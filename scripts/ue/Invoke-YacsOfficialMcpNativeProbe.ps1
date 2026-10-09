@@ -505,10 +505,13 @@ try {
 
     # Read exactly this installed declaration, as data, before any Python opt-in.
     # An absent/unproved declaration disables only the reflection sub-proof.
-    $settingsPath = Join-Path $engine.Root 'Engine/Plugins/Experimental/PythonScriptPlugin/Source/PythonScriptPlugin/Public/PythonScriptPluginSettings.h'
+    # Exact installed path/hash observed by read-only diagnostic 37998743610.
+    $settingsPath = Join-Path $engine.Root 'Engine/Plugins/Experimental/PythonScriptPlugin/Source/PythonScriptPlugin/Private/PythonScriptPluginSettings.h'
+    $settingsExpectedSha = '6c5f68a3945759234a9b38a98ac7d1369a91982f9d36c433eb2e518e79ebb5f2'
     $settingsEvidence = [ordered]@{
         schema_version = 1; exact_sha = $ExpectedHead; path = $settingsPath
-        status = 'UNESTABLISHED'; source_sha256 = $null; config_engine = $false
+        status = 'UNESTABLISHED'; source_sha256 = $null; expected_source_sha256 = $settingsExpectedSha
+        source_diagnostic_run = '37998743610'; config_engine = $false
         public_config_remote_execution = $false; context = @(); error = $null
         official_mcp_admitted = $false; persistent_world_mutation = $false
     }
@@ -518,6 +521,9 @@ try {
         $settingsIdentity = Get-ProbeFileIdentity $settingsPath
         if ($settingsIdentity.size_bytes -gt 256KB) { throw 'Fixed Python settings header exceeds 256 KiB.' }
         $settingsEvidence.source_sha256 = $settingsIdentity.sha256
+        if ($settingsIdentity.sha256 -cne $settingsExpectedSha) {
+            throw 'Installed Python settings source differs from the exact diagnostic SHA256.'
+        }
         $stream = [IO.File]::OpenRead($settingsPath)
         try {
             $settingsBuffer = [byte[]]::new(256KB + 1)

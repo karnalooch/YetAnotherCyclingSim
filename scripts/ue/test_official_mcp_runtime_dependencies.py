@@ -26,6 +26,13 @@ SERVER_IMPL = MCP + "ModelContextProtocol/Private/ModelContextProtocolModule.cpp
 TRANSPORT_IMPL = MCP + "ModelContextProtocol/Private/ModelContextProtocolServer.cpp"
 HTTP_IMPL = "Engine/Source/Runtime/Online/HTTPServer/Private/HttpServerModule.cpp"
 LISTENER_IMPL = "Engine/Source/Runtime/Online/HTTPServer/Private/HttpListener.cpp"
+CONFIG_HEADER = "Engine/Source/Runtime/Online/HTTPServer/Private/HttpServerConfig.h"
+CONFIG_IMPL = "Engine/Source/Runtime/Online/HTTPServer/Private/HttpServerConfig.cpp"
+CORE_HEADER = "Engine/Source/Runtime/Core/Public/Misc/AutomationTest.h"
+CORE_IMPL = "Engine/Source/Runtime/Core/Private/Misc/AutomationTest.cpp"
+PROJECTS_HEADER = "Engine/Source/Runtime/Projects/Public/Interfaces/IPluginManager.h"
+PROJECTS_IMPL = "Engine/Source/Runtime/Projects/Private/PluginManager.cpp"
+FIXED_ENGINE_PATHS = {CORE_HEADER, CORE_IMPL, PROJECTS_HEADER, PROJECTS_IMPL}
 RUNTIME_FLAGS = (
     "official_mcp_transport_verified", "official_mcp_admitted", "argument_policy_parity_verified",
     "local_only_binding_verified", "existing_project_test_verified", "native_bob_capture_verified",
@@ -93,6 +100,17 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                    "void UModelContextProtocolToolLibrary::SyntheticControl() {}\n")
         self.write(MCP + "ModelContextProtocolEditor/Private/ModelContextProtocolToolsetRegistryAdapter.cpp",
                    "void FToolsetRegistryToolAdapter::Execute() {}\n")
+        self.write(CORE_HEADER, "enum class EAutomationExpectedMessageFlags { Contains, Exact };\n"
+                   "struct FAutomationExpectedLogMessage { int Occurrences; };\n"
+                   "void AddExpectedError();\nvoid AddExpectedMessage();\nvoid AddExpectedLogMessage();\n")
+        self.write(CORE_IMPL,
+                   "FAutomationExpectedMessage::FAutomationExpectedMessage() : Occurrences(1) {}\n"
+                   "bool FAutomationExpectedMessage::Matches() { return MatchSynthetic(); }\n"
+                   "bool FAutomationExpectedLogMessage::HasMetExpectedOccurrences() { return Occurrences == 1; }\n"
+                   "void FAutomationTestBase::AddExpectedError() { RecordSynthetic(); }\n")
+        self.write(PROJECTS_HEADER, "virtual bool ConfigureEnabledPlugin() = 0;\n")
+        self.write(PROJECTS_IMPL, "bool FPluginManager::ConfigureEnabledPlugins() {\n"
+                   ' ParseSynthetic(TEXT("EnablePlugins="));\n ParseSynthetic(TEXT("DisablePlugins="));\n return true;\n}\n')
 
     def write(self, relative, text):
         path = self.engine / relative
@@ -126,7 +144,10 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
     def test_constant_program_collects_primary_hashes_without_runtime_claims(self):
         process, receipt = self.run_reader()
         self.assertEqual(process.returncode, 0, process.stderr)
-        self.assertEqual(receipt["status"], "SOURCE_CONTEXTS_COLLECTED")
+        self.assertEqual(receipt["status"], "PARTIAL_DEPENDENCY_EVIDENCE")
+        self.assertFalse(any(item.get("reason") == "SOURCE_MISSING" for item in receipt["gaps"]))
+        self.assertTrue(any(item.get("reason") == "NAMED_DECLARATION_CONTEXT_REQUIRES_PRIMARY_REVIEW"
+                            for item in receipt["gaps"]))
         self.assertTrue(receipt["mcp_callsite_index_complete"])
         self.assertEqual(len(receipt["direct_registration_calls"]), 1)
         self.assertEqual(receipt["direct_registration_calls"][0]["line"], 5)
@@ -136,7 +157,13 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         self.assertEqual(excerpt["sha256"], hashlib.sha256((self.engine / SERVER_IMPL).read_bytes()).hexdigest())
         self.assertEqual(receipt["observed_server_dependency_includes"][0]["include"], "HttpServerModule.h")
         self.assertTrue(all(item["path"] == "Engine/Build/Build.version"
+            or item["path"] in FIXED_ENGINE_PATHS
             or item["path"].startswith((AUTO, MCP)) for item in receipt["source_files"]))
+        for topic in ("expected_error_declarations", "expected_matcher_constructor_context",
+                      "expected_FAutomationExpectedMessage_Matches",
+                      "expected_FAutomationExpectedLogMessage_HasMetExpectedOccurrences",
+                      "fixed_plugin_activation_context"):
+            self.assertTrue(any(item["topic"] == topic for item in receipt["excerpts"]))
 
     def test_engine_identity_mismatch_stops_before_plugin_read(self):
         self.write("Engine/Build/Build.version", json.dumps({
@@ -247,7 +274,7 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                        "void Synthetic() { AddTool(Synthetic); }\n")
         process, receipt = self.run_reader()
         self.assertEqual(process.returncode, 0, process.stderr)
-        self.assertEqual(receipt["source_file_count"], 16)
+        self.assertEqual(receipt["source_file_count"], 18)
         self.assertFalse(receipt["mcp_callsite_index_complete"])
         self.assertTrue(any(not item["scanned"] for item in receipt["mcp_callsite_inventory"]))
         sources = receipt["source_files"]
@@ -269,7 +296,7 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         excerpt = next(item for item in receipt["excerpts"] if item["topic"] == "settings_declarations")
         self.assertFalse(excerpt["body_complete"])
         self.assertEqual(len(excerpt["lines"]), 1200)
-        for purpose in ("automation", "mcp_transport", "mcp"):
+        for purpose in ("automation", "expected_errors", "plugin_activation", "mcp_transport", "mcp"):
             section = process.stdout.split("PURPOSE " + purpose + " ", 1)[1].split("END_PURPOSE " + purpose, 1)[0]
             self.assertLessEqual(len(section.splitlines()) + 1, 500)
         self.assertIn("PURPOSE mcp console_truncated=True", process.stdout)
@@ -281,7 +308,9 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                    "void FModelContextProtocolServer::HandleRequest() {}\n")
         self.write(HTTP_IMPL, '#include "HttpListener.h"\n'
                    "void FHttpServerModule::StartAllListeners() {}\n")
-        self.write(LISTENER_IMPL, "void FHttpListener::StartListening() {}\n")
+        self.write(LISTENER_IMPL, '#include "HttpServerConfig.h"\nvoid FHttpListener::StartListening() {}\n')
+        self.write(CONFIG_HEADER, "struct FHttpServerConfig {};\n")
+        self.write(CONFIG_IMPL, "int FHttpServerConfig::GetListenerConfig() { return SyntheticBindConfiguration(); }\n")
         # The collector may follow only the two fixed backend dependencies,
         # even with an unrelated escaping link and abundant optional source.
         unrelated = self.engine / "Engine/Source/Runtime/Unrelated"
@@ -293,18 +322,21 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         process, receipt = self.run_reader()
         self.assertEqual(process.returncode, 0, process.stderr)
         follows = receipt["followed_binding_dependencies"]
-        self.assertEqual([item["path"] for item in follows], [HTTP_IMPL, LISTENER_IMPL])
-        self.assertEqual([item["from_path"] for item in follows], [TRANSPORT_IMPL, HTTP_IMPL])
+        self.assertEqual([item["path"] for item in follows], [HTTP_IMPL, LISTENER_IMPL, CONFIG_HEADER])
+        self.assertEqual([item["from_path"] for item in follows], [TRANSPORT_IMPL, HTTP_IMPL, LISTENER_IMPL])
         for item in follows:
             self.assertEqual(item["include_line"], 1)
             self.assertEqual(item["from_sha256"],
                              hashlib.sha256((self.engine / item["from_path"]).read_bytes()).hexdigest())
-        self.assertLessEqual(receipt["source_file_count"], 18)
+        self.assertLessEqual(receipt["source_file_count"], 24)
         self.assertLessEqual(receipt["total_source_bytes"], 8 * 1024 * 1024)
         self.assertFalse(receipt["mcp_callsite_index_complete"])
         outside = [item["path"] for item in receipt["source_files"]
-                   if not item["path"].startswith((AUTO, MCP)) and item["path"] != "Engine/Build/Build.version"]
-        self.assertEqual(outside, [HTTP_IMPL, LISTENER_IMPL])
+                   if not item["path"].startswith((AUTO, MCP)) and item["path"] != "Engine/Build/Build.version"
+                   and item["path"] not in FIXED_ENGINE_PATHS]
+        self.assertEqual(outside, [HTTP_IMPL, LISTENER_IMPL, CONFIG_HEADER, CONFIG_IMPL])
+        self.assertTrue(any(item["topic"] == "http_config_getter" and item["body_complete"]
+                            for item in receipt["excerpts"]))
         for topic in ("module_AddTool", "module_RemoveTool", "module_RefreshTools", "adapter_Execute"):
             self.assertTrue(any(item["topic"] == topic and item["body_complete"] for item in receipt["excerpts"]))
 
@@ -318,7 +350,8 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                 process, receipt = self.run_reader()
                 self.assertEqual(process.returncode, 0, process.stderr)
                 self.assertEqual(receipt["followed_binding_dependencies"], [])
-                self.assertFalse(any(item["path"].startswith("Engine/Source/") for item in receipt["source_files"]))
+                self.assertFalse(any(item["path"].startswith("Engine/Source/")
+                    and item["path"] not in FIXED_ENGINE_PATHS for item in receipt["source_files"]))
         self.write(TRANSPORT_IMPL, '#include "HttpServerModule.h"\nvoid FModelContextProtocolServer::HandleRequest() {}\n')
         self.write(HTTP_IMPL, 'const char* text=R"tag(\n#include "HttpListener.h"\n)tag";\n'
                    "void FHttpServerModule::StartAllListeners() {}\n")

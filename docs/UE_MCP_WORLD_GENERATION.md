@@ -324,8 +324,8 @@ including misses, after real inspector execution. Its default caller behavior
 is preserved. A saved scene requires Landscape-only traces and verified native
 hit ownership: road or CUT geometry must not become a claimed Landscape height.
 Unknown ownership fails closed. Synthetic capture tests do not prove reflected
-owner availability on the actual host. Native registration, compile, restricted
-official transport, the completed single test and conservation remain pending.
+owner availability on the actual host. Registration into the restricted official
+session, the completed single project test and conservation remain pending.
 
 The trusted no-argument
 [`capture_and_inspect`](../scripts/ue/official_mcp_bob_operation.py) body binds
@@ -339,6 +339,18 @@ trusted host must validate the retained consumer manifest before staging its
 fixed context; caller arguments cannot supply those inputs. Synthetic tests
 cover these boundaries and preserve missing/contact/review states. They do not
 certify an actual native capture, official transport or content conservation.
+
+The trusted host utility
+[`official_mcp_bob_session.py`](../scripts/ci/official_mcp_bob_session.py)
+authenticates six immutable #363 JSON anchors before parsing or restoration.
+It verifies the frozen 236-file LFS dependency set, preflights existing targets
+and cached objects, uses normal LFS checkout and the existing missing-only
+generated-package restorer, then stages the pinned road profile. The separate
+no-argument context step requires the actual native checkpoint helper and the
+accepted Landscape/Actor census before publishing the operation's eight fields.
+It changes no project descriptor or configuration and starts no Editor or MCP
+server. Its 24 synthetic tests verify rejection and preservation boundaries;
+actual Windows restoration and accepted-scene execution remain unverified.
 
 [Declaration run 37993672276](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37993672276)
 passed at `2f7fbf6ae771abcb45cb15221e4d66130676e3b3` on the same exact engine.
@@ -376,19 +388,27 @@ characters, exceeding UnrealBuildTool's 260-character limit. The
 at `f557bfd0a760b795bb3294ec047cdfc4c837424d` completed all eleven build
 actions and linked the plugin on UE 5.8.2 / CL 56702186. Its owned empty-project
 Editor process exited **255**; the boundary test and Python bindings are not
-verified. The final output-identity error obscured the original session error,
-so branch pushes now select a fixed read-only diagnostic of that preserved run.
+verified. The final output-identity error obscured the original session error.
+[Read-only diagnostic 37998743610](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37998743610)
+at `e09133df67d13ce06bf872a0620ead9c883296e3` verified the preserved log and
+report: the single test failed on three intentional missing-toolset error logs
+(`actor`, `scene`, `AutomationTestToolset`), with zero warnings and no reported
+assertion failure. The test must expect exactly those denial messages while
+retaining its assertions. Branch pushes currently select the fixed readback.
 An explicit `native_probe` workflow dispatch selects a later native retry after
 diagnosis; the default diagnostic launches no Editor and compiles no code.
-The previously assumed public Python settings header was absent; its actual
-installed location still requires bounded source discovery. Previous outputs
-remain retained. Accepted-scene hydration, the existing project test and
-official MCP activation remain pending.
+The same diagnostic located the actual private Python settings header, SHA-256
+`6c5f68a3945759234a9b38a98ac7d1369a91982f9d36c433eb2e518e79ebb5f2`,
+with `config=Engine` and configurable `bRemoteExecution`. Previous outputs remain
+retained. Accepted-scene hydration, the existing project test and official MCP
+activation remain pending.
 
 The same native run authenticated the frozen #363 artifact archive and all six
 consumer/delivery/reload/render/conservation JSON hashes against retained host
-bytes. Later retained-metadata discovery stopped with `READ_BLOCKED`; it did
-not restore assets or admit the scene. Protected
+bytes. Later retained-metadata discovery stopped with `READ_BLOCKED`: the fixed
+capture receipt was 2,868,417 bytes, above its original 2 MiB read limit. Only
+that ZIP-manifest-bound receipt now has a 4 MiB limit; other JSON limits remain
+2 MiB. This read has not restored assets or admitted the scene. Protected
 [CI 37996983703](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37996983703)
 passed for that exact commit, including the project build, Automation and
 Aggregate gate. That CI does not enable or test this disabled-by-default plugin.

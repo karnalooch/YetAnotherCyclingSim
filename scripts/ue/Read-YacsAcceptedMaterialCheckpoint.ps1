@@ -113,9 +113,19 @@ function Read-BoundedCheckpointStream {
 }
 
 function Read-CheckpointHostJson {
-    param([Parameter(Mandatory)][string] $Name)
+    param([Parameter(Mandatory)][string] $Name, [string] $ExpectedSha256)
     $receipt.retained_metadata_path = $Name
     $receipt.retained_metadata_observed_bytes = $null
+    $readLimit = $JsonLimit
+    if ($Name -ceq 'capture/whole-map-prep/whole-map-prep-receipt.json') {
+        # Actual accepted receipt is 2,868,417 bytes. Only this fixed member
+        # receives 4 MiB, and its bytes must match the anchored consumer hash.
+        $readLimit = 4MB
+        if ($ExpectedSha256 -cnotmatch '^[0-9a-f]{64}$') {
+            throw 'Fixed retained capture identity is unavailable.'
+        }
+    }
+    $receipt.retained_metadata_limit_bytes = $readLimit
     $path = Join-Path $HostProofRoot $Name
     Assert-NoCheckpointAlias $path
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
@@ -124,12 +134,16 @@ function Read-CheckpointHostJson {
     $file = [IO.FileStream]::new($path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
     try {
         $receipt.retained_metadata_observed_bytes = $file.Length
-        if ($file.Length -gt $JsonLimit) { throw 'Retained checkpoint JSON exceeds its bound.' }
-        $bytes = Read-BoundedCheckpointStream -Stream $file -Limit $JsonLimit
+        if ($file.Length -gt $readLimit) { throw 'Retained checkpoint JSON exceeds its bound.' }
+        $bytes = Read-BoundedCheckpointStream -Stream $file -Limit $readLimit
         if ($bytes.Length -ne $file.Length) { throw 'Retained checkpoint JSON changed during read.' }
     }
     finally { $file.Dispose() }
-    return [ordered]@{ status = 'READ'; bytes = $bytes; identity = (Get-CheckpointBytesIdentity $bytes) }
+    $identity = Get-CheckpointBytesIdentity $bytes
+    if ($Name -ceq 'capture/whole-map-prep/whole-map-prep-receipt.json' -and $identity.sha256 -cne $ExpectedSha256) {
+        throw 'Retained checkpoint capture hash differs from its accepted consumer.'
+    }
+    return [ordered]@{ status = 'READ'; bytes = $bytes; identity = $identity }
 }
 
 if (-not $IsWindows) { throw 'Accepted checkpoint discovery requires the trusted Windows host.' }
@@ -182,6 +196,7 @@ $receipt = [ordered]@{
     restoration_performed = $false
     retained_metadata_path = $null
     retained_metadata_observed_bytes = $null
+    retained_metadata_limit_bytes = $null
     error_code = $null
     local_exception_type = $null
     error = $null
@@ -326,10 +341,10 @@ try {
         'whole-map-prep/surface-prep-manifest.json' = 'prep_manifest_sha256'
     }
     foreach ($name in $AdditionalHostNames) {
-        $hostJson = Read-CheckpointHostJson $name
         $expectedHostHash = if ($sourceProofFields.ContainsKey($name)) {
             $consumer.source_proof[$sourceProofFields[$name]]
         } else { $null }
+        $hostJson = Read-CheckpointHostJson -Name $name -ExpectedSha256 $expectedHostHash
         $row = [ordered]@{
             path = $name
             archive_status = 'NOT_INCLUDED_IN_COMPACT_ARTIFACT'
@@ -399,6 +414,8 @@ catch {
             'Retained checkpoint JSON exceeds its bound.' { 'JSON_SIZE_LIMIT' }
             'Retained checkpoint JSON changed during read.' { 'JSON_CHANGED_DURING_READ' }
             'Accepted checkpoint paths cannot use symlinks or junctions.' { 'REPARSE_PATH' }
+            'Fixed retained capture identity is unavailable.' { 'CAPTURE_ANCHOR_MISSING' }
+            'Retained checkpoint capture hash differs from its accepted consumer.' { 'ACCEPTED_CAPTURE_HASH_MISMATCH' }
             default { 'LOCAL_RETAINED_METADATA_FAILURE' }
         }
         $receipt.error = "Accepted checkpoint discovery failed during $phase at $($receipt.retained_metadata_path): $($receipt.error_code)."
@@ -425,6 +442,7 @@ finally {
         restoration_performed = $false
         retained_metadata_path = $receipt.retained_metadata_path
         retained_metadata_observed_bytes = $receipt.retained_metadata_observed_bytes
+        retained_metadata_limit_bytes = $receipt.retained_metadata_limit_bytes
         error_code = $receipt.error_code
         local_exception_type = $receipt.local_exception_type
         error = $receipt.error

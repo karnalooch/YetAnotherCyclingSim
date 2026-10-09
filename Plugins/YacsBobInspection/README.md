@@ -7,9 +7,11 @@ Python `FHitResult` binding does not reliably expose. It contains no assets and
 does not change the project plugin configuration.
 
 The module currently registers no toolset. Native body wiring, registration,
-Unreal compilation/reflection, restricted official MCP transport and the
-checkpoint proof remain pending. A successful source build alone does not admit
-this operation or complete Issue #384.
+Python reflection, restricted official MCP transport and the checkpoint proof
+remain pending. Run `37996979223` compiled all plugin actions and its DLL on UE
+5.8.2 / CL 56702186 at `f557bfd0a760b795bb3294ec047cdfc4c837424d`.
+A successful source build alone does not admit this operation or complete
+Issue #384.
 
 `InspectAcceptedCheckpoint` accepts only an empty JSON object, with bounded JSON
 whitespace. Its native boundary rejects other operation names, fields, scalars,
@@ -54,5 +56,9 @@ callback; it does not touch the editor-global
 registry or activate MCP. In the isolated empty `HostProject`, even a valid empty
 request must reject the unapproved map. This boundary proof is separate from the
 existing project `CyclingPhysics.RoadPhysics.ProfileInterpolation` test and the
-real checkpoint BOB inspection required by Issue #384. Native execution remains
-pending until a matching host receipt is recorded.
+real checkpoint BOB inspection required by Issue #384. The first native run
+completed this test with three errors from the intentionally denied, absent
+`actor`, `scene` and `AutomationTestToolset` toolsets; diagnostic run
+`37998743610` retained the exact log and report. No assertion failure was
+reported. Native test success remains pending a narrowly counted expectation
+for those three log messages and a fresh matching host receipt.

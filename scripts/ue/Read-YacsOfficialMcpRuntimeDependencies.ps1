@@ -59,7 +59,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 engine, artifact, exact_sha = Path(os.path.abspath(sys.argv[1])), Path(os.path.abspath(sys.argv[2])), sys.argv[3]
-MAX_FILE, MAX_TOTAL, BASE_FILES, MAX_FILES = 2*1024*1024, 8*1024*1024, 16, 18
+MAX_FILE, MAX_TOTAL, BASE_FILES, MAX_FILES = 2*1024*1024, 8*1024*1024, 16, 24
 MAX_ENTRIES, MAX_DEPTH, MAX_SPAN_LINES, MAX_CONSOLE = 1024, 10, 1200, 500
 MAX_CALLS, MAX_CONSOLE_CHARS = 128, 1024
 MAX_DEPENDENCY_INCLUDES = 64
@@ -212,6 +212,14 @@ def functions(item, pattern, topic, required=True):
 def full(item, topic):
     add_span(item, topic, 1, len(item['text'].splitlines()), True)
 
+def named_contexts(item, pattern, topic, radius=20):
+    lines=item['text'].splitlines()
+    visible=cpp_mask(item['text'],strings=False).splitlines()
+    for index,line in enumerate(visible):
+        if re.search(pattern,line):
+            add_span(item,topic,max(1,index+1-radius),min(len(lines),index+1+radius),False,
+                     'NAMED_DECLARATION_CONTEXT_REQUIRES_PRIMARY_REVIEW')
+
 def actual_includes(item):
     code = cpp_mask(item['text']).splitlines()
     visible = cpp_mask(item['text'], strings=False).splitlines()
@@ -273,6 +281,7 @@ try:
     if item: full(item, 'subsystem_public_declarations')
     item = optional(auto+'Private/AutomationTestToolsetSubsystem.cpp', 'automation')
     if item:
+        functions(item,r'\bAutomationStateToString\s*\(','automation_state_strings',required=False)
         for name in ('FormatResultsJson','CollectLeafReports','EnableRunResultPolling'):
             functions(item, r'\bUAutomationTestToolsetSubsystem::'+name+r'\s*\(', name)
         names = sorted(set(re.findall(r'\bUAutomationTestToolsetSubsystem::(\w+)\s*\(', cpp_mask(item['text']))))
@@ -322,7 +331,7 @@ try:
         elif basename=='ModelContextProtocolToolsetRegistryAdapter.cpp':
             names = sorted(set(re.findall(r'\b(FToolsetRegistryToolAdapter(?:Manager)?)::(\w+)\s*\(',cpp_mask(item['text']))))
             for owner,name in names:
-                if re.search(r'Execute|Dispatch',name):
+                if re.search(r'Run|Execute|Dispatch',name):
                     functions(item,r'\b'+owner+'::'+re.escape(name)+r'\s*\(','adapter_'+name,required=False)
         elif basename=='ModelContextProtocolModule.cpp':
             for name in ('AddTool','RemoveTool','RefreshTools'):
@@ -352,11 +361,48 @@ try:
                             if re.search(r'Listen|Start|Init|Bind',name):
                                 functions(listener,r'\bFHttpListener::'+re.escape(name)+r'\s*\(','http_'+name,required=False)
                         full(listener,'http_listener_source')
+                        config_include=next(((line,name) for line,name in actual_includes(listener) if name=='HttpServerConfig.h'),None)
+                        if config_include:
+                            base='Engine/Source/Runtime/Online/HTTPServer/'
+                            headers=[base+kind+'/HttpServerConfig.h' for kind in ('Private','Public')
+                                if (engine/(base+kind+'/HttpServerConfig.h')).exists()]
+                            if len(headers)==1:
+                                config_header=read(headers[0],'mcp')
+                                full(config_header,'http_config_declarations')
+                                receipt['followed_binding_dependencies'].append(dict(path=headers[0],from_path=listener['path'],
+                                    from_sha256=listener['sha256'],include_line=config_include[0],include=config_include[1]))
+                            else: gaps.append(dict(topic='http_config_declarations',reason='NAMED_CONFIG_HEADER_NOT_UNIQUE',candidates=headers))
+                            config=optional(base+'Private/HttpServerConfig.cpp','mcp')
+                            if config:
+                                functions(config,r'\bFHttpServerConfig::GetListenerConfig\s*\(','http_config_getter')
+                                full(config,'http_config_implementation')
                 for backend in (item, records.get('Engine/Source/Runtime/Online/HTTPServer/Private/HttpListener.cpp')):
                     if not backend: continue
                     candidates=sorted(set(re.findall(r'\b(\w*(?:Config|Bind|Address)\w*)\s*\(',cpp_mask(backend['text']))))
                     for name in candidates:
                         functions(backend,r'\b'+re.escape(name)+r'\s*\(','http_helper_'+name,required=False)
+    # The existing native test includes AutomationTest.h, and project activation
+    # requires the actual Projects parser. These are fixed read-only inputs,
+    # not a traversal of either outside-plugin source tree.
+    for relative in ('Engine/Source/Runtime/Core/Public/Misc/AutomationTest.h',
+                     'Engine/Source/Runtime/Core/Private/Misc/AutomationTest.cpp'):
+        item=optional(relative,'expected_errors')
+        if not item: continue
+        if relative.endswith('.h'):
+            named_contexts(item,r'AddExpected(?:Error|Message|LogMessage)|[EF]AutomationExpected(?:Error|Message|LogMessage)(?:Flags)?',
+                           'expected_error_declarations',18)
+        else:
+            named_contexts(item,r'FAutomationExpected(?:Error|Message|LogMessage)::FAutomationExpected(?:Error|Message|LogMessage)','expected_matcher_constructor_context',30)
+            definitions=sorted(set(re.findall(r'\b(\w+)::(\w+)\s*\(',cpp_mask(item['text']))))
+            for owner,name in definitions:
+                if 'Expected' in owner or 'Expected' in name or (owner=='FAutomationTestBase' and name in {'AddError','AddWarning'}) or (owner=='FAutomationTestFramework' and name=='StopTest'):
+                    functions(item,r'\b'+owner+'::'+name+r'\s*\(','expected_'+owner+'_'+name,required=False)
+    for relative in ('Engine/Source/Runtime/Projects/Public/Interfaces/IPluginManager.h',
+                     'Engine/Source/Runtime/Projects/Private/PluginManager.cpp'):
+        item=optional(relative,'plugin_activation')
+        if not item: continue
+        named_contexts(item,r'EnablePlugins|DisablePlugins|ConfigureEnabledPlugin',
+                       'fixed_plugin_activation_context',22)
     # Prioritize already-read implementations, then bounded new cpp files.
     implementations = sorted(source_inventory)
     implementations.sort(key=lambda x: (x not in records,
@@ -417,13 +463,14 @@ finally:
     console_summary('SERVER_DEPENDENCY_INCLUDES',dict(count=len(receipt['observed_server_dependency_includes']),
         inventory_truncated=any(x.get('reason')=='DEPENDENCY_INCLUDE_LIMIT' for x in gaps)))
     console_summary('FOLLOWED_BINDING_DEPENDENCIES',receipt['followed_binding_dependencies'])
-    for purpose in ('automation','mcp_transport','mcp'):
+    for purpose in ('automation','expected_errors','plugin_activation','mcp_transport','mcp'):
         console = []
         if purpose == 'mcp':
             console.extend('SERVER_INCLUDE '+json.dumps(item,sort_keys=True) for item in receipt['observed_server_dependency_includes'])
             console.extend('REGISTRATION_CALL '+json.dumps(call,sort_keys=True) for call in calls)
         priority = {
             'FormatResultsJson':0, 'DiscoverTests':1, 'GetSubsystem':2, 'RunTests':3,
+            'automation_state_strings':0,
             'GetTestResults':4, 'GetTestStatus':5, 'ListTests':6, 'CollectLeafReports':7,
             'EnableRunResultPolling':8, 'subsystem_public_declarations':10,
             'direct_tool_library_controls':0, 'direct_tool_library_declarations':1,
@@ -437,10 +484,19 @@ finally:
             if excerpt['purpose']!='mcp': return excerpt['purpose']
             return 'mcp_transport' if excerpt['topic'].startswith(('server_','server_dependency_','official_server_','adapter_','http_')) else 'mcp'
         def console_priority(excerpt):
+            if excerpt['topic']=='expected_error_declarations': return -3
+            if excerpt['topic']=='expected_matcher_constructor_context': return -2
+            if excerpt['topic'].startswith('expected_') and 'AddExpectedError' in excerpt['topic']: return -2
+            if excerpt['topic'].startswith('expected_') and any(key in excerpt['topic'] for key in ('Matches','Match','Occurrence','Validate','Verify','HasMet')): return -1
+            if excerpt['topic'].startswith('expected_') and not excerpt['topic'].endswith(('_StopTest','_AddError','_AddWarning')): return 0
+            if excerpt['topic']=='server_dependency_ProcessToolCallJsonRpcCall': return -3
+            if excerpt['topic'].startswith('adapter_'): return -2
+            if excerpt['topic'].startswith('http_config'): return -1
             if excerpt['topic'].startswith('http_'): return 0
             if excerpt['topic'].startswith('server_dependency_'): return 1
             if excerpt['topic'].startswith('adapter_'): return 2
             return priority.get(excerpt['topic'],9)
+        emitted_source_lines=set()
         for excerpt in sorted(excerpts,key=lambda x:(console_priority(x),x['path'],x['line_start'])):
             if console_purpose(excerpt) != purpose: continue
             if purpose in {'mcp','mcp_transport'} and excerpt['topic'] in {
@@ -448,12 +504,20 @@ finally:
                 'editor_registration_lifecycle','official_server_implementation',
                 'registry_adapter_implementation','module_implementation',
                 'server_StartupModule','server_ShutdownModule','server_StopServer',
-                'http_module_source','http_listener_source'}:
+                'http_module_source','http_listener_source','http_config_implementation',
+                'http_StartupModule','http_StopListening','http_StopAllListeners','http_StartAllListeners',
+                'http_HasPendingListeners','server_dependency_StopServer',
+                'server_dependency_ScheduleToolsListChangedBroadcast',
+                'server_dependency_ProcessPingJsonRpcCall','server_dependency_ProcessNotificationCancelledJsonRpcCall',
+                'server_dependency_ProcessListResourcesJsonRpcCall','server_dependency_ProcessReadResourceJsonRpcCall'}:
                 # Already-reviewed contexts / full-file backup remain in JSON;
                 # use console capacity for the newly required control bodies.
                 continue
             console.append('SOURCE '+excerpt['path']+':'+str(excerpt['line_start'])+'-'+str(excerpt['line_end'])+' sha256='+excerpt['sha256']+' topic='+excerpt['topic']+' body_complete='+str(excerpt['body_complete']))
-            console.extend(str(line['line'])+': '+line['text'] for line in excerpt['lines'] if line['code'])
+            for line in excerpt['lines']:
+                key=(excerpt['path'],line['line'])
+                if line['code'] and key not in emitted_source_lines:
+                    console.append(str(line['line'])+': '+line['text']); emitted_source_lines.add(key)
         truncated = len(console) > MAX_CONSOLE-2 or any(len(x)>MAX_CONSOLE_CHARS for x in console)
         print('PURPOSE '+purpose+' console_truncated='+str(truncated))
         for line in console[:MAX_CONSOLE-2]:
