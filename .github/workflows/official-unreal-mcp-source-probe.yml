@@ -52,7 +52,7 @@ jobs:
             [ref]$tokens, [ref]$errors
           ) | Out-Null
           if ($errors.Count -gt 0) { throw ($errors.Message -join '; ') }
-          ./scripts/ue/Invoke-YacsOfficialMcpSourceProbe.ps1 -ExpectedHead $env:TARGET_SHA
+          ./scripts/ue/Invoke-YacsOfficialMcpSourceProbe.ps1 -ExpectedHead $env:TARGET_SHA -EvidenceFocus domain_extension
 
       - name: Retain scoped source evidence even when preflight is blocked
         if: ${{ always() }}

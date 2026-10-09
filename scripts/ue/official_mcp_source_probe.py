@@ -28,6 +28,7 @@ MAX_SOURCE_FILES = 4096
 MAX_DEPTH = 12
 MAX_EXCERPT_LINES = 2400
 MAX_CONSOLE_LINES = 500
+EVIDENCE_FOCUSES = ("stock_control_flow", "domain_extension")
 PLUGIN_ROOTS = {
     "ModelContextProtocol": "Engine/Plugins/Experimental/ModelContextProtocol",
     "ToolsetRegistry": "Engine/Plugins/Experimental/ToolsetRegistry",
@@ -253,9 +254,98 @@ def selected_excerpts(
     return excerpts, used
 
 
+def cpp_code_lines(lines: list[str]) -> list[str]:
+    """Mask C++ comments while preserving source line numbers and literals."""
+    source = "\n".join(lines)
+    pattern = r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|/\*.*?\*/|//[^\n]*'
+
+    def mask(match: re.Match[str]) -> str:
+        value = match.group()
+        return "".join("\n" if char == "\n" else " " for char in value) if value.startswith(("//", "/*")) else value
+
+    return re.sub(pattern, mask, source, flags=re.S).splitlines()
+
+
+# One fixed declaration review preset. Paths come from the already bounded
+# plugin inventory; optional symbols are selectors, never verified API wiring.
+DOMAIN_RULES = (
+    ("static_argument_conversion", "ToolsetRegistry", ".cpp", r"FStaticToolset::ExecuteToolInternal\s*\(", 0, 180, 90),
+    ("toolset_interface", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?FToolset\b", 3, 145, 55),
+    ("class_registration", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolsetRegistry\b", 3, 145, 55),
+    ("toolset_definition", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolsetDefinition\b", 3, 80, 10),
+    ("static_toolset_interface", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?FStaticToolset\b", 3, 85, 10),
+    ("async_string_interface", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolCallAsyncResultString\b", 3, 100, 25),
+    ("async_result_interface", "ToolsetRegistry", ".h", r"\bclass\s+(?:\w+\s+)?UToolCallAsyncResult\b", 3, 150, 35),
+    ("automation_prototypes", "AutomationTestToolset", ".h", r"\b(?:DiscoverTests|RunTests|GetTestStatus|GetTestResults)\s*\(", 4, 8, 40),
+    ("automation_status", "AutomationTestToolset", ".cpp", r"UAutomationTestToolset::GetTestStatus\s*\(", 0, 150, 40),
+    ("automation_subsystem", "AutomationTestToolset", ".h", r"\b(?:GetAutomationController|GetRunningTestNames|SetPendingRunResult|EnableRunResultPolling|Tick|PollRunResults)\s*\(", 3, 9, 25),
+    ("automation_controller", "AutomationController", ".h", r"\b(?:GetTestState|RunTests|StopTests|IsTestRunning)\s*\(", 3, 8, 25),
+    ("registration_factory", "ToolsetRegistry", ".cpp", r"UToolsetRegistry::RegisterToolsetClass\s*\(", 0, 110, 15),
+    ("reflected_execution", "ToolsetRegistry", ".cpp", r"UToolsetRegistry::ExecuteTool\s*\(", 0, 110, 15),
+)
+CONTROLLER_HEADERS = {
+    "IAutomationControllerModule.h": "Engine/Source/Developer/AutomationController/Public/IAutomationControllerModule.h",
+    "IAutomationControllerManager.h": "Engine/Source/Developer/AutomationController/Public/IAutomationControllerManager.h",
+}
+
+
+def select_domain_extension(
+    receipt: dict[str, Any], sources: list[tuple[dict[str, Any], bytes]],
+) -> None:
+    """Keep bounded contexts for one native domain extension declaration review."""
+    observations = {rule[0]: [] for rule in DOMAIN_RULES}
+    remaining = MAX_EXCERPT_LINES
+    for topic, role, suffix, pattern, before, after, _ in DOMAIN_RULES:
+        for item, data in sources:
+            if item["role"] != role or Path(item["path"]).suffix != suffix:
+                continue
+            lines = data.decode("utf-8-sig").splitlines()
+            code = cpp_code_lines(lines)
+            literal_pattern = r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\''
+            indexes = [index for index, line in enumerate(code)
+                       if re.search(pattern, re.sub(literal_pattern, "", line))][:8]
+            for index in indexes:
+                if r"\bclass" in pattern:
+                    declaration = "\n".join(code[index:index + 8])
+                    boundary = re.search(r"[;{]", re.sub(literal_pattern, "", declaration))
+                    if boundary is None or boundary.group() == ";":
+                        continue
+                start, end = max(0, index - before), min(len(lines), index + after)
+                window_truncated = False
+                if "::" in pattern or r"\bclass" in pattern:
+                    depth, opened, closed = 0, False, False
+                    for cursor in range(index, end):
+                        statement = re.sub(literal_pattern, "", code[cursor])
+                        depth += statement.count("{") - statement.count("}")
+                        opened |= "{" in statement
+                        if opened and depth <= 0:
+                            end = cursor + 1
+                            closed = True
+                            break
+                    window_truncated = opened and not closed
+                observations[topic].append({"path": item["path"], "line": index + 1, "sha256": item["sha256"]})
+                bounded_end = min(end, start + remaining)
+                if bounded_end > start:
+                    item["selected_excerpts"].append({
+                        "start_line": start + 1, "end_line": bounded_end,
+                        "text": "\n".join(line[:600] for line in lines[start:bounded_end]),
+                        "selection": "domain_extension", "topic": topic,
+                        "budget_truncated": bounded_end < end,
+                        "context_window_truncated": window_truncated,
+                        "code_line_offsets": [cursor - start for cursor in range(start, bounded_end)
+                                              if code[cursor].strip()],
+                    })
+                    remaining -= bounded_end - start
+    receipt["domain_extension_observations"] = observations
+    receipt["domain_extension_missing_contexts"] = [topic for topic, values in observations.items() if not values]
+    receipt["domain_extension_status"] = "DECLARATIONS_REQUIRE_PRIMARY_REVIEW"
+    receipt["excerpt_limit_reached"] = remaining == 0
+
+
 def collect(
     *, engine_root: Path, project: Path, repository_root: Path,
     expected_sha: str, actual_sha: str, host_context: dict[str, Any] | None = None,
+    evidence_focus: str = "stock_control_flow",
 ) -> dict[str, Any]:
     receipt: dict[str, Any] = {
         "schema_version": 1,
@@ -265,6 +355,7 @@ def collect(
         "exact_sha": expected_sha,
         "actual_sha": actual_sha,
         "probe": "installed_filesystem_only",
+        "evidence_focus": evidence_focus,
         "engine_root": str(engine_root),
         "project": str(project),
         "inventory": [],
@@ -284,6 +375,7 @@ def collect(
     remaining_lines = MAX_EXCERPT_LINES
     role_lines = {"ToolsetRegistry": 650, "ModelContextProtocol": 850,
                   "AutomationTestToolset": 350}
+    extension_sources: list[tuple[dict[str, Any], bytes]] = []
 
     def record(path: Path, role: str) -> bytes:
         nonlocal total_bytes, remaining_lines
@@ -300,7 +392,7 @@ def collect(
         per_file_limit = {"Toolset.cpp": 120, "ToolsetRegistry.cpp": 120,
                           "ToolsetRegistrySubsystem.cpp": 65}.get(path.name, 80) if role == "ToolsetRegistry" else 150
         available = min(available, per_file_limit)
-        excerpts, used = selected_excerpts(data, available, path)
+        excerpts, used = selected_excerpts(data, available, path) if evidence_focus == "stock_control_flow" else ([], 0)
         remaining_lines -= used
         role_lines[role] = role_lines.get(role, 550) - used
         item = {
@@ -324,9 +416,15 @@ def collect(
             except SyntaxError:
                 item["python_declarations"] = {"status": "SOURCE_PARSE_UNESTABLISHED"}
         receipt["inventory"].append(item)
+        if (evidence_focus == "domain_extension" and role in {
+                "ToolsetRegistry", "AutomationTestToolset", "AutomationController"}
+                and path.suffix in {".h", ".cpp"} and source_priority(path, role)[0] < 100):
+            extension_sources.append((item, data))
         return data
 
     try:
+        if evidence_focus not in EVIDENCE_FOCUSES:
+            raise ProbeBlocked("UNSUPPORTED_EVIDENCE_FOCUS")
         if host_context is not None and not isinstance(host_context, dict):
             raise ProbeBlocked("INVALID_HOST_CONTEXT")
         if host_context and host_context.get("probe_input_error"):
@@ -424,6 +522,25 @@ def collect(
                 raise
             except (OSError, ValueError, UnicodeError) as exc:
                 receipt["blockers"].append(f"{name}: {exc}")
+        if evidence_focus == "domain_extension":
+            includes = set()
+            for item, data in extension_sources:
+                if item["role"] == "AutomationTestToolset":
+                    for line in cpp_code_lines(data.decode("utf-8-sig").splitlines()):
+                        match = re.fullmatch(r'\s*#\s*include\s*["<]([^">]+)[">]\s*', line)
+                        if match and match[1] in CONTROLLER_HEADERS:
+                            includes.add(match[1])
+            receipt["automation_controller_named_includes"] = sorted(includes)
+            receipt["automation_controller_unestablished"] = []
+            for name in sorted(includes):
+                path = engine_root / CONTROLLER_HEADERS[name]
+                if path.is_file():
+                    record(path, "AutomationController")
+                else:
+                    receipt["automation_controller_unestablished"].append(CONTROLLER_HEADERS[name])
+            if not includes:
+                receipt["automation_controller_unestablished"].append("NO_APPROVED_NAMED_INCLUDE_OBSERVED")
+            select_domain_extension(receipt, extension_sources)
         combined = "\n".join(text for texts in source_texts.values() for text in texts)
         candidates = {
             "stock_inspection": ("SceneTools", "ActorTools", "ObjectTools"),
@@ -440,7 +557,8 @@ def collect(
             for role, symbols in candidates.items()
         }
         receipt["semantic_mapping_status"] = "PRIMARY_SOURCE_REVIEW_REQUIRED"
-        receipt["excerpt_limit_reached"] = remaining_lines == 0
+        if evidence_focus == "stock_control_flow":
+            receipt["excerpt_limit_reached"] = remaining_lines == 0
         if not receipt["blockers"]:
             receipt["status"] = "SOURCE_EVIDENCE_COLLECTED"
     except (OSError, ValueError, UnicodeError) as exc:
@@ -526,6 +644,32 @@ def console_summary(receipt: dict[str, Any]) -> str:
     host["process_list_truncated"] = len(processes) > 8
     lines.append("RUNNING_EDITOR_OBSERVATION " + json.dumps(host, sort_keys=True))
 
+    if receipt.get("evidence_focus") == "domain_extension":
+        lines.append("EVIDENCE_FOCUS domain_extension; native wiring / argument parity: UNVERIFIED")
+        lines.append("MISSING_EXTENSION_CONTEXTS " + json.dumps(receipt.get("domain_extension_missing_contexts", [])))
+        lines.append("CONTROLLER_DECLARATION_UNESTABLISHED " + json.dumps(receipt.get("automation_controller_unestablished", [])))
+        for topic, _, _, _, _, _, budget in DOMAIN_RULES:
+            for item in receipt["inventory"]:
+                for excerpt in item["selected_excerpts"]:
+                    if excerpt.get("topic") != topic:
+                        continue
+                    original = excerpt["text"].splitlines()
+                    offsets = excerpt.get("code_line_offsets")
+                    if offsets is None:
+                        offsets = [index for index, line in enumerate(cpp_code_lines(original)) if line.strip()]
+                    numbered = [(excerpt["start_line"] + index, original[index]) for index in offsets]
+                    room = min(budget, MAX_CONSOLE_LINES - len(lines) - 1)
+                    if room <= 0:
+                        continue
+                    selected = numbered[:room]
+                    clipped = excerpt.get("budget_truncated", False) or len(selected) < len(numbered)
+                    lines.append(f"SOURCE {item['path']}:{excerpt['start_line']}-{excerpt['end_line']} "
+                                 f"sha256={item['sha256']} topic={topic} budget_truncated={str(clipped).lower()} "
+                                 f"context_window_truncated={str(excerpt.get('context_window_truncated', False)).lower()}")
+                    lines.extend(f"{number}: {line}" for number, line in selected)
+                    budget -= len(selected)
+        return "\n".join(lines)
+
     # Fixed role/file budgets expose useful primary definitions through native
     # logs when artifact download is unavailable. Never print arbitrary content
     # from process command lines, secret files, tests or an entire source tree.
@@ -588,6 +732,7 @@ def main() -> int:
     parser.add_argument("--actual-sha", required=True)
     parser.add_argument("--artifact-root", type=Path, required=True)
     parser.add_argument("--host-context", type=Path)
+    parser.add_argument("--evidence-focus", choices=EVIDENCE_FOCUSES, default="stock_control_flow")
     args = parser.parse_args()
     context = None
     if args.host_context:
@@ -599,6 +744,7 @@ def main() -> int:
     receipt = collect(
         engine_root=args.engine_root, project=args.project, repository_root=args.repository_root,
         expected_sha=args.expected_sha, actual_sha=args.actual_sha, host_context=context,
+        evidence_focus=args.evidence_focus,
     )
     path = write_receipt(receipt, repository_root=args.repository_root, artifact_root=args.artifact_root)
     print(console_summary(receipt))

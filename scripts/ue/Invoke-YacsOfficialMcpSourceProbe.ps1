@@ -14,6 +14,8 @@ param(
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^[0-9a-f]{40}$')]
     [string] $ExpectedHead,
+    [ValidateSet('stock_control_flow', 'domain_extension')]
+    [string] $EvidenceFocus = 'stock_control_flow',
     [string] $ArtifactRoot
 )
 
@@ -133,7 +135,7 @@ $python = Get-Command python -ErrorAction Stop
 & $python.Source (Join-Path $PSScriptRoot 'official_mcp_source_probe.py') `
     --engine-root $engineRoot --project $ProjectPath --repository-root $RepoRoot `
     --expected-sha $ExpectedHead --actual-sha $ActualHead --artifact-root $ArtifactRoot `
-    --host-context $hostPath
+    --host-context $hostPath --evidence-focus $EvidenceFocus
 if ($LASTEXITCODE -ne 0) {
     throw "Official MCP source probe is blocked (collector exit $LASTEXITCODE); retain its receipt."
 }

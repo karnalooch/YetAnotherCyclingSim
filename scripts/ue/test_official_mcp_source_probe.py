@@ -318,6 +318,96 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
             self.assertEqual(index["definitions"][1]["line"], 4)
         self.assertLessEqual(len(output.splitlines()), 500)
 
+    def test_domain_extension_selects_actual_declarations_not_comments_or_literals(self):
+        registry = "Engine/Plugins/Experimental/ToolsetRegistry/Source"
+        # Unfamiliar filenames prove declaration discovery does not invent paths.
+        self.write(f"{registry}/ActualLibrary.h",
+                   "/* class UToolsetRegistry { void RegisterToolsetClass(); }; */\n"
+                   'const char* Example = "class UToolsetRegistry {";\n'
+                   "class UToolsetRegistry;\nclass UnrelatedForwardNoise {};\n"
+                   "class FIXTURE_API UToolsetRegistry\n{\npublic:\n"
+                   "    static void RegisterToolsetClass(UClass* Class);\n};\n")
+        self.write(f"{registry}/ActualHandler.cpp",
+                   "// FStaticToolset::ExecuteToolInternal() is a comment.\n"
+                   "TFuture FStaticToolset::ExecuteToolInternal(const FString& JsonInput)\n{\n"
+                   "    if (JsonInput.HasUnknownFields()) { return ARGUMENT_REJECTION; }\n"
+                   "    return FIXED_DOMAIN_CALL;\n}\n"
+                   "void Unrelated() { UNRELATED_CODE_MUST_NOT_PRINT; }\n")
+        automation = "Engine/Plugins/Experimental/Toolsets/AutomationTestToolset/Source"
+        self.write(f"{automation}/ActualAutomation.h",
+                   "/* RunTests() workflow\n GetTestResults() workflow */\n"
+                   'const char* Example = "RunTests() is not a declaration";\n'
+                   "public:\nUFUNCTION(BlueprintCallable, meta=(AICallable))\n"
+                   "FIXTURE_API static UToolCallAsyncResultString* RunTests(const TArray<FString>& TestNames);\n")
+        result = self.collect(evidence_focus="domain_extension")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        observations = result["domain_extension_observations"]
+        self.assertEqual(len(observations["class_registration"]), 1)
+        self.assertEqual(observations["class_registration"][0]["line"], 5)
+        actual_prototype = next(item for item in observations["automation_prototypes"]
+                                if item["path"].endswith("ActualAutomation.h"))
+        self.assertEqual(actual_prototype["line"], 6)
+        self.assertEqual(observations["static_argument_conversion"][0]["line"], 2)
+        output = probe.console_summary(result)
+        self.assertIn("ARGUMENT_REJECTION", output)
+        self.assertIn("FIXED_DOMAIN_CALL", output)
+        self.assertNotIn("UNRELATED_CODE_MUST_NOT_PRINT", output)
+        self.assertIn("FIXTURE_API static UToolCallAsyncResultString* RunTests", output)
+        self.assertIn("ActualLibrary.h", output)
+        self.assertLessEqual(len(output.splitlines()), 500)
+        for key in ("guard_parity_verified", "runtime_schema_verified", "official_mcp_admitted",
+                    "mcp_server_started", "plugin_activation_performed", "performance_pass"):
+            self.assertIs(result[key], False)
+
+    def test_domain_extension_controller_reads_only_exact_observed_fixed_include(self):
+        relative = probe.CONTROLLER_HEADERS["IAutomationControllerModule.h"]
+        controller = self.write(relative, "class IAutomationControllerManager {\n"
+                                "virtual int GetTestState() const = 0;\n};\n")
+        unrelated = self.write("Engine/Source/Developer/AutomationController/Public/Secret.h", "NEVER_READ\n")
+        automation = "Engine/Plugins/Experimental/Toolsets/AutomationTestToolset/Source/Actual.cpp"
+        self.write(automation, '// #include "IAutomationControllerModule.h"\n'
+                   '#include "../../../Secret.h"\n')
+        with patch.object(probe, "read_bounded", wraps=probe.read_bounded) as reads:
+            missing = self.collect(evidence_focus="domain_extension")
+        self.assertNotIn(controller, [call.args[1] for call in reads.call_args_list])
+        self.assertIn("NO_APPROVED_NAMED_INCLUDE_OBSERVED", missing["automation_controller_unestablished"])
+        self.write(automation, '#include "IAutomationControllerModule.h"\n')
+        with patch.object(probe, "read_bounded", wraps=probe.read_bounded) as reads:
+            result = self.collect(evidence_focus="domain_extension")
+        paths = [call.args[1] for call in reads.call_args_list]
+        self.assertIn(controller, paths)
+        self.assertNotIn(unrelated, paths)
+        self.assertEqual(result["automation_controller_unestablished"], [])
+        self.assertTrue(result["domain_extension_observations"]["automation_controller"])
+        self.assertIn("GetTestState", probe.console_summary(result))
+        controller.unlink()
+        controller.symlink_to(unrelated)
+        result = self.collect(evidence_focus="domain_extension")
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertTrue(any("LINK_OR_REPARSE_POINT" in error for error in result["blockers"]))
+
+    def test_domain_extension_window_and_global_console_caps_remain_explicit(self):
+        registry = "Engine/Plugins/Experimental/ToolsetRegistry/Source/Actual.cpp"
+        self.write(registry, "void FStaticToolset::ExecuteToolInternal()\n{\n"
+                   + "\n".join(f"    int Step{index} = {index};" for index in range(240)) + "\n}\n")
+        result = self.collect(evidence_focus="domain_extension")
+        item = next(item for item in result["inventory"] if item["path"].endswith("Actual.cpp"))
+        self.assertTrue(item["selected_excerpts"][0]["context_window_truncated"])
+        output = probe.console_summary(result)
+        self.assertIn("context_window_truncated=true", output)
+        self.assertIn("budget_truncated=true", output)
+        self.assertLessEqual(len(output.splitlines()), 500)
+        for item in result["inventory"]:
+            item["selected_excerpts"] = [
+                {"topic": topic, "start_line": 1, "end_line": 1000,
+                 "text": "\n".join("void SATURATED_DECLARATION();" for _ in range(1000))}
+                for topic, *_ in probe.DOMAIN_RULES]
+        self.assertLessEqual(len(probe.console_summary(result).splitlines()), 500)
+        blocked = self.collect(evidence_focus="caller_defined_roots")
+        self.assertEqual(blocked["status"], "BLOCKED")
+        self.assertIn("UNSUPPORTED_EVIDENCE_FOCUS", blocked["blockers"])
+        self.assertEqual(blocked["source_file_count"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
