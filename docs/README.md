@@ -67,6 +67,7 @@ flowchart TB
 | World method | **World Building Bible is authoritative** |
 | Geographic fidelity | **1:1 real-world scale; no route compression, relocation or invented macro terrain** |
 | Architecture policy | **Embark-first + tools-first + version-matched Epic/PCGEx API evidence + local proof** |
+| Existing material tools | **Material Maker + Godot through [Material Forge](tooling/MATERIAL_FORGE.md): offline procedural PBR for pale limestone, dry mineral soil and aged asphalt; consult before proposing additional material tools** |
 | MCP adoption | **[#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384): material entry gate satisfied by completed #363 / merged #446; bounded spike still unimplemented, before #364; no activation or UE migration** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
 | Current priority | **#363 material foundation accepted/frozen; next #384 bounded MCP spike → #364 asphalt/shoulder. #337/#349 road and source-inventory work remains separately scoped; #338 stays frozen Draft** |
@@ -93,6 +94,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Road and cornering physics geometry | [`ROAD_PHYSICS_PROFILE.md`](ROAD_PHYSICS_PROFILE.md) | **Authoritative** |
 | Reusable world-authoring systems | [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) | **Authoritative implementation library** |
 | Asset plan / provenance | [`ASSET_PLAN.md`](ASSET_PLAN.md) | **Authoritative** |
+| Material Maker + Godot / procedural PBR | [`tooling/MATERIAL_FORGE.md`](tooling/MATERIAL_FORGE.md) | **Existing offline material toolchain; pinned versions, source renderer, outputs and proof limits** |
 | Julka asset-manager contract | [`tooling/JULKA.md`](tooling/JULKA.md) | **Active supporting tool** |
 | Independent texture preparation | [`tooling/TEXTURE_MATERIAL_PREP.md`](tooling/TEXTURE_MATERIAL_PREP.md) | **Opt-in adapter proved; remote backup verified; admission pending** |
 | Resume texture work remotely | [`tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md`](tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md) | **2026-10-05 evidence and recovery procedure** |
@@ -130,7 +132,7 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) — Gumball-derived Blueprint Mermaid language for new or substantially revised YACS architecture/workflow diagrams.
 - [`PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md`](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md) — copyright-safe reconstructions of public Far Cry 5 and THE FINALS production pipelines plus direct YACS mappings; evidence, not methodology authority.
 - [`YACS_WORLD_AUTHORING_LIBRARY.md`](YACS_WORLD_AUTHORING_LIBRARY.md) — reusable authoring systems, semantic catalog, presets and generated-output boundary.
-- [`tooling/MATERIAL_FORGE.md`](tooling/MATERIAL_FORGE.md) — Issue #387 offline procedural PBR, material-local mask and UE import contract; consumes PCG/PCGEx semantics, never replaces them.
+- [`tooling/MATERIAL_FORGE.md`](tooling/MATERIAL_FORGE.md) — existing **Material Maker + Godot** toolchain: Issue #387 offline procedural PBR, material-local mask and UE import contract; consumes PCG/PCGEx semantics, never replaces them.
 - [`tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md`](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md) — cliff selector/handoff contract and bounded native Landscape/PCGEx/mesh trial history, subordinate to the World Building Bible.
 - [`tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md`](tooling/SA_CALOBRA_COMPONENT230_REPAIR_PLAN.md) — retained #445 / #446 local repair history and remaining cliff/PCGEx failures; merged material consolidation does not admit the local geometry trials.
 - [`tooling/SA_CALOBRA_SURFACE_DETAIL_ATLAS.md`](tooling/SA_CALOBRA_SURFACE_DETAIL_ATLAS.md) — surface-detail review and PCG/PCGEx handoff plan with a tested Component 230 registration/native pilot: A-D viewer demand remains separate from rendering distance; wider physical mapping remains pending.
