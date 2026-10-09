@@ -94,5 +94,15 @@ class RecipeDiagnosisTests(unittest.TestCase):
                 diagnostic.check(self.proof, self.backup, normalize_lf=True)
 
 
+class SingleFileLauncherContractTests(unittest.TestCase):
+    def test_review_launcher_contains_standalone_diagnostic(self):
+        root = Path(__file__).resolve().parents[2]
+        launcher = (root / "Open-YACS-Review.ps1").read_text(encoding="utf-8")
+        self.assertIn("$diagnosticCode = @'", launcher)
+        self.assertIn("Only CRLF->LF normalized:", launcher)
+        self.assertIn("No file changed; review the local Git checkout", launcher)
+        self.assertIn("D:\\yacs\\work\\sa-calobra-live-review", launcher)
+
+
 if __name__ == "__main__":
     unittest.main()
