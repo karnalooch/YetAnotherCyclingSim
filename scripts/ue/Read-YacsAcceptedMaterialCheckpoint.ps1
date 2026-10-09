@@ -52,6 +52,15 @@ $script:CheckpointConsoleLines = 0
 
 function Write-CheckpointLine {
     param([Parameter(Mandatory)][string] $Text)
+    if ($Text.Length -gt 8192) {
+        $Text = 'YACS_ACCEPTED363_CONSOLE_TRUNCATED ' + ([ordered]@{
+            record = ($Text -split ' ', 2)[0]
+            reason = 'LINE_CHARACTER_LIMIT'
+            original_chars = $Text.Length
+            limit_chars = 8192
+            full_json_retained = $true
+        } | ConvertTo-Json -Compress -Depth 4)
+    }
     $script:CheckpointConsoleLines += @($Text -split '\r?\n').Count
     if ($script:CheckpointConsoleLines -gt 1000) {
         throw 'Accepted checkpoint console output exceeded its fixed line bound.'
@@ -347,7 +356,26 @@ try {
     foreach ($name in @('saved-material-consumer/reload-receipt.json',
         'saved-material-consumer/fresh-render-receipt.json', 'checkout-restoration.json',
         'checkout-restoration-post-material.json')) {
-        Write-CheckpointLine ('YACS_ACCEPTED363_RECEIPT ' + $name + ' ' + ($values[$name] | ConvertTo-Json -Compress -Depth 32))
+        $value = $values[$name]
+        $consoleReceipt = [ordered]@{}
+        foreach ($key in @('status', 'exact_sha', 'map_package', 'map_sha256',
+            'component_count', 'fresh_process', 'material_reapplied',
+            'saved_assets_unchanged', 'capture_settings_restored', 'geometry_mutation',
+            'canonical_map_saved', 'audit_phase', 'tracked_checkout_unchanged',
+            'retained_source_unchanged', 'prepared_bundle_unchanged', 'initial_receipt_sha256')) {
+            if ($value.Contains($key)) { $consoleReceipt[$key] = $value[$key] }
+        }
+        if ($value.Contains('errors')) {
+            $allErrors = @($value['errors'])
+            $consoleReceipt['errors'] = @($allErrors | Select-Object -First 4 | ForEach-Object {
+                $errorText = [string]$_
+                if ($errorText.Length -gt 512) { $errorText.Substring(0, 512) + '[TRUNCATED]' }
+                else { $errorText }
+            })
+            $consoleReceipt['errors_count'] = $allErrors.Count
+            $consoleReceipt['errors_truncated'] = $allErrors.Count -gt 4 -or @($allErrors | Where-Object { ([string]$_).Length -gt 512 }).Count -gt 0
+        }
+        Write-CheckpointLine ('YACS_ACCEPTED363_RECEIPT ' + $name + ' ' + ($consoleReceipt | ConvertTo-Json -Compress -Depth 8))
     }
     $receipt.status = 'ACCEPTED_CHECKPOINT_METADATA_READ'
 }
