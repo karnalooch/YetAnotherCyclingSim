@@ -2,11 +2,13 @@
 
 **Owner direction:** 2026-10-08
 
-**Work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445), continued in [draft PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)
+**Work item:** [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363), with retained [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445) experiment history, delivered in [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)
 
 **Starting revision:** `e74a2fabe292626cb49b7c69827a60e234878cd6`
 
-**Status (2026-10-09):** [native run 37911204919](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37911204919) passed at `9972803b67812ea8584473d076e588d4452a2628`: the verifier admitted all 43 original frames, eight additional diagnostic frames, native material consumption and restoration. [CI 37912434061](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37912434061) passed at the subsequent documentation head `bfbc48057b8b84d087a3685cd71972678a32d412`, using verified compile/Automation reuse. Its performance decision was `DEFERRED_DRAFT` with no measurement evidence. Whole-Landscape owner visual acceptance, a saved/fresh-rendered material consumer and actual reference-PC performance remain open. The earlier 10/43 and disk failures remain historical in the [recovery report](../experiments/sa-calobra-whole-map-material-prep-20261009/recovery-20261009.md).
+**Frozen implementation (2026-10-09):** `94827365ef8e83e52717bb21f9d6efa921aa2d1e`, retained by annotated tag `checkpoint/363-materials-2026-10-09`. [Native run 37954100285](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37954100285) and [exact-head CI 37954108803](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37954108803) passed. Evidence includes 43 original plus eight diagnostic captures, all 1024 material-instance roots, actual derived-map save, fresh reload without reapplication, eleven fresh 1920 x 1080 original renders and two chained source-conservation receipts. Downloaded CI proves a warm build and 27 fresh Automation successes, including the read-only shoulder query. The earlier 10/43 and disk failures remain historical in the [recovery report](../experiments/sa-calobra-whole-map-material-prep-20261009/recovery-20261009.md).
+
+**Owner decision:** on 2026-10-09 the owner accepted the presented whole-area material foundation and requested stage freezing and PR/issue cleanup. This accepts the material baseline, not completed M3, integrated road rideability, new PCGEx topology or a geometry repair. Independent review retains uniform beige/limited role variation, faceted terrain and dark pockets, scalloped road margins and highlight clipping as disclosed limits. The canonical map remains unchanged; the saved consumer is `/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview`, not canonical-map promotion. #363 can close only after normal protected implementation merge. #384 then precedes #364. Performance is `DEFERRED_AFTER_M3`, with `performance_pass:false` and no benchmark.
 
 **Methodology:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through the [documentation index](../README.md)
 
@@ -320,11 +322,12 @@ provide an owner replay in the already-open accepted map without a map save.
 The existing combined-lighting and PCGEx admission failures retain their recorded
 results. The owner's [ROAD FIRST decision](https://github.com/karnalooch/YetAnotherCyclingSim/issues/457)
 defers existing mountain-shadow polish; it does not admit introduced material
-defects, unproven geometry repairs or new PCGEx placement. This preparation does
-not close #363, unblock #384/#364 or admit
-later world dressing. Whole-map owner visual acceptance, a production saved
-consumer and the applicable reference-PC performance gates retain their own
-requirements. PR #446 remains unmerged pending the existing approval boundary.
+defects, unproven geometry repairs or new PCGEx placement. The owner has accepted
+the saved/fresh-rendered whole-area material baseline described above. Closing
+#363 still requires protected merge; #384 must finish before #364 implementation.
+This does not admit later world dressing, repair #459 or promote the derived
+review map into the canonical authoring map. Reference-PC measurement remains
+the explicit post-M3 #373 obligation, with no performance PASS.
 
 ## Parallel implementation ownership
 
@@ -347,13 +350,14 @@ integration. Heavy native operations remain serial on the reference runner.
 | Full-grid package | Every sample accounted for; unchanged source and exclusion bytes; reproducible outputs | Windows full-grid execution and independent pixel/sector audit passed at `a0f12793`; source bytes and logical outputs reproduced; encoder-version byte differences are retained explicitly below |
 | Role composition | Unit sum, valid channels, explicit residual/unknown/alpha meanings | Passed over all 16,265,089 source cells |
 | Native material | All five roles, expected assets and metric projection, successful compile | Fixed master saved and all three package byte identities verified at `ddeb01b5`, attempt 2; all eleven fresh-process texture bindings verified after native compilation completed at `35e81dc5` |
-| Actual full-map bindings | 1024 generated instance parent chains | The complete native proof passed at `9972803b`; prior partial readbacks remain history |
+| Actual full-map bindings | 1024 generated instance parent chains | Current preparation and fresh saved-consumer reload passed at `94827365`; prior partial readbacks remain history |
 | Adaptive detail | Recorded LOD state, independent near/far parameters and matched view evidence | Complete captured evidence verified; visible normal response is not shader-cost or FPS admission |
-| Preservation | Original map, roads, v8 source/UV/normals/material and final rollback checks | Native scene/settings restoration and checkout/source conservation passed in run 37911204919 |
-| Selected visual review | Original distributed/rider/overview PNGs and location-specific findings | All 43 original and eight diagnostic captures completed; natural appearance, introduced anomalies and whole-area owner acceptance remain separately open |
-| Source / workflow tests | Focused executed checks plus exact-head CI | Native verifier passed at `9972803b`; CI passed at `bfbc4805` with validated binary/Automation reuse, not a fresh compile or Automation execution |
-| Documentation | Links, i18n, structure and freshness guards; semantic reconciliation | All four local guards passed; final evidence reconciliation pending |
-| Owner visual acceptance | Explicit owner decision on the presented result | Pending |
+| Preservation | Original map, roads, v8 source/UV/normals/material and final rollback checks | Both immutable conservation receipts passed in run 37954100285; the second pins the first PASS hash |
+| Selected visual review | Original distributed/rider/overview PNGs and location-specific findings | 43+8 preparation captures and eleven fresh saved-consumer originals retained; static views do not establish physical riding/contact acceptance |
+| Saved consumer | Actual save, independent fresh reload and separate fresh rendering | Passed at `94827365`; original PNG/readiness/package identities independently verified; canonical map unchanged |
+| Source / workflow tests | Focused executed checks plus exact-head CI | Native and CI passed at `94827365`; actual CI evidence records warm build and 27 fresh Automation tests |
+| Documentation | Links, i18n, structure and freshness guards; semantic reconciliation | Final freeze/acceptance reconciliation is documentation-only; its checks and protected merge remain separate from the frozen runtime proof |
+| Owner visual acceptance | Explicit owner decision on the presented result | Accepted as the whole-area material foundation on 2026-10-09; disclosed geometry and dressing limitations remain open |
 | Reference-PC performance | Applicable full-area exact-SHA Frame/GPU measurement after M3 assembly | `DEFERRED_AFTER_M3` by owner on 2026-10-09; not measured, no performance PASS |
 
 New delivery work must bind its own exact revision and saved consumer identity;
