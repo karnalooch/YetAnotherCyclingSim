@@ -103,17 +103,18 @@ function Get-ProbeTopLevelMetadata {
     return $result.ToString()
 }
 function Invoke-ProbePreviousFailureDiagnostic {
-    $previousRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpNativeProbe\37996979223-1'
-    if (-not [string]::Equals([IO.Path]::GetFullPath((Join-Path $RepoRoot 'Saved/RuntimeProof/OfficialMcpNativeProbe/37996979223-1')), $previousRoot, [StringComparison]::OrdinalIgnoreCase)) {
+    $previousRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpNativeProbe\38001987773-1'
+    if (-not [string]::Equals([IO.Path]::GetFullPath((Join-Path $RepoRoot 'Saved/RuntimeProof/OfficialMcpNativeProbe/38001987773-1')), $previousRoot, [StringComparison]::OrdinalIgnoreCase)) {
         throw 'Previous-failure diagnostic requires the exact retained runner checkout.'
     }
     Assert-ProbePlainPath $previousRoot
     $diagnostic = [ordered]@{
-        schema_version = 1; exact_sha = $ExpectedHead; previous_run = '37996979223-1'
-        previous_exact_sha = 'f557bfd0a760b795bb3294ec047cdfc4c837424d'
-        previous_package_root = 'D:\yacs\runner\_work\b384\37996979223-1\p'
+        schema_version = 1; exact_sha = $ExpectedHead; previous_run = '38001987773-1'
+        previous_exact_sha = '3e8eee60e4a7d37d61a653f0b52f7dcb09196276'
+        previous_package_root = 'D:\yacs\runner\_work\b384\38001987773-1\p'
         status = 'READ_ONLY_DIAGNOSTIC'; files = [ordered]@{}; gaps = @()
         editor_context = @(); editor_context_truncated = $false; automation_summary = $null; accepted_summary = $null
+        previous_sdk_receipt_exists = $false; previous_sdk_summary = $null; previous_reflection_receipt_exists = $false
         python_settings_candidates = @(); source_discovery_complete = $true
         read_bytes = 0; source_only = $true; compile_performed = $false
         editor_launched = $false; official_mcp_admitted = $false
@@ -168,8 +169,8 @@ function Invoke-ProbePreviousFailureDiagnostic {
         $file = Read-ProbeDiagnosticFile (Join-Path $previousRoot $name) 2MB
         if ($null -eq $file) { $diagnostic.gaps += "Missing retained $name"; continue }
         $diagnostic.files[$name] = $file.identity
-        if ($name -ceq 'input-boundary-editor.log' -and $file.identity.sha256 -cne 'd02a32ee1380bab8ba3d6ffe86a4fb8d8b40903989d934b4c101b8c9255f9db7') {
-            throw 'Retained Editor log differs from the exact previous-run SHA256.'
+        if ($name -ceq 'input-boundary-editor.log' -and ($file.identity.sha256 -cne '36b269882449b17ede1b03fcc79aa8a7a1aa154d966e581334f79f96b08bf026' -or $file.identity.size_bytes -ne 293469)) {
+            throw 'Retained Editor log differs from the exact previous-run SHA256/length.'
         }
         $lines = $file.text -split '\r?\n'
         $selected = [Collections.Generic.SortedSet[int]]::new()
@@ -177,7 +178,8 @@ function Invoke-ProbePreviousFailureDiagnostic {
             # Preserve the causal shutdown/assertion tail before other contexts.
             for ($line = [Math]::Max(0, $lines.Length - 80); $line -lt $lines.Length; $line++) { [void]$selected.Add($line) }
         }
-        foreach ($pattern in @('(?i)fatal|assertion|error:|Test failed|Failed to load|Missing.*module',
+        foreach ($pattern in @('(?i)LogPython:.*(?:Error|Fatal)|Traceback|Exception|ScriptError|probe_official_mcp_bob_reflection',
+            '(?i)fatal|assertion|error:|Test failed|Failed to load|Missing.*module',
             '(?i)InputBoundary|YacsBobInspection|AutomationTest|Test Started|Test Completed|LogExit:|LogLoad:.*Entry')) {
             for ($index = 0; $index -lt $lines.Length; $index++) {
                 if ($lines[$index] -match $pattern) {
@@ -195,6 +197,31 @@ function Invoke-ProbePreviousFailureDiagnostic {
             $diagnostic.editor_context += $text
             Write-Host $text
         }
+    }
+    # Read old receipts only if actually present; missing SDK output is a gap,
+    # never inferred success from the fact that the independent build passed.
+    foreach ($name in @('runtime-dependencies.json', 'native-python-reflection.json')) {
+        $path = Join-Path $previousRoot $name
+        Assert-ProbePlainPath $path
+        $exists = Test-Path -LiteralPath $path -PathType Leaf
+        if ($name -ceq 'runtime-dependencies.json') { $diagnostic.previous_sdk_receipt_exists = $exists }
+        else { $diagnostic.previous_reflection_receipt_exists = $exists }
+        Write-ProbeDiagnosticSummary 'PREVIOUS_RECEIPT_PRESENCE' @{ path = $name; exists = $exists }
+        if (-not $exists) { $diagnostic.gaps += "Previous $name is absent."; continue }
+        $file = Read-ProbeDiagnosticFile $path 2MB
+        $diagnostic.files[$name] = $file.identity
+        $value = $file.text.TrimStart([char]0xFEFF) | ConvertFrom-Json -AsHashtable -Depth 64
+        $summary = [ordered]@{ path = $name }
+        foreach ($field in @('status', 'exact_sha', 'reflection_verified', 'source_unchanged', 'error', 'python_remote_execution')) {
+            if ($value.Contains($field)) {
+                $scalar = $value[$field]
+                $summary[$field] = if ($scalar -is [string]) { Get-ProbeSafeDiagnosticText $scalar }
+                    elseif ($null -eq $scalar -or $scalar -is [bool] -or $scalar -is [int] -or $scalar -is [long]) { $scalar }
+                    else { 'MALFORMED_SCALAR' }
+            }
+        }
+        if ($name -ceq 'runtime-dependencies.json') { $diagnostic.previous_sdk_summary = $summary }
+        Write-ProbeDiagnosticSummary 'PREVIOUS_RECEIPT_SUMMARY' $summary
     }
     $indexFile = Read-ProbeDiagnosticFile (Join-Path $previousRoot 'InputBoundaryReport/index.json') 2MB
     if ($null -eq $indexFile) { $diagnostic.gaps += 'Previous Automation index.json is absent.' }
@@ -257,7 +284,7 @@ function Invoke-ProbePreviousFailureDiagnostic {
                 throw 'Previously extracted accepted JSON differs from its pinned ZIP read receipt.'
             }
             $diagnostic.files["accepted_json/$name"] = $jsonFile.identity
-            $target = Join-Path $ArtifactRoot "Previous37996979223/Accepted363/json/$name"
+            $target = Join-Path $ArtifactRoot "Previous38001987773/Accepted363/json/$name"
             Assert-ProbePlainPath $target
             New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
             if (Test-Path -LiteralPath $target) { throw 'Previous JSON diagnostic readback target already exists.' }
@@ -333,7 +360,7 @@ function Invoke-ProbePreviousFailureDiagnostic {
         if ($diagnostic.python_settings_candidates.Count -eq 0) { $diagnostic.gaps += 'Fixed PythonScriptPluginSettings.h basename not found within the bounded Source inventory.' }
     }
     Write-ProbeJson (Join-Path $ArtifactRoot 'previous-failure-diagnostic.json') $diagnostic
-    $receipt['diagnostic_previous_run'] = '37996979223-1'
+    $receipt['diagnostic_previous_run'] = '38001987773-1'
     $receipt.proof_files.previous_failure_diagnostic = Get-ProbeFileIdentity (Join-Path $ArtifactRoot 'previous-failure-diagnostic.json')
 }
 

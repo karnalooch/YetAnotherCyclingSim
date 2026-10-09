@@ -397,14 +397,27 @@ assertion failure. The test now expects each complete literal denial message
 exactly once and checks actual occurrence counts, retaining all denial calls
 and assertions. The installed Core API and count verification were confirmed
 in [diagnostic 38000430250](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38000430250)
-at `79a7279176a7b5abddd21729fb88ff352c2a66d7`. Branch pushes select the
-corrected native retry; manual dispatch can still select the fixed readback,
-which launches no Editor and compiles no code. A passing retry is pending.
+at `79a7279176a7b5abddd21729fb88ff352c2a66d7`. After the retry recorded
+below, branch pushes select its fixed readback, which launches no Editor and
+compiles no code. Manual native dispatch remains available after diagnosis.
+A passing native proof is pending.
 The same diagnostic located the actual private Python settings header, SHA-256
 `6c5f68a3945759234a9b38a98ac7d1369a91982f9d36c433eb2e518e79ebb5f2`,
 with `config=Engine` and configurable `bRemoteExecution`. Previous outputs remain
 retained. Accepted-scene hydration, the existing project test and official MCP
 activation remain pending.
+
+[Retry 38001987773](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38001987773)
+at `3e8eee60e4a7d37d61a653f0b52f7dcb09196276` compiled all eleven
+actions, requested the Python reflection check and retained its owned Editor
+exit code **3**. No native test or reflection PASS follows from this attempt;
+the preserved Editor log must be read before another launch. The dependency
+reader did not start: its embedded Python program is 33,053 characters, and
+the Windows command exceeds the 32,767-character process limit. Passing the
+same owned reader program through standard input removes that tooling limit.
+The accepted-checkpoint reader now successfully reads the authenticated
+2,868,417-byte capture receipt and its retained metadata; it still restores no
+assets and grants no runtime admission.
 
 That source diagnostic also verified the HTTP listener's `localhost` default
 and loopback binding, configuration override support and the actual MCP call

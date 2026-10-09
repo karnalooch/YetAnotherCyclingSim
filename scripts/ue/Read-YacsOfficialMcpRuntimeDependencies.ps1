@@ -546,5 +546,6 @@ finally:
     console_summary('DEPENDENCY_GAPS',gaps)
 sys.exit(1 if receipt['status']=='BLOCKED' else 0)
 '@
-& python -c $DependencyReader $EngineRoot $ArtifactRoot $ExpectedHead
+# Keep the owned program off Windows' 32,767-character process command line.
+$DependencyReader | & python - $EngineRoot $ArtifactRoot $ExpectedHead
 if ($LASTEXITCODE -ne 0) { throw 'Read-only runtime dependency preflight was blocked; inspect runtime-dependencies.json.' }

@@ -143,14 +143,24 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
             self.assertIs(value[name], False)
         return value
 
-    def run_reader(self):
+    def run_reader(self, *, program_suffix=""):
         destination = self.next_output()
         process = subprocess.run(
-            [sys.executable, str(self.reader), str(self.engine), str(destination), "a" * 40],
+            [sys.executable, "-", str(self.engine), str(destination), "a" * 40],
+            input=self.reader.read_text(encoding="utf-8") + program_suffix,
             check=False, capture_output=True, text=True, timeout=30,
         )
         self.assertTrue((destination / "runtime-dependencies.json").exists(), process.stderr)
         return process, self.receipt(destination)
+
+    def test_large_owned_program_executes_without_windows_command_line_overflow(self):
+        program_suffix = "\n# " + "synthetic-owned-comment " * 2000 + "\n"
+        self.assertGreater(len(program_suffix), 32767)
+        command = [sys.executable, "-", str(self.engine), str(self.output), "a" * 40]
+        self.assertLess(len(subprocess.list2cmdline(command)), 32767)
+        process, receipt = self.run_reader(program_suffix=program_suffix)
+        self.assertEqual(process.returncode, 0, process.stderr)
+        self.assertEqual(receipt["status"], "PARTIAL_DEPENDENCY_EVIDENCE")
 
     def test_constant_program_collects_primary_hashes_without_runtime_claims(self):
         process, receipt = self.run_reader()
