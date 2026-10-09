@@ -148,6 +148,9 @@ class PersistenceTests(unittest.TestCase):
         )
         self.landscape = Landscape()
         self.api, self.master, self.instance, self.audits, _ = fake_api(self.landscape)
+        self.api.EditorPythonScripting = SimpleNamespace(
+            set_keep_python_script_alive=Mock()
+        )
         self.original = self.landscape.material
         self.original_overrides = [
             component.props["override_material"]
@@ -383,7 +386,13 @@ class PersistenceTests(unittest.TestCase):
         self.api.CameraActor = self.api.EditorActorSubsystem = object
         self.api.Vector = lambda *_args: object()
         self.api.get_editor_subsystem = lambda _kind: actor_subsystem
-        self.api.register_slate_post_tick_callback = Mock(return_value=0)
+        events = []
+        self.api.EditorPythonScripting.set_keep_python_script_alive.side_effect = (
+            lambda value: events.append(("alive", value))
+        )
+        self.api.register_slate_post_tick_callback = Mock(
+            side_effect=lambda _callback: events.append(("callback", None)) or 0
+        )
         job = consumer.RenderJob(
             self.api,
             self.output,
@@ -398,6 +407,7 @@ class PersistenceTests(unittest.TestCase):
             job.start()
         job.stop.assert_not_called()
         self.assertFalse(job.busy)
+        self.assertEqual(events, [("alive", True), ("callback", None)])
 
     def test_receipt_write_failure_still_quits_isolated_editor(self):
         manifest = self.prepare()
@@ -419,6 +429,67 @@ class PersistenceTests(unittest.TestCase):
             ),
         ):
             with self.assertRaisesRegex(OSError, "disk unavailable"):
+                job.stop()
+        self.api.SystemLibrary.quit_editor.assert_called_once()
+        self.api.EditorPythonScripting.set_keep_python_script_alive.assert_called_once_with(
+            False
+        )
+
+    def test_startup_failure_releases_keepalive_and_quits_after_failed_receipt(self):
+        manifest = self.prepare()
+        events = []
+        self.api.EditorPythonScripting.set_keep_python_script_alive.side_effect = (
+            lambda value: events.append(("alive", value))
+        )
+        self.api.SystemLibrary.quit_editor = Mock(
+            side_effect=lambda: events.append(("quit", None))
+        )
+        job = consumer.RenderJob(
+            self.api,
+            self.output,
+            manifest,
+            self.world,
+            self.landscape,
+            SimpleNamespace(audit=Mock()),
+        )
+        with (
+            patch.object(
+                consumer, "load_workspace", return_value={"project": str(self.project)}
+            ),
+            patch.object(
+                prep,
+                "CaptureEnvironment",
+                side_effect=RuntimeError("viewport unavailable"),
+            ),
+        ):
+            job.start()
+        self.assertEqual(events, [("alive", True), ("alive", False), ("quit", None)])
+        receipt = consumer.read_json(self.output / "fresh-render-receipt.json")
+        self.assertEqual(receipt["status"], "FAILED")
+        self.assertTrue(any("viewport unavailable" in row for row in receipt["errors"]))
+        self.assertNotIn(
+            "fresh_render_receipt",
+            consumer.read_json(self.output / "consumer-manifest.json"),
+        )
+
+    def test_keepalive_release_failure_still_quits_isolated_editor(self):
+        manifest = self.prepare()
+        self.api.EditorPythonScripting.set_keep_python_script_alive.side_effect = (
+            RuntimeError("release failed")
+        )
+        self.api.SystemLibrary.quit_editor = Mock()
+        job = consumer.RenderJob(
+            self.api,
+            self.output,
+            manifest,
+            self.world,
+            self.landscape,
+            SimpleNamespace(audit=Mock()),
+        )
+        with patch.object(
+            consumer, "load_workspace", return_value={"project": str(self.project)}
+        ):
+            with self.assertRaisesRegex(RuntimeError, "release failed"):
                 job.stop()
         self.api.SystemLibrary.quit_editor.assert_called_once()
 

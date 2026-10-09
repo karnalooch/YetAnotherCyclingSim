@@ -422,6 +422,9 @@ class RenderJob:
     def start(self):
         self.busy = True
         try:
+            # -ExecutePythonScript must retain the interpreter after main()
+            # returns while the existing Slate screenshot tasks are pending.
+            self.api.EditorPythonScripting.set_keep_python_script_alive(True)
             self.environment = prep.CaptureEnvironment(
                 self.api, self.world, self.landscape
             )
@@ -639,7 +642,10 @@ class RenderJob:
                 prep.write_json(self.root / "consumer-manifest.json", self.manifest)
         finally:
             # Disk or evidence publication failure must not strand this editor.
-            self.api.SystemLibrary.quit_editor()
+            try:
+                self.api.EditorPythonScripting.set_keep_python_script_alive(False)
+            finally:
+                self.api.SystemLibrary.quit_editor()
 
 
 def main():
