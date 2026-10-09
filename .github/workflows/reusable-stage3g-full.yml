@@ -38,6 +38,10 @@ jobs:
           "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
           "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
 
+          # Generated material packages can exceed MAX_PATH in nested runner checkouts.
+          # Configure the job-local file before either actions/checkout invocation.
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths in isolated Git configuration.' }
           Write-Host "Using isolated Git config: $isolated"
           git config --global --list --show-origin
 

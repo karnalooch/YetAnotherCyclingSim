@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import unittest
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github" / "workflows" / "reusable-stage3g-full.yml"
@@ -29,6 +28,22 @@ class ReusableStage3GFullWorkflowContractTests(unittest.TestCase):
         self.assertIn("PR_HEAD_REPO", self.workflow)
         self.assertIn("refuses untrusted fork PRs", self.workflow)
         self.assertIn("github.event.pull_request.head.sha", self.workflow)
+
+    def test_long_paths_are_enabled_in_isolated_config_before_checkout(self):
+        isolate = self.workflow.split(
+            "- name: Isolate self-hosted Git configuration", 1
+        )[1].split("- name:", 1)[0]
+        config = isolate.index("$env:GIT_CONFIG_GLOBAL = $isolated")
+        enable = isolate.index("git config --global core.longpaths true")
+        guard = isolate.index(
+            "if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths in isolated Git configuration.' }"
+        )
+        self.assertLess(config, enable)
+        self.assertLess(enable, guard)
+        self.assertLess(
+            self.workflow.index("git config --global core.longpaths true"),
+            self.workflow.index("uses: actions/checkout@"),
+        )
 
     def test_lane_materializes_and_verifies_full_lfs(self):
         self.assertIn("lfs: true", self.workflow)
