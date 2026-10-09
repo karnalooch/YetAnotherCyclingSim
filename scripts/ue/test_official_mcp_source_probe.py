@@ -206,7 +206,69 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
         self.assertLessEqual(used, 17)
         self.assertTrue(excerpts)
         result = self.collect()
-        self.assertLess(len(probe.console_summary(result).splitlines()), 100)
+        self.assertLessEqual(len(probe.console_summary(result).splitlines()), probe.MAX_CONSOLE_LINES)
+
+    def test_shipped_tests_cannot_consume_stock_definition_excerpt_budget(self):
+        plugin = "Engine/Plugins/Experimental/Toolsets/DifferentEditorTools/Content/Python"
+        noise = "\n".join(f"def test_case_{index}():\n    pass\n" for index in range(600))
+        for name in ("scene", "actor", "object"):
+            self.write(f"{plugin}/tests/test_{name}.py", noise)
+            self.write(f"{plugin}/toolsets/{name}.py",
+                       f"class {name.title()}Tools:\n    def inspect_{name}_identity():\n        return 'real-definition'\n")
+        result = self.collect()
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        records = {item["path"]: item for item in result["inventory"]}
+        for name in ("scene", "actor", "object"):
+            actual = records[f"{plugin}/toolsets/{name}.py"]
+            self.assertTrue(actual["selected_excerpts"])
+            self.assertIn(f"inspect_{name}_identity", actual["selected_excerpts"][0]["text"])
+        output = probe.console_summary(result)
+        self.assertIn("real-definition", output)
+        self.assertNotIn("test_case_", output)
+        self.assertNotIn("/tests/test_", output)
+
+    def test_console_identity_is_bounded_and_omits_process_command_lines(self):
+        processes = [{
+            "process_id": index, "name": "UnrealEditor.exe", "executable_path": "D:/engine/UnrealEditor.exe",
+            "executable_sha256": "c" * 64, "executable_under_resolved_engine": True,
+            "plugin_state_verified": False, "command_line": "SECRET_COMMAND_LINE_MUST_NEVER_PRINT",
+        } for index in range(50)]
+        result = self.collect(host_context={
+            "status": "PROCESS_PATHS_OBSERVED", "active_engine_matches_resolver": True,
+            "active_plugin_state_verified": False, "processes": processes,
+        })
+        for item in result["inventory"]:
+            item["selected_excerpts"] = [{"start_line": 1, "end_line": 10000,
+                                          "text": "\n".join("class SOURCE_EXCERPT;" for _ in range(10000))}]
+        output = probe.console_summary(result)
+        lines = output.splitlines()
+        self.assertLessEqual(len(lines), probe.MAX_CONSOLE_LINES)
+        self.assertNotIn("SECRET_COMMAND_LINE", output)
+        engine = json.loads(next(line.removeprefix("ENGINE_IDENTITY ") for line in lines if line.startswith("ENGINE_IDENTITY ")))
+        self.assertEqual(engine["Changelist"], 56702186)
+        self.assertEqual(engine["root"], str(self.engine))
+        host = json.loads(next(line.removeprefix("RUNNING_EDITOR_OBSERVATION ") for line in lines if line.startswith("RUNNING_EDITOR_OBSERVATION ")))
+        self.assertEqual(host["observed_process_count"], 50)
+        self.assertEqual(len(host["processes"]), 8)
+        self.assertTrue(host["process_list_truncated"])
+        self.assertFalse(host["active_plugin_state_verified"])
+        self.assertIn('"version_name": "fixture-only"', output)
+
+    def test_registry_filter_header_and_python_adapter_survive_large_other_sources(self):
+        registry = "Engine/Plugins/Experimental/ToolsetRegistry"
+        noise = "\n".join(f"class LongFixture{index};\nvoid ExecuteTool();\n" for index in range(500))
+        for name in ("ToolsetRegistrySubsystem.cpp", "Toolset.cpp", "ToolsetRegistry.cpp"):
+            self.write(f"{registry}/Source/{name}", noise)
+        self.write(f"{registry}/Content/Python/toolset_registry/__init__.py",
+                   "def tool_call(function):\n    return function\n")
+        result = self.collect()
+        actual = {Path(item["path"]).name: item for item in result["inventory"]}
+        for name in ("ToolsetRegistrySubsystem.h", "Toolset.h", "__init__.py"):
+            self.assertTrue(actual[name]["selected_excerpts"], name)
+        console = probe.console_summary(result)
+        self.assertIn("SetNameFilters", console)
+        self.assertIn("def tool_call(function)", console)
+        self.assertLessEqual(len(console.splitlines()), 500)
 
 
 if __name__ == "__main__":

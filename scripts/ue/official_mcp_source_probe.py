@@ -2,7 +2,8 @@
 
 This filesystem probe records declarations for a later human/API review. It
 does not establish runtime schemas, restrict a server, execute tools or admit
-the #384 spike. Epic source excerpts belong only in ignored Saved artifacts.
+the #384 spike. Epic excerpts stay in ignored Saved evidence and bounded native
+job logs; the installed source is never copied into the repository.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ MAX_ENTRIES = 4096
 MAX_SOURCE_FILES = 4096
 MAX_DEPTH = 12
 MAX_EXCERPT_LINES = 2400
+MAX_CONSOLE_LINES = 500
 PLUGIN_ROOTS = {
     "ModelContextProtocol": "Engine/Plugins/Experimental/ModelContextProtocol",
     "ToolsetRegistry": "Engine/Plugins/Experimental/ToolsetRegistry",
@@ -127,6 +129,36 @@ def read_bounded(root: Path, path: Path) -> bytes:
     return data
 
 
+def source_priority(path: Path, role: str) -> tuple[int, str]:
+    """Prefer real stock implementations; shipped tests never spend their budget first."""
+    name = path.name
+    if any(part.lower() in {"test", "tests"} for part in path.parts) or name.startswith("test_"):
+        return 100, path.as_posix()
+    registry = (
+        "ToolsetRegistrySubsystem.h", "Toolset.h", "Toolset.cpp", "ToolsetRegistry.cpp",
+        "ToolsetRegistrySubsystem.cpp", "ToolsetRegistry.h", "__init__.py", "UToolsetRegistry.h",
+        "UToolsetRegistry.cpp", "ToolsetDefinition.h",
+    )
+    if role == "ToolsetRegistry" and name in registry:
+        return registry.index(name), path.as_posix()
+    if role == "AutomationTestToolset" and name in {"AutomationTestToolset.h", "AutomationTestToolset.cpp"}:
+        return int(path.suffix == ".cpp"), path.as_posix()
+    if role == "ModelContextProtocol":
+        if "Settings" in name and path.suffix == ".h":
+            return 0, path.as_posix()
+        if "ModelContextProtocolEditor" in name and path.suffix == ".cpp":
+            return 1, path.as_posix()
+        if "Toolset" in name and path.suffix in {".h", ".cpp"}:
+            return 2, path.as_posix()
+        if name == "ModelContextProtocolModule.cpp":
+            return 3, path.as_posix()
+        if name == "IModelContextProtocolModule.h":
+            return 4, path.as_posix()
+    if name in {"scene.py", "actor.py", "object.py"}:
+        return ("scene.py", "actor.py", "object.py").index(name), path.as_posix()
+    return 50, path.as_posix()
+
+
 def selected_excerpts(data: bytes, budget: int) -> tuple[list[dict[str, Any]], int]:
     """Retain concise contexts, never a wholesale copy of an Epic source file."""
     lines = data.decode("utf-8-sig").splitlines()
@@ -199,9 +231,11 @@ def collect(
         if total_bytes > MAX_TOTAL_BYTES:
             raise SourceBudgetExceeded("SOURCE_TOTAL_BYTE_LIMIT")
         available = min(remaining_lines, role_lines.get(role, 550))
+        per_file_limit = 80 if role == "ToolsetRegistry" else 150
+        available = min(available, per_file_limit)
         excerpts, used = selected_excerpts(data, available)
         remaining_lines -= used
-        role_lines[role] = available - used
+        role_lines[role] = role_lines.get(role, 550) - used
         receipt["inventory"].append({
             "path": path.relative_to(engine_root).as_posix(),
             "role": role,
@@ -290,21 +324,18 @@ def collect(
                     "modules": [item.get("Name") for item in plugin.get("Modules", [])],
                 }
                 sources = []
+                paths = []
                 for relative in ("Source", "Content/Python", "Config"):
                     source_root = root / relative
                     if source_root.is_dir():
                         checked_path(engine_root, source_root)
-                        paths = bounded_files(source_root)
-                        paths.sort(key=lambda item: (
-                            not re.search(r"(?:Settings|Subsystem|Toolset(?:Registry)?\.(?:h|cpp)$|"
-                                          r"AutomationTestToolset|ModelContextProtocolEditor|"
-                                          r"(?:scene|actor|object)\.py$)", item.name),
-                            item.as_posix(),
-                        ))
-                        for path in paths:
-                            if path.suffix in SOURCE_SUFFIXES:
-                                data = record(path, name)
-                                sources.append(data.decode("utf-8-sig"))
+                        paths.extend(bounded_files(source_root))
+                # Sort across Source/Python/Config together so native helpers
+                # cannot consume the role budget before the Python adapter.
+                for path in sorted(paths, key=lambda item: source_priority(item, name)):
+                    if path.suffix in SOURCE_SUFFIXES:
+                        data = record(path, name)
+                        sources.append(data.decode("utf-8-sig"))
                 source_texts[name] = sources
                 if not sources:
                     receipt["blockers"].append(f"MISSING_PLUGIN_SOURCES: {name}")
@@ -368,22 +399,86 @@ def console_summary(receipt: dict[str, Any]) -> str:
         f"Files: {receipt['source_file_count']}; bytes: {receipt['source_total_bytes']}",
         "Guard parity / runtime schemas / official MCP admission: UNVERIFIED",
     ]
-    lines.extend(f"BLOCKER: {item}" for item in receipt["blockers"])
-    # Keep remote logs useful and small; the artifact retains the wider excerpt set.
-    for role in ("ToolsetRegistry", "AutomationTestToolset", "ModelContextProtocol", "EditorToolset"):
-        candidates = [item for item in receipt["inventory"] if item["role"] == role]
-        priority = ("ToolsetRegistrySubsystem.h", "Toolset.h", "AutomationTestToolset.h")
-        candidates.sort(key=lambda item: (Path(item["path"]).name not in priority, item["path"]))
-        shown = 0
+    lines.extend(f"BLOCKER: {str(item)[:600]}" for item in receipt["blockers"][:16])
+
+    def scalar(value: Any, limit: int = 256) -> Any:
+        return value[:limit] if isinstance(value, str) else value if isinstance(value, (bool, int, float)) else None
+
+    build = receipt.get("engine_build", {})
+    engine = {key: scalar(build.get(key)) for key in (
+        "MajorVersion", "MinorVersion", "PatchVersion", "Changelist", "CompatibleChangelist",
+        "IsLicenseeVersion", "IsPromotedBuild", "BranchName", "BuildId",
+    )}
+    engine["root"] = scalar(receipt.get("engine_root"), 512)
+    engine["project_association"] = scalar(receipt.get("project_engine_association"))
+    build_record = next((item for item in receipt["inventory"] if item["role"] == "engine_build"), {})
+    engine["build_version_sha256"] = build_record.get("sha256")
+    lines.append("ENGINE_IDENTITY " + json.dumps(engine, sort_keys=True))
+
+    for name, plugin in sorted(receipt.get("plugins", {}).items())[:16]:
+        metadata = {key: scalar(plugin.get(key), 512) for key in (
+            "descriptor_path", "version", "version_name", "enabled_by_default",
+        )}
+        metadata["name"] = scalar(name, 128)
+        metadata["modules"] = [scalar(item, 128) for item in plugin.get("modules", [])[:16]]
+        record = next((item for item in receipt["inventory"] if item["path"] == plugin.get("descriptor_path")), {})
+        metadata["descriptor_sha256"] = record.get("sha256")
+        lines.append("PLUGIN_IDENTITY " + json.dumps(metadata, sort_keys=True))
+
+    observed = receipt.get("running_editor", {})
+    if not isinstance(observed, dict):
+        observed = {}
+    host = {key: scalar(observed.get(key), 1024) for key in (
+        "status", "inspected_at_utc", "active_engine_matches_resolver", "active_plugin_state_verified",
+    )}
+    processes = observed.get("processes", [])
+    if not isinstance(processes, list):
+        processes = []
+    host["observed_process_count"] = len(processes)
+    host["processes"] = [
+        {key: scalar(item.get(key), 512) for key in (
+            "process_id", "name", "executable_path", "executable_sha256",
+            "executable_under_resolved_engine", "plugin_state_verified",
+        )}
+        for item in processes[:8] if isinstance(item, dict)
+    ]
+    host["process_list_truncated"] = len(processes) > 8
+    lines.append("RUNNING_EDITOR_OBSERVATION " + json.dumps(host, sort_keys=True))
+
+    # Fixed role/file budgets expose useful primary definitions through native
+    # logs when artifact download is unavailable. Never print arbitrary content
+    # from process command lines, secret files, tests or an entire source tree.
+    roles = ("ToolsetRegistry", "ModelContextProtocol", "AutomationTestToolset")
+    other_roles = sorted({item["role"] for item in receipt["inventory"]} - set(roles) - {"engine_build"})
+    generic_remaining = 90
+    role_budgets = {"ToolsetRegistry": 170, "ModelContextProtocol": 140, "AutomationTestToolset": 100}
+    for role in (*roles, *other_roles):
+        candidates = [item for item in receipt["inventory"] if item["role"] == role
+                      and source_priority(Path(item["path"]), role)[0] < 50
+                      and Path(item["path"]).suffix in {".h", ".cpp", ".py"}]
+        candidates.sort(key=lambda item: source_priority(Path(item["path"]), role))
+        if role == "ToolsetRegistry":
+            console_order = ("ToolsetRegistrySubsystem.h", "Toolset.h", "__init__.py", "Toolset.cpp")
+            candidates.sort(key=lambda item: (
+                console_order.index(Path(item["path"]).name)
+                if Path(item["path"]).name in console_order else len(console_order),
+                source_priority(Path(item["path"]), role),
+            ))
+        remaining = role_budgets.get(role, generic_remaining)
         for item in candidates:
+            file_remaining = 40 if role in roles else 30
             for excerpt in item["selected_excerpts"]:
-                if shown >= 12:
+                room = min(remaining, file_remaining, MAX_CONSOLE_LINES - len(lines) - 1)
+                if room <= 0:
                     break
-                selected = excerpt["text"].splitlines()[: min(6, 12 - shown)]
+                selected = excerpt["text"].splitlines()[:room]
                 if selected:
                     lines.append(f"SOURCE {item['path']}:{excerpt['start_line']} sha256={item['sha256']}")
                     lines.extend(selected)
-                    shown += len(selected)
+                    remaining -= len(selected)
+                    file_remaining -= len(selected)
+        if role not in roles:
+            generic_remaining = remaining
     return "\n".join(lines)
 
 
