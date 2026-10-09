@@ -7,7 +7,7 @@
     "assembly_status": "IN_PROGRESS",
     "due": "after_m3_assembly",
     "baseline_sha": "03fff5aa83f322fc1cc24f38692d2474afa700cd",
-    "instruction": "Measure performance after M3 assembly is complete. Intermediate material/road/scene checkpoints require their native build, asset and owner visual evidence; no performance PASS is implied. Set assembly_status to COMPLETE at M3 implementation closeout."
+    "instruction": "Measure performance after M3 implementation is accepted and merged. Intermediate material/road/scene checkpoints require their native build, asset and owner visual evidence; no performance PASS is implied. Set assembly_status to COMPLETE in the subsequent performance-admission change, after M3 implementation closeout."
   },
   "owner_deferred_2a_performance": {
     "issue": 335,

@@ -8,6 +8,7 @@ import hashlib
 import itertools
 import json
 import math
+import os
 from pathlib import Path
 import re
 import shutil
@@ -38,7 +39,8 @@ def parse_powershell_scripts(sources):
         {"index": index, "source": source} for index, source in enumerate(sources)
     ]
     command = r"""
-$rows = @(ConvertFrom-Json -InputObject ([Console]::In.ReadToEnd()))
+$ErrorActionPreference = 'Stop'
+$rows = @(ConvertFrom-Json -InputObject (Get-Content -LiteralPath $env:YACS_PARSER_INPUT_FILE -Raw -Encoding UTF8))
 $results = @()
 foreach ($row in $rows) {
   $tokens = $null
@@ -54,16 +56,29 @@ foreach ($row in $rows) {
 }
 ConvertTo-Json -InputObject $results -Depth 6 -Compress | Write-Output
 """
-    result = subprocess.run(
-        [shutil.which("pwsh"), "-NoProfile", "-NonInteractive", "-Command", command],
-        # ASCII JSON avoids a Windows console-codepage dependency; JSON decoding
-        # reconstructs the original Unicode source before native ParseInput.
-        input=json.dumps(payload, ensure_ascii=True, allow_nan=False),
-        text=True,
-        capture_output=True,
-        timeout=30,
-        check=False,
-    )
+    # Close the input file before spawning Windows PowerShell. Avoid its console
+    # stdin reader entirely while retaining the exact JSON-decoded source bytes.
+    with tempfile.TemporaryDirectory(prefix="yacs-pwsh-parser-") as directory:
+        inputs = Path(directory) / "inputs.json"
+        inputs.write_text(
+            json.dumps(payload, ensure_ascii=True, allow_nan=False), encoding="utf-8"
+        )
+        child_env = dict(os.environ, YACS_PARSER_INPUT_FILE=str(inputs))
+        result = subprocess.run(
+            [
+                shutil.which("pwsh"),
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                command,
+            ],
+            stdin=subprocess.DEVNULL,
+            env=child_env,
+            text=True,
+            capture_output=True,
+            timeout=30,
+            check=False,
+        )
     if result.returncode != 0:
         raise AssertionError(
             "PowerShell parse batch failed: " + result.stdout + result.stderr
@@ -83,6 +98,7 @@ ConvertTo-Json -InputObject $results -Depth 6 -Compress | Write-Output
 class PowerShellParserBatchTests(unittest.TestCase):
     def test_one_bounded_process_preserves_all_source_bytes_and_results(self):
         sources = ['Write-Host "literal `$value"', "# Unicode Ł\n$x=@{value=1}"]
+        original_input = os.environ.get("YACS_PARSER_INPUT_FILE")
         result = subprocess.CompletedProcess(
             [],
             0,
@@ -94,17 +110,40 @@ class PowerShellParserBatchTests(unittest.TestCase):
             ),
             "",
         )
+        observed = {}
+
+        def execute(arguments, **kwargs):
+            inputs = Path(kwargs["env"]["YACS_PARSER_INPUT_FILE"])
+            # Read while the child would run: the file must be complete and
+            # closed. Its path never enters the PowerShell command string.
+            observed.update(
+                parser=arguments[-1],
+                inputs=json.loads(inputs.read_text(encoding="utf-8")),
+                directory=inputs.parent,
+            )
+            return result
+
         with (
             patch.object(shutil, "which", return_value="pwsh"),
-            patch.object(subprocess, "run", return_value=result) as run,
+            patch.object(subprocess, "run", side_effect=execute) as run,
         ):
             self.assertEqual(len(parse_powershell_scripts(sources)), 2)
         run.assert_called_once()
         call = run.call_args
         self.assertEqual(call.kwargs["timeout"], 30)
-        self.assertEqual(
-            [row["source"] for row in json.loads(call.kwargs["input"])], sources
+        self.assertEqual(call.kwargs["stdin"], subprocess.DEVNULL)
+        self.assertNotIn("input", call.kwargs)
+        self.assertNotIn("-File", call.args[0])
+        self.assertNotIn("-ExecutionPolicy", call.args[0])
+        self.assertNotIn("ReadToEnd", observed["parser"])
+        self.assertIn(
+            "Get-Content -LiteralPath $env:YACS_PARSER_INPUT_FILE -Raw -Encoding UTF8",
+            observed["parser"],
         )
+        self.assertNotIn(str(observed["directory"]), observed["parser"])
+        self.assertEqual([row["source"] for row in observed["inputs"]], sources)
+        self.assertFalse(observed["directory"].exists())
+        self.assertEqual(os.environ.get("YACS_PARSER_INPUT_FILE"), original_input)
 
     def test_syntax_failure_and_incomplete_batch_fail_admission(self):
         for result in (
