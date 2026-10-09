@@ -22,14 +22,14 @@ class RunnerDiskReserveTests(unittest.TestCase):
             )
 
     def test_below_reserve_rejects_job(self):
-        result = self.run_guard(49.99)
+        result = self.run_guard(4.99)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Job stopped before heavy work", result.stderr)
 
     def test_reserve_boundary_accepts_job(self):
-        result = self.run_guard(50)
+        result = self.run_guard(5)
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_above_reserve_accepts_job(self):
-        result = self.run_guard(70)
+        result = self.run_guard(5.01)
         self.assertEqual(result.returncode, 0, result.stderr)
