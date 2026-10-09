@@ -45,9 +45,10 @@ strip nor the Golden Kilometer replaces this full-area preparation and review.
 five-role preparation candidate, not the earlier material foundation. Its master
 and instance are `M_SaCalobraWholeMapPreparation` and
 `MI_SaCalobraWholeMapPreparation` under
-`/Game/Generated/YACS/SaCalobra/WholeMapPreparation`. This candidate remains
-`PENDING_OWNER`; native compilation or a successful screenshot does not choose
-the final visual design for the owner.
+`/Game/Generated/YACS/SaCalobra/WholeMapPreparation`. Native receipts retain their
+execution-time `PENDING_OWNER` state; the subsequent 2026-10-09 owner decision
+accepts the material foundation as recorded above. Compilation or a screenshot
+alone does not choose the final visual design for the owner.
 
 The entrypoint requires the current exact Git SHA, completed 43-frame preparation
 evidence, retained three-package inventory and checkout conservation receipt.
