@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 import json
 import sys
 from pathlib import Path
@@ -18,6 +19,52 @@ CUT_PROOF = "bob-road-earthworks-cut-proof.json"
 PATCH_MANIFEST = "ma2141-cut-patch.json"
 from scripts.geometry.curved_road_plan import profile_plan_valid
 from scripts.geometry.road_cut_limits import cut_limits, inspection_within_cut_limits
+from scripts.ue.sa_calobra_geometry_collision_witness import _hit_result, _property
+
+
+def _landscape_measurement_scope(world, landscape):
+    landscapes = list(unreal.GameplayStatics.get_all_actors_of_class(world, unreal.Landscape))
+    if len(landscapes) != 1 or landscapes[0] != landscape:
+        raise RuntimeError("BOB inspection expects the single supplied Landscape in this world")
+    actors = list(unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_actors())
+    paths = [actor.get_path_name() for actor in actors]
+    if (landscape not in actors or any(not isinstance(path, str) or not path for path in paths)
+            or len(set(paths)) != len(paths)):
+        raise RuntimeError("BOB Landscape inspection actor inventory is missing or ambiguous")
+    # Owned mesh/render primitives are not necessarily terrain. Admit only the
+    # native heightfield collision class; unsupported classes stay unmeasured.
+    primitives = list(landscape.get_components_by_class(unreal.PrimitiveComponent))
+    try:
+        components = [component for component in primitives
+                      if component.get_class().get_path_name()
+                      == "/Script/Landscape.LandscapeHeightfieldCollisionComponent"]
+    except Exception as exc:  # noqa: BLE001 - reflected class may be unavailable
+        raise RuntimeError("BOB Landscape collision component type is unavailable") from exc
+    component_paths = [component.get_path_name() for component in components]
+    if (not components or any(not isinstance(path, str) or not path for path in component_paths)
+            or len(set(component_paths)) != len(component_paths)):
+        raise RuntimeError("BOB Landscape heightfield collision inventory is missing or ambiguous")
+    return [actor for actor in actors if actor != landscape], components
+
+
+def _landscape_hit_height(hit, start, end, landscape, components):
+    if hit is None:
+        return None
+    blocking = _property(hit, "blocking_hit")
+    if blocking is False:
+        return None
+    if blocking is not True:
+        raise RuntimeError("BOB Landscape HitResult blocking status is unavailable")
+    actor = _property(hit, "hit_actor")
+    component = _property(hit, "hit_component")
+    if (actor is None or actor != landscape or component is None
+            or not any(component == owned for owned in components)):
+        raise RuntimeError("BOB Landscape HitResult actor/component ownership is unknown or foreign")
+    measured = _hit_result(hit, start, end)
+    if (measured["actor_path"] != landscape.get_path_name()
+            or measured["component_path"] != component.get_path_name()):
+        raise RuntimeError("BOB Landscape HitResult owner identity changed")
+    return measured["impact_cm"][2] / 100.0
 
 
 def measure_smooth_terrain_fit(
@@ -29,7 +76,24 @@ def measure_smooth_terrain_fit(
     exact_sha,
     contact_band_max_m,
     geometry_inspection_view,
+    sample_sink=None,
+    landscape=None,
 ):
+    """Inspect existing traces; optionally hand all raw rows to a trusted sink.
+
+    The sink receives detached ``samples`` and ``inspection`` keyword values
+    after the real inspector completes. Existing callers retain the same
+    measurements and report. The sink is an integration callback, never a
+    caller-supplied MCP argument. ``landscape`` is also a trusted integration
+    argument: when provided, ignore other actors and require reflected blocking
+    status plus exact hit actor/owned-component identity. Unavailable ownership
+    fails closed, including UE 5.8's known missing HitResult reflected fields.
+    This function neither writes an export nor certifies the selected scene.
+    The default unfiltered trace retains its original assumption that other
+    collidable geometry cannot intercept the measurement.
+    """
+    if sample_sink is not None and not callable(sample_sink):
+        raise TypeError("sample_sink must be a trusted callable or None")
     policy = json.loads(
         (ROOT / "worldgen/terrain/adaptive_terrain_policy.json").read_text(
             encoding="utf-8"
@@ -43,6 +107,9 @@ def measure_smooth_terrain_fit(
     rows = profile["stations"]
     if top_count != len(rows) * section_points:
         raise RuntimeError("Smooth ribbon/profile sample count mismatch")
+    ignored, components = [], []
+    if landscape is not None:
+        ignored, components = _landscape_measurement_scope(world, landscape)
 
     samples = []
     for sample_index, point in enumerate(smooth_vertices[:top_count]):
@@ -56,19 +123,26 @@ def measure_smooth_terrain_fit(
             unreal.Vector(x_cm, y_cm, road_z_cm - 10000.0),
             unreal.TraceTypeQuery.ECC_VISIBILITY,
             True,
-            [],
+            ignored,
             unreal.DrawDebugTrace.NONE,
             True,
         )
-        values = () if hit is None else hit.to_tuple()
-        candidates = [
-            float(value.z) / 100.0
-            for value in values
-            if all(hasattr(value, key) for key in ("x", "y", "z"))
-            and abs(float(value.x) - x_cm) < 0.1
-            and abs(float(value.y) - y_cm) < 0.1
-            and abs(float(value.z) - road_z_cm) < 9999.0
-        ]
+        if landscape is None:
+            values = () if hit is None else hit.to_tuple()
+            candidates = [
+                float(value.z) / 100.0
+                for value in values
+                if all(hasattr(value, key) for key in ("x", "y", "z"))
+                and abs(float(value.x) - x_cm) < 0.1
+                and abs(float(value.y) - y_cm) < 0.1
+                and abs(float(value.z) - road_z_cm) < 9999.0
+            ]
+            landscape_z_m = candidates[0] if candidates else None
+        else:
+            landscape_z_m = _landscape_hit_height(
+                hit, [x_cm, y_cm, road_z_cm + 10000.0],
+                [x_cm, y_cm, road_z_cm - 10000.0], landscape, components,
+            )
         station_index = sample_index // section_points
         lateral_index = sample_index % section_points
         row = rows[station_index]
@@ -78,17 +152,20 @@ def measure_smooth_terrain_fit(
                 "lateral_m": float(row["lateral_m"][lateral_index]),
                 "local_xy_m": [x_m, y_m],
                 "road_surface_z_m": road_z_m,
-                "landscape_z_m": candidates[0] if candidates else None,
+                "landscape_z_m": landscape_z_m,
             }
         )
 
-    return inspect_terrain_fit(
+    inspection = inspect_terrain_fit(
         samples,
         exact_sha=exact_sha,
         contact_band_max_m=float(contact_band_max_m),
         structure_review_threshold_m=structure_threshold_m,
         geometry_inspection_view=geometry_inspection_view,
     )
+    if sample_sink is not None:
+        sample_sink(samples=deepcopy(samples), inspection=deepcopy(inspection))
+    return inspection
 
 
 def apply_cut_patch(world, root, exact_sha, pre_fit):

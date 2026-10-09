@@ -228,7 +228,7 @@ Primary references:
 
 The BOB helper's trusted caller supplies an evidence root; it accepts only an
 explicit sample path/hash, repository SHA and fixed source inventory. Its
-seven domain sources, including the adapter, must match the committed checkout.
+eight domain sources, including the adapter and collision witness, must match the committed checkout.
 The existing pavement producer supplies the contact band; the pinned adaptive
 policy supplies the structure threshold. The policy has a narrow LF checkout
 rule so Windows normalization cannot change its byte-bound identity. The helper
@@ -290,9 +290,40 @@ before any eventual invocation. Complete stock read bodies return the current
 level path, the supplied actor's label or the supplied object's class, without
 binding the admitted map/object. These are source observations, not discovered
 RPC schemas or proof that every possible native extension lacks a guard.
-The outcome remains `GUARD_PARITY_UNESTABLISHED`; stop this source-collector
-workstream here. A supported native argument boundary, actual reflected
+The outcome remains `GUARD_PARITY_UNESTABLISHED`; the stock control-flow
+collection is complete. A supported native argument boundary, actual reflected
 signatures and runtime denial/async-result evidence are needed before wiring.
+
+### Next bounded fragment: one fixed BOB domain operation
+
+The continuation uses the existing native extension pattern, already compiled
+for UE 5.8.2 / CL 56702186 by opt-in `YacsTexturePrep`. Its
+[local proof](tooling/texture-material-prep-proof.json) verifies reflected schemas,
+class registration and asynchronous registry dispatch; it does not prove official
+MCP transport or grant this BOB operation admission.
+
+One fixed checkpoint inspection may contain its map/object read and the single
+existing Automation test as internal prerequisites. The exposed interface must
+accept no caller-selected map, object, test, method, script, command, policy or
+evidence root. Reject malformed input, unknown fields and other operation names
+before any native call. This is the approved thin YACS domain contract. No generic
+dispatch or broader stock tool access follows from it.
+
+The fixed `domain_extension` evidence preset reads actual installed declaration
+contexts for registration, argument conversion, asynchronous results and test
+idle state. It preserves the original filesystem and console bounds. Only two
+named AutomationController public headers may be read outside the plugin roots,
+and only when an actual installed Automation plugin include identifies them.
+Missing contexts remain explicit gaps; this preset neither activates a plugin
+nor executes a tool.
+
+The BOB producer now offers a trusted optional sink for every original sample,
+including misses, after real inspector execution. Its default caller behavior
+is preserved. A saved scene requires Landscape-only traces and verified native
+hit ownership: road or CUT geometry must not become a claimed Landscape height.
+Unknown ownership fails closed. Synthetic capture tests do not prove reflected
+owner availability on the actual host. Native registration, compile, restricted
+official transport, the completed single test and conservation remain pending.
 
 ### Safety and preserved governance
 

@@ -2,8 +2,9 @@
 
 This is neither an MCP server nor a registered Epic tool. Native sample exports
 use the five fields assembled by ``measure_smooth_terrain_fit`` in
-``scripts/ue/bob_road_earthworks_cut.py``. That producer currently does not save
-the raw samples, so an aggregate terrain-fit report cannot substitute for them.
+``scripts/ue/bob_road_earthworks_cut.py``. Its optional trusted sample sink hands
+off all measured rows; an aggregate terrain-fit report cannot substitute for
+them. Export and native hit ownership require separate integration proof.
 An input's declared native provenance requires separate host proof; this adapter
 only proves hash-bound domain execution and repeatability.
 """
@@ -39,6 +40,7 @@ SOURCE_PATHS = (
     CONTACT_PRODUCER,
     "scripts/ue/ma2141_road_preview.py",
     "scripts/ue/bob_road_earthworks_cut.py",
+    "scripts/ue/sa_calobra_geometry_collision_witness.py",
 )
 NATIVE_PRODUCER = "scripts.ue.bob_road_earthworks_cut.measure_smooth_terrain_fit"
 NATIVE_SAMPLE_SOURCE = "unreal.SystemLibrary.line_trace_single"

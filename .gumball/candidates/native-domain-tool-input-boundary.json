@@ -1,0 +1,20 @@
+{
+  "id": "native-domain-tool-input-boundary",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "tooling",
+  "problem": "A native registry can restrict tool names while forwarding caller arguments unchanged; generated schemas alone do not prove runtime argument restrictions.",
+  "invariant": "Review the actual installed dispatch and argument conversion. A bounded domain operation binds its resources and prerequisites internally, rejects unexpected input before native work, and separates synthetic checks, native dispatch and transport evidence.",
+  "evidence": [
+    "Issue #384",
+    "Draft PR #467",
+    "docs/UE_MCP_WORLD_GENERATION.md",
+    "scripts/ue/test_official_mcp_source_probe.py"
+  ],
+  "do_not_copy": [
+    "YACS map, actor and test identities",
+    "Epic proprietary source excerpts",
+    "product-specific domain authority"
+  ],
+  "failure_behavior": "Missing declarations, unproved arguments or missing native results leave activation and admission blocked; name lists and schema validation cannot substitute for executed denial proof.",
+  "status": "candidate"
+}
