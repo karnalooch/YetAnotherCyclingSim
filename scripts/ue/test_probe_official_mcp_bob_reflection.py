@@ -122,6 +122,20 @@ class NativeReflectionContextTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "differs from its trusted marker"):
             self.context()
 
+    def test_startup_config_rewrite_is_identified_and_rejected_before_receipt(self):
+        expected = self.marker["host_engine_config_sha256"]
+        changed = self.engine_config.read_bytes() + b"\n[StartupGenerated]\nValue=True\n"
+        self.engine_config.write_bytes(changed)
+        observed = self.digest(self.engine_config)
+        with self.assertRaises(RuntimeError) as failure:
+            self.context()
+        self.assertEqual(str(failure.exception),
+                         "Reflection proof source differs from its trusted marker: "
+                         f"field=host_engine_config_sha256, expected_sha256={expected}, observed_sha256={observed}")
+        self.assertEqual(self.engine_config.read_bytes(), changed)
+        self.assertEqual(json.loads(self.marker_path.read_text())["host_engine_config_sha256"], expected)
+        self.assertFalse((self.artifacts / PROBE.RECEIPT_NAME).exists())
+
     def test_ai_callable_metadata_is_rejected_even_if_hash_matches(self):
         self.header.write_text(self.header.read_text().replace(
             'UFUNCTION(BlueprintCallable, Category="YACS BOB Inspection")',

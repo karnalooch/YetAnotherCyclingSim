@@ -410,6 +410,17 @@ try:
                        'fixed_plugin_activation_context',22)
         if relative.endswith('.cpp'):
             named_contexts(item,r'\bParsePluginsList\s*=', 'fixed_plugin_list_parser',45)
+    # One fixed Core input establishes prelaunch config override grammar and
+    # its real callers; this is not a search of the Core source tree.
+    item=optional('Engine/Source/Runtime/Core/Private/Misc/ConfigCacheIni.cpp','mcp')
+    if item:
+        definitions=sorted(set(re.findall(r'\b(\w+)::(\w+)\s*\(',cpp_mask(item['text']))))
+        for owner,name in definitions:
+            if re.search(r'Commandline|CommandLine',name):
+                functions(item,r'\b'+owner+'::'+name+r'\s*\(',
+                          'startup_config_'+owner+'_'+name,required=False)
+        named_contexts(item,r'\bOverrideFromCommandline\b|"ini:',
+                       'startup_config_override_callsite_context',24)
     # Two fixed PythonScriptPlugin files are the only added bridge inputs.
     # No installed Python is imported, and no command is executed by this probe.
     python_plugin='Engine/Plugins/Experimental/PythonScriptPlugin/Source/PythonScriptPlugin/'
@@ -505,6 +516,7 @@ finally:
             if excerpt['purpose']!='mcp': return excerpt['purpose']
             return 'mcp_transport' if excerpt['topic'].startswith(('server_','server_dependency_','official_server_','adapter_','http_')) else 'mcp'
         def console_priority(excerpt):
+            if excerpt['topic'].startswith('startup_config_'): return -4
             if excerpt['topic']=='expected_error_declarations': return -3
             if excerpt['topic']=='expected_matcher_constructor_context': return -2
             if excerpt['topic'].startswith('expected_') and 'AddExpectedError' in excerpt['topic']: return -2

@@ -139,8 +139,12 @@ def _load_context(script: Path, environment: dict) -> dict:
         if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
             raise RuntimeError("Reflection proof marker contains an invalid source hash")
         value = _bytes(path)
-        if hashlib.sha256(value).hexdigest() != expected:
-            raise RuntimeError("Reflection proof source differs from its trusted marker")
+        observed = hashlib.sha256(value).hexdigest()
+        if observed != expected:
+            raise RuntimeError(
+                "Reflection proof source differs from its trusted marker: "
+                f"field={name}, expected_sha256={expected}, observed_sha256={observed}"
+            )
         snapshots[name] = value
 
     plugin = _json_object(snapshots["plugin_descriptor_sha256"])

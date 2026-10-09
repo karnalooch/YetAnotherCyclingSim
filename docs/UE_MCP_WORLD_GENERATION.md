@@ -414,9 +414,17 @@ exit code **3**. No native test or reflection PASS follows from this attempt;
 the [fixed retained-log readback](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002856042)
 at `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4` identifies
 `RuntimeError: Reflection proof source differs from its trusted marker`,
-followed by the configured fatal Python-script exit. The differing source field
-must be identified before another native launch; the hash contract remains
-binding. The dependency reader independently did not start: its embedded
+followed by the configured fatal Python-script exit.
+[Five-file readback 38003698637](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38003698637)
+at `08e1a0cc47a00646aa8cdbb251f13cfa9abbaa6e` confirms that only
+the generated HostProject's `Config/DefaultEngine.ini` changed: its post-startup
+469 bytes hash to
+`a090175a44123f56df2d6432a5cf2fa45f9aaab3d33df5fdab51d901a77551b8`.
+The script, public header, plugin descriptor and project descriptor all match
+their original hashes. The added config keys and owning startup behavior must
+be identified before another native launch; the hash contract remains binding.
+Hash failures now identify the exact field and both digests. The dependency
+reader independently did not start: its embedded
 Python program is 33,053 characters, and
 the Windows command exceeds the 32,767-character process limit. Passing the
 same owned reader program through standard input removed that tooling limit:
@@ -438,9 +446,13 @@ nullable JSON parameters and the fixed `IPythonScriptPlugin::ExecPythonCommand`
 string/boolean interface. The fixed domain entry remains unwired. The official
 `FindTool` compares names without case sensitivity: spelling variants resolve
 to the same operation and cannot be reported as wire-level wrong-case denials.
-Native registry name checks retain their narrower meaning. Actual HTTP section
-initialization and cache invalidation still need bounded source verification
-before configuring and starting the loopback listener.
+Native registry name checks retain their narrower meaning. The five-file
+diagnostic also verifies the actual `HTTPServer.Listeners` section and cache
+invalidation: notification must name `GEngineIni` and that section before
+listener creation. Early Python remote-execution and MCP automatic-start
+settings still require a proved config override mechanism before module load;
+the bounded reader now includes only the fixed Core `ConfigCacheIni.cpp` for
+that remaining startup question.
 
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including

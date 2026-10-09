@@ -30,12 +30,13 @@ CONFIG_HEADER = "Engine/Source/Runtime/Online/HTTPServer/Private/HttpServerConfi
 CONFIG_IMPL = "Engine/Source/Runtime/Online/HTTPServer/Private/HttpServerConfig.cpp"
 CORE_HEADER = "Engine/Source/Runtime/Core/Public/Misc/AutomationTest.h"
 CORE_IMPL = "Engine/Source/Runtime/Core/Private/Misc/AutomationTest.cpp"
+CONFIG_CACHE_IMPL = "Engine/Source/Runtime/Core/Private/Misc/ConfigCacheIni.cpp"
 PROJECTS_HEADER = "Engine/Source/Runtime/Projects/Public/Interfaces/IPluginManager.h"
 PROJECTS_IMPL = "Engine/Source/Runtime/Projects/Private/PluginManager.cpp"
 PYTHON = "Engine/Plugins/Experimental/PythonScriptPlugin/Source/PythonScriptPlugin/"
 PYTHON_HEADER = PYTHON + "Public/IPythonScriptPlugin.h"
 PYTHON_IMPL = PYTHON + "Private/PythonScriptPlugin.cpp"
-FIXED_ENGINE_PATHS = {CORE_HEADER, CORE_IMPL, PROJECTS_HEADER, PROJECTS_IMPL, PYTHON_HEADER, PYTHON_IMPL}
+FIXED_ENGINE_PATHS = {CORE_HEADER, CORE_IMPL, CONFIG_CACHE_IMPL, PROJECTS_HEADER, PROJECTS_IMPL, PYTHON_HEADER, PYTHON_IMPL}
 RUNTIME_FLAGS = (
     "official_mcp_transport_verified", "official_mcp_admitted", "argument_policy_parity_verified",
     "local_only_binding_verified", "existing_project_test_verified", "native_bob_capture_verified",
@@ -113,6 +114,12 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                    "bool FAutomationExpectedMessage::Matches() { return MatchSynthetic(); }\n"
                    "bool FAutomationExpectedLogMessage::HasMetExpectedOccurrences() { return Occurrences == 1; }\n"
                    "void FAutomationTestBase::AddExpectedError() { RecordSynthetic(); }\n")
+        self.write(CONFIG_CACHE_IMPL,
+                   "void FConfigFile::OverrideFromCommandline(const FString& Filename) {\n"
+                   ' const char* option="ini:Synthetic:[SyntheticSettings]:Flag=false";\n'
+                   " ApplySyntheticOverride(option);\n}\n"
+                   "void FConfigCacheIni::LoadSyntheticIni() {\n"
+                   " SyntheticFile.OverrideFromCommandline(SyntheticFilename);\n}\n")
         self.write(PROJECTS_HEADER, "virtual bool ConfigureEnabledPlugin() = 0;\n")
         self.write(PROJECTS_IMPL, "bool FPluginManager::ConfigureEnabledPlugins() {\n"
                    " auto ParsePluginsList = [](const char* value) { ParseSynthetic(value); };\n"
@@ -180,6 +187,14 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         self.assertTrue(all(item["path"] == "Engine/Build/Build.version"
             or item["path"] in FIXED_ENGINE_PATHS
             or item["path"].startswith((AUTO, MCP)) for item in receipt["source_files"]))
+        override = next(item for item in receipt["excerpts"]
+                        if item["topic"] == "startup_config_FConfigFile_OverrideFromCommandline")
+        self.assertTrue(override["body_complete"])
+        self.assertEqual(override["sha256"], hashlib.sha256((self.engine / CONFIG_CACHE_IMPL).read_bytes()).hexdigest())
+        self.assertTrue(any("SyntheticFile.OverrideFromCommandline" in line["text"]
+                            for item in receipt["excerpts"] if item["topic"] == "startup_config_override_callsite_context"
+                            for line in item["lines"]))
+        self.assertIn("topic=startup_config_FConfigFile_OverrideFromCommandline body_complete=True", process.stdout)
         for topic in ("expected_error_declarations", "expected_matcher_constructor_context",
                       "expected_FAutomationExpectedMessage_Matches",
                       "expected_FAutomationExpectedLogMessage_HasMetExpectedOccurrences",
@@ -302,7 +317,8 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                        "void Synthetic() { AddTool(Synthetic); }\n")
         process, receipt = self.run_reader()
         self.assertEqual(process.returncode, 0, process.stderr)
-        self.assertEqual(receipt["source_file_count"], 21)
+        self.assertEqual(receipt["source_file_count"], 22)
+        self.assertFalse(any(Path(item["path"]).name.startswith("Extra") for item in receipt["source_files"]))
         self.assertFalse(receipt["mcp_callsite_index_complete"])
         self.assertTrue(any(not item["scanned"] for item in receipt["mcp_callsite_inventory"]))
         sources = receipt["source_files"]

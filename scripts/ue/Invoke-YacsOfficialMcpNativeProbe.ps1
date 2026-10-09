@@ -222,6 +222,23 @@ function Invoke-ProbePreviousFailureDiagnostic {
             $diagnostic.files["reflection_source/$field"] = $file.identity
             $diagnostic.previous_reflection_sources += $row
             Write-ProbeDiagnosticSummary 'PREVIOUS_REFLECTION_SOURCE' $row
+            if ($field -ceq 'host_engine_config_sha256') {
+                # These 469 retained bytes are the sole observed drift. Read
+                # no additional file and reveal no credentials or URL values.
+                if ($file.identity.size_bytes -ne 469 -or $file.identity.sha256 -cne 'a090175a44123f56df2d6432a5cf2fa45f9aaab3d33df5fdab51d901a77551b8') {
+                    throw 'Prior generated config differs from its exact diagnosed post-startup bytes.'
+                }
+                $configContext = @()
+                $configLines = $file.text -split '\r?\n'
+                foreach ($line in ($configLines | Select-Object -First 32)) {
+                    $safeLine = if ($line -match '(?i)^\s*[^;#\[]*(?:token|secret|password|credential|api.?key|authorization)\s*=') { '[SECRET_CONFIG_VALUE_REDACTED]' }
+                        else { Get-ProbeSafeDiagnosticText $line 512 }
+                    $configContext += $safeLine
+                }
+                $diagnostic['previous_generated_engine_config_context'] = $configContext
+                $diagnostic['previous_generated_engine_config_context_truncated'] = $configLines.Count -gt 32
+                Write-ProbeDiagnosticSummary 'PREVIOUS_GENERATED_ENGINE_CONFIG' $configContext
+            }
         }
         Write-ProbeJson (Join-Path $readbackRoot 'source-identities.json') $diagnostic.previous_reflection_sources
     }
@@ -531,7 +548,8 @@ try {
     if ($DiagnosePreviousFailure) {
         Invoke-ProbePreviousFailureDiagnostic
         Assert-ProbeIdleHost
-        # Same fixed bounded source reader; no accepted artifact redownload.
+        # Same bounded reader now includes the approved fixed Core ini parser,
+        # needed to establish early settings without editing tracked Config.
         & (Join-Path $PSScriptRoot 'Read-YacsOfficialMcpRuntimeDependencies.ps1') -EngineRoot $engine.Root -ArtifactRoot $ArtifactRoot -ExpectedHead $ExpectedHead
         $receipt.status = 'PREVIOUS_FAILURE_DIAGNOSTIC_RETAINED'
         return
