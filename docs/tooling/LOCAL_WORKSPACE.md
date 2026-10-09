@@ -45,7 +45,7 @@ uses its existing per-user scheduled task with the new installed path. Do not
 silently switch the GPU runner to Windows Session 0.
 
 The owner requested disk-growth protection. `Invoke-YacsJobStarted.ps1` is the
-runner's pre-job hook and requires **50 GiB free** before workflow steps start.
+runner's pre-job hook and requires **5 GiB free** before workflow steps start.
 Unreal checks the same reserve immediately before compilation. These checks
 stop admission when space is low; they are not an operating-system disk quota
 and do not promise a fixed ceiling during an already running job. The monitor
@@ -53,7 +53,7 @@ records remaining space. The existing persistent warm checkout is reused.
 `Clear-YacsRunnerWorkspace.ps1` previews eligible old `Intermediate` and local
 `DerivedDataCache` folders; apply requires the exact reviewed count/byte total,
 an idle worker and unchanged inventory. Source assets, shared caches and active
-build cache remain protected. Never lower the reserve simply to turn CI green.
+build cache remain protected. The owner explicitly approved reducing this admission floor from 50 GiB to 5 GiB on 2026-10-09; never silently lower it further simply to turn CI green. The installed hook at the live runner's configured path must be updated separately while the runner is idle: checkout of a PR does not update a pre-job hook. Five GiB is not a guarantee of sufficient Unreal shader, frame, build or rollback scratch space. See [#454](https://github.com/karnalooch/YetAnotherCyclingSim/issues/454) for deployment and verification.
 The hook uses GitHub's supported
 [pre-job script mechanism](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/run-scripts).
 
