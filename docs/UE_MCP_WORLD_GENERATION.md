@@ -352,6 +352,23 @@ It changes no project descriptor or configuration and starts no Editor or MCP
 server. Its 24 synthetic tests verify rejection and preservation boundaries;
 actual Windows restoration and accepted-scene execution remain unverified.
 
+The trusted no-argument
+[`official_mcp_bob_client.py`](../scripts/ci/official_mcp_bob_client.py)
+uses only `127.0.0.1:18784/mcp`, the installed server's `2025-06-18`
+protocol and one serial JSON session. The owned host supplies exact committed
+sources, project root and Editor PID in a private fixed marker. The client
+requires exactly one empty-object operation in `tools/list`, verifies 22 fixed
+name/argument denials against their precise boundary errors and checks that
+none entered the native body. Its sole valid call must advance the native
+counter from zero to one. It compares all four returned domain artifacts with
+the saved bundle, reinspects the actual samples through the existing BOB
+adapter and verifies original project/source conservation. Generic session or
+internal errors cannot count as denials. The client starts no server or Editor;
+its transport receipt leaves native test and final host admission pending.
+The host must also bound the entire owned attempt; the client's 180-second
+socket timeout alone is not a whole-session deadline. Offline fixtures do not
+admit an actual MCP session.
+
 [Declaration run 37993672276](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37993672276)
 passed at `2f7fbf6ae771abcb45cb15221e4d66130676e3b3` on the same exact engine.
 It verifies exported native `FToolsetRegistry::RegisterToolset` /
@@ -398,8 +415,8 @@ exactly once and checks actual occurrence counts, retaining all denial calls
 and assertions. The installed Core API and count verification were confirmed
 in [diagnostic 38000430250](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38000430250)
 at `79a7279176a7b5abddd21729fb88ff352c2a66d7`. Branch pushes now select
-the fixed native proof after the configuration writer was identified below.
-Manual dispatch retains the previous attempt's bounded readback option.
+the latest failed attempt's fixed readback, without compiling or launching
+another Editor. Manual dispatch retains the fixed native proof option.
 A passing native proof is pending.
 The same diagnostic located the actual private Python settings header, SHA-256
 `6c5f68a3945759234a9b38a98ac7d1369a91982f9d36c433eb2e518e79ebb5f2`,
@@ -425,15 +442,21 @@ their original hashes.
 [Config-content readback 38004216108](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38004216108)
 at `3d7645e145d55fb4832be7b03656b5a7611e5e91` identifies added
 `AndroidFileServerEditor.AndroidFileServerRuntimeSettings` keys; the generated
-security value is redacted. The next bare-project launch verifies the fixed
-installed descriptor and disables only `AndroidFileServer` through the proved
+security value is redacted. The next bare-project launch verified the fixed
+installed descriptor and disabled only `AndroidFileServer` through the proved
 plugin command-line mechanism. It neither accepts rewritten configuration nor
 changes the original project descriptor. The hash contract remains binding.
 Only this invocation's two redirected logs may be read with shared read access
 after its owned Editor has exited; bounded size and timestamp checks reject
 changes during reading or before receipt persistence. General source hashing
-retains its existing behavior. This retention correction still awaits runtime
-verification.
+retains its existing behavior.
+[Retry 38005167146](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38005167146)
+at `8239a0211040230599a9acfef8a32cd002289ecb` compiled all eleven actions
+and verified the corrected log retention with no secondary errors. Its owned
+Editor still exited **3**, without timing out; native boundary and reflection
+remain unverified. The next readback targets only this retained attempt's
+authenticated Editor log, marker and fixed input identities to identify the
+current Python failure before another native launch.
 Hash failures now identify the exact field and both digests. The dependency
 reader independently did not start: its embedded
 Python program is 33,053 characters, and
@@ -463,9 +486,12 @@ invalidation: notification must name `GEngineIni` and that section before
 listener creation. Early Python remote-execution and MCP automatic-start
 settings still require a proved config override mechanism before module load;
 the bounded reader now includes only the fixed Core `ConfigCacheIni.cpp` for
-that remaining startup question. Both command-line override parser bodies are
-verified; the next same-file read prioritizes their literal specifiers and
-configuration-loading contexts to establish precedence.
+that remaining startup question. Both command-line override parser bodies and
+the exact `-ini:` / `:[` / `]:` specifiers are verified. The new read also
+establishes that `ini.UseNewDynamicLayers` defaults to **1**, bypassing the
+legacy override overload. Effective early precedence therefore remains
+unproved; the next bounded read includes only the named `ConfigContext`
+implementation and its directly included public header to trace actual loading.
 
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including

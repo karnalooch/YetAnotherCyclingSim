@@ -16,7 +16,7 @@ on:
         description: Fixed bare-project proof, or retained previous failure readback
         type: choice
         options: [native_probe, diagnose_previous_failure]
-        default: native_probe
+        default: diagnose_previous_failure
         required: true
 
 permissions:
@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   compile:
-    name: Prove fixed BOB input boundary and Python reflection
+    name: Read the retained native failure before another Editor proof
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
@@ -51,12 +51,12 @@ jobs:
           clean: false
           persist-credentials: false
 
-      - name: Run bare-project proof with the diagnosed config writer disabled
+      - name: Diagnose the retained owned Editor failure without relaunching
         shell: pwsh
         working-directory: _official-mcp-native-probe
         env:
           YACS_CHECKPOINT_READ_TOKEN: ${{ github.token }}
-          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'native_probe' }}
+          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'diagnose_previous_failure' }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
@@ -97,10 +97,10 @@ jobs:
             _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/InputBoundaryReport/index.json
             _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/native-python-reflection.json
             _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/previous-failure-diagnostic.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38001987773/Reflection/reflection-marker.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38001987773/Reflection/source-identities.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38001987773/Accepted363/json/saved-material-consumer/*.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38001987773/Accepted363/json/checkout-restoration.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38001987773/Accepted363/json/checkout-restoration-post-material.json
+            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38005167146/Reflection/reflection-marker.json
+            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38005167146/Reflection/source-identities.json
+            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38005167146/Accepted363/json/saved-material-consumer/*.json
+            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38005167146/Accepted363/json/checkout-restoration.json
+            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38005167146/Accepted363/json/checkout-restoration-post-material.json
           if-no-files-found: error
           retention-days: 7

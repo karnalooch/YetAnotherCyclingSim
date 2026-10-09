@@ -22,6 +22,7 @@ HELPER = Path(__file__).with_name("Read-YacsOfficialMcpRuntimeDependencies.ps1")
 AUTO = "Engine/Plugins/Experimental/Toolsets/AutomationTestToolset/Source/AutomationTestToolset/"
 MCP = "Engine/Plugins/Experimental/ModelContextProtocol/Source/"
 AUTO_IMPL = AUTO + "Private/AutomationTestToolset.cpp"
+AUTO_HEADER = AUTO + "Public/AutomationTestToolset.h"
 SERVER_IMPL = MCP + "ModelContextProtocol/Private/ModelContextProtocolModule.cpp"
 TRANSPORT_IMPL = MCP + "ModelContextProtocol/Private/ModelContextProtocolServer.cpp"
 HTTP_IMPL = "Engine/Source/Runtime/Online/HTTPServer/Private/HttpServerModule.cpp"
@@ -31,12 +32,15 @@ CONFIG_IMPL = "Engine/Source/Runtime/Online/HTTPServer/Private/HttpServerConfig.
 CORE_HEADER = "Engine/Source/Runtime/Core/Public/Misc/AutomationTest.h"
 CORE_IMPL = "Engine/Source/Runtime/Core/Private/Misc/AutomationTest.cpp"
 CONFIG_CACHE_IMPL = "Engine/Source/Runtime/Core/Private/Misc/ConfigCacheIni.cpp"
+CONFIG_CONTEXT_HEADER = "Engine/Source/Runtime/Core/Public/Misc/ConfigContext.h"
+CONFIG_CONTEXT_IMPL = "Engine/Source/Runtime/Core/Private/Misc/ConfigContext.cpp"
 PROJECTS_HEADER = "Engine/Source/Runtime/Projects/Public/Interfaces/IPluginManager.h"
 PROJECTS_IMPL = "Engine/Source/Runtime/Projects/Private/PluginManager.cpp"
 PYTHON = "Engine/Plugins/Experimental/PythonScriptPlugin/Source/PythonScriptPlugin/"
 PYTHON_HEADER = PYTHON + "Public/IPythonScriptPlugin.h"
 PYTHON_IMPL = PYTHON + "Private/PythonScriptPlugin.cpp"
-FIXED_ENGINE_PATHS = {CORE_HEADER, CORE_IMPL, CONFIG_CACHE_IMPL, PROJECTS_HEADER, PROJECTS_IMPL, PYTHON_HEADER, PYTHON_IMPL}
+FIXED_ENGINE_PATHS = {CORE_HEADER, CORE_IMPL, CONFIG_CACHE_IMPL, CONFIG_CONTEXT_HEADER, CONFIG_CONTEXT_IMPL,
+                      PROJECTS_HEADER, PROJECTS_IMPL, PYTHON_HEADER, PYTHON_IMPL}
 RUNTIME_FLAGS = (
     "official_mcp_transport_verified", "official_mcp_admitted", "argument_policy_parity_verified",
     "local_only_binding_verified", "existing_project_test_verified", "native_bob_capture_verified",
@@ -75,6 +79,8 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
             "".join("void UAutomationTestToolset::" + name + "() {\n"
                     ' const char* value=R"tag({ fake })tag";\n}\n'
                     for name in ("DiscoverTests", "ListTests", "RunTests", "GetTestResults", "GetTestStatus")))
+        self.write(AUTO_HEADER, "class UAutomationTestToolset {\n"
+                   " static SYNTHETIC_API FString ListTests(const FString& NameFilter, const FString& TagFilter, int32 Limit);\n};\n")
         self.write(AUTO + "Public/AutomationTestToolsetSubsystem.h",
                    "class UAutomationTestToolsetSubsystem {};\n")
         self.write(AUTO + "Private/AutomationTestToolsetSubsystem.cpp",
@@ -127,6 +133,14 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                    "void FConfigCacheIni::LoadSyntheticIni() {\n"
                    " FConfigContext::SyntheticLoad();\n"
                    " SyntheticFile.OverrideFromCommandline(SyntheticFilename);\n}\n")
+        self.write(CONFIG_CONTEXT_HEADER, "struct FConfigContext {\n"
+                   " static FConfigContext ReadIntoGConfig();\n bool Load(const FString& Filename);\n};\n")
+        self.write(CONFIG_CONTEXT_IMPL, '#include "Misc/ConfigContext.h"\n'
+                   'const char* fake=R"tag(void FConfigContext::Load() { FAKE_CONTEXT_LOAD; })tag";\n'
+                   "bool FConfigContext::Load(const FString& Filename) {\n"
+                   " ReadSyntheticHierarchy();\n"
+                   " FConfigFile::OverrideFromCommandline(CommandlineOverrides, Filename);\n"
+                   " ApplySyntheticDynamicStream(CommandlineOverrides);\n return true;\n}\n")
         self.write(PROJECTS_HEADER, "virtual bool ConfigureEnabledPlugin() = 0;\n")
         self.write(PROJECTS_IMPL, "bool FPluginManager::ConfigureEnabledPlugins() {\n"
                    " auto ParsePluginsList = [](const char* value) { ParseSynthetic(value); };\n"
@@ -232,6 +246,35 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         self.assertEqual(receipt["error"], "ENGINE_IDENTITY_MISMATCH")
         self.assertEqual(receipt["source_file_count"], 1)
 
+    def test_named_config_context_adoption_survives_old_parser_console_saturation(self):
+        self.write(CONFIG_CACHE_IMPL, (self.engine / CONFIG_CACHE_IMPL).read_text() +
+                   "void FConfigFile::OverrideFromCommandlineOther() {\n" +
+                   " SyntheticOldParser();\n" * 900 + "}\n")
+        process, receipt = self.run_reader()
+        self.assertEqual(process.returncode, 0, process.stderr)
+        context = next(item for item in receipt["excerpts"]
+                       if item["topic"] == "startup_config_context_Load")
+        self.assertTrue(context["body_complete"])
+        self.assertEqual(context["path"], CONFIG_CONTEXT_IMPL)
+        self.assertEqual(context["sha256"], hashlib.sha256((self.engine / CONFIG_CONTEXT_IMPL).read_bytes()).hexdigest())
+        body = "\n".join(line["text"] for line in context["lines"])
+        self.assertNotIn("FAKE_CONTEXT_LOAD", body)
+        self.assertLess(body.index("ReadSyntheticHierarchy"), body.index("OverrideFromCommandline"))
+        self.assertLess(body.index("OverrideFromCommandline"), body.index("ApplySyntheticDynamicStream"))
+        adoption = next(item for item in receipt["excerpts"]
+                        if item["topic"] == "startup_config_effective_override_context")
+        self.assertFalse(adoption["body_complete"])
+        console = process.stdout.split("PURPOSE mcp ", 1)[1].split("END_PURPOSE mcp", 1)[0]
+        self.assertIn("topic=startup_config_context_Load body_complete=True", console)
+        self.assertIn("ApplySyntheticDynamicStream", console)
+        self.assertTrue(all(receipt[flag] is False for flag in RUNTIME_FLAGS))
+        declaration = next(item for item in receipt["excerpts"]
+                           if item["topic"] == "automation_public_toolset_declarations")
+        self.assertEqual(declaration["path"], AUTO_HEADER)
+        self.assertTrue(declaration["body_complete"])
+        automation = process.stdout.split("PURPOSE automation ", 1)[1].split("END_PURPOSE automation", 1)[0]
+        self.assertIn("static SYNTHETIC_API FString ListTests", automation)
+
     def test_missing_truncated_and_invocation_bodies_never_become_complete_definitions(self):
         cases = (
             ("comment", "// void UAutomationTestToolset::RunTests() {}\n", None),
@@ -311,7 +354,10 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         self.write(AUTO_IMPL, "x" * (2 * 1024 * 1024 + 1))
         process, receipt = self.run_reader()
         self.assertEqual(process.returncode, 1)
-        self.assertEqual(receipt["source_file_count"], 1)
+        self.assertEqual(receipt["error"], "UNSUPPORTED_OR_OVERSIZED_SOURCE")
+        self.assertEqual({item["path"] for item in receipt["source_files"]},
+                         {"Engine/Build/Build.version", AUTO_HEADER})
+        self.assertFalse(any(item["path"] == AUTO_IMPL for item in receipt["source_files"]))
         self.write(AUTO_IMPL, original)
         large = "/*" + "x" * (1900 * 1024) + "*/\n"
         for relative in (AUTO_IMPL, AUTO + "Public/AutomationTestToolsetSubsystem.h",
@@ -332,7 +378,7 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                        "void Synthetic() { AddTool(Synthetic); }\n")
         process, receipt = self.run_reader()
         self.assertEqual(process.returncode, 0, process.stderr)
-        self.assertEqual(receipt["source_file_count"], 22)
+        self.assertEqual(receipt["source_file_count"], 25)
         self.assertFalse(any(Path(item["path"]).name.startswith("Extra") for item in receipt["source_files"]))
         self.assertFalse(receipt["mcp_callsite_index_complete"])
         self.assertTrue(any(not item["scanned"] for item in receipt["mcp_callsite_inventory"]))
@@ -394,7 +440,7 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
             self.assertEqual(item["include_line"], 1)
             self.assertEqual(item["from_sha256"],
                              hashlib.sha256((self.engine / item["from_path"]).read_bytes()).hexdigest())
-        self.assertLessEqual(receipt["source_file_count"], 26)
+        self.assertLessEqual(receipt["source_file_count"], 29)
         self.assertLessEqual(receipt["total_source_bytes"], 8 * 1024 * 1024)
         self.assertFalse(receipt["mcp_callsite_index_complete"])
         outside = [item["path"] for item in receipt["source_files"]

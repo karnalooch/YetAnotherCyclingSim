@@ -59,7 +59,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 engine, artifact, exact_sha = Path(os.path.abspath(sys.argv[1])), Path(os.path.abspath(sys.argv[2])), sys.argv[3]
-MAX_FILE, MAX_TOTAL, BASE_FILES, MAX_FILES = 2*1024*1024, 8*1024*1024, 16, 26
+MAX_FILE, MAX_TOTAL, BASE_FILES, MAX_FILES = 2*1024*1024, 8*1024*1024, 16, 29
 MAX_ENTRIES, MAX_DEPTH, MAX_SPAN_LINES, MAX_CONSOLE = 1024, 10, 1200, 500
 MAX_CALLS, MAX_CONSOLE_CHARS = 128, 1024
 MAX_DEPENDENCY_INCLUDES = 64
@@ -272,6 +272,8 @@ try:
         raise ValueError('ENGINE_IDENTITY_MISMATCH')
     receipt['engine_identity'] = dict(root=str(engine), version='5.8.2-56702186', build_version_sha256=build['sha256'])
     auto = 'Engine/Plugins/Experimental/Toolsets/AutomationTestToolset/Source/AutomationTestToolset/'
+    item = optional(auto+'Public/AutomationTestToolset.h', 'automation')
+    if item: full(item,'automation_public_toolset_declarations')
     item = optional(auto+'Private/AutomationTestToolset.cpp', 'automation')
     if item:
         functions(item, r'\bUAutomationTestToolsetSubsystem\s*\*\s*GetSubsystem\s*\(', 'GetSubsystem')
@@ -436,6 +438,34 @@ try:
                        'startup_config_override_callsite_context',24)
         named_contexts(item,r'ini\.UseNewDynamicLayers|\bFConfigContext\b|#\s*include[^\n]*ConfigContext|\bLoad(?:Global|Local)IniFile\b',
                        'startup_config_loading_context',10)
+    # ConfigCacheIni.cpp actually includes Misc/ConfigContext.h and delegates
+    # global loading to FConfigContext. These two fixed declarations/definitions
+    # close that named dependency only; no include traversal or source execution.
+    for relative in ('Engine/Source/Runtime/Core/Public/Misc/ConfigContext.h',
+                     'Engine/Source/Runtime/Core/Private/Misc/ConfigContext.cpp'):
+        item=optional(relative,'mcp')
+        if not item: continue
+        if relative.endswith('.h'):
+            named_contexts(item,r'\bFConfigContext\b|\bLoad\s*\(|\bReadIntoGConfig\b|\bReadIntoConfigSystem\b|\bFConfigCommandStream\b',
+                           'startup_config_context_declarations',10)
+        else:
+            # Show the actual override adoption and neighboring ordering first.
+            # Contexts explicitly remain partial; complete function bodies have
+            # the existing brace/line guards and never imply runtime adoption.
+            lines=item['text'].splitlines()
+            for index,line in enumerate(cpp_mask(item['text']).splitlines()):
+                if re.search(r'\bOverrideFromCommandline\b',line):
+                    add_span(item,'startup_config_effective_override_context',max(1,index+1-40),
+                             min(len(lines),index+1+40),False,'NAMED_DECLARATION_CONTEXT_REQUIRES_PRIMARY_REVIEW')
+            functions(item,r'\bFConfigContext::Load\s*\(',
+                      'startup_config_context_Load',required=False)
+            definitions=sorted(set(re.findall(r'\bFConfigContext::(\w+)\s*\(',cpp_mask(item['text']))))
+            for name in definitions:
+                if name!='Load' and re.search(r'Prepare|Finalize|PerformLoad|LoadIniFileHierarchy|Commandline|CommandLine',name):
+                    functions(item,r'\bFConfigContext::'+re.escape(name)+r'\s*\(',
+                              'startup_config_context_'+name,required=False)
+            named_contexts(item,r'\bFConfigCommandStream\b|\bCommandlineOverrides\b|\bCommandLineOverrides\b|ini\.UseNewDynamicLayers|\b(?:Commandline|CommandLine)\w*\b',
+                           'startup_config_dynamic_stream_context',12)
     # Two fixed PythonScriptPlugin files are the only added bridge inputs.
     # No installed Python is imported, and no command is executed by this probe.
     python_plugin='Engine/Plugins/Experimental/PythonScriptPlugin/Source/PythonScriptPlugin/'
@@ -512,6 +542,7 @@ finally:
             console.extend('SERVER_INCLUDE '+json.dumps(item,sort_keys=True) for item in receipt['observed_server_dependency_includes'])
             console.extend('REGISTRATION_CALL '+json.dumps(call,sort_keys=True) for call in calls)
         priority = {
+            'automation_public_toolset_declarations':-1,
             'FormatResultsJson':0, 'DiscoverTests':1, 'GetSubsystem':2, 'RunTests':3,
             'automation_state_strings':0,
             'GetTestResults':4, 'GetTestStatus':5, 'ListTests':6, 'CollectLeafReports':7,
@@ -531,6 +562,9 @@ finally:
             if excerpt['purpose']!='mcp': return excerpt['purpose']
             return 'mcp_transport' if excerpt['topic'].startswith(('server_','server_dependency_','official_server_','adapter_','http_')) else 'mcp'
         def console_priority(excerpt):
+            if excerpt['topic']=='startup_config_effective_override_context': return -8
+            if excerpt['topic'].startswith('startup_config_context_') and excerpt['topic']!='startup_config_context_declarations': return -7
+            if excerpt['topic'] in {'startup_config_context_declarations','startup_config_dynamic_stream_context'}: return -6
             if excerpt['topic'] in {'startup_config_specifier_constants','startup_config_loading_context'}: return -5
             if excerpt['topic'].startswith('startup_config_'): return -4
             if excerpt['topic']=='expected_error_declarations': return -3
