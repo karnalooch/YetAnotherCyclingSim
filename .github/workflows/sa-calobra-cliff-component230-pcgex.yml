@@ -504,6 +504,7 @@ jobs:
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/whole-map-prep/
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/generated-assets/
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/capture/whole-map-prep/frames/
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/capture/whole-map-prep/diagnostics/
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/capture/whole-map-prep/*.json
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/capture/whole-map-prep/readiness/**/capture-readiness.json
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/capture/component230-cliff-visual-receipt.json

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -83,6 +85,29 @@ class WholeMapWitnessTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "Unknown"):
             witness_parameters("magic", {})
+
+    def test_embedded_unreal_can_import_witness_contract_without_pillow(self):
+        probe = (
+            "import builtins\n"
+            "old_import = builtins.__import__\n"
+            "def forbid_pillow(name, *args, **kwargs):\n"
+            "    if name == 'PIL' or name.startswith('PIL.'):\n"
+            "        raise ModuleNotFoundError('Pillow absent inside Unreal')\n"
+            "    return old_import(name, *args, **kwargs)\n"
+            "builtins.__import__ = forbid_pillow\n"
+            "from scripts.ue.sa_calobra_whole_map_witness import "
+            "witness_steps, witness_parameters\n"
+            "assert witness_parameters('flat-normal', {})"
+            "['MicroNormalStrength'] == 0.0\n"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", probe],
+            cwd=Path(__file__).resolve().parents[2],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_missing_or_modified_png_fails_closed(self):
         path = self.root / self.diagnostics[0]["file"]

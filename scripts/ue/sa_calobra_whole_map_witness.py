@@ -6,7 +6,6 @@ import hashlib
 import math
 from pathlib import Path
 
-from PIL import Image, ImageStat
 
 WITNESS_IDS = (
     "near-landscape-2",
@@ -36,12 +35,13 @@ def witness_parameters(mode, ordinary):
 
 def dark_fraction(path, expected_size):
     """Image area, never terrain area; strict entire-RGB near-black screen."""
+    # Unreal's embedded Python does not include Pillow. The module itself
+    # must remain importable there; this decode executes only in host proof.
+    from PIL import Image, ImageChops, ImageStat
     with Image.open(path) as image:
         if image.format != "PNG" or image.size != expected_size:
             raise ValueError("Witness PNG format or image dimensions changed")
         r, g, b = image.convert("RGB").split()
-        from PIL import ImageChops
-
         strongest = ImageChops.lighter(ImageChops.lighter(r, g), b)
         dark = strongest.point(
             lambda value: 255 if value < DARK_RGB_MAX_EXCLUSIVE else 0

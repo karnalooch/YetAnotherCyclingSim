@@ -166,6 +166,7 @@ class WholeMapWorkflowRoutingTests(unittest.TestCase):
             "/whole-map-prep/",
             "/generated-assets/",
             "/capture/whole-map-prep/frames/",
+            "/capture/whole-map-prep/diagnostics/",
             "/capture/whole-map-prep/*.json",
             "/capture-readiness.json",
             "/whole-map-*.log",
