@@ -679,6 +679,31 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+      - name: Upload original middle saved-material frames for owner review
+        if: ${{ always() && contains(github.event.head_commit.message, '[material-closeout]') && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: sa-calobra-material-review-middle-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/ground-0-1.png
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/ground-0-2.png
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/ground-1-0.png
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/ground-1-1.png
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload original remaining saved-material frames for owner review
+        if: ${{ always() && contains(github.event.head_commit.message, '[material-closeout]') && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: sa-calobra-material-review-remaining-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/ground-1-2.png
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/ground-2-0.png
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/ground-2-1.png
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Upload original shoulder-contact review frames and restoration evidence
         if: ${{ always() && contains(github.event.head_commit.message, '[shoulder-contact]') && env.YACS_SHOULDER_CONTACT_ROOT != '' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
