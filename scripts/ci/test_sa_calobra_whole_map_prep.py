@@ -990,7 +990,6 @@ class StartupMemoryTests(unittest.TestCase):
         self.native_call.assert_called_once()
 
 
-
 class CleanupResultTests(unittest.TestCase):
     @staticmethod
     def owner(status, restored, errors=None):

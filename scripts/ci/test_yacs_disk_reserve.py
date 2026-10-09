@@ -41,7 +41,9 @@ class RunnerDiskReserveTests(unittest.TestCase):
         self.assertIn("repository 5 GiB reserve", texture)
         self.assertNotIn("$drive.Free -lt 50GB", texture)
 
-    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 is needed to execute the guard")
+    @unittest.skipUnless(
+        shutil.which("pwsh"), "PowerShell 7 is needed to execute the guard"
+    )
     def test_boundary_and_explicit_higher_override(self):
         cases = (
             (4.99, None, False),
