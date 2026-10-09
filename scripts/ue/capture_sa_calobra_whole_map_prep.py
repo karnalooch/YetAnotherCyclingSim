@@ -1098,12 +1098,26 @@ class WholeMapCapture:
             self.done(self.report["error"])
 
     def mark_cleanup(self, error):
-        if error or not self.environment.report.get("restored"):
+        # The owning callback also propagates a prior capture error. A failed
+        # renderer does not imply that its separately verified LOD/camera/CVar
+        # rollback failed. Preserve both results without admitting the capture.
+        restored = self.environment.report.get("restored") is True
+        environment_result = {
+            "status": "RESTORED" if restored else "FAILED",
+            "restore_errors": list(
+                self.environment.report.get("restore_errors") or []
+            ),
+        }
+        if error or not restored:
             self.report["status"] = "FAILED"
             self.report["error"] = (
                 error or "Whole-map capture environment did not restore"
             )
-            self.report["cleanup"] = {"status": "FAILED", "error": self.report["error"]}
+            self.report["cleanup"] = {
+                "status": "FAILED",
+                "error": self.report["error"],
+                "capture_environment": environment_result,
+            }
         elif self.report["status"] == "CAPTURED_PENDING_SCENE_CLEANUP":
             self.report["status"] = "WHOLE_MAP_PREPARATION_PASS"
             self.report["cleanup"] = {
@@ -1112,5 +1126,17 @@ class WholeMapCapture:
                 "source_scene_snapshot_unchanged": True,
                 "landscape_materials_restored": True,
                 "capture_environment_restored": True,
+                "capture_environment": environment_result,
+            }
+        else:
+            # Teardown success cannot turn a partial/inconsistent capture green.
+            self.report["status"] = "FAILED"
+            self.report["error"] = (
+                self.report.get("error") or "Whole-map capture did not complete"
+            )
+            self.report["cleanup"] = {
+                "status": "FAILED",
+                "error": self.report["error"],
+                "capture_environment": environment_result,
             }
         self._write()

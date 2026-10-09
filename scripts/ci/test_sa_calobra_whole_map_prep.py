@@ -990,6 +990,67 @@ class StartupMemoryTests(unittest.TestCase):
         self.native_call.assert_called_once()
 
 
+
+class CleanupResultTests(unittest.TestCase):
+    @staticmethod
+    def owner(status, restored, errors=None):
+        value = capture.WholeMapCapture.__new__(capture.WholeMapCapture)
+        value.report = {
+            "status": status,
+            "error": None,
+            "cleanup": {"status": "PENDING"},
+        }
+        value.environment = SimpleNamespace(
+            report={"restored": restored, "restore_errors": errors or []}
+        )
+        value._write = Mock()
+        return value
+
+    def test_capture_failure_and_verified_environment_restore_stay_distinct(self):
+        value = self.owner("FAILED", True)
+        value.mark_cleanup("Whole-map native asset compilation did not drain")
+        self.assertEqual(value.report["status"], "FAILED")
+        self.assertEqual(value.report["cleanup"]["status"], "FAILED")
+        self.assertEqual(
+            value.report["cleanup"]["capture_environment"],
+            {"status": "RESTORED", "restore_errors": []},
+        )
+        self.assertIn("did not drain", value.report["error"])
+        value._write.assert_called_once()
+
+    def test_complete_capture_requires_actual_environment_restore(self):
+        value = self.owner("CAPTURED_PENDING_SCENE_CLEANUP", False, ["LOD mismatch"])
+        value.mark_cleanup(None)
+        self.assertEqual(value.report["status"], "FAILED")
+        self.assertIn("did not restore", value.report["error"])
+        self.assertEqual(
+            value.report["cleanup"]["capture_environment"],
+            {"status": "FAILED", "restore_errors": ["LOD mismatch"]},
+        )
+
+    def test_full_native_success_retains_original_admission_fields(self):
+        value = self.owner("CAPTURED_PENDING_SCENE_CLEANUP", True)
+        value.mark_cleanup(None)
+        self.assertEqual(value.report["status"], "WHOLE_MAP_PREPARATION_PASS")
+        self.assertIsNone(value.report["error"])
+        self.assertEqual(value.report["cleanup"]["status"], "RESTORED")
+        self.assertTrue(value.report["cleanup"]["source_scene_snapshot_unchanged"])
+        self.assertEqual(
+            value.report["cleanup"]["capture_environment"]["status"],
+            "RESTORED",
+        )
+
+    def test_successful_teardown_cannot_admit_incomplete_capture(self):
+        value = self.owner("FAILED", True)
+        value.mark_cleanup(None)
+        self.assertEqual(value.report["status"], "FAILED")
+        self.assertIn("did not complete", value.report["error"])
+        self.assertEqual(
+            value.report["cleanup"]["capture_environment"]["status"],
+            "RESTORED",
+        )
+
+
 class ReusablePreviewTests(unittest.TestCase):
     def test_package_inventory_includes_actual_bulk_and_rejects_unknown_siblings(self):
         with (

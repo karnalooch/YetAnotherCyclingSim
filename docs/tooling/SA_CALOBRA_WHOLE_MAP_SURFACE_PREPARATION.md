@@ -6,7 +6,7 @@
 
 **Starting revision:** `e74a2fabe292626cb49b7c69827a60e234878cd6`
 
-**Status:** full-grid package, fresh native material and all 1024 render-instance roots verified; the first actual baseline/prepared pair is retained, with the 43-frame capture still incomplete
+**Status (2026-10-09):** source-bound material preparation reached native capture, but [run 37860882304](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37860882304) failed at 10/43 frames; the next exact-head attempt was blocked by D: disk reserve before Unreal. See the [bounded recovery incident and operator procedure](../experiments/sa-calobra-whole-map-material-prep-20261009/recovery-20261009.md). Native acceptance, visual approval and performance remain open.
 
 **Methodology:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through the [documentation index](../README.md)
 
