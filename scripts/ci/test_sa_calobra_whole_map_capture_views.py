@@ -201,6 +201,64 @@ class OriginalSurveyViewTests(unittest.TestCase):
                 capture.original_survey_views(path)
 
 
+
+class WholeMapFrameSequenceTests(unittest.TestCase):
+    """A/B pairing, deterministic mode order and 43 distinct native outputs."""
+
+    def test_exact_43_frame_sequence_has_unique_output_paths_and_matched_views(self):
+        pinned = list(
+            capture.TARGETED_VIEWS + capture.NEAR_VIEWS + capture.FAR_VIEWS
+        )
+        self.assertEqual(len(pinned), 9)
+        self.assertEqual(len(set(pinned)), 9)
+        names = pinned + [f"unselected-{index:02d}" for index in range(12)]
+        views = [
+            {
+                "frame_id": name,
+                "camera": [float(index), 0.0, 100.0],
+                "target": [0.0, 0.0, 0.0],
+                "fov": 60.0,
+            }
+            for index, name in enumerate(names)
+        ]
+        steps = capture.build_steps(views)
+        expected_modes = (
+            ["baseline"] * 9
+            + ["prepared"] * 21
+            + ["domains"] * 4
+            + ["checker"] * 7
+            + ["normal-near", "normal-far"]
+        )
+        self.assertEqual([mode for _, mode in steps], expected_modes)
+        self.assertEqual(len(steps), 43)
+
+        output_paths = [
+            f"frames/{view['frame_id']}-{mode}.png" for view, mode in steps
+        ]
+        self.assertEqual(len(set(output_paths)), 43)
+        baseline = {
+            view["frame_id"]: view for view, mode in steps if mode == "baseline"
+        }
+        prepared = {
+            view["frame_id"]: view for view, mode in steps if mode == "prepared"
+        }
+        self.assertEqual(set(baseline), set(pinned))
+        self.assertEqual(set(prepared), set(names))
+        for name in pinned:
+            with self.subTest(frame_id=name):
+                self.assertIs(baseline[name], prepared[name])
+
+    def test_missing_or_duplicate_view_cannot_form_a_complete_capture_plan(self):
+        names = list(
+            capture.TARGETED_VIEWS + capture.NEAR_VIEWS + capture.FAR_VIEWS
+        ) + [f"unselected-{index:02d}" for index in range(12)]
+        views = [{"frame_id": name} for name in names]
+        with self.assertRaisesRegex(ValueError, "camera coverage is incomplete"):
+            capture.build_steps(views[:-1])
+        with self.assertRaisesRegex(ValueError, "camera coverage is incomplete"):
+            capture.build_steps(views[:-1] + [views[0]])
+
+
 class MaterialParameterTransitionTests(unittest.TestCase):
     def setUp(self):
         self.values = capture.mode_parameters("prepared")
