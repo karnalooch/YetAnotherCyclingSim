@@ -1,0 +1,76 @@
+name: Sa Calobra original window evidence
+
+on:
+  push:
+    branches: [audit/459-window-0112-evidence]
+    paths:
+      - .github/workflows/sa-calobra-window-evidence.yml
+      - scripts/ci/extract_sa_calobra_window_evidence.py
+      - scripts/ci/test_extract_sa_calobra_window_evidence.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: yacs-459-window-evidence
+  cancel-in-progress: false
+
+jobs:
+  extract:
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.actor == 'karnalooch' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.head_commit.message, '[window-0112-evidence]'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - name: Checkout only the evidence tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+          sparse-checkout: scripts/ci
+      - name: Test source identity and rejection cases
+        run: python3 -m unittest scripts.ci.test_extract_sa_calobra_window_evidence -v
+      - name: Fetch pinned historical archive and original frame index
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -c 'import shutil; assert shutil.disk_usage("/tmp").free > 6 * 1024**3, "Insufficient hosted temporary space"'
+          gh api repos/karnalooch/YetAnotherCyclingSim/actions/artifacts/11562342248 > "$RUNNER_TEMP/source-artifact.json"
+          python3 - "$RUNNER_TEMP/source-artifact.json" <<'PY'
+          import json, sys
+          row = json.load(open(sys.argv[1], encoding='utf-8'))
+          assert row['id'] == 11562342248 and row['expired'] is False
+          assert row['size_in_bytes'] == 1609577808
+          assert row['workflow_run']['head_sha'] == 'b1ea05b33b9f3208e7aeb6884f1a67792d9c6121'
+          assert row['digest'] == 'sha256:f9ad39ae59a16dc1fc4615ef10ca950096a94d443bea4dcb0e624284000a0cab'
+          PY
+          gh api repos/karnalooch/YetAnotherCyclingSim/git/blobs/6aa5fa289231aff5823451977624c7ef87713d45 --jq '.content' | base64 --decode > "$RUNNER_TEMP/source-frames.csv"
+          gh api repos/karnalooch/YetAnotherCyclingSim/actions/artifacts/11562342248/zip > "$RUNNER_TEMP/source-survey.zip"
+      - name: Retain eight unchanged native PNGs with provenance
+        run: >-
+          python3 scripts/ci/extract_sa_calobra_window_evidence.py
+          --archive "$RUNNER_TEMP/source-survey.zip"
+          --index "$RUNNER_TEMP/source-frames.csv"
+          --output "$RUNNER_TEMP/window-0112-originals"
+      - name: Publish the small original-image bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sa-calobra-window-0112-originals-${{ github.sha }}
+          path: ${{ runner.temp }}/window-0112-originals/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+      - name: Summarize evidence scope
+        run: |
+          echo 'Eight original historical PNGs, not new renders or a geometry repair.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Source window reviewed-VIAL_TR70190001272-1-interval-24-0; native run 37800814004.' >> "$GITHUB_STEP_SUMMARY"

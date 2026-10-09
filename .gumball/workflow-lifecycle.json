@@ -270,6 +270,11 @@
       "file": "runner-monitor.yml",
       "state": "CURRENT",
       "reason": "Owner-only manual main-branch desktop monitor deployment. Rollout push trigger retired after verified silent installation. No Unreal or service restart."
+    },
+    {
+      "file": "sa-calobra-window-evidence.yml",
+      "state": "CURRENT",
+      "reason": "Issue #459: owner-only hosted retrieval of eight unchanged window-0112 PNGs from hash-pinned historical native evidence; no Unreal, authoring, credentials persistence or production admission. Dedicated audit branch and explicit marker only; retire the retrieval trigger after this bounded review."
     }
   ]
 }
