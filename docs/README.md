@@ -68,7 +68,7 @@ flowchart TB
 | Geographic fidelity | **1:1 real-world scale; no route compression, relocation or invented macro terrain** |
 | Architecture policy | **Embark-first + tools-first + version-matched Epic/PCGEx API evidence + local proof** |
 | Existing material tools | **Material Maker + Godot through [Material Forge](tooling/MATERIAL_FORGE.md): offline procedural PBR for pale limestone, dry mineral soil and aged asphalt; consult before proposing additional material tools** |
-| MCP adoption | **[#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384): material entry gate satisfied by completed #363 / merged #446; read-only source preflight and BOB domain adapter in development, before #364; official integration and native proof pending** |
+| MCP adoption | **[#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384): material entry gate satisfied by completed #363 / merged #446; source evidence and BOB domain preparation implemented in Draft #467; activation blocked on argument restrictions and native session proof, before #364** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
 | Current priority | **#363 material foundation accepted/frozen; next #384 bounded MCP spike → #364 asphalt/shoulder. #337/#349 road and source-inventory work remains separately scoped; #338 stays frozen Draft** |
 | M3 acceptance debt | **M3 remains in progress; material acceptance does not admit unresolved road/CUT/cliff/contact geometry or production PCGEx. Performance is `DEFERRED_AFTER_M3`, `performance_pass: false`** |
@@ -87,7 +87,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Product scope and MVP boundaries | [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) | **Authoritative** |
 | Delivery order and current milestone | [`ROADMAP.md`](ROADMAP.md) | **Authoritative** |
 | How to build terrain/roads/worlds | [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) | **Authoritative** |
-| Official MCP decision, authority boundary and bounded spike | [`UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption`](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption) | **#363 prerequisite satisfied; #384 source/domain preparation in development; official runtime pending** |
+| Official MCP decision, authority boundary and bounded spike | [`UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption`](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption) | **#363 prerequisite satisfied; Draft #467 source/domain preparation implemented; official runtime blocked on unestablished restrictions** |
 | First full-route visual/data reference | [`SA_CALOBRA_MENUT_ROUTE_REFERENCE.md`](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md) | **Evidence / candidate** |
 | Draw architecture/workflow diagrams | [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) | **Authoritative visual convention** |
 | Inspect shipped production world pipelines | [`PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md`](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md) | **Evidence dossier** |

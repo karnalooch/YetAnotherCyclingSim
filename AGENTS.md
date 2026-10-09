@@ -236,7 +236,9 @@ is unchanged. A closed-as-not-planned issue or green CI alone is insufficient.
 Verified closeout, 2026-10-09: #363 is completed after protected PR #446 merge
 `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b`. Its whole-area material acceptance,
 saved/fresh-rendered consumer and technical evidence satisfy #384's entry gate.
-#384 is still open and unimplemented; #364 remains blocked by #384. Reverify
+#384 is open; Draft PR #467 implements read-only source evidence and BOB
+delegation preparation, with official runtime integration/admission pending.
+#364 remains blocked by #384. Reverify
 the [material handoff](docs/tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
 at kickoff. No MCP activation, geometry admission or manual Project transition
 is implied by this checkpoint.

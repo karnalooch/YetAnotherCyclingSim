@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Read-only source preflight and BOB domain adapter in development; official integration, activation and adoption admission remain pending.
+**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Draft PR #467 implements read-only source preflight and BOB domain preparation; official activation is blocked on unestablished argument restrictions and runtime proof.
 **Tracking:** #384 adoption; #385 documentation; #85 historical integration; follow-ups #376 (Performance MCP), #377 (Buildings MCP)
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
@@ -205,8 +205,9 @@ execution checklist, not new milestone identifiers or evidence of completion.
 The source probe uses an isolated code-only Actions checkout and the existing
 `Resolve-YacsUnrealEngine.ps1`; it never launches, closes or restarts Unreal,
 builds code, enables plugins or changes the live project. Installed source
-hashes/excerpts are retained as a seven-day Actions artifact, not Epic source
-committed to Git. `SOURCE_EVIDENCE_COLLECTED` is a filesystem observation, not
+hashes/excerpts are retained as a seven-day Actions artifact and at most 500
+source/identity lines in native job logs, not Epic source committed to Git.
+Process command lines are excluded. `SOURCE_EVIDENCE_COLLECTED` is a filesystem observation, not
 runtime schema discovery, guard parity, scene admission or a performance PASS.
 The workflow is branch/path scoped and serializes in the existing
 `yacs-unreal-ci` host lane. Local invocation:
@@ -235,6 +236,44 @@ does not export native traces, register a tool or write its result bundle;
 serialize the returned result/proof with `canonical_json_bytes` to preserve
 their recorded output hashes. Native raw-sample capture and official routing
 remain the next integration fragment.
+
+### Windows source checkpoint and activation gap — 2026-10-09
+
+[Source run 37989389864](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37989389864)
+passed at `e6bfcf555c95ee0149594495c21479239783b7e2`, collecting **320
+files / 2,520,076 bytes** from the resolved engine. The observed identity was
+**UE 5.8.2 / CL 56702186**, root `D:\yacs\engine\UE_5.8`, with project
+association `5.8`. `Build.version` SHA-256 was
+`ff99fc3dd98e7c7fd2f5700334bc792dfb7baced3828cdee32940bb69581a6a4`.
+The installed ModelContextProtocol, ToolsetRegistry, EditorToolset and
+AutomationTestToolset descriptors each reported version **1 / 1.0**. Their
+hashes and selected source evidence are in
+[artifact 11644526383](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37989389864/artifacts/11644526383),
+archive SHA-256
+`a1a8e4766af5d8820f679c37c36b97ff8839c68c291a682b1da1ac585f17b4db`.
+
+Installed `FToolset::ExecuteTool` checks toolset enablement and the qualified
+tool name before forwarding JSON input to its implementation (`Toolset.cpp`,
+lines 31–48, SHA-256
+`3f3388429a6e210e2fd4557d787514609aacbaeb568dd6b81cf1c96a540f915e`).
+The stock MCP adapter obtains the editor ToolsetRegistry and delegates execution
+to it (`ModelContextProtocolToolsetRegistryAdapter.cpp`, lines 24–31 and 66,
+SHA-256 `21d276181513d02e49355efed74bbe09156f8ee83fc564bce8bbad1a417717f1`).
+This establishes a name-filter execution path, not a verified argument boundary
+for the admitted map/object or the single test. The reviewed evidence does not
+establish those restrictions; it does not prove that every installed capability
+lacks a supported mechanism.
+
+**Current outcome: `GUARD_PARITY_UNESTABLISHED`, before activation.** The
+process observation at `2026-10-09T20:48:27.3197878Z` found **zero running
+Unreal Editor processes**; it proves neither a live scene nor active plugin
+state. The current cloud tools also expose no callable Unreal/Windows desktop
+runtime. No official server, map/object read, native test or BOB capture was
+started. Resume only after a supported argument restriction and an approved
+local session can be verified, then collect actual schemas and the remaining
+native proof. Retain the guarded baseline and Draft #467; #384 stays open and
+#364 stays blocked. Do not substitute a generic gateway or treat synthetic
+adapter tests as native admission.
 
 ### Safety and preserved governance
 

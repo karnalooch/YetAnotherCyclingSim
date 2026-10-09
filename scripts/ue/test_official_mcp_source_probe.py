@@ -270,6 +270,54 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
         self.assertIn("def tool_call(function)", console)
         self.assertLessEqual(len(console.splitlines()), 500)
 
+    def test_native_tests_modules_are_excluded_from_console_case_insensitively(self):
+        root = "Engine/Plugins/Experimental/ModelContextProtocol/Source"
+        for module in ("ModelContextProtocolEditorTests", "MODELContextProtocolEngineTESTS"):
+            for name in ("ModelContextProtocolEditorTestsModule.cpp", "MockToolset.h"):
+                path = self.write(f"{root}/{module}/Private/{name}",
+                                  "class SHIPPED_TEST_MODULE_MUST_NOT_PRINT;\nvoid ExecuteTool();\n")
+                self.assertEqual(probe.source_priority(path, "ModelContextProtocol")[0], 100)
+        self.assertEqual(probe.source_priority(Path("TEST_case.py"), "EditorToolset")[0], 100)
+        self.assertEqual(probe.source_priority(Path("test.py"), "EditorToolset")[0], 100)
+        result = self.collect()
+        self.assertTrue(any("EditorTests" in item["path"] for item in result["inventory"]))
+        output = probe.console_summary(result)
+        self.assertNotIn("SHIPPED_TEST_MODULE", output)
+        self.assertNotIn("TestsModule.cpp", output)
+        self.assertLessEqual(len(output.splitlines()), 500)
+
+    def test_semantic_bodies_and_all_three_python_signature_indexes_survive_noise(self):
+        automation = "Engine/Plugins/Experimental/Toolsets/AutomationTestToolset/Source"
+        run_body = "\n".join(f"    int Step{index} = {index};" for index in range(50))
+        self.write(f"{automation}/AutomationTestToolset.cpp",
+                   "class UnrelatedPreamble {};\nUToolCallAsyncResultString* UAutomationTestToolset::RunTests(const TArray<FString>& TestNames)\n{\n"
+                   + run_body + "\n    return NATIVE_RUN_TESTS_CONTROL_FLOW_TAIL;\n}\n"
+                   + "void UnrelatedMutation() { MUST_NOT_PRINT_AFTER_RUN_BODY; }\n")
+        registry = "Engine/Plugins/Experimental/ToolsetRegistry/Source"
+        self.write(f"{registry}/Toolset.cpp",
+                   "class UnrelatedPreamble {};\nvoid FToolset::SetNameFilters()\n{\n"
+                   + run_body + "\n    FILTER_CONTROL_FLOW_TAIL;\n}\n")
+        plugin = "Engine/Plugins/Experimental/Toolsets/DifferentEditorTools/Content/Python"
+        for name in ("scene", "actor", "object"):
+            self.write(f"{plugin}/{name}.py",
+                       "class ActualTools:\n    def load_mutating_noise(self):\n        NEVER_EMIT_MUTATION_BODY\n"
+                       f"    def get_{name}_identity(self, reference: str) -> str:\n        return '{name}_READ_BODY'\n"
+                       + "\n".join(f"    def get_later_{index}(self):\n        return '{index}'" for index in range(35)))
+        result = self.collect()
+        output = probe.console_summary(result)
+        self.assertIn("NATIVE_RUN_TESTS_CONTROL_FLOW_TAIL", output)
+        self.assertIn("FILTER_CONTROL_FLOW_TAIL", output)
+        self.assertNotIn("MUST_NOT_PRINT_AFTER_RUN_BODY", output)
+        self.assertNotIn("NEVER_EMIT_MUTATION_BODY", output)
+        records = {Path(item["path"]).name: item for item in result["inventory"]}
+        for name in ("scene", "actor", "object"):
+            self.assertIn(f"{name}_READ_BODY", output)
+            index = records[f"{name}.py"]["python_declarations"]
+            self.assertTrue(index["truncated"])
+            self.assertEqual(len(index["definitions"]), 32)
+            self.assertEqual(index["definitions"][1]["line"], 4)
+        self.assertLessEqual(len(output.splitlines()), 500)
+
 
 if __name__ == "__main__":
     unittest.main()

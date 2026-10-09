@@ -9,6 +9,7 @@ job logs; the installed source is never copied into the repository.
 from __future__ import annotations
 
 import argparse
+import ast
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -132,7 +133,8 @@ def read_bounded(root: Path, path: Path) -> bytes:
 def source_priority(path: Path, role: str) -> tuple[int, str]:
     """Prefer real stock implementations; shipped tests never spend their budget first."""
     name = path.name
-    if any(part.lower() in {"test", "tests"} for part in path.parts) or name.startswith("test_"):
+    if (any(part.lower() == "test" or part.lower().endswith("tests") for part in path.parts)
+            or name.lower() == "test.py" or name.lower().startswith("test_")):
         return 100, path.as_posix()
     registry = (
         "ToolsetRegistrySubsystem.h", "Toolset.h", "Toolset.cpp", "ToolsetRegistry.cpp",
@@ -159,12 +161,74 @@ def source_priority(path: Path, role: str) -> tuple[int, str]:
     return 50, path.as_posix()
 
 
-def selected_excerpts(data: bytes, budget: int) -> tuple[list[dict[str, Any]], int]:
+# Narrow evidence selectors use confirmed paths and observed/documented names.
+# They collect source contexts; they do not implement or verify API wiring.
+# Optional anchors never establish a capability or turn their absence into a blocker.
+SEMANTIC_ANCHORS = {
+    "Toolset.h": ((r"\bSetNameFilters\s*\(", 0, 4), (r"\bExecuteTool\s*\(", 0, 4)),
+    "Toolset.cpp": ((r"FToolset::SetNameFilters\s*\(", 0, 85),
+                    (r"FToolset::ExecuteTool\s*\(", 0, 30)),
+    "ToolsetRegistry.cpp": ((r"FToolsetRegistry::ExecuteTool\s*\(", 0, 75),
+                           (r"FToolsetRegistry::RegisterToolset\s*\(", 0, 45)),
+    "ToolsetRegistrySubsystem.cpp": ((r"GetDefault<UToolsetRegistrySettings>", 8, 35),),
+    "ModelContextProtocolToolsetRegistryAdapter.cpp": (
+        (r"bEnableToolSearch", 7, 45),
+        (r"ToolsetRegistry->ExecuteTool\s*\(", 18, 28),
+    ),
+    "ModelContextProtocolEditor.cpp": ((r"StartServer\s*\(", 8, 8),
+                                      (r"OnRefreshTools", 2, 12)),
+    "AutomationTestToolset.cpp": ((r"UAutomationTestToolset::RunTests\s*\(", 0, 110),
+                                  (r"UAutomationTestToolset::GetTestResults\s*\(", 0, 55)),
+    "AutomationTestToolset.h": ((r"\bRunTests\s*\(", 3, 8),
+                               (r"\bGetTest(?:Status|Results)\s*\(", 2, 4)),
+    "__init__.py": ((r"^def tool_call\s*\(", 0, 15),),
+}
+
+
+def semantic_spans(lines: list[str], path: Path) -> list[tuple[int, int]]:
+    """Select fixed native control-flow contexts and actual Python read bodies."""
+    if path.name in {"actor.py", "scene.py", "object.py"}:
+        try:
+            tree = ast.parse("\n".join(lines))
+        except SyntaxError:
+            return []
+        methods = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
+                   and node.name.startswith(("get_", "list_", "find_", "is_", "exists"))]
+        methods.sort(key=lambda node: node.lineno)
+        return [(max(0, min([node.lineno, *[item.lineno for item in node.decorator_list]]) - 1),
+                 min(node.end_lineno or node.lineno, node.lineno + 55)) for node in methods[:2]]
+    spans = []
+    for pattern, before, after in SEMANTIC_ANCHORS.get(path.name, ()):
+        for index, line in enumerate(lines):
+            if not re.search(pattern, line):
+                continue
+            start, end = max(0, index - before), min(len(lines), index + after)
+            # For an anchored C++ definition stop at its closing brace, so a
+            # short function does not spend its budget on following methods.
+            if "::" in pattern and before == 0:
+                depth = 0
+                opened = False
+                for cursor in range(index, end):
+                    code = re.sub(r'"(?:\\.|[^"\\])*"|//.*', "", lines[cursor])
+                    depth += code.count("{") - code.count("}")
+                    opened |= "{" in code
+                    if opened and depth <= 0:
+                        end = cursor + 1
+                        break
+            spans.append((start, end))
+            break
+    return spans
+
+
+def selected_excerpts(
+    data: bytes, budget: int, path: Path | None = None,
+) -> tuple[list[dict[str, Any]], int]:
     """Retain concise contexts, never a wholesale copy of an Epic source file."""
     lines = data.decode("utf-8-sig").splitlines()
-    spans: list[tuple[int, int]] = []
+    spans = semantic_spans(lines, path) if path is not None else []
+    semantic = bool(spans)
     for index, line in enumerate(lines):
-        if INTEREST.search(line):
+        if not semantic and INTEREST.search(line):
             start, end = max(0, index - 1), min(len(lines), index + 9)
             if spans and start <= spans[-1][1]:
                 # A single selected block is capped even if many adjacent lines match.
@@ -182,6 +246,8 @@ def selected_excerpts(data: bytes, budget: int) -> tuple[list[dict[str, Any]], i
             "start_line": start + 1,
             "end_line": end,
             "text": "\n".join(line[:600] for line in lines[start:end]),
+            "selection": "semantic_context" if semantic else "declaration_context",
+            "budget_truncated": end < spans[len(excerpts)][1],
         })
         used += end - start
     return excerpts, used
@@ -231,18 +297,33 @@ def collect(
         if total_bytes > MAX_TOTAL_BYTES:
             raise SourceBudgetExceeded("SOURCE_TOTAL_BYTE_LIMIT")
         available = min(remaining_lines, role_lines.get(role, 550))
-        per_file_limit = 80 if role == "ToolsetRegistry" else 150
+        per_file_limit = {"Toolset.cpp": 120, "ToolsetRegistry.cpp": 120,
+                          "ToolsetRegistrySubsystem.cpp": 65}.get(path.name, 80) if role == "ToolsetRegistry" else 150
         available = min(available, per_file_limit)
-        excerpts, used = selected_excerpts(data, available)
+        excerpts, used = selected_excerpts(data, available, path)
         remaining_lines -= used
         role_lines[role] = role_lines.get(role, 550) - used
-        receipt["inventory"].append({
+        item = {
             "path": path.relative_to(engine_root).as_posix(),
             "role": role,
             "bytes": len(data),
             "sha256": digest(data),
             "selected_excerpts": excerpts,
-        })
+        }
+        if path.name in {"actor.py", "scene.py", "object.py"} and source_priority(path, role)[0] < 50:
+            lines = data.decode("utf-8-sig").splitlines()
+            try:
+                tree = ast.parse("\n".join(lines))
+                definitions = sorted((node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)),
+                                     key=lambda node: node.lineno)
+                item["python_declarations"] = {
+                    "total": len(definitions), "truncated": len(definitions) > 32,
+                    "definitions": [{"line": node.lineno, "signature_first_line": lines[node.lineno - 1][:240]}
+                                    for node in definitions[:32]],
+                }
+            except SyntaxError:
+                item["python_declarations"] = {"status": "SOURCE_PARSE_UNESTABLISHED"}
+        receipt["inventory"].append(item)
         return data
 
     try:
@@ -452,28 +533,44 @@ def console_summary(receipt: dict[str, Any]) -> str:
     other_roles = sorted({item["role"] for item in receipt["inventory"]} - set(roles) - {"engine_build"})
     generic_remaining = 90
     role_budgets = {"ToolsetRegistry": 170, "ModelContextProtocol": 140, "AutomationTestToolset": 100}
+    console_files = {
+        "ToolsetRegistry": (("Toolset.cpp", 80), ("ToolsetRegistry.cpp", 50),
+                            ("ToolsetRegistrySubsystem.cpp", 20), ("Toolset.h", 10),
+                            ("__init__.py", 10), ("ToolsetRegistrySubsystem.h", 10)),
+        "ModelContextProtocol": (("ModelContextProtocolToolsetRegistryAdapter.cpp", 90),
+                                 ("ModelContextProtocolEditor.cpp", 25),
+                                 ("ModelContextProtocolSettings.h", 25)),
+        "AutomationTestToolset": (("AutomationTestToolset.cpp", 80),
+                                  ("AutomationTestToolset.h", 20)),
+    }
     for role in (*roles, *other_roles):
         candidates = [item for item in receipt["inventory"] if item["role"] == role
                       and source_priority(Path(item["path"]), role)[0] < 50
                       and Path(item["path"]).suffix in {".h", ".cpp", ".py"}]
         candidates.sort(key=lambda item: source_priority(Path(item["path"]), role))
-        if role == "ToolsetRegistry":
-            console_order = ("ToolsetRegistrySubsystem.h", "Toolset.h", "__init__.py", "Toolset.cpp")
+        if role in console_files:
+            console_order = tuple(name for name, _ in console_files[role])
+            candidates = [item for item in candidates if Path(item["path"]).name in console_order]
             candidates.sort(key=lambda item: (
-                console_order.index(Path(item["path"]).name)
-                if Path(item["path"]).name in console_order else len(console_order),
+                console_order.index(Path(item["path"]).name),
                 source_priority(Path(item["path"]), role),
             ))
         remaining = role_budgets.get(role, generic_remaining)
         for item in candidates:
-            file_remaining = 40 if role in roles else 30
+            file_remaining = dict(console_files[role])[Path(item["path"]).name] if role in roles else 30
+            if item.get("python_declarations") and len(lines) < MAX_CONSOLE_LINES:
+                lines.append(f"DECLARATIONS {item['path']} sha256={item['sha256']} "
+                             + json.dumps(item["python_declarations"], sort_keys=True))
             for excerpt in item["selected_excerpts"]:
                 room = min(remaining, file_remaining, MAX_CONSOLE_LINES - len(lines) - 1)
                 if room <= 0:
                     break
                 selected = excerpt["text"].splitlines()[:room]
                 if selected:
-                    lines.append(f"SOURCE {item['path']}:{excerpt['start_line']} sha256={item['sha256']}")
+                    end_line = excerpt["start_line"] + len(selected) - 1
+                    clipped = excerpt.get("budget_truncated", False) or len(selected) < len(excerpt["text"].splitlines())
+                    lines.append(f"SOURCE {item['path']}:{excerpt['start_line']}-{end_line} "
+                                 f"sha256={item['sha256']} budget_truncated={str(clipped).lower()}")
                     lines.extend(selected)
                     remaining -= len(selected)
                     file_remaining -= len(selected)
