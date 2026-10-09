@@ -126,7 +126,33 @@ class NativeCompilationTests(unittest.TestCase):
         self.assertEqual(prep.drain_compilation(api), result)
         native.assert_called_once()
 
-    def test_pending_queues_fail_with_exact_native_evidence_without_retry(self):
+    def test_post_gc_shader_enqueue_drains_with_second_native_pass(self):
+        first = {
+            "ok": False,
+            "remaining_before": 1,
+            "remaining_after": 3,
+            "shader_jobs_before": 0,
+            "shader_jobs_after": 3,
+            "shader_active_workers_after": 0,
+            "available_physical_after": 11435679744,
+        }
+        settled = {
+            "ok": True,
+            "remaining_before": 3,
+            "remaining_after": 0,
+            "shader_jobs_before": 3,
+            "shader_jobs_after": 0,
+        }
+        native = Mock(side_effect=[json.dumps(first), json.dumps(settled)])
+        api = SimpleNamespace(
+            YacsTextureAuditLibrary=SimpleNamespace(
+                drain_asset_compilation_and_collect_garbage=native
+            )
+        )
+        self.assertEqual(prep.drain_compilation(api), settled)
+        self.assertEqual(native.call_count, 2)
+
+    def test_permanent_pending_work_retains_three_native_observations(self):
         for ok, assets, shaders in (
             (False, 2, 0),
             (False, 0, 3),
@@ -155,11 +181,33 @@ class NativeCompilationTests(unittest.TestCase):
                     RuntimeError, "native asset compilation did not drain:"
                 ) as error:
                     prep.drain_compilation(api)
-                self.assertEqual(
-                    json.loads(str(error.exception).split(": ", 1)[1]), result
-                )
-                native.assert_called_once()
+                evidence = json.loads(str(error.exception).split(": ", 1)[1])
+                self.assertEqual(evidence["attempt_count"], 3)
+                self.assertEqual(evidence["attempts"], [result] * 3)
+                self.assertEqual(evidence["last"], result)
+                self.assertEqual(native.call_count, 3)
 
+    def test_explicit_native_error_does_not_retry(self):
+        failure = {
+            "ok": False,
+            "error": "must run on game thread",
+            "remaining_after": -1,
+            "shader_jobs_after": -1,
+        }
+        native = Mock(return_value=json.dumps(failure))
+        api = SimpleNamespace(
+            YacsTextureAuditLibrary=SimpleNamespace(
+                drain_asset_compilation_and_collect_garbage=native
+            )
+        )
+        with self.assertRaisesRegex(
+            RuntimeError, "native asset compilation did not drain:"
+        ) as error:
+            prep.drain_compilation(api)
+        evidence = json.loads(str(error.exception).split(": ", 1)[1])
+        self.assertEqual(evidence["attempt_count"], 1)
+        self.assertEqual(evidence["last"], failure)
+        native.assert_called_once()
 
 class BindingTests(unittest.TestCase):
     def test_every_native_root_checked_against_master_and_overrides_restored(self):

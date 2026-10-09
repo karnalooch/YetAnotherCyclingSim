@@ -206,9 +206,7 @@ class WholeMapFrameSequenceTests(unittest.TestCase):
     """A/B pairing, deterministic mode order and 43 distinct native outputs."""
 
     def test_exact_43_frame_sequence_has_unique_output_paths_and_matched_views(self):
-        pinned = list(
-            capture.TARGETED_VIEWS + capture.NEAR_VIEWS + capture.FAR_VIEWS
-        )
+        pinned = list(capture.TARGETED_VIEWS + capture.NEAR_VIEWS + capture.FAR_VIEWS)
         self.assertEqual(len(pinned), 9)
         self.assertEqual(len(set(pinned)), 9)
         names = pinned + [f"unselected-{index:02d}" for index in range(12)]
@@ -232,9 +230,7 @@ class WholeMapFrameSequenceTests(unittest.TestCase):
         self.assertEqual([mode for _, mode in steps], expected_modes)
         self.assertEqual(len(steps), 43)
 
-        output_paths = [
-            f"frames/{view['frame_id']}-{mode}.png" for view, mode in steps
-        ]
+        output_paths = [f"frames/{view['frame_id']}-{mode}.png" for view, mode in steps]
         self.assertEqual(len(set(output_paths)), 43)
         baseline = {
             view["frame_id"]: view for view, mode in steps if mode == "baseline"

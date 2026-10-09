@@ -575,23 +575,42 @@ def assert_isolated_bootstrap(api):
 
 
 def drain_compilation(api):
-    result = json.loads(
-        api.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage()
-    )
-    if (
-        not result.get("ok")
-        or result.get("remaining_after") != 0
-        or result.get("shader_jobs_after") != 0
-    ):
-        # The owning capture retains exception text in its receipt. Keep the
-        # actual queue, worker and memory observations on failure as on success;
-        # a generic error cannot identify which native barrier stayed pending.
-        raise RuntimeError(
-            "Whole-map native asset compilation did not drain: "
-            + json.dumps(result, sort_keys=True)
+    """Drain late post-GC shader jobs with a bounded, fail-closed retry."""
+    observations = []
+    for _ in range(3):
+        result = json.loads(
+            api.YacsTextureAuditLibrary.drain_asset_compilation_and_collect_garbage()
         )
-    return result
-
+        if not isinstance(result, dict):
+            raise RuntimeError("Whole-map compiler returned a non-object receipt")
+        observations.append(result)
+        if (
+            result.get("ok") is True
+            and result.get("remaining_after") == 0
+            and result.get("shader_jobs_after") == 0
+        ):
+            if len(observations) > 1:
+                print(
+                    "Whole-map native compilation quiescence: "
+                    + json.dumps(
+                        {"attempt_count": len(observations), "attempts": observations},
+                        sort_keys=True,
+                    )
+                )
+            return result
+        if result.get("error"):
+            break
+    raise RuntimeError(
+        "Whole-map native asset compilation did not drain: "
+        + json.dumps(
+            {
+                "attempt_count": len(observations),
+                "attempts": observations,
+                "last": observations[-1],
+            },
+            sort_keys=True,
+        )
+    )
 
 class LandscapeBinding:
     def __init__(self, api, landscape, master, instance):
