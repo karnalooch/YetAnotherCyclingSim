@@ -59,7 +59,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 engine, artifact, exact_sha = Path(os.path.abspath(sys.argv[1])), Path(os.path.abspath(sys.argv[2])), sys.argv[3]
-MAX_FILE, MAX_TOTAL, MAX_FILES = 2*1024*1024, 8*1024*1024, 16
+MAX_FILE, MAX_TOTAL, BASE_FILES, MAX_FILES = 2*1024*1024, 8*1024*1024, 16, 18
 MAX_ENTRIES, MAX_DEPTH, MAX_SPAN_LINES, MAX_CONSOLE = 1024, 10, 1200, 500
 MAX_CALLS, MAX_CONSOLE_CHARS = 128, 1024
 MAX_DEPENDENCY_INCLUDES = 64
@@ -70,6 +70,7 @@ receipt = dict(schema_version=1, exact_sha=exact_sha, inspected_at_utc=datetime.
     status='PENDING', engine_identity=None, source_files=[], excerpts=[], gaps=[], direct_registration_calls=[],
     mcp_callsite_inventory=[], mcp_callsite_index_complete=False, declarations_require_primary_review=True,
     observed_server_dependency_includes=[],
+    followed_binding_dependencies=[],
     source_only=True, official_mcp_transport_verified=False, official_mcp_admitted=False,
     argument_policy_parity_verified=False, local_only_binding_verified=False,
     existing_project_test_verified=False, native_bob_capture_verified=False,
@@ -211,6 +212,16 @@ def functions(item, pattern, topic, required=True):
 def full(item, topic):
     add_span(item, topic, 1, len(item['text'].splitlines()), True)
 
+def actual_includes(item):
+    code = cpp_mask(item['text']).splitlines()
+    visible = cpp_mask(item['text'], strings=False).splitlines()
+    result = []
+    for index,line in enumerate(visible):
+        if not re.match(r'\s*#\s*include\b',code[index]): continue
+        include = re.match(r'\s*#\s*include\s*[<"]([^>"]+)[>"]',line)
+        if include: result.append((index+1,include.group(1)))
+    return result
+
 def optional(relative, purpose):
     path = engine / relative
     if not path.exists():
@@ -266,7 +277,7 @@ try:
             functions(item, r'\bUAutomationTestToolsetSubsystem::'+name+r'\s*\(', name)
         names = sorted(set(re.findall(r'\bUAutomationTestToolsetSubsystem::(\w+)\s*\(', cpp_mask(item['text']))))
         for name in names:
-            if re.search(r'Discover|Poll|Tick|Initialize|Pending|Complete', name):
+            if re.search(r'Discover|Poll|Tick|Initialize|Pending|Complete|HandleTestsAvailable|HandleTestsRefreshed', name):
                 functions(item, r'\bUAutomationTestToolsetSubsystem::'+re.escape(name)+r'\s*\(', name)
 
     mcp = 'Engine/Plugins/Experimental/ModelContextProtocol/Source/'
@@ -287,6 +298,65 @@ try:
             gaps.append(dict(topic=basename, reason='CANONICAL_SOURCE_FILENAME_NOT_UNIQUE', candidates=matches)); continue
         item = read(matches[0], 'mcp')
         full(item, 'server_public_lifecycle')
+    # These real dependency names came from the previous installed source run.
+    # Reserve their reads before the optional bounded registration index.
+    critical = (
+        ('ModelContextProtocolServer.h','ModelContextProtocol','official_server_declarations'),
+        ('ModelContextProtocolServer.cpp','ModelContextProtocol','official_server_implementation'),
+        ('ModelContextProtocolToolLibrary.h','ModelContextProtocolEngine','direct_tool_library_declarations'),
+        ('ModelContextProtocolToolLibrary.cpp','ModelContextProtocolEngine','direct_tool_library_controls'),
+        ('ModelContextProtocolToolsetRegistryAdapter.cpp','ModelContextProtocolEditor','registry_adapter_implementation'),
+        ('ModelContextProtocolModule.cpp','ModelContextProtocol','module_implementation'),
+    )
+    for basename, module, topic in critical:
+        matches = [x for x in source_inventory if x.startswith(mcp+module+'/') and Path(x).name==basename]
+        if len(matches)!=1:
+            gaps.append(dict(topic=topic, reason='NAMED_DEPENDENCY_SOURCE_NOT_UNIQUE', candidates=matches)); continue
+        item = read(matches[0], 'mcp')
+        if basename=='ModelContextProtocolServer.cpp':
+            names = sorted(set(re.findall(r'\bFModelContextProtocolServer::(\w+)\s*\(',cpp_mask(item['text']))))
+            for name in names:
+                if re.search(r'StartServer|StopServer|Handle|Request|Tool|Dispatch|Call|Tick',name):
+                    functions(item,r'\bFModelContextProtocolServer::'+re.escape(name)+r'\s*\(',
+                              'server_dependency_'+name,required=False)
+        elif basename=='ModelContextProtocolToolsetRegistryAdapter.cpp':
+            names = sorted(set(re.findall(r'\b(FToolsetRegistryToolAdapter(?:Manager)?)::(\w+)\s*\(',cpp_mask(item['text']))))
+            for owner,name in names:
+                if re.search(r'Execute|Dispatch',name):
+                    functions(item,r'\b'+owner+'::'+re.escape(name)+r'\s*\(','adapter_'+name,required=False)
+        elif basename=='ModelContextProtocolModule.cpp':
+            for name in ('AddTool','RemoveTool','RefreshTools'):
+                functions(item,r'\bFModelContextProtocolModule::'+name+r'\s*\(','module_'+name)
+        full(item,topic)
+    server_source = next((x for x in records.values() if Path(x['path']).name in {'ModelContextProtocolServer.cpp','ModelContextProtocolServer.h'}
+        and any(name=='HttpServerModule.h' for _,name in actual_includes(x))),None)
+    if server_source:
+        provenance = next(((line,name) for line,name in actual_includes(server_source) if name=='HttpServerModule.h'),None)
+        if provenance:
+            relative = 'Engine/Source/Runtime/Online/HTTPServer/Private/HttpServerModule.cpp'
+            item = optional(relative,'mcp')
+            if item:
+                receipt['followed_binding_dependencies'].append(dict(path=relative,from_path=server_source['path'],
+                    from_sha256=server_source['sha256'],include_line=provenance[0],include=provenance[1]))
+                for name in sorted(set(re.findall(r'\bFHttpServerModule::(\w+)\s*\(',cpp_mask(item['text'])))):
+                    if re.search(r'Router|Listen|Start|Stop',name):
+                        functions(item,r'\bFHttpServerModule::'+re.escape(name)+r'\s*\(','http_'+name,required=False)
+                full(item,'http_module_source')
+                listener_include = next(((line,name) for line,name in actual_includes(item) if name=='HttpListener.h'),None)
+                if listener_include:
+                    listener = optional('Engine/Source/Runtime/Online/HTTPServer/Private/HttpListener.cpp','mcp')
+                    if listener:
+                        receipt['followed_binding_dependencies'].append(dict(path=listener['path'],from_path=item['path'],
+                            from_sha256=item['sha256'],include_line=listener_include[0],include=listener_include[1]))
+                        for name in sorted(set(re.findall(r'\bFHttpListener::(\w+)\s*\(',cpp_mask(listener['text'])))):
+                            if re.search(r'Listen|Start|Init|Bind',name):
+                                functions(listener,r'\bFHttpListener::'+re.escape(name)+r'\s*\(','http_'+name,required=False)
+                        full(listener,'http_listener_source')
+                for backend in (item, records.get('Engine/Source/Runtime/Online/HTTPServer/Private/HttpListener.cpp')):
+                    if not backend: continue
+                    candidates=sorted(set(re.findall(r'\b(\w*(?:Config|Bind|Address)\w*)\s*\(',cpp_mask(backend['text']))))
+                    for name in candidates:
+                        functions(backend,r'\b'+re.escape(name)+r'\s*\(','http_helper_'+name,required=False)
     # Prioritize already-read implementations, then bounded new cpp files.
     implementations = sorted(source_inventory)
     implementations.sort(key=lambda x: (x not in records,
@@ -294,7 +364,7 @@ try:
         not bool(re.search(r'ToolLibrary|ToolsetRegistryAdapter|ToolRegistration', Path(x).name)),
         not x.endswith('.cpp'), x))
     for relative in implementations:
-        if relative not in records and (len(records) >= MAX_FILES or total_bytes + checked(engine,engine / relative).stat().st_size > MAX_TOTAL):
+        if relative not in records and (len(records) >= BASE_FILES or total_bytes + checked(engine,engine / relative).stat().st_size > MAX_TOTAL):
             inventory.append(dict(path=relative, scanned=False, reason='GLOBAL_SOURCE_BUDGET')); continue
         item = read(relative, 'mcp')
         inventory.append(dict(path=relative, scanned=True, sha256=item['sha256']))
@@ -346,7 +416,8 @@ finally:
     print('SOURCE_ONLY: no runtime, binding, argument parity or admission proof')
     console_summary('SERVER_DEPENDENCY_INCLUDES',dict(count=len(receipt['observed_server_dependency_includes']),
         inventory_truncated=any(x.get('reason')=='DEPENDENCY_INCLUDE_LIMIT' for x in gaps)))
-    for purpose in ('automation','mcp'):
+    console_summary('FOLLOWED_BINDING_DEPENDENCIES',receipt['followed_binding_dependencies'])
+    for purpose in ('automation','mcp_transport','mcp'):
         console = []
         if purpose == 'mcp':
             console.extend('SERVER_INCLUDE '+json.dumps(item,sort_keys=True) for item in receipt['observed_server_dependency_includes'])
@@ -355,12 +426,32 @@ finally:
             'FormatResultsJson':0, 'DiscoverTests':1, 'GetSubsystem':2, 'RunTests':3,
             'GetTestResults':4, 'GetTestStatus':5, 'ListTests':6, 'CollectLeafReports':7,
             'EnableRunResultPolling':8, 'subsystem_public_declarations':10,
+            'direct_tool_library_controls':0, 'direct_tool_library_declarations':1,
+            'official_server_declarations':1,
+            'module_AddTool':2, 'module_RemoveTool':2, 'module_RefreshTools':2,
             'server_start':0, 'settings_declarations':1, 'settings_implementation':2,
             'server_public_lifecycle':3, 'editor_registration_lifecycle':4,
             'observed_binding_context':6,
         }
-        for excerpt in sorted(excerpts,key=lambda x:(priority.get(x['topic'],9),x['path'],x['line_start'])):
-            if excerpt['purpose'] != purpose: continue
+        def console_purpose(excerpt):
+            if excerpt['purpose']!='mcp': return excerpt['purpose']
+            return 'mcp_transport' if excerpt['topic'].startswith(('server_','server_dependency_','official_server_','adapter_','http_')) else 'mcp'
+        def console_priority(excerpt):
+            if excerpt['topic'].startswith('http_'): return 0
+            if excerpt['topic'].startswith('server_dependency_'): return 1
+            if excerpt['topic'].startswith('adapter_'): return 2
+            return priority.get(excerpt['topic'],9)
+        for excerpt in sorted(excerpts,key=lambda x:(console_priority(x),x['path'],x['line_start'])):
+            if console_purpose(excerpt) != purpose: continue
+            if purpose in {'mcp','mcp_transport'} and excerpt['topic'] in {
+                'settings_declarations','settings_implementation','server_public_lifecycle',
+                'editor_registration_lifecycle','official_server_implementation',
+                'registry_adapter_implementation','module_implementation',
+                'server_StartupModule','server_ShutdownModule','server_StopServer',
+                'http_module_source','http_listener_source'}:
+                # Already-reviewed contexts / full-file backup remain in JSON;
+                # use console capacity for the newly required control bodies.
+                continue
             console.append('SOURCE '+excerpt['path']+':'+str(excerpt['line_start'])+'-'+str(excerpt['line_end'])+' sha256='+excerpt['sha256']+' topic='+excerpt['topic']+' body_complete='+str(excerpt['body_complete']))
             console.extend(str(line['line'])+': '+line['text'] for line in excerpt['lines'] if line['code'])
         truncated = len(console) > MAX_CONSOLE-2 or any(len(x)>MAX_CONSOLE_CHARS for x in console)

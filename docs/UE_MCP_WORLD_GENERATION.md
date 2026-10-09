@@ -371,12 +371,27 @@ the BOB body. This test does not establish editor-global filters or MCP parity.
 runs `BuildPlugin` on an idle shared host. Its
 [first native run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37994488902)
 stopped before C++ compilation because generated action paths were 292–311
-characters, exceeding UnrealBuildTool's 260-character limit. The next fragment
-uses a fresh shorter retained runner package directory and runs only the native
-boundary test in its empty HostProject. It preserves previous output and retains
-the current compile/test receipts, logs and report. Accepted-scene hydration,
-the existing project test and official MCP activation remain separate pending
-proofs.
+characters, exceeding UnrealBuildTool's 260-character limit. The
+[short-path native run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37996979223)
+at `f557bfd0a760b795bb3294ec047cdfc4c837424d` completed all eleven build
+actions and linked the plugin on UE 5.8.2 / CL 56702186. Its owned empty-project
+Editor process exited **255**; the boundary test and Python bindings are not
+verified. The final output-identity error obscured the original session error,
+so branch pushes now select a fixed read-only diagnostic of that preserved run.
+An explicit `native_probe` workflow dispatch selects a later native retry after
+diagnosis; the default diagnostic launches no Editor and compiles no code.
+The previously assumed public Python settings header was absent; its actual
+installed location still requires bounded source discovery. Previous outputs
+remain retained. Accepted-scene hydration, the existing project test and
+official MCP activation remain pending.
+
+The same native run authenticated the frozen #363 artifact archive and all six
+consumer/delivery/reload/render/conservation JSON hashes against retained host
+bytes. Later retained-metadata discovery stopped with `READ_BLOCKED`; it did
+not restore assets or admit the scene. Protected
+[CI 37996983703](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37996983703)
+passed for that exact commit, including the project build, Automation and
+Aggregate gate. That CI does not enable or test this disabled-by-default plugin.
 
 ### Safety and preserved governance
 

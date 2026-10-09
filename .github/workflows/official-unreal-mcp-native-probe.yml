@@ -11,6 +11,13 @@ on:
       - 'scripts/ue/Read-YacsAcceptedMaterialCheckpoint.ps1'
       - 'scripts/ue/probe_official_mcp_bob_reflection.py'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Fixed previous failure readback, or an explicit later native proof
+        type: choice
+        options: [diagnose_previous_failure, native_probe]
+        default: diagnose_previous_failure
+        required: true
 
 permissions:
   contents: read
@@ -22,7 +29,7 @@ concurrency:
 
 jobs:
   compile:
-    name: Build isolated BOB plugin and verify its input boundary
+    name: Inspect retained native failure or run the explicit native proof
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
@@ -44,11 +51,12 @@ jobs:
           clean: false
           persist-credentials: false
 
-      - name: Build and run the fixed bare-project native proof
+      - name: Read fixed previous failure; native retry requires explicit dispatch
         shell: pwsh
         working-directory: _official-mcp-native-probe
         env:
           YACS_CHECKPOINT_READ_TOKEN: ${{ github.token }}
+          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'diagnose_previous_failure' }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
@@ -64,7 +72,11 @@ jobs:
             ) | Out-Null
             if ($errors.Count -gt 0) { throw ($errors.Message -join '; ') }
           }
-          ./scripts/ue/Invoke-YacsOfficialMcpNativeProbe.ps1 -ExpectedHead $env:TARGET_SHA
+          if ($env:NATIVE_PROBE_MODE -ceq 'diagnose_previous_failure') {
+            ./scripts/ue/Invoke-YacsOfficialMcpNativeProbe.ps1 -ExpectedHead $env:TARGET_SHA -DiagnosePreviousFailure
+          } elseif ($env:NATIVE_PROBE_MODE -ceq 'native_probe' -and '${{ github.event_name }}' -ceq 'workflow_dispatch') {
+            ./scripts/ue/Invoke-YacsOfficialMcpNativeProbe.ps1 -ExpectedHead $env:TARGET_SHA
+          } else { throw 'Unsupported fixed native proof mode.' }
 
       - name: Retain bounded compile and bare-project proof evidence
         if: ${{ always() }}
@@ -84,5 +96,9 @@ jobs:
             _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/input-boundary-stderr.log
             _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/InputBoundaryReport/index.json
             _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/native-python-reflection.json
+            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/previous-failure-diagnostic.json
+            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous37996979223/Accepted363/json/saved-material-consumer/*.json
+            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous37996979223/Accepted363/json/checkout-restoration.json
+            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous37996979223/Accepted363/json/checkout-restoration-post-material.json
           if-no-files-found: error
           retention-days: 7

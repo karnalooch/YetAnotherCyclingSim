@@ -12,7 +12,9 @@
 param(
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^[0-9a-f]{40}$')]
-    [string] $ExpectedHead
+    [string] $ExpectedHead,
+    # Fixed retained run only; no caller-supplied paths or runtime operation.
+    [switch] $DiagnosePreviousFailure
 )
 
 Set-StrictMode -Version Latest
@@ -43,10 +45,15 @@ function Get-ProbeFileIdentity {
     Assert-ProbePlainPath $Path
     $entry = Get-Item -LiteralPath $Path -Force
     if ($entry.PSIsContainer) { throw 'A native proof file is unexpectedly a directory.' }
+    $stream = [IO.File]::OpenRead($Path)
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    try { $hash = [Convert]::ToHexString($algorithm.ComputeHash($stream)).ToLowerInvariant() }
+    finally { $algorithm.Dispose(); $stream.Dispose() }
     return [ordered]@{
         path = [IO.Path]::GetFullPath($Path)
         size_bytes = $entry.Length
-        sha256 = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+        # Stream hashing also produces a real SHA256 for empty redirected logs.
+        sha256 = $hash
     }
 }
 function Write-ProbeJson {
@@ -94,6 +101,240 @@ function Get-ProbeTopLevelMetadata {
         else { [void]$result.Append(' ') }
     }
     return $result.ToString()
+}
+function Invoke-ProbePreviousFailureDiagnostic {
+    $previousRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpNativeProbe\37996979223-1'
+    if (-not [string]::Equals([IO.Path]::GetFullPath((Join-Path $RepoRoot 'Saved/RuntimeProof/OfficialMcpNativeProbe/37996979223-1')), $previousRoot, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Previous-failure diagnostic requires the exact retained runner checkout.'
+    }
+    Assert-ProbePlainPath $previousRoot
+    $diagnostic = [ordered]@{
+        schema_version = 1; exact_sha = $ExpectedHead; previous_run = '37996979223-1'
+        previous_exact_sha = 'f557bfd0a760b795bb3294ec047cdfc4c837424d'
+        previous_package_root = 'D:\yacs\runner\_work\b384\37996979223-1\p'
+        status = 'READ_ONLY_DIAGNOSTIC'; files = [ordered]@{}; gaps = @()
+        editor_context = @(); editor_context_truncated = $false; automation_summary = $null; accepted_summary = $null
+        python_settings_candidates = @(); source_discovery_complete = $true
+        read_bytes = 0; source_only = $true; compile_performed = $false
+        editor_launched = $false; official_mcp_admitted = $false
+        native_input_boundary_verified = $false; native_bob_capture_verified = $false
+        persistent_world_mutation = $false; performance_pass = $false
+        performance_status = 'DEFERRED_AFTER_M3'
+    }
+    function Read-ProbeDiagnosticFile {
+        param([string] $Path, [long] $Limit)
+        Assert-ProbePlainPath $Path
+        if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $null }
+        $entry = Get-Item -LiteralPath $Path -Force
+        if ($entry.Length -gt $Limit -or $diagnostic.read_bytes + $entry.Length -gt 16MB) {
+            throw 'Fixed diagnostic evidence exceeded its per-file or 16 MiB total read bound.'
+        }
+        $originalWriteTicks = $entry.LastWriteTimeUtc.Ticks
+        $stream = [IO.File]::OpenRead($Path)
+        try {
+            $buffer = [byte[]]::new([int]$Limit + 1)
+            $count = 0
+            while (($chunk = $stream.Read($buffer, $count, $buffer.Length - $count)) -gt 0) {
+                $count += $chunk
+                if ($count -gt $Limit) { throw 'Fixed diagnostic evidence grew beyond its read bound.' }
+            }
+            $bytes = [byte[]]::new($count)
+            [Array]::Copy($buffer, $bytes, $count)
+        }
+        finally { $stream.Dispose() }
+        $afterEntry = Get-Item -LiteralPath $Path -Force
+        if ($count -ne $entry.Length -or $count -ne $afterEntry.Length -or $originalWriteTicks -ne $afterEntry.LastWriteTimeUtc.Ticks) {
+            throw 'Fixed retained diagnostic evidence changed during its read.'
+        }
+        $identity = [ordered]@{
+            path = [IO.Path]::GetFullPath($Path); size_bytes = $count
+            sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+        }
+        $diagnostic.read_bytes += $count
+        return @{ identity = $identity; bytes = $bytes; text = [Text.Encoding]::UTF8.GetString($bytes) }
+    }
+    function Get-ProbeSafeDiagnosticText {
+        param([string] $Text, [int] $MaximumCharacters = 1024)
+        $safe = [regex]::Replace($Text, '(?i)https?://\S+', '[URL_REDACTED]')
+        $safe = [regex]::Replace($safe, '(?i)\b(?:authorization|bearer|token|signature|sig)\s*[:=]\s*\S+', '[SECRET_FIELD_REDACTED]')
+        if ($safe.Length -gt $MaximumCharacters) { return $safe.Substring(0, $MaximumCharacters) + '[TRUNCATED]' }
+        return $safe
+    }
+    function Write-ProbeDiagnosticSummary {
+        param([string] $Label, $Value)
+        Write-Host ($Label + ' ' + (Get-ProbeSafeDiagnosticText ($Value | ConvertTo-Json -Depth 10 -Compress) 8192))
+    }
+    foreach ($name in @('input-boundary-editor.log', 'input-boundary-stdout.log', 'input-boundary-stderr.log')) {
+        $file = Read-ProbeDiagnosticFile (Join-Path $previousRoot $name) 2MB
+        if ($null -eq $file) { $diagnostic.gaps += "Missing retained $name"; continue }
+        $diagnostic.files[$name] = $file.identity
+        if ($name -ceq 'input-boundary-editor.log' -and $file.identity.sha256 -cne 'd02a32ee1380bab8ba3d6ffe86a4fb8d8b40903989d934b4c101b8c9255f9db7') {
+            throw 'Retained Editor log differs from the exact previous-run SHA256.'
+        }
+        $lines = $file.text -split '\r?\n'
+        $selected = [Collections.Generic.SortedSet[int]]::new()
+        if ($name -ceq 'input-boundary-editor.log') {
+            # Preserve the causal shutdown/assertion tail before other contexts.
+            for ($line = [Math]::Max(0, $lines.Length - 80); $line -lt $lines.Length; $line++) { [void]$selected.Add($line) }
+        }
+        foreach ($pattern in @('(?i)fatal|assertion|error:|Test failed|Failed to load|Missing.*module',
+            '(?i)InputBoundary|YacsBobInspection|AutomationTest|Test Started|Test Completed|LogExit:|LogLoad:.*Entry')) {
+            for ($index = 0; $index -lt $lines.Length; $index++) {
+                if ($lines[$index] -match $pattern) {
+                    for ($line = [Math]::Max(0, $index - 2); $line -le [Math]::Min($index + 2, $lines.Length - 1); $line++) {
+                        if ($selected.Count -lt 160) { [void]$selected.Add($line) }
+                        elseif (-not $selected.Contains($line)) { $diagnostic.editor_context_truncated = $true }
+                    }
+                }
+            }
+        }
+        foreach ($line in $selected) {
+            if ($diagnostic.editor_context.Count -ge 200) { $diagnostic.editor_context_truncated = $true; break }
+            if ($lines[$line] -match '(?i)command\s*line|authorization|bearer\s') { continue }
+            $text = Get-ProbeSafeDiagnosticText ('{0}:{1}: {2}' -f $name, ($line + 1), $lines[$line])
+            $diagnostic.editor_context += $text
+            Write-Host $text
+        }
+    }
+    $indexFile = Read-ProbeDiagnosticFile (Join-Path $previousRoot 'InputBoundaryReport/index.json') 2MB
+    if ($null -eq $indexFile) { $diagnostic.gaps += 'Previous Automation index.json is absent.' }
+    else {
+        $diagnostic.files.automation_index = $indexFile.identity
+        $index = $indexFile.text.TrimStart([char]0xFEFF) | ConvertFrom-Json -AsHashtable -Depth 64
+        $summary = [ordered]@{}
+        foreach ($field in @('succeeded', 'succeededWithWarnings', 'failed', 'notRun', 'inProcess')) {
+            $summary[$field] = if (Test-ProbeNonnegativeInteger $index[$field]) { $index[$field] } else { 'MALFORMED_COUNTER' }
+        }
+        $summary.tests = @()
+        foreach ($test in @($index['tests'] | Select-Object -First 8)) {
+            $row = [ordered]@{
+                fullTestPath = Get-ProbeSafeDiagnosticText ([string]$test['fullTestPath']) 256
+                state = Get-ProbeSafeDiagnosticText ([string]$test['state']) 64
+                errors = if (Test-ProbeNonnegativeInteger $test['errors']) { $test['errors'] } else { 'MALFORMED_COUNTER' }
+                warnings = if (Test-ProbeNonnegativeInteger $test['warnings']) { $test['warnings'] } else { 'MALFORMED_COUNTER' }
+                error_events = @()
+            }
+            foreach ($event in @($test['entries'] | Where-Object { $_['event']['type'] -ceq 'Error' } | Select-Object -First 8)) {
+                $row.error_events += Get-ProbeSafeDiagnosticText ([string]$event['event']['message'])
+            }
+            $summary.tests += $row
+        }
+        $diagnostic.automation_summary = $summary
+        Write-ProbeDiagnosticSummary 'PREVIOUS_AUTOMATION' $summary
+    }
+    $acceptedFile = Read-ProbeDiagnosticFile (Join-Path $previousRoot 'Accepted363/accepted-read.json') 2MB
+    if ($null -eq $acceptedFile) { $diagnostic.gaps += 'Previous accepted-read.json is absent.' }
+    else {
+        $diagnostic.files.accepted_read = $acceptedFile.identity
+        $accepted = $acceptedFile.text.TrimStart([char]0xFEFF) | ConvertFrom-Json -AsHashtable -Depth 64
+        $summary = [ordered]@{}
+        foreach ($field in @('status', 'source_exact_sha', 'artifact_id', 'zip_verified', 'downloaded_zip_sha256', 'error', 'error_code', 'local_exception_type', 'retained_metadata_path', 'retained_metadata_observed_bytes')) {
+            if ($accepted.Contains($field)) {
+                $value = $accepted[$field]
+                $summary[$field] = if ($value -is [string]) { Get-ProbeSafeDiagnosticText $value }
+                    elseif ($null -eq $value -or $value -is [bool] -or $value -is [int] -or $value -is [long]) { $value }
+                    else { 'MALFORMED_SCALAR' }
+            }
+        }
+        $diagnostic.accepted_summary = $summary
+        Write-ProbeDiagnosticSummary 'PREVIOUS_ACCEPTED' $summary
+        if ($accepted['zip_verified'] -ne $true -or $accepted['downloaded_zip_sha256'] -cne '3f65958a52cd476bbf268eea7cb884ada06206e15b3fd00286162848e0bece9c') {
+            throw 'Previous accepted JSON readback lacks the pinned ZIP identity.'
+        }
+        $pinnedJsonHashes = [ordered]@{
+            'saved-material-consumer/consumer-manifest.json' = '0eff084ad7bad97200e8947c47f5480ebb504b928769ab1bc36609de6ef777fb'
+            'saved-material-consumer/delivery-package-manifest.json' = 'd8e7dfe050d952f8c0bbc236f1effe15ccc9a48b578277fb4b4c4817d8c122c8'
+            'saved-material-consumer/reload-receipt.json' = '2e4025d7b56f60bc5f8f13c3e16390b4ae4bcff915ba680a14c64b8fe3190aae'
+            'saved-material-consumer/fresh-render-receipt.json' = '60a5bccd95ea78f58a910c25f293db12eb124429e281b8a96d590558f45cc356'
+            'checkout-restoration.json' = '6e15ef090fc94d694e35aba9ca3dac78ddc7c581d495d9f23cf1a7f772da7c34'
+            'checkout-restoration-post-material.json' = '41c473d3e90fe3f7c72ec1baec741d8356c7e5e00f6e2cc56a7c5611837265a0'
+        }
+        foreach ($name in $pinnedJsonHashes.Keys) {
+            $jsonFile = Read-ProbeDiagnosticFile (Join-Path $previousRoot "Accepted363/json/$name") 2MB
+            if ($null -eq $jsonFile) { $diagnostic.gaps += "Missing previously extracted $name"; continue }
+            $rows = @($accepted['selected_json'] | Where-Object { $_['path'] -ceq $name })
+            if ($rows.Count -ne 1 -or $rows[0]['archive_sha256'] -cne $jsonFile.identity.sha256 -or $jsonFile.identity.sha256 -cne $pinnedJsonHashes[$name]) {
+                throw 'Previously extracted accepted JSON differs from its pinned ZIP read receipt.'
+            }
+            $diagnostic.files["accepted_json/$name"] = $jsonFile.identity
+            $target = Join-Path $ArtifactRoot "Previous37996979223/Accepted363/json/$name"
+            Assert-ProbePlainPath $target
+            New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
+            if (Test-Path -LiteralPath $target) { throw 'Previous JSON diagnostic readback target already exists.' }
+            [IO.File]::WriteAllBytes($target, $jsonFile.bytes)
+            $value = $jsonFile.text.TrimStart([char]0xFEFF) | ConvertFrom-Json -AsHashtable -Depth 64
+            $metadata = [ordered]@{ path = $name }
+            foreach ($field in @('status', 'exact_sha', 'map_package', 'map_sha256', 'canonical_map_package', 'canonical_map_sha256',
+                'component_count', 'fresh_process', 'geometry_mutation', 'geometry_snapshot_sha256', 'material_recipe_sha256',
+                'expected_material_parent', 'expected_material_instance', 'source_proof', 'initial_receipt_sha256')) {
+                if ($value.Contains($field)) { $metadata[$field] = $value[$field] }
+            }
+            Write-ProbeDiagnosticSummary 'PREVIOUS_ACCEPTED_METADATA' $metadata
+        }
+        # Stat the same five frozen metadata names only; never read a large
+        # capture JSON or retry the download to establish the old 2 MiB gate.
+        $diagnostic['accepted_retained_metadata_stats'] = @()
+        $frozenProofRoot = 'D:\yacs\work\proofs\sa-calobra-whole-map\94827365ef8e83e52717bb21f9d6efa921aa2d1e\37954100285-1'
+        foreach ($name in @('whole-map-master-receipt.json', 'generated-assets-verification.json', 'native-proof-verification.json',
+            'capture/whole-map-prep/whole-map-prep-receipt.json', 'whole-map-prep/surface-prep-manifest.json')) {
+            $metadataPath = Join-Path $frozenProofRoot $name
+            Assert-ProbePlainPath $metadataPath
+            $metadataStat = [ordered]@{ path = $metadataPath; exists = (Test-Path -LiteralPath $metadataPath -PathType Leaf); read_performed = $false; observed_size_bytes = $null; exceeds_prior_2mib_limit = $null }
+            if ($metadataStat.exists) {
+                $metadataStat.observed_size_bytes = (Get-Item -LiteralPath $metadataPath -Force).Length
+                $metadataStat.exceeds_prior_2mib_limit = $metadataStat.observed_size_bytes -gt 2MB
+            }
+            $diagnostic.accepted_retained_metadata_stats += $metadataStat
+            Write-ProbeDiagnosticSummary 'PREVIOUS_ACCEPTED_METADATA_STAT' $metadataStat
+        }
+    }
+    # Discover only this exact basename beneath the already known Python plugin
+    # Source root. No engine walk or source execution; bounded 512 entries/depth6.
+    $sourceRoot = Join-Path $engine.Root 'Engine/Plugins/Experimental/PythonScriptPlugin/Source'
+    Assert-ProbePlainPath $sourceRoot
+    if (-not (Test-Path -LiteralPath $sourceRoot -PathType Container)) { $diagnostic.gaps += 'Confirmed Python plugin Source directory is absent.' }
+    else {
+        $queue = [Collections.Generic.Queue[object]]::new()
+        $queue.Enqueue(@{ path = $sourceRoot; depth = 0 })
+        $entries = 0
+        while ($queue.Count -gt 0) {
+            $directory = $queue.Dequeue()
+            foreach ($entryPath in [IO.Directory]::EnumerateFileSystemEntries($directory.path)) {
+                $entries++
+                if ($entries -gt 512) { $diagnostic.source_discovery_complete = $false; break }
+                $item = Get-Item -LiteralPath $entryPath -Force
+                if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { $diagnostic.source_discovery_complete = $false; continue }
+                if ($item.PSIsContainer) {
+                    if ($directory.depth -lt 6) { $queue.Enqueue(@{ path = $item.FullName; depth = $directory.depth + 1 }) }
+                    else { $diagnostic.source_discovery_complete = $false }
+                }
+                elseif ($item.Name -ceq 'PythonScriptPluginSettings.h') {
+                    if ($diagnostic.python_settings_candidates.Count -ge 2) { throw 'Fixed Python settings basename has more than two bounded candidates.' }
+                    $header = Read-ProbeDiagnosticFile $item.FullName 256KB
+                    $context = @()
+                    $lines = $header.text -split '\r?\n'
+                    $numbers = [Collections.Generic.SortedSet[int]]::new()
+                    for ($index = 0; $index -lt $lines.Length; $index++) {
+                        if ($lines[$index] -match '\b(?:UCLASS|UPythonScriptPluginSettings|bRemoteExecution)\b|^\s*public\s*:') {
+                            for ($line = [Math]::Max(0, $index - 4); $line -le [Math]::Min($index + 8, $lines.Length - 1); $line++) {
+                                if ($numbers.Count -lt 60) { [void]$numbers.Add($line) }
+                            }
+                        }
+                    }
+                    foreach ($line in $numbers) { $context += Get-ProbeSafeDiagnosticText ('{0}: {1}' -f ($line + 1), $lines[$line]) }
+                    $diagnostic.python_settings_candidates += @{ identity = $header.identity; context = $context }
+                    Write-Host ('PYTHON_SETTINGS_SOURCE ' + ($header.identity | ConvertTo-Json -Compress))
+                    foreach ($line in $context) { Write-Host $line }
+                }
+            }
+            if ($entries -gt 512) { break }
+        }
+        if (-not $diagnostic.source_discovery_complete) { $diagnostic.gaps += 'Python settings basename inventory hit a depth/entry/link boundary.' }
+        if ($diagnostic.python_settings_candidates.Count -eq 0) { $diagnostic.gaps += 'Fixed PythonScriptPluginSettings.h basename not found within the bounded Source inventory.' }
+    }
+    Write-ProbeJson (Join-Path $ArtifactRoot 'previous-failure-diagnostic.json') $diagnostic
+    $receipt['diagnostic_previous_run'] = '37996979223-1'
+    $receipt.proof_files.previous_failure_diagnostic = Get-ProbeFileIdentity (Join-Path $ArtifactRoot 'previous-failure-diagnostic.json')
 }
 
 if ($env:GITHUB_RUN_ID -notmatch '^[0-9]{1,20}$' -or $env:GITHUB_RUN_ATTEMPT -notmatch '^[0-9]{1,4}$') {
@@ -147,6 +388,7 @@ $receipt = [ordered]@{
     persistent_world_mutation = $false
     performance_pass = $false
     performance_status = 'DEFERRED_AFTER_M3'
+    secondary_errors = @()
     error = $null
 }
 $ownedEditor = $null
@@ -198,6 +440,14 @@ try {
         -or @($descriptor.Modules).Count -ne 1 -or $descriptor.Modules[0].Name -cne 'YacsBobInspection' `
         -or $descriptor.Modules[0].Type -cne 'Editor' -or $descriptor.Modules[0].LoadingPhase -cne 'PostEngineInit') {
         throw 'Native plugin must remain disabled by default, Editor-only and content-free.'
+    }
+    if ($DiagnosePreviousFailure) {
+        Invoke-ProbePreviousFailureDiagnostic
+        Assert-ProbeIdleHost
+        # Same fixed bounded source reader; no accepted artifact redownload.
+        & (Join-Path $PSScriptRoot 'Read-YacsOfficialMcpRuntimeDependencies.ps1') -EngineRoot $engine.Root -ArtifactRoot $ArtifactRoot -ExpectedHead $ExpectedHead
+        $receipt.status = 'PREVIOUS_FAILURE_DIAGNOSTIC_RETAINED'
+        return
     }
     Assert-ProbeIdleHost
 
@@ -493,7 +743,7 @@ try {
     }
     $ownedEditor.WaitForExit()
     $receipt.owned_editor_exit_code = $ownedEditor.ExitCode
-    if ($null -eq $ownedEditor.ExitCode -or $ownedEditor.ExitCode -ne 0) { throw 'The owned bare HostProject Editor did not exit successfully.' }
+    if ($null -eq $ownedEditor.ExitCode -or $ownedEditor.ExitCode -ne 0) { throw "The owned bare HostProject Editor did not exit successfully (exit=$($ownedEditor.ExitCode))." }
     Assert-ProbeInputsUnchanged
     foreach ($key in $protectedHostFiles.Keys) {
         if ((Get-ProbeFileIdentity $protectedHostFiles[$key]).sha256 -cne $receipt.host_project_source_sha256[$key]) {
@@ -565,17 +815,29 @@ finally {
         try {
             if (-not $ownedEditor.HasExited) {
                 $ownedEditor.Kill()
-                if (-not $ownedEditor.WaitForExit(10000)) { $receipt.error = 'Owned Editor did not exit after bounded termination.'; $receipt.status = 'BLOCKED' }
+                if (-not $ownedEditor.WaitForExit(10000)) {
+                    $receipt.secondary_errors += 'Owned Editor did not exit after bounded termination.'
+                    if (-not $receipt.error) { $receipt.error = $receipt.secondary_errors[-1] }
+                    $receipt.status = 'BLOCKED'
+                }
             }
         }
-        catch { $receipt.error = 'Cannot terminate the owned isolated Editor handle.'; $receipt.status = 'BLOCKED' }
+        catch {
+            $receipt.secondary_errors += 'Cannot terminate the owned isolated Editor handle.'
+            if (-not $receipt.error) { $receipt.error = $receipt.secondary_errors[-1] }
+            $receipt.status = 'BLOCKED'
+        }
         finally { $ownedEditor.Dispose() }
     }
     foreach ($name in @('native-plugin-build.log', 'input-boundary-editor.log', 'input-boundary-stdout.log', 'input-boundary-stderr.log', 'python-runtime-settings.json', 'runtime-dependencies.json')) {
         $path = Join-Path $ArtifactRoot $name
         if (Test-Path -LiteralPath $path -PathType Leaf) {
             try { $receipt.proof_files[$name] = Get-ProbeFileIdentity $path }
-            catch { $receipt.status = 'BLOCKED'; $receipt.error = 'Cannot retain a native proof output identity.' }
+            catch {
+                $receipt.secondary_errors += "Cannot retain native proof output identity: $name ($($_.Exception.GetType().Name))."
+                $receipt.status = 'BLOCKED'
+                if (-not $receipt.error) { $receipt.error = $receipt.secondary_errors[-1] }
+            }
         }
     }
     $json = $receipt | ConvertTo-Json -Depth 20

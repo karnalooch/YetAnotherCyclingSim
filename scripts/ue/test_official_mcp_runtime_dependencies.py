@@ -23,6 +23,9 @@ AUTO = "Engine/Plugins/Experimental/Toolsets/AutomationTestToolset/Source/Automa
 MCP = "Engine/Plugins/Experimental/ModelContextProtocol/Source/"
 AUTO_IMPL = AUTO + "Private/AutomationTestToolset.cpp"
 SERVER_IMPL = MCP + "ModelContextProtocol/Private/ModelContextProtocolModule.cpp"
+TRANSPORT_IMPL = MCP + "ModelContextProtocol/Private/ModelContextProtocolServer.cpp"
+HTTP_IMPL = "Engine/Source/Runtime/Online/HTTPServer/Private/HttpServerModule.cpp"
+LISTENER_IMPL = "Engine/Source/Runtime/Online/HTTPServer/Private/HttpListener.cpp"
 RUNTIME_FLAGS = (
     "official_mcp_transport_verified", "official_mcp_admitted", "argument_policy_parity_verified",
     "local_only_binding_verified", "existing_project_test_verified", "native_bob_capture_verified",
@@ -78,7 +81,18 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         self.write(SERVER_IMPL, '#include "HttpServerModule.h"\n'
             "void FModule::StartServer() {\n// AddTool(fake);\n"
             'const char* text="AddTool(fake);";\n AddTool(Real);\n}\n'
-            "void FModule::ShutdownModule() {}\n")
+            "void FModule::ShutdownModule() {}\n" +
+            "".join("void FModelContextProtocolModule::" + name + "\n() {}\n"
+                    for name in ("AddTool", "RemoveTool", "RefreshTools")))
+        self.write(MCP + "ModelContextProtocol/Public/ModelContextProtocolServer.h",
+                   "class FModelContextProtocolServer {};\n")
+        self.write(TRANSPORT_IMPL, "void FModelContextProtocolServer::HandleRequest() {}\n")
+        self.write(MCP + "ModelContextProtocolEngine/Public/ModelContextProtocolToolLibrary.h",
+                   "class UModelContextProtocolToolLibrary {};\n")
+        self.write(MCP + "ModelContextProtocolEngine/Private/ModelContextProtocolToolLibrary.cpp",
+                   "void UModelContextProtocolToolLibrary::SyntheticControl() {}\n")
+        self.write(MCP + "ModelContextProtocolEditor/Private/ModelContextProtocolToolsetRegistryAdapter.cpp",
+                   "void FToolsetRegistryToolAdapter::Execute() {}\n")
 
     def write(self, relative, text):
         path = self.engine / relative
@@ -245,16 +259,81 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                    "int SyntheticValue;\n" * 1600)
         self.write(SERVER_IMPL, '#include "HttpServerModule.h"\n' * 600 +
                    "void FModule::StartServer() {}\n")
+        self.write(TRANSPORT_IMPL, "void FModelContextProtocolServer::HandleRequest() {\n" +
+                   "int SyntheticValue;\n" * 1600 + "}\n")
+        self.write(MCP + "ModelContextProtocolEngine/Private/ModelContextProtocolToolLibrary.cpp",
+                   "void UModelContextProtocolToolLibrary::SyntheticControl() {\n" +
+                   "int SyntheticValue;\n" * 1600 + "}\n")
         process, receipt = self.run_reader()
         self.assertEqual(process.returncode, 0, process.stderr)
         excerpt = next(item for item in receipt["excerpts"] if item["topic"] == "settings_declarations")
         self.assertFalse(excerpt["body_complete"])
         self.assertEqual(len(excerpt["lines"]), 1200)
-        for purpose in ("automation", "mcp"):
+        for purpose in ("automation", "mcp_transport", "mcp"):
             section = process.stdout.split("PURPOSE " + purpose + " ", 1)[1].split("END_PURPOSE " + purpose, 1)[0]
             self.assertLessEqual(len(section.splitlines()) + 1, 500)
         self.assertIn("PURPOSE mcp console_truncated=True", process.stdout)
+        self.assertIn("PURPOSE mcp_transport console_truncated=True", process.stdout)
         self.assertLessEqual(max(map(len, process.stdout.splitlines())), 1100)
+
+    def test_actual_http_include_chain_is_bounded_and_has_source_provenance(self):
+        self.write(TRANSPORT_IMPL, '#include "HttpServerModule.h"\n'
+                   "void FModelContextProtocolServer::HandleRequest() {}\n")
+        self.write(HTTP_IMPL, '#include "HttpListener.h"\n'
+                   "void FHttpServerModule::StartAllListeners() {}\n")
+        self.write(LISTENER_IMPL, "void FHttpListener::StartListening() {}\n")
+        # The collector may follow only the two fixed backend dependencies,
+        # even with an unrelated escaping link and abundant optional source.
+        unrelated = self.engine / "Engine/Source/Runtime/Unrelated"
+        unrelated.parent.mkdir(parents=True, exist_ok=True)
+        unrelated.symlink_to(self.base / "outside-unread", target_is_directory=True)
+        for index in range(20):
+            self.write(MCP + f"ModelContextProtocol/Private/Extra{index:02d}.cpp",
+                       "void Synthetic() {}\n")
+        process, receipt = self.run_reader()
+        self.assertEqual(process.returncode, 0, process.stderr)
+        follows = receipt["followed_binding_dependencies"]
+        self.assertEqual([item["path"] for item in follows], [HTTP_IMPL, LISTENER_IMPL])
+        self.assertEqual([item["from_path"] for item in follows], [TRANSPORT_IMPL, HTTP_IMPL])
+        for item in follows:
+            self.assertEqual(item["include_line"], 1)
+            self.assertEqual(item["from_sha256"],
+                             hashlib.sha256((self.engine / item["from_path"]).read_bytes()).hexdigest())
+        self.assertLessEqual(receipt["source_file_count"], 18)
+        self.assertLessEqual(receipt["total_source_bytes"], 8 * 1024 * 1024)
+        self.assertFalse(receipt["mcp_callsite_index_complete"])
+        outside = [item["path"] for item in receipt["source_files"]
+                   if not item["path"].startswith((AUTO, MCP)) and item["path"] != "Engine/Build/Build.version"]
+        self.assertEqual(outside, [HTTP_IMPL, LISTENER_IMPL])
+        for topic in ("module_AddTool", "module_RemoveTool", "module_RefreshTools", "adapter_Execute"):
+            self.assertTrue(any(item["topic"] == topic and item["body_complete"] for item in receipt["excerpts"]))
+
+    def test_literal_http_includes_never_follow_and_real_backend_link_is_denied(self):
+        self.write(HTTP_IMPL, '#include "HttpListener.h"\nvoid FHttpServerModule::StartAllListeners() {}\n')
+        self.write(LISTENER_IMPL, "void FHttpListener::StartListening() {}\n")
+        for source in ('// #include "HttpServerModule.h"\n',
+                       'const char* text=R"tag(\n#include "HttpServerModule.h"\n)tag";\n'):
+            with self.subTest(source=source):
+                self.write(TRANSPORT_IMPL, source + "void FModelContextProtocolServer::HandleRequest() {}\n")
+                process, receipt = self.run_reader()
+                self.assertEqual(process.returncode, 0, process.stderr)
+                self.assertEqual(receipt["followed_binding_dependencies"], [])
+                self.assertFalse(any(item["path"].startswith("Engine/Source/") for item in receipt["source_files"]))
+        self.write(TRANSPORT_IMPL, '#include "HttpServerModule.h"\nvoid FModelContextProtocolServer::HandleRequest() {}\n')
+        self.write(HTTP_IMPL, 'const char* text=R"tag(\n#include "HttpListener.h"\n)tag";\n'
+                   "void FHttpServerModule::StartAllListeners() {}\n")
+        process, receipt = self.run_reader()
+        self.assertEqual(process.returncode, 0, process.stderr)
+        self.assertEqual([item["path"] for item in receipt["followed_binding_dependencies"]], [HTTP_IMPL])
+        backend = self.engine / HTTP_IMPL
+        outside = self.base / "outside-http.cpp"
+        outside.write_text("OUTSIDE_BACKEND_MUST_NOT_BE_READ", encoding="utf-8")
+        backend.unlink()
+        backend.symlink_to(outside)
+        process, receipt = self.run_reader()
+        self.assertEqual(process.returncode, 1)
+        self.assertEqual(receipt["error"], "LINK_OR_REPARSE_POINT")
+        self.assertNotIn("OUTSIDE_BACKEND_MUST_NOT_BE_READ", json.dumps(receipt))
 
 
 if __name__ == "__main__":

@@ -114,6 +114,8 @@ function Read-BoundedCheckpointStream {
 
 function Read-CheckpointHostJson {
     param([Parameter(Mandatory)][string] $Name)
+    $receipt.retained_metadata_path = $Name
+    $receipt.retained_metadata_observed_bytes = $null
     $path = Join-Path $HostProofRoot $Name
     Assert-NoCheckpointAlias $path
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
@@ -121,6 +123,7 @@ function Read-CheckpointHostJson {
     }
     $file = [IO.FileStream]::new($path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
     try {
+        $receipt.retained_metadata_observed_bytes = $file.Length
         if ($file.Length -gt $JsonLimit) { throw 'Retained checkpoint JSON exceeds its bound.' }
         $bytes = Read-BoundedCheckpointStream -Stream $file -Limit $JsonLimit
         if ($bytes.Length -ne $file.Length) { throw 'Retained checkpoint JSON changed during read.' }
@@ -177,6 +180,10 @@ $receipt = [ordered]@{
     native_runtime_verified = $false
     official_mcp_admitted = $false
     restoration_performed = $false
+    retained_metadata_path = $null
+    retained_metadata_observed_bytes = $null
+    error_code = $null
+    local_exception_type = $null
     error = $null
 }
 $phase = 'download'
@@ -384,6 +391,18 @@ catch {
     # phase label; never serialize the exception, request headers or token.
     $receipt.status = 'READ_BLOCKED'
     $receipt.error = "Accepted checkpoint discovery failed during $phase."
+    if ($phase -ceq 'retained metadata') {
+        # Only this fixed local-file phase has diagnostic details. Never emit
+        # arbitrary exception text, which could expose a signed network URL.
+        $receipt.local_exception_type = $_.Exception.GetType().FullName
+        $receipt.error_code = switch ($_.Exception.Message) {
+            'Retained checkpoint JSON exceeds its bound.' { 'JSON_SIZE_LIMIT' }
+            'Retained checkpoint JSON changed during read.' { 'JSON_CHANGED_DURING_READ' }
+            'Accepted checkpoint paths cannot use symlinks or junctions.' { 'REPARSE_PATH' }
+            default { 'LOCAL_RETAINED_METADATA_FAILURE' }
+        }
+        $receipt.error = "Accepted checkpoint discovery failed during $phase at $($receipt.retained_metadata_path): $($receipt.error_code)."
+    }
     throw $receipt.error
 }
 finally {
@@ -404,6 +423,10 @@ finally {
         native_runtime_verified = $false
         official_mcp_admitted = $false
         restoration_performed = $false
+        retained_metadata_path = $receipt.retained_metadata_path
+        retained_metadata_observed_bytes = $receipt.retained_metadata_observed_bytes
+        error_code = $receipt.error_code
+        local_exception_type = $receipt.local_exception_type
         error = $receipt.error
     }
     Write-CheckpointLine ('YACS_ACCEPTED363_READ ' + ($summary | ConvertTo-Json -Compress -Depth 8))
