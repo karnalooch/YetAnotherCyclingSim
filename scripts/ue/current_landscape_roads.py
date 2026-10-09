@@ -313,7 +313,7 @@ def render_window(world, window, network):
     try:
         if trace_misses:
             raise ValueError(f"Native ground missing at {trace_misses} asphalt samples; support not built")
-        support = shoulder_sections(sections)
+        support = selected_shoulder_sections(window, network)
         for row in support:
             endpoints = [sample(row[0]), sample(row[-1])]
             if None in endpoints:
@@ -368,8 +368,60 @@ def render_window(world, window, network):
     }
 
 
+def prepare_shared_shoulders(network):
+    """Compute shared endpoints before rendering; retain rejected buffers for review."""
+    from scripts.geometry.network_shoulder_joints import fingerprint, repair_shoulder_joints
+
+    windows = list(construction_windows(network))
+    eligible, original, failed = [], {}, {}
+    for window in windows:
+        try:
+            original[window["id"]] = shoulder_sections(window["sections"])
+            eligible.append({"id": window["id"], "sections": window["sections"]})
+        except ValueError as exc:
+            failed[window["id"]] = str(exc)
+    if eligible:
+        protected = [w["id"] for w in windows
+                     if w.get("nudo_structure") and w["id"] in original]
+        supports, report = repair_shoulder_joints(
+            eligible, original, protected_ids=protected
+        )
+    else:
+        supports = {}
+        report = {"status": "NO_REPAIRABLE_SUPPORT", "joints": [],
+                  "native_contact_verified": False, "visual_acceptance": "PENDING"}
+    network["shared_shoulder_sections"] = supports
+    network["shared_shoulder_source_hashes"] = {
+        w["id"]: fingerprint(w["sections"]) for w in eligible
+    }
+    network["shared_shoulder_output_hashes"] = {
+        name: fingerprint(rows) for name, rows in supports.items()
+    }
+    report["excluded_window_reasons"] = failed
+    report["construction_window_count"] = len(windows)
+    network["shoulder_joint_repair"] = report
+
+
+def selected_shoulder_sections(window, network):
+    """Reject stale candidates; the normal native trace loop samples these NEW points."""
+    from scripts.geometry.network_shoulder_joints import fingerprint
+
+    candidates = network.get("shared_shoulder_sections", {})
+    if window["id"] not in candidates:
+        return shoulder_sections(window["sections"])
+    if network["shared_shoulder_source_hashes"].get(window["id"]) != fingerprint(
+        window["sections"]
+    ):
+        raise RuntimeError("Shared shoulder source changed before native trace")
+    candidate = candidates[window["id"]]
+    if network["shared_shoulder_output_hashes"].get(window["id"]) != fingerprint(candidate):
+        raise RuntimeError("Shared shoulder geometry changed before native trace")
+    return candidate
+
+
 def finish(world, root, exact_sha, network):
     started = time.perf_counter()
+    prepare_shared_shoulders(network)
     kept, reports = [], []
     for window in construction_windows(network):
         objects, report = render_window(world, window, network)
@@ -385,6 +437,7 @@ def finish(world, root, exact_sha, network):
         "full_visual_context": context_proof,
         "owner_construction_decision": network.get("owner_construction_decision"),
         "nudo": ({k: v for k, v in network["nudo"].items() if k != "windows"} if "nudo" in network else None),
+        "shoulder_joint_repair": network["shoulder_joint_repair"],
         "construction_window_count": len(reports),
         "visual_review_window_count": review_count,
         "preview_policy": "RENDER_DEVIATIONS_RED_WIDTH_TOLERANCE_5_PERCENT",
