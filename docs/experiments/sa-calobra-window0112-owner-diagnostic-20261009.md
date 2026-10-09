@@ -46,7 +46,14 @@ $env:YACS_SA_CALOBRA_TPP_FROZEN_ROOT = Join-Path $workspace.data 'world-data/sa-
 
 The installed UE5.8.2 CL56702186 primary-header receipt must include
 `SectionBaseX`, `SectionBaseY`, `ComponentSizeQuads`, `ForcedLOD`, `LODBias`,
-`SetVisibility`, `bVisible`, `bCastHiddenShadow` and `GetTrianglePositions`.
+`SetVisibility`, `bVisible`, `bCastHiddenShadow`, `GetMeshRef`,
+`TriangleIndicesItr`, `IsTriangle`, `GetTriangle`, `GetVertex`, `VertexCount`
+and `TriangleCount`. The bounded read-only
+`YacsLandscapeMeshDiagnosticLibrary.ReadWindow0112SupportTriangles` reads these
+native mesh methods and preserves actual triangle IDs, including sparse IDs.
+It returns at most 12,000 oriented triangle records and never modifies the mesh.
+The earlier Python `get_triangle_positions` call is unsupported by the installed
+primary `UDynamicMesh.h`; no native capture was produced by that first attempt.
 Use the existing isolated launcher with
 `-ExecutePythonScript=scripts/ue/capture_sa_calobra_shoulder_contact.py` and the
 same Entry map, rendering and script-error flags. The capture has a 900-second
@@ -80,3 +87,10 @@ This validates source-camera drift rejection, support triangle addressing,
 bounded component selection, mode visibility and best-effort restoration,
 PNG evidence and cleanup/failure handling. It does not substitute for the
 Windows native captures or paired visual review.
+
+The existing compile/test pass also runs
+`YACS.ShoulderContactNative.ReadOnlyTriangles`: sparse IDs, selected/all reads,
+invalid/null/duplicate IDs, query budget and exact unchanged fixture geometry.
+Its fixture setup additionally uses the already retained native `AppendVertex`,
+`InsertTriangle` and `SetMesh` methods; include those symbols in the installed
+primary-header preflight. This native test still needs the actual Windows build.

@@ -159,6 +159,15 @@ These targets are read-only proof workflows with exact-SHA/request-id inputs,
 success-only reusable artifacts and separate failure diagnostics. The broker
 does not make heavyweight Unreal work automatic on every PR update.
 
+The prepared `sa-calobra-material-performance` broker registration is disabled:
+the owner deferred performance measurement until M3 is closed. Its placeholder
+consumer path cannot launch a native measurement and establishes no PASS.
+After M3, review/enable registration on the trusted default branch and use
+manual `workflow_dispatch` with `material_consumer=true`, the exact candidate
+SHA, a unique request id and the absolute immutable `consumer_manifest` from
+a successful fresh rendered attempt. Existing budgets and protected
+default-branch provenance remain required for performance acceptance.
+
 Mutating authoring workflows, release/full-asset validation and administrative
 recovery remain outside the broker by design.
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 import builtins
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import struct
@@ -46,7 +47,13 @@ PRIMARY_SYMBOLS = {
     "SetVisibility",
     "bVisible",
     "bCastHiddenShadow",
-    "GetTrianglePositions",
+    "GetMeshRef",
+    "TriangleIndicesItr",
+    "IsTriangle",
+    "GetTriangle",
+    "GetVertex",
+    "VertexCount",
+    "TriangleCount",
 }
 
 
@@ -54,17 +61,80 @@ def xyz(value):
     return tuple(float(getattr(value, axis)) for axis in ("x", "y", "z"))
 
 
-def mesh_triangle(mesh, tid):
-    valid, a, b, c = mesh.get_triangle_positions(tid)
-    if not valid:
+def native_integer(value):
+    # FJsonValueNumber stores doubles; admit 2 and 2.0 as the same native ID.
+    if (
+        type(value) not in (int, float)
+        or not math.isfinite(value)
+        or value < 0
+        or value > 2147483647
+        or value != int(value)
+    ):
+        raise RuntimeError("Native support query has invalid integer ID/count")
+    return int(value)
+
+
+def native_triangles(api, mesh, ids=(), *, allow_missing=False):
+    text = api.YacsLandscapeMeshDiagnosticLibrary.read_window0112_support_triangles(
+        mesh, list(ids)
+    )
+    if not isinstance(text, str) or len(text) > 16 * 1024 * 1024:
+        raise RuntimeError(
+            "Native support query returned invalid or unbounded evidence"
+        )
+    report = json.loads(text)
+    if (
+        allow_missing
+        and report.get("error") == "missing or duplicate native support triangle ID"
+    ):
+        return None
+    if (
+        report.get("status") != "NATIVE_WINDOW0112_SUPPORT_TRIANGLES"
+        or report.get("geometry_mutated") is not False
+        or report.get("mesh_path") != mesh.get_path_name()
+    ):
+        raise RuntimeError("Native support query failed: " + str(report.get("error")))
+    for field in ("vertex_count", "triangle_count", "returned_triangle_count"):
+        report[field] = native_integer(report.get(field))
+    rows = report.get("triangles", [])
+    if (
+        not isinstance(rows, list)
+        or not 0 <= len(rows) <= 12000
+        or report.get("returned_triangle_count") != len(rows)
+        or (not ids and len(rows) != report["triangle_count"])
+    ):
+        raise RuntimeError("Native support query triangle inventory differs")
+    positions = {}
+    for row in rows:
+        if (
+            not isinstance(row, list)
+            or len(row) != 10
+            or any(type(v) not in (int, float) or not math.isfinite(v) for v in row[1:])
+        ):
+            raise RuntimeError("Native support query has invalid ID or coordinates")
+        tid = native_integer(row[0])
+        if tid in positions:
+            raise RuntimeError("Native support query has duplicate triangle IDs")
+        positions[tid] = tuple(tuple(row[start : start + 3]) for start in (1, 4, 7))
+    if ids and set(positions) != set(ids):
+        raise RuntimeError(
+            "Native support query did not return the exact requested IDs"
+        )
+    report["positions"] = positions
+    return report
+
+
+def mesh_triangle(snapshot, tid):
+    if tid not in snapshot["positions"]:
         raise RuntimeError("Saved support triangle is unavailable: " + str(tid))
-    return tuple(xyz(point) for point in (a, b, c))
+    return snapshot["positions"][tid]
 
 
-def mesh_digest(mesh):
+def mesh_digest(snapshot):
     result = hashlib.sha256()
-    for tid in range(mesh.get_triangle_count()):
-        for point in mesh_triangle(mesh, tid):
+    for tid in sorted(snapshot["positions"]):
+        result.update(struct.pack("<i", tid))
+        for point in mesh_triangle(snapshot, tid):
             result.update(struct.pack("<3d", *point))
     return result.hexdigest()
 
@@ -237,7 +307,7 @@ class Owner:
                     "Source actor inventory/transforms differ after cleanup"
                 )
             if self.mesh is not None:
-                support_hash = mesh_digest(self.mesh)
+                support_hash = mesh_digest(native_triangles(self.api, self.mesh))
                 if support_hash != self.report["support"]["triangle_sha256"]:
                     raise RuntimeError("Target support triangle coordinates changed")
             for component, before in getattr(self, "landscape_state", []):
@@ -400,29 +470,33 @@ class Owner:
             comp = actor.get_dynamic_mesh_component()
             mesh = comp.get_dynamic_mesh()
             tid, wanted = target[0]
-            if mesh.get_triangle_count() <= tid:
+            probe = native_triangles(api, mesh, [tid], allow_missing=True)
+            if probe is None:
                 continue
-            if triangle_delta(mesh_triangle(mesh, tid), wanted) <= 0.0001:
+            if triangle_delta(mesh_triangle(probe, tid), wanted) <= 0.0001:
+                actual = native_triangles(api, mesh)
                 worst = max(
-                    triangle_delta(mesh_triangle(mesh, i), points)
+                    triangle_delta(mesh_triangle(actual, i), points)
                     for i, points in target
                 )
                 if worst <= 0.0001:
-                    matches.append((actor, comp, mesh, worst))
+                    matches.append((actor, comp, mesh, actual, worst))
         if len(matches) != 1:
             raise RuntimeError(
                 "Exact frozen target support owner is missing/ambiguous: "
                 + str(len(matches))
             )
-        actor, support, self.mesh, worst = matches[0]
+        actor, support, self.mesh, actual, worst = matches[0]
         self.report["support"] = dict(
             actor_snapshot(actor),
             component=support.get_path_name(),
             interior_top_triangles_compared=len(target),
             max_coordinate_delta_cm=worst,
-            vertices=self.mesh.get_vertex_count(),
-            triangles=self.mesh.get_triangle_count(),
-            triangle_sha256=mesh_digest(self.mesh),
+            vertices=actual["vertex_count"],
+            triangles=actual["triangle_count"],
+            native_query="YacsLandscapeMeshDiagnosticLibrary.ReadWindow0112SupportTriangles",
+            native_ids_in_triangle_digest=True,
+            triangle_sha256=mesh_digest(actual),
         )
         landscape_transform = actor_snapshot(self.landscape)
         if landscape_transform["rotation_deg"] != (0.0, 0.0, 0.0):

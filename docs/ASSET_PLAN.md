@@ -271,8 +271,10 @@ verifies CPU-approved source hashes, uses native `WorldAlignedTexture` /
 `WorldAlignedNormal` and converts the provenance tile size to `TileSizeCm` with
 material-instance readback. This is a possible reuse path when metric road UVs
 are absent; it still needs version-matched native projection/normal evidence and
-road-specific visual/performance proof. It is not permission to regenerate the
-mesh, assume a 2 x 2 m texture scale or transplant the old prototype-road recipe.
+road-specific visual/technical proof. Under the 2026-10-09 owner decision,
+performance measurement is deferred until after assembled M3 closeout. It is not
+permission to regenerate the mesh, assume a 2 x 2 m texture scale or transplant
+the old prototype-road recipe.
 
 After both entry gates, begin with a bounded comparison on the actual admitted
 saved road/shoulder consumer: keep source vertices, grade, crossfall, width,
@@ -282,8 +284,10 @@ travel directions, bends, shoulder/wall separation and the Landscape transition
 without covering unresolved geometric seams. Retain future wetness parameter
 compatibility without implementing weather. Expand the admitted material across
 the entire existing 2,016.5 m square and require whole-area visual, fresh rendered
-reopening and exact-SHA performance admission; the Golden Kilometer remains an
-additional check. The
+reopening and technical admission; the Golden Kilometer remains an additional
+check. Record performance as `DEFERRED_AFTER_M3`, not PASS, and retain the
+reference budgets and exact-SHA/default-branch provenance for the later
+assembled-world benchmark. The
 [prepared official MCP kickoff](UE_MCP_WORLD_GENERATION.md#prepared-kickoff-after-material-acceptance--2026-10-09)
 defines the intermediate step and its stop condition.
 

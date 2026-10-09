@@ -92,21 +92,43 @@ jobs:
             ./scripts/ue/Invoke-YacsSaCalobraPerformance.ps1 -ExpectedHead $env:YACS_PERF_EXPECTED_HEAD -ArtifactRoot $proof
           }
           if ($LASTEXITCODE -ne 0) { throw 'Sa Calobra performance failed.' }
-      - name: Publish successful exact-SHA proof
-        if: ${{ success() }}
+      - name: Publish successful exact-SHA terrain proof
+        if: ${{ success() && !inputs.material_consumer }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: proof-${{ inputs.material_consumer && 'sa-calobra-material-performance' || 'sa-calobra-terrain-performance' }}-${{ inputs.exact_sha }}
+          name: proof-sa-calobra-terrain-performance-${{ inputs.exact_sha }}
           path: |
             _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.json
             _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.csv
           if-no-files-found: error
           retention-days: 14
-      - name: Retain failed run diagnostics
-        if: ${{ failure() || cancelled() }}
+      - name: Publish successful exact-SHA saved-material proof
+        if: ${{ success() && inputs.material_consumer }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: diagnostic-${{ inputs.material_consumer && 'sa-calobra-material-performance' || 'sa-calobra-terrain-performance' }}-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: proof-sa-calobra-material-performance-${{ inputs.exact_sha }}
+          path: |
+            _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.json
+            _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.csv
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain failed terrain run diagnostics
+        if: ${{ (failure() || cancelled()) && !inputs.material_consumer }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: diagnostic-sa-calobra-terrain-performance-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.log
+            _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.json
+            _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.csv
+            _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformanceBuild/*.log
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Retain failed saved-material run diagnostics
+        if: ${{ (failure() || cancelled()) && inputs.material_consumer }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: diagnostic-sa-calobra-material-performance-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.log
             _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.json

@@ -265,12 +265,13 @@ ground and coherent transitions; no claim of spatial foliage from ground colour.
 **Exit gate:** all 1024 component consumers use the expected candidate, the visible
 result matches it and frozen-scene checks preserve their stated scope.
 
-### 8. Review the whole area and measure the stable candidate
+### 8. Review the whole area and retain the post-M3 measurement obligation
 
 **Work**
 
 - Inspect relative shader/texture cost during projection and detail selection.
-  Run the full benchmark at stable-candidate readiness, not every cosmetic edit.
+  Under the 2026-10-09 owner decision, run the full benchmark after assembled
+  M3 closeout. Preserve local memory-headroom and shader-readiness checks.
 - Review every identified environment, demanding overview, steep face and
   traversal across the whole area, plus the additional Golden Kilometer.
 - Use the existing [Performance Framework](../performance/PERFORMANCE_FRAMEWORK.md),
@@ -283,18 +284,19 @@ result matches it and frozen-scene checks preserve their stated scope.
   <= 16.667 ms, GPU p95 <= 16.667 ms and <= 5% frames above 16.667 ms;
   required GPU timing missing means FAIL. This is the whole-frame budget,
   not an allocation to the material alone.
-- Bind deferred 2A/2B performance admission to the actual saved consumer and
-  exact candidate SHA. No legacy map or frozen-baseline exception substitutes.
+- Bind the later post-M3 performance admission to the actual assembled saved
+  consumer and exact candidate SHA. No legacy map substitutes for that consumer.
 - Diagnose the limiting domain before optimizing. Any appearance-affecting
   optimization returns to the relevant visual checks.
 
-**Deliverable:** explicit whole-area visual decision and performance evidence for
-the same candidate; final admitted measurements use the saved consumer in step 9.
+**Deliverable:** explicit whole-area visual decision, technical cost diagnostics
+and the recorded `DEFERRED_AFTER_M3` performance obligation. Final admitted
+measurements use the assembled saved consumer after M3 closeout.
 
-**Exit gate:** whole-area appearance is accepted and cost risks are measured.
-Final performance admission remains pending until the saved, freshly rendered
-consumer passes step 9. Report unobserved locations and unresolved diagnostics
-rather than averaging them away.
+**Exit gate:** whole-area appearance is accepted and required technical risk
+checks pass. Performance remains pending under the explicit post-M3 deferral;
+it is not PASS or an intermediate material-closeout gate. Report unobserved
+locations and unresolved diagnostics rather than averaging them away.
 
 ### 9. Persist, reopen and deliver through the existing lane
 
@@ -309,8 +311,9 @@ rather than averaging them away.
   rendered evidence. Live reapplication and NullRHI are insufficient.
 - Resolve or explicitly triage renderer diagnostics, including the retained
   ray-tracing ensure described in the foundation workflow, before admission.
-- Execute final performance proof on that saved/rendered consumer. Reuse build
-  evidence only within the exact-SHA/compile-reuse policy.
+- Record performance as deferred until after assembled M3 closeout; measure
+  that actual saved/rendered world then. Reuse build evidence only within the
+  exact-SHA/compile-reuse policy.
 - Run relevant source/consumer, Unreal/asset and protected CI/review checks.
   Update changed input semantics and recipes in the same implementation PR.
 - Run documentation links, i18n, structure and freshness guards; retain original
@@ -322,7 +325,9 @@ rather than averaging them away.
 current documentation and protected repository delivery.
 
 **Exit gate:** live, saved and fresh-loaded states agree; owner visual acceptance,
-performance and technical proof apply to the delivered revision.
+saved/fresh-rendered consumer and technical proof apply to the delivered revision.
+Performance is explicitly deferred until after assembled M3 closeout and remains
+required under the unchanged reference budgets and exact-SHA provenance.
 
 ## Diagnostic routing and first implementation checkpoint
 
@@ -357,4 +362,4 @@ The live full-Landscape material iteration failed. At 04:58:31 UTC Unreal termin
 
 Recovery checks verified all 17 saved asset hashes against `worldgen/materials/sa_calobra_repair_asset.json`. The accepted map SHA-256 remains `276d1621fa083850f6d603b6d115b01b74c9a92c182254d15302e786abfbf29c`. Crash logs, crash reports and autosaves were copied to `D:/yacs/work/material-repair-20261006/crash-20261006-045831` before reopening. The accepted map was not overwritten. The script now rejects `rebuild_candidate`, `surface_review` and `bounded_residency` before accessing the scene.
 
-The next implementation gate is isolated preparation of one material, with measured memory headroom and successful shader completion before any full-Landscape application. Do not repeat a sequence of graph rebuilds in the owner's editor or force non-streaming textures as a sharpness workaround. Reopen the saved candidate in a fresh isolated process, verify its exact asset hashes and material parent chains, and establish a memory/performance baseline before progressing to visual tuning. Preserve the accepted map and all geometry/collision constraints. No visual or performance PASS is claimed by this checkpoint.
+The next implementation gate is isolated preparation of one material, with measured memory headroom and successful shader completion before any full-Landscape application. Do not repeat a sequence of graph rebuilds in the owner's editor or force non-streaming textures as a sharpness workaround. Reopen the saved candidate in a fresh isolated process, verify its exact asset hashes and material parent chains, and establish memory headroom and shader readiness before progressing to visual tuning. These crash-recovery checks remain required; the full performance benchmark is deferred until after assembled M3 closeout under the 2026-10-09 decision. Preserve the accepted map and all geometry/collision constraints. No visual or performance PASS is claimed by this checkpoint.

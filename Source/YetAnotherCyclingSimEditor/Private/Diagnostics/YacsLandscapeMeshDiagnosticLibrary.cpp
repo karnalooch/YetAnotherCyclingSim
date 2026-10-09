@@ -16,6 +16,9 @@
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
+#if WITH_DEV_AUTOMATION_TESTS
+#include "Misc/AutomationTest.h"
+#endif
 
 namespace
 {
@@ -995,6 +998,68 @@ bool SmoothLocalCliffs(UE::Geometry::FDynamicMesh3& Mesh, const FString& PlanJso
 }
 }
 
+FString UYacsLandscapeMeshDiagnosticLibrary::ReadWindow0112SupportTriangles(
+    UDynamicMesh* Mesh, const TArray<int32>& TriangleIds)
+{
+    // The query owns no mesh copy or edit session. All access stays on the
+    // editor game thread, against the existing accepted support only.
+    if (!IsInGameThread() || !IsValid(Mesh) || TriangleIds.Num() > 12000)
+    {
+        return TEXT("{\"error\":\"invalid or unbounded support triangle query\"}");
+    }
+    const UE::Geometry::FDynamicMesh3& Source = Mesh->GetMeshRef();
+    TArray<int32> Ids = TriangleIds;
+    if (Ids.IsEmpty())
+    {
+        if (Source.TriangleCount() > 12000)
+        {
+            return TEXT("{\"error\":\"whole mesh exceeds window0112 support query budget\"}");
+        }
+        for (int32 Id : Source.TriangleIndicesItr()) { Ids.Add(Id); }
+    }
+    TSet<int32> Seen;
+    TArray<TSharedPtr<FJsonValue>> Rows;
+    for (int32 Id : Ids)
+    {
+        if (Seen.Contains(Id) || !Source.IsTriangle(Id))
+        {
+            return TEXT("{\"error\":\"missing or duplicate native support triangle ID\"}");
+        }
+        Seen.Add(Id);
+        const auto Face = Source.GetTriangle(Id);
+        TArray<TSharedPtr<FJsonValue>> Row;
+        Row.Add(MakeShared<FJsonValueNumber>(Id));
+        for (int32 Vertex : {Face.A, Face.B, Face.C})
+        {
+            const FVector3d Point = Source.GetVertex(Vertex);
+            for (double Coordinate : {Point.X, Point.Y, Point.Z})
+            {
+                if (!FMath::IsFinite(Coordinate))
+                {
+                    return TEXT("{\"error\":\"nonfinite native support coordinates\"}");
+                }
+                Row.Add(MakeShared<FJsonValueNumber>(Coordinate));
+            }
+        }
+        Rows.Add(MakeShared<FJsonValueArray>(Row));
+    }
+    const auto Report = MakeShared<FJsonObject>();
+    Report->SetStringField(TEXT("status"), TEXT("NATIVE_WINDOW0112_SUPPORT_TRIANGLES"));
+    Report->SetStringField(TEXT("mesh_path"), Mesh->GetPathName());
+    Report->SetNumberField(TEXT("vertex_count"), Source.VertexCount());
+    Report->SetNumberField(TEXT("triangle_count"), Source.TriangleCount());
+    Report->SetNumberField(TEXT("returned_triangle_count"), Rows.Num());
+    Report->SetBoolField(TEXT("geometry_mutated"), false);
+    Report->SetArrayField(TEXT("triangles"), Rows);
+    FString Result;
+    const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&Result);
+    if (!FJsonSerializer::Serialize(Report, Writer))
+    {
+        return TEXT("{\"error\":\"native support query serialization failed\"}");
+    }
+    return Result;
+}
+
 FString UYacsLandscapeMeshDiagnosticLibrary::CopyComponent230(
     ULandscapeComponent* Component, UDynamicMesh* TargetMesh, const FString& SmoothingPlanJson)
 {
@@ -1086,3 +1151,64 @@ FString UYacsLandscapeMeshDiagnosticLibrary::CopyComponent230(
     FJsonSerializer::Serialize(Report, Writer);
     return Result;
 }
+
+#if WITH_DEV_AUTOMATION_TESTS
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FYacsWindow0112ReadOnlyTriangleTest,
+    "YACS.ShoulderContactNative.ReadOnlyTriangles",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FYacsWindow0112ReadOnlyTriangleTest::RunTest(const FString& Parameters)
+{
+    using namespace UE::Geometry;
+    UDynamicMesh* Mesh = NewObject<UDynamicMesh>();
+    FDynamicMesh3 Fixture;
+    Fixture.AppendVertex(FVector3d(1.25, 2.5, 3.75));
+    Fixture.AppendVertex(FVector3d(4, 5, 6));
+    Fixture.AppendVertex(FVector3d(7, 8, 9));
+    if (!TestTrue(TEXT("Sparse native triangle fixture"),
+        Fixture.InsertTriangle(2, FIndex3i(0, 1, 2), 0, false) == EMeshResult::Ok))
+    { return false; }
+    Mesh->SetMesh(MoveTemp(Fixture));
+    auto Read = [this, Mesh](const TArray<int32>& Ids)
+    {
+        TSharedPtr<FJsonObject> Report;
+        const auto Reader = TJsonReaderFactory<>::Create(
+            UYacsLandscapeMeshDiagnosticLibrary::ReadWindow0112SupportTriangles(Mesh, Ids));
+        TestTrue(TEXT("Query returns complete JSON"), FJsonSerializer::Deserialize(Reader, Report));
+        return Report;
+    };
+    const auto All = Read({});
+    if (!All.IsValid()) { return false; }
+    TestEqual(TEXT("Native query status"), All->GetStringField(TEXT("status")),
+        FString(TEXT("NATIVE_WINDOW0112_SUPPORT_TRIANGLES")));
+    TestEqual(TEXT("One sparse triangle, not a compact-ID assumption"),
+        All->GetNumberField(TEXT("triangle_count")), 1.0);
+    const auto Rows = All->GetArrayField(TEXT("triangles"));
+    if (!TestEqual(TEXT("One full native row"), Rows.Num(), 1)) { return false; }
+    const auto Row = Rows[0]->AsArray();
+    if (!TestEqual(TEXT("ID and nine positions"), Row.Num(), 10)) { return false; }
+    TestEqual(TEXT("Native ID preserved"), Row[0]->AsNumber(), 2.0);
+    TestEqual(TEXT("Exact source X"), Row[1]->AsNumber(), 1.25);
+    TestEqual(TEXT("Exact source final Z"), Row[9]->AsNumber(), 9.0);
+    const auto Selected = Read({2});
+    TestTrue(TEXT("Selected native ID is admitted"), Selected.IsValid() && !Selected->HasField(TEXT("error")));
+    for (const TArray<int32>& Rejected : {TArray<int32>{0}, TArray<int32>{-1}, TArray<int32>{2, 2}})
+    {
+        const auto Failure = Read(Rejected);
+        TestTrue(TEXT("Missing and duplicate IDs fail closed"), Failure.IsValid() && Failure->HasField(TEXT("error")));
+    }
+    TArray<int32> TooMany;
+    TooMany.Init(2, 12001);
+    const auto Bounded = Read(TooMany);
+    TestTrue(TEXT("Query count budget is enforced"), Bounded.IsValid() && Bounded->HasField(TEXT("error")));
+    TestTrue(TEXT("Null mesh is rejected"),
+        UYacsLandscapeMeshDiagnosticLibrary::ReadWindow0112SupportTriangles(nullptr, {}).Contains(TEXT("error")));
+    const FDynamicMesh3& After = Mesh->GetMeshRef();
+    TestEqual(TEXT("Read preserves vertex count"), After.VertexCount(), 3);
+    TestEqual(TEXT("Read preserves sparse triangle count"), After.TriangleCount(), 1);
+    TestTrue(TEXT("Read preserves triangle ID and oriented indices"),
+        After.IsTriangle(2) && After.GetTriangle(2) == FIndex3i(0, 1, 2));
+    TestTrue(TEXT("Read preserves exact vertex coordinates"), After.GetVertex(0) == FVector3d(1.25, 2.5, 3.75));
+    return true;
+}
+#endif

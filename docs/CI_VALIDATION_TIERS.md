@@ -360,7 +360,7 @@ Current configured proof commands:
 /gumball proof source-asset-audit
 ```
 
-All six are explicit, heavy and non-automatic. Successful exact-revision
+All configured proofs are explicit, heavy and non-automatic. Successful exact-revision
 artifacts may be reused; failed runs require explicit `retry`.
 
 The broker runs from trusted default-branch code, authorizes the requester,
@@ -380,6 +380,17 @@ For one proof + PR + exact SHA:
 Each broker target keeps `workflow_dispatch` as a recovery fallback, but
 broker-driven dispatch is the normal operator path. Heavy proof still runs only
 when explicitly requested; this changes the control plane, not the evidence bar.
+
+The prepared `sa-calobra-material-performance` registration is disabled.
+The owner deferred performance measurement until M3 is closed; no performance
+PASS is implied. It uses the existing Sa Calobra workflow, but its placeholder
+consumer path cannot launch a native measurement. After M3, enable the reviewed
+registration on the trusted default branch and use reviewed manual
+`workflow_dispatch` with `material_consumer=true`, the exact candidate SHA,
+a unique `gumball_request_id`, and an absolute immutable `consumer_manifest`
+path from a successful saved/fresh-rendered attempt. Preserve the existing
+budgets and protected provenance. A branch-native diagnostic run does not
+satisfy protected default-branch provenance.
 
 Mutating asset-author workflows, `asset-full.yml`, manual Unreal recovery,
 runner-space recovery and Project/bootstrap operations are deliberately **not**
@@ -622,13 +633,27 @@ Broker artifact contract; it never launches a GPU job or mutates a map.
 | Context | Required behavior |
 |---|---|
 | Draft world PR | List required scenarios as `DEFERRED_DRAFT`; no hardware launch |
-| Ready world PR | Require successful scenario-specific proof for the exact HEAD |
-| Main world push | Require proof for the new exact main SHA; PR-head proof is insufficient |
+| Ready world PR | Require successful scenario-specific proof for the exact HEAD, except the bounded 2026-10-09 M3 deferral below |
+| Main world push | Require proof for the new exact main SHA, except the bounded M3 deferral; PR-head proof is insufficient |
 | Docs or ordinary CI changes | `NOT_REQUIRED`; no hardware launch |
 | Scheduled/manual static CI sweep | `STATIC_ONLY`; no implicit world benchmark |
 | New unregistered world | Fail readiness rather than substitute an older map |
 
 ### Owner-approved frozen 2A handoff: measurement due in 2B
+
+**Current owner decision, 2026-10-09:** "wydajność zmierzymy po domknięciu m3".
+Performance measurement is due after the assembled M3 world is closed out.
+This supersedes the historical 2A-to-2B deadline described below and the
+performance prerequisite for #363 → #384 → #364. The bounded M3 policy must
+retain the required registered scenarios and report `DEFERRED_AFTER_M3` with
+`performance_pass: false`. Restrict it to the recorded M3 baseline ancestry,
+the registered scenarios and assembly still in progress; unmapped worlds,
+unrelated scenarios and later milestones retain ordinary fail-closed admission.
+After M3 assembly is complete, end the exception and measure the actual assembled
+consumer at its exact SHA. Saved/fresh-rendered consumer proof, whole-area owner
+visual acceptance, build/Automation/asset evidence, review and protected Aggregate
+remain required. Existing budgets, reference hardware, sample/sector checks,
+trusted default-branch producer and artifact provenance remain unchanged.
 
 On 2026-10-04 the owner explicitly moved the performance measurement for the
 Issue #335 / PR #362 diagnostic-mask baseline to Issue #363 (2B). No GPU job
@@ -646,9 +671,9 @@ or any other non-allowlisted file restore the ordinary proof requirement.
 Unregistered or additional scenarios cannot use this exception. Build,
 Automation, asset retention/provenance, review and protected Aggregate gates
 remain required. Candidate surface classifications remain candidates; the red
-problem-overlay review is separately deferred to #372. Issue #363 owns the
-whole-current-Landscape measurement after the material foundation is visually
-reviewable; neither a Golden Kilometer sample nor a single view substitutes
+problem-overlay review is separately deferred to #372. The former #363
+measurement deadline is superseded by the 2026-10-09 decision above; neither
+a Golden Kilometer sample nor a single view substitutes
 for its 2,016.5 m × 2,016.5 m scope. The existing reference hardware, budgets and
 exact-SHA evidence contract remain unchanged.
 

@@ -181,8 +181,7 @@ class WholeMapWorkflowRoutingTests(unittest.TestCase):
             "Verify complete native inventory and fresh capture provenance",
             "Verify unchanged map checkout and all retained source bytes",
             "Save the selected material then reload and render it in fresh processes",
-            "Measure the same saved material consumer on the reference GPU",
-            "Verify conservation again after saved material and performance processes",
+            "Verify conservation again after saved material processes",
         )
         positions = [self.job.index(name) for name in ordered]
         self.assertEqual(positions, sorted(positions))
@@ -193,9 +192,7 @@ class WholeMapWorkflowRoutingTests(unittest.TestCase):
         self.assertIn("$state.status -ne 'IDLE'", saved)
         self.assertEqual(saved.count("Start-Process -FilePath"), 1)
         self.assertNotIn("New-Item -ItemType Directory", saved)
-        timing = self.job.split(ordered[3], 1)[1].split("      - name:", 1)[0]
-        self.assertIn("-ConsumerManifest $manifest", timing)
-        self.assertIn("preliminary until the trusted-default workflow", timing)
+        self.assertNotIn("./scripts/ue/Invoke-YacsSaCalobraPerformance.ps1 ", self.job)
 
     def test_shoulder_diagnostic_cannot_rebuild_or_save_accepted_geometry(self):
         diagnostic = self.job.split(

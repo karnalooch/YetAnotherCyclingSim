@@ -352,7 +352,8 @@ jobs:
             @{ path = 'Engine/Source/Runtime/Landscape/Classes/LandscapeComponent.h'; symbols = @('ForcedLOD', 'OverrideMaterial', 'SectionBaseX', 'SectionBaseY', 'ComponentSizeQuads', 'LODBias', 'MaterialInstances', 'MaterialInstancesDynamic') },
             @{ path = 'Engine/Source/Runtime/Engine/Classes/Components/SceneComponent.h'; symbols = @('SetVisibility', 'bVisible') },
             @{ path = 'Engine/Source/Runtime/Engine/Classes/Components/PrimitiveComponent.h'; symbols = @('bCastHiddenShadow') },
-            @{ path = 'Engine/Source/Runtime/GeometryFramework/Public/UDynamicMesh.h'; symbols = @('GetTrianglePositions') }
+            @{ path = 'Engine/Source/Runtime/GeometryFramework/Public/UDynamicMesh.h'; symbols = @('GetMeshRef', 'SetMesh') },
+            @{ path = 'Engine/Source/Runtime/GeometryCore/Public/DynamicMesh/DynamicMesh3.h'; symbols = @('TriangleIndicesItr', 'IsTriangle', 'GetTriangle', 'GetVertex', 'VertexCount', 'TriangleCount', 'AppendVertex', 'InsertTriangle') }
           )
           $evidence = @()
           foreach ($contract in $contracts) {
@@ -427,7 +428,7 @@ jobs:
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $parameters = @{ ExpectedHead = $env:GITHUB_SHA; ExpectedBranch = 'HEAD' }
+          $parameters = @{ ExpectedHead = $env:GITHUB_SHA; ExpectedBranch = 'HEAD'; TestFilter = 'CyclingSession+CyclingPhysics+CyclingInput+YACS.ShoulderContactNative' }
           if ('${{ steps.cache.outputs.mode }}' -eq 'runtime') { $parameters.SkipBuild = $true }
           elseif ('${{ steps.cache.outputs.mode }}' -ne 'compile') { throw 'Unexpected verified Unreal execution mode.' }
           ./scripts/ci/Invoke-YacsUnrealCi.ps1 @parameters
@@ -588,21 +589,7 @@ jobs:
             }
           }
 
-      - name: Measure the same saved material consumer on the reference GPU
-        if: ${{ contains(github.event.head_commit.message, '[material-closeout]') }}
-        shell: pwsh
-        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
-          if ($state.status -ne 'IDLE') { throw "Saved-material performance requires an idle host: $($state.status)." }
-          $manifest = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'saved-material-consumer/consumer-manifest.json'
-          $proof = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'saved-material-performance'
-          ./scripts/ue/Invoke-YacsSaCalobraPerformance.ps1 -ExpectedHead $env:GITHUB_SHA -ArtifactRoot $proof -ConsumerManifest $manifest -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
-          if ($LASTEXITCODE -ne 0) { throw 'Actual saved-material 1080p60 timing failed; no stage exit may be claimed.' }
-          Write-Host 'Timing evidence is preliminary until the trusted-default workflow admits this exact consumer.'
-
-      - name: Verify conservation again after saved material and performance processes
+      - name: Verify conservation again after saved material processes
         if: ${{ always() && contains(github.event.head_commit.message, '[material-closeout]') && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
@@ -674,6 +661,8 @@ jobs:
           path: |
             ${{ env.YACS_SHOULDER_CONTACT_ROOT }}/
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/shoulder-contact.*.log
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/native-api-evidence.json
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/checkout-restoration.json
           if-no-files-found: error
           retention-days: 90
 

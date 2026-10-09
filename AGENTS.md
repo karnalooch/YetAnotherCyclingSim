@@ -184,6 +184,17 @@ This is authorization to progress the baseline, not a fabricated performance
 PASS or permission to bypass protected CI. Resolve required technical admission
 before marking #335 complete or starting its dependent implementation.
 
+Owner decision, 2026-10-09: "wydajność zmierzymy po domknięciu m3".
+Measure performance after the assembled M3 world is closed out. This supersedes
+the earlier 2A-to-2B measurement deadline and the performance prerequisite for
+the intermediate #363 → #384 → #364 handoff. Record `DEFERRED_AFTER_M3` and
+`performance_pass: false`; this is neither a performance PASS nor final
+performance admission. Preserve whole-area owner visual acceptance, saved and
+fresh-rendered consumer proof, native build/Automation/asset proof, review and
+protected CI. The later benchmark retains exact-SHA/default-branch provenance,
+the full-area scope, reference hardware and existing budgets. This decision
+does not authorize an exception for later product milestones.
+
 ### Region migration and LFS retirement
 
 Owner update, 2026-10-02: execute the six-step Sa Calobra migration and retire
@@ -214,8 +225,9 @@ Owner directive, 2026-10-01 (Issue #308): keep downloaded/materialized LFS asset
 Owner decision, 2026-10-05: #384 is the bounded official Unreal MCP adoption
 workstream, informally "step 2.5", between #363 and #364 inside M3. It is
 **blocked until #363 is fully completed and merged**, with whole-Landscape
-visual acceptance, saved/fresh-rendered consumer proof, deferred 2A/2B
-performance admission and all required technical/review gates. No implementation,
+visual acceptance, saved/fresh-rendered consumer proof and all required
+technical/review gates. The 2026-10-09 performance deferral above applies.
+No implementation,
 plugin activation, implementation PR or Ready/In progress promotion before that
 gate. Documentation-only planning (#385) may merge without closing/unblocking #384.
 #364 retains its #363 dependency and also depends on #384; the remaining sequence

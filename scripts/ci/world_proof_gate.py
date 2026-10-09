@@ -68,10 +68,6 @@ def requirements(paths: list[str], policy: dict) -> list[str]:
             result.add("UNMAPPED_WORLD")
     if classify_paths(paths).asset_full:
         result.add("stage3g-environment")
-    # The admitted material consumer includes the terrain; a bare terrain proof
-    # cannot substitute for it when material/world-consumer paths change.
-    if "sa-calobra-material" in result:
-        result.discard("sa-calobra-terrain")
     return sorted(result)
 
 
@@ -86,6 +82,48 @@ def phase(event: str, draft: str) -> str:
     if event in {"schedule", "workflow_dispatch"}:
         return "STATIC_ONLY"
     return "REQUIRED"
+
+
+def deferred_m3_performance(
+    head: str, needed: list[str], policy: dict, root: Path = ROOT
+) -> dict | None:
+    """Record the owner's assembly-first M3 decision without a timing PASS."""
+    decision = policy.get("owner_deferred_m3_performance")
+    if decision is None or not needed:
+        return None
+    require(
+        isinstance(decision, dict)
+        and decision.get("stage") == "M3"
+        and decision.get("owner_decision_date") == "2026-10-09"
+        and decision.get("assembly_status") in {"IN_PROGRESS", "COMPLETE"}
+        and decision.get("due") == "after_m3_assembly"
+        and isinstance(decision.get("baseline_sha"), str)
+        and SHA.fullmatch(decision["baseline_sha"]) is not None,
+        "invalid owner-approved M3 performance deferral",
+    )
+    allowed = {"sa-calobra-terrain", "sa-calobra-material", "stage3g-environment"}
+    if decision["assembly_status"] == "COMPLETE" or not set(needed) <= allowed:
+        return None
+    require(set(needed) <= set(policy["scenarios"]), "unregistered M3 scenario")
+    ancestry = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", decision["baseline_sha"], head],
+        cwd=root,
+        capture_output=True,
+        text=True,
+    )
+    require(ancestry.returncode in {0, 1}, "cannot verify M3 deferral baseline")
+    if ancestry.returncode == 1:
+        return None
+    return {
+        "status": "DEFERRED_AFTER_M3",
+        "owner_decision_date": decision["owner_decision_date"],
+        "due": decision["due"],
+        "baseline_sha": decision["baseline_sha"],
+        "assembly_status": decision["assembly_status"],
+        "required_scenarios": needed,
+        "performance_pass": False,
+        "instruction": "Measure performance after M3 assembly is complete.",
+    }
 
 
 def deferred_2a_performance(
@@ -417,14 +455,15 @@ def main() -> int:
                 text=True,
             ).splitlines()
         needed = requirements(paths, policy)
-        deferred = (
-            deferred_2a_performance(args.head, needed, policy)
-            if admission == "REQUIRED"
-            else None
-        )
+        deferred = deferred_m3_performance(args.head, needed, policy)
         if deferred is not None:
-            admission = "DEFERRED_TO_2B"
+            admission = "DEFERRED_AFTER_M3"
             report["owner_deferral"] = deferred
+        elif admission == "REQUIRED":
+            deferred = deferred_2a_performance(args.head, needed, policy)
+            if deferred is not None:
+                admission = "DEFERRED_TO_2B"
+                report["owner_deferral"] = deferred
         report.update(required_scenarios=needed, phase=admission)
         if needed and admission == "REQUIRED":
             require(

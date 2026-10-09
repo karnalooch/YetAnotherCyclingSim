@@ -69,6 +69,13 @@ This is planning, not plugin activation, implementation or an engine migration.
 See [the MCP decision and DoD](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
 and [delivery order](ROADMAP.md#official-unreal-mcp-adoption-between-materials-and-asphalt).
 
+Owner decision, 2026-10-09: performance measurement is due after assembled M3
+closeout, so it is not the intermediate #363 → #384 → #364 entry gate.
+Whole-area owner visual acceptance, saved/fresh-rendered consumers and protected
+technical/review admission remain required. Record `DEFERRED_AFTER_M3`, not
+performance PASS; retain the full-area reference budgets and exact-SHA proof
+for the later benchmark of the actual assembled world.
+
 MCP is the agent's orchestration/interface layer. World Authority still owns
 admitted geography, masks, provenance and unknowns; BOB still owns its admitted
 road/earthworks domain decisions; route/physics contracts remain independent.

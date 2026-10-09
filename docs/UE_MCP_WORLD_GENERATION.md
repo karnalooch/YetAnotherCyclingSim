@@ -24,7 +24,7 @@ Before implementation, plugin activation, an implementation PR, or promotion to 
 - #363 is closed **as completed**, with its implementation merged; closing as not planned, a draft PR or a green build is insufficient.
 - Explicit owner visual acceptance covers the entire current 2,016.5 m × 2,016.5 m Sa Calobra Landscape (~4.07 km²), including representative environments/traversal and the additional Golden Kilometer check.
 - Saved material/consumer identity and fresh rendered reopening are admitted. NullRHI or a screenshot alone does not establish rendered acceptance.
-- Deferred 2A/2B whole-Landscape performance has passed under the existing exact-SHA policy and canonical budgets; `DEFERRED_TO_2B` is not PASS.
+- Owner decision, 2026-10-09: performance measurement is deferred until after assembled M3 closeout and is not an entry gate for #384/#364. Record `DEFERRED_AFTER_M3` with `performance_pass: false`; retain the existing full-area/reference budgets and exact-SHA/default-branch provenance for the later benchmark.
 - Required build, Automation, asset, review, documentation and protected Aggregate CI gates have passed; the handoff pins outputs, versions/hashes, limitations and proof links.
 
 At creation, #363 is OPEN and its current material remains a visually rejected prototype. No admission is implied here. Re-read its latest evidence at kickoff; do not freeze this checkpoint into future truth.
@@ -129,8 +129,9 @@ below; it needs no road rebuild, new transport service or expanded tool library.
 
 1. **Bind the completed predecessor.** Record #363's completed issue state,
    protected merge SHA, admitted saved map/material identities and links to
-   whole-area visual, fresh rendered reopening and exact-SHA performance
-   acceptance. Use that handoff's actual map; do not substitute an older
+   whole-area owner visual acceptance, fresh rendered reopening and technical
+   admission, with performance explicitly deferred until after assembled M3
+   closeout. Use that handoff's actual map; do not substitute an older
    session-only preview or Component 230 acceptance.
 2. **Collect version-matched primary evidence before wiring.** Resolve the
    canonical engine with
@@ -199,7 +200,7 @@ read-only road/shoulder inventory is maintained in
 
 ### Definition of Done
 
-- [ ] #363 entry gate is verified with completed state, merged implementation and linked visual/render/performance/technical evidence.
+- [ ] #363 entry gate is verified with completed state, merged implementation, linked owner visual/render/technical evidence and the explicit post-M3 performance deferral.
 - [ ] Exact environment, one map and the permitted official tool surface are pinned.
 - [ ] Agent sees the admitted map/scene through official Unreal MCP.
 - [ ] Agent reads an actual Actor/UObject and verifies its identity.

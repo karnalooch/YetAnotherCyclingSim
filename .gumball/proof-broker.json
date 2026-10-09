@@ -188,7 +188,7 @@
       "allowed_write_permissions": []
     },
     "sa-calobra-material-performance": {
-      "enabled": true,
+      "enabled": false,
       "workflow": "sa-calobra-terrain-performance.yml",
       "label": "proof:sa-calobra-material-performance",
       "cost_class": "heavy",

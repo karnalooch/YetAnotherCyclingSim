@@ -251,9 +251,13 @@ Review different environments, steep surfaces, demanding overviews and rider
 views across the whole Landscape; retain the Golden Kilometer as an additional
 check. Resolve visible material defects before owner visual acceptance.
 Prove saved assets and a fresh consumer reload separately from live review.
-Execute the deferred 2A/2B performance measurement on this actual map/material
-at the exact candidate SHA, using existing budgets, reference hardware and raw
-Frame/GPU evidence. A legacy terrain-baseline map cannot prove this consumer.
+Owner decision, 2026-10-09: performance measurement is deferred until after
+assembled M3 closeout. It is not #363's intermediate entry/exit gate; retain
+saved/fresh-rendered consumer proof and whole-area owner visual acceptance.
+Record `DEFERRED_AFTER_M3` with `performance_pass: false`. The later benchmark
+must measure the actual assembled saved consumer at its exact SHA, using
+existing budgets, reference hardware and raw Frame/GPU evidence. A legacy
+terrain-baseline map cannot prove that consumer.
 The existing `Invoke-YacsSaCalobraPerformance.ps1` now has an explicit
 `-ConsumerManifest <absolute consumer-manifest.json> -WorkspaceConfig <workspace.json>`
 mode. It requires an isolated checkout, a saved review map and a hash-pinned
@@ -280,8 +284,8 @@ The frozen canonical accepted-map digest identifies terrain/scene lineage; it
 must not be described as a raw heightmap digest.
 
 This source extension still requires a fresh UE 5.8.2 sampler build and native
-measurement on the saved consumer. Python tests do not establish FPS. Publish
-the successful summary/CSV through the trusted default-branch Proof Broker
+measurement on the saved consumer after assembled M3 closeout. Python tests do
+not establish FPS. Publish the successful summary/CSV through the trusted default-branch Proof Broker
 registration for `sa-calobra-material-performance`; a branch preparation
 artifact alone does not waive that protected provenance requirement. Whole-area
 owner visual acceptance and production delivery remain separate gates.

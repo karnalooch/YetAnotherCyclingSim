@@ -109,9 +109,12 @@ leave a derived package for inspection; it produces no admitted manifest and
 the next attempt refuses that package collision. Material override rollback
 tracks component object identity across save-as renames, and render failure
 still attempts every cleanup operation. The accepted baseline remains the
-rollback source. Final canonical promotion and #363 closure require the actual
-rendered review, recorded owner decision and successful required performance
-gate; this preparatory implementation grants none of those outcomes.
+rollback source. Canonical promotion and #363 closure require the actual saved
+and freshly rendered review, recorded owner decision and required native/asset
+validation. The owner explicitly moved performance measurement to after M3
+assembly on 2026-10-09; that debt is `DEFERRED_AFTER_M3`, not a performance PASS.
+No sampler is launched by material closeout. The prepared measurement path and
+unchanged reference budgets remain available for the assembled world.
 
 ### Authorized local Landscape and seam corrections
 
@@ -351,7 +354,7 @@ integration. Heavy native operations remain serial on the reference runner.
 | Source / workflow tests | Focused executed checks plus exact-head CI | Native verifier passed at `9972803b`; CI passed at `bfbc4805` with validated binary/Automation reuse, not a fresh compile or Automation execution |
 | Documentation | Links, i18n, structure and freshness guards; semantic reconciliation | All four local guards passed; final evidence reconciliation pending |
 | Owner visual acceptance | Explicit owner decision on the presented result | Pending |
-| Reference-PC performance | Applicable full-area exact-SHA Frame/GPU measurement | Not measured by preparation alone |
+| Reference-PC performance | Applicable full-area exact-SHA Frame/GPU measurement after M3 assembly | `DEFERRED_AFTER_M3` by owner on 2026-10-09; not measured, no performance PASS |
 
 New delivery work must bind its own exact revision and saved consumer identity;
 the recorded native success is not proof that future changes passed. A successful preparation package is not a declaration that

@@ -16,6 +16,10 @@ class YETANOTHERCYCLINGSIMEDITOR_API UYacsLandscapeMeshDiagnosticLibrary : publi
 {
     GENERATED_BODY()
 public:
+    /** Read at most 12000 existing support triangle positions for Issue459. Empty IDs reads all; never changes the mesh. */
+    UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+    static FString ReadWindow0112SupportTriangles(UDynamicMesh* Mesh, const TArray<int32>& TriangleIds);
+
     /** Copy native LOD0 geometry and attributes into an existing transient mesh. Never save. Optional plan enables bounded local presentation smoothing. */
     UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
     static FString CopyComponent230(ULandscapeComponent* Component, UDynamicMesh* TargetMesh,

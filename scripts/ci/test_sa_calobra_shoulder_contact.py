@@ -12,7 +12,13 @@ from types import SimpleNamespace
 
 from scripts.ci.test_sa_calobra_tpp_survey_capture import write_png
 from scripts.proof import sa_calobra_shoulder_contact as contract
-from scripts.ue.capture_sa_calobra_shoulder_contact import ContactCapture, Owner
+from scripts.ue.capture_sa_calobra_shoulder_contact import (
+    ContactCapture,
+    Owner,
+    native_triangles,
+    mesh_digest,
+    mesh_triangle,
+)
 
 
 class Component:
@@ -37,6 +43,57 @@ class Component:
 
 
 class ShoulderContactTests(unittest.TestCase):
+    def test_native_triangle_adapter_preserves_sparse_ids_and_rejects_incomplete_or_nonfinite_reads(
+        self,
+    ):
+        mesh = SimpleNamespace(get_path_name=lambda: "saved.target.mesh")
+        result = {
+            "status": "NATIVE_WINDOW0112_SUPPORT_TRIANGLES",
+            "geometry_mutated": False,
+            "mesh_path": "saved.target.mesh",
+            "vertex_count": 3,
+            "triangle_count": 1,
+            "returned_triangle_count": 1,
+            "triangles": [[2, 1.25, 2.5, 3.75, 4, 5, 6, 7, 8, 9]],
+        }
+        read = Mock(side_effect=lambda *_args: json.dumps(result))
+        api = SimpleNamespace(
+            YacsLandscapeMeshDiagnosticLibrary=SimpleNamespace(
+                read_window0112_support_triangles=read
+            )
+        )
+        full = native_triangles(api, mesh)
+        self.assertEqual(mesh_triangle(full, 2)[0], (1.25, 2.5, 3.75))
+        self.assertEqual(
+            mesh_digest(full), mesh_digest(native_triangles(api, mesh, [2]))
+        )
+        read.assert_called_with(mesh, [2])
+        for field in ("vertex_count", "triangle_count", "returned_triangle_count"):
+            result[field] = float(result[field])
+        result["triangles"][0][0] = 2.0
+        self.assertEqual(mesh_digest(full), mesh_digest(native_triangles(api, mesh)))
+        result["triangles"][0][0] = True
+        with self.assertRaisesRegex(RuntimeError, "integer ID/count"):
+            native_triangles(api, mesh)
+        result["triangles"][0][0] = 2.5
+        with self.assertRaisesRegex(RuntimeError, "integer ID/count"):
+            native_triangles(api, mesh)
+        result["triangles"][0][0] = 2
+        with self.assertRaisesRegex(RuntimeError, "exact requested IDs"):
+            native_triangles(api, mesh, [0])
+        result["triangles"][0][-1] = float("nan")
+        with self.assertRaisesRegex(RuntimeError, "invalid ID or coordinates"):
+            native_triangles(api, mesh)
+        result["triangles"] = []
+        result["returned_triangle_count"] = 0
+        with self.assertRaisesRegex(RuntimeError, "inventory differs"):
+            native_triangles(api, mesh)
+        result.clear()
+        result["error"] = "missing or duplicate native support triangle ID"
+        self.assertIsNone(native_triangles(api, mesh, [2], allow_missing=True))
+        with self.assertRaisesRegex(RuntimeError, "query failed"):
+            native_triangles(api, mesh, [2])
+
     def test_native_shutdown_is_guaranteed_when_final_readback_raises(self):
         owner = Owner.__new__(Owner)
         quit_editor = Mock()
