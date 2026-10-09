@@ -1135,7 +1135,7 @@ class WholeMapCapture:
         self.report["diagnostic_complete"] = (
             len(self.report["diagnostic_captures"]) == len(self.witness_steps) == 8
         )
-        if not self.report["diagnostic_complete"] and not errors:
+        if not self.report["diagnostic_complete"]:
             errors.append("Bounded material/light witness capture is incomplete")
         if not self.report["capture_complete"] and not errors:
             errors.append("Whole-map capture coverage is incomplete")
