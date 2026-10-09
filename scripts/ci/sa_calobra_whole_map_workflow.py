@@ -1374,9 +1374,7 @@ def verify_native_mode_sequence(modes):
     expected_witnesses = tuple(
         (identity, mode) for identity in WITNESS_IDS for mode in WITNESS_MODES
     )
-    actual = tuple(
-        (row.get("frame_id"), row.get("landscape_mode")) for row in modes
-    )
+    actual = tuple((row.get("frame_id"), row.get("landscape_mode")) for row in modes)
     require(
         actual == CAPTURE_PAIRS + expected_witnesses,
         "Native v8 baseline guard order or diagnostic witness coverage changed",
