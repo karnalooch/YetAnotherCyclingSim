@@ -18,6 +18,7 @@ RECEIPT_NAME = "native-python-reflection.json"
 SCRIPT_NAME = "probe_official_mcp_bob_reflection.py"
 ENTRY_MAP = "/Engine/Maps/Entry"
 LIBRARY_CLASS = "/Script/YacsBobInspection.YacsBobLandscapeHitLibrary"
+PYTHON_SETTINGS_CLASS = "/Script/PythonScriptPlugin.PythonScriptPluginSettings"
 WRONG_MAP_ERROR = "Current map is outside the accepted BOB inspection checkpoint."
 ENV_FIELDS = {
     "host_project_root": "YACS_MCP_NATIVE_HOST_PROJECT_ROOT",
@@ -243,6 +244,13 @@ def _raw_hit_properties(hit) -> dict:
     return actual
 
 
+def _validate_python_remote_execution(class_path: str, remote_execution: object) -> None:
+    if class_path != PYTHON_SETTINGS_CLASS:
+        raise RuntimeError("Native reflection proof loaded unexpected Python settings class")
+    if remote_execution is not False:
+        raise RuntimeError("Native reflection proof requires Python remote execution disabled")
+
+
 def main() -> None:
     context = _load_context(Path(__file__), os.environ)
     receipt = {
@@ -257,9 +265,16 @@ def main() -> None:
         project_dir = unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())
         if _root(project_dir) != context["host"]:
             raise RuntimeError("Current Unreal project is outside the trusted bare HostProject")
-        python_settings = unreal.get_default_object(unreal.PythonScriptPluginSettings)
-        if python_settings.get_editor_property("remote_execution") is not False:
-            raise RuntimeError("Native reflection proof requires Python remote execution disabled")
+        # Private native settings classes are loaded by their fixed UClass path;
+        # they need not have a generated attribute on the unreal Python module.
+        python_settings_class = unreal.load_class(None, PYTHON_SETTINGS_CLASS)
+        if python_settings_class is None or python_settings_class.get_path_name() != PYTHON_SETTINGS_CLASS:
+            raise RuntimeError("Native reflection proof loaded unexpected Python settings class")
+        python_settings = unreal.get_default_object(python_settings_class)
+        _validate_python_remote_execution(
+            python_settings.get_class().get_path_name(),
+            python_settings.get_editor_property("remote_execution"),
+        )
         # Proven API from texture_material_prep_ue_smoke.py; Automation owns exit.
         unreal.EditorPythonScripting.set_keep_python_script_alive(True)
         engine_version = unreal.SystemLibrary.get_engine_version()
@@ -283,6 +298,7 @@ def main() -> None:
             "status": "NATIVE_PYTHON_REFLECTION_VERIFIED", "reflection_verified": True,
             "source_unchanged": True, "engine_version": engine_version, "current_map_package": current_map,
             "python_remote_execution": False,
+            "python_settings_class_path": python_settings_class.get_path_name(),
             "helper_class_path": class_path, "reflected_fields": list(RESULT_FIELDS),
             "checkpoint_identity": identity, "default_hit_identity": collision,
             "raw_hit_result_binding": type(hit).__name__, "raw_hit_result_properties": raw_properties,

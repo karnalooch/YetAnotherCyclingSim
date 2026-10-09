@@ -16,7 +16,7 @@ on:
         description: Fixed bare-project proof, or retained previous failure readback
         type: choice
         options: [native_probe, diagnose_previous_failure]
-        default: diagnose_previous_failure
+        default: native_probe
         required: true
 
 permissions:
@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   compile:
-    name: Read the retained native failure before another Editor proof
+    name: Prove fixed BOB boundary and private Python settings reflection
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
@@ -51,12 +51,12 @@ jobs:
           clean: false
           persist-credentials: false
 
-      - name: Diagnose the retained owned Editor failure without relaunching
+      - name: Prove the corrected private settings lookup in the bare Editor
         shell: pwsh
         working-directory: _official-mcp-native-probe
         env:
           YACS_CHECKPOINT_READ_TOKEN: ${{ github.token }}
-          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'diagnose_previous_failure' }}
+          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'native_probe' }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1

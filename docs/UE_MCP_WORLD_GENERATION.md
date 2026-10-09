@@ -415,8 +415,8 @@ exactly once and checks actual occurrence counts, retaining all denial calls
 and assertions. The installed Core API and count verification were confirmed
 in [diagnostic 38000430250](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38000430250)
 at `79a7279176a7b5abddd21729fb88ff352c2a66d7`. Branch pushes now select
-the latest failed attempt's fixed readback, without compiling or launching
-another Editor. Manual dispatch retains the fixed native proof option.
+the fixed native proof after the latest precise Python failure was corrected.
+Manual dispatch retains the fixed previous-failure readback option.
 A passing native proof is pending.
 The same diagnostic located the actual private Python settings header, SHA-256
 `6c5f68a3945759234a9b38a98ac7d1369a91982f9d36c433eb2e518e79ebb5f2`,
@@ -454,9 +454,16 @@ retains its existing behavior.
 at `8239a0211040230599a9acfef8a32cd002289ecb` compiled all eleven actions
 and verified the corrected log retention with no secondary errors. Its owned
 Editor still exited **3**, without timing out; native boundary and reflection
-remain unverified. The next readback targets only this retained attempt's
-authenticated Editor log, marker and fixed input identities to identify the
-current Python failure before another native launch.
+remain unverified.
+[Readback 38005786174](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38005786174)
+at `8cebfebc69aae1029b2cf8d460edb70a42b2cf0a` confirms that all five
+inputs match, including the original 79-byte configuration. The Android plugin
+correction therefore preserved that config. The actual Python failure is
+`AttributeError: module 'unreal' has no attribute 'PythonScriptPluginSettings'`.
+The corrected probe uses the existing fixed `unreal.load_class` settings
+pattern, verifies the native class and actual default object's class path, and
+still requires remote execution to be exactly `False`. Seventeen offline
+reflection tests pass; the corrected lookup still requires native execution.
 Hash failures now identify the exact field and both digests. The dependency
 reader independently did not start: its embedded
 Python program is 33,053 characters, and
@@ -489,9 +496,17 @@ the bounded reader now includes only the fixed Core `ConfigCacheIni.cpp` for
 that remaining startup question. Both command-line override parser bodies and
 the exact `-ini:` / `:[` / `]:` specifiers are verified. The new read also
 establishes that `ini.UseNewDynamicLayers` defaults to **1**, bypassing the
-legacy override overload. Effective early precedence therefore remains
-unproved; the next bounded read includes only the named `ConfigContext`
-implementation and its directly included public header to trace actual loading.
+legacy override overload. The latest bounded read verifies the named
+`ConfigContext.cpp`, SHA-256
+`e885987db4711ff5fe6ba6e053e5ced57d8dbe9eb911c12130e8a6f28666a1cc`:
+its dynamic hierarchy records command-line overrides and applies them after
+the saved layer to both final and in-memory configuration. The fixed forms are
+`-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False`
+and
+`-ini:EditorPerProjectUserSettings:[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]:bAutoStartServer=False`.
+No positive automatic-start flags are allowed. Source order supports this
+mechanism; the actual executable's effective Python/MCP settings and absence
+of an existing official server still must be verified before owned activation.
 
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including

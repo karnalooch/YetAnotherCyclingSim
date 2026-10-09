@@ -16,6 +16,25 @@ PROBE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PROBE)
 
 
+class NativePythonSettingsAdmissionTests(unittest.TestCase):
+    """Admission rules only; actual load_class/CDO binding requires the Editor."""
+
+    def test_only_fixed_native_class_and_false_boolean_are_admitted(self):
+        PROBE._validate_python_remote_execution(PROBE.PYTHON_SETTINGS_CLASS, False)
+
+    def test_foreign_or_missing_class_cannot_supply_disabled_settings(self):
+        for class_path in (None, "", "/Script/UnrealEd.EditorPerformanceSettings"):
+            with self.subTest(class_path=class_path):
+                with self.assertRaisesRegex(RuntimeError, "unexpected Python settings class"):
+                    PROBE._validate_python_remote_execution(class_path, False)
+
+    def test_unknown_enabled_or_false_like_values_are_rejected(self):
+        for remote_execution in (None, True, 0, "False"):
+            with self.subTest(remote_execution=remote_execution):
+                with self.assertRaisesRegex(RuntimeError, "remote execution disabled"):
+                    PROBE._validate_python_remote_execution(PROBE.PYTHON_SETTINGS_CLASS, remote_execution)
+
+
 class NativeReflectionContextTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="yacs-reflection-contract-")
