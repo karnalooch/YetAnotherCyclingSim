@@ -51,7 +51,9 @@ def audit_near_views(proof, captures, near_views, size=(1920, 1080)):
             row = lookup.get((frame_id, mode))
             relative = f"frames/{frame_id}-{mode}.png"
             if row is None or row.get("file") != relative:
-                raise ValueError("Visual review frame or provenance is missing: " + relative)
+                raise ValueError(
+                    "Visual review frame or provenance is missing: " + relative
+                )
             frames.append(row)
         poses = [{key: row.get(key) for key in POSE_FIELDS} for row in frames]
         if poses[0] != poses[1] or poses[0] != poses[2]:
@@ -91,7 +93,9 @@ def audit_near_views(proof, captures, near_views, size=(1920, 1080)):
         )
     return {
         "schema_version": 1,
-        "status": "VISUAL_REVIEW_REQUIRED" if flagged else "NO_LARGE_PREPARED_ONLY_BLACKOUT",
+        "status": "VISUAL_REVIEW_REQUIRED"
+        if flagged
+        else "NO_LARGE_PREPARED_ONLY_BLACKOUT",
         "flagged_views": flagged,
         "thresholds": {
             "max_rgb_exclusive": DARK_MAX_RGB_EXCLUSIVE,
