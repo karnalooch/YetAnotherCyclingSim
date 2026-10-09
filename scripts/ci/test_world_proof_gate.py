@@ -39,6 +39,12 @@ def fixture(name="stage3g-environment"):
         "SettingsSha256": "c" * 64,
         "ScreenPercentage": 100,
         "DynamicResolution": False,
+        "MapSha256": "d" * 64,
+        "ConsumerManifestSha256": "e" * 64,
+        "MaterialParent": scenario.get("material_parent"),
+        "MaterialComponentCount": 1024,
+        "RenderInstanceCount": 1024,
+        "LightingPreserved": True,
         "Sectors": [
             {
                 "Sector": s,
@@ -59,6 +65,11 @@ def fixture(name="stage3g-environment"):
 
 
 class WorldProofTests(unittest.TestCase):
+    def test_material_changes_require_saved_consumer_instead_of_bare_terrain(self):
+        needed = gate.requirements(["scripts/ue/sa_calobra_whole_map_prep.py"], POLICY)
+        self.assertIn("sa-calobra-material", needed)
+        self.assertNotIn("sa-calobra-terrain", needed)
+
     def test_worlds_are_distinct_and_docs_do_not_require_gpu(self):
         self.assertEqual(
             gate.requirements(["Content/Worlds/SaCalobra/L_Test.umap"], POLICY),

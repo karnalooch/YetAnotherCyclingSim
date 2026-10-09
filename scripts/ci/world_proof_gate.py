@@ -68,6 +68,10 @@ def requirements(paths: list[str], policy: dict) -> list[str]:
             result.add("UNMAPPED_WORLD")
     if classify_paths(paths).asset_full:
         result.add("stage3g-environment")
+    # The admitted material consumer includes the terrain; a bare terrain proof
+    # cannot substitute for it when material/world-consumer paths change.
+    if "sa-calobra-material" in result:
+        result.discard("sa-calobra-terrain")
     return sorted(result)
 
 
@@ -194,6 +198,27 @@ def validate_evidence(
             summary.get("ScreenPercentage") == 100
             and summary.get("DynamicResolution") is False,
             "uncontrolled render resolution",
+        )
+    if name == "sa-calobra-material":
+        for key in ("MapSha256", "ConsumerManifestSha256"):
+            require(
+                isinstance(summary.get(key), str)
+                and re.fullmatch(r"[0-9a-f]{64}", summary[key]) is not None,
+                f"missing saved consumer {key}",
+            )
+        require(
+            summary.get("MaterialParent") == scenario["material_parent"],
+            "wrong actual material parent",
+        )
+        require(
+            summary.get("MaterialComponentCount") == scenario["component_count"]
+            and number(summary.get("RenderInstanceCount"), "render instance count")
+            >= scenario["component_count"],
+            "actual material consumption incomplete",
+        )
+        require(
+            summary.get("LightingPreserved") is True,
+            "saved scene lighting was replaced",
         )
     rows = list(csv.DictReader(io.StringIO(csv_text)))
     require(

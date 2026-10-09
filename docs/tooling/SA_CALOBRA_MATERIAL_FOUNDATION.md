@@ -254,6 +254,37 @@ Prove saved assets and a fresh consumer reload separately from live review.
 Execute the deferred 2A/2B performance measurement on this actual map/material
 at the exact candidate SHA, using existing budgets, reference hardware and raw
 Frame/GPU evidence. A legacy terrain-baseline map cannot prove this consumer.
+The existing `Invoke-YacsSaCalobraPerformance.ps1` now has an explicit
+`-ConsumerManifest <absolute consumer-manifest.json> -WorkspaceConfig <workspace.json>`
+mode. It requires an isolated checkout, a saved review map and a hash-pinned
+successful fresh rendered receipt before launching timing. It verifies map,
+master, instance and dependent asset bytes before and after the process, reads
+the actual native parent chains for all 1024 components, and retains the saved
+scene lighting. It does not import another heightmap, rebuild a material or save
+the canonical map. The original no-manifest mode remains the separate bare
+terrain baseline and cannot satisfy `sa-calobra-material` admission.
+
+The measured review package is
+`/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview`.
+The consumer manifest carries the original 3x3 ground poses and opposing
+overviews from the verified whole-map capture, including their FOV, plus an
+explicit three-pose camera traversal, measured for 30 seconds. Its camera
+height clears the saved Landscape's native maximum bounds by at least 20 m;
+XY, targets and FOV remain tied to the three source ground poses. The sampler
+checks that clearance against the loaded Landscape. That traversal is a presentation
+diagnostic, not a physical cycling/route-continuity proof. Sector IDs retain
+the existing native capture's X-first/Y-second indexing. Missing sector,
+unrendered consumer, changed bytes, wrong actual parent, incomplete native
+roots, unavailable GPU samples or an exceeded existing budget fail admission.
+The frozen canonical accepted-map digest identifies terrain/scene lineage; it
+must not be described as a raw heightmap digest.
+
+This source extension still requires a fresh UE 5.8.2 sampler build and native
+measurement on the saved consumer. Python tests do not establish FPS. Publish
+the successful summary/CSV through the trusted default-branch Proof Broker
+registration for `sa-calobra-material-performance`; a branch preparation
+artifact alone does not waive that protected provenance requirement. Whole-area
+owner visual acceptance and production delivery remain separate gates.
 Run source tests, all four documentation guards and the required Unreal/asset
 proofs. Keep the PR draft until required admission passes. Step #364 remains
 blocked until #363 is completed and its implementation merged with proof.

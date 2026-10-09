@@ -119,6 +119,73 @@ Do not run two independent agent-facing mutation servers. Before cutover, prove 
 
 The receipt should bind repository SHA, actual UE/plugin versions, map/object identity, tool calls/arguments, input hashes, BOB policy/version, Automation test/run/status, domain result, artifact paths/hashes, timestamp and mutation scope. Reuse current proof/receipt conventions. A log claiming success without the referenced evidence is insufficient.
 
+### Prepared kickoff after material acceptance — 2026-10-09
+
+This is a static preparation checkpoint at
+`bfbc48057b8b84d087a3685cd71972678a32d412`, not official MCP activation or
+completion of #384. Both #384 and #364 retain their dependency gates. The
+smallest implementation after the entry gate is the inspection/test spike
+below; it needs no road rebuild, new transport service or expanded tool library.
+
+1. **Bind the completed predecessor.** Record #363's completed issue state,
+   protected merge SHA, admitted saved map/material identities and links to
+   whole-area visual, fresh rendered reopening and exact-SHA performance
+   acceptance. Use that handoff's actual map; do not substitute an older
+   session-only preview or Component 230 acceptance.
+2. **Collect version-matched primary evidence before wiring.** Resolve the
+   canonical engine with
+   [`Resolve-YacsUnrealEngine.ps1`](../scripts/ci/Resolve-YacsUnrealEngine.ps1)
+   and the workspace configuration. Retain `Engine/Build/Build.version`, the
+   installed `ModelContextProtocol` and `AutomationTestToolset` plugin
+   descriptors and the source declarations implementing registry selection,
+   scene/object reads and test execution/results. Record paths and SHA-256
+   hashes without copying Epic source into Git. The inspected baseline is
+   UE **5.8.2 / CL 56702186**; prove that the running editor and these files
+   identify the same build. Missing files or a version mismatch block wiring.
+3. **Discover a restricted stock surface.** Retain the official server's
+   actual tool names, input/output schemas and enabled registry entries.
+   Admit only the map/object reads and one test invocation needed here. Exact
+   RPC names, endpoint settings and a native allow-list mechanism remain
+   unverified; public capability names are not executable schemas. If installed
+   primary source cannot establish restrictions, return the gap and retain the
+   guarded baseline. Do not implement a generic gateway to compensate.
+4. **Read one object and run one existing test.** Use a stable object from the
+   admitted map and compare its path/class/properties with the checkpoint.
+   Discover the existing candidate test
+   `CyclingPhysics.RoadPhysics.ProfileInterpolation`, declared in
+   [`RoadPhysicsProfile.spec.cpp`](../Source/YetAnotherCyclingSim/Private/Tests/RoadPhysicsProfile.spec.cpp).
+   It checks the route/physics presentation boundary without scene authoring.
+   Require exactly one matching completed test, real assertions and its report;
+   absence, timeout or missing results fail the spike.
+5. **Delegate one BOB inspection.** The concrete read-only target is
+   [`inspect_terrain_fit`](../scripts/worldgen/bob_terrain_fit_inspector.py),
+   using nonempty hash-bound real native samples and its explicit `exact_sha`,
+   `contact_band_max_m` and `structure_review_threshold_m` arguments. Bind
+   thresholds to the admitted caller and
+   [`adaptive_terrain_policy.json`](../worldgen/terrain/adaptive_terrain_policy.json),
+   not user-supplied engineering overrides. Compare the domain-tool return with
+   direct invocation on identical inputs. Preserve `INSPECTOR_ONLY`,
+   `REVIEW_REQUIRED` / `INSPECTION_INCOMPLETE` and all false admission/authoring
+   flags. Do not expose the entire
+   [`bob_road_earthworks_cut.py`](../scripts/ue/bob_road_earthworks_cut.py)
+   workflow: its separate `apply_cut_patch` operation changes earthworks.
+6. **Prove denial and stop.** Reject a wrong map/object, missing or stale input
+   hashes, an engine/plugin/schema mismatch, an absent test result, paths outside
+   scope and attempted save/import/transform/earthworks or arbitrary execution.
+   Retain before/after persistent-content hashes and the call/domain/test
+   receipts. After protected technical closeout, hand off the admitted stock
+   `MaterialInstanceTools` capability and its exact schemas to #364; stop MCP
+   infrastructure expansion.
+
+Preparation checks at the audited SHA: the existing BOB terrain-fit and adaptive
+policy unit modules passed **18 tests**. These exercise domain behavior only;
+official transport, installed Epic APIs, native scene identity, test invocation
+and guard parity remain **unverified**. The current `.uproject` does not enable
+an official MCP server, and `YacsStage3GGuard` belongs to the retained db-lyon
+path; neither establishes restrictions on the future official path. The
+read-only road/shoulder inventory is maintained in
+[Asset Plan section 4.4](ASSET_PLAN.md#44-droga-i-pobocze).
+
 ### Safety and preserved governance
 
 - Prove a narrow read/inspect/test surface. Loading All Toolsets is not blanket authorization for every registered operation.

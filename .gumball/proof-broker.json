@@ -186,6 +186,27 @@
         "require_ci_class": "heavy"
       },
       "allowed_write_permissions": []
+    },
+    "sa-calobra-material-performance": {
+      "enabled": true,
+      "workflow": "sa-calobra-terrain-performance.yml",
+      "label": "proof:sa-calobra-material-performance",
+      "cost_class": "heavy",
+      "merge_critical": false,
+      "dispatch_ref": "default",
+      "request_id_input": "gumball_request_id",
+      "inputs": {
+        "exact_sha": "$sha",
+        "gumball_request_id": "$request_id",
+        "material_consumer": "true",
+        "consumer_manifest": ""
+      },
+      "artifact_name": "proof-$proof-$sha",
+      "automatic": {
+        "enabled": false,
+        "require_ci_class": "heavy"
+      },
+      "allowed_write_permissions": []
     }
   }
 }

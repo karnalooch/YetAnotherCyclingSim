@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import io
+import itertools
 import json
 import math
 import os
@@ -50,43 +51,56 @@ class WholeMapWorkflowRoutingTests(unittest.TestCase):
         cls.job = cls.jobs["wholemap-material"]
 
     def test_owner_marker_selects_only_whole_map_work(self):
-        self.assertEqual(
-            [
-                name
-                for name, job in self.jobs.items()
-                if enabled(job, message="[wholemap-material]")
-            ],
-            ["wholemap-material"],
-        )
+        for marker in (
+            "[wholemap-material]",
+            "[shoulder-contact]",
+            "[material-closeout]",
+        ):
+            with self.subTest(marker=marker):
+                self.assertEqual(
+                    [
+                        name
+                        for name, job in self.jobs.items()
+                        if enabled(job, message=marker)
+                    ],
+                    ["wholemap-material"],
+                )
         self.assertIn("runs-on: [self-hosted, yacs-ue58]", self.job)
 
     def test_wrong_actor_repository_branch_or_event_cannot_start(self):
-        for key, value in (
-            ("github.actor", "contributor"),
-            ("github.repository", "fork/YetAnotherCyclingSim"),
-            ("github.ref", "refs/heads/main"),
-            ("github.event_name", "workflow_dispatch"),
+        for marker, (key, value) in itertools.product(
+            ("[wholemap-material]", "[shoulder-contact]", "[material-closeout]"),
+            (
+                ("github.actor", "contributor"),
+                ("github.repository", "fork/YetAnotherCyclingSim"),
+                ("github.ref", "refs/heads/main"),
+                ("github.event_name", "workflow_dispatch"),
+            ),
         ):
-            with self.subTest(key=key):
-                self.assertFalse(
-                    enabled(self.job, message="[wholemap-material]", **{key: value})
-                )
+            with self.subTest(key=key, marker=marker):
+                self.assertFalse(enabled(self.job, message=marker, **{key: value}))
         self.assertFalse(enabled(self.job, message="ordinary maintenance"))
 
     def test_every_mixed_marker_is_rejected_without_starting_legacy_jobs(self):
-        for other in (
+        markers = (
+            "[wholemap-material]",
+            "[shoulder-contact]",
+            "[material-closeout]",
             "[detail-pilot]",
             "[detail-native]",
             "[tpp-survey]",
             "[tpp-retain]",
             "[tpp-docs]",
-        ):
-            with self.subTest(other=other):
+        )
+        for first, other in itertools.combinations(markers, 2):
+            if first not in markers[:3]:
+                continue
+            with self.subTest(first=first, other=other):
                 self.assertEqual(
                     [
                         name
                         for name, job in self.jobs.items()
-                        if enabled(job, message="[wholemap-material] " + other)
+                        if enabled(job, message=first + " " + other)
                     ],
                     [],
                 )
@@ -119,7 +133,9 @@ class WholeMapWorkflowRoutingTests(unittest.TestCase):
         capture = self.job.split(
             "Prepare fixed master then capture the entire native working map", 1
         )[1].split("      - name:", 1)[0]
-        self.assertNotIn("if: ${{", capture)
+        self.assertIn(
+            "!contains(github.event.head_commit.message, '[shoulder-contact]')", capture
+        )
         self.assertEqual(
             capture.count("Start-Process -FilePath $engine.UnrealEditorPath"), 1
         )
@@ -157,6 +173,44 @@ class WholeMapWorkflowRoutingTests(unittest.TestCase):
         self.assertNotIn("D:\\yacs\\project", self.job)
         self.assertNotIn("Content/**", self.job)
         self.assertNotIn("yacs-unreal-ci-${{ github.repository }}", self.job)
+
+    def test_material_closeout_requires_current_proof_before_three_fresh_processes(
+        self,
+    ):
+        ordered = (
+            "Verify complete native inventory and fresh capture provenance",
+            "Verify unchanged map checkout and all retained source bytes",
+            "Save the selected material then reload and render it in fresh processes",
+            "Measure the same saved material consumer on the reference GPU",
+            "Verify conservation again after saved material and performance processes",
+        )
+        positions = [self.job.index(name) for name in ordered]
+        self.assertEqual(positions, sorted(positions))
+        saved = self.job.split(ordered[2], 1)[1].split("      - name:", 1)[0]
+        self.assertIn("@('prepare', 'reload', 'render')", saved)
+        self.assertIn("'/Engine/Maps/Entry'", saved)
+        self.assertIn("$receipt.exact_sha -ne $env:GITHUB_SHA", saved)
+        self.assertIn("$state.status -ne 'IDLE'", saved)
+        self.assertEqual(saved.count("Start-Process -FilePath"), 1)
+        self.assertNotIn("New-Item -ItemType Directory", saved)
+        timing = self.job.split(ordered[3], 1)[1].split("      - name:", 1)[0]
+        self.assertIn("-ConsumerManifest $manifest", timing)
+        self.assertIn("preliminary until the trusted-default workflow", timing)
+
+    def test_shoulder_diagnostic_cannot_rebuild_or_save_accepted_geometry(self):
+        diagnostic = self.job.split(
+            "Capture the frozen internal CUT surface owners without changing geometry",
+            1,
+        )[1].split("      - name:", 1)[0]
+        self.assertIn("[shoulder-contact]", diagnostic)
+        self.assertIn("Get-YacsUnrealHostState.ps1", diagnostic)
+        self.assertIn("YACS_SHOULDER_CONTACT_API_RECEIPT", diagnostic)
+        self.assertIn("scripts.proof.sa_calobra_shoulder_contact verify", diagnostic)
+        self.assertIn(
+            "$env:YACS_WHOLE_MAP_PROOF_ROOT 'shoulder-contact.stdout.log'", diagnostic
+        )
+        self.assertNotIn("build_sa_calobra", diagnostic)
+        self.assertNotIn("save_map", diagnostic)
 
     def test_compact_retention_includes_reusable_packages_and_failure_logs(self):
         upload = self.job.split(

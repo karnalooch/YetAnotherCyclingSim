@@ -45,6 +45,13 @@ on:
       - "scripts/ue/capture_sa_calobra_whole_map_prep.py"
       - "scripts/ci/test_sa_calobra_whole_map_prep.py"
       - "scripts/ci/test_sa_calobra_whole_map_capture_views.py"
+      - "scripts/ue/capture_sa_calobra_shoulder_contact.py"
+      - "scripts/proof/sa_calobra_shoulder_contact.py"
+      - "scripts/ci/test_sa_calobra_shoulder_contact.py"
+      - "scripts/ue/sa_calobra_saved_material_consumer.py"
+      - "scripts/ci/test_sa_calobra_saved_material_consumer.py"
+      - "Source/YetAnotherCyclingSim/Private/Tests/CyclingSaCalobraPerformance.spec.cpp"
+      - "scripts/ue/Invoke-YacsSaCalobraPerformance.ps1"
       - "docs/experiments/sa-calobra-component230-detail-pilot-20261008/annotations.json"
       - "scripts/assets/prepare_sa_calobra_component230_cliff_visual.py"
       - "scripts/assets/test_sa_calobra_component230_cliff_visual.py"
@@ -88,7 +95,12 @@ jobs:
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.actor == 'karnalooch' &&
       github.ref == 'refs/heads/feat/phase2c-pcgex-cliff-topology' &&
-      contains(github.event.head_commit.message, '[wholemap-material]') &&
+      (contains(github.event.head_commit.message, '[wholemap-material]') ||
+       contains(github.event.head_commit.message, '[shoulder-contact]') ||
+       contains(github.event.head_commit.message, '[material-closeout]')) &&
+      !(contains(github.event.head_commit.message, '[wholemap-material]') && contains(github.event.head_commit.message, '[shoulder-contact]')) &&
+      !(contains(github.event.head_commit.message, '[wholemap-material]') && contains(github.event.head_commit.message, '[material-closeout]')) &&
+      !(contains(github.event.head_commit.message, '[shoulder-contact]') && contains(github.event.head_commit.message, '[material-closeout]')) &&
       !contains(github.event.head_commit.message, '[detail-native]') &&
       !contains(github.event.head_commit.message, '[detail-pilot]') &&
       !contains(github.event.head_commit.message, '[tpp-survey]') &&
@@ -267,6 +279,8 @@ jobs:
           "YACS_WHOLE_MAP_PREP=$(Join-Path $root 'whole-map-prep')" >> $env:GITHUB_ENV
           "YACS_WHOLE_MAP_NATIVE_SOURCE=$(Join-Path $root 'native-input')" >> $env:GITHUB_ENV
           "YACS_WHOLE_MAP_MASTER_RECEIPT=$(Join-Path $root 'whole-map-master-receipt.json')" >> $env:GITHUB_ENV
+          "YACS_SHOULDER_CONTACT_ROOT=$(Join-Path $root 'shoulder-contact')" >> $env:GITHUB_ENV
+          "YACS_SA_CALOBRA_TPP_FROZEN_ROOT=$(Join-Path $workspace.data 'world-data/sa-calobra-working-v1/frozen-road-c5573b3-2026-10-04')" >> $env:GITHUB_ENV
           "YACS_WHOLE_MAP_PLACEMENT=$(Join-Path $workspace.data 'world-data/sa-calobra-working-v1/pcg-masks-v1-2026-10-04')" >> $env:GITHUB_ENV
           "YACS_WHOLE_MAP_RETAINED_SOURCE=$(Join-Path $workspace.work 'proofs/sa-calobra-tpp/b1ea05b33b9f3208e7aeb6884f1a67792d9c6121/37800814004-1')" >> $env:GITHUB_ENV
           "YACS_CLIFF_VISUAL_OUTPUT=$(Join-Path $root 'capture')" >> $env:GITHUB_ENV
@@ -309,7 +323,7 @@ jobs:
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
           $ErrorActionPreference = 'Stop'
-          python -m unittest scripts.assets.test_sa_calobra_whole_map_surface_prep scripts.assets.test_install_sa_calobra_whole_map_prep scripts.assets.test_restore_workspace_data scripts.ci.test_sa_calobra_whole_map_prep scripts.ci.test_sa_calobra_whole_map_capture_views scripts.ci.test_sa_calobra_whole_map_workflow scripts.ci.test_sa_calobra_detail_native_workflow -v
+          python -m unittest scripts.assets.test_sa_calobra_whole_map_surface_prep scripts.assets.test_install_sa_calobra_whole_map_prep scripts.assets.test_restore_workspace_data scripts.ci.test_sa_calobra_whole_map_prep scripts.ci.test_sa_calobra_whole_map_capture_views scripts.ci.test_sa_calobra_whole_map_workflow scripts.ci.test_sa_calobra_detail_native_workflow scripts.ci.test_sa_calobra_shoulder_contact scripts.ci.test_sa_calobra_saved_material_consumer scripts.ci.test_sa_calobra_performance scripts.ci.test_world_proof_gate -v
           if ($LASTEXITCODE -ne 0) { throw 'Whole-map CPU and workflow contract tests failed.' }
           python scripts/assets/prepare_sa_calobra_whole_map_surface_prep.py --source-inputs worldgen/materials/visual_fill --placement-inputs $env:YACS_WHOLE_MAP_PLACEMENT --output $env:YACS_WHOLE_MAP_PREP
           if ($LASTEXITCODE -ne 0) { throw 'Full-grid material preparation or mandatory pinned PCG exclusion reasons failed.' }
@@ -335,7 +349,10 @@ jobs:
             @{ path = 'Engine/Source/Runtime/Engine/Public/Materials/MaterialExpressionFrac.h'; symbols = @('UMaterialExpressionFrac') },
             @{ path = 'Engine/Source/Runtime/Engine/Public/Materials/MaterialExpressionMax.h'; symbols = @('UMaterialExpressionMax') },
             @{ path = 'Engine/Source/Editor/MaterialEditor/Public/MaterialEditingLibrary.h'; symbols = @('CreateMaterialExpression', 'ConnectMaterialProperty', 'RecompileMaterial') },
-            @{ path = 'Engine/Source/Runtime/Landscape/Classes/LandscapeComponent.h'; symbols = @('ForcedLOD', 'OverrideMaterial') }
+            @{ path = 'Engine/Source/Runtime/Landscape/Classes/LandscapeComponent.h'; symbols = @('ForcedLOD', 'OverrideMaterial', 'SectionBaseX', 'SectionBaseY', 'ComponentSizeQuads', 'LODBias', 'MaterialInstances', 'MaterialInstancesDynamic') },
+            @{ path = 'Engine/Source/Runtime/Engine/Classes/Components/SceneComponent.h'; symbols = @('SetVisibility', 'bVisible') },
+            @{ path = 'Engine/Source/Runtime/Engine/Classes/Components/PrimitiveComponent.h'; symbols = @('bCastHiddenShadow') },
+            @{ path = 'Engine/Source/Runtime/GeometryFramework/Public/UDynamicMesh.h'; symbols = @('GetTrianglePositions') }
           )
           $evidence = @()
           foreach ($contract in $contracts) {
@@ -346,6 +363,24 @@ jobs:
               if ($source -notmatch ('\b' + [regex]::Escape($symbol) + '\b')) { throw "Installed material API lacks $symbol" }
             }
             $evidence += [ordered]@{ header = $contract.path; sha256 = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant(); verified_symbols = $contract.symbols }
+          }
+          # Resolve observed installed headers; do not assume their module paths.
+          $discoveredContracts = @(
+            @{ file = 'FileHelpers.h'; symbols = @('UEditorLoadingAndSavingUtils', 'SaveMap', 'LoadMap') },
+            @{ file = 'AutomationBlueprintFunctionLibrary.h'; symbols = @('UAutomationBlueprintFunctionLibrary', 'TakeHighResScreenshot', 'FinishLoadingBeforeScreenshot') },
+            @{ file = 'MaterialInstance.h'; symbols = @('UMaterialInstance', 'Parent') },
+            @{ file = 'UnrealType.h'; symbols = @('FArrayProperty', 'FScriptArrayHelper') }
+          )
+          foreach ($contract in $discoveredContracts) {
+            $matches = @(Get-ChildItem -LiteralPath (Join-Path $engine.Root 'Engine/Source') -Filter $contract.file -File -Recurse | Where-Object {
+              $installedSource = Get-Content -LiteralPath $_.FullName -Raw
+              $missingSymbols = @($contract.symbols | Where-Object { $installedSource -notmatch ('\b' + [regex]::Escape($_) + '\b') })
+              $missingSymbols.Count -eq 0
+            })
+            if ($matches.Count -ne 1) { throw "Installed primary API contract must resolve uniquely: $($contract.file)." }
+            $path = $matches[0].FullName
+            $relative = [IO.Path]::GetRelativePath($engine.Root, $path).Replace('\', '/')
+            $evidence += [ordered]@{ header = $relative; sha256 = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant(); verified_symbols = $contract.symbols }
           }
           [ordered]@{ status = 'INSTALLED_PRIMARY_API_SOURCE_VERIFIED'; exact_sha = $env:GITHUB_SHA; engine_version = $engine.Version; build_version_sha256 = $engine.BuildVersionSha256; headers = $evidence; startup_map = '/Engine/Maps/Entry'; startup_map_sha256 = (Get-FileHash -LiteralPath $entryMap -Algorithm SHA256).Hash.ToLowerInvariant() } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'native-api-evidence.json') -Encoding UTF8
 
@@ -419,7 +454,41 @@ jobs:
           Write-Host 'Binary mode: ${{ steps.cache.outputs.mode }}; compile kind: ${{ steps.cache.outputs.compile_kind }}; reason: ${{ steps.cache.outputs.reason }}'
           Write-Host 'The following material build and full-map capture are fresh even when binary equivalence is static.'
 
+      - name: Capture the frozen internal CUT surface owners without changing geometry
+        if: ${{ contains(github.event.head_commit.message, '[shoulder-contact]') }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          if ($state.status -ne 'IDLE') { throw "Shoulder-contact diagnostic requires an idle host: $($state.status)." }
+          if (Test-Path -LiteralPath $env:YACS_SHOULDER_CONTACT_ROOT) { throw 'Refusing stale shoulder-contact output.' }
+          New-Item -ItemType Directory -Path $env:YACS_SHOULDER_CONTACT_ROOT | Out-Null
+          $env:YACS_SHOULDER_CONTACT_EXACT_SHA = $env:GITHUB_SHA
+          $env:YACS_SHOULDER_CONTACT_API_RECEIPT = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'native-api-evidence.json'
+          $env:YACS_SHOULDER_CONTACT_WORKTREE = (Get-Location).Path
+          $script = (Resolve-Path 'scripts/ue/capture_sa_calobra_shoulder_contact.py').Path
+          $stdout = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'shoulder-contact.stdout.log'
+          $stderr = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'shoulder-contact.stderr.log'
+          $log = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'shoulder-contact.engine.log'
+          $arguments = @(('"' + $project + '"'), '/Engine/Maps/Entry', ('-ExecutePythonScript="' + $script + '"'), '-RenderOffscreen', '-Unattended', '-NoPause', '-NoSplash', '-NoSound', '-NoP4', '-NoVSync', '-Deterministic', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + $log + '"'))
+          $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $process.WaitForExit(900000)) {
+            try { $process | Stop-Process -Force } catch { }
+            throw 'Owned shoulder-contact capture timed out.'
+          }
+          if ($process.ExitCode -ne 0) {
+            foreach ($diagnostic in @($stdout, $stderr, $log)) { if (Test-Path -LiteralPath $diagnostic -PathType Leaf) { Get-Content -LiteralPath $diagnostic -Tail 120 | Write-Host } }
+            throw "Shoulder-contact process exited $($process.ExitCode)."
+          }
+          python -m scripts.proof.sa_calobra_shoulder_contact verify --root $env:YACS_SHOULDER_CONTACT_ROOT --exact-sha $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Native surface-owner/restoration evidence failed verification.' }
+
       - name: Prepare fixed master then capture the entire native working map
+        if: ${{ !contains(github.event.head_commit.message, '[shoulder-contact]') }}
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
@@ -464,6 +533,7 @@ jobs:
           }
 
       - name: Verify complete native inventory and fresh capture provenance
+        if: ${{ !contains(github.event.head_commit.message, '[shoulder-contact]') }}
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
@@ -477,6 +547,68 @@ jobs:
         run: |
           python -m scripts.ci.sa_calobra_whole_map_workflow restore --root $env:YACS_WHOLE_MAP_PROOF_ROOT --exact-sha $env:GITHUB_SHA
           if ($LASTEXITCODE -ne 0) { throw 'Whole-map source/checkout conservation verification failed.' }
+
+      - name: Save the selected material then reload and render it in fresh processes
+        if: ${{ contains(github.event.head_commit.message, '[material-closeout]') }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/Resolve-YacsUnrealEngine.ps1
+          $project = Join-Path (Get-Location) 'YetAnotherCyclingSim.uproject'
+          $engine = Resolve-YacsUnrealEngine -ProjectPath $project
+          $env:YACS_MATERIAL_PROOF_ROOT = $env:YACS_WHOLE_MAP_PROOF_ROOT
+          $env:YACS_MATERIAL_CONSUMER_ROOT = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'saved-material-consumer'
+          $env:YACS_2B_EXPECTED_HEAD = $env:GITHUB_SHA
+          $script = (Resolve-Path 'scripts/ue/sa_calobra_saved_material_consumer.py').Path
+          foreach ($action in @('prepare', 'reload', 'render')) {
+            $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+            if ($state.status -ne 'IDLE') { throw "Saved material $action requires an idle host: $($state.status)." }
+            $env:YACS_MATERIAL_ACTION = $action
+            $stdout = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT "material-consumer-$action.stdout.log"
+            $stderr = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT "material-consumer-$action.stderr.log"
+            $log = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT "material-consumer-$action.engine.log"
+            $arguments = @(('"' + $project + '"'), '/Engine/Maps/Entry', ('-ExecutePythonScript="' + $script + '"'), '-RenderOffscreen', '-Unattended', '-NoPause', '-NoSplash', '-NoSound', '-NoP4', '-NoVSync', '-Deterministic', '-ScriptErrorsAreFatal', '-stdout', ('-AbsLog="' + $log + '"'))
+            $process = Start-Process -FilePath $engine.UnrealEditorPath -ArgumentList $arguments -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+            if (-not $process.WaitForExit(1200000)) {
+              try { $process | Stop-Process -Force } catch { }
+              throw "Owned saved-material $action process timed out."
+            }
+            if ($process.ExitCode -ne 0) {
+              foreach ($diagnostic in @($stdout, $stderr, $log)) { if (Test-Path -LiteralPath $diagnostic -PathType Leaf) { Get-Content -LiteralPath $diagnostic -Tail 120 | Write-Host } }
+              throw "Saved-material $action exited $($process.ExitCode)."
+            }
+            $receiptName = @{ prepare = 'consumer-manifest.json'; reload = 'reload-receipt.json'; render = 'fresh-render-receipt.json' }[$action]
+            $expectedStatus = @{ prepare = 'SAVED_MATERIAL_CONSUMER_PREPARED'; reload = 'SAVED_MATERIAL_CONSUMER_RELOADED'; render = 'SAVED_MATERIAL_CONSUMER_RENDERED' }[$action]
+            $receipt = Get-Content -LiteralPath (Join-Path $env:YACS_MATERIAL_CONSUMER_ROOT $receiptName) -Raw | ConvertFrom-Json
+            if ($receipt.status -ne $expectedStatus -or $receipt.exact_sha -ne $env:GITHUB_SHA) { throw "Saved-material $action receipt failed admission." }
+            foreach ($diagnostic in @($stdout, $stderr, $log)) {
+              $fallback = @(Select-String -LiteralPath $diagnostic -Pattern @('Texture Sample > Missing input texture', 'Default Material will be used', 'LogPython: Error:', "LoadErrors: Error:.*'/Game/Generated/YACS/SaCalobra/WholeMapPreparation/"))
+              if ($fallback.Count -gt 0) { $fallback | Write-Host; throw 'Saved-material process reported an error or material fallback.' }
+            }
+          }
+
+      - name: Measure the same saved material consumer on the reference GPU
+        if: ${{ contains(github.event.head_commit.message, '[material-closeout]') }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          if ($state.status -ne 'IDLE') { throw "Saved-material performance requires an idle host: $($state.status)." }
+          $manifest = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'saved-material-consumer/consumer-manifest.json'
+          $proof = Join-Path $env:YACS_WHOLE_MAP_PROOF_ROOT 'saved-material-performance'
+          ./scripts/ue/Invoke-YacsSaCalobraPerformance.ps1 -ExpectedHead $env:GITHUB_SHA -ArtifactRoot $proof -ConsumerManifest $manifest -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
+          if ($LASTEXITCODE -ne 0) { throw 'Actual saved-material 1080p60 timing failed; no stage exit may be claimed.' }
+          Write-Host 'Timing evidence is preliminary until the trusted-default workflow admits this exact consumer.'
+
+      - name: Verify conservation again after saved material and performance processes
+        if: ${{ always() && contains(github.event.head_commit.message, '[material-closeout]') && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          python -m scripts.ci.sa_calobra_whole_map_workflow restore --root $env:YACS_WHOLE_MAP_PROOF_ROOT --exact-sha $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Saved-material source/checkout conservation verification failed.' }
 
       - name: Retain only current-run compile diagnostics under the proof root
         if: ${{ always() && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
@@ -511,6 +643,37 @@ jobs:
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/*.json
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/whole-map-*.log
             ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/build-automation/
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-performance/
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/material-consumer-*.log
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload original saved-material frames for owner review
+        if: ${{ always() && contains(github.event.head_commit.message, '[material-closeout]') && env.YACS_WHOLE_MAP_PROOF_ROOT != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: sa-calobra-material-review-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/overview-north.png
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/overview-south.png
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/ground-0-0.png
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/frames/ground-2-2.png
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/*.json
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-consumer/readiness/**/capture-readiness.json
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-performance/*.json
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/saved-material-performance/*.csv
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload original shoulder-contact review frames and restoration evidence
+        if: ${{ always() && contains(github.event.head_commit.message, '[shoulder-contact]') && env.YACS_SHOULDER_CONTACT_ROOT != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: sa-calobra-shoulder-contact-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.YACS_SHOULDER_CONTACT_ROOT }}/
+            ${{ env.YACS_WHOLE_MAP_PROOF_ROOT }}/shoulder-contact.*.log
           if-no-files-found: error
           retention-days: 90
 
@@ -523,6 +686,8 @@ jobs:
       github.ref == 'refs/heads/feat/phase2c-pcgex-cliff-topology' &&
       contains(github.event.head_commit.message, '[detail-pilot]') &&
       !contains(github.event.head_commit.message, '[wholemap-material]') &&
+      !contains(github.event.head_commit.message, '[shoulder-contact]') &&
+      !contains(github.event.head_commit.message, '[material-closeout]') &&
       !contains(github.event.head_commit.message, '[detail-native]') &&
       !contains(github.event.head_commit.message, '[tpp-survey]') &&
       !contains(github.event.head_commit.message, '[tpp-retain]') &&
@@ -568,6 +733,8 @@ jobs:
       github.ref == 'refs/heads/feat/phase2c-pcgex-cliff-topology' &&
       contains(github.event.head_commit.message, '[detail-native]') &&
       !contains(github.event.head_commit.message, '[wholemap-material]') &&
+      !contains(github.event.head_commit.message, '[shoulder-contact]') &&
+      !contains(github.event.head_commit.message, '[material-closeout]') &&
       !contains(github.event.head_commit.message, '[detail-pilot]') &&
       !contains(github.event.head_commit.message, '[tpp-survey]') &&
       !contains(github.event.head_commit.message, '[tpp-retain]') &&
@@ -1133,6 +1300,8 @@ jobs:
   phase2c:
     if: >-
       !(github.event_name == 'push' && contains(github.event.head_commit.message, '[wholemap-material]')) &&
+      !(github.event_name == 'push' && contains(github.event.head_commit.message, '[shoulder-contact]')) &&
+      !(github.event_name == 'push' && contains(github.event.head_commit.message, '[material-closeout]')) &&
       !(github.event_name == 'push' && contains(github.event.head_commit.message, '[detail-native]')) &&
       !(github.event_name == 'push' && contains(github.event.head_commit.message, '[detail-pilot]')) &&
       !(github.event_name == 'workflow_dispatch' && inputs.tpp_survey) &&
@@ -1732,6 +1901,8 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.tpp_survey) ||
       (github.event_name == 'push' && contains(github.event.head_commit.message, '[tpp-survey]') &&
        !contains(github.event.head_commit.message, '[wholemap-material]') &&
+      !contains(github.event.head_commit.message, '[shoulder-contact]') &&
+      !contains(github.event.head_commit.message, '[material-closeout]') &&
        !contains(github.event.head_commit.message, '[detail-native]'))
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 120
@@ -2263,6 +2434,8 @@ jobs:
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[tpp-retain]') &&
       !contains(github.event.head_commit.message, '[wholemap-material]') &&
+      !contains(github.event.head_commit.message, '[shoulder-contact]') &&
+      !contains(github.event.head_commit.message, '[material-closeout]') &&
       !contains(github.event.head_commit.message, '[detail-native]') &&
       !contains(github.event.head_commit.message, '[tpp-survey]') &&
       !contains(github.event.head_commit.message, '[tpp-docs]')
@@ -2359,6 +2532,8 @@ jobs:
       github.ref == 'refs/heads/feat/phase2c-pcgex-cliff-topology' &&
       contains(github.event.head_commit.message, '[tpp-docs]') &&
       !contains(github.event.head_commit.message, '[wholemap-material]') &&
+      !contains(github.event.head_commit.message, '[shoulder-contact]') &&
+      !contains(github.event.head_commit.message, '[material-closeout]') &&
       !contains(github.event.head_commit.message, '[detail-native]') &&
       !contains(github.event.head_commit.message, '[tpp-survey]') &&
       !contains(github.event.head_commit.message, '[tpp-retain]')

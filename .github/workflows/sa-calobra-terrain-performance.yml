@@ -11,6 +11,16 @@ on:
         description: Gumball proof request identity
         required: true
         type: string
+      material_consumer:
+        description: Measure the saved current material consumer instead of importing bare terrain
+        required: false
+        default: false
+        type: boolean
+      consumer_manifest:
+        description: Absolute immutable exact-SHA consumer-manifest.json path on the reference runner
+        required: false
+        default: ''
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -24,7 +34,20 @@ jobs:
     defaults:
       run:
         shell: pwsh
+    env:
+      YACS_PERF_MATERIAL_CONSUMER: ${{ inputs.material_consumer }}
+      YACS_PERF_CONSUMER_MANIFEST: ${{ inputs.consumer_manifest }}
+      YACS_PERF_EXPECTED_HEAD: ${{ inputs.exact_sha }}
     steps:
+      - name: Reject missing saved-consumer intent before checkout or Unreal
+        run: |
+          $ErrorActionPreference='Stop'
+          if ($env:YACS_PERF_EXPECTED_HEAD -notmatch '^[0-9a-f]{40}$') { throw 'Exact SHA must be immutable.' }
+          if ($env:YACS_PERF_MATERIAL_CONSUMER -eq 'true') {
+            if (-not [IO.Path]::IsPathRooted($env:YACS_PERF_CONSUMER_MANIFEST) -or -not (Test-Path -LiteralPath $env:YACS_PERF_CONSUMER_MANIFEST -PathType Leaf)) { throw 'Material proof needs an explicit pinned consumer manifest; use reviewed manual workflow_dispatch.' }
+            $consumer=Get-Content -LiteralPath $env:YACS_PERF_CONSUMER_MANIFEST -Raw | ConvertFrom-Json
+            if ($consumer.exact_sha -ne $env:YACS_PERF_EXPECTED_HEAD -or $consumer.map_package -ne '/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview') { throw 'Saved-consumer intent is stale or targets another map.' }
+          } elseif ($env:YACS_PERF_CONSUMER_MANIFEST) { throw 'Consumer manifest requires material_consumer=true.' }
       - name: Checkout trusted retention helper
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -59,13 +82,21 @@ jobs:
       - name: Prove native map and 1080p60 budget
         working-directory: _sa-calobra-performance
         run: |
-          ./scripts/ue/Invoke-YacsSaCalobraPerformance.ps1 -ExpectedHead '${{ inputs.exact_sha }}' -ArtifactRoot 'Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}'
+          $proof=Join-Path (Get-Location).Path 'Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($env:YACS_PERF_MATERIAL_CONSUMER -eq 'true') {
+            python scripts/ci/sa_calobra_performance.py restore-consumer --root $proof --head $env:YACS_PERF_EXPECTED_HEAD --consumer-manifest $env:YACS_PERF_CONSUMER_MANIFEST
+            if ($LASTEXITCODE -ne 0) { throw 'Retained saved-consumer packages failed verified no-overwrite restoration.' }
+            $config='D:\yacs\workspace.json'
+            ./scripts/ue/Invoke-YacsSaCalobraPerformance.ps1 -ExpectedHead $env:YACS_PERF_EXPECTED_HEAD -ArtifactRoot $proof -ConsumerManifest $env:YACS_PERF_CONSUMER_MANIFEST -WorkspaceConfig $config
+          } else {
+            ./scripts/ue/Invoke-YacsSaCalobraPerformance.ps1 -ExpectedHead $env:YACS_PERF_EXPECTED_HEAD -ArtifactRoot $proof
+          }
           if ($LASTEXITCODE -ne 0) { throw 'Sa Calobra performance failed.' }
       - name: Publish successful exact-SHA proof
         if: ${{ success() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: proof-sa-calobra-terrain-performance-${{ inputs.exact_sha }}
+          name: proof-${{ inputs.material_consumer && 'sa-calobra-material-performance' || 'sa-calobra-terrain-performance' }}-${{ inputs.exact_sha }}
           path: |
             _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.json
             _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.csv
@@ -75,7 +106,7 @@ jobs:
         if: ${{ failure() || cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: diagnostic-sa-calobra-terrain-performance-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: diagnostic-${{ inputs.material_consumer && 'sa-calobra-material-performance' || 'sa-calobra-terrain-performance' }}-${{ inputs.exact_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.log
             _sa-calobra-performance/Saved/RuntimeProof/CI/SaCalobraPerformance/${{ github.run_id }}-${{ github.run_attempt }}/*.json

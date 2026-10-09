@@ -26,6 +26,8 @@ MARKERS = (
     "[tpp-retain]",
     "[tpp-docs]",
     "[wholemap-material]",
+    "[shoulder-contact]",
+    "[material-closeout]",
 )
 
 
@@ -134,6 +136,8 @@ class NativeDetailWorkflowTests(unittest.TestCase):
     def test_existing_single_marker_lanes_keep_their_meaning(self):
         expected = {
             "[wholemap-material]": "wholemap-material",
+            "[shoulder-contact]": "wholemap-material",
+            "[material-closeout]": "wholemap-material",
             "[detail-pilot]": "detail-pilot",
             "[tpp-survey]": "bidirectional-survey",
             "[tpp-retain]": "retain-bidirectional-survey",

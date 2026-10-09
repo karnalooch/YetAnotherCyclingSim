@@ -29,6 +29,7 @@ the appropriate data/material consumer. Opening a map is not rebuilding roads.
 | `ue/verify_accepted_scene_checkpoint.py` | Run inside a fresh UE editor on the configured accepted map; checks stored geometry/materials/CUT traces, writes a receipt and closes that verification editor |
 | `assets/restore_workspace_data.py` | Checks or restores the hash-verified external-data snapshot; preview by default, `--apply` restores missing files without overwriting existing files |
 | `assets/Restore-YacsSaCalobraWorldData.ps1` | Restores the separately pinned CNIG source bundle; CI must pass its destination explicitly |
+| `ue/sa_calobra_saved_material_consumer.py` | In separate isolated UE processes, save the verified current whole-map material to a generated review map, freshly reload without reapplying, then capture hash-bound rendered evidence for the existing performance consumer; owner acceptance remains pending |
 
 Read the workspace guide's restore procedure before running a checkpoint tool.
 One-off migration scripts and old experiments belong in the local

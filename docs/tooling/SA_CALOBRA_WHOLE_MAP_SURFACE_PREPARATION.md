@@ -6,7 +6,7 @@
 
 **Starting revision:** `e74a2fabe292626cb49b7c69827a60e234878cd6`
 
-**Status (2026-10-09):** source-bound material preparation reached native capture, but [run 37860882304](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37860882304) failed at 10/43 frames; the next exact-head attempt was blocked by D: disk reserve before Unreal. See the [bounded recovery incident and operator procedure](../experiments/sa-calobra-whole-map-material-prep-20261009/recovery-20261009.md). Native acceptance, visual approval and performance remain open.
+**Status (2026-10-09):** [native run 37911204919](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37911204919) passed at `9972803b67812ea8584473d076e588d4452a2628`: the verifier admitted all 43 original frames, eight additional diagnostic frames, native material consumption and restoration. [CI 37912434061](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37912434061) passed at the subsequent documentation head `bfbc48057b8b84d087a3685cd71972678a32d412`, using verified compile/Automation reuse. Its performance decision was `DEFERRED_DRAFT` with no measurement evidence. Whole-Landscape owner visual acceptance, a saved/fresh-rendered material consumer and actual reference-PC performance remain open. The earlier 10/43 and disk failures remain historical in the [recovery report](../experiments/sa-calobra-whole-map-material-prep-20261009/recovery-20261009.md).
 
 **Methodology:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through the [documentation index](../README.md)
 
@@ -36,6 +36,82 @@ The authoritative area is the existing 2,016.5 m square, approximately 4.07 km2:
 
 The larger 8 km x 8 km source benchmark is not the working map. Neither a road
 strip nor the Golden Kilometer replaces this full-area preparation and review.
+
+### Saved material review consumer
+
+`scripts/ue/sa_calobra_saved_material_consumer.py` consumes the current fixed
+five-role preparation candidate, not the earlier material foundation. Its master
+and instance are `M_SaCalobraWholeMapPreparation` and
+`MI_SaCalobraWholeMapPreparation` under
+`/Game/Generated/YACS/SaCalobra/WholeMapPreparation`. This candidate remains
+`PENDING_OWNER`; native compilation or a successful screenshot does not choose
+the final visual design for the owner.
+
+The entrypoint requires the current exact Git SHA, completed 43-frame preparation
+evidence, retained three-package inventory and checkout conservation receipt.
+Before a material setter or map save, it checks the frozen canonical map, all
+actual candidate bytes, and source evidence for the installed UE 5.8.2 CL 56702186
+map-save/load and screenshot APIs. It runs in an isolated project started on
+`/Engine/Maps/Entry`; it rejects the configured authoring project.
+
+Run three separate native processes using the existing whole-map workflow's
+engine, project, renderer arguments and failure/log checks. Set
+`YACS_WORKSPACE_CONFIG` to the unchanged canonical workspace configuration and
+`YACS_2B_EXPECTED_HEAD` to the exact checkout SHA. Set
+`YACS_MATERIAL_PROOF_ROOT` to that SHA's completed whole-map proof and
+`YACS_MATERIAL_CONSUMER_ROOT` to a new absolute `saved-material-consumer`
+directory below that proof. Execute this script with:
+
+1. `YACS_MATERIAL_ACTION=prepare`: apply only the verified Landscape material
+   binding, save
+   `/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview`,
+   retain its actual packages and restore the in-memory original material.
+2. `YACS_MATERIAL_ACTION=reload`: freshly load the derived map, without applying
+   or repairing a material, and verify all 1024 assigned components and native
+   generated-instance parent chains. Write `reload-receipt.json`.
+3. `YACS_MATERIAL_ACTION=render`: freshly load and audit that saved binding again,
+   then capture the nine recorded whole-grid ground views and two broad overviews
+   at 1920 x 1080. Camera positions and 60/58-degree FOV come from the completed
+   preparation capture plan. Use its native loading barrier and three priming
+   frames per pose, with no new lights, scene rebuild or height-mip lease.
+
+The unchanged canonical `.umap` SHA-256 is
+`276d1621fa083850f6d603b6d115b01b74c9a92c182254d15302e786abfbf29c`.
+Save/reload/render compare actor transforms, component identities, edit layers,
+nine native collision traces, separate mesh bindings and all component LOD
+settings. The `terrain_sha256` field identifies that immutable canonical source
+map; it is not presented as a separate raw height-raster hash. No transient v8
+preview mesh is silently serialized into this material-only consumer.
+
+Only a complete, decoded native frame set with successful cleanup produces
+`fresh-render-receipt.json` with status `SAVED_MATERIAL_CONSUMER_RENDERED` and pins
+its hash in `consumer-manifest.json`. Pass that manifest explicitly to
+`Invoke-YacsSaCalobraPerformance.ps1 -ConsumerManifest <path>`. Performance uses
+the saved package and same views; the three recorded diagonal ground poses
+define diagnostic camera traversal with their camera Z lifted to at least
+20 metres above the actual saved Landscape bounds maximum, preserving the
+recorded targets. This terrain-envelope clearance avoids interpolating through
+an intervening ridge; it does not prove a physical ride. `PENDING_OWNER` visual
+acceptance remains separate from measured renderer performance.
+
+The consumer directory retains the derived map and three generated material
+package families, including recorded sidecars, in `packages/`.
+`delivery-package-manifest.json` uses the existing
+`assets/restore_workspace_data.py` format: verify every source and destination,
+then install missing packages with `--apply`; differing existing bytes are
+rejected. The full consumer inventory also pins all ten Git LFS source texture
+dependencies. Rehydrate those exact dependencies before opening the delivered
+review map. This provides a reopenable candidate without changing the canonical
+map or workspace configuration.
+
+Each attempt uses a new proof and consumer directory. A failed native save may
+leave a derived package for inspection; it produces no admitted manifest and
+the next attempt refuses that package collision. Material override rollback
+tracks component object identity across save-as renames, and render failure
+still attempts every cleanup operation. The accepted baseline remains the
+rollback source. Final canonical promotion and #363 closure require the actual
+rendered review, recorded owner decision and successful required performance
+gate; this preparatory implementation grants none of those outcomes.
 
 ### Authorized local Landscape and seam corrections
 
@@ -238,8 +314,11 @@ reversible `preview('apply', bundle=..., master_receipt=...)` and
 `preview('restore')` entrypoints in `scripts/ue/sa_calobra_whole_map_prep.py`
 provide an owner replay in the already-open accepted map without a map save.
 
-The existing combined-lighting and PCGEx admission failures remain historical
-open gates. This preparation does not close #363, unblock #384/#364 or admit
+The existing combined-lighting and PCGEx admission failures retain their recorded
+results. The owner's [ROAD FIRST decision](https://github.com/karnalooch/YetAnotherCyclingSim/issues/457)
+defers existing mountain-shadow polish; it does not admit introduced material
+defects, unproven geometry repairs or new PCGEx placement. This preparation does
+not close #363, unblock #384/#364 or admit
 later world dressing. Whole-map owner visual acceptance, a production saved
 consumer and the applicable reference-PC performance gates retain their own
 requirements. PR #446 remains unmerged pending the existing approval boundary.
@@ -265,17 +344,17 @@ integration. Heavy native operations remain serial on the reference runner.
 | Full-grid package | Every sample accounted for; unchanged source and exclusion bytes; reproducible outputs | Windows full-grid execution and independent pixel/sector audit passed at `a0f12793`; source bytes and logical outputs reproduced; encoder-version byte differences are retained explicitly below |
 | Role composition | Unit sum, valid channels, explicit residual/unknown/alpha meanings | Passed over all 16,265,089 source cells |
 | Native material | All five roles, expected assets and metric projection, successful compile | Fixed master saved and all three package byte identities verified at `ddeb01b5`, attempt 2; all eleven fresh-process texture bindings verified after native compilation completed at `35e81dc5` |
-| Actual full-map bindings | 1024 generated instance parent chains | All 1024 native render-instance roots matched at `35e81dc5`, including hidden Component 230; verified again after the ten actual captures |
-| Adaptive detail | Recorded LOD state, independent near/far parameters and matched view evidence | Pending |
-| Preservation | Original map, roads, v8 source/UV/normals/material and final rollback checks | Checkout, map and retained sources unchanged after the stopped `a0f12793` pass; complete scene rollback still awaits actual capture |
-| Selected visual review | Original distributed/rider/overview PNGs and location-specific findings | Partial: nine baseline and one prepared PNG at `35e81dc5`; the same-camera ground pair shows the material change, while the full 43-frame inventory and near/far acceptance remain pending |
-| Source / workflow tests | Focused executed checks plus exact-head CI | CI passed at `a0f12793`: 1,147 script tests, 391 reference tests, 26 fresh Unreal Automation tests; native Windows preflight ran 104 focused tests with one platform skip |
+| Actual full-map bindings | 1024 generated instance parent chains | The complete native proof passed at `9972803b`; prior partial readbacks remain history |
+| Adaptive detail | Recorded LOD state, independent near/far parameters and matched view evidence | Complete captured evidence verified; visible normal response is not shader-cost or FPS admission |
+| Preservation | Original map, roads, v8 source/UV/normals/material and final rollback checks | Native scene/settings restoration and checkout/source conservation passed in run 37911204919 |
+| Selected visual review | Original distributed/rider/overview PNGs and location-specific findings | All 43 original and eight diagnostic captures completed; natural appearance, introduced anomalies and whole-area owner acceptance remain separately open |
+| Source / workflow tests | Focused executed checks plus exact-head CI | Native verifier passed at `9972803b`; CI passed at `bfbc4805` with validated binary/Automation reuse, not a fresh compile or Automation execution |
 | Documentation | Links, i18n, structure and freshness guards; semantic reconciliation | All four local guards passed; final evidence reconciliation pending |
 | Owner visual acceptance | Explicit owner decision on the presented result | Pending |
 | Reference-PC performance | Applicable full-area exact-SHA Frame/GPU measurement | Not measured by preparation alone |
 
-The final evidence report will replace pending execution entries with measured
-outcomes and links. A successful preparation package is not a declaration that
+New delivery work must bind its own exact revision and saved consumer identity;
+the recorded native success is not proof that future changes passed. A successful preparation package is not a declaration that
 the entire finished world is already visually or performance-admitted.
 
 ## Executed full-grid checkpoint and native startup diagnosis
