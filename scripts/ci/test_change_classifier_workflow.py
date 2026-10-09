@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import unittest
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CI = ROOT / ".github" / "workflows" / "ci.yml"
@@ -34,6 +33,7 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
             "docs_only:",
             "asset_only:",
             "asset_full:",
+            "stage3g_authoring:",
             "security_base:",
         ):
             self.assertIn(output, self.ci)
@@ -91,11 +91,17 @@ class ChangeClassifierWorkflowContractTests(unittest.TestCase):
         self.assertIn("lfs: false", self.ci)
 
     def test_stage3g_full_lane_is_path_gated_and_aggregate_required(self):
-        self.assertIn("name: Stage 3G full validation", self.ci)
+        self.assertIn("name: Legacy Stage 3G compatibility regression", self.ci)
         self.assertIn("needs.changes.outputs.asset_full == 'true'", self.ci)
         self.assertIn("reusable-stage3g-full.yml", self.ci)
         self.assertIn("- stage3g-full-validation", self.ci)
         self.assertIn('require_optional "stage3g-full-validation"', self.ci)
+        self.assertIn(
+            "legacy_regression_only: ${{ needs.changes.outputs.stage3g_authoring != 'true' }}",
+            self.ci,
+        )
+        self.assertIn('require_bool "class-stage3g-authoring"', self.ci)
+        self.assertIn("legacy authoring must retain its full regression gate", self.ci)
         self.assertIn(
             "github.event.pull_request.head.repo.full_name == github.repository",
             self.ci,

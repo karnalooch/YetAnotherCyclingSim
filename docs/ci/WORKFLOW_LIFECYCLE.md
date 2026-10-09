@@ -51,7 +51,7 @@ endpoint is forbidden outside an explicit test fixture.
 | `proof-broker.yml` | CURRENT | Trusted Proof Broker orchestration |
 | `repository-ops.yml` | CURRENT | Gumball labels/lifecycle reconciliation |
 | `reusable-python.yml` | CURRENT | Hosted Python and repository contracts |
-| `reusable-stage3g-full.yml` | CURRENT | Exact-head full-world proof used by CI |
+| `reusable-stage3g-full.yml` | CURRENT | Frozen legacy compatibility regression; full legacy authoring only for actual legacy asset/spec/producer changes; never Sa Calobra admission |
 | `reusable-unreal.yml` | CURRENT | Code-only Unreal build + Automation |
 | `runner-monitor.yml` | CURRENT | Owner-only manual main-branch silent desktop companion deployment |
 | `runner-space-recovery.yml` | CURRENT | Owner-only manual main-branch runner recovery |
@@ -103,7 +103,7 @@ not rewrite that history.
 
 The surviving Actions surface is intentionally grouped:
 
-1. **Main CI:** `ci.yml` + reusable Python/Unreal/full-world workflows.
+1. **Main CI:** `ci.yml` + reusable Python/Unreal and scoped legacy regression workflows. Current Sa Calobra acceptance retains its own actual-map evidence.
 2. **Gumball/repository operations:** governance consumers, Proof Broker,
    Repository Ops, branch hygiene and PR orchestration.
 3. **Explicit recovery/probes:** manual Unreal, Windows probe, pinned portable
@@ -132,6 +132,14 @@ or `BROKER-MANAGED` means a tool remains usable; it does not mean its fixed map
 is the current product destination. The two `UNKNOWN` author workflows retain
 that bounded status until equivalent real-world replacement evidence permits
 retirement. No workflow is deleted based solely on a geographic rename.
+
+Owner correction, 2026-10-09: the old Stage 3G `L_CyclingTest` authoring/capture
+is not the current material closeout test. The classifier's `stage3g_authoring`
+signal reserves regeneration for actual legacy asset/spec/producer changes.
+Actor compatibility and workflow changes select the existing transient
+`CyclingStage3World.PrototypeTerrain` regression without saved-map authoring,
+Map Check or legacy visual capture. Preserve the oracle and required C++/native
+checks; never treat this regression as proof of the current Sa Calobra consumer.
 
 The geometry capability broker workflow is now explicit-dispatch only. Its two
 automatic geometry suites and Python syntax checks are covered centrally by

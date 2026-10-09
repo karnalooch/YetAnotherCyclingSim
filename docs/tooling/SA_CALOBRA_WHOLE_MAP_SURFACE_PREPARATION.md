@@ -12,6 +12,15 @@
 
 **Methodology:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through the [documentation index](../README.md)
 
+**Validation routing correction (2026-10-09):** the owner identified the automatic
+old Stage 3G `L_CyclingTest` authoring/capture as an outdated test for this
+closeout. Its green result is historical regression evidence, not Sa Calobra
+material admission. Current evidence is the frozen full-area native proof above.
+Compatibility changes to the retained prototype use its existing transient
+native test without regenerating/saving the old world; actual legacy asset or
+producer changes retain their own full regression contract. Current source,
+build/Automation, asset, protected CI and owner acceptance gates remain required.
+
 ## Goal and area
 
 Prepare the entire current Sa Calobra Landscape for coherent surface materials,

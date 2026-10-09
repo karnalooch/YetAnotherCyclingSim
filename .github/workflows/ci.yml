@@ -40,6 +40,7 @@ jobs:
       docs_only: ${{ steps.classify.outputs.docs_only }}
       asset_only: ${{ steps.classify.outputs.asset_only }}
       asset_full: ${{ steps.classify.outputs.asset_full }}
+      stage3g_authoring: ${{ steps.classify.outputs.stage3g_authoring }}
       security_base: ${{ steps.classify.outputs.security_base }}
       base_sha: ${{ steps.classify.outputs.base_sha }}
       head_sha: ${{ steps.classify.outputs.head_sha }}
@@ -218,7 +219,7 @@ jobs:
             --head "${HEAD_SHA}"
 
   stage3g-full-validation:
-    name: Stage 3G full validation
+    name: Legacy Stage 3G compatibility regression
     needs: [changes, python-reference, world-proof-admission]
     if: ${{ !cancelled() && needs.changes.result == 'success' && needs.world-proof-admission.result == 'success' && (needs.python-reference.result == 'success' || needs.python-reference.result == 'skipped') && needs.changes.outputs.asset_full == 'true' && (github.event_name != 'pull_request' || (github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository)) }}
     permissions:
@@ -226,6 +227,7 @@ jobs:
     uses: ./.github/workflows/reusable-stage3g-full.yml
     with:
       target_sha: ${{ needs.changes.outputs.head_sha }}
+      legacy_regression_only: ${{ needs.changes.outputs.stage3g_authoring != 'true' }}
 
   world-proof-admission:
     name: Exact-world performance evidence
@@ -311,6 +313,7 @@ jobs:
           CLASS_CI_COST: ${{ needs.changes.outputs.ci_cost_class }}
           CLASS_SECURITY_BASE: ${{ needs.changes.outputs.security_base }}
           CLASS_ASSET_FULL: ${{ needs.changes.outputs.asset_full }}
+          CLASS_STAGE3G_AUTHORING: ${{ needs.changes.outputs.stage3g_authoring }}
           EVENT_NAME: ${{ github.event_name }}
           PR_DRAFT: ${{ github.event.pull_request.draft || false }}
         run: |
@@ -380,6 +383,11 @@ jobs:
           require_ci_cost "${CLASS_CI_COST}"
           require_bool "class-security-base" "${CLASS_SECURITY_BASE}"
           require_bool "class-asset-full" "${CLASS_ASSET_FULL}"
+          require_bool "class-stage3g-authoring" "${CLASS_STAGE3G_AUTHORING}"
+          if [[ "${CLASS_STAGE3G_AUTHORING}" == "true" && "${CLASS_ASSET_FULL}" != "true" ]]; then
+            echo "::error::legacy authoring must retain its full regression gate"
+            failed=1
+          fi
 
           python_expected=false
           if [[ "${CLASS_PYTHON}" == "true" || "${CLASS_CI}" == "true" ]]; then

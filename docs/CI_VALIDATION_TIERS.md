@@ -457,11 +457,21 @@ Stage-specific authoring/performance workflows should default to `workflow_dispa
 
 Tiering changes *when* expensive proof runs, not *whether* it is required.
 
-A draft PR cannot merge. A ready PR with `asset_full=true` cannot satisfy the aggregate gate unless the exact-head Stage 3G full proof succeeds. If more commits are pushed after review readiness, the exact-head heavy proof is required again.
+A draft PR cannot merge. A ready PR with `asset_full=true` must pass its exact-head legacy regression gate. `stage3g_authoring` distinguishes actual legacy asset/spec/producer changes from code compatibility and workflow changes. The latter run the existing transient `CyclingStage3World.PrototypeTerrain` test with full LFS and a real build, without regenerating, saving, Map Checking or rendering `L_CyclingTest`. Actual legacy producer/asset changes retain the full authoring/final-proof contract. Aggregate requires the selected mode; neither mode admits the current Sa Calobra world.
 
 Code-only Unreal validation remains independent from the Stage 3G full-LFS lane so C++ correctness can still fail fast without materializing the world asset set.
 
-## World-stage operating model
+## Current Sa Calobra world admission
+
+Current M3 material admission targets the entire existing **2016.5 x 2016.5 m Sa Calobra Landscape**, with its actual material consumer, saved derived-map identity, independent fresh reload and fresh rendered originals. A fixed-map Stage 3G result or its 1200/4900/8000 m views cannot substitute for these requirements.
+
+The owner accepted and froze runtime implementation `94827365ef8e83e52717bb21f9d6efa921aa2d1e` on 2026-10-09. [Native proof 37954100285](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37954100285) establishes 43+8 preparation captures, 1024 material roots, actual scoped save, independent reload, eleven fresh original renders and chained source conservation. Later CI/documentation-only revisions retain this runtime proof only with unchanged relevant source/input/consumer identities; they still require their own protected checks and applicable build/Automation evidence. See [the current material ledger](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md).
+
+On 2026-10-09 the owner explicitly rejected automatic old-world validation as the current-stage test. Keep the frozen prototype as a bounded compatibility/regression oracle; do not automatically regenerate it for current-world or shared-workflow compatibility changes. Material owner acceptance, normal protected merge and current-map evidence remain separate from that oracle. Performance is `DEFERRED_AFTER_M3`, `performance_pass:false`, with no benchmark during this closeout.
+
+## Historical Stage 3G reference operating model
+
+The following operating model records the historical `L_CyclingTest` workflow. Its fixed route stations and world-authoring results are retained regression history, not the active Sa Calobra acceptance protocol. The current M3 sequence and post-M3 performance decision above govern new world work.
 
 For Stage 3G R4/R5 world-art work, one long-lived **Draft stage integration PR** is the normal iteration surface.
 

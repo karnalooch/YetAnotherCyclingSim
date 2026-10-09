@@ -7,6 +7,11 @@ on:
         description: "Exact trusted revision to validate"
         required: true
         type: string
+      legacy_regression_only:
+        description: "Run the frozen prototype compatibility test without authoring its world"
+        required: false
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -16,7 +21,7 @@ concurrency:
 
 jobs:
   stage3g-full:
-    name: Stage 3G full validation on yacs-ue58
+    name: Legacy Stage 3G compatibility regression on yacs-ue58
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 180
     permissions:
@@ -174,7 +179,19 @@ jobs:
 
           Write-Host "Stage 3G full-LFS materialization: PASS ($($lfsPaths.Count) files)."
 
+      - name: Respect shared Unreal host ownership before native regression
+        shell: pwsh
+        working-directory: ${{ env.STAGE3G_WORKTREE_DIR }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $state | ConvertTo-Json -Depth 8 | Write-Host
+          if ($state.status -ne 'IDLE') {
+            throw "Unreal runner host is already owned; status=$($state.status). Local/unknown Editors always win over remote CI."
+          }
+
       - name: Author deterministic Stage 3G environment
+        if: ${{ !inputs.legacy_regression_only }}
         shell: pwsh
         working-directory: ${{ env.STAGE3G_WORKTREE_DIR }}
         env:
@@ -187,6 +204,7 @@ jobs:
             -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GFull/Authoring'
 
       - name: Run non-mutating Stage 3G final proof
+        if: ${{ !inputs.legacy_regression_only }}
         shell: pwsh
         working-directory: ${{ env.STAGE3G_WORKTREE_DIR }}
         env:
@@ -198,6 +216,84 @@ jobs:
             -ExpectedHead $env:TARGET_SHA `
             -ArtifactRoot 'Saved/RuntimeProof/CI/Stage3GFull/FinalProof' `
             -SkipBuild
+
+      - name: Verify frozen prototype compatibility without world authoring
+        if: ${{ inputs.legacy_regression_only }}
+        shell: pwsh
+        working-directory: ${{ env.STAGE3G_WORKTREE_DIR }}
+        env:
+          TARGET_SHA: ${{ inputs.target_sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          function Assert-LegacyStage3GRegression {
+            param([string] $ReportRoot, [string] $ExpectedHead)
+            $summaryPath = Join-Path $ReportRoot 'unreal_ci_summary.json'
+            $summary = Get-Content -LiteralPath $summaryPath -Raw | ConvertFrom-Json
+            foreach ($field in @('Head', 'ExpectedHead', 'TestFilter', 'SkipBuild', 'Discovered', 'Passed', 'Failed', 'Errors')) {
+              if ($field -notin $summary.PSObject.Properties.Name) {
+                throw "Legacy compatibility summary lacks $field."
+              }
+            }
+            $expectedTest = 'CyclingStage3World.PrototypeTerrain'
+            if ($summary.Head -cne $ExpectedHead -or $summary.ExpectedHead -cne $ExpectedHead -or
+                $summary.TestFilter -cne $expectedTest -or $summary.SkipBuild -isnot [bool] -or
+                $summary.SkipBuild -ne $false -or [int]$summary.Discovered -ne 1 -or
+                [int]$summary.Passed -ne 1 -or [int]$summary.Failed -ne 0 -or [int]$summary.Errors -ne 0) {
+              throw 'Legacy compatibility summary does not prove one exact-head freshly built test.'
+            }
+            $indexPath = Join-Path $ReportRoot 'Proof/AutomationReport/index.json'
+            if (-not (Test-Path -LiteralPath $indexPath -PathType Leaf)) {
+              $indexPath = Join-Path $ReportRoot 'Proof/index.json'
+            }
+            $proof = Get-Content -LiteralPath (Join-Path $ReportRoot 'Proof/summary.json') -Raw | ConvertFrom-Json
+            foreach ($field in @('Head', 'IndexPath', 'Discovered', 'Passed', 'Failed', 'Skipped', 'Errors', 'UatExitCode')) {
+              if ($field -notin $proof.PSObject.Properties.Name) {
+                throw "Legacy Automation summary lacks $field."
+              }
+            }
+            if ($proof.Head -cne $ExpectedHead -or
+                [System.IO.Path]::GetFullPath($proof.IndexPath) -ine [System.IO.Path]::GetFullPath($indexPath) -or
+                [int]$proof.Discovered -ne 1 -or [int]$proof.Passed -ne 1 -or
+                [int]$proof.Failed -ne 0 -or [int]$proof.Skipped -ne 0 -or
+                [int]$proof.Errors -ne 0 -or [int]$proof.UatExitCode -ne 0) {
+              throw 'Legacy Automation summary does not prove the exact fresh singleton report.'
+            }
+            $index = Get-Content -LiteralPath $indexPath -Raw | ConvertFrom-Json
+            $tests = @($index.tests)
+            if ('tests' -notin $index.PSObject.Properties.Name) {
+              $tests = @($index.results.tests)
+            }
+            if ($tests.Count -ne 1 -or $tests[0].fullTestPath -cne $expectedTest -or
+                $tests[0].state -cne 'Success' -or
+                'errors' -notin $tests[0].PSObject.Properties.Name -or [int]$tests[0].errors -ne 0 -or
+                'warnings' -notin $tests[0].PSObject.Properties.Name -or [int]$tests[0].warnings -lt 0) {
+              throw 'Legacy compatibility report must contain exactly the requested test with Success.'
+            }
+            return [ordered]@{
+              status = 'LEGACY_STAGE3G_COMPATIBILITY_PASS'
+              exact_sha = $ExpectedHead
+              test = $expectedTest
+              discovered = 1
+              warnings = [int]$tests[0].warnings
+              world_authoring = $false
+              current_world_admission = $false
+              summary_sha256 = (Get-FileHash -LiteralPath $summaryPath -Algorithm SHA256).Hash.ToLowerInvariant()
+              automation_index_sha256 = (Get-FileHash -LiteralPath $indexPath -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
+          }
+          $root = Join-Path (Get-Location).Path 'Saved/RuntimeProof/CI/Stage3GFull/LegacyRegression'
+          if (Test-Path -LiteralPath $root) { throw 'Legacy regression requires a fresh evidence directory.' }
+          ./scripts/ci/Invoke-YacsUnrealCi.ps1 `
+            -ExpectedHead $env:TARGET_SHA `
+            -TestFilter 'CyclingStage3World.PrototypeTerrain' `
+            -ArtifactRoot $root
+          if ($LASTEXITCODE -ne 0) { throw 'Frozen prototype compatibility build/Automation failed.' }
+          $receipt = Assert-LegacyStage3GRegression -ReportRoot $root -ExpectedHead $env:TARGET_SHA
+          $dirty = @(git status --porcelain)
+          if ($LASTEXITCODE -ne 0 -or $dirty.Count -ne 0) {
+            throw 'Frozen prototype compatibility must preserve the source checkout.'
+          }
+          $receipt | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $root 'legacy-regression-receipt.json') -Encoding UTF8
 
       - name: Record ephemeral source mutations
         if: ${{ always() }}
