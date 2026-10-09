@@ -415,7 +415,7 @@ exactly once and checks actual occurrence counts, retaining all denial calls
 and assertions. The installed Core API and count verification were confirmed
 in [diagnostic 38000430250](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38000430250)
 at `79a7279176a7b5abddd21729fb88ff352c2a66d7`. Branch pushes now select
-the fixed native proof after the latest precise Python failure was corrected.
+the fixed retained-log diagnostic for the latest failed Python attempt.
 Manual dispatch retains the fixed previous-failure readback option.
 A passing native proof is pending.
 The same diagnostic located the actual private Python settings header, SHA-256
@@ -463,7 +463,15 @@ correction therefore preserved that config. The actual Python failure is
 The corrected probe uses the existing fixed `unreal.load_class` settings
 pattern, verifies the native class and actual default object's class path, and
 still requires remote execution to be exactly `False`. Seventeen offline
-reflection tests pass; the corrected lookup still requires native execution.
+reflection tests pass. [Retry 38006333498](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38006333498)
+at `88188399847bdafbe10b6e33dd664da5871a2900` again compiled all eleven
+actions and retained its owned Editor exit **3**, without timeout or secondary
+retention errors. The actual next Python exception is pending the fixed
+readback; no boundary or reflection PASS is established. Future failed native
+attempts print only the bounded current reflection receipt's safe scalar
+summary after the owned Editor has exited, retaining the original failure and
+all false admission flags. [Protected CI 38006339219](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38006339219)
+passed at the same head; its ordinary lane leaves this plugin disabled.
 Hash failures now identify the exact field and both digests. The dependency
 reader independently did not start: its embedded
 Python program is 33,053 characters, and
