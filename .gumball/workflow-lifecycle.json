@@ -17,6 +17,11 @@
   },
   "workflows": [
     {
+      "file": "level-editor-review.yml",
+      "state": "CURRENT",
+      "reason": "Issue #364 owner-selected Stream Level Editor review. Owner-only fixed branch and explicit launch marker/manual intent, shared non-cancelling host lane, verified independent saved-scene copy, stock inspected PixelStreaming2, exact runtime/launcher labels and bounded receiving-browser proof. Hands one isolated Editor to the owner; no build, source-world mutation, public tunnel, firewall change, visual acceptance or performance admission."
+    },
+    {
       "file": "official-unreal-mcp-native-probe.yml",
       "state": "CURRENT",
       "reason": "Issue #384 owner-only branch-scoped opt-in BOB plugin BuildPlugin compilation. Isolated code-only checkout, canonical exact engine, idle shared host and serial host lane; no Editor/MCP launch, live project changes or native/transport/admission claims from a compile result."
