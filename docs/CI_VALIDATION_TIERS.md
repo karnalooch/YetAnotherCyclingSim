@@ -256,6 +256,16 @@ successful protected `CyclingSim CI` run, without reserving the shared Unreal
 concurrency lock. Only then does its Windows baseline job acquire the existing
 lock and check cache state again. A failed/cancelled/timed-out upstream CI cannot
 launch the native reader, and no green CI alone substitutes for runtime proof.
+On a reused Windows worktree, Git may keep old CRLF working files when their
+committed blob is unchanged even though the repository now requires LF. Before
+the normal Unreal cache resolver may select STATIC/RUNTIME/COMPILE reuse, the
+serialized CI lane rematerializes exactly the tracked C# and critical proof
+PowerShell fingerprint inputs using `git checkout-index --force`. It checks their
+pinned LF attributes and then independently recomputes *physical* compile and
+proof fingerprints, comparing both to the hosted exact-SHA fingerprint outputs.
+A failure stops before cache reuse rather than asserting equivalent proof; it
+does not alter generated binaries, cache stamps, source history or local owner
+workspaces. This is an isolated CI checkout correction, not a new cache format.
 A compile-fingerprint mismatch is **not** cache corruption:
 when engine/toolchain provenance still matches, the lane invalidates the green
 stamp but keeps `Intermediate/Binaries` and performs a WARM COMPILE. Missing

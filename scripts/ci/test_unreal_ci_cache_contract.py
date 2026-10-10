@@ -16,6 +16,46 @@ PREFLIGHT = ROOT / "scripts" / "ue" / "Preflight-YacsProof.ps1"
 
 
 class UnrealCiCacheContractTests(unittest.TestCase):
+    def test_canonical_fingerprint_checkout_materialization_precedes_cache_reuse(self):
+        workflow = self.workflow
+        canonical = workflow.index(
+            "Materialize canonical LF fingerprint inputs after warm checkout"
+        )
+        cleanup = workflow.index("Sanitize tracked workspace while preserving verified build outputs")
+        code_only = workflow.index("Enforce code-only checkout")
+        resolver = workflow.index("Resolve verified Unreal execution mode")
+        self.assertLess(cleanup, canonical)
+        self.assertLess(canonical, code_only)
+        self.assertLess(canonical, resolver)
+        self.assertIn("git checkout-index --force -- $targets", workflow)
+        self.assertIn("unreal_compile_fingerprint", workflow)
+        self.assertIn("unreal_proof_fingerprint", workflow)
+        self.assertIn("Physical Windows fingerprint input bytes differ", workflow)
+        self.assertNotIn("git clean -ffdx -e '/Saved/BuildCache/UnrealCi/' -e '/Binaries/'", workflow)
+
+    def test_forced_checkout_restores_lf_even_when_git_blob_is_unchanged(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            subprocess.run(["git", "config", "core.autocrlf", "true"], cwd=root, check=True)
+            (root / ".gitattributes").write_bytes(b"*.cs text eol=lf\n")
+            source = root / "Source/Module.Test.Build.cs"
+            source.parent.mkdir(parents=True)
+            source.write_bytes(b"first\nsecond\n")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(
+                ["git", "-c", "user.email=test@example.invalid",
+                 "-c", "user.name=Test", "commit", "-qm", "frozen"],
+                cwd=root, check=True,
+            )
+            source.write_bytes(b"first\r\nsecond\r\n")
+            self.assertNotEqual(source.read_bytes(), b"first\nsecond\n")
+            subprocess.run(
+                ["git", "checkout-index", "--force", "--", "Source/Module.Test.Build.cs"],
+                cwd=root, check=True,
+            )
+            self.assertEqual(source.read_bytes(), b"first\nsecond\n")
+
     def test_road_material_native_waits_for_exact_head_ci_without_host_lock(self):
         workflow = (
             ROOT / ".github" / "workflows" / "road-material-native-proof.yml"
