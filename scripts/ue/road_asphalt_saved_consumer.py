@@ -88,9 +88,23 @@ def inventory_digest(snapshot):
     return hashlib.sha256(raw).hexdigest()
 
 
-def expected_saved_inventory(original, saved, material_path):
-    old = normalized(original, session.operation.MAP_PACKAGE)
-    actual = normalized(saved, MAP)
+def expected_saved_inventory(original, saved, material_path, *, observed_map_package):
+    """Audit every field using the actual owning map in this Editor phase.
+
+    Before SaveMap both snapshots belong to the frozen source map. Only after
+    SaveMap (and in fresh reload) may the observed actor paths belong to the
+    new derived map. Never alias arbitrary map packages or ignore actor paths.
+    """
+    source_map = session.operation.MAP_PACKAGE
+    require(original.get("map_package") == source_map,
+            "Native baseline belongs to another source map")
+    require(
+        observed_map_package in (source_map, MAP)
+        and saved.get("map_package") == observed_map_package,
+        "Observed actor map identity differs from the approved save phase",
+    )
+    old = normalized(original, source_map)
+    actual = normalized(saved, observed_map_package)
     road = canary.verify_accepted_surface(old)
     canary._expected_live_snapshot(old, actual, road["component"], material_path)
     return inventory_digest(actual)
@@ -337,13 +351,18 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows):
             "Saved road material assignment readback differs",
         )
         live = baseline.native_inventory(api, prep, session.operation.MAP_PACKAGE)
-        expected_saved_inventory(inventory_before, live, instance_path)
+        expected_saved_inventory(
+            inventory_before, live, instance_path,
+            observed_map_package=session.operation.MAP_PACKAGE,
+        )
         world = api.get_editor_subsystem(api.UnrealEditorSubsystem).get_editor_world()
         require(api.EditorLoadingAndSavingUtils.save_map(world, MAP),
                 "New material-only derived map save failed")
         saved = True
         after = baseline.native_inventory(api, prep, MAP)
-        inventory_hash = expected_saved_inventory(inventory_before, after, instance_path)
+        inventory_hash = expected_saved_inventory(
+            inventory_before, after, instance_path, observed_map_package=MAP,
+        )
     except Exception:
         if not saved:
             component.set_material(0, old_material)
@@ -459,7 +478,8 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows):
     )
     after = baseline.native_inventory(api, prep, MAP)
     inventory_hash = expected_saved_inventory(
-        original["native_inventory"], after, manifest["material_instance"]
+        original["native_inventory"], after, manifest["material_instance"],
+        observed_map_package=MAP,
     )
     require(
         inventory_hash == manifest["expected_normalized_inventory_sha256"],

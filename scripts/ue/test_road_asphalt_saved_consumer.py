@@ -18,6 +18,26 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
         self.fixture = CanaryTests()
         self.fixture.setUp()
         self.old = self.fixture.snapshot()
+        source = saved.session.operation.MAP_PACKAGE
+        source_world = source + "." + source.rsplit("/", 1)[-1]
+        self.old["map_package"] = source
+        self.old["world"] = source_world
+        road = source_world + ":PersistentLevel.YACS_PERSIST_ROAD"
+        support = source_world + ":PersistentLevel.YACS_PERSIST_SUPPORT_000"
+        self.old["road_supports"][0]["actor"] = road
+        self.old["road_supports"][0]["component"] = road + ".DynamicMeshComponent"
+        self.old["mesh_material_collision_snapshot"][0]["component"] = (
+            road + ".DynamicMeshComponent"
+        )
+        self.old["road_supports"][1]["actor"] = support
+        self.old["road_supports"][1]["component"] = support + ".DynamicMeshComponent"
+        self.old["mesh_material_collision_snapshot"][1]["component"] = (
+            support + ".DynamicMeshComponent"
+        )
+        self.old["actors"] = [
+            (road, [1.0, 2.0, 3.0]),
+            (support, [4.0, 5.0, 6.0]),
+        ]
         self.new_material = (
             saved.PACKAGE
             + "/aged_mountain_asphalt/base/6b381516854c/MI_MaterialForge.MI_MaterialForge"
@@ -62,7 +82,8 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
     def test_only_road_slot_zero_changes_across_derived_save(self):
         after = self.new_inventory()
         signature = saved.expected_saved_inventory(
-            self.old, after, self.new_material
+            self.old, after, self.new_material,
+            observed_map_package=saved.session.operation.MAP_PACKAGE,
         )
         self.assertEqual(len(signature), 64)
         for mutation in (
@@ -76,8 +97,57 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
             mutation(changed)
             with self.assertRaises(ValueError):
                 saved.expected_saved_inventory(
-                    self.old, changed, self.new_material
+                    self.old, changed, self.new_material,
+                    observed_map_package=saved.session.operation.MAP_PACKAGE,
                 )
+
+    def test_source_slot_binding_before_save_and_new_map_names_after_save(self):
+        source = saved.session.operation.MAP_PACKAGE
+        source_world = source + "." + source.rsplit("/", 1)[-1]
+        target_world = saved.MAP + "." + saved.MAP.rsplit("/", 1)[-1]
+        temporary = self.new_inventory()
+        first = saved.expected_saved_inventory(
+            self.old, temporary, self.new_material,
+            observed_map_package=source,
+        )
+
+        def renamed(value):
+            if isinstance(value, str):
+                return (
+                    value.replace(source_world, target_world)
+                    .replace(source, saved.MAP)
+                )
+            if isinstance(value, list):
+                return [renamed(item) for item in value]
+            if isinstance(value, tuple):
+                return [renamed(item) for item in value]
+            if isinstance(value, dict):
+                return {renamed(k): renamed(v) for k, v in value.items()}
+            return value
+
+        persisted = renamed(temporary)
+        second = saved.expected_saved_inventory(
+            self.old, persisted, self.new_material,
+            observed_map_package=saved.MAP,
+        )
+        self.assertEqual(first, second)
+        with self.assertRaisesRegex(ValueError, "approved save phase"):
+            saved.expected_saved_inventory(
+                self.old, temporary, self.new_material,
+                observed_map_package=saved.MAP,
+            )
+        with self.assertRaisesRegex(ValueError, "approved save phase"):
+            saved.expected_saved_inventory(
+                self.old, persisted, self.new_material,
+                observed_map_package="/Game/Unauthorized/Map",
+            )
+        altered = deepcopy(persisted)
+        altered["actors"][0][1][0] = -1.0
+        with self.assertRaisesRegex(ValueError, "changed geometry"):
+            saved.expected_saved_inventory(
+                self.old, altered, self.new_material,
+                observed_map_package=saved.MAP,
+            )
 
     def test_world_identity_normalizes_but_materials_are_not_aliases(self):
         before = saved.session.operation.MAP_PACKAGE

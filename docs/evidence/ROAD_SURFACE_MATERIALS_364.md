@@ -565,3 +565,34 @@ strict identity for untouched inventory, length detection and no raw value
 disclosure. A new protected exact-SHA CI and independent native save attempt
 must identify and resolve the observed drift; do not treat this diagnostic
 candidate as material/geometry/reload PASS.
+
+## Native atlas ownership: original map names before SaveMap — 2026-10-10
+
+[Exact-head protected CI #38069493158](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38069493158)
+**PASS** at `90df60e6a84ba3bc25d6dd757b07cda90a17354f`.
+[Independent native proof #38069488817](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38069488817)
+**FAILED during new-map preparation**, although the original read-only
+scene and reversible material-only asphalt canary both passed. The
+[retained Editor artifact #11676467435](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38069488817/artifacts/11676467435)
+records actual saved Material Forge master/instance/four texture packages
+(6 assets, TileSizeCm=400), then a strict native inventory failure with
+`first_differences=['$.actors[0][0]', '$.actors[1][0]', ...]` before
+`SaveMap`. Neither final derived map nor fresh-reload admission exists.
+
+The mismatch was caused by a bug in **comparison identity**, not admitted
+terrain drift: after the road slot was changed, the Editor still owned
+`session.operation.MAP_PACKAGE`. The `expected_saved_inventory` helper
+prematurely normalized observed actors as if the future `MAP` SaveMap target
+already owned them. The resulting map name prefixes differed for every
+actor path while geometry and materials were otherwise protected.
+
+The repair requires an explicit, authoritative `observed_map_package`:
+**the canonical accepted source** immediately after transient slot assignment
+and **the new derived map** only after `SaveMap` / on fresh Editor reload.
+A mismatch between the requested phase and the actual inventory
+`map_package` remains a hard failure. It still compares every source/target
+field, actor path, transform, geometry/collision/material inventory and all
+Landscape components exactly; there is no bypass for actors. New offline
+tests reproduce both phases, reject an incorrect declared phase or foreign
+map, and fail on altered actor transforms. New protected exact-SHA CI and
+independent native save/reload are required. This fix alone is **not PASS**.
