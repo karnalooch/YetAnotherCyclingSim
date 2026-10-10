@@ -20,6 +20,7 @@ from scripts.worldgen import bob_terrain_fit_inspector as inspector
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 OPERATION_PATH = "scripts/ue/official_mcp_bob_operation.py"
+COMMITTED_GIT_READER_PATH = "scripts/committed_git_blobs.py"
 GEOMETRY_SOURCES = (
     "smooth_road_ribbon", "curved_road_plan", "road_cut_limits", "road_single_bend",
     "road_surface_profile", "road_edge_roles", "road_width_profile", "road_transition",
@@ -66,7 +67,7 @@ class OfficialMcpBobOperationTests(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
-        source_paths = set(adapter.SOURCE_PATHS) | {OPERATION_PATH}
+        source_paths = set(adapter.SOURCE_PATHS) | {OPERATION_PATH, COMMITTED_GIT_READER_PATH}
         source_paths.update(f"scripts/geometry/{name}.py" for name in GEOMETRY_SOURCES)
         plugin_paths = subprocess.run(
             ["git", "-C", str(REPOSITORY_ROOT), "ls-files", "--cached", "--others",
@@ -128,9 +129,14 @@ class OfficialMcpBobOperationTests(unittest.TestCase):
         with mock.patch.dict(sys.modules, {"unreal": self.api}):
             specification.loader.exec_module(self.operation)
             self.producer = importlib.import_module("scripts.ue.bob_road_earthworks_cut")
+        reader_specification = importlib.util.spec_from_file_location(
+            "_synthetic_committed_git_blobs", self.root / COMMITTED_GIT_READER_PATH)
+        reader = importlib.util.module_from_spec(reader_specification)
+        reader_specification.loader.exec_module(reader)
         for name, value in (
             ("ROOT", self.root), ("PROFILE_SHA256", self.profile_hash),
             ("CANONICAL_MAP_SHA256", digest(self.canonical_path.read_bytes())),
+            ("committed_git", reader),
         ):
             patcher = mock.patch.object(self.operation, name, value)
             patcher.start()
@@ -322,6 +328,77 @@ class OfficialMcpBobOperationTests(unittest.TestCase):
         self.assertIsNone(rows[0]["landscape_z_m"])
         self.assertIsNone(rows[-1]["landscape_z_m"])
         self.assertIs(actual["receipt"]["native_capture_verified"], False)
+
+    def test_all_three_source_boundaries_read_fresh_batches_and_keep_domain_verification(self):
+        with mock.patch.object(self.operation.committed_git, "_read_exact_blobs",
+                               wraps=self.operation.committed_git._read_exact_blobs) as batches, \
+                mock.patch.object(adapter, "_git", wraps=adapter._git) as domain_git:
+            self.capture()
+        self.assertEqual(batches.call_count, 3)
+        for call in batches.call_args_list:
+            self.assertEqual(call.args, (self.root, self.exact_sha, tuple(sorted(self.source_hashes))))
+            self.assertEqual(call.kwargs["blob_limit"], adapter.MAX_INPUT_BYTES)
+            self.assertEqual(call.kwargs["total_limit"], adapter.MAX_INPUT_BYTES)
+            self.assertEqual(call.kwargs["timeout_seconds"], 10)
+        domain_shows = [call.args[2] for call in domain_git.call_args_list
+                        if call.args[1] == "show"]
+        # The three outer boundaries plus both independent delegation checks
+        # continue to bind every domain source directly to the current commit.
+        self.assertCountEqual(domain_shows,
+                              [f"{self.exact_sha}:{path}" for path in adapter.SOURCE_PATHS] * 5)
+
+    def test_committed_batch_mismatch_still_rejects_worktree_bytes(self):
+        relative = self.operation.PLUGIN_PREFIX + "YacsBobInspection.uplugin"
+        original = self.operation.committed_git._read_exact_blobs
+
+        def mismatch(*arguments, **keywords):
+            blobs = original(*arguments, **keywords)
+            blobs[relative] += b"\n# SYNTHETIC batch corruption\n"
+            return blobs
+
+        with mock.patch.object(self.operation.committed_git, "_read_exact_blobs",
+                               side_effect=mismatch):
+            self.assert_pre_capture_rejection("operation source differs from exact_sha")
+        self.identity.assert_not_called()
+
+    def test_rejects_an_identical_executing_git_reader_from_another_checkout(self):
+        foreign = self.root / "foreign-reader.py"
+        foreign.write_bytes((self.root / COMMITTED_GIT_READER_PATH).read_bytes())
+        with mock.patch.object(self.operation.committed_git, "__file__", str(foreign)):
+            self.assert_pre_capture_rejection("executing committed Git reader belongs to another checkout")
+        self.identity.assert_not_called()
+
+    def test_rejects_an_executing_operation_with_unpinned_bytes(self):
+        foreign = self.root / "foreign-operation.py"
+        foreign.write_bytes(b"# SYNTHETIC foreign executing operation\n")
+        with mock.patch.object(self.operation, "__file__", str(foreign)):
+            self.assert_pre_capture_rejection("executing operation source hash mismatch")
+        self.identity.assert_not_called()
+
+    def test_git_reader_is_required_in_the_exact_source_inventory(self):
+        self.context["source_sha256"] = {path: value for path, value in self.source_hashes.items()
+                                         if path != COMMITTED_GIT_READER_PATH}
+        self.write_context()
+        self.assert_pre_capture_rejection("operation source_sha256")
+        self.identity.assert_not_called()
+
+    def test_git_reader_drift_before_measurement_prevents_native_capture(self):
+        reader = self.root / COMMITTED_GIT_READER_PATH
+        snapshot = self.operation._persistent_snapshot
+
+        def drift():
+            observed = snapshot()
+            reader.write_bytes(reader.read_bytes() + b"\n# SYNTHETIC reader drift\n")
+            return observed
+
+        with mock.patch.object(self.operation, "_persistent_snapshot", side_effect=drift):
+            self.assert_pre_capture_rejection("operation requires unchanged tracked files")
+
+    def test_git_reader_drift_during_measurement_prevents_receipt(self):
+        reader = self.root / COMMITTED_GIT_READER_PATH
+        self.trace_mutation = lambda: reader.write_bytes(
+            reader.read_bytes() + b"\n# SYNTHETIC reader drift\n")
+        self.assert_capture_rejection_without_receipt("operation requires unchanged tracked files")
 
     def test_sink_must_be_invoked_by_actual_producer(self):
         real_measure = self.producer.measure_smooth_terrain_fit

@@ -12,6 +12,8 @@ on:
       - 'scripts/ue/probe_official_mcp_bob_reflection.py'
       - 'scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1'
       - 'scripts/ue/bootstrap_official_mcp_bob_session.py'
+      - 'scripts/ue/official_mcp_bob_operation.py'
+      - 'scripts/committed_git_blobs.py'
       - 'scripts/ci/official_mcp_bob_session.py'
       - 'scripts/ci/official_mcp_bob_client.py'
   workflow_dispatch:

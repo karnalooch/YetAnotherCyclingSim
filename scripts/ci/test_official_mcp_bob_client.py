@@ -49,8 +49,9 @@ class SyntheticResponse:
 class SyntheticHttpScript:
     """Supply one response per request, recording all attempts and closures."""
 
-    def __init__(self, responses):
+    def __init__(self, responses, *, close_error=None):
         self.responses = list(responses)
+        self.close_error = close_error
         self.connections = []
         self.requests = []
 
@@ -83,6 +84,8 @@ class SyntheticHttpScript:
 
             def close(self):
                 self.closed = True
+                if script.close_error is not None:
+                    raise script.close_error
 
         connection = Connection()
         self.connections.append((host, port, options, connection))
@@ -870,6 +873,9 @@ class OfficialMcpBobClientTests(unittest.TestCase):
             self.run_script(script)
         receipt = self.blocked_receipt()
         self.assertIs(receipt["valid_call_attempted"], False)
+        self.assertEqual(receipt["failure_stage"], "DENIAL_COUNTER")
+        self.assertEqual(receipt["failure_denial_case"], "unknown_operation")
+        self.assertEqual(receipt["error_code"], "BODY_COUNTER_MISMATCH")
         self.assertEqual(len(script.requests), 4)
         self.assertTrue(script.connections[0][3].closed)
 
@@ -926,12 +932,18 @@ class OfficialMcpBobClientTests(unittest.TestCase):
         self.assertEqual(len(script.connections), 1)
         self.assertTrue(script.connections[0][3].closed)
         self.assertNotIn("SYNTHETIC_PRIVATE_MESSAGE", json.dumps(receipt))
+        self.assertEqual(receipt["failure_stage"], "VALID_CALL")
+        self.assertEqual(receipt["error_category"], "TIMEOUT")
+        self.assertEqual(receipt["error_code"], "UNCLASSIFIED_LOCAL_CHECK")
 
     def test_counter_zero_after_valid_response_cannot_certify_capture(self):
         script = self.fixed_script()
         with self.assertRaisesRegex(ValueError, "invocation counter"):
             self.run_script(script)
-        self.assertIs(self.blocked_receipt()["valid_call_attempted"], True)
+        receipt = self.blocked_receipt()
+        self.assertIs(receipt["valid_call_attempted"], True)
+        self.assertEqual(receipt["failure_stage"], "BODY_COUNTER")
+        self.assertEqual(receipt["error_code"], "BODY_COUNTER_MISMATCH")
         self.assertEqual(len(script.requests), 26)
 
     def test_existing_receipt_is_preserved_before_connection_or_request(self):
@@ -960,7 +972,9 @@ class OfficialMcpBobClientTests(unittest.TestCase):
         script = self.fixed_script(final=valid)
         with self.assertRaisesRegex(ValueError, "invocation counter"):
             self.run_script(script, unchanged=lambda *_: self.write_counter(2))
-        self.blocked_receipt()
+        receipt = self.blocked_receipt()
+        self.assertEqual(receipt["failure_stage"], "FINAL_COUNTER")
+        self.assertEqual(receipt["error_code"], "BODY_COUNTER_MISMATCH")
         self.assertEqual(len(script.requests), 26)
 
     def test_conservation_rejection_after_valid_call_leaves_blocked_receipt(self):
@@ -974,7 +988,125 @@ class OfficialMcpBobClientTests(unittest.TestCase):
         script = self.fixed_script(final=valid)
         with self.assertRaisesRegex(ValueError, "source drift"):
             self.run_script(script, unchanged=changed_source)
-        self.blocked_receipt()
+        receipt = self.blocked_receipt()
+        self.assertEqual(receipt["failure_stage"], "CONSERVATION")
+        self.assertEqual(receipt["error_category"], "GUARD_REJECTED")
+        self.assertEqual(receipt["error_code"], "UNCLASSIFIED_LOCAL_CHECK")
+        self.assertNotIn("SYNTHETIC trusted source drift", json.dumps(receipt))
+        self.assertEqual(len(script.requests), 26)
+
+    def test_close_failure_preserves_first_failure_and_never_logs_private_exception(
+        self,
+    ):
+        def valid(request):
+            self.write_counter(1)
+            return packet_response(SYNTHETIC_PACKET)(request)
+
+        def changed_source(*_args):
+            raise ValueError(
+                "Persistent project/profile bytes changed during MCP proof"
+            )
+
+        script = self.fixed_script(final=valid)
+        script.close_error = OSError("SYNTHETIC_SECRET_TOKEN_CLOSE")
+        with self.assertRaisesRegex(ValueError, "Persistent project/profile"):
+            self.run_script(script, unchanged=changed_source)
+        receipt = self.blocked_receipt()
+        self.assertEqual(receipt["failure_stage"], "CONSERVATION")
+        self.assertEqual(receipt["error_type"], "ValueError")
+        self.assertEqual(receipt["error_code"], "PERSISTENT_INPUT_DRIFT")
+        self.assertEqual(receipt["secondary_close_error_category"], "HTTP_TRANSPORT")
+        self.assertEqual(
+            receipt["secondary_close_error_code"], "TRANSPORT_CLOSE_FAILED"
+        )
+        self.assertNotIn("SYNTHETIC_SECRET_TOKEN_CLOSE", json.dumps(receipt))
+        self.assertEqual(len(script.requests), 26)
+        self.assertEqual(len(script.connections), 1)
+        self.assertTrue(script.connections[0][3].closed)
+
+    def test_close_only_failure_blocks_an_otherwise_verified_session(self):
+        def valid(request):
+            self.write_counter(1)
+            return packet_response(SYNTHETIC_PACKET)(request)
+
+        script = self.fixed_script(final=valid)
+        script.close_error = OSError("SYNTHETIC_SECRET_TOKEN_CLOSE_ONLY")
+        with self.assertRaises(OSError):
+            self.run_script(script)
+        receipt = self.blocked_receipt()
+        self.assertEqual(receipt["failure_stage"], "TRANSPORT_CLOSE")
+        self.assertEqual(receipt["error_category"], "HTTP_TRANSPORT")
+        self.assertNotIn("SYNTHETIC_SECRET_TOKEN_CLOSE_ONLY", json.dumps(receipt))
+        self.assertEqual(len(script.requests), 26)
+
+    def test_client_uses_one_fresh_source_pass_but_rechecks_executing_file_bytes(self):
+        paths = {*client.session.UTILITY_SOURCE_PATHS, client.CLIENT_SOURCE}
+        for relative in paths:
+            path = self.root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"# SYNTHETIC_SOURCE_ONLY " + relative.encode())
+        hashes = {
+            relative: client._digest((self.root / relative).read_bytes())
+            for relative in paths
+        }
+        session_file = self.root / "scripts/ci/official_mcp_bob_session.py"
+        client_file = self.root / client.CLIENT_SOURCE
+        with (
+            mock.patch.object(
+                client.session, "_sources", return_value=hashes
+            ) as verified,
+            mock.patch.object(client.session, "__file__", str(session_file)),
+            mock.patch.object(client, "__file__", str(client_file)),
+            mock.patch.object(
+                client.operation.adapter,
+                "_git",
+                side_effect=AssertionError("duplicate Git read"),
+            ),
+        ):
+            self.assertEqual(client._source_hashes(self.context["exact_sha"]), hashes)
+            verified.assert_called_once_with(
+                self.context["exact_sha"], include_utilities=True
+            )
+            client_file.write_bytes(
+                client_file.read_bytes() + b"\n# SYNTHETIC_CHANGED_AFTER_PASS"
+            )
+            with self.assertRaisesRegex(ValueError, "Executing client differs"):
+                client._source_hashes(self.context["exact_sha"])
+            client_file.write_bytes(
+                b"# SYNTHETIC_SOURCE_ONLY " + client.CLIENT_SOURCE.encode()
+            )
+            session_file.write_bytes(
+                session_file.read_bytes() + b"\n# SYNTHETIC_MODULE_DRIFT"
+            )
+            with self.assertRaisesRegex(
+                ValueError, "Executing trusted session utility"
+            ):
+                client._source_hashes(self.context["exact_sha"])
+            with (
+                mock.patch.object(
+                    client.session,
+                    "_sources",
+                    return_value={client.CLIENT_SOURCE: hashes[client.CLIENT_SOURCE]},
+                ),
+                self.assertRaisesRegex(ValueError, "lacks fixed client dependencies"),
+            ):
+                client._source_hashes(self.context["exact_sha"])
+
+    def test_valid_response_framing_failure_has_fixed_code_without_retry(self):
+        script = self.fixed_script(
+            final=rpc_response(
+                {},
+                headers=[
+                    ("Content-Type", "application/json"),
+                    ("Transfer-Encoding", "gzip"),
+                ],
+            )
+        )
+        with self.assertRaisesRegex(ValueError, "HTTP body framing"):
+            self.run_script(script)
+        receipt = self.blocked_receipt()
+        self.assertEqual(receipt["failure_stage"], "VALID_CALL")
+        self.assertEqual(receipt["error_code"], "HTTP_FRAMING")
         self.assertEqual(len(script.requests), 26)
 
     def operation_bundle(self):
@@ -1010,6 +1142,53 @@ class OfficialMcpBobClientTests(unittest.TestCase):
             "persistent_content_verified",
         ):
             self.assertIs(packet["capture"][key], False)
+
+    def test_real_bundle_authority_rejection_records_fixed_validation_stage(self):
+        fixture, context, _persistent, packet = self.operation_bundle()
+        context.update(
+            marker={"owned_editor_pid": 123}, sources={"synthetic_source.py": "c" * 64}
+        )
+        counter_path = fixture.root / client.COUNTER_FILE
+
+        def write_counter(count):
+            counter_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "exact_sha": context["exact_sha"],
+                        "body_invocation_count": count,
+                    }
+                )
+            )
+
+        write_counter(0)
+        packet["result"]["status"] = "PASS"
+        raw = client.operation.adapter.canonical_json_bytes(packet["result"])
+        for name in ("result.json", "direct-inspection.json"):
+            (fixture.session / "bundle" / name).write_bytes(raw)
+        # Only publish this synthetic native output in the valid-call callback;
+        # denied requests must still observe the genuine absent-bundle guard.
+        pending_bundle = fixture.session / "pending-bundle"
+        (fixture.session / "bundle").rename(pending_bundle)
+
+        def valid(request):
+            pending_bundle.rename(fixture.session / "bundle")
+            write_counter(1)
+            return packet_response(packet)(request)
+
+        script = self.fixed_script(final=valid)
+        with (
+            mock.patch.object(client, "_load_context", return_value=context),
+            mock.patch.object(client.http.client, "HTTPConnection", script.connect),
+            self.assertRaisesRegex(ValueError, "authority flags"),
+        ):
+            client.run_fixed_session()
+        receipt = json.loads((fixture.root / client.RECEIPT_FILE).read_bytes())
+        self.assertEqual(receipt["failure_stage"], "BUNDLE_VERIFY")
+        self.assertEqual(receipt["error_code"], "DOMAIN_AUTHORITY")
+        self.assertIs(receipt["official_mcp_transport_verified"], False)
+        self.assertIs(receipt["official_mcp_admitted"], False)
+        self.assertEqual(len(script.requests), 26)
 
     def test_saved_bundle_cannot_outlive_its_tracked_source_revision(self):
         fixture, context, persistent, packet = self.operation_bundle()

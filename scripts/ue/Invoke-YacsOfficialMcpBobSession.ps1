@@ -444,6 +444,7 @@ function Write-SessionFixedFailureLogContext {
     $matched = [Collections.Generic.SortedSet[int]]::new()
     $startup = [Collections.Generic.SortedSet[int]]::new()
     $nativeMilestones = [Collections.Generic.SortedSet[int]]::new()
+    $operationMilestones = [Collections.Generic.SortedSet[int]]::new()
     $categories = [ordered]@{
         engine = '(?i)LogInit:.*(?:Engine Version|Build:)'
         bob = '(?i)LogPluginManager:.*(?:YacsBobInspection|ModelContextProtocol|ToolsetRegistry)|YacsBob|BOB_|LogModelContextProtocol'
@@ -459,10 +460,11 @@ function Write-SessionFixedFailureLogContext {
             [void]$commandLines.Add($index)
             continue
         }
-        if ($lines[$index] -match '(?i)error C[0-9]+|fatal error|error LNK[0-9]+|LogPython:.*(?:Error|Fatal)|Traceback|Exception|(?:Runtime|Attribute|Type|Value|Name|Import|ModuleNotFound|Syntax)Error|Assertion failed') {
+        if ($lines[$index] -match '(?i)error C[0-9]+|fatal error|error LNK[0-9]+|LogPython:.*(?:Error|Fatal)|Traceback|Exception|(?:Runtime|Attribute|Type|Value|Name|Import|ModuleNotFound|Syntax)Error|Assertion failed|YACS_MCP_BOB_CLIENT_FAILURE') {
             for ($line = [Math]::Max(0, $index - 1); $line -le [Math]::Min($index + 2, $lines.Length - 1); $line++) { [void]$matched.Add($line) }
         }
         if ($lines[$index].Contains('LogYacsBobOfficialSession:')) { [void]$nativeMilestones.Add($index) }
+        if ($lines[$index].Contains('YACS_MCP_BOB_OPERATION ')) { [void]$operationMilestones.Add($index) }
         if ($DiagnosePreviousFailure) {
             foreach ($category in $categories.Keys) {
                 if ($lines[$index] -match $categories[$category]) {
@@ -476,6 +478,11 @@ function Write-SessionFixedFailureLogContext {
     if (-not $DiagnosePreviousFailure -and $nativeMilestones.Count -gt 0) {
         $chosen = @($matched | Select-Object -First 12) + @($matched | Select-Object -Last 8) `
             + @($nativeMilestones | Select-Object -First 2) + @($nativeMilestones | Select-Object -Last 2)
+    }
+    if (-not $DiagnosePreviousFailure -and $operationMilestones.Count -gt 0) {
+        $chosen = @($matched | Select-Object -First 8) + @($matched | Select-Object -Last 8) `
+            + @($nativeMilestones | Select-Object -First 2) + @($nativeMilestones | Select-Object -Last 2) `
+            + @($operationMilestones | Select-Object -First 2) + @($operationMilestones | Select-Object -Last 2)
     }
     if ($DiagnosePreviousFailure) {
         # Five independently reserved categories (at most four each) plus
@@ -631,7 +638,7 @@ function Invoke-SessionPreviousFailureDiagnostic {
             }
             if ($name -cin @('native-session.json', 'transport-receipt.json') -and -not (Test-SessionInteger $json.owned_editor_pid $previous.owned_editor_pid)) { throw 'The retained native/client receipt reports another Editor PID.' }
             $summary = [ordered]@{ identity_scope = $observation.identity_scope }
-            foreach ($field in @('schema_version', 'exact_sha', 'status', 'owned_editor_pid', 'error', 'error_type', 'map_package', 'landscape_path', 'python_startup_complete', 'python_settings_class_path', 'python_remote_execution', 'body_invocation_count', 'denied_input_count', 'valid_call_attempted', 'domain_status', 'persistent_files_unchanged', 'native_runtime_verified', 'official_mcp_transport_verified', 'native_bob_capture_verified', 'official_mcp_admitted')) {
+            foreach ($field in @('schema_version', 'exact_sha', 'status', 'owned_editor_pid', 'error', 'error_type', 'failure_stage', 'error_category', 'error_code', 'failure_denial_case', 'secondary_close_error_category', 'secondary_close_error_code', 'map_package', 'landscape_path', 'python_startup_complete', 'python_settings_class_path', 'python_remote_execution', 'body_invocation_count', 'denied_input_count', 'valid_call_attempted', 'domain_status', 'persistent_files_unchanged', 'native_runtime_verified', 'official_mcp_transport_verified', 'native_bob_capture_verified', 'official_mcp_admitted')) {
                 if (-not $json.Contains($field)) { continue }
                 $value = $json[$field]
                 $summary[$field] = if ($value -is [string]) { Get-SessionSafeFailureText $value } elseif ($null -eq $value -or $value -is [bool] -or $value -is [int] -or $value -is [long]) { $value } else { 'MALFORMED_SCALAR' }
@@ -676,6 +683,194 @@ function Invoke-SessionPreviousFailureDiagnostic {
     $receipt.proof_files.previous_session_failure_diagnostic = Get-SessionFileIdentity (Join-Path $ArtifactRoot 'previous-session-failure-diagnostic.json') 1MB
     $receipt.proof_files.previous_failed_receipt = Get-SessionFileIdentity $target 1MB
     Write-Host ('PREVIOUS_SESSION_FAILURE ' + $diagnostic.previous_error)
+}
+function Invoke-SessionStorageGit {
+    param([string] $Root, [string[]] $Arguments, $Budget)
+    if ($Budget.timer.Elapsed.TotalSeconds -ge 45) { throw 'The fixed storage inventory exhausted its 45-second observation bound.' }
+    $command = Get-Command git -CommandType Application -ErrorAction Stop | Select-Object -First 1
+    if ($command -isnot [Management.Automation.ApplicationInfo] -or $command.Source -isnot [string] -or [string]::IsNullOrWhiteSpace($command.Source)) { throw 'The fixed storage Git application is unavailable.' }
+    $start = [Diagnostics.ProcessStartInfo]::new($command.Source)
+    $start.UseShellExecute = $false
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    foreach ($argument in @('--no-optional-locks', '-c', 'core.fsmonitor=false', '-C', $Root) + $Arguments) { $start.ArgumentList.Add($argument) }
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $start
+    $timer = [Diagnostics.Stopwatch]::StartNew()
+    $started = $false
+    try {
+        if (-not $process.Start()) { throw 'The fixed storage Git observation did not start.' }
+        $started = $true
+        $stdout = [byte[]]::new(4096)
+        $stderr = [byte[]]::new(1024)
+        $outTask = $process.StandardOutput.BaseStream.ReadAsync($stdout, 0, $stdout.Length)
+        $errTask = $process.StandardError.BaseStream.ReadAsync($stderr, 0, $stderr.Length)
+        while (-not $process.HasExited -or -not $outTask.IsCompleted -or -not $errTask.IsCompleted) {
+            if ($timer.Elapsed.TotalSeconds -ge 10 -or $Budget.timer.Elapsed.TotalSeconds -ge 45) { throw 'The fixed storage Git observation exceeded its time bound.' }
+            if (($outTask.IsCompleted -and $outTask.Result -eq $stdout.Length) -or ($errTask.IsCompleted -and $errTask.Result -eq $stderr.Length)) { throw 'The fixed storage Git observation exceeded its output bound.' }
+            [void]$process.WaitForExit(25)
+        }
+        if ($outTask.Result -eq $stdout.Length -or $errTask.Result -eq $stderr.Length) { throw 'The fixed storage Git observation exceeded its output bound.' }
+        if ($errTask.Result -ne 0) { throw 'The fixed storage Git observation reported an error; current state is unestablished.' }
+        return [ordered]@{ exit_code = $process.ExitCode; stdout = [Text.Encoding]::UTF8.GetString($stdout, 0, $outTask.Result) }
+    } finally {
+        if ($started -and -not $process.HasExited) { $process.Kill($true); [void]$process.WaitForExit(2000) }
+        $process.Dispose()
+    }
+}
+function Get-SessionStorageGitState {
+    param([string] $Root, [string] $PinnedHead, $Budget)
+    Assert-SessionPlainPath $Root
+    $head = Invoke-SessionStorageGit $Root @('rev-parse', 'HEAD') $Budget
+    if ($head.exit_code -ne 0 -or $head.stdout.Trim() -cne $PinnedHead) { throw 'The fixed old project worktree differs from its pinned HEAD.' }
+    $paths = @('Source', 'Build', 'Config', ':(glob)Plugins/*/Source/**', ':(glob)Plugins/*/*.uplugin', 'YetAnotherCyclingSim.uproject')
+    $diff = Invoke-SessionStorageGit $Root (@('diff', '--quiet', '--no-ext-diff', '--no-textconv', 'HEAD', '--') + $paths) $Budget
+    if ($diff.exit_code -ne 0 -or $diff.stdout.Length -ne 0) { throw 'The fixed old project has changed tracked native/config inputs or an unestablished Git state.' }
+    $extra = Invoke-SessionStorageGit $Root (@('ls-files', '--others', '--') + $paths) $Budget
+    if ($extra.exit_code -ne 0 -or $extra.stdout.Length -ne 0) { throw 'The fixed old project has untracked native/config inputs or an unestablished Git state.' }
+    return [ordered]@{ scope = 'CURRENT_OBSERVED_NATIVE_CONFIG_GIT_STATE; NOT_FULL_WORKTREE_OR_BINARY_ADMISSION'
+        head = $PinnedHead; tracked_native_config_unchanged = $true; untracked_native_config_absent = $true }
+}
+function Measure-SessionStorageIntermediate {
+    param([string] $Path, $Budget)
+    Assert-SessionPlainPath $Path
+    if (-not [IO.Directory]::Exists($Path)) { throw 'The fixed Intermediate directory is absent.' }
+    $rows = [Collections.Generic.Dictionary[string, string]]::new([StringComparer]::Ordinal)
+    $stack = [Collections.Generic.Stack[object]]::new()
+    $stack.Push(@{ path = $Path; depth = 0 })
+    $bytes = 0L
+    $files = 0
+    $directories = 1
+    $rootInfo = [IO.DirectoryInfo]::new($Path)
+    $rootInfo.Refresh()
+    if ($Budget.entries -ge 100000 -or $Budget.timer.Elapsed.TotalSeconds -ge 45) { throw 'The fixed storage inventory exceeded 100000 entries or 45 seconds.' }
+    $Budget.entries++
+    $rootRow = '.' + "`0" + [int]$rootInfo.Attributes + "`00`0" + $rootInfo.LastWriteTimeUtc.Ticks + "`0" + $rootInfo.CreationTimeUtc.Ticks + "`n"
+    $rows.Add('.', $rootRow)
+    $newest = $rootInfo.LastWriteTimeUtc.Ticks
+    while ($stack.Count -gt 0) {
+        if ($Budget.timer.Elapsed.TotalSeconds -ge 45) { throw 'The fixed storage inventory exhausted its 45-second observation bound.' }
+        $directory = $stack.Pop()
+        if ($directory.depth -gt 64) { throw 'The fixed Intermediate inventory exceeds depth 64.' }
+        Assert-SessionPlainPath $directory.path
+        foreach ($entry in [IO.Directory]::EnumerateFileSystemEntries($directory.path)) {
+            if ($Budget.entries -ge 100000 -or $Budget.timer.Elapsed.TotalSeconds -ge 45) { throw 'The fixed storage inventory exceeded 100000 entries or 45 seconds.' }
+            if ($directory.depth + 1 -gt 64) { throw 'The fixed Intermediate inventory exceeds depth 64.' }
+            $Budget.entries++
+            Assert-SessionPlainPath $entry
+            $attributes = [IO.File]::GetAttributes($entry)
+            if ($attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'The fixed Intermediate inventory contains a reparse point.' }
+            $isDirectory = ($attributes -band [IO.FileAttributes]::Directory) -ne 0
+            $item = if ($isDirectory) { [IO.DirectoryInfo]::new($entry) } else { [IO.FileInfo]::new($entry) }
+            $item.Refresh()
+            if ($item.Attributes -ne $attributes) { throw 'A fixed Intermediate entry changed during its metadata observation.' }
+            $length = if ($isDirectory) { 0L } else { $item.Length }
+            $written = $item.LastWriteTimeUtc.Ticks
+            $relative = [IO.Path]::GetRelativePath($Path, $entry).Replace('\', '/')
+            if ($relative.StartsWith('../', [StringComparison]::Ordinal) -or $rows.ContainsKey($relative)) { throw 'The fixed Intermediate inventory has an escaped or duplicate entry.' }
+            $rows.Add($relative, ($relative + "`0" + [int]$attributes + "`0" + $length + "`0" + $written + "`0" + $item.CreationTimeUtc.Ticks + "`n"))
+            if ($written -gt $newest) { $newest = $written }
+            if ($isDirectory) {
+                $directories++
+                $stack.Push(@{ path = $entry; depth = $directory.depth + 1 })
+            } else { $files++; $bytes += $length }
+        }
+    }
+    Assert-SessionPlainPath $Path
+    $rootInfo.Refresh()
+    $afterRoot = '.' + "`0" + [int]$rootInfo.Attributes + "`00`0" + $rootInfo.LastWriteTimeUtc.Ticks + "`0" + $rootInfo.CreationTimeUtc.Ticks + "`n"
+    if ($rootRow -cne $afterRoot) { throw 'The fixed Intermediate root changed during enumeration.' }
+    $algorithm = [Security.Cryptography.IncrementalHash]::CreateHash([Security.Cryptography.HashAlgorithmName]::SHA256)
+    try {
+        [string[]]$ordered = @($rows.Keys)
+        [Array]::Sort($ordered, [StringComparer]::Ordinal)
+        foreach ($relative in $ordered) {
+            if ($Budget.timer.Elapsed.TotalSeconds -ge 45) { throw 'The fixed storage inventory exhausted its digest time bound.' }
+            $algorithm.AppendData([Text.Encoding]::UTF8.GetBytes($rows[$relative]))
+        }
+        $digest = [Convert]::ToHexString($algorithm.GetHashAndReset()).ToLowerInvariant()
+    } finally { $algorithm.Dispose() }
+    return [ordered]@{ logical_bytes = $bytes; file_count = $files; directory_count = $directories
+        newest_last_write_utc = [DateTime]::new($newest, [DateTimeKind]::Utc).ToString('o'); inventory_sha256 = $digest }
+}
+function Invoke-SessionFixedStorageInventory {
+    # These two old producers are observations only. Latest 380185 remains protected.
+    $pins = @(
+        @{ run = '38015883833'; sha = '9be44d403af3997b56f68c04df14c402f70001ce'; receipt_sha = 'b22a7b1eabecda906127afed3cbd63f3a50115ac7d8a55be280b0352fea09e75' },
+        @{ run = '38016857639'; sha = 'aceaefb437962ce3dc0af301db32c4ac2cf66592'; receipt_sha = '0076721aff4f5af496d2f720a0f6826633594e8a61d25b12c9b922ce9318d6e6' }
+    )
+    $budget = @{ entries = 0; timer = [Diagnostics.Stopwatch]::StartNew() }
+    $inventory = [ordered]@{ schema_version = 1; exact_sha = $ExpectedHead; source_only = $true; cleanup_performed = $false
+        cleanup_admitted = $false; compile_performed = $false; editor_launched = $false; reclaimed_bytes = $null
+        observation_scope = 'FIXED_OLD_INTERMEDIATE_METADATA; LOGICAL_BYTES_NOT_RECLAIMABLE_SPACE'
+        protected_latest_run = '38018565445-1'; entry_limit = 100000; time_limit_seconds = 45; depth_limit = 64
+        observed_at_utc = (Get-Date).ToUniversalTime().ToString('o'); free_before_bytes = [IO.DriveInfo]::new('D:\').AvailableFreeSpace
+        runs = [ordered]@{} }
+    foreach ($pin in $pins) {
+        $id = $pin.run + '-1'
+        $projectRoot = Join-Path 'D:\yacs\runner\_work\b384' ($id + '-session-project')
+        $pluginRoot = Join-Path 'D:\yacs\runner\_work\b384' ($id + '-session-plugin')
+        $sessionRoot = Join-Path 'D:\yacs\runner\_work\s384' $id
+        $hostPath = Join-Path $RepoRoot ('Saved/RuntimeProof/OfficialMcpBobSession/' + $id + '/accepted-session-build.json')
+        $run = [ordered]@{ status = 'NOT_ELIGIBLE'; exact_sha = $pin.sha; project_root = $projectRoot; plugin_package_root = $pluginRoot
+            cleanup_candidate = $false; directories = [ordered]@{} }
+        $inventory.runs[$id] = $run
+        try {
+            if ($budget.timer.Elapsed.TotalSeconds -ge 45) { throw 'The fixed storage inventory exhausted its 45-second observation bound.' }
+            foreach ($path in @($projectRoot, $pluginRoot, $sessionRoot, $hostPath)) { Assert-SessionPlainPath $path }
+            $identity = Get-SessionFileIdentity $hostPath 1MB
+            if ($identity.size_bytes -ne 443055 -or $identity.sha256 -cne $pin.receipt_sha) { throw 'The fixed old host differs from its original console-pinned bytes.' }
+            # Authenticate the raw anchor BEFORE parsing its recorded paths/state.
+            $read = Read-SessionJson $hostPath 1MB
+            $hostReceipt = $read.value
+            if ($read.identity.sha256 -cne $identity.sha256 -or -not (Test-SessionInteger $hostReceipt.schema_version 1) `
+                -or $hostReceipt.exact_sha -cne $pin.sha -or $hostReceipt.run -cne $pin.run -or $hostReceipt.attempt -cne '1' `
+                -or $hostReceipt.status -cne 'BLOCKED' -or $hostReceipt.build_root -cne $projectRoot `
+                -or $hostReceipt.plugin_package_root -cne $pluginRoot -or $hostReceipt.session_root -cne $sessionRoot `
+                -or -not (Test-SessionInteger $hostReceipt.project_build.exit_code 0) -or -not (Test-SessionInteger $hostReceipt.plugin_build.exit_code 0) `
+                -or $hostReceipt.source_unchanged -isnot [bool] -or -not $hostReceipt.source_unchanged) { throw 'The authenticated old build/source/root state differs from its fixed contract.' }
+            $run['original_host_receipt'] = $identity
+            $run['recorded_source_fingerprints'] = $hostReceipt.source_fingerprints
+            $run['recorded_protected_identities'] = [ordered]@{ scope = 'ORIGINAL_AUTHENTICATED_HOST_RECEIPT; CURRENT_PROOF_AND_BINARY_BYTES_NOT_REHASHED'
+                proof_files = $hostReceipt.proof_files; binary_provenance = $hostReceipt.binary_provenance; staged_binary_provenance = $hostReceipt.staged_binary_provenance }
+            $run['current_native_config_git'] = Get-SessionStorageGitState $projectRoot $pin.sha $budget
+            foreach ($relative in @('Intermediate', 'Plugins/RoadForge/Intermediate', 'HostProject/Intermediate', 'HostProject/Plugins/YacsBobInspection/Intermediate')) {
+                $root = if ($relative.StartsWith('HostProject/', [StringComparison]::Ordinal)) { $pluginRoot } else { $projectRoot }
+                $path = Join-Path $root $relative
+                $observed = [ordered]@{ path = $path; status = 'NOT_ELIGIBLE'; cleanup_candidate = $false }
+                $run.directories[$relative] = $observed
+                try {
+                    $first = Measure-SessionStorageIntermediate $path $budget
+                    $second = Measure-SessionStorageIntermediate $path $budget
+                    if ($first.inventory_sha256 -cne $second.inventory_sha256) { throw 'The fixed Intermediate metadata changed between its two enumerations.' }
+                    $observed['metadata'] = $second
+                    $observed['status'] = 'STABLE_METADATA_ONLY; SEPARATE_CLEANUP_PREVIEW_REQUIRED'
+                } catch {
+                    $observed['error'] = Get-SessionSafeFailureText $_.Exception.Message
+                    $observed['exception_type'] = $_.Exception.GetType().Name
+                }
+                Write-Host ('FIXED_STORAGE_DIRECTORY ' + ($observed | ConvertTo-Json -Depth 4 -Compress))
+            }
+            $run['current_native_config_git_after'] = Get-SessionStorageGitState $projectRoot $pin.sha $budget
+            if ((Get-SessionFileIdentity $hostPath 1MB).sha256 -cne $identity.sha256) { throw 'The fixed old host anchor changed during metadata observation.' }
+            $run.status = 'READ_ONLY_OBSERVATIONS_RETAINED; CLEANUP_NOT_ADMITTED'
+        } catch {
+            $run['error'] = Get-SessionSafeFailureText $_.Exception.Message
+            $run['exception_type'] = $_.Exception.GetType().Name
+            foreach ($observed in $run.directories.Values) { $observed.status = 'NOT_ELIGIBLE' }
+        }
+        Write-Host ('FIXED_STORAGE_RUN ' + (([ordered]@{ run = $id; exact_sha = $run.exact_sha; status = $run.status
+            cleanup_candidate = $false; error = if ($run.Contains('error')) { $run.error } else { $null } }) | ConvertTo-Json -Compress))
+    }
+    $inventory['entries_observed_including_repeat'] = $budget.entries
+    $inventory['observation_elapsed_seconds'] = $budget.timer.Elapsed.TotalSeconds
+    $inventory['free_after_bytes'] = [IO.DriveInfo]::new('D:\').AvailableFreeSpace
+    $path = Join-Path $ArtifactRoot 'fixed-old-intermediate-storage-inventory.json'
+    $encoded = [Text.Encoding]::UTF8.GetBytes(($inventory | ConvertTo-Json -Depth 30))
+    if ($encoded.Length -gt 1MB) { throw 'The fixed storage inventory exceeds its 1MiB receipt bound.' }
+    Write-SessionJson $path $inventory
+    $receipt.proof_files.fixed_old_intermediate_storage_inventory = Get-SessionFileIdentity $path 1MB
+    Write-Host ('FIXED_STORAGE_RECEIPT_IDENTITY ' + ($receipt.proof_files.fixed_old_intermediate_storage_inventory | ConvertTo-Json -Compress))
 }
 function Write-SessionCurrentFailureReadback {
     if (-not $artifactOwned -or $receipt.status -cne 'BLOCKED') { return }
@@ -747,6 +942,7 @@ try {
     $artifactOwned = $true
     if ($DiagnosePreviousFailure) {
         Invoke-SessionPreviousFailureDiagnostic
+        Invoke-SessionFixedStorageInventory
         & (Join-Path $RepoRoot 'scripts/ue/Read-YacsOfficialMcpRuntimeDependencies.ps1') -EngineRoot $engine.Root -ArtifactRoot $ArtifactRoot -ExpectedHead $ExpectedHead
         $currentSdk = Read-SessionJson (Join-Path $ArtifactRoot 'runtime-dependencies.json') 4MB
         if (-not (Test-SessionInteger $currentSdk.value.schema_version 1) -or $currentSdk.value.exact_sha -cne $ExpectedHead `

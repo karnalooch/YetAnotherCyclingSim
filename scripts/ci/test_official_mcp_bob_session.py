@@ -18,6 +18,7 @@ from types import SimpleNamespace
 import unittest
 from unittest import mock
 
+from scripts import committed_git_blobs as committed_git
 from scripts.ci import official_mcp_bob_session as production
 from scripts.ue import official_mcp_bob_operation as operation
 
@@ -106,6 +107,11 @@ class OfficialMcpBobSessionTests(unittest.TestCase):
         self.patch(self.session, "WINDOWS_HOST", True)
         self.patch(operation, "ROOT", self.root)
         self.patch(operation.adapter, "ROOT", self.root)
+        self.patch(
+            self.session.committed_git,
+            "__file__",
+            str(self.root / committed_git.SOURCE_PATH),
+        )
         self.patch(self.session, "_workspace", lambda: self.config)
 
         self.dependency_payloads = {
@@ -984,6 +990,42 @@ class OfficialMcpBobSessionTests(unittest.TestCase):
         self.assertLess(popen.call_count, 3 + len(paths))
         self.assertFalse(any("show" in call.args[0] for call in popen.call_args_list))
 
+    def test_full_source_pass_returns_current_verified_utilities_without_changing_context_keys(
+        self,
+    ):
+        inventory = set(operation._source_inventory(self.exact_sha))
+        paths = inventory | set(self.session.UTILITY_SOURCE_PATHS)
+        expected = {
+            path: digest(self.git("show", self.exact_sha + ":" + path))
+            for path in paths
+        }
+        with mock.patch.object(subprocess, "Popen", wraps=subprocess.Popen) as popen:
+            actual = self.session._sources(self.exact_sha, include_utilities=True)
+        self.assertEqual(actual, expected)
+        self.assertEqual(popen.call_count, 6)
+        self.assertEqual(set(self.session._sources(self.exact_sha)), inventory)
+        self.assertIn("scripts/ci/official_mcp_bob_client.py", actual)
+        self.assertIn(committed_git.SOURCE_PATH, actual)
+
+    def test_client_utility_limit_remains_narrower_than_session_source_limit(self):
+        relative = "scripts/ci/official_mcp_bob_client.py"
+        path = self.root / relative
+        path.write_bytes(
+            path.read_bytes() + b"\n#" + b"x" * self.session.CLIENT_UTILITY_LIMIT
+        )
+        self.commit("Synthetic oversized client utility")
+        sha = self.git("rev-parse", "HEAD").decode().strip()
+        self.assertTrue(self.session._sources(sha))
+        with self.assertRaisesRegex(ValueError, "client utility exceeds"):
+            self.session._sources(sha, include_utilities=True)
+
+    def test_identical_executing_helper_outside_root_is_denied(self):
+        foreign = self.base / "foreign-helper.py"
+        foreign.write_bytes((self.root / committed_git.SOURCE_PATH).read_bytes())
+        with mock.patch.object(self.session.committed_git, "__file__", str(foreign)):
+            with self.assertRaisesRegex(ValueError, "executing committed Git helper"):
+                self.session._sources(self.exact_sha)
+
 
 class CommittedGitBatchTests(unittest.TestCase):
     """Real local Git and adversarial pipe fixtures; no Windows/UE timing proof."""
@@ -1049,6 +1091,58 @@ class CommittedGitBatchTests(unittest.TestCase):
         self.assertEqual(popen.call_count, 2)
         self.assertEqual(self.inventory["a.bin"], self.inventory["path with space.bin"])
 
+    def test_exact_path_api_authenticates_raw_blobs_in_three_processes(self):
+        with mock.patch.object(subprocess, "Popen", wraps=subprocess.Popen) as popen:
+            actual = committed_git._read_exact_blobs(
+                self.root,
+                self.sha,
+                tuple(self.payloads),
+                blob_limit=production.JSON_LIMIT,
+                total_limit=production.GIT_BATCH_BYTES,
+                timeout_seconds=10,
+                path_validator=production._safe_path,
+            )
+        self.assertEqual(actual, self.payloads)
+        self.assertEqual(popen.call_count, 3)
+
+    def test_exact_path_api_rejects_missing_rows_before_payload_acquisition(self):
+        with mock.patch.object(subprocess, "Popen", wraps=subprocess.Popen) as popen:
+            with self.assertRaisesRegex(ValueError, "exact path inventory differs"):
+                committed_git._read_exact_blobs(
+                    self.root,
+                    self.sha,
+                    ("a.bin", "missing.bin"),
+                    blob_limit=production.JSON_LIMIT,
+                    total_limit=production.GIT_BATCH_BYTES,
+                    timeout_seconds=10,
+                    path_validator=production._safe_path,
+                )
+        self.assertEqual(popen.call_count, 1)
+
+    def test_caller_path_denial_precedes_any_git_process(self):
+        denial = mock.Mock(side_effect=ValueError("synthetic forbidden alias"))
+        with mock.patch.object(subprocess, "Popen") as popen:
+            with self.assertRaisesRegex(ValueError, "forbidden alias"):
+                committed_git._read_exact_blobs(
+                    self.root,
+                    self.sha,
+                    ("a.bin",),
+                    blob_limit=production.JSON_LIMIT,
+                    total_limit=production.GIT_BATCH_BYTES,
+                    timeout_seconds=10,
+                    path_validator=denial,
+                )
+        denial.assert_called_once_with(self.root, "a.bin")
+        popen.assert_not_called()
+
+    def test_session_blob_limit_rejects_before_shared_reader(self):
+        with mock.patch.object(committed_git, "_git_blobs") as read:
+            with self.assertRaisesRegex(ValueError, "inventory exceeds its bound"):
+                production._git_blobs(
+                    self.inventory, blob_limit=production.JSON_LIMIT + 1
+                )
+        read.assert_not_called()
+
     def test_actual_repository_batch_payloads_match_individual_show(self):
         # Structural process reduction on this Linux checkout, not a Windows
         # benchmark or native/MCP proof. Read committed bytes even if edited.
@@ -1062,6 +1156,10 @@ class CommittedGitBatchTests(unittest.TestCase):
                 (*operation._source_inventory(sha), *production.UTILITY_SOURCE_PATHS)
             )
         )
+        # A new shared helper can be uncommitted in the candidate. This is
+        # immutable raw-Git parity for present HEAD rows, never source admission.
+        with mock.patch.object(production, "ROOT", REPOSITORY):
+            paths = tuple(production._git_blob_inventory(sha, paths))
         real_popen = subprocess.Popen
         with mock.patch.object(production, "ROOT", REPOSITORY):
             with mock.patch.object(subprocess, "Popen", wraps=real_popen) as individual:
@@ -1141,7 +1239,7 @@ class CommittedGitBatchTests(unittest.TestCase):
             with (
                 self.subTest(case=name),
                 mock.patch.object(
-                    production, "_git_bounded", return_value=metadata
+                    committed_git, "_git_bounded", return_value=metadata
                 ) as read,
             ):
                 with self.assertRaises(ValueError):
@@ -1154,7 +1252,7 @@ class CommittedGitBatchTests(unittest.TestCase):
         with (
             mock.patch.object(production, "GIT_BATCH_BYTES", 1),
             mock.patch.object(
-                production, "_git_bounded", return_value=self.metadata
+                committed_git, "_git_bounded", return_value=self.metadata
             ) as read,
         ):
             with self.assertRaisesRegex(ValueError, "total bound"):
@@ -1163,7 +1261,7 @@ class CommittedGitBatchTests(unittest.TestCase):
 
     def test_metadata_and_payload_share_deadline_and_exact_output_budget(self):
         with mock.patch.object(
-            production, "_git_bounded", side_effect=[self.metadata, self.raw]
+            committed_git, "_git_bounded", side_effect=[self.metadata, self.raw]
         ) as read:
             self.assertEqual(
                 production._git_blobs(self.inventory, blob_limit=production.JSON_LIMIT),
@@ -1171,7 +1269,7 @@ class CommittedGitBatchTests(unittest.TestCase):
             )
         metadata, payload = read.call_args_list
         self.assertEqual(metadata.kwargs["deadline"], payload.kwargs["deadline"])
-        self.assertEqual(payload.args[1], len(self.raw))
+        self.assertEqual(payload.args[2], len(self.raw))
         self.assertEqual(
             payload.kwargs["request"],
             b"".join((oid + "\n").encode() for oid in self.inventory.values()),
@@ -1179,18 +1277,20 @@ class CommittedGitBatchTests(unittest.TestCase):
 
     def test_expired_metadata_budget_prevents_payload_process_launch(self):
         now = [100.0]
-        original = production._git_bounded
+        original = committed_git._git_bounded
 
-        def metadata_then_expire(args, *rest, **kwargs):
+        def metadata_then_expire(root, args, *rest, **kwargs):
             if args[1].startswith("--batch-check"):
                 now[0] = 230.0
                 return self.metadata
-            return original(args, *rest, **kwargs)
+            return original(root, args, *rest, **kwargs)
 
         with (
-            mock.patch.object(production.time, "monotonic", side_effect=lambda: now[0]),
             mock.patch.object(
-                production, "_git_bounded", side_effect=metadata_then_expire
+                committed_git.time, "monotonic", side_effect=lambda: now[0]
+            ),
+            mock.patch.object(
+                committed_git, "_git_bounded", side_effect=metadata_then_expire
             ),
             mock.patch.object(subprocess, "Popen") as popen,
         ):
@@ -1218,7 +1318,7 @@ class CommittedGitBatchTests(unittest.TestCase):
             with (
                 self.subTest(case=name),
                 mock.patch.object(
-                    production, "_git_bounded", side_effect=[self.metadata, raw]
+                    committed_git, "_git_bounded", side_effect=[self.metadata, raw]
                 ),
             ):
                 with self.assertRaises(ValueError):
@@ -1244,7 +1344,7 @@ class CommittedGitBatchTests(unittest.TestCase):
         ):
             with (
                 self.subTest(raw=raw),
-                mock.patch.object(production, "_git_bounded", return_value=raw),
+                mock.patch.object(committed_git, "_git_bounded", return_value=raw),
             ):
                 with self.assertRaises(ValueError):
                     production._git_blob_inventory(self.sha, ("a.bin",))
@@ -1283,7 +1383,7 @@ class CommittedGitBatchTests(unittest.TestCase):
 
     def test_pipe_reader_start_failure_kills_reaps_and_closes_pipe(self):
         with mock.patch.object(
-            production.threading.Thread,
+            committed_git.threading.Thread,
             "start",
             side_effect=RuntimeError("synthetic no thread"),
         ):

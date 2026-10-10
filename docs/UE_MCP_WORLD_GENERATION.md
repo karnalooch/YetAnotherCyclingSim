@@ -736,6 +736,42 @@ The host receipt is 444,401 bytes, SHA-256
 [artifact 11657602552](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38018565445/artifacts/11657602552)
 is 2,935,256 bytes, archive SHA-256
 `afb7d52de02456f890ef132c36784e4f4b8255c9a79f3b23282d074645f12b4a`.
+[Read-only diagnostic 38019785377](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38019785377)
+passed at `b6086b7304aee29018281c433981f381fc27e146`, including the actual
+Windows PowerShell parser. [Ordinary CI 38019788315](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38019788315)
+also passed at that source. The authenticated native failure receipt records
+one body invocation and 15 argument denials. The retained client receipt
+(8,026 bytes, SHA-256
+`a613645d46009a94c646b6f0fbf284b89cac9e2388db3d516c4a6c24a6565292`)
+records all 22 ordered denials with body count zero and one attempted valid
+call, but no successful bundle verification. Its original host hash was not
+recorded: these are current observations of retained bytes, not authenticated
+historical transport evidence. Its exception text is generic, so failure is
+only narrowed to the valid call, response, counter or bundle checks. The next
+refactor shares the existing bounded raw Git reader across the same fresh
+source boundaries and adds fixed client error stages; no failed guard is
+bypassed. Drive free space was 6.72 GiB at `03:13:52.0557393Z`; a bounded
+inventory of the known older generated build directories precedes any cleanup.
+The refactor uses one private standard-library Git reader for both callers,
+preserving immutable raw bytes, per-file/aggregate/deadline limits, executing
+module identity and every fresh source boundary. Operation source checks retain
+independent domain verification; the client reuses hashes from its same current
+source pass and keeps its 256 KiB utility limit. Fixed producer elapsed stages
+and client failure codes expose future failures without raw exception text.
+The combined 133 local tests passed, with independent reader/client/operation
+reviews, critical Ruff and formatting checks; these do not establish Windows
+timings or runtime admission. The workflow stays in read-only diagnostic mode
+to observe eight fixed old `Intermediate` directories first. The inventory
+authenticates two older host receipts, checks their current native/config Git
+state, and compares two metadata walks within 100,000 entries, 45 seconds and
+depth 64. Missing, unstable or incomplete observations remain ineligible.
+No cleanup is admitted or performed; latest `38018565445-1`, evidence, assets,
+Git/cache data and compiled binaries are preserved.
+The current diagnostic host receipt is 422,608 bytes, SHA-256
+`2b3ba42c4e2589f45d3842e31f3ee86bd19f6a86c9b1c59bc7a4a3bd12e920f9`;
+[artifact 11657930874](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38019785377/artifacts/11657930874)
+is 428,019 bytes, archive SHA-256
+`1743d17d37d9bfe6faf3709c8507d4881887cc117098746bf476c7cb1e2bc369`.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 

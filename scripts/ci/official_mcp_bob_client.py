@@ -96,6 +96,90 @@ def _require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+# Only these constant guard messages can select a diagnostic code. Exception
+# text is compared locally and is never copied into a receipt or console line.
+_GUARD_ERROR_CODES = {
+    "MCP JSON must be one object": "JSON_OBJECT_REQUIRED",
+    "MCP response contains duplicate transport headers": "DUPLICATE_HTTP_HEADERS",
+    "MCP response exceeds its declared body bound": "HTTP_DECLARED_SIZE",
+    "MCP response has unsupported or ambiguous HTTP body framing": "HTTP_FRAMING",
+    "Compressed MCP responses are outside the fixed client contract": "HTTP_ENCODING",
+    "MCP request returned an unsupported HTTP status; no retry is permitted": "HTTP_STATUS",
+    "MCP request did not return bounded JSON; event streams are not accepted": "HTTP_CONTENT_TYPE",
+    "MCP response body exceeds its bound or declared size": "HTTP_BODY_SIZE",
+    "MCP response changed the negotiated protocol": "PROTOCOL_CHANGED",
+    "MCP response changed the negotiated session": "SESSION_CHANGED",
+    "MCP response has an invalid JSON-RPC identity/result contract": "JSON_RPC_IDENTITY",
+    "HTTP400 must carry an explicit JSON-RPC error": "HTTP400_ERROR_REQUIRED",
+    "Unknown-name denial must match the exact official InvalidParams error": "UNKNOWN_TOOL_DENIAL",
+    "Malformed arguments must be denied by the fixed native argument boundary": "ARGUMENT_DENIAL",
+    "Malformed argument denial must match the exact native boundary text": "ARGUMENT_DENIAL_TEXT",
+    "Native BOB body invocation counter differs from the fixed request sequence": "BODY_COUNTER_MISMATCH",
+    "Denied request entered the BOB capture body": "DENIED_BODY_ENTERED",
+    "Fixed BOB call returned a JSON-RPC error": "VALID_RPC_ERROR",
+    "Fixed BOB call returned an MCP tool error": "VALID_TOOL_ERROR",
+    "Fixed BOB result must contain exactly one text JSON domain result": "RESULT_CONTENT_SHAPE",
+    "Fixed BOB text JSON exceeds its bound": "RESULT_TEXT_SIZE",
+    "Fixed BOB packet artifacts must be JSON objects": "RESULT_PACKET_SHAPE",
+    "Fixed BOB capture bundle is missing": "BUNDLE_MISSING",
+    "Fixed BOB bundle exceeds its artifact inventory bound": "BUNDLE_INVENTORY_SIZE",
+    "Fixed BOB bundle must contain exactly the actual operation artifacts": "BUNDLE_INVENTORY",
+    "Transported BOB packet differs from saved/direct artifacts": "BUNDLE_PACKET_MISMATCH",
+    "BOB domain status or authority flags were changed": "DOMAIN_AUTHORITY",
+    "Actual adapter reinspection differs from saved domain proof": "ADAPTER_REINSPECTION",
+    "Saved BOB receipt differs from its actual result/proof references": "DOMAIN_RECEIPT_MISMATCH",
+    "Saved BOB receipt artifact byte hashes differ": "DOMAIN_RECEIPT_HASHES",
+    "Capture proof input/conservation or pending-admission claims differ": "CAPTURE_CLOSURE",
+    "Actual captured Landscape identity differs from the fixed context": "SCENE_IDENTITY",
+    "Trusted client inputs changed during the fixed request sequence": "CLIENT_INPUT_DRIFT",
+    "Persistent project/profile bytes changed during MCP proof": "PERSISTENT_INPUT_DRIFT",
+}
+
+
+def _failure_category(stage: str, exc: Exception) -> str:
+    if isinstance(exc, TimeoutError):
+        return "TIMEOUT"
+    if isinstance(exc, (http.client.HTTPException, ConnectionError)):
+        return "HTTP_TRANSPORT"
+    if isinstance(exc, OSError):
+        return (
+            "HTTP_TRANSPORT"
+            if stage
+            in {
+                "INITIALIZE",
+                "TOOL_INVENTORY",
+                "DENIAL_CALL",
+                "VALID_CALL",
+                "TRANSPORT_CLOSE",
+            }
+            else "FILE_IO"
+        )
+    return "GUARD_REJECTED" if isinstance(exc, ValueError) else "UNEXPECTED"
+
+
+def _record_failure(
+    receipt: dict, stage: str, exc: Exception, denial_case: str | None = None
+) -> None:
+    # Closing a connection may also fail. Preserve the first failing boundary.
+    if "failure_stage" in receipt:
+        return
+    receipt["failure_stage"] = stage
+    receipt["error_category"] = _failure_category(stage, exc)
+    receipt["error_code"] = _GUARD_ERROR_CODES.get(str(exc), "UNCLASSIFIED_LOCAL_CHECK")
+    receipt["error_type"] = type(exc).__name__
+    receipt["error"] = "Fixed MCP proof failed; inspect its fixed stage and error code."
+    if denial_case is not None:
+        receipt["failure_denial_case"] = denial_case
+    print(
+        "YACS_MCP_BOB_CLIENT_FAILURE stage="
+        + stage
+        + " category="
+        + receipt["error_category"]
+        + " code="
+        + receipt["error_code"]
+    )
+
+
 def _digest(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
@@ -133,14 +217,11 @@ def _read(relative: str, *, limit: int = MAX_METADATA_BYTES) -> bytes:
 
 
 def _source_hashes(exact_sha: str) -> dict[str, str]:
-    sources = session._sources(exact_sha)
-    for relative in session.UTILITY_SOURCE_PATHS:
-        raw = _read(relative)
-        _require(
-            raw == operation.adapter._git(ROOT, "show", f"{exact_sha}:{relative}"),
-            "Trusted session dependency differs from its committed source",
-        )
-        sources[relative] = _digest(raw)
+    sources = session._sources(exact_sha, include_utilities=True)
+    _require(
+        {*session.UTILITY_SOURCE_PATHS, CLIENT_SOURCE}.issubset(sources),
+        "The fresh verified session source pass lacks fixed client dependencies",
+    )
     _require(
         _digest(Path(session.__file__).read_bytes())
         == sources["scripts/ci/official_mcp_bob_session.py"],
@@ -149,12 +230,12 @@ def _source_hashes(exact_sha: str) -> dict[str, str]:
     path = operation._safe_path(ROOT, CLIENT_SOURCE)
     raw = _read(CLIENT_SOURCE)
     _require(
-        raw == operation.adapter._git(ROOT, "show", f"{exact_sha}:{CLIENT_SOURCE}")
+        _digest(raw) == sources[CLIENT_SOURCE]
         and _digest(Path(__file__).read_bytes()) == _digest(raw)
         and path.resolve() == Path(__file__).resolve(),
         "Executing client differs from its committed exact-SHA source",
     )
-    return {**sources, CLIENT_SOURCE: _digest(raw)}
+    return sources
 
 
 def _load_context() -> dict[str, Any]:
@@ -724,16 +805,22 @@ def run_fixed_session() -> dict:
     path = operation._safe_path(ROOT, RECEIPT_FILE)
     receipt_stream = path.open("xb")
     transport = None
+    stage, denial_case = "INITIALIZE", None
     try:
         transport = _Transport()
         initialized = transport.initialize()
         receipt["negotiated_protocol"] = initialized["protocolVersion"]
         receipt["session_id_sha256"] = _digest(transport.session_id.encode("ascii"))
+        stage = "TOOL_INVENTORY"
         receipt["tool"] = transport.list_fixed_tool()
         for label, name, arguments in DENIAL_CASES:
+            stage, denial_case = "DENIAL_CALL", label
             response = transport.call(name, arguments)
+            stage = "DENIAL_CLASSIFY"
             category = _explicit_denial(response, label=label, name=name)
+            stage = "DENIAL_COUNTER"
             _counter(context, 0)
+            stage = "DENIAL_NO_BUNDLE"
             _require(
                 not operation._safe_path(ROOT, SESSION_DIR + "/bundle").exists(),
                 "Denied request entered the BOB capture body",
@@ -748,11 +835,17 @@ def run_fixed_session() -> dict:
             )
         # Set before dispatch: an uncertain request must never be retried.
         receipt["valid_call_attempted"] = True
+        stage, denial_case = "VALID_CALL", None
         response = transport.call(TOOL, {})
+        stage = "VALID_RESULT"
         packet = _valid_result(response)
+        stage = "BODY_COUNTER"
         _counter(context, 1)
+        stage = "BUNDLE_VERIFY"
         receipt["bundle"] = _verify_bundle(context, packet, persistent_before)
+        stage = "CONSERVATION"
         _unchanged(context, persistent_before)
+        stage = "FINAL_COUNTER"
         _counter(context, 1)
         receipt["body_invocation_count"] = 1
         receipt["domain_status"] = packet["result"]["status"]
@@ -760,20 +853,23 @@ def run_fixed_session() -> dict:
         receipt["status"] = "LOCAL_TRANSPORT_AND_BOB_ARTIFACTS_VERIFIED"
         receipt["official_mcp_transport_verified"] = True
     except Exception as exc:
-        # Keep bounded local evidence; no raw request/session/error payload is logged.
-        receipt["error_type"] = type(exc).__name__
-        receipt["error"] = (
-            "Fixed MCP proof failed; inspect the owned native session and saved bundle."
-        )
+        _record_failure(receipt, stage, exc, denial_case)
         raise
     finally:
         try:
             if transport is not None:
                 transport.close()
-        except Exception:
+        except Exception as exc:
             receipt["status"] = "TRANSPORT_BLOCKED"
             receipt["official_mcp_transport_verified"] = False
-            raise
+            if "failure_stage" in receipt:
+                receipt["secondary_close_error_category"] = _failure_category(
+                    "TRANSPORT_CLOSE", exc
+                )
+                receipt["secondary_close_error_code"] = "TRANSPORT_CLOSE_FAILED"
+            else:
+                _record_failure(receipt, "TRANSPORT_CLOSE", exc)
+                raise
         finally:
             try:
                 receipt_stream.write(operation.adapter.canonical_json_bytes(receipt))

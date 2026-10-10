@@ -14,13 +14,16 @@ import importlib
 import math
 from pathlib import Path
 import stat
+import time
 from typing import Any
 
+from scripts import committed_git_blobs as committed_git
 from scripts.worldgen import bob_mcp_inspection as adapter
 
 
 ROOT = Path(__file__).resolve().parents[2]
 OPERATION = "scripts/ue/official_mcp_bob_operation.py"
+COMMITTED_GIT_READER = "scripts/committed_git_blobs.py"
 SESSION_DIR = "Saved/RuntimeProof/OfficialMcpBob"
 PROFILE_SHA256 = "c0ca612dd5af5a311d1917e41d66f44aa83a9d40eed5e9e784432e06e2a52253"
 PROFILE_SOURCE_SHA = "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6"
@@ -31,7 +34,7 @@ CANONICAL_MAP_FILE = "Content/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.umap
 CANONICAL_MAP_SHA256 = "276d1621fa083850f6d603b6d115b01b74c9a92c182254d15302e786abfbf29c"
 LANDSCAPE_CLASS = "/Script/Landscape.Landscape"
 GEOMETRY_VIEW = "road-geometry-inspection-before"
-BASE_SOURCE_PATHS = tuple(dict.fromkeys((*adapter.SOURCE_PATHS, OPERATION,
+BASE_SOURCE_PATHS = tuple(dict.fromkeys((*adapter.SOURCE_PATHS, OPERATION, COMMITTED_GIT_READER,
     "scripts/geometry/smooth_road_ribbon.py", "scripts/geometry/curved_road_plan.py",
     "scripts/geometry/road_cut_limits.py", "scripts/geometry/road_single_bend.py",
     "scripts/geometry/road_surface_profile.py", "scripts/geometry/road_edge_roles.py",
@@ -135,11 +138,19 @@ def _sources(context: dict[str, Any]) -> dict[str, bytes]:
     adapter._fields(expected, set(_source_inventory(exact_sha)), "operation source_sha256")
     if _digest(Path(__file__).read_bytes()) != expected[OPERATION]:
         raise ValueError("executing operation source hash mismatch")
+    if Path(committed_git.__file__).resolve() != _safe_path(ROOT, COMMITTED_GIT_READER).resolve():
+        raise ValueError("executing committed Git reader belongs to another checkout")
+    _read_fixed(COMMITTED_GIT_READER, expected[COMMITTED_GIT_READER])
     domain = adapter._sources(ROOT, exact_sha,
                                {path: expected[path] for path in adapter.SOURCE_PATHS})
+    committed = committed_git._read_exact_blobs(
+        ROOT, exact_sha, tuple(expected), blob_limit=adapter.MAX_INPUT_BYTES,
+        total_limit=adapter.MAX_INPUT_BYTES, timeout_seconds=10,
+        path_validator=_safe_path,
+    )
     for relative in expected:
         raw = _read_fixed(relative, expected[relative])
-        if raw != adapter._git(ROOT, "show", f"{exact_sha}:{relative}"):
+        if raw != committed[relative]:
             raise ValueError(f"operation source differs from exact_sha: {relative}")
         domain[relative] = raw
     return domain
@@ -288,6 +299,7 @@ def capture_and_inspect() -> dict[str, Any]:
     This body writes only exclusive evidence files below its fixed ignored Saved
     directory. It does not certify native registration, tests or MCP transport.
     """
+    started = time.monotonic()
     context_relative = SESSION_DIR + "/session-context.json"
     context_raw = _read_fixed(context_relative)
     context = adapter._json(context_raw)
@@ -303,6 +315,8 @@ def capture_and_inspect() -> dict[str, Any]:
             or not context["landscape"]["path"].startswith(MAP_PACKAGE + ".")):
         raise ValueError("trusted Landscape identity is outside the fixed map")
     sources = _sources(context)
+    print("YACS_MCP_BOB_OPERATION SOURCE_BOUNDARY_INITIAL "
+          f"elapsed={time.monotonic() - started:.6f}")
     profile_raw = _read_fixed(SESSION_DIR + "/profile.json", PROFILE_SHA256)
     profile = adapter._json(profile_raw)
     if not isinstance(profile, dict) or profile.get("exact_sha") != PROFILE_SOURCE_SHA:
@@ -322,6 +336,8 @@ def capture_and_inspect() -> dict[str, Any]:
     # Large map byte inventories can take time. Refresh the trusted boundary
     # after that read, immediately before reserving evidence and measuring.
     _sources(context)
+    print("YACS_MCP_BOB_OPERATION SOURCE_BOUNDARY_BEFORE_MEASUREMENT "
+          f"elapsed={time.monotonic() - started:.6f}")
     _read_fixed(context_relative, _digest(context_raw))
     _read_fixed(SESSION_DIR + "/profile.json", PROFILE_SHA256)
     refreshed = _scene(unreal, context)
@@ -341,6 +357,8 @@ def capture_and_inspect() -> dict[str, Any]:
         contact_band_max_m=arguments["contact_band_max_m"],
         geometry_inspection_view=GEOMETRY_VIEW, landscape=landscape, sample_sink=sink,
     )
+    print("YACS_MCP_BOB_OPERATION NATIVE_MEASUREMENT_COMPLETE "
+          f"elapsed={time.monotonic() - started:.6f}")
     if len(captures) != 1 or captures[0][1] != direct:
         raise ValueError("native capture did not retain exactly one real direct inspection")
     samples = captures[0][0]
@@ -358,13 +376,19 @@ def capture_and_inspect() -> dict[str, Any]:
         "exact_sha": context["exact_sha"], "native_samples_path": "native-samples.json",
         "native_samples_sha256": _digest(sample_raw), "source_sha256": domain_hashes,
     }, evidence_root=bundle_root, repository_root=ROOT)
+    print("YACS_MCP_BOB_OPERATION DOMAIN_DELEGATION_COMPLETE "
+          f"elapsed={time.monotonic() - started:.6f}")
     if delegated["result"] != direct:
         raise ValueError("native producer inspection differs from delegated BOB result")
     _consumer_assets(context)
     persistent_after = _persistent_snapshot()
     if persistent_after != persistent_before or _scene(unreal, context)[2] != scene_before:
         raise ValueError("persistent project or native scene changed during BOB operation")
+    print("YACS_MCP_BOB_OPERATION PERSISTENT_CONSERVATION_COMPLETE "
+          f"elapsed={time.monotonic() - started:.6f}")
     _sources(context)
+    print("YACS_MCP_BOB_OPERATION SOURCE_BOUNDARY_FINAL "
+          f"elapsed={time.monotonic() - started:.6f}")
     _read_fixed(context_relative, _digest(context_raw))
     _read_fixed(SESSION_DIR + "/profile.json", PROFILE_SHA256)
     _read_fixed(SESSION_DIR + "/bundle/native-samples.json", _digest(sample_raw))
@@ -388,4 +412,6 @@ def capture_and_inspect() -> dict[str, Any]:
     _write_exclusive("capture-proof.json", capture)
     # Publish the receipt only after source, input, scene and content checks.
     _write_exclusive("receipt.json", delegated["receipt"])
+    print("YACS_MCP_BOB_OPERATION COMPLETE "
+          f"elapsed={time.monotonic() - started:.6f}")
     return {**delegated, "capture": capture}
