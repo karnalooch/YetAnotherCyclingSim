@@ -282,6 +282,24 @@ The one-time fresh compile may cost more than warm reuse but is safer than
 repeatedly mutating an inconsistent cache. Only CI worktrees are eligible;
 interactive `D:\\yacs\\project` remains outside this mechanism.
 
+**Unreal binary fingerprint correction — M3 #364 (2026-10-10).**
+The previous `yacs-unreal-binary-v1` filesystem traversal under `Plugins/`
+included engine-generated `Plugins/*/Binaries/**` and
+`Plugins/*/Intermediate/**` as unknown runtime inputs. On the persistent
+Windows cache this hashed DLLs and intermediates produced by the preceding
+build, while the hosted Linux code-only checkout had no such outputs. Both the
+compile fingerprint and its dependent Automation proof fingerprint could then
+differ even when every tracked Git source byte matched exactly.
+
+`yacs-unreal-binary-v2` excludes **only these plugin build-output trees**
+from its binary-input traversal, pruning them before filesystem enumeration.
+Normal repository source under `Plugins/*/Source/**`, `*.uplugin`,
+`Build/**` and unknown *non-generated* plugin runtime inputs remain in the
+compile fingerprint. The new namespace forces a fresh exact-SHA cache identity,
+requiring ordinary successful Unreal build/Automation before any green cache
+can be published. This is not permission to rewrite, delete or ignore existing
+DLLs, weaken CI proof or change physics/world geometry.
+
 A compile-fingerprint mismatch is **not** cache corruption:
 when engine/toolchain provenance still matches, the lane invalidates the green
 stamp but keeps `Intermediate/Binaries` and performs a WARM COMPILE. Missing
