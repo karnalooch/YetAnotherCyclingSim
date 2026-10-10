@@ -133,10 +133,8 @@ jobs:
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
         run: |
           $ErrorActionPreference = 'Stop'
-          # A Git reset may keep previously checked-out CRLF files when the Git
-          # blob did not change but its .gitattributes conversion policy did.
-          # Rewrite ONLY trusted compile/proof C# and PS1 inputs; do not touch
-          # Binaries/Intermediate, generated UE assets or the author's editor.
+          # Freshly check out only fingerprinted scripts/C# from committed Git blobs.
+          # This does not touch Unreal binaries, cache state or retained assets.
           $json = & python -c 'import json; from scripts.ci.classify_changes import UNREAL_COMPILE_TOOLING_EXACT, UNREAL_PROOF_EXACT; print(json.dumps(sorted(x for x in UNREAL_COMPILE_TOOLING_EXACT | UNREAL_PROOF_EXACT if x.endswith(".ps1"))))'
           if ($LASTEXITCODE -ne 0) { throw 'Cannot enumerate canonical Unreal fingerprint inputs.' }
           $scripts = @($json | ConvertFrom-Json)
@@ -144,9 +142,30 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Cannot enumerate tracked Unreal C# inputs.' }
           $targets = @($scripts + $cs | Sort-Object -Unique)
           if ($targets.Count -lt 10) { throw 'Fingerprint input inventory unexpectedly small.' }
-          foreach ($path in $targets) {
-            $attribute = @(git check-attr eol -- $path)
-            if ($LASTEXITCODE -ne 0 -or $attribute.Count -ne 1 -or $attribute[0] -cnotmatch ': eol: lf
+          foreach ($file in $targets) {
+            $attribute = @(git check-attr eol -- $file)
+            if ($LASTEXITCODE -ne 0 -or $attribute.Count -ne 1 -or $attribute[0] -notlike '*: eol: lf') {
+              throw ('Fingerprint input lacks pinned LF conversion: ' + $file)
+            }
+          }
+          & git checkout-index --force -- $targets
+          if ($LASTEXITCODE -ne 0) { throw 'Canonical checkout materialization failed.' }
+          $raw = & python -c 'import json; from scripts.ci.classify_changes import unreal_compile_fingerprint, unreal_proof_fingerprint; print(json.dumps(dict(compile=unreal_compile_fingerprint("."), proof=unreal_proof_fingerprint("."))))'
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot measure physical Unreal fingerprint input bytes.' }
+          $actual = $raw | ConvertFrom-Json
+          if ($actual.compile -cne '${{ inputs.compile_fingerprint }}' -or $actual.proof -cne '${{ inputs.proof_fingerprint }}') {
+            throw 'Physical Windows fingerprint input bytes differ from exact-SHA hosted fingerprints; do not reuse the cache.'
+          }
+          & git diff --quiet HEAD --
+          if ($LASTEXITCODE -ne 0) { throw 'Canonical checkout changed tracked source; block Unreal reuse.' }
+          Write-Host 'UNREAL CACHE CHECKOUT: canonical physical compile/proof bytes verified.'
+
+      - name: Enforce code-only checkout
+        shell: pwsh
+        working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
+        run: |
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+
       - name: Verify exact SHA and clean tracked state
         shell: pwsh
         working-directory: ${{ env.YACS_UNREAL_WORKTREE }}
