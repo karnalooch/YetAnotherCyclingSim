@@ -988,8 +988,8 @@ function Select-SessionUnitFailureContext {
     param([byte[]] $Bytes, [switch] $EngineSource)
     # Decode bounded line prefixes only; even a giant raw line cannot allocate
     # an unbounded string. Keep first/last selected contexts and report omissions.
-    $controlArgumentPattern = '(?i)FParse::.*(?:control|ctrl)|(?:control|ctrl).*FParse::|TEXT\(\s*"[^"]*(?:control|ctrl)[^"]*"|bUseControl|bEnableControl|ControlPort'
-    $initializationPattern = '(?i)FParse::.*(?:trace|control|ctrl)|(?:trace|control|ctrl).*FParse::|FInitializeDesc|Writer_InitializeControl|FTraceAuxiliary::Initialize|bUseControl|bEnableControl|ControlPort'
+    $controlArgumentPattern = '(?i)FParse::.*(?:control|ctrl|ctl)|(?:control|ctrl|ctl).*FParse::|TEXT\(\s*"[^"]*(?:control|ctrl|ctl)[^"]*"|bUseControl|bEnableControl|bInitializeControl|ControlPort|GInitializeDesc|InitializeDesc.*(?:control|ctrl|ctl)|(?:control|ctrl|ctl).*InitializeDesc'
+    $initializationPattern = '(?i)FParse::.*(?:trace|control|ctrl|ctl)|(?:trace|control|ctrl|ctl).*FParse::|FInitializeDesc|InitializeDesc|Writer_InitializeControl|Writer_Control|FTraceAuxiliary::Initialize|UE::Trace::Initialize|bUseControl|bEnableControl|ControlPort'
     $pattern = if ($EngineSource) { '(?i)notracectrl|trace.?control|ControlThread|Listen|Start.*Control|Control.*Start|' + $initializationPattern + '|' + $controlArgumentPattern }
         else { '(?i)trace|listen|socket|tcp|udp|error|warning|fatal|LogInit:|LogPython:|ModelContextProtocol|YacsBobInspection' }
     $priorityPattern = if ($EngineSource) { '(?i)notracectrl|' + $initializationPattern + '|' + $controlArgumentPattern }
@@ -1166,9 +1166,11 @@ function Invoke-SessionFixedUnitListenerFailureReadback {
             original_declared_identity = $diagnostic.original_log_identity_declarations[$name]
             current_identity = $file.identity; retained_raw = $file.retained_raw; context = (Select-SessionUnitFailureContext $file.bytes) }
     }
-    $sourceBudget = [ordered]@{ bytes = 0L; limit_bytes = 12MB }
+    $sourceBudget = [ordered]@{ bytes = 0L; limit_bytes = 28MB }
     foreach ($relative in @('Engine/Source/Runtime/Core/Private/ProfilingDebugging/TraceAuxiliary.cpp',
-        'Engine/Source/Runtime/TraceLog/Private/Trace/Control.cpp', 'Engine/Source/Runtime/TraceLog/Private/Trace/Control.h')) {
+        'Engine/Source/Runtime/TraceLog/Private/Trace/Control.cpp', 'Engine/Source/Runtime/TraceLog/Private/Trace/Control.h',
+        'Engine/Source/Runtime/Launch/Private/LaunchEngineLoop.cpp', 'Engine/Source/Runtime/TraceLog/Public/Trace/Trace.h',
+        'Engine/Source/Runtime/TraceLog/Private/Trace/Writer.cpp', 'Engine/Source/Runtime/TraceLog/Private/TraceLog.cpp')) {
         $path = Join-Path $engine.Root $relative
         Assert-SessionPlainPath $path
         if (-not (Test-Path -LiteralPath $path)) {

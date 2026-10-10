@@ -917,7 +917,7 @@ The six bundle identities total 11,935,638 bytes:
 The host's final persistent inventory digest is
 `4566bc9b3b2877ee562c230de1733da0668a481eaf933a51cb579d45a0c9b938`;
 the three physical frozen textures retain identical before/after identities.
-This is the runtime source SHA, distinct from later documentation/readback
+The runtime source SHA is `241104de320f8417c7abc4dd973ac148ed98a66d`, distinct from later documentation/readback
 commits and the eventual protected merge. Later plugin README changes are
 documentation deltas in the producer's source inventory, not changed native
 code, descriptors, Python, policy or frozen assets. The fixed branch reader
@@ -995,6 +995,16 @@ startup clue, not the missing OS endpoint row. The limited installed-source
 excerpts did not establish a suppression flag. The source-only job opened no
 Editor or server and supplies no unit verification. Its 24,159-byte diagnostic
 is SHA-256 `c40b03f428b685ac79355f4b9f30685a933ec1541be08b7fd9c604c7033b3533`.
+
+[Control-source diagnostic 38032735476](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38032735476)
+at `bf18d900259ba57918b95f8b67a4f8dcdebf14a7` succeeded without launching
+an Editor or unit. The observed installed `Control.cpp` connects the default
+1985 control port, TCP listen call and startup message. This supports the
+trace-control implementation relationship, without supplying the missing
+historical OS endpoint row or a suppression parameter. The selected
+`TraceAuxiliary.cpp` contexts contain the initialization descriptor declaration
+and getter, but not its caller's control decision. Its 26,662-byte diagnostic
+is SHA-256 `aa87e16bff0389da517e1efc8daf0e2f2a77a0f243a86395cca8f1f5efd12387`.
 
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
