@@ -256,6 +256,19 @@ successful protected `CyclingSim CI` run, without reserving the shared Unreal
 concurrency lock. Only then does its Windows baseline job acquire the existing
 lock and check cache state again. A failed/cancelled/timed-out upstream CI cannot
 launch the native reader, and no green CI alone substitutes for runtime proof.
+Windows cache raw-byte reconciliation — #364 (2026-10-10):
+`Resolve-YacsUnrealCiCache.ps1` invokes the pinned
+`materialize_unreal_cache_inputs.py` **only** during normal serialized
+`CyclingSim CI` Resolve, after the isolated tracked checkout is cleaned and
+before cache admission. It accepts exactly the Git index's C# and critical
+PowerShell inputs with `eol=lf`; source modifications other than CRLF drift
+are rejected. It selectively forces a Git index checkout for stale bytes,
+verifies every physical input against its committed blob and compares both
+physical compile/proof fingerprints to the hosted exact-SHA values. The cache
+state, compiled DLLs, assets, editor and local authoring checkout remain
+untouched. Any failure rejects reuse before build/Automation or proof
+publication; standalone read-only native consumers never repair the cache.
+
 A compile-fingerprint mismatch is **not** cache corruption:
 when engine/toolchain provenance still matches, the lane invalidates the green
 stamp but keeps `Intermediate/Binaries` and performs a WARM COMPILE. Missing

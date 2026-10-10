@@ -8,6 +8,13 @@ import classify_changes as cc
 
 
 class ChangeClassifierTests(unittest.TestCase):
+    def test_cache_checkout_repair_requires_unreal_runtime_proof(self):
+        result = cc.classify_paths(["scripts/ci/materialize_unreal_cache_inputs.py"])
+        self.assertTrue(result.ue_code)
+        self.assertTrue(result.unreal_runtime)
+        self.assertFalse(result.unreal_compile)
+        self.assertEqual(result.unreal_execution_class, "runtime")
+
     def test_gitattributes_policy_change_requires_unreal_reproof(self):
         # Attribute changes must not strand an older green Windows cache.
         result = cc.classify_paths([".gitattributes"])

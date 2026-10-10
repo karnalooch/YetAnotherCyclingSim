@@ -57,6 +57,7 @@ UE_CRITICAL_CONFIG = {
 }
 
 UE_CODE_TOOLING_EXACT = {
+    "scripts/ci/materialize_unreal_cache_inputs.py",
     # Line-ending policies can change raw build inputs even when Git blobs do not.
     ".gitattributes",
     ".github/workflows/reusable-unreal.yml",
@@ -472,6 +473,7 @@ def classify_embark_terrain_proof(paths: Iterable[str]) -> str:
 UNREAL_COMPILE_EXTENSIONS = {".cpp", ".c", ".h", ".hpp", ".inl", ".cs"}
 
 UNREAL_PROOF_EXACT = {
+    "scripts/ci/materialize_unreal_cache_inputs.py",
     ".gitattributes",
     ".github/workflows/reusable-unreal.yml",
     "scripts/ci/Invoke-YacsUnrealCi.ps1",

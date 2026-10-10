@@ -16,6 +16,23 @@ PREFLIGHT = ROOT / "scripts" / "ue" / "Preflight-YacsProof.ps1"
 
 
 class UnrealCiCacheContractTests(unittest.TestCase):
+    def test_normalization_is_scoped_to_serial_windows_resolve_before_cache_reuse(self):
+        self.assertIn("$env:GITHUB_WORKFLOW -eq 'CyclingSim CI'", self.cache)
+        self.assertIn("$env:YACS_UNREAL_WORKTREE", self.cache)
+        self.assertIn("scripts.ci.materialize_unreal_cache_inputs", self.cache)
+        self.assertIn("--expected-head $ExpectedHead", self.cache)
+        self.assertIn("--expected-compile-fingerprint $ExpectedCompileFingerprint", self.cache)
+        self.assertIn("--expected-proof-fingerprint $ExpectedProofFingerprint", self.cache)
+        self.assertLess(
+            self.cache.index("scripts.ci.materialize_unreal_cache_inputs"),
+            self.cache.index("Resolve-YacsUnrealBuildEnvironment -ProjectPath"),
+        )
+        self.assertNotIn("Materialize canonical LF fingerprint inputs", self.workflow)
+        classifier = (
+            ROOT / "scripts/ci/classify_changes.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn('"scripts/ci/materialize_unreal_cache_inputs.py"', classifier)
+
     def test_road_material_native_waits_for_exact_head_ci_without_host_lock(self):
         workflow = (
             ROOT / ".github" / "workflows" / "road-material-native-proof.yml"
