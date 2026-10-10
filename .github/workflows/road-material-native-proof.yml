@@ -24,6 +24,10 @@ on:
       - 'scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1'
       - 'scripts/ue/test_invoke_road_asphalt_native_canary.py'
       - 'scripts/ue/import_material_forge_variant.py'
+      - 'scripts/ue/road_asphalt_saved_consumer.py'
+      - 'scripts/ue/test_road_asphalt_saved_consumer.py'
+      - 'scripts/ue/Invoke-YacsRoadSavedConsumer.ps1'
+      - 'scripts/ue/test_invoke_road_saved_consumer.py'
       - 'scripts/assets/road_material_contract.py'
 
 permissions:
@@ -120,7 +124,8 @@ jobs:
           $errors = $null
           foreach ($script in @(
             'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1',
-            'scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1'
+            'scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1',
+            'scripts/ue/Invoke-YacsRoadSavedConsumer.ps1'
           )) {
             $errors = $null
             [System.Management.Automation.Language.Parser]::ParseFile(
@@ -152,6 +157,16 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
+
+      - name: Save and fresh-reopen the isolated road asphalt consumer
+        shell: pwsh
+        working-directory: rm-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ue/Invoke-YacsRoadSavedConsumer.ps1 `
             -ExpectedHead $env:GITHUB_SHA `
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
             -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG

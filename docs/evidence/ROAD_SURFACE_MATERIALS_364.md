@@ -464,3 +464,49 @@ A hosted regression executes the real Python entry with `-I` and an unrelated
 working directory, with no ambient project import path; it never starts UE.
 Source, map, material and geometry inputs are unchanged, and no success is
 claimed until a fresh exact-SHA CI and independent native Editor trial pass.
+
+## Saved road-asphalt derivative and independent fresh-reload candidate — 2026-10-10
+
+This stage follows the verified [native road-slot-only transient PASS
+38066292810](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38066292810)
+at exact SHA `4f11e0dadf3ac099e49402ca69f319c592052dd0`
+and its [protected green CI 38066296977](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38066296977).
+The new implementation is **not yet native-admitted** simply because its
+source has been committed.
+
+- `scripts/ue/road_asphalt_saved_consumer.py` is the bounded two-action
+  Unreal entrypoint. In `prepare`, require the original pinned source replay,
+  real accepted saved scene, native baseline and rolled-back transient canary.
+  Reuse the verified Material Forge importer with `save_assets=True`,
+  metric 400 cm projection and DirectX normal settings, bind only the
+  original road DynamicMesh material slot zero and save **only** the new
+  `/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview`
+  map. Verify the complete old/new actor, road mesh, all 186 supports,
+  Landscape 1024 components and other material bindings remain identical
+  apart from road material slot zero. Verify immutable source/retained
+  producer bytes before/after. Preserve new files with exact SHA-256/byte
+  sizes in `D:\yacs\work\road-materials\saved-consumers\<sha>\<run-attempt>`.
+- In `reload`, a **separate fresh Editor process** loads the new saved
+  map, never reassigns or saves a material, checks the same normalized
+  inventory digest and all four real Material Instance texture parameters,
+  effective `TileSizeCm=400` and DirectX normal compression/green/sRGB.
+  The original map and derived packages must still match their raw SHA-256
+  and byte-sized immutable manifest. No rolling back the **new saved**
+  material binding: the original accepted map is not modified.
+- `Invoke-YacsRoadSavedConsumer.ps1` owns serial, isolated,
+  exact-HEAD/host-lease authenticated **prepare -> reload** Editors.
+  The existing successful baseline and transient canary must precede
+  either process; both actual native receipts and stdout/stderr/Editor
+  logs are mandatory. The host writes a separate exclusive
+  `saved-road-host-receipt.json` only after both operations.
+- New offline synthetic tests cover world-identity-only normalization,
+  original/support/Landscape mutation rejection, no-overwrite package
+  retention and mandatory source/workflow boundaries.
+
+This candidate intentionally uses `-NullRHI`: it is **a saved native
+binding and reload test**, not a claim of GPU shader compilation,
+high-quality rendered pixels, whole-area shoulder/wall transitions,
+owner visual PASS or final material delivery. Owner audit
+`PENDING_FINAL_M3`; performance `DEFERRED_AFTER_M3` /
+`performance_pass: false`. PR #470 remains Draft and #364 remains OPEN
+until the further roadmap/native/asset/render/review gates pass.
