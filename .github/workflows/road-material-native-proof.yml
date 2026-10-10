@@ -5,9 +5,6 @@ on:
     branches: [codex/364-road-surface-materials]
     paths:
       - '.github/workflows/road-material-native-proof.yml'
-      - '.github/workflows/reusable-unreal.yml'
-      - 'scripts/ue/road_asphalt_slot_canary.py'
-      - 'scripts/ue/test_road_asphalt_slot_canary.py'
       - 'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1'
       - 'scripts/ue/read_road_material_baseline.py'
       - 'scripts/ue/test_read_road_material_baseline.py'
