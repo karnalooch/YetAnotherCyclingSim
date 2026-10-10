@@ -101,7 +101,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 required")
     def test_editor_redirected_log_read_retries_only_transient_windows_locks(self):
         wrapper = ROOT / "scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1"
-        fixture = r'''
+        fixture = r"""
 param([string] $Wrapper)
 $ErrorActionPreference = 'Stop'
 $tokens = $null
@@ -164,7 +164,7 @@ catch { $failed = $true }
 if (-not $failed -or $script:calls -ne 40 -or $script:sleeps -ne 39) {
     throw 'Persistent lock must fail closed after forty attempts.'
 }
-'''
+"""
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "test_editor_log_retry.ps1"
             path.write_text(fixture, encoding="utf-8")
