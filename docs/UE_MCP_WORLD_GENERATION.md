@@ -1034,8 +1034,21 @@ after the owned clean exit, no owned listeners may remain. The 180-second
 Editor limit, exact test success, denied input/body-zero checks and source,
 binary and accepted-asset conservation remain required. This replaces our
 overbroad zero-all-TCP harness condition, without treating a port number as
-proof of official MCP absence. The new native test and plugin build still
-require execution evidence; this contract description supplies no unit PASS.
+proof of official MCP absence. The standalone native test still requires
+successful execution evidence; compilation alone supplies no unit PASS.
+
+[Fresh input-boundary build 38035299343](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38035299343)
+at `0ee5eaf39e0d673fee061f7e33372710278d50be` compiled the strengthened test
+successfully. Its new plugin DLL is 354,816 bytes, SHA-256
+`9cdf999ebc6bb68ec5912df24ee99a2a445eabb70d0a7d255d3dfd56b707ef50`.
+The owned Editor then exposed two endpoints: `0.0.0.0:1985` and
+`127.0.0.1:19315`. The guard stopped it; no test report, native before/after
+certificate or final conservation was verified. The second endpoint remains
+unattributed until authenticated retained logs and primary source establish its
+owner. The successful compilation supplies no unit PASS. Ordinary CI was not
+created while PR #467 conflicted with the concurrent #468 policy refactor;
+the branch preserves that refactor and moves its MCP checkpoint into the scoped
+M3 policy before requesting current-head CI again.
 
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
