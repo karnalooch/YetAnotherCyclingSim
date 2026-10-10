@@ -571,6 +571,18 @@ its `Path` argument could not be converted to `System.String`. The correction
 selects the first application in command-resolution order and preserves the
 physical-file checks. This result does not establish a zero-size alias failure
 or a successful asset/runtime proof.
+[Integrated session 38011502540](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38011502540)
+at `2baa276fcdd35920490495709c7d7379820c5c03` passed both builds,
+staged the accepted consumer, verified the three physical texture payloads,
+and launched its owned Editor. The Editor published its native scene context
+and the host published the transport context. Waiting for `native-counter.json`
+then exceeded the shared 420-second deadline. The fixed client was not launched;
+official readiness, Automation, transport and BOB remain unverified. The saved
+host receipt is 440,247 bytes, SHA-256
+`b19aa1b9d474ef7be6eff646da53d17a6e57225a672d3a29f043d5fd501b2f45`.
+A fixed read-only diagnostic must authenticate the retained Editor log and
+native/context evidence before changing lifecycle behavior. The timeout alone
+does not establish its cause or the absence of a native receipt.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 
