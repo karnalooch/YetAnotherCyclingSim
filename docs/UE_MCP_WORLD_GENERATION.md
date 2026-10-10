@@ -694,6 +694,27 @@ The diagnostic host receipt is 422,608 bytes, SHA-256
 [artifact 11657200558](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38017909601/artifacts/11657200558)
 is 425,535 bytes, archive SHA-256
 `6b704c6f222928e5a6dbc7d42484969eb354c526b2eec012eaa979f88ea39fd6`.
+[Accessor diagnostic 38018320423](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38018320423)
+passed at `e2791d78d86e00a3e12e13a4fdb46353ef5c51f9`. The same installed
+header shows `FConfigCacheIni` and its uninterrupted public scope (1264–1424),
+including exported `FindBranchWithNoReload` (1383). The complete
+`GetConfigFilename` body (installed CPP 5169–5182) returns the base name for
+known configurations, so it is unsuitable for physical containment. The
+complete `FindBranchWithNoReload` body (4258–4297) resolves the existing cache
+branch without `SafeReload`; it updates the inactivity timer. Public
+`FConfigBranch::IniPath` is the actual branch destination. The correction uses
+that existing branch via the unchanged `GEngineIni` cache key, rejects a missing
+branch/empty destination, and applies the same owned-root containment check.
+All cache reads/writes/config-section broadcasts retain `GEngineIni`; no global
+cache key is overwritten and no destination is fabricated. Native compilation
+and execution of the correction still require the accepted-session proof.
+The current SDK receipt is 1,916,879 bytes, SHA-256
+`9d9d2088664fc6a94c01faf587c6aaf3ec3675a1ecdaee7913ca41abc8b58155`;
+the host receipt is 422,608 bytes, SHA-256
+`dc9d2b4958d84f1ee4f345207c5263a074e24195241b66c54e3df3318572c675`.
+[Artifact 11656793802](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38018320423/artifacts/11656793802)
+is 427,248 bytes, archive SHA-256
+`0635866a12ca40c6d39428c3880e1e6bb27cf7d63b644ef216149726c9c6d3eb`.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 

@@ -720,8 +720,6 @@ bool FYacsBobOfficialSession::Activate()
 {
     IModelContextProtocolModule* Module = IModelContextProtocolModule::Get();
     UToolsetRegistrySubsystem* Registry = GEditor->GetEditorSubsystem<UToolsetRegistrySubsystem>();
-    FString EngineIni = FPaths::ConvertRelativePathToFull(GEngineIni);
-    FPaths::NormalizeFilename(EngineIni);
     if (!Module)
     {
         if (Error.IsEmpty()) { Error = TEXT("The official MCP module is unavailable before listener startup."); }
@@ -742,6 +740,19 @@ bool FYacsBobOfficialSession::Activate()
         if (Error.IsEmpty()) { Error = TEXT("The native configuration cache is unavailable before listener startup."); }
         return false;
     }
+    const FConfigBranch* EngineBranch = GConfig->FindBranchWithNoReload(NAME_None, GEngineIni);
+    if (!EngineBranch)
+    {
+        if (Error.IsEmpty()) { Error = TEXT("The active engine configuration branch is unavailable before listener startup."); }
+        return false;
+    }
+    if (EngineBranch->IniPath.IsEmpty())
+    {
+        if (Error.IsEmpty()) { Error = TEXT("The active engine configuration branch has no destination before listener startup."); }
+        return false;
+    }
+    FString EngineIni = FPaths::ConvertRelativePathToFull(EngineBranch->IniPath);
+    FPaths::NormalizeFilename(EngineIni);
     if (!EngineIni.StartsWith(Root + TEXT("/"), ESearchCase::IgnoreCase))
     {
         if (Error.IsEmpty()) { Error = TEXT("The active engine configuration is outside the owned project root."); }
