@@ -37,6 +37,28 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
         ]
         return value
 
+    def test_native_actor_tuples_equal_authentic_json_arrays_without_field_loss(self):
+        # The real Unreal inventory builds actors with sorted((path, transform)
+        # for actor ...), so the current process owns tuples. Persisted JSON
+        # always restores arrays. Both must hash to the same exact scene bytes.
+        native = deepcopy(self.old)
+        native["actors"] = [
+            ("/Game/Map.Map:PersistentLevel.Road", [1.0, 2.0, 3.0]),
+            ("/Game/Map.Map:PersistentLevel.Support", [4.0, 5.0, 6.0]),
+        ]
+        retained = deepcopy(native)
+        retained["actors"] = [list(row) for row in retained["actors"]]
+        self.assertNotEqual(native, retained)
+        self.assertEqual(
+            saved.inventory_digest(native),
+            saved.inventory_digest(retained),
+        )
+        retained["actors"][1][1][2] = 9.0
+        self.assertNotEqual(
+            saved.inventory_digest(native),
+            saved.inventory_digest(retained),
+        )
+
     def test_only_road_slot_zero_changes_across_derived_save(self):
         after = self.new_inventory()
         signature = saved.expected_saved_inventory(

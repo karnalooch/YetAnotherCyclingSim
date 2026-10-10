@@ -74,14 +74,26 @@ def normalized(value, map_package):
     return value
 
 
+def inventory_digest(snapshot):
+    """Hash native scene semantics in the exact JSON type domain of prior receipts.
+
+    Unreal Python inventory has a sorted list of actor *tuples*; the authentic
+    retained baseline decodes those same entries as JSON *lists*. Never require
+    a Python container-type equality across process/JSON boundaries. Serialize
+    every field under the identical canonical schema and compare all bytes.
+    """
+    raw = json.dumps(
+        snapshot, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
 def expected_saved_inventory(original, saved, material_path):
     old = normalized(original, session.operation.MAP_PACKAGE)
     actual = normalized(saved, MAP)
     road = canary.verify_accepted_surface(old)
     canary._expected_live_snapshot(old, actual, road["component"], material_path)
-    return hashlib.sha256(
-        json.dumps(actual, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
-    ).hexdigest()
+    return inventory_digest(actual)
 
 
 def verified_staging(exact_sha, staging_hash):
@@ -272,7 +284,10 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows):
     inventory_before = baseline.native_inventory(
         api, prep, session.operation.MAP_PACKAGE
     )
-    require(inventory_before == before, "Accepted scene differs from native baseline")
+    require(
+        inventory_digest(inventory_before) == inventory_digest(before),
+        "Accepted full scene JSON differs from authenticated native baseline",
+    )
     canary.verify_accepted_surface(inventory_before)
     baseline.native_projection(api)
     source_before = asphalt_source.verify_retained_replay()
@@ -361,9 +376,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows):
         "metric_tile_cm": 400,
         "normal_convention": "DirectX",
         "expected_normalized_inventory_sha256": inventory_hash,
-        "original_native_map_inventory_sha256": hashlib.sha256(
-            json.dumps(before, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
-        ).hexdigest(),
+        "original_native_map_inventory_sha256": inventory_digest(before),
         "assets": delivered,
         "road_slot_zero_only": True,
         "support_186_unchanged": True,

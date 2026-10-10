@@ -510,3 +510,30 @@ owner visual PASS or final material delivery. Owner audit
 `PENDING_FINAL_M3`; performance `DEFERRED_AFTER_M3` /
 `performance_pass: false`. PR #470 remains Draft and #364 remains OPEN
 until the further roadmap/native/asset/render/review gates pass.
+
+## Native saved-consumer baseline JSON equality fix — 2026-10-10
+
+[Protected exact-head CI 38068143388](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38068143388)
+**PASS** on `432dfad3ef2067b8d34a9c7f4508fec21b6a3a4d`.
+[Native #38068139306](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38068139306)
+**FAILED in the new prepare Editor**, after the authentic base read and transient
+canary both passed. [Retained artifact #11675927513](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38068139306/artifacts/11675927513)
+shows a read-only failure at `inventory_before == before` before
+any Material Forge import or derived map save. Its prior complete baseline
+inventory agrees *exactly* with the independent green native baseline at
+`4f11e0da`, including 375 world actors, all road/support
+material/geometry/collision slots and Landscape 1024 components.
+
+Cause: the native inventory creator represents its sorted `actors` as
+`list[tuple]`. Its persisted authenticated JSON receipt serializes tuples as
+JSON arrays and Python restores them as `list[list]`. Direct Python equality
+fails on the container type even for identical semantic snapshot bytes.
+The candidate now hashes **every** original/live field in the **same
+canonical JSON serialization domain** (`sort_keys=True`, explicit separators
+and finite values) and requires the SHA-256 digests to match. Actor transforms,
+component/material ownership, geometry counts and all other fields remain in
+the comparison; nothing is ignored. Synthetic regression proves tuples and
+their exact JSON arrays hash identically while an actual transform mutation
+fails. No Landscape/map/asset mutation was performed in the failed native
+attempt. Fresh exact-SHA CI and **new independent saved-map/Editor proof**
+are required; no saved consumer PASS is inferred from this fix.
