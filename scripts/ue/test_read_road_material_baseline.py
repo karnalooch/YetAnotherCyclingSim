@@ -171,12 +171,10 @@ class BaselineBoundaryTests(unittest.TestCase):
         )
 
         repo = reader.ROOT
-        critical_ps1 = {path for path in
-                        UNREAL_COMPILE_TOOLING_EXACT | UNREAL_PROOF_EXACT
-                        if path.endswith(".ps1")}
+        critical_inputs = UNREAL_COMPILE_TOOLING_EXACT | UNREAL_PROOF_EXACT
         listing = subprocess.run(
             ["git", "-C", str(repo), "ls-tree", "-r", "-z", "HEAD", "--",
-             "Source", "Plugins", *sorted(critical_ps1)],
+             "Source", "Plugins", *sorted(critical_inputs)],
             check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         ).stdout
         committed = {}
@@ -188,10 +186,10 @@ class BaselineBoundaryTests(unittest.TestCase):
             mode, obj_type, sha = header.split(b" ")
             self.assertEqual(obj_type, b"blob")
             path = name.decode("utf-8")
-            if path.endswith(".cs") or path in critical_ps1:
+            if path.endswith(".cs") or path in critical_inputs:
                 self.assertEqual(mode, b"100644")
                 committed[path] = sha.decode("ascii")
-        self.assertTrue(critical_ps1.issubset(committed))
+        self.assertTrue(critical_inputs.issubset(committed))
         self.assertTrue(any(path.endswith(".cs") for path in committed))
 
         paths = sorted(committed)

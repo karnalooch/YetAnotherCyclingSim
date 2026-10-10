@@ -239,7 +239,19 @@ preparation cannot upload old-run diagnostic files under the new commit name.
 This preserves locked diagnostics without suppressing other cleanup failures. The
 code-only LFS contract and exact HEAD are then rechecked. Preserved outputs are
 only candidates for reuse; they are never trusted without fingerprint and
-environment checks. A compile-fingerprint mismatch is **not** cache corruption:
+environment checks. Line-ending changes are provenance changes, not grounds to bypass the check.
+Git pins LF for every current C# and compile/proof-script fingerprint input,
+including the attributes file itself. The native #364 checkout-byte regression
+compares the physical Windows/Linux working files with exact committed Git
+blobs. A future change to `.gitattributes` is classified as Unreal RUNTIME,
+and the attributes file participates in the proof fingerprint: the normal,
+serialized Unreal CI lane must renew green proof before read-only consumers may
+reuse the active cache. If LF/CRLF changes compiled bytes, the compile
+fingerprint differs and the existing WARM COMPILE path validates those binaries.
+A read-only native consumer must **fail closed** while such provenance is stale;
+it must not rewrite state.json, retroactively certify a failed proof, invalidate
+another owner's cache, or run Unreal before the normal verification lane.
+A compile-fingerprint mismatch is **not** cache corruption:
 when engine/toolchain provenance still matches, the lane invalidates the green
 stamp but keeps `Intermediate/Binaries` and performs a WARM COMPILE. Missing
 final project DLLs are handled the same way because UBT can relink/rebuild them

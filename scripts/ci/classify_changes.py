@@ -57,6 +57,8 @@ UE_CRITICAL_CONFIG = {
 }
 
 UE_CODE_TOOLING_EXACT = {
+    # Line-ending policies can change raw build inputs even when Git blobs do not.
+    ".gitattributes",
     ".github/workflows/reusable-unreal.yml",
     "scripts/ci/Invoke-YacsUnrealCi.ps1",
     "scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1",
@@ -470,6 +472,7 @@ def classify_embark_terrain_proof(paths: Iterable[str]) -> str:
 UNREAL_COMPILE_EXTENSIONS = {".cpp", ".c", ".h", ".hpp", ".inl", ".cs"}
 
 UNREAL_PROOF_EXACT = {
+    ".gitattributes",
     ".github/workflows/reusable-unreal.yml",
     "scripts/ci/Invoke-YacsUnrealCi.ps1",
     "scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1",

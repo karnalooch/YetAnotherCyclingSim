@@ -1,5 +1,7 @@
 # Normalize text files across operating systems
 * text=auto
+# The attributes contract is itself part of Unreal proof identity.
+.gitattributes text eol=lf
 *.py text eol=lf
 *.md text eol=lf
 *.toml text eol=lf

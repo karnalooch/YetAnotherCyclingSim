@@ -8,6 +8,25 @@ import classify_changes as cc
 
 
 class ChangeClassifierTests(unittest.TestCase):
+    def test_gitattributes_policy_change_requires_unreal_reproof(self):
+        # Attribute changes must not strand an older green Windows cache.
+        result = cc.classify_paths([".gitattributes"])
+        self.assertTrue(result.ci)
+        self.assertTrue(result.ue_code)
+        self.assertFalse(result.unreal_compile)
+        self.assertTrue(result.unreal_runtime)
+        self.assertEqual(result.unreal_execution_class, "runtime")
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            attrs = root / ".gitattributes"
+            attrs.write_text("* text=auto\n", encoding="utf-8")
+            compile_before = cc.unreal_compile_fingerprint(root)
+            proof_before = cc.unreal_proof_fingerprint(root)
+            attrs.write_text("* text=auto\n*.cs text eol=lf\n", encoding="utf-8")
+            self.assertEqual(compile_before, cc.unreal_compile_fingerprint(root))
+            self.assertNotEqual(proof_before, cc.unreal_proof_fingerprint(root))
+
     def test_terrain_data_policy_and_memory_require_render(self):
         for path in (
             "worldgen/terrain/benchmarks/sa_calobra/sa_calobra_8x8km_mdt50cm_epsg25831.tif",
