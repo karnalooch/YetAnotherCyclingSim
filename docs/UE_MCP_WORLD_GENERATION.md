@@ -676,6 +676,24 @@ or MCP operation runs in that diagnostic mode.
 [Ordinary CI 38016861731](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38016861731)
 passed at `aceaefb437962ce3dc0af301db32c4ac2cf66592` with the domain plugin
 disabled.
+[Source-only diagnostic 38017909601](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38017909601)
+passed at `70ba2f3785e851886079ae45e54c92c2fd4eb9ca`, authenticating the
+retained activation failure and observing its native counter absent. Its
+current SDK receipt covers 30 fixed sources / 1,080,690 bytes and is
+1,891,101 bytes, SHA-256
+`d12131db09bb99b77a34741cdfe8654a08ca06c2a8abb8b546ce5a94a8639502`.
+Installed `ConfigCacheIni.h` (SHA-256
+`15e5481088838025174ae651881a76b32c4c14ceeac710a51848d4b35d524345`)
+shows public `FConfigBranch::IniPath` and exported `GetConfigFilename`, but
+the latter's body and enclosing `FConfigCacheIni` public scope were omitted
+from the bounded console. The next fixed read prioritizes those exact existing
+inputs; no new source path, runtime operation or read limit is added. This does
+not establish the active `GEngineIni` value or admit an accessor substitution.
+The diagnostic host receipt is 422,608 bytes, SHA-256
+`2e24dadeb6f025ccb7ce36984c477678526592fed9c76fb85229600591b637b3`;
+[artifact 11657200558](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38017909601/artifacts/11657200558)
+is 425,535 bytes, archive SHA-256
+`6b704c6f222928e5a6dbc7d42484969eb354c526b2eec012eaa979f88ea39fd6`.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 

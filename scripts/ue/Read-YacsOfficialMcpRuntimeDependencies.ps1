@@ -420,6 +420,21 @@ try:
     # fixed header named by the already-read Core implementations, not a walk.
     item=optional('Engine/Source/Runtime/Core/Public/Misc/ConfigCacheIni.h','mcp')
     if item:
+        # GetConfigFilename is now an observed installed declaration (line1422).
+        # Retain its containing class through that declaration so public/private
+        # visibility is reviewable instead of inferred from CORE_API alone.
+        header_masked=cpp_mask(item['text'])
+        cache_class=re.search(r'\bclass\s+(?:\w+_API\s+)?FConfigCacheIni\b[^;{]*\{',header_masked)
+        accessor=re.search(r'\bGetConfigFilename\s*\(',header_masked)
+        named_contexts(item,r'\bGetConfigFilename\s*\(',
+                       'engine_branch_active_filename_declaration',12)
+        if cache_class and accessor and accessor.start()>cache_class.start():
+            start=header_masked.count('\n',0,cache_class.start())+1
+            end=min(len(item['text'].splitlines()),header_masked.count('\n',0,accessor.start())+3)
+            add_span(item,'engine_branch_cache_class_scope',start,min(end,start+179),False,
+                     'NAMED_DECLARATION_CONTEXT_REQUIRES_PRIMARY_REVIEW' if end<=start+179 else 'CLASS_SCOPE_CONTEXT_LIMIT')
+        else:
+            gaps.append(dict(path=item['path'],topic='engine_branch_cache_class_scope',reason='NAMED_CLASS_SCOPE_NOT_ESTABLISHED'))
         named_contexts(item,r'\b\w*(?:IniPath|IniName|IniFilename|ConfigFilename)\w*\b|\b(?:Find|Get)\w*Branch\w*\s*\(',
                        'engine_branch_path_api_declarations',12)
         named_contexts(item,r'\b(?:EKnownIniFile|FKnownConfigFiles|KnownFiles|GEngineIni)\b',
@@ -431,9 +446,12 @@ try:
     item=optional('Engine/Source/Runtime/Core/Private/Misc/ConfigCacheIni.cpp','mcp')
     if item:
         masked=cpp_mask(item['text'])
+        functions(item,r'\bFConfigCacheIni::GetConfigFilename\s*\(',
+                  'engine_branch_active_filename_accessor')
         definitions=sorted(set(re.findall(r'\b(\w+)::(\w+)\s*\(',masked)),
                            key=lambda value:(value[1] not in {'InitializeKnownConfigFiles','GetDestIniFilename','FindBranch'},value))
         for owner,name in definitions:
+            if owner=='FConfigCacheIni' and name=='GetConfigFilename': continue
             if ((owner in {'FConfigCacheIni','FConfigBranch'} and
                  (re.search(r'Known|Branch|Filename|IniPath',name) or name==owner))
                 or (re.search(r'Known.*Config|KnownFiles',owner) and name==owner)):
@@ -596,6 +614,9 @@ finally:
             if excerpt['purpose']!='mcp': return excerpt['purpose']
             return 'mcp_transport' if excerpt['topic'].startswith(('server_','server_dependency_','official_server_','adapter_','http_')) else 'mcp'
         def console_priority(excerpt):
+            if excerpt['topic']=='engine_branch_active_filename_accessor': return -18
+            if excerpt['topic']=='engine_branch_active_filename_declaration': return -17
+            if excerpt['topic']=='engine_branch_cache_class_scope': return -16
             if excerpt['topic']=='engine_branch_path_api_declarations': return -14
             if excerpt['topic']=='engine_branch_identity_declarations': return -13
             if excerpt['topic']=='engine_branch_export_visibility': return -12
@@ -621,7 +642,8 @@ finally:
             return priority.get(excerpt['topic'],9)
         emitted_source_lines=set()
         branch_header_topics={'engine_branch_path_api_declarations','engine_branch_identity_declarations',
-                              'engine_branch_export_visibility'}
+                              'engine_branch_export_visibility','engine_branch_active_filename_declaration',
+                              'engine_branch_cache_class_scope'}
         branch_header_lines, branch_header_truncated = 0, False
         for excerpt in sorted(excerpts,key=lambda x:(console_priority(x),x['path'],x['line_start'])):
             if console_purpose(excerpt) != purpose: continue

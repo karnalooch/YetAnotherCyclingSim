@@ -129,6 +129,7 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                    "enum class EKnownIniFile { Engine };\n"
                    "class SYNTHETIC_API FConfigCacheIni {\npublic:\n"
                    " FConfigBranch* FindBranch(const TCHAR* IniName, const FString& IniPath);\n"
+                   " CORE_API FString GetConfigFilename(const TCHAR* BaseIniName);\n"
                    " static FString GetDestIniFilename(const TCHAR* IniName);\nprivate:\n"
                    " FKnownConfigFiles KnownFiles;\n};\n")
         self.write(CONFIG_CACHE_IMPL,
@@ -289,9 +290,10 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
 
     def test_branch_identity_destination_and_complete_bodies_keep_primary_provenance(self):
         header_source = (self.engine / CONFIG_CACHE_HEADER).read_text()
-        self.write(CONFIG_CACHE_HEADER, header_source + "".join(
+        header_prefix, cache_class = header_source.split("class SYNTHETIC_API FConfigCacheIni", 1)
+        self.write(CONFIG_CACHE_HEADER, header_prefix + "".join(
             f"FString SyntheticIniFilename{index};\n" + "int SyntheticHeaderPadding;\n" * 23
-            for index in range(24)))
+            for index in range(24)) + "class SYNTHETIC_API FConfigCacheIni" + cache_class)
         cache_source = (self.engine / CONFIG_CACHE_IMPL).read_text()
         self.write(CONFIG_CACHE_IMPL, cache_source +
                    "void FConfigCacheIni::InitializeKnownConfigFiles() {\n"
@@ -301,6 +303,8 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                    " return SyntheticGeneratedDirectory / IniName;\n}\n"
                    "FConfigBranch* FConfigCacheIni::FindBranch(const TCHAR* IniName, const FString& IniPath) {\n"
                    " return SyntheticFindByIdentityAndDestination(IniName, IniPath);\n}\n"
+                   "FString FConfigCacheIni::GetConfigFilename(const TCHAR* BaseIniName) {\n"
+                   " return SyntheticCachedDestination(BaseIniName);\n}\n"
                    "FConfigCacheIni::FConfigCacheIni() : KnownFiles(SyntheticKnownFiles) {\n"
                    " InitializeKnownConfigFiles();\n}\n"
                    "void FConfigFile::OverrideFromCommandlineOther() {\n" +
@@ -332,12 +336,17 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         self.assertGreater(len({line["line"] for item in header_excerpts for line in item["lines"]}), 500)
         self.assertIn("SyntheticIniFilename23", header_text)
         for required in ("FName IniName", "FString DestIniFilename", "SYNTHETIC_API FConfigCacheIni",
+                         "CORE_API FString GetConfigFilename(const TCHAR* BaseIniName)",
                          "SYNTHETIC_API FConfigBranch", "public:", "private:"):
             self.assertIn(required, header_text)
         self.assertTrue(all(item["body_complete"] is False and item["context_truncated"] is True
                             and item["truncation_reason"] == "NAMED_DECLARATION_CONTEXT_REQUIRES_PRIMARY_REVIEW"
                             and item["sha256"] == sources[CONFIG_CACHE_HEADER]["sha256"]
                             for item in header_excerpts))
+        scope = next(item for item in header_excerpts if item["topic"] == "engine_branch_cache_class_scope")
+        scope_text = "\n".join(line["text"] for line in scope["lines"])
+        self.assertIn("class SYNTHETIC_API FConfigCacheIni", scope_text)
+        self.assertLess(scope_text.index("public:"), scope_text.index("CORE_API FString GetConfigFilename"))
         constructor = [item for item in receipt["excerpts"]
                        if item["topic"] == "engine_branch_constructor_context_FConfigCacheIni"]
         self.assertEqual(len(constructor), 1)
@@ -356,11 +365,20 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
             if line.startswith("SOURCE "):
                 in_header_excerpt = any("topic=" + topic + " " in line for topic in (
                     "engine_branch_path_api_declarations", "engine_branch_identity_declarations",
-                    "engine_branch_export_visibility"))
+                    "engine_branch_export_visibility", "engine_branch_active_filename_declaration",
+                    "engine_branch_cache_class_scope"))
             if in_header_excerpt:
                 header_rows += 1
         self.assertEqual(header_rows, 200)
+        self.assertIn("CORE_API FString GetConfigFilename(const TCHAR* BaseIniName)", console)
+        self.assertIn("class SYNTHETIC_API FConfigCacheIni", console)
+        self.assertLess(console.index("topic=engine_branch_cache_class_scope"),
+                        console.index("topic=engine_branch_path_api_declarations"))
+        self.assertLess(console.index("topic=engine_branch_active_filename_accessor"),
+                        console.index("topic=engine_branch_definition_FConfigCacheIni_FindBranch"))
         for path, topic, body_token in (
+                (CONFIG_CACHE_IMPL, "engine_branch_active_filename_accessor",
+                 "SyntheticCachedDestination(BaseIniName)"),
                 (CONFIG_CACHE_IMPL, "engine_branch_definition_FConfigCacheIni_InitializeKnownConfigFiles",
                  'KnownFiles.Engine.IniName = TEXT("Engine")'),
                 (CONFIG_CACHE_IMPL, "engine_branch_definition_FConfigCacheIni_GetDestIniFilename",
