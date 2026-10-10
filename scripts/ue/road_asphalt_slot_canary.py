@@ -114,6 +114,43 @@ def authenticate_asphalt_replay(
     return variant, replay
 
 
+def _snapshot_difference_paths(expected, observed, limit=8):
+    """Bounded, field-name-only diagnostics; never relax the exact equality.
+
+    Paths identify source witness fields without retaining actual material,
+    geometry or transform values in ordinary CI console logs. Nested inventories
+    are compared structurally and their complete equality remains mandatory.
+    """
+    mismatches, stack, examined = [], [("$", expected, observed)], 0
+    while stack and len(mismatches) < limit:
+        path, left, right = stack.pop()
+        examined += 1
+        if examined > 100_000:
+            mismatches.append("$: diagnostic node bound")
+            break
+        if type(left) is not type(right):
+            mismatches.append(path + ": type")
+        elif isinstance(left, dict):
+            keys = set(left) | set(right)
+            for key in sorted(keys, reverse=True):
+                child = path + "." + str(key)
+                if key not in left or key not in right:
+                    mismatches.append(child + ": missing")
+                else:
+                    stack.append((child, left[key], right[key]))
+                if len(mismatches) >= limit:
+                    break
+        elif isinstance(left, (tuple, list)):
+            if len(left) != len(right):
+                mismatches.append(path + ": length")
+            else:
+                for index in reversed(range(len(left))):
+                    stack.append((f"{path}[{index}]", left[index], right[index]))
+        elif left != right:
+            mismatches.append(path)
+    return mismatches[:limit]
+
+
 def _expected_live_snapshot(before, during, component_path, material_path):
     """The only permitted consumer mutation is road material slot zero."""
     expected = deepcopy(before)
@@ -141,8 +178,11 @@ def _expected_live_snapshot(before, during, component_path, material_path):
             row["materials"] = [material_path]
             found += 1
     require(found == 1, "road mesh component binding is ambiguous")
-    require(during == expected,
-            "material canary changed geometry, supports, Landscape or other bindings")
+    require(
+        during == expected,
+        "material canary changed geometry, supports, Landscape or other bindings; "
+        "first_differences=" + repr(_snapshot_difference_paths(expected, during)),
+    )
 
 
 def try_road_only_material(snapshot, actors, asphalt_instance, import_receipt):

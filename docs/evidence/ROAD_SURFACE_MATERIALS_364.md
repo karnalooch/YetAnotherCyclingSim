@@ -537,3 +537,31 @@ their exact JSON arrays hash identically while an actual transform mutation
 fails. No Landscape/map/asset mutation was performed in the failed native
 attempt. Fresh exact-SHA CI and **new independent saved-map/Editor proof**
 are required; no saved consumer PASS is inferred from this fix.
+
+## Strict road material slot snapshot mismatch diagnostic — 2026-10-10
+
+[Protected CI #38068822892](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38068822892)
+**PASS** at `10464c9ce6aaa07fc514fb6ee63b133a926b7719`.
+[Native run #38068818538](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38068818538)
+**FAILED before derived map save or fresh reload**, although the original
+read-only scene, source replay and reversible transient canary passed.
+The [retained original Editor log #11676386973](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38068818538/artifacts/11676386973)
+shows the Material Forge importer successfully **wrote its own six material
+packages** under the isolated `RoadAsphaltConsumer` namespace; then the
+material-only scene equality check rejected
+`_expected_live_snapshot` after binding road slot zero.
+This is **not** an accepted new derived world. The original accepted
+Landscape, road/physics authority and source map were not saved or
+replaced. Permanent package retention had not begun.
+
+The next candidate changes **diagnostics only**, not admissible state:
+the existing complete `during == expected` proof remains mandatory.
+When it fails, the error now includes up to eight exact structural paths
+(e.g. `$.road_supports[1].vertices`), including type/missing/length
+differences, without logging geometry/transform values or relaxing any
+source/asset/scene guard. A fixed 100,000-node diagnostic budget prevents
+unbounded scans. A dedicated synthetic test proves field-level mismatches,
+strict identity for untouched inventory, length detection and no raw value
+disclosure. A new protected exact-SHA CI and independent native save attempt
+must identify and resolve the observed drift; do not treat this diagnostic
+candidate as material/geometry/reload PASS.

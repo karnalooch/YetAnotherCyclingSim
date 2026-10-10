@@ -125,6 +125,25 @@ class CanaryTests(unittest.TestCase):
         self.assertFalse(result["material_authoring_admitted"])
         self.assertFalse(result["performance_pass"])
 
+    def test_diagnostic_reports_only_mismatched_paths_and_keeps_strict_equality(self):
+        expected = {
+            "road_supports": [{"label": "ROAD", "vertices": 42}],
+            "landscape": {"component_count": 1024},
+        }
+        actual = deepcopy(expected)
+        actual["road_supports"][0]["vertices"] = 43
+        paths = canary._snapshot_difference_paths(expected, actual)
+        self.assertEqual(paths, ["$.road_supports[0].vertices"])
+        self.assertNotIn("42", repr(paths))
+        self.assertNotIn("43", repr(paths))
+        self.assertEqual(canary._snapshot_difference_paths(expected, expected), [])
+        self.assertEqual(
+            canary._snapshot_difference_paths(
+                {"key": [1, 2]}, {"key": [1, 2, 3]}
+            ),
+            ["$.key: length"],
+        )
+
     def test_modified_support_snapshot_is_rejected_and_road_restored(self):
         self.sabotage = True
         with self.assertRaisesRegex(ValueError, "supports"):
