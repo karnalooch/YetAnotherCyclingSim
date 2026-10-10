@@ -177,15 +177,37 @@ is unchanged. A closed-as-not-planned issue or green CI alone is insufficient.
 Verified closeout, 2026-10-09: #363 is completed after protected PR #446 merge
 `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b`. Its whole-area material acceptance,
 saved/fresh-rendered consumer and technical evidence satisfy #384's entry gate.
-#384 is still open and unimplemented; #364 remains blocked by #384. Reverify
-the [material handoff](../../../docs/tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
-at kickoff. No MCP activation, geometry admission or manual Project transition
-is implied by this checkpoint.
+[Native run 38027596123](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123)
+passed the fixed inspection/test session at runtime SHA
+`241104de320f8417c7abc4dd973ac148ed98a66d`. Authenticated
+[receipt readback 38029602978](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38029602978)
+passed separately. The native evidence records
+official transport, one passing `CyclingPhysics.RoadPhysics.ProfileInterpolation`
+test and real BOB capture, retaining `REVIEW_REQUIRED` / `INSPECTOR_ONLY` and
+all false authoring/admission flags. Separate
+[unit run 38039426402](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402)
+passed `YacsBobInspection.InputBoundary` at execution SHA
+`2016a91f03438f1d866be0eb26f3ae49fd43b803`, using the strengthened test compiled
+at `0ee5eaf39e0d673fee061f7e33372710278d50be`. The original runtime receipt's
+`official_mcp_admitted: false` remains unchanged; these proofs support only
+the fixed inspection/test interface's protected delivery. Authenticated
+source-only [receipt readback 38040872136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136)
+passed at reader SHA `df80c44a027102560767d9aaa14edab12526fd6d`, checking
+retained native/unit evidence without a new build or Editor launch. This reader
+revision remains separate from the runtime, unit and protected-merge revisions.
+
+Start #364 only after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467)
+is merged and [#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384)
+is closed as completed. Then stop MCP infrastructure work and return to
+asphalt/shoulder delivery.
+Reverify the [material handoff](../../../docs/tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
+at kickoff. These proofs do not admit geometry or change Project status.
 
 Read [the current MCP decision and bounded DoD](../../../docs/UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
-before MCP work. The official Epic server is the future control-plane target;
-the pinned db-lyon integration remains the current retained baseline until proven
-cutover. The repository already targets UE 5.8; this decision does not migrate it.
+before MCP work. The official Epic server has bounded native inspection/test
+evidence; the pinned db-lyon integration remains the retained baseline until
+reviewed cutover. The repository already targets UE 5.8; this decision does not
+migrate it.
 
 MCP is orchestration/interface, never authority. BOB, World Authority,
 route/physics contracts, tests, proof producers and governance keep their
@@ -201,6 +223,9 @@ real BOB inspection with result/proof/receipt. Prove guard parity before cutover
 never assume native tools inherit the old guard. After success, **STOP adding
 infrastructure and return to #364**. Missing/unsafe capability is an explicit
 blocker, not permission to create another platform or weaken a gate.
+The fixed inspector does not admit stock `MaterialInstanceTools`: #364 requires
+separate version-matched schemas, argument/resource restrictions and material-only
+native authoring proof before using that surface.
 
 ### Frozen geometry and environment fidelity — Issue #335
 

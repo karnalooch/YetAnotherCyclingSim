@@ -17,6 +17,16 @@
   },
   "workflows": [
     {
+      "file": "official-unreal-mcp-native-probe.yml",
+      "state": "CURRENT",
+      "reason": "Issue #384 owner-only branch-scoped opt-in BOB plugin BuildPlugin compilation. Isolated code-only checkout, canonical exact engine, idle shared host and serial host lane; no Editor/MCP launch, live project changes or native/transport/admission claims from a compile result."
+    },
+    {
+      "file": "official-unreal-mcp-source-probe.yml",
+      "state": "CURRENT",
+      "reason": "Issue #384 owner-only branch-scoped read-only installed UE 5.8.2 official MCP/registry/test declaration inventory. Isolated code-only checkout, serial shared host lane, no build/editor launch/plugin activation or persistent world mutation; source metadata is not MCP guard parity or adoption admission."
+    },
+    {
       "file": "blender-material-forge-reference.yml",
       "state": "CURRENT",
       "reason": "Self-hosted Issue #399 pinned-Blender ground-scale Material Forge reference proof; consumes CPU-validated deterministic outputs, refuses active local Unreal ownership and never mutates the accepted world."

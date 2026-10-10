@@ -1,0 +1,18 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "0.1.0",
+  "FriendlyName": "YACS BOB Inspection",
+  "Description": "Opt-in read-only inspection of the accepted Sa Calobra material checkpoint.",
+  "Category": "Editor",
+  "EnabledByDefault": false,
+  "CanContainContent": false,
+  "IsBetaVersion": true,
+  "Modules": [{"Name": "YacsBobInspection", "Type": "Editor", "LoadingPhase": "PostEngineInit"}],
+  "Plugins": [
+    {"Name": "ToolsetRegistry", "Enabled": true},
+    {"Name": "ModelContextProtocol", "Enabled": true},
+    {"Name": "AutomationTestToolset", "Enabled": true},
+    {"Name": "PythonScriptPlugin", "Enabled": true}
+  ]
+}

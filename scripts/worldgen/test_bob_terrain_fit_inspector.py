@@ -115,6 +115,68 @@ class BobTerrainFitInspectorTests(unittest.TestCase):
         self.assertFalse(report["inspection_complete"])
         self.assertEqual(report["status"], "INSPECTION_INCOMPLETE")
         self.assertEqual(report["trace_miss_count"], 1)
+        self.assertEqual(report["evaluated_sample_count"], 0)
+        self.assertEqual(report["rms_required_adjustment_m"], 0.0)
+        for flag in (
+            "earthworks_authoring_permitted",
+            "geometry_repair_executed",
+            "road_admitted",
+            "eligible_for_learning",
+        ):
+            self.assertIs(report[flag], False)
+
+    def test_constant_adjustments_have_exact_constant_rms(self):
+        for count in (10, 100, 1000):
+            with self.subTest(sample_count=count):
+                report = inspect_terrain_fit(
+                    [
+                        {
+                            "station_m": index * 0.5,
+                            "lateral_m": 0.0,
+                            "local_xy_m": [index * 0.5, 0.0],
+                            "road_surface_z_m": 0.0,
+                            "landscape_z_m": 0.1,
+                        }
+                        for index in range(count)
+                    ],
+                    exact_sha=SHA,
+                    contact_band_max_m=0.08,
+                    structure_review_threshold_m=4.0,
+                )
+                # Identical adjustments have the same RMS as each adjustment.
+                self.assertEqual(report["rms_required_adjustment_m"], 0.1)
+                self.assertEqual(report["evaluated_sample_count"], count)
+                self.assertEqual(report["class_counts"][CUT_REQUIRED], count)
+
+    def test_finite_adjustment_multiset_has_order_independent_rms(self):
+        adjustments = [0.1, 0.2, 0.3, 1.0, 4.0] * 200
+        observed = []
+        for values in (
+            adjustments,
+            sorted(adjustments),
+            sorted(adjustments, reverse=True),
+        ):
+            report = inspect_terrain_fit(
+                [
+                    {
+                        "station_m": 0.0,
+                        "lateral_m": 0.0,
+                        "local_xy_m": [0.0, 0.0],
+                        "road_surface_z_m": 0.0,
+                        "landscape_z_m": value,
+                    }
+                    for value in values
+                ],
+                exact_sha=SHA,
+                contact_band_max_m=0.08,
+                structure_review_threshold_m=4.0,
+            )
+            self.assertEqual(report["evaluated_sample_count"], len(adjustments))
+            self.assertEqual(report["max_required_adjustment_m"], 4.0)
+            self.assertEqual(report["class_counts"][CUT_REQUIRED], 800)
+            self.assertEqual(report["class_counts"][STRUCTURE_REVIEW], 200)
+            observed.append(report["rms_required_adjustment_m"])
+        self.assertEqual(observed, [observed[0]] * len(observed))
 
 
 if __name__ == "__main__":

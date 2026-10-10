@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Adoption unimplemented; no MCP activation or engine migration.
+**Status:** #384's bounded native inspection/test session, separate InputBoundary test and authenticated source-only evidence readback are verified. PR #467 delivers the fixed BOB inspector, shared Git-blob refactor and repeatable RMS calculation. Start #364 only after PR #467 is protected-merged and #384 is closed as completed. The ordinary project keeps the server disabled; broader tool or authoring admission requires separate proof.
 **Tracking:** #384 adoption; #385 documentation; #85 historical integration; follow-ups #376 (Performance MCP), #377 (Buildings MCP)
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
@@ -9,13 +9,13 @@
 
 ### Decision and status
 
-**Entry gate satisfied — #363 completed through merged PR #446. #384 remains open; implementation is not started.**
+**Entry gate satisfied — #363 completed through merged PR #446. The fixed native session and separate InputBoundary execution are verified. Protected delivery of PR #467 and completed closure of #384 are the gate for #364.**
 
 The owner approved a small official Unreal MCP adoption workstream between world-finishing step 2 (#363) and step 3 (#364). "Step 2.5" is a shorthand inside **M3**, not a new product milestone or a renumbering of the existing 13 steps.
 
 **Execution order:** #363 full acceptance and protected merge → this bounded spike → #364 asphalt/shoulder → #365 PCG/PCGEx world graph → the unchanged downstream sequence.
 
-Keep the native GitHub `blocked_by` relationship to completed #363. Its material entry condition is satisfied and `lifecycle:blocked` was removed from #384; this does not claim a manual Project transition to Ready/In progress. #364 keeps its existing #363 dependency and also depends on this still-open spike. Dependencies and board states do not technically prevent PR creation: agents must enforce the gate below.
+Keep the native GitHub `blocked_by` relationship to completed #363. Its material entry condition is satisfied and `lifecycle:blocked` was removed from #384; this does not claim a manual Project transition to Ready/In progress. #364 keeps its existing #363 dependency and also depends on #384. Dependencies and board states do not technically prevent PR creation: agents must verify the actual protected merge and completed issue state before implementation.
 
 ### Hard entry gate: what “step 2 complete” means
 
@@ -119,6 +119,72 @@ Do not run two independent agent-facing mutation servers. Before cutover, prove 
 
 The receipt should bind repository SHA, actual UE/plugin versions, map/object identity, tool calls/arguments, input hashes, BOB policy/version, Automation test/run/status, domain result, artifact paths/hashes, timestamp and mutation scope. Reuse current proof/receipt conventions. A log claiming success without the referenced evidence is insufficient.
 
+### Verified native evidence and delivery gate — 2026-10-10
+
+The fixed official session at `241104de320f8417c7abc4dd973ac148ed98a66d`
+passed in [run 38027596123](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123).
+It pinned the accepted map, inspected 375 Actor identities, completed
+`CyclingPhysics.RoadPhysics.ProfileInterpolation` through the official toolset, and executed
+the fixed read-only BOB operation. The 60,025 exported contact samples and full
+BOB result matched direct execution on the same inputs. The result remains
+`REVIEW_REQUIRED` / `INSPECTOR_ONLY`; all authoring, repair, road acceptance
+and learning flags remain false. Its receipt verifies the fixed official
+listener and operation surface; it does not prove absence of every other owned
+TCP endpoint or Wingman in that historical session.
+
+The separate InputBoundary test change, source SHA-256
+`4c6840fc4db6f4f3585a4e6830df43bb0756a2033b3a0d083e38132c7640c82c`,
+was actually compiled at `0ee5eaf39e0d673fee061f7e33372710278d50be`
+in [run 38035299343](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38035299343).
+That compile succeeded; its original unit attempt failed and remains failed.
+The other eleven native inputs match the original fixed-session source.
+
+The authenticated compiled plugin was reused at
+`2016a91f03438f1d866be0eb26f3ae49fd43b803` in
+[run 38039426402](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402).
+`YacsBobInspection.InputBoundary` completed exactly one `Success`, with zero
+errors, warnings or unfinished tests. Both actual native Info events confirm
+that the MCP module is loaded, its server is absent, auto-start is disabled,
+trusted opt-in is absent and the session factory returns no session, before
+and after the input checks. The unit finished in 27.524 s, with the owned Editor
+exiting with code `0` within its 180 s limit. Thirty live-process samples
+observed only `0.0.0.0:1985`, attributed to Trace by
+installed source and the owned log. No owned listeners remained after exit.
+The unit disabled the observed Wingman plugin and verified unchanged protected
+inputs; this evidence applies to this unit execution.
+
+The raw successful unit is 107,189 bytes, SHA-256
+`e276a7347086f0aad0d08893b07920551682f62359d7f810bfdd29c3878cc950`;
+the raw Automation report is 1,954 bytes, SHA-256
+`24dfe3ea356758329db177948fd351675056ee422029baeda131538bd76e5256`.
+The report's optional leading UTF-8 BOM is omitted only from its parsing view;
+the original report bytes and hash remain unchanged. The earlier BOM-blocked
+attempt [38038830197](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38038830197)
+remains blocked and is not relabelled by this successful retry.
+
+Authenticated source-only readback at
+`df80c44a027102560767d9aaa14edab12526fd6d` passed in
+[run 38040872136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136).
+It authenticated the original runtime receipt, retained compilation and
+successful unit separately, including the raw report and all three original
+owned logs. The closed conservation inventories contain 15 copied inputs,
+57 fresh identities (5,958,949 logical bytes) and 138 protected identities
+(48,499,484 logical bytes). The 19,912-byte unit readback has SHA-256
+`3210141eeea7ac2e20d5f0298a89151ab7970f389254eb9a6ac31a5206c59d83`.
+This readback launched no Editor, compiler, Automation test or MCP session;
+its current execution/admission flags remain false. Runtime, compilation,
+unit execution, readback and later documentation/merge revisions are distinct.
+Required exact-head CI and review gate protected delivery.
+**Start #364 only after PR #467 is merged and #384 is closed
+as completed. Then stop MCP infrastructure work and return to asphalt/shoulder.**
+Stock material tools need their own actual-schema and native authoring proof
+for #364. M3 remains in progress; performance stays `DEFERRED_AFTER_M3` with
+`performance_pass: false`.
+
+The following kickoff, implementation and diagnostic records are historical
+checkpoints. Their pending or failed states describe their named revisions;
+the verified evidence above owns the current technical outcome.
+
 ### Prepared kickoff after material acceptance — 2026-10-09
 
 This is a static preparation checkpoint at
@@ -174,9 +240,11 @@ below; it needs no road rebuild, new transport service or expanded tool library.
    hashes, an engine/plugin/schema mismatch, an absent test result, paths outside
    scope and attempted save/import/transform/earthworks or arbitrary execution.
    Retain before/after persistent-content hashes and the call/domain/test
-   receipts. After protected technical closeout, hand off the admitted stock
-   `MaterialInstanceTools` capability and its exact schemas to #364; stop MCP
-   infrastructure expansion.
+   receipts. After protected technical closeout, hand off the bounded
+   inspection/test interface and its evidence to #364; stop MCP infrastructure
+   expansion. Stock `MaterialInstanceTools` requires separate version-matched
+   schemas, argument/resource restrictions and material-only native authoring
+   proof before use in #364.
 
 Preparation checks at the audited SHA: the existing BOB terrain-fit and adaptive
 policy unit modules passed **18 tests**. These exercise domain behavior only;
@@ -186,6 +254,903 @@ an official MCP server, and `YacsStage3GGuard` belongs to the retained db-lyon
 path; neither establishes restrictions on the future official path. The
 read-only road/shoulder inventory is maintained in
 [Asset Plan section 4.4](ASSET_PLAN.md#44-droga-i-pobocze).
+
+### Implementation fragments and execution order
+
+Keep all fragments under #384 and one implementation branch,
+`codex/384-official-mcp-spike`. Independent preparation may proceed in parallel;
+native editor calls and shared-host jobs remain serial. This table is an
+execution checklist, not new milestone identifiers or evidence of completion.
+
+| Fragment | Deliverable | Entry condition / remaining proof |
+|---|---|---|
+| Installed primary-source evidence | `official_mcp_source_probe.py`, its PowerShell launcher and the owner-only source-probe workflow; exact repository/engine/plugin identities, declaration hashes and bounded excerpts in ignored evidence | #363 closeout verified; run on the canonical UE 5.8.2 / CL 56702186 host; missing/mismatched source fails closed |
+| BOB domain delegation | `bob_mcp_inspection.py` delegates to the existing inspector on nonempty hash-bound samples; the producer exports every row and verifies native Landscape ownership when requested | Existing caller/policy thresholds and inspection-only states; synthetic unit checks do not verify native capture or official MCP |
+| Native domain boundary compile | Disabled-by-default `YacsBobInspection`, strict raw-input `FToolset` and internal fixed checkpoint/`FHitResult` reads; isolated exact-SHA `BuildPlugin` | Installed exported registration/schema declarations verified; compile does not establish native routing, test execution or transport |
+| Restricted official session | Verify the installed registry filters, server initialization and actual tool schemas, then perform the single map/object read | Source evidence reviewed; stock restriction and argument boundaries proved before activation; no replacement generic gateway |
+| Native test and domain tool | Run `CyclingPhysics.RoadPhysics.ProfileInterpolation` through the official toolset; invoke the thin BOB operation and compare with direct execution on identical native inputs | Restricted official session and real native raw samples; aggregate/worst-sample reports are insufficient substitutes |
+| Technical closeout and handoff | Persistent-content conservation, denial cases, exact-SHA receipts, relevant build/Automation, protected CI and review; admitted handoff to #364 | All adoption DoD items proved; otherwise #384 stays open and #364 stays blocked |
+
+The source probe uses an isolated code-only Actions checkout and the existing
+`Resolve-YacsUnrealEngine.ps1`; it never launches, closes or restarts Unreal,
+builds code, enables plugins or changes the live project. Installed source
+hashes/excerpts are retained as a seven-day Actions artifact and at most 500
+source/identity lines in native job logs, not Epic source committed to Git.
+Process command lines are excluded. `SOURCE_EVIDENCE_COLLECTED` is a filesystem observation, not
+runtime schema discovery, guard parity, scene admission or a performance PASS.
+The workflow is branch/path scoped and serializes in the existing
+`yacs-unreal-ci` host lane. Local invocation:
+
+```powershell
+./scripts/ue/Invoke-YacsOfficialMcpSourceProbe.ps1 -ExpectedHead (git rev-parse HEAD)
+```
+
+Public Epic API evidence identifies `FToolsetRegistry` allow/block name filters,
+`UToolsetRegistrySettings` and `FToolset::SetNameFilters`. Toolset-name matches
+can admit an entire toolset; exact per-tool restrictions and the MCP adapter's
+registry use still require installed source/runtime verification. Do not enable
+whole `ActorTools`/`ObjectTools` toolsets based only on those public names.
+Primary references:
+[registry](https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/ToolsetRegistry/FToolsetRegistry),
+[settings](https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/ToolsetRegistry/UToolsetRegistrySettings),
+[filter semantics](https://dev.epicgames.com/documentation/unreal-engine/API/Plugins/ToolsetRegistry/FToolset/SetNameFilters).
+
+The BOB helper's trusted caller supplies an evidence root; it accepts only an
+explicit sample path/hash, repository SHA and fixed source inventory. Its
+eight domain sources, including the adapter and collision witness, must match the committed checkout.
+The existing pavement producer supplies the contact band; the pinned adaptive
+policy supplies the structure threshold. The policy has a narrow LF checkout
+rule so Windows normalization cannot change its byte-bound identity. The helper
+does not export native traces, register a tool or write its result bundle;
+serialize the returned result/proof with `canonical_json_bytes` to preserve
+their recorded output hashes. The fixed capture body below uses this contract;
+its execution on the accepted native checkpoint and official routing remain
+pending.
+
+### Windows source checkpoint and activation gap — 2026-10-09
+
+[Source run 37989389864](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37989389864)
+passed at `e6bfcf555c95ee0149594495c21479239783b7e2`, collecting **320
+files / 2,520,076 bytes** from the resolved engine. The observed identity was
+**UE 5.8.2 / CL 56702186**, root `D:\yacs\engine\UE_5.8`, with project
+association `5.8`. `Build.version` SHA-256 was
+`ff99fc3dd98e7c7fd2f5700334bc792dfb7baced3828cdee32940bb69581a6a4`.
+The installed ModelContextProtocol, ToolsetRegistry, EditorToolset and
+AutomationTestToolset descriptors each reported version **1 / 1.0**. Their
+hashes and selected source evidence are in
+[artifact 11644526383](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37989389864/artifacts/11644526383),
+archive SHA-256
+`a1a8e4766af5d8820f679c37c36b97ff8839c68c291a682b1da1ac585f17b4db`.
+
+Installed `FToolset::ExecuteTool` checks toolset enablement and the qualified
+tool name before forwarding JSON input to its implementation (`Toolset.cpp`,
+lines 31–48, SHA-256
+`3f3388429a6e210e2fd4557d787514609aacbaeb568dd6b81cf1c96a540f915e`).
+The stock MCP adapter obtains the editor ToolsetRegistry and delegates execution
+to it (`ModelContextProtocolToolsetRegistryAdapter.cpp`, lines 24–31 and 66,
+SHA-256 `21d276181513d02e49355efed74bbe09156f8ee83fc564bce8bbad1a417717f1`).
+This establishes a name-filter execution path, not a verified argument boundary
+for the admitted map/object or the single test. The reviewed evidence does not
+establish those restrictions; it does not prove that every installed capability
+lacks a supported mechanism.
+
+**Current outcome: `GUARD_PARITY_UNESTABLISHED`, before activation.** The
+process observation at `2026-10-09T20:48:27.3197878Z` found **zero running
+Unreal Editor processes**; it proves neither a live scene nor active plugin
+state. The current cloud tools also expose no callable Unreal/Windows desktop
+runtime. No official server, map/object read, native test or BOB capture was
+started. Resume only after a supported argument restriction and an approved
+local session can be verified, then collect actual schemas and the remaining
+native proof. Retain the guarded baseline and Draft #467; #384 stays open and
+#364 stays blocked. Do not substitute a generic gateway or treat synthetic
+adapter tests as native admission.
+
+[The final control-flow source run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37990333833)
+passed at `df43779606cfdbf6d3726b82ea19d26ba649e3a7`. Its
+[artifact 11645176572](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37990333833/artifacts/11645176572)
+has archive SHA-256
+`d7e2033984c026330e673cf7597d4866677a699966d3148ff222fabf9cd7280a`.
+Complete selected bodies confirm that `SetNameFilters` filters names and
+`ExecuteTool` forwards caller JSON. `AutomationTestToolset.cpp`, lines 135–166
+(SHA-256 `f4b66c8c3567810a4da11dd1298975798e576b42dd6ea4d8f843f7abb415f0b9`),
+rejects an unavailable subsystem or empty `TestNames`, then stops the current
+test run and executes the caller-supplied names. This inspected entry point
+does not bind the single permitted YACS test; an idle-state check is also needed
+before any eventual invocation. Complete stock read bodies return the current
+level path, the supplied actor's label or the supplied object's class, without
+binding the admitted map/object. These are source observations, not discovered
+RPC schemas or proof that every possible native extension lacks a guard.
+The outcome remains `GUARD_PARITY_UNESTABLISHED`; the stock control-flow
+collection is complete. A supported native argument boundary, actual reflected
+signatures and runtime denial/async-result evidence are needed before wiring.
+
+### Next bounded fragment: one fixed BOB domain operation
+
+The continuation uses the existing native extension pattern, already compiled
+for UE 5.8.2 / CL 56702186 by opt-in `YacsTexturePrep`. Its
+[local proof](tooling/texture-material-prep-proof.json) verifies reflected schemas,
+class registration and asynchronous registry dispatch; it does not prove official
+MCP transport or grant this BOB operation admission.
+
+One fixed checkpoint inspection may contain its map/object read and the single
+existing Automation test as internal prerequisites. The exposed interface must
+accept no caller-selected map, object, test, method, script, command, policy or
+evidence root. Reject malformed input, unknown fields and other operation names
+before any native call. This is the approved thin YACS domain contract. No generic
+dispatch or broader stock tool access follows from it.
+
+The fixed `domain_extension` evidence preset reads actual installed declaration
+contexts for registration, argument conversion, asynchronous results and test
+idle state. It preserves the original filesystem and console bounds. Only two
+named AutomationController public headers may be read outside the plugin roots,
+and only when an actual installed Automation plugin include identifies them.
+Missing contexts remain explicit gaps; this preset neither activates a plugin
+nor executes a tool.
+
+The BOB producer now offers a trusted optional sink for every original sample,
+including misses, after real inspector execution. Its default caller behavior
+is preserved. A saved scene requires Landscape-only traces and verified native
+hit ownership: road or CUT geometry must not become a claimed Landscape height.
+Unknown ownership fails closed. Synthetic capture tests do not prove reflected
+owner availability on the actual host. Registration into the restricted official
+session, the completed single project test and conservation remain pending.
+
+The trusted no-argument
+[`capture_and_inspect`](../scripts/ue/official_mcp_bob_operation.py) body binds
+the isolated project, exact committed source inventory, retained profile and
+frozen #363 consumer provenance. It requires the native checkpoint identity
+before sampling, retains every real producer sample, delegates to the existing
+BOB adapter and compares with the producer's direct result. It checks scene
+identity/transforms and persistent project bytes before and after the operation,
+then publishes an exclusive fixed Saved bundle with the receipt last. The
+trusted host must validate the retained consumer manifest before staging its
+fixed context; caller arguments cannot supply those inputs. Synthetic tests
+cover these boundaries and preserve missing/contact/review states. They do not
+certify an actual native capture, official transport or content conservation.
+
+The trusted host utility
+[`official_mcp_bob_session.py`](../scripts/ci/official_mcp_bob_session.py)
+authenticates six immutable #363 JSON anchors before parsing or restoration.
+It verifies the frozen 236-file LFS dependency set, preflights existing targets
+and cached objects, uses normal LFS checkout and the existing missing-only
+generated-package restorer, then stages the pinned road profile. The separate
+no-argument context step requires the actual native checkpoint helper and the
+accepted Landscape/Actor census before publishing the operation's eight fields.
+It changes no project descriptor or configuration and starts no Editor or MCP
+server. Its 24 synthetic tests verify rejection and preservation boundaries;
+actual Windows restoration and accepted-scene execution remain unverified.
+
+The trusted no-argument
+[`official_mcp_bob_client.py`](../scripts/ci/official_mcp_bob_client.py)
+uses only `127.0.0.1:18784/mcp`, the installed server's `2025-06-18`
+protocol and one serial JSON session. The owned host supplies exact committed
+sources, project root and Editor PID in a private fixed marker. The client
+requires exactly one empty-object operation in `tools/list`, verifies 22 fixed
+name/argument denials against their precise boundary errors and checks that
+none entered the native body. Its sole valid call must advance the native
+counter from zero to one. It compares all four returned domain artifacts with
+the saved bundle, reinspects the actual samples through the existing BOB
+adapter and verifies original project/source conservation. Generic session or
+internal errors cannot count as denials. The client starts no server or Editor;
+its transport receipt leaves native test and final host admission pending.
+The host must also bound the entire owned attempt; the client's 180-second
+socket timeout alone is not a whole-session deadline. Offline fixtures do not
+admit an actual MCP session.
+
+[Declaration run 37993672276](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37993672276)
+passed at `2f7fbf6ae771abcb45cb15221e4d66130676e3b3` on the same exact engine.
+It verifies exported native `FToolsetRegistry::RegisterToolset` /
+`UnregisterToolset`, the editor subsystem's registry accessor and the official
+adapter's actual root `tools[]` schema consumer. The complete native `FToolset`
+interface supports raw argument rejection. Its internal handler receives the
+bare operation; the schema uses
+`YacsBobInspection.InspectAcceptedCheckpoint`. Artifact `11646406329` has
+archive SHA-256 `82049f8e8610cf54200ea540068f9503ec8c856063c85c7bba67aeffd3294f00`.
+These observations close the declaration gap, without asserting runtime guard
+parity. The stock reflected argument conversion remains unproved and is not
+used as this boundary.
+
+The [native plugin](../Plugins/YacsBobInspection/README.md) remains disabled by
+default. Its fixed owned session binding requires the explicit proof flag and
+admitted startup before registering its single domain operation. Its internal
+identity and hit readers pin the accepted map and unique
+Landscape, remain outside the MCP tool definitions, and never trace or mutate
+the world themselves. The producer prefers the native reader when present;
+an invalid native response cannot fall back to unverified reflected ownership.
+The native `YacsBobInspection.InputBoundary` Automation test owns a separate
+registry and callback. It verifies actual single-tool schema visibility before
+checking malformed inputs, unknown fields and denied operation names. Installed
+registry regexes require slash delimiters:
+`/^YacsBobInspection$/` and
+`/^YacsBobInspection[.]InspectAcceptedCheckpoint$/`. A valid empty request in
+the isolated empty HostProject must fail the fixed-map check, without invoking
+the BOB body. This test does not establish editor-global filters or MCP parity.
+
+`official-unreal-mcp-native-probe.yml` stages only tracked plugin inputs and
+runs `BuildPlugin` on an idle shared host. Its
+[first native run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37994488902)
+stopped before C++ compilation because generated action paths were 292–311
+characters, exceeding UnrealBuildTool's 260-character limit. The
+[short-path native run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37996979223)
+at `f557bfd0a760b795bb3294ec047cdfc4c837424d` completed all eleven build
+actions and linked the plugin on UE 5.8.2 / CL 56702186. Its owned empty-project
+Editor process exited **255**; the boundary test and Python bindings are not
+verified. The final output-identity error obscured the original session error.
+[Read-only diagnostic 37998743610](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37998743610)
+at `e09133df67d13ce06bf872a0620ead9c883296e3` verified the preserved log and
+report: the single test failed on three intentional missing-toolset error logs
+(`actor`, `scene`, `AutomationTestToolset`), with zero warnings and no reported
+assertion failure. The test now expects each complete literal denial message
+exactly once and checks actual occurrence counts, retaining all denial calls
+and assertions. The installed Core API and count verification were confirmed
+in [diagnostic 38000430250](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38000430250)
+at `79a7279176a7b5abddd21729fb88ff352c2a66d7`. Branch pushes now select
+the fixed retained-log diagnostic for the latest failed Python attempt.
+Manual dispatch retains the fixed previous-failure readback option.
+A passing native proof is pending.
+The same diagnostic located the actual private Python settings header, SHA-256
+`6c5f68a3945759234a9b38a98ac7d1369a91982f9d36c433eb2e518e79ebb5f2`,
+with `config=Engine` and configurable `bRemoteExecution`. Previous outputs remain
+retained. Accepted-scene hydration, the existing project test and official MCP
+activation remain pending.
+
+[Retry 38001987773](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38001987773)
+at `3e8eee60e4a7d37d61a653f0b52f7dcb09196276` compiled all eleven
+actions, requested the Python reflection check and retained its owned Editor
+exit code **3**. No native test or reflection PASS follows from this attempt;
+the [fixed retained-log readback](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002856042)
+at `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4` identifies
+`RuntimeError: Reflection proof source differs from its trusted marker`,
+followed by the configured fatal Python-script exit.
+[Five-file readback 38003698637](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38003698637)
+at `08e1a0cc47a00646aa8cdbb251f13cfa9abbaa6e` confirms that only
+the generated HostProject's `Config/DefaultEngine.ini` changed: its post-startup
+469 bytes hash to
+`a090175a44123f56df2d6432a5cf2fa45f9aaab3d33df5fdab51d901a77551b8`.
+The script, public header, plugin descriptor and project descriptor all match
+their original hashes.
+[Config-content readback 38004216108](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38004216108)
+at `3d7645e145d55fb4832be7b03656b5a7611e5e91` identifies added
+`AndroidFileServerEditor.AndroidFileServerRuntimeSettings` keys; the generated
+security value is redacted. The next bare-project launch verified the fixed
+installed descriptor and disabled only `AndroidFileServer` through the proved
+plugin command-line mechanism. It neither accepts rewritten configuration nor
+changes the original project descriptor. The hash contract remains binding.
+Only this invocation's two redirected logs may be read with shared read access
+after its owned Editor has exited; bounded size and timestamp checks reject
+changes during reading or before receipt persistence. General source hashing
+retains its existing behavior.
+[Retry 38005167146](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38005167146)
+at `8239a0211040230599a9acfef8a32cd002289ecb` compiled all eleven actions
+and verified the corrected log retention with no secondary errors. Its owned
+Editor still exited **3**, without timing out; native boundary and reflection
+remain unverified.
+[Readback 38005786174](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38005786174)
+at `8cebfebc69aae1029b2cf8d460edb70a42b2cf0a` confirms that all five
+inputs match, including the original 79-byte configuration. The Android plugin
+correction therefore preserved that config. The actual Python failure is
+`AttributeError: module 'unreal' has no attribute 'PythonScriptPluginSettings'`.
+The corrected probe uses the existing fixed `unreal.load_class` settings
+pattern, verifies the native class and actual default object's class path, and
+still requires remote execution to be exactly `False`. Seventeen offline
+reflection tests pass. [Retry 38006333498](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38006333498)
+at `88188399847bdafbe10b6e33dd664da5871a2900` again compiled all eleven
+actions and retained its owned Editor exit **3**, without timeout or secondary
+retention errors. [Readback 38007015306](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38007015306)
+at `22ce0291e0aa26d98c042464f4e6fbccfdbfb609` confirms all five inputs
+still match. The class and default object load, but Python's
+`get_editor_property("remote_execution")` cannot find that private property.
+The owned binding therefore reads the source-proved native `FBoolProperty`
+`bRemoteExecution` on the exact settings class/default object and requires
+`false` before imports/listening and on repeated inventory checks. No boundary
+or reflection PASS is established by that failed attempt. Future failed native
+attempts print only the bounded current reflection receipt's safe scalar
+summary after the owned Editor has exited, retaining the original failure and
+all false admission flags. [Protected CI 38006339219](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38006339219)
+passed at the same head; its ordinary lane leaves this plugin disabled.
+Hash failures now identify the exact field and both digests. The dependency
+reader independently did not start: its embedded
+Python program is 33,053 characters, and
+the Windows command exceeds the 32,767-character process limit. Passing the
+same owned reader program through standard input removed that tooling limit:
+the fixed readback successfully collected the installed APIs. A large-program
+regression verifies this transport without expanding its source collection.
+The accepted-checkpoint reader now successfully reads the authenticated
+2,868,417-byte capture receipt and its retained metadata; it still restores no
+assets and grants no runtime admission.
+
+That source diagnostic also verified the HTTP listener's `localhost` default
+and loopback binding, configuration override support and the actual MCP call
+dispatch. The official registry adapter substitutes an empty object for absent
+or non-object argument parameters. The raw native boundary alone therefore
+cannot prove rejection of malformed transport input. The fixed domain entry
+must require an actual empty argument object before delegation; its incoming
+editor work and result completion must run on the game thread. The latest
+installed-source readback verifies `IModelContextProtocolTool::RunAsync` with
+nullable JSON parameters and the fixed `IPythonScriptPlugin::ExecPythonCommand`
+string/boolean interface. The private fixed domain entry is implemented but its
+native compilation and actual session proof remain pending. The official
+`FindTool` compares names without case sensitivity: spelling variants resolve
+to the same operation and cannot be reported as wire-level wrong-case denials.
+Native registry name checks retain their narrower meaning. The five-file
+diagnostic also verifies the actual `HTTPServer.Listeners` section and cache
+invalidation: notification must name `GEngineIni` and that section before
+listener creation. Early Python remote-execution and MCP automatic-start
+settings still require a proved config override mechanism before module load;
+the bounded reader now includes only the fixed Core `ConfigCacheIni.cpp` for
+that remaining startup question. Both command-line override parser bodies and
+the exact `-ini:` / `:[` / `]:` specifiers are verified. The new read also
+establishes that `ini.UseNewDynamicLayers` defaults to **1**, bypassing the
+legacy override overload. The latest bounded read verifies the named
+`ConfigContext.cpp`, SHA-256
+`e885987db4711ff5fe6ba6e053e5ced57d8dbe9eb911c12130e8a6f28666a1cc`:
+its dynamic hierarchy records command-line overrides and applies them after
+the saved layer to both final and in-memory configuration. The fixed forms are
+`-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False`
+and
+`-ini:EditorPerProjectUserSettings:[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]:bAutoStartServer=False`.
+No positive automatic-start flags are allowed. Source order supports this
+mechanism; the actual executable's effective Python/MCP settings and absence
+of an existing official server still must be verified before owned activation.
+
+The fixed `accepted_session` workflow now replaces the obsolete bare-project
+launch. The retained failure reader remains its only alternate mode. Two fresh
+short isolated worktrees bind the committed source, normal original-project
+build and independent tracked-only `BuildPlugin` output. The launcher copies
+only four successfully built custom DLLs and their unchanged matching module
+manifests; it certifies no old cache. The accepted consumer stager restores only
+the authenticated #363 bytes. One owned Editor and fixed client share a
+420-second deadline. The native zero counter and OS-owned IPv4 loopback socket
+must be ready before the client starts. Final proof requires the exact one
+Automation pass, 22 precise denials, one native body invocation, all six real BOB
+bundle hashes, clean owned shutdown and a post-exit Content/Config/project
+inventory comparison. Fifty-three offline session/client tests and independent
+source/lifecycle reviews pass; these are preparation evidence.
+[First integrated attempt 38007485025](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38007485025)
+at `cd61e0133fc9be749cb0688c6536f09f4ea63a14` passed Windows parsing
+and the original-project build. The independently owned plugin compiled but
+linking exited **6**: `LNK2019` for the `FJsonObjectWrapper` constructor used by
+the official `MakeTextResult` helper, followed by `LNK1120` for one unresolved
+symbol. [Fixed read-only diagnostic 38008679525](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38008679525)
+authenticated this retained failure without starting a build or Editor.
+Accepted bytes were not staged and no MCP listener started. The domain module
+now declares its direct `JsonUtilities` dependency.
+[Fixed integrated attempt 38009120622](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38009120622)
+at `4ae6268a2577028baa27d5e2d0ffa1e27cd8a9f1` passed both builds,
+linked the plugin and staged the authenticated consumer bytes. The launcher
+then rejected a file identity as not bounded, nonempty and regular before
+Editor startup. [Fixed read-only diagnostic 38010255761](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38010255761)
+at `0fed8a7d646cfb152bdd9c43dd22ebe048751e7a` authenticated both
+successful build records and the 50,878-byte staged preparation file. The
+recorded markers put the failure before preparation admission, not at Python
+executable selection. Source analysis establishes a deterministic mismatch:
+the stager hydrates three frozen non-Content LFS PNGs, while the code/config
+guard compares their payloads to pointer hashes and caps reads at 16 MiB.
+`material-weights.png` is 28,497,885 bytes. The historical filename was not
+logged; this is a source/control-flow diagnosis. The correction keeps the
+16 MiB code cap and checks only those three fixed asset identities separately
+before activation and after exit. No MCP listener or domain call is admitted;
+the actual accepted session remains unverified.
+[Next native attempt 38011227188](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38011227188)
+at `d163f345a818150a81a1f2ca8a9e3cb3a7b69bb6` passed Windows
+PowerShell parsing, then stopped in executable preflight before either build.
+The `Get-SessionFileIdentity` call rejected the Python search result because
+its `Path` argument could not be converted to `System.String`. The correction
+selects the first application in command-resolution order and preserves the
+physical-file checks. This result does not establish a zero-size alias failure
+or a successful asset/runtime proof.
+[Integrated session 38011502540](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38011502540)
+at `2baa276fcdd35920490495709c7d7379820c5c03` passed both builds,
+staged the accepted consumer, verified the three physical texture payloads,
+and launched its owned Editor. The Editor published its native scene context
+and the host published the transport context. Waiting for `native-counter.json`
+then exceeded the shared 420-second deadline. The fixed client was not launched;
+official readiness, Automation, transport and BOB remain unverified. The saved
+host receipt is 440,247 bytes, SHA-256
+`b19aa1b9d474ef7be6eff646da53d17a6e57225a672d3a29f043d5fd501b2f45`.
+[Read-only diagnostic 38013335203](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38013335203)
+at `211a1a4c1a9eb5fcf3125f432e380cd44643e7d8` authenticated the old
+host receipt, both build records, preparation/scene/transport contexts and all
+three retained Editor logs. The actual command line contained the proof opt-in
+and both domain/MCP plugin selections; the domain DLL loaded. Both
+`native-counter.json` and `native-session.json` were absent. This establishes
+the retained observations, not the lifecycle cause. Source review found no
+context schema mismatch and confirmed that failures before trusted-input
+admission suppress the native receipt without logging their reason.
+The next candidate adds bounded native lifecycle/failure log records and
+reserves their first/last lines within the existing 24-line failure console
+limit. It preserves all context, listener, operation and authority guards and
+the native 180-second / host 420-second deadlines. A fresh exact-source native
+attempt is needed to establish the otherwise missing failure phase; no
+historical timeout cause or readiness PASS is inferred.
+[Instrumented attempt 38013644520](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38013644520)
+at `9b50911a058f1213fad6f17bd85086fa76830e2f` passed the builds and
+accepted staging but again failed before MCP readiness. Its complete four
+native milestones show the Python callback, first tick at 9.548 seconds, then
+failure in `WaitingInputs` at 209.654 seconds with Python initialized and inputs
+untrusted. The unchanged native 180-second check precedes marker visibility and
+input admission; the host subsequently reached its shared 420-second deadline.
+This identifies the failure phase, not the cost of any one preparation stage
+or marker availability at the nominal deadline.
+[Fixed readback 38015171281](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38015171281)
+at `0fc8d8b87db4b6c8663f4845f961efa6e6eefd4d` authenticated the original
+host/context/log bytes and observed both native receipts absent. The original
+host start is `2026-10-10T01:42:56.3369494Z`. Separately labelled current
+filesystem metadata records context publication at `01:47:09.5082640Z` and
+transport publication at `01:47:43.6509744Z`; these timestamps are not original
+hash-pinned chronology. They support a preparation delay without measuring
+individual stage costs.
+
+The next candidate batches immutable committed Git reads: 354 pre-context
+Git processes become 21. All three independent HEAD/clean/worktree-byte checks
+remain separate. Tree object IDs, preflight blob types/sizes/order, bounded
+raw acquisition and object hashes authenticate the same source/pointer bytes.
+Accepted metadata, scene and physical-asset validation remain unchanged.
+The later 2,782-file host check retains every ancestor/reparse check, using
+direct filesystem attributes instead of the PowerShell provider. Fixed host
+and bootstrap stage timings are added; neither native 180-second nor host
+420-second limits or validation order change. Seventy focused synthetic and
+real-Git session/client tests pass. Linux raw-read parity confirms identical
+bytes, not Windows timing or native admission. A fresh accepted-session proof
+must establish the runtime effect.
+[Refactored attempt 38015883833](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38015883833)
+at `9be44d403af3997b56f68c04df14c402f70001ce` passed both builds and
+accepted staging. The host verified context at 119.326 seconds from launch,
+completed its unchanged tracked-source scan in 5.801 seconds and published
+transport at 125.148 seconds. Native inputs were trusted and official test
+discovery completed; the native session then failed in `Discovering` at
+41.160 seconds with `python=1` / `trusted=1` and
+`The owned official pre-listener prerequisites are unavailable.` This resolves
+the previous pre-admission deadline blocker, but establishes no listener,
+client, Automation result or BOB execution. The compound activation guard does
+not identify which prerequisite failed; the next candidate will preserve its
+short-circuit order and conditions while reporting fixed branch-specific errors.
+The host receipt is 443,055 bytes, SHA-256
+`b22a7b1eabecda906127afed3cbd63f3a50115ac7d8a55be280b0352fea09e75`.
+[Artifact 11656312507](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38015883833/artifacts/11656312507)
+is 346,833 bytes, archive SHA-256
+`86347a8134fe37b0a5fba6e5075a33f8c5fe64db5923038af27c9f2dafb30b59`.
+[Ordinary CI 38015886935](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38015886935)
+passed at this SHA with the domain plugin disabled.
+[Activation diagnostic 38016857639](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38016857639)
+at `aceaefb437962ce3dc0af301db32c4ac2cf66592` passed both builds and
+accepted staging. Context was verified at 74.472 seconds from launch, the
+complete host source scan took 4.688 seconds, and transport was published at
+79.179 seconds. Discovery completed; the unchanged activation conditions then
+failed at 50.813 native seconds with
+`The active engine configuration is outside the owned project root.` Module,
+absence-of-server, registry and config-cache prerequisites passed before that
+containment check. Legacy library preparation and listener startup were not
+reached. This identifies the failing check, not the actual `GEngineIni` value.
+The host receipt is 443,055 bytes, SHA-256
+`0076721aff4f5af496d2f720a0f6826633594e8a61d25b12c9b922ce9318d6e6`;
+[artifact 11656772437](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38016857639/artifacts/11656772437)
+is 346,211 bytes, archive SHA-256
+`49e081252d09fe54ccfa64de658e48f13a1dde1b619395a5d82fc691232143a9`.
+Retained installed configuration sources distinguish cache branch identifiers
+from destination paths. A fixed read-only source/readback attempt will collect
+the missing installed public branch/path declarations before any correction.
+It adds only the observed-include `Core/Public/Misc/ConfigCacheIni.h`, raising
+the fixed source count cap from 29 to 30 because all 29 existing slots were
+present. The 2 MiB per-file, 8 MiB total and 500-line per-purpose console caps
+remain unchanged. The new SDK receipt is a current source-only observation,
+separate from the hash-pinned historical failure; declarations and bounded
+constructor contexts still require primary review. Header console contexts
+have an explicit 200-line reservation so branch-resolution implementation
+excerpts can fit within the unchanged overall console cap; any omission is
+reported, and the bounded JSON evidence is retained separately.
+No config-containment guard is removed or presumed satisfied; no build, Editor
+or MCP operation runs in that diagnostic mode.
+[Ordinary CI 38016861731](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38016861731)
+passed at `aceaefb437962ce3dc0af301db32c4ac2cf66592` with the domain plugin
+disabled.
+[Source-only diagnostic 38017909601](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38017909601)
+passed at `70ba2f3785e851886079ae45e54c92c2fd4eb9ca`, authenticating the
+retained activation failure and observing its native counter absent. Its
+current SDK receipt covers 30 fixed sources / 1,080,690 bytes and is
+1,891,101 bytes, SHA-256
+`d12131db09bb99b77a34741cdfe8654a08ca06c2a8abb8b546ce5a94a8639502`.
+Installed `ConfigCacheIni.h` (SHA-256
+`15e5481088838025174ae651881a76b32c4c14ceeac710a51848d4b35d524345`)
+shows public `FConfigBranch::IniPath` and exported `GetConfigFilename`, but
+the latter's body and enclosing `FConfigCacheIni` public scope were omitted
+from the bounded console. The next fixed read prioritizes those exact existing
+inputs; no new source path, runtime operation or read limit is added. This does
+not establish the active `GEngineIni` value or admit an accessor substitution.
+The diagnostic host receipt is 422,608 bytes, SHA-256
+`2e24dadeb6f025ccb7ce36984c477678526592fed9c76fb85229600591b637b3`;
+[artifact 11657200558](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38017909601/artifacts/11657200558)
+is 425,535 bytes, archive SHA-256
+`6b704c6f222928e5a6dbc7d42484969eb354c526b2eec012eaa979f88ea39fd6`.
+[Accessor diagnostic 38018320423](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38018320423)
+passed at `e2791d78d86e00a3e12e13a4fdb46353ef5c51f9`. The same installed
+header shows `FConfigCacheIni` and its uninterrupted public scope (1264–1424),
+including exported `FindBranchWithNoReload` (1383). The complete
+`GetConfigFilename` body (installed CPP 5169–5182) returns the base name for
+known configurations, so it is unsuitable for physical containment. The
+complete `FindBranchWithNoReload` body (4258–4297) resolves the existing cache
+branch without `SafeReload`; it updates the inactivity timer. Public
+`FConfigBranch::IniPath` is the actual branch destination. The correction uses
+that existing branch via the unchanged `GEngineIni` cache key, rejects a missing
+branch/empty destination, and applies the same owned-root containment check.
+All cache reads/writes/config-section broadcasts retain `GEngineIni`; no global
+cache key is overwritten and no destination is fabricated. Native compilation
+and execution of the correction still require the accepted-session proof.
+The current SDK receipt is 1,916,879 bytes, SHA-256
+`9d9d2088664fc6a94c01faf587c6aaf3ec3675a1ecdaee7913ca41abc8b58155`;
+the host receipt is 422,608 bytes, SHA-256
+`dc9d2b4958d84f1ee4f345207c5263a074e24195241b66c54e3df3318572c675`.
+[Artifact 11656793802](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38018320423/artifacts/11656793802)
+is 427,248 bytes, archive SHA-256
+`0635866a12ca40c6d39428c3880e1e6bb27cf7d63b644ef216149726c9c6d3eb`.
+[Corrected session 38018565445](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38018565445)
+at `98b6042e495e79a6460f221190a9d5dfd79a08f0` passed both builds, accepted
+staging, the corrected config containment and listener readiness.
+[Ordinary CI 38018568041](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38018568041)
+also passed at that source. Owned Editor
+38100 reported `Ready` at `03:01:06.143`; owned client 268 started. Host context
+was verified at 110.882 seconds, the full source scan took 6.301 seconds, and
+transport was published at 117.204 seconds. The native session later failed
+at `03:03:25.263`, `phase=Completed elapsed=187.425`, under the unchanged
+180-second bound. The client exited nonzero with `TRANSPORT_BLOCKED` /
+`error_type=ValueError`; its exact failing validation is not yet established.
+`Completed` is set only after the test/producer/four-packet checks, but does not
+establish completed client verification or native admission. The retained
+failure is read next without another build or Editor; no deadline is extended.
+Pre-Editor disk reserve was 6.96 GiB, so another fresh build also needs a
+verified storage plan that preserves evidence and owner work.
+The host receipt is 444,401 bytes, SHA-256
+`eec147e2013a644ee7edbf81041da59597736626ad4bbb8fe609a8b9ee0eca3e`;
+[artifact 11657602552](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38018565445/artifacts/11657602552)
+is 2,935,256 bytes, archive SHA-256
+`afb7d52de02456f890ef132c36784e4f4b8255c9a79f3b23282d074645f12b4a`.
+[Read-only diagnostic 38019785377](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38019785377)
+passed at `b6086b7304aee29018281c433981f381fc27e146`, including the actual
+Windows PowerShell parser. [Ordinary CI 38019788315](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38019788315)
+also passed at that source. The authenticated native failure receipt records
+one body invocation and 15 argument denials. The retained client receipt
+(8,026 bytes, SHA-256
+`a613645d46009a94c646b6f0fbf284b89cac9e2388db3d516c4a6c24a6565292`)
+records all 22 ordered denials with body count zero and one attempted valid
+call, but no successful bundle verification. Its original host hash was not
+recorded: these are current observations of retained bytes, not authenticated
+historical transport evidence. Its exception text is generic, so failure is
+only narrowed to the valid call, response, counter or bundle checks. The next
+refactor shares the existing bounded raw Git reader across the same fresh
+source boundaries and adds fixed client error stages; no failed guard is
+bypassed. Drive free space was 6.72 GiB at `03:13:52.0557393Z`; a bounded
+inventory of the known older generated build directories precedes any cleanup.
+The refactor uses one private standard-library Git reader for both callers,
+preserving immutable raw bytes, per-file/aggregate/deadline limits, executing
+module identity and every fresh source boundary. Operation source checks retain
+independent domain verification; the client reuses hashes from its same current
+source pass and keeps its 256 KiB utility limit. Fixed producer elapsed stages
+and client failure codes expose future failures without raw exception text.
+The combined 133 local tests passed, with independent reader/client/operation
+reviews, critical Ruff and formatting checks; these do not establish Windows
+timings or runtime admission. At `3a66f557`, the workflow used read-only diagnostic mode
+to observe eight fixed old `Intermediate` directories first. The inventory
+authenticates two older host receipts, checks their current native/config Git
+state, and compares two metadata walks within 100,000 entries, 45 seconds and
+depth 64. Missing, unstable or incomplete observations remain ineligible.
+That diagnostic performed no cleanup; latest `38018565445-1`, evidence, assets,
+Git/cache data and compiled binaries are preserved.
+The current diagnostic host receipt is 422,608 bytes, SHA-256
+`2b3ba42c4e2589f45d3842e31f3ee86bd19f6a86c9b1c59bc7a4a3bd12e920f9`;
+[artifact 11657930874](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38019785377/artifacts/11657930874)
+is 428,019 bytes, archive SHA-256
+`1743d17d37d9bfe6faf3709c8507d4881887cc117098746bf476c7cb1e2bc369`.
+[Storage diagnostic 38020860094](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38020860094)
+passed at `3a66f5571e16bc8a8fc39da5707103a1c5a85953`, including Windows
+parsing and all eight fixed directory observations. Both old native/config Git
+states matched before and after; no cleanup occurred. [Ordinary CI 38020863514](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38020863514)
+also passed. The 30,868-byte inventory is SHA-256
+`77d497f8ec4bb53ee070f5fa7de8e12b1daa77387e278c1810b344b7d24afb8a`.
+Only the two old project `Intermediate` directories were selected for the
+fixed cleanup: `38015883833-1` contains 2,750,359,177 logical bytes with
+metadata digest `d651d8e61bf13a10c902496e1620c1f26dd2b292913fb4adc0e8ca2f318a7b56`;
+`38016857639-1` contains 2,750,359,182 bytes with digest
+`8bbb390391d0cd68560f124c78b60447e45ec843393b4d7a44ee3acf2218858e`.
+Each contains 196 files / 23 directories. Their approximately 5.12 GiB sum is
+logical storage, not itself an observed increase in free space. The fixed cleanup
+must authenticate the inventory, recheck its metadata and native/config state,
+and verify retained proof/binary hashes before and after individual generated
+file removal. RoadForge/plugin intermediates, source, assets, Git/cache data,
+all evidence/DLLs/binary module manifests and latest `38018565445-1` remain protected.
+Free space was 6.50 GiB at `03:32:27.8224666Z`; actual before/after free-space
+observations and the unchanged disk reserve are required before another build.
+The current storage diagnostic host receipt is 423,106 bytes, SHA-256
+`3333583b85589451209883bbf95efa44c33b25d2fe08fbefdfeb25dba159f174`;
+[artifact 11658940776](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38020860094/artifacts/11658940776)
+is 432,762 bytes, archive SHA-256
+`b08b757a9aa2c34cb822ac417cec36d724d499e424316729bf1b493197354c36`.
+[Fixed maintenance 38021932519](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38021932519)
+passed at `9d26427a0aeb3f659d018778b7501a840d1b7b65`, including the actual
+Windows parser and all pre/post preservation gates. Its bounded primary console
+reports 392 files / 46 directories removed, 5,500,718,359 logical bytes and
+55 protected identities matched both before and after. Actual available space
+rose from 6,749,306,880 to 12,250,710,016 bytes: an observed 5,501,403,136-byte
+gain, with 11.41 GiB free and the unchanged 5 GiB reserve passing at
+`03:50:51.7424231Z`. The 141,853-byte individual-deletion receipt is SHA-256
+`0fcdb82b71aa6ede50a4e0053a8ff73a6281be75362fe8c14e0ad69b78a4338d`;
+the 421,414-byte host receipt is SHA-256
+`773c2714e1953b39db159c4daa4c818c3549fcc9ac359c832caf360cf5364c05`.
+[Artifact 11658772774](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38021932519/artifacts/11658772774)
+is 135,823 bytes, archive SHA-256
+`dc22efbc833e59b311fec968db969e299c26359222901bdb5009d4eb259db6a0`.
+These are authenticated console identities and source-enforced maintenance
+findings, not a claim that the complete raw deletion receipt was independently
+read. Maintenance supplies no runtime admission. The one-off cleanup and
+storage-inventory helpers are now removed; the workflow returns to the accepted
+session with the shared Git reader, fixed failure stages and unchanged native
+180-second / host 420-second deadlines. A fresh native session remains required.
+[Native attempt 38025560494](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38025560494)
+at `4fe6c4f50db0e7a8b2883429209dd193e01159dd` passed both isolated builds and
+accepted staging. Editor 29376 reached native `Ready`; client 45940 received
+the valid result and matched its four transported objects with saved files,
+including saved/direct result equality. The client then failed at
+`BUNDLE_VERIFY / GUARD_REJECTED / ADAPTER_REINSPECTION`: the fresh adapter
+result or proof differed from the saved object. Adapter source/input checks
+completed before this equality guard; the differing field is not retained in
+the failure. The client's later receipt/capture/conservation checks were not reached.
+The native terminal reason was `The fixed client completion or final native census changed.`;
+no successful session summary or six bundle identities were published.
+The producer completed at 72.938 cumulative seconds; its selected logs show
+source milestones at 10.735, 27.829 and 72.688 seconds. Host context/source/
+transport milestones were 122.668 / 152.816 / 152.834 seconds. These are this
+attempt's observations, not a performance comparison or M3 performance PASS.
+The 445,099-byte host receipt is SHA-256
+`5f0d9cfae844b00d43dbcac7cd3c4e21103423439db1bf6fcc45f0212f4465f0`;
+[artifact 11659423904](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38025560494/artifacts/11659423904)
+is 2,935,316 bytes, archive SHA-256
+`cea0f730ce8a64b16dae683661c3665189379aaca4881d0fc1275d59a2fc9f58`.
+The next fixed job authenticates that original failed host and observes the
+retained bundle before pure adapter reinspection, with bounded field differences.
+Bundle bytes without original host hashes remain qualified current observations;
+this diagnostic performs no build, native capture or MCP call and admits no runtime.
+The exact result/proof equality guard and native 180 / host 420-second bounds
+remain required. No cause is inferred before the actual differing field is read.
+[Fixed retained comparison 38027251962](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027251962)
+at `cb90c59fb2426bf102f9e563ad1088b8d1a00132` authenticated the original
+failed host and compared the current retained bundle without a build, Editor
+launch or MCP call. The saved and direct results matched. Reinspection differed
+only at `rms_required_adjustment_m`: saved/direct `0.35042352565936236`
+(`0x1.66d56cb9d2ebfp-2`) versus host `0.3504235256593645`
+(`0x1.66d56cb9d2ee6p-2`). The proof differed only at the two derived output
+hashes; the input paths and input hash matched. The original host-authenticated
+Editor log identifies embedded Python 3.11.8; the original owned client
+executable used for this reinspection reports Python 3.12.10. The inspector's
+built-in floating-point `sum` changed its accumulation behavior in Python 3.12.
+RMS now uses `math.fsum` so both runtimes compute the same domain quantity;
+exact result/proof equality remains required, with no rounding or tolerance.
+The current retained input is 60,025 samples / 10,445,634 bytes, SHA-256
+`b064fbe3697c77dfc1ef33de2e24fb6dc94bf6f8011c477f821b175ab16283e5`.
+These bundle observations have no original failed-host bundle hash. The fixed
+6,889-byte diagnostic is SHA-256
+`77b6bf557fc58cadf195f697b12f47ea85a261174c34dfc5c6d25736dfc98994`;
+its 424,249-byte current host receipt is SHA-256
+`c81e777bb3a10eab888a3f16319a0b8163a21ae00a82f2eab2b73bcfd1d5c264`.
+[Artifact 11661060539](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027251962/artifacts/11661060539)
+is 432,882 bytes, archive SHA-256
+`cb7ecb120c4bc8e88a7e077b51d37ea0c293f7b2a63dcc8510f2991af578da2d`.
+The actual sample member also exceeds the host's previous 8 MiB bundle-member
+bound. Only `native-samples.json` now uses the existing adapter/client 32 MiB
+bound; the other five members retain 8 MiB each, with a 64 MiB aggregate budget
+applied before each bounded hash read. The one-off reinspection helper is
+removed after this observation. A fresh native session must verify these
+corrections under the unchanged 180 / 420-second bounds; this source-only
+diagnostic provides no native, transport or admission PASS.
+The ordinary project descriptor and guarded baseline are unchanged;
+#384 stays open and #364 stays blocked.
+
+[Fixed native session 38027596123](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123)
+passed at `241104de320f8417c7abc4dd973ac148ed98a66d`, as did
+[ordinary CI 38027599394](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027599394).
+Both isolated builds, accepted consumer staging, official IPv4 loopback
+transport, one `CyclingPhysics.RoadPhysics.ProfileInterpolation` test and the
+real native BOB capture passed. The host reports
+`ACCEPTED_SESSION_LOCAL_PROOF_VERIFIED`, with its three runtime verification
+flags true and `official_mcp_admitted`, `persistent_world_mutation` and
+`performance_pass` false. The bounded console summary is not a complete raw
+receipt review. Full hash-pinned native/transport/capture review and the
+separate `YacsBobInspection.InputBoundary` test remain required before protected
+closeout; ordinary CI's `CyclingPhysics` filter does not cover that test.
+
+BOB returned `REVIEW_REQUIRED` / `INSPECTOR_ONLY`, with inspection complete:
+60,025 evaluated samples, zero trace misses, six `CONTACT_OK` and 60,019
+`FILL_REQUIRED`. Maximum required fill is 1.734214770718081 m and RMS is
+0.3504235256593645 m. Saved/direct/client-reinspected results now match exactly
+across embedded Python 3.11.8 and host Python 3.12.10. All four BOB
+authoring/repair/road/learning flags remain false. No road acceptance or
+earthworks change follows from successful transport.
+
+The original host receipt is 449,384 bytes, SHA-256
+`e42ec494ed4835a007fe5133f7379434b71088ab1d0018e88ffcec28c6500353`.
+[Artifact 11661116718](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123/artifacts/11661116718)
+is 2,941,011 bytes, archive SHA-256
+`6383366789f06ec371127412602337ba7f8d84f1810b340fdced8b33c7a696d2`.
+The six bundle identities total 11,935,638 bytes:
+
+| Member | Bytes | SHA-256 |
+|---|---:|---|
+| `capture-proof.json` | 75,594 | `5ac20d17ce10b7a77ad80ca051ec274ce1c77a614ed5266675aa9b422d597f2a` |
+| `direct-inspection.json` | 705,872 | `30e0a42fef8254f85dde74f75402f709bb10f17bd6e3444e0bdb8a3d54d0cc18` |
+| `native-samples.json` | 10,445,634 | `2a852d071212517223900b2f4030e3b8df47268847a1b5cf7e0ed0c74746cea1` |
+| `proof.json` | 1,974 | `87d39ddf6506fd219a8f0fa9c32f87f14d400ebb1e224cc603e06a03ba3d5836` |
+| `receipt.json` | 692 | `6f3fd243b76691d5a5c9c05a7b340a5424e703b678a074ab4e37a25b83a97f4d` |
+| `result.json` | 705,872 | `30e0a42fef8254f85dde74f75402f709bb10f17bd6e3444e0bdb8a3d54d0cc18` |
+
+The host's final persistent inventory digest is
+`4566bc9b3b2877ee562c230de1733da0668a481eaf933a51cb579d45a0c9b938`;
+the three physical frozen textures retain identical before/after identities.
+The runtime source SHA is `241104de320f8417c7abc4dd973ac148ed98a66d`, distinct from later documentation/readback
+commits and the eventual protected merge. Later plugin README changes are
+documentation deltas in the producer's source inventory. The strengthened
+`InputBoundary` C++ test is a separate test-only delta; the other eleven native
+source/descriptor inputs, runtime Python, policy and frozen assets retain the
+runtime revision's bytes. The original client utility inventory's launcher
+is separately authenticated as historical bytes; its reviewed current unit
+and readback implementation is an explicit harness delta. The fixed branch reader
+will authenticate the successful raw receipt without rebuilding the project;
+the separate input-boundary check builds the strengthened test in a fresh
+tracked-only plugin package and owned lightweight project. Its test-only C++
+delta and newly compiled binary remain separate from the original runtime proof.
+
+[First positive readback 38029365716](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38029365716)
+at `299eaac301de1a4da334241a24821e506ceb6aa3` passed Windows parsing, then
+failed before unit launch because local `$host` collides with PowerShell's
+read-only automatic `$Host` variable. Its current host status is `BLOCKED`,
+with all current runtime verification flags false. This is a reader naming
+error, not a failed historical native session or an InputBoundary result.
+The correction renames that local document variable; actual receipt review
+and the separate unit still require a successful run.
+
+[Corrected readback 38029602978](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38029602978)
+at `5e686e1f506f8f5046e0ffabb11fb7c8e882dc4f` authenticated the original
+host, native/transport/capture and bundle bytes, recording 375 unique Actors,
+the fixed Landscape's finite transform, 22 ordered body-zero denials, the one
+passing ProfileInterpolation test and original owned exits zero. The readback
+receipt is 19,470 bytes, SHA-256
+`c2924b517211d76a83985d642cc3133e79479622bc2009ce40c54f713e54d954`.
+The overall job then failed before unit-root creation or Editor launch in the
+untracked-native-input scan of the persistent code checkout. Git reported
+long-path traversal warnings in preserved `37994488902-1` outputs; neither the
+offending path list nor Git exit code was retained, so the exact cause is not
+yet established. This run verifies the qualified historical readback, not the
+standalone unit or a fresh MCP session. A bounded read-only path diagnostic
+must establish the unit guard's actual rejected inputs before correction.
+
+[Fixed preflight diagnostic 38030202142](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38030202142)
+at `dbf16388d63e5573869cab91b4737db1731002d0` recorded Git exit zero,
+exactly one untracked path and no truncated rows or deadline/stream termination:
+`Saved/RuntimeProof/OfficialMcpNativeProbe/37994488902-1/PluginPackage/HostProject/HostProject.uproject`.
+The two long-path warnings belong to that same preserved old package; this
+does not certify complete traversal of its descendants. The result establishes
+that the persistent-checkout scan included an unrelated retained descriptor.
+Its 2,870-byte diagnostic is SHA-256
+`f071ab787e438fa0626603f59f3f1f91546d74f4e8a12d458d9aec42a5e9d03e`.
+The corrected unit preflight checks its fresh, exclusive copied-file inventory
+before launch instead. Original build-input guards and historical files remain
+unchanged. The temporary diagnostic is removed; actual InputBoundary remains
+pending. Diagnostic job success supplies no unit or fresh MCP verification.
+
+[Isolated InputBoundary attempt 38030801857](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38030801857)
+at `8f8fac210e16c08f547f6985b47f06eb2d1d5ae0` passed the exact fresh-input
+inventory (15 files, 10 directories, 24 entries; copied hashes unchanged).
+The owned Editor (PID 5932) then had one TCP listener at its first live sample;
+the guard stopped it before a test report. Cleanup observed exit -1 after
+1.6620195 seconds. No native unit PASS or post-test conservation is claimed.
+The receipt did not retain listener address/port rows, so subsystem attribution
+requires its hash-linked owned logs. Its 9,183-byte unit receipt is SHA-256
+`30270fa253aa7828bdac8ef9383d7c0a1a8a95790f8871652e2f78f263ae612f`;
+the 423,385-byte host receipt is SHA-256
+`188d4325b301ca9cbfda8770f55cb8464726a4ba7bbf4e271eddf02cbdef5fe6`.
+That attempt required zero owned TCP listeners. The corrected unit contract
+below checks official MCP absence directly; actual InputBoundary remains pending.
+
+[Source-only startup readback 38031509916](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38031509916)
+at `10f2664a50d1d58dd88444abcc6ca72cc35ebd0b` authenticated the failed host
+and unit receipt, then rejected an owned-log identity's shape/path/size before
+reading its bytes. The offending field was not printed; no SHA drift or
+listener cause is established. A corrected diagnostic preserves the original
+declared log identities separately from current observed retained-path bytes.
+Only an exact size/hash match may be labelled original verified log bytes.
+
+[Qualified startup diagnostic 38031958490](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38031958490)
+at `a96bdf280473db2d544e38126447906f24a5fa67` succeeded. The original
+9,576-byte Editor log still matches SHA-256
+`25ceff31d98f13646aa171eaff0bb967a3bb51d77c3c13340604d6c4f4327825`
+and records `LogTrace: Display: Control listening on port 1985`. The declared
+397-byte stdout is now 1,150 bytes with a different hash, explicitly retained
+as a current observation; the empty stderr matches. This supplies a trace
+startup clue, not the missing OS endpoint row. The limited installed-source
+excerpts did not establish a suppression flag. The source-only job opened no
+Editor or server and supplies no unit verification. Its 24,159-byte diagnostic
+is SHA-256 `c40b03f428b685ac79355f4b9f30685a933ec1541be08b7fd9c604c7033b3533`.
+
+[Control-source diagnostic 38032735476](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38032735476)
+at `bf18d900259ba57918b95f8b67a4f8dcdebf14a7` succeeded without launching
+an Editor or unit. The observed installed `Control.cpp` connects the default
+1985 control port, TCP listen call and startup message. This supports the
+trace-control implementation relationship, without supplying the missing
+historical OS endpoint row or a suppression parameter. The selected
+`TraceAuxiliary.cpp` contexts contain the initialization descriptor declaration
+and getter, but not its caller's control decision. Its 26,662-byte diagnostic
+is SHA-256 `aa87e16bff0389da517e1efc8daf0e2f2a77a0f243a86395cca8f1f5efd12387`.
+
+[Fixed-source windows 38033670497](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38033670497)
+at `44d803f505330063442a377f7fb4ab8cd5af35b7` retained all 334 requested
+lines without truncation. The complete observed trace initialization descriptor
+has no control-enable field, and the internal initializer calls control
+initialization unconditionally. `notraceserver` suppresses the separate Trace
+Server launch; `notracethreading` controls the worker thread. Neither is proved
+to suppress the Editor control listener. This is evidence about the observed
+initialization path, not an exhaustive absence claim for every engine option.
+Its 52,303-byte diagnostic is SHA-256
+`2b2bf8ea3a72f40e6ee5e35786703cc59676cccd051b85f91169261497183e1f`.
+
+The strengthened standalone unit checks the loaded official MCP module before
+and after its local-registry proof: no server object, effective automatic-start
+setting disabled, trusted session opt-in absent and actual factory result null.
+Both native observations must occur exactly once with all checks true. The
+owned-PID socket inventory may contain only one attributed TraceControl
+endpoint on port 1985, linked to its actual address/PID row, owned startup log
+and observed installed control source. Unknown or multiple listeners reject;
+after the owned clean exit, no owned listeners may remain. The 180-second
+Editor limit, exact test success, denied input/body-zero checks and source,
+binary and accepted-asset conservation remain required. This replaces our
+overbroad zero-all-TCP harness condition, without treating a port number as
+proof of official MCP absence. The standalone native test still requires
+successful execution evidence; compilation alone supplies no unit PASS.
+
+[Fresh input-boundary build 38035299343](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38035299343)
+at `0ee5eaf39e0d673fee061f7e33372710278d50be` compiled the strengthened test
+successfully. Its new plugin DLL is 354,816 bytes, SHA-256
+`9cdf999ebc6bb68ec5912df24ee99a2a445eabb70d0a7d255d3dfd56b707ef50`.
+The owned Editor then exposed two endpoints: `0.0.0.0:1985` and
+`127.0.0.1:19315`. The guard stopped it; no test report, native before/after
+certificate or final conservation was verified. The second endpoint remains
+unattributed until authenticated retained logs and primary source establish its
+owner. The successful compilation supplies no unit PASS. Ordinary CI was not
+created while PR #467 conflicted with the concurrent #468 policy refactor;
+the branch preserves that refactor and moves its MCP checkpoint into the scoped
+M3 policy before requesting current-head CI again.
+
+[Authenticated startup readback 38037644767](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38037644767)
+at `0e140e0e9c30d64957fdf668aa7d3b701aed07a1` matched all three original
+failed-unit log identities. The owned startup log links `127.0.0.1:19315` to
+`LocoHelperAI`, which reports its MCP endpoint and external exposure enabled.
+The actual plugin descriptor name and isolated opt-out still require verification;
+this diagnostic launches no Editor and supplies no unit PASS or endpoint allowance.
+Its isolated checkout restored the two #468 JSON inputs from 1,973/5,190 bytes
+to the exact 1,953/4,993-byte Git inputs; all twenty-four integrated main paths
+then passed the strict raw-byte check. The only attributes delta is two literal
+LF rules, authenticated separately from the historical runtime source.
+
+[CI 38036647295](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38036647295)
+at `40b85b0c07fc9bda28164f052641dd45c775f666` completed an actual warm UBT
+invocation successfully with zero rebuild actions and scoped Automation 27/27,
+zero errors and two warnings. [CI 38037648234](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38037648234)
+passed through verified equivalent proof reuse; it reran neither the build nor
+Automation. Neither ordinary CI result verifies the standalone BOB test.
+
+Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
+passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
+hosted Python, equivalent exact-head Unreal proof reuse and Aggregate.
+Protected [CI 38004220925](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38004220925)
+also passed for `3d7645e145d55fb4832be7b03656b5a7611e5e91`. Standard
+CI leaves the new plugin disabled; this result does not admit the new native
+boundary or official MCP session.
+
+The same native run authenticated the frozen #363 artifact archive and all six
+consumer/delivery/reload/render/conservation JSON hashes against retained host
+bytes. Later retained-metadata discovery stopped with `READ_BLOCKED`: the fixed
+capture receipt was 2,868,417 bytes, above its original 2 MiB read limit. Only
+that ZIP-manifest-bound receipt now has a 4 MiB limit; other JSON limits remain
+2 MiB. This read has not restored assets or admitted the scene. Protected
+[CI 37996983703](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37996983703)
+passed for that exact commit, including the project build, Automation and
+Aggregate gate. That CI does not enable or test this disabled-by-default plugin.
 
 ### Safety and preserved governance
 
@@ -201,15 +1166,20 @@ read-only road/shoulder inventory is maintained in
 ### Definition of Done
 
 - [x] #363 entry gate is verified with completed state, merged implementation, linked owner visual/render/technical evidence and the explicit post-M3 performance deferral (2026-10-09 handoff above; reverify at kickoff).
-- [ ] Exact environment, one map and the permitted official tool surface are pinned.
-- [ ] Agent sees the admitted map/scene through official Unreal MCP.
-- [ ] Agent reads an actual Actor/UObject and verifies its identity.
-- [ ] One existing relevant Automation Test completes through the official toolset, with real results/logs.
-- [ ] One real BOB inspector executes through a thin domain tool and matches the direct invocation on identical inputs.
-- [ ] Result + proof + receipt are retrievable, hash/identity-bound and explicit about domain FAIL/review states.
-- [ ] Fail-closed behavior and absence of unauthorized persistent/authority changes are verified; guard parity is proven before any cutover.
-- [ ] Required integration/build/Automation, documentation, protected CI and review gates pass for the candidate; implementation is merged.
-- [ ] #364 receives the admitted interface, environment, evidence and limits. Optional #376/#377/#365 work remains deferred. **STOP infrastructure expansion.**
+- [x] Exact environment, one map and the permitted official tool surface are pinned (fixed session 241104de).
+- [x] Agent sees the admitted map/scene through official Unreal MCP (fixed session 241104de).
+- [x] Agent reads an actual Actor/UObject and verifies its identity (fixed session 241104de).
+- [x] One existing relevant Automation Test completes through the official toolset, with real results/logs (ProfileInterpolation, run 38027596123).
+- [x] One real BOB inspector executes through a thin domain tool and matches the direct invocation on identical inputs (fixed session 241104de).
+- [x] Result + proof + receipt are retrievable, hash/identity-bound and explicit about domain FAIL/review states (fixed session 241104de; authenticated readback 38040872136).
+- [x] Fail-closed behavior and absence of unauthorized persistent/authority changes are verified for the fixed session; separate InputBoundary run 38039426402 verifies its native absence checks. Broader tool or authoring cutover requires separate admission.
+
+Delivery completes only when required integration/build/Automation,
+documentation, protected CI and review gates pass, PR #467 is merged and #384
+is closed as completed. Verify the actual GitHub state before starting #364.
+The handoff above supplies its fixed interface, environment, evidence and
+limits; optional #376/#377/#365 work remains deferred. **STOP infrastructure
+expansion and return to asphalt/shoulder after protected delivery.**
 
 A documentation merge, plugin enablement, connection handshake, mock BOB result or list of tool names alone cannot close this issue.
 

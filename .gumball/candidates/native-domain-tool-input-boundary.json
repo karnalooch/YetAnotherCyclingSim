@@ -1,0 +1,26 @@
+{
+  "id": "native-domain-tool-input-boundary",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "tooling",
+  "problem": "A native registry can restrict tool names while forwarding caller arguments unchanged; generated schemas alone do not prove runtime argument restrictions.",
+  "invariant": "Review the actual installed dispatch and argument conversion. A bounded domain operation binds its resources and prerequisites internally, rejects unexpected input before native work, and separates synthetic checks, native dispatch and transport evidence.",
+  "evidence": [
+    "Issue #384",
+    "PR #467",
+    "docs/UE_MCP_WORLD_GENERATION.md",
+    "scripts/ue/test_official_mcp_source_probe.py",
+    "Fixed native inspection/test session at runtime 241104de320f8417c7abc4dd973ac148ed98a66d: https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123",
+    "Authenticated original receipt readback: https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38029602978",
+    "Strengthened test separately compiled at 0ee5eaf39e0d673fee061f7e33372710278d50be: https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38035299343",
+    "Separate InputBoundary success at execution 2016a91f03438f1d866be0eb26f3ae49fd43b803, with direct before/after MCP absence and no world/performance admission: https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402",
+    "Authenticated source-only receipt readback at df80c44a027102560767d9aaa14edab12526fd6d, without a new native or unit execution: https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136",
+    "Protected PR #467 merge and completed Issue #384 gate downstream implementation."
+  ],
+  "do_not_copy": [
+    "YACS map, actor and test identities",
+    "Epic proprietary source excerpts",
+    "product-specific domain authority"
+  ],
+  "failure_behavior": "Missing declarations, unproved arguments or missing native results leave activation and admission blocked; name lists and schema validation cannot substitute for executed denial proof.",
+  "status": "candidate"
+}
