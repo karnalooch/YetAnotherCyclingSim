@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Fixed accepted checkpoint session, or authenticated input boundary failure readback
+        description: Fixed accepted checkpoint session, or isolated native InputBoundary proof
         type: choice
         options: [accepted_session, diagnose_previous_failure]
         default: diagnose_previous_failure
@@ -35,7 +35,7 @@ concurrency:
 
 jobs:
   compile:
-    name: Read fixed input boundary startup failure
+    name: Build and verify fixed native InputBoundary
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
@@ -59,7 +59,7 @@ jobs:
           clean: false
           persist-credentials: false
 
-      - name: Verify exact source and run the fixed session or read the fixed unit failure
+      - name: Verify exact sources and run the fixed session or standalone InputBoundary
         shell: pwsh
         working-directory: _official-mcp-native-probe
         env:

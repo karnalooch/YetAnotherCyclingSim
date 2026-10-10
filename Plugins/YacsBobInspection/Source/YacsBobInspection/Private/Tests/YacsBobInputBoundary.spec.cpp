@@ -3,12 +3,17 @@
 #include "Misc/AutomationTest.h"
 
 #include "Dom/JsonObject.h"
+#include "IModelContextProtocolModule.h"
+#include "Misc/CommandLine.h"
 #include "Misc/EngineVersion.h"
+#include "Misc/Parse.h"
+#include "ModelContextProtocolSettings.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "ToolsetRegistry/ToolsetRegistry.h"
 #include "YacsBobCheckpoint.h"
 #include "YacsBobInspectionToolset.h"
+#include "YacsBobOfficialSession.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
     FYacsBobInputBoundaryTest,
@@ -27,13 +32,44 @@ bool FYacsBobInputBoundaryTest::RunTest(const FString& Parameters)
         return false;
     }
 
+    const auto AssertMcpAbsence = [this](const TCHAR* Phase) -> bool
+    {
+        IModelContextProtocolModule* Module = IModelContextProtocolModule::Get();
+        const bool bModuleLoaded = Module != nullptr;
+        const bool bAutoStartDisabled = !UE::ModelContextProtocol::ShouldAutoStartServer();
+        const bool bTrustedOptInAbsent = !FParse::Param(FCommandLine::Get(), TEXT("YacsBobOfficialProof"));
+        if (!TestTrue(TEXT("Trusted official-session CLI opt-in is absent"), bTrustedOptInAbsent))
+        {
+            // Never invoke the factory with an opt-in that could start a session.
+            return false;
+        }
+        const bool bFactorySessionAbsent = !StartYacsBobOfficialSession().IsValid();
+        const bool bServerAbsent = bModuleLoaded && Module->GetServer() == nullptr;
+        AddInfo(FString::Printf(
+            TEXT("YacsBobInspection.InputBoundary.McpAbsence phase=%s module_loaded=%s server_absent=%s auto_start_disabled=%s trusted_opt_in_absent=%s factory_session_absent=%s"),
+            Phase, bModuleLoaded ? TEXT("true") : TEXT("false"),
+            bServerAbsent ? TEXT("true") : TEXT("false"),
+            bAutoStartDisabled ? TEXT("true") : TEXT("false"),
+            bTrustedOptInAbsent ? TEXT("true") : TEXT("false"),
+            bFactorySessionAbsent ? TEXT("true") : TEXT("false")));
+        bool bPassed = TestTrue(TEXT("The official MCP module is loaded"), bModuleLoaded);
+        bPassed &= TestTrue(TEXT("The actual official MCP server is absent"), bServerAbsent);
+        bPassed &= TestTrue(TEXT("The effective official MCP automatic-startup setting is disabled"), bAutoStartDisabled);
+        bPassed &= TestTrue(TEXT("The actual official-session factory returns no session without opt-in"), bFactorySessionAbsent);
+        return bPassed;
+    };
+    if (!AssertMcpAbsence(TEXT("before")))
+    {
+        return false;
+    }
+
     const FString QualifiedOperation = TEXT("YacsBobInspection.InspectAcceptedCheckpoint");
     const TArray<FString> AllowPatterns = {
         TEXT("/^YacsBobInspection$/"),
         TEXT("/^YacsBobInspection[.]InspectAcceptedCheckpoint$/")
     };
     // This registry is owned by this test. No editor-global registry or MCP
-    // server is read, configured, registered or started by the proof.
+    // server is configured, registered or started by the proof.
     FToolsetRegistry Registry({}, AllowPatterns);
     const TSharedRef<int32> CallbackCount = MakeShared<int32>(0);
     const TSharedPtr<FYacsBobInspectionToolset> Toolset = MakeShared<FYacsBobInspectionToolset>(
@@ -170,7 +206,7 @@ bool FYacsBobInputBoundaryTest::RunTest(const FString& Parameters)
         FString(TEXT("Current map is outside the accepted BOB inspection checkpoint.")));
     TestEqual(TEXT("All native boundary cases leave the trusted callback untouched"), *CallbackCount, 0);
     TestTrue(TEXT("Test-owned native toolset unregisters cleanly"), Registry.UnregisterToolset(Toolset));
-    return true;
+    return AssertMcpAbsence(TEXT("after"));
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS

@@ -919,11 +919,16 @@ The host's final persistent inventory digest is
 the three physical frozen textures retain identical before/after identities.
 The runtime source SHA is `241104de320f8417c7abc4dd973ac148ed98a66d`, distinct from later documentation/readback
 commits and the eventual protected merge. Later plugin README changes are
-documentation deltas in the producer's source inventory, not changed native
-code, descriptors, Python, policy or frozen assets. The fixed branch reader
+documentation deltas in the producer's source inventory. The strengthened
+`InputBoundary` C++ test is a separate test-only delta; the other eleven native
+source/descriptor inputs, runtime Python, policy and frozen assets retain the
+runtime revision's bytes. The original client utility inventory's launcher
+is separately authenticated as historical bytes; its reviewed current unit
+and readback implementation is an explicit harness delta. The fixed branch reader
 will authenticate the successful raw receipt without rebuilding the project;
-the separate input-boundary check reuses the pinned native plugin in a fresh
-owned lightweight project.
+the separate input-boundary check builds the strengthened test in a fresh
+tracked-only plugin package and owned lightweight project. Its test-only C++
+delta and newly compiled binary remain separate from the original runtime proof.
 
 [First positive readback 38029365716](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38029365716)
 at `299eaac301de1a4da334241a24821e506ceb6aa3` passed Windows parsing, then
@@ -974,7 +979,8 @@ requires its hash-linked owned logs. Its 9,183-byte unit receipt is SHA-256
 `30270fa253aa7828bdac8ef9383d7c0a1a8a95790f8871652e2f78f263ae612f`;
 the 423,385-byte host receipt is SHA-256
 `188d4325b301ca9cbfda8770f55cb8464726a4ba7bbf4e271eddf02cbdef5fe6`.
-The no-listener guard remains binding; actual InputBoundary is pending.
+That attempt required zero owned TCP listeners. The corrected unit contract
+below checks official MCP absence directly; actual InputBoundary remains pending.
 
 [Source-only startup readback 38031509916](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38031509916)
 at `10f2664a50d1d58dd88444abcc6ca72cc35ebd0b` authenticated the failed host
@@ -1005,6 +1011,31 @@ historical OS endpoint row or a suppression parameter. The selected
 `TraceAuxiliary.cpp` contexts contain the initialization descriptor declaration
 and getter, but not its caller's control decision. Its 26,662-byte diagnostic
 is SHA-256 `aa87e16bff0389da517e1efc8daf0e2f2a77a0f243a86395cca8f1f5efd12387`.
+
+[Fixed-source windows 38033670497](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38033670497)
+at `44d803f505330063442a377f7fb4ab8cd5af35b7` retained all 334 requested
+lines without truncation. The complete observed trace initialization descriptor
+has no control-enable field, and the internal initializer calls control
+initialization unconditionally. `notraceserver` suppresses the separate Trace
+Server launch; `notracethreading` controls the worker thread. Neither is proved
+to suppress the Editor control listener. This is evidence about the observed
+initialization path, not an exhaustive absence claim for every engine option.
+Its 52,303-byte diagnostic is SHA-256
+`2b2bf8ea3a72f40e6ee5e35786703cc59676cccd051b85f91169261497183e1f`.
+
+The strengthened standalone unit checks the loaded official MCP module before
+and after its local-registry proof: no server object, effective automatic-start
+setting disabled, trusted session opt-in absent and actual factory result null.
+Both native observations must occur exactly once with all checks true. The
+owned-PID socket inventory may contain only one attributed TraceControl
+endpoint on port 1985, linked to its actual address/PID row, owned startup log
+and observed installed control source. Unknown or multiple listeners reject;
+after the owned clean exit, no owned listeners may remain. The 180-second
+Editor limit, exact test success, denied input/body-zero checks and source,
+binary and accepted-asset conservation remain required. This replaces our
+overbroad zero-all-TCP harness condition, without treating a port number as
+proof of official MCP absence. The new native test and plugin build still
+require execution evidence; this contract description supplies no unit PASS.
 
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
