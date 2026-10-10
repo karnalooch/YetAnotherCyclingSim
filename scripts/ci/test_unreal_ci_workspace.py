@@ -93,6 +93,9 @@ class UnrealWorkspaceTests(unittest.TestCase):
 
     def test_raw_checkout_drift_preserves_pointer_and_uses_fresh_build(self):
         self.publish()
+        retained_asset = self.root / "Content/fixture.uasset"
+        retained_asset.parent.mkdir(parents=True, exist_ok=True)
+        retained_asset.write_bytes(b"original owner asset remains safe")
         env_file = self.workspace / "github-env"
         with (
             patch.dict(os.environ, {"GITHUB_ENV": str(env_file)}),
@@ -117,6 +120,9 @@ class UnrealWorkspaceTests(unittest.TestCase):
         )
         self.assertEqual(cache.select(self.workspace), self.name)
         self.assertTrue((self.root / "Binaries/Win64" / cache.BINARY_NAMES[0]).exists())
+        self.assertEqual(
+            retained_asset.read_bytes(), b"original owner asset remains safe"
+        )
         self.assertFalse((self.workspace / "_unreal-build-101-1").exists())
 
     def test_detects_raw_crlf_against_git_blob_even_if_git_filters_it(self):
@@ -518,23 +524,25 @@ class UnrealWorkspaceTests(unittest.TestCase):
         asset.parent.mkdir()
         asset.write_bytes(b"owner asset before checkout")
         env_file = self.workspace / "github-env.txt"
-        subprocess.run(
-            [
-                os.sys.executable,
-                "-m",
-                "scripts.ci.unreal_ci_workspace",
-                "select",
-                "--workspace",
-                str(self.workspace),
-                "--run",
-                "101-1",
-            ],
-            cwd=ROOT,
-            env=dict(os.environ, GITHUB_ENV=str(env_file)),
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+        # This fixture has no checked-out Unreal fingerprint inputs; the
+        # source-identity guard is covered by dedicated fail-closed tests.
+        # Exercise only the verified-cache retention/selection path here.
+        with (
+            patch.dict(os.environ, {"GITHUB_ENV": str(env_file)}),
+            patch(
+                "sys.argv",
+                [
+                    "workspace",
+                    "select",
+                    "--workspace",
+                    str(self.workspace),
+                    "--run",
+                    "101-1",
+                ],
+            ),
+            patch.object(cache, "has_untrusted_source_checkout", return_value=False),
+        ):
+            cache.main()
         archive = (
             self.workspace
             / "_yacs-retained-lfs"
