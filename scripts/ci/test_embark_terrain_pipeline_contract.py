@@ -97,6 +97,9 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
         self,
     ) -> None:
         agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        scoped_path = "docs/ai/policies/TOOLING_AND_AI_SAFETY.md"
+        self.assertIn(scoped_path, agents)
+        policy = (ROOT / scoped_path).read_text(encoding="utf-8")
         for token in (
             "### Explicit Embark-mode directive",
             "production-proven Embark pattern end-to-end",
@@ -105,7 +108,7 @@ class EmbarkTerrainPipelineContractTests(unittest.TestCase):
             "license-clean Unreal-native or open-source implementation",
             "do **not** invent its node graph",
         ):
-            self.assertIn(token, agents)
+            self.assertIn(token, policy)
 
     def test_world_bible_records_pcgex_first_bounded_substitution(self) -> None:
         bible = (ROOT / "docs/WORLD_BUILDING_BIBLE.md").read_text(encoding="utf-8")

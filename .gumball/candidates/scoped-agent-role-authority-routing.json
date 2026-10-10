@@ -1,0 +1,20 @@
+{
+  "id": "scoped-agent-role-authority-routing",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "agent-workflow",
+  "problem": "A single large root AGENTS file accumulates unrelated domain details, time-bounded owner exceptions and execution policy. Delegates receive unnecessary context and may confuse advisory model output with authoritative runtime/proof admission.",
+  "invariant": "Keep a short universal agent policy and deterministic scoped context routing (task domain, active milestone, role, SSOT). Preserve detailed existing rules outside the root without loss. Keep orchestration contracts provider-neutral. Fail closed on missing context, out-of-stage work, duplicate domain ownership, untrusted admission claims, blocked issue prerequisites and contested exclusive runner/editor resources.",
+  "evidence": [
+    "YACS Issue #468 and PR #469 relocate original 727-line AGENTS policy to six scoped files with exact text reconstruction and add a source-owned registry and eight M3 role cards",
+    "YACS PR #469 exact-head 5f69091c145de693fea4cf58515b5259ee440fec completed protected Aggregate CI, Governance and hosted script tests including eight new agent contract tests",
+    "docs/ai/DECISION_LIFECYCLE.md describes policy precedence and stale-exception escalation"
+  ],
+  "do_not_copy": [
+    "YACS M3 issue numbers and dependencies",
+    "Sa Calobra, Passo Giau and local Unreal workspace paths",
+    "YACS role names, editor-specific configurations or hardware budgets",
+    "Assumptions that registry metadata launches agents or grants permissions"
+  ],
+  "failure_behavior": "Missing/unsafe role file or SSOT, role privilege escalation, out-of-stage routing, missing exact SHA, concurrent exclusive host claim or a self-declared acceptance flag must reject delegation/admission. Unknown orchestration runtime remains documentation-only; no invented autonomous execution or fake CI result.",
+  "status": "candidate"
+}

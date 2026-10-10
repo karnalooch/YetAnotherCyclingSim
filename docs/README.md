@@ -107,6 +107,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | CI cost / proof cadence | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | **Authoritative** |
 | Shared CI and governance platform | [`ENGINEERING_PLATFORM.md`](ENGINEERING_PLATFORM.md) | **Authoritative** |
 | AI contributor rules | [`../AGENTS.md`](../AGENTS.md) | **Authoritative repository policy** |
+| Agent roles, scoped rules and task handoffs | [`ai/README.md`](ai/README.md) | **Authoritative agent contract router (not an execution runtime)** |
 
 ## Authority map
 

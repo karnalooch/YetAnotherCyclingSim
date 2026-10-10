@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "current_milestone": "M3",
+  "orchestrator": {
+    "id": "primary-coordinator",
+    "can_admit": false,
+    "can_merge": false,
+    "can_dispatch_heavy": false
+  },
+  "domain_owners": {
+    "source-geodata": "world-data",
+    "road-earthworks": "road-bob",
+    "procedural-world": "procedural-world",
+    "visual-dcc": "visual-dcc",
+    "unreal-integration": "unreal-integration",
+    "physics-gameplay": "physics-gameplay",
+    "proof-review": "proof-qa",
+    "docs-governance": "docs-governor"
+  },
+  "exclusive_resources": [
+    "unreal-editor",
+    "ue-build",
+    "gpu-proof",
+    "home-runner"
+  ],
+  "policy_documents": [
+    "docs/ai/policies/DELIVERY_AND_SCOPE.md",
+    "docs/ai/policies/M3_WORLD_OPERATIONS.md",
+    "docs/ai/policies/DOCS_AND_PLATFORM.md",
+    "docs/ai/policies/CODE_PHYSICS_UNREAL.md",
+    "docs/ai/policies/GIT_AND_PROJECT.md",
+    "docs/ai/policies/TOOLING_AND_AI_SAFETY.md"
+  ],
+  "roles": {
+    "world-data": {
+      "status": "active",
+      "milestones": [
+        "M3"
+      ],
+      "domain": "source-geodata",
+      "card": "docs/ai/roles/world-data.md",
+      "read_docs": [
+        "docs/WORLD_BUILDING_BIBLE.md",
+        "docs/ASSET_PLAN.md",
+        "docs/ai/policies/M3_WORLD_OPERATIONS.md"
+      ],
+      "can_admit": false,
+      "can_merge": false,
+      "can_dispatch_heavy": false
+    },
+    "road-bob": {
+      "status": "active",
+      "milestones": [
+        "M3"
+      ],
+      "domain": "road-earthworks",
+      "card": "docs/ai/roles/road-bob.md",
+      "read_docs": [
+        "docs/WORLD_BUILDING_BIBLE.md",
+        "docs/STAGE_3_ROUTE_GEOMETRY_CONTRACT.md",
+        "docs/ROAD_PHYSICS_PROFILE.md",
+        "docs/ai/policies/M3_WORLD_OPERATIONS.md"
+      ],
+      "can_admit": false,
+      "can_merge": false,
+      "can_dispatch_heavy": false
+    },
+    "procedural-world": {
+      "status": "active",
+      "milestones": [
+        "M3"
+      ],
+      "domain": "procedural-world",
+      "card": "docs/ai/roles/procedural-world.md",
+      "read_docs": [
+        "docs/WORLD_BUILDING_BIBLE.md",
+        "docs/YACS_WORLD_AUTHORING_LIBRARY.md",
+        "docs/ai/policies/M3_WORLD_OPERATIONS.md"
+      ],
+      "can_admit": false,
+      "can_merge": false,
+      "can_dispatch_heavy": false
+    },
+    "visual-dcc": {
+      "status": "active",
+      "milestones": [
+        "M3"
+      ],
+      "domain": "visual-dcc",
+      "card": "docs/ai/roles/visual-dcc.md",
+      "read_docs": [
+        "docs/WORLD_BUILDING_BIBLE.md",
+        "docs/ASSET_PLAN.md",
+        "docs/tooling/BLENDER_HEADLESS.md",
+        "docs/ai/policies/M3_WORLD_OPERATIONS.md"
+      ],
+      "can_admit": false,
+      "can_merge": false,
+      "can_dispatch_heavy": false
+    },
+    "unreal-integration": {
+      "status": "active",
+      "milestones": [
+        "M3"
+      ],
+      "domain": "unreal-integration",
+      "card": "docs/ai/roles/unreal-integration.md",
+      "read_docs": [
+        "docs/UE_MCP_WORLD_GENERATION.md",
+        "docs/UNREAL_CI_RUNNER.md",
+        "docs/ai/policies/CODE_PHYSICS_UNREAL.md",
+        "docs/ai/policies/M3_WORLD_OPERATIONS.md"
+      ],
+      "can_admit": false,
+      "can_merge": false,
+      "can_dispatch_heavy": false
+    },
+    "physics-gameplay": {
+      "status": "active",
+      "milestones": [
+        "M3"
+      ],
+      "domain": "physics-gameplay",
+      "card": "docs/ai/roles/physics-gameplay.md",
+      "read_docs": [
+        "docs/ROAD_PHYSICS_PROFILE.md",
+        "docs/STAGE_2_RUNTIME_CONTRACT.md",
+        "docs/ai/policies/CODE_PHYSICS_UNREAL.md"
+      ],
+      "can_admit": false,
+      "can_merge": false,
+      "can_dispatch_heavy": false
+    },
+    "proof-qa": {
+      "status": "active",
+      "milestones": [
+        "M3"
+      ],
+      "domain": "proof-review",
+      "card": "docs/ai/roles/proof-qa.md",
+      "read_docs": [
+        "docs/CI_VALIDATION_TIERS.md",
+        "docs/ENGINEERING_PLATFORM.md",
+        "docs/performance/PERFORMANCE_FRAMEWORK.md",
+        "docs/ai/policies/DOCS_AND_PLATFORM.md"
+      ],
+      "can_admit": false,
+      "can_merge": false,
+      "can_dispatch_heavy": false
+    },
+    "docs-governor": {
+      "status": "active",
+      "milestones": [
+        "M3"
+      ],
+      "domain": "docs-governance",
+      "card": "docs/ai/roles/docs-governor.md",
+      "read_docs": [
+        "docs/README.md",
+        "docs/ROADMAP.md",
+        "docs/ai/policies/DOCS_AND_PLATFORM.md",
+        "docs/ai/DECISION_LIFECYCLE.md"
+      ],
+      "can_admit": false,
+      "can_merge": false,
+      "can_dispatch_heavy": false
+    }
+  },
+  "planned_roles": {
+    "gameplay-cornering": {
+      "milestones": [
+        "M4"
+      ]
+    },
+    "session-ui": {
+      "milestones": [
+        "M5"
+      ]
+    },
+    "rider-animation": {
+      "milestones": [
+        "M6"
+      ]
+    },
+    "environment-systems": {
+      "milestones": [
+        "M8"
+      ]
+    },
+    "data-export-release": {
+      "milestones": [
+        "M9",
+        "M10"
+      ]
+    }
+  }
+}
