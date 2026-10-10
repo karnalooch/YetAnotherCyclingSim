@@ -1433,6 +1433,30 @@ function Assert-SessionFreshUnitInputs {
         maximum_entries = 128; maximum_depth = 16; deadline_seconds = 30; elapsed_seconds = $inventoryTimer.Elapsed.TotalSeconds
         scope = 'EXACT_FRESH_UNIT_COPIED_INPUTS'; copied_hashes_unchanged = $true }
 }
+function Read-SessionInputBoundaryReport {
+    param($Unit)
+    $path = Join-Path $ArtifactRoot 'input-boundary-report/index.json'
+    $identity = Get-SessionFileIdentity $path 8MB
+    $Unit.report = $identity
+    Write-Host ('INPUT_BOUNDARY_REPORT_RAW_IDENTITY ' + ($identity | ConvertTo-Json -Depth 3 -Compress))
+    $stream = [IO.File]::OpenRead($path)
+    try {
+        $buffer = [byte[]]::new([int]$identity.size_bytes + 1)
+        $count = 0
+        while (($part = $stream.Read($buffer, $count, $buffer.Length - $count)) -gt 0) { $count += $part }
+    } finally { $stream.Dispose() }
+    if ($count -ne $identity.size_bytes) { throw 'The bounded unit report changed before parsing.' }
+    $bytes = [byte[]]::new($count)
+    [Array]::Copy($buffer, $bytes, $count)
+    if ([Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant() -cne $identity.sha256 `
+        -or (Get-SessionFileIdentity $path 8MB).sha256 -cne $identity.sha256) { throw 'The bounded unit report changed before parsing.' }
+    # The raw Automation report remains unchanged; only its parsing view may
+    # omit one exact leading UTF-8 BOM, emitted by the installed producer.
+    $offset = if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) { 3 } else { 0 }
+    $value = [Text.Encoding]::UTF8.GetString($bytes, $offset, $bytes.Length - $offset) | ConvertFrom-Json -AsHashtable -Depth 40
+    if ($value -isnot [Collections.IDictionary]) { throw 'The fixed unit report must be an object.' }
+    return [ordered]@{ identity = $identity; value = $value }
+}
 function Invoke-SessionInputBoundaryUnit {
     param($Green)
     $unitRoot = Join-Path 'D:\yacs\runner\_work\b384' ($runIdentity + '-input-boundary')
@@ -1553,7 +1577,7 @@ function Invoke-SessionInputBoundaryUnit {
         $unit.owned_listeners_after_exit = @(Get-SessionUnitOwnedListeners $script:ownedEditor.Id).Count
         $unit['owned_editor_elapsed_seconds'] = $timer.Elapsed.TotalSeconds
         if ($unit.listener_samples_while_alive -lt 1 -or $timer.Elapsed.TotalSeconds -gt 180 -or $unit.owned_editor_exit_code -ne 0 -or $unit.owned_listeners_after_exit -ne 0) { throw 'The fixed unit lacked a clean bounded exit and owned-listener absence.' }
-        $report = Read-SessionJson (Join-Path $reportRoot 'index.json') 8MB
+        $report = Read-SessionInputBoundaryReport $unit
         $index = $report.value
         if ($index.tests -isnot [array] -or $index.tests.Count -ne 1 -or -not (Test-SessionInteger $index.succeeded 1)) { throw 'The InputBoundary report did not finish exactly one successful test.' }
         foreach ($field in @('succeededWithWarnings', 'failed', 'notRun', 'inProcess')) {
