@@ -77,7 +77,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         short_name = "rm-${{ github.run_id }}-${{ github.run_attempt }}"
         self.assertIn("          path: " + short_name, stage_workflow)
-        self.assertEqual(stage_workflow.count("working-directory: " + short_name), 2)
+        self.assertEqual(stage_workflow.count("working-directory: " + short_name), 3)
         self.assertIn("('rm-' + $RunToken)", host_script)
         self.assertNotIn(
             "_road-material-native-${{ github.run_id }}",
