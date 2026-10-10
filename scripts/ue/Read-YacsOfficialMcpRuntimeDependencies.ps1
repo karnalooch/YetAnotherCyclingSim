@@ -59,7 +59,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 engine, artifact, exact_sha = Path(os.path.abspath(sys.argv[1])), Path(os.path.abspath(sys.argv[2])), sys.argv[3]
-MAX_FILE, MAX_TOTAL, BASE_FILES, MAX_FILES = 2*1024*1024, 8*1024*1024, 16, 29
+# All 29 existing fixed inputs were present in the installed-source receipt.
+# ConfigCacheIni.cpp/ConfigContext.cpp actually include this one new header;
+# reserve exactly one additional read, without expanding the optional index.
+MAX_FILE, MAX_TOTAL, BASE_FILES, MAX_FILES = 2*1024*1024, 8*1024*1024, 16, 30
 MAX_ENTRIES, MAX_DEPTH, MAX_SPAN_LINES, MAX_CONSOLE = 1024, 10, 1200, 500
 MAX_CALLS, MAX_CONSOLE_CHARS = 128, 1024
 MAX_DEPENDENCY_INCLUDES = 64
@@ -412,11 +415,39 @@ try:
                        'fixed_plugin_activation_context',22)
         if relative.endswith('.cpp'):
             named_contexts(item,r'\bParsePluginsList\s*=', 'fixed_plugin_list_parser',45)
-    # One fixed Core input establishes prelaunch config override grammar and
-    # its real callers; this is not a search of the Core source tree.
+    # The actual Engine containment failure needs the installed distinction
+    # between a config-cache branch identity and its destination. This is one
+    # fixed header named by the already-read Core implementations, not a walk.
+    item=optional('Engine/Source/Runtime/Core/Public/Misc/ConfigCacheIni.h','mcp')
+    if item:
+        named_contexts(item,r'\b\w*(?:IniPath|IniName|IniFilename|ConfigFilename)\w*\b|\b(?:Find|Get)\w*Branch\w*\s*\(',
+                       'engine_branch_path_api_declarations',12)
+        named_contexts(item,r'\b(?:EKnownIniFile|FKnownConfigFiles|KnownFiles|GEngineIni)\b',
+                       'engine_branch_identity_declarations',12)
+        named_contexts(item,r'^\s*(?:class|struct)\b[^;]*\b(?:FConfigCacheIni|FConfigBranch|FKnownConfigFiles)\b|^\s*(?:public|protected|private)\s*:',
+                       'engine_branch_export_visibility',2)
+    # Existing Core implementation input: prioritize actual named branch/path
+    # definitions before the already-reviewed startup override backup excerpts.
     item=optional('Engine/Source/Runtime/Core/Private/Misc/ConfigCacheIni.cpp','mcp')
     if item:
         masked=cpp_mask(item['text'])
+        definitions=sorted(set(re.findall(r'\b(\w+)::(\w+)\s*\(',masked)),
+                           key=lambda value:(value[1] not in {'InitializeKnownConfigFiles','GetDestIniFilename','FindBranch'},value))
+        for owner,name in definitions:
+            if ((owner in {'FConfigCacheIni','FConfigBranch'} and
+                 (re.search(r'Known|Branch|Filename|IniPath',name) or name==owner))
+                or (re.search(r'Known.*Config|KnownFiles',owner) and name==owner)):
+                if name==owner:
+                    # Constructors lack a return type and can contain brace
+                    # initializers. Preserve only an honest bounded context;
+                    # the existing function parser does not establish its body.
+                    named_contexts(item,r'\b'+owner+'::'+name+r'\s*\(',
+                                   'engine_branch_constructor_context_'+owner,40)
+                else:
+                    functions(item,r'\b'+owner+'::'+name+r'\s*\(',
+                              'engine_branch_definition_'+owner+'_'+name,required=False)
+        named_contexts(item,r'\b(?:GEngineIni|KnownFiles|KnownBranch|IniPath|IniName)\b',
+                       'engine_branch_initialization_context',10)
         namespace=re.search(r'\bnamespace\s+CommandlineOverrideSpecifiers\s*\{',masked)
         if namespace:
             cursor,depth=namespace.end(),1
@@ -449,6 +480,9 @@ try:
             named_contexts(item,r'\bFConfigContext\b|\bLoad\s*\(|\bReadIntoGConfig\b|\bReadIntoConfigSystem\b|\bFConfigCommandStream\b',
                            'startup_config_context_declarations',10)
         else:
+            for name in ('CachePaths','ResetBaseIni','ReadIntoGConfig','ReadIntoConfigSystem'):
+                functions(item,r'\bFConfigContext::'+name+r'\s*\(',
+                          'engine_branch_context_'+name,required=False)
             # Show the actual override adoption and neighboring ordering first.
             # Contexts explicitly remain partial; complete function bodies have
             # the existing brace/line guards and never imply runtime adoption.
@@ -562,6 +596,12 @@ finally:
             if excerpt['purpose']!='mcp': return excerpt['purpose']
             return 'mcp_transport' if excerpt['topic'].startswith(('server_','server_dependency_','official_server_','adapter_','http_')) else 'mcp'
         def console_priority(excerpt):
+            if excerpt['topic']=='engine_branch_path_api_declarations': return -14
+            if excerpt['topic']=='engine_branch_identity_declarations': return -13
+            if excerpt['topic']=='engine_branch_export_visibility': return -12
+            if excerpt['topic'].startswith('engine_branch_definition_') and any(
+                name in excerpt['topic'] for name in ('InitializeKnownConfigFiles','GetDestIniFilename','FindBranch')): return -11
+            if excerpt['topic'].startswith('engine_branch_'): return -10
             if excerpt['topic']=='startup_config_effective_override_context': return -8
             if excerpt['topic'].startswith('startup_config_context_') and excerpt['topic']!='startup_config_context_declarations': return -7
             if excerpt['topic'] in {'startup_config_context_declarations','startup_config_dynamic_stream_context'}: return -6
@@ -580,6 +620,9 @@ finally:
             if excerpt['topic'].startswith('adapter_'): return 2
             return priority.get(excerpt['topic'],9)
         emitted_source_lines=set()
+        branch_header_topics={'engine_branch_path_api_declarations','engine_branch_identity_declarations',
+                              'engine_branch_export_visibility'}
+        branch_header_lines, branch_header_truncated = 0, False
         for excerpt in sorted(excerpts,key=lambda x:(console_priority(x),x['path'],x['line_start'])):
             if console_purpose(excerpt) != purpose: continue
             if purpose in {'mcp','mcp_transport'} and excerpt['topic'] in {
@@ -596,16 +639,26 @@ finally:
                 # Already-reviewed contexts / full-file backup remain in JSON;
                 # use console capacity for the newly required control bodies.
                 continue
+            branch_header = excerpt['topic'] in branch_header_topics
+            if branch_header and branch_header_lines >= 200:
+                branch_header_truncated = True
+                continue
             console.append('SOURCE '+excerpt['path']+':'+str(excerpt['line_start'])+'-'+str(excerpt['line_end'])+' sha256='+excerpt['sha256']+' topic='+excerpt['topic']+' body_complete='+str(excerpt['body_complete']))
+            if branch_header: branch_header_lines += 1
             for line in excerpt['lines']:
                 key=(excerpt['path'],line['line'])
                 if line['code'] and key not in emitted_source_lines:
+                    if branch_header and branch_header_lines >= 200:
+                        branch_header_truncated = True
+                        break
                     console.append(str(line['line'])+': '+line['text']); emitted_source_lines.add(key)
-        truncated = len(console) > MAX_CONSOLE-2 or any(len(x)>MAX_CONSOLE_CHARS for x in console)
-        print('PURPOSE '+purpose+' console_truncated='+str(truncated))
+                    if branch_header: branch_header_lines += 1
+        truncated = branch_header_truncated or len(console) > MAX_CONSOLE-2 or any(len(x)>MAX_CONSOLE_CHARS for x in console)
+        header_marker = (' engine_branch_header_budget_truncated='+str(branch_header_truncated)+' header_console_limit=200') if purpose=='mcp' else ''
+        print('PURPOSE '+purpose+' console_truncated='+str(truncated)+header_marker)
         for line in console[:MAX_CONSOLE-2]:
             print(line if len(line)<=MAX_CONSOLE_CHARS else line[:MAX_CONSOLE_CHARS]+' [CONSOLE_LINE_TRUNCATED]')
-        print('END_PURPOSE '+purpose+' console_truncated='+str(truncated))
+        print('END_PURPOSE '+purpose+' console_truncated='+str(truncated)+header_marker)
     console_summary('DEPENDENCY_GAPS',gaps)
 sys.exit(1 if receipt['status']=='BLOCKED' else 0)
 '@

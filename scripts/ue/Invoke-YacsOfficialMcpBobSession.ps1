@@ -395,8 +395,8 @@ function Read-SessionFixedFailureFile {
     if ($DiagnosePreviousFailure) {
         if ($Name -cnotin @('accepted-session-build.json', 'session-preparation.json', 'session-context.json', 'transport-context.json', 'native-counter.json', 'native-session.json', 'owned-editor.log', 'owned-editor-stdout.log', 'owned-editor-stderr.log')) { throw 'Previous failure readback covers only its nine fixed session files.' }
         $path = if ($Name.EndsWith('.json', [StringComparison]::Ordinal) -and $Name -cne 'accepted-session-build.json') {
-            Join-Path 'D:\yacs\runner\_work\s384\38013644520-1\Saved\RuntimeProof\OfficialMcpBob' $Name
-        } else { Join-Path 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38013644520-1' $Name }
+            Join-Path 'D:\yacs\runner\_work\s384\38016857639-1\Saved\RuntimeProof\OfficialMcpBob' $Name
+        } else { Join-Path 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38016857639-1' $Name }
     } else {
         if ($Name -cin @('accepted-session-build.json', 'session-preparation.json', 'session-context.json', 'transport-context.json', 'native-counter.json')) { throw 'Retained context receipts are read only in fixed previous-failure mode.' }
         $path = if ($Name -ceq 'native-session.json') { Join-Path $SessionRoot 'Saved/RuntimeProof/OfficialMcpBob/native-session.json' }
@@ -526,13 +526,13 @@ function Write-SessionFixedFailureLogContext {
         launch_observations = $observations; command_line_observed = $commandLines.Count -gt 0; launch_observations_truncated = $commandLines.Count -gt $observations.Count }
 }
 function Invoke-SessionPreviousFailureDiagnostic {
-    $previousRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38013644520-1'
-    if (-not [string]::Equals([IO.Path]::GetFullPath((Join-Path $RepoRoot 'Saved/RuntimeProof/OfficialMcpBobSession/38013644520-1')), $previousRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Fixed previous failure requires its exact retained checkout.' }
+    $previousRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38016857639-1'
+    if (-not [string]::Equals([IO.Path]::GetFullPath((Join-Path $RepoRoot 'Saved/RuntimeProof/OfficialMcpBobSession/38016857639-1')), $previousRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Fixed previous failure requires its exact retained checkout.' }
     $readBudget = [ordered]@{ bytes = 0 }
     $file = Read-SessionFixedFailureFile 'accepted-session-build.json'
-    if ($null -eq $file -or $file.identity.size_bytes -ne 442120 -or $file.identity.sha256 -cne '43aabf46532692520645dd4bb5eaf4e6a17f07c873889e6985a657374d290f28') { throw 'The retained host receipt differs from the original console-pinned bytes.' }
+    if ($null -eq $file -or $file.identity.size_bytes -ne 443055 -or $file.identity.sha256 -cne '0076721aff4f5af496d2f720a0f6826633594e8a61d25b12c9b922ce9318d6e6') { throw 'The retained host receipt differs from the original console-pinned bytes.' }
     $previous = $file.text | ConvertFrom-Json -AsHashtable -Depth 40
-    if ($previous -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $previous.schema_version 1) -or $previous.exact_sha -cne '9b50911a058f1213fad6f17bd85086fa76830e2f' -or $previous.run -cne '38013644520' -or $previous.attempt -cne '1' -or $previous.status -cne 'BLOCKED') { throw 'The retained receipt disagrees with the exact failed run/source.' }
+    if ($previous -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $previous.schema_version 1) -or $previous.exact_sha -cne 'aceaefb437962ce3dc0af301db32c4ac2cf66592' -or $previous.run -cne '38016857639' -or $previous.attempt -cne '1' -or $previous.status -cne 'BLOCKED') { throw 'The retained receipt disagrees with the exact failed run/source.' }
     # Read this original string without ConvertFrom-Json's date coercion.
     $document = [Text.Json.JsonDocument]::Parse([string]$file.text)
     try {
@@ -551,7 +551,7 @@ function Invoke-SessionPreviousFailureDiagnostic {
     }
     if ($null -ne $previous.owned_client_pid -or ($previous.owned_editor_pid -isnot [int] -and $previous.owned_editor_pid -isnot [long]) -or $previous.owned_editor_pid -le 0 -or $previous.proof_files -isnot [Collections.IDictionary]) { throw 'The recorded owned-session boundary differs from the no-client timeout.' }
     $diagnostic = [ordered]@{
-        schema_version = 1; exact_sha = $ExpectedHead; previous_run = '38013644520-1'; previous_exact_sha = $previous.exact_sha
+        schema_version = 1; exact_sha = $ExpectedHead; previous_run = '38016857639-1'; previous_exact_sha = $previous.exact_sha
         previous_receipt = $file.identity; source_only = $true; compile_performed = $false; editor_launched = $false; listener_started = $false
         official_mcp_admitted = $false; native_automation_verified = $false; native_bob_capture_verified = $false
         status = 'READ_ONLY_NATIVE_READINESS_FAILURE_DIAGNOSTIC'; previous_error = Get-SessionSafeFailureText ([string]$previous.error)
@@ -647,7 +647,7 @@ function Invoke-SessionPreviousFailureDiagnostic {
         }
     }
     Write-SessionJson (Join-Path $ArtifactRoot 'previous-session-failure-diagnostic.json') $diagnostic
-    $receipt['diagnostic_previous_run'] = '38013644520-1'
+    $receipt['diagnostic_previous_run'] = '38016857639-1'
     $receipt.proof_files.previous_session_failure_diagnostic = Get-SessionFileIdentity (Join-Path $ArtifactRoot 'previous-session-failure-diagnostic.json') 1MB
     $receipt.proof_files.previous_failed_receipt = Get-SessionFileIdentity $target 1MB
     Write-Host ('PREVIOUS_SESSION_FAILURE ' + $diagnostic.previous_error)
@@ -722,6 +722,18 @@ try {
     $artifactOwned = $true
     if ($DiagnosePreviousFailure) {
         Invoke-SessionPreviousFailureDiagnostic
+        & (Join-Path $RepoRoot 'scripts/ue/Read-YacsOfficialMcpRuntimeDependencies.ps1') -EngineRoot $engine.Root -ArtifactRoot $ArtifactRoot -ExpectedHead $ExpectedHead
+        $currentSdk = Read-SessionJson (Join-Path $ArtifactRoot 'runtime-dependencies.json') 4MB
+        if (-not (Test-SessionInteger $currentSdk.value.schema_version 1) -or $currentSdk.value.exact_sha -cne $ExpectedHead `
+            -or $currentSdk.value.source_only -isnot [bool] -or -not $currentSdk.value.source_only) { throw 'The current diagnostic SDK observation differs from its executing source.' }
+        foreach ($flag in @('official_mcp_transport_verified', 'official_mcp_admitted', 'argument_policy_parity_verified',
+            'local_only_binding_verified', 'existing_project_test_verified', 'native_bob_capture_verified', 'persistent_world_mutation')) {
+            if ($currentSdk.value[$flag] -isnot [bool] -or $currentSdk.value[$flag]) { throw 'A current source-only observation claimed runtime verification.' }
+        }
+        $receipt.proof_files.current_runtime_dependencies = $currentSdk.identity
+        $receipt['current_sdk_observation'] = [ordered]@{ scope = 'CURRENT_SOURCE_ONLY_OBSERVATION; NOT_HISTORICAL_RUNTIME_PROOF'
+            exact_sha = $ExpectedHead; source_only = $true; identity = $currentSdk.identity }
+        Write-Host ('CURRENT_DIAGNOSTIC_SDK_OBSERVATION ' + ($receipt.current_sdk_observation | ConvertTo-Json -Depth 4 -Compress))
         $receipt.status = 'PREVIOUS_SESSION_FAILURE_DIAGNOSTIC_RETAINED'
         return
     }

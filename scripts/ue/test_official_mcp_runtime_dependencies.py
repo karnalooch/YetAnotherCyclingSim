@@ -31,6 +31,7 @@ CONFIG_HEADER = "Engine/Source/Runtime/Online/HTTPServer/Private/HttpServerConfi
 CONFIG_IMPL = "Engine/Source/Runtime/Online/HTTPServer/Private/HttpServerConfig.cpp"
 CORE_HEADER = "Engine/Source/Runtime/Core/Public/Misc/AutomationTest.h"
 CORE_IMPL = "Engine/Source/Runtime/Core/Private/Misc/AutomationTest.cpp"
+CONFIG_CACHE_HEADER = "Engine/Source/Runtime/Core/Public/Misc/ConfigCacheIni.h"
 CONFIG_CACHE_IMPL = "Engine/Source/Runtime/Core/Private/Misc/ConfigCacheIni.cpp"
 CONFIG_CONTEXT_HEADER = "Engine/Source/Runtime/Core/Public/Misc/ConfigContext.h"
 CONFIG_CONTEXT_IMPL = "Engine/Source/Runtime/Core/Private/Misc/ConfigContext.cpp"
@@ -39,7 +40,7 @@ PROJECTS_IMPL = "Engine/Source/Runtime/Projects/Private/PluginManager.cpp"
 PYTHON = "Engine/Plugins/Experimental/PythonScriptPlugin/Source/PythonScriptPlugin/"
 PYTHON_HEADER = PYTHON + "Public/IPythonScriptPlugin.h"
 PYTHON_IMPL = PYTHON + "Private/PythonScriptPlugin.cpp"
-FIXED_ENGINE_PATHS = {CORE_HEADER, CORE_IMPL, CONFIG_CACHE_IMPL, CONFIG_CONTEXT_HEADER, CONFIG_CONTEXT_IMPL,
+FIXED_ENGINE_PATHS = {CORE_HEADER, CORE_IMPL, CONFIG_CACHE_HEADER, CONFIG_CACHE_IMPL, CONFIG_CONTEXT_HEADER, CONFIG_CONTEXT_IMPL,
                       PROJECTS_HEADER, PROJECTS_IMPL, PYTHON_HEADER, PYTHON_IMPL}
 RUNTIME_FLAGS = (
     "official_mcp_transport_verified", "official_mcp_admitted", "argument_policy_parity_verified",
@@ -120,7 +121,18 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                    "bool FAutomationExpectedMessage::Matches() { return MatchSynthetic(); }\n"
                    "bool FAutomationExpectedLogMessage::HasMetExpectedOccurrences() { return Occurrences == 1; }\n"
                    "void FAutomationTestBase::AddExpectedError() { RecordSynthetic(); }\n")
+        self.write(CONFIG_CACHE_HEADER,
+                   '#include "SyntheticUnrelatedConfig.h"\n'
+                   "class SYNTHETIC_API FConfigBranch {\npublic:\n"
+                   " FName IniName;\n FString DestIniFilename;\nprivate:\n int SyntheticPrivateValue;\n};\n"
+                   "struct FKnownConfigFiles { FConfigBranch* KnownFiles; };\n"
+                   "enum class EKnownIniFile { Engine };\n"
+                   "class SYNTHETIC_API FConfigCacheIni {\npublic:\n"
+                   " FConfigBranch* FindBranch(const TCHAR* IniName, const FString& IniPath);\n"
+                   " static FString GetDestIniFilename(const TCHAR* IniName);\nprivate:\n"
+                   " FKnownConfigFiles KnownFiles;\n};\n")
         self.write(CONFIG_CACHE_IMPL,
+                   '#include "Misc/ConfigCacheIni.h"\n'
                    '#include "Misc/ConfigContext.h"\n'
                    'const char* fake=R"tag(namespace CommandlineOverrideSpecifiers { FAKE_MUST_NOT_BE_SELECTED; })tag";\n'
                    "namespace CommandlineOverrideSpecifiers {\n"
@@ -275,6 +287,169 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
         automation = process.stdout.split("PURPOSE automation ", 1)[1].split("END_PURPOSE automation", 1)[0]
         self.assertIn("static SYNTHETIC_API FString ListTests", automation)
 
+    def test_branch_identity_destination_and_complete_bodies_keep_primary_provenance(self):
+        header_source = (self.engine / CONFIG_CACHE_HEADER).read_text()
+        self.write(CONFIG_CACHE_HEADER, header_source + "".join(
+            f"FString SyntheticIniFilename{index};\n" + "int SyntheticHeaderPadding;\n" * 23
+            for index in range(24)))
+        cache_source = (self.engine / CONFIG_CACHE_IMPL).read_text()
+        self.write(CONFIG_CACHE_IMPL, cache_source +
+                   "void FConfigCacheIni::InitializeKnownConfigFiles() {\n"
+                   ' KnownFiles.Engine.IniName = TEXT("Engine");\n'
+                   ' KnownFiles.Engine.DestIniFilename = TEXT("Synthetic/Engine.ini");\n}\n'
+                   "FString FConfigCacheIni::GetDestIniFilename(const TCHAR* IniName) {\n"
+                   " return SyntheticGeneratedDirectory / IniName;\n}\n"
+                   "FConfigBranch* FConfigCacheIni::FindBranch(const TCHAR* IniName, const FString& IniPath) {\n"
+                   " return SyntheticFindByIdentityAndDestination(IniName, IniPath);\n}\n"
+                   "FConfigCacheIni::FConfigCacheIni() : KnownFiles(SyntheticKnownFiles) {\n"
+                   " InitializeKnownConfigFiles();\n}\n"
+                   "void FConfigFile::OverrideFromCommandlineOther() {\n" +
+                   " SyntheticOldParser();\n" * 900 + "}\n")
+        context_source = (self.engine / CONFIG_CONTEXT_IMPL).read_text()
+        self.write(CONFIG_CONTEXT_IMPL, context_source +
+                   "void FConfigContext::CachePaths() {\n"
+                   " DestIniFilename = FConfigCacheIni::GetDestIniFilename(*BaseIniName);\n"
+                   " Branch = ConfigSystem->FindBranch(*BaseIniName, DestIniFilename);\n}\n"
+                   "void FConfigContext::ResetBaseIni() {\n BaseIniName = SyntheticBaseName;\n}\n"
+                   "FConfigContext FConfigContext::ReadIntoGConfig() {\n return SyntheticGlobalConfigContext();\n}\n"
+                   "FConfigContext FConfigContext::ReadIntoConfigSystem() {\n return SyntheticBoundConfigContext();\n}\n")
+        # New fixed source is data only: its unrelated include is never followed,
+        # even when an escaping source with that name is present.
+        unrelated = self.engine / "Engine/Source/Runtime/Core/Public/Misc/SyntheticUnrelatedConfig.h"
+        outside = self.base / "outside-config-header.h"
+        outside.write_text("OUTSIDE_CONFIG_HEADER_MUST_NOT_BE_READ", encoding="utf-8")
+        unrelated.symlink_to(outside)
+        process, receipt = self.run_reader()
+        self.assertEqual(process.returncode, 0, process.stderr)
+        sources = {item["path"]: item for item in receipt["source_files"]}
+        self.assertEqual(sources[CONFIG_CACHE_HEADER]["sha256"],
+                         hashlib.sha256((self.engine / CONFIG_CACHE_HEADER).read_bytes()).hexdigest())
+        self.assertFalse(any(item["path"].endswith("SyntheticUnrelatedConfig.h")
+                             for item in receipt["source_files"]))
+        self.assertNotIn("OUTSIDE_CONFIG_HEADER_MUST_NOT_BE_READ", json.dumps(receipt))
+        header_excerpts = [item for item in receipt["excerpts"] if item["path"] == CONFIG_CACHE_HEADER]
+        header_text = "\n".join(line["text"] for item in header_excerpts for line in item["lines"])
+        self.assertGreater(len({line["line"] for item in header_excerpts for line in item["lines"]}), 500)
+        self.assertIn("SyntheticIniFilename23", header_text)
+        for required in ("FName IniName", "FString DestIniFilename", "SYNTHETIC_API FConfigCacheIni",
+                         "SYNTHETIC_API FConfigBranch", "public:", "private:"):
+            self.assertIn(required, header_text)
+        self.assertTrue(all(item["body_complete"] is False and item["context_truncated"] is True
+                            and item["truncation_reason"] == "NAMED_DECLARATION_CONTEXT_REQUIRES_PRIMARY_REVIEW"
+                            and item["sha256"] == sources[CONFIG_CACHE_HEADER]["sha256"]
+                            for item in header_excerpts))
+        constructor = [item for item in receipt["excerpts"]
+                       if item["topic"] == "engine_branch_constructor_context_FConfigCacheIni"]
+        self.assertEqual(len(constructor), 1)
+        self.assertFalse(constructor[0]["body_complete"])
+        self.assertEqual(constructor[0]["truncation_reason"],
+                         "NAMED_DECLARATION_CONTEXT_REQUIRES_PRIMARY_REVIEW")
+        self.assertIn("KnownFiles(SyntheticKnownFiles)",
+                      "\n".join(line["text"] for line in constructor[0]["lines"]))
+        self.assertFalse(any(item["topic"] == "engine_branch_definition_FConfigCacheIni_FConfigCacheIni"
+                             for item in receipt["excerpts"]))
+        console = process.stdout.split("PURPOSE mcp ", 1)[1].split("END_PURPOSE mcp", 1)[0]
+        self.assertLessEqual(len(console.splitlines()) + 1, 500)
+        self.assertIn("engine_branch_header_budget_truncated=True header_console_limit=200", console)
+        header_rows, in_header_excerpt = 0, False
+        for line in console.splitlines():
+            if line.startswith("SOURCE "):
+                in_header_excerpt = any("topic=" + topic + " " in line for topic in (
+                    "engine_branch_path_api_declarations", "engine_branch_identity_declarations",
+                    "engine_branch_export_visibility"))
+            if in_header_excerpt:
+                header_rows += 1
+        self.assertEqual(header_rows, 200)
+        for path, topic, body_token in (
+                (CONFIG_CACHE_IMPL, "engine_branch_definition_FConfigCacheIni_InitializeKnownConfigFiles",
+                 'KnownFiles.Engine.IniName = TEXT("Engine")'),
+                (CONFIG_CACHE_IMPL, "engine_branch_definition_FConfigCacheIni_GetDestIniFilename",
+                 "SyntheticGeneratedDirectory / IniName"),
+                (CONFIG_CACHE_IMPL, "engine_branch_definition_FConfigCacheIni_FindBranch",
+                 "SyntheticFindByIdentityAndDestination(IniName, IniPath)"),
+                (CONFIG_CONTEXT_IMPL, "engine_branch_context_CachePaths",
+                 "ConfigSystem->FindBranch(*BaseIniName, DestIniFilename)"),
+                (CONFIG_CONTEXT_IMPL, "engine_branch_context_ResetBaseIni",
+                 "BaseIniName = SyntheticBaseName"),
+                (CONFIG_CONTEXT_IMPL, "engine_branch_context_ReadIntoGConfig",
+                 "SyntheticGlobalConfigContext()"),
+                (CONFIG_CONTEXT_IMPL, "engine_branch_context_ReadIntoConfigSystem",
+                 "SyntheticBoundConfigContext()")):
+            with self.subTest(topic=topic):
+                excerpt = next(item for item in receipt["excerpts"] if item["topic"] == topic)
+                self.assertTrue(excerpt["body_complete"])
+                self.assertEqual(excerpt["path"], path)
+                self.assertEqual(excerpt["sha256"], sources[path]["sha256"])
+                self.assertIn(body_token, "\n".join(line["text"] for line in excerpt["lines"]))
+                self.assertIn("topic=" + topic + " body_complete=True", console)
+                self.assertIn(body_token, console)
+
+    def test_branch_calls_comments_literals_and_incomplete_bodies_are_not_complete_definitions(self):
+        self.write(CONFIG_CACHE_IMPL,
+                   '// FString FConfigCacheIni::GetDestIniFilename() { COMMENT_FAKE; }\n'
+                   'const char* fake=R"tag(FConfigBranch* FConfigCacheIni::FindBranch() { RAW_FAKE; })tag";\n'
+                   "FConfigBranch* FConfigCacheIni::FindBranch(const TCHAR* IniName);\n"
+                   "void SyntheticCaller() {\n"
+                   " if (FConfigCacheIni::GetDestIniFilename(IniName)) { InvocationOnly(); }\n}\n"
+                   "FString FConfigCacheIni::GetDestIniFilename(const TCHAR* IniName) {\n"
+                   " return SyntheticDestination(IniName);\n}\n"
+                   "FConfigBranch* FConfigCacheIni::FindBranch(const TCHAR* IniName) {\n"
+                   " SyntheticUnfinishedBranch(IniName);\n")
+        self.write(CONFIG_CONTEXT_IMPL,
+                   '// void FConfigContext::CachePaths() { COMMENT_CONTEXT_FAKE; }\n'
+                   'const char* fake=R"tag(void FConfigContext::ReadIntoGConfig() { RAW_CONTEXT_FAKE; })tag";\n'
+                   "void FConfigContext::ResetBaseIni();\n"
+                   "void SyntheticCaller() {\n if (FConfigContext::CachePaths()) { InvocationOnly(); }\n}\n"
+                   "void FConfigContext::CachePaths() {\n SyntheticRealPathCache();\n}\n")
+        process, receipt = self.run_reader()
+        self.assertEqual(process.returncode, 0, process.stderr)
+        getter = [item for item in receipt["excerpts"]
+                  if item["topic"] == "engine_branch_definition_FConfigCacheIni_GetDestIniFilename"]
+        self.assertEqual(len(getter), 1)
+        self.assertTrue(getter[0]["body_complete"])
+        self.assertEqual((getter[0]["line_start"], getter[0]["line_end"]), (7, 9))
+        branch = [item for item in receipt["excerpts"]
+                  if item["topic"] == "engine_branch_definition_FConfigCacheIni_FindBranch"]
+        self.assertEqual(len(branch), 1)
+        self.assertFalse(branch[0]["body_complete"])
+        self.assertEqual(branch[0]["truncation_reason"], "UNTERMINATED_FUNCTION_BODY")
+        paths = [item for item in receipt["excerpts"] if item["topic"] == "engine_branch_context_CachePaths"]
+        self.assertEqual(len(paths), 1)
+        self.assertTrue(paths[0]["body_complete"])
+        self.assertEqual((paths[0]["line_start"], paths[0]["line_end"]), (7, 9))
+        self.assertFalse(any(item["topic"] in {"engine_branch_context_ReadIntoGConfig",
+                                               "engine_branch_context_ResetBaseIni"}
+                             for item in receipt["excerpts"]))
+        for excerpt in getter + branch + paths:
+            body = "\n".join(line["text"] for line in excerpt["lines"])
+            self.assertNotIn("FAKE", body)
+            self.assertNotIn("InvocationOnly", body)
+
+    def test_new_fixed_header_missing_link_and_size_failures_keep_evidence_explicit(self):
+        header = self.engine / CONFIG_CACHE_HEADER
+        original = header.read_bytes()
+        header.unlink()
+        process, receipt = self.run_reader()
+        self.assertEqual(process.returncode, 0, process.stderr)
+        self.assertEqual(receipt["status"], "PARTIAL_DEPENDENCY_EVIDENCE")
+        self.assertTrue(any(item.get("path") == CONFIG_CACHE_HEADER and item.get("reason") == "SOURCE_FILE_MISSING"
+                            for item in receipt["gaps"]))
+        self.assertFalse(any(item["path"] == CONFIG_CACHE_HEADER for item in receipt["source_files"]))
+        outside = self.base / "outside-new-fixed-header.h"
+        outside.write_text("OUTSIDE_NEW_FIXED_HEADER_MUST_NOT_BE_READ", encoding="utf-8")
+        header.symlink_to(outside)
+        process, receipt = self.run_reader()
+        self.assertEqual(process.returncode, 1)
+        self.assertEqual(receipt["error"], "LINK_OR_REPARSE_POINT")
+        self.assertNotIn("OUTSIDE_NEW_FIXED_HEADER_MUST_NOT_BE_READ", json.dumps(receipt))
+        header.unlink()
+        header.write_bytes(b"x" * (2 * 1024 * 1024 + 1))
+        process, receipt = self.run_reader()
+        self.assertEqual(process.returncode, 1)
+        self.assertEqual(receipt["error"], "UNSUPPORTED_OR_OVERSIZED_SOURCE")
+        self.assertFalse(any(item["path"] == CONFIG_CACHE_HEADER for item in receipt["source_files"]))
+        header.write_bytes(original)
+
     def test_missing_truncated_and_invocation_bodies_never_become_complete_definitions(self):
         cases = (
             ("comment", "// void UAutomationTestToolset::RunTests() {}\n", None),
@@ -378,7 +553,7 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
                        "void Synthetic() { AddTool(Synthetic); }\n")
         process, receipt = self.run_reader()
         self.assertEqual(process.returncode, 0, process.stderr)
-        self.assertEqual(receipt["source_file_count"], 25)
+        self.assertEqual(receipt["source_file_count"], 26)
         self.assertFalse(any(Path(item["path"]).name.startswith("Extra") for item in receipt["source_files"]))
         self.assertFalse(receipt["mcp_callsite_index_complete"])
         self.assertTrue(any(not item["scanned"] for item in receipt["mcp_callsite_inventory"]))
@@ -440,7 +615,7 @@ class OfficialMcpRuntimeDependenciesTests(unittest.TestCase):
             self.assertEqual(item["include_line"], 1)
             self.assertEqual(item["from_sha256"],
                              hashlib.sha256((self.engine / item["from_path"]).read_bytes()).hexdigest())
-        self.assertLessEqual(receipt["source_file_count"], 29)
+        self.assertEqual(receipt["source_file_count"], 30)
         self.assertLessEqual(receipt["total_source_bytes"], 8 * 1024 * 1024)
         self.assertFalse(receipt["mcp_callsite_index_complete"])
         outside = [item["path"] for item in receipt["source_files"]

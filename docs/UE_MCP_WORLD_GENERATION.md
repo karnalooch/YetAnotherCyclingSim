@@ -644,6 +644,38 @@ is 346,833 bytes, archive SHA-256
 `86347a8134fe37b0a5fba6e5075a33f8c5fe64db5923038af27c9f2dafb30b59`.
 [Ordinary CI 38015886935](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38015886935)
 passed at this SHA with the domain plugin disabled.
+[Activation diagnostic 38016857639](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38016857639)
+at `aceaefb437962ce3dc0af301db32c4ac2cf66592` passed both builds and
+accepted staging. Context was verified at 74.472 seconds from launch, the
+complete host source scan took 4.688 seconds, and transport was published at
+79.179 seconds. Discovery completed; the unchanged activation conditions then
+failed at 50.813 native seconds with
+`The active engine configuration is outside the owned project root.` Module,
+absence-of-server, registry and config-cache prerequisites passed before that
+containment check. Legacy library preparation and listener startup were not
+reached. This identifies the failing check, not the actual `GEngineIni` value.
+The host receipt is 443,055 bytes, SHA-256
+`0076721aff4f5af496d2f720a0f6826633594e8a61d25b12c9b922ce9318d6e6`;
+[artifact 11656772437](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38016857639/artifacts/11656772437)
+is 346,211 bytes, archive SHA-256
+`49e081252d09fe54ccfa64de658e48f13a1dde1b619395a5d82fc691232143a9`.
+Retained installed configuration sources distinguish cache branch identifiers
+from destination paths. A fixed read-only source/readback attempt will collect
+the missing installed public branch/path declarations before any correction.
+It adds only the observed-include `Core/Public/Misc/ConfigCacheIni.h`, raising
+the fixed source count cap from 29 to 30 because all 29 existing slots were
+present. The 2 MiB per-file, 8 MiB total and 500-line per-purpose console caps
+remain unchanged. The new SDK receipt is a current source-only observation,
+separate from the hash-pinned historical failure; declarations and bounded
+constructor contexts still require primary review. Header console contexts
+have an explicit 200-line reservation so branch-resolution implementation
+excerpts can fit within the unchanged overall console cap; any omission is
+reported, and the bounded JSON evidence is retained separately.
+No config-containment guard is removed or presumed satisfied; no build, Editor
+or MCP operation runs in that diagnostic mode.
+[Ordinary CI 38016861731](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38016861731)
+passed at `aceaefb437962ce3dc0af301db32c4ac2cf66592` with the domain plugin
+disabled.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 
