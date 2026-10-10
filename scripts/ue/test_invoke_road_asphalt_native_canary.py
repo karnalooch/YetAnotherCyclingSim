@@ -28,7 +28,7 @@ class NativeAsphaltHostContractTests(unittest.TestCase):
     def test_original_green_baseline_and_modules_are_authentication_gates(self):
         for token in (
             "ROAD_MATERIAL_BASELINE_READ_ONLY_COMPLETE",
-            "host.proof_files.native_baseline.sha256",
+            "baselineHost.proof_files.native_baseline.sha256",
             "owned_editor_exit_code -ne 0",
             "Get-Identity $row.copied_identity.path 512MB",
             "Require-IdleHost",

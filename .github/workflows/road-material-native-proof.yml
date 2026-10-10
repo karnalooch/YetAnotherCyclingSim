@@ -118,11 +118,17 @@ jobs:
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
           $tokens = $null
           $errors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile(
-            (Join-Path (Get-Location).Path 'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1'),
-            [ref]$tokens, [ref]$errors
-          ) | Out-Null
-          if ($errors.Count) { throw ($errors.Message -join "`n") }
+          foreach ($script in @(
+            'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1',
+            'scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1'
+          )) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Join-Path (Get-Location).Path $script),
+              [ref]$tokens, [ref]$errors
+            ) | Out-Null
+            if ($errors.Count) { throw ($errors.Message -join "`n") }
+          }
           $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
           if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Existing pinned Python is missing.' }
           & $python -m unittest scripts.ue.test_read_road_material_baseline
