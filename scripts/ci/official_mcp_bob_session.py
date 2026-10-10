@@ -506,10 +506,15 @@ def _source_dependency_inventory(exact_sha: str) -> list[dict]:
 
 def _verify_rows(root: Path, rows: list[dict]) -> None:
     for row in rows:
+        observed = _identity(_safe_path(root, row["path"]))
+        expected = {key: row[key] for key in ("sha256", "size_bytes")}
         _require(
-            _identity(_safe_path(root, row["path"]))
-            == {key: row[key] for key in ("sha256", "size_bytes")},
-            "accepted asset bytes differ",
+            observed == expected,
+            "accepted asset bytes differ: "
+            f"{row['path']} (expected_size={expected['size_bytes']}, "
+            f"observed_size={observed['size_bytes']}, "
+            f"expected_sha256={expected['sha256']}, "
+            f"observed_sha256={observed['sha256']})",
         )
 
 

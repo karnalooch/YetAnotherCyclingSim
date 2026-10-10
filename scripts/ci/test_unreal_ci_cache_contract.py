@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import unittest
 import shlex
 import subprocess
@@ -65,6 +65,40 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn(
             "    concurrency:\n      group: yacs-unreal-ci-${{ github.repository }}",
             native,
+        )
+
+    def test_native_stager_shortens_only_its_isolated_checkout_for_deep_lfs(self):
+        stage_workflow = (
+            ROOT / ".github" / "workflows" / "road-material-native-proof.yml"
+        ).read_text(encoding="utf-8")
+        host_script = (
+            ROOT / "scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1"
+        ).read_text(encoding="utf-8")
+        short_name = "rm-\u0024{{ github.run_id }}-\u0024{{ github.run_attempt }}"
+        self.assertIn("          path: " + short_name, stage_workflow)
+        self.assertEqual(
+            stage_workflow.count("working-directory: " + short_name), 2
+        )
+        self.assertIn("('rm-' + \u0024RunToken)", host_script)
+        self.assertNotIn(
+            "_road-material-native-\u0024{{ github.run_id }}",
+            stage_workflow,
+        )
+        base = PureWindowsPath(
+            r"D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim"
+        )
+        deepest_asset = PureWindowsPath(
+            "Content/Generated/YACS/TextureMaterialPrep/Libraries/"
+            "3d53743e48394f31beb35e4030dc8a87/LimestonePalette/"
+            "1b3d9c45b1e24d6085bfcc8859390c19/"
+            "M_SC_Limestone_ExposedRock.uasset"
+        )
+        self.assertGreaterEqual(
+            len(str(base / "_road-material-native-38058683514-1" / deepest_asset)),
+            260,
+        )
+        self.assertLess(
+            len(str(base / "rm-38058683514-1" / deepest_asset)), 260
         )
 
     def test_native_road_reader_requires_retained_byte_pinned_automation_proof(self):

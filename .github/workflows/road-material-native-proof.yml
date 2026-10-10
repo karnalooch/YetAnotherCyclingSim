@@ -93,14 +93,14 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
-          path: _road-material-native-${{ github.run_id }}-${{ github.run_attempt }}
+          path: rm-${{ github.run_id }}-${{ github.run_attempt }}
           fetch-depth: 1
           lfs: false
           persist-credentials: false
 
       - name: Check reader contract before shared-host work
         shell: pwsh
-        working-directory: _road-material-native-${{ github.run_id }}-${{ github.run_attempt }}
+        working-directory: rm-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
@@ -120,7 +120,7 @@ jobs:
 
       - name: Stage verified consumer and read native baseline
         shell: pwsh
-        working-directory: _road-material-native-${{ github.run_id }}-${{ github.run_attempt }}
+        working-directory: rm-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1 `

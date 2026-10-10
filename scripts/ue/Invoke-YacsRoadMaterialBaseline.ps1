@@ -194,7 +194,7 @@ try {
     $workspace = [IO.Path]::GetFullPath($env:GITHUB_WORKSPACE).TrimEnd('\', '/')
     Assert-BaselinePlainPath $workspace
     if (-not $workspace.StartsWith('D:\yacs\runner\_work\', [StringComparison]::OrdinalIgnoreCase) `
-        -or -not [string]::Equals($RepoRoot, (Join-Path $workspace ('_road-material-native-' + $RunToken)), [StringComparison]::OrdinalIgnoreCase) `
+        -or -not [string]::Equals($RepoRoot, (Join-Path $workspace ('rm-' + $RunToken)), [StringComparison]::OrdinalIgnoreCase) `
         -or -not [string]::Equals($RepoRoot, [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..')).TrimEnd('\', '/'), [StringComparison]::OrdinalIgnoreCase)) {
         throw 'The baseline requires its own fresh runner checkout, separate from the live project and cache.'
     }

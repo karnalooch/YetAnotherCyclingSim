@@ -582,6 +582,20 @@ class OfficialMcpBobSessionTests(unittest.TestCase):
         # matching owner file whose cached pointer stat intentionally survives.
         self.git("diff", "--exit-code", "--", *self.dependency_payloads)
 
+    def test_hydration_mismatch_reports_exact_asset_identity_without_replacement(self):
+        row = self.rows[-1]
+        mismatch = b"SYNTHETIC incorrect hydrated asset"
+        target = self.write(self.root, row["path"], mismatch)
+        with self.assertRaises(ValueError) as raised:
+            self.session._verify_rows(self.root, [row])
+        message = str(raised.exception)
+        self.assertIn("accepted asset bytes differ:", message)
+        self.assertIn(row["path"], message)
+        self.assertIn("expected_sha256=" + row["sha256"], message)
+        self.assertIn("observed_sha256=" + digest(mismatch), message)
+        self.assertIn("observed_size=" + str(len(mismatch)), message)
+        self.assertEqual(target.read_bytes(), mismatch)
+
     def test_owner_asset_mismatch_is_rejected_before_any_pointer_is_replaced(self):
         owner = self.rows[-1]
         wrong = b"SYNTHETIC owner changes must survive"

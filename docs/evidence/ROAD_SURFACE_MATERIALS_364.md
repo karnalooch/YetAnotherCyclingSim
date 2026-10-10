@@ -274,3 +274,36 @@ protected verification. New exact-SHA normal CI, retained-summary admission,
 fresh native reader and subsequent asphalt canary are **NOT YET VERIFIED**.
 Owner visual `PENDING_FINAL_M3`; performance `DEFERRED_AFTER_M3`,
 `performance_pass: false`. PR remains Draft until stage-specific evidence.
+
+## Native stage failure at 5a4a9c1b and bounded checkout-path correction — 2026-10-10
+
+[Exact-head protected CI 38058686733](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38058686733)
+PASSED: Windows Unreal Automation, authenticated cache proof retention and
+Aggregate CI. The separately gated
+[native attempt 38058683514](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38058683514)
+**FAILED during accepted-consumer staging, before launching Unreal**.
+[Artifact 11672726865](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38058683514/artifacts/11672726865)
+retained complete host receipt, pinned original green Automation summary,
+static/none cache resolver and the `accepted-consumer-stage-stderr.log` showing
+`_hydrate_dependencies -> _verify_rows: ValueError: accepted asset bytes differ`.
+The verified fingerprint/cache/proof gates passed; the staging error does not
+authorize altering any source hash or marking the native read as PASS.
+
+A scoped Windows MAX_PATH hypothesis is supported by the exact dependency tree:
+five frozen limestone palette `.uasset` paths exceed **260 characters** when
+prefixed by the original 99-character isolated Actions checkout root; the
+longest reaches **268 characters**. The LFS process returned without a
+diagnostic path, so this remains a **hypothesis**, not a proven mismatch
+identity. This candidate shortens **only** the separate native Actions
+checkout directory to `rm-<run>-<attempt>`, keeping the real workspace,
+isolated source/exact SHA, protected cache, Git/LFS checks and accepted
+assets unchanged. A hosted contract test covers the exact old-vs-new Windows
+path lengths and the wrapper/workflow binding. The common stager now includes
+the exact relative path and expected/observed byte identities when a hydrated
+file mismatches, without skipping or rewriting it. Its synthetic test confirms
+the error remains fail-closed and preserves the original wrong bytes.
+
+**Candidate status:** awaiting protected tests and a fresh independent native
+staging/read result on the new exact SHA. No native scene/material admission,
+saved consumer or geometry change claimed. PR remains Draft; owner visual
+`PENDING_FINAL_M3`, FPS `DEFERRED_AFTER_M3`, `performance_pass: false`.
