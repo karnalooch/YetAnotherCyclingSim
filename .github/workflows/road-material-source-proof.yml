@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/road-material-source-proof.yml'
       - 'scripts/assets/run_road_asphalt_source_proof.py'
+      - 'scripts/assets/test_run_road_asphalt_source_proof.py'
       - 'scripts/assets/road_material_contract.py'
       - 'scripts/assets/test_road_material_contract.py'
       - 'worldgen/materials/material_forge/**'
@@ -83,7 +84,7 @@ jobs:
         working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           $ErrorActionPreference = 'Stop'
-          & $env:YACS_ROAD_FORGE_PY -m unittest scripts.assets.test_road_material_contract
+          & $env:YACS_ROAD_FORGE_PY -m unittest scripts.assets.test_road_material_contract scripts.assets.test_run_road_asphalt_source_proof
           if ($LASTEXITCODE -ne 0) { throw 'Road material source contract tests failed.' }
           & $env:YACS_ROAD_FORGE_PY scripts/assets/run_road_asphalt_source_proof.py `
             --expected-head $env:GITHUB_SHA --run $env:GITHUB_RUN_ID --attempt $env:GITHUB_RUN_ATTEMPT
