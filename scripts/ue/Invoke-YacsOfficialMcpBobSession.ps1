@@ -1343,7 +1343,7 @@ function Invoke-SessionVerifiedInputBoundaryReadback {
         $row = $oldProtected[$path]
         if (-not $allowedProtected.Contains($path) -or $row.path -cne $path -or $row.sha256 -cnotmatch '^[0-9a-f]{64}$' `
             -or ($row.size_bytes -isnot [int] -and $row.size_bytes -isnot [long]) -or $row.size_bytes -le 0 `
-            -or $row.size_bytes -gt [Math]::Min(1GB, (2GB - $protectedBytes))) { throw 'An original session protected identity exceeds its path or byte bounds.' }
+            -or $row.size_bytes -gt [Math]::Min([long]1GB, ([long]2GB - $protectedBytes))) { throw 'An original session protected identity exceeds its path or byte bounds.' }
         $protectedBytes += $row.size_bytes
         $actual = Get-SessionFileIdentity $path $row.size_bytes
         if ($actual.sha256 -cne $row.sha256) { throw 'An actual protected original session/unit input changed.' }
