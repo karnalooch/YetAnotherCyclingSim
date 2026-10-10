@@ -976,6 +976,14 @@ the 423,385-byte host receipt is SHA-256
 `188d4325b301ca9cbfda8770f55cb8464726a4ba7bbf4e271eddf02cbdef5fe6`.
 The no-listener guard remains binding; actual InputBoundary is pending.
 
+[Source-only startup readback 38031509916](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38031509916)
+at `10f2664a50d1d58dd88444abcc6ca72cc35ebd0b` authenticated the failed host
+and unit receipt, then rejected an owned-log identity's shape/path/size before
+reading its bytes. The offending field was not printed; no SHA drift or
+listener cause is established. A corrected diagnostic preserves the original
+declared log identities separately from current observed retained-path bytes.
+Only an exact size/hash match may be labelled original verified log bytes.
+
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
 hosted Python, equivalent exact-head Unreal proof reuse and Aggregate.

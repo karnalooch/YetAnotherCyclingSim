@@ -927,8 +927,13 @@ function Get-SessionUnitOwnedListeners {
     return @(Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object OwningProcess -eq $OwnedPid)
 }
 function Read-SessionUnitFailureEvidenceBytes {
-    param([string] $Path, $Expected, [long] $Limit, $Budget, [string] $CopyName, [switch] $CurrentSource, [switch] $AllowEmpty)
+    param([string] $Path, $Expected, [long] $Limit, $Budget, [string] $CopyName, [switch] $CurrentSource, [switch] $AllowEmpty, [switch] $ObservedRetainedLog)
     if ($null -eq $Expected -and -not $CurrentSource) { throw 'A historical unit failure file requires its authenticated identity.' }
+    if ($ObservedRetainedLog) {
+        $fixedLogRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38030801857-1'
+        $fixedLogPaths = @('input-boundary-editor.log', 'input-boundary-editor-stdout.log', 'input-boundary-editor-stderr.log') | ForEach-Object { Join-Path $fixedLogRoot $_ }
+        if ($Path -cnotin $fixedLogPaths -or $null -eq $Expected -or $CurrentSource) { throw 'Observed retained bytes are restricted to the three fixed failed-unit logs.' }
+    }
     Assert-SessionPlainPath $Path
     $before = Get-Item -LiteralPath $Path -Force
     $size = $before.Length
@@ -936,7 +941,9 @@ function Read-SessionUnitFailureEvidenceBytes {
     if ($before.PSIsContainer -or ($size -eq 0 -and -not $AllowEmpty) -or $size -gt $Limit -or $size -gt ($Budget.limit_bytes - $Budget.bytes)) { throw 'Fixed unit failure evidence exceeds its nonempty/regular-file or aggregate bound.' }
     if ($null -ne $Expected -and ($Expected -isnot [Collections.IDictionary] -or $Expected.path -isnot [string] `
         -or -not [string]::Equals([IO.Path]::GetFullPath($Expected.path), [IO.Path]::GetFullPath($Path), [StringComparison]::OrdinalIgnoreCase) `
-        -or $Expected.sha256 -cnotmatch '^[0-9a-f]{64}$' -or -not (Test-SessionInteger $Expected.size_bytes $size))) { throw 'Fixed unit failure bytes lack their authenticated identity.' }
+        -or $Expected.sha256 -cnotmatch '^[0-9a-f]{64}$' -or (-not $ObservedRetainedLog -and -not (Test-SessionInteger $Expected.size_bytes $size)))) { throw 'Fixed unit failure bytes lack their authenticated identity.' }
+    if ($ObservedRetainedLog -and (($Expected.size_bytes -isnot [int] -and $Expected.size_bytes -isnot [long]) `
+        -or $Expected.size_bytes -lt 0 -or $Expected.size_bytes -gt $Limit)) { throw 'The fixed original log declaration has an invalid byte count.' }
     $Budget.bytes += $size
     $stream = [IO.File]::OpenRead($Path)
     try {
@@ -954,7 +961,11 @@ function Read-SessionUnitFailureEvidenceBytes {
     [Array]::Copy($buffer, $bytes, $count)
     $identity = [ordered]@{ path = [IO.Path]::GetFullPath($Path); size_bytes = $count
         sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant() }
-    if ($null -ne $Expected -and $identity.sha256 -cne $Expected.sha256) { throw 'Fixed unit failure raw hash differs before decoding or parsing.' }
+    $originalMatches = $null
+    if ($null -ne $Expected) {
+        $originalMatches = $identity.sha256 -ceq $Expected.sha256 -and (Test-SessionInteger $Expected.size_bytes $count)
+        if (-not $originalMatches -and -not $ObservedRetainedLog) { throw 'Fixed unit failure raw hash differs before decoding or parsing.' }
+    }
     $retained = $null
     if ($CopyName) {
         $target = Join-Path $ArtifactRoot $CopyName
@@ -971,7 +982,7 @@ function Read-SessionUnitFailureEvidenceBytes {
             if ($retained.sha256 -cne $identity.sha256 -or $retained.size_bytes -ne $count) { throw 'A retained raw unit failure copy differs.' }
         }
     }
-    return [ordered]@{ identity = $identity; retained_raw = $retained; bytes = $bytes }
+    return [ordered]@{ identity = $identity; retained_raw = $retained; bytes = $bytes; matches_original_identity = $originalMatches }
 }
 function Select-SessionUnitFailureContext {
     param([byte[]] $Bytes, [switch] $EngineSource)
@@ -1089,17 +1100,52 @@ function Invoke-SessionFixedUnitListenerFailureReadback {
         original_failed_run = '38030801857-1'; original_failed_sha = $failedSha
         original_failed_host = $failedHostBytes.identity; original_failed_unit = $unitBytes.identity
         retained_raw_host = $failedHostBytes.retained_raw; retained_raw_unit = $unitBytes.retained_raw
-        original_unit_facts = [ordered]@{}; original_owned_logs = [ordered]@{}; current_engine_sources = [ordered]@{}
+        original_unit_facts = [ordered]@{}; retained_failed_unit_log_paths = [ordered]@{}; current_engine_sources = [ordered]@{}
+        original_log_identity_declarations = [ordered]@{}; current_log_metadata = [ordered]@{}
         proof_limits = @('The failed unit counted one owned listener; its endpoint and service were not retained.',
+            'A log whose current identity differs is only a current observation of the fixed retained path, not original process ownership evidence.',
             'Log text may show startup hints; current engine source is not a historical listener ownership proof.',
             'This diagnostic launches no Editor and establishes no successful InputBoundary result.') }
     foreach ($field in @('status', 'source_only', 'editor_launched', 'compile_performed', 'native_input_boundary_verified', 'owned_editor_pid',
         'owned_editor_exit_code', 'owned_editor_exit_observed', 'listener_samples', 'listener_samples_while_alive', 'maximum_owned_listeners',
         'owned_listeners_after_exit', 'prelaunch_input_inventory', 'report', 'report_summary', 'error', 'elapsed_seconds')) { $diagnostic.original_unit_facts[$field] = $unitDocument[$field] }
-    foreach ($name in @('input-boundary-editor.log', 'input-boundary-editor-stdout.log', 'input-boundary-editor-stderr.log')) {
-        $file = Read-SessionUnitFailureEvidenceBytes (Join-Path $failedRoot $name) $unitDocument.logs[$name] 32MB $budget ('verified-failed-unit-' + $name) -AllowEmpty
-        $diagnostic.original_owned_logs[$name] = [ordered]@{ scope = 'MATCHES_AUTHENTICATED_ORIGINAL_FAILED_UNIT_RECEIPT'
-            identity = $file.identity; retained_raw = $file.retained_raw; context = (Select-SessionUnitFailureContext $file.bytes) }
+    $logNames = @('input-boundary-editor.log', 'input-boundary-editor-stdout.log', 'input-boundary-editor-stderr.log')
+    foreach ($name in $logNames) {
+        $path = Join-Path $failedRoot $name
+        Assert-SessionPlainPath $path
+        $current = Get-Item -LiteralPath $path -Force
+        $declared = $unitDocument.logs[$name]
+        $isObject = $declared -is [Collections.IDictionary]
+        $declaredPath = if ($isObject) { $declared['path'] } else { $null }
+        $declaredSha = if ($isObject) { $declared['sha256'] } else { $null }
+        $declaredSize = if ($isObject) { $declared['size_bytes'] } else { $null }
+        $pathValid = $isObject -and $declaredPath -is [string] -and $declaredPath.Length -le 1024
+        $pathMatches = $false
+        if ($pathValid) {
+            try { $pathMatches = [string]::Equals([IO.Path]::GetFullPath($declaredPath), [IO.Path]::GetFullPath($path), [StringComparison]::OrdinalIgnoreCase) }
+            catch { $pathMatches = $false }
+        }
+        $shaValid = $isObject -and $declaredSha -is [string] -and $declaredSha -cmatch '^[0-9a-f]{64}$'
+        $sizeValid = $isObject -and ($declaredSize -is [int] -or $declaredSize -is [long]) -and $declaredSize -ge 0
+        $diagnostic.original_log_identity_declarations[$name] = [ordered]@{
+            path = $(if ($pathValid) { $declaredPath } else { $null }); sha256 = $(if ($shaValid) { $declaredSha } else { $null })
+            size_bytes = $(if ($sizeValid) { $declaredSize } else { $null }) }
+        $diagnostic.current_log_metadata[$name] = [ordered]@{ scope = 'CURRENT_OBSERVED_FIXED_RETAINED_PATH_METADATA; NOT_A_RAW_HASH'
+            path = [IO.Path]::GetFullPath($path); size_bytes = $(if ($current.PSIsContainer) { $null } else { $current.Length })
+            is_directory = $current.PSIsContainer; expected_identity_is_object = $isObject; expected_path_is_bounded_string = $pathValid
+            expected_path_matches_fixed = $pathMatches; expected_sha256_is_canonical = $shaValid; expected_size_is_nonnegative_integer = $sizeValid
+            declared_size_matches_observed = ($sizeValid -and -not $current.PSIsContainer -and (Test-SessionInteger $declaredSize $current.Length)) }
+    }
+    $metadataConsole = [ordered]@{ original_declared = $diagnostic.original_log_identity_declarations; current_metadata = $diagnostic.current_log_metadata } | ConvertTo-Json -Depth 5 -Compress
+    if ([Text.Encoding]::UTF8.GetByteCount($metadataConsole) -gt 8KB) { throw 'The fixed three-log identity metadata exceeds its 8KiB console bound.' }
+    Write-Host ('FAILED_UNIT_LOG_IDENTITY_METADATA ' + $metadataConsole)
+    foreach ($name in $logNames) {
+        $file = Read-SessionUnitFailureEvidenceBytes (Join-Path $failedRoot $name) $unitDocument.logs[$name] 32MB $budget ('retained-failed-unit-' + $name) -AllowEmpty -ObservedRetainedLog
+        $scope = if ($file.matches_original_identity) { 'MATCHES_AUTHENTICATED_ORIGINAL_FAILED_UNIT_RECEIPT' }
+            else { 'CURRENT_OBSERVED_RETAINED_FAILED_UNIT_PATH_BYTES; NOT_ORIGINAL_HASH_MATCH; NO_ORIGINAL_PROCESS_OWNERSHIP_PROOF' }
+        $diagnostic.retained_failed_unit_log_paths[$name] = [ordered]@{ scope = $scope; matches_original_identity = $file.matches_original_identity
+            original_declared_identity = $diagnostic.original_log_identity_declarations[$name]
+            current_identity = $file.identity; retained_raw = $file.retained_raw; context = (Select-SessionUnitFailureContext $file.bytes) }
     }
     $sourceBudget = [ordered]@{ bytes = 0L; limit_bytes = 12MB }
     foreach ($relative in @('Engine/Source/Runtime/Core/Private/ProfilingDebugging/TraceAuxiliary.cpp',
