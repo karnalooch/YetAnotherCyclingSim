@@ -174,9 +174,11 @@ below; it needs no road rebuild, new transport service or expanded tool library.
    hashes, an engine/plugin/schema mismatch, an absent test result, paths outside
    scope and attempted save/import/transform/earthworks or arbitrary execution.
    Retain before/after persistent-content hashes and the call/domain/test
-   receipts. After protected technical closeout, hand off the admitted stock
-   `MaterialInstanceTools` capability and its exact schemas to #364; stop MCP
-   infrastructure expansion.
+   receipts. After protected technical closeout, hand off the bounded
+   inspection/test interface and its evidence to #364; stop MCP infrastructure
+   expansion. Stock `MaterialInstanceTools` requires separate version-matched
+   schemas, argument/resource restrictions and material-only native authoring
+   proof before use in #364.
 
 Preparation checks at the audited SHA: the existing BOB terrain-fit and adaptive
 policy unit modules passed **18 tests**. These exercise domain behavior only;
@@ -816,6 +818,32 @@ read. Maintenance supplies no runtime admission. The one-off cleanup and
 storage-inventory helpers are now removed; the workflow returns to the accepted
 session with the shared Git reader, fixed failure stages and unchanged native
 180-second / host 420-second deadlines. A fresh native session remains required.
+[Native attempt 38025560494](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38025560494)
+at `4fe6c4f50db0e7a8b2883429209dd193e01159dd` passed both isolated builds and
+accepted staging. Editor 29376 reached native `Ready`; client 45940 received
+the valid result and matched its four transported objects with saved files,
+including saved/direct result equality. The client then failed at
+`BUNDLE_VERIFY / GUARD_REJECTED / ADAPTER_REINSPECTION`: the fresh adapter
+result or proof differed from the saved object. Adapter source/input checks
+completed before this equality guard; the differing field is not retained in
+the failure. The client's later receipt/capture/conservation checks were not reached.
+The native terminal reason was `The fixed client completion or final native census changed.`;
+no successful session summary or six bundle identities were published.
+The producer completed at 72.938 cumulative seconds; its selected logs show
+source milestones at 10.735, 27.829 and 72.688 seconds. Host context/source/
+transport milestones were 122.668 / 152.816 / 152.834 seconds. These are this
+attempt's observations, not a performance comparison or M3 performance PASS.
+The 445,099-byte host receipt is SHA-256
+`5f0d9cfae844b00d43dbcac7cd3c4e21103423439db1bf6fcc45f0212f4465f0`;
+[artifact 11659423904](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38025560494/artifacts/11659423904)
+is 2,935,316 bytes, archive SHA-256
+`cea0f730ce8a64b16dae683661c3665189379aaca4881d0fc1275d59a2fc9f58`.
+The next fixed job authenticates that original failed host and observes the
+retained bundle before pure adapter reinspection, with bounded field differences.
+Bundle bytes without original host hashes remain qualified current observations;
+this diagnostic performs no build, native capture or MCP call and admits no runtime.
+The exact result/proof equality guard and native 180 / host 420-second bounds
+remain required. No cause is inferred before the actual differing field is read.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 
