@@ -1,8 +1,8 @@
 """Repair CRLF-only checkout drift in a serialized Unreal CI cache worktree.
 
 Old Windows worktrees may retain CRLF for files after .gitattributes gains
-eol=lf, despite git reset --hard returning success. Rehydrate ONLY tracked
-C#/critical PowerShell inputs from the existing Git index. Never modify binaries,
+eol=lf, despite git reset --hard returning success. Rewrite ONLY tracked
+C#/critical PowerShell inputs from authenticated HEAD Git blobs. Never modify binaries,
 cache state, assets, the source index, or the interactive authoring checkout.
 
 The caller must already hold the normal Unreal CI host lock and supply the
@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import stat
 import subprocess
+import tempfile
 from pathlib import Path, PurePosixPath
 
 from scripts.ci.classify_changes import (
@@ -125,6 +127,7 @@ def materialize(root: Path, paths: list[str]) -> dict:
     }
     targets = []
     expected = {}
+    observed = {}
     for name in paths:
         path, blob = validate_target(root, name)
         current = path.read_bytes()
@@ -134,13 +137,32 @@ def materialize(root: Path, paths: list[str]) -> dict:
                 "Fingerprint source has non-EOL changes: " + name,
             )
             targets.append(name)
+            observed[name] = current
         expected[name] = blob
     require(
         dirty.issubset(set(targets)),
         "Unreal cache has unrelated tracked source modifications",
     )
-    if targets:
-        git(root, "checkout-index", "--force", "--", *targets)
+    # Windows git checkout-index may reproduce the wrong worktree EOL after a
+    # historical attributes change. Write the pre-authenticated HEAD blob bytes
+    # atomically instead; neither the index nor the cache stamp is modified.
+    for name in targets:
+        path = root / name
+        require(
+            path.read_bytes() == observed[name],
+            "Fingerprint input changed after preflight: " + name,
+        )
+        fd, temporary = tempfile.mkstemp(prefix=".yacs-unreal-eol-", dir=path.parent)
+        try:
+            with os.fdopen(fd, "wb") as stream:
+                stream.write(expected[name])
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.chmod(temporary, stat.S_IMODE(path.stat().st_mode))
+            os.replace(temporary, path)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
     for name, blob in expected.items():
         require(
             (root / name).read_bytes() == blob,

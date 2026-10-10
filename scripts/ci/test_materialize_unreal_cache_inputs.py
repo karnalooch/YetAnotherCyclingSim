@@ -64,6 +64,7 @@ class UnrealCacheMaterializationTests(unittest.TestCase):
         self.assertEqual(self.initial_head, gate.git(self.root, "rev-parse", "HEAD"))
         self.assertEqual(self.dll.read_bytes(), b"immutable binary")
         self.assertEqual(self.state.read_bytes(), b"immutable green proof state")
+        self.assertFalse(list(self.root.rglob(".yacs-unreal-eol-*")))
         self.assertEqual(gate.materialize(self.root, self.paths)["restored"], 0)
 
     def test_unexpected_edit_fails_without_overwriting_source(self):

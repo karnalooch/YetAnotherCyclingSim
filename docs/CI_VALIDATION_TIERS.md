@@ -262,9 +262,11 @@ Windows cache raw-byte reconciliation — #364 (2026-10-10):
 `CyclingSim CI` Resolve, after the isolated tracked checkout is cleaned and
 before cache admission. It accepts exactly the Git index's C# and critical
 PowerShell inputs with `eol=lf`; source modifications other than CRLF drift
-are rejected. It selectively forces a Git index checkout for stale bytes,
-verifies every physical input against its committed blob and compares both
-physical compile/proof fingerprints to the hosted exact-SHA values. The cache
+are rejected. It atomically replaces CRLF-only drift with authenticated raw
+HEAD Git blob bytes because Git for Windows checkout conversion did not reliably
+rematerialize LF in the existing RoadForge build-rule file. The repair verifies
+every physical input against its committed blob and compares both physical
+compile/proof fingerprints to the hosted exact-SHA values. The cache
 state, compiled DLLs, assets, editor and local authoring checkout remain
 untouched. Any failure rejects reuse before build/Automation or proof
 publication; standalone read-only native consumers never repair the cache.
