@@ -1050,6 +1050,24 @@ created while PR #467 conflicted with the concurrent #468 policy refactor;
 the branch preserves that refactor and moves its MCP checkpoint into the scoped
 M3 policy before requesting current-head CI again.
 
+[Authenticated startup readback 38037644767](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38037644767)
+at `0e140e0e9c30d64957fdf668aa7d3b701aed07a1` matched all three original
+failed-unit log identities. The owned startup log links `127.0.0.1:19315` to
+`LocoHelperAI`, which reports its MCP endpoint and external exposure enabled.
+The actual plugin descriptor name and isolated opt-out still require verification;
+this diagnostic launches no Editor and supplies no unit PASS or endpoint allowance.
+Its isolated checkout restored the two #468 JSON inputs from 1,973/5,190 bytes
+to the exact 1,953/4,993-byte Git inputs; all twenty-four integrated main paths
+then passed the strict raw-byte check. The only attributes delta is two literal
+LF rules, authenticated separately from the historical runtime source.
+
+[CI 38036647295](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38036647295)
+at `40b85b0c07fc9bda28164f052641dd45c775f666` completed an actual warm UBT
+invocation successfully with zero rebuild actions and scoped Automation 27/27,
+zero errors and two warnings. [CI 38037648234](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38037648234)
+passed through verified equivalent proof reuse; it reran neither the build nor
+Automation. Neither ordinary CI result verifies the standalone BOB test.
+
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
 hosted Python, equivalent exact-head Unreal proof reuse and Aggregate.

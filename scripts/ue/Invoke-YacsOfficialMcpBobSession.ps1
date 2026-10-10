@@ -1147,10 +1147,10 @@ function Invoke-SessionFixedFailedUnitReadback {
         original_owned_endpoints = $failedUnit.observed_owned_endpoints; original_unit_error = Get-SessionSafeFailureText $failedUnit.error
         original_unit_verified = $false; original_report_parsed = $null -ne $failedUnit.report
         original_mcp_absence_info = $failedUnit.mcp_absence_info; original_conservation_verified = $failedUnit.protected_inputs_unchanged
-        raw_evidence_limit_bytes = 64MB; logs = [ordered]@{}; proof_limits = @('Port19315 remains unattributed; this reader admits no endpoint.',
+        raw_evidence_limit_bytes = 64MB; logs = [ordered]@{}; proof_limits = @('Port19315 remains unadmitted; actual plugin descriptor and opt-out are unverified.',
             'Changed retained log bytes are current path observations, not original process-ownership evidence.',
             'No report or native Info proof is manufactured from startup logs.') }
-    $patterns = [ordered]@{ port19315 = '19315'; http = '(?i)HTTP|HttpServer|listen|bind|socket|TCP'; mcp = '(?i)ModelContextProtocol|MCP|YacsBob';
+    $patterns = [ordered]@{ port19315 = '19315'; loco = '(?i)Loco'; http = '(?i)HTTP|HttpServer|listen|bind|socket|TCP'; mcp = '(?i)ModelContextProtocol|MCP|YacsBob';
         messaging = '(?i)messag'; rider = '(?i)Rider'; remote = '(?i)remote'; python = '(?i)Python';
         automation = '(?i)Automation'; startup_error = '(?i)LogInit:|Error|Fatal|Exception|Traceback' }
     foreach ($name in @('input-boundary-editor.log', 'input-boundary-editor-stdout.log', 'input-boundary-editor-stderr.log')) {
@@ -1159,7 +1159,7 @@ function Invoke-SessionFixedFailedUnitReadback {
         $categories = [ordered]@{}
         foreach ($category in $patterns.Keys) { $categories[$category] = [Collections.Generic.List[int]]::new() }
         for ($index = 0; $index -lt $lines.Length; $index++) {
-            if ($lines[$index] -match '(?i)Command\s*Line:') { continue }
+            if ($lines[$index] -match '(?i)\bCommand\s*Line\s*[:=]') { continue }
             foreach ($category in $patterns.Keys) { if ($lines[$index] -match $patterns[$category]) { $categories[$category].Add($index) } }
         }
         $selected = [Collections.Generic.HashSet[int]]::new()
@@ -1170,6 +1170,7 @@ function Invoke-SessionFixedFailedUnitReadback {
             $categoryMatches = $categories[$category]
             $counts[$category] = $categoryMatches.Count
             $candidates = if ($category -ceq 'port19315') { @($categoryMatches | Select-Object -First 2) + @($categoryMatches | Select-Object -Last 2) }
+                elseif ($category -ceq 'loco') { @($categoryMatches | Select-Object -First 4) + @($categoryMatches | Select-Object -Last 2) }
                 else { @($categoryMatches | Select-Object -First 1) + @($categoryMatches | Select-Object -Last 1) }
             foreach ($index in $candidates) {
                 if ($selected.Contains($index)) { continue }

@@ -46,8 +46,12 @@ at the runtime revision versus
 after strengthening its before/after MCP-state checks. Fresh `BuildPlugin`
 passed in [run 38035299343](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38035299343)
 at unit-build SHA `0ee5eaf39e0d673fee061f7e33372710278d50be`. The unit then
-blocked on two owned TCP listeners, ports 1985 and 19315; port 19315 has no
-established subsystem attribution. No verified unit report, MCP-absence
+blocked on two owned TCP listeners, ports 1985 and 19315.
+[Source-only readback 38037644767](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38037644767)
+matched all three original log hashes and identified port 19315 startup as
+`LocoHelperAI`'s own MCP endpoint. Its actual plugin descriptor and supported
+opt-out remain unverified. This diagnostic performed no build or Editor launch.
+No verified unit report, MCP-absence
 certificates or current input-conservation proof was admitted. Native test
 proof remains pending. No claim is made that the entire source inventory is
 unchanged.
