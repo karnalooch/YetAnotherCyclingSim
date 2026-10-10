@@ -733,8 +733,8 @@ function Invoke-SessionVerifiedGreenReadback {
     foreach ($kind in @('project_build', 'plugin_build')) {
         if ($h[$kind] -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $h[$kind].exit_code 0)) { throw 'A GREEN actual build did not succeed.' }
     }
-    # This lane builds a new test binary. It never reuses the original binary
-    # for changed source or relabels its historical compile fingerprint.
+    # This lane authenticates the retained0ee test build, with its original
+    # compile fingerprint; it never relabels that binary as original241.
     $testPath = 'Plugins/YacsBobInspection/Source/YacsBobInspection/Private/Tests/YacsBobInputBoundary.spec.cpp'
     $oldTestHash = '5c55e7cf7146b0215c783b60630a2480f5f60bb21ab531af20f662b972823606'
     $newTestHash = '4c6840fc4db6f4f3585a4e6830df43bb0756a2033b3a0d083e38132c7640c82c'
@@ -1063,16 +1063,19 @@ function Invoke-SessionVerifiedGreenReadback {
 }
 function Read-SessionFixedFailedUnitBytes {
     param([ValidateSet('accepted-session-build.json', 'input-boundary-unit.json', 'input-boundary-editor.log',
-        'input-boundary-editor-stdout.log', 'input-boundary-editor-stderr.log')][string] $Name, $Expected, $Budget, [switch] $ObservedLog)
+        'input-boundary-editor-stdout.log', 'input-boundary-editor-stderr.log', 'verified-session-readback.json',
+        'runtime-dependencies.json', 'input-boundary-plugin-build.log', 'input-boundary-plugin-build-stderr.log')][string] $Name, $Expected, $Budget, [switch] $ObservedLog)
     $root = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38035299343-1'
     $path = Join-Path $root $Name
     $isLog = $Name.EndsWith('.log', [StringComparison]::Ordinal)
-    if ($ObservedLog -and -not $isLog) { throw 'Only the three fixed owned logs allow qualified current-byte observation.' }
+    if ($ObservedLog -and $Name -cnotin @('input-boundary-editor.log', 'input-boundary-editor-stdout.log', 'input-boundary-editor-stderr.log')) {
+        throw 'Only the three fixed owned logs allow qualified current-byte observation.'
+    }
     if ($Expected -isnot [Collections.IDictionary] -or $Expected.path -isnot [string] `
         -or -not [string]::Equals([IO.Path]::GetFullPath($Expected.path), [IO.Path]::GetFullPath($path), [StringComparison]::OrdinalIgnoreCase) `
         -or $Expected.sha256 -cnotmatch '^[0-9a-f]{64}$' -or ($Expected.size_bytes -isnot [int] -and $Expected.size_bytes -isnot [long]) `
         -or $Expected.size_bytes -lt 0 -or (-not $isLog -and $Expected.size_bytes -eq 0)) { throw 'The fixed failed-unit identity lacks its authenticated path, size or hash.' }
-    $limit = if ($isLog) { 32MB } else { 1MB }
+    $limit = if ($isLog) { 32MB } elseif ($Name -ceq 'runtime-dependencies.json') { 4MB } else { 1MB }
     if ($Expected.size_bytes -gt $limit) { throw 'The original failed-unit identity exceeds its fixed member bound.' }
     $remaining = 64MB - $Budget.bytes
     if ($remaining -le 0) { throw 'The fixed failed-unit raw inventory exhausts its 64MiB budget.' }
@@ -1218,96 +1221,144 @@ function Add-SessionFreshUnitIdentity {
         -or -not (Test-SessionInteger $Expected.size_bytes $actual.size_bytes))) { throw 'A fresh unit input differs from its fixed source identity.' }
     $Rows[$Path] = $actual
 }
-function Build-SessionFreshInputBoundaryPlugin {
+function Get-SessionRetainedInputBoundaryPlugin {
     param($Green, $Unit, $Protected)
-    $inputPlugin = Join-Path $ArtifactRoot 'UnitInputPlugin/YacsBobInspection'
-    $package = Join-Path 'D:\yacs\runner\_work\b384' ($runIdentity + '-input-boundary-plugin')
-    $prefix = 'Plugins/YacsBobInspection/'
-    foreach ($path in @($inputPlugin, $package)) {
-        Assert-SessionPlainPath $path
-        if (Test-Path -LiteralPath $path) { throw 'The fresh unit build refuses an existing producer root.' }
-    }
-    $actionExample = Join-Path $package 'HostProject/Plugins/YacsBobInspection/Intermediate/Build/Win64/x64/UnrealEditor/Development/YacsBobInspection/Module.YacsBobInspection.cpp.obj.rsp'
-    if ($actionExample.Length -ge 240) { throw 'The fresh unit package exceeds the established UBT action path bound.' }
-    $inputRows = [ordered]@{}
-    foreach ($relative in $Green.native_paths) {
-        $source = Join-Path $RepoRoot $relative
-        $identity = Get-SessionFileIdentity $source 16MB
-        if ($identity.sha256 -cne $receipt.tracked_source_sha256[$relative]) { throw 'A current tracked unit build input differs.' }
-        $target = Join-Path $inputPlugin $relative.Substring($prefix.Length)
-        Assert-SessionPlainPath $target
-        New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
-        $readStream = [IO.File]::OpenRead($source)
-        $writeStream = [IO.File]::Open($target, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
-        try {
-            $buffer = [byte[]]::new(8192)
-            $total = 0L
-            while (($count = $readStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
-                $total += $count
-                if ($total -gt $identity.size_bytes) { throw 'A tracked unit build input grew during exclusive copy.' }
-                $writeStream.Write($buffer, 0, $count)
-            }
-        } finally { $writeStream.Dispose(); $readStream.Dispose() }
-        Add-SessionFreshUnitIdentity $Protected $target $identity 16MB
-        $inputRows[$relative.Substring($prefix.Length)] = $Protected[$target]
-    }
-    $Unit['prebuild_input_inventory'] = Assert-SessionFreshUnitInputs $inputPlugin $inputRows 12
-    Assert-YacsDiskReserve -Path $package | ForEach-Object { Write-Host $_ }
-    Assert-SessionUnitProtectedIdentities $Green.protected
-    Assert-SessionTrackedSources $RepoRoot
-    $Unit['compile_attempted'] = $true
-    $Unit['plugin_build'] = Invoke-SessionBuildProcess $engine.UATPath @('BuildPlugin',
-        ('-Plugin="' + (Join-Path $inputPlugin 'YacsBobInspection.uplugin') + '"'), ('-Package="' + $package + '"'),
-        '-TargetPlatforms=Win64', '-StrictIncludes', '-NoDeleteHostProject') (Join-Path $engine.Root 'Engine/Build/BatchFiles') 'input-boundary-plugin-build'
-    $Unit['owned_build_exit_observed'] = $true
-    $Unit['owned_build_exit_code'] = $Unit.plugin_build.exit_code
-    $Unit.compile_performed = $true
-    $receipt['compile_performed'] = $true
-    $Unit['compile_scope'] = 'FRESH_TRACKED_BOB_BUILDPLUGIN_ONLY; NO_PROJECT_REBUILD; NOT_ORIGINAL_241_BINARY'
-    $Unit['current_source_fingerprints'] = $receipt.source_fingerprints
-    $Unit['current_unit_test_delta'] = $Green.unit_test_delta
-    $Unit['plugin_package_root'] = $package
-    $Unit['planned_plugin_action_path_length'] = $actionExample.Length
+    $oldSha = '0ee5eaf39e0d673fee061f7e33372710278d50be'
+    $oldArtifact = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38035299343-1'
+    $inputPlugin = Join-Path $oldArtifact 'UnitInputPlugin/YacsBobInspection'
+    $package = 'D:\yacs\runner\_work\b384\38035299343-1-input-boundary-plugin'
+    $oldUnitRoot = 'D:\yacs\runner\_work\b384\38035299343-1-input-boundary'
     $pluginRoot = Join-Path $package 'HostProject/Plugins/YacsBobInspection'
+    $prefix = 'Plugins/YacsBobInspection/'
+    $budget = [ordered]@{ bytes = 0L }
+    $hostFile = Read-SessionFixedFailedUnitBytes 'accepted-session-build.json' @{
+        path = (Join-Path $oldArtifact 'accepted-session-build.json'); size_bytes = 423398
+        sha256 = 'f59ecce8855fffc8c4965925cf4f162b3c475b57f491529e8da2ca1765b91a0c' } $budget
+    $builtHost = [Text.Encoding]::UTF8.GetString($hostFile.bytes) | ConvertFrom-Json -AsHashtable -Depth 40
+    if ($builtHost -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $builtHost.schema_version 1) `
+        -or $builtHost.exact_sha -cne $oldSha -or $builtHost.run -cne '38035299343' -or $builtHost.attempt -cne '1' `
+        -or $builtHost.status -cne 'BLOCKED' -or $builtHost.engine_identity -cne $receipt.engine_identity `
+        -or $builtHost.build_environment_identity -cne $receipt.build_environment_identity) { throw 'The retained unit build host differs from its source/run/engine.' }
+    $expectedUnit = $builtHost.proof_files.input_boundary_unit
+    if ($expectedUnit.sha256 -cne '28c1401dab3962a035e9b8bc75ecd738616e85f0c31cb1a4360852405dbc1757' `
+        -or -not (Test-SessionInteger $expectedUnit.size_bytes 16347)) { throw 'The retained unit build lacks its pinned raw unit receipt.' }
+    $unitFile = Read-SessionFixedFailedUnitBytes 'input-boundary-unit.json' $expectedUnit $budget
+    $built = [Text.Encoding]::UTF8.GetString($unitFile.bytes) | ConvertFrom-Json -AsHashtable -Depth 40
+    if ($built -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $built.schema_version 1) `
+        -or $built.exact_sha -cne $oldSha -or $built.status -cne 'INPUT_BOUNDARY_BLOCKED' `
+        -or $built.unit_root -cne $oldUnitRoot -or $built.plugin_package_root -cne $package `
+        -or $built.compile_performed -isnot [bool] -or -not $built.compile_performed `
+        -or $built.owned_build_exit_observed -isnot [bool] -or -not $built.owned_build_exit_observed `
+        -or -not (Test-SessionInteger $built.owned_build_exit_code 0) -or -not (Test-SessionInteger $built.plugin_build.exit_code 0) `
+        -or $built.native_input_boundary_verified -isnot [bool] -or $built.native_input_boundary_verified `
+        -or $built.tracked_native_source_sha256 -isnot [Collections.IDictionary] -or $built.tracked_native_source_sha256.Count -ne 12 `
+        -or $built.copied_inputs -isnot [Collections.IDictionary] -or $built.copied_inputs.Count -ne 15) { throw 'The retained compile succeeded without a verified unit; its fixed provenance differs.' }
+    $expectedArguments = @('BuildPlugin', ('-Plugin="' + (Join-Path $inputPlugin 'YacsBobInspection.uplugin') + '"'),
+        ('-Package="' + $package + '"'), '-TargetPlatforms=Win64', '-StrictIncludes', '-NoDeleteHostProject')
+    if ($built.plugin_build.executable -cne $engine.UATPath -or $built.plugin_build.arguments -isnot [array] `
+        -or $built.plugin_build.arguments.Count -ne 6 -or @(Compare-Object $expectedArguments $built.plugin_build.arguments -CaseSensitive).Count -ne 0) { throw 'The retained actual BuildPlugin command differs from its fixed producer.' }
+    $readbackExpected = $builtHost.proof_files.verified_session_readback
+    $sdkExpected = $builtHost.proof_files.current_runtime_dependencies
+    if ($readbackExpected.sha256 -cne 'c26f8794a3b954ad98f653032f44afe8e6c6de25e49803fc81df25237c3f0c34' `
+        -or -not (Test-SessionInteger $readbackExpected.size_bytes 21125) `
+        -or $sdkExpected.sha256 -cne 'eaa7adbf08e480e0aa711f06a91c7394a613490fe8915646d50ebcc2efd52560' `
+        -or -not (Test-SessionInteger $sdkExpected.size_bytes 1916879)) { throw 'The retained compile lacks its independently observed SDK receipt pins.' }
+    $readbackFile = Read-SessionFixedFailedUnitBytes 'verified-session-readback.json' $readbackExpected $budget
+    $sdkFile = Read-SessionFixedFailedUnitBytes 'runtime-dependencies.json' $sdkExpected $budget
+    $readback = [Text.Encoding]::UTF8.GetString($readbackFile.bytes) | ConvertFrom-Json -AsHashtable -Depth 40
+    $sdk = [Text.Encoding]::UTF8.GetString($sdkFile.bytes) | ConvertFrom-Json -AsHashtable -Depth 40
+    if ($readback.exact_sha -cne $oldSha -or $readback.current_sdk_libraries -isnot [Collections.IDictionary] -or $readback.current_sdk_libraries.Count -ne 3 `
+        -or $sdk.exact_sha -cne $oldSha -or $sdk.source_only -isnot [bool] -or -not $sdk.source_only `
+        -or $sdk.source_files -isnot [array] -or $sdk.source_files.Count -ne 30) { throw 'The retained compile SDK observations differ.' }
+    $sourcePaths = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($row in $sdk.source_files) {
+        if ($row.path -isnot [string] -or -not $row.path.StartsWith('Engine/', [StringComparison]::Ordinal) `
+            -or $row.path -cmatch '(^|/)\.\.?(/|$)|[\\:\x00]' -or -not $sourcePaths.Add($row.path)) { throw 'A retained SDK source path is unsafe or repeated.' }
+        $path = Join-Path $engine.Root $row.path
+        if (-not $Green.protected.Contains($path) -or $Green.protected[$path].sha256 -cne $row.sha256 `
+            -or -not (Test-SessionInteger $row.byte_count $Green.protected[$path].size_bytes)) { throw 'Current installed SDK source differs from the actual retained compile observation.' }
+    }
+    foreach ($spec in @(@('ModelContextProtocol', 'Engine/Plugins/Experimental/ModelContextProtocol'),
+        @('AutomationTestToolset', 'Engine/Plugins/Experimental/Toolsets/AutomationTestToolset'), @('ToolsetRegistry', 'Engine/Plugins/Experimental/ToolsetRegistry'))) {
+        foreach ($kind in @('manifest', 'binary')) {
+            $expected = $readback.current_sdk_libraries[$spec[0]][$kind]
+            $leaf = if ($kind -ceq 'manifest') { 'UnrealEditor.modules' } else { 'UnrealEditor-' + $spec[0] + '.dll' }
+            $path = Join-Path $engine.Root ($spec[1] + '/Binaries/Win64/' + $leaf)
+            if ($expected.path -cne $path -or -not $Green.protected.Contains($path) -or $Green.protected[$path].sha256 -cne $expected.sha256 `
+                -or -not (Test-SessionInteger $expected.size_bytes $Green.protected[$path].size_bytes)) { throw 'Current installed SDK binaries differ from their authenticated0ee observations.' }
+        }
+    }
+    foreach ($file in @($hostFile, $unitFile, $readbackFile, $sdkFile)) {
+        Add-SessionFreshUnitIdentity $Protected $file.identity.path $file.identity 4MB
+        Add-SessionFreshUnitIdentity $Protected $file.retained_raw.path $file.retained_raw 4MB
+    }
+    foreach ($name in @('input-boundary-plugin-build.log', 'input-boundary-plugin-build-stderr.log')) {
+        $expected = if ($name -ceq 'input-boundary-plugin-build.log') { $built.plugin_build.log } else { $built.plugin_build.stderr }
+        $file = Read-SessionFixedFailedUnitBytes $name $expected $budget
+        if ($file.identity.size_bytes -gt 0) {
+            Add-SessionFreshUnitIdentity $Protected $file.identity.path $file.identity 32MB
+            Add-SessionFreshUnitIdentity $Protected $file.retained_raw.path $file.retained_raw 32MB
+        }
+    }
     $copies = @()
     foreach ($relative in $Green.native_paths) {
+        if (-not $built.tracked_native_source_sha256.Contains($relative) `
+            -or $built.tracked_native_source_sha256[$relative] -cne $receipt.tracked_source_sha256[$relative]) { throw 'A retained native compile input differs from current committed bytes.' }
+        $oldCopy = $built.copied_inputs[$relative]
+        if ($oldCopy.path -cne (Join-Path $oldUnitRoot $relative) -or $oldCopy.sha256 -cne $receipt.tracked_source_sha256[$relative]) { throw 'The retained copied native input differs from its exact source.' }
         foreach ($root in @($inputPlugin, $pluginRoot)) {
-            $path = Join-Path $root $relative.Substring($prefix.Length)
-            $expected = @{ sha256 = $receipt.tracked_source_sha256[$relative]; size_bytes = $Protected[(Join-Path $inputPlugin $relative.Substring($prefix.Length))].size_bytes }
-            Add-SessionFreshUnitIdentity $Protected $path $expected 16MB
-            $actual = Get-SessionFileIdentity $path $expected.size_bytes
-            if ($actual.sha256 -cne $expected.sha256 -or $actual.size_bytes -ne $expected.size_bytes) { throw 'Actual newly compiled unit source differs from tracked input.' }
+            Add-SessionFreshUnitIdentity $Protected (Join-Path $root $relative.Substring($prefix.Length)) $oldCopy 16MB
         }
         $copies += [ordered]@{ relative = $relative; identity = $Protected[(Join-Path $pluginRoot $relative.Substring($prefix.Length))] }
     }
-    $descriptor = Read-SessionJson (Join-Path $package 'HostProject/HostProject.uproject') 64KB
+    if ($built.copied_inputs['HostProject.uproject'].path -cne (Join-Path $oldUnitRoot 'HostProject.uproject')) {
+        throw 'The retained generated descriptor copy has a different fixed unit path.'
+    }
+    $descriptorPath = Join-Path $package 'HostProject/HostProject.uproject'
+    Add-SessionFreshUnitIdentity $Protected $descriptorPath $built.copied_inputs['HostProject.uproject'] 64KB
+    $descriptor = Read-SessionJson $descriptorPath 64KB
     if (-not (Test-SessionInteger $descriptor.value.FileVersion 3) -or ($descriptor.value.Contains('Modules') -and @($descriptor.value.Modules).Count -ne 0) `
         -or $descriptor.value.Plugins -isnot [array] -or $descriptor.value.Plugins.Count -ne 1 `
         -or $descriptor.value.Plugins[0].Name -cne 'YacsBobInspection' -or $descriptor.value.Plugins[0].Enabled -isnot [bool] `
-        -or -not $descriptor.value.Plugins[0].Enabled) { throw 'The newly generated unit descriptor is not the fixed content-free host.' }
+        -or -not $descriptor.value.Plugins[0].Enabled) { throw 'The retained generated descriptor is not the fixed Bob host.' }
     foreach ($field in $descriptor.value.Keys) {
-        if ($field -cnotin @('FileVersion', 'Plugins', 'Modules', 'EngineAssociation', 'Category', 'Description')) { throw 'The new unit descriptor contains an unsupported field.' }
+        if ($field -cnotin @('FileVersion', 'Plugins', 'Modules', 'EngineAssociation', 'Category', 'Description')) { throw 'The retained generated descriptor contains an unsupported field.' }
     }
     Assert-SessionJsonFields $descriptor.value.Plugins[0] @('Name', 'Enabled')
-    Add-SessionFreshUnitIdentity $Protected $descriptor.identity.path $descriptor.identity 64KB
-    $copies += [ordered]@{ relative = 'HostProject.uproject'; identity = $descriptor.identity }
-    $manifest = Read-SessionJson (Join-Path $pluginRoot 'Binaries/Win64/UnrealEditor.modules') 64KB
-    if ($manifest.value.BuildId -cne $Green.engine_build_id -or $manifest.value.Modules -isnot [Collections.IDictionary] `
-        -or $manifest.value.Modules.Count -ne 1 -or $manifest.value.Modules.YacsBobInspection -cne 'UnrealEditor-YacsBobInspection.dll') { throw 'The freshly built unit module manifest differs from its installed engine and fixed module.' }
-    Add-SessionFreshUnitIdentity $Protected $manifest.identity.path $manifest.identity 64KB
-    $newDll = Join-Path $pluginRoot 'Binaries/Win64/UnrealEditor-YacsBobInspection.dll'
-    Add-SessionFreshUnitIdentity $Protected $newDll $null 64MB
-    $moduleRows = @([ordered]@{ relative = 'Binaries/Win64/UnrealEditor.modules'; identity = $manifest.identity
-        build_id = $manifest.value.BuildId; modules = $manifest.value.Modules },
-        [ordered]@{ relative = 'Binaries/Win64/UnrealEditor-YacsBobInspection.dll'; identity = $Protected[$newDll] })
-    foreach ($row in $moduleRows) {
+    $copies += [ordered]@{ relative = 'HostProject.uproject'; identity = $Protected[$descriptorPath] }
+    if ($built.binary_provenance -isnot [array] -or $built.binary_provenance.Count -ne 2) { throw 'The retained compiled output closure differs.' }
+    $binaryPaths = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($row in $built.binary_provenance) {
+        if ($row.relative -cnotin @('Binaries/Win64/UnrealEditor.modules', 'Binaries/Win64/UnrealEditor-YacsBobInspection.dll') `
+            -or -not $binaryPaths.Add($row.relative) -or $row.identity.path -cne (Join-Path $pluginRoot $row.relative)) { throw 'A retained compiled output path differs or repeats.' }
         Add-SessionFreshUnitIdentity $Protected $row.identity.path $row.identity 64MB
-        $copies += [ordered]@{ relative = ('Plugins/YacsBobInspection/' + $row.relative); identity = $row.identity }
+        $relative = $prefix + $row.relative
+        $oldCopy = $built.copied_inputs[$relative]
+        if ($oldCopy.path -cne (Join-Path $oldUnitRoot $relative) -or $oldCopy.sha256 -cne $row.identity.sha256 `
+            -or -not (Test-SessionInteger $oldCopy.size_bytes $row.identity.size_bytes)) { throw 'A retained copied binary differs from the actual successful producer.' }
+        $copies += [ordered]@{ relative = $relative; identity = $Protected[$row.identity.path] }
     }
-    if ($copies.Count -ne 15) { throw 'The fresh compiled unit input closure differs from fifteen files.' }
-    $Unit['binary_provenance'] = $moduleRows
-    $Unit['tracked_native_source_sha256'] = [ordered]@{}
-    foreach ($relative in $Green.native_paths) { $Unit.tracked_native_source_sha256[$relative] = $receipt.tracked_source_sha256[$relative] }
+    $manifestPath = Join-Path $pluginRoot 'Binaries/Win64/UnrealEditor.modules'
+    $dllPath = Join-Path $pluginRoot 'Binaries/Win64/UnrealEditor-YacsBobInspection.dll'
+    if ($Protected[$manifestPath].sha256 -cne '923e46c3ad5657feaeeaf6c20333b656c7a7670bfce3ed868ea43e7cdb938267' `
+        -or -not (Test-SessionInteger $Protected[$manifestPath].size_bytes 112) `
+        -or $Protected[$dllPath].sha256 -cne '9cdf999ebc6bb68ec5912df24ee99a2a445eabb70d0a7d255d3dfd56b707ef50' `
+        -or -not (Test-SessionInteger $Protected[$dllPath].size_bytes 354816)) { throw 'The reused compiled outputs differ from the actual primary pins.' }
+    $manifest = Read-SessionJson $manifestPath 64KB
+    if ($manifest.value.BuildId -cne $Green.engine_build_id -or $manifest.value.Modules -isnot [Collections.IDictionary] `
+        -or $manifest.value.Modules.Count -ne 1 -or $manifest.value.Modules.YacsBobInspection -cne 'UnrealEditor-YacsBobInspection.dll' `
+        -or $copies.Count -ne 15) { throw 'The reused module BuildId or fifteen-file closure differs.' }
+    $Unit['compile_scope'] = 'REUSED_AUTHENTICATED_0EE_BUILDPLUGIN_OUTPUTS; NO_CURRENT_BUILD; NOT_ORIGINAL_241_BINARY'
+    $Unit['retained_compile_provenance'] = [ordered]@{ source_sha = $oldSha; run = '38035299343-1'
+        host = $hostFile.identity; unit = $unitFile.identity; compile_performed = $true; build_exit_code = 0; native_input_boundary_verified = $false
+        plugin_build = $built.plugin_build; source_fingerprints = $built.current_source_fingerprints; sdk_sources = $sdkFile.identity
+        sdk_libraries = $readbackFile.identity; tracked_native_source_sha256 = $built.tracked_native_source_sha256; binary_provenance = $built.binary_provenance }
+    $Unit['binary_provenance'] = $built.binary_provenance
+    $Unit['tracked_native_source_sha256'] = $built.tracked_native_source_sha256
+    $Unit['current_unit_test_delta'] = $Green.unit_test_delta
+    $Unit['current_source_fingerprints'] = $receipt.source_fingerprints
+    $Unit['plugin_package_root'] = $package
+    $receipt['compile_performed'] = $false
     Assert-SessionUnitProtectedIdentities $Protected
     Assert-SessionUnitProtectedIdentities $Green.protected
     Assert-SessionTrackedSources $RepoRoot
@@ -1407,7 +1458,7 @@ function Invoke-SessionInputBoundaryUnit {
         Assert-SessionIdleHost
         Assert-SessionUnitProtectedIdentities $Green.protected
         $freshProtected = [ordered]@{}
-        $copyRows = @(Build-SessionFreshInputBoundaryPlugin $Green $unit $freshProtected)
+        $copyRows = @(Get-SessionRetainedInputBoundaryPlugin $Green $unit $freshProtected)
         New-Item -ItemType Directory -Path $unitRoot | Out-Null
         foreach ($row in $copyRows) {
             $target = Join-Path $unitRoot $row.relative
@@ -1440,6 +1491,18 @@ function Invoke-SessionInputBoundaryUnit {
         Add-SessionFreshUnitIdentity $freshProtected $controlPath @{
             size_bytes = 9043; sha256 = '238e6ac9fb9320f3a1050abd91438ff663c43ae7ccfd98edbea264ba98de77fd' } 4MB
         $unit['trace_control_source'] = [ordered]@{ scope = 'CURRENT_INSTALLED_SOURCE; KNOWN_TRACE_CONTROL_PORT_1985'; identity = $freshProtected[$controlPath] }
+        $wingmanPath = Join-Path $engine.Root 'Engine/Plugins/Marketplace/Wingman/Wingman.uplugin'
+        $wingman = Read-SessionJson $wingmanPath 64KB
+        if ($wingman.value.Modules -isnot [array] -or $wingman.value.Modules.Count -lt 1 -or $wingman.value.Modules.Count -gt 16) { throw 'The fixed Wingman descriptor lacks its bounded module inventory.' }
+        $wingmanModules = @()
+        foreach ($module in $wingman.value.Modules) {
+            if ($module -isnot [Collections.IDictionary] -or $module.Name -isnot [string] -or $module.Name -cnotmatch '^[A-Za-z][A-Za-z0-9_]{0,79}$') { throw 'The fixed Wingman descriptor contains a malformed module name.' }
+            $wingmanModules += $module.Name
+        }
+        if (@($wingmanModules | Where-Object { $_ -ceq 'Wingman' }).Count -ne 1) { throw 'The fixed descriptor does not match the authenticated Wingman module load.' }
+        Add-SessionFreshUnitIdentity $freshProtected $wingman.identity.path $wingman.identity 64KB
+        $unit['disabled_plugin_descriptor'] = [ordered]@{ scope = 'CURRENT_INSTALLED_DESCRIPTOR; NOT_HISTORICAL_DESCRIPTOR_BYTES'
+            identity = $wingman.identity; plugin_name = 'Wingman'; module_names = $wingmanModules; module_count = $wingmanModules.Count }
         $unit['startup_config_overrides'] = @('-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False',
             '-ini:EditorPerProjectUserSettings:[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]:bAutoStartServer=False')
         New-Item -ItemType Directory -Path $reportRoot | Out-Null
@@ -1451,7 +1514,7 @@ function Invoke-SessionInputBoundaryUnit {
         Assert-SessionUnitProtectedIdentities $freshProtected
         $unit['prelaunch_input_inventory'] = Assert-SessionFreshUnitInputs $unitRoot $unit.copied_inputs
         $arguments = @(('"' + (Join-Path $unitRoot 'HostProject.uproject') + '"'), '/Engine/Maps/Entry',
-            '-Unattended', '-NoPause', '-NullRHI', '-NoSplash', '-NoSound', '-NoLiveCoding', '-log', '-DisablePlugins=AndroidFileServer',
+            '-Unattended', '-NoPause', '-NullRHI', '-NoSplash', '-NoSound', '-NoLiveCoding', '-log', '-DisablePlugins=AndroidFileServer,Wingman',
             '-EnablePlugins=YacsBobInspection,ModelContextProtocol', ('-AbsLog="' + (Join-Path $ArtifactRoot 'input-boundary-editor.log') + '"'),
             ('-ReportExportPath="' + $reportRoot + '"'), '-execcmds="Automation RunTests YacsBobInspection.InputBoundary;Quit"') + $unit.startup_config_overrides
         # No official-proof opt-in, ExecutePythonScript, trusted marker or BOB producer.
@@ -1463,6 +1526,7 @@ function Invoke-SessionInputBoundaryUnit {
         $unit.editor_launched = $true
         $unit.owned_editor_pid = $script:ownedEditor.Id
         $receipt.editor_launched = $true
+        $receipt['source_only'] = $false
         $receipt.owned_editor_pid = $script:ownedEditor.Id
         while ($true) {
             $aliveBefore = -not $script:ownedEditor.HasExited
@@ -1534,6 +1598,9 @@ function Invoke-SessionInputBoundaryUnit {
             $unit.logs[$name] = Get-SessionOwnedLogIdentity (Join-Path $ArtifactRoot $name) $script:ownedEditor
         }
         $absLog = Get-SessionOwnedLogIdentity (Join-Path $ArtifactRoot 'input-boundary-editor.log') $script:ownedEditor -IncludeText
+        if ($absLog.text -match '(?im)LogLocoHelperAI:|LogPluginManager:.*Mounting.*plugin\s+Wingman\b|UnrealEditor-Wingman[.]dll') {
+            throw 'The fixed unit log records the disabled Wingman/Loco module; no proof is admitted.'
+        }
         $traceRows = @($absLog.text -split "`n" | Where-Object { $_ -cmatch 'LogTrace: Display: Control listening on port [0-9]+\s*$' })
         if ($traceRows.Count -gt 1 -or ($traceRows.Count -eq 1 -and ($traceRows[0] -cnotmatch 'LogTrace: Display: Control listening on port 1985\s*$' `
             -or [Text.Encoding]::UTF8.GetByteCount($traceRows[0]) -gt 1024))) { throw 'The owned unit log records an unsupported or unbounded Trace control startup.' }
@@ -1626,8 +1693,18 @@ function Invoke-SessionInputBoundaryUnit {
             'build_failure_logs', 'report', 'report_summary', 'error', 'elapsed_seconds')) {
             $console[$field] = $unit[$field]
         }
-        foreach ($field in @('compile_scope', 'plugin_build', 'binary_provenance', 'current_unit_test_delta', 'trace_control_source', 'tcp_proof_scope')) {
+        foreach ($field in @('compile_scope', 'plugin_build', 'binary_provenance', 'current_unit_test_delta',
+            'trace_control_source', 'disabled_plugin_descriptor', 'tcp_proof_scope')) {
             if ($unit.Contains($field)) { $console[$field] = $unit[$field] }
+        }
+        if ($unit.Contains('retained_compile_provenance')) {
+            $retained = $unit.retained_compile_provenance
+            $console['retained_compile_provenance'] = [ordered]@{}
+            foreach ($field in @('source_sha', 'run', 'host', 'unit', 'compile_performed', 'build_exit_code',
+                'native_input_boundary_verified', 'sdk_sources', 'sdk_libraries', 'binary_provenance')) {
+                $console.retained_compile_provenance[$field] = $retained[$field]
+            }
+            $console.retained_compile_provenance['scope'] = 'COMPACT_CONSOLE_IDENTITIES; FULL_COMPILE_SOURCE_PROVENANCE_IN_UNIT_RECEIPT'
         }
         $console['unit_receipt'] = $receipt.proof_files.input_boundary_unit
         $consoleJson = $console | ConvertTo-Json -Depth 6 -Compress
@@ -1718,8 +1795,8 @@ try {
         $receipt['current_sdk_observation'] = [ordered]@{ scope = 'CURRENT_SOURCE_ONLY_OBSERVATION; NOT_HISTORICAL_RUNTIME_PROOF'
             exact_sha = $ExpectedHead; source_only = $true; identity = $currentSdk.identity }
         Write-Host ('CURRENT_DIAGNOSTIC_SDK_OBSERVATION ' + ($receipt.current_sdk_observation | ConvertTo-Json -Depth 4 -Compress))
-        Invoke-SessionFixedFailedUnitReadback
-        $receipt.status = 'FAILED_UNIT_STARTUP_READBACK_RETAINED'
+        Invoke-SessionInputBoundaryUnit $verifiedGreen
+        $receipt.status = 'VERIFIED_GREEN_READBACK_AND_INPUT_BOUNDARY_UNIT_VERIFIED'
         return
     }
     # Establish fixed executable identities before expensive builds; their raw
