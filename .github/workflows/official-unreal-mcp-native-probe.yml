@@ -19,10 +19,10 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Fixed session, retained failure readback, or verified old compiler scratch cleanup
+        description: Fixed accepted checkpoint session, or retained previous failure readback
         type: choice
-        options: [accepted_session, diagnose_previous_failure, reclaim_verified_old_intermediates]
-        default: reclaim_verified_old_intermediates
+        options: [accepted_session, diagnose_previous_failure]
+        default: accepted_session
         required: true
 
 permissions:
@@ -35,7 +35,7 @@ concurrency:
 
 jobs:
   compile:
-    name: Reclaim two verified old compiler scratch directories
+    name: Verify the accepted checkpoint through official Unreal MCP
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
@@ -59,12 +59,12 @@ jobs:
           clean: false
           persist-credentials: false
 
-      - name: Verify exact source and run the fixed session, readback or scratch cleanup
+      - name: Verify exact source and run the fixed session or retained failure readback
         shell: pwsh
         working-directory: _official-mcp-native-probe
         env:
           YACS_CHECKPOINT_READ_TOKEN: ${{ github.token }}
-          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'reclaim_verified_old_intermediates' }}
+          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'accepted_session' }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
@@ -85,8 +85,6 @@ jobs:
             ./scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1 -ExpectedHead $env:TARGET_SHA -DiagnosePreviousFailure
           } elseif ($env:NATIVE_PROBE_MODE -ceq 'accepted_session') {
             ./scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1 -ExpectedHead $env:TARGET_SHA
-          } elseif ($env:NATIVE_PROBE_MODE -ceq 'reclaim_verified_old_intermediates') {
-            ./scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1 -ExpectedHead $env:TARGET_SHA -ReclaimVerifiedOldBuildIntermediates
           } else { throw 'Unsupported fixed native proof mode.' }
 
       - name: Retain fixed accepted session evidence

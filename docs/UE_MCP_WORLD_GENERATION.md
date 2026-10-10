@@ -760,12 +760,12 @@ source pass and keeps its 256 KiB utility limit. Fixed producer elapsed stages
 and client failure codes expose future failures without raw exception text.
 The combined 133 local tests passed, with independent reader/client/operation
 reviews, critical Ruff and formatting checks; these do not establish Windows
-timings or runtime admission. The workflow stays in read-only diagnostic mode
+timings or runtime admission. At `3a66f557`, the workflow used read-only diagnostic mode
 to observe eight fixed old `Intermediate` directories first. The inventory
 authenticates two older host receipts, checks their current native/config Git
 state, and compares two metadata walks within 100,000 entries, 45 seconds and
 depth 64. Missing, unstable or incomplete observations remain ineligible.
-No cleanup is admitted or performed; latest `38018565445-1`, evidence, assets,
+That diagnostic performed no cleanup; latest `38018565445-1`, evidence, assets,
 Git/cache data and compiled binaries are preserved.
 The current diagnostic host receipt is 422,608 bytes, SHA-256
 `2b3ba42c4e2589f45d3842e31f3ee86bd19f6a86c9b1c59bc7a4a3bd12e920f9`;
@@ -778,13 +778,13 @@ parsing and all eight fixed directory observations. Both old native/config Git
 states matched before and after; no cleanup occurred. [Ordinary CI 38020863514](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38020863514)
 also passed. The 30,868-byte inventory is SHA-256
 `77d497f8ec4bb53ee070f5fa7de8e12b1daa77387e278c1810b344b7d24afb8a`.
-Only the two old project `Intermediate` directories are selected for the next
+Only the two old project `Intermediate` directories were selected for the
 fixed cleanup: `38015883833-1` contains 2,750,359,177 logical bytes with
 metadata digest `d651d8e61bf13a10c902496e1620c1f26dd2b292913fb4adc0e8ca2f318a7b56`;
 `38016857639-1` contains 2,750,359,182 bytes with digest
 `8bbb390391d0cd68560f124c78b60447e45ec843393b4d7a44ee3acf2218858e`.
 Each contains 196 files / 23 directories. Their approximately 5.12 GiB sum is
-logical storage, not an observed increase in free space. The fixed cleanup
+logical storage, not itself an observed increase in free space. The fixed cleanup
 must authenticate the inventory, recheck its metadata and native/config state,
 and verify retained proof/binary hashes before and after individual generated
 file removal. RoadForge/plugin intermediates, source, assets, Git/cache data,
@@ -796,6 +796,26 @@ The current storage diagnostic host receipt is 423,106 bytes, SHA-256
 [artifact 11658940776](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38020860094/artifacts/11658940776)
 is 432,762 bytes, archive SHA-256
 `b08b757a9aa2c34cb822ac417cec36d724d499e424316729bf1b493197354c36`.
+[Fixed maintenance 38021932519](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38021932519)
+passed at `9d26427a0aeb3f659d018778b7501a840d1b7b65`, including the actual
+Windows parser and all pre/post preservation gates. Its bounded primary console
+reports 392 files / 46 directories removed, 5,500,718,359 logical bytes and
+55 protected identities matched both before and after. Actual available space
+rose from 6,749,306,880 to 12,250,710,016 bytes: an observed 5,501,403,136-byte
+gain, with 11.41 GiB free and the unchanged 5 GiB reserve passing at
+`03:50:51.7424231Z`. The 141,853-byte individual-deletion receipt is SHA-256
+`0fcdb82b71aa6ede50a4e0053a8ff73a6281be75362fe8c14e0ad69b78a4338d`;
+the 421,414-byte host receipt is SHA-256
+`773c2714e1953b39db159c4daa4c818c3549fcc9ac359c832caf360cf5364c05`.
+[Artifact 11658772774](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38021932519/artifacts/11658772774)
+is 135,823 bytes, archive SHA-256
+`dc22efbc833e59b311fec968db969e299c26359222901bdb5009d4eb259db6a0`.
+These are authenticated console identities and source-enforced maintenance
+findings, not a claim that the complete raw deletion receipt was independently
+read. Maintenance supplies no runtime admission. The one-off cleanup and
+storage-inventory helpers are now removed; the workflow returns to the accepted
+session with the shared Git reader, fixed failure stages and unchanged native
+180-second / host 420-second deadlines. A fresh native session remains required.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 
