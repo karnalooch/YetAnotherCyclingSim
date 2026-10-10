@@ -50,7 +50,7 @@ def verify_accepted_surface(snapshot):
         "/Engine/BasicShapes/BasicShapeMaterial"
     ), "accepted road parent material changed")
     supports = [row.get("label") for row in rows if row.get("label") != ROAD_LABEL]
-    expected = {f"YACS_PERSIST_SUPPORT_{i:03d}" for i in range(1, SUPPORT_COUNT + 1)}
+    expected = {f"YACS_PERSIST_SUPPORT_{i:03d}" for i in range(SUPPORT_COUNT)}
     require(len(supports) == SUPPORT_COUNT and set(supports) == expected,
             "accepted support actors are missing or ambiguous")
     component = road.get("component")

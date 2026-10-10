@@ -379,3 +379,67 @@ persistent failure. The current document section is a candidate pending
 protected exact-head CI plus a **separate independent native rerun**.
 Owner visual `PENDING_FINAL_M3` and performance
 `DEFERRED_AFTER_M3` / `performance_pass: false` remain unchanged.
+
+## Correct native road support label boundary — 2026-10-10
+
+The authenticated [native baseline from run 38063289931](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38063289931)
+records exactly 186 supports named `YACS_PERSIST_SUPPORT_000` through
+`YACS_PERSIST_SUPPORT_185`, not `001` through `186`. The synthetic
+transient asphalt canary still expected the latter and would falsely reject
+the accepted frozen scene. This correction makes the material-only canary
+use actual native saved actor labels; it changes no scene, topology, Physics
+Profile, Landscape or support material ownership. A new exact-range and
+out-of-range regression is included; native asphalt assignment remains
+**NOT VERIFIED** until an actual separate editor run.
+
+## M3 asphalt on accepted road — bounded transient native execution candidate
+
+The owner resumed #364 after the exact-HEAD green
+[CI 38063294944](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38063294944)
+and independently green
+[native baseline 38063289931](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38063289931)
+at `229c4e416f7149fd1a6ae383ae0fe31a7547f21b`.
+The actual captured native scene has one road (856,250 vertices,
+1,711,760 triangles), 186 **zero-based** supports and 1024
+Landscape components. The baseline is source/geometry read only.
+
+This **implementation candidate**, in the same #364 Draft PR, adds:
+
+- `scripts/ue/road_asphalt_source_preflight.py`: separately verifies the
+  retained two-run `aged_mountain_asphalt/base` producer bundle from exact
+  source `6fa54b50` and original run `38045485913-1`, pinned original
+  receipt SHA-256 `3626bf85…`, source fingerprint `b4d93e24…`, and
+  graph `6b381516…`. Missing retained source is a hard failure: no
+  implicit re-render, download or loosened hash check.
+- `scripts/ue/run_road_asphalt_native_canary.py`: independently rechecks
+  the staged consumer, original producer bytes, projection
+  `WorldAlignedTexture`/`WorldAlignedNormal`, original road/side materials
+  and the exact saved scene; reuses the existing Material Forge importer with
+  `save_assets=False`, world alignment 400 cm and DirectX normals. It
+  temporarily swaps **only the road material slot zero**, verifies material
+  readback and the complete actor/material/geometry snapshot, restores the
+  original slot even on failure and verifies input packages unchanged.
+- `scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1`: a **second,
+  separately owned Unreal Editor process** only after the existing complete
+  read-only native baseline passes in the same isolated Windows checkout.
+  Authentic original baseline hashes, exact source SHA, approved engine/DLLs,
+  the trusted host lock, bounded process lifetime and exclusive proof files
+  remain mandatory. Actual-run logs and trial receipt are retained.
+- Synthetic source, native entry, slot ownership and host/workflow tests.
+  Source `YACS_PERSIST_SUPPORT_000..185` identity is corrected; no geometry
+  mutation or support-side material replacement is allowed.
+
+The first native canary intentionally runs with `-NullRHI` to validate the
+Material Editing API, importer graph and reversible native slot binding
+without claiming GPU shader compilation or a rendered appearance pass.
+`shader_gpu_compilation_verified: false`,
+`saved_consumer_verified: false`, `owner_visual_status: PENDING_FINAL_M3`
+and `performance_pass: false` remain binding. Actual native canary success
+requires an independently completed exact-SHA workflow and readable
+`road-asphalt-canary.json` **plus** `asphalt-host-receipt.json`; source,
+synthetic tests or a green regular Unreal build alone never admit this stage.
+
+Future #364 batches must separately prove real shader output, authored
+shoulder-top/wall slot separation, a new saved material-only derived consumer,
+fresh reopening and review frames from both road directions. Do not merge until
+all applicable technical/review gates and final M3 owner audit policy are met.

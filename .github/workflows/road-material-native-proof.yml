@@ -16,6 +16,15 @@ on:
       - 'scripts/ci/official_mcp_bob_session.py'
       - 'scripts/ci/test_official_mcp_bob_session.py'
       - 'scripts/ue/road_asphalt_slot_canary.py'
+      - 'scripts/ue/test_road_asphalt_slot_canary.py'
+      - 'scripts/ue/road_asphalt_source_preflight.py'
+      - 'scripts/ue/test_road_asphalt_source_preflight.py'
+      - 'scripts/ue/run_road_asphalt_native_canary.py'
+      - 'scripts/ue/test_run_road_asphalt_native_canary.py'
+      - 'scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1'
+      - 'scripts/ue/test_invoke_road_asphalt_native_canary.py'
+      - 'scripts/ue/import_material_forge_variant.py'
+      - 'scripts/assets/road_material_contract.py'
 
 permissions:
   contents: read
@@ -127,6 +136,16 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
+
+      - name: Run isolated reversible road asphalt canary
+        shell: pwsh
+        working-directory: rm-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1 `
             -ExpectedHead $env:GITHUB_SHA `
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
             -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG

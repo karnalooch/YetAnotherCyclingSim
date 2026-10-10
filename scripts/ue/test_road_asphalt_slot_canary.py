@@ -85,7 +85,7 @@ class CanaryTests(unittest.TestCase):
                  "component": f"support-{i}", "vertices": i,
                  "triangles": i + 1,
                  "slots": [{"path": f"support-mat-{i}"}]}
-                for i in range(1, 187)
+                for i in range(186)
             ],
             "mesh_material_collision_snapshot": [{
                 "component": self.comp.get_path_name(),
@@ -93,7 +93,7 @@ class CanaryTests(unittest.TestCase):
             }] + [
                 {"component": f"support-{i}", "materials": [f"support-mat-{i}"],
                  "collision": "NO_COLLISION"}
-                for i in range(1, 187)
+                for i in range(186)
             ],
         }
         self.sabotage = False
@@ -150,6 +150,20 @@ class CanaryTests(unittest.TestCase):
                 candidate[edit[0]] = edit[1]
             with self.subTest(edit=edit), self.assertRaises(ValueError):
                 canary.verify_accepted_surface(candidate)
+
+    def test_frozen_native_support_labels_are_exact_zero_based_000_to_185(self):
+        support_labels = [
+            row["label"] for row in self.base["road_supports"]
+            if row["label"].startswith("YACS_PERSIST_SUPPORT_")
+        ]
+        self.assertEqual(len(support_labels), 186)
+        self.assertEqual(support_labels[0], "YACS_PERSIST_SUPPORT_000")
+        self.assertEqual(support_labels[-1], "YACS_PERSIST_SUPPORT_185")
+        canary.verify_accepted_surface(self.base)
+        broken = deepcopy(self.base)
+        broken["road_supports"][-1]["label"] = "YACS_PERSIST_SUPPORT_186"
+        with self.assertRaisesRegex(ValueError, "missing or ambiguous"):
+            canary.verify_accepted_surface(broken)
 
     def test_shared_support_slot_cannot_be_used_as_road_owner(self):
         broken = deepcopy(self.base)
