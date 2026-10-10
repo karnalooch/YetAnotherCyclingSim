@@ -16,6 +16,23 @@ PREFLIGHT = ROOT / "scripts" / "ue" / "Preflight-YacsProof.ps1"
 
 
 class UnrealCiCacheContractTests(unittest.TestCase):
+    def test_road_material_native_waits_for_exact_head_ci_without_host_lock(self):
+        workflow = (
+            ROOT / ".github" / "workflows" / "road-material-native-proof.yml"
+        ).read_text(encoding="utf-8")
+        hosted = workflow.split("  await_ci:\n", 1)[1].split("  baseline:\n", 1)[0]
+        native = workflow.split("  baseline:\n", 1)[1]
+        self.assertIn("runs-on: ubuntu-latest", hosted)
+        self.assertIn("head_sha=${GITHUB_SHA}&event=pull_request", hosted)
+        self.assertIn('.name == "CyclingSim CI"', hosted)
+        self.assertIn('"$conclusion" == "success"', hosted)
+        self.assertNotIn("yacs-unreal-ci-${{ github.repository }}", hosted)
+        self.assertIn("    needs: await_ci", native)
+        self.assertIn(
+            "    concurrency:\n      group: yacs-unreal-ci-${{ github.repository }}",
+            native,
+        )
+
     @classmethod
     def setUpClass(cls):
         cls.workflow = WORKFLOW.read_text(encoding="utf-8")

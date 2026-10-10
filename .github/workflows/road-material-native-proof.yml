@@ -11,14 +11,56 @@ on:
 
 permissions:
   contents: read
-
-concurrency:
-  group: yacs-unreal-ci-${{ github.repository }}
-  cancel-in-progress: false
+  actions: read
 
 jobs:
+  await_ci:
+    name: Await protected CI for this exact source SHA
+    if: >-
+      github.actor == github.repository_owner &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/364-road-surface-materials'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Require matching successful CyclingSim CI before reserving Windows
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 90); do
+            payload=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${GITHUB_SHA}&event=pull_request&per_page=50")
+            row=$(jq -r --arg sha "$GITHUB_SHA" '
+              [.workflow_runs[] | select(.name == "CyclingSim CI" and .head_sha == $sha)]
+              | sort_by(.created_at) | last
+              | if . == null then "" else "\(.id)|\(.status)|\(.conclusion // "pending")" end
+            ' <<< "$payload")
+            if [[ -n "$row" ]]; then
+              IFS='|' read -r ci_id state conclusion <<< "$row"
+              if [[ "$state" == "completed" ]]; then
+                if [[ "$conclusion" == "success" ]]; then
+                  echo "Protected exact-SHA CI succeeded: run $ci_id at $GITHUB_SHA"
+                  exit 0
+                fi
+                echo "::error::Exact-SHA CI run $ci_id completed with $conclusion; native road proof is blocked."
+                exit 1
+              fi
+              echo "Protected exact-SHA CI $ci_id status=$state (poll $attempt/90)"
+            else
+              echo "Awaiting matching exact-SHA pull_request CI (poll $attempt/90)"
+            fi
+            sleep 20
+          done
+          echo "::error::Timed out awaiting successful exact-SHA protected CI. Do not use stale Unreal cache."
+          exit 1
+
   baseline:
     name: Read accepted road materials in a fresh isolated editor
+    needs: await_ci
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&

@@ -251,6 +251,11 @@ fingerprint differs and the existing WARM COMPILE path validates those binaries.
 A read-only native consumer must **fail closed** while such provenance is stale;
 it must not rewrite state.json, retroactively certify a failed proof, invalidate
 another owner's cache, or run Unreal before the normal verification lane.
+The #364 native workflow first waits on a hosted worker for the same-SHA
+successful protected `CyclingSim CI` run, without reserving the shared Unreal
+concurrency lock. Only then does its Windows baseline job acquire the existing
+lock and check cache state again. A failed/cancelled/timed-out upstream CI cannot
+launch the native reader, and no green CI alone substitutes for runtime proof.
 A compile-fingerprint mismatch is **not** cache corruption:
 when engine/toolchain provenance still matches, the lane invalidates the green
 stamp but keeps `Intermediate/Binaries` and performs a WARM COMPILE. Missing
