@@ -546,9 +546,15 @@ the official `MakeTextResult` helper, followed by `LNK1120` for one unresolved
 symbol. [Fixed read-only diagnostic 38008679525](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38008679525)
 authenticated this retained failure without starting a build or Editor.
 Accepted bytes were not staged and no MCP listener started. The domain module
-now declares its direct `JsonUtilities` dependency. The workflow returns to
-the accepted-session default; successful plugin linking and the actual
-accepted session remain unverified.
+now declares its direct `JsonUtilities` dependency.
+[Fixed integrated attempt 38009120622](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38009120622)
+at `4ae6268a2577028baa27d5e2d0ffa1e27cd8a9f1` passed both builds,
+linked the plugin and staged the authenticated consumer bytes. The launcher
+then rejected a file identity as not bounded, nonempty and regular before
+Editor startup. Its generic message does not identify the input; a fixed
+read-only receipt diagnostic is required before changing the guard. No MCP
+listener or domain call is admitted. The actual accepted session remains
+unverified.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 

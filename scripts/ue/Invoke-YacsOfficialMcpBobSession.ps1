@@ -72,7 +72,11 @@ function Get-SessionFileIdentity {
     Assert-SessionPlainPath $Path
     $before = Get-Item -LiteralPath $Path -Force
     if ($before.PSIsContainer -or $before.Length -le 0 -or $before.Length -gt $Limit) {
-        throw 'A fixed session input is not a bounded nonempty regular file.'
+        $observedSize = if ($before.PSIsContainer) { $null } else { $before.Length }
+        $receipt['input_identity_failure'] = [ordered]@{ path = [IO.Path]::GetFullPath($Path)
+            size_bytes = $observedSize; limit_bytes = $Limit; is_directory = $before.PSIsContainer }
+        throw ('A fixed session input is not a bounded nonempty regular file: path={0}; size_bytes={1}; limit_bytes={2}; is_directory={3}.' -f
+            $receipt.input_identity_failure.path, $observedSize, $Limit, $before.PSIsContainer)
     }
     $beforeLength = $before.Length
     $beforeTicks = $before.LastWriteTimeUtc.Ticks
@@ -337,13 +341,16 @@ function Get-SessionSafeFailureText {
 function Read-SessionFixedFailureFile {
     param([ValidateSet('original-project-build.log', 'original-project-build-stderr.log',
         'domain-plugin-build.log', 'domain-plugin-build-stderr.log', 'owned-editor.log',
-        'owned-editor-stdout.log', 'owned-editor-stderr.log', 'owned-client-stdout.log', 'owned-client-stderr.log', 'native-session.json', 'accepted-session-build.json')][string] $Name)
-    $limit = if ($Name -ceq 'native-session.json') { 256KB } elseif ($Name -ceq 'accepted-session-build.json') { 1MB } else { 32MB }
+        'owned-editor-stdout.log', 'owned-editor-stderr.log', 'owned-client-stdout.log', 'owned-client-stderr.log', 'native-session.json', 'accepted-session-build.json', 'session-preparation.json')][string] $Name)
+    $limit = if ($Name -ceq 'native-session.json') { 256KB } elseif ($Name -ceq 'accepted-session-build.json') { 1MB }
+        elseif ($Name -ceq 'session-preparation.json') { 4MB } else { 32MB }
     if ($DiagnosePreviousFailure) {
-        if ($Name -cnotin @('accepted-session-build.json', 'original-project-build.log', 'original-project-build-stderr.log', 'domain-plugin-build.log', 'domain-plugin-build-stderr.log')) { throw 'Previous failure readback covers only its fixed build evidence.' }
-        $path = Join-Path 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38007485025-1' $Name
+        if ($Name -cnotin @('accepted-session-build.json', 'session-preparation.json', 'original-project-build.log', 'original-project-build-stderr.log', 'domain-plugin-build.log', 'domain-plugin-build-stderr.log')) { throw 'Previous failure readback covers only its fixed build/staging evidence.' }
+        $path = if ($Name -ceq 'session-preparation.json') {
+            'D:\yacs\runner\_work\s384\38009120622-1\Saved\RuntimeProof\OfficialMcpBob\session-preparation.json'
+        } else { Join-Path 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38009120622-1' $Name }
     } else {
-        if ($Name -ceq 'accepted-session-build.json') { throw 'The retained build receipt is read only in fixed previous-failure mode.' }
+        if ($Name -cin @('accepted-session-build.json', 'session-preparation.json')) { throw 'Retained preparation receipts are read only in fixed previous-failure mode.' }
         $path = if ($Name -ceq 'native-session.json') { Join-Path $SessionRoot 'Saved/RuntimeProof/OfficialMcpBob/native-session.json' }
             else { Join-Path $ArtifactRoot $Name }
     }
@@ -392,28 +399,32 @@ function Write-SessionFixedFailureLogContext {
     return [ordered]@{ lines = $context; truncated = $matched.Count -gt 24 }
 }
 function Invoke-SessionPreviousFailureDiagnostic {
-    $previousRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38007485025-1'
-    if (-not [string]::Equals([IO.Path]::GetFullPath((Join-Path $RepoRoot 'Saved/RuntimeProof/OfficialMcpBobSession/38007485025-1')), $previousRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Fixed previous failure requires its exact retained checkout.' }
+    $previousRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38009120622-1'
+    if (-not [string]::Equals([IO.Path]::GetFullPath((Join-Path $RepoRoot 'Saved/RuntimeProof/OfficialMcpBobSession/38009120622-1')), $previousRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Fixed previous failure requires its exact retained checkout.' }
     $readBudget = [ordered]@{ bytes = 0 }
     $file = Read-SessionFixedFailureFile 'accepted-session-build.json'
     if ($null -eq $file) { throw 'The exact retained failed session receipt is absent.' }
     $previous = $file.text | ConvertFrom-Json -AsHashtable -Depth 40
     if ($previous -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $previous.schema_version 1) `
-        -or $previous.exact_sha -cne 'cd61e0133fc9be749cb0688c6536f09f4ea63a14' `
-        -or $previous.run -cne '38007485025' -or $previous.attempt -cne '1' -or $previous.status -cne 'BLOCKED') { throw 'The retained receipt disagrees with the exact failed run/source.' }
-    foreach ($flag in @('accepted_bytes_staged', 'editor_launched', 'listener_started', 'official_mcp_transport_verified', 'official_mcp_admitted', 'native_automation_verified', 'native_bob_capture_verified')) {
-        if ($previous[$flag] -isnot [bool] -or $previous[$flag]) { throw 'The fixed failed build receipt contains unsupported runtime claims.' }
+        -or $previous.exact_sha -cne '4ae6268a2577028baa27d5e2d0ffa1e27cd8a9f1' `
+        -or $previous.run -cne '38009120622' -or $previous.attempt -cne '1' -or $previous.status -cne 'BLOCKED') { throw 'The retained receipt disagrees with the exact failed run/source.' }
+    foreach ($flag in @('accepted_bytes_staged', 'source_unchanged')) {
+        if ($previous[$flag] -isnot [bool] -or -not $previous[$flag]) { throw 'The exact failed session did not record completed staging/source checks.' }
+    }
+    foreach ($flag in @('editor_launched', 'listener_started', 'official_mcp_transport_verified', 'official_mcp_admitted', 'native_automation_verified', 'native_bob_capture_verified', 'persistent_world_mutation', 'performance_pass')) {
+        if ($previous[$flag] -isnot [bool] -or $previous[$flag]) { throw 'The fixed failed preparation receipt contains unsupported runtime claims.' }
     }
     $diagnostic = [ordered]@{
-        schema_version = 1; exact_sha = $ExpectedHead; previous_run = '38007485025-1'
-        previous_exact_sha = 'cd61e0133fc9be749cb0688c6536f09f4ea63a14'; previous_receipt = $file.identity
+        schema_version = 1; exact_sha = $ExpectedHead; previous_run = '38009120622-1'
+        previous_exact_sha = '4ae6268a2577028baa27d5e2d0ffa1e27cd8a9f1'; previous_receipt = $file.identity
         source_only = $true; compile_performed = $false; editor_launched = $false; listener_started = $false
         official_mcp_admitted = $false; native_automation_verified = $false; native_bob_capture_verified = $false
-        status = 'READ_ONLY_BUILD_FAILURE_DIAGNOSTIC'; previous_error = Get-SessionSafeFailureText ([string]$previous.error)
+        status = 'READ_ONLY_PREPARATION_FAILURE_DIAGNOSTIC'; previous_error = Get-SessionSafeFailureText ([string]$previous.error)
         build_records = [ordered]@{}; files = [ordered]@{}; context = [ordered]@{}; gaps = @()
     }
     foreach ($kind in @('project_build', 'plugin_build')) {
         $record = $previous[$kind]
+        if ($record -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $record.exit_code 0)) { throw 'The fixed prior session did not record both successful builds.' }
         $summary = [ordered]@{ recorded = ($record -is [Collections.IDictionary]) }
         if ($record -is [Collections.IDictionary]) {
             foreach ($field in @('exit_code', 'started_at_utc', 'ended_at_utc', 'executable')) {
@@ -426,6 +437,71 @@ function Invoke-SessionPreviousFailureDiagnostic {
         $diagnostic.build_records[$kind] = $summary
         Write-Host ('PREVIOUS_BUILD_RECORD ' + $kind + ' ' + ($summary | ConvertTo-Json -Depth 4 -Compress))
     }
+    if ($previous.proof_files -isnot [Collections.IDictionary] -or $previous.startup_config_overrides -isnot [array]) { throw 'The recorded preparation boundary metadata is malformed.' }
+    $boundary = [ordered]@{
+        session_preparation_recorded = $previous.proof_files.Contains('session_preparation')
+        startup_config_overrides_count = $previous.startup_config_overrides.Count
+        owned_editor_executable_recorded = $previous.Contains('owned_editor_executable')
+        owned_client_executable_recorded = $previous.Contains('owned_client_executable')
+        attempt_started_at_utc_recorded = $previous.Contains('attempt_started_at_utc')
+    }
+    foreach ($entry in @(@('session_preparation', $previous.proof_files), @('owned_editor_executable', $previous), @('owned_client_executable', $previous))) {
+        if (-not $entry[1].Contains($entry[0])) { continue }
+        $identity = $entry[1][$entry[0]]
+        if ($identity -isnot [Collections.IDictionary] -or $identity.path -isnot [string] -or $identity.sha256 -cnotmatch '^[0-9a-f]{64}$' `
+            -or ($identity.size_bytes -isnot [long] -and $identity.size_bytes -isnot [int]) -or $identity.size_bytes -le 0) { throw 'A recorded preparation input identity is malformed.' }
+        $boundary[$entry[0]] = [ordered]@{ path = Get-SessionSafeFailureText $identity.path; size_bytes = $identity.size_bytes; sha256 = $identity.sha256 }
+    }
+    $diagnostic['recorded_preparation_boundary'] = $boundary
+    Write-Host ('PREVIOUS_PREPARATION_BOUNDARY ' + ($boundary | ConvertTo-Json -Depth 5 -Compress))
+    $preparation = Read-SessionFixedFailureFile 'session-preparation.json'
+    if ($null -eq $preparation) { throw 'The exact prior staged preparation file is absent.' }
+    $prepared = $preparation.text | ConvertFrom-Json -AsHashtable -Depth 40
+    if ($prepared -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $prepared.schema_version 1) `
+        -or $prepared.exact_sha -cne $previous.exact_sha -or $prepared.status -cne 'ACCEPTED_CONSUMER_BYTES_STAGED') { throw 'The fixed staged preparation receipt disagrees with the failed run.' }
+    if ($boundary.session_preparation_recorded -and ($previous.proof_files.session_preparation.sha256 -cne $preparation.identity.sha256 `
+        -or -not (Test-SessionInteger $previous.proof_files.session_preparation.size_bytes $preparation.identity.size_bytes))) { throw 'The retained staged preparation bytes differ from the recorded identity.' }
+    $diagnostic.files['session-preparation.json'] = $preparation.identity
+    Write-Host ('PREVIOUS_PREPARATION_FILE ' + ($preparation.identity | ConvertTo-Json -Depth 4 -Compress))
+    if ($boundary.session_preparation_recorded -and $boundary.startup_config_overrides_count -eq 2 `
+        -and $boundary.owned_editor_executable_recorded -and -not $boundary.owned_client_executable_recorded `
+        -and -not $boundary.attempt_started_at_utc_recorded) {
+        $diagnostic['historical_failure_boundary'] = 'PYTHON_APPLICATION_FILE_IDENTITY'
+        $command = Get-Command python -CommandType Application -ErrorAction Stop
+        $application = Get-Item -LiteralPath $command.Source -Force
+        $diagnostic['current_python_application'] = [ordered]@{ observation = 'CURRENT_PROCESS_ENVIRONMENT_ONLY'
+            path = Get-SessionSafeFailureText ([IO.Path]::GetFullPath($command.Source)); size_bytes = $application.Length
+            is_directory = $application.PSIsContainer; is_reparse_point = [bool]($application.Attributes -band [IO.FileAttributes]::ReparsePoint)
+            hash_performed = $false }
+        Write-Host ('CURRENT_PYTHON_APPLICATION ' + ($diagnostic.current_python_application | ConvertTo-Json -Depth 4 -Compress))
+        $diagnostic['current_python_interpreter'] = [ordered]@{ observation = 'CURRENT_PROCESS_ENVIRONMENT_ONLY'; status = 'OBSERVATION_PENDING' }
+        $stdout = Join-Path $ArtifactRoot 'current-python-interpreter-stdout.log'
+        $stderr = Join-Path $ArtifactRoot 'current-python-interpreter-stderr.log'
+        try {
+            $script:ownedValidation = Start-Process -FilePath $command.Source -ArgumentList @('-c', '"import sys; print(sys.executable)"') `
+                -WorkingDirectory $RepoRoot -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+            if (-not $script:ownedValidation.WaitForExit(10000)) { throw 'The fixed current interpreter observation exceeded ten seconds.' }
+            $script:ownedValidation.WaitForExit()
+            if ($script:ownedValidation.ExitCode -ne 0 -or (Get-Item -LiteralPath $stdout).Length -gt 4KB `
+                -or (Get-Item -LiteralPath $stderr).Length -gt 4KB) { throw 'The bounded fixed current interpreter observation failed.' }
+            $output = Get-SessionOwnedLogIdentity $stdout $script:ownedValidation -IncludeText
+            $errors = Get-SessionOwnedLogIdentity $stderr $script:ownedValidation
+            $observedExecutable = $output.text.Trim()
+            if ([string]::IsNullOrWhiteSpace($observedExecutable) -or $observedExecutable.Contains("`n") -or $observedExecutable.Contains("`r") `
+                -or $output.size_bytes -gt 4KB -or $errors.size_bytes -ne 0) { throw 'The fixed current interpreter did not return one bounded executable path.' }
+            $diagnostic.current_python_interpreter['status'] = 'CURRENT_INTERPRETER_OBSERVED'
+            $diagnostic.current_python_interpreter['executable'] = Get-SessionSafeFailureText $observedExecutable
+            $diagnostic.current_python_interpreter['exit_code'] = $script:ownedValidation.ExitCode
+        } catch {
+            $diagnostic.current_python_interpreter['status'] = 'CURRENT_INTERPRETER_OBSERVATION_FAILED'
+            $diagnostic.current_python_interpreter['exception_type'] = $_.Exception.GetType().Name
+            $diagnostic.gaps += 'The optional current interpreter observation did not complete; historical boundary markers remain recorded separately.'
+        } finally {
+            Stop-SessionOwnedProcess $script:ownedValidation 'validation'
+            $script:ownedValidation = $null
+        }
+        Write-Host ('CURRENT_PYTHON_INTERPRETER ' + ($diagnostic.current_python_interpreter | ConvertTo-Json -Depth 4 -Compress))
+    } else { $diagnostic['historical_failure_boundary'] = 'UNESTABLISHED_FROM_RECORDED_MARKERS' }
     $target = Join-Path $ArtifactRoot 'previous-accepted-session-build.json'
     Assert-SessionPlainPath $target
     $stream = [IO.File]::Open($target, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
@@ -438,7 +514,7 @@ function Invoke-SessionPreviousFailureDiagnostic {
         Write-Host ('PREVIOUS_BUILD_LOG ' + ($log.identity | ConvertTo-Json -Depth 4 -Compress))
     }
     Write-SessionJson (Join-Path $ArtifactRoot 'previous-session-failure-diagnostic.json') $diagnostic
-    $receipt['diagnostic_previous_run'] = '38007485025-1'
+    $receipt['diagnostic_previous_run'] = '38009120622-1'
     $receipt.proof_files.previous_session_failure_diagnostic = Get-SessionFileIdentity (Join-Path $ArtifactRoot 'previous-session-failure-diagnostic.json') 1MB
     $receipt.proof_files.previous_failed_receipt = Get-SessionFileIdentity $target 1MB
     Write-Host ('PREVIOUS_SESSION_FAILURE ' + $diagnostic.previous_error)
@@ -839,6 +915,8 @@ try {
 }
 catch {
     $receipt.error = $_.Exception.Message
+    $receipt['failure_script_stack_trace'] = @($_.ScriptStackTrace -split '\r?\n' | Select-Object -First 8 | ForEach-Object { Get-SessionSafeFailureText $_ })
+    foreach ($line in $receipt.failure_script_stack_trace) { Write-Host ('CURRENT_SESSION_STACK ' + $line) }
     $receipt.status = 'BLOCKED'
     $receipt.official_mcp_transport_verified = $false
     $receipt.native_automation_verified = $false
