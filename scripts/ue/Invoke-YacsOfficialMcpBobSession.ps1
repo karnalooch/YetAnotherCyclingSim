@@ -984,105 +984,81 @@ function Read-SessionUnitFailureEvidenceBytes {
     }
     return [ordered]@{ identity = $identity; retained_raw = $retained; bytes = $bytes; matches_original_identity = $originalMatches }
 }
-function Select-SessionUnitFailureContext {
-    param([byte[]] $Bytes, [switch] $EngineSource)
-    # Decode bounded line prefixes only; even a giant raw line cannot allocate
-    # an unbounded string. Keep first/last selected contexts and report omissions.
-    $controlArgumentPattern = '(?i)FParse::.*(?:control|ctrl|ctl)|(?:control|ctrl|ctl).*FParse::|TEXT\(\s*"[^"]*(?:control|ctrl|ctl)[^"]*"|bUseControl|bEnableControl|bInitializeControl|ControlPort|GInitializeDesc|InitializeDesc.*(?:control|ctrl|ctl)|(?:control|ctrl|ctl).*InitializeDesc'
-    $initializationPattern = '(?i)FParse::.*(?:trace|control|ctrl|ctl)|(?:trace|control|ctrl|ctl).*FParse::|FInitializeDesc|InitializeDesc|Writer_InitializeControl|Writer_Control|FTraceAuxiliary::Initialize|UE::Trace::Initialize|bUseControl|bEnableControl|ControlPort'
-    $pattern = if ($EngineSource) { '(?i)notracectrl|trace.?control|ControlThread|Listen|Start.*Control|Control.*Start|' + $initializationPattern + '|' + $controlArgumentPattern }
-        else { '(?i)trace|listen|socket|tcp|udp|error|warning|fatal|LogInit:|LogPython:|ModelContextProtocol|YacsBobInspection' }
-    $priorityPattern = if ($EngineSource) { '(?i)notracectrl|' + $initializationPattern + '|' + $controlArgumentPattern }
-        else { '(?i)listen|TraceControl|Trace.*(?:control|server|port|tcp)|(?:control|server|port|tcp).*Trace|ModelContextProtocol.*(?:bind|start|port|server)|(?:bind|start|port|server).*ModelContextProtocol' }
-    $controlArguments = [Collections.Generic.List[object]]::new()
-    $controlArgumentMatches = 0
-    $controlContext = [Collections.Generic.List[object]]::new()
-    $controlSeen = [Collections.Generic.HashSet[int]]::new()
-    $controlStart = 0; $controlUntil = 0
-    $radius = if ($EngineSource) { 3 } else { 2 }
-    $priorityFirst = [Collections.Generic.List[object]]::new()
-    $priorityLast = [Collections.Generic.Queue[object]]::new()
-    $directFirst = [Collections.Generic.List[object]]::new()
-    $directLast = [Collections.Generic.Queue[object]]::new()
-    $prioritySeen = [Collections.Generic.HashSet[int]]::new()
-    $priorityStart = 0; $priorityUntil = 0; $priorityMatches = 0
-    $first = [Collections.Generic.List[object]]::new()
-    $last = [Collections.Generic.Queue[object]]::new()
-    $previous = [Collections.Generic.Queue[object]]::new()
-    $seen = [Collections.Generic.HashSet[int]]::new()
-    $offset = 0; $line = 0; $following = 0; $selected = 0; $oversized = $false
-    while ($offset -lt $Bytes.Length -and $line -lt 200000) {
+function Select-SessionFixedTraceSourceWindows {
+    param([string] $RelativePath, [byte[]] $Bytes, $Identity, $WindowBudget)
+    # Current-source line anchors came from the preceding actual readback.
+    # These fixed windows expose the bodies; no heuristic selects their rows.
+    $ranges = [ordered]@{
+        'Engine/Source/Runtime/Core/Private/ProfilingDebugging/TraceAuxiliary.cpp' = @(@(2347, 2394), @(2395, 2442), @(2443, 2490))
+        'Engine/Source/Runtime/TraceLog/Public/Trace/Trace.h' = @(,@(147, 176))
+        'Engine/Source/Runtime/TraceLog/Private/Trace/Writer.cpp' = @(@(1144, 1173), @(1237, 1284))
+        'Engine/Source/Runtime/Launch/Private/LaunchEngineLoop.cpp' = @(,@(1818, 1854))
+        'Engine/Source/Runtime/TraceLog/Private/Trace/Control.cpp' = @(,@(333, 377))
+    }
+    if (-not $ranges.Contains($RelativePath)) { return @() }
+    $wanted = [Collections.Generic.HashSet[int]]::new()
+    $lastLine = 0
+    foreach ($range in $ranges[$RelativePath]) {
+        if ($range[1] - $range[0] + 1 -gt 48) { throw 'A fixed trace source window exceeds 48 rows.' }
+        for ($line = $range[0]; $line -le $range[1]; $line++) { [void]$wanted.Add($line) }
+        $lastLine = [Math]::Max($lastLine, $range[1])
+    }
+    $rows = [ordered]@{}
+    $offset = 0; $line = 0
+    while ($offset -lt $Bytes.Length -and $line -lt $lastLine) {
         $end = [Array]::IndexOf($Bytes, [byte]10, $offset)
         if ($end -lt 0) { $end = $Bytes.Length }
         $length = $end - $offset
-        $decodeLength = [Math]::Min($length, 4096)
-        $text = [Text.Encoding]::UTF8.GetString($Bytes, $offset, $decodeLength).TrimEnd("`r")
-        $line++; $offset = $end + 1
-        $rowOversized = $length -gt 4096
-        if ($rowOversized) { $oversized = $true }
-        $skip = -not $EngineSource -and $text -match '(?i)command\s*line|authorization|bearer\s'
-        $row = [ordered]@{ line = $line; text = $text; raw_line_prefix_truncated = $rowOversized }
-        $match = -not $skip -and $text -match $pattern
-        $priorityMatch = -not $skip -and $text -match $priorityPattern
-        if ($priorityMatch) { $priorityStart = [Math]::Max(1, $line - $radius); $priorityUntil = $line + $radius; $priorityMatches++ }
-        if ($EngineSource -and -not $skip -and $text -match $controlArgumentPattern) { $controlStart = [Math]::Max(1, $line - $radius); $controlUntil = $line + $radius }
-        $rows = @()
-        if ($match) { $rows += @($previous.ToArray()); $rows += $row; $following = $radius }
-        elseif ($following -gt 0) { if (-not $skip) { $rows += $row }; $following-- }
-        foreach ($candidate in $rows) {
-            $newRow = $seen.Add($candidate.line)
-            $priority = $candidate.line -ge $priorityStart -and $candidate.line -le $priorityUntil
-            if (-not $newRow -and -not $priority) { continue }
-            $safe = Get-SessionSafeFailureText $candidate.text
-            $safeBytes = [Text.Encoding]::UTF8.GetBytes($safe)
-            if ($safeBytes.Length -gt 768) { $safe = [Text.Encoding]::UTF8.GetString($safeBytes, 0, 736) + '[TRUNCATED]' }
-            $value = [ordered]@{ line = $candidate.line; text = $safe; raw_line_prefix_truncated = $candidate.raw_line_prefix_truncated }
-            if ($EngineSource -and $candidate.line -ge $controlStart -and $candidate.line -le $controlUntil -and $controlSeen.Add($candidate.line)) {
-                if ($controlContext.Count -lt 84) { $controlContext.Add($value) }
-            }
-            if ($priority -and $prioritySeen.Add($candidate.line)) {
-                if ($priorityFirst.Count -lt 2) { $priorityFirst.Add($value) }
-                else { if ($priorityLast.Count -ge 2) { [void]$priorityLast.Dequeue() }; $priorityLast.Enqueue($value) }
-            }
-            if ($EngineSource -and $candidate.line -eq $line -and $candidate.text -match $controlArgumentPattern) {
-                $controlArgumentMatches++
-                if ($controlArguments.Count -lt 12) { $controlArguments.Add($value) }
-            }
-            if ($priorityMatch -and $candidate.line -eq $line) {
-                if ($directFirst.Count -lt 2) { $directFirst.Add($value) }
-                else { if ($directLast.Count -ge 2) { [void]$directLast.Dequeue() }; $directLast.Enqueue($value) }
-            }
-            if (-not $newRow) { continue }
-            $selected++
-            if ($first.Count -lt 12) { $first.Add($value) }
-            else { if ($last.Count -ge 12) { [void]$last.Dequeue() }; $last.Enqueue($value) }
+        $line++
+        if ($wanted.Contains($line)) {
+            $prefixLength = [Math]::Min($length, 736)
+            $text = [Text.Encoding]::UTF8.GetString($Bytes, $offset, $prefixLength).TrimEnd("`r")
+            $rowTruncated = $length -gt $prefixLength
+            # Installed code has no caller payload. Preserve indentation while
+            # applying the existing URL/secret redactor to bounded prefixes.
+            $safe = Get-SessionSafeFailureText $text
+            if ($safe -cne $text) { $rowTruncated = $true }
+            if ($rowTruncated -and -not $safe.EndsWith('[TRUNCATED]')) { $safe += '[TRUNCATED]' }
+            if ([Text.Encoding]::UTF8.GetByteCount($safe) -gt 768) { throw 'A bounded trace source row exceeds 768 UTF8 bytes.' }
+            $rows[[string]$line] = [object[]]@($line, $safe, $rowTruncated)
         }
-        if (-not $skip) { $previous.Enqueue($row); if ($previous.Count -gt $radius) { [void]$previous.Dequeue() } }
-        else { $previous.Clear() }
+        $offset = $end + 1
     }
-    $chosen = @($first.ToArray()) + @($last.ToArray())
-    if ($priorityMatches -gt 0) {
-        # Direct clue rows precede neighboring context and generic startup rows.
-        # Four direct + four context + sixteen generic rows keep the 24-row cap.
-        $chosen = @($directFirst.ToArray()) + @($directLast.ToArray()) + @($priorityFirst.ToArray()) + @($priorityLast.ToArray()) `
-            + @($first.ToArray() | Select-Object -First 8) + @($last.ToArray() | Select-Object -Last 8)
+    $windows = [Collections.Generic.List[object]]::new()
+    foreach ($range in $ranges[$RelativePath]) {
+        $window = [ordered]@{ source = $RelativePath; source_sha256 = $Identity.sha256
+            scope = 'CURRENT_ENGINE_SOURCE_ONLY; FIXED_LINE_WINDOW; NOT_HISTORICAL_LISTENER_PROOF'
+            requested_first_line = $range[0]; requested_last_line = $range[1]; requested_line_count = $range[1] - $range[0] + 1
+            row_format = @('line', 'text', 'truncated'); rows = @(); retained_line_count = 0; truncated = $false
+            maximum_rows = 48; maximum_row_utf8_bytes = 768; serialized_limit_bytes = 8KB }
+        $separator = if ($WindowBudget.window_count -gt 0) { 1 } else { 0 }
+        for ($line = $range[0]; $line -le $range[1]; $line++) {
+            if (-not $rows.Contains([string]$line)) { $window.truncated = $true; continue }
+            $row = $rows[[string]$line]
+            $previous = $window.rows
+            # Array addition must preserve one row as a nested tuple.
+            $window.rows = $previous + @(,$row)
+            $window.retained_line_count = $window.rows.Count
+            if ($row[2]) { $window.truncated = $true }
+            $cost = [Text.Encoding]::UTF8.GetByteCount(($window | ConvertTo-Json -Depth 5 -Compress))
+            if ($cost -gt 8KB -or $WindowBudget.bytes + $separator + $cost -gt 32KB) {
+                $window.rows = $previous
+                $window.retained_line_count = $window.rows.Count
+                $window.truncated = $true
+                break
+            }
+        }
+        if ($window.retained_line_count -ne $window.requested_line_count) { $window.truncated = $true }
+        $cost = [Text.Encoding]::UTF8.GetByteCount(($window | ConvertTo-Json -Depth 5 -Compress))
+        if ($cost -gt 8KB -or $WindowBudget.bytes + $separator + $cost -gt 32KB) {
+            $WindowBudget.omitted_windows++
+            continue
+        }
+        $WindowBudget.bytes += $separator + $cost
+        $WindowBudget.window_count++
+        $windows.Add($window)
     }
-    # Actual control argument rows always precede broad initialization matches;
-    # retain up to twelve of them under the existing serialized context bound.
-    if ($EngineSource) { $chosen = @($controlArguments.ToArray()) + @($controlContext.ToArray()) + $chosen }
-    $context = @(); $contextBytes = 0; $contextJsonBytes = 2
-    $emitted = [Collections.Generic.HashSet[int]]::new()
-    foreach ($row in $chosen) {
-        if (-not $emitted.Add($row.line)) { continue }
-        $cost = [Text.Encoding]::UTF8.GetByteCount(($row | ConvertTo-Json -Depth 3 -Compress))
-        if ($context.Count -gt 0) { $cost++ }
-        if ($context.Count -ge 24 -or $contextJsonBytes + $cost -gt 4KB) { continue }
-        $context += $row; $contextJsonBytes += $cost; $contextBytes += [Text.Encoding]::UTF8.GetByteCount($row.text)
-    }
-    return [ordered]@{ lines = $context; scanned_line_count = $line; matching_context_count = $selected; priority_direct_match_count = $priorityMatches; direct_control_argument_match_count = $controlArgumentMatches
-        truncated = ($context.Count -lt $selected -or $offset -lt $Bytes.Length -or $oversized)
-        maximum_lines = 24; maximum_row_utf8_bytes = 768; decoded_context_limit_bytes = 4KB; decoded_context_bytes = $contextBytes
-        context_json_limit_bytes = 4KB; context_json_bytes = $contextJsonBytes }
+    return $windows.ToArray()
 }
 
 function Invoke-SessionFixedUnitListenerFailureReadback {
@@ -1119,7 +1095,7 @@ function Invoke-SessionFixedUnitListenerFailureReadback {
         original_failed_run = '38030801857-1'; original_failed_sha = $failedSha
         original_failed_host = $failedHostBytes.identity; original_failed_unit = $unitBytes.identity
         retained_raw_host = $failedHostBytes.retained_raw; retained_raw_unit = $unitBytes.retained_raw
-        original_unit_facts = [ordered]@{}; retained_failed_unit_log_paths = [ordered]@{}; current_engine_sources = [ordered]@{}
+        original_unit_facts = [ordered]@{}; retained_failed_unit_log_paths = [ordered]@{}; current_engine_sources = [ordered]@{}; current_source_windows = @()
         original_log_identity_declarations = [ordered]@{}; current_log_metadata = [ordered]@{}
         proof_limits = @('The failed unit counted one owned listener; its endpoint and service were not retained.',
             'A log whose current identity differs is only a current observation of the fixed retained path, not original process ownership evidence.',
@@ -1164,9 +1140,10 @@ function Invoke-SessionFixedUnitListenerFailureReadback {
             else { 'CURRENT_OBSERVED_RETAINED_FAILED_UNIT_PATH_BYTES; NOT_ORIGINAL_HASH_MATCH; NO_ORIGINAL_PROCESS_OWNERSHIP_PROOF' }
         $diagnostic.retained_failed_unit_log_paths[$name] = [ordered]@{ scope = $scope; matches_original_identity = $file.matches_original_identity
             original_declared_identity = $diagnostic.original_log_identity_declarations[$name]
-            current_identity = $file.identity; retained_raw = $file.retained_raw; context = (Select-SessionUnitFailureContext $file.bytes) }
+            current_identity = $file.identity; retained_raw = $file.retained_raw }
     }
     $sourceBudget = [ordered]@{ bytes = 0L; limit_bytes = 28MB }
+    $windowBudget = [ordered]@{ bytes = 2L; window_count = 0; omitted_windows = 0 }
     foreach ($relative in @('Engine/Source/Runtime/Core/Private/ProfilingDebugging/TraceAuxiliary.cpp',
         'Engine/Source/Runtime/TraceLog/Private/Trace/Control.cpp', 'Engine/Source/Runtime/TraceLog/Private/Trace/Control.h',
         'Engine/Source/Runtime/Launch/Private/LaunchEngineLoop.cpp', 'Engine/Source/Runtime/TraceLog/Public/Trace/Trace.h',
@@ -1179,10 +1156,14 @@ function Invoke-SessionFixedUnitListenerFailureReadback {
         }
         $file = Read-SessionUnitFailureEvidenceBytes $path $null 4MB $sourceBudget '' -CurrentSource
         $diagnostic.current_engine_sources[$relative] = [ordered]@{ scope = 'CURRENT_ENGINE_SOURCE_ONLY; NOT_HISTORICAL_LISTENER_PROOF'
-            status = 'READ'; identity = $file.identity; context = (Select-SessionUnitFailureContext $file.bytes -EngineSource) }
+            status = 'READ'; identity = $file.identity }
+        $diagnostic.current_source_windows += @(Select-SessionFixedTraceSourceWindows $relative $file.bytes $file.identity $windowBudget)
     }
     $diagnostic['historical_evidence_read_bytes'] = $budget.bytes
     $diagnostic['current_engine_source_read_bytes'] = $sourceBudget.bytes
+    $diagnostic['current_source_window_budget'] = [ordered]@{ serialized_limit_bytes = 32KB; serialized_bytes = $windowBudget.bytes
+        retained_window_count = $windowBudget.window_count; omitted_window_count = $windowBudget.omitted_windows
+        whole_console_limit_bytes = 48KB }
     Assert-SessionTrackedSources $RepoRoot
     $target = Join-Path $ArtifactRoot 'input-boundary-listener-diagnostic.json'
     Write-SessionJson $target $diagnostic
