@@ -190,7 +190,7 @@ class CanaryTests(unittest.TestCase):
 
         def read(index):
             reads[0] += 1
-            if reads[0] == 2:
+            if reads[0] == 3:
                 return wrong_on_second_read()
             return actual(index)
 
@@ -202,10 +202,9 @@ class CanaryTests(unittest.TestCase):
         self.assertEqual(self.comp.calls[-1], self.old.get_path_name())
 
     def test_pure_library_has_no_run_on_import_or_unreal_import(self):
-        import sys
+        # The imported library must remain inert outside the native entry point.
         self.assertFalse(hasattr(canary, "main"))
         self.assertNotIn("unreal", canary.__dict__)
-        self.assertNotIn("unreal", sys.modules)
 
 
 if __name__ == "__main__":

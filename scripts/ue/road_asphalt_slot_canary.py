@@ -157,8 +157,12 @@ def try_road_only_material(snapshot, actors, asphalt_instance, import_receipt):
     path = asphalt_instance.get_path_name()
     require(path == import_receipt["assets"]["instance"],
             "material instance differs from its importer receipt")
-    roads = [actor for actor in actors if actor.get_actor_label() == ROAD_LABEL]
-    require(len(roads) == 1, "road Actor lookup is ambiguous")
+    road_like = [actor for actor in actors
+                 if actor.get_actor_label().startswith(ROAD_LABEL)]
+    require(len(road_like) == 1
+            and road_like[0].get_actor_label() == ROAD_LABEL,
+            "road Actor lookup is ambiguous")
+    roads = road_like
     comp = roads[0].get_dynamic_mesh_component()
     require(comp.get_path_name() == binding["component"]
             and comp.get_num_materials() == 1,
