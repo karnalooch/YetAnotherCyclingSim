@@ -738,6 +738,59 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
         self.assertLessEqual(sum(len(excerpt["text"].splitlines()) for item in limited["inventory"]
                                  for excerpt in item["selected_excerpts"]), 9)
 
+    def test_stream_review_retains_config_parser_and_complete_startup_bodies_before_generic_uses(self):
+        self.stream_fixture()
+        relative = probe.STREAM_PLUGIN_ROOT
+        self.write(relative + "/Source/PixelStreaming2Settings/Internal/PixelStreaming2PluginSettings.h",
+                   "// UCLASS(config=CommentOnly) must not be selected.\n"
+                   "UCLASS(config=FixtureOnly)\nclass UPixelStreaming2PluginSettings {};\n")
+        self.write(relative + "/Source/PixelStreaming2Settings/Private/PixelStreaming2PluginSettings.cpp",
+                   'const auto FixtureMap = Pair("EditorSource", &CVarEditorSource);\n'
+                   'const auto FixtureStartMap = Pair("EditorStartOnLaunch", &CVarEditorStartOnLaunch);\n'
+                   + "\n".join("int UnrelatedPreamble;" for _ in range(120))
+                   + "\nvoid UPixelStreaming2PluginSettings::PostInitProperties()\n{\n"
+                   + "\n".join("    int InitStep;" for _ in range(40))
+                   + '\n    FParse::Value(FCommandLine::Get(), TEXT("FixtureOnly="), FixtureValue);\n'
+                   + "    FIXTURE_COMMAND_LINE_MAPPING;\n}\n")
+        self.write(relative + "/Source/PixelStreaming2Editor/Private/PixelStreaming2EditorModule.cpp",
+                   "void FPixelStreaming2EditorModule::StartupModule()\n{\n    FIXTURE_READY_CALLBACK;\n}\n"
+                   "void FPixelStreaming2EditorModule::InitEditorStreaming()\n{\n    FIXTURE_MAIN_FRAME_CALLBACK;\n}\n"
+                   "void FPixelStreaming2EditorModule::StartStreaming()\n{\n"
+                   + "\n".join("    int ViewportSetupStep;" for _ in range(48))
+                   + "\n    FIXTURE_VIEWPORT_TAIL;\n    StartSignalling();\n}\n"
+                   "void FPixelStreaming2EditorModule::StartSignalling()\n{\n"
+                   "    if (FixtureAlreadyRunning) { return; }\n"
+                   "    FIXTURE_SERVER_FACTORY;\n    FIXTURE_SERVER_LAUNCH;\n}\n"
+                   "void FixtureUnrelatedMutation() { UNRELATED_BODY_OUTSIDE_DEFINITION; }\n")
+        result = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertEqual(result["level_editor_stream_missing_review_contexts"], [])
+        review = [excerpt for item in result["inventory"] for excerpt in item["selected_excerpts"]
+                  if excerpt["selection"] == "level_editor_stream_review"]
+        self.assertEqual(len(result["level_editor_stream_review_contexts"]["editor_startup"]), 2)
+        expected = {
+            "settings_class": "UCLASS(config=FixtureOnly)",
+            "editor_property_map": 'Pair("EditorSource", &CVarEditorSource)',
+            "settings_command_line": "FIXTURE_COMMAND_LINE_MAPPING",
+            "level_editor_start": "FIXTURE_VIEWPORT_TAIL",
+            "builtin_server_launch": "FIXTURE_SERVER_LAUNCH",
+        }
+        for topic, marker in expected.items():
+            text = "\n".join(excerpt["text"] for excerpt in review if excerpt["topic"] == topic)
+            self.assertIn(marker, text, topic)
+            if topic in {"level_editor_start", "builtin_server_launch"}:
+                self.assertNotIn("UNRELATED_BODY_OUTSIDE_DEFINITION", text)
+        output = probe.console_summary(result)
+        self.assertIn("UCLASS(config=FixtureOnly)", output)
+        self.assertIn("FIXTURE_COMMAND_LINE_MAPPING", output)
+        self.assertIn("FIXTURE_SERVER_FACTORY", output)
+        self.assertLessEqual(len(output.splitlines()), probe.MAX_CONSOLE_LINES)
+        with patch.object(probe, "MAX_EXCERPT_LINES", 9):
+            limited = self.collect(evidence_focus="level_editor_stream")
+        self.assertTrue(limited["excerpt_limit_reached"])
+        self.assertLessEqual(sum(len(excerpt["text"].splitlines()) for item in limited["inventory"]
+                                 for excerpt in item["selected_excerpts"]), 9)
+
 
 if __name__ == "__main__":
     unittest.main()

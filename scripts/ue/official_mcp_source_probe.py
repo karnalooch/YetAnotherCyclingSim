@@ -59,6 +59,17 @@ STREAM_SYMBOLS = (
 MAX_STREAM_OBSERVATIONS_PER_SYMBOL = 24
 MAX_STREAM_CONTEXTS_PER_SYMBOL = 3
 MAX_STREAM_CONTEXT_LINES = 56
+# Installed filenames were observed in native source receipt 38088310628.
+# Select startup/configuration definitions before generic uses spend the budget.
+# Each rule is (topic, filename, anchor, before, after, contexts, console lines).
+STREAM_REVIEW_RULES = (
+    ("settings_class", "PixelStreaming2PluginSettings.h", r"\bUCLASS\s*\(", 0, 28, 1, 20),
+    ("editor_property_map", "PixelStreaming2PluginSettings.cpp", r"\bCVarEditor(?:Source|StartOnLaunch|UseRemoteSignallingServer)\b", 12, 24, 1, 28),
+    ("settings_command_line", "PixelStreaming2PluginSettings.cpp", r"\b(?:FCommandLine|FParse)::|\bUPixelStreaming2PluginSettings::\w*(?:CommandLine|Init|Load)\w*\s*\(", 12, 80, 4, 110),
+    ("editor_startup", "PixelStreaming2EditorModule.cpp", r"FPixelStreaming2EditorModule::(?:StartupModule|InitEditorStreaming)\s*\(", 0, 86, 2, 65),
+    ("level_editor_start", "PixelStreaming2EditorModule.cpp", r"FPixelStreaming2EditorModule::StartStreaming\s*\(", 0, 100, 1, 65),
+    ("builtin_server_launch", "PixelStreaming2EditorModule.cpp", r"FPixelStreaming2EditorModule::StartSignalling\s*\(", 0, 72, 1, 50),
+)
 INTEREST = re.compile(
     r"\b(?:AllowedNames|BlockedNames|SetNameFilters|IsToolEnabled|ExecuteTool|"
     r"RegisterToolset|GetToolsetJsonSchema\w*|OnRefreshTools|RefreshTools|"
@@ -496,6 +507,48 @@ def select_level_editor_stream(
         ]
         prepared.append((item, lines, code))
     remaining = MAX_EXCERPT_LINES
+    review_contexts = {}
+    for topic, filename, pattern, before, after, context_limit, _ in STREAM_REVIEW_RULES:
+        observed = []
+        for item, lines, code in prepared:
+            if Path(item["path"]).name != filename:
+                continue
+            previous_end = 0
+            for index, line in enumerate(code):
+                if index < previous_end or not re.search(pattern, line) or len(observed) >= context_limit:
+                    continue
+                start, end = max(0, index - before), min(len(lines), index + after)
+                # An anchored member definition ends at its actual closing
+                # brace; parser call-site windows remain fixed and explicit.
+                if before == 0 and "::" in pattern:
+                    depth, opened = 0, False
+                    for cursor in range(index, end):
+                        statement = re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', "", code[cursor])
+                        depth += statement.count("{") - statement.count("}")
+                        opened |= "{" in statement
+                        if opened and depth <= 0:
+                            end = cursor + 1
+                            break
+                observed.append({"path": item["path"], "line": index + 1, "sha256": item["sha256"]})
+                bounded_end = min(end, start + remaining)
+                if bounded_end > start:
+                    item["selected_excerpts"].append({
+                        "start_line": start + 1, "end_line": bounded_end, "match_line": index + 1,
+                        "text": "\n".join(line[:600] for line in lines[start:bounded_end]),
+                        "selection": "level_editor_stream_review", "topic": topic,
+                        "topic_context_index": len(observed) - 1,
+                        "budget_truncated": bounded_end < end,
+                        "context_window_truncated": end == min(len(lines), index + after) and end < len(lines),
+                        "source_line_truncated": any(len(line) > 600 for line in lines[start:bounded_end]),
+                        "code_line_offsets": [cursor - start for cursor in range(start, bounded_end)
+                                              if code[cursor].strip()],
+                    })
+                    remaining -= bounded_end - start
+                previous_end = end
+        review_contexts[topic] = observed
+    receipt["level_editor_stream_review_contexts"] = review_contexts
+    receipt["level_editor_stream_missing_review_contexts"] = [
+        topic for topic, values in review_contexts.items() if not values]
     observations = {}
     counts = {}
     for symbol in STREAM_SYMBOLS:
@@ -953,9 +1006,13 @@ def console_summary(receipt: dict[str, Any]) -> str:
             receipt.get("level_editor_stream_missing_contexts", list(STREAM_SYMBOLS))))
         lines.append("STREAM_PATHS_UNESTABLISHED " + json.dumps(
             receipt.get("level_editor_stream_unestablished_paths", [])))
+        lines.append("MISSING_STREAM_REVIEW_CONTEXTS " + json.dumps(
+            receipt.get("level_editor_stream_missing_review_contexts", [])))
         printed = set()
-        for topic in STREAM_SYMBOLS:
-            budget = 34
+        for topic, budget in (
+            *((rule[0], rule[-1]) for rule in STREAM_REVIEW_RULES),
+            *((symbol, 34) for symbol in STREAM_SYMBOLS),
+        ):
             excerpts = [(item, excerpt) for item in receipt["inventory"]
                         for excerpt in item["selected_excerpts"] if excerpt.get("topic") == topic]
             excerpts.sort(key=lambda pair: pair[1].get("topic_context_index", 0))
