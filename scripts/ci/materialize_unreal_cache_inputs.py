@@ -256,9 +256,9 @@ def verify(root: Path, head: str, compile_fp: str, proof_fp: str) -> dict:
         drift = raw_fingerprint_source_drift(root)
         raise ValueError(
             "Physical Unreal cache fingerprints differ from hosted exact HEAD; "
-            + "compile_matches=" + str(actual_compile == compile_fp)
-            + "; proof_matches=" + str(actual_proof == proof_fp)
-            + "; first_noncanonical_input=" + (drift or "none")
+            f"compile_matches={actual_compile == compile_fp}; "
+            f"proof_matches={actual_proof == proof_fp}; "
+            f"first_noncanonical_input={drift or 'none'}"
         )
     return {
         "status": "UNREAL_CANONICAL_CHECKOUT_VERIFIED",

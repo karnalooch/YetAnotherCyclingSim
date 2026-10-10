@@ -109,9 +109,11 @@ class UnrealCacheMaterializationTests(unittest.TestCase):
         )
         # Fixture omits other production-specific named helpers. The canonical
         # required manifest must still be discoverable.
-        with patch.object(gate, "UNREAL_COMPILE_TOOLING_EXACT", set()), patch.object(
-            gate, "UNREAL_PROOF_EXACT", set()
-        ), patch.object(gate, "UE_CRITICAL_CONFIG", set()):
+        with (
+            patch.object(gate, "UNREAL_COMPILE_TOOLING_EXACT", set()),
+            patch.object(gate, "UNREAL_PROOF_EXACT", set()),
+            patch.object(gate, "UE_CRITICAL_CONFIG", set()),
+        ):
             got = gate.fingerprint_paths(self.root)
         self.assertIn("YetAnotherCyclingSim.uproject", got)
 
