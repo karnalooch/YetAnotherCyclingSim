@@ -93,11 +93,31 @@ jobs:
             throw 'Persistent road asphalt source receipt is missing.'
           }
 
-      - name: Retain asphalt sources and proof for native consumption
+      - name: Retain asphalt determinism receipt and render logs
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: road-asphalt-source-${{ github.sha }}-${{ github.run_attempt }}
-          path: ${{ env.YACS_ROAD_ASPHALT_PROOF }}/**
+          name: road-asphalt-receipt-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.YACS_ROAD_ASPHALT_PROOF }}/source-proof.json
+            ${{ env.YACS_ROAD_ASPHALT_PROOF }}/*.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain first complete asphalt source bundle
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-asphalt-run-a-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_ASPHALT_PROOF }}/run-a/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain second complete asphalt source bundle
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-asphalt-run-b-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_ASPHALT_PROOF }}/run-b/**
           if-no-files-found: warn
           retention-days: 14
