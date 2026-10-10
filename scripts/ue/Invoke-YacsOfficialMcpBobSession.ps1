@@ -14,7 +14,9 @@
 param(
     [Parameter(Mandatory)]
     [ValidatePattern('^[0-9a-f]{40}$')]
-    [string] $ExpectedHead
+    [string] $ExpectedHead,
+    # One fixed retained build failure only; no caller-supplied paths or PIDs.
+    [switch] $DiagnosePreviousFailure
 )
 
 Set-StrictMode -Version Latest
@@ -322,6 +324,166 @@ function Stop-SessionOwnedProcess {
     } catch { $receipt.secondary_errors += ('Cannot terminate/observe this invocation owned ' + $Kind + ' handle.') }
     finally { $Process.Dispose() }
 }
+function Get-SessionSafeFailureText {
+    param([string] $Text)
+    $truncated = $Text.Length -gt 512
+    if ($truncated) { $Text = $Text.Substring(0, 512) }
+    $safe = [regex]::Replace($Text, '(?i)https?://\S+', '[URL_REDACTED]')
+    $safe = [regex]::Replace($safe, '(?i)\b[A-Za-z0-9_]*(?:authorization|bearer|token|secret|password|credential|api.?key|signature|sig)[A-Za-z0-9_]*\s*["'']?\s*[:=]\s*["'']?\S+', '[SECRET_FIELD_REDACTED]')
+    if ($safe.Length -gt 512) { $safe = $safe.Substring(0, 512); $truncated = $true }
+    if ($truncated) { return $safe + '[TRUNCATED]' }
+    return $safe
+}
+function Read-SessionFixedFailureFile {
+    param([ValidateSet('original-project-build.log', 'original-project-build-stderr.log',
+        'domain-plugin-build.log', 'domain-plugin-build-stderr.log', 'owned-editor.log',
+        'owned-editor-stdout.log', 'owned-editor-stderr.log', 'owned-client-stdout.log', 'owned-client-stderr.log', 'native-session.json', 'accepted-session-build.json')][string] $Name)
+    $limit = if ($Name -ceq 'native-session.json') { 256KB } elseif ($Name -ceq 'accepted-session-build.json') { 1MB } else { 32MB }
+    if ($DiagnosePreviousFailure) {
+        if ($Name -cnotin @('accepted-session-build.json', 'original-project-build.log', 'original-project-build-stderr.log', 'domain-plugin-build.log', 'domain-plugin-build-stderr.log')) { throw 'Previous failure readback covers only its fixed build evidence.' }
+        $path = Join-Path 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38007485025-1' $Name
+    } else {
+        if ($Name -ceq 'accepted-session-build.json') { throw 'The retained build receipt is read only in fixed previous-failure mode.' }
+        $path = if ($Name -ceq 'native-session.json') { Join-Path $SessionRoot 'Saved/RuntimeProof/OfficialMcpBob/native-session.json' }
+            else { Join-Path $ArtifactRoot $Name }
+    }
+    Assert-SessionPlainPath $path
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return $null }
+    $before = Get-Item -LiteralPath $path -Force
+    $size = $before.Length
+    $ticks = $before.LastWriteTimeUtc.Ticks
+    if ($before.PSIsContainer -or $size -gt $limit -or $readBudget.bytes + $size + 1 -gt 64MB) { throw 'Fixed failure files exceed their read bound.' }
+    # Charge the reserved read even if instability later rejects this log.
+    $readBudget.bytes += $size + 1
+    $stream = [IO.FileStream]::new($path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)
+    try {
+        $buffer = [byte[]]::new([int]$size + 1)
+        $count = 0
+        while (($part = $stream.Read($buffer, $count, $buffer.Length - $count)) -gt 0) { $count += $part }
+    } finally { $stream.Dispose() }
+    Assert-SessionPlainPath $path
+    $after = Get-Item -LiteralPath $path -Force
+    if ($count -ne $size -or $count -ne $after.Length -or $ticks -ne $after.LastWriteTimeUtc.Ticks) { throw 'Fixed failure log changed during readback.' }
+    $bytes = [byte[]]::new($count)
+    [Array]::Copy($buffer, $bytes, $count)
+    return [ordered]@{ bytes = $bytes; text = [Text.Encoding]::UTF8.GetString($bytes); identity = [ordered]@{
+        path = [IO.Path]::GetFullPath($path); size_bytes = $count
+        sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+    } }
+}
+function Write-SessionFixedFailureLogContext {
+    param([string] $Name, $File)
+    $lines = $File.text -split '\r?\n'
+    $matched = [Collections.Generic.SortedSet[int]]::new()
+    for ($index = 0; $index -lt $lines.Length; $index++) {
+        if ($lines[$index] -match '(?i)error C[0-9]+|fatal error|error LNK[0-9]+|LogPython:.*(?:Error|Fatal)|Traceback|Exception|(?:Runtime|Attribute|Type|Value|Name|Import|ModuleNotFound|Syntax)Error|Assertion failed') {
+            for ($line = [Math]::Max(0, $index - 1); $line -le [Math]::Min($index + 2, $lines.Length - 1); $line++) { [void]$matched.Add($line) }
+        }
+    }
+    $chosen = @($matched | Select-Object -First 16) + @($matched | Select-Object -Last 8)
+    $context = @()
+    $label = if ($DiagnosePreviousFailure) { 'PREVIOUS_SESSION_ERROR ' } else { 'CURRENT_SESSION_ERROR ' }
+    foreach ($line in ($chosen | Sort-Object -Unique)) {
+        if ($lines[$line] -match '(?i)command\s*line|authorization|bearer\s') { continue }
+        $text = Get-SessionSafeFailureText ('{0}:{1}: {2}' -f $Name, ($line + 1), $lines[$line])
+        $context += $text
+        Write-Host ($label + $text)
+    }
+    return [ordered]@{ lines = $context; truncated = $matched.Count -gt 24 }
+}
+function Invoke-SessionPreviousFailureDiagnostic {
+    $previousRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38007485025-1'
+    if (-not [string]::Equals([IO.Path]::GetFullPath((Join-Path $RepoRoot 'Saved/RuntimeProof/OfficialMcpBobSession/38007485025-1')), $previousRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Fixed previous failure requires its exact retained checkout.' }
+    $readBudget = [ordered]@{ bytes = 0 }
+    $file = Read-SessionFixedFailureFile 'accepted-session-build.json'
+    if ($null -eq $file) { throw 'The exact retained failed session receipt is absent.' }
+    $previous = $file.text | ConvertFrom-Json -AsHashtable -Depth 40
+    if ($previous -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $previous.schema_version 1) `
+        -or $previous.exact_sha -cne 'cd61e0133fc9be749cb0688c6536f09f4ea63a14' `
+        -or $previous.run -cne '38007485025' -or $previous.attempt -cne '1' -or $previous.status -cne 'BLOCKED') { throw 'The retained receipt disagrees with the exact failed run/source.' }
+    foreach ($flag in @('accepted_bytes_staged', 'editor_launched', 'listener_started', 'official_mcp_transport_verified', 'official_mcp_admitted', 'native_automation_verified', 'native_bob_capture_verified')) {
+        if ($previous[$flag] -isnot [bool] -or $previous[$flag]) { throw 'The fixed failed build receipt contains unsupported runtime claims.' }
+    }
+    $diagnostic = [ordered]@{
+        schema_version = 1; exact_sha = $ExpectedHead; previous_run = '38007485025-1'
+        previous_exact_sha = 'cd61e0133fc9be749cb0688c6536f09f4ea63a14'; previous_receipt = $file.identity
+        source_only = $true; compile_performed = $false; editor_launched = $false; listener_started = $false
+        official_mcp_admitted = $false; native_automation_verified = $false; native_bob_capture_verified = $false
+        status = 'READ_ONLY_BUILD_FAILURE_DIAGNOSTIC'; previous_error = Get-SessionSafeFailureText ([string]$previous.error)
+        build_records = [ordered]@{}; files = [ordered]@{}; context = [ordered]@{}; gaps = @()
+    }
+    foreach ($kind in @('project_build', 'plugin_build')) {
+        $record = $previous[$kind]
+        $summary = [ordered]@{ recorded = ($record -is [Collections.IDictionary]) }
+        if ($record -is [Collections.IDictionary]) {
+            foreach ($field in @('exit_code', 'started_at_utc', 'ended_at_utc', 'executable')) {
+                if (-not $record.Contains($field)) { continue }
+                $value = $record[$field]
+                $summary[$field] = if ($value -is [string]) { Get-SessionSafeFailureText $value }
+                    elseif ($null -eq $value -or $value -is [int] -or $value -is [long]) { $value } else { 'MALFORMED_SCALAR' }
+            }
+        }
+        $diagnostic.build_records[$kind] = $summary
+        Write-Host ('PREVIOUS_BUILD_RECORD ' + $kind + ' ' + ($summary | ConvertTo-Json -Depth 4 -Compress))
+    }
+    $target = Join-Path $ArtifactRoot 'previous-accepted-session-build.json'
+    Assert-SessionPlainPath $target
+    $stream = [IO.File]::Open($target, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+    try { $stream.Write($file.bytes, 0, $file.bytes.Length) } finally { $stream.Dispose() }
+    foreach ($name in @('original-project-build.log', 'original-project-build-stderr.log', 'domain-plugin-build.log', 'domain-plugin-build-stderr.log')) {
+        $log = Read-SessionFixedFailureFile $name
+        if ($null -eq $log) { $diagnostic.gaps += ('Missing retained ' + $name); continue }
+        $diagnostic.files[$name] = $log.identity
+        $diagnostic.context[$name] = Write-SessionFixedFailureLogContext $name $log
+        Write-Host ('PREVIOUS_BUILD_LOG ' + ($log.identity | ConvertTo-Json -Depth 4 -Compress))
+    }
+    Write-SessionJson (Join-Path $ArtifactRoot 'previous-session-failure-diagnostic.json') $diagnostic
+    $receipt['diagnostic_previous_run'] = '38007485025-1'
+    $receipt.proof_files.previous_session_failure_diagnostic = Get-SessionFileIdentity (Join-Path $ArtifactRoot 'previous-session-failure-diagnostic.json') 1MB
+    $receipt.proof_files.previous_failed_receipt = Get-SessionFileIdentity $target 1MB
+    Write-Host ('PREVIOUS_SESSION_FAILURE ' + $diagnostic.previous_error)
+}
+function Write-SessionCurrentFailureReadback {
+    if (-not $artifactOwned -or $receipt.status -cne 'BLOCKED') { return }
+    $readBudget = [ordered]@{ bytes = 0 }
+    $receipt['current_failure_context'] = [ordered]@{}
+    $groups = @(
+        @{ exited = $receipt.owned_build_exit_observed; names = @('original-project-build.log', 'original-project-build-stderr.log', 'domain-plugin-build.log', 'domain-plugin-build-stderr.log') },
+        @{ exited = $receipt.owned_editor_exit_observed; names = @('owned-editor.log', 'owned-editor-stdout.log', 'owned-editor-stderr.log') },
+        @{ exited = $receipt.owned_client_exit_observed; names = @('owned-client-stdout.log', 'owned-client-stderr.log') }
+    )
+    foreach ($group in $groups) {
+        if ($group.exited -ne $true) { continue }
+        foreach ($name in $group.names) {
+            try {
+                $file = Read-SessionFixedFailureFile $name
+                if ($null -eq $file) { continue }
+                $receipt.proof_files[('failure/' + $name)] = $file.identity
+                $receipt.current_failure_context[$name] = Write-SessionFixedFailureLogContext $name $file
+            } catch { $receipt.secondary_errors += ('Cannot read fixed current failure log: ' + $name + ' (' + $_.Exception.GetType().Name + ').') }
+        }
+    }
+    if ($receipt.owned_editor_exit_observed -eq $true) {
+        try {
+            $file = Read-SessionFixedFailureFile 'native-session.json'
+            if ($null -ne $file) {
+                $native = $file.text | ConvertFrom-Json -AsHashtable -Depth 16
+                if ($native -isnot [Collections.IDictionary]) { throw 'Fixed native failure receipt is not an object.' }
+                $summary = [ordered]@{}
+                foreach ($field in @('schema_version', 'exact_sha', 'status', 'owned_editor_pid', 'error')) {
+                    if (-not $native.Contains($field)) { continue }
+                    $value = $native[$field]
+                    $summary[$field] = if ($value -is [string]) { Get-SessionSafeFailureText $value }
+                        elseif ($null -eq $value -or $value -is [bool] -or $value -is [int] -or $value -is [long]) { $value }
+                        else { 'MALFORMED_SCALAR' }
+                }
+                $receipt.proof_files.native_failure_receipt = $file.identity
+                $receipt['current_native_failure'] = $summary
+                Write-Host ('CURRENT_NATIVE_SESSION ' + ($summary | ConvertTo-Json -Depth 4 -Compress))
+            }
+        } catch { $receipt.secondary_errors += ('Cannot read fixed native failure receipt (' + $_.Exception.GetType().Name + ').') }
+    }
+}
 
 try {
     foreach ($path in @($RepoRoot, $BuildRoot, $SessionRoot, $PluginPackage, $ArtifactRoot)) { Assert-SessionPlainPath $path }
@@ -349,6 +511,11 @@ try {
     Assert-SessionIdleHost
     New-Item -ItemType Directory -Path $ArtifactRoot | Out-Null
     $artifactOwned = $true
+    if ($DiagnosePreviousFailure) {
+        Invoke-SessionPreviousFailureDiagnostic
+        $receipt.status = 'PREVIOUS_SESSION_FAILURE_DIAGNOSTIC_RETAINED'
+        return
+    }
     & (Join-Path $RepoRoot 'scripts/ue/Read-YacsOfficialMcpRuntimeDependencies.ps1') -EngineRoot $engine.Root -ArtifactRoot $ArtifactRoot -ExpectedHead $ExpectedHead
     $sdk = Read-SessionJson (Join-Path $ArtifactRoot 'runtime-dependencies.json') 4MB
     if ($sdk.value.exact_sha -cne $ExpectedHead -or $sdk.value.source_only -isnot [bool] -or -not $sdk.value.source_only) { throw 'The observed installed SDK receipt differs from this source-bound session.' }
@@ -684,6 +851,10 @@ finally {
     Stop-SessionOwnedProcess $ownedEditor 'editor'
     Stop-SessionOwnedProcess $ownedBuild 'build' -BuildTree
     if ($artifactOwned) {
+        if ($receipt.status -ceq 'BLOCKED') {
+            try { Write-SessionCurrentFailureReadback }
+            catch { $receipt.secondary_errors += ('Cannot retain current failure readback (' + $_.Exception.GetType().Name + ').') }
+        }
         Write-SessionJson (Join-Path $ArtifactRoot 'accepted-session-build.json') $receipt
     }
     Write-Host ('YACS_MCP_BOB_SESSION status={0}, acceptedBytes={1}, runtimeVerified={2}.' -f $receipt.status, $receipt.accepted_bytes_staged, $receipt.official_mcp_transport_verified)

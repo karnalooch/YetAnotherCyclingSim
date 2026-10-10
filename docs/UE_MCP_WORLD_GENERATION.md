@@ -537,9 +537,16 @@ must be ready before the client starts. Final proof requires the exact one
 Automation pass, 22 precise denials, one native body invocation, all six real BOB
 bundle hashes, clean owned shutdown and a post-exit Content/Config/project
 inventory comparison. Fifty-three offline session/client tests and independent
-source/lifecycle reviews pass; these are preparation evidence. Windows parsing,
-new native dependency compilation and this actual accepted session remain
-unverified. The ordinary project descriptor and guarded baseline are unchanged;
+source/lifecycle reviews pass; these are preparation evidence.
+[First integrated attempt 38007485025](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38007485025)
+at `cd61e0133fc9be749cb0688c6536f09f4ea63a14` passed Windows parsing
+and the original-project build. The independently owned plugin build exited
+**6**; its compiler errors remain in the retained build log pending fixed
+readback. Accepted bytes were not staged and no Editor or MCP listener started.
+The workflow defaults temporarily to that fixed read-only failure diagnostic;
+the accepted-session mode remains explicit. New native dependency compilation
+and the actual accepted session remain unverified.
+The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)

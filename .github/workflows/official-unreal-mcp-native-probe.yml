@@ -20,7 +20,7 @@ on:
         description: Fixed accepted checkpoint session, or retained previous failure readback
         type: choice
         options: [accepted_session, diagnose_previous_failure]
-        default: accepted_session
+        default: diagnose_previous_failure
         required: true
 
 permissions:
@@ -33,7 +33,7 @@ concurrency:
 
 jobs:
   compile:
-    name: Prove the fixed official MCP accepted checkpoint session
+    name: Read the retained integrated plugin compile failure
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
@@ -57,12 +57,12 @@ jobs:
           clean: false
           persist-credentials: false
 
-      - name: Verify exact source and run the fixed owned session
+      - name: Verify exact source and read the fixed retained failure
         shell: pwsh
         working-directory: _official-mcp-native-probe
         env:
           YACS_CHECKPOINT_READ_TOKEN: ${{ github.token }}
-          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'accepted_session' }}
+          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'diagnose_previous_failure' }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
@@ -80,40 +80,13 @@ jobs:
             if ($errors.Count -gt 0) { throw ($errors.Message -join '; ') }
           }
           if ($env:NATIVE_PROBE_MODE -ceq 'diagnose_previous_failure') {
-            ./scripts/ue/Invoke-YacsOfficialMcpNativeProbe.ps1 -ExpectedHead $env:TARGET_SHA -DiagnosePreviousFailure
+            ./scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1 -ExpectedHead $env:TARGET_SHA -DiagnosePreviousFailure
           } elseif ($env:NATIVE_PROBE_MODE -ceq 'accepted_session') {
             ./scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1 -ExpectedHead $env:TARGET_SHA
           } else { throw 'Unsupported fixed native proof mode.' }
 
-      - name: Retain bounded compile and bare-project proof evidence
-        if: ${{ always() && github.event.inputs.mode == 'diagnose_previous_failure' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: official-mcp-native-${{ env.TARGET_SHA }}-${{ github.run_attempt }}
-          path: |
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/native-plugin-build.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/native-plugin-build.log
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/python-runtime-settings.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/runtime-dependencies.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Accepted363/*.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/host-project-original.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/host-project-probe.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/input-boundary-editor.log
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/input-boundary-stdout.log
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/input-boundary-stderr.log
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/InputBoundaryReport/index.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/native-python-reflection.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/previous-failure-diagnostic.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38006333498/Reflection/reflection-marker.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38006333498/Reflection/source-identities.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38006333498/Accepted363/json/saved-material-consumer/*.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38006333498/Accepted363/json/checkout-restoration.json
-            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38006333498/Accepted363/json/checkout-restoration-post-material.json
-          if-no-files-found: error
-          retention-days: 7
-
       - name: Retain fixed accepted session evidence
-        if: ${{ always() && github.event.inputs.mode != 'diagnose_previous_failure' }}
+        if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: official-mcp-session-${{ env.TARGET_SHA }}-${{ github.run_attempt }}
