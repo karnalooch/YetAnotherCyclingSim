@@ -110,6 +110,34 @@ if ($errors.Count) { throw ($errors.Message -join "\u0060n") }
             )
             self.assertEqual(process.returncode, 0, process.stderr)
 
+    def test_frozen_recipe_checkout_preserves_raw_bytes_with_windows_autocrlf(self):
+        relative = "worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.json"
+        source = (ROOT / relative).read_bytes()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            def git(*arguments):
+                result = subprocess.run(["git", "-C", str(root), *arguments],
+                    capture_output=True, timeout=30, check=False)
+                self.assertEqual(result.returncode, 0, result.stderr.decode(errors="replace"))
+                return result.stdout
+            git("init", "-q")
+            git("config", "core.autocrlf", "true")
+            git("config", "core.safecrlf", "false")
+            (root / ".gitattributes").write_bytes((ROOT / ".gitattributes").read_bytes())
+            path = root / relative
+            path.parent.mkdir(parents=True)
+            path.write_bytes(source)
+            control = root / "unmatched.json"
+            control.write_bytes(b'{"control": true}\n')
+            git("add", ".gitattributes", relative, "unmatched.json")
+            path.unlink()
+            control.unlink()
+            git("checkout-index", "--", relative, "unmatched.json")
+            self.assertIn(b"\r\n", control.read_bytes())
+            self.assertEqual(path.read_bytes(), source)
+            self.assertEqual(git("hash-object", "--no-filters", relative).strip(),
+                             git("rev-parse", ":" + relative).strip())
+
 
 if __name__ == "__main__":
     unittest.main()

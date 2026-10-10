@@ -4,6 +4,7 @@ on:
   push:
     branches: [codex/364-road-surface-materials]
     paths:
+      - '.gitattributes'
       - '.github/workflows/road-material-native-proof.yml'
       - 'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1'
       - 'scripts/ue/read_road_material_baseline.py'

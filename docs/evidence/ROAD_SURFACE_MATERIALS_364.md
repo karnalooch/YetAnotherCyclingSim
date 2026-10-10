@@ -31,7 +31,7 @@ images are retained in
 | Native GPU review at `396861de` | PASS: four final same-camera frames, forward/reverse in window 0112; each readiness receipt records full 12/12 resident mips for all four asphalt textures before capture |
 | Full geometry and rendered normal/UV conservation | Baseline counts and saved-file checks do not prove every mesh buffer; the current shoulder candidate adds exact checks on its sole changed support |
 | Current shoulder candidate: local checks | Integrated 59-test suite completed successfully with 2 platform-dependent skips; `py_compile` PASS |
-| Current shoulder candidate: native and GPU | NOT RUN for the candidate in this change |
+| Current shoulder candidate: native and GPU | First attempt stopped at the recipe's raw-byte checkout guard before the saved-material editor launched; LF checkout correction below; shoulder/native GPU still NOT RUN |
 | Whole-area visual acceptance | Unaccepted; four bounded road frames do not establish whole-area acceptance |
 | Owner visual status | `PENDING_FINAL_M3` |
 | Performance | `DEFERRED_AFTER_M3`, `performance_pass: false` |
@@ -64,6 +64,25 @@ is outside this patch; material work must not conceal it. The owner audits the
 complete assembled M3 world at the end, before FPS measurement. Intermediate
 technical proof and retained review images continue without changing
 `PENDING_FINAL_M3` or the deferred performance status.
+
+### Shoulder recipe checkout correction
+
+Candidate `926ed9c592d12142d082195a1c5b93ebfe8aebcc` passed
+[protected CI 38082004301](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38082004301).
+The Unreal gate explicitly reused verified equivalent build/Automation evidence.
+[Native run 38081999577](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38081999577)
+passed the fresh baseline and reversible asphalt canary, then stopped before
+launching the saved-material editor: the newly read frozen road recipe lacked
+an explicit LF checkout rule and failed the raw Git-byte guard on Windows.
+The failed run did not apply shoulder materials, save the candidate or render it.
+
+The correction pins LF only for that existing recipe in `.gitattributes`; the
+recipe blob and the raw-byte guard are unchanged. A real temporary Git checkout
+with `core.autocrlf=true` proves the recipe remains byte-identical to its index
+while an unmatched JSON control becomes CRLF. The six-test saved-host suite
+passed with one unavailable-PowerShell parser skip. A fresh native run remains
+required. The original failure artifact is `11680528146`, SHA-256
+`e95eec21856185fd5bd135f3fb770c2de478eeccdb10abe2da3081db22227ba5`.
 
 ## Historical owner pause and first native attempt — 2026-10-10
 

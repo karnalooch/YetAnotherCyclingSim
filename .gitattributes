@@ -59,6 +59,8 @@ Plugins/YacsBobInspection/Source/YacsBobInspection/YacsBobInspection.Build.cs te
 # The fixed native-session caller participates in exact source-byte admission.
 scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1 text eol=lf
 worldgen/materials/*.json text eol=lf
+# Shoulder source ownership reads this recipe with an exact raw Git-byte guard.
+worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.json text eol=lf
 # Retain exact rendered graph bytes and recognize their Windows line endings.
 worldgen/materials/material_maker/**/*.ptex -text whitespace=cr-at-eol
 worldgen/materials/material_maker/**/export/*.png filter=lfs diff=lfs merge=lfs -text
