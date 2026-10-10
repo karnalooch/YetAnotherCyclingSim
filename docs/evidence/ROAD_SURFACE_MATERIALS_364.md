@@ -18,7 +18,7 @@ This work continues #364, not MCP infrastructure.
 |---|---|
 | Windows source-stage tests | 37 discovered; 35 passed, 2 Windows symlink-permission cases skipped on Python 3.12.10 |
 | Asphalt source replay | Two independent 2048 × 2048 renders of the same base recipe PASS; graph and all five map bytes match |
-| Read-only Unreal baseline reader | 11 candidate contract tests PASS; actual Unreal baseline execution pending |
+| Read-only Unreal baseline reader | Linux: 11 tests passed. Windows: parser passed; 10 tests passed and one symlink-permission case skipped. Actual scene read blocked before Unreal launch |
 | Unreal shader/projection/normal and material assignment | Pending |
 | Road, shoulder-top and support-side ownership; full mesh geometry proof | Pending native verification |
 | Saved consumer, fresh reload/render and whole-area review images | Pending |
@@ -30,6 +30,52 @@ slots, save a map, prove geometry or render the Unreal consumer. It does not
 satisfy #364's complete definition of done. The owner audits the complete
 assembled M3 world at the end, before FPS measurement; intermediate native
 technical checks and inspected, retained review images continue.
+
+## Owner pause and actual native attempt — 2026-10-10
+
+The owner stopped implementation and requested a report plus smaller roadmap
+batches. Agent implementation/review work is stopped; no additional native job
+is dispatched for this documentation update. The remote implementation head is
+`33a35a74f17e56ef073248581e265db9db16cf7c`; #364 remains open and PR #470 Draft.
+#364 changes are on that branch, not merged into `main`.
+[Normal CI 38046180394](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38046180394)
+passed. It does not override the failed stage-specific native attempt.
+
+[Baseline run 38046175645](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38046175645)
+passed PowerShell parsing and the Windows reader suite (11 discovered, 10 passed,
+one permission-dependent symlink case skipped). It stopped at cache preflight
+before staging, copying modules, invoking the cache resolver or starting Unreal.
+The original verified cache state, binaries and scene were preserved.
+
+| Fingerprint view | Compile | Proof |
+|---|---|---|
+| Actual fresh Windows files | `8caee4876a7a00aef42f6fea90f887193c4f38ddb6c69679cc0bec313f31f54f` | `7fdcba7f638c1c2a00edec7a5a14c7c7a81fde186849cad4ee0af435d2be99f8` |
+| Retained hosted CI cache state | `e5fc3e8d77e350ba1bb94458bd71fd2fe2e771915f0c9838de7876b7fbbc01de` | `7e6a4073b34d86ae4c11122ecbac3d5b15f2088c774b5265008999e82734236c` |
+
+The canonical native engine/toolchain environment matched the retained state.
+Its original compile/proof head is
+`40b85b0c07fc9bda28164f052641dd45c775f666`; mutable cache HEAD at observation was
+`88f6b95e007b61a122b6515fe29041e5e3a3f220`. Preserve that distinction rather than
+claiming a new compilation or Automation run. The failed-attempt artifact is
+`11667629439`, ZIP SHA-256
+`add0483d15f22018d37d489276bcd71b5035d015f8552ce625916898e7bfcd52`.
+
+A read-only local simulation of native Windows EOL checkout exactly reproduced
+the observed Windows fingerprints from 14 existing `.cs`/`.ps1` inputs whose
+EOL is unspecified. This supports an EOL diagnosis; it is not actual Windows
+per-file qualification, cache admission or a successful scene read. Resolve the
+specific identity contract on resumption, retaining byte/source checks and the
+existing cache authority.
+
+An authenticated two-run source bridge remains an **uncommitted local
+candidate** in `scripts/assets/road_material_contract.py` and its tests: 45
+contract tests passed, but independent review did not finish before the stop.
+Its strict raw receipt/current-input comparison remains; Linux and Windows raw
+catalog/source fingerprints differ with their EOL bytes. No complete bridge or
+native material admission is claimed from the separately downloaded Linux
+bundles. A complete mesh/normal/UV hash reader was researched but not implemented.
+
+Resume batches are recorded in the [authoritative roadmap](../ROADMAP.md).
 
 ## Verified source run
 
