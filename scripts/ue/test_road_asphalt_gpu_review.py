@@ -195,7 +195,7 @@ class RoadGpuReviewContractTests(unittest.TestCase):
         self.assertNotIn("unreal", gpu.__dict__)
         self.assertFalse(hasattr(gpu, "RUN_IMMEDIATELY"))
         self.assertEqual(gpu.RECEIPT, "road-asphalt-lit-review.json")
-        self.assertEqual(gpu.FRAME_DEADLINE_SECONDS, 90)
+        self.assertEqual(gpu.FRAME_DEADLINE_SECONDS, 180)
         self.assertEqual(gpu.TOTAL_DEADLINE_SECONDS, 1080)
 
 
@@ -317,6 +317,68 @@ class RoadGpuNativePoseTests(unittest.TestCase):
         self.assertEqual(self.api.AutomationLibrary.take_high_res_screenshot.call_count, 1)
         self.assertEqual(self.job.frames, [])
 
+    def test_pending_screenshot_gets_bounded_recovery_room(self):
+        self.job.started = 0.0
+        with patch.object(gpu.time, "monotonic", return_value=0.0):
+            self.job.submit_pose()
+        self.job.task.is_task_done = Mock(return_value=False)
+        with patch.object(gpu.time, "monotonic", return_value=98.964):
+            self.job.tick(0.05)
+        self.job.stop.assert_not_called()
+        self.job.task.is_task_done.assert_called_once()
+        self.assertEqual(self.job.frames, [])
+        self.assertEqual(self.job.completed_priming_frames, 0)
+        self.assertEqual(self.job.max_completed_screenshot_seconds, 0.0)
+
+    def test_completed_task_and_existing_png_cannot_bypass_shot_deadline(self):
+        self.job.started = 0.0
+        with patch.object(gpu.time, "monotonic", return_value=0.0):
+            self.job.submit_pose()
+        self.assertTrue(self.job.pending_path.is_file())
+        self.job.task.is_task_done = Mock(return_value=True)
+        with patch.object(gpu.time, "monotonic", return_value=180.001):
+            self.job.tick(0.05)
+        self.job.task.is_task_done.assert_not_called()
+        self.job.stop.assert_called_once()
+        self.assertIn("screenshot deadline exceeded (180.001s > 180s)",
+                      self.job.stop.call_args.args[0])
+        self.assertEqual(self.job.frames, [])
+        self.assertEqual(self.job.completed_priming_frames, 0)
+        self.assertEqual(self.job.max_completed_screenshot_seconds, 0.0)
+
+    def test_total_deadline_still_rejects_a_recent_completed_task(self):
+        self.job.started = 0.0
+        with patch.object(gpu.time, "monotonic", return_value=1000.0):
+            self.job.submit_pose()
+        self.job.task.is_task_done = Mock(return_value=True)
+        with patch.object(gpu.time, "monotonic", return_value=1080.001):
+            self.job.tick(0.05)
+        self.job.task.is_task_done.assert_not_called()
+        self.job.stop.assert_called_once()
+        self.assertIn("bounded total deadline", self.job.stop.call_args.args[0])
+        self.assertEqual(self.job.frames, [])
+        self.assertEqual(self.job.completed_priming_frames, 0)
+
+    def test_each_prime_and_final_records_elapsed_and_worst_completion(self):
+        self.job.started = 0.0
+        with patch.object(gpu.time, "monotonic", return_value=0.0):
+            self.job.submit_pose()
+        elapsed_values = [0.1, 1.2, 98.964, 0.4]
+        clock = 0.0
+        for elapsed in elapsed_values:
+            clock += elapsed
+            with patch.object(gpu.time, "monotonic", return_value=clock):
+                self.job.tick(0.05)
+        self.job.stop.assert_not_called()
+        self.assertEqual(len(self.job.frames), 1)
+        frame = self.job.frames[0]
+        measured = [row["screenshot_elapsed_seconds"] for row in frame["priming_frames"]]
+        measured.append(frame["screenshot_elapsed_seconds"])
+        for actual, expected in zip(measured, elapsed_values, strict=True):
+            self.assertAlmostEqual(actual, expected)
+        self.assertAlmostEqual(self.job.max_completed_screenshot_seconds, 98.964)
+        self.assertEqual(self.job.completed_priming_frames, 3)
+
 
 class RoadGpuStopLifecycleTests(unittest.TestCase):
     def assert_stop_lifecycle(self, error=None):
@@ -393,6 +455,7 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
         job.camera, job.handle, job.viewport_before = object(), object(), viewport_before
         job.frames = frames
         job.completed_priming_frames = len(frames) * gpu.PRIMING_FRAMES
+        job.max_completed_screenshot_seconds = 98.964
         job.residency_leases = {
             "synthetic texture": SimpleNamespace(
                 set_force_mip_levels_to_be_resident=Mock(side_effect=record("mip release"))
@@ -447,6 +510,8 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
         api.SystemLibrary.quit_editor.assert_not_called()
         self.assertTrue(job.stopped)
         receipt = json.loads((proof / gpu.RECEIPT).read_text(encoding="utf-8"))
+        self.assertEqual(receipt["frame_deadline_seconds"], 180)
+        self.assertEqual(receipt["max_completed_screenshot_seconds"], 98.964)
         self.assertTrue(receipt["transient_camera_destroyed"])
         self.assertTrue(receipt["residency_requests_released"])
         self.assertEqual(receipt["gpu_shutdown_quiescence_seconds"], 10.0)

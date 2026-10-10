@@ -58,7 +58,8 @@ Its retained producer fingerprint is
 `0968cc9e3a4c882faada014bb498a844fe09414d6960e209f7ffc02922fbce99`;
 the graph is
 `25257e365ec99155d6e2e5a89ec527d153a7156427ad67777444f90b1b5561cd`.
-The native source bridge now selects exactly this producer/run and receipt.
+The source bridge used for the first full-network native run selected exactly
+this producer/run and receipt.
 
 All three original archives were independently downloaded and byte-verified:
 
@@ -162,6 +163,46 @@ therefore needs a new real two-render source proof and new native images.
 Numerical source QA was not visual acceptance. Owner visual status stays
 `PENDING_FINAL_M3`; performance stays `DEFERRED_AFTER_M3`,
 `performance_pass: false`.
+
+The next source revision `d91b4d09e3f7fcd8720f4157c495bc34060d6319`
+reduces the large wear field's weight from 0.58 to 0.18, increases the existing
+aggregate/micro weights, attenuates the shared crack field to 0.20 and reduces
+repair-mask albedo contrast from 0.050 to 0.020. Its dry periodic helper,
+frequencies, source seed, scale, UE response and all source QA limits remain
+unchanged. Historical material variants are preserved. All 78 source tests
+passed locally; the real host ran 78 with two unavailable-platform skips.
+
+[Source run 38092391221](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38092391221)
+passed two actual renders with identical graph and all five maps. Original
+receipt: 15,351 bytes, SHA-256
+`43715d7dda0b188a90f90cfd1bec609cd22e280898d0a6869c5cb6be73b9b167`.
+Producer fingerprint:
+`9c939121d126a7920624acdf33694479627fe828c17b6cbb2320c050bd0a4d1f`;
+graph SHA-256:
+`e6693675d01617023bdce014254a2074ea6ca571e21f2232a8dccc2ae78bb4cc`.
+The Python bridge and PowerShell canary now select this exact new source.
+
+| New source artifact | ZIP bytes | SHA-256 |
+|---|---:|---|
+| [Receipt/logs 11684168342](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38092391221/artifacts/11684168342) | 3,973 | `051f1f743d35b3dc1b590d1c1627c9bfa3634f17dee2936190b8b883ab88b61a` |
+| [Run-a 11684522800](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38092391221/artifacts/11684522800) | 22,543,229 | `d88a0b89450bc997c9f8406e5a00040d8d0f3d90882529e88995075b9abd411a` |
+| [Run-b 11684298065](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38092391221/artifacts/11684298065) | 22,543,229 | `61f14589bef2514589804699da428c17171efaaf283b2f9ec706294d850bdb41` |
+
+All three original ZIPs were downloaded and byte-verified. The actual 25 cm
+block luma standard deviation fell from 0.042601 to 0.013930, while total luma
+standard deviation is 0.027441 and mean roughness is 0.936163. Source-map
+inspection finds the large variations and crack motifs less dominant. This
+qualifies a new native visual candidate, not finished UE appearance.
+
+For the next capture only, the per-shot watchdog is explicitly 180 seconds,
+within the unchanged 1080-second total and 1200-second host limits. Both
+deadline checks still precede completion polling; a late existing PNG cannot
+bypass them. Every prime/final records monotonic submission-to-observed-
+completion latency, with the configured watchdog and maximum in the receipt.
+These are capture diagnostics, not GPU-only timings or performance admission.
+All 48 focused source-bridge/canary/GPU tests pass locally with three PowerShell
+skips. The old 9242 timeout remains failed; new full-network native proof is
+pending on the newly pinned material.
 
 The integrated local contract suite completed **237 tests, with six skipped
 because PowerShell is unavailable locally**. Documentation/architecture and

@@ -12,7 +12,7 @@ from scripts.ue import road_asphalt_source_preflight as preflight
 
 class RoadAsphaltSourceBridgeTests(unittest.TestCase):
     def test_dry_source_proof_is_selected_only_by_verified_producer_sha_and_run(self):
-        self.assertEqual(preflight.SOURCE_RUN, "38089061451-1")
+        self.assertEqual(preflight.SOURCE_RUN, "38092391221-1")
         self.assertEqual(len(preflight.SOURCE_HEAD), 40)
         self.assertEqual(len(preflight.SOURCE_RECEIPT_SHA256), 64)
         self.assertEqual(len(preflight.SOURCE_FINGERPRINT), 64)

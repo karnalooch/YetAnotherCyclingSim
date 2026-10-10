@@ -112,7 +112,8 @@ jobs:
       github.ref == 'refs/heads/codex/364-road-surface-materials'
     runs-on: [self-hosted, yacs-ue58]
     # Full-network save/reload and the bounded 68-pose (3 priming each) GPU sample.
-    # Host GPU deadline is 1200 s; native readiness/frame/error gates are unchanged.
+    # Host GPU deadline is 1200 s; native total is 1080 s, per-shot watchdog 180 s.
+    # Texture readiness, image quality, pose and conservation gates remain enforced.
     timeout-minutes: 38
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
