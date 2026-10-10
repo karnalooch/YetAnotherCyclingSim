@@ -5,7 +5,7 @@
 **Scope authority:** `PRODUCT_REQUIREMENTS.md`  
 **World-building method:** `WORLD_BUILDING_BIBLE.md`
 
-**Current M3 checkpoint — 2026-10-10:** [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363) is completed and its whole-area material foundation is accepted and frozen. [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b` after [protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed. The delivery order is **#384 bounded official MCP inspection/test spike → #364 asphalt/shoulder → #365 world graph**. [#384's fixed native session passed](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123); full pinned receipt review, standalone InputBoundary and protected #467 closeout remain pending. Official admission is false, #384 remains open and #364 remains blocked by #384.
+**Current M3 checkpoint — 2026-10-10:** [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363) is completed and its whole-area material foundation is accepted and frozen. [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b` after [protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed. The delivery order is **#384 bounded official MCP inspection/test spike → #364 asphalt/shoulder → #365 world graph**. #384's fixed native session, authenticated original receipt readback and separate [InputBoundary](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402) passed; final delivery-head receipt readback remains pending. Start #364 only after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467) is merged and [#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384) is closed as completed; then stop MCP infrastructure work.
 
 Acceptance covers the material baseline on the **2,016.5 m × 2,016.5 m / 1024-component** working Landscape, not a finished rideable world or completed M3. [The material handoff](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) pins the saved/fresh-rendered consumer and native evidence. Canonical-map promotion, unresolved road/CUT/cliff/contact geometry and production PCGEx admission remain outside this acceptance. Performance is **`DEFERRED_AFTER_M3` / `performance_pass: false`**.
 
@@ -77,7 +77,7 @@ Produce a believable, deterministic Sa Calobra route/world foundation that can s
 | **Route truth** | canonical route XY, distance, grade, curvature and road-physics profile | established; remains authoritative |
 | **Terrain** | real DTM -> metric deterministic Landscape foundation | active / proven source path; architecture being consolidated |
 | **Road & Earthworks** | real Ma-2141 alignment, road mesh, non-destructive cut/fill, shoulder tie-in | remaining road/CUT/contact debt; separate #337/#459 scopes |
-| **Materials** | coherent terrain/road surface foundation | #363 whole-area Landscape foundation accepted/frozen; #364 asphalt/shoulder awaits #384 reviewed/protected closeout |
+| **Materials** | coherent terrain/road surface foundation | #363 whole-area Landscape foundation accepted/frozen; #364 asphalt/shoulder follows #384's protected delivery gate |
 | **Biomes** | valley / forest / exposed limestone-upland PCG and route exclusion | baseline systems exist; preserve the tooling and retune presentation for Mallorca |
 | **Proof** | rider-camera visual acceptance, exact-SHA technical evidence, performance | active |
 | **Tooling** | reproducible authoring, remote editor, CI/proof orchestration | active support work |
@@ -158,8 +158,15 @@ in PR #467 has passed the fixed official native session in
 at runtime SHA `241104de320f8417c7abc4dd973ac148ed98a66d`. Its bounded verified
 summary records one passing `CyclingPhysics.RoadPhysics.ProfileInterpolation`
 test and complete BOB inspection with `REVIEW_REQUIRED` / `INSPECTOR_ONLY` and
-all false authoring/admission flags. Full pinned receipt review, standalone
-`YacsBobInspection.InputBoundary` and protected merge remain pending;
+all false authoring/admission flags. Authenticated original receipt readback
+passed in [run 38029602978](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38029602978).
+Separate `YacsBobInspection.InputBoundary` passed in
+[run 38039426402](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402)
+at execution SHA `2016a91f03438f1d866be0eb26f3ae49fd43b803`, using the plugin
+compiled at `0ee5eaf39e0d673fee061f7e33372710278d50be`. Original runtime
+receipt admission flags remain false. Final delivery-head receipt readback
+remains pending. Start #364 only after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467)
+is merged and #384 is closed as completed;
 see the [MCP evidence and remaining gates](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption).
 
 The [MCP decision and DoD](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)

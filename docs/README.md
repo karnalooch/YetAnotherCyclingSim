@@ -68,9 +68,9 @@ flowchart TB
 | Geographic fidelity | **1:1 real-world scale; no route compression, relocation or invented macro terrain** |
 | Architecture policy | **Embark-first + tools-first + version-matched Epic/PCGEx API evidence + local proof** |
 | Existing material tools | **Material Maker + Godot through [Material Forge](tooling/MATERIAL_FORGE.md): offline procedural PBR for pale limestone, dry mineral soil and aged asphalt; consult before proposing additional material tools** |
-| MCP adoption | **[#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384): [fixed native inspection/test session passed](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123); full pinned receipt review, standalone InputBoundary and protected #467 closeout pending; official admission remains false** |
+| MCP adoption | **[#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384): fixed native inspection/test session, authenticated original receipt readback and separate [InputBoundary](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402) passed; final delivery-head receipt readback pending; [protected delivery gate](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption) controls #364** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
-| Current priority | **#363 material foundation accepted/frozen; finish #384 review/protected closeout, then #364 asphalt/shoulder. #364 remains blocked; #337/#349 road and source-inventory work remains separately scoped; #338 stays frozen Draft** |
+| Current priority | **#363 material foundation accepted/frozen; #384 protected handoff → #364 asphalt/shoulder. Start #364 only after protected [#467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467) merge and completed #384; stop MCP infrastructure work. #337/#349 road and source-inventory work remains separately scoped; #338 stays frozen Draft** |
 | M3 acceptance debt | **M3 remains in progress; material acceptance does not admit unresolved road/CUT/cliff/contact geometry or production PCGEx. Performance is `DEFERRED_AFTER_M3`, `performance_pass: false`** |
 | Route reference | **sea-level Sa Calobra → Coll dels Reis → Ma-10 → Menut/Binifaldó → Coll des Pedregaret; ~29–30 km planning estimate, exact chainage pending** |
 | Terrain source | **CNIG/IGN MDT50cm Sa Calobra 8 km × 8 km benchmark; bounded native UE import PASS, terrain visual accepted; performance pending** |
@@ -87,7 +87,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Product scope and MVP boundaries | [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) | **Authoritative** |
 | Delivery order and current milestone | [`ROADMAP.md`](ROADMAP.md) | **Authoritative** |
 | How to build terrain/roads/worlds | [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) | **Authoritative** |
-| Official MCP decision, authority boundary and bounded spike | [`UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption`](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption) | **Fixed native inspection/test session passed; full receipt review, standalone InputBoundary and protected closeout pending; stock material authoring requires separate #364 proof** |
+| Official MCP decision, authority boundary and bounded spike | [`UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption`](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption) | **Fixed session, original receipt readback and separate InputBoundary passed; final delivery-head readback pending; protected merge gates #364 and stock material authoring requires separate proof** |
 | First full-route visual/data reference | [`SA_CALOBRA_MENUT_ROUTE_REFERENCE.md`](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md) | **Evidence / candidate** |
 | Draw architecture/workflow diagrams | [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md) | **Authoritative visual convention** |
 | Inspect shipped production world pipelines | [`PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md`](PRODUCTION_WORLD_ARCHITECTURE_REFERENCES.md) | **Evidence dossier** |
@@ -140,7 +140,7 @@ The `STAGE_*` filenames above are retained identifiers for established technical
 - [`tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md`](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) — current accepted #363 / merged #446 material handoff: five-role full-grid bindings, saved/fresh-rendered consumer, source conservation and retained acceptance limits.
 - [`ASSET_PLAN.md`](ASSET_PLAN.md) — source/technical asset ledger and provenance expectations.
 - [`tooling/JULKA.md`](tooling/JULKA.md) — Issue #345 asset acquisition, local restore, identity and cleanup contract; subordinate to the asset ledger and World Building Bible.
-- [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — current official Epic MCP adoption decision/DoD (#384 fixed native session passed; full receipt review, standalone InputBoundary and protected closeout pending), plus the retained db-lyon integration baseline; interface only, not world/proof authority.
+- [`UE_MCP_WORLD_GENERATION.md`](UE_MCP_WORLD_GENERATION.md) — official Epic MCP adoption evidence and delivery gate: fixed session, original receipt readback and separate InputBoundary passed; final delivery-head readback pending. #364 requires protected #467 merge and completed #384; MCP remains an interface, not world/proof authority.
 - [`tooling/TEXTURE_MATERIAL_PREP.md`](tooling/TEXTURE_MATERIAL_PREP.md) — independent Texture Graph domain adapter, offline validation and limestone proof contract; no world integration or #384 cutover.
 - [`tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md`](tooling/TEXTURE_MATERIAL_PREP_EXAMPLES.md) — offline diagnostics, opt-in UE adapter commands, isolated smoke/reopen proof and limitations.
 - [`YACS_REMOTE_EDITOR_AGENT.md`](YACS_REMOTE_EDITOR_AGENT.md) — remote editor-agent operating contract.

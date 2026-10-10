@@ -177,16 +177,28 @@ is unchanged. A closed-as-not-planned issue or green CI alone is insufficient.
 Verified closeout, 2026-10-09: #363 is completed after protected PR #446 merge
 `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b`. Its whole-area material acceptance,
 saved/fresh-rendered consumer and technical evidence satisfy #384's entry gate.
-#384 is open. [Native run 38027596123](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123)
+[Native run 38027596123](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123)
 passed the fixed inspection/test session at runtime SHA
-`241104de320f8417c7abc4dd973ac148ed98a66d`. Its bounded verified summary records
+`241104de320f8417c7abc4dd973ac148ed98a66d`. Authenticated
+[receipt readback 38029602978](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38029602978)
+passed separately. The native evidence records
 official transport, one passing `CyclingPhysics.RoadPhysics.ProfileInterpolation`
 test and real BOB capture, retaining `REVIEW_REQUIRED` / `INSPECTOR_ONLY` and
-all false authoring/admission flags. Full pinned receipt review, standalone
-`YacsBobInspection.InputBoundary` proof and protected PR #467 closeout remain
-pending; official MCP admission is still false and #364 remains blocked by #384.
+all false authoring/admission flags. Separate
+[unit run 38039426402](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402)
+passed `YacsBobInspection.InputBoundary` at execution SHA
+`2016a91f03438f1d866be0eb26f3ae49fd43b803`, using the strengthened test compiled
+at `0ee5eaf39e0d673fee061f7e33372710278d50be`. The original runtime receipt's
+`official_mcp_admitted: false` remains unchanged; these proofs support only
+the fixed inspection/test interface's protected delivery. Final delivery-head
+receipt readback remains pending.
+
+Start #364 only after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467)
+is merged and [#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384)
+is closed as completed. Then stop MCP infrastructure work and return to
+asphalt/shoulder delivery.
 Reverify the [material handoff](../../../docs/tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
-at kickoff. This checkpoint does not admit geometry or change Project status.
+at kickoff. These proofs do not admit geometry or change Project status.
 
 Read [the current MCP decision and bounded DoD](../../../docs/UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
 before MCP work. The official Epic server has bounded native inspection/test

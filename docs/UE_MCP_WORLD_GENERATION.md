@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Draft PR #467 implements source evidence, complete BOB sample export and the opt-in strict native domain boundary. The fixed native session passed on 2026-10-10; full pinned receipt review, standalone InputBoundary and protected closeout remain pending. Official admission is false; the ordinary project keeps the server disabled.
+**Status:** #384's bounded native inspection/test session and separate InputBoundary test are verified. PR #467 delivers the fixed BOB inspector, shared Git-blob refactor and repeatable RMS calculation; final source-only evidence readback and protected closeout remain pending. Start #364 only after PR #467 is protected-merged and #384 is closed as completed. The ordinary project keeps the server disabled; broader tool or authoring admission requires separate proof.
 **Tracking:** #384 adoption; #385 documentation; #85 historical integration; follow-ups #376 (Performance MCP), #377 (Buildings MCP)
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
@@ -9,13 +9,13 @@
 
 ### Decision and status
 
-**Entry gate satisfied — #363 completed through merged PR #446. #384 is open; its fixed native inspection/test session passed, with receipt review, InputBoundary and protected #467 closeout pending. Official MCP is not yet admitted.**
+**Entry gate satisfied — #363 completed through merged PR #446. The fixed native session and separate InputBoundary execution are verified. Protected delivery of PR #467 and completed closure of #384 are the gate for #364.**
 
 The owner approved a small official Unreal MCP adoption workstream between world-finishing step 2 (#363) and step 3 (#364). "Step 2.5" is a shorthand inside **M3**, not a new product milestone or a renumbering of the existing 13 steps.
 
 **Execution order:** #363 full acceptance and protected merge → this bounded spike → #364 asphalt/shoulder → #365 PCG/PCGEx world graph → the unchanged downstream sequence.
 
-Keep the native GitHub `blocked_by` relationship to completed #363. Its material entry condition is satisfied and `lifecycle:blocked` was removed from #384; this does not claim a manual Project transition to Ready/In progress. #364 keeps its existing #363 dependency and also depends on this still-open spike. Dependencies and board states do not technically prevent PR creation: agents must enforce the gate below.
+Keep the native GitHub `blocked_by` relationship to completed #363. Its material entry condition is satisfied and `lifecycle:blocked` was removed from #384; this does not claim a manual Project transition to Ready/In progress. #364 keeps its existing #363 dependency and also depends on #384. Dependencies and board states do not technically prevent PR creation: agents must verify the actual protected merge and completed issue state before implementation.
 
 ### Hard entry gate: what “step 2 complete” means
 
@@ -118,6 +118,62 @@ Do not run two independent agent-facing mutation servers. Before cutover, prove 
 8. Record the bounded outcome and the handoff to #364. After success, **STOP infrastructure work and return to asphalt/shoulder**. If a capability is absent or unsafe, stop with an explicit blocker; retain the prior guarded workflow without silently treating the new gate as passed.
 
 The receipt should bind repository SHA, actual UE/plugin versions, map/object identity, tool calls/arguments, input hashes, BOB policy/version, Automation test/run/status, domain result, artifact paths/hashes, timestamp and mutation scope. Reuse current proof/receipt conventions. A log claiming success without the referenced evidence is insufficient.
+
+### Verified native evidence and delivery gate — 2026-10-10
+
+The fixed official session at `241104de320f8417c7abc4dd973ac148ed98a66d`
+passed in [run 38027596123](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123).
+It pinned the accepted map, inspected 375 Actor identities, completed
+`CyclingPhysics.RoadPhysics.ProfileInterpolation` through the official toolset, and executed
+the fixed read-only BOB operation. The 60,025 exported contact samples and full
+BOB result matched direct execution on the same inputs. The result remains
+`REVIEW_REQUIRED` / `INSPECTOR_ONLY`; all authoring, repair, road acceptance
+and learning flags remain false. Its receipt verifies the fixed official
+listener and operation surface; it does not prove absence of every other owned
+TCP endpoint or Wingman in that historical session.
+
+The separate InputBoundary test change, source SHA-256
+`4c6840fc4db6f4f3585a4e6830df43bb0756a2033b3a0d083e38132c7640c82c`,
+was actually compiled at `0ee5eaf39e0d673fee061f7e33372710278d50be`
+in [run 38035299343](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38035299343).
+That compile succeeded; its original unit attempt failed and remains failed.
+The other eleven native inputs match the original fixed-session source.
+
+The authenticated compiled plugin was reused at
+`2016a91f03438f1d866be0eb26f3ae49fd43b803` in
+[run 38039426402](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402).
+`YacsBobInspection.InputBoundary` completed exactly one `Success`, with zero
+errors, warnings or unfinished tests. Both actual native Info events confirm
+that the MCP module is loaded, its server is absent, auto-start is disabled,
+trusted opt-in is absent and the session factory returns no session, before
+and after the input checks. The unit finished in 27.524 s, with the owned Editor
+exiting with code `0` within its 180 s limit. Thirty live-process samples
+observed only `0.0.0.0:1985`, attributed to Trace by
+installed source and the owned log. No owned listeners remained after exit.
+The unit disabled the observed Wingman plugin and verified unchanged protected
+inputs; this evidence applies to this unit execution.
+
+The raw successful unit is 107,189 bytes, SHA-256
+`e276a7347086f0aad0d08893b07920551682f62359d7f810bfdd29c3878cc950`;
+the raw Automation report is 1,954 bytes, SHA-256
+`24dfe3ea356758329db177948fd351675056ee422029baeda131538bd76e5256`.
+The report's optional leading UTF-8 BOM is omitted only from its parsing view;
+the original report bytes and hash remain unchanged. The earlier BOM-blocked
+attempt [38038830197](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38038830197)
+remains blocked and is not relabelled by this successful retry.
+
+Final source-only readback is pending. It must authenticate the original
+runtime receipt, retained compilation and successful unit separately, without
+launching an Editor or compiler. Required exact-head CI and review still gate
+protected delivery. **Start #364 only after PR #467 is merged and #384 is closed
+as completed. Then stop MCP infrastructure work and return to asphalt/shoulder.**
+Stock material tools need their own actual-schema and native authoring proof
+for #364. M3 remains in progress; performance stays `DEFERRED_AFTER_M3` with
+`performance_pass: false`.
+
+The following kickoff, implementation and diagnostic records are historical
+checkpoints. Their pending or failed states describe their named revisions;
+the verified evidence above owns the current technical outcome.
 
 ### Prepared kickoff after material acceptance — 2026-10-09
 
@@ -1100,15 +1156,20 @@ Aggregate gate. That CI does not enable or test this disabled-by-default plugin.
 ### Definition of Done
 
 - [x] #363 entry gate is verified with completed state, merged implementation, linked owner visual/render/technical evidence and the explicit post-M3 performance deferral (2026-10-09 handoff above; reverify at kickoff).
-- [ ] Exact environment, one map and the permitted official tool surface are pinned.
-- [ ] Agent sees the admitted map/scene through official Unreal MCP.
-- [ ] Agent reads an actual Actor/UObject and verifies its identity.
-- [ ] One existing relevant Automation Test completes through the official toolset, with real results/logs.
-- [ ] One real BOB inspector executes through a thin domain tool and matches the direct invocation on identical inputs.
-- [ ] Result + proof + receipt are retrievable, hash/identity-bound and explicit about domain FAIL/review states.
-- [ ] Fail-closed behavior and absence of unauthorized persistent/authority changes are verified; guard parity is proven before any cutover.
-- [ ] Required integration/build/Automation, documentation, protected CI and review gates pass for the candidate; implementation is merged.
-- [ ] #364 receives the admitted interface, environment, evidence and limits. Optional #376/#377/#365 work remains deferred. **STOP infrastructure expansion.**
+- [x] Exact environment, one map and the permitted official tool surface are pinned (fixed session 241104de).
+- [x] Agent sees the admitted map/scene through official Unreal MCP (fixed session 241104de).
+- [x] Agent reads an actual Actor/UObject and verifies its identity (fixed session 241104de).
+- [x] One existing relevant Automation Test completes through the official toolset, with real results/logs (ProfileInterpolation, run 38027596123).
+- [x] One real BOB inspector executes through a thin domain tool and matches the direct invocation on identical inputs (fixed session 241104de).
+- [x] Result + proof + receipt are retrievable, hash/identity-bound and explicit about domain FAIL/review states (fixed session 241104de).
+- [x] Fail-closed behavior and absence of unauthorized persistent/authority changes are verified for the fixed session; separate InputBoundary run 38039426402 verifies its native absence checks. Broader tool or authoring cutover requires separate admission.
+
+Delivery completes only when required integration/build/Automation,
+documentation, protected CI and review gates pass, PR #467 is merged and #384
+is closed as completed. Verify the actual GitHub state before starting #364.
+The handoff above supplies its fixed interface, environment, evidence and
+limits; optional #376/#377/#365 work remains deferred. **STOP infrastructure
+expansion and return to asphalt/shoulder after protected delivery.**
 
 A documentation merge, plugin enablement, connection handshake, mock BOB result or list of tool names alone cannot close this issue.
 

@@ -29,9 +29,26 @@ maximum required fill 1.734214770718081 m and RMS 0.3504235256593645 m.
 All BOB authoring/admission flags remain false. The original host verifies
 transport, native Automation and native BOB capture locally, while official
 admission, persistent mutation and performance PASS remain false.
-Full pinned receipt review, standalone `YacsBobInspection.InputBoundary` and
-protected PR #467 closeout remain pending. The successful bounded summary is
-not a complete independent raw-receipt/bundle review.
+Authenticated original receipt readback passed in
+[run 38029602978](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38029602978).
+The original session verifies its fixed official listener; it does not prove
+absence of all other owned TCP endpoints or Wingman. Final delivery-head
+receipt readback remains pending.
+
+Separate `YacsBobInspection.InputBoundary` passed in
+[run 38039426402](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402)
+at execution SHA `2016a91f03438f1d866be0eb26f3ae49fd43b803`: one success,
+zero errors/warnings and two actual before/after MCP-absence Info records with
+all five checks true. Editor 41880 exited cleanly with code 0; the harness
+observed only the attributed engine Trace listener on port 1985, no owned
+listeners after exit and unchanged protected inputs. This unit performed no
+build and reused the separately compiled plugin below. Its evidence grants
+no official MCP, world-authoring or performance admission.
+
+Start #364 only after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467)
+is merged and [#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384)
+is closed as completed. Then stop MCP infrastructure work and return to
+asphalt/shoulder delivery.
 
 The runtime revision remains distinct from subsequent documentation and
 protected-merge revisions. This README is included in the producer's source
@@ -45,16 +62,14 @@ at the runtime revision versus
 `4c6840fc4db6f4f3585a4e6830df43bb0756a2033b3a0d083e38132c7640c82c`
 after strengthening its before/after MCP-state checks. Fresh `BuildPlugin`
 passed in [run 38035299343](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38035299343)
-at unit-build SHA `0ee5eaf39e0d673fee061f7e33372710278d50be`. The unit then
-blocked on two owned TCP listeners, ports 1985 and 19315.
-[Source-only readback 38037644767](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38037644767)
-matched all three original log hashes and identified port 19315 startup as
-`LocoHelperAI`'s own MCP endpoint. Its actual plugin descriptor and supported
-opt-out remain unverified. This diagnostic performed no build or Editor launch.
-No verified unit report, MCP-absence
-certificates or current input-conservation proof was admitted. Native test
-proof remains pending. No claim is made that the entire source inventory is
-unchanged.
+at unit-build SHA `0ee5eaf39e0d673fee061f7e33372710278d50be`. That attempt's
+unit was blocked by a second owned listener, later authenticated as
+`LocoHelperAI`'s endpoint in source-only
+[readback 38037644767](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38037644767).
+The later successful unit has its own execution SHA and receipt; it does not
+change the blocked attempt's result. Runtime, unit build, unit execution,
+final readback, documentation and protected-merge revisions remain distinct.
+No claim is made that the entire source inventory is unchanged.
 
 Run `37996979223` compiled the earlier plugin boundary and its DLL on UE
 5.8.2 / CL 56702186 at `f557bfd0a760b795bb3294ec047cdfc4c837424d`.
@@ -107,12 +122,10 @@ callback; it does not touch the editor-global
 registry or activate MCP. In the isolated empty `HostProject`, even a valid empty
 request must reject the unapproved map. This boundary proof is separate from the
 existing project `CyclingPhysics.RoadPhysics.ProfileInterpolation` test and the
-real checkpoint BOB inspection required by Issue #384. The first native run
-completed this test with three errors from the intentionally denied, absent
-`actor`, `scene` and `AutomationTestToolset` toolsets; diagnostic run
-`37998743610` retained the exact log and report. No assertion failure was
-reported. The test now expects each complete observed log message literally,
-exactly once, and checks its actual occurrence count; an unused expectation
-fails the test. The installed Core declarations, literal matching and positive
-count validation were verified in source-only run `38000430250`. Native test
-success remains pending a fresh matching host receipt.
+real checkpoint BOB inspection required by Issue #384. Before and after its
+cases, the test verifies `module_loaded`, `server_absent`,
+`auto_start_disabled`, `trusted_opt_in_absent` and `factory_session_absent`.
+The test expects complete intentional denial messages literally and checks
+their actual occurrence counts; an unused expectation fails the test. Earlier
+three-error native output and the matching source verification remain
+historical in the [MCP evidence record](../../docs/UE_MCP_WORLD_GENERATION.md).

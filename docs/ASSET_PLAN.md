@@ -273,12 +273,14 @@ Droga pozostaje częścią systemu YACS; nie kupujemy „gotowej trasy”. Asset
 #### Sa Calobra road-material preparation — 2026-10-09
 
 Read-only inventory at `bfbc48057b8b84d087a3685cd71972678a32d412`.
-[#364](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364) remains
-blocked by the bounded official MCP spike #384. The #363 material admission/merge
-prerequisite was satisfied on 2026-10-09. #384's
-[fixed native inspection/test session passed](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123),
-but full pinned receipt review, standalone InputBoundary and protected #467
-closeout remain pending; #384 stays open. The fixed inspector does not admit
+The #363 material admission/merge prerequisite was satisfied on 2026-10-09.
+#384's fixed native inspection/test session, authenticated original receipt
+readback and separate [InputBoundary](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402)
+passed; final delivery-head receipt readback remains pending.
+Start [#364](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364) only
+after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467)
+is merged and #384 is closed as completed; then stop MCP infrastructure work.
+The fixed inspector does not admit
 stock `MaterialInstanceTools`: #364 requires separate version-matched schemas,
 argument/resource restrictions and material-only native authoring proof before use.
 This inventory selects no production asset, performs no import/application and
@@ -309,7 +311,13 @@ performance measurement is deferred until after assembled M3 closeout. It is not
 permission to regenerate the mesh, assume a 2 x 2 m texture scale or transplant
 the old prototype-road recipe.
 
-After both entry gates, begin with a bounded comparison on the actual admitted
+After both entry gates, authenticate the retained CPU-validated
+`aged_mountain_asphalt/base` bundle before the first comparison: seed 101,
+4 m tile, roughness 0.82 and normal strength 0.48. Reuse
+`import_material_forge_variant.py` with `save_assets=False` and 400 cm projection,
+with actual surface/slot ownership and native projection/normal proof.
+Availability of `worn` or `repaired` receipts does not make them prerequisites
+of that first base proof. Begin with a bounded comparison on the actual admitted
 saved road/shoulder consumer: keep source vertices, grade, crossfall, width,
 collision and BOB/CUT inputs byte-identical; use approved source maps, explicit
 physical scale and roughness, and preserve rollback/readback. Inspect both

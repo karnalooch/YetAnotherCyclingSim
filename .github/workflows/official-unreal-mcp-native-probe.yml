@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Fixed accepted checkpoint session, or InputBoundary with authenticated compiled plugin reuse
+        description: Fixed accepted checkpoint session, or source-only readback of verified session and InputBoundary evidence
         type: choice
         options: [accepted_session, diagnose_previous_failure]
         default: diagnose_previous_failure
@@ -35,7 +35,7 @@ concurrency:
 
 jobs:
   compile:
-    name: Verify InputBoundary with authenticated compiled plugin reuse
+    name: Read verified official session and InputBoundary evidence
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
@@ -59,7 +59,7 @@ jobs:
           clean: false
           persist-credentials: false
 
-      - name: Verify exact sources and run the fixed session or retained-build unit
+      - name: Verify exact sources and run the fixed session or source-only readback
         shell: pwsh
         working-directory: _official-mcp-native-probe
         env:
