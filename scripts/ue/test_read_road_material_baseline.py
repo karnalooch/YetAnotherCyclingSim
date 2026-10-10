@@ -180,11 +180,11 @@ class BaselineBoundaryTests(unittest.TestCase):
             check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         ).stdout
         committed = {}
-        for row in listing.split(b"\\0"):
+        for row in listing.split(bytes([0])):
             if not row:
                 continue
-            header, marker, name = row.partition(b"\\t")
-            self.assertEqual(marker, b"\\t")
+            header, marker, name = row.partition(bytes([9]))
+            self.assertEqual(marker, bytes([9]))
             mode, obj_type, sha = header.split(b" ")
             self.assertEqual(obj_type, b"blob")
             path = name.decode("utf-8")
@@ -207,8 +207,8 @@ class BaselineBoundaryTests(unittest.TestCase):
         for path, expected in committed.items():
             with self.subTest(path=path):
                 raw = (repo / path).read_bytes()
-                self.assertNotIn(b"\\r", raw, "fingerprint input has physical CR bytes")
-                git_blob = b"blob " + str(len(raw)).encode("ascii") + b"\\0" + raw
+                self.assertNotIn(bytes([13]), raw, "fingerprint input has physical CR bytes")
+                git_blob = b"blob " + str(len(raw)).encode("ascii") + bytes([0]) + raw
                 self.assertEqual(hashlib.sha1(git_blob).hexdigest(), expected,
                                  "physical fingerprint input differs from Git HEAD")
 
