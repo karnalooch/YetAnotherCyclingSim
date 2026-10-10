@@ -505,7 +505,7 @@ function Invoke-SessionPreviousFailureDiagnostic {
         -and $boundary.owned_editor_executable_recorded -and -not $boundary.owned_client_executable_recorded `
         -and -not $boundary.attempt_started_at_utc_recorded) {
         $diagnostic['historical_failure_boundary'] = 'PYTHON_APPLICATION_FILE_IDENTITY'
-        $command = Get-Command python -CommandType Application -ErrorAction Stop
+        $command = Get-Command python -CommandType Application -ErrorAction Stop | Select-Object -First 1
         $application = Get-Item -LiteralPath $command.Source -Force
         $diagnostic['current_python_application'] = [ordered]@{ observation = 'CURRENT_PROCESS_ENVIRONMENT_ONLY'
             path = Get-SessionSafeFailureText ([IO.Path]::GetFullPath($command.Source)); size_bytes = $application.Length
@@ -634,7 +634,13 @@ try {
     # bytes are checked again immediately before the owned session launch.
     Assert-SessionPlainPath $engine.UnrealEditorPath
     $receipt.owned_editor_executable = Get-SessionFileIdentity $engine.UnrealEditorPath 1GB
-    $pythonExecutable = (Get-Command python -CommandType Application -ErrorAction Stop).Source
+    $pythonCommand = Get-Command python -CommandType Application -ErrorAction Stop | Select-Object -First 1
+    if ($pythonCommand -isnot [System.Management.Automation.ApplicationInfo] -or $pythonCommand.Source -isnot [string] `
+        -or [string]::IsNullOrWhiteSpace($pythonCommand.Source) -or $pythonCommand.Source.Length -gt 1024) { throw 'The first resolved Python application lacks one bounded executable path.' }
+    [string]$pythonExecutable = $pythonCommand.Source
+    $receipt['python_application_selection'] = [ordered]@{ selection = 'FIRST_APPLICATION_IN_COMMAND_RESOLUTION_ORDER'
+        command_type = [string]$pythonCommand.CommandType; path = $pythonExecutable }
+    Write-Host ('SELECTED_PYTHON_APPLICATION ' + ($receipt.python_application_selection | ConvertTo-Json -Depth 3 -Compress))
     $receipt.owned_client_executable = Get-SessionFileIdentity $pythonExecutable 128MB
     & (Join-Path $RepoRoot 'scripts/ue/Read-YacsOfficialMcpRuntimeDependencies.ps1') -EngineRoot $engine.Root -ArtifactRoot $ArtifactRoot -ExpectedHead $ExpectedHead
     $sdk = Read-SessionJson (Join-Path $ArtifactRoot 'runtime-dependencies.json') 4MB

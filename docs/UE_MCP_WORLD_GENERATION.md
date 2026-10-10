@@ -563,6 +563,14 @@ logged; this is a source/control-flow diagnosis. The correction keeps the
 16 MiB code cap and checks only those three fixed asset identities separately
 before activation and after exit. No MCP listener or domain call is admitted;
 the actual accepted session remains unverified.
+[Next native attempt 38011227188](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38011227188)
+at `d163f345a818150a81a1f2ca8a9e3cb3a7b69bb6` passed Windows
+PowerShell parsing, then stopped in executable preflight before either build.
+The `Get-SessionFileIdentity` call rejected the Python search result because
+its `Path` argument could not be converted to `System.String`. The correction
+selects the first application in command-resolution order and preserves the
+physical-file checks. This result does not establish a zero-size alias failure
+or a successful asset/runtime proof.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 
