@@ -150,7 +150,7 @@ def authenticate_render_context():
     prepare_receipt = session._read_json(session._safe_path(proof, saved.PREPARED))
     fresh_receipt = session._read_json(session._safe_path(proof, saved.RELOADED))
     manifest_path = session._safe_path(retained, saved.MANIFEST)
-    manifest_id = session._identity(manifest_path, saved.JSON_LIMIT)
+    manifest_id = saved.verified_manifest_identity(proof, retained)
     manifest = session._read_json(manifest_path)
     require(
         host.get("schema_version") == 1
@@ -167,17 +167,23 @@ def authenticate_render_context():
         and host.get("proof_files", {}).get("fresh_reload", {}).get("sha256")
         == session._identity(session._safe_path(proof, saved.RELOADED))["sha256"]
         and prepare_receipt.get("manifest") == manifest_id
+        and prepare_receipt.get("evidence_manifest") == {"file": saved.MANIFEST, **manifest_id}
         and fresh_receipt.get("saved_manifest_sha256") == manifest_id["sha256"]
+        and fresh_receipt.get("evidence_manifest_sha256") == manifest_id["sha256"]
         and fresh_receipt.get("status")
         == "ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_PASS"
         and fresh_receipt.get("fresh_process") is True
         and fresh_receipt.get("road_material_reapplied") is False
+        and fresh_receipt.get("shoulder_material_reapplied") is False
+        and fresh_receipt.get("window0112_shoulder_fresh_reload_verified") is True
         and manifest.get("status") == "SAVED_ROAD_ASPHALT_CONSUMER_PREPARED"
         and manifest.get("exact_sha") == exact_sha
         and manifest.get("staging_sha256") == staged_sha
         and manifest.get("map_package") == saved.MAP
-        and manifest.get("road_slot_zero_only") is True
-        and manifest.get("support_186_unchanged") is True
+        and manifest.get("road_slot_zero_only") is False
+        and manifest.get("support_186_unchanged") is False
+        and manifest.get("shoulder_window", {}).get("rollback_verified") is True
+        and manifest.get("material_changes") == "road_slot_zero_and_window0112_outer_shoulder_ids"
         and manifest.get("landscape_1024_unchanged") is True
         and manifest.get("metric_tile_cm") == 400
         and manifest.get("performance_pass") is False,
@@ -309,12 +315,17 @@ class RoadLitCapture:
         streaming input. Keep source geometry/LOD/materials fixed and retain
         before/after residency telemetry instead of assuming a terrain defect.
         """
-        material_paths = self.context["manifest"]["texture_objects"]
+        material_paths = dict(self.context["manifest"]["texture_objects"])
         require(
             set(material_paths) == {"BaseColor", "Normal_DX", "ORM", "DetailMasks"}
             and len(set(material_paths.values())) == 4,
             "Expected four distinct authenticated road textures",
         )
+        gravel_paths = self.context["manifest"]["shoulder_window"]["material"]["texture_objects"]
+        require(set(gravel_paths) == {"BaseColor", "Normal_DX", "Roughness"}
+                and len(set(gravel_paths.values())) == 3,
+                "Expected three authenticated shoulder textures")
+        material_paths.update({"Shoulder_" + channel: path for channel, path in gravel_paths.items()})
         road_textures = []
         for channel, path in sorted(material_paths.items()):
             texture = self.api.load_asset(path)
@@ -547,6 +558,13 @@ class RoadLitCapture:
                 baseline.native_inventory(self.api, prep, saved.MAP),
                 context["manifest"]["material_instance"],
                 observed_map_package=saved.MAP,
+                shoulder_receipt=context["manifest"]["shoulder_window"],
+            )),
+            ("shoulder native mesh", lambda: saved.shoulder.verify_loaded(
+                self.api, context["manifest"]["shoulder_window"]
+            )),
+            ("shoulder material", lambda: saved.shoulder_material.verify_material(
+                self.api, context["manifest"]["shoulder_window"]["material"], context["rows"]
             )),
             ("saved package hashes", lambda: saved.verify_retained_files(
                 context["retained"], context["manifest"]["assets"]
@@ -557,9 +575,8 @@ class RoadLitCapture:
                 == context["stage_identity"], "Accepted stage receipt changed"
             )),
             ("manifest", lambda: require(
-                session._identity(
-                    context["retained"] / saved.MANIFEST, saved.JSON_LIMIT
-                ) == context["manifest_id"], "Retained saved manifest changed"
+                saved.verified_manifest_identity(self.proof, context["retained"])
+                == context["manifest_id"], "Retained/downloadable saved manifest changed"
             )),
             ("prior proof", lambda: require(
                 session._identity(
@@ -615,6 +632,9 @@ class RoadLitCapture:
             "road_pixel_visibility_admitted": False,
             "whole_area_visual_admitted": False,
             "shoulder_wall_materials_admitted": False,
+            "window0112_shoulder_material_ids_verified": not errors,
+            "window0112_selected_triangle_count": len(saved.shoulder.SHOULDER_IDS),
+            "window0112_wall_material_unchanged": not errors,
             "owner_visual_status": "PENDING_FINAL_M3",
             "performance_status": "DEFERRED_AFTER_M3",
             "performance_pass": False,
@@ -649,6 +669,7 @@ def main():
         inventories,
         context["manifest"]["material_instance"],
         observed_map_package=saved.MAP,
+        shoulder_receipt=context["manifest"]["shoulder_window"],
     )
     require(
         digest == context["manifest"]["expected_normalized_inventory_sha256"],
@@ -660,6 +681,9 @@ def main():
         context["manifest"]["material_master"],
         context["manifest"]["texture_objects"],
     )
+    saved.shoulder_material.verify_material(
+        unreal, context["manifest"]["shoulder_window"]["material"], context["rows"])
+    saved.shoulder.verify_loaded(unreal, context["manifest"]["shoulder_window"])
     landscape = list(unreal.GameplayStatics.get_all_actors_of_class(
         world, unreal.Landscape
     ))

@@ -150,6 +150,61 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 observed_map_package=saved.MAP,
             )
 
+    def test_shoulder_allows_one_source_owned_extra_slot_and_preserves_other_state(self):
+        original = deepcopy(self.old)
+        original["road_supports"][1]["slots"] = [{"path": saved.shoulder.OLD_MATERIAL}]
+        original["mesh_material_collision_snapshot"][1]["materials"] = [saved.shoulder.OLD_MATERIAL]
+        receipt = {
+            "support_label": original["road_supports"][1]["label"],
+            "material": {"assets": saved.shoulder_material.asset_paths(
+                saved.PACKAGE + "/ShoulderWindow0112"
+            )},
+        }
+        assets = receipt["material"]["assets"]
+        after = self.new_inventory()
+        after["road_supports"][1]["slots"] = [
+            {"path": saved.shoulder.OLD_MATERIAL},
+            {"path": assets["instance"], "parent": assets["master"],
+             "class": "MaterialInstanceConstant", "effective_color": None},
+        ]
+        after["mesh_material_collision_snapshot"][1]["materials"] = [
+            saved.shoulder.OLD_MATERIAL, assets["instance"],
+        ]
+        def verify(value, selection=receipt):
+            return saved.expected_saved_inventory(
+                original, value, self.new_material,
+                observed_map_package=saved.session.operation.MAP_PACKAGE,
+                shoulder_receipt=selection,
+            )
+        verify(after)
+        self.assertEqual(len(original["road_supports"][1]["slots"]), 1)
+        for mutate in (
+            lambda value: value["road_supports"][1]["slots"][0].update(path="changed-wall"),
+            lambda value: value["road_supports"][2]["slots"].append({"path": assets["instance"]}),
+            lambda value: value["mesh_material_collision_snapshot"][1].update(collision="BLOCK_ALL"),
+            lambda value: value["landscape"].update(component_count=1023),
+        ):
+            value = deepcopy(after)
+            mutate(value)
+            with self.assertRaises(ValueError):
+                verify(value)
+        for label in ("missing-support", original["road_supports"][0]["label"]):
+            with self.assertRaises(ValueError):
+                verify(after, {**receipt, "support_label": label})
+
+    def test_downloadable_manifest_must_match_retained_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            proof, retained = Path(directory) / "proof", Path(directory) / "retained"
+            proof.mkdir()
+            retained.mkdir()
+            value = {"shoulder_window": {"selected_triangle_ids": [0, 1, 50, 51]}}
+            expected = saved.write_once(retained / saved.MANIFEST, value)
+            saved.write_once(proof / saved.MANIFEST, value)
+            self.assertEqual(saved.verified_manifest_identity(proof, retained), expected)
+            (proof / saved.MANIFEST).write_bytes((proof / saved.MANIFEST).read_bytes().replace(b"50", b"52"))
+            with self.assertRaisesRegex(ValueError, "Downloadable material manifest differs"):
+                saved.verified_manifest_identity(proof, retained)
+
     def test_savemap_may_keep_original_world_until_fresh_editor_reload(self):
         def mock_editor(package):
             world = SimpleNamespace(

@@ -158,7 +158,7 @@ The 500–1000 m Golden Kilometer is an **additional representative check inside
 
 **Authorized execution-order exception — 2026-10-09, clarified 2026-10-10:** keep the 13 step identifiers and **#372 whole-area review evidence/technical checks → #374 full-route assembly and implementation closeout → #373 performance measurement**. The owner's final visual audit uses #372's review contract on the complete #374 assembled consumer, before #373; it is not a repeated intermediate signoff. Retain #372 as an additional prerequisite of #373. The native graph still has #373 blocking #374 and must be reconciled before #374 starts; this documentation does not change dependencies or Project columns. #363 and #384 are completed; downstream work remains gated by its own open predecessors. M3 implementation closeout carries the outstanding owner-audit and benchmark obligations until each actually passes.
 
-### Small delivery batches and pause checkpoint — 2026-10-10
+### Small delivery batches and current checkpoint — 2026-10-10
 
 The M3 goal is one believable, reproducible route/world foundation supporting
 an end-to-end ride. First finish the **entire current 2016.5 m square Landscape**;
@@ -173,7 +173,7 @@ Reuse existing tools and proven inputs; investigate a specific failure before
 rerunning native work. A source proof, prepared script, green CI and a saved
 Unreal consumer are separate completion states.
 
-**Verified foundations at the pause:** #335 World Authority, #349 GIS source
+**Verified foundations:** #335 World Authority, #349 GIS source
 planning, #363 Landscape materials and #384 bounded official MCP adoption are
 closed as completed. #429's cliff/erosion classification foundation is complete;
 #443/#445 were closed as historical/not planned and do not admit production
@@ -181,38 +181,39 @@ cliff topology. #337 road construction and #459 road/shoulder/CUT contact remain
 open; the independent #338 road preview remains frozen Draft.
 
 **Current delivery:** #364 is open in Draft [PR #470](https://github.com/karnalooch/YetAnotherCyclingSim/pull/470).
-Its remote implementation head at the pause is
-`33a35a74f17e56ef073248581e265db9db16cf7c`.
-The 4 m asphalt source has two authenticated, byte-identical 2048 px renders;
-all five downloaded maps and graph passed readback. The Windows source suite
-ran 37 tests: 35 passed and two symlink-permission cases were skipped.
-[CI 38046180394](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38046180394)
-passed. This work has **not assigned asphalt/shoulder materials to a saved scene**.
+The verified asphalt baseline is
+`396861de0884135d18006e6d3f133edebef639aa`:
+[protected CI 38078462035](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38078462035)
+PASS with existing equivalent build/Automation evidence reused, and
+[native/GPU 38078459124](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38078459124)
+PASS for the isolated road canary, saved/freshly reopened consumer and four
+final same-camera window 0112 frames in both directions with full mip warmup.
+This is bounded technical evidence; whole-area visual acceptance remains open.
 
-[Native baseline run 38046175645](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38046175645)
-passed the Windows PowerShell parser and ran 11 reader tests (10 passed, one
-symlink-permission case skipped), but stopped **before Unreal launch** at the
-compile/proof cache identity gate. Windows physical file fingerprints differ
-from the hosted CI fingerprints retained in the cache. A local EOL simulation
-reproduces the observed Windows fingerprints exactly; actual per-file Windows
-qualification and a successful native read remain pending. Do not bypass the
-gate, relabel the attempt PASS or rebuild merely to conceal this mismatch.
-Full mesh/normal/UV conservation is also unproved. See the
-[source and native evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md).
+The current **shoulder candidate** assigns existing CC0 Poly Haven
+`rock_ground` / `FillGravel` at 150 cm only to 436 source-owned outer top triangle
+IDs on one window 0112 support. Slot 0 interior faces and walls keep their
+original material. Before/after and fresh-load checks must preserve positions,
+indices and every rendered corner's normals/UVs; only the explicit selected
+material IDs may change. The integrated local 59-test suite completed
+successfully with two platform-dependent skips and `py_compile` PASS; candidate
+native/GPU are NOT RUN. No geometry, Base_DTM or road physics edit belongs to
+this material patch; the unresolved inner seam remains #459 debt. See the
+[current source and native evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md).
 
 #### Finish #364 in bounded batches
 
-| Batch | Concrete output and completion check | Pause status |
+| Batch | Concrete output and completion check | Current status |
 |---|---|---|
 | Asphalt source | Pin tools, recipe and scale; render twice; authenticate graph and five maps | **Done:** current base recipe, 4 m / 400 cm; source-only proof |
-| Source-to-consumer handoff | Authenticate the retained two-run receipt and both source bundles against unchanged current inputs | **Checkpoint candidate:** 45 contract tests passed; committed for the owner-requested remote checkpoint; independent review incomplete |
-| Windows cache identity | Compare actual current/cache file bytes with committed inputs; qualify the exact EOL differences using existing cache authority | **Blocked:** mismatch recorded; no native read or build performed |
-| Saved-scene inventory | Fresh isolated Entry process loads only the accepted derived consumer; record road/support slots, parents, projection functions and unchanged saved bytes | **Prepared:** reader/launcher reviewed; actual execution pending |
-| Material-only conservation | Prove positions, vertex/triangle IDs, topology, material IDs and complete normal/UV layers unchanged, plus transforms/collision/Landscape bindings | **Pending:** counts and saved-file hashes alone are insufficient |
-| Road canary | Apply the validated asphalt to one authorized road slot without saving; verify shader, 400 cm projection, DirectX normals and exact restoration | **Pending:** use the existing fixed importer; stock MCP setters remain unadmitted |
-| Shoulder canary | Verify top/side ownership; apply licensed gravel to admitted tops while preserving support-side appearance; verify boundaries and restoration | **Pending:** labels alone do not establish ownership; Nudo/parapets require their own evidence |
-| Edges and technical appearance | Inspect both directions, bends, close/distant views and shoulder/Landscape transitions; retain real images and defect locations | **Pending:** no geometry concealment; wetness compatibility without weather implementation |
-| Save, reopen and deliver | Save only derived outputs; fresh reload/render proves bindings and conservation; pass required native/asset/review/CI checks and merge #470 | **Pending:** owner audit stays `PENDING_FINAL_M3`; performance stays deferred |
+| Source-to-consumer handoff | Authenticate the retained two-run receipt and both source bundles against unchanged current inputs | **Done for the asphalt baseline:** authenticated source consumed by the native canary and saved consumer |
+| Windows cache identity | Qualify current/cache inputs using the existing cache authority before native execution | **PASS at `396861de`:** protected CI reused equivalent build/Automation evidence and native execution passed |
+| Saved-scene inventory | Fresh isolated Entry process loads the accepted derived consumer; record road/support slots, parents, projection functions and unchanged source bytes | **PASS for the asphalt baseline:** native read completed; this does not establish shoulder selection or full mesh-buffer conservation |
+| Material-only conservation | Preserve positions, vertex/triangle IDs, topology and rendered corner normals/UVs, plus transforms/collision/Landscape bindings; permit only the named material assignment delta | **Candidate pending:** exact target hashes before/after and fresh load; baseline counts and saved-file hashes alone are insufficient |
+| Road canary | Apply the validated asphalt to the authorized road slot without saving; verify shader, 400 cm projection, DirectX normals and exact restoration | **PASS at `396861de`:** native reversible canary, then separate saved/freshly reopened consumer proof |
+| Shoulder canary | Verify source-owned top/side selection; apply licensed gravel to the bounded tops while preserving walls, interior material and geometry | **Current candidate:** 436 outer top IDs on the sole window 0112 support, `FillGravel` 150 cm in slot 1; local 59-test suite PASS with 2 platform-dependent skips, native/GPU NOT RUN; no Nudo/parapet expansion |
+| Edges and technical appearance | Inspect both directions, bends, close/distant views and shoulder/Landscape transitions; retain real images and defect locations | **Partial:** four final same-camera asphalt frames with full mip warmup; candidate and whole-area review pending; seam #459 remains visible debt |
+| Save, reopen and deliver | Save only derived outputs; fresh reload/render proves bindings and conservation; pass required native/asset/review/CI checks and merge #470 | **Partial:** asphalt baseline PASS; shoulder candidate and complete #364 delivery pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
 
 #### Complete the remaining world foundation after #364
 
@@ -292,8 +293,11 @@ The [#364 evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md) retains the
 installed material declaration audit and authenticated two-run 4 m asphalt
 source replay. Stock mutation remains unadmitted; the existing fixed Material
 Forge importer and scoped proof collectors remain available under the current
-policy. Native road/shoulder assignment, conservation, saved/fresh-rendered
-consumer proof and whole-area review images are still pending.
+policy. The `396861de` asphalt baseline now has native assignment,
+saved/fresh-rendered consumer proof and four final same-camera frames with full
+mip warmup. The current 436-triangle shoulder candidate still requires
+native/GPU conservation and appearance proof; whole-area visual acceptance and
+complete #364 delivery remain pending.
 
 From step 3 onward, use official Epic MCP for supported generic editor control
 within YACS constraints; do not add custom generic workarounds. Custom toolsets

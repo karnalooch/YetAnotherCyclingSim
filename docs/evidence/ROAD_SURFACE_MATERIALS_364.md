@@ -14,24 +14,62 @@ This work continues #364, not MCP infrastructure.
 
 ## Current proof boundary
 
+The verified asphalt baseline is exact commit
+`396861de0884135d18006e6d3f133edebef639aa`. Its protected
+[CI 38078462035](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38078462035)
+and [native/GPU run 38078459124](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38078459124)
+both passed. CI reused existing equivalent build/Automation evidence; it did
+not perform a new Unreal build or Automation run. Original native receipts and
+images are retained in
+[artifact 11679925399](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38078459124/artifacts/11679925399).
+
 | Check | Actual status |
 |---|---|
-| Windows source-stage tests | 37 discovered; 35 passed, 2 Windows symlink-permission cases skipped on Python 3.12.10 |
 | Asphalt source replay | Two independent 2048 × 2048 renders of the same base recipe PASS; graph and all five map bytes match |
-| Read-only Unreal baseline reader | Linux: 11 tests passed. Windows: parser passed; 10 tests passed and one symlink-permission case skipped. Actual scene read blocked before Unreal launch |
-| Unreal shader/projection/normal and material assignment | Pending |
-| Road, shoulder-top and support-side ownership; full mesh geometry proof | Pending native verification |
-| Saved consumer, fresh reload/render and whole-area review images | Pending |
+| Protected CI at `396861de` | PASS, including the aggregate gate; existing equivalent Unreal build/Automation proof reused |
+| Native asphalt baseline at `396861de` | PASS: read-only scene inventory, reversible road canary, saved derived consumer and fresh reopening |
+| Native GPU review at `396861de` | PASS: four final same-camera frames, forward/reverse in window 0112; each readiness receipt records full 12/12 resident mips for all four asphalt textures before capture |
+| Full geometry and rendered normal/UV conservation | Baseline counts and saved-file checks do not prove every mesh buffer; the current shoulder candidate adds exact checks on its sole changed support |
+| Current shoulder candidate: local checks | Integrated 59-test suite completed successfully with 2 platform-dependent skips; `py_compile` PASS |
+| Current shoulder candidate: native and GPU | NOT RUN for the candidate in this change |
+| Whole-area visual acceptance | Unaccepted; four bounded road frames do not establish whole-area acceptance |
 | Owner visual status | `PENDING_FINAL_M3` |
 | Performance | `DEFERRED_AFTER_M3`, `performance_pass: false` |
 
-The source proof did not start Unreal, author material instances, assign road
-slots, save a map, prove geometry or render the Unreal consumer. It does not
-satisfy #364's complete definition of done. The owner audits the complete
-assembled M3 world at the end, before FPS measurement; intermediate native
-technical checks and inspected, retained review images continue.
+### Current shoulder candidate
 
-## Owner pause and actual native attempt — 2026-10-10
+The next bounded #364 change targets exactly **436 source-owned outer top
+triangle IDs on the sole window 0112 support**. Only those material IDs may
+change from slot 0 to slot 1. Interior tops and walls retain slot 0 and its
+literal original material instance. The added slot uses the existing staged
+`FillGravel` maps from Poly Haven `rock_ground`, CC0, with a **150 cm** world
+projection matching the provider's 1.5 m source scale; it imports or edits no
+source texture. See the pinned source and use limits in the
+[asset plan](../ASSET_PLAN.md#sa-calobra-road-material-preparation--2026-10-10).
+
+The candidate must compare hashes of the target mesh's positions and triangle
+indices, plus every rendered triangle corner's normals and UVs, before and
+after assignment and after fresh loading. Its exact 436-ID assignment delta is
+separate from those immutable geometry/attribute checks. The manifest retains
+all 436 IDs, hashes and native API declarations, with its durable copy pinned
+across fresh reload and GPU checks. The integrated local 59-test suite completed
+successfully with two skips requiring PowerShell/Windows, and `py_compile`
+passed. Native save/reload and GPU evidence for this candidate are **NOT RUN**;
+no candidate native PASS is claimed. The baseline run above does not validate
+the shoulder changes in this patch.
+
+This remains material-only #364 work: no geometry, Base_DTM, road physics,
+displacement or weather change. The unresolved inner seam belongs to #459 and
+is outside this patch; material work must not conceal it. The owner audits the
+complete assembled M3 world at the end, before FPS measurement. Intermediate
+technical proof and retained review images continue without changing
+`PENDING_FINAL_M3` or the deferred performance status.
+
+## Historical owner pause and first native attempt — 2026-10-10
+
+The following chronology retains earlier attempts. Its paused, blocked and
+pending statements apply to their recorded heads; the current baseline and
+candidate status are stated above.
 
 The owner stopped implementation and requested a report plus smaller roadmap
 batches. Agent implementation/review work is stopped; no additional native job

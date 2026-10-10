@@ -1,7 +1,7 @@
-"""Author a new road-material-only map and verify it in a separate UE process.
+"""Author a new road/shoulder material map and verify a separate UE process.
 
-Action prepare is the sole mutation authority: only a *new* derived /Game
-package and exclusively retained Material Forge packages. Action reload is
+Action prepare is the sole mutation authority: a new derived map, retained
+Material Forge asphalt and the source-owned window0112 shoulder material. Reload is
 read-only and never repairs or re-saves any binding. The accepted #363 map,
 Landscape, source road geometry, route and road physics are immutable.
 """
@@ -27,6 +27,8 @@ from scripts.ue import road_asphalt_source_preflight as asphalt_source  # noqa: 
 from scripts.ue import road_asphalt_slot_canary as canary  # noqa: E402
 from scripts.ue import read_road_material_baseline as baseline  # noqa: E402
 from scripts.ue import sa_calobra_whole_map_prep as prep  # noqa: E402
+from scripts.ue import road_shoulder_window as shoulder  # noqa: E402
+from scripts.ue import road_shoulder_material as shoulder_material  # noqa: E402
 
 MAP = "/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview"
 PREFIX = "Content/Generated/YACS/RoadAsphaltConsumer/"
@@ -88,7 +90,8 @@ def inventory_digest(snapshot):
     return hashlib.sha256(raw).hexdigest()
 
 
-def expected_saved_inventory(original, saved, material_path, *, observed_map_package):
+def expected_saved_inventory(original, saved, material_path, *, observed_map_package,
+                             shoulder_receipt=None):
     """Audit every field using the actual owning map in this Editor phase.
 
     Before SaveMap both snapshots belong to the frozen source map. Only after
@@ -106,6 +109,25 @@ def expected_saved_inventory(original, saved, material_path, *, observed_map_pac
     old = normalized(original, source_map)
     actual = normalized(saved, observed_map_package)
     road = canary.verify_accepted_surface(old)
+    if shoulder_receipt is not None:
+        label = shoulder_receipt["support_label"]
+        matches = [row for row in old["road_supports"] if row["label"] == label]
+        require(len(matches) == 1 and label.startswith("YACS_PERSIST_SUPPORT_")
+                and len(matches[0]["slots"]) == 1
+                and matches[0]["slots"][0]["path"] == shoulder.OLD_MATERIAL,
+                "Shoulder source slot ownership differs")
+        assets = shoulder_receipt["material"]["assets"]
+        require(assets["instance"] == PACKAGE + "/ShoulderWindow0112/MI_ShoulderWindow0112.MI_ShoulderWindow0112"
+                and assets["master"] == PACKAGE + "/ShoulderWindow0112/M_ShoulderWindow0112.M_ShoulderWindow0112",
+                "Shoulder material escaped its bounded package")
+        matches[0]["slots"].append({"path": assets["instance"],
+            "parent": assets["master"], "class": "MaterialInstanceConstant",
+            "effective_color": None})
+        bindings = [row for row in old["mesh_material_collision_snapshot"]
+                    if row["component"] == matches[0]["component"]]
+        require(len(bindings) == 1 and bindings[0]["materials"] == [shoulder.OLD_MATERIAL],
+                "Shoulder material component is missing or ambiguous")
+        bindings[0]["materials"].append(assets["instance"])
     canary._expected_live_snapshot(old, actual, road["component"], material_path)
     return inventory_digest(actual)
 
@@ -174,6 +196,14 @@ def write_once(path, value):
     with path.open("xb") as handle:
         handle.write(raw)
     return session._identity(path, JSON_LIMIT)
+
+
+def verified_manifest_identity(proof, retained):
+    """The downloadable evidence is byte-identical to the retained manifest."""
+    identity = session._identity(session._safe_path(retained, MANIFEST), JSON_LIMIT)
+    require(session._identity(session._safe_path(proof, MANIFEST), JSON_LIMIT) == identity,
+            "Downloadable material manifest differs from retained native evidence")
+    return identity
 
 
 def native_world(api, package):
@@ -369,6 +399,37 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows):
         "<scene>", session.operation.MAP_PACKAGE
     ) or component.get_path_name() == inventory_before["road_supports"][0]["component"],
             "Road component ownership differs")
+    sections, source_identity = shoulder.frozen_window()
+    support_actor, support_component, support_mesh, _worst = shoulder.find_owner(
+        api, actors, sections
+    )
+    before_shoulder = shoulder.read_mesh(api, support_mesh)
+    selection = shoulder.verify_selection(before_shoulder, sections)
+    require(all(value == 0 for value in before_shoulder["material_ids"]),
+            "Original shoulder material IDs differ before authoring")
+    material_api = shoulder.native_api_evidence(api, support_component)
+    gravel, gravel_receipt = shoulder_material.create_material(
+        api, PACKAGE + "/ShoulderWindow0112", rows)
+    shoulder_material.verify_material(api, gravel_receipt, rows)
+    for path in gravel_receipt["assets"].values():
+        asset = api.load_asset(path)
+        require(asset is not None and api.EditorAssetLibrary.save_loaded_asset(
+            asset, only_if_is_dirty=False), "Derived shoulder material save failed")
+    shoulder_receipt = {
+        "window_id": shoulder.WINDOW,
+        "support_label": support_actor.get_actor_label(),
+        "source_identity": source_identity,
+        "selection": selection,
+        "before_mesh": before_shoulder["summary"],
+        "material": gravel_receipt,
+        "material_api": material_api,
+        "source_vertices_topology_normals_uv_preserved": True,
+        "original_wall_material_preserved": True,
+        "material_ids_changed": len(shoulder.SHOULDER_IDS),
+        "other_185_supports_unchanged": True,
+        "rollback_verified": False,
+        "whole_area_admitted": False,
+    }
     saved = False
     try:
         component.set_material(0, instance)
@@ -376,10 +437,16 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows):
             component.get_material(0).get_path_name() == instance_path,
             "Saved road material assignment readback differs",
         )
+        after_shoulder = shoulder.apply_with_rollback_proof(
+            api, support_component, gravel, before_shoulder
+        )
+        shoulder_receipt["after_mesh"] = after_shoulder["summary"]
+        shoulder_receipt["rollback_verified"] = True
         live = baseline.native_inventory(api, prep, session.operation.MAP_PACKAGE)
         expected_saved_inventory(
             inventory_before, live, instance_path,
             observed_map_package=session.operation.MAP_PACKAGE,
+            shoulder_receipt=shoulder_receipt,
         )
         world = api.get_editor_subsystem(api.UnrealEditorSubsystem).get_editor_world()
         require(api.EditorLoadingAndSavingUtils.save_map(world, MAP),
@@ -391,10 +458,14 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows):
         inventory_hash = expected_saved_inventory(
             inventory_before, after, instance_path,
             observed_map_package=observed_map,
+            shoulder_receipt=shoulder_receipt,
         )
     except Exception:
         if not saved:
             component.set_material(0, old_material)
+            shoulder.set_ids(api, support_component, shoulder.SHOULDER_IDS, 0)
+            support_component.configure_material_set(
+                [api.load_asset(shoulder.OLD_MATERIAL)], delete_extra_slots=True)
         raise
     session._verify_rows(ROOT, rows)
     session._assert_package_members(ROOT, rows)
@@ -426,8 +497,10 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows):
         "expected_normalized_inventory_sha256": inventory_hash,
         "original_native_map_inventory_sha256": inventory_digest(before),
         "assets": delivered,
-        "road_slot_zero_only": True,
-        "support_186_unchanged": True,
+        "road_slot_zero_only": False,
+        "support_186_unchanged": False,
+        "shoulder_window": shoulder_receipt,
+        "material_changes": "road_slot_zero_and_window0112_outer_shoulder_ids",
         "landscape_1024_unchanged": True,
         "road_geometry_unchanged": True,
         "physics_profile_unchanged": True,
@@ -438,11 +511,16 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows):
         "performance_pass": False,
     }
     manifest_id = write_once(retained / MANIFEST, manifest)
+    require(write_once(session._safe_path(proof, MANIFEST), manifest) == manifest_id,
+            "Downloadable material manifest differs from retained native evidence")
+    require(verified_manifest_identity(proof, retained) == manifest_id,
+            "Native material manifest copy changed after writing")
     receipt_path = session._safe_path(proof, PREPARED)
     receipt_id = write_once(receipt_path, {
         "status": "ROAD_ASPHALT_SAVED_PREPARED",
         "exact_sha": exact_sha,
         "manifest": manifest_id,
+        "evidence_manifest": {"file": MANIFEST, **manifest_id},
         "retained_root": str(retained),
         "derived_map_sha256": next(x["sha256"] for x in assets if x["path"] == MAP_FILE),
         "material_saved": True,
@@ -465,9 +543,10 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows):
         and prepare_row.get("retained_root") == str(retained),
         "No authentic native saved-consumer preparation",
     )
-    original_manifest_id = session._identity(retained / MANIFEST, JSON_LIMIT)
+    original_manifest_id = verified_manifest_identity(proof, retained)
     require(
-        prepare_row.get("manifest") == original_manifest_id,
+        prepare_row.get("manifest") == original_manifest_id
+        and prepare_row.get("evidence_manifest") == {"file": MANIFEST, **original_manifest_id},
         "Persistent manifest differs from first native save",
     )
     manifest = session._read_json(retained / MANIFEST, limit=JSON_LIMIT)
@@ -481,7 +560,10 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows):
         and manifest.get("map_file") == MAP_FILE
         and manifest.get("map_saved") is True
         and manifest.get("canonical_saved") is False
-        and manifest.get("road_slot_zero_only") is True
+        and manifest.get("road_slot_zero_only") is False
+        and manifest.get("support_186_unchanged") is False
+        and manifest.get("material_changes") == "road_slot_zero_and_window0112_outer_shoulder_ids"
+        and manifest.get("shoulder_window", {}).get("rollback_verified") is True
         and manifest.get("source_scene_mutated") is False
         and manifest.get("source_receipt_sha256") == asphalt_source.SOURCE_RECEIPT_SHA256
         and manifest.get("graph_sha256") == asphalt_source.GRAPH_SHA256
@@ -501,6 +583,8 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows):
         api, manifest["material_instance"], manifest["material_master"],
         manifest["texture_objects"],
     )
+    shoulder_material.verify_material(api, manifest["shoulder_window"]["material"], rows)
+    shoulder.verify_loaded(api, manifest["shoulder_window"])
     require(
         instance.get_path_name() == manifest["material_instance"],
         "Fresh loaded material object differs",
@@ -509,6 +593,7 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows):
     inventory_hash = expected_saved_inventory(
         original["native_inventory"], after, manifest["material_instance"],
         observed_map_package=MAP,
+        shoulder_receipt=manifest["shoulder_window"],
     )
     require(
         inventory_hash == manifest["expected_normalized_inventory_sha256"],
@@ -517,7 +602,7 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows):
     baseline.dirty_packages(api)
     session._verify_rows(ROOT, rows)
     verify_retained_files(retained, manifest["assets"])
-    require(session._identity(retained / MANIFEST, JSON_LIMIT) == original_manifest_id,
+    require(verified_manifest_identity(proof, retained) == original_manifest_id,
             "Saved consumer manifest changed during fresh reload")
     write_once(session._safe_path(proof, RELOADED), {
         "schema_version": 1,
@@ -526,10 +611,16 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows):
         "exact_sha": exact_sha,
         "map_package": MAP,
         "saved_manifest_sha256": original_manifest_id["sha256"],
+        "evidence_manifest_sha256": original_manifest_id["sha256"],
         "map_sha256": next(x["sha256"] for x in manifest["assets"] if x["path"] == MAP_FILE),
         "material_instance": instance.get_path_name(),
         "fresh_process": True,
         "road_material_reapplied": False,
+        "shoulder_material_reapplied": False,
+        "window0112_shoulder_fresh_reload_verified": True,
+        "window0112_positions_indices_normals_uv_unchanged": True,
+        "window0112_wall_material_unchanged": True,
+        "window0112_selected_triangle_count": len(shoulder.SHOULDER_IDS),
         "source_scene_mutated": False,
         "new_saved_asset_bytes_unchanged": True,
         "supports_landscape_geometry_unchanged": True,

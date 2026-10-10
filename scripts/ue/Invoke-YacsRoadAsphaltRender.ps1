@@ -159,7 +159,13 @@ try {
         'scripts/ue/Invoke-YacsRoadAsphaltRender.ps1',
         'scripts/ue/road_asphalt_gpu_review.py',
         'scripts/ue/road_asphalt_saved_consumer.py',
+        'scripts/ue/road_shoulder_window.py',
+        'scripts/ue/road_shoulder_material.py',
+        'scripts/ue/capture_sa_calobra_shoulder_contact.py',
         'scripts/proof/sa_calobra_shoulder_contact.py',
+        'scripts/proof/sa_calobra_tpp_survey.py',
+        'worldgen/materials/sa_calobra_texture_library_v2_20261005.json',
+        'worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.json',
         'docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv'
     )) { Require-ExactSource $relative }
     $proof = Join-Path $root ('Saved/RuntimeProof/RoadMaterialBaseline/' + $RunToken)
@@ -263,6 +269,11 @@ try {
         $data.camera_csv_sha256 -cne '15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3' -or
         $data.native_lit_frames_retained -isnot [bool] -or
         -not $data.native_lit_frames_retained -or
+        $data.window0112_shoulder_material_ids_verified -isnot [bool] -or
+        -not $data.window0112_shoulder_material_ids_verified -or
+        $data.window0112_selected_triangle_count -ne 436 -or
+        $data.window0112_wall_material_unchanged -isnot [bool] -or
+        -not $data.window0112_wall_material_unchanged -or
         $data.transient_dirty_package_audit.no_original_or_content_package_dirty -isnot [bool] -or
         -not $data.transient_dirty_package_audit.no_original_or_content_package_dirty -or
         $data.transient_dirty_package_audit.dirty_derived_package_saved -isnot [bool] -or

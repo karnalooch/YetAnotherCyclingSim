@@ -214,7 +214,14 @@ try {
         'scripts/ue/road_asphalt_saved_consumer.py',
         'scripts/ue/road_asphalt_source_preflight.py',
         'scripts/ue/road_asphalt_slot_canary.py',
-        'scripts/ue/import_material_forge_variant.py'
+        'scripts/ue/import_material_forge_variant.py',
+        'scripts/ue/road_shoulder_window.py',
+        'scripts/ue/road_shoulder_material.py',
+        'scripts/ue/capture_sa_calobra_shoulder_contact.py',
+        'scripts/proof/sa_calobra_shoulder_contact.py',
+        'scripts/proof/sa_calobra_tpp_survey.py',
+        'worldgen/materials/sa_calobra_texture_library_v2_20261005.json',
+        'worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.json'
     )) { Require-ExactSource $relative }
     $evidence = Join-Path $root ('Saved/RuntimeProof/RoadMaterialBaseline/' + $RunToken)
     Assert-PlainPath $evidence
@@ -259,6 +266,15 @@ try {
         throw 'Saved road map preparation receipt is not an authentic first-stage candidate.'
     }
     $receipt.proof_files.saved_prepared = $saved.identity
+    $manifest = Read-Json (Join-Path $evidence 'road-asphalt-saved-manifest.json')
+    if ($saved.value.evidence_manifest.file -cne 'road-asphalt-saved-manifest.json' -or
+        $saved.value.evidence_manifest.sha256 -cne $manifest.identity.sha256 -or
+        $saved.value.evidence_manifest.size_bytes -ne $manifest.identity.size_bytes -or
+        $saved.value.manifest.sha256 -cne $manifest.identity.sha256 -or
+        $saved.value.manifest.size_bytes -ne $manifest.identity.size_bytes) {
+        throw 'Downloadable material manifest is not pinned to the native retained evidence.'
+    }
+    $receipt.proof_files.saved_manifest = $manifest.identity
     Assert-Identity $baseline.identity 2MB
     Assert-Identity $asphalt.identity 2MB
     Assert-Identity $nativeRead.identity 2MB
@@ -270,8 +286,13 @@ try {
     if ($fresh.value.status -cne 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_PASS' -or
         $fresh.value.exact_sha -cne $ExpectedHead -or
         $fresh.value.saved_manifest_sha256 -cne $saved.value.manifest.sha256 -or
+        $fresh.value.evidence_manifest_sha256 -cne $manifest.identity.sha256 -or
         $fresh.value.fresh_process -isnot [bool] -or -not $fresh.value.fresh_process -or
         $fresh.value.road_material_reapplied -isnot [bool] -or $fresh.value.road_material_reapplied -or
+        $fresh.value.shoulder_material_reapplied -isnot [bool] -or $fresh.value.shoulder_material_reapplied -or
+        $fresh.value.window0112_shoulder_fresh_reload_verified -isnot [bool] -or
+        -not $fresh.value.window0112_shoulder_fresh_reload_verified -or
+        $fresh.value.window0112_selected_triangle_count -ne 436 -or
         $fresh.value.source_scene_mutated -isnot [bool] -or $fresh.value.source_scene_mutated -or
         $fresh.value.new_saved_asset_bytes_unchanged -isnot [bool] -or
         -not $fresh.value.new_saved_asset_bytes_unchanged -or
@@ -281,6 +302,7 @@ try {
     }
     $receipt.proof_files.fresh_reload = $fresh.identity
     Assert-Identity $saved.identity 2MB
+    Assert-Identity $manifest.identity 2MB
     Assert-Identity $baseline.identity 2MB
     Assert-Identity $asphalt.identity 2MB
     Assert-Identity $engine 1GB
@@ -290,6 +312,7 @@ try {
     Require-IdleHost
     $receipt.saved_derived_consumer = $true
     $receipt.fresh_reload_verified = $true
+    $receipt.window0112_shoulder_material_ids_verified = $true
     $receipt.status = 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS'
 }
 catch {

@@ -2438,11 +2438,23 @@ Heavy proof cadence is defined in `CI_VALIDATION_TIERS.md`.
 World success is judged from the rider camera.
 
 Current #364 [asphalt/shoulder evidence](evidence/ROAD_SURFACE_MATERIALS_364.md)
-proves the 4 m asphalt base's source replay, not its native road appearance.
-Inspect the actual road consumer from rider height, including both travel
-directions, bends, shoulder tops, support sides and the Landscape transition.
-Preserve the accepted #363 consumer and require material-only conservation,
-saved/fresh-rendered proof and whole-area review images before technical delivery.
+includes a verified asphalt baseline at exact
+`396861de0884135d18006e6d3f133edebef639aa`: protected CI 38078462035 PASS with
+existing build/Automation evidence reused, and native/GPU 38078459124 PASS for
+the saved/freshly reopened road consumer and four final same-camera window 0112
+frames in both directions with full mip warmup. Whole-area appearance remains
+unaccepted. The current shoulder candidate selects only 436 source-owned
+outer top triangle IDs on one window 0112 support for CC0 Poly Haven
+`rock_ground` / `FillGravel` at 150 cm in slot 1; interior tops and walls retain
+their literal original slot 0 material. Local checks pass, but candidate
+native/GPU are NOT RUN. Require positions/indices and every rendered corner's
+normals/UVs to match before/after and after fresh load, allowing only the named
+material-ID delta. Preserve the accepted #363 consumer, Base_DTM, geometry and
+road physics; the unresolved inner seam remains #459 debt outside this patch.
+Continue rider-height review of both directions, bends, shoulder tops, support
+sides and Landscape transitions, with retained whole-area review images before
+complete technical delivery. Owner audit remains `PENDING_FINAL_M3` and
+performance `DEFERRED_AFTER_M3` / `performance_pass: false`.
 
 **Current M3 owner decision — 2026-10-10:** "zrób to jak najlepiej potrafisz,
 ja zrobię audyt wizualny na końcu m3 przed testem fpsów". For #364 and the

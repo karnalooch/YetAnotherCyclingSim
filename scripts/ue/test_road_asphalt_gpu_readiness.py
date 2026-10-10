@@ -22,12 +22,16 @@ class RoadCaptureReadinessTests(unittest.TestCase):
             key: "/Game/Derived/T_" + key + ".T_" + key
             for key in ("BaseColor", "Normal_DX", "ORM", "DetailMasks")
         }
+        self.gravel_paths = {
+            key: "/Game/Derived/Shoulder/T_" + key + ".T_" + key
+            for key in ("BaseColor", "Normal_DX", "Roughness")
+        }
         self.textures = {
             path: SimpleNamespace(
                 get_path_name=Mock(return_value=path),
                 set_force_mip_levels_to_be_resident=Mock(),
             )
-            for path in self.paths.values()
+            for path in (*self.paths.values(), *self.gravel_paths.values())
         }
         self.height = SimpleNamespace(
             get_path_name=Mock(return_value="/Game/Derived/L_Map.Height"),
@@ -53,7 +57,10 @@ class RoadCaptureReadinessTests(unittest.TestCase):
         }
         context = {
             "proof": self.root,
-            "manifest": {"texture_objects": self.paths},
+            "manifest": {
+                "texture_objects": self.paths,
+                "shoulder_window": {"material": {"texture_objects": self.gravel_paths}},
+            },
             "frames": [self.row],
         }
         self.safe = self.enterContext(patch.object(
@@ -133,8 +140,8 @@ class RoadCaptureReadinessTests(unittest.TestCase):
         self.job.submit_pose()
         self.assertEqual(self.events, ["ready", "shot"])
         self.prepare.assert_called_once()
-        self.assertEqual(self.job.pose_readiness["material_texture_count"], 4)
-        self.assertEqual(len(self.job.residency_leases), 5)
+        self.assertEqual(self.job.pose_readiness["material_texture_count"], 7)
+        self.assertEqual(len(self.job.residency_leases), 8)
         for texture in self.textures.values():
             texture.set_force_mip_levels_to_be_resident.assert_called_with(
                 gpu.HEIGHT_MIP_LEASE_SECONDS, 0
@@ -204,6 +211,13 @@ class RoadCaptureReadinessTests(unittest.TestCase):
     def test_missing_texture_does_not_get_a_fabricated_readiness_receipt(self):
         self.api.load_asset.return_value = None
         self.api.load_asset.side_effect = None
+        with self.assertRaisesRegex(ValueError, "texture missing"):
+            self.job.prepare_pose(self.row, object(), object())
+        self.prepare.assert_not_called()
+        self.writer.assert_not_called()
+
+    def test_missing_shoulder_texture_stops_before_capture_barrier(self):
+        del self.textures[self.gravel_paths["Normal_DX"]]
         with self.assertRaisesRegex(ValueError, "texture missing"):
             self.job.prepare_pose(self.row, object(), object())
         self.prepare.assert_not_called()
