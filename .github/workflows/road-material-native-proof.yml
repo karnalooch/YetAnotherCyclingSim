@@ -12,6 +12,9 @@ on:
       - 'scripts/ci/Resolve-YacsUnrealCiCache.ps1'
       - 'scripts/ci/unreal_ci_workspace.py'
       - 'scripts/ci/materialize_unreal_cache_inputs.py'
+      - 'scripts/ci/test_unreal_ci_cache_contract.py'
+      - 'scripts/ci/official_mcp_bob_session.py'
+      - 'scripts/ci/test_official_mcp_bob_session.py'
       - 'scripts/ue/road_asphalt_slot_canary.py'
 
 permissions:

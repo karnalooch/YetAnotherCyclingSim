@@ -74,14 +74,12 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         host_script = (
             ROOT / "scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1"
         ).read_text(encoding="utf-8")
-        short_name = "rm-\u0024{{ github.run_id }}-\u0024{{ github.run_attempt }}"
+        short_name = "rm-${{ github.run_id }}-${{ github.run_attempt }}"
         self.assertIn("          path: " + short_name, stage_workflow)
-        self.assertEqual(
-            stage_workflow.count("working-directory: " + short_name), 2
-        )
-        self.assertIn("('rm-' + \u0024RunToken)", host_script)
+        self.assertEqual(stage_workflow.count("working-directory: " + short_name), 2)
+        self.assertIn("('rm-' + $RunToken)", host_script)
         self.assertNotIn(
-            "_road-material-native-\u0024{{ github.run_id }}",
+            "_road-material-native-${{ github.run_id }}",
             stage_workflow,
         )
         base = PureWindowsPath(
@@ -97,9 +95,7 @@ class UnrealCiCacheContractTests(unittest.TestCase):
             len(str(base / "_road-material-native-38058683514-1" / deepest_asset)),
             260,
         )
-        self.assertLess(
-            len(str(base / "rm-38058683514-1" / deepest_asset)), 260
-        )
+        self.assertLess(len(str(base / "rm-38058683514-1" / deepest_asset)), 260)
 
     def test_native_road_reader_requires_retained_byte_pinned_automation_proof(self):
         reader = (ROOT / "scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1").read_text(
