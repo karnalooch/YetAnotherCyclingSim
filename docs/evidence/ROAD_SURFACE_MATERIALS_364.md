@@ -127,9 +127,41 @@ The representative camera plan selects 68 existing, authenticated survey poses:
 both directions in all 24 occupied 250 m road cells, the original four
 comparisons, Nudo, the accepted hairpin and elevation extremes. It represents
 28 of 185 road windows; it does not assert exhaustive road-pixel visibility or
-owner acceptance. Full-network save, independent reopening and these GPU
-captures remain pending. Owner visual status stays `PENDING_FINAL_M3` and
-performance stays `DEFERRED_AFTER_M3`, `performance_pass: false`.
+owner acceptance. At `9242964495670e354836b9e65e47d2155c30d98a`,
+[protected CI 38090399959](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38090399959)
+passed with the authenticated equivalent native build/Automation proof. The
+[native run 38090395135](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38090395135)
+passed the baseline, reversible dry-asphalt canary, complete network save and
+separate fresh-process reopening. The actual selection is **67,760 outer-top
+triangles across 185 material targets**, with all 186 support owners checked;
+all road/support geometry and rendered corner normal/UV buffers were preserved.
+Prepare and reload processes exited 0. The saved manifest is 1,909,237 bytes,
+SHA-256 `e7c764ddc7c6876dbf64cd6213dd61e9f5ed225c74b86df180f8603030f269f6`;
+the freshly reopened map is
+`4ea74f77112c1323203569b5ee10c34a15c6f7db006ea33f01f3e77bf90c60e5`.
+
+The GPU stage **failed**, retaining 23 of 68 final poses in its receipt. The
+24th final PNG (`window-0081-reverse-00008`) was eventually written, but its
+trace-to-save interval was 98.964 seconds, beyond the 90-second per-shot
+watchdog. All previous 95 prime/final trace-to-save intervals were at most
+0.513 seconds. The log does not identify what blocked the engine during that
+interval; no GPU, shader or disk cause is inferred from the missing entries.
+The disk contains 24 final plus 72 priming PNGs; the completed receipt prefix
+contains 23 final plus 69 linked priming PNGs, with correct hashes and poses.
+Full texture readiness and source/material/geometry conservation checks passed,
+and GPU editor PID 10860 exited 0. Neither its clean exit nor the late PNG
+changes the failed 68-pose result into a PASS.
+
+The original [artifact 11683194509](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38090395135/artifacts/11683194509)
+was downloaded and independently verified: 144,105,118 bytes, SHA-256
+`4e9e7f2559f54fb150d2e22ecbc51711827793f5d0a1d3526117181a5fcbfdac`.
+Technical inspection of actual lit, shadowed and hairpin images also rejected
+the dry recipe's appearance: large smoky/marbled albedo fields dominate the
+aggregate, with smooth U/S-shaped cracks. The revised Material Forge recipe
+therefore needs a new real two-render source proof and new native images.
+Numerical source QA was not visual acceptance. Owner visual status stays
+`PENDING_FINAL_M3`; performance stays `DEFERRED_AFTER_M3`,
+`performance_pass: false`.
 
 The integrated local contract suite completed **237 tests, with six skipped
 because PowerShell is unavailable locally**. Documentation/architecture and
@@ -148,11 +180,18 @@ curvature in a separate bounded 8 MiB compact file, linked by SHA-256 from
 the material manifest and rehashed during fresh reload and GPU review.
 Its status explicitly keeps `real_road_match_validated=false`; it neither
 authors geometry nor turns DTM inference into measured road banking.
-The frozen hairpin producer uses a provisional 2% inward design, the ordinary
-network smooths and globally bounds DTM-derived banking within each source
-part, and Nudo deliberately uses a level transverse bridge profile with end
-blends. Establishing faithful real-road profiles remains the separate
-measurement and geometry workstream requested by the owner.
+The sidecar retained in native run 38090395135 is 5,684,256 bytes, SHA-256
+`b2f5f3306157ba4431371d9d7e1bf0241e19874fea4f9a3009899b614b52821d`.
+Its actual full accepted-hairpin source has signed edge0-to-edge24 crossfall
+from -7.43% to +13.72%, across 2,401 sections and 306.46 m of local XY station.
+The source centre's longitudinal grade ranges from -15.29% to -2.71%.
+The provisional 2% inward design belongs only to a limited central region;
+it does not describe the whole saved hairpin. Nudo's main `nudo-1` window is
+transversely level in 201 of 202 sections within a 1e-9 slope tolerance.
+These are measurements of the frozen visual/design source, not surveyed road
+banking, a native geometry repair or authoritative cycling physics. Establishing
+faithful real-road profiles remains the separate measurement and geometry
+workstream requested by the owner.
 
 ## Current proof boundary
 

@@ -145,14 +145,18 @@ vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
     );
     secondary_crack *= smoothstep(0.64,0.79,yacs_dry_noise(q,17.0,seed+61.0));
     float crack = clamp(primary_crack+0.30*secondary_crack,0.0,1.0);
-    crack *= 1.0-0.70*patch_mask;
+    // UE review exposed smooth contour marks in colour, normal and ORM.
+    // Attenuate the shared field so all five exports retain the same relief.
+    crack *= 0.20*(1.0-0.70*patch_mask);
 
     float height = 0.50+0.018*(aggregate-0.5)+0.006*(micro-0.5);
     height += 0.004*(middle-0.5)+0.003*patch_mask;
     height -= clamp(fractures,0.0,1.6)*0.022*crack;
+    // Keep metre-scale wear subordinate to the existing centimetre/millimetre
+    // binder and aggregate fields; dominant wear read as marble in UE.
     float variation = clamp(
-        0.5+1.65*(0.58*(wear-0.5)+0.22*(middle-0.5)
-        +0.14*(aggregate-0.5)+0.06*(micro-0.5)),0.0,1.0
+        0.5+1.65*(0.18*(wear-0.5)+0.32*(middle-0.5)
+        +0.38*(aggregate-0.5)+0.12*(micro-0.5)),0.0,1.0
     );
     return vec4(clamp(height,0.0,1.0),crack,patch_mask,variation);
 }
@@ -476,7 +480,7 @@ def _color_code(
     pore_scale = _profile_scale(profile, "pore_color_scale")
     if family_id == "aged_mountain_asphalt":
         if _is_dry_asphalt(family_id, variant):
-            variation, crack, pore = 0.200, -0.045, -0.050
+            variation, crack, pore = 0.200, -0.045, -0.020
         else:
             variation, crack, pore = 0.085, -0.060, -0.030
     elif family_id == "regional_limestone":

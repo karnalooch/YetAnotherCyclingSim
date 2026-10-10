@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,6 +28,18 @@ def _load_forge():
 
 
 forge = _load_forge()
+
+
+def _scalar_probe(expression: str, **inputs: float) -> float:
+    """Probe production scalar arithmetic; this is not a shader render."""
+    for name in ("variation", "crack", "pore"):
+        expression = expression.replace("$" + name + "($uv)", name)
+    expression = expression.replace("$brightness", "brightness")
+    return float(eval(
+        expression.replace("\n", " "),
+        {"__builtins__": {}, "clamp": lambda value, lo, hi: min(hi, max(lo, value))},
+        inputs,
+    ))
 
 
 def _png(path: Path, array: np.ndarray) -> None:
@@ -255,24 +268,69 @@ class MaterialForgeContractTests(unittest.TestCase):
             self.assertEqual(material["parameters"]["emission_energy"], 0)
             self.assertEqual(len(material["shader_model"]["exports"]["YACS/Textures"]["files"]), 5)
 
-    def test_dry_wrap_fix_preserves_the_rendered_recipe_contrast_and_frequencies(self):
-        # Source run 38087789852/c773f871 failed wrap QA. Keep the fix confined
-        # to periodic lattice addressing, with no edge fade or mask reduction.
+    def test_dry_visual_correction_preserves_the_exact_periodic_helper(self):
+        # The b385 fix for source run 38087789852/c773f871 stays byte-exact.
+        # The later UE9242 appearance rejection changes the surface recipe.
         helper, surface = forge.DRY_ASPHALT_FUNCTION.split("vec4 yacs_limestone(", 1)
         self.assertIn("vec2 p = fract(uv)*cells;", helper)
         self.assertNotIn("mod(", helper)
         self.assertNotIn("yacs_noise(", surface)
-        prior_surface = "\nvec4 yacs_limestone(" + surface.replace(
-            "yacs_dry_noise(", "yacs_noise("
-        )
-        prior_field = (
-            forge._load_base_builder().FIELD.split("vec4 yacs_limestone(", 1)[0]
-            + prior_surface
-        )
         self.assertEqual(
-            hashlib.sha256(prior_field.encode()).hexdigest(),
-            "4e5df9c82a0a7dc5cc7618f281567ed940369d2d325262dcd8e2c7ba2e35897e",
+            hashlib.sha256(helper.encode()).hexdigest(),
+            "9494ae2a921def4302fd88dd28716c5f7728983bfd0a96d02bc99199e91d3458",
         )
+
+    def test_dry_colour_makes_aggregate_stronger_than_metre_scale_wear(self):
+        surface = forge.DRY_ASPHALT_FUNCTION
+        variation = re.search(r"float variation = (.*?);", surface, re.S)[1]
+        colour = forge._color_code("aged_mountain_asphalt", {"id": "dry_varied"})
+        colour = colour.split(" = ", 1)[1].removesuffix(";")
+        neutral = dict(wear=0.5, middle=0.5, aggregate=0.5, micro=0.5)
+        self.assertAlmostEqual(_scalar_probe(variation, **neutral), 0.5)
+        spans = {}
+        for field in neutral:
+            tones = [
+                _scalar_probe(
+                    colour, brightness=0.31, crack=0.0, pore=0.0,
+                    variation=_scalar_probe(variation, **{**neutral, field: value}),
+                )
+                for value in (0.25, 0.75)
+            ]
+            spans[field] = tones[1] - tones[0]
+        # Equal source excursions expose the old cloud-dominant mix directly;
+        # these probes do not assert visual acceptance or rendered statistics.
+        self.assertLess(spans["wear"], 0.035)
+        self.assertGreater(spans["aggregate"], 0.05)
+        self.assertLess(spans["wear"], spans["aggregate"] / 2)
+        self.assertGreater(spans["middle"], spans["wear"])
+
+    def test_dry_crack_attenuation_reaches_colour_height_and_response(self):
+        surface = forge.DRY_ASPHALT_FUNCTION
+        initial = re.search(r"float crack = (.*?);", surface, re.S)[1]
+        attenuation = re.search(r"\bcrack \*= (.*?);", surface, re.S)
+        crack = _scalar_probe(initial, primary_crack=1.0, secondary_crack=0.0)
+        crack *= _scalar_probe(attenuation[1], patch_mask=0.0)
+        self.assertGreater(crack, 0.0)
+        self.assertLessEqual(crack, 0.25)
+        self.assertLess(attenuation.end(), surface.index("height -= "))
+        self.assertIn("return vec4(clamp(height,0.0,1.0),crack,patch_mask,variation);", surface)
+        height = re.search(r"height -= (.*?);", surface, re.S)[1]
+        self.assertLess(_scalar_probe(height, fractures=0.48, crack=crack), 0.0027)
+        variant = {"id": "dry_varied"}
+        colour = forge._color_code("aged_mountain_asphalt", variant)
+        colour = colour.split(" = ", 1)[1].removesuffix(";")
+        roughness, ao = forge._response_expressions("aged_mountain_asphalt", 0.94, variant)
+        for expression, maximum in ((colour, 0.012), (roughness, 0.005), (ao, 0.025)):
+            values = [
+                _scalar_probe(expression, brightness=0.31, variation=0.5, crack=value, pore=0.0)
+                for value in (0.0, crack)
+            ]
+            self.assertLess(abs(values[1] - values[0]), maximum)
+        repair_tones = [
+            _scalar_probe(colour, brightness=0.31, variation=0.5, crack=0.0, pore=value)
+            for value in (0.0, 1.0)
+        ]
+        self.assertLess(abs(repair_tones[1] - repair_tones[0]), 0.025)
 
     def test_real_dry_source_failure_remains_rejected_by_unchanged_wrap_qa(self):
         # Measured from the original artifact 11682871037, not a passing

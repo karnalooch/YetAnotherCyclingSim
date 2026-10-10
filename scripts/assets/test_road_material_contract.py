@@ -78,7 +78,7 @@ def _synthetic_bundle(root: Path) -> None:
                 "shader_model": {
                     "code": "float $(name_uv)_tone = clamp($brightness"
                     "+0.200000*($variation($uv)-0.5)-0.045000*$crack($uv)"
-                    "-0.050000*$pore($uv),0.0,1.0);",
+                    "-0.020000*$pore($uv),0.0,1.0);",
                     "outputs": [{
                         "rgb": "vec3(($(name_uv)_tone*0.97)*1.000000,"
                         "($(name_uv)_tone*0.985)*1.000000,"
