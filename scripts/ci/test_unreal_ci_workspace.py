@@ -91,6 +91,76 @@ class UnrealWorkspaceTests(unittest.TestCase):
         self.assertEqual(cache.select(self.workspace), self.name)
         self.assertTrue((self.workspace / cache.POINTER).exists())
 
+    def test_raw_checkout_drift_preserves_pointer_and_uses_fresh_build(self):
+        self.publish()
+        env_file = self.workspace / "github-env"
+        with (
+            patch.dict(os.environ, {"GITHUB_ENV": str(env_file)}),
+            patch(
+                "sys.argv",
+                [
+                    "workspace",
+                    "select",
+                    "--workspace",
+                    str(self.workspace),
+                    "--run",
+                    "101-1",
+                ],
+            ),
+            patch.object(cache, "has_untrusted_source_checkout", return_value=True),
+            patch.object(cache, "cleanup") as cleanup,
+        ):
+            cache.main()
+        cleanup.assert_not_called()
+        self.assertEqual(
+            env_file.read_text(), "YACS_UNREAL_WORKTREE=_unreal-build-101-1\n"
+        )
+        self.assertEqual(cache.select(self.workspace), self.name)
+        self.assertTrue(
+            (self.root / "Binaries/Win64" / cache.BINARY_NAMES[0]).exists()
+        )
+        self.assertFalse((self.workspace / "_unreal-build-101-1").exists())
+
+    def test_detects_raw_crlf_against_git_blob_even_if_git_filters_it(self):
+        from scripts.ci import materialize_unreal_cache_inputs as source
+
+        attr = self.root / ".gitattributes"
+        attr.write_bytes(b"*.cs text eol=lf\n")
+        cs = self.root / "Source/Module/Module.Build.cs"
+        cs.parent.mkdir(parents=True)
+        cs.write_bytes(b"first\nsecond\n")
+        subprocess.run(["git", "add", "."], cwd=self.root, check=True)
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.invalid",
+                "commit",
+                "-qm",
+                "source fixture",
+            ],
+            cwd=self.root,
+            check=True,
+        )
+        before = (self.root / cache.STATE).read_bytes()
+        with patch.object(
+            source, "critical_paths", return_value=["Source/Module/Module.Build.cs"]
+        ):
+            self.assertFalse(cache.has_untrusted_source_checkout(self.root))
+            cs.write_bytes(b"first\r\nsecond\r\n")
+            original_git = source.git
+
+            def stale_git_filter(root, *args):
+                if args == ("diff", "--name-only", "-z", "HEAD"):
+                    return b""
+                return original_git(root, *args)
+
+            with patch.object(source, "git", side_effect=stale_git_filter):
+                self.assertTrue(cache.has_untrusted_source_checkout(self.root))
+        self.assertEqual((self.root / cache.STATE).read_bytes(), before)
+
     def test_binary_probe_preserves_bytes_and_verified_pointer(self):
         self.publish()
         before = {

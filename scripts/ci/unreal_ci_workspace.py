@@ -164,6 +164,41 @@ def publish(
     write_pointer(workspace, name)
 
 
+def has_untrusted_source_checkout(root: Path) -> bool:
+    """Treat noncanonical raw Git bytes as a reason for fresh build isolation.
+
+    The active cache pointer and all original binaries/assets remain untouched.
+    This function is a read-only selector, never a replacement for the normal
+    exact-SHA environment/binary/proof resolver.
+    """
+    if not (root / ".git").exists():
+        return False
+    try:
+        from scripts.ci import materialize_unreal_cache_inputs as source
+
+        if source.git(root, "diff", "--name-only", "-z", "HEAD"):
+            print("UNREAL WORKSPACE: active source checkout has tracked differences")
+            return True
+        for relative in source.critical_paths(root):
+            path, committed = source.validate_target(root, relative)
+            if path.read_bytes() != committed:
+                print("UNREAL WORKSPACE: physical Git source differs: " + relative)
+                return True
+    except (
+        OSError,
+        ValueError,
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        UnicodeError,
+    ) as error:
+        print(
+            "UNREAL WORKSPACE: source identity unavailable; preserve active cache: "
+            + type(error).__name__
+        )
+        return True
+    return False
+
+
 def has_unwritable_binary(root: Path) -> bool:
     """Probe existing DLLs without changing bytes, including stale Windows locks."""
     for name in BINARY_NAMES:
@@ -406,14 +441,20 @@ def main() -> None:
         active = select(workspace, fallback=fallback)
         root = safe_path(workspace, active)
         preserve_locked_cache = has_unwritable_binary(root)
-        if preserve_locked_cache:
-            # Do not rewrite the verified pointer or copy stale absolute-path
-            # build outputs. Publish this fresh worktree only after real proof.
+        preserve_source_cache = (
+            not preserve_locked_cache and has_untrusted_source_checkout(root)
+        )
+        preserve_cache = preserve_locked_cache or preserve_source_cache
+        if preserve_cache:
+            # Never rewrite the active pointer, old Git checkout, binaries or
+            # absolute-path build products. Use a new isolated source + build
+            # only; it becomes active after exact-head build/Automation PASS.
             active = fallback
             root = safe_path(workspace, active)
             if root.exists():
                 raise ValueError("Fresh Unreal build destination already exists")
-            print(f"UNREAL WORKSPACE: locked cache retained; fresh build={active}")
+            reason = "locked binary" if preserve_locked_cache else "stale source bytes"
+            print(f"UNREAL WORKSPACE: {reason}; retained active, fresh={active}")
         if (root / ".git").exists():
             # actions/checkout itself can replace tracked assets before the
             # later sanitization step; retain bytes before entering it.
@@ -422,7 +463,7 @@ def main() -> None:
             )
         standalone(root)
         prepare_checkout_directory(workspace, active, args.run)
-        if not preserve_locked_cache:
+        if not preserve_cache:
             cleanup(workspace, active, args.run)
         with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as stream:
             stream.write(f"YACS_UNREAL_WORKTREE={active}\n")

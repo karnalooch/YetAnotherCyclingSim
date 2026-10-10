@@ -271,6 +271,17 @@ state, compiled DLLs, assets, editor and local authoring checkout remain
 untouched. Any failure rejects reuse before build/Automation or proof
 publication; standalone read-only native consumers never repair the cache.
 
+When the active retained cache checkout itself has noncanonical raw source
+bytes (or a dirty/unverifiable tracked source identity), cache selection
+**preserves the old pointer/worktree and skips destructive cleanup**, choosing a
+fresh run-scoped checkout instead. This uses the existing locked-binary recovery
+pattern: the normal UBT/Automation gate must build/verify anew before publishing
+the fresh cache pointer. It avoids treating Windows Git's EOL conversion as a
+trusted source of exact physical bytes; no old cache state is relabeled green.
+The one-time fresh compile may cost more than warm reuse but is safer than
+repeatedly mutating an inconsistent cache. Only CI worktrees are eligible;
+interactive `D:\\yacs\\project` remains outside this mechanism.
+
 A compile-fingerprint mismatch is **not** cache corruption:
 when engine/toolchain provenance still matches, the lane invalidates the green
 stamp but keeps `Intermediate/Binaries` and performs a WARM COMPILE. Missing
