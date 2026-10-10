@@ -233,7 +233,7 @@ def inspect_terrain_fit(
     )
     rms_adjustment = (
         math.sqrt(
-            sum(value * value for value in required_adjustments)
+            math.fsum(value * value for value in required_adjustments)
             / evaluated_count
         )
         if evaluated_count

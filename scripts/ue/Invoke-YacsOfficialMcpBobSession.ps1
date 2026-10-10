@@ -683,60 +683,6 @@ function Invoke-SessionPreviousFailureDiagnostic {
     $receipt.proof_files.previous_session_failure_diagnostic = Get-SessionFileIdentity (Join-Path $ArtifactRoot 'previous-session-failure-diagnostic.json') 1MB
     $receipt.proof_files.previous_failed_receipt = Get-SessionFileIdentity $target 1MB
     Write-Host ('PREVIOUS_SESSION_FAILURE ' + $diagnostic.previous_error)
-    return $previous
-}
-function Invoke-SessionFixedBobReinspection {
-    param($Previous)
-    $helperRelative = 'scripts/ci/read_official_mcp_bob_reinspection.py'
-    $helper = Join-Path $RepoRoot $helperRelative
-    $helperIdentity = Get-SessionFileIdentity $helper 1MB
-    if (-not $receipt.tracked_source_sha256.Contains($helperRelative) `
-        -or $helperIdentity.sha256 -cne $receipt.tracked_source_sha256[$helperRelative]) { throw 'The fixed reinspection helper differs from its executing committed source.' }
-    $expectedExecutable = $Previous.owned_client_executable
-    if ($expectedExecutable -isnot [Collections.IDictionary] -or $expectedExecutable.path -isnot [string] `
-        -or $expectedExecutable.path.Length -gt 1024 -or [string]::IsNullOrWhiteSpace($expectedExecutable.path) `
-        -or $expectedExecutable.sha256 -isnot [string] -or $expectedExecutable.sha256 -cnotmatch '^[0-9a-f]{64}$') { throw 'The original owned client executable identity is unavailable.' }
-    $executable = Get-SessionFileIdentity $expectedExecutable.path 128MB
-    if ($executable.sha256 -cne $expectedExecutable.sha256 -or -not (Test-SessionInteger $expectedExecutable.size_bytes $executable.size_bytes)) { throw 'The original owned client executable bytes changed; no fallback interpreter is permitted.' }
-    $stdout = Join-Path $ArtifactRoot 'fixed-bob-reinspection-stdout.log'
-    $stderr = Join-Path $ArtifactRoot 'fixed-bob-reinspection-stderr.log'
-    $receipt['fixed_reinspection_executable'] = $executable
-    $ownedValidation = Start-Process -FilePath $executable.path -ArgumentList @('-B', ('"' + $helper + '"')) `
-        -WorkingDirectory $RepoRoot -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Environment @{
-            YACS_BOB_REINSPECTION_EXPECTED_HEAD = $ExpectedHead; YACS_BOB_REINSPECTION_ARTIFACT_ROOT = $ArtifactRoot
-            PYTHONPATH = ''; PYTHONHOME = ''; YACS_OWNER_HANDOFF = ''
-        }
-    try {
-        if (-not $ownedValidation.WaitForExit(120000)) { throw 'The owned fixed pure reinspection exceeded 120 seconds.' }
-        $ownedValidation.WaitForExit()
-        $receipt['fixed_reinspection_exit_code'] = $ownedValidation.ExitCode
-        if ((Get-Item -LiteralPath $stdout -Force).Length -gt 16KB -or (Get-Item -LiteralPath $stderr -Force).Length -gt 16KB) { throw 'The fixed reinspection output exceeds its 16KiB per-stream bound.' }
-        $output = Get-SessionOwnedLogIdentity $stdout $ownedValidation -IncludeText
-        $receipt.proof_files.fixed_bob_reinspection_stderr = Get-SessionOwnedLogIdentity $stderr $ownedValidation
-        if ([Text.Encoding]::UTF8.GetByteCount($output.text) -gt 16KB) { throw 'The fixed reinspection console exceeds 16KiB.' }
-        foreach ($line in @($output.text -split '\r?\n' | Where-Object { $_ })) {
-            if (-not $line.StartsWith('FIXED_BOB_REINSPECTION ', [StringComparison]::Ordinal)) { throw 'The fixed reinspection emitted unexpected stdout.' }
-            Write-Host $line
-        }
-        $output.Remove('text')
-        $receipt.proof_files.fixed_bob_reinspection_stdout = $output
-        if ($ownedValidation.ExitCode -ne 0) { throw 'The fixed retained pure reinspection failed; its bounded owned logs are retained.' }
-        $observed = Read-SessionJson (Join-Path $ArtifactRoot 'fixed-bob-reinspection.json') 1MB
-        if (-not (Test-SessionInteger $observed.value.schema_version 1) -or $observed.value.exact_sha -cne $ExpectedHead `
-            -or $observed.value.previous_run -cne '38025560494-1' -or $observed.value.previous_exact_sha -cne $Previous.exact_sha `
-            -or $observed.value.original_host.sha256 -cne '5f0d9cfae844b00d43dbcac7cd3c4e21103423439db1bf6fcc45f0212f4465f0' `
-            -or $observed.value.source_only -isnot [bool] -or -not $observed.value.source_only) { throw 'The current pure reinspection source/run/anchor contract differs.' }
-        foreach ($flag in @('editor_launched', 'compile_performed', 'listener_started', 'official_mcp_transport_verified', 'official_mcp_admitted',
-            'native_bob_capture_verified', 'native_automation_verified', 'persistent_world_mutation', 'performance_pass')) {
-            if ($observed.value[$flag] -isnot [bool] -or $observed.value[$flag]) { throw 'A pure retained diagnostic claimed runtime/admission authority.' }
-        }
-        $receipt.proof_files.fixed_bob_reinspection = $observed.identity
-        Write-Host ('FIXED_BOB_REINSPECTION_IDENTITY ' + ($observed.identity | ConvertTo-Json -Compress))
-    } finally {
-        Stop-SessionOwnedProcess $ownedValidation 'validation'
-        if ((Get-SessionFileIdentity $executable.path 128MB).sha256 -cne $executable.sha256 `
-            -or (Get-SessionFileIdentity $helper 1MB).sha256 -cne $helperIdentity.sha256) { throw 'The fixed executable or reinspection helper changed during the owned diagnostic.' }
-    }
 }
 function Write-SessionCurrentFailureReadback {
     if (-not $artifactOwned -or $receipt.status -cne 'BLOCKED') { return }
@@ -807,8 +753,7 @@ try {
     New-Item -ItemType Directory -Path $ArtifactRoot | Out-Null
     $artifactOwned = $true
     if ($DiagnosePreviousFailure) {
-        $previous = Invoke-SessionPreviousFailureDiagnostic
-        Invoke-SessionFixedBobReinspection $previous
+        Invoke-SessionPreviousFailureDiagnostic
         & (Join-Path $RepoRoot 'scripts/ue/Read-YacsOfficialMcpRuntimeDependencies.ps1') -EngineRoot $engine.Root -ArtifactRoot $ArtifactRoot -ExpectedHead $ExpectedHead
         $currentSdk = Read-SessionJson (Join-Path $ArtifactRoot 'runtime-dependencies.json') 4MB
         if (-not (Test-SessionInteger $currentSdk.value.schema_version 1) -or $currentSdk.value.exact_sha -cne $ExpectedHead `
@@ -1141,9 +1086,14 @@ try {
     $bundleNames = @('capture-proof.json', 'direct-inspection.json', 'native-samples.json', 'proof.json', 'receipt.json', 'result.json')
     Assert-SessionJsonFields $t.bundle $bundleNames
     $receipt.bundle_files = [ordered]@{}
+    $bundleBytes = 0L
     foreach ($name in $bundleNames) {
         $relative = 'Saved/RuntimeProof/OfficialMcpBob/bundle/' + $name
-        $identity = Get-SessionFileIdentity (Join-Path $SessionRoot $relative) 8MB
+        $memberLimit = if ($name -ceq 'native-samples.json') { 32MB } else { 8MB }
+        $remaining = 64MB - $bundleBytes
+        if ($remaining -le 0) { throw 'The six fixed bundle files exhaust their 64MiB aggregate bound.' }
+        $identity = Get-SessionFileIdentity (Join-Path $SessionRoot $relative) ([Math]::Min($memberLimit, $remaining))
+        $bundleBytes += $identity.size_bytes
         if ($t.bundle[$name].path -cne $relative -or $t.bundle[$name].sha256 -cne $identity.sha256 `
             -or -not (Test-SessionInteger $t.bundle[$name].size_bytes $identity.size_bytes)) { throw 'The actual fixed bundle bytes differ from client-verified hashes.' }
         $receipt.bundle_files[$name] = $identity

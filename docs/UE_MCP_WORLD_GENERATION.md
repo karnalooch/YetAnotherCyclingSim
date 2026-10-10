@@ -844,6 +844,36 @@ Bundle bytes without original host hashes remain qualified current observations;
 this diagnostic performs no build, native capture or MCP call and admits no runtime.
 The exact result/proof equality guard and native 180 / host 420-second bounds
 remain required. No cause is inferred before the actual differing field is read.
+[Fixed retained comparison 38027251962](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027251962)
+at `cb90c59fb2426bf102f9e563ad1088b8d1a00132` authenticated the original
+failed host and compared the current retained bundle without a build, Editor
+launch or MCP call. The saved and direct results matched. Reinspection differed
+only at `rms_required_adjustment_m`: saved/direct `0.35042352565936236`
+(`0x1.66d56cb9d2ebfp-2`) versus host `0.3504235256593645`
+(`0x1.66d56cb9d2ee6p-2`). The proof differed only at the two derived output
+hashes; the input paths and input hash matched. The original host-authenticated
+Editor log identifies embedded Python 3.11.8; the original owned client
+executable used for this reinspection reports Python 3.12.10. The inspector's
+built-in floating-point `sum` changed its accumulation behavior in Python 3.12.
+RMS now uses `math.fsum` so both runtimes compute the same domain quantity;
+exact result/proof equality remains required, with no rounding or tolerance.
+The current retained input is 60,025 samples / 10,445,634 bytes, SHA-256
+`b064fbe3697c77dfc1ef33de2e24fb6dc94bf6f8011c477f821b175ab16283e5`.
+These bundle observations have no original failed-host bundle hash. The fixed
+6,889-byte diagnostic is SHA-256
+`77b6bf557fc58cadf195f697b12f47ea85a261174c34dfc5c6d25736dfc98994`;
+its 424,249-byte current host receipt is SHA-256
+`c81e777bb3a10eab888a3f16319a0b8163a21ae00a82f2eab2b73bcfd1d5c264`.
+[Artifact 11661060539](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027251962/artifacts/11661060539)
+is 432,882 bytes, archive SHA-256
+`cb7ecb120c4bc8e88a7e077b51d37ea0c293f7b2a63dcc8510f2991af578da2d`.
+The actual sample member also exceeds the host's previous 8 MiB bundle-member
+bound. Only `native-samples.json` now uses the existing adapter/client 32 MiB
+bound; the other five members retain 8 MiB each, with a 64 MiB aggregate budget
+applied before each bounded hash read. The one-off reinspection helper is
+removed after this observation. A fresh native session must verify these
+corrections under the unchanged 180 / 420-second bounds; this source-only
+diagnostic provides no native, transport or admission PASS.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 
