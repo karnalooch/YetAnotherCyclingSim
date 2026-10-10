@@ -35,14 +35,14 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TARGET_SHA }}
-          path: _official-mcp-source-probe
+          path: _official-mcp-source-probe-${{ github.run_id }}-${{ github.run_attempt }}
           fetch-depth: 1
           lfs: false
           persist-credentials: false
 
       - name: Collect read-only version and declaration evidence
         shell: pwsh
-        working-directory: _official-mcp-source-probe
+        working-directory: _official-mcp-source-probe-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
@@ -63,6 +63,6 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: official-mcp-source-${{ env.TARGET_SHA }}-${{ github.run_attempt }}
-          path: _official-mcp-source-probe/Saved/RuntimeProof/OfficialMcpSourceProbe/**
+          path: _official-mcp-source-probe-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/OfficialMcpSourceProbe/**
           if-no-files-found: error
           retention-days: 7
