@@ -1,14 +1,25 @@
 # YACS BOB Inspection
 
 This opt-in editor plugin is the narrow native boundary for Issue #384. It
-depends on Epic's existing `ToolsetRegistry` to expose one YACS domain operation;
+uses Epic's existing `ToolsetRegistry` and official `ModelContextProtocol`
+modules to expose one fixed YACS domain operation. The existing Automation and
+Python plugins run the literal project test and trusted BOB producer;
 the `Landscape` dependency supplies native collision ownership that the current
 Python `FHitResult` binding does not reliably expose. It contains no assets and
 does not change the project plugin configuration.
 
-The module currently registers no toolset. Native body wiring, registration,
-Python reflection, restricted official MCP transport and the checkpoint proof
-remain pending. Run `37996979223` compiled all plugin actions and its DLL on UE
+The module remains disabled by default. Only the fixed owned launcher uses
+`-YacsBobOfficialProof`; without it the module starts no session. The private
+binding checks the isolated accepted checkpoint, full Python initialization,
+actual native `bRemoteExecution=false`, disabled MCP automatic startup, stable
+tool-library census and single-operation inventory before starting its owned
+loopback listener. It rejects absent/non-object/nonempty transport arguments
+before the game-thread domain body. It runs only
+`CyclingPhysics.RoadPhysics.ProfileInterpolation`, then the fixed BOB capture.
+The client requires 22 exact denials without body invocation and one valid call;
+the launcher verifies owned shutdown and persistent bytes again after exit.
+This new binding's native compilation and actual session proof remain pending.
+Run `37996979223` compiled the earlier plugin boundary and its DLL on UE
 5.8.2 / CL 56702186 at `f557bfd0a760b795bb3294ec047cdfc4c837424d`.
 A successful source build alone does not admit this operation or complete
 Issue #384.

@@ -10,13 +10,17 @@ on:
       - 'scripts/ue/Read-YacsOfficialMcpRuntimeDependencies.ps1'
       - 'scripts/ue/Read-YacsAcceptedMaterialCheckpoint.ps1'
       - 'scripts/ue/probe_official_mcp_bob_reflection.py'
+      - 'scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1'
+      - 'scripts/ue/bootstrap_official_mcp_bob_session.py'
+      - 'scripts/ci/official_mcp_bob_session.py'
+      - 'scripts/ci/official_mcp_bob_client.py'
   workflow_dispatch:
     inputs:
       mode:
-        description: Fixed bare-project proof, or retained previous failure readback
+        description: Fixed accepted checkpoint session, or retained previous failure readback
         type: choice
-        options: [native_probe, diagnose_previous_failure]
-        default: diagnose_previous_failure
+        options: [accepted_session, diagnose_previous_failure]
+        default: accepted_session
         required: true
 
 permissions:
@@ -29,13 +33,15 @@ concurrency:
 
 jobs:
   compile:
-    name: Read retained bare-project reflection failure
+    name: Prove the fixed official MCP accepted checkpoint session
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/384-official-mcp-spike'
     runs-on: [self-hosted, yacs-ue58]
-    timeout-minutes: 30
+    # Two independently bounded 20-minute builds plus the 420-second session
+    # and staging must leave time for owned-process cleanup and evidence upload.
+    timeout-minutes: 60
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
       TARGET_SHA: ${{ github.sha }}
@@ -51,17 +57,18 @@ jobs:
           clean: false
           persist-credentials: false
 
-      - name: Read fixed retained failure and bounded source evidence
+      - name: Verify exact source and run the fixed owned session
         shell: pwsh
         working-directory: _official-mcp-native-probe
         env:
           YACS_CHECKPOINT_READ_TOKEN: ${{ github.token }}
-          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'diagnose_previous_failure' }}
+          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'accepted_session' }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
           foreach ($source in @(
             'scripts/ue/Invoke-YacsOfficialMcpNativeProbe.ps1',
+            'scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1',
             'scripts/ue/Read-YacsOfficialMcpRuntimeDependencies.ps1',
             'scripts/ue/Read-YacsAcceptedMaterialCheckpoint.ps1'
           )) {
@@ -74,12 +81,12 @@ jobs:
           }
           if ($env:NATIVE_PROBE_MODE -ceq 'diagnose_previous_failure') {
             ./scripts/ue/Invoke-YacsOfficialMcpNativeProbe.ps1 -ExpectedHead $env:TARGET_SHA -DiagnosePreviousFailure
-          } elseif ($env:NATIVE_PROBE_MODE -ceq 'native_probe') {
-            ./scripts/ue/Invoke-YacsOfficialMcpNativeProbe.ps1 -ExpectedHead $env:TARGET_SHA
+          } elseif ($env:NATIVE_PROBE_MODE -ceq 'accepted_session') {
+            ./scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1 -ExpectedHead $env:TARGET_SHA
           } else { throw 'Unsupported fixed native proof mode.' }
 
       - name: Retain bounded compile and bare-project proof evidence
-        if: ${{ always() }}
+        if: ${{ always() && github.event.inputs.mode == 'diagnose_previous_failure' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: official-mcp-native-${{ env.TARGET_SHA }}-${{ github.run_attempt }}
@@ -102,5 +109,23 @@ jobs:
             _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38006333498/Accepted363/json/saved-material-consumer/*.json
             _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38006333498/Accepted363/json/checkout-restoration.json
             _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpNativeProbe/${{ github.run_id }}-${{ github.run_attempt }}/Previous38006333498/Accepted363/json/checkout-restoration-post-material.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Retain fixed accepted session evidence
+        if: ${{ always() && github.event.inputs.mode != 'diagnose_previous_failure' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: official-mcp-session-${{ env.TARGET_SHA }}-${{ github.run_attempt }}
+          path: |
+            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpBobSession/${{ github.run_id }}-${{ github.run_attempt }}/*.json
+            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpBobSession/${{ github.run_id }}-${{ github.run_attempt }}/*.log
+            D:/yacs/runner/_work/s384/${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/OfficialMcpBob/session-preparation.json
+            D:/yacs/runner/_work/s384/${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/OfficialMcpBob/session-context.json
+            D:/yacs/runner/_work/s384/${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/OfficialMcpBob/transport-context.json
+            D:/yacs/runner/_work/s384/${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/OfficialMcpBob/native-counter.json
+            D:/yacs/runner/_work/s384/${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/OfficialMcpBob/native-session.json
+            D:/yacs/runner/_work/s384/${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/OfficialMcpBob/transport-receipt.json
+            D:/yacs/runner/_work/s384/${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/OfficialMcpBob/bundle/*.json
           if-no-files-found: error
           retention-days: 7

@@ -382,8 +382,10 @@ These observations close the declaration gap, without asserting runtime guard
 parity. The stock reflected argument conversion remains unproved and is not
 used as this boundary.
 
-The [native plugin](../Plugins/YacsBobInspection/README.md) currently registers
-nothing. Its internal identity and hit readers pin the accepted map and unique
+The [native plugin](../Plugins/YacsBobInspection/README.md) remains disabled by
+default. Its fixed owned session binding requires the explicit proof flag and
+admitted startup before registering its single domain operation. Its internal
+identity and hit readers pin the accepted map and unique
 Landscape, remain outside the MCP tool definitions, and never trace or mutate
 the world themselves. The producer prefers the native reader when present;
 an invalid native response cannot fall back to unverified reflected ownership.
@@ -466,8 +468,14 @@ still requires remote execution to be exactly `False`. Seventeen offline
 reflection tests pass. [Retry 38006333498](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38006333498)
 at `88188399847bdafbe10b6e33dd664da5871a2900` again compiled all eleven
 actions and retained its owned Editor exit **3**, without timeout or secondary
-retention errors. The actual next Python exception is pending the fixed
-readback; no boundary or reflection PASS is established. Future failed native
+retention errors. [Readback 38007015306](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38007015306)
+at `22ce0291e0aa26d98c042464f4e6fbccfdbfb609` confirms all five inputs
+still match. The class and default object load, but Python's
+`get_editor_property("remote_execution")` cannot find that private property.
+The owned binding therefore reads the source-proved native `FBoolProperty`
+`bRemoteExecution` on the exact settings class/default object and requires
+`false` before imports/listening and on repeated inventory checks. No boundary
+or reflection PASS is established by that failed attempt. Future failed native
 attempts print only the bounded current reflection receipt's safe scalar
 summary after the owned Editor has exited, retaining the original failure and
 all false admission flags. [Protected CI 38006339219](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38006339219)
@@ -492,7 +500,8 @@ must require an actual empty argument object before delegation; its incoming
 editor work and result completion must run on the game thread. The latest
 installed-source readback verifies `IModelContextProtocolTool::RunAsync` with
 nullable JSON parameters and the fixed `IPythonScriptPlugin::ExecPythonCommand`
-string/boolean interface. The fixed domain entry remains unwired. The official
+string/boolean interface. The private fixed domain entry is implemented but its
+native compilation and actual session proof remain pending. The official
 `FindTool` compares names without case sensitivity: spelling variants resolve
 to the same operation and cannot be reported as wire-level wrong-case denials.
 Native registry name checks retain their narrower meaning. The five-file
@@ -515,6 +524,23 @@ and
 No positive automatic-start flags are allowed. Source order supports this
 mechanism; the actual executable's effective Python/MCP settings and absence
 of an existing official server still must be verified before owned activation.
+
+The fixed `accepted_session` workflow now replaces the obsolete bare-project
+launch. The retained failure reader remains its only alternate mode. Two fresh
+short isolated worktrees bind the committed source, normal original-project
+build and independent tracked-only `BuildPlugin` output. The launcher copies
+only four successfully built custom DLLs and their unchanged matching module
+manifests; it certifies no old cache. The accepted consumer stager restores only
+the authenticated #363 bytes. One owned Editor and fixed client share a
+420-second deadline. The native zero counter and OS-owned IPv4 loopback socket
+must be ready before the client starts. Final proof requires the exact one
+Automation pass, 22 precise denials, one native body invocation, all six real BOB
+bundle hashes, clean owned shutdown and a post-exit Content/Config/project
+inventory comparison. Fifty-three offline session/client tests and independent
+source/lifecycle reviews pass; these are preparation evidence. Windows parsing,
+new native dependency compilation and this actual accepted session remain
+unverified. The ordinary project descriptor and guarded baseline are unchanged;
+#384 stays open and #364 stays blocked.
 
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including

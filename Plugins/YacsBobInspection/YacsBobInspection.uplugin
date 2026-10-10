@@ -10,6 +10,9 @@
   "IsBetaVersion": true,
   "Modules": [{"Name": "YacsBobInspection", "Type": "Editor", "LoadingPhase": "PostEngineInit"}],
   "Plugins": [
-    {"Name": "ToolsetRegistry", "Enabled": true}
+    {"Name": "ToolsetRegistry", "Enabled": true},
+    {"Name": "ModelContextProtocol", "Enabled": true},
+    {"Name": "AutomationTestToolset", "Enabled": true},
+    {"Name": "PythonScriptPlugin", "Enabled": true}
   ]
 }

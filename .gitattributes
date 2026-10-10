@@ -37,6 +37,8 @@ scripts/assets/sa_calobra_context_recipe_v1.json text eol=lf
 worldgen/terrain/adaptive_terrain_policy.json text eol=lf
 # Native BOB context verifies its complete plugin inventory against Git bytes.
 Plugins/YacsBobInspection/Source/YacsBobInspection/YacsBobInspection.Build.cs text eol=lf
+# The fixed native-session caller participates in exact source-byte admission.
+scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1 text eol=lf
 worldgen/materials/*.json text eol=lf
 # Retain exact rendered graph bytes and recognize their Windows line endings.
 worldgen/materials/material_maker/**/*.ptex -text whitespace=cr-at-eol

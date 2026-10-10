@@ -106,6 +106,8 @@ SOURCE_PROOF_HASHES = {
 }
 UTILITY_SOURCE_PATHS = (
     "scripts/ci/official_mcp_bob_session.py",
+    "scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1",
+    "scripts/ue/bootstrap_official_mcp_bob_session.py",
     "scripts/assets/restore_workspace_data.py",
     "scripts/ci/sa_calobra_whole_map_workflow.py",
     "scripts/manage_local_workspace.py",

@@ -6,6 +6,10 @@ public class YacsBobInspection : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "ToolsetRegistry" });
-        PrivateDependencyModuleNames.AddRange(new[] { "UnrealEd", "Landscape", "Json" });
+        PrivateDependencyModuleNames.AddRange(new[] {
+            "UnrealEd", "Landscape", "Json", "DeveloperSettings", "AutomationController",
+            "AutomationTestToolset", "ModelContextProtocol", "ModelContextProtocolEngine",
+            "PythonScriptPlugin"
+        });
     }
 }
