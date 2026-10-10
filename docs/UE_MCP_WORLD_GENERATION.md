@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Draft PR #467 implements source evidence, complete BOB sample export and the opt-in strict native domain boundary. Standalone plugin compilation passed; runtime guard proof and official transport remain pending. No official server is activated.
+**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Draft PR #467 implements source evidence, complete BOB sample export and the opt-in strict native domain boundary. The integrated project and plugin builds passed; runtime guard proof and official transport remain pending. No official server is activated.
 **Tracking:** #384 adoption; #385 documentation; #85 historical integration; follow-ups #376 (Performance MCP), #377 (Buildings MCP)
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
@@ -551,10 +551,18 @@ now declares its direct `JsonUtilities` dependency.
 at `4ae6268a2577028baa27d5e2d0ffa1e27cd8a9f1` passed both builds,
 linked the plugin and staged the authenticated consumer bytes. The launcher
 then rejected a file identity as not bounded, nonempty and regular before
-Editor startup. Its generic message does not identify the input; a fixed
-read-only receipt diagnostic is required before changing the guard. No MCP
-listener or domain call is admitted. The actual accepted session remains
-unverified.
+Editor startup. [Fixed read-only diagnostic 38010255761](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38010255761)
+at `0fed8a7d646cfb152bdd9c43dd22ebe048751e7a` authenticated both
+successful build records and the 50,878-byte staged preparation file. The
+recorded markers put the failure before preparation admission, not at Python
+executable selection. Source analysis establishes a deterministic mismatch:
+the stager hydrates three frozen non-Content LFS PNGs, while the code/config
+guard compares their payloads to pointer hashes and caps reads at 16 MiB.
+`material-weights.png` is 28,497,885 bytes. The historical filename was not
+logged; this is a source/control-flow diagnosis. The correction keeps the
+16 MiB code cap and checks only those three fixed asset identities separately
+before activation and after exit. No MCP listener or domain call is admitted;
+the actual accepted session remains unverified.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 

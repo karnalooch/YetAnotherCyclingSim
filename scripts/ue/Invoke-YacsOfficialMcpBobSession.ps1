@@ -38,12 +38,21 @@ $ownedEditor = $null
 $ownedClient = $null
 $ownedValidation = $null
 $artifactOwned = $false
+# These are the only frozen scene dependencies outside Content. Their physical
+# payloads have separate asset proofs; they are never code/config byte hashes.
+$FrozenNonContentAssets = [ordered]@{
+    'worldgen/materials/visual_fill/material-weights.png' = @{ sha256 = 'af16fc7c43ec8a3a3b2e000fe716232a3229fe0ac6b4e9708baae5842ef99f6c'; size_bytes = 28497885 }
+    'worldgen/materials/visual_fill/sample-availability.png' = @{ sha256 = '9c9906268977a8f49ba20c194cecb101e8bb8c25c44b51ee30f66e7e88a7522a'; size_bytes = 861726 }
+    'worldgen/materials/visual_fill/inference-kind.png' = @{ sha256 = 'cc3bc3490878c5a96c20586cd28b0cd3cc812c5506ae97a7110c59e6ed3a3176'; size_bytes = 879841 }
+}
 $receipt = [ordered]@{
     schema_version = 1; exact_sha = $ExpectedHead; run = $runId; attempt = $attempt
     status = 'PREPARATION_PENDING'; build_root = $BuildRoot; session_root = $SessionRoot
     plugin_package_root = $PluginPackage; engine_identity = $null; build_environment_identity = $null
     source_fingerprints = [ordered]@{}; tracked_source_sha256 = [ordered]@{}
     project_build = $null; plugin_build = $null; binary_provenance = @(); staged_binary_provenance = @()
+    frozen_asset_provenance = [ordered]@{}; final_frozen_asset_provenance = [ordered]@{}; frozen_assets_unchanged = $false
+    installed_plugin_descriptors = [ordered]@{}
     source_unchanged = $false; accepted_bytes_staged = $false; owned_build_exit_observed = $false
     editor_launched = $false; listener_started = $false; official_mcp_transport_verified = $false
     official_mcp_admitted = $false; native_automation_verified = $false; native_bob_capture_verified = $false
@@ -159,7 +168,7 @@ function Get-SessionTrackedSources {
     foreach ($relative in $paths) {
         # Content pointers are authenticated by the accepted checkpoint stager.
         # Preserve the separate code/config identity after their hydration.
-        if ($relative.StartsWith('Content/', [StringComparison]::Ordinal)) { continue }
+        if ($relative.StartsWith('Content/', [StringComparison]::Ordinal) -or $relative -cin $FrozenNonContentAssets.Keys) { continue }
         if ($relative -cmatch '(^|/)(\.\.?)(/|$)|[\\:\x00]') { throw 'Tracked source path is not canonical.' }
         $path = Join-Path $Root $relative
         $entry = Get-Item -LiteralPath $path -Force
@@ -177,6 +186,35 @@ function Assert-SessionTrackedSources {
     foreach ($relative in $receipt.tracked_source_sha256.Keys) {
         if ($actual[$relative] -cne $receipt.tracked_source_sha256[$relative]) { throw 'Tracked source/config bytes changed.' }
     }
+}
+function Assert-SessionFrozenAssets {
+    param([switch] $Final)
+    $prepared = Read-SessionJson (Join-Path $SessionRoot 'Saved/RuntimeProof/OfficialMcpBob/session-preparation.json') 4MB
+    if ($prepared.identity.sha256 -cne $receipt.proof_files.session_preparation.sha256 `
+        -or $prepared.value.exact_sha -cne $ExpectedHead -or $prepared.value.status -cne 'ACCEPTED_CONSUMER_BYTES_STAGED' `
+        -or $prepared.value.consumer_source_sha -cne '94827365ef8e83e52717bb21f9d6efa921aa2d1e' `
+        -or $prepared.value.source_dependencies -isnot [array] -or $prepared.value.source_dependencies.Count -ne 236) {
+        throw 'The fixed asset proof requires unchanged accepted staging evidence.'
+    }
+    foreach ($relative in $FrozenNonContentAssets.Keys) {
+        if ($Final) { Assert-SessionAttemptDeadline }
+        $expected = $FrozenNonContentAssets[$relative]
+        $rows = @($prepared.value.source_dependencies | Where-Object { $_.path -ceq $relative })
+        if ($rows.Count -ne 1) { throw 'A fixed frozen non-Content asset row is missing or duplicated.' }
+        Assert-SessionJsonFields $rows[0] @('path', 'sha256', 'size_bytes')
+        if ($rows[0].sha256 -cne $expected.sha256 -or -not (Test-SessionInteger $rows[0].size_bytes $expected.size_bytes)) {
+            throw 'A fixed asset staging row differs from the frozen LFS payload identity.'
+        }
+        $actual = Get-SessionFileIdentity (Join-Path $SessionRoot $relative) $expected.size_bytes
+        if ($actual.sha256 -cne $expected.sha256 -or $actual.size_bytes -ne $expected.size_bytes) { throw 'A fixed frozen asset payload differs.' }
+        if ($Final) {
+            if (-not $receipt.frozen_asset_provenance.Contains($relative) `
+                -or $actual.sha256 -cne $receipt.frozen_asset_provenance[$relative].sha256 `
+                -or $actual.size_bytes -ne $receipt.frozen_asset_provenance[$relative].size_bytes) { throw 'A frozen asset payload changed during the owned session.' }
+            $receipt.final_frozen_asset_provenance[$relative] = $actual
+        } else { $receipt.frozen_asset_provenance[$relative] = $actual }
+    }
+    if ($Final) { $receipt.frozen_assets_unchanged = $true }
 }
 function Assert-SessionNoUntrackedNativeInputs {
     param([string] $Root)
@@ -592,6 +630,12 @@ try {
         $receipt.status = 'PREVIOUS_SESSION_FAILURE_DIAGNOSTIC_RETAINED'
         return
     }
+    # Establish fixed executable identities before expensive builds; their raw
+    # bytes are checked again immediately before the owned session launch.
+    Assert-SessionPlainPath $engine.UnrealEditorPath
+    $receipt.owned_editor_executable = Get-SessionFileIdentity $engine.UnrealEditorPath 1GB
+    $pythonExecutable = (Get-Command python -CommandType Application -ErrorAction Stop).Source
+    $receipt.owned_client_executable = Get-SessionFileIdentity $pythonExecutable 128MB
     & (Join-Path $RepoRoot 'scripts/ue/Read-YacsOfficialMcpRuntimeDependencies.ps1') -EngineRoot $engine.Root -ArtifactRoot $ArtifactRoot -ExpectedHead $ExpectedHead
     $sdk = Read-SessionJson (Join-Path $ArtifactRoot 'runtime-dependencies.json') 4MB
     if ($sdk.value.exact_sha -cne $ExpectedHead -or $sdk.value.source_only -isnot [bool] -or -not $sdk.value.source_only) { throw 'The observed installed SDK receipt differs from this source-bound session.' }
@@ -599,6 +643,35 @@ try {
     if ($serverRows.Count -ne 1 -or $serverRows[0].sha256 -cne '56e519b8a956a1d916f421781767f85a999d02b9e02f806b3594d96b96d2a104') { throw 'The actual installed official MCP Server source does not match the fixed reviewed protocol.' }
     $receipt.proof_files.runtime_dependencies = $sdk.identity
     $receipt.observed_official_server_source = $serverRows[0]
+    foreach ($spec in @(
+        @('ModelContextProtocol', 'Engine/Plugins/Experimental/ModelContextProtocol/ModelContextProtocol.uplugin', '74420534edcd6baafcb48e0af919d53b84891bdade7b97869b0ef485c3ea1518'),
+        @('AutomationTestToolset', 'Engine/Plugins/Experimental/Toolsets/AutomationTestToolset/AutomationTestToolset.uplugin', 'ef31f3689ede040b005d6bcb7ec2886d16fac5c7c47b9aad1060c5d0fd01b78b'),
+        @('ToolsetRegistry', 'Engine/Plugins/Experimental/ToolsetRegistry/ToolsetRegistry.uplugin', '2dfc01159b54daea67c62966a48b78254d1d848d84e8df48c708c7a69d3f2062'),
+        @('PythonScriptPlugin', 'Engine/Plugins/Experimental/PythonScriptPlugin/PythonScriptPlugin.uplugin', $null)
+    )) {
+        $descriptor = Read-SessionJson (Join-Path $engine.Root $spec[1]) 64KB
+        $metadata = $descriptor.value
+        if ($null -ne $spec[2] -and $descriptor.identity.sha256 -cne $spec[2]) { throw 'An installed official plugin descriptor differs from its reviewed hash.' }
+        if (($metadata.Version -isnot [int] -and $metadata.Version -isnot [long]) -or $metadata.Version -lt 0 `
+            -or $metadata.VersionName -isnot [string] -or $metadata.VersionName.Length -gt 128 `
+            -or $metadata.Modules -isnot [array] -or $metadata.Modules.Count -lt 1 -or $metadata.Modules.Count -gt 16) {
+            throw 'An installed fixed plugin descriptor lacks bounded version/module metadata.'
+        }
+        $modules = @()
+        foreach ($module in $metadata.Modules) {
+            if ($module -isnot [Collections.IDictionary] -or $module.Name -cnotmatch '^[A-Za-z][A-Za-z0-9_]{0,127}$' `
+                -or $module.Type -isnot [string] -or $module.Type.Length -gt 64) { throw 'A fixed installed plugin module record is malformed.' }
+            $row = [ordered]@{ name = $module.Name; type = $module.Type }
+            if ($module.Contains('LoadingPhase')) {
+                if ($module.LoadingPhase -isnot [string] -or $module.LoadingPhase.Length -gt 64) { throw 'A fixed plugin loading phase is malformed.' }
+                $row['loading_phase'] = $module.LoadingPhase
+            }
+            $modules += $row
+        }
+        $receipt.installed_plugin_descriptors[$spec[0]] = [ordered]@{ identity = $descriptor.identity
+            version = $metadata.Version; version_name = $metadata.VersionName; modules = $modules; reviewed_sha256 = $spec[2] }
+        Write-Host ('INSTALLED_SESSION_PLUGIN ' + $spec[0] + ' ' + ($receipt.installed_plugin_descriptors[$spec[0]] | ConvertTo-Json -Depth 6 -Compress))
+    }
     $engineModuleRecord = Read-SessionJson (Join-Path $engine.Root 'Engine/Binaries/Win64/UnrealEditor.modules') 64KB
     $engineManifest = $engineModuleRecord.identity
     $engineModules = $engineModuleRecord.value
@@ -713,6 +786,7 @@ try {
         -or $preparation.value.native_runtime_verified -isnot [bool] -or $preparation.value.native_runtime_verified `
         -or $preparation.value.official_mcp_admitted -isnot [bool] -or $preparation.value.official_mcp_admitted) { throw 'The actual staged consumer receipt is missing or does not match this build.' }
     $receipt.proof_files.session_preparation = $preparation.identity
+    Assert-SessionFrozenAssets
     $mapPackage = '/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview'
     $operationName = 'YacsBobInspection.InspectAcceptedCheckpoint'
     $bootstrap = Join-Path $SessionRoot 'scripts/ue/bootstrap_official_mcp_bob_session.py'
@@ -742,10 +816,8 @@ try {
         '-YacsBobOfficialProof', '-unattended', '-NoSplash', '-NoSound', '-NoLiveCoding',
         ('-ExecutePythonScript="' + $bootstrap + '"'), ('-abslog="' + (Join-Path $ArtifactRoot 'owned-editor.log') + '"')
     ) + $receipt.startup_config_overrides
-    Assert-SessionPlainPath $engine.UnrealEditorPath
-    $receipt.owned_editor_executable = Get-SessionFileIdentity $engine.UnrealEditorPath 1GB
-    $pythonExecutable = (Get-Command python -CommandType Application -ErrorAction Stop).Source
-    $receipt.owned_client_executable = Get-SessionFileIdentity $pythonExecutable 128MB
+    if ((Get-SessionFileIdentity $engine.UnrealEditorPath 1GB).sha256 -cne $receipt.owned_editor_executable.sha256 `
+        -or (Get-SessionFileIdentity $pythonExecutable 128MB).sha256 -cne $receipt.owned_client_executable.sha256) { throw 'A fixed executable changed after the accepted-session preflight.' }
     $attemptTimer = [Diagnostics.Stopwatch]::StartNew()
     $receipt.attempt_started_at_utc = (Get-Date).ToUniversalTime().ToString('o')
     $receipt.status = 'OWNED_EDITOR_STARTING'
@@ -894,11 +966,41 @@ try {
     $receipt.official_automation_result = $n.official_automation_result
     $receipt.domain_status = $t.domain_status
     $receipt.client_source_sha256 = $clientInputs.source_sha256
+    Assert-SessionFrozenAssets -Final
     Assert-SessionStagedBinaries
     foreach ($root in @($BuildRoot, $SessionRoot, $RepoRoot)) { Assert-SessionTrackedSources $root }
     Assert-SessionNoUntrackedNativeInputs $BuildRoot
     if ((Get-SessionFileIdentity $engineManifest.path 64KB).sha256 -cne $engineManifest.sha256) { throw 'The installed engine manifest changed.' }
     if ((Get-SessionFileIdentity (Join-Path $engine.Root $serverRows[0].path) 2MB).sha256 -cne $serverRows[0].sha256) { throw 'The actual official server source changed.' }
+    foreach ($descriptor in $receipt.installed_plugin_descriptors.Values) {
+        if ((Get-SessionFileIdentity $descriptor.identity.path 64KB).sha256 -cne $descriptor.identity.sha256) { throw 'A fixed installed plugin descriptor changed during the session.' }
+    }
+    $result = Read-SessionJson (Join-Path $proofRoot 'bundle/result.json') 8MB
+    if ($result.identity.sha256 -cne $receipt.bundle_files['result.json'].sha256 `
+        -or $result.value.exact_sha -cne $ExpectedHead -or $result.value.role -cne 'INSPECTOR_ONLY' `
+        -or $result.value.status -cne $receipt.domain_status -or $result.value.inspection_complete -isnot [bool]) { throw 'The fixed BOB finding summary does not match its authenticated result.' }
+    $receipt['bob_finding_summary'] = [ordered]@{ identity = $result.identity; status = $result.value.status
+        role = $result.value.role; inspection_complete = $result.value.inspection_complete }
+    foreach ($field in @('sample_count', 'evaluated_sample_count', 'trace_miss_count')) {
+        $value = $result.value[$field]
+        if (($value -isnot [int] -and $value -isnot [long]) -or $value -lt 0) { throw 'The authenticated BOB sample counts are malformed.' }
+        $receipt.bob_finding_summary[$field] = $value
+    }
+    Assert-SessionJsonFields $result.value.class_counts @('CONTACT_OK', 'CUT_REQUIRED', 'FILL_REQUIRED', 'STRUCTURE_REVIEW')
+    foreach ($value in $result.value.class_counts.Values) {
+        if (($value -isnot [int] -and $value -isnot [long]) -or $value -lt 0) { throw 'The authenticated BOB class counts are malformed.' }
+    }
+    $receipt.bob_finding_summary['class_counts'] = $result.value.class_counts
+    foreach ($field in @('max_cut_required_m', 'max_fill_required_m', 'rms_required_adjustment_m')) {
+        $value = $result.value[$field]
+        if (($value -isnot [double] -and $value -isnot [int] -and $value -isnot [long]) `
+            -or -not [double]::IsFinite([double]$value) -or $value -lt 0) { throw 'The authenticated BOB adjustment summary is malformed.' }
+        $receipt.bob_finding_summary[$field] = $value
+    }
+    foreach ($flag in @('earthworks_authoring_permitted', 'geometry_repair_executed', 'road_admitted', 'eligible_for_learning')) {
+        if ($result.value[$flag] -isnot [bool] -or $result.value[$flag]) { throw 'The authenticated BOB result expanded its authority.' }
+        $receipt.bob_finding_summary[$flag] = $result.value[$flag]
+    }
     foreach ($kind in @('client', 'editor')) {
         $process = if ($kind -ceq 'client') { $ownedClient } else { $ownedEditor }
         foreach ($streamName in @('stdout', 'stderr')) {
@@ -933,7 +1035,25 @@ finally {
             try { Write-SessionCurrentFailureReadback }
             catch { $receipt.secondary_errors += ('Cannot retain current failure readback (' + $_.Exception.GetType().Name + ').') }
         }
-        Write-SessionJson (Join-Path $ArtifactRoot 'accepted-session-build.json') $receipt
+        $receiptPath = Join-Path $ArtifactRoot 'accepted-session-build.json'
+        Write-SessionJson $receiptPath $receipt
+        Write-Host ('SESSION_HOST_RECEIPT_IDENTITY ' + ((Get-SessionFileIdentity $receiptPath 1MB) | ConvertTo-Json -Depth 4 -Compress))
+        if ($receipt.status -ceq 'ACCEPTED_SESSION_LOCAL_PROOF_VERIFIED') {
+            $summary = [ordered]@{ exact_sha = $receipt.exact_sha; run = $receipt.run; attempt = $receipt.attempt; status = $receipt.status
+                summary_scope = 'BOUNDED_VERIFIED_FINDINGS_AND_IDENTITIES; NOT_COMPLETE_RAW_BUNDLE_REVIEW'
+                domain_status = $receipt.domain_status; bob_findings = $receipt.bob_finding_summary
+                official_automation_result = $receipt.official_automation_result
+                native_session = $receipt.proof_files.native_session; transport_receipt = $receipt.proof_files.transport_receipt
+                native_counter = $receipt.proof_files.native_counter; bundle_files = $receipt.bundle_files
+                frozen_assets = $receipt.frozen_asset_provenance; final_frozen_assets = $receipt.final_frozen_asset_provenance
+                frozen_assets_unchanged = $receipt.frozen_assets_unchanged; final_persistent_inventory_sha256 = $receipt.final_persistent_inventory_sha256
+                official_mcp_transport_verified = $receipt.official_mcp_transport_verified; native_automation_verified = $receipt.native_automation_verified
+                native_bob_capture_verified = $receipt.native_bob_capture_verified; official_mcp_admitted = $receipt.official_mcp_admitted
+                persistent_world_mutation = $receipt.persistent_world_mutation; performance_pass = $receipt.performance_pass; performance_status = $receipt.performance_status }
+            $summaryJson = $summary | ConvertTo-Json -Depth 10 -Compress
+            if ($summaryJson.Length -gt 16KB) { Write-Host ('VERIFIED_SESSION_SUMMARY ' + $summaryJson.Substring(0, 16KB) + '[CONSOLE_TRUNCATED]') }
+            else { Write-Host ('VERIFIED_SESSION_SUMMARY ' + $summaryJson) }
+        }
     }
     Write-Host ('YACS_MCP_BOB_SESSION status={0}, acceptedBytes={1}, runtimeVerified={2}.' -f $receipt.status, $receipt.accepted_bytes_staged, $receipt.official_mcp_transport_verified)
 }
