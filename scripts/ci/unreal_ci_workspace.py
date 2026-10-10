@@ -78,9 +78,12 @@ def verify_retained_summary(root: Path, state: dict) -> dict:
         summary.get(field) != state["ProofHead"] for field in ("Head", "ExpectedHead")
     ):
         raise ValueError("Unreal retained Automation summary HEAD mismatch")
-    if summary.get("Failed") != 0 or summary.get("Errors") != 0 or type(
-        summary.get("Discovered")
-    ) is not int or summary["Discovered"] <= 0:
+    if (
+        summary.get("Failed") != 0
+        or summary.get("Errors") != 0
+        or type(summary.get("Discovered")) is not int
+        or summary["Discovered"] <= 0
+    ):
         raise ValueError("Unreal retained Automation summary is not green")
     return summary
 

@@ -68,11 +68,18 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         )
 
     def test_native_road_reader_requires_retained_byte_pinned_automation_proof(self):
-        reader = (ROOT / "scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1").read_text(encoding="utf-8")
+        reader = (ROOT / "scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("proof-summary-' + $s.ProofSummarySha256", reader)
         self.assertIn("$summary.identity.sha256 -cne $s.ProofSummarySha256", reader)
-        self.assertIn("$summary.identity.size_bytes -ne $s.ProofSummarySizeBytes", reader)
-        self.assertNotIn("Join-Path $cacheRoot 'Saved/RuntimeProof/CI/Unreal/unreal_ci_summary.json'", reader)
+        self.assertIn(
+            "$summary.identity.size_bytes -ne $s.ProofSummarySizeBytes", reader
+        )
+        self.assertNotIn(
+            "Join-Path $cacheRoot 'Saved/RuntimeProof/CI/Unreal/unreal_ci_summary.json'",
+            reader,
+        )
         self.assertIn("ProofSummarySha256 = $SummarySha256", self.cache)
         self.assertIn("ProofSummarySizeBytes = $SummaryBytes.Length", self.cache)
         self.assertIn("retained-proof-summary-unavailable", self.cache)

@@ -670,31 +670,43 @@ class UnrealWorkspaceTests(unittest.TestCase):
         ]
         subprocess.run(
             [*args, "-Action", "Record", "-CompletedMode", "runtime"],
-            check=True, capture_output=True, text=True
+            check=True,
+            capture_output=True,
+            text=True,
         )
         state = cache.read_state(self.root)
-        self.assertEqual(state["ProofSummarySha256"], hashlib.sha256(self.summary.read_bytes()).hexdigest())
+        self.assertEqual(
+            state["ProofSummarySha256"],
+            hashlib.sha256(self.summary.read_bytes()).hexdigest(),
+        )
         self.assertEqual(state["ProofSummarySizeBytes"], self.summary.stat().st_size)
         retained = (
-            self.root / cache.RETAINED_SUMMARY_DIR
+            self.root
+            / cache.RETAINED_SUMMARY_DIR
             / f"proof-summary-{state['ProofSummarySha256']}.json"
         )
         self.assertEqual(retained.read_bytes(), self.summary.read_bytes())
         self.summary.unlink()  # The normal job discards run-scoped RuntimeProof.
         subprocess.run(
-            [*args, "-Action", "Resolve"],
-            check=True, capture_output=True, text=True
+            [*args, "-Action", "Resolve"], check=True, capture_output=True, text=True
         )
-        resolution_path = self.root / "Saved/RuntimeProof/CI/Unreal/cache_resolution.json"
+        resolution_path = (
+            self.root / "Saved/RuntimeProof/CI/Unreal/cache_resolution.json"
+        )
         resolved = json.loads(resolution_path.read_text(encoding="utf-8-sig"))
-        self.assertEqual((resolved["Mode"], resolved["Reason"]), ("static", "verified-equivalent-proof"))
+        self.assertEqual(
+            (resolved["Mode"], resolved["Reason"]),
+            ("static", "verified-equivalent-proof"),
+        )
         retained.write_bytes(b"tampered by regression fixture")
         subprocess.run(
-            [*args, "-Action", "Resolve"],
-            check=True, capture_output=True, text=True
+            [*args, "-Action", "Resolve"], check=True, capture_output=True, text=True
         )
         resolved = json.loads(resolution_path.read_text(encoding="utf-8-sig"))
-        self.assertEqual((resolved["Mode"], resolved["Reason"]), ("runtime", "retained-proof-summary-unavailable"))
+        self.assertEqual(
+            (resolved["Mode"], resolved["Reason"]),
+            ("runtime", "retained-proof-summary-unavailable"),
+        )
         self.assertFalse(cache.read_state(self.root)["ProofPassed"])
 
     def test_workspace_helper_change_requires_proof_without_compile_fingerprint_drift(
