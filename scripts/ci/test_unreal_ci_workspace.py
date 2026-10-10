@@ -150,7 +150,9 @@ class UnrealWorkspaceTests(unittest.TestCase):
         )
         before = (self.root / cache.STATE).read_bytes()
         with patch.object(
-            source, "critical_paths", return_value=["Source/Module/Module.Build.cs"]
+            source,
+            "fingerprint_paths",
+            return_value=["Source/Module/Module.Build.cs"],
         ):
             self.assertFalse(cache.has_untrusted_source_checkout(self.root))
             cs.write_bytes(b"first\r\nsecond\r\n")

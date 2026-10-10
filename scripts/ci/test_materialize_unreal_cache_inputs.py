@@ -5,6 +5,7 @@ from __future__ import annotations
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from scripts.ci import materialize_unreal_cache_inputs as gate
@@ -52,6 +53,67 @@ class UnrealCacheMaterializationTests(unittest.TestCase):
         self.state = self.root / "Saved/BuildCache/UnrealCi/state.json"
         self.state.parent.mkdir(parents=True)
         self.state.write_bytes(b"immutable green proof state")
+
+    def test_noncritical_config_raw_drift_is_detected(self):
+        config = self.root / "Config/DefaultGame.ini"
+        config.parent.mkdir(parents=True)
+        config.write_bytes(b"[Game]\nTest=1\n")
+        subprocess.run(
+            ["git", "add", "Config/DefaultGame.ini"], cwd=self.root, check=True
+        )
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.email=yacs@example.invalid",
+                "-c",
+                "user.name=Test",
+                "commit",
+                "-qm",
+                "config input",
+            ],
+            cwd=self.root,
+            check=True,
+        )
+        with patch.object(
+            gate, "fingerprint_paths", return_value=["Config/DefaultGame.ini"]
+        ):
+            self.assertIsNone(gate.raw_fingerprint_source_drift(self.root))
+            config.write_bytes(b"[Game]\r\nTest=1\r\n")
+            self.assertEqual(
+                gate.raw_fingerprint_source_drift(self.root),
+                "Config/DefaultGame.ini",
+            )
+
+    def test_manifest_is_included_in_fingerprint_audit(self):
+        path = self.root / "YetAnotherCyclingSim.uproject"
+        path.write_bytes(b'{"FileVersion":3}\n')
+        subprocess.run(
+            ["git", "add", "YetAnotherCyclingSim.uproject"],
+            cwd=self.root,
+            check=True,
+        )
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.email=yacs@example.invalid",
+                "-c",
+                "user.name=Test",
+                "commit",
+                "-qm",
+                "project input",
+            ],
+            cwd=self.root,
+            check=True,
+        )
+        # Fixture omits other production-specific named helpers. The canonical
+        # required manifest must still be discoverable.
+        with patch.object(gate, "UNREAL_COMPILE_TOOLING_EXACT", set()), patch.object(
+            gate, "UNREAL_PROOF_EXACT", set()
+        ), patch.object(gate, "UE_CRITICAL_CONFIG", set()):
+            got = gate.fingerprint_paths(self.root)
+        self.assertIn("YetAnotherCyclingSim.uproject", got)
 
     def test_only_crlf_drift_is_materialized_from_original_index(self):
         self.cs.write_bytes(b"first\r\nsecond\r\n")

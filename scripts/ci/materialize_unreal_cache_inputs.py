@@ -22,8 +22,11 @@ import tempfile
 from pathlib import Path, PurePosixPath
 
 from scripts.ci.classify_changes import (
+    UE_CRITICAL_CONFIG,
     UNREAL_COMPILE_TOOLING_EXACT,
     UNREAL_PROOF_EXACT,
+    _is_unknown_runtime_compile_input,
+    _is_unreal_compile_input,
     unreal_compile_fingerprint,
     unreal_proof_fingerprint,
 )
@@ -65,6 +68,62 @@ def critical_paths(root: Path) -> list[str]:
     paths = sorted(required | {p for p in names if p.endswith(".cs")})
     require(10 <= len(paths) <= MAX_TARGETS, "Unreal source list is outside bounds")
     return paths
+
+
+def fingerprint_paths(root: Path) -> list[str]:
+    """Enumerate exactly the existing tracked inputs of Unreal compile/proof.
+
+    Unlike critical_paths(), this is READ-ONLY and also covers native sources,
+    manifests, project and config files. A stale non-PS1/non-CS raw byte must
+    invalidate the candidate cache before actions/checkout rewrites it.
+    """
+    names = {
+        value.decode("utf-8")
+        for value in git(root, "ls-files", "-z").split(b"\0")
+        if value
+    }
+    required = UNREAL_COMPILE_TOOLING_EXACT | UNREAL_PROOF_EXACT
+    required |= UE_CRITICAL_CONFIG | {"YetAnotherCyclingSim.uproject"}
+    result = {name for name in required if (root / name).is_file()}
+    for name in names:
+        if not name.startswith(("Source/", "Plugins/", "Config/", "Build/")):
+            continue
+        if _is_unreal_compile_input(name) or _is_unknown_runtime_compile_input(name):
+            result.add(name)
+    require(result.issubset(names), "Fingerprint input not tracked by Git")
+    require(1 <= len(result) <= 512, "Fingerprint input inventory is out of bounds")
+    return sorted(result)
+
+
+def raw_fingerprint_source_drift(root: Path) -> str | None:
+    """Return first noncanonical fingerprint input; no mutations or trust grants.
+
+    A tracked file can have different working-tree bytes from its raw Git blob
+    even when git status reports clean under text-conversion filters.
+    """
+    for relative in fingerprint_paths(root):
+        posix = PurePosixPath(relative)
+        require(
+            bool(posix.parts)
+            and ".." not in posix.parts
+            and not posix.is_absolute()
+            and "\\" not in relative,
+            "Invalid fingerprint input path",
+        )
+        path = root.joinpath(*posix.parts)
+        require(
+            path.is_file()
+            and not path.is_symlink()
+            and path.resolve().is_relative_to(root.resolve()),
+            "Fingerprint input is missing or redirected",
+        )
+        current = path.read_bytes()
+        require(len(current) <= MAX_FILE_BYTES, "Fingerprint input exceeds size bound")
+        committed = git(root, "show", "HEAD:" + relative)
+        require(len(committed) <= MAX_FILE_BYTES, "Git source exceeds size bound")
+        if current != committed:
+            return relative
+    return None
 
 
 def validate_target(root: Path, relative: str) -> tuple[Path, bytes]:
@@ -193,10 +252,14 @@ def verify(root: Path, head: str, compile_fp: str, proof_fp: str) -> dict:
     evidence = materialize(root, critical_paths(root))
     actual_compile = unreal_compile_fingerprint(root)
     actual_proof = unreal_proof_fingerprint(root)
-    require(
-        actual_compile == compile_fp and actual_proof == proof_fp,
-        "Physical Unreal cache fingerprints differ from hosted exact HEAD",
-    )
+    if actual_compile != compile_fp or actual_proof != proof_fp:
+        drift = raw_fingerprint_source_drift(root)
+        raise ValueError(
+            "Physical Unreal cache fingerprints differ from hosted exact HEAD; "
+            + "compile_matches=" + str(actual_compile == compile_fp)
+            + "; proof_matches=" + str(actual_proof == proof_fp)
+            + "; first_noncanonical_input=" + (drift or "none")
+        )
     return {
         "status": "UNREAL_CANONICAL_CHECKOUT_VERIFIED",
         "exact_sha": head,

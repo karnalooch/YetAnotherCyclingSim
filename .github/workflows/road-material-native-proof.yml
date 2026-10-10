@@ -8,6 +8,11 @@ on:
       - 'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1'
       - 'scripts/ue/read_road_material_baseline.py'
       - 'scripts/ue/test_read_road_material_baseline.py'
+      - 'scripts/ci/classify_changes.py'
+      - 'scripts/ci/Resolve-YacsUnrealCiCache.ps1'
+      - 'scripts/ci/unreal_ci_workspace.py'
+      - 'scripts/ci/materialize_unreal_cache_inputs.py'
+      - 'scripts/ue/road_asphalt_slot_canary.py'
 
 permissions:
   contents: read

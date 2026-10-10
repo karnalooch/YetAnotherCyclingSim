@@ -179,11 +179,10 @@ def has_untrusted_source_checkout(root: Path) -> bool:
         if source.git(root, "diff", "--name-only", "-z", "HEAD"):
             print("UNREAL WORKSPACE: active source checkout has tracked differences")
             return True
-        for relative in source.critical_paths(root):
-            path, committed = source.validate_target(root, relative)
-            if path.read_bytes() != committed:
-                print("UNREAL WORKSPACE: physical Git source differs: " + relative)
-                return True
+        drift = source.raw_fingerprint_source_drift(root)
+        if drift is not None:
+            print("UNREAL WORKSPACE: physical Git source differs: " + drift)
+            return True
     except (
         OSError,
         ValueError,

@@ -218,3 +218,27 @@ into a serial isolated Editor proof. Geometry/normal/UV hashes, native shader
 compilation, material projection, visual review, saved/reloaded consumer,
 roadside shoulder/wall separation and whole-area admission remain pending.
 No bypass of the existing active-cache trust gate is authorized.
+
+## Cache provenance gate — 2026-10-10 follow-up
+
+At HEAD `17a1142825fa8794f3ef661731d6df21299accda`, [protected CI run 38055292848](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38055292848)
+passed the hosted tests but stopped its normal Unreal lane **before Editor**:
+the physically checked-out compile/proof source bytes did not match the hosted
+exact-SHA fingerprints. A Git status clean check and C#/PowerShell-only raw
+source correction did not cover every fingerprint input. This is a preserved
+failure, not a native material PASS.
+
+This revision adds a **read-only full fingerprint-input raw Git comparison**
+during cache selection, including native C++/project/plugin/config and explicit
+Automation tooling inputs. Source mismatches and unverifiable input inventory
+force the already-established fresh isolated checkout fallback while preserving
+the old cache pointer, original binaries and original verified state. The
+normal CI must then pass real build/Automation before publishing the new
+pointer. The separate #364 native reader remains fail-closed and can run only
+after successful exact-SHA protected CI. No geometry, Landscape or road physics
+authority is changed.
+
+`PENDING_FINAL_M3`; performance `DEFERRED_AFTER_M3` /
+`performance_pass: false`. No native material import/road authoring claimed
+until actual evidence exists.
+
