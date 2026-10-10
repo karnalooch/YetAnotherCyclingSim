@@ -254,7 +254,9 @@ try {
         pointer_identity = $pointer.identity; state_identity = $state.identity; resolver = $null }
     if ($s.SchemaVersion -ne 3 -or $s.CompilePassed -isnot [bool] -or -not $s.CompilePassed `
         -or $s.ProofPassed -isnot [bool] -or -not $s.ProofPassed -or $s.CompileHead -cnotmatch '^[0-9a-f]{40}$' `
-        -or $s.ProofHead -cnotmatch '^[0-9a-f]{40}$' -or $s.CompileFingerprint -cne $fingerprints.compile `
+        -or $s.ProofHead -cnotmatch '^[0-9a-f]{40}$' -or $s.ProofSummarySha256 -cnotmatch '^[0-9a-f]{64}$' `
+        -or ($s.ProofSummarySizeBytes -isnot [int] -and $s.ProofSummarySizeBytes -isnot [long]) -or $s.ProofSummarySizeBytes -le 0 `
+        -or $s.ProofSummarySizeBytes -gt 2MB -or $s.CompileFingerprint -cne $fingerprints.compile `
         -or $s.ProofFingerprint -cne $fingerprints.proof -or $s.EnvironmentIdentity -cne $environment.Identity `
         -or $s.EngineIdentity -cne $engine.Identity -or $s.ToolchainIdentity -cne $environment.Toolchain.Identity `
         -or -not [string]::Equals($s.EngineRoot, $engine.Root, [StringComparison]::OrdinalIgnoreCase) `
@@ -263,7 +265,12 @@ try {
     }
     $cacheFingerprints = Get-BaselineFingerprints $cacheRoot 'cache-fingerprints'
     if ($cacheFingerprints.compile -cne $fingerprints.compile -or $cacheFingerprints.proof -cne $fingerprints.proof) { throw 'Active cache source fingerprints differ from its state/current source.' }
-    $summary = Read-BaselineJson (Join-Path $cacheRoot 'Saved/RuntimeProof/CI/Unreal/unreal_ci_summary.json') 2MB
+    $summaryPath = Join-Path $cacheRoot ('Saved/BuildCache/UnrealCi/proof-summary-' + $s.ProofSummarySha256 + '.json')
+    $summary = Read-BaselineJson $summaryPath 2MB
+    if ($summary.identity.sha256 -cne $s.ProofSummarySha256 -or
+        $summary.identity.size_bytes -ne $s.ProofSummarySizeBytes) {
+        throw 'Retained original Automation summary differs from its verified cache state.'
+    }
     if ($summary.value.Head -cne $s.ProofHead -or $summary.value.ExpectedHead -cne $s.ProofHead `
         -or $summary.value.Failed -ne 0 -or $summary.value.Errors -ne 0 -or $summary.value.Discovered -le 0) { throw 'Active cache lacks its original green exact-head normal Automation summary.' }
     foreach ($row in @(@('cache-pointer.json', $pointer.identity), @('cache-state-original.json', $state.identity), @('cache-proof-summary.json', $summary.identity))) {

@@ -242,3 +242,35 @@ authority is changed.
 `performance_pass: false`. No native material import/road authoring claimed
 until actual evidence exists.
 
+
+## Native retry 38056671833 and proof-retention repair candidate — 2026-10-10
+
+[Protected exact-head CI 38056675118](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38056675118)
+succeeded at `3262a7529c97e1ed34f1ba5a436c2b84e06db55d`, including Windows Unreal
+build/Automation, verified cache publication and the Aggregate gate.
+The independently gated [native read 38056671833](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38056671833)
+**FAILED before Unreal launch**. Its fixed Windows reader checks completed
+(12 tests, one permission-dependent skip), then the runner raised `Get-Item`
+at `Invoke-YacsRoadMaterialBaseline.ps1:64`: the active cache no longer held
+`Saved/RuntimeProof/CI/Unreal/unreal_ci_summary.json`. The normal CI cleanup
+explicitly removes current-run RuntimeProof files after cache publication,
+while preserving `Saved/BuildCache/UnrealCi`. A green normal CI is not a
+successful native scene read.
+
+This candidate closes that lifecycle mismatch without loosening provenance:
+normal CI `Record` retains the **actual** bounded, green exact-HEAD Automation
+summary as a content-addressed immutable file under the existing preserved
+build-cache namespace and records its SHA-256/byte size in verified state.
+Cache selection and static proof reuse reject missing/tampered/incorrect-HEAD
+retained summaries; older cache state must run real Automation again, then
+record authentic proof before native reuse. The #364 native reader independently
+checks the pinned bytes and green original proof head instead of expecting
+a transient file deleted by normal cleanup. No synthetic summary, cache pointer
+override, foreign worktree, new geometry/material binding, or owner-project
+mutation is authorized by this fix.
+
+**Status of this candidate:** source implementation/tests submitted for
+protected verification. New exact-SHA normal CI, retained-summary admission,
+fresh native reader and subsequent asphalt canary are **NOT YET VERIFIED**.
+Owner visual `PENDING_FINAL_M3`; performance `DEFERRED_AFTER_M3`,
+`performance_pass: false`. PR remains Draft until stage-specific evidence.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -74,6 +75,16 @@ class UnrealWorkspaceTests(unittest.TestCase):
                 }
             )
         )
+        payload = self.summary.read_bytes()
+        pin = hashlib.sha256(payload).hexdigest()
+        self.retained_summary = (
+            self.root / cache.RETAINED_SUMMARY_DIR / f"proof-summary-{pin}.json"
+        )
+        self.retained_summary.parent.mkdir(parents=True, exist_ok=True)
+        self.retained_summary.write_bytes(payload)
+        self.state["ProofSummarySha256"] = pin
+        self.state["ProofSummarySizeBytes"] = len(payload)
+        self.write_state()
 
     def write_state(self):
         path = self.root / cache.STATE
@@ -82,6 +93,32 @@ class UnrealWorkspaceTests(unittest.TestCase):
 
     def publish(self):
         cache.publish(self.workspace, self.name, self.head, "compile", "proof")
+
+    def test_retained_original_automation_proof_survives_ephemeral_cleanup(self):
+        self.summary.unlink()
+        self.assertEqual(cache.verified(self.root), self.state)
+        self.assertEqual(
+            cache.verify_retained_summary(self.root, self.state)["Head"], self.head
+        )
+
+    def test_missing_or_changed_retained_proof_cannot_authorize_cache_reuse(self):
+        original = self.retained_summary.read_bytes()
+        for corrupt in (b"{}", original + b" ", b""):
+            with self.subTest(corrupt=corrupt[:12]):
+                self.retained_summary.write_bytes(corrupt)
+                with self.assertRaises(ValueError):
+                    cache.verified(self.root)
+                with self.assertRaises(ValueError):
+                    self.publish()
+                self.assertFalse((self.workspace / cache.POINTER).exists())
+        self.retained_summary.unlink()
+        with self.assertRaises(OSError):
+            cache.verified(self.root)
+        self.retained_summary.write_bytes(original)
+        self.state.pop("ProofSummarySha256")
+        self.write_state()
+        with self.assertRaisesRegex(ValueError, "no pinned Automation summary"):
+            cache.verified(self.root)
 
     def test_migration_recovers_verified_isolated_build_instead_of_stale_warm(self):
         warm = self.workspace / cache.WARM
@@ -603,6 +640,62 @@ class UnrealWorkspaceTests(unittest.TestCase):
             self.assertEqual(evidence["Mode"], expected)
             self.assertEqual(evidence["Reason"], reason)
             self.assertFalse(evidence["PurgeBuildCache"])
+
+    @unittest.skipUnless(
+        shutil.which("pwsh"), "PowerShell 7 required; exercised by hosted checks"
+    )
+    def test_native_reusable_cache_requires_real_retained_record_after_cleanup(self):
+        scripts = self.root / "scripts/ci"
+        scripts.mkdir(parents=True)
+        shutil.copy2(ROOT / "scripts/ci/Resolve-YacsUnrealCiCache.ps1", scripts)
+        (scripts / "Resolve-YacsUnrealBuildEnvironment.ps1").write_text(
+            "function Resolve-YacsUnrealBuildEnvironment { param($ProjectPath) "
+            "[pscustomobject]@{ Engine=[pscustomobject]@{ Identity='engine'; Root='fixture-engine' }; "
+            "Toolchain=[pscustomobject]@{ Identity='toolchain' }; Identity='environment' } }"
+        )
+        script = str(scripts / "Resolve-YacsUnrealCiCache.ps1")
+        args = [
+            "pwsh",
+            "-NoProfile",
+            "-File",
+            script,
+            "-RepoRoot",
+            str(self.root),
+            "-ExpectedHead",
+            self.head,
+            "-ExpectedCompileFingerprint",
+            "compile",
+            "-ExpectedProofFingerprint",
+            "proof",
+        ]
+        subprocess.run(
+            [*args, "-Action", "Record", "-CompletedMode", "runtime"],
+            check=True, capture_output=True, text=True
+        )
+        state = cache.read_state(self.root)
+        self.assertEqual(state["ProofSummarySha256"], hashlib.sha256(self.summary.read_bytes()).hexdigest())
+        self.assertEqual(state["ProofSummarySizeBytes"], self.summary.stat().st_size)
+        retained = (
+            self.root / cache.RETAINED_SUMMARY_DIR
+            / f"proof-summary-{state['ProofSummarySha256']}.json"
+        )
+        self.assertEqual(retained.read_bytes(), self.summary.read_bytes())
+        self.summary.unlink()  # The normal job discards run-scoped RuntimeProof.
+        subprocess.run(
+            [*args, "-Action", "Resolve"],
+            check=True, capture_output=True, text=True
+        )
+        resolution_path = self.root / "Saved/RuntimeProof/CI/Unreal/cache_resolution.json"
+        resolved = json.loads(resolution_path.read_text(encoding="utf-8-sig"))
+        self.assertEqual((resolved["Mode"], resolved["Reason"]), ("static", "verified-equivalent-proof"))
+        retained.write_bytes(b"tampered by regression fixture")
+        subprocess.run(
+            [*args, "-Action", "Resolve"],
+            check=True, capture_output=True, text=True
+        )
+        resolved = json.loads(resolution_path.read_text(encoding="utf-8-sig"))
+        self.assertEqual((resolved["Mode"], resolved["Reason"]), ("runtime", "retained-proof-summary-unavailable"))
+        self.assertFalse(cache.read_state(self.root)["ProofPassed"])
 
     def test_workspace_helper_change_requires_proof_without_compile_fingerprint_drift(
         self,

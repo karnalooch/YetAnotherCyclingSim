@@ -7,6 +7,7 @@ Resolve-YacsUnrealCiCache.ps1 remains the provenance and environment authority.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -21,6 +22,8 @@ from scripts.ci.retain_unreal_assets import digest, retain
 WARM = "_unreal-ci-warm"
 POINTER = "_yacs-unreal-ci/active.json"
 STATE = "Saved/BuildCache/UnrealCi/state.json"
+RETAINED_SUMMARY_DIR = "Saved/BuildCache/UnrealCi"
+MAX_AUTOMATION_SUMMARY_BYTES = 2 * 1024 * 1024
 BINARY_NAMES = (
     "UnrealEditor-YetAnotherCyclingSim.dll",
     "UnrealEditor-YetAnotherCyclingSimEditor.dll",
@@ -51,6 +54,37 @@ def read_state(root: Path) -> dict:
     return value
 
 
+def verify_retained_summary(root: Path, state: dict) -> dict:
+    """Authenticate only the original successful Automation bytes retained by Record."""
+    pin = state.get("ProofSummarySha256")
+    size = state.get("ProofSummarySizeBytes")
+    if (
+        not isinstance(pin, str)
+        or re.fullmatch(r"[0-9a-f]{64}", pin) is None
+        or type(size) is not int
+        or not (0 < size <= MAX_AUTOMATION_SUMMARY_BYTES)
+    ):
+        raise ValueError("Unreal verified cache has no pinned Automation summary")
+    path = root / RETAINED_SUMMARY_DIR / f"proof-summary-{pin}.json"
+    if path.is_symlink() or getattr(path, "is_junction", lambda: False)():
+        raise ValueError("Unreal retained Automation summary is linked")
+    if path.stat().st_size != size:
+        raise ValueError("Unreal retained Automation summary size mismatch")
+    blob = path.read_bytes()
+    if len(blob) != size or hashlib.sha256(blob).hexdigest() != pin:
+        raise ValueError("Unreal retained Automation summary digest mismatch")
+    summary = json.loads(blob.decode("utf-8-sig"))
+    if not isinstance(summary, dict) or any(
+        summary.get(field) != state["ProofHead"] for field in ("Head", "ExpectedHead")
+    ):
+        raise ValueError("Unreal retained Automation summary HEAD mismatch")
+    if summary.get("Failed") != 0 or summary.get("Errors") != 0 or type(
+        summary.get("Discovered")
+    ) is not int or summary["Discovered"] <= 0:
+        raise ValueError("Unreal retained Automation summary is not green")
+    return summary
+
+
 def verified(root: Path) -> dict:
     state = read_state(root)
     if state.get("SchemaVersion") != 3 or any(
@@ -78,6 +112,7 @@ def verified(root: Path) -> dict:
         not (root / "Binaries/Win64" / name).is_file() for name in BINARY_NAMES
     ):
         raise ValueError("Verified Unreal worktree or binaries missing")
+    verify_retained_summary(root, state)
     return state
 
 
