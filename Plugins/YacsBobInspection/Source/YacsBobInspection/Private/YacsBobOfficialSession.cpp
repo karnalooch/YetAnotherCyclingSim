@@ -510,7 +510,12 @@ struct FYacsBobOfficialSession : TSharedFromThis<FYacsBobOfficialSession, ESPMod
                 Property->SetPropertyValue_InContainer(Library, false);
                 Library->DeregisterTools();
             }
-            return Census() == LibraryClasses;
+            if (Census() != LibraryClasses)
+            {
+                Error = TEXT("The prepared legacy tool-library census changed during deregistration.");
+                return false;
+            }
+            return true;
         }
         Error = TEXT("The loaded legacy tool-library census did not stabilize.");
         return false;
@@ -717,10 +722,34 @@ bool FYacsBobOfficialSession::Activate()
     UToolsetRegistrySubsystem* Registry = GEditor->GetEditorSubsystem<UToolsetRegistrySubsystem>();
     FString EngineIni = FPaths::ConvertRelativePathToFull(GEngineIni);
     FPaths::NormalizeFilename(EngineIni);
-    if (!Module || Module->GetServer() || !Registry || !GConfig
-        || !EngineIni.StartsWith(Root + TEXT("/"), ESearchCase::IgnoreCase) || !PrepareLibraries())
+    if (!Module)
     {
-        if (Error.IsEmpty()) { Error = TEXT("The owned official pre-listener prerequisites are unavailable."); }
+        if (Error.IsEmpty()) { Error = TEXT("The official MCP module is unavailable before listener startup."); }
+        return false;
+    }
+    if (Module->GetServer())
+    {
+        if (Error.IsEmpty()) { Error = TEXT("The official MCP server object already exists before owned listener startup."); }
+        return false;
+    }
+    if (!Registry)
+    {
+        if (Error.IsEmpty()) { Error = TEXT("The native Toolset Registry subsystem is unavailable before listener startup."); }
+        return false;
+    }
+    if (!GConfig)
+    {
+        if (Error.IsEmpty()) { Error = TEXT("The native configuration cache is unavailable before listener startup."); }
+        return false;
+    }
+    if (!EngineIni.StartsWith(Root + TEXT("/"), ESearchCase::IgnoreCase))
+    {
+        if (Error.IsEmpty()) { Error = TEXT("The active engine configuration is outside the owned project root."); }
+        return false;
+    }
+    if (!PrepareLibraries())
+    {
+        if (Error.IsEmpty()) { Error = TEXT("The loaded legacy tool libraries could not be prepared before listener startup."); }
         return false;
     }
     GlobalRegistry = Registry;

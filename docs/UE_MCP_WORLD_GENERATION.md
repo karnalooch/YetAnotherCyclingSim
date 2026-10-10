@@ -625,6 +625,25 @@ and bootstrap stage timings are added; neither native 180-second nor host
 real-Git session/client tests pass. Linux raw-read parity confirms identical
 bytes, not Windows timing or native admission. A fresh accepted-session proof
 must establish the runtime effect.
+[Refactored attempt 38015883833](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38015883833)
+at `9be44d403af3997b56f68c04df14c402f70001ce` passed both builds and
+accepted staging. The host verified context at 119.326 seconds from launch,
+completed its unchanged tracked-source scan in 5.801 seconds and published
+transport at 125.148 seconds. Native inputs were trusted and official test
+discovery completed; the native session then failed in `Discovering` at
+41.160 seconds with `python=1` / `trusted=1` and
+`The owned official pre-listener prerequisites are unavailable.` This resolves
+the previous pre-admission deadline blocker, but establishes no listener,
+client, Automation result or BOB execution. The compound activation guard does
+not identify which prerequisite failed; the next candidate will preserve its
+short-circuit order and conditions while reporting fixed branch-specific errors.
+The host receipt is 443,055 bytes, SHA-256
+`b22a7b1eabecda906127afed3cbd63f3a50115ac7d8a55be280b0352fea09e75`.
+[Artifact 11656312507](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38015883833/artifacts/11656312507)
+is 346,833 bytes, archive SHA-256
+`86347a8134fe37b0a5fba6e5075a33f8c5fe64db5923038af27c9f2dafb30b59`.
+[Ordinary CI 38015886935](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38015886935)
+passed at this SHA with the domain plugin disabled.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 
