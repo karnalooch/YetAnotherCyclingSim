@@ -9,6 +9,8 @@
 
 Acceptance covers the material baseline on the **2,016.5 m × 2,016.5 m / 1024-component** working Landscape, not a finished rideable world or completed M3. [The material handoff](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) pins the saved/fresh-rendered consumer and native evidence. Canonical-map promotion, unresolved road/CUT/cliff/contact geometry and production PCGEx admission remain outside this acceptance. Performance is **`DEFERRED_AFTER_M3` / `performance_pass: false`**.
 
+**Project-wide Landscape decision — 2026-10-10 (#471):** accepted whole-Landscape geometry stays globally frozen, while an independently scoped issue may authorize evidence-backed **local repair or local simplification** through [World Building Bible section 6](WORLD_BUILDING_BIBLE.md#6-landscape-edit-layers-contract). Preserve `Base_DTM`, source/grid authority, canonical roads/physics and accepted checkpoints; document AOI, deltas, rollback and required reviews. The exception does not change the 13-step sequence, admit unresolved #459 geometry or authorize global terrain regeneration.
+
 This roadmap answers **what must be delivered and in what order**.
 
 It intentionally does **not** encode every experiment, proof or implementation attempt as another nested stage number. Concrete work belongs in GitHub Issues.

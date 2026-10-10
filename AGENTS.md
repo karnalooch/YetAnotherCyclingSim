@@ -11,6 +11,7 @@
 - Change only approved scope. Do not add speculative features, bypass predecessor issues or begin post-MVP systems early.
 - Keep physics deterministic and frame-independent, with SI units; route truth, physics inputs and geographic truth must not be overwritten by visual presentation.
 - Treat terrain, roads and generated assets as sourced, reproducible and non-destructive; never conceal geometry defects with materials or foliage.
+- **Project-wide Landscape freeze:** keep the accepted global Landscape, original `Base_DTM`, grid/georeferencing and macro terrain. A scoped issue may authorize **bounded local repair or simplification** for a diagnosed defect or justified complexity need, using reversible Edit Layers/derived geometry plus before/after delta and rollback proof. Never infer a global terrain thaw or bypass route/physics, source, native/visual or dependency gates; follow [World Building Bible section 6](docs/WORLD_BUILDING_BIBLE.md#6-landscape-edit-layers-contract).
 - Never commit credentials, secrets, personal data, generated UE caches or unlicensed third-party material; follow [AI policy](docs/legal/AI_ASSISTED_DEVELOPMENT.md) and [provenance requirements](docs/legal/DEPENDENCY_PROVENANCE.md).
 - No destructive Git operations, shared-history rewrites, new major dependencies or architecture/scope expansion without the required authorization.
 - Never weaken tests, CI, exact-SHA evidence, hardware proof or human visual acceptance. Unverified is not PASS.
