@@ -24,7 +24,12 @@
     {
       "file": "official-unreal-mcp-source-probe.yml",
       "state": "CURRENT",
-      "reason": "Issue #384 owner-only branch-scoped read-only installed UE 5.8.2 official MCP/registry/test declaration inventory. Isolated code-only checkout, serial shared host lane, no build/editor launch/plugin activation or persistent world mutation; source metadata is not MCP guard parity or adoption admission."
+      "reason": "Issues #384/#364 owner-only branch-scoped read-only installed UE 5.8.2 official MCP/registry/test and material declaration inventory. Fresh code-only checkout, isolated long-path Git configuration and serial shared host lane; no build/editor launch/plugin activation or persistent world mutation. Source metadata is not runtime schemas, material authoring or MCP admission."
+    },
+    {
+      "file": "road-material-source-proof.yml",
+      "state": "CURRENT",
+      "reason": "Issue #364 owner-only bounded replay of the current asphalt base through existing pinned Material Forge tools. Verifies tool archives and source contract, compares graph and five maps across two native renders, preserves persistent source evidence and yields to host ownership. No Unreal/MCP launch, tool provisioning, world mutation, visual acceptance or performance admission."
     },
     {
       "file": "blender-material-forge-reference.yml",

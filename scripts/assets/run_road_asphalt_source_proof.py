@@ -100,9 +100,18 @@ def prove(expected_head: str, run: str, attempt: str) -> dict:
             raise ValueError("Installed executable differs from its approved archive")
     source = tools / ("material-maker-source-" + MM_SOURCE_SHA)
     checked_path(workspace, source)
-    if git(source, "rev-parse", "HEAD") != MM_SOURCE_SHA or git(
-        source, "status", "--porcelain", "--untracked-files=no"
-    ):
+    source_head = git(source, "rev-parse", "HEAD")
+    source_status = git(source, "status", "--porcelain", "--untracked-files=no")
+    if source_head != MM_SOURCE_SHA or source_status:
+        print(
+            json.dumps(
+                {
+                    "material_maker_source_head": source_head,
+                    "tracked_changes": source_status[:4096],
+                    "tracked_changes_truncated": len(source_status) > 4096,
+                }
+            )
+        )
         raise ValueError("Material Maker source is not the pinned clean revision")
     for path in (
         source / "project.godot",
