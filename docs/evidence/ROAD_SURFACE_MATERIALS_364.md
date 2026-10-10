@@ -12,6 +12,69 @@ remains frozen. #384 completed after protected [PR #467](https://github.com/karn
 merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its gate is satisfied.
 This work continues #364, not MCP infrastructure.
 
+## Whole-network revision following owner feedback
+
+The owner requested gravel beside the entire existing road network, a drier
+and more varied asphalt made in Material Forge, and one complete #364 delivery.
+The hairpin concern means realistic crossfall/banking and longitudinal profile,
+not new guardrails. Diagnose that geometry separately against its source;
+the material proof retains its unchanged-geometry contract.
+
+Source candidate `c773f871aa9b8fc269888f12f8714d584de4dd66` introduces
+`aged_mountain_asphalt/dry_varied`: the existing 4 m / 2048 px / five-map
+contract, roughness target 0.90–0.99, normal strength 0.24 and irregular
+variation at several scales. Historical asphalt recipes retain their shader.
+The 74 local source tests passed, and
+[protected CI 38087793104](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38087793104)
+passed. This does not establish source-render or visual acceptance.
+
+The first actual
+[source run 38087789852](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38087789852)
+failed `DetailMasks` horizontal wrap QA after rendering run-a. No run-b or
+two-render PASS exists for this candidate. Original logs are retained in
+[artifact 11683365198](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38087789852/artifacts/11683365198),
+484 bytes, SHA-256
+`5e956c3020ddf553278d4c07f1c7f3a38d2d69c8177c20adb4a896bb9afbfe4b`.
+The actual first bundle is
+[artifact 11682871037](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38087789852/artifacts/11682871037),
+20,532,779 bytes, SHA-256
+`3a15ded3458b5978ce7a36b0b1bee76d0dca4e602325df3915af65b77ac7a4a4`.
+Both archives were downloaded and their bytes independently verified. The
+intermediate native run stopped at the source bridge: the previous base bundle
+does not contain `dry_varied`. It did not reach new material authoring.
+
+The isolated follow-up changes only the dry recipe's periodic lattice
+addressing: canonical tile coordinates and explicit neighbouring-index wrap
+replace floating modulo there. Seed, frequencies, contrast, material response,
+historical recipes and wrap thresholds remain unchanged. All 76 source tests
+pass locally, including regression rejection of both measured failed seam
+axes. This is a candidate fix until two new native source renders pass; no
+GPU compiler lowering or new visual result is inferred from the numerical
+model used to diagnose the boundary risk.
+
+The full-network consumer under integration source-authenticates all 186
+support owners before assignment, assigns only the two outer top strips on
+185 material targets, and preserves the existing Nudo parapet and all original
+wall materials. A narrow, read-only native inspector reads complete road and
+support position/index, rendered corner-normal/UV and MaterialID buffers.
+Its versioned `blake3-256-le-i32-f64-corners-v1` fields are new evidence;
+historical SHA-256 mesh fields are not relabelled. It uses the existing Core,
+GeometryCore, GeometryFramework and Json dependencies, with no geometry
+authoring API. API review used Epic's UE 5.8 documentation for
+[FBlake3](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Core/FBlake3),
+[FBlake3Hash](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Core/FBlake3Hash)
+and [FDynamicMeshAttributeSet](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/GeometryCore/FDynamicMeshAttributeSet).
+Compilation and `CyclingPhysics.World.RoadMaterialReadOnlyInspection` Automation
+remain pending until the exact new native source is built on the host.
+
+The representative camera plan selects 68 existing, authenticated survey poses:
+both directions in all 24 occupied 250 m road cells, the original four
+comparisons, Nudo, the accepted hairpin and elevation extremes. It represents
+28 of 185 road windows; it does not assert exhaustive road-pixel visibility or
+owner acceptance. Full-network save, independent reopening and these GPU
+captures remain pending. Owner visual status stays `PENDING_FINAL_M3` and
+performance stays `DEFERRED_AFTER_M3`, `performance_pass: false`.
+
 ## Current proof boundary
 
 The verified asphalt baseline is exact commit

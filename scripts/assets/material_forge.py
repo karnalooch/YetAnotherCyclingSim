@@ -94,34 +94,56 @@ vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
 # recipe adds variation within the same 4 m tile and five exported maps: no
 # extra Unreal samples, world masks, wetness or geometry displacement.
 DRY_ASPHALT_FUNCTION = r"""
+float yacs_dry_noise(vec2 uv, float cells, float salt) {
+    // Canonicalize the tile before locating its integer lattice. Explicit
+    // neighbour wrapping avoids floating mod/division at the 47/61-cell
+    // boundaries; reciprocal rounding can otherwise leave index == cells.
+    vec2 p = fract(uv)*cells;
+    vec2 origin = floor(p);
+    vec2 f = fract(p);
+    vec2 cell = vec2(
+        origin.x >= cells ? 0.0 : origin.x,
+        origin.y >= cells ? 0.0 : origin.y
+    );
+    vec2 next_cell = vec2(
+        cell.x+1.0 >= cells ? 0.0 : cell.x+1.0,
+        cell.y+1.0 >= cells ? 0.0 : cell.y+1.0
+    );
+    vec2 weight = f*f*f*(f*(f*6.0-15.0)+10.0);
+    float a = dot(yacs_gradient(cell,salt),f);
+    float b = dot(yacs_gradient(vec2(next_cell.x,cell.y),salt),f-vec2(1.0,0.0));
+    float c = dot(yacs_gradient(vec2(cell.x,next_cell.y),salt),f-vec2(0.0,1.0));
+    float d = dot(yacs_gradient(next_cell,salt),f-vec2(1.0));
+    return 0.5+0.7*mix(mix(a,b,weight.x),mix(c,d,weight.x),weight.y);
+}
 vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
-    vec2 warp = vec2(yacs_noise(uv,9.0,seed),yacs_noise(uv,13.0,seed+3.0))-0.5;
-    vec2 detail_warp = vec2(yacs_noise(uv,37.0,seed+5.0),yacs_noise(uv,37.0,seed+7.0))-0.5;
+    vec2 warp = vec2(yacs_dry_noise(uv,9.0,seed),yacs_dry_noise(uv,13.0,seed+3.0))-0.5;
+    vec2 detail_warp = vec2(yacs_dry_noise(uv,37.0,seed+5.0),yacs_dry_noise(uv,37.0,seed+7.0))-0.5;
     vec2 q = uv+0.028*warp+0.003*detail_warp;
 
-    float coarse = 0.62*yacs_noise(q,3.0,seed+11.0)
-                 + 0.38*yacs_noise(q,7.0,seed+13.0);
-    float middle = 0.60*yacs_noise(q,29.0,seed+17.0)
-                 + 0.40*yacs_noise(q,61.0,seed+19.0);
-    float aggregate = 0.60*yacs_noise(q,257.0,seed+23.0)
-                    + 0.40*yacs_noise(q,521.0,seed+29.0);
-    float micro = yacs_noise(q,733.0,seed+31.0);
+    float coarse = 0.62*yacs_dry_noise(q,3.0,seed+11.0)
+                 + 0.38*yacs_dry_noise(q,7.0,seed+13.0);
+    float middle = 0.60*yacs_dry_noise(q,29.0,seed+17.0)
+                 + 0.40*yacs_dry_noise(q,61.0,seed+19.0);
+    float aggregate = 0.60*yacs_dry_noise(q,257.0,seed+23.0)
+                    + 0.40*yacs_dry_noise(q,521.0,seed+29.0);
+    float micro = yacs_dry_noise(q,733.0,seed+31.0);
     float wear = smoothstep(0.30,0.70,0.66*coarse+0.34*middle);
 
-    float repair_field = 0.56*yacs_noise(q,5.0,seed+37.0)
-                       + 0.31*yacs_noise(q,11.0,seed+41.0)
-                       + 0.13*yacs_noise(q,47.0,seed+43.0);
+    float repair_field = 0.56*yacs_dry_noise(q,5.0,seed+37.0)
+                       + 0.31*yacs_dry_noise(q,11.0,seed+41.0)
+                       + 0.13*yacs_dry_noise(q,47.0,seed+43.0);
     float patch_mask = clamp(
         smoothstep(0.57,0.64,repair_field)*clamp(pores,0.0,1.2),0.0,1.0
     );
     float primary_crack = 1.0-smoothstep(
-        0.009,0.026,abs(yacs_noise(q,13.0,seed+47.0)-0.49)
+        0.009,0.026,abs(yacs_dry_noise(q,13.0,seed+47.0)-0.49)
     );
-    primary_crack *= smoothstep(0.58,0.74,yacs_noise(q,7.0,seed+53.0));
+    primary_crack *= smoothstep(0.58,0.74,yacs_dry_noise(q,7.0,seed+53.0));
     float secondary_crack = 1.0-smoothstep(
-        0.007,0.021,abs(yacs_noise(q,23.0,seed+59.0)-0.51)
+        0.007,0.021,abs(yacs_dry_noise(q,23.0,seed+59.0)-0.51)
     );
-    secondary_crack *= smoothstep(0.64,0.79,yacs_noise(q,17.0,seed+61.0));
+    secondary_crack *= smoothstep(0.64,0.79,yacs_dry_noise(q,17.0,seed+61.0));
     float crack = clamp(primary_crack+0.30*secondary_crack,0.0,1.0);
     crack *= 1.0-0.70*patch_mask;
 

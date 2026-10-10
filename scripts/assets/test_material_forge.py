@@ -255,6 +255,39 @@ class MaterialForgeContractTests(unittest.TestCase):
             self.assertEqual(material["parameters"]["emission_energy"], 0)
             self.assertEqual(len(material["shader_model"]["exports"]["YACS/Textures"]["files"]), 5)
 
+    def test_dry_wrap_fix_preserves_the_rendered_recipe_contrast_and_frequencies(self):
+        # Source run 38087789852/c773f871 failed wrap QA. Keep the fix confined
+        # to periodic lattice addressing, with no edge fade or mask reduction.
+        helper, surface = forge.DRY_ASPHALT_FUNCTION.split("vec4 yacs_limestone(", 1)
+        self.assertIn("vec2 p = fract(uv)*cells;", helper)
+        self.assertNotIn("mod(", helper)
+        self.assertNotIn("yacs_noise(", surface)
+        prior_surface = "\nvec4 yacs_limestone(" + surface.replace(
+            "yacs_dry_noise(", "yacs_noise("
+        )
+        prior_field = (
+            forge._load_base_builder().FIELD.split("vec4 yacs_limestone(", 1)[0]
+            + prior_surface
+        )
+        self.assertEqual(
+            hashlib.sha256(prior_field.encode()).hexdigest(),
+            "4e5df9c82a0a7dc5cc7618f281567ed940369d2d325262dcd8e2c7ba2e35897e",
+        )
+
+    def test_real_dry_source_failure_remains_rejected_by_unchanged_wrap_qa(self):
+        # Measured from the original artifact 11682871037, not a passing
+        # synthetic render. Both axes must continue to reject these pixels.
+        measured = {
+            "wrap_step_x": 0.0633450776144,
+            "wrap_step_y": 0.0720071231618,
+            "interior_step_x": 0.0124458216741,
+            "interior_step_y": 0.0121966005643,
+        }
+        with self.assertRaisesRegex(ValueError, "DetailMasks x"):
+            forge._assert_wrap("DetailMasks", measured)
+        with self.assertRaisesRegex(ValueError, "DetailMasks y"):
+            forge._assert_wrap("DetailMasks", {**measured, "wrap_step_x": 0.0})
+
     def test_dry_source_qa_measures_actual_pixels_and_retains_statistics(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
