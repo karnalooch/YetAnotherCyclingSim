@@ -949,6 +949,20 @@ yet established. This run verifies the qualified historical readback, not the
 standalone unit or a fresh MCP session. A bounded read-only path diagnostic
 must establish the unit guard's actual rejected inputs before correction.
 
+[Fixed preflight diagnostic 38030202142](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38030202142)
+at `dbf16388d63e5573869cab91b4737db1731002d0` recorded Git exit zero,
+exactly one untracked path and no truncated rows or deadline/stream termination:
+`Saved/RuntimeProof/OfficialMcpNativeProbe/37994488902-1/PluginPackage/HostProject/HostProject.uproject`.
+The two long-path warnings belong to that same preserved old package; this
+does not certify complete traversal of its descendants. The result establishes
+that the persistent-checkout scan included an unrelated retained descriptor.
+Its 2,870-byte diagnostic is SHA-256
+`f071ab787e438fa0626603f59f3f1f91546d74f4e8a12d458d9aec42a5e9d03e`.
+The corrected unit preflight checks its fresh, exclusive copied-file inventory
+before launch instead. Original build-input guards and historical files remain
+unchanged. The temporary diagnostic is removed; actual InputBoundary remains
+pending. Diagnostic job success supplies no unit or fresh MCP verification.
+
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
 hosted Python, equivalent exact-head Unreal proof reuse and Aggregate.
