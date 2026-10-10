@@ -82,18 +82,24 @@ def validate_target(root: Path, relative: str) -> tuple[Path, bytes]:
         info = cursor.lstat()
         require(
             not stat.S_ISLNK(info.st_mode)
-            and not (getattr(info, "st_file_attributes", 0)
-                     & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)),
+            and not (
+                getattr(info, "st_file_attributes", 0)
+                & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+            ),
             "Fingerprint input or ancestor is a link/junction",
         )
         require(
-            stat.S_ISREG(info.st_mode) if index == len(posix.parts) - 1
+            stat.S_ISREG(info.st_mode)
+            if index == len(posix.parts) - 1
             else stat.S_ISDIR(info.st_mode),
             "Fingerprint input must have regular directory ancestry",
         )
     require(0 < info.st_size <= MAX_FILE_BYTES, "Fingerprint input size exceeds bound")
     attrs = git(root, "check-attr", "eol", "--", relative).decode("utf-8").strip()
-    require(attrs == f"{relative}: eol: lf", "Missing pinned LF checkout attribute: " + relative)
+    require(
+        attrs == f"{relative}: eol: lf",
+        "Missing pinned LF checkout attribute: " + relative,
+    )
     committed = git(root, "show", "HEAD:" + relative)
     require(
         0 < len(committed) <= MAX_FILE_BYTES and b"\r" not in committed,
@@ -103,13 +109,15 @@ def validate_target(root: Path, relative: str) -> tuple[Path, bytes]:
 
 
 def materialize(root: Path, paths: list[str]) -> dict:
-    """Mutate only already-clean CRLF drift and verify every restored Git blob."""
+    """Repair CRLF-only drift and verify every restored Git blob."""
     require(len(set(paths)) == len(paths), "Duplicate input path")
     require(0 < len(paths) <= MAX_TARGETS, "Invalid input count")
     # A CRLF-only file may itself appear dirty after the LF policy changed.
     # Reject staged/index changes, and allow only proven EOL drift in named files.
-    require(not git(root, "diff", "--cached", "--name-only", "-z", "HEAD"),
-            "Unreal cache index has staged source modifications")
+    require(
+        not git(root, "diff", "--cached", "--name-only", "-z", "HEAD"),
+        "Unreal cache index has staged source modifications",
+    )
     dirty = {
         raw.decode("utf-8")
         for raw in git(root, "diff", "--name-only", "-z", "HEAD").split(b"\0")
@@ -121,37 +129,59 @@ def materialize(root: Path, paths: list[str]) -> dict:
         path, blob = validate_target(root, name)
         current = path.read_bytes()
         if current != blob:
-            require(current.replace(b"\r\n", b"\n") == blob,
-                    "Fingerprint source has non-EOL changes: " + name)
+            require(
+                current.replace(b"\r\n", b"\n") == blob,
+                "Fingerprint source has non-EOL changes: " + name,
+            )
             targets.append(name)
         expected[name] = blob
-    require(dirty.issubset(set(targets)),
-            "Unreal cache has unrelated tracked source modifications")
+    require(
+        dirty.issubset(set(targets)),
+        "Unreal cache has unrelated tracked source modifications",
+    )
     if targets:
         git(root, "checkout-index", "--force", "--", *targets)
     for name, blob in expected.items():
-        require((root / name).read_bytes() == blob,
-                "Git checkout did not materialize canonical source: " + name)
-    require(not git(root, "status", "--porcelain", "--untracked-files=no"),
-            "Canonical materialization altered tracked source")
-    return {"checked": len(expected), "restored": len(targets),
-            "repaired_files": targets, "git_index_changed": False}
+        require(
+            (root / name).read_bytes() == blob,
+            "Git checkout did not materialize canonical source: " + name,
+        )
+    require(
+        not git(root, "status", "--porcelain", "--untracked-files=no"),
+        "Canonical materialization altered tracked source",
+    )
+    return {
+        "checked": len(expected),
+        "restored": len(targets),
+        "repaired_files": targets,
+        "git_index_changed": False,
+    }
 
 
 def verify(root: Path, head: str, compile_fp: str, proof_fp: str) -> dict:
     require(bool(SHA40.fullmatch(head)), "Malformed expected source SHA")
-    require(bool(SHA64.fullmatch(compile_fp)) and bool(SHA64.fullmatch(proof_fp)),
-            "Malformed expected hosted fingerprints")
-    require(git(root, "rev-parse", "HEAD").decode("ascii").strip() == head,
-            "Unreal cache checkout HEAD mismatch")
+    require(
+        bool(SHA64.fullmatch(compile_fp)) and bool(SHA64.fullmatch(proof_fp)),
+        "Malformed expected hosted fingerprints",
+    )
+    require(
+        git(root, "rev-parse", "HEAD").decode("ascii").strip() == head,
+        "Unreal cache checkout HEAD mismatch",
+    )
     evidence = materialize(root, critical_paths(root))
     actual_compile = unreal_compile_fingerprint(root)
     actual_proof = unreal_proof_fingerprint(root)
-    require(actual_compile == compile_fp and actual_proof == proof_fp,
-            "Physical Unreal cache fingerprints differ from hosted exact HEAD")
-    return {"status": "UNREAL_CANONICAL_CHECKOUT_VERIFIED", "exact_sha": head,
-            "physical_compile_fingerprint": actual_compile,
-            "physical_proof_fingerprint": actual_proof, **evidence}
+    require(
+        actual_compile == compile_fp and actual_proof == proof_fp,
+        "Physical Unreal cache fingerprints differ from hosted exact HEAD",
+    )
+    return {
+        "status": "UNREAL_CANONICAL_CHECKOUT_VERIFIED",
+        "exact_sha": head,
+        "physical_compile_fingerprint": actual_compile,
+        "physical_proof_fingerprint": actual_proof,
+        **evidence,
+    }
 
 
 def main() -> int:
@@ -162,7 +192,8 @@ def main() -> int:
     parser.add_argument("--expected-proof-fingerprint", required=True)
     options = parser.parse_args()
     report = verify(
-        options.repo_root.resolve(), options.expected_head,
+        options.repo_root.resolve(),
+        options.expected_head,
         options.expected_compile_fingerprint,
         options.expected_proof_fingerprint,
     )

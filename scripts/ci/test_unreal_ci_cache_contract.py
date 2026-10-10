@@ -21,16 +21,20 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         self.assertIn("$env:YACS_UNREAL_WORKTREE", self.cache)
         self.assertIn("scripts.ci.materialize_unreal_cache_inputs", self.cache)
         self.assertIn("--expected-head $ExpectedHead", self.cache)
-        self.assertIn("--expected-compile-fingerprint $ExpectedCompileFingerprint", self.cache)
-        self.assertIn("--expected-proof-fingerprint $ExpectedProofFingerprint", self.cache)
+        self.assertIn(
+            "--expected-compile-fingerprint $ExpectedCompileFingerprint", self.cache
+        )
+        self.assertIn(
+            "--expected-proof-fingerprint $ExpectedProofFingerprint", self.cache
+        )
         self.assertLess(
             self.cache.index("scripts.ci.materialize_unreal_cache_inputs"),
             self.cache.index("Resolve-YacsUnrealBuildEnvironment -ProjectPath"),
         )
         self.assertNotIn("Materialize canonical LF fingerprint inputs", self.workflow)
-        classifier = (
-            ROOT / "scripts/ci/classify_changes.py"
-        ).read_text(encoding="utf-8")
+        classifier = (ROOT / "scripts/ci/classify_changes.py").read_text(
+            encoding="utf-8"
+        )
         self.assertIn('"scripts/ci/materialize_unreal_cache_inputs.py"', classifier)
 
     def test_road_material_native_waits_for_exact_head_ci_without_host_lock(self):

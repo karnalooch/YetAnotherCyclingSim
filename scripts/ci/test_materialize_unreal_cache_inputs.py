@@ -16,8 +16,9 @@ class UnrealCacheMaterializationTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         subprocess.run(["git", "init", "-q", str(self.root)], check=True)
-        subprocess.run(["git", "config", "core.autocrlf", "true"],
-                       cwd=self.root, check=True)
+        subprocess.run(
+            ["git", "config", "core.autocrlf", "true"], cwd=self.root, check=True
+        )
         self.attr = self.root / ".gitattributes"
         self.attr.write_bytes(
             b"*.cs text eol=lf\nscripts/ci/Invoke-YacsUnrealCi.ps1 text eol=lf\n"
@@ -29,10 +30,20 @@ class UnrealCacheMaterializationTests(unittest.TestCase):
         self.ps.parent.mkdir(parents=True)
         self.ps.write_bytes(b"Write-Host 'test'\n")
         subprocess.run(["git", "add", "."], cwd=self.root, check=True)
-        subprocess.run([
-            "git", "-c", "user.email=yacs@example.invalid",
-            "-c", "user.name=Test", "commit", "-qm", "pinned sources"
-        ], cwd=self.root, check=True)
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.email=yacs@example.invalid",
+                "-c",
+                "user.name=Test",
+                "commit",
+                "-qm",
+                "pinned sources",
+            ],
+            cwd=self.root,
+            check=True,
+        )
         self.paths = ["Source/Unit.Build.cs", "scripts/ci/Invoke-YacsUnrealCi.ps1"]
         self.initial_head = gate.git(self.root, "rev-parse", "HEAD")
         self.dll = self.root / "Binaries/Win64/build.dll"
@@ -65,7 +76,9 @@ class UnrealCacheMaterializationTests(unittest.TestCase):
     def test_missing_eol_attribute_fails_before_change(self):
         self.cs.write_bytes(b"first\r\nsecond\r\n")
         self.attr.write_bytes(b"*.cs text=auto\n")
-        with self.assertRaisesRegex(ValueError, "tracked source modifications|pinned LF"):
+        with self.assertRaisesRegex(
+            ValueError, "tracked source modifications|pinned LF"
+        ):
             gate.materialize(self.root, self.paths)
         self.assertEqual(self.cs.read_bytes(), b"first\r\nsecond\r\n")
 
@@ -75,7 +88,7 @@ class UnrealCacheMaterializationTests(unittest.TestCase):
             self.cs.symlink_to(self.ps)
         except OSError as error:
             self.skipTest(str(error))
-        with self.assertRaisesRegex(ValueError, "regular non-linked"):
+        with self.assertRaisesRegex(ValueError, "link/junction"):
             gate.validate_target(self.root, self.paths[0])
 
     def test_different_committed_blob_is_not_reinterpreted(self):
