@@ -275,7 +275,12 @@ Droga pozostaje częścią systemu YACS; nie kupujemy „gotowej trasy”. Asset
 Read-only inventory at `bfbc48057b8b84d087a3685cd71972678a32d412`.
 [#364](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364) remains
 blocked by the bounded official MCP spike #384. The #363 material admission/merge
-prerequisite was satisfied on 2026-10-09; #384 remains open and unimplemented.
+prerequisite was satisfied on 2026-10-09. #384's
+[fixed native inspection/test session passed](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123),
+but full pinned receipt review, standalone InputBoundary and protected #467
+closeout remain pending; #384 stays open. The fixed inspector does not admit
+stock `MaterialInstanceTools`: #364 requires separate version-matched schemas,
+argument/resource restrictions and material-only native authoring proof before use.
 This inventory selects no production asset, performs no import/application and
 does not promote material-prep fallback roles into geographic road domains.
 

@@ -10,7 +10,7 @@
 
 **Owner decision:** on 2026-10-09 the owner accepted the presented whole-area material foundation and requested stage freezing and PR/issue cleanup. This accepts the material baseline, not completed M3, integrated road rideability, new PCGEx topology or a geometry repair. Independent review retains uniform beige/limited role variation, faceted terrain and dark pockets, scalloped road margins and highlight clipping as disclosed limits. The canonical map remains unchanged; the saved consumer is `/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview`, not canonical-map promotion. Performance is `DEFERRED_AFTER_M3`, with `performance_pass:false` and no benchmark.
 
-**Protected delivery:** PR #446 merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b`; #363 is closed as completed. [Final CI 37978579196](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed at reviewed head `968d9ed669cd52667d7994e26dec24aa5a1f3560`, whose tree matches the merge. Its standard Unreal lane verified equivalent proof reuse; its fresh native legacy regression built and passed 1/1 tests without old-world authoring/capture. Current Sa Calobra admission remains the saved/reloaded/rendered proof and 27-test runtime CI above, not `L_CyclingTest`. Runtime/source content remains the frozen `9482736` checkpoint. #384's material prerequisite is satisfied; its fixed MCP binding is implemented but native session verification remains pending, as recorded in [the MCP SSOT](../UE_MCP_WORLD_GENERATION.md). #364 remains blocked by #384.
+**Protected delivery:** PR #446 merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b`; #363 is closed as completed. [Final CI 37978579196](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed at reviewed head `968d9ed669cd52667d7994e26dec24aa5a1f3560`, whose tree matches the merge. Its standard Unreal lane verified equivalent proof reuse; its fresh native legacy regression built and passed 1/1 tests without old-world authoring/capture. Current Sa Calobra admission remains the saved/reloaded/rendered proof and 27-test runtime CI above, not `L_CyclingTest`. Runtime/source content remains the frozen `9482736` checkpoint. #384's material prerequisite is satisfied and its [fixed native inspection/test session passed](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123); full pinned receipt review, standalone InputBoundary and protected #467 closeout remain pending, as recorded in [the MCP SSOT](../UE_MCP_WORLD_GENERATION.md). #384 stays open and #364 remains blocked by #384.
 
 **Methodology:** [World Building Bible](../WORLD_BUILDING_BIBLE.md), selected through the [documentation index](../README.md)
 
@@ -338,6 +338,9 @@ defers existing mountain-shadow polish; it does not admit introduced material
 defects, unproven geometry repairs or new PCGEx placement. The owner has accepted
 the saved/fresh-rendered whole-area material baseline described above. #363
 completed after protected merge; #384 must finish before #364 implementation.
+Its fixed native inspection/test proof does not admit stock `MaterialInstanceTools`;
+#364 requires separate version-matched schemas, argument/resource restrictions
+and material-only native authoring proof before using that surface.
 This does not admit later world dressing, repair #459 or promote the derived
 review map into the canonical authoring map. Reference-PC measurement remains
 the explicit post-M3 #373 obligation, with no performance PASS.

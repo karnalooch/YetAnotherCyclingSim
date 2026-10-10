@@ -236,17 +236,22 @@ is unchanged. A closed-as-not-planned issue or green CI alone is insufficient.
 Verified closeout, 2026-10-09: #363 is completed after protected PR #446 merge
 `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b`. Its whole-area material acceptance,
 saved/fresh-rendered consumer and technical evidence satisfy #384's entry gate.
-#384 is open; Draft PR #467 implements read-only source evidence and BOB
-delegation preparation, with official runtime integration/admission pending.
-#364 remains blocked by #384. Reverify
-the [material handoff](docs/tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
-at kickoff. No MCP activation, geometry admission or manual Project transition
-is implied by this checkpoint.
+#384 is open. [Native run 38027596123](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123)
+passed the fixed inspection/test session at runtime SHA
+`241104de320f8417c7abc4dd973ac148ed98a66d`. Its bounded verified summary records
+official transport, one passing `CyclingPhysics.RoadPhysics.ProfileInterpolation`
+test and real BOB capture, retaining `REVIEW_REQUIRED` / `INSPECTOR_ONLY` and
+all false authoring/admission flags. Full pinned receipt review, standalone
+`YacsBobInspection.InputBoundary` proof and protected PR #467 closeout remain
+pending; official MCP admission is still false and #364 remains blocked by #384.
+Reverify the [material handoff](docs/tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md)
+at kickoff. This checkpoint does not admit geometry or change Project status.
 
 Read [the current MCP decision and bounded DoD](docs/UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
-before MCP work. The official Epic server is the future control-plane target;
-the pinned db-lyon integration remains the current retained baseline until proven
-cutover. The repository already targets UE 5.8; this decision does not migrate it.
+before MCP work. The official Epic server has bounded native inspection/test
+evidence; the pinned db-lyon integration remains the retained baseline until
+reviewed cutover. The repository already targets UE 5.8; this decision does not
+migrate it.
 
 MCP is orchestration/interface, never authority. BOB, World Authority,
 route/physics contracts, tests, proof producers and governance keep their
@@ -262,6 +267,9 @@ real BOB inspection with result/proof/receipt. Prove guard parity before cutover
 never assume native tools inherit the old guard. After success, **STOP adding
 infrastructure and return to #364**. Missing/unsafe capability is an explicit
 blocker, not permission to create another platform or weaken a gate.
+The fixed inspector does not admit stock `MaterialInstanceTools`: #364 requires
+separate version-matched schemas, argument/resource restrictions and material-only
+native authoring proof before using that surface.
 
 ### Frozen geometry and environment fidelity — Issue #335
 

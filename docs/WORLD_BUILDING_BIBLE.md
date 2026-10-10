@@ -65,7 +65,9 @@ YACS deliberately separates physical truth from visual presentation.
 Owner decision, 2026-10-05, [#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384):
 adopt official Epic Unreal MCP through a bounded spike **only after full #363
 Landscape material acceptance and protected merge**, before #364 asphalt/shoulder.
-This is planning, not plugin activation, implementation or an engine migration.
+The fixed native inspection/test session passed on 2026-10-10; pinned receipt
+review, InputBoundary and protected #467 closeout remain pending. Official
+admission remains false, and this work does not migrate the engine.
 See [the MCP decision and DoD](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
 and [delivery order](ROADMAP.md#official-unreal-mcp-adoption-between-materials-and-asphalt).
 

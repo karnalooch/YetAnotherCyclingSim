@@ -5,7 +5,7 @@
 **Scope authority:** `PRODUCT_REQUIREMENTS.md`  
 **World-building method:** `WORLD_BUILDING_BIBLE.md`
 
-**Current M3 checkpoint — 2026-10-09:** [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363) is completed and its whole-area material foundation is accepted and frozen. [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b` after [protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed. The next delivery is **#384 bounded official MCP inspection/test spike → #364 asphalt/shoulder → #365 world graph**. #384's material entry gate is satisfied; MCP is not activated and #384 remains open. #364 remains blocked by #384.
+**Current M3 checkpoint — 2026-10-10:** [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363) is completed and its whole-area material foundation is accepted and frozen. [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b` after [protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed. The delivery order is **#384 bounded official MCP inspection/test spike → #364 asphalt/shoulder → #365 world graph**. [#384's fixed native session passed](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123); full pinned receipt review, standalone InputBoundary and protected #467 closeout remain pending. Official admission is false, #384 remains open and #364 remains blocked by #384.
 
 Acceptance covers the material baseline on the **2,016.5 m × 2,016.5 m / 1024-component** working Landscape, not a finished rideable world or completed M3. [The material handoff](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) pins the saved/fresh-rendered consumer and native evidence. Canonical-map promotion, unresolved road/CUT/cliff/contact geometry and production PCGEx admission remain outside this acceptance. Performance is **`DEFERRED_AFTER_M3` / `performance_pass: false`**.
 
@@ -77,7 +77,7 @@ Produce a believable, deterministic Sa Calobra route/world foundation that can s
 | **Route truth** | canonical route XY, distance, grade, curvature and road-physics profile | established; remains authoritative |
 | **Terrain** | real DTM -> metric deterministic Landscape foundation | active / proven source path; architecture being consolidated |
 | **Road & Earthworks** | real Ma-2141 alignment, road mesh, non-destructive cut/fill, shoulder tie-in | remaining road/CUT/contact debt; separate #337/#459 scopes |
-| **Materials** | coherent terrain/road surface foundation | #363 whole-area Landscape foundation accepted/frozen; #364 asphalt/shoulder awaits #384 |
+| **Materials** | coherent terrain/road surface foundation | #363 whole-area Landscape foundation accepted/frozen; #364 asphalt/shoulder awaits #384 reviewed/protected closeout |
 | **Biomes** | valley / forest / exposed limestone-upland PCG and route exclusion | baseline systems exist; preserve the tooling and retune presentation for Mallorca |
 | **Proof** | rider-camera visual acceptance, exact-SHA technical evidence, performance | active |
 | **Tooling** | reproducible authoring, remote editor, CI/proof orchestration | active support work |
@@ -153,12 +153,14 @@ That condition was satisfied by the accepted material closeout and protected
 merge recorded above. Historical rejected candidates remain rejected; the
 accepted whole-area baseline has its own evidence. A connection test or a
 closed-as-not-planned state cannot satisfy adoption DoD. #384 implementation
-has delivered read-only installed-source evidence and thin BOB domain
-preparation, complete sample export and a strict opt-in native boundary in
-Draft PR #467. Installed primary source verifies the native extension and schema
-contract. Compilation, runtime denial cases and the official session proof remain
-pending;
-see the [source checkpoint and gap](UE_MCP_WORLD_GENERATION.md#windows-source-checkpoint-and-activation-gap--2026-10-09).
+in PR #467 has passed the fixed official native session in
+[run 38027596123](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123)
+at runtime SHA `241104de320f8417c7abc4dd973ac148ed98a66d`. Its bounded verified
+summary records one passing `CyclingPhysics.RoadPhysics.ProfileInterpolation`
+test and complete BOB inspection with `REVIEW_REQUIRED` / `INSPECTOR_ONLY` and
+all false authoring/admission flags. Full pinned receipt review, standalone
+`YacsBobInspection.InputBoundary` and protected merge remain pending;
+see the [MCP evidence and remaining gates](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption).
 
 The [MCP decision and DoD](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)
 cap the spike at one map/scene, one Actor/UObject inspection, one existing
@@ -166,6 +168,9 @@ Automation Test and one real BOB inspection returning result/proof/receipt.
 Prove the restricted surface and safety parity before cutover. After success,
 **STOP infrastructure work and return to #364**. #376 performance tooling,
 #377 buildings and #365 graph authoring remain separately gated work.
+This fixed inspector does not admit stock `MaterialInstanceTools`; #364 needs
+separate version-matched schemas, argument/resource restrictions and material-only
+native authoring proof before using those tools.
 
 From step 3 onward, use official Epic MCP for supported generic editor control
 within YACS constraints; do not add custom generic workarounds. Custom toolsets

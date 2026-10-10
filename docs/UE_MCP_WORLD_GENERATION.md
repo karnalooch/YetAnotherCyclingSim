@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Draft PR #467 implements source evidence, complete BOB sample export and the opt-in strict native domain boundary. The integrated project and plugin builds passed; runtime guard proof and official transport remain pending. No official server is activated.
+**Status:** official Epic MCP direction approved; #384's #363 entry gate satisfied on 2026-10-09, before #364. Draft PR #467 implements source evidence, complete BOB sample export and the opt-in strict native domain boundary. The fixed native session passed on 2026-10-10; full pinned receipt review, standalone InputBoundary and protected closeout remain pending. Official admission is false; the ordinary project keeps the server disabled.
 **Tracking:** #384 adoption; #385 documentation; #85 historical integration; follow-ups #376 (Performance MCP), #377 (Buildings MCP)
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
@@ -9,7 +9,7 @@
 
 ### Decision and status
 
-**Entry gate satisfied — #363 completed through merged PR #446. #384 is open; its source preflight and domain adapter are the first implementation fragment. Official MCP is not yet admitted.**
+**Entry gate satisfied — #363 completed through merged PR #446. #384 is open; its fixed native inspection/test session passed, with receipt review, InputBoundary and protected #467 closeout pending. Official MCP is not yet admitted.**
 
 The owner approved a small official Unreal MCP adoption workstream between world-finishing step 2 (#363) and step 3 (#364). "Step 2.5" is a shorthand inside **M3**, not a new product milestone or a renumbering of the existing 13 steps.
 
@@ -876,6 +876,54 @@ corrections under the unchanged 180 / 420-second bounds; this source-only
 diagnostic provides no native, transport or admission PASS.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
+
+[Fixed native session 38027596123](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123)
+passed at `241104de320f8417c7abc4dd973ac148ed98a66d`, as did
+[ordinary CI 38027599394](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027599394).
+Both isolated builds, accepted consumer staging, official IPv4 loopback
+transport, one `CyclingPhysics.RoadPhysics.ProfileInterpolation` test and the
+real native BOB capture passed. The host reports
+`ACCEPTED_SESSION_LOCAL_PROOF_VERIFIED`, with its three runtime verification
+flags true and `official_mcp_admitted`, `persistent_world_mutation` and
+`performance_pass` false. The bounded console summary is not a complete raw
+receipt review. Full hash-pinned native/transport/capture review and the
+separate `YacsBobInspection.InputBoundary` test remain required before protected
+closeout; ordinary CI's `CyclingPhysics` filter does not cover that test.
+
+BOB returned `REVIEW_REQUIRED` / `INSPECTOR_ONLY`, with inspection complete:
+60,025 evaluated samples, zero trace misses, six `CONTACT_OK` and 60,019
+`FILL_REQUIRED`. Maximum required fill is 1.734214770718081 m and RMS is
+0.3504235256593645 m. Saved/direct/client-reinspected results now match exactly
+across embedded Python 3.11.8 and host Python 3.12.10. All four BOB
+authoring/repair/road/learning flags remain false. No road acceptance or
+earthworks change follows from successful transport.
+
+The original host receipt is 449,384 bytes, SHA-256
+`e42ec494ed4835a007fe5133f7379434b71088ab1d0018e88ffcec28c6500353`.
+[Artifact 11661116718](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123/artifacts/11661116718)
+is 2,941,011 bytes, archive SHA-256
+`6383366789f06ec371127412602337ba7f8d84f1810b340fdced8b33c7a696d2`.
+The six bundle identities total 11,935,638 bytes:
+
+| Member | Bytes | SHA-256 |
+|---|---:|---|
+| `capture-proof.json` | 75,594 | `5ac20d17ce10b7a77ad80ca051ec274ce1c77a614ed5266675aa9b422d597f2a` |
+| `direct-inspection.json` | 705,872 | `30e0a42fef8254f85dde74f75402f709bb10f17bd6e3444e0bdb8a3d54d0cc18` |
+| `native-samples.json` | 10,445,634 | `2a852d071212517223900b2f4030e3b8df47268847a1b5cf7e0ed0c74746cea1` |
+| `proof.json` | 1,974 | `87d39ddf6506fd219a8f0fa9c32f87f14d400ebb1e224cc603e06a03ba3d5836` |
+| `receipt.json` | 692 | `6f3fd243b76691d5a5c9c05a7b340a5424e703b678a074ab4e37a25b83a97f4d` |
+| `result.json` | 705,872 | `30e0a42fef8254f85dde74f75402f709bb10f17bd6e3444e0bdb8a3d54d0cc18` |
+
+The host's final persistent inventory digest is
+`4566bc9b3b2877ee562c230de1733da0668a481eaf933a51cb579d45a0c9b938`;
+the three physical frozen textures retain identical before/after identities.
+This is the runtime source SHA, distinct from later documentation/readback
+commits and the eventual protected merge. Later plugin README changes are
+documentation deltas in the producer's source inventory, not changed native
+code, descriptors, Python, policy or frozen assets. The fixed branch reader
+will authenticate the successful raw receipt without rebuilding the project;
+the separate input-boundary check reuses the pinned native plugin in a fresh
+owned lightweight project.
 
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including

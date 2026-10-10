@@ -19,10 +19,10 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Fixed accepted checkpoint session, or retained previous failure readback
+        description: Fixed accepted checkpoint session, or verified session readback and input boundary
         type: choice
         options: [accepted_session, diagnose_previous_failure]
-        default: accepted_session
+        default: diagnose_previous_failure
         required: true
 
 permissions:
@@ -35,7 +35,7 @@ concurrency:
 
 jobs:
   compile:
-    name: Verify the accepted checkpoint through official Unreal MCP
+    name: Review fixed accepted session and run input boundary
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
@@ -59,12 +59,12 @@ jobs:
           clean: false
           persist-credentials: false
 
-      - name: Verify exact source and run the fixed session or retained failure readback
+      - name: Verify exact source and run the fixed session or verified readback and input boundary
         shell: pwsh
         working-directory: _official-mcp-native-probe
         env:
           YACS_CHECKPOINT_READ_TOKEN: ${{ github.token }}
-          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'accepted_session' }}
+          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'diagnose_previous_failure' }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
@@ -95,6 +95,7 @@ jobs:
           path: |
             _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpBobSession/${{ github.run_id }}-${{ github.run_attempt }}/*.json
             _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpBobSession/${{ github.run_id }}-${{ github.run_attempt }}/*.log
+            _official-mcp-native-probe/Saved/RuntimeProof/OfficialMcpBobSession/${{ github.run_id }}-${{ github.run_attempt }}/input-boundary-report/index.json
             D:/yacs/runner/_work/s384/${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/OfficialMcpBob/session-preparation.json
             D:/yacs/runner/_work/s384/${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/OfficialMcpBob/session-context.json
             D:/yacs/runner/_work/s384/${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/OfficialMcpBob/transport-context.json

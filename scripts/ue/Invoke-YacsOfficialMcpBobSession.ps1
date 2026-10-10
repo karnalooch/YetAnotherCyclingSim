@@ -15,7 +15,7 @@ param(
     [Parameter(Mandatory)]
     [ValidatePattern('^[0-9a-f]{40}$')]
     [string] $ExpectedHead,
-    # One fixed retained session failure only; no caller-supplied paths or PIDs.
+    # Fixed GREEN readback and isolated InputBoundary unit; no caller paths or PIDs.
     [switch] $DiagnosePreviousFailure
 )
 
@@ -532,157 +532,565 @@ function Write-SessionFixedFailureLogContext {
         identity_scope = $identityScope
         launch_observations = $observations; command_line_observed = $commandLines.Count -gt 0; launch_observations_truncated = $commandLines.Count -gt $observations.Count }
 }
-function Invoke-SessionPreviousFailureDiagnostic {
-    $previousRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38025560494-1'
-    if (-not [string]::Equals([IO.Path]::GetFullPath((Join-Path $RepoRoot 'Saved/RuntimeProof/OfficialMcpBobSession/38025560494-1')), $previousRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Fixed previous failure requires its exact retained checkout.' }
-    $readBudget = [ordered]@{ bytes = 0 }
-    $file = Read-SessionFixedFailureFile 'accepted-session-build.json'
-    if ($null -eq $file -or $file.identity.size_bytes -ne 445099 -or $file.identity.sha256 -cne '5f0d9cfae844b00d43dbcac7cd3c4e21103423439db1bf6fcc45f0212f4465f0') { throw 'The retained host receipt differs from the original console-pinned bytes.' }
-    $previous = $file.text | ConvertFrom-Json -AsHashtable -Depth 40
-    if ($previous -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $previous.schema_version 1) -or $previous.exact_sha -cne '4fe6c4f50db0e7a8b2883429209dd193e01159dd' -or $previous.run -cne '38025560494' -or $previous.attempt -cne '1' -or $previous.status -cne 'BLOCKED') { throw 'The retained receipt disagrees with the exact failed run/source.' }
-    # Read this original string without ConvertFrom-Json's date coercion.
-    $document = [Text.Json.JsonDocument]::Parse([string]$file.text)
-    try {
-        $start = $document.RootElement.GetProperty('attempt_started_at_utc')
-        if ($start.ValueKind -ne [Text.Json.JsonValueKind]::String) { throw 'The pinned attempt start is not an original JSON string.' }
-        $attemptStarted = $start.GetString()
-    } finally { $document.Dispose() }
-    if ($attemptStarted.Length -gt 64 -or $attemptStarted -cnotmatch '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{7}Z$') { throw 'The pinned attempt start is not its bounded UTC timestamp.' }
-    $parsedStart = [DateTime]::MinValue
-    if (-not [DateTime]::TryParseExact($attemptStarted, 'o', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::RoundtripKind, [ref]$parsedStart)) { throw 'The pinned attempt start is not a valid UTC timestamp.' }
-    foreach ($flag in @('accepted_bytes_staged', 'source_unchanged', 'editor_launched', 'listener_started')) {
-        if ($previous[$flag] -isnot [bool] -or -not $previous[$flag]) { throw 'The exact failed session did not record staging, Editor startup and an owned listener.' }
+function Read-SessionVerifiedGreenJson {
+    param([string] $Path, $Expected, [long] $Limit, $Budget)
+    if ($Expected -isnot [Collections.IDictionary] -or $Expected.path -isnot [string] `
+        -or -not [string]::Equals([IO.Path]::GetFullPath($Expected.path), [IO.Path]::GetFullPath($Path), [StringComparison]::OrdinalIgnoreCase) `
+        -or $Expected.sha256 -cnotmatch '^[0-9a-f]{64}$') { throw 'A GREEN evidence identity is not bound to its fixed path.' }
+    $remaining = 64MB - $Budget.bytes
+    if ($remaining -le 0) { throw 'The fixed GREEN JSON inventory exhausts its 64MiB aggregate bound.' }
+    $identity = Get-SessionFileIdentity $Path ([Math]::Min($Limit, $remaining))
+    if ($identity.sha256 -cne $Expected.sha256 -or -not (Test-SessionInteger $Expected.size_bytes $identity.size_bytes)) {
+        throw 'A GREEN raw evidence file differs from its authenticated original identity before parsing.'
     }
-    foreach ($flag in @('official_mcp_transport_verified', 'official_mcp_admitted', 'native_automation_verified', 'native_bob_capture_verified', 'persistent_world_mutation', 'performance_pass')) {
-        if ($previous[$flag] -isnot [bool] -or $previous[$flag]) { throw 'The fixed failed session contains unsupported verification claims.' }
-    }
-    if (-not (Test-SessionInteger $previous.owned_editor_pid 29376) -or -not (Test-SessionInteger $previous.owned_client_pid 45940) `
-        -or $previous.owned_client_exit_observed -isnot [bool] -or -not $previous.owned_client_exit_observed `
-        -or ($previous.owned_client_exit_code -isnot [int] -and $previous.owned_client_exit_code -isnot [long]) -or $previous.owned_client_exit_code -eq 0 `
-        -or $previous.proof_files -isnot [Collections.IDictionary]) { throw 'The recorded ownership differs from the fixed client-present failure.' }
-    $diagnostic = [ordered]@{
-        schema_version = 1; exact_sha = $ExpectedHead; previous_run = '38025560494-1'; previous_exact_sha = $previous.exact_sha
-        previous_receipt = $file.identity; source_only = $true; compile_performed = $false; editor_launched = $false; listener_started = $false
-        official_mcp_admitted = $false; native_automation_verified = $false; native_bob_capture_verified = $false
-        status = 'READ_ONLY_NATIVE_CLIENT_FAILURE_DIAGNOSTIC'; previous_error = Get-SessionSafeFailureText ([string]$previous.error)
-        recorded_session = [ordered]@{}; build_records = [ordered]@{}; files = [ordered]@{}; context = [ordered]@{}; gaps = @()
-    }
-    $diagnostic.recorded_session['attempt_started_at_utc'] = $attemptStarted
-    foreach ($field in @('editor_launched', 'owned_editor_pid', 'owned_client_pid', 'owned_editor_exit_observed', 'owned_client_exit_observed', 'owned_client_exit_code', 'listener_started', 'accepted_bytes_staged')) {
-        $value = $previous[$field]
-        if ($null -ne $value -and $value -isnot [bool] -and $value -isnot [int] -and $value -isnot [long]) { throw 'A recorded ownership scalar is malformed.' }
-        $diagnostic.recorded_session[$field] = $value
-    }
-    $diagnostic.recorded_session['startup_config_overrides_count'] = @($previous.startup_config_overrides).Count
-    $diagnostic.recorded_session['session_context_recorded'] = $previous.proof_files.Contains('session_context')
-    $diagnostic.recorded_session['transport_context_recorded'] = $previous.proof_files.Contains('transport_context')
-    $diagnostic.recorded_session['secondary_errors'] = @($previous.secondary_errors | Select-Object -First 8 | ForEach-Object { Get-SessionSafeFailureText ([string]$_) })
-    $diagnostic.recorded_session['secondary_errors_truncated'] = @($previous.secondary_errors).Count -gt 8
-    if ($previous.Contains('python_application_selection')) {
-        $selection = $previous.python_application_selection
-        if ($selection -isnot [Collections.IDictionary]) { throw 'The recorded Python selection is malformed.' }
-        $diagnostic.recorded_session['python_application_selection'] = [ordered]@{}
-        foreach ($field in @('selection', 'command_type', 'path')) {
-            if ($selection[$field] -isnot [string]) { throw 'The recorded Python selection scalar is malformed.' }
-            $diagnostic.recorded_session.python_application_selection[$field] = Get-SessionSafeFailureText $selection[$field]
-        }
-    }
-    Write-Host ('PREVIOUS_RECORDED_SESSION ' + ($diagnostic.recorded_session | ConvertTo-Json -Depth 5 -Compress))
-    foreach ($kind in @('project_build', 'plugin_build')) {
-        $record = $previous[$kind]
-        if ($record -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $record.exit_code 0)) { throw 'The fixed prior session did not record both successful builds.' }
-        $diagnostic.build_records[$kind] = [ordered]@{ exit_code = $record.exit_code; executable = Get-SessionSafeFailureText ([string]$record.executable) }
-        Write-Host ('PREVIOUS_BUILD_RECORD ' + $kind + ' ' + ($diagnostic.build_records[$kind] | ConvertTo-Json -Compress))
-    }
-    $target = Join-Path $ArtifactRoot 'previous-accepted-session-build.json'
+    $Budget.bytes += $identity.size_bytes
+    $parsed = Read-SessionJson $Path ([Math]::Min($Limit, $remaining))
+    if ($parsed.identity.sha256 -cne $identity.sha256) { throw 'A GREEN evidence file changed during its authenticated read.' }
+    # Retain the authenticated raw JSON bytes for review, without serializing
+    # parsed values back into a file and relabeling them as original bytes.
+    $target = Join-Path $ArtifactRoot ('verified-original-' + [IO.Path]::GetFileName($Path))
     Assert-SessionPlainPath $target
-    $stream = [IO.File]::Open($target, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
-    try { $stream.Write($file.bytes, 0, $file.bytes.Length) } finally { $stream.Dispose() }
-    foreach ($entry in @(
-        @('session-preparation.json', 'session_preparation'), @('session-context.json', 'session_context'),
-        @('transport-context.json', 'transport_context'), @('native-counter.json', 'native_counter'),
-        @('native-session.json', 'native_failure_receipt'), @('transport-receipt.json', 'transport_receipt'), @('owned-editor.log', 'failure/owned-editor.log'),
-        @('owned-editor-stdout.log', 'failure/owned-editor-stdout.log'), @('owned-editor-stderr.log', 'failure/owned-editor-stderr.log')
-    )) {
-        $name = $entry[0]
-        $observation = [ordered]@{ status = 'ABSENT'; original_host_identity_recorded = $previous.proof_files.Contains($entry[1]) }
-        $diagnostic.files[$name] = $observation
-        try {
-            $observed = Read-SessionFixedFailureFile $name
-            if ($null -eq $observed) {
-                $diagnostic.gaps += ('Retained file absent: ' + $name)
-                Write-Host ('PREVIOUS_SESSION_FILE ' + $name + ' ABSENT')
-                continue
-            }
-            $observation['status'] = 'PRESENT'
-            $observation['identity'] = $observed.identity
-            if ($observation.original_host_identity_recorded) {
-                $expected = $previous.proof_files[$entry[1]]
-                if ($expected -isnot [Collections.IDictionary] -or $expected.sha256 -cne $observed.identity.sha256 -or -not (Test-SessionInteger $expected.size_bytes $observed.identity.size_bytes) -or -not [string]::Equals([IO.Path]::GetFullPath($expected.path), $observed.identity.path, [StringComparison]::OrdinalIgnoreCase)) { throw 'The retained file differs from its pinned host identity.' }
-                $observation['identity_scope'] = 'MATCHES_ORIGINAL_HOST_RECEIPT'
-            } else {
-                $observation['identity_scope'] = 'CURRENT_OBSERVED_RETAINED_BYTES; NO_ORIGINAL_HOST_HASH'
-                $diagnostic.gaps += ('No original host hash for retained ' + $name)
-            }
-            if ($observed.Contains('filesystem_metadata')) { $observation['filesystem_metadata'] = $observed.filesystem_metadata }
-            Write-Host ('PREVIOUS_SESSION_FILE ' + $name + ' ' + ($observation | ConvertTo-Json -Depth 4 -Compress))
-            if ($name.EndsWith('.log', [StringComparison]::Ordinal)) {
-                $observed['identity_scope'] = $observation.identity_scope
-                $diagnostic.context[$name] = Write-SessionFixedFailureLogContext $name $observed
-                continue
-            }
-            $json = $observed.text | ConvertFrom-Json -AsHashtable -Depth 40
-            if ($json -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $json.schema_version 1) -or $json.exact_sha -cne $previous.exact_sha) { throw 'The fixed retained JSON source/schema identity differs.' }
-            if ($name -ceq 'transport-context.json') {
-                if (-not (Test-SessionInteger $json.owned_editor_pid $previous.owned_editor_pid) -or $json.session_context_sha256 -cne $previous.proof_files.session_context.sha256) { throw 'The retained transport marker differs from its owned context.' }
-            }
-            if ($name -cin @('native-session.json', 'transport-receipt.json') -and -not (Test-SessionInteger $json.owned_editor_pid $previous.owned_editor_pid)) { throw 'The retained native/client receipt reports another Editor PID.' }
-            $summary = [ordered]@{ identity_scope = $observation.identity_scope }
-            foreach ($field in @('schema_version', 'exact_sha', 'status', 'owned_editor_pid', 'error', 'error_type', 'failure_stage', 'error_category', 'error_code', 'failure_denial_case', 'secondary_close_error_category', 'secondary_close_error_code', 'map_package', 'landscape_path', 'python_startup_complete', 'python_settings_class_path', 'python_remote_execution', 'body_invocation_count', 'denied_input_count', 'valid_call_attempted', 'domain_status', 'persistent_files_unchanged', 'native_runtime_verified', 'official_mcp_transport_verified', 'native_bob_capture_verified', 'official_mcp_admitted')) {
-                if (-not $json.Contains($field)) { continue }
-                $value = $json[$field]
-                $summary[$field] = if ($value -is [string]) { Get-SessionSafeFailureText $value } elseif ($null -eq $value -or $value -is [bool] -or $value -is [int] -or $value -is [long]) { $value } else { 'MALFORMED_SCALAR' }
-            }
-            if ($name -ceq 'session-context.json' -and $json.landscape -is [Collections.IDictionary]) {
-                $summary['landscape'] = [ordered]@{ path = Get-SessionSafeFailureText ([string]$json.landscape.path); class_path = Get-SessionSafeFailureText ([string]$json.landscape.class_path) }
-            }
-            if ($name -ceq 'transport-receipt.json') {
-                $summary['bundle_recorded'] = $json.Contains('bundle')
-                if ($json.Contains('bundle')) {
-                    if ($json.bundle -isnot [Collections.IDictionary]) { throw 'The retained client bundle inventory is malformed.' }
-                    $summary['bundle_file_count_recorded'] = $json.bundle.Count
-                }
-                if ($json.Contains('denials')) {
-                    if ($json.denials -isnot [array]) { throw 'The retained client denial list is malformed.' }
-                    $summary['denial_count_recorded'] = $json.denials.Count
-                    $summary['denials_truncated'] = $json.denials.Count -gt 22
-                    $summary['denials'] = @($json.denials | Select-Object -First 22 | ForEach-Object {
-                        if ($_ -isnot [Collections.IDictionary]) { throw 'A retained client denial row is malformed.' }
-                        $row = [ordered]@{}
-                        foreach ($field in @('case', 'expected_category', 'explicit_error', 'body_invocation_count')) {
-                            if (-not $_.Contains($field)) { continue }
-                            $value = $_[$field]
-                            $row[$field] = if ($value -is [string]) { Get-SessionSafeFailureText $value } elseif ($null -eq $value -or $value -is [bool] -or $value -is [int] -or $value -is [long]) { $value } else { 'MALFORMED_SCALAR' }
-                        }
-                        $row
-                    })
-                }
-            }
-            $observation['json_summary'] = $summary
-            Write-Host ('PREVIOUS_SESSION_JSON ' + $name + ' ' + ($summary | ConvertTo-Json -Depth 4 -Compress))
-        } catch {
-            $observation['status'] = 'READ_BLOCKED'
-            $observation['error'] = Get-SessionSafeFailureText $_.Exception.Message
-            $observation['exception_type'] = $_.Exception.GetType().Name
-            $diagnostic.gaps += ('Retained read/validation blocked: ' + $name)
-            Write-Host ('PREVIOUS_SESSION_FILE ' + $name + ' ' + ($observation | ConvertTo-Json -Depth 4 -Compress))
+    $input = [IO.File]::OpenRead($Path)
+    $output = [IO.File]::Open($target, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+    try {
+        $buffer = [byte[]]::new(8192)
+        $copiedBytes = 0L
+        while (($count = $input.Read($buffer, 0, $buffer.Length)) -gt 0) {
+            $copiedBytes += $count
+            if ($copiedBytes -gt $identity.size_bytes) { throw 'A raw GREEN copy grew beyond its authenticated byte bound.' }
+            $output.Write($buffer, 0, $count)
+        }
+    } finally { $output.Dispose(); $input.Dispose() }
+    $retained = Get-SessionFileIdentity $target $identity.size_bytes
+    if ($retained.sha256 -cne $identity.sha256 -or (Get-SessionFileIdentity $Path $identity.size_bytes).sha256 -cne $identity.sha256) {
+        throw 'The exclusive retained raw GREEN JSON copy differs.'
+    }
+    $parsed['retained_raw'] = $retained
+    return $parsed
+}
+function Add-SessionUnitProtectedIdentity {
+    param($Rows, [string] $Path, $Expected, [long] $Limit = 512MB)
+    if ($Rows.Contains($Path)) { return }
+    if ($Rows.Count -ge 160) { throw 'The fixed unit conservation inventory exceeds 160 files.' }
+    $actual = Get-SessionFileIdentity $Path $Limit
+    if ($null -ne $Expected -and ($Expected -isnot [Collections.IDictionary] `
+        -or -not [string]::Equals([IO.Path]::GetFullPath($Expected.path), $actual.path, [StringComparison]::OrdinalIgnoreCase) `
+        -or $Expected.sha256 -cne $actual.sha256 -or -not (Test-SessionInteger $Expected.size_bytes $actual.size_bytes))) {
+        throw 'A protected GREEN input differs from its original successful identity.'
+    }
+    $total = $actual.size_bytes
+    foreach ($row in $Rows.Values) { $total += $row.size_bytes }
+    if ($total -gt 2GB) { throw 'The fixed unit conservation inventory exceeds 2GiB.' }
+    $Rows[$Path] = $actual
+}
+function Assert-SessionUnitProtectedIdentities {
+    param($Rows)
+    foreach ($row in $Rows.Values) {
+        $actual = Get-SessionFileIdentity $row.path $row.size_bytes
+        if ($actual.sha256 -cne $row.sha256 -or $actual.size_bytes -ne $row.size_bytes) { throw 'A protected GREEN or unit input changed.' }
+    }
+}
+function Assert-SessionFiniteActorProperty {
+    param($Value, [int] $Depth = 0, $Counter)
+    if ($Depth -gt 8 -or $Counter.nodes -ge 128) { throw 'A captured Actor transform exceeds its fixed structural bound.' }
+    $Counter.nodes++
+    if ($Value -is [array]) {
+        if ($Value.Count -lt 1 -or $Value.Count -gt 16) { throw 'A captured Actor property array is empty or oversized.' }
+        foreach ($item in $Value) { Assert-SessionFiniteActorProperty $item ($Depth + 1) $Counter }
+    } elseif (($Value -is [int] -or $Value -is [long] -or $Value -is [double] -or $Value -is [decimal]) `
+        -and -not [double]::IsNaN([double]$Value) -and -not [double]::IsInfinity([double]$Value)) { $Counter.numbers++ }
+    else { throw 'A captured Actor transform is not a finite numeric property array.' }
+}
+function Invoke-SessionVerifiedGreenReadback {
+    $oldSha = '241104de320f8417c7abc4dd973ac148ed98a66d'
+    $oldArtifact = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38027596123-1'
+    $oldSession = 'D:\yacs\runner\_work\s384\38027596123-1'
+    $oldPackage = 'D:\yacs\runner\_work\b384\38027596123-1-session-plugin'
+    $oldProject = 'D:\yacs\runner\_work\b384\38027596123-1-session-project'
+    $oldHostProject = Join-Path $oldPackage 'HostProject'
+    $oldPlugin = Join-Path $oldHostProject 'Plugins/YacsBobInspection'
+    $oldProof = Join-Path $oldSession 'Saved/RuntimeProof/OfficialMcpBob'
+    $budget = [ordered]@{ bytes = 0L }
+    $protected = [ordered]@{}
+    $hostPath = Join-Path $oldArtifact 'accepted-session-build.json'
+    $host = Read-SessionVerifiedGreenJson $hostPath @{
+        path = $hostPath; size_bytes = 449384; sha256 = 'e42ec494ed4835a007fe5133f7379434b71088ab1d0018e88ffcec28c6500353'
+    } 1MB $budget
+    $h = $host.value
+    if (-not (Test-SessionInteger $h.schema_version 1) -or $h.exact_sha -cne $oldSha -or $h.run -cne '38027596123' `
+        -or $h.attempt -cne '1' -or $h.status -cne 'ACCEPTED_SESSION_LOCAL_PROOF_VERIFIED' `
+        -or $h.build_root -cne $oldProject -or $h.session_root -cne $oldSession -or $h.plugin_package_root -cne $oldPackage `
+        -or $h.engine_identity -cne $receipt.engine_identity -or $h.build_environment_identity -cne $receipt.build_environment_identity) {
+        throw 'The authenticated GREEN host disagrees with its fixed source, roots, run or current engine environment.'
+    }
+    foreach ($flag in @('source_unchanged', 'accepted_bytes_staged', 'owned_build_exit_observed', 'editor_launched', 'listener_started',
+        'official_mcp_transport_verified', 'native_automation_verified', 'native_bob_capture_verified', 'owned_editor_exit_observed',
+        'owned_client_exit_observed', 'frozen_assets_unchanged')) {
+        if ($h[$flag] -isnot [bool] -or -not $h[$flag]) { throw 'The GREEN host lacks a required original verification flag.' }
+    }
+    foreach ($flag in @('official_mcp_admitted', 'persistent_world_mutation', 'performance_pass')) {
+        if ($h[$flag] -isnot [bool] -or $h[$flag]) { throw 'The GREEN host claims unsupported admission.' }
+    }
+    if ($h.performance_status -cne 'DEFERRED_AFTER_M3' -or -not (Test-SessionInteger $h.owned_editor_pid 42184) `
+        -or -not (Test-SessionInteger $h.owned_client_pid 38260) -or -not (Test-SessionInteger $h.owned_editor_exit_code 0) `
+        -or -not (Test-SessionInteger $h.owned_client_exit_code 0) -or $h.secondary_errors.Count -ne 0 `
+        -or $null -ne $h.error -or $h.loopback_binding -isnot [array] -or $h.loopback_binding.Count -ne 1 `
+        -or $h.loopback_binding[0].address -cne '127.0.0.1' -or -not (Test-SessionInteger $h.loopback_binding[0].port 18784) `
+        -or -not (Test-SessionInteger $h.loopback_binding[0].owned_editor_pid 42184)) { throw 'The GREEN ownership, exit or listener record differs.' }
+    foreach ($kind in @('project_build', 'plugin_build')) {
+        if ($h[$kind] -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $h[$kind].exit_code 0)) { throw 'A GREEN actual build did not succeed.' }
+    }
+    if ($h.source_fingerprints.compile -cne $receipt.source_fingerprints.compile) { throw 'Current native compile inputs differ from the successful build.' }
+    $read = [ordered]@{}
+    foreach ($row in @(@('session-preparation.json', 'session_preparation', 4MB), @('session-context.json', 'session_context', 1MB),
+        @('transport-context.json', 'transport_context', 1MB), @('native-counter.json', 'native_counter', 1MB),
+        @('native-session.json', 'native_session', 1MB), @('transport-receipt.json', 'transport_receipt', 4MB))) {
+        $read[$row[0]] = Read-SessionVerifiedGreenJson (Join-Path $oldProof $row[0]) $h.proof_files[$row[1]] $row[2] $budget
+    }
+    foreach ($name in @('capture-proof.json', 'direct-inspection.json', 'native-samples.json', 'proof.json', 'receipt.json', 'result.json')) {
+        $limit = if ($name -ceq 'native-samples.json') { 32MB } else { 8MB }
+        $read[$name] = Read-SessionVerifiedGreenJson (Join-Path $oldProof ('bundle/' + $name)) $h.bundle_files[$name] $limit $budget
+    }
+    $c = $read['session-context.json'].value
+    $prep = $read['session-preparation.json'].value
+    $marker = $read['transport-context.json'].value
+    $n = $read['native-session.json'].value
+    $t = $read['transport-receipt.json'].value
+    $capture = $read['capture-proof.json'].value
+    $result = $read['result.json'].value
+    $map = '/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview'
+    $tool = 'YacsBobInspection.InspectAcceptedCheckpoint'
+    foreach ($file in $read.Values) {
+        if (-not (Test-SessionInteger $file.value.schema_version 1) -or $file.value.exact_sha -cne $oldSha) { throw 'A GREEN JSON schema/source identity differs.' }
+        Add-SessionUnitProtectedIdentity $protected $file.identity.path $file.identity $file.identity.size_bytes
+    }
+    Add-SessionUnitProtectedIdentity $protected $hostPath $host.identity 1MB
+    Assert-SessionJsonFields $c @('schema_version', 'exact_sha', 'source_sha256', 'profile_sha256', 'profile_source_sha', 'consumer_source_sha', 'consumer_assets', 'landscape')
+    Assert-SessionJsonFields $marker @('schema_version', 'exact_sha', 'project_root', 'owned_editor_pid', 'source_sha256', 'session_context_sha256')
+    Assert-SessionJsonFields $read['native-counter.json'].value @('schema_version', 'exact_sha', 'body_invocation_count')
+    if ($c.profile_sha256 -cne 'c0ca612dd5af5a311d1917e41d66f44aa83a9d40eed5e9e784432e06e2a52253' `
+        -or $c.profile_source_sha -cne 'c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6' -or $c.consumer_source_sha -cne '94827365ef8e83e52717bb21f9d6efa921aa2d1e' `
+        -or $prep.status -cne 'ACCEPTED_CONSUMER_BYTES_STAGED' -or $prep.consumer_source_sha -cne $c.consumer_source_sha `
+        -or $prep.profile_sha256 -cne $c.profile_sha256 -or $c.consumer_assets -isnot [array] -or $c.consumer_assets.Count -ne 14 `
+        -or ($c.consumer_assets | ConvertTo-Json -Depth 6 -Compress) -cne ($prep.consumer_assets | ConvertTo-Json -Depth 6 -Compress) `
+        -or $c.landscape.class_path -cne '/Script/Landscape.Landscape' -or $c.landscape.path -isnot [string] `
+        -or -not $c.landscape.path.StartsWith($map + '.', [StringComparison]::Ordinal) `
+        -or $marker.project_root -cne $oldSession -or -not (Test-SessionInteger $marker.owned_editor_pid 42184) `
+        -or $marker.session_context_sha256 -cne $read['session-context.json'].identity.sha256 `
+        -or -not (Test-SessionInteger $read['native-counter.json'].value.body_invocation_count 1)) { throw 'The accepted context/profile/consumer/native counter binding differs.' }
+    if ($n.status -cne 'NATIVE_BODY_COMPLETED' -or $n.error -cne '' -or -not (Test-SessionInteger $n.owned_editor_pid 42184) `
+        -or $n.map_package -cne $map -or $n.landscape_path -cne $c.landscape.path -or $n.operation -cne $tool `
+        -or $n.python_startup_complete -isnot [bool] -or -not $n.python_startup_complete `
+        -or $n.python_settings_class_path -cne '/Script/PythonScriptPlugin.PythonScriptPluginSettings' `
+        -or $n.python_remote_execution -isnot [bool] -or $n.python_remote_execution `
+        -or -not (Test-SessionInteger $n.body_invocation_count 1) -or -not (Test-SessionInteger $n.denied_input_count 15) `
+        -or $n.bundle_hash_verification -cne 'fixed_producer_and_client; not_native_sha256') { throw 'The original native checkpoint result differs.' }
+    Assert-SessionFixedAutomation $n.official_automation_result
+    if ($t.status -cne 'LOCAL_TRANSPORT_AND_BOB_ARTIFACTS_VERIFIED' -or -not (Test-SessionInteger $t.owned_editor_pid 42184) `
+        -or $t.official_mcp_transport_verified -isnot [bool] -or -not $t.official_mcp_transport_verified `
+        -or $t.valid_call_attempted -isnot [bool] -or -not $t.valid_call_attempted -or -not (Test-SessionInteger $t.body_invocation_count 1) `
+        -or $t.persistent_files_unchanged -isnot [bool] -or -not $t.persistent_files_unchanged -or $t.domain_status -cne 'REVIEW_REQUIRED' `
+        -or $t.endpoint -cne 'http://127.0.0.1:18784/mcp' -or $t.requested_protocol -cne '2025-06-18' -or $t.negotiated_protocol -cne '2025-06-18' `
+        -or $t.expected_server_source_sha256 -cne '56e519b8a956a1d916f421781767f85a999d02b9e02f806b3594d96b96d2a104' `
+        -or $t.tool.name -cne $tool -or $t.tool.inputSchema.type -cne 'object' -or $t.tool.inputSchema.properties.Count -ne 0 `
+        -or $t.tool.inputSchema.additionalProperties -isnot [bool] -or $t.tool.inputSchema.additionalProperties `
+        -or -not (Test-SessionInteger $t.tool.inputSchema.maxProperties 0) -or $t.denials -isnot [array] -or $t.denials.Count -ne 22) { throw 'The original transport/inventory/protocol receipt differs.' }
+    $cases = @('unknown_operation', 'unknown_scene_candidate', 'unknown_actor_candidate', 'unknown_object_candidate',
+        'unknown_automation_candidate', 'unknown_dispatch_candidate', 'unknown_python_candidate', 'field', 'policy', 'evidence_root',
+        'receipt_path', 'map', 'object_path', 'test', 'body', 'mixed_fields', 'null', 'array', 'scalar_string', 'scalar_number', 'scalar_boolean', 'missing_arguments')
+    for ($index = 0; $index -lt 22; $index++) {
+        $denial = $t.denials[$index]
+        $category = if ($index -lt 7) { 'UNKNOWN_TOOL' } else { 'ARGUMENTS_REJECTED' }
+        if ($denial.case -cne $cases[$index] -or $denial.expected_category -cne $category -or $denial.explicit_error -isnot [bool] `
+            -or -not $denial.explicit_error -or -not (Test-SessionInteger $denial.body_invocation_count 0)) { throw 'A GREEN denial order/category/body-zero record differs.' }
+    }
+    foreach ($flag in @('official_mcp_transport_verified', 'native_bob_capture_verified')) {
+        if ($n[$flag] -isnot [bool] -or $n[$flag]) { throw 'The native receipt promoted a host-owned proof flag.' }
+    }
+    if ($prep.native_runtime_verified -isnot [bool] -or $prep.native_runtime_verified -or $prep.persistent_world_mutation -isnot [bool] `
+        -or $prep.persistent_world_mutation) { throw 'The preparation claimed native or persistent admission.' }
+    foreach ($value in @($n, $prep)) {
+        foreach ($flag in @('official_mcp_admitted', 'performance_pass')) {
+            if ($value[$flag] -isnot [bool] -or $value[$flag]) { throw 'A domain or native receipt claimed unsupported admission.' }
         }
     }
-    Write-SessionJson (Join-Path $ArtifactRoot 'previous-session-failure-diagnostic.json') $diagnostic
-    $receipt['diagnostic_previous_run'] = '38025560494-1'
-    $receipt.proof_files.previous_session_failure_diagnostic = Get-SessionFileIdentity (Join-Path $ArtifactRoot 'previous-session-failure-diagnostic.json') 1MB
-    $receipt.proof_files.previous_failed_receipt = Get-SessionFileIdentity $target 1MB
-    Write-Host ('PREVIOUS_SESSION_FAILURE ' + $diagnostic.previous_error)
+    foreach ($flag in @('official_mcp_admitted', 'native_automation_verified', 'persistent_world_mutation', 'performance_pass')) {
+        if ($t[$flag] -isnot [bool] -or $t[$flag]) { throw 'The transport readback claimed unsupported admission.' }
+    }
+    if ($capture.consumer.asset_inventory_sha256 -cnotmatch '^[0-9a-f]{64}$') { throw 'The consumer capture inventory hash is malformed.' }
+    if ($capture.scope -cne 'BOB_CAPTURE_AND_DOMAIN_COMPARISON; HOST_ADMISSION_PENDING' -or $capture.context_sha256 -cne $read['session-context.json'].identity.sha256 `
+        -or $capture.profile.sha256 -cne $c.profile_sha256 -or $capture.profile.source_exact_sha -cne $c.profile_source_sha `
+        -or $capture.consumer.source_exact_sha -cne $c.consumer_source_sha -or $capture.scene.map_package -cne $map `
+        -or $capture.scene.landscape.path -cne $c.landscape.path -or $capture.scene.landscape.class_path -cne $c.landscape.class_path `
+        -or $capture.persistent_inventory_sha256 -cne $h.final_persistent_inventory_sha256 `
+        -or $capture.native_sample_sha256 -cne $read['native-samples.json'].identity.sha256 -or -not (Test-SessionInteger $capture.sample_count 60025)) { throw 'The GREEN capture context/input/conservation binding differs.' }
+    foreach ($flag in @('direct_invocation_matches', 'persistent_files_unchanged', 'scene_snapshot_unchanged')) {
+        if ($capture[$flag] -isnot [bool] -or -not $capture[$flag]) { throw 'The capture lacks its original equality/conservation evidence.' }
+    }
+    foreach ($flag in @('native_capture_verified', 'official_mcp_verified', 'persistent_content_verified',
+        'earthworks_authoring_permitted', 'geometry_repair_executed', 'road_admitted', 'eligible_for_learning')) {
+        if ($capture[$flag] -isnot [bool] -or $capture[$flag]) { throw 'The capture claimed unsupported authority.' }
+    }
+    if ($capture.scene.actors -isnot [array] -or $capture.scene.actors.Count -lt 1 -or $capture.scene.actors.Count -gt 20000) { throw 'The captured Actor census is missing or oversized.' }
+    $actors = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($actor in $capture.scene.actors) {
+        if ($actor -isnot [array] -or $actor.Count -ne 2 -or $actor[0] -isnot [string] -or $actor[0].Length -gt 1024 `
+            -or -not $actor[0].StartsWith($map + '.', [StringComparison]::Ordinal) -or -not $actors.Add($actor[0]) -or $actor[1] -isnot [array]) { throw 'A captured Actor identity/property row differs.' }
+        $counter = [ordered]@{ nodes = 0; numbers = 0 }
+        Assert-SessionFiniteActorProperty $actor[1] 0 $counter
+        if ($counter.numbers -lt 1) { throw 'A captured Actor transform has no numeric property.' }
+    }
+    if (-not $actors.Contains($c.landscape.path)) { throw 'The unique guarded native Landscape is absent from the capture census.' }
+    if ($result.role -cne 'INSPECTOR_ONLY' -or $result.status -cne 'REVIEW_REQUIRED' -or $result.inspection_complete -isnot [bool] `
+        -or -not $result.inspection_complete -or -not (Test-SessionInteger $result.sample_count 60025) `
+        -or -not (Test-SessionInteger $result.evaluated_sample_count 60025) -or -not (Test-SessionInteger $result.trace_miss_count 0) `
+        -or $read['direct-inspection.json'].identity.sha256 -cne $read['result.json'].identity.sha256) { throw 'The original domain result/equality differs.' }
+    foreach ($flag in @('earthworks_authoring_permitted', 'geometry_repair_executed', 'road_admitted', 'eligible_for_learning')) {
+        if ($result[$flag] -isnot [bool] -or $result[$flag]) { throw 'The domain result claimed authoring or engineering authority.' }
+    }
+    foreach ($name in @('capture-proof.json', 'direct-inspection.json', 'native-samples.json', 'proof.json', 'receipt.json', 'result.json')) {
+        $row = $t.bundle[$name]
+        if ($row.path -cne ('Saved/RuntimeProof/OfficialMcpBob/bundle/' + $name) -or $row.sha256 -cne $read[$name].identity.sha256 `
+            -or -not (Test-SessionInteger $row.size_bytes $read[$name].identity.size_bytes)) { throw 'The original transport packet bundle identity differs.' }
+    }
+    $proof = $read['proof.json'].value
+    $samples = $read['native-samples.json'].value
+    if (-not [string]::Equals([IO.Path]::GetFullPath($proof.input.path), [IO.Path]::GetFullPath((Join-Path $oldProof 'bundle/native-samples.json')), [StringComparison]::OrdinalIgnoreCase) `
+        -or $proof.input.sha256 -cne $read['native-samples.json'].identity.sha256 -or -not (Test-SessionInteger $proof.input.size_bytes $read['native-samples.json'].identity.size_bytes) `
+        -or $proof.output.sha256 -cne $read['result.json'].identity.sha256 -or $proof.direct_invocation_sha256 -cne $read['result.json'].identity.sha256 `
+        -or $samples.samples -isnot [array] -or $samples.samples.Count -ne 60025) { throw 'The actual domain proof input/output/direct byte links differ.' }
+    foreach ($flag in @('direct_invocation_matches', 'input_bytes_unchanged', 'source_bytes_unchanged')) {
+        if ($proof[$flag] -isnot [bool] -or -not $proof[$flag]) { throw 'The domain proof lacks original equality/conservation evidence.' }
+    }
+    $bobReceipt = $read['receipt.json'].value
+    foreach ($flag in @('native_capture_verified', 'official_mcp_verified', 'persistent_content_verified',
+        'earthworks_authoring_permitted', 'geometry_repair_executed', 'road_admitted', 'eligible_for_learning')) {
+        if ($bobReceipt[$flag] -isnot [bool] -or $bobReceipt[$flag]) { throw 'The domain receipt claimed unsupported admission.' }
+    }
+    if ($bobReceipt.result.sha256 -cne $read['result.json'].identity.sha256 -or $bobReceipt.proof.sha256 -cne $read['proof.json'].identity.sha256) { throw 'The original domain receipt links differ.' }
+    foreach ($pair in @(@($c.source_sha256, $capture.source_sha256), @($c.source_sha256, $prep.source_sha256), @($marker.source_sha256, $t.source_sha256), @($marker.source_sha256, $h.client_source_sha256))) {
+        if ($pair[0] -isnot [Collections.IDictionary] -or $pair[1] -isnot [Collections.IDictionary] -or $pair[0].Count -lt 3 `
+            -or $pair[0].Count -gt 64 -or $pair[0].Count -ne $pair[1].Count) { throw 'A GREEN source closure is missing or oversized.' }
+        foreach ($relative in $pair[0].Keys) {
+            if ($pair[0][$relative] -cne $pair[1][$relative] -or $h.tracked_source_sha256[$relative] -cne $pair[0][$relative] `
+                -or $relative -cnotmatch '^(?:scripts/(?:ue|ci|worldgen|geometry|assets)/[A-Za-z0-9_/.-]+\.(?:py|ps1)|scripts/(?:committed_git_blobs|manage_local_workspace)\.py|worldgen/terrain/adaptive_terrain_policy\.json|Plugins/YacsBobInspection/(?:Source/[A-Za-z0-9_/.-]+|YacsBobInspection\.uplugin|README\.md))$' `
+                -or $relative -cmatch '(^|/)\.\.?(/|$)' -or $pair[0][$relative] -cnotmatch '^[0-9a-f]{64}$') { throw 'A GREEN source path/hash differs from committed inputs.' }
+            $path = Join-Path $oldSession $relative
+            $identity = Get-SessionFileIdentity $path 16MB
+            if ($identity.sha256 -cne $pair[0][$relative]) { throw 'Actual retained GREEN source bytes differ.' }
+            Add-SessionUnitProtectedIdentity $protected $path $identity 16MB
+        }
+    }
+    $oldHead = @(& git -C $oldSession rev-parse HEAD)
+    if ($LASTEXITCODE -ne 0 -or $oldHead.Count -ne 1 -or $oldHead[0] -cne $oldSha) { throw 'The retained GREEN checkout has a different HEAD.' }
+    $profilePath = Join-Path $oldProof 'profile.json'
+    $profileIdentity = Get-SessionFileIdentity $profilePath 32MB
+    if ($profileIdentity.sha256 -cne $c.profile_sha256) { throw 'The retained fixed profile differs.' }
+    Add-SessionUnitProtectedIdentity $protected $profilePath $profileIdentity 32MB
+    $runtime = Read-SessionVerifiedGreenJson (Join-Path $oldArtifact 'runtime-dependencies.json') $h.proof_files.runtime_dependencies 4MB $budget
+    Add-SessionUnitProtectedIdentity $protected $runtime.identity.path $runtime.identity 4MB
+    if ($runtime.value.exact_sha -cne $oldSha -or $runtime.value.source_only -isnot [bool] -or -not $runtime.value.source_only `
+        -or $runtime.value.source_files -isnot [array] -or $runtime.value.source_files.Count -ne 30) { throw 'The historical installed SDK source inventory differs.' }
+    foreach ($row in $runtime.value.source_files) {
+        if ($row.path -isnot [string] -or -not $row.path.StartsWith('Engine/', [StringComparison]::Ordinal) `
+            -or $row.path -cmatch '(^|/)\.\.?(/|$)|[\\:\x00]' -or $row.sha256 -cnotmatch '^[0-9a-f]{64}$') { throw 'An installed SDK source row has an unsafe path.' }
+        $path = Join-Path $engine.Root $row.path
+        $identity = Get-SessionFileIdentity $path 2MB
+        if ($identity.sha256 -cne $row.sha256) { throw 'Current installed API source differs from the GREEN SDK source observation.' }
+        Add-SessionUnitProtectedIdentity $protected $path $identity 2MB
+    }
+    Add-SessionUnitProtectedIdentity $protected (Join-Path $engine.Root 'Engine/Binaries/Win64/UnrealEditor.modules') $h.installed_engine_module_manifest 64KB
+    $engineModules = Read-SessionJson (Join-Path $engine.Root 'Engine/Binaries/Win64/UnrealEditor.modules') 64KB
+    if ($engineModules.value.BuildId -cne $h.installed_engine_build_id) { throw 'The current installed engine BuildId differs from GREEN compilation.' }
+    foreach ($spec in @(@('ModelContextProtocol', 'Engine/Plugins/Experimental/ModelContextProtocol'),
+        @('AutomationTestToolset', 'Engine/Plugins/Experimental/Toolsets/AutomationTestToolset'), @('ToolsetRegistry', 'Engine/Plugins/Experimental/ToolsetRegistry'),
+        @('PythonScriptPlugin', 'Engine/Plugins/Experimental/PythonScriptPlugin'))) {
+        Add-SessionUnitProtectedIdentity $protected (Join-Path $engine.Root ($spec[1] + '/' + $spec[0] + '.uplugin')) $h.installed_plugin_descriptors[$spec[0]].identity 64KB
+    }
+    $sdkLibraries = [ordered]@{}
+    foreach ($spec in @(@('ModelContextProtocol', 'Engine/Plugins/Experimental/ModelContextProtocol'),
+        @('AutomationTestToolset', 'Engine/Plugins/Experimental/Toolsets/AutomationTestToolset'), @('ToolsetRegistry', 'Engine/Plugins/Experimental/ToolsetRegistry'))) {
+        $manifestPath = Join-Path $engine.Root ($spec[1] + '/Binaries/Win64/UnrealEditor.modules')
+        $manifest = Read-SessionJson $manifestPath 64KB
+        $dllName = 'UnrealEditor-' + $spec[0] + '.dll'
+        if ($manifest.value.BuildId -cne $h.installed_engine_build_id -or $manifest.value.Modules[$spec[0]] -cne $dllName) { throw 'A current installed SDK module does not match the successful engine BuildId.' }
+        $dllPath = Join-Path $engine.Root ($spec[1] + '/Binaries/Win64/' + $dllName)
+        Add-SessionUnitProtectedIdentity $protected $manifestPath $manifest.identity 64KB
+        Add-SessionUnitProtectedIdentity $protected $dllPath $null 512MB
+        $sdkLibraries[$spec[0]] = [ordered]@{ scope = 'CURRENT_OBSERVED_INSTALLED_BYTES; NOT_HISTORICAL_DLL_HASH'
+            manifest = $manifest.identity; binary = $protected[$dllPath] }
+    }
+    $expectedCompiled = [ordered]@{}
+    foreach ($relative in @('Binaries/Win64/UnrealEditor.modules', 'Binaries/Win64/UnrealEditor-YetAnotherCyclingSim.dll',
+        'Binaries/Win64/UnrealEditor-YetAnotherCyclingSimEditor.dll', 'Plugins/RoadForge/Binaries/Win64/UnrealEditor.modules',
+        'Plugins/RoadForge/Binaries/Win64/UnrealEditor-RoadForge.dll')) {
+        $expectedCompiled[(Join-Path $oldProject $relative)] = $relative
+        $expectedCompiled[(Join-Path $oldSession $relative)] = $relative
+    }
+    foreach ($relative in @('Binaries/Win64/UnrealEditor.modules', 'Binaries/Win64/UnrealEditor-YacsBobInspection.dll')) {
+        $expectedCompiled[(Join-Path $oldPlugin $relative)] = $relative
+        $expectedCompiled[(Join-Path $oldSession ('Plugins/YacsBobInspection/' + $relative))] = 'Plugins/YacsBobInspection/' + $relative
+    }
+    $seenCompiled = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($row in @($h.binary_provenance + $h.staged_binary_provenance)) {
+        $path = [IO.Path]::GetFullPath($row.identity.path)
+        if (-not $expectedCompiled.Contains($path) -or $row.relative -cne $expectedCompiled[$path] -or -not $seenCompiled.Add($path)) { throw 'A GREEN compiled-output identity escapes its fixed closure.' }
+        Add-SessionUnitProtectedIdentity $protected $path $row.identity 512MB
+    }
+    if ($h.binary_provenance.Count -ne 7 -or $h.staged_binary_provenance.Count -ne 7) { throw 'The historical seven-file original/staged compiled closure differs.' }
+    $bobRows = @(Get-SessionModuleClosure $oldPlugin 'Binaries/Win64/UnrealEditor.modules' @{ YacsBobInspection = 'UnrealEditor-YacsBobInspection.dll' } $h.installed_engine_build_id)
+    foreach ($row in $bobRows) {
+        if (-not $protected.Contains($row.identity.path) -or $protected[$row.identity.path].sha256 -cne $row.identity.sha256) { throw 'The unit Bob binary/module closure lacks its historical build identity.' }
+    }
+    $prefix = 'Plugins/YacsBobInspection/'
+    $nativePaths = @($receipt.tracked_source_sha256.Keys | Where-Object { $_ -ceq ($prefix + 'YacsBobInspection.uplugin') -or $_.StartsWith($prefix + 'Source/', [StringComparison]::Ordinal) })
+    if ($nativePaths.Count -lt 4 -or $nativePaths.Count -gt 64) { throw 'The current tracked native plugin inventory is incomplete or oversized.' }
+    $oldNativePaths = @($h.tracked_source_sha256.Keys | Where-Object { $_ -ceq ($prefix + 'YacsBobInspection.uplugin') -or $_.StartsWith($prefix + 'Source/', [StringComparison]::Ordinal) })
+    if ($oldNativePaths.Count -ne $nativePaths.Count) { throw 'Current native plugin inventory differs from successful compilation.' }
+    foreach ($relative in $nativePaths) {
+        if ($h.tracked_source_sha256[$relative] -cne $receipt.tracked_source_sha256[$relative]) { throw 'Current native plugin bytes differ from successful compilation.' }
+        $path = Join-Path $oldPlugin $relative.Substring($prefix.Length)
+        $identity = Get-SessionFileIdentity $path 16MB
+        if ($identity.sha256 -cne $h.tracked_source_sha256[$relative]) { throw 'Actual old compiled native source differs from its tracked inventory.' }
+        Add-SessionUnitProtectedIdentity $protected $path $identity 16MB
+    }
+    $descriptor = Read-SessionJson (Join-Path $oldHostProject 'HostProject.uproject') 64KB
+    if (-not (Test-SessionInteger $descriptor.value.FileVersion 3) -or ($descriptor.value.Contains('Modules') -and @($descriptor.value.Modules).Count -ne 0) `
+        -or $descriptor.value.Plugins -isnot [array] -or $descriptor.value.Plugins.Count -ne 1 `
+        -or $descriptor.value.Plugins[0].Name -cne 'YacsBobInspection' -or $descriptor.value.Plugins[0].Enabled -isnot [bool] `
+        -or -not $descriptor.value.Plugins[0].Enabled) { throw 'The current generated HostProject descriptor is not the fixed content-free Bob host.' }
+    foreach ($field in $descriptor.value.Keys) {
+        if ($field -cnotin @('FileVersion', 'Plugins', 'Modules', 'EngineAssociation', 'Category', 'Description')) { throw 'The generated unit descriptor contains an unsupported field.' }
+    }
+    Assert-SessionJsonFields $descriptor.value.Plugins[0] @('Name', 'Enabled')
+    Add-SessionUnitProtectedIdentity $protected $descriptor.identity.path $descriptor.identity 64KB
+    $diagnostic = [ordered]@{ schema_version = 1; exact_sha = $ExpectedHead; status = 'VERIFIED_GREEN_RECEIPTS_READ_BACK'
+        scope = 'CURRENT_SOURCE_ONLY_READBACK_OF_AUTHENTICATED_ORIGINAL_SUCCESS; NOT_A_NEW_MCP_SESSION'
+        source_only = $true; compile_performed = $false; editor_launched = $false; listener_started = $false
+        official_mcp_transport_verified = $false; native_automation_verified = $false; native_bob_capture_verified = $false
+        official_mcp_admitted = $false; persistent_world_mutation = $false; performance_pass = $false
+        original_run = '38027596123-1'; original_exact_sha = $oldSha; original_host = $host.identity
+        original_verified_flags = [ordered]@{ official_mcp_transport_verified = $h.official_mcp_transport_verified
+            native_automation_verified = $h.native_automation_verified; native_bob_capture_verified = $h.native_bob_capture_verified }
+        original_owned_editor_pid = $h.owned_editor_pid; original_owned_client_pid = $h.owned_client_pid
+        original_owned_editor_exit_code = $h.owned_editor_exit_code; original_owned_client_exit_code = $h.owned_client_exit_code
+        original_loopback_binding = $h.loopback_binding; original_official_automation_result = $n.official_automation_result
+        original_denials = $t.denials; original_tool = $t.tool; original_negotiated_protocol = $t.negotiated_protocol
+        original_context_landscape = $c.landscape; original_actor_count = $actors.Count; original_actor_property_read = 'HASH_BOUND_CAPTURE_FINITE_TRANSFORM_ARRAY'
+        original_landscape_transform = @($capture.scene.actors | Where-Object { $_[0] -ceq $c.landscape.path })[0][1]
+        original_inspector_findings = [ordered]@{ status = $result.status; role = $result.role; inspection_complete = $result.inspection_complete
+            evaluated_sample_count = $result.evaluated_sample_count; trace_miss_count = $result.trace_miss_count; class_counts = $result.class_counts
+            max_cut_required_m = $result.max_cut_required_m; max_fill_required_m = $result.max_fill_required_m
+            rms_required_adjustment_m = $result.rms_required_adjustment_m; earthworks_authoring_permitted = $result.earthworks_authoring_permitted
+            geometry_repair_executed = $result.geometry_repair_executed; road_admitted = $result.road_admitted; eligible_for_learning = $result.eligible_for_learning }
+        original_capture = $read['capture-proof.json'].identity; original_result = $read['result.json'].identity
+        original_domain_status = $result.status; original_inspector_role = $result.role; original_sample_count = $result.sample_count
+        generated_host_descriptor = [ordered]@{ scope = 'CURRENT_OBSERVED_GENERATED_DESCRIPTOR; NO_ORIGINAL_HOST_HASH'; identity = $descriptor.identity }
+        current_sdk_libraries = $sdkLibraries; protected_input_count = $protected.Count
+        original_profile = $capture.profile; original_consumer = $capture.consumer; original_consumer_asset_count = $c.consumer_assets.Count
+        original_evidence = [ordered]@{}; retained_raw_evidence = [ordered]@{}
+        proof_limits = @('Original wire messages and denial texts were not retained in these receipts.',
+            'One wire tools/list is retained; later native census is a separate in-process check.',
+            'No independently retained shutdown ACK or historical listener-absent Boolean is invented.',
+            'Current installed SDK DLL hashes and generated HostProject descriptor are not original historical byte anchors.') }
+    foreach ($name in $read.Keys) {
+        $diagnostic.original_evidence[$name] = $read[$name].identity
+        $diagnostic.retained_raw_evidence[$name] = $read[$name].retained_raw
+    }
+    $diagnostic.retained_raw_evidence['accepted-session-build.json'] = $host.retained_raw
+    $diagnostic.retained_raw_evidence['runtime-dependencies.json'] = $runtime.retained_raw
+    foreach ($row in $diagnostic.retained_raw_evidence.Values) { Add-SessionUnitProtectedIdentity $protected $row.path $row $row.size_bytes }
+    $diagnostic.protected_input_count = $protected.Count
+    $target = Join-Path $ArtifactRoot 'verified-session-readback.json'
+    Write-SessionJson $target $diagnostic
+    $receipt.proof_files.verified_session_readback = Get-SessionFileIdentity $target 1MB
+    Add-SessionUnitProtectedIdentity $protected $target $receipt.proof_files.verified_session_readback 1MB
+    $receipt['source_only'] = $false
+    $receipt['compile_performed'] = $false
+    $receipt['verified_original_run'] = '38027596123-1'
+    $console = [ordered]@{ original_host = $diagnostic.original_host; original_exact_sha = $oldSha; scope = $diagnostic.scope
+        original_owned_editor_pid = $h.owned_editor_pid; original_owned_client_pid = $h.owned_client_pid
+        original_owned_editor_exit_code = $h.owned_editor_exit_code; original_owned_client_exit_code = $h.owned_client_exit_code
+        original_tool = $t.tool; original_negotiated_protocol = $t.negotiated_protocol; original_denials = $t.denials
+        original_context_landscape = $c.landscape; original_actor_count = $actors.Count; original_landscape_transform = $diagnostic.original_landscape_transform
+        original_official_automation_result = $n.official_automation_result; original_inspector_findings = $diagnostic.original_inspector_findings
+        proof_limits = $diagnostic.proof_limits; readback = $receipt.proof_files.verified_session_readback }
+    $consoleJson = $console | ConvertTo-Json -Depth 8 -Compress
+    if ($consoleJson.Length -gt 16KB) { throw 'The fixed GREEN console summary exceeds its 16KiB bound.' }
+    Write-Host ('VERIFIED_GREEN_READBACK ' + $consoleJson)
+    return [ordered]@{ protected = $protected; descriptor = $descriptor; native_paths = $nativePaths; bob_rows = $bobRows
+        old_plugin = $oldPlugin; old_source_sha = $oldSha; old_host_identity = $host.identity }
+}
+function Get-SessionUnitOwnedListeners {
+    param([int] $OwnedPid)
+    if (-not (Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue)) { throw 'The unit owned-PID listener check is unavailable.' }
+    return @(Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object OwningProcess -eq $OwnedPid)
+}
+function Invoke-SessionInputBoundaryUnit {
+    param($Green)
+    $unitRoot = Join-Path 'D:\yacs\runner\_work\b384' ($runIdentity + '-input-boundary')
+    $reportRoot = Join-Path $ArtifactRoot 'input-boundary-report'
+    $unit = [ordered]@{ schema_version = 1; exact_sha = $ExpectedHead; status = 'INPUT_BOUNDARY_PENDING'; source_only = $false
+        editor_launched = $false; compile_performed = $false; native_input_boundary_verified = $false
+        official_mcp_transport_verified = $false; native_automation_verified = $false; native_bob_capture_verified = $false
+        official_mcp_admitted = $false; persistent_world_mutation = $false; performance_pass = $false
+        original_run = '38027596123-1'; original_compiled_sha = $Green.old_source_sha; original_host = $Green.old_host_identity
+        unit_root = $unitRoot; map = '/Engine/Maps/Entry'; test = 'YacsBobInspection.InputBoundary'
+        deadline_seconds = 180; owned_editor_pid = $null; owned_editor_exit_code = $null; owned_editor_exit_observed = $false
+        listener_samples = 0; listener_samples_while_alive = 0; maximum_owned_listeners = 0; owned_listeners_after_exit = $null
+        protected_inputs_unchanged = $false; copied_inputs = [ordered]@{}; logs = [ordered]@{}; report = $null; report_summary = $null; error = $null }
+    Assert-SessionPlainPath $unitRoot
+    if (Test-Path -LiteralPath $unitRoot) { throw 'The fixed unit root already exists; preserve it.' }
+    Assert-SessionNoUntrackedNativeInputs $RepoRoot
+    Assert-SessionIdleHost
+    Assert-SessionUnitProtectedIdentities $Green.protected
+    New-Item -ItemType Directory -Path $unitRoot | Out-Null
+    $copyRows = @([ordered]@{ relative = 'HostProject.uproject'; identity = $Green.descriptor.identity })
+    foreach ($relative in $Green.native_paths) {
+        $copyRows += [ordered]@{ relative = $relative; identity = $Green.protected[(Join-Path $Green.old_plugin $relative.Substring('Plugins/YacsBobInspection/'.Length))] }
+    }
+    foreach ($row in $Green.bob_rows) { $copyRows += [ordered]@{ relative = ('Plugins/YacsBobInspection/' + $row.relative); identity = $row.identity } }
+    foreach ($row in $copyRows) {
+        $target = Join-Path $unitRoot $row.relative
+        Assert-SessionPlainPath $target
+        if (Test-Path -LiteralPath $target) { throw 'The fixed unit refuses to replace a copied input.' }
+        New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
+        $input = [IO.File]::OpenRead($row.identity.path)
+        $output = [IO.File]::Open($target, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+        try {
+            $buffer = [byte[]]::new(8192)
+            $copiedBytes = 0L
+            while (($count = $input.Read($buffer, 0, $buffer.Length)) -gt 0) {
+                $copiedBytes += $count
+                if ($copiedBytes -gt $row.identity.size_bytes) { throw 'A unit input grew beyond its authenticated copy bound.' }
+                $output.Write($buffer, 0, $count)
+            }
+        } finally { $output.Dispose(); $input.Dispose() }
+        $copied = Get-SessionFileIdentity $target $row.identity.size_bytes
+        if ($copied.sha256 -cne $row.identity.sha256 -or $copied.size_bytes -ne $row.identity.size_bytes) { throw 'A fixed unit input copy differs.' }
+        $unit.copied_inputs[$row.relative] = $copied
+        Add-SessionUnitProtectedIdentity $Green.protected $target $copied $copied.size_bytes
+    }
+    $entry = Join-Path $engine.Root 'Engine/Content/Maps/Entry.umap'
+    Add-SessionUnitProtectedIdentity $Green.protected $entry $null 32MB
+    $executable = Join-Path $engine.Root 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe'
+    Add-SessionUnitProtectedIdentity $Green.protected $executable $null 1GB
+    $unit['owned_editor_executable'] = $Green.protected[$executable]
+    $unit['entry_map_identity'] = $Green.protected[$entry]
+    $unit['startup_config_overrides'] = @('-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False',
+        '-ini:EditorPerProjectUserSettings:[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]:bAutoStartServer=False')
+    New-Item -ItemType Directory -Path $reportRoot | Out-Null
+    $timer = [Diagnostics.Stopwatch]::StartNew()
+    try {
+        Assert-SessionIdleHost
+        $arguments = @(('"' + (Join-Path $unitRoot 'HostProject.uproject') + '"'), '/Engine/Maps/Entry',
+            '-Unattended', '-NoPause', '-NullRHI', '-NoSplash', '-NoSound', '-NoLiveCoding', '-log', '-DisablePlugins=AndroidFileServer',
+            '-EnablePlugins=YacsBobInspection,ModelContextProtocol', ('-AbsLog="' + (Join-Path $ArtifactRoot 'input-boundary-editor.log') + '"'),
+            ('-ReportExportPath="' + $reportRoot + '"'), '-execcmds="Automation RunTests YacsBobInspection.InputBoundary;Quit"') + $unit.startup_config_overrides
+        # No official-proof opt-in, ExecutePythonScript, trusted marker or BOB producer.
+        $script:ownedEditor = Start-Process -FilePath $executable -ArgumentList $arguments -WorkingDirectory $unitRoot `
+            -PassThru -NoNewWindow -RedirectStandardOutput (Join-Path $ArtifactRoot 'input-boundary-editor-stdout.log') `
+            -RedirectStandardError (Join-Path $ArtifactRoot 'input-boundary-editor-stderr.log') -Environment @{
+                YACS_MCP_BOB_PROJECT_ROOT = ''; YACS_MCP_BOB_EXPECTED_HEAD = ''; YACS_MCP_BOB_OWNED_EDITOR_PID = ''
+                YACS_OWNER_HANDOFF = ''; PYTHONPATH = ''; PYTHONHOME = '' }
+        $unit.editor_launched = $true
+        $unit.owned_editor_pid = $script:ownedEditor.Id
+        $receipt.editor_launched = $true
+        $receipt.owned_editor_pid = $script:ownedEditor.Id
+        while ($true) {
+            $aliveBefore = -not $script:ownedEditor.HasExited
+            $listeners = @(Get-SessionUnitOwnedListeners $script:ownedEditor.Id)
+            $unit.listener_samples++
+            if ($aliveBefore -and -not $script:ownedEditor.HasExited) { $unit.listener_samples_while_alive++ }
+            $unit.maximum_owned_listeners = [Math]::Max($unit.maximum_owned_listeners, $listeners.Count)
+            if ($listeners.Count -ne 0) { throw 'The fixed unit Editor owns a TCP listener; no unit proof is admitted.' }
+            if ($script:ownedEditor.WaitForExit(200)) { break }
+            if ($timer.Elapsed.TotalSeconds -ge 180) { throw 'The fixed InputBoundary Editor exceeded its 180 second deadline.' }
+        }
+        $script:ownedEditor.WaitForExit()
+        $unit.owned_editor_exit_code = $script:ownedEditor.ExitCode
+        $unit.owned_editor_exit_observed = $true
+        $unit.owned_listeners_after_exit = @(Get-SessionUnitOwnedListeners $script:ownedEditor.Id).Count
+        $unit['owned_editor_elapsed_seconds'] = $timer.Elapsed.TotalSeconds
+        if ($unit.listener_samples_while_alive -lt 1 -or $timer.Elapsed.TotalSeconds -gt 180 -or $unit.owned_editor_exit_code -ne 0 -or $unit.owned_listeners_after_exit -ne 0) { throw 'The fixed unit lacked a clean bounded exit and owned-listener absence.' }
+        $report = Read-SessionJson (Join-Path $reportRoot 'index.json') 8MB
+        $index = $report.value
+        if ($index.tests -isnot [array] -or $index.tests.Count -ne 1 -or -not (Test-SessionInteger $index.succeeded 1)) { throw 'The InputBoundary report did not finish exactly one successful test.' }
+        foreach ($field in @('succeededWithWarnings', 'failed', 'notRun', 'inProcess')) {
+            if (-not (Test-SessionInteger $index[$field] 0)) { throw 'The InputBoundary report contains warnings, failure or unfinished tests.' }
+        }
+        $test = $index.tests[0]
+        if ($test.fullTestPath -cne 'YacsBobInspection.InputBoundary' -or $test.state -cne 'Success' `
+            -or -not (Test-SessionInteger $test.errors 0) -or -not (Test-SessionInteger $test.warnings 0) -or $test.entries -isnot [array]) { throw 'The exact InputBoundary test did not pass without errors and warnings.' }
+        $eventCounts = [ordered]@{}
+        if ($test.entries.Count -gt 10000) { throw 'The fixed unit report event count exceeds its bound.' }
+        foreach ($entry in $test.entries) {
+            if ($entry -isnot [Collections.IDictionary] -or $entry.event -isnot [Collections.IDictionary] `
+                -or $entry.event.type -isnot [string] -or $entry.event.type -cnotmatch '^[A-Za-z]{1,32}$' -or $entry.event.type -cin @('Error', 'Warning')) { throw 'The InputBoundary report contains a malformed, error or warning event.' }
+            if (-not $eventCounts.Contains($entry.event.type)) {
+                if ($eventCounts.Count -ge 16) { throw 'The fixed unit report event type count exceeds its bound.' }
+                $eventCounts[$entry.event.type] = 0
+            }
+            $eventCounts[$entry.event.type]++
+        }
+        $unit.report_summary = [ordered]@{ succeeded = $index.succeeded; succeededWithWarnings = $index.succeededWithWarnings
+            failed = $index.failed; notRun = $index.notRun; inProcess = $index.inProcess; fullTestPath = $test.fullTestPath
+            state = $test.state; errors = $test.errors; warnings = $test.warnings; entry_event_type_counts = $eventCounts }
+        $unit.report = $report.identity
+        Assert-SessionUnitProtectedIdentities $Green.protected
+        Assert-SessionTrackedSources $RepoRoot
+        if ((Get-SessionFileIdentity $report.identity.path 8MB).sha256 -cne $report.identity.sha256) { throw 'The unit report changed during verification.' }
+        $unit['protected_input_identities'] = $Green.protected
+        $unit.protected_inputs_unchanged = $true
+        foreach ($name in @('input-boundary-editor.log', 'input-boundary-editor-stdout.log', 'input-boundary-editor-stderr.log')) {
+            $unit.logs[$name] = Get-SessionOwnedLogIdentity (Join-Path $ArtifactRoot $name) $script:ownedEditor
+        }
+        if ($unit.logs.Count -ne 3 -or $receipt.secondary_errors.Count -ne 0) { throw 'The fixed unit lacks complete owned logs or has a secondary failure.' }
+        $unit.native_input_boundary_verified = $true
+        $unit.status = 'INPUT_BOUNDARY_VERIFIED'
+    } catch { $unit.error = Get-SessionSafeFailureText $_.Exception.Message; $unit.status = 'INPUT_BOUNDARY_BLOCKED'; throw }
+    finally {
+        if ($null -ne $script:ownedEditor) {
+            if (-not $script:ownedEditor.HasExited) {
+                try { $script:ownedEditor.Kill(); [void]$script:ownedEditor.WaitForExit(10000) }
+                catch { $receipt.secondary_errors += 'Cannot observe fixed unit owned Editor cleanup.' }
+            }
+            if ($script:ownedEditor.HasExited) {
+                $unit.owned_editor_exit_observed = $true
+                $unit.owned_editor_exit_code = $script:ownedEditor.ExitCode
+                foreach ($name in @('input-boundary-editor.log', 'input-boundary-editor-stdout.log', 'input-boundary-editor-stderr.log')) {
+                    try { if (-not $unit.logs.Contains($name)) { $unit.logs[$name] = Get-SessionOwnedLogIdentity (Join-Path $ArtifactRoot $name) $script:ownedEditor } }
+                    catch { $receipt.secondary_errors += 'Cannot retain one fixed unit owned log.' }
+                }
+            }
+            Stop-SessionOwnedProcess $script:ownedEditor 'editor'
+            $script:ownedEditor = $null
+        }
+        $cleanupBlocked = $unit.status -ceq 'INPUT_BOUNDARY_VERIFIED' -and $receipt.secondary_errors.Count -ne 0
+        if ($cleanupBlocked) {
+            $unit.status = 'INPUT_BOUNDARY_BLOCKED'
+            $unit.native_input_boundary_verified = $false
+            $unit.error = 'The fixed unit has an owned cleanup or log-retention failure.'
+        }
+        $unit['elapsed_seconds'] = $timer.Elapsed.TotalSeconds
+        $path = Join-Path $ArtifactRoot 'input-boundary-unit.json'
+        Write-SessionJson $path $unit
+        $receipt.proof_files.input_boundary_unit = Get-SessionFileIdentity $path 1MB
+        $receipt['native_input_boundary_verified'] = $unit.native_input_boundary_verified
+        $console = [ordered]@{}
+        foreach ($field in @('schema_version', 'exact_sha', 'status', 'source_only', 'editor_launched', 'compile_performed', 'native_input_boundary_verified',
+            'official_mcp_transport_verified', 'native_automation_verified', 'native_bob_capture_verified', 'official_mcp_admitted',
+            'persistent_world_mutation', 'performance_pass', 'original_run', 'original_compiled_sha', 'original_host', 'unit_root', 'map', 'test',
+            'deadline_seconds', 'owned_editor_pid', 'owned_editor_exit_code', 'owned_editor_exit_observed', 'listener_samples', 'listener_samples_while_alive',
+            'maximum_owned_listeners', 'owned_listeners_after_exit', 'protected_inputs_unchanged', 'report', 'report_summary', 'error', 'elapsed_seconds')) {
+            $console[$field] = $unit[$field]
+        }
+        $console['unit_receipt'] = $receipt.proof_files.input_boundary_unit
+        $consoleJson = $console | ConvertTo-Json -Depth 6 -Compress
+        if ($consoleJson.Length -gt 16KB) { throw 'The fixed unit console summary exceeds its 16KiB bound.' }
+        Write-Host ('INPUT_BOUNDARY_UNIT ' + $consoleJson)
+        if ($cleanupBlocked) { throw 'The fixed unit has a secondary cleanup failure; no verification is admitted.' }
+    }
 }
 function Write-SessionCurrentFailureReadback {
     if (-not $artifactOwned -or $receipt.status -cne 'BLOCKED') { return }
@@ -753,7 +1161,7 @@ try {
     New-Item -ItemType Directory -Path $ArtifactRoot | Out-Null
     $artifactOwned = $true
     if ($DiagnosePreviousFailure) {
-        Invoke-SessionPreviousFailureDiagnostic
+        $verifiedGreen = Invoke-SessionVerifiedGreenReadback
         & (Join-Path $RepoRoot 'scripts/ue/Read-YacsOfficialMcpRuntimeDependencies.ps1') -EngineRoot $engine.Root -ArtifactRoot $ArtifactRoot -ExpectedHead $ExpectedHead
         $currentSdk = Read-SessionJson (Join-Path $ArtifactRoot 'runtime-dependencies.json') 4MB
         if (-not (Test-SessionInteger $currentSdk.value.schema_version 1) -or $currentSdk.value.exact_sha -cne $ExpectedHead `
@@ -766,7 +1174,8 @@ try {
         $receipt['current_sdk_observation'] = [ordered]@{ scope = 'CURRENT_SOURCE_ONLY_OBSERVATION; NOT_HISTORICAL_RUNTIME_PROOF'
             exact_sha = $ExpectedHead; source_only = $true; identity = $currentSdk.identity }
         Write-Host ('CURRENT_DIAGNOSTIC_SDK_OBSERVATION ' + ($receipt.current_sdk_observation | ConvertTo-Json -Depth 4 -Compress))
-        $receipt.status = 'PREVIOUS_SESSION_FAILURE_DIAGNOSTIC_RETAINED'
+        Invoke-SessionInputBoundaryUnit $verifiedGreen
+        $receipt.status = 'VERIFIED_SESSION_READBACK_AND_INPUT_BOUNDARY_VERIFIED'
         return
     }
     # Establish fixed executable identities before expensive builds; their raw
@@ -1185,7 +1594,9 @@ finally {
     Stop-SessionOwnedProcess $ownedEditor 'editor'
     Stop-SessionOwnedProcess $ownedBuild 'build' -BuildTree
     if ($artifactOwned) {
-        if ($receipt.status -ceq 'BLOCKED') {
+        if ($receipt.status -ceq 'BLOCKED' -and -not $DiagnosePreviousFailure) {
+            # The fixed diagnostic/unit branch owns its separate raw readback
+            # and unit receipt; never relabel an old failure as this attempt.
             try { Write-SessionCurrentFailureReadback }
             catch { $receipt.secondary_errors += ('Cannot retain current failure readback (' + $_.Exception.GetType().Name + ').') }
         }

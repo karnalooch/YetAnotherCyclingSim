@@ -18,11 +18,34 @@ before the game-thread domain body. It runs only
 `CyclingPhysics.RoadPhysics.ProfileInterpolation`, then the fixed BOB capture.
 The client requires 22 exact denials without body invocation and one valid call;
 the launcher verifies owned shutdown and persistent bytes again after exit.
-This new binding's native compilation and actual session proof remain pending.
+Both isolated builds and the fixed native session passed in
+[run 38027596123](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123)
+at runtime SHA `241104de320f8417c7abc4dd973ac148ed98a66d` on UE 5.8.2 /
+CL 56702186. The bounded verified summary records one successful
+`CyclingPhysics.RoadPhysics.ProfileInterpolation` test with no errors/warnings
+and BOB `REVIEW_REQUIRED` / `INSPECTOR_ONLY`: 60,025 evaluated samples, zero
+misses, six `CONTACT_OK`, 60,019 `FILL_REQUIRED`, no cut or structure cases,
+maximum required fill 1.734214770718081 m and RMS 0.3504235256593645 m.
+All BOB authoring/admission flags remain false. The original host verifies
+transport, native Automation and native BOB capture locally, while official
+admission, persistent mutation and performance PASS remain false.
+Full pinned receipt review, standalone `YacsBobInspection.InputBoundary` and
+protected PR #467 closeout remain pending. The successful bounded summary is
+not a complete independent raw-receipt/bundle review.
+
+The runtime revision remains distinct from subsequent documentation and
+protected-merge revisions. This README is included in the producer's source
+inventory, so its update is a documentation delta; executable plugin C++, its
+descriptor, runtime Python, policy and accepted asset bytes retain the runtime
+revision's bytes. No claim is made that the entire source inventory is unchanged.
+
 Run `37996979223` compiled the earlier plugin boundary and its DLL on UE
 5.8.2 / CL 56702186 at `f557bfd0a760b795bb3294ec047cdfc4c837424d`.
 A successful source build alone does not admit this operation or complete
 Issue #384.
+The fixed inspector does not admit stock `MaterialInstanceTools`; #364 requires
+separate version-matched schemas, argument/resource restrictions and material-only
+native authoring proof before using that surface.
 
 `InspectAcceptedCheckpoint` accepts only an empty JSON object, with bounded JSON
 whitespace. Its native boundary rejects other operation names, fields, scalars,

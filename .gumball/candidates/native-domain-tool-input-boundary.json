@@ -8,7 +8,8 @@
     "Issue #384",
     "Draft PR #467",
     "docs/UE_MCP_WORLD_GENERATION.md",
-    "scripts/ue/test_official_mcp_source_probe.py"
+    "scripts/ue/test_official_mcp_source_probe.py",
+    "Bounded successful native inspection/test summary at runtime 241104de320f8417c7abc4dd973ac148ed98a66d; full receipt review and standalone InputBoundary remain pending: https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38027596123"
   ],
   "do_not_copy": [
     "YACS map, actor and test identities",
