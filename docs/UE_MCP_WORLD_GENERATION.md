@@ -963,6 +963,19 @@ before launch instead. Original build-input guards and historical files remain
 unchanged. The temporary diagnostic is removed; actual InputBoundary remains
 pending. Diagnostic job success supplies no unit or fresh MCP verification.
 
+[Isolated InputBoundary attempt 38030801857](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38030801857)
+at `8f8fac210e16c08f547f6985b47f06eb2d1d5ae0` passed the exact fresh-input
+inventory (15 files, 10 directories, 24 entries; copied hashes unchanged).
+The owned Editor (PID 5932) then had one TCP listener at its first live sample;
+the guard stopped it before a test report. Cleanup observed exit -1 after
+1.6620195 seconds. No native unit PASS or post-test conservation is claimed.
+The receipt did not retain listener address/port rows, so subsystem attribution
+requires its hash-linked owned logs. Its 9,183-byte unit receipt is SHA-256
+`30270fa253aa7828bdac8ef9383d7c0a1a8a95790f8871652e2f78f263ae612f`;
+the 423,385-byte host receipt is SHA-256
+`188d4325b301ca9cbfda8770f55cb8464726a4ba7bbf4e271eddf02cbdef5fe6`.
+The no-listener guard remains binding; actual InputBoundary is pending.
+
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
 hosted Python, equivalent exact-head Unreal proof reuse and Aggregate.

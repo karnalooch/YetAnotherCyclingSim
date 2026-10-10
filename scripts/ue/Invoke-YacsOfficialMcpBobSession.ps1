@@ -926,6 +926,205 @@ function Get-SessionUnitOwnedListeners {
     if (-not (Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue)) { throw 'The unit owned-PID listener check is unavailable.' }
     return @(Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object OwningProcess -eq $OwnedPid)
 }
+function Read-SessionUnitFailureEvidenceBytes {
+    param([string] $Path, $Expected, [long] $Limit, $Budget, [string] $CopyName, [switch] $CurrentSource, [switch] $AllowEmpty)
+    if ($null -eq $Expected -and -not $CurrentSource) { throw 'A historical unit failure file requires its authenticated identity.' }
+    Assert-SessionPlainPath $Path
+    $before = Get-Item -LiteralPath $Path -Force
+    $size = $before.Length
+    $ticks = $before.LastWriteTimeUtc.Ticks
+    if ($before.PSIsContainer -or ($size -eq 0 -and -not $AllowEmpty) -or $size -gt $Limit -or $size -gt ($Budget.limit_bytes - $Budget.bytes)) { throw 'Fixed unit failure evidence exceeds its nonempty/regular-file or aggregate bound.' }
+    if ($null -ne $Expected -and ($Expected -isnot [Collections.IDictionary] -or $Expected.path -isnot [string] `
+        -or -not [string]::Equals([IO.Path]::GetFullPath($Expected.path), [IO.Path]::GetFullPath($Path), [StringComparison]::OrdinalIgnoreCase) `
+        -or $Expected.sha256 -cnotmatch '^[0-9a-f]{64}$' -or -not (Test-SessionInteger $Expected.size_bytes $size))) { throw 'Fixed unit failure bytes lack their authenticated identity.' }
+    $Budget.bytes += $size
+    $stream = [IO.File]::OpenRead($Path)
+    try {
+        $buffer = [byte[]]::new([int]$size + 1)
+        $count = 0
+        while (($part = $stream.Read($buffer, $count, $buffer.Length - $count)) -gt 0) {
+            $count += $part
+            if ($count -gt $size) { throw 'Fixed unit failure bytes grew beyond their read bound.' }
+        }
+    } finally { $stream.Dispose() }
+    Assert-SessionPlainPath $Path
+    $after = Get-Item -LiteralPath $Path -Force
+    if ($after.PSIsContainer -or $count -ne $size -or $after.Length -ne $size -or $after.LastWriteTimeUtc.Ticks -ne $ticks) { throw 'Fixed unit failure bytes changed during reading.' }
+    $bytes = [byte[]]::new($count)
+    [Array]::Copy($buffer, $bytes, $count)
+    $identity = [ordered]@{ path = [IO.Path]::GetFullPath($Path); size_bytes = $count
+        sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant() }
+    if ($null -ne $Expected -and $identity.sha256 -cne $Expected.sha256) { throw 'Fixed unit failure raw hash differs before decoding or parsing.' }
+    $retained = $null
+    if ($CopyName) {
+        $target = Join-Path $ArtifactRoot $CopyName
+        Assert-SessionPlainPath $target
+        $output = [IO.File]::Open($target, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+        try { $output.Write($bytes, 0, $bytes.Length) } finally { $output.Dispose() }
+        if ($count -eq 0) {
+            Assert-SessionPlainPath $target
+            $empty = Get-Item -LiteralPath $target -Force
+            if ($empty.PSIsContainer -or $empty.Length -ne 0) { throw 'A retained empty unit log differs.' }
+            $retained = [ordered]@{ path = [IO.Path]::GetFullPath($target); size_bytes = 0; sha256 = $identity.sha256 }
+        } else {
+            $retained = Get-SessionFileIdentity $target $count
+            if ($retained.sha256 -cne $identity.sha256 -or $retained.size_bytes -ne $count) { throw 'A retained raw unit failure copy differs.' }
+        }
+    }
+    return [ordered]@{ identity = $identity; retained_raw = $retained; bytes = $bytes }
+}
+function Select-SessionUnitFailureContext {
+    param([byte[]] $Bytes, [switch] $EngineSource)
+    # Decode bounded line prefixes only; even a giant raw line cannot allocate
+    # an unbounded string. Keep first/last selected contexts and report omissions.
+    $pattern = if ($EngineSource) { '(?i)notracectrl|trace.?control|ControlThread|Listen|Start.*Control|Control.*Start' }
+        else { '(?i)trace|listen|socket|tcp|udp|error|warning|fatal|LogInit:|LogPython:|ModelContextProtocol|YacsBobInspection' }
+    $priorityPattern = if ($EngineSource) { '(?i)notracectrl' }
+        else { '(?i)listen|TraceControl|Trace.*(?:control|server|port|tcp)|(?:control|server|port|tcp).*Trace|ModelContextProtocol.*(?:bind|start|port|server)|(?:bind|start|port|server).*ModelContextProtocol' }
+    $priorityFirst = [Collections.Generic.List[object]]::new()
+    $priorityLast = [Collections.Generic.Queue[object]]::new()
+    $directFirst = [Collections.Generic.List[object]]::new()
+    $directLast = [Collections.Generic.Queue[object]]::new()
+    $prioritySeen = [Collections.Generic.HashSet[int]]::new()
+    $priorityStart = 0; $priorityUntil = 0; $priorityMatches = 0
+    $first = [Collections.Generic.List[object]]::new()
+    $last = [Collections.Generic.Queue[object]]::new()
+    $previous = [Collections.Generic.Queue[object]]::new()
+    $seen = [Collections.Generic.HashSet[int]]::new()
+    $offset = 0; $line = 0; $following = 0; $selected = 0; $oversized = $false
+    while ($offset -lt $Bytes.Length -and $line -lt 200000) {
+        $end = [Array]::IndexOf($Bytes, [byte]10, $offset)
+        if ($end -lt 0) { $end = $Bytes.Length }
+        $length = $end - $offset
+        $decodeLength = [Math]::Min($length, 4096)
+        $text = [Text.Encoding]::UTF8.GetString($Bytes, $offset, $decodeLength).TrimEnd("`r")
+        $line++; $offset = $end + 1
+        $rowOversized = $length -gt 4096
+        if ($rowOversized) { $oversized = $true }
+        $skip = -not $EngineSource -and $text -match '(?i)command\s*line|authorization|bearer\s'
+        $row = [ordered]@{ line = $line; text = $text; raw_line_prefix_truncated = $rowOversized }
+        $match = -not $skip -and $text -match $pattern
+        $priorityMatch = -not $skip -and $text -match $priorityPattern
+        if ($priorityMatch) { $priorityStart = [Math]::Max(1, $line - 2); $priorityUntil = $line + 2; $priorityMatches++ }
+        $rows = @()
+        if ($match) { $rows += @($previous.ToArray()); $rows += $row; $following = 2 }
+        elseif ($following -gt 0) { if (-not $skip) { $rows += $row }; $following-- }
+        foreach ($candidate in $rows) {
+            $newRow = $seen.Add($candidate.line)
+            $priority = $candidate.line -ge $priorityStart -and $candidate.line -le $priorityUntil
+            if (-not $newRow -and -not $priority) { continue }
+            $safe = Get-SessionSafeFailureText $candidate.text
+            $safeBytes = [Text.Encoding]::UTF8.GetBytes($safe)
+            if ($safeBytes.Length -gt 768) { $safe = [Text.Encoding]::UTF8.GetString($safeBytes, 0, 736) + '[TRUNCATED]' }
+            $value = [ordered]@{ line = $candidate.line; text = $safe; raw_line_prefix_truncated = $candidate.raw_line_prefix_truncated }
+            if ($priority -and $prioritySeen.Add($candidate.line)) {
+                if ($priorityFirst.Count -lt 2) { $priorityFirst.Add($value) }
+                else { if ($priorityLast.Count -ge 2) { [void]$priorityLast.Dequeue() }; $priorityLast.Enqueue($value) }
+            }
+            if ($priorityMatch -and $candidate.line -eq $line) {
+                if ($directFirst.Count -lt 2) { $directFirst.Add($value) }
+                else { if ($directLast.Count -ge 2) { [void]$directLast.Dequeue() }; $directLast.Enqueue($value) }
+            }
+            if (-not $newRow) { continue }
+            $selected++
+            if ($first.Count -lt 12) { $first.Add($value) }
+            else { if ($last.Count -ge 12) { [void]$last.Dequeue() }; $last.Enqueue($value) }
+        }
+        if (-not $skip) { $previous.Enqueue($row); if ($previous.Count -gt 2) { [void]$previous.Dequeue() } }
+        else { $previous.Clear() }
+    }
+    $chosen = @($first.ToArray()) + @($last.ToArray())
+    if ($priorityMatches -gt 0) {
+        # Direct clue rows precede neighboring context and generic startup rows.
+        # Four direct + four context + sixteen generic rows keep the 24-row cap.
+        $chosen = @($directFirst.ToArray()) + @($directLast.ToArray()) + @($priorityFirst.ToArray()) + @($priorityLast.ToArray()) `
+            + @($first.ToArray() | Select-Object -First 8) + @($last.ToArray() | Select-Object -Last 8)
+    }
+    $context = @(); $contextBytes = 0; $contextJsonBytes = 2
+    $emitted = [Collections.Generic.HashSet[int]]::new()
+    foreach ($row in $chosen) {
+        if (-not $emitted.Add($row.line)) { continue }
+        $cost = [Text.Encoding]::UTF8.GetByteCount(($row | ConvertTo-Json -Depth 3 -Compress))
+        if ($context.Count -gt 0) { $cost++ }
+        if ($contextJsonBytes + $cost -gt 4KB) { continue }
+        $context += $row; $contextJsonBytes += $cost; $contextBytes += [Text.Encoding]::UTF8.GetByteCount($row.text)
+    }
+    return [ordered]@{ lines = $context; scanned_line_count = $line; matching_context_count = $selected; priority_direct_match_count = $priorityMatches
+        truncated = ($context.Count -lt $selected -or $offset -lt $Bytes.Length -or $oversized)
+        maximum_lines = 24; maximum_row_utf8_bytes = 768; decoded_context_limit_bytes = 4KB; decoded_context_bytes = $contextBytes
+        context_json_limit_bytes = 4KB; context_json_bytes = $contextJsonBytes }
+}
+
+function Invoke-SessionFixedUnitListenerFailureReadback {
+    $receipt['source_only'] = $true
+    $receipt['compile_performed'] = $false
+    $receipt['native_input_boundary_verified'] = $false
+    $failedSha = '8f8fac210e16c08f547f6985b47f06eb2d1d5ae0'
+    $failedRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38030801857-1'
+    $budget = [ordered]@{ bytes = 0L; limit_bytes = 64MB }
+    $hostPath = Join-Path $failedRoot 'accepted-session-build.json'
+    $failedHostBytes = Read-SessionUnitFailureEvidenceBytes $hostPath @{
+        path = $hostPath; size_bytes = 423385; sha256 = '188d4325b301ca9cbfda8770f55cb8464726a4ba7bbf4e271eddf02cbdef5fe6'
+    } 1MB $budget 'verified-failed-unit-host.json'
+    $failedHostDocument = [Text.Encoding]::UTF8.GetString($failedHostBytes.bytes) | ConvertFrom-Json -AsHashtable -Depth 40
+    if ($failedHostDocument -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $failedHostDocument.schema_version 1) `
+        -or $failedHostDocument.exact_sha -cne $failedSha -or $failedHostDocument.run -cne '38030801857' `
+        -or $failedHostDocument.attempt -cne '1' -or $failedHostDocument.status -cne 'BLOCKED') { throw 'The fixed failed unit host differs from its actual run or source.' }
+    $unitPath = Join-Path $failedRoot 'input-boundary-unit.json'
+    $unitBytes = Read-SessionUnitFailureEvidenceBytes $unitPath $failedHostDocument.proof_files.input_boundary_unit 1MB $budget 'verified-failed-unit.json'
+    if ($unitBytes.identity.size_bytes -ne 9183 -or $unitBytes.identity.sha256 -cne '30270fa253aa7828bdac8ef9383d7c0a1a8a95790f8871652e2f78f263ae612f') { throw 'The host-linked failed unit differs from its completed primary identity.' }
+    $unitDocument = [Text.Encoding]::UTF8.GetString($unitBytes.bytes) | ConvertFrom-Json -AsHashtable -Depth 40
+    if ($unitDocument -isnot [Collections.IDictionary] -or $unitDocument.exact_sha -cne $failedSha `
+        -or $unitDocument.status -cne 'INPUT_BOUNDARY_BLOCKED' -or $unitDocument.unit_root -cne 'D:\yacs\runner\_work\b384\38030801857-1-input-boundary' `
+        -or $unitDocument.map -cne '/Engine/Maps/Entry' -or $unitDocument.test -cne 'YacsBobInspection.InputBoundary' `
+        -or -not (Test-SessionInteger $unitDocument.owned_editor_pid 5932) -or -not (Test-SessionInteger $unitDocument.maximum_owned_listeners 1) `
+        -or $unitDocument.native_input_boundary_verified -isnot [bool] -or $unitDocument.native_input_boundary_verified `
+        -or $unitDocument.logs -isnot [Collections.IDictionary]) { throw 'The fixed failed unit receipt differs from the observed listener rejection.' }
+    Assert-SessionJsonFields $unitDocument.logs @('input-boundary-editor.log', 'input-boundary-editor-stdout.log', 'input-boundary-editor-stderr.log')
+    $diagnostic = [ordered]@{ schema_version = 1; exact_sha = $ExpectedHead; status = 'UNIT_LISTENER_FAILURE_DIAGNOSIS_RETAINED'
+        scope = 'CURRENT_SOURCE_ONLY_READBACK_OF_AUTHENTICATED_FAILED_UNIT; NO_UNIT_ADMISSION'
+        source_only = $true; editor_launched = $false; compile_performed = $false; native_input_boundary_verified = $false
+        official_mcp_transport_verified = $false; native_automation_verified = $false; native_bob_capture_verified = $false
+        official_mcp_admitted = $false; persistent_world_mutation = $false; performance_pass = $false
+        original_failed_run = '38030801857-1'; original_failed_sha = $failedSha
+        original_failed_host = $failedHostBytes.identity; original_failed_unit = $unitBytes.identity
+        retained_raw_host = $failedHostBytes.retained_raw; retained_raw_unit = $unitBytes.retained_raw
+        original_unit_facts = [ordered]@{}; original_owned_logs = [ordered]@{}; current_engine_sources = [ordered]@{}
+        proof_limits = @('The failed unit counted one owned listener; its endpoint and service were not retained.',
+            'Log text may show startup hints; current engine source is not a historical listener ownership proof.',
+            'This diagnostic launches no Editor and establishes no successful InputBoundary result.') }
+    foreach ($field in @('status', 'source_only', 'editor_launched', 'compile_performed', 'native_input_boundary_verified', 'owned_editor_pid',
+        'owned_editor_exit_code', 'owned_editor_exit_observed', 'listener_samples', 'listener_samples_while_alive', 'maximum_owned_listeners',
+        'owned_listeners_after_exit', 'prelaunch_input_inventory', 'report', 'report_summary', 'error', 'elapsed_seconds')) { $diagnostic.original_unit_facts[$field] = $unitDocument[$field] }
+    foreach ($name in @('input-boundary-editor.log', 'input-boundary-editor-stdout.log', 'input-boundary-editor-stderr.log')) {
+        $file = Read-SessionUnitFailureEvidenceBytes (Join-Path $failedRoot $name) $unitDocument.logs[$name] 32MB $budget ('verified-failed-unit-' + $name) -AllowEmpty
+        $diagnostic.original_owned_logs[$name] = [ordered]@{ scope = 'MATCHES_AUTHENTICATED_ORIGINAL_FAILED_UNIT_RECEIPT'
+            identity = $file.identity; retained_raw = $file.retained_raw; context = (Select-SessionUnitFailureContext $file.bytes) }
+    }
+    $sourceBudget = [ordered]@{ bytes = 0L; limit_bytes = 12MB }
+    foreach ($relative in @('Engine/Source/Runtime/Core/Private/ProfilingDebugging/TraceAuxiliary.cpp',
+        'Engine/Source/Runtime/TraceLog/Private/Trace/Control.cpp', 'Engine/Source/Runtime/TraceLog/Private/Trace/Control.h')) {
+        $path = Join-Path $engine.Root $relative
+        Assert-SessionPlainPath $path
+        if (-not (Test-Path -LiteralPath $path)) {
+            $diagnostic.current_engine_sources[$relative] = [ordered]@{ scope = 'CURRENT_ENGINE_SOURCE_ONLY'; status = 'MISSING' }
+            continue
+        }
+        $file = Read-SessionUnitFailureEvidenceBytes $path $null 4MB $sourceBudget '' -CurrentSource
+        $diagnostic.current_engine_sources[$relative] = [ordered]@{ scope = 'CURRENT_ENGINE_SOURCE_ONLY; NOT_HISTORICAL_LISTENER_PROOF'
+            status = 'READ'; identity = $file.identity; context = (Select-SessionUnitFailureContext $file.bytes -EngineSource) }
+    }
+    $diagnostic['historical_evidence_read_bytes'] = $budget.bytes
+    $diagnostic['current_engine_source_read_bytes'] = $sourceBudget.bytes
+    Assert-SessionTrackedSources $RepoRoot
+    $target = Join-Path $ArtifactRoot 'input-boundary-listener-diagnostic.json'
+    Write-SessionJson $target $diagnostic
+    $receipt.proof_files.input_boundary_listener_diagnostic = Get-SessionFileIdentity $target 1MB
+    $diagnostic['receipt_identity'] = $receipt.proof_files.input_boundary_listener_diagnostic
+    $console = $diagnostic | ConvertTo-Json -Depth 10 -Compress
+    if ([Text.Encoding]::UTF8.GetByteCount($console) -gt 48KB) { throw 'The fixed unit listener diagnostic exceeds its 48KiB console bound.' }
+    Write-Host ('UNIT_LISTENER_FAILURE_DIAGNOSTIC ' + $console)
+}
 function Assert-SessionFreshUnitInputs {
     param([string] $Root, $ExpectedFiles)
     # The unit launches only this fresh, closed 15-file copy. Historical Saved
@@ -1244,8 +1443,8 @@ try {
         $receipt['current_sdk_observation'] = [ordered]@{ scope = 'CURRENT_SOURCE_ONLY_OBSERVATION; NOT_HISTORICAL_RUNTIME_PROOF'
             exact_sha = $ExpectedHead; source_only = $true; identity = $currentSdk.identity }
         Write-Host ('CURRENT_DIAGNOSTIC_SDK_OBSERVATION ' + ($receipt.current_sdk_observation | ConvertTo-Json -Depth 4 -Compress))
-        Invoke-SessionInputBoundaryUnit $verifiedGreen
-        $receipt.status = 'VERIFIED_SESSION_READBACK_AND_INPUT_BOUNDARY_VERIFIED'
+        Invoke-SessionFixedUnitListenerFailureReadback
+        $receipt.status = 'UNIT_LISTENER_FAILURE_DIAGNOSIS_RETAINED'
         return
     }
     # Establish fixed executable identities before expensive builds; their raw
