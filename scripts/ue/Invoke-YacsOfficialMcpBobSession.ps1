@@ -926,6 +926,102 @@ function Get-SessionUnitOwnedListeners {
     if (-not (Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue)) { throw 'The unit owned-PID listener check is unavailable.' }
     return @(Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object OwningProcess -eq $OwnedPid)
 }
+function Invoke-SessionFixedUnitNativeInputDiagnostic {
+    # One owned, bounded read-only Git scan. Preserve the original producer
+    # guard/pathspecs; no unit root, filtering, deletion or Editor launch.
+    $scan = [ordered]@{ schema_version = 1; exact_sha = $ExpectedHead; status = 'SCAN_PENDING'
+        scope = 'CURRENT_SOURCE_ONLY_UNIT_PREFLIGHT_DIAGNOSTIC; NO_UNIT_ADMISSION'
+        root = $RepoRoot; source_only = $true; compile_performed = $false; editor_launched = $false
+        listener_started = $false; native_input_boundary_verified = $false; official_mcp_transport_verified = $false
+        native_automation_verified = $false; native_bob_capture_verified = $false; official_mcp_admitted = $false
+        persistent_world_mutation = $false; performance_pass = $false; git_exit_code = $null
+        owned_git_pid = $null; owned_git_exit_observed = $false; terminated_at_bound = $null
+        stdout_path_count = 0L; stderr_row_count = 0L; paths = @(); stderr = @()
+        stdout_truncated = $false; stderr_truncated = $false; oversized_row_observed = $false
+        stdout_row_limit = 24; stderr_row_limit = 8; row_utf8_limit_bytes = 1024
+        stream_termination_threshold_bytes = 1MB; retained_stream_read_bound_bytes = 32MB
+        decoded_prefix_limit_bytes = 1MB; deadline_seconds = 30; raw_streams = [ordered]@{} }
+    $receipt['source_only'] = $true
+    $receipt['compile_performed'] = $false
+    $receipt['native_input_boundary_verified'] = $false
+    $stdout = Join-Path $ArtifactRoot 'unit-native-input-stdout.log'
+    $stderr = Join-Path $ArtifactRoot 'unit-native-input-stderr.log'
+    $gitCommand = Get-Command git -CommandType Application -ErrorAction Stop | Select-Object -First 1
+    if ($gitCommand -isnot [System.Management.Automation.ApplicationInfo] -or $gitCommand.Source -isnot [string] `
+        -or [string]::IsNullOrWhiteSpace($gitCommand.Source) -or $gitCommand.Source.Length -gt 1024) { throw 'The fixed diagnostic lacks one resolved Git executable.' }
+    $timer = [Diagnostics.Stopwatch]::StartNew()
+    try {
+        $script:ownedValidation = Start-Process -FilePath $gitCommand.Source -ArgumentList @('-C', ('"' + $RepoRoot + '"'),
+            'ls-files', '--others', '--', 'Source', ':(glob)Plugins/*/Source/**', ':(glob)Plugins/*/*.uplugin', '*.uproject') `
+            -WorkingDirectory $RepoRoot -PassThru -NoNewWindow -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+        $scan.owned_git_pid = $script:ownedValidation.Id
+        while (-not $script:ownedValidation.WaitForExit(100)) {
+            if ($timer.Elapsed.TotalSeconds -ge 30) { $scan.terminated_at_bound = 'OWNED_SCAN_TIMEOUT' }
+            foreach ($path in @($stdout, $stderr)) {
+                Assert-SessionPlainPath $path
+                if ((Get-Item -LiteralPath $path -Force).Length -gt 1MB) { $scan.terminated_at_bound = 'OWNED_STREAM_SIZE_BOUND' }
+            }
+            if ($null -ne $scan.terminated_at_bound) {
+                $script:ownedValidation.Kill()
+                if (-not $script:ownedValidation.WaitForExit(10000)) { throw 'The bounded Git scan owned exit was not observed.' }
+                break
+            }
+        }
+        $script:ownedValidation.WaitForExit()
+        $scan.owned_git_exit_observed = $script:ownedValidation.HasExited
+        $scan.git_exit_code = $script:ownedValidation.ExitCode
+        if ($scan.git_exit_code -isnot [int] -and $scan.git_exit_code -isnot [long]) { throw 'The owned diagnostic Git exit code is unknown.' }
+        foreach ($channel in @('stdout', 'stderr')) {
+            $path = if ($channel -ceq 'stdout') { $stdout } else { $stderr }
+            # Hash/retain the fixed owned raw stream under the existing 32MiB
+            # race bound, then decode at most 1MiB. No unbounded line reader.
+            $log = Get-SessionOwnedLogIdentity $path $script:ownedValidation
+            if ($log.size_bytes -gt 1MB) { $scan.terminated_at_bound = 'OWNED_STREAM_SIZE_BOUND' }
+            $prefixSize = [int][Math]::Min($log.size_bytes, 1MB)
+            $buffer = [byte[]]::new($prefixSize)
+            $stream = [IO.File]::OpenRead($path)
+            try {
+                $count = 0
+                while ($count -lt $prefixSize -and ($part = $stream.Read($buffer, $count, $prefixSize - $count)) -gt 0) { $count += $part }
+                if ($count -ne $prefixSize) { throw 'The fixed owned diagnostic prefix changed during reading.' }
+            } finally { $stream.Dispose() }
+            if ((Get-SessionOwnedLogIdentity $path $script:ownedValidation).sha256 -cne $log.sha256) { throw 'The fixed owned diagnostic raw stream changed.' }
+            $text = [Text.Encoding]::UTF8.GetString($buffer)
+            $scan.raw_streams[$channel] = $log
+            foreach ($line in ($text -split '\r?\n')) {
+                if ($line.Length -eq 0) { continue }
+                $bytes = [Text.Encoding]::UTF8.GetBytes($line)
+                $rowTruncated = $bytes.Length -gt 1024
+                $value = $line
+                if ($rowTruncated) { $scan.oversized_row_observed = $true; $value = [Text.Encoding]::UTF8.GetString($bytes, 0, 992) + '[TRUNCATED]' }
+                $row = [ordered]@{ value = $value; original_utf8_bytes = $bytes.Length; truncated = $rowTruncated }
+                if ($channel -ceq 'stderr') {
+                    $scan.stderr_row_count++
+                    if ($scan.stderr.Count -lt 8) { $scan.stderr += $row } else { $scan.stderr_truncated = $true }
+                } else {
+                    $scan.stdout_path_count++
+                    if ($scan.paths.Count -lt 24) { $scan.paths += $row } else { $scan.stdout_truncated = $true }
+                }
+            }
+        }
+    } finally {
+        Stop-SessionOwnedProcess $script:ownedValidation 'validation'
+        $script:ownedValidation = $null
+    }
+    if ($null -ne $scan.terminated_at_bound) { $scan.status = 'BOUNDED_SCAN_TERMINATED; NOT_COMPLETE' }
+    elseif ($scan.git_exit_code -ne 0) { $scan.status = 'GIT_SCAN_FAILED' }
+    elseif ($scan.stdout_truncated -or $scan.stderr_truncated -or $scan.oversized_row_observed) { $scan.status = 'BOUNDED_SCAN_OUTPUT_TRUNCATED; NOT_ELIGIBLE' }
+    elseif ($scan.stdout_path_count -ne 0) { $scan.status = 'UNTRACKED_NATIVE_INPUTS_OBSERVED; NOT_ELIGIBLE' }
+    else { $scan.status = 'NO_EXTRA_PATHS_OBSERVED; UNIT_NOT_EXECUTED' }
+    $scan['elapsed_seconds'] = $timer.Elapsed.TotalSeconds
+    $target = Join-Path $ArtifactRoot 'input-boundary-native-input-diagnostic.json'
+    Write-SessionJson $target $scan
+    $receipt.proof_files.unit_native_input_diagnostic = Get-SessionFileIdentity $target 1MB
+    $scan['receipt_identity'] = $receipt.proof_files.unit_native_input_diagnostic
+    $console = $scan | ConvertTo-Json -Depth 6 -Compress
+    if ([Text.Encoding]::UTF8.GetByteCount($console) -gt 48KB) { throw 'The fixed native input diagnostic exceeds its console bound.' }
+    Write-Host ('UNIT_NATIVE_INPUT_DIAGNOSTIC ' + $console)
+}
 function Invoke-SessionInputBoundaryUnit {
     param($Green)
     $unitRoot = Join-Path 'D:\yacs\runner\_work\b384' ($runIdentity + '-input-boundary')
@@ -1174,8 +1270,8 @@ try {
         $receipt['current_sdk_observation'] = [ordered]@{ scope = 'CURRENT_SOURCE_ONLY_OBSERVATION; NOT_HISTORICAL_RUNTIME_PROOF'
             exact_sha = $ExpectedHead; source_only = $true; identity = $currentSdk.identity }
         Write-Host ('CURRENT_DIAGNOSTIC_SDK_OBSERVATION ' + ($receipt.current_sdk_observation | ConvertTo-Json -Depth 4 -Compress))
-        Invoke-SessionInputBoundaryUnit $verifiedGreen
-        $receipt.status = 'VERIFIED_SESSION_READBACK_AND_INPUT_BOUNDARY_VERIFIED'
+        Invoke-SessionFixedUnitNativeInputDiagnostic
+        $receipt.status = 'INPUT_BOUNDARY_PREFLIGHT_DIAGNOSIS_RETAINED'
         return
     }
     # Establish fixed executable identities before expensive builds; their raw

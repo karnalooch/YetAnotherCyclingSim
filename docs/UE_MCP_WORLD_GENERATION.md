@@ -934,6 +934,21 @@ error, not a failed historical native session or an InputBoundary result.
 The correction renames that local document variable; actual receipt review
 and the separate unit still require a successful run.
 
+[Corrected readback 38029602978](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38029602978)
+at `5e686e1f506f8f5046e0ffabb11fb7c8e882dc4f` authenticated the original
+host, native/transport/capture and bundle bytes, recording 375 unique Actors,
+the fixed Landscape's finite transform, 22 ordered body-zero denials, the one
+passing ProfileInterpolation test and original owned exits zero. The readback
+receipt is 19,470 bytes, SHA-256
+`c2924b517211d76a83985d642cc3133e79479622bc2009ce40c54f713e54d954`.
+The overall job then failed before unit-root creation or Editor launch in the
+untracked-native-input scan of the persistent code checkout. Git reported
+long-path traversal warnings in preserved `37994488902-1` outputs; neither the
+offending path list nor Git exit code was retained, so the exact cause is not
+yet established. This run verifies the qualified historical readback, not the
+standalone unit or a fresh MCP session. A bounded read-only path diagnostic
+must establish the unit guard's actual rejected inputs before correction.
+
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
 hosted Python, equivalent exact-head Unreal proof reuse and Aggregate.
