@@ -1,0 +1,224 @@
+name: Road material native proof
+
+on:
+  push:
+    branches: [codex/364-road-surface-materials]
+    paths:
+      - '.gitattributes'
+      - '.github/workflows/road-material-native-proof.yml'
+      - 'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1'
+      - 'scripts/ue/read_road_material_baseline.py'
+      - 'scripts/ue/test_read_road_material_baseline.py'
+      - 'scripts/ci/classify_changes.py'
+      - 'scripts/ci/Resolve-YacsUnrealCiCache.ps1'
+      - 'scripts/ci/unreal_ci_workspace.py'
+      - 'scripts/ci/materialize_unreal_cache_inputs.py'
+      - 'scripts/ci/test_unreal_ci_cache_contract.py'
+      - 'scripts/ci/official_mcp_bob_session.py'
+      - 'scripts/ci/test_official_mcp_bob_session.py'
+      - 'scripts/ue/road_asphalt_slot_canary.py'
+      - 'scripts/ue/test_road_asphalt_slot_canary.py'
+      - 'scripts/ue/road_asphalt_source_preflight.py'
+      - 'scripts/ue/test_road_asphalt_source_preflight.py'
+      - 'scripts/ue/run_road_asphalt_native_canary.py'
+      - 'scripts/ue/test_run_road_asphalt_native_canary.py'
+      - 'scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1'
+      - 'scripts/ue/test_invoke_road_asphalt_native_canary.py'
+      - 'scripts/ue/import_material_forge_variant.py'
+      - 'scripts/ue/road_asphalt_saved_consumer.py'
+      - 'scripts/ue/road_shoulder_window.py'
+      - 'scripts/ue/test_road_shoulder_window.py'
+      - 'scripts/ue/road_shoulder_sources.py'
+      - 'scripts/ue/test_road_shoulder_sources.py'
+      - 'scripts/ue/road_shoulder_network.py'
+      - 'scripts/ue/test_road_shoulder_network.py'
+      - 'scripts/ue/road_material_views.py'
+      - 'scripts/ue/test_road_material_views.py'
+      - 'Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h'
+      - 'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsRoadMaterialInspectionLibrary.cpp'
+      - 'scripts/ue/road_shoulder_material.py'
+      - 'scripts/ue/test_road_shoulder_material.py'
+      - 'scripts/ue/capture_sa_calobra_shoulder_contact.py'
+      - 'scripts/proof/sa_calobra_tpp_survey.py'
+      - 'worldgen/materials/sa_calobra_texture_library_v2_20261005.json'
+      - 'worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.json'
+      - 'scripts/ue/test_road_asphalt_saved_consumer.py'
+      - 'scripts/ue/Invoke-YacsRoadSavedConsumer.ps1'
+      - 'scripts/ue/test_invoke_road_saved_consumer.py'
+      - 'scripts/ue/road_asphalt_gpu_review.py'
+      - 'scripts/ue/test_road_asphalt_gpu_review.py'
+      - 'scripts/ue/test_road_asphalt_gpu_readiness.py'
+      - 'scripts/ue/Invoke-YacsRoadAsphaltRender.ps1'
+      - 'scripts/ue/test_invoke_road_asphalt_render.py'
+      - 'scripts/proof/sa_calobra_shoulder_contact.py'
+      - 'docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv'
+      - 'scripts/assets/road_material_contract.py'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  await_ci:
+    name: Await protected CI for this exact source SHA
+    if: >-
+      github.actor == github.repository_owner &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/364-road-surface-materials'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Require matching successful CyclingSim CI before reserving Windows
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 90); do
+            payload=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${GITHUB_SHA}&event=pull_request&per_page=50")
+            row=$(jq -r --arg sha "$GITHUB_SHA" '
+              [.workflow_runs[] | select(.name == "CyclingSim CI" and .head_sha == $sha)]
+              | sort_by(.created_at) | last
+              | if . == null then "" else "\(.id)|\(.status)|\(.conclusion // "pending")" end
+            ' <<< "$payload")
+            if [[ -n "$row" ]]; then
+              IFS='|' read -r ci_id state conclusion <<< "$row"
+              if [[ "$state" == "completed" ]]; then
+                if [[ "$conclusion" == "success" ]]; then
+                  echo "Protected exact-SHA CI succeeded: run $ci_id at $GITHUB_SHA"
+                  exit 0
+                fi
+                echo "::error::Exact-SHA CI run $ci_id completed with $conclusion; native road proof is blocked."
+                exit 1
+              fi
+              echo "Protected exact-SHA CI $ci_id status=$state (poll $attempt/90)"
+            else
+              echo "Awaiting matching exact-SHA pull_request CI (poll $attempt/90)"
+            fi
+            sleep 20
+          done
+          echo "::error::Timed out awaiting successful exact-SHA protected CI. Do not use stale Unreal cache."
+          exit 1
+
+  baseline:
+    name: Read accepted road materials in a fresh isolated editor
+    needs: await_ci
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    if: >-
+      github.actor == github.repository_owner &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/364-road-surface-materials'
+    runs-on: [self-hosted, yacs-ue58]
+    # Full-network save/reload and the bounded 68-pose (3 priming each) GPU sample.
+    # Host GPU deadline is 1200 s; native total is 1080 s, per-shot watchdog 180 s.
+    # Texture readiness, image quality, pose and conservation gates remain enforced.
+    timeout-minutes: 38
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
+    steps:
+      - name: Isolate Git configuration and enable long paths
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'road-material-native-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths in isolated Git configuration.' }
+
+      - name: Checkout exact code-only native reader
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: rm-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Check reader contract before shared-host work
+        shell: pwsh
+        working-directory: rm-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          $tokens = $null
+          $errors = $null
+          foreach ($script in @(
+            'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1',
+            'scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1',
+            'scripts/ue/Invoke-YacsRoadSavedConsumer.ps1',
+            'scripts/ue/Invoke-YacsRoadAsphaltRender.ps1'
+          )) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Join-Path (Get-Location).Path $script),
+              [ref]$tokens, [ref]$errors
+            ) | Out-Null
+            if ($errors.Count) { throw ($errors.Message -join "`n") }
+          }
+          $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Existing pinned Python is missing.' }
+          & $python -B -m unittest scripts.ue.test_read_road_material_baseline `
+            scripts.ue.test_road_asphalt_source_preflight scripts.ue.test_invoke_road_asphalt_native_canary `
+            scripts.ue.test_run_road_asphalt_native_canary `
+            scripts.ue.test_road_shoulder_sources scripts.ue.test_road_shoulder_network `
+            scripts.ue.test_road_material_views scripts.ue.test_invoke_road_saved_consumer `
+            scripts.ue.test_invoke_road_asphalt_render
+          if ($LASTEXITCODE -ne 0) { throw 'Road baseline/source/network/host contracts failed before native work.' }
+          $proof = Join-Path (Get-Location).Path 'Saved/RuntimeProof/RoadMaterialBaseline/${{ github.run_id }}-${{ github.run_attempt }}'
+          "YACS_ROAD_NATIVE_PROOF=$proof" >> $env:GITHUB_ENV
+
+      - name: Stage verified consumer and read native baseline
+        shell: pwsh
+        working-directory: rm-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
+
+      - name: Run isolated reversible road asphalt canary
+        shell: pwsh
+        working-directory: rm-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
+
+      - name: Save and fresh-reopen the isolated road asphalt consumer
+        shell: pwsh
+        working-directory: rm-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ue/Invoke-YacsRoadSavedConsumer.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
+
+      - name: Capture native road-facing lit GPU review
+        shell: pwsh
+        working-directory: rm-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ue/Invoke-YacsRoadAsphaltRender.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
+
+      - name: Retain native inventory and owned-process evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-material-native-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_NATIVE_PROOF }}/**
+          if-no-files-found: warn
+          retention-days: 14

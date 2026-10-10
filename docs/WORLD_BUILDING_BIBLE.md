@@ -76,8 +76,10 @@ and [delivery order](ROADMAP.md#official-unreal-mcp-adoption-between-materials-a
 
 Owner decision, 2026-10-09: performance measurement is due after assembled M3
 closeout, so it is not the intermediate #363 → #384 → #364 entry gate.
-Whole-area owner visual acceptance, saved/fresh-rendered consumers and protected
-technical/review admission remain required. Record `DEFERRED_AFTER_M3`, not
+Saved/fresh-rendered consumers and protected technical/review admission remain
+required. The 2026-10-10 owner decision places the whole-area owner audit at the
+end of assembled M3, before FPS measurement; see [visual acceptance](#19-visual-acceptance).
+Record `DEFERRED_AFTER_M3`, not
 performance PASS; retain the full-area reference budgets and exact-SHA proof
 for the later benchmark of the actual assembled world.
 
@@ -1106,7 +1108,8 @@ repeat the rider proof on at least:
 Only after neutral geometry is visually accepted should the relevant performance
 proof set thresholds for the chosen representation. Meso cliffs/rocks/retaining,
 materials, vegetation and final weather follow after the ground ownership contract
-is proven.
+is proven. For current M3, inspect and retain neutral-geometry rider evidence;
+the owner's audit and FPS benchmark follow the [2026-10-10 timing](#19-visual-acceptance).
 
 ##### BOB — Builder Of Berms: adaptive terrain policy and verified-case learning
 
@@ -1587,7 +1590,11 @@ transitions and broad views; measure representative traversal and demanding
 views across that full area using the existing performance framework/budgets.
 Keep location-specific evidence. The 500–1000 m Golden Kilometer is an additional
 detailed rider-camera check, not sufficient evidence for whole-Landscape PASS.
-Expand beyond the current Landscape only after its visual/performance gates.
+For current M3, expansion requires technical admission and retained
+saved/fresh-rendered review evidence. The owner's final whole-area audit occurs
+on the complete assembled M3 consumer before the FPS benchmark, under the
+[2026-10-10 decision](#19-visual-acceptance); intermediate rollout requires no
+repeated owner signoff and supplies no visual/performance PASS.
 Heavy measurement remains milestone-driven; frozen geometry and explicit unknowns
 remain binding throughout full-area work.
 
@@ -2430,6 +2437,55 @@ Heavy proof cadence is defined in `CI_VALIDATION_TIERS.md`.
 
 World success is judged from the rider camera.
 
+Owner feedback, 2026-10-10: deliver the complete current road material result,
+using Material Forge for dry, substantially less glossy asphalt with irregular
+aggregate, wear and repair variation, plus gravel shoulders throughout the
+existing network. Internal small checks are implementation details, not repeated
+owner handoffs. The hairpin request concerns realistic banking/crossfall and
+longitudinal profiling, not roadside barriers. Diagnose and correct that geometry
+against admitted road/source evidence through the separate road-geometry scope;
+do not use material variation to conceal it or invent a supposedly real profile.
+
+Current #364 [asphalt/shoulder evidence](evidence/ROAD_SURFACE_MATERIALS_364.md)
+includes a verified asphalt baseline at exact
+`396861de0884135d18006e6d3f133edebef639aa`: protected CI 38078462035 PASS with
+existing build/Automation evidence reused, and native/GPU 38078459124 PASS for
+the saved/freshly reopened road consumer and four final same-camera window 0112
+frames in both directions with full mip warmup. Whole-area appearance remains
+unaccepted. The current shoulder candidate selects only 436 source-owned
+outer top triangle IDs on one window 0112 support for CC0 Poly Haven
+`rock_ground` / `FillGravel` at 150 cm in slot 1; interior tops and walls retain
+their literal original slot 0 material. At `1ef46da`, native before/after,
+rollback, saved/fresh-load and independent manifest checks passed for that
+support's positions/indices and corner normals (zero UV sets). The four real
+frames show aggregate shoulders without visible wall repaint, but repeated
+middle-distance patches and sharp edges remain review notes. The complete
+GPU run now passes with observed exit 0 and independent proof review. Four
+same-camera before/after pairs and selected original receipts are retained in
+the [window 0112 comparison](experiments/sa-calobra-road-shoulder-window0112-20261010/README.md).
+Preserve the accepted #363 consumer, Base_DTM, geometry and
+road physics; the unresolved inner seam remains #459 debt outside this patch.
+Continue rider-height review of both directions, bends, shoulder tops, support
+sides and Landscape transitions, with retained whole-area review images before
+complete technical delivery. Owner audit remains `PENDING_FINAL_M3` and
+performance `DEFERRED_AFTER_M3` / `performance_pass: false`.
+
+**Current M3 owner decision — 2026-10-10:** "zrób to jak najlepiej potrafisz,
+ja zrobię audyt wizualny na końcu m3 przed testem fpsów". For #364 and the
+remaining M3 implementation, the owner audits the complete assembled consumer
+at the end of M3, before #373's FPS benchmark. This supersedes owner visual
+signoff as an intermediate implementation/material/rollout prerequisite.
+Continue native build/Automation/material/asset validation, saved and freshly
+rendered consumer proof, exact-SHA review images, technical review and protected
+CI. Inspect the images and retain defects and unknowns for the final whole-area
+audit, covering the current Landscape and assembled route; a selected Golden
+Kilometer does not substitute for that scope. Intermediate technical completion
+is not owner visual PASS, and performance remains `DEFERRED_AFTER_M3` /
+`performance_pass: false` until actually measured. Preserve the historical
+accepted #363 consumer and its original owner evidence. The delivery order
+remains #372 review evidence → #374 assembly → final owner audit → #373 FPS;
+this records audit timing without changing native issue dependencies.
+
 Reject visible:
 
 - Landscape component/grid structure;
@@ -2560,7 +2616,14 @@ Legacy Stage/R/B identifiers remain searchable historical aliases only.
 
 ## 23. Definition of Done for a world slice
 
-A route slice is acceptable when:
+The criteria below describe final production acceptance. For current M3,
+intermediate technical delivery follows the
+[2026-10-10 owner-audit decision](#19-visual-acceptance): required native and
+saved/fresh-rendered checks and retained review images continue, while the
+owner's audit is at the end of assembled M3 before FPS measurement. An
+intermediate merge does not satisfy the final visual or performance criteria.
+
+A route slice has final production acceptance when:
 
 - canonical route/physics authority is unchanged unless intentionally revised;
 - source provenance is recorded;
@@ -3662,8 +3725,11 @@ behavior, not an implemented solver or passing proof.
 7. **Regeneration and review:** accept the bounded XY/width solution first,
    then regenerate the road height/banking, CUT and 0.5 m shoulders/downward
    support from clean `Base_DTM`. Require fresh exact-SHA plan and rider views,
-   owner visual acceptance and the existing independent surface/support,
-   collision and performance admissions before propagation.
+   inspect them and retain the existing independent surface/support and
+   collision admissions before propagation. For current M3, the owner's visual
+   audit and performance admission follow the [2026-10-10 timing](#19-visual-acceptance);
+   technical propagation does not supply either PASS. Outside that scoped
+   decision, the owner visual and performance admissions remain prerequisites.
 
 The regression case is the owner's red-line/red-arrow review of 183a30e:
 the derived inner boundary accumulated about 90 degrees of turn and then

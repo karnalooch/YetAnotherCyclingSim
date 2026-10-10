@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import unittest
 import shlex
+import shutil
 import subprocess
 import tempfile
 
@@ -16,6 +17,196 @@ PREFLIGHT = ROOT / "scripts" / "ue" / "Preflight-YacsProof.ps1"
 
 
 class UnrealCiCacheContractTests(unittest.TestCase):
+    def test_normalization_is_scoped_to_serial_windows_resolve_before_cache_reuse(self):
+        self.assertIn("$env:GITHUB_WORKFLOW -eq 'CyclingSim CI'", self.cache)
+        self.assertIn("$env:YACS_UNREAL_WORKTREE", self.cache)
+        self.assertIn("scripts.ci.materialize_unreal_cache_inputs", self.cache)
+        self.assertIn("--expected-head $ExpectedHead", self.cache)
+        self.assertIn(
+            "--expected-compile-fingerprint $ExpectedCompileFingerprint", self.cache
+        )
+        self.assertIn(
+            "--expected-proof-fingerprint $ExpectedProofFingerprint", self.cache
+        )
+        self.assertLess(
+            self.cache.index("scripts.ci.materialize_unreal_cache_inputs"),
+            self.cache.index("Resolve-YacsUnrealBuildEnvironment -ProjectPath"),
+        )
+        self.assertNotIn("Materialize canonical LF fingerprint inputs", self.workflow)
+        classifier = (ROOT / "scripts/ci/classify_changes.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('"scripts/ci/materialize_unreal_cache_inputs.py"', classifier)
+
+    def test_road_material_native_reruns_on_cache_reconciliation_change(self):
+        workflow = (
+            ROOT / ".github" / "workflows" / "road-material-native-proof.yml"
+        ).read_text(encoding="utf-8")
+        triggers = workflow.split("permissions:", 1)[0]
+        for path in (
+            "scripts/ci/unreal_ci_workspace.py",
+            "scripts/ci/materialize_unreal_cache_inputs.py",
+            "scripts/ci/Resolve-YacsUnrealCiCache.ps1",
+        ):
+            self.assertIn(f"- '{path}'", triggers)
+        self.assertIn("needs: await_ci", workflow)
+
+    def test_road_material_native_waits_for_exact_head_ci_without_host_lock(self):
+        workflow = (
+            ROOT / ".github" / "workflows" / "road-material-native-proof.yml"
+        ).read_text(encoding="utf-8")
+        hosted = workflow.split("  await_ci:\n", 1)[1].split("  baseline:\n", 1)[0]
+        native = workflow.split("  baseline:\n", 1)[1]
+        self.assertIn("runs-on: ubuntu-latest", hosted)
+        self.assertIn("head_sha=${GITHUB_SHA}&event=pull_request", hosted)
+        self.assertIn('.name == "CyclingSim CI"', hosted)
+        self.assertIn('"$conclusion" == "success"', hosted)
+        self.assertNotIn("yacs-unreal-ci-${{ github.repository }}", hosted)
+        self.assertIn("    needs: await_ci", native)
+        self.assertIn(
+            "    concurrency:\n      group: yacs-unreal-ci-${{ github.repository }}",
+            native,
+        )
+
+    def test_native_stager_shortens_only_its_isolated_checkout_for_deep_lfs(self):
+        stage_workflow = (
+            ROOT / ".github" / "workflows" / "road-material-native-proof.yml"
+        ).read_text(encoding="utf-8")
+        host_script = (
+            ROOT / "scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1"
+        ).read_text(encoding="utf-8")
+        short_name = "rm-${{ github.run_id }}-${{ github.run_attempt }}"
+        self.assertIn("          path: " + short_name, stage_workflow)
+        self.assertGreaterEqual(
+            stage_workflow.count("working-directory: " + short_name), 3
+        )
+        self.assertEqual(
+            stage_workflow.count("working-directory: " + short_name),
+            stage_workflow.count("working-directory:"),
+        )
+        self.assertIn("('rm-' + $RunToken)", host_script)
+        self.assertNotIn(
+            "_road-material-native-${{ github.run_id }}",
+            stage_workflow,
+        )
+        base = PureWindowsPath(
+            r"D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim"
+        )
+        deepest_asset = PureWindowsPath(
+            "Content/Generated/YACS/TextureMaterialPrep/Libraries/"
+            "3d53743e48394f31beb35e4030dc8a87/LimestonePalette/"
+            "1b3d9c45b1e24d6085bfcc8859390c19/"
+            "M_SC_Limestone_ExposedRock.uasset"
+        )
+        self.assertGreaterEqual(
+            len(str(base / "_road-material-native-38058683514-1" / deepest_asset)),
+            260,
+        )
+        self.assertLess(len(str(base / "rm-38058683514-1" / deepest_asset)), 260)
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 required")
+    def test_editor_redirected_log_read_retries_only_transient_windows_locks(self):
+        wrapper = ROOT / "scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1"
+        fixture = r"""
+param([string] $Wrapper)
+$ErrorActionPreference = 'Stop'
+$tokens = $null
+$errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile(
+    $Wrapper, [ref] $tokens, [ref] $errors
+)
+if ($errors.Count) { throw 'Cannot parse the real native wrapper.' }
+$definitions = @($ast.FindAll({
+    param($node)
+    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+        $node.Name -eq 'Get-BaselineClosedEditorLogIdentity'
+}, $true))
+if ($definitions.Count -ne 1) { throw 'Expected one actual retry helper.' }
+Invoke-Expression $definitions[0].Extent.Text
+$script:calls = 0
+$script:sleeps = 0
+function Start-Sleep {
+    param([int] $Milliseconds)
+    if ($Milliseconds -ne 250) { throw 'Wrong bounded retry interval.' }
+    $script:sleeps++
+}
+function Get-BaselineIdentity {
+    param([string] $Path, [long] $Limit, [switch] $AllowEmpty)
+    if ($Path -ne 'fixture.log' -or $Limit -ne 64MB -or -not $AllowEmpty) {
+        throw 'Changed log identity or bound.'
+    }
+    $script:calls++
+    if ($script:calls -le 2) {
+        throw [IO.IOException]::new('SYNTHETIC sharing violation', -2147024864)
+    }
+    return @{ path=$Path; size_bytes=0; sha256='synthetic' }
+}
+$result = Get-BaselineClosedEditorLogIdentity 'fixture.log'
+if ($result.sha256 -ne 'synthetic' -or $script:calls -ne 3 -or
+    $script:sleeps -ne 2) { throw 'Transient sharing lock was not retried.' }
+$script:calls = 0
+$script:sleeps = 0
+function Get-BaselineIdentity {
+    param([string] $Path, [long] $Limit, [switch] $AllowEmpty)
+    $script:calls++
+    throw [IO.IOException]::new('SYNTHETIC missing file', -2147024894)
+}
+$failed = $false
+try { $null = Get-BaselineClosedEditorLogIdentity 'fixture.log' }
+catch { $failed = $true }
+if (-not $failed -or $script:calls -ne 1 -or $script:sleeps -ne 0) {
+    throw 'Unrelated I/O failure must fail immediately.'
+}
+$script:calls = 0
+$script:sleeps = 0
+function Get-BaselineIdentity {
+    param([string] $Path, [long] $Limit, [switch] $AllowEmpty)
+    $script:calls++
+    throw [IO.IOException]::new('SYNTHETIC persistent lock', -2147024864)
+}
+$failed = $false
+try { $null = Get-BaselineClosedEditorLogIdentity 'fixture.log' }
+catch { $failed = $true }
+if (-not $failed -or $script:calls -ne 40 -or $script:sleeps -ne 39) {
+    throw 'Persistent lock must fail closed after forty attempts.'
+}
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test_editor_log_retry.ps1"
+            path.write_text(fixture, encoding="utf-8")
+            subprocess.run(
+                ["pwsh", "-NoProfile", "-File", str(path), str(wrapper)],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+
+    def test_asphalt_host_wrapper_must_have_exact_lf_windows_checkout(self):
+        attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
+        self.assertIn(
+            "scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1 text eol=lf",
+            attributes,
+        )
+
+    def test_native_road_reader_requires_retained_byte_pinned_automation_proof(self):
+        reader = (ROOT / "scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("proof-summary-' + $s.ProofSummarySha256", reader)
+        self.assertIn("$summary.identity.sha256 -cne $s.ProofSummarySha256", reader)
+        self.assertIn(
+            "$summary.identity.size_bytes -ne $s.ProofSummarySizeBytes", reader
+        )
+        self.assertNotIn(
+            "Join-Path $cacheRoot 'Saved/RuntimeProof/CI/Unreal/unreal_ci_summary.json'",
+            reader,
+        )
+        self.assertIn("ProofSummarySha256 = $SummarySha256", self.cache)
+        self.assertIn("ProofSummarySizeBytes = $SummaryBytes.Length", self.cache)
+        self.assertIn("retained-proof-summary-unavailable", self.cache)
+        self.assertIn("-e '/Saved/BuildCache/UnrealCi/'", self.workflow)
+
     @classmethod
     def setUpClass(cls):
         cls.workflow = WORKFLOW.read_text(encoding="utf-8")

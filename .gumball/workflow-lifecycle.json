@@ -17,6 +17,11 @@
   },
   "workflows": [
     {
+      "file": "level-editor-review.yml",
+      "state": "CURRENT",
+      "reason": "Issue #364 owner-selected Stream Level Editor review. Owner-only fixed branch and explicit launch marker/manual intent, shared non-cancelling host lane, verified independent saved-scene copy, stock inspected PixelStreaming2, exact runtime/launcher labels and bounded receiving-browser proof. Hands one isolated Editor to the owner; no build, source-world mutation, public tunnel, firewall change, visual acceptance or performance admission."
+    },
+    {
       "file": "official-unreal-mcp-native-probe.yml",
       "state": "CURRENT",
       "reason": "Issue #384 owner-only branch-scoped opt-in BOB plugin BuildPlugin compilation. Isolated code-only checkout, canonical exact engine, idle shared host and serial host lane; no Editor/MCP launch, live project changes or native/transport/admission claims from a compile result."
@@ -24,7 +29,17 @@
     {
       "file": "official-unreal-mcp-source-probe.yml",
       "state": "CURRENT",
-      "reason": "Issue #384 owner-only branch-scoped read-only installed UE 5.8.2 official MCP/registry/test declaration inventory. Isolated code-only checkout, serial shared host lane, no build/editor launch/plugin activation or persistent world mutation; source metadata is not MCP guard parity or adoption admission."
+      "reason": "Issues #384/#364 owner-only branch-scoped read-only installed UE 5.8.2 official MCP/registry/test, material and Level Editor streaming declaration inventory. Explicit focus selection preserves existing inspections. Fresh code-only checkout, isolated long-path Git configuration and serial shared host lane; no build/editor launch/plugin activation or persistent world mutation. Source metadata is not runtime schemas, a working stream, material authoring or MCP admission."
+    },
+    {
+      "file": "road-material-source-proof.yml",
+      "state": "CURRENT",
+      "reason": "Issue #364 owner-only bounded replay of the current asphalt base through existing pinned Material Forge tools. Verifies tool archives and source contract, compares graph and five maps across two native renders, preserves persistent source evidence and yields to host ownership. No Unreal/MCP launch, tool provisioning, world mutation, visual acceptance or performance admission."
+    },
+    {
+      "file": "road-material-native-proof.yml",
+      "state": "CURRENT",
+      "reason": "Issue #364 owner-only read-only material inventory in a fresh isolated UE process. Reuses the accepted-consumer stager and existing compile/environment cache resolver, yields to shared-host ownership, preserves saved asset bytes, and retains native bindings, projection function inputs and query documentation. No build, MCP activation, material authoring, geometry mutation, map save, rendered appearance or performance admission."
     },
     {
       "file": "blender-material-forge-reference.yml",

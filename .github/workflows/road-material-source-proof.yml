@@ -1,0 +1,125 @@
+name: Road material source proof
+
+on:
+  push:
+    branches: [codex/364-road-surface-materials]
+    paths:
+      - '.github/workflows/road-material-source-proof.yml'
+      - 'scripts/assets/run_road_asphalt_source_proof.py'
+      - 'scripts/assets/test_run_road_asphalt_source_proof.py'
+      - 'scripts/assets/road_material_contract.py'
+      - 'scripts/assets/test_road_material_contract.py'
+      - 'scripts/assets/material_forge.py'
+      - 'scripts/assets/test_material_forge.py'
+      - 'worldgen/materials/material_forge/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-unreal-ci-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  asphalt:
+    name: Authenticate and replay only dry_varied asphalt
+    if: >-
+      github.actor == github.repository_owner &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/364-road-surface-materials'
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 15
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
+    steps:
+      - name: Isolate Git configuration and enable long paths
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'road-material-source-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths in isolated Git configuration.' }
+
+      - name: Checkout exact code-only source proof
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Verify checkout and idle shared render host
+        shell: pwsh
+        working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) {
+            throw 'Road source checkout differs from the event SHA.'
+          }
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          if ($state.status -cne 'IDLE') {
+            throw "Road source render yields to existing host ownership: $($state.status)."
+          }
+          $godot = @(Get-Process -Name 'Godot*' -ErrorAction SilentlyContinue)
+          if ($godot.Count) { throw 'Road source render yields to an existing Godot process.' }
+          $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python -PathType Leaf)) {
+            throw 'Pinned Material Forge Python environment is missing.'
+          }
+          & $python -c "import sys, numpy, PIL; print('ROAD_SOURCE_PYTHON ' + sys.version); assert numpy.__version__ == '2.3.5' and PIL.__version__ == '12.3.0'"
+          if ($LASTEXITCODE -ne 0) { throw 'Existing Material Forge Python versions differ from the admitted pins.' }
+          "YACS_ROAD_FORGE_PY=$python" >> $env:GITHUB_ENV
+          $proof = & $python -c "import os; from pathlib import Path; from scripts.manage_local_workspace import load_workspace; print(Path(load_workspace()['work']) / 'material-forge/road-asphalt' / os.environ['GITHUB_SHA'] / (os.environ['GITHUB_RUN_ID'] + '-' + os.environ['GITHUB_RUN_ATTEMPT']))"
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the persistent road source proof path.' }
+          "YACS_ROAD_ASPHALT_PROOF=$proof" >> $env:GITHUB_ENV
+
+      - name: Check source contract and render dry_varied twice
+        shell: pwsh
+        working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & $env:YACS_ROAD_FORGE_PY -m unittest scripts.assets.test_material_forge scripts.assets.test_road_material_contract scripts.assets.test_run_road_asphalt_source_proof
+          if ($LASTEXITCODE -ne 0) { throw 'Road material source contract tests failed.' }
+          & $env:YACS_ROAD_FORGE_PY scripts/assets/run_road_asphalt_source_proof.py `
+            --expected-head $env:GITHUB_SHA --run $env:GITHUB_RUN_ID --attempt $env:GITHUB_RUN_ATTEMPT
+          if ($LASTEXITCODE -ne 0) { throw 'Current dry_varied asphalt source proof failed.' }
+          if (-not (Test-Path -LiteralPath (Join-Path $env:YACS_ROAD_ASPHALT_PROOF 'source-proof.json') -PathType Leaf)) {
+            throw 'Persistent road asphalt source receipt is missing.'
+          }
+
+      - name: Retain asphalt determinism receipt and render logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-asphalt-receipt-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.YACS_ROAD_ASPHALT_PROOF }}/source-proof.json
+            ${{ env.YACS_ROAD_ASPHALT_PROOF }}/*.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain first complete asphalt source bundle
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-asphalt-run-a-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_ASPHALT_PROOF }}/run-a/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain second complete asphalt source bundle
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-asphalt-run-b-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_ASPHALT_PROOF }}/run-b/**
+          if-no-files-found: warn
+          retention-days: 14

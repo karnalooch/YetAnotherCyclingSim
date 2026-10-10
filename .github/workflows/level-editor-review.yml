@@ -1,0 +1,88 @@
+name: M3 Level Editor review
+
+on:
+  push:
+    branches: [codex/364-road-surface-materials]
+    paths:
+      - '.github/workflows/level-editor-review.yml'
+      - 'scripts/ue/Start-YacsLevelEditorStream.ps1'
+      - 'scripts/ue/prepare_level_editor_review.py'
+      - 'scripts/ue/bootstrap_level_editor_stream.py'
+      - 'scripts/ue/Test-YacsLevelEditorStreamClient.ps1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-unreal-ci-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  review:
+    name: Open retained road viewport for owner review
+    if: >-
+      github.actor == github.repository_owner &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/364-road-surface-materials' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.head_commit.message, '[level-editor-review]'))
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 12
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      TARGET_SHA: ${{ github.sha }}
+      YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
+    steps:
+      - name: Isolate Git configuration and enable long paths
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'level-editor-review-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths in isolated Git configuration.' }
+
+      - name: Checkout exact code-only review launcher
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.TARGET_SHA }}
+          path: _level-editor-review-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Prepare saved scene and hand off the viewport stream
+        shell: pwsh
+        working-directory: _level-editor-review-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          foreach ($script in @('scripts/ue/Start-YacsLevelEditorStream.ps1', 'scripts/ue/Test-YacsLevelEditorStreamClient.ps1')) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path -LiteralPath $script), [ref]$tokens, [ref]$errors
+            ) | Out-Null
+            if ($errors.Count -gt 0) { throw ($errors.Message -join '; ') }
+          }
+          ./scripts/ue/Start-YacsLevelEditorStream.ps1 `
+            -ExpectedHead $env:TARGET_SHA `
+            -SessionToken '${{ github.run_id }}-${{ github.run_attempt }}'
+
+      - name: Retain scene, host and receiving-client evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: level-editor-review-${{ env.TARGET_SHA }}-${{ github.run_attempt }}
+          path: |
+            _level-editor-review-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/LevelEditorStream/**/*.json
+            _level-editor-review-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/LevelEditorStream/**/*.log
+            _level-editor-review-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/LevelEditorStream/**/*.png
+            !_level-editor-review-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/LevelEditorStream/**/edge-profile/**
+          if-no-files-found: warn
+          retention-days: 7

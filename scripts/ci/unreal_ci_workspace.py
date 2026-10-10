@@ -7,6 +7,7 @@ Resolve-YacsUnrealCiCache.ps1 remains the provenance and environment authority.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -21,6 +22,8 @@ from scripts.ci.retain_unreal_assets import digest, retain
 WARM = "_unreal-ci-warm"
 POINTER = "_yacs-unreal-ci/active.json"
 STATE = "Saved/BuildCache/UnrealCi/state.json"
+RETAINED_SUMMARY_DIR = "Saved/BuildCache/UnrealCi"
+MAX_AUTOMATION_SUMMARY_BYTES = 2 * 1024 * 1024
 BINARY_NAMES = (
     "UnrealEditor-YetAnotherCyclingSim.dll",
     "UnrealEditor-YetAnotherCyclingSimEditor.dll",
@@ -51,6 +54,40 @@ def read_state(root: Path) -> dict:
     return value
 
 
+def verify_retained_summary(root: Path, state: dict) -> dict:
+    """Authenticate only the original successful Automation bytes retained by Record."""
+    pin = state.get("ProofSummarySha256")
+    size = state.get("ProofSummarySizeBytes")
+    if (
+        not isinstance(pin, str)
+        or re.fullmatch(r"[0-9a-f]{64}", pin) is None
+        or type(size) is not int
+        or not (0 < size <= MAX_AUTOMATION_SUMMARY_BYTES)
+    ):
+        raise ValueError("Unreal verified cache has no pinned Automation summary")
+    path = root / RETAINED_SUMMARY_DIR / f"proof-summary-{pin}.json"
+    if path.is_symlink() or getattr(path, "is_junction", lambda: False)():
+        raise ValueError("Unreal retained Automation summary is linked")
+    if path.stat().st_size != size:
+        raise ValueError("Unreal retained Automation summary size mismatch")
+    blob = path.read_bytes()
+    if len(blob) != size or hashlib.sha256(blob).hexdigest() != pin:
+        raise ValueError("Unreal retained Automation summary digest mismatch")
+    summary = json.loads(blob.decode("utf-8-sig"))
+    if not isinstance(summary, dict) or any(
+        summary.get(field) != state["ProofHead"] for field in ("Head", "ExpectedHead")
+    ):
+        raise ValueError("Unreal retained Automation summary HEAD mismatch")
+    if (
+        summary.get("Failed") != 0
+        or summary.get("Errors") != 0
+        or type(summary.get("Discovered")) is not int
+        or summary["Discovered"] <= 0
+    ):
+        raise ValueError("Unreal retained Automation summary is not green")
+    return summary
+
+
 def verified(root: Path) -> dict:
     state = read_state(root)
     if state.get("SchemaVersion") != 3 or any(
@@ -78,6 +115,7 @@ def verified(root: Path) -> dict:
         not (root / "Binaries/Win64" / name).is_file() for name in BINARY_NAMES
     ):
         raise ValueError("Verified Unreal worktree or binaries missing")
+    verify_retained_summary(root, state)
     return state
 
 
@@ -162,6 +200,40 @@ def publish(
     if summary["Failed"] != 0 or summary["Errors"] != 0 or summary["Discovered"] <= 0:
         raise ValueError("Unreal publication requires green Automation")
     write_pointer(workspace, name)
+
+
+def has_untrusted_source_checkout(root: Path) -> bool:
+    """Treat noncanonical raw Git bytes as a reason for fresh build isolation.
+
+    The active cache pointer and all original binaries/assets remain untouched.
+    This function is a read-only selector, never a replacement for the normal
+    exact-SHA environment/binary/proof resolver.
+    """
+    if not (root / ".git").exists():
+        return False
+    try:
+        from scripts.ci import materialize_unreal_cache_inputs as source
+
+        if source.git(root, "diff", "--name-only", "-z", "HEAD"):
+            print("UNREAL WORKSPACE: active source checkout has tracked differences")
+            return True
+        drift = source.raw_fingerprint_source_drift(root)
+        if drift is not None:
+            print("UNREAL WORKSPACE: physical Git source differs: " + drift)
+            return True
+    except (
+        OSError,
+        ValueError,
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        UnicodeError,
+    ) as error:
+        print(
+            "UNREAL WORKSPACE: source identity unavailable; preserve active cache: "
+            + type(error).__name__
+        )
+        return True
+    return False
 
 
 def has_unwritable_binary(root: Path) -> bool:
@@ -406,14 +478,20 @@ def main() -> None:
         active = select(workspace, fallback=fallback)
         root = safe_path(workspace, active)
         preserve_locked_cache = has_unwritable_binary(root)
-        if preserve_locked_cache:
-            # Do not rewrite the verified pointer or copy stale absolute-path
-            # build outputs. Publish this fresh worktree only after real proof.
+        preserve_source_cache = (
+            not preserve_locked_cache and has_untrusted_source_checkout(root)
+        )
+        preserve_cache = preserve_locked_cache or preserve_source_cache
+        if preserve_cache:
+            # Never rewrite the active pointer, old Git checkout, binaries or
+            # absolute-path build products. Use a new isolated source + build
+            # only; it becomes active after exact-head build/Automation PASS.
             active = fallback
             root = safe_path(workspace, active)
             if root.exists():
                 raise ValueError("Fresh Unreal build destination already exists")
-            print(f"UNREAL WORKSPACE: locked cache retained; fresh build={active}")
+            reason = "locked binary" if preserve_locked_cache else "stale source bytes"
+            print(f"UNREAL WORKSPACE: {reason}; retained active, fresh={active}")
         if (root / ".git").exists():
             # actions/checkout itself can replace tracked assets before the
             # later sanitization step; retain bytes before entering it.
@@ -422,7 +500,7 @@ def main() -> None:
             )
         standalone(root)
         prepare_checkout_directory(workspace, active, args.run)
-        if not preserve_locked_cache:
+        if not preserve_cache:
             cleanup(workspace, active, args.run)
         with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as stream:
             stream.write(f"YACS_UNREAL_WORKTREE={active}\n")

@@ -1,0 +1,19 @@
+{
+  "derived_map_sha256": "35d485005f123e5648f675d6f91209630c163bddf92d55f6c5b640d55917732d",
+  "evidence_manifest": {
+    "file": "road-asphalt-saved-manifest.json",
+    "sha256": "ccd13145400c756e5d27efd332f84fe87001a8e1e4fe00e08df00997310e5cbd",
+    "size_bytes": 22701
+  },
+  "exact_sha": "1ef46dacedba5ed1fc909422529be41808d3dbe4",
+  "fresh_reload_verified": false,
+  "manifest": {
+    "sha256": "ccd13145400c756e5d27efd332f84fe87001a8e1e4fe00e08df00997310e5cbd",
+    "size_bytes": 22701
+  },
+  "material_saved": true,
+  "new_world_only": true,
+  "performance_pass": false,
+  "retained_root": "D:\\yacs\\work\\road-materials\\saved-consumers\\1ef46dacedba5ed1fc909422529be41808d3dbe4\\38084733503-1",
+  "status": "ROAD_ASPHALT_SAVED_PREPARED"
+}

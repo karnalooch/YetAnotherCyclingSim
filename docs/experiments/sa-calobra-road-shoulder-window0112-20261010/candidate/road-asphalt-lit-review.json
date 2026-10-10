@@ -1,0 +1,294 @@
+{
+  "camera_csv_sha256": "15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3",
+  "capture_readiness_verified": true,
+  "completed_priming_frames": 12,
+  "errors": [],
+  "exact_sha": "1ef46dacedba5ed1fc909422529be41808d3dbe4",
+  "expected_frame_count": 4,
+  "frame_count": 4,
+  "frames": [
+    {
+      "camera_location_cm": [
+        56912.43746055451,
+        53090.5078449409,
+        46766.459277036185
+      ],
+      "capture_readiness": {
+        "height_mip_lease_requested": true,
+        "height_receipt": {
+          "sha256": "ba93d4a1647dada117dd5181df38b29d9d5dd25dd50be6c722580bcff6b445b8",
+          "size_bytes": 291401
+        },
+        "material_receipt": {
+          "sha256": "9a6795a4582dc463611bd94296aea4ead9bba14202841b00ad5580a2cd33fb7b",
+          "size_bytes": 4984
+        },
+        "material_texture_count": 7,
+        "status": "NATIVE_LOADING_AND_MIPS_READY",
+        "viewport_primed_at_rider_camera": true
+      },
+      "channels": 4,
+      "direction": "forward",
+      "file": "road-asphalt-lit-review/frames/window-0112-forward-00001.png",
+      "fov_deg": 76.0,
+      "frame_id": "window-0112-forward-00001",
+      "height": 720,
+      "priming_frames": [
+        {
+          "file": "road-asphalt-lit-review/priming/window-0112-forward-00001-00.png",
+          "sha256": "1b9c9507a76b1230507e95dec477c28aa9b2685b0c6d6cc8abcdfe34e29bff74",
+          "size_bytes": 1347481
+        },
+        {
+          "file": "road-asphalt-lit-review/priming/window-0112-forward-00001-01.png",
+          "sha256": "9a904b31b3d501a8b84e2bd078a4aee1e7eddd6ca9cb98ec5aef694cb2009e4c",
+          "size_bytes": 1539859
+        },
+        {
+          "file": "road-asphalt-lit-review/priming/window-0112-forward-00001-02.png",
+          "sha256": "e9c3b29f73ee3f4911db7a8e14048209a3ed3f8f0262b33addbe96cc38c24e42",
+          "size_bytes": 1537195
+        }
+      ],
+      "render_mode": "lit",
+      "road_pixels_isolated": false,
+      "road_position_cm": [
+        57364.86009754567,
+        52879.776746856,
+        46516.356754917586
+      ],
+      "sha256": "fea559955680a17621f9a0713fddbfebf03003ab69f62d5c992bce6d2801d891",
+      "size_bytes": 1536643,
+      "station_m": 17.766589862030518,
+      "target_cm": [
+        58088.73631673153,
+        52542.60698992016,
+        46508.19271952782
+      ],
+      "unique_sampled_rgb": 1614,
+      "visual_quality_reviewed": false,
+      "width": 1280
+    },
+    {
+      "camera_location_cm": [
+        58520.05450440308,
+        52341.70600329629,
+        46659.7797300969
+      ],
+      "capture_readiness": {
+        "height_mip_lease_requested": true,
+        "height_receipt": {
+          "sha256": "c07b27112ea0dc8431b341e9167390dd3438693752ec529147213cbdbb352a0d",
+          "size_bytes": 292361
+        },
+        "material_receipt": {
+          "sha256": "9a6795a4582dc463611bd94296aea4ead9bba14202841b00ad5580a2cd33fb7b",
+          "size_bytes": 4984
+        },
+        "material_texture_count": 7,
+        "status": "NATIVE_LOADING_AND_MIPS_READY",
+        "viewport_primed_at_rider_camera": true
+      },
+      "channels": 4,
+      "direction": "forward",
+      "file": "road-asphalt-lit-review/frames/window-0112-forward-00002.png",
+      "fov_deg": 76.0,
+      "frame_id": "window-0112-forward-00002",
+      "height": 720,
+      "priming_frames": [
+        {
+          "file": "road-asphalt-lit-review/priming/window-0112-forward-00002-00.png",
+          "sha256": "d86c88b292f2c22a93923c6d4bb800b2b542d4a352f873ca9016efc5331a4a78",
+          "size_bytes": 1560819
+        },
+        {
+          "file": "road-asphalt-lit-review/priming/window-0112-forward-00002-01.png",
+          "sha256": "7ef76dbdfeb6a66c040c62279f4216bbfa8611887cdeb8b5d72f387aa1d949f1",
+          "size_bytes": 1561501
+        },
+        {
+          "file": "road-asphalt-lit-review/priming/window-0112-forward-00002-02.png",
+          "sha256": "e543a1280eef5bfcbb35b80c78190d8c090149a32f27eebd1874328225dc62c0",
+          "size_bytes": 1561682
+        }
+      ],
+      "render_mode": "lit",
+      "road_pixels_isolated": false,
+      "road_position_cm": [
+        58972.43407088867,
+        52130.994966778686,
+        46408.89952744225
+      ],
+      "sha256": "4181e753fd2e4ce36351dc2982fff5e569b8d467bc32d3426d4e1ad9eab99c25",
+      "size_bytes": 1562041,
+      "station_m": 35.533179724061036,
+      "target_cm": [
+        59696.2413772656,
+        51793.857308350525,
+        46399.49120319479
+      ],
+      "unique_sampled_rgb": 1679,
+      "visual_quality_reviewed": false,
+      "width": 1280
+    },
+    {
+      "camera_location_cm": [
+        59424.813637374245,
+        51920.28393026109,
+        46598.01932478759
+      ],
+      "capture_readiness": {
+        "height_mip_lease_requested": true,
+        "height_receipt": {
+          "sha256": "99e24396a964133598765d2bb2e7221b70881df84973bc01553b78d4b7e65798",
+          "size_bytes": 292361
+        },
+        "material_receipt": {
+          "sha256": "9a6795a4582dc463611bd94296aea4ead9bba14202841b00ad5580a2cd33fb7b",
+          "size_bytes": 4984
+        },
+        "material_texture_count": 7,
+        "status": "NATIVE_LOADING_AND_MIPS_READY",
+        "viewport_primed_at_rider_camera": true
+      },
+      "channels": 4,
+      "direction": "reverse",
+      "file": "road-asphalt-lit-review/frames/window-0112-reverse-00001.png",
+      "fov_deg": 76.0,
+      "frame_id": "window-0112-reverse-00001",
+      "height": 720,
+      "priming_frames": [
+        {
+          "file": "road-asphalt-lit-review/priming/window-0112-reverse-00001-00.png",
+          "sha256": "b4fd448eca37fa9655e58322a88dcc6bfed7978bc874325ce29c4698a8727e1b",
+          "size_bytes": 1325456
+        },
+        {
+          "file": "road-asphalt-lit-review/priming/window-0112-reverse-00001-01.png",
+          "sha256": "354f14df8b17bad39e86300d75f34641abf3e35480d440e21a909fa644bde681",
+          "size_bytes": 1325370
+        },
+        {
+          "file": "road-asphalt-lit-review/priming/window-0112-reverse-00001-02.png",
+          "sha256": "bd28b0ec88e99ce08594a86a36621d53cd78c170bb9f9f578fb52c4386b08870",
+          "size_bytes": 1323879
+        }
+      ],
+      "render_mode": "lit",
+      "road_pixels_isolated": false,
+      "road_position_cm": [
+        58972.43407088867,
+        52130.994966778686,
+        46408.89952744225
+      ],
+      "sha256": "b528f3733bcb5befcdefc6189adcf7d06f3e1b489f5591a4830746cce322c9b9",
+      "size_bytes": 1324130,
+      "station_m": 35.533179724061036,
+      "target_cm": [
+        58248.62676451173,
+        52468.132625206854,
+        46498.30785168969
+      ],
+      "unique_sampled_rgb": 1796,
+      "visual_quality_reviewed": false,
+      "width": 1280
+    },
+    {
+      "camera_location_cm": [
+        57817.282734536835,
+        52669.0456487711,
+        46706.25423279898
+      ],
+      "capture_readiness": {
+        "height_mip_lease_requested": true,
+        "height_receipt": {
+          "sha256": "99e24396a964133598765d2bb2e7221b70881df84973bc01553b78d4b7e65798",
+          "size_bytes": 292361
+        },
+        "material_receipt": {
+          "sha256": "9a6795a4582dc463611bd94296aea4ead9bba14202841b00ad5580a2cd33fb7b",
+          "size_bytes": 4984
+        },
+        "material_texture_count": 7,
+        "status": "NATIVE_LOADING_AND_MIPS_READY",
+        "viewport_primed_at_rider_camera": true
+      },
+      "channels": 4,
+      "direction": "reverse",
+      "file": "road-asphalt-lit-review/frames/window-0112-reverse-00002.png",
+      "fov_deg": 76.0,
+      "frame_id": "window-0112-reverse-00002",
+      "height": 720,
+      "priming_frames": [
+        {
+          "file": "road-asphalt-lit-review/priming/window-0112-reverse-00002-00.png",
+          "sha256": "cb86a69d8e775ecd99739847e3b864555833a8c0ab4333c4776204eadd5adc1c",
+          "size_bytes": 1306512
+        },
+        {
+          "file": "road-asphalt-lit-review/priming/window-0112-reverse-00002-01.png",
+          "sha256": "9a478b1370a49045c5b7a5cf751cb7d4179928eff7bfcbb8d52162b0d03cb005",
+          "size_bytes": 1306649
+        },
+        {
+          "file": "road-asphalt-lit-review/priming/window-0112-reverse-00002-02.png",
+          "sha256": "9b904b9a284a66f7b098c40cc2bc7892e451485a4c3659079def040eaa96baf3",
+          "size_bytes": 1305770
+        }
+      ],
+      "render_mode": "lit",
+      "road_pixels_isolated": false,
+      "road_position_cm": [
+        57364.86009754567,
+        52879.776746856,
+        46516.356754917586
+      ],
+      "sha256": "480c8bc697fb3367174036116ded0d54b1666cc0962282fe19f7a6c6849c10c4",
+      "size_bytes": 1306295,
+      "station_m": 17.766589862030518,
+      "target_cm": [
+        56640.98387835982,
+        53216.946503791834,
+        46604.52079030735
+      ],
+      "unique_sampled_rgb": 1745,
+      "visual_quality_reviewed": false,
+      "width": 1280
+    }
+  ],
+  "gpu_shader_compilation_admitted": false,
+  "gpu_shutdown_quiescence_seconds": 10.0,
+  "issue": 364,
+  "map_package": "/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview",
+  "native_lit_frames_retained": true,
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_pass": false,
+  "performance_status": "DEFERRED_AFTER_M3",
+  "priming_frames_per_pose": 3,
+  "residency_requests_released": true,
+  "road_pixel_visibility_admitted": false,
+  "run_token": "38084733503-1",
+  "saved_manifest_sha256": "ccd13145400c756e5d27efd332f84fe87001a8e1e4fe00e08df00997310e5cbd",
+  "schema_version": 1,
+  "shoulder_wall_materials_admitted": false,
+  "sources_and_saved_assets_unchanged": true,
+  "status": "ROAD_ASPHALT_LIT_REVIEW_FRAMES_RETAINED",
+  "terrain_geometry_repaired": false,
+  "transient_camera_destroyed": true,
+  "transient_dirty_package_audit": {
+    "derived_map_dirty_in_memory": true,
+    "dirty_content_count": 0,
+    "dirty_derived_package_saved": false,
+    "dirty_map_paths": [
+      "/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview"
+    ],
+    "geometry_or_material_changes_admitted": false,
+    "no_original_or_content_package_dirty": true
+  },
+  "view_authority": "accepted_bidirectional_tpp_source_camera",
+  "whole_area_visual_admitted": false,
+  "window": "0112",
+  "window0112_selected_triangle_count": 436,
+  "window0112_shoulder_material_ids_verified": true,
+  "window0112_wall_material_unchanged": true
+}

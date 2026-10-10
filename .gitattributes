@@ -1,5 +1,7 @@
 # Normalize text files across operating systems
 * text=auto
+# The attributes contract is itself part of Unreal proof identity.
+.gitattributes text eol=lf
 *.py text eol=lf
 *.md text eol=lf
 *.toml text eol=lf
@@ -10,6 +12,23 @@
 *.uproject text eol=lf
 *.uplugin text eol=lf
 *.ini text eol=lf
+
+# The existing Unreal cache fingerprints raw checked-out C# and proof-script
+# bytes. Pin LF for exactly those inputs on Windows as well as on Linux.
+# Do not relax the cache's exact physical-byte/fingerprint comparison.
+*.cs text eol=lf
+scripts/ci/Invoke-YacsUnrealCi.ps1 text eol=lf
+scripts/ci/Resolve-YacsUnrealBuildEnvironment.ps1 text eol=lf
+scripts/ue/Invoke-YacsProof.ps1 text eol=lf
+scripts/ue/Preflight-YacsProof.ps1 text eol=lf
+scripts/ci/Resolve-YacsUnrealEngine.ps1 text eol=lf
+scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1 text eol=lf
+scripts/ci/Resolve-YacsUnrealCiCache.ps1 text eol=lf
+scripts/ci/Test-YacsCodeOnlyCheckout.ps1 text eol=lf
+scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1 text eol=lf
+scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1 text eol=lf
+scripts/ue/Invoke-YacsRoadSavedConsumer.ps1 text eol=lf
+scripts/ue/Invoke-YacsRoadAsphaltRender.ps1 text eol=lf
 
 # Unreal Engine and source media binary assets
 *.uasset filter=lfs diff=lfs merge=lfs -text
@@ -40,6 +59,8 @@ Plugins/YacsBobInspection/Source/YacsBobInspection/YacsBobInspection.Build.cs te
 # The fixed native-session caller participates in exact source-byte admission.
 scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1 text eol=lf
 worldgen/materials/*.json text eol=lf
+# Shoulder source ownership reads this recipe with an exact raw Git-byte guard.
+worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.json text eol=lf
 # Retain exact rendered graph bytes and recognize their Windows line endings.
 worldgen/materials/material_maker/**/*.ptex -text whitespace=cr-at-eol
 worldgen/materials/material_maker/**/export/*.png filter=lfs diff=lfs merge=lfs -text

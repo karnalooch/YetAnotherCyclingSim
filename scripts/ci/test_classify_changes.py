@@ -8,6 +8,32 @@ import classify_changes as cc
 
 
 class ChangeClassifierTests(unittest.TestCase):
+    def test_cache_checkout_repair_requires_unreal_runtime_proof(self):
+        result = cc.classify_paths(["scripts/ci/materialize_unreal_cache_inputs.py"])
+        self.assertTrue(result.ue_code)
+        self.assertTrue(result.unreal_runtime)
+        self.assertFalse(result.unreal_compile)
+        self.assertEqual(result.unreal_execution_class, "runtime")
+
+    def test_gitattributes_policy_change_requires_unreal_reproof(self):
+        # Attribute changes must not strand an older green Windows cache.
+        result = cc.classify_paths([".gitattributes"])
+        self.assertTrue(result.ci)
+        self.assertTrue(result.ue_code)
+        self.assertFalse(result.unreal_compile)
+        self.assertTrue(result.unreal_runtime)
+        self.assertEqual(result.unreal_execution_class, "runtime")
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            attrs = root / ".gitattributes"
+            attrs.write_text("* text=auto\n", encoding="utf-8")
+            compile_before = cc.unreal_compile_fingerprint(root)
+            proof_before = cc.unreal_proof_fingerprint(root)
+            attrs.write_text("* text=auto\n*.cs text eol=lf\n", encoding="utf-8")
+            self.assertEqual(compile_before, cc.unreal_compile_fingerprint(root))
+            self.assertNotEqual(proof_before, cc.unreal_proof_fingerprint(root))
+
     def test_terrain_data_policy_and_memory_require_render(self):
         for path in (
             "worldgen/terrain/benchmarks/sa_calobra/sa_calobra_8x8km_mdt50cm_epsg25831.tif",
@@ -348,6 +374,66 @@ class ChangeClassifierTests(unittest.TestCase):
             first = cc.unreal_compile_fingerprint(root)
             unknown.write_text("v2\n", encoding="utf-8")
             self.assertNotEqual(first, cc.unreal_compile_fingerprint(root))
+
+    def test_warm_plugin_build_outputs_are_not_compile_fingerprint_inputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            project = root / "YetAnotherCyclingSim.uproject"
+            project.write_text('{"FileVersion": 3}\n', encoding="utf-8")
+            plugin = root / "Plugins/RoadForge"
+            source = plugin / "Source/RoadForge/RoadForge.Build.cs"
+            source.parent.mkdir(parents=True)
+            source.write_text("public class RoadForge {}\n", encoding="utf-8")
+            manifest = plugin / "RoadForge.uplugin"
+            manifest.write_text('{"Version": 1}\n', encoding="utf-8")
+            baseline = cc.unreal_compile_fingerprint(root)
+            baseline_proof = cc.unreal_proof_fingerprint(root)
+
+            binaries = plugin / "Binaries/Win64"
+            intermediates = plugin / "Intermediate/Build/Win64"
+            binaries.mkdir(parents=True)
+            intermediates.mkdir(parents=True)
+            dll = binaries / "UnrealEditor-RoadForge.dll"
+            obj = intermediates / "RoadForge.obj"
+            dll.write_bytes(b"compiled-v1")
+            obj.write_bytes(b"generated-v1")
+            self.assertEqual(baseline, cc.unreal_compile_fingerprint(root))
+            self.assertEqual(baseline_proof, cc.unreal_proof_fingerprint(root))
+            dll.write_bytes(b"compiled-v2")
+            obj.write_bytes(b"generated-v2")
+            self.assertEqual(baseline, cc.unreal_compile_fingerprint(root))
+            self.assertEqual(baseline_proof, cc.unreal_proof_fingerprint(root))
+
+            source.write_text("public class RoadForgeV2 {}\n", encoding="utf-8")
+            self.assertNotEqual(baseline, cc.unreal_compile_fingerprint(root))
+            self.assertTrue(
+                cc._is_generated_unreal_plugin_output(
+                    "Plugins/RoadForge/Binaries/Win64/UnrealEditor-RoadForge.dll"
+                )
+            )
+            self.assertTrue(
+                cc._is_generated_unreal_plugin_output(
+                    "Plugins/RoadForge/Intermediate/Build/Win64/RoadForge.obj"
+                )
+            )
+            self.assertFalse(
+                cc._is_generated_unreal_plugin_output(
+                    "Plugins/RoadForge/RoadForge.uplugin"
+                )
+            )
+
+    def test_unknown_non_generated_plugin_input_remains_compilation_sensitive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "YetAnotherCyclingSim.uproject").write_text(
+                '{"FileVersion": 3}\n', encoding="utf-8"
+            )
+            unknown = root / "Plugins/RoadForge/Resources/custom.runtime"
+            unknown.parent.mkdir(parents=True)
+            unknown.write_bytes(b"one")
+            before = cc.unreal_compile_fingerprint(root)
+            unknown.write_bytes(b"two")
+            self.assertNotEqual(before, cc.unreal_compile_fingerprint(root))
 
     def test_embark_terrain_proof_modes(self):
         self.assertEqual(

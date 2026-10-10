@@ -270,65 +270,81 @@ Droga pozostaje częścią systemu YACS; nie kupujemy „gotowej trasy”. Asset
 
 **Wchodzi:** część wizualna w 3G/7, wetness w 8.
 
-#### Sa Calobra road-material preparation — 2026-10-09
+#### Sa Calobra road-material preparation — 2026-10-10
 
-Read-only inventory at `bfbc48057b8b84d087a3685cd71972678a32d412`.
-The #363 material admission/merge prerequisite was satisfied on 2026-10-09.
-#384's fixed native inspection/test session, authenticated original receipt
-readback and separate [InputBoundary](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402)
-passed. Authenticated source-only
-[receipt readback 38040872136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136)
-passed separately, without a new native session or unit execution.
-Start [#364](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364) only
-after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467)
-is merged and #384 is closed as completed; then stop MCP infrastructure work.
-The fixed inspector does not admit
-stock `MaterialInstanceTools`: #364 requires separate version-matched schemas,
-argument/resource restrictions and material-only native authoring proof before use.
-This inventory selects no production asset, performs no import/application and
-does not promote material-prep fallback roles into geographic road domains.
+The initial read-only inventory used
+`bfbc48057b8b84d087a3685cd71972678a32d412`. #363 and #384's entry gates are now
+satisfied; [#364](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364)
+continues in Draft [PR #470](https://github.com/karnalooch/YetAnotherCyclingSim/pull/470).
+The verified asphalt baseline is exact
+`396861de0884135d18006e6d3f133edebef639aa`:
+[CI 38078462035](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38078462035)
+PASS, reusing existing equivalent build/Automation evidence, and
+[native/GPU 38078459124](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38078459124)
+PASS for the reversible road canary, saved/freshly reopened consumer and four
+final same-camera forward/reverse frames in window 0112 with full mip warmup.
+Whole-area visual acceptance remains open. See the
+[#364 evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md) for the source and
+receipt boundaries. Stock `MaterialInstanceTools` remain unadmitted; the existing
+fixed importer and scoped material scripts retain their native proof obligations.
 
 | Role / consumer | Existing source or candidate | Preparation limit |
 |---|---|---|
-| Asphalt | Material Forge `aged_mountain_asphalt/base`, `worn`, `repaired` in [`families.json`](../worldgen/materials/material_forge/families.json); seeds 101/137/173, declared 4 m tile, roughness 0.82/0.86/0.78 | Existing YACS procedural recipes. [`MATERIAL_FORGE.md`](tooling/MATERIAL_FORGE.md) records a first base render/CPU check; it does not admit all variants or the current road consumer. Requested 2048 resolution is not measured consumed texture size. |
-| Saved pavement | [`create_accepted_scene_checkpoint.py`](../scripts/ue/create_accepted_scene_checkpoint.py) uses an instance of `/Engine/BasicShapes/BasicShapeMaterial`, one slot and colour readback | This is the retained checkpoint recipe, not a textured asphalt system. Its authored buffers contain positions/triangles without a metric UV contract. Verify actual saved bindings and geometry hashes before future material assignment. |
-| Shoulder and support faces | The same checkpoint builds top/side support faces with one brown material slot | Establish shoulder-top versus support-wall selection from admitted frozen geometry before choosing a material. Neither gravel nor masonry has been approved for this slot by this inventory. Preserve nominal 0.5 m shoulders and existing BOB contact limits. |
-| Gravel / mineral transition | [`texture library v2`](../worldgen/materials/sa_calobra_texture_library_v2_20261005.json) records candidate `FillGravel` from Poly Haven `rock_ground`, CC0, pinned channels/hashes and provider-reported 1.5 x 1.5 m dimensions; existing outputs belong to [`Texture Material Prep`](tooling/TEXTURE_MATERIAL_PREP.md) | Its visual acceptance remains pending; terrain-fill provenance is not shoulder admission. A prepared role or fallback texture does not establish a shoulder footprint, hydrology/geology or road material approval. Keep source masks and observation/Unknown semantics independent. |
+| Asphalt | Material Forge `aged_mountain_asphalt/base`, `worn`, `repaired` in [`families.json`](../worldgen/materials/material_forge/families.json); seeds 101/137/173, declared 4 m tile, roughness 0.82/0.86/0.78 | The `base` recipe has authenticated two-run source replay and the native baseline above at 400 cm. Its four consumed 2048 px textures reached all 12 mips before each final frame. This does not admit `worn`/`repaired` or the whole area's appearance. |
+| Saved pavement | The original [`create_accepted_scene_checkpoint.py`](../scripts/ue/create_accepted_scene_checkpoint.py) uses `/Engine/BasicShapes/BasicShapeMaterial`; the isolated derived asphalt consumer now has saved/fresh-load native proof | Preserve the original #363 checkpoint. The metric projection comes from the authenticated source scale, not an assumed road UV contract. Baseline counts and saved-file checks do not prove complete mesh-buffer conservation. |
+| Shoulder and support faces | The original checkpoint shares one brown slot across support tops and walls; the verified canary selects 436 source-owned outer top triangle IDs on the sole window 0112 support | Complete native/save/fresh-reload/GPU PASS at `1ef46da`: gravel only in slot 1 for those IDs; slot 0 and its literal material remain on interior tops and walls, with actual GPU exit 0. Preserve nominal 0.5 m shoulders and BOB contact limits; no Nudo/parapet expansion. |
+| Gravel / mineral transition | [`texture library v2`](../worldgen/materials/sa_calobra_texture_library_v2_20261005.json) records `FillGravel` from Poly Haven `rock_ground`, CC0, pinned channels/hashes and provider-reported 1.5 x 1.5 m dimensions; existing outputs belong to [`Texture Material Prep`](tooling/TEXTURE_MATERIAL_PREP.md) | Native source/material checks at `1ef46da` verify existing BaseColor, DirectX normal and roughness at 150 cm without import or source edits. Each 1024 px map reached 11/11 mips in all four successful poses. Four-pair technical review is retained; complete-area and final owner review remain pending. Keep source masks and observation/Unknown semantics independent. |
+
+Owner appearance feedback, 2026-10-10: retain Material Forge as the asphalt
+producer, reduce the glossy appearance substantially, and increase irregular
+aggregate, wear and repair variation. The next source candidate is
+`aged_mountain_asphalt/dry_varied`; its source and Unreal results are pending.
+Gravel shoulders must cover the whole existing road network. The separately
+requested hairpin improvement concerns actual banking/crossfall and longitudinal
+profiling, not guardrail assets; material edits must preserve that geometry for
+its own source-relative diagnosis and correction.
 
 The #338/#462 transient road consumers are a separate branch lineage from this
 material checkpoint. Select the actual admitted saved consumer and its source
 hashes before integration; do not assume that a material-library proof delivered
-the current road. The engine-parent road/support materials inherit roughness;
-this inventory has not measured their PBR values. Preserve road-deviation review
-colours while preparing final material comparisons.
+the current road. The original engine-parent road/support materials inherit
+roughness; their appearance must not be reconstructed from an assumed value.
+The shoulder candidate preserves the literal original wall/interior instance.
+Preserve road-deviation review colours while preparing final material comparisons.
 
 The existing
 [`import_material_forge_variant.py`](../scripts/ue/import_material_forge_variant.py)
 verifies CPU-approved source hashes, uses native `WorldAlignedTexture` /
 `WorldAlignedNormal` and converts the provenance tile size to `TileSizeCm` with
-material-instance readback. This is a possible reuse path when metric road UVs
-are absent; it still needs version-matched native projection/normal evidence and
-road-specific visual/technical proof. Under the 2026-10-09 owner decision,
+material-instance readback. The verified asphalt baseline uses this path at
+400 cm. The bounded shoulder candidate reuses these projection helpers at
+150 cm; native material/projection/normal checks and fresh reload passed at
+`1ef46da`, including full capture proof and GPU process exit 0.
+Under the 2026-10-09 owner decision,
 performance measurement is deferred until after assembled M3 closeout. It is not
 permission to regenerate the mesh, assume a 2 x 2 m texture scale or transplant
 the old prototype-road recipe.
 
-After both entry gates, authenticate the retained CPU-validated
-`aged_mountain_asphalt/base` bundle before the first comparison: seed 101,
-4 m tile, roughness 0.82 and normal strength 0.48. Reuse
-`import_material_forge_variant.py` with `save_assets=False` and 400 cm projection,
-with actual surface/slot ownership and native projection/normal proof.
-Availability of `worn` or `repaired` receipts does not make them prerequisites
-of that first base proof. Begin with a bounded comparison on the actual admitted
-saved road/shoulder consumer: keep source vertices, grade, crossfall, width,
-collision and BOB/CUT inputs byte-identical; use approved source maps, explicit
-physical scale and roughness, and preserve rollback/readback. Inspect both
+For the current shoulder candidate, require before/after and fresh-load hashes
+of the target positions and triangle indices, plus every rendered corner's
+normals and UVs. The exact 436 material-ID changes are the only mesh assignment
+delta; retain their full manifest with native API declarations and hashes
+across reload and GPU proof. At `1ef46da`, these native checks and independent
+manifest review passed for support 112; other supports retain inventory checks.
+The local 63-test suite passed with two platform-dependent skips and
+`py_compile` PASS. The complete native/GPU result is PASS for this sole
+support. Keep source vertices, grade, crossfall, width, collision
+and BOB/CUT inputs unchanged. No geometry, Base_DTM, road physics, displacement
+or weather edit belongs to this material patch. The unresolved inner seam
+remains #459 debt. Inspect both
 travel directions, bends, shoulder/wall separation and the Landscape transition
 without covering unresolved geometric seams. Retain future wetness parameter
-compatibility without implementing weather. Expand the admitted material across
-the entire existing 2,016.5 m square and require whole-area visual, fresh rendered
-reopening and technical admission; the Golden Kilometer remains an additional
-check. Record performance as `DEFERRED_AFTER_M3`, not PASS, and retain the
+compatibility without implementing weather. Expansion beyond this single
+support requires its own bounded technical evidence; the current candidate
+does not complete the entire existing 2,016.5 m square. Require whole-area
+review and fresh rendered reopening; the Golden Kilometer remains an additional
+check. Owner visual status stays `PENDING_FINAL_M3`; record performance as
+`DEFERRED_AFTER_M3` / `performance_pass: false`, and retain the
 reference budgets and exact-SHA/default-branch provenance for the later
 assembled-world benchmark. The
 [prepared official MCP kickoff](UE_MCP_WORLD_GENERATION.md#prepared-kickoff-after-material-acceptance--2026-10-09)

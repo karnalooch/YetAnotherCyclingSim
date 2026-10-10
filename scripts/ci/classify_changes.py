@@ -57,6 +57,9 @@ UE_CRITICAL_CONFIG = {
 }
 
 UE_CODE_TOOLING_EXACT = {
+    "scripts/ci/materialize_unreal_cache_inputs.py",
+    # Line-ending policies can change raw build inputs even when Git blobs do not.
+    ".gitattributes",
     ".github/workflows/reusable-unreal.yml",
     "scripts/ci/Invoke-YacsUnrealCi.ps1",
     "scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1",
@@ -470,6 +473,8 @@ def classify_embark_terrain_proof(paths: Iterable[str]) -> str:
 UNREAL_COMPILE_EXTENSIONS = {".cpp", ".c", ".h", ".hpp", ".inl", ".cs"}
 
 UNREAL_PROOF_EXACT = {
+    "scripts/ci/materialize_unreal_cache_inputs.py",
+    ".gitattributes",
     ".github/workflows/reusable-unreal.yml",
     "scripts/ci/Invoke-YacsUnrealCi.ps1",
     "scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1",
@@ -503,6 +508,16 @@ def _hash_repository_inputs(
     return hasher.hexdigest()
 
 
+def _is_generated_unreal_plugin_output(path: str) -> bool:
+    """Exclude engine-generated plugin build products, never authored inputs."""
+    parts = PurePosixPath(path).parts
+    return (
+        len(parts) >= 3
+        and parts[0].lower() == "plugins"
+        and parts[2].lower() in {"binaries", "intermediate"}
+    )
+
+
 def _unreal_binary_fingerprint(repo_root: str | Path = ".") -> str:
     """Hash project/plugin inputs that define the compiled binary graph."""
 
@@ -517,18 +532,33 @@ def _unreal_binary_fingerprint(repo_root: str | Path = ".") -> str:
     ):
         if not source_root.exists():
             continue
-        for path in source_root.rglob("*"):
-            if not path.is_file():
-                continue
-            relative = path.relative_to(root).as_posix()
-            if _is_unreal_compile_input(relative) or _is_unknown_runtime_compile_input(
-                relative
-            ):
-                candidates.add(path)
+        # A warm UE worktree intentionally retains Plugins/*/Binaries and
+        # Plugins/*/Intermediate. Neither DLLs nor generated build intermediates
+        # may become hash inputs for their own binary fingerprint.
+        for directory, subdirs, filenames in os.walk(source_root):
+            folder = Path(directory)
+            subdirs[:] = [
+                child
+                for child in subdirs
+                if not _is_generated_unreal_plugin_output(
+                    (folder / child).relative_to(root).as_posix()
+                )
+            ]
+            for filename in filenames:
+                path = folder / filename
+                if not path.is_file():
+                    continue
+                relative = path.relative_to(root).as_posix()
+                if _is_generated_unreal_plugin_output(relative):
+                    continue
+                if _is_unreal_compile_input(
+                    relative
+                ) or _is_unknown_runtime_compile_input(relative):
+                    candidates.add(path)
 
     return _hash_repository_inputs(
         root,
-        namespace="yacs-unreal-binary-v1",
+        namespace="yacs-unreal-binary-v2",
         inputs=candidates,
     )
 

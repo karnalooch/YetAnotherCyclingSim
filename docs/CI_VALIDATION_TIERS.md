@@ -239,7 +239,68 @@ preparation cannot upload old-run diagnostic files under the new commit name.
 This preserves locked diagnostics without suppressing other cleanup failures. The
 code-only LFS contract and exact HEAD are then rechecked. Preserved outputs are
 only candidates for reuse; they are never trusted without fingerprint and
-environment checks. A compile-fingerprint mismatch is **not** cache corruption:
+environment checks. Line-ending changes are provenance changes, not grounds to bypass the check.
+Git pins LF for every current C# and compile/proof-script fingerprint input,
+including the attributes file itself. The native #364 checkout-byte regression
+compares the physical Windows/Linux working files with exact committed Git
+blobs. A future change to `.gitattributes` is classified as Unreal RUNTIME,
+and the attributes file participates in the proof fingerprint: the normal,
+serialized Unreal CI lane must renew green proof before read-only consumers may
+reuse the active cache. If LF/CRLF changes compiled bytes, the compile
+fingerprint differs and the existing WARM COMPILE path validates those binaries.
+A read-only native consumer must **fail closed** while such provenance is stale;
+it must not rewrite state.json, retroactively certify a failed proof, invalidate
+another owner's cache, or run Unreal before the normal verification lane.
+The #364 native workflow first waits on a hosted worker for the same-SHA
+successful protected `CyclingSim CI` run, without reserving the shared Unreal
+concurrency lock. Only then does its Windows baseline job acquire the existing
+lock and check cache state again. A failed/cancelled/timed-out upstream CI cannot
+launch the native reader, and no green CI alone substitutes for runtime proof.
+Windows cache raw-byte reconciliation — #364 (2026-10-10):
+`Resolve-YacsUnrealCiCache.ps1` invokes the pinned
+`materialize_unreal_cache_inputs.py` **only** during normal serialized
+`CyclingSim CI` Resolve, after the isolated tracked checkout is cleaned and
+before cache admission. It accepts exactly the Git index's C# and critical
+PowerShell inputs with `eol=lf`; source modifications other than CRLF drift
+are rejected. It atomically replaces CRLF-only drift with authenticated raw
+HEAD Git blob bytes because Git for Windows checkout conversion did not reliably
+rematerialize LF in the existing RoadForge build-rule file. The repair verifies
+every physical input against its committed blob and compares both physical
+compile/proof fingerprints to the hosted exact-SHA values. The cache
+state, compiled DLLs, assets, editor and local authoring checkout remain
+untouched. Any failure rejects reuse before build/Automation or proof
+publication; standalone read-only native consumers never repair the cache.
+
+When the active retained cache checkout itself has noncanonical raw source
+bytes (or a dirty/unverifiable tracked source identity), cache selection
+**preserves the old pointer/worktree and skips destructive cleanup**, choosing a
+fresh run-scoped checkout instead. This uses the existing locked-binary recovery
+pattern: the normal UBT/Automation gate must build/verify anew before publishing
+the fresh cache pointer. It avoids treating Windows Git's EOL conversion as a
+trusted source of exact physical bytes; no old cache state is relabeled green.
+The one-time fresh compile may cost more than warm reuse but is safer than
+repeatedly mutating an inconsistent cache. Only CI worktrees are eligible;
+interactive `D:\\yacs\\project` remains outside this mechanism.
+
+**Unreal binary fingerprint correction — M3 #364 (2026-10-10).**
+The previous `yacs-unreal-binary-v1` filesystem traversal under `Plugins/`
+included engine-generated `Plugins/*/Binaries/**` and
+`Plugins/*/Intermediate/**` as unknown runtime inputs. On the persistent
+Windows cache this hashed DLLs and intermediates produced by the preceding
+build, while the hosted Linux code-only checkout had no such outputs. Both the
+compile fingerprint and its dependent Automation proof fingerprint could then
+differ even when every tracked Git source byte matched exactly.
+
+`yacs-unreal-binary-v2` excludes **only these plugin build-output trees**
+from its binary-input traversal, pruning them before filesystem enumeration.
+Normal repository source under `Plugins/*/Source/**`, `*.uplugin`,
+`Build/**` and unknown *non-generated* plugin runtime inputs remain in the
+compile fingerprint. The new namespace forces a fresh exact-SHA cache identity,
+requiring ordinary successful Unreal build/Automation before any green cache
+can be published. This is not permission to rewrite, delete or ignore existing
+DLLs, weaken CI proof or change physics/world geometry.
+
+A compile-fingerprint mismatch is **not** cache corruption:
 when engine/toolchain provenance still matches, the lane invalidates the green
 stamp but keeps `Intermediate/Binaries` and performs a WARM COMPILE. Missing
 final project DLLs are handled the same way because UBT can relink/rebuild them

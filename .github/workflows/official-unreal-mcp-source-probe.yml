@@ -2,12 +2,23 @@ name: Official Unreal MCP source probe
 
 on:
   push:
-    branches: [codex/384-official-mcp-spike]
+    branches: [codex/384-official-mcp-spike, codex/364-road-surface-materials]
     paths:
       - '.github/workflows/official-unreal-mcp-source-probe.yml'
       - 'scripts/ue/official_mcp_source_probe.py'
       - 'scripts/ue/Invoke-YacsOfficialMcpSourceProbe.ps1'
   workflow_dispatch:
+    inputs:
+      evidence_focus:
+        description: Installed declarations to inspect without starting Unreal
+        type: choice
+        default: auto
+        options:
+          - auto
+          - stock_control_flow
+          - domain_extension
+          - material_declarations
+          - level_editor_stream
 
 permissions:
   contents: read
@@ -22,26 +33,41 @@ jobs:
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
-      github.ref == 'refs/heads/codex/384-official-mcp-spike'
+      (github.ref == 'refs/heads/codex/384-official-mcp-spike' ||
+       github.ref == 'refs/heads/codex/364-road-surface-materials')
     runs-on: [self-hosted, yacs-ue58]
     timeout-minutes: 10
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
       TARGET_SHA: ${{ github.sha }}
       YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
+      YACS_SOURCE_EVIDENCE_FOCUS: ${{ inputs.evidence_focus || 'auto' }}
     steps:
+      - name: Isolate Git configuration and enable long paths
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'official-mcp-source-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths in isolated Git configuration.' }
+
       - name: Checkout exact code-only probe in isolated runner directory
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TARGET_SHA }}
-          path: _official-mcp-source-probe
+          path: _official-mcp-source-probe-${{ github.run_id }}-${{ github.run_attempt }}
           fetch-depth: 1
           lfs: false
           persist-credentials: false
 
       - name: Collect read-only version and declaration evidence
         shell: pwsh
-        working-directory: _official-mcp-source-probe
+        working-directory: _official-mcp-source-probe-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
@@ -52,13 +78,19 @@ jobs:
             [ref]$tokens, [ref]$errors
           ) | Out-Null
           if ($errors.Count -gt 0) { throw ($errors.Message -join '; ') }
-          ./scripts/ue/Invoke-YacsOfficialMcpSourceProbe.ps1 -ExpectedHead $env:TARGET_SHA -EvidenceFocus domain_extension
+          $focus = $env:YACS_SOURCE_EVIDENCE_FOCUS
+          if ($focus -eq 'auto') {
+            $focus = if ($env:GITHUB_REF -eq 'refs/heads/codex/364-road-surface-materials') {
+              'level_editor_stream'
+            } else { 'domain_extension' }
+          }
+          ./scripts/ue/Invoke-YacsOfficialMcpSourceProbe.ps1 -ExpectedHead $env:TARGET_SHA -EvidenceFocus $focus
 
       - name: Retain scoped source evidence even when preflight is blocked
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: official-mcp-source-${{ env.TARGET_SHA }}-${{ github.run_attempt }}
-          path: _official-mcp-source-probe/Saved/RuntimeProof/OfficialMcpSourceProbe/**
+          path: _official-mcp-source-probe-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/OfficialMcpSourceProbe/**
           if-no-files-found: error
           retention-days: 7

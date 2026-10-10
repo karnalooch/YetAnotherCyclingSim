@@ -436,6 +436,361 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
         self.assertTrue(result["domain_extension_observations"]["mcp_schema_consumer"])
         self.assertLessEqual(len(output.splitlines()), 500)
 
+    def material_fixture(self, *, source=None):
+        relative = "Engine/Plugins/Experimental/Toolsets/ZMaterialFixture"
+        self.plugin("ZMaterialFixture", relative)
+        return self.write(relative + "/Content/Python/toolsets/material_instance.py", source or (
+            "raise RuntimeError('EPIC_SOURCE_MUST_NEVER_EXECUTE')\n"
+            "@toolset_registry.toolset(name='MaterialInstanceTools')\n"
+            "class FixtureMaterialTools:\n"
+            "    @toolset_registry.tool_call\n"
+            "    @staticmethod\n"
+            "    def get_fixture_parameter(reference: str, name: str) -> float:\n"
+            "        return ACTUAL_READ_DECLARATION_BODY\n"
+            "    @toolset_registry.tool_call\n"
+            "    def set_fixture_parameter(reference: str, name: str, value: float) -> bool:\n"
+            "        return ACTUAL_WRITE_DECLARATION_BODY\n"))
+
+    def test_material_focus_discovers_actual_decorated_declarations_without_execution(self):
+        path = self.material_fixture()
+        before = {item: item.read_bytes() for item in self.engine.rglob("*") if item.is_file()}
+        stock = self.collect()
+        self.assertNotIn("ZMaterialFixture", stock["plugins"])
+        self.assertEqual(stock["issue"], 384)
+        result = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertEqual(result["issue"], 364)
+        observed = result["material_declaration_observations"]
+        self.assertEqual([item["name"] for item in observed],
+                         ["FixtureMaterialTools", "get_fixture_parameter", "set_fixture_parameter"])
+        self.assertIn("name='MaterialInstanceTools'", observed[0]["decorators"][0])
+        self.assertEqual(observed[1]["line"], 6)
+        self.assertIn("reference: str, name: str", observed[1]["signature"])
+        self.assertEqual(observed[1]["decorators"], ["toolset_registry.tool_call", "staticmethod"])
+        self.assertEqual(observed[0]["signature"], "class FixtureMaterialTools:")
+        self.assertTrue(all(item["sha256"] == hashlib.sha256(path.read_bytes()).hexdigest() for item in observed))
+        output = probe.console_summary(result)
+        self.assertIn("ACTUAL_READ_DECLARATION_BODY", output)
+        self.assertIn("ACTUAL_WRITE_DECLARATION_BODY", output)
+        self.assertNotIn("EPIC_SOURCE_MUST_NEVER_EXECUTE", output)
+        for key in ("guard_parity_verified", "runtime_schema_verified", "official_mcp_admitted",
+                    "mcp_server_started", "plugin_activation_performed", "persistent_content_mutation_performed",
+                    "editor_execution_performed", "material_tool_execution_performed", "material_authoring_admitted",
+                    "performance_pass"):
+            self.assertIs(result[key], False)
+        self.assertEqual(before, {item: item.read_bytes() for item in before})
+
+    def test_material_focus_missing_and_literal_only_evidence_fail_closed(self):
+        result = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("MATERIAL_METHOD_DECLARATIONS_UNESTABLISHED", result["blockers"])
+        self.material_fixture(source=(
+            "# class MaterialInstanceTools is not an actual declaration.\n"
+            "EXAMPLE = 'class MaterialInstanceTools'\n"
+            "class Unrelated:\n    def set_fixture(self):\n        return False\n"))
+        result = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["material_declaration_observations"], [])
+        self.assertEqual(result["material_declaration_unestablished"][0]["reason"],
+                         "MATERIAL_TOOLSET_DECLARATION_UNESTABLISHED")
+        self.material_fixture(source="class MaterialInstanceTools:\n    pass\n")
+        self.assertEqual(self.collect(evidence_focus="material_declarations")["status"], "BLOCKED")
+
+    def test_material_focus_tests_cannot_satisfy_or_spend_declaration_budget(self):
+        relative = "Engine/Plugins/Experimental/Toolsets/MaterialInstanceTools"
+        self.plugin("MaterialInstanceTools", relative)
+        self.write(relative + "/Content/Python/Tests/material_instance.py",
+                   "class MaterialInstanceTools:\n    def get_fixture(self):\n        SHIPPED_TEST_MUST_NOT_PRINT\n")
+        result = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["material_declaration_observations"], [])
+        self.assertNotIn("SHIPPED_TEST_MUST_NOT_PRINT", probe.console_summary(result))
+
+    def test_material_focus_definition_body_and_console_budgets_are_explicit(self):
+        source = "class MaterialInstanceTools:\n    def get_fixture(self):\n"
+        source += "\n".join(f"        value_{index} = {index}" for index in range(120)) + "\n"
+        source += "\n".join(f"    def set_fixture_{index}(self):\n        return False" for index in range(80))
+        self.material_fixture(source=source)
+        result = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertEqual(len(result["material_declaration_observations"]), probe.MAX_MATERIAL_DEFINITIONS)
+        self.assertTrue(result["material_declaration_index_truncated"])
+        item = next(item for item in result["inventory"] if item.get("material_declarations"))
+        body = next(excerpt for excerpt in item["selected_excerpts"] if excerpt["name"] == "get_fixture")
+        self.assertTrue(body["context_window_truncated"])
+        self.assertTrue(body["budget_truncated"])
+        self.assertEqual(len(body["text"].splitlines()), probe.MAX_MATERIAL_BODY_LINES)
+        self.assertLessEqual(len(probe.console_summary(result).splitlines()), probe.MAX_CONSOLE_LINES)
+        with patch.object(probe, "MAX_EXCERPT_LINES", 9):
+            limited = self.collect(evidence_focus="material_declarations")
+        self.assertTrue(limited["excerpt_limit_reached"])
+        self.assertLessEqual(sum(len(excerpt["text"].splitlines()) for item in limited["inventory"]
+                                 for excerpt in item["selected_excerpts"]), 9)
+
+    def test_material_discovery_rejects_link_escape_and_preserves_global_read_budget(self):
+        path = self.material_fixture()
+        result = self.collect(evidence_focus="material_declarations")
+        preceding = 0
+        for item in result["inventory"]:
+            if item["path"] == path.relative_to(self.engine).as_posix():
+                break
+            preceding += item["bytes"]
+        with patch.object(probe, "MAX_TOTAL_BYTES", preceding + path.stat().st_size - 1), patch.object(
+            probe, "read_bounded", wraps=probe.read_bounded,
+        ) as reads:
+            blocked = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(blocked["status"], "BLOCKED")
+        self.assertIn("SOURCE_TOTAL_BYTE_LIMIT", blocked["blockers"])
+        self.assertNotIn(path, [call.args[1] for call in reads.call_args_list])
+        outside = self.root / "outside-material.py"
+        outside.write_text("NEVER_READ_OR_EXECUTE\n")
+        path.unlink()
+        path.symlink_to(outside)
+        result = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertTrue(any("LINK_OR_REPARSE_POINT" in error for error in result["blockers"]))
+
+    def stream_fixture(self):
+        # Synthetic spellings test extraction only; these are not Epic CLI contracts.
+        relative = probe.STREAM_PLUGIN_ROOT
+        self.plugin("PixelStreaming2", relative)
+        self.write(relative + "/Source/PixelStreaming2Settings/Public/FixtureSettings.h",
+                   "enum class EPixelStreaming2EditorStreamTypes\n{\n"
+                   "    LevelEditorViewport = 0,\n    FixtureOtherViewport = 1\n};\n")
+        self.write(relative + "/Source/PixelStreaming2Settings/Private/FixtureSettings.cpp",
+                   "\n".join(f'static TAutoConsoleVariable<int> CVar{symbol}(TEXT("FixtureOnly.{symbol}"), 0);'
+                             for symbol in ("EditorPixelStreaming", "StartOnLaunch", "StreamType",
+                                            "ViewerPort", "StreamerPort")) + "\n")
+        self.write(relative + "/Source/PixelStreaming2Editor/Private/FixtureEditor.cpp",
+                   "void FFixtureEditor::StartStreamingWithEditor()\n{\n"
+                   "    FixtureServer.StartSignalling();\n    FixtureStream.StartStreaming();\n}\n"
+                   'FAutoConsoleCommand FixtureCommand(TEXT("FixtureOnly.StopStreaming"), TEXT("fixture"), FixtureCallback);\n')
+        self.write(relative + "/Config/FixtureStreaming.ini",
+                   "; CommentOnly.StartOnLaunch must not establish a candidate.\n"
+                   "[FixtureOnly]\nEditorPixelStreaming=false\n")
+        self.write(probe.STREAM_PLUGIN_MANAGER,
+                   'FParse::Value(FCommandLine::Get(), TEXT("EnablePlugins="), FixtureNames);\n')
+
+    def test_stream_focus_is_read_only_and_retains_actual_contexts_without_admission(self):
+        self.stream_fixture()
+        before = {item: item.read_bytes() for item in self.engine.rglob("*") if item.is_file()}
+        result = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertEqual(result["issue"], 364)
+        self.assertEqual(set(result["plugins"]), {"PixelStreaming2"})
+        self.assertEqual(result["level_editor_stream_missing_contexts"], [])
+        self.assertEqual(result["level_editor_stream_unestablished_paths"], [])
+        self.assertEqual(result["level_editor_stream_status"], "INSTALLED_SOURCE_CONTEXTS_REQUIRE_REVIEW")
+        output = probe.console_summary(result)
+        for symbol in probe.STREAM_SYMBOLS:
+            self.assertTrue(result["level_editor_stream_observations"][symbol], symbol)
+            self.assertIn(symbol, output)
+        self.assertIn('TEXT("FixtureOnly.StartOnLaunch")', output)
+        self.assertIn("LevelEditorViewport = 0", output)
+        for item in result["inventory"]:
+            self.assertEqual(item["sha256"], hashlib.sha256((self.engine / item["path"]).read_bytes()).hexdigest())
+        self.assertTrue(result["source_only"])
+        for key in ("guard_parity_verified", "runtime_schema_verified", "official_mcp_admitted",
+                    "mcp_server_started", "plugin_activation_performed", "persistent_content_mutation_performed",
+                    "editor_execution_performed", "signalling_server_started", "streaming_started",
+                    "stream_connection_verified", "level_editor_stream_admitted", "performance_pass"):
+            self.assertIs(result[key], False, key)
+        self.assertEqual(before, {item: item.read_bytes() for item in before})
+
+    def test_stream_focus_never_scans_toolsets_or_reads_unapproved_plugin_sources(self):
+        self.stream_fixture()
+        toolsets = self.engine / "Engine/Plugins/Experimental/Toolsets"
+        retained = toolsets.with_name("UnusedToolsets")
+        toolsets.rename(retained)
+        toolsets.symlink_to(retained, target_is_directory=True)
+        relative = probe.STREAM_PLUGIN_ROOT
+        forbidden = [
+            self.write(relative + "/Source/PixelStreaming2/Private/Unapproved.cpp", "NEVER_READ\n"),
+            self.write(relative + "/Source/PixelStreaming2Editor/Private/Unapproved.py",
+                       "raise RuntimeError('NEVER_IMPORT_EPIC_SOURCE')\n"),
+            self.write(relative + "/Source/PixelStreaming2Editor/Tests/FixtureTest.cpp", "NEVER_READ\n"),
+            self.write("Engine/Source/Runtime/Projects/Private/Unapproved.cpp", "NEVER_READ\n"),
+        ]
+        with patch.object(probe, "bounded_files", wraps=probe.bounded_files) as scans, patch.object(
+            probe, "read_bounded", wraps=probe.read_bounded,
+        ) as reads:
+            result = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertEqual({call.args[0] for call in scans.call_args_list}, {
+            self.engine / relative / "Source" / name for name in probe.STREAM_MODULES
+        } | {self.engine / relative / "Config"})
+        paths = {call.args[1] for call in reads.call_args_list}
+        self.assertFalse(paths.intersection(forbidden))
+        self.assertFalse(any("Experimental" in path.parts for path in paths))
+        approved_fixed = {self.project, self.engine / "Engine/Build/Build.version",
+                          self.engine / relative / "PixelStreaming2.uplugin",
+                          self.engine / probe.STREAM_PLUGIN_MANAGER}
+        approved_roots = [self.engine / relative / "Source" / name for name in probe.STREAM_MODULES]
+        approved_roots.append(self.engine / relative / "Config")
+        self.assertTrue(all(path in approved_fixed or any(path.is_relative_to(root) for root in approved_roots)
+                            for path in paths))
+
+    def test_stream_focus_missing_plugin_or_required_module_fails_closed(self):
+        with patch.object(probe, "bounded_files", wraps=probe.bounded_files) as scans:
+            missing = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(missing["status"], "BLOCKED")
+        self.assertIn("MISSING_PLUGIN_DESCRIPTOR: PixelStreaming2", missing["blockers"])
+        self.assertEqual(missing["source_file_count"], 1)
+        scans.assert_not_called()
+        self.assertFalse(missing["streaming_started"])
+        self.stream_fixture()
+        module = self.engine / probe.STREAM_PLUGIN_ROOT / "Source/PixelStreaming2Editor"
+        for path in module.rglob("*.cpp"):
+            path.unlink()
+        missing = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(missing["status"], "BLOCKED")
+        self.assertIn("MISSING_PLUGIN_SOURCES: PixelStreaming2Editor", missing["blockers"])
+        self.assertFalse(missing["plugin_activation_performed"])
+
+    def test_stream_focus_preserves_version_sha_and_source_budget_boundaries(self):
+        self.stream_fixture()
+        result = self.collect(evidence_focus="level_editor_stream", actual_sha="b" * 40)
+        self.assertEqual(result["source_file_count"], 0)
+        self.assertIn("REPOSITORY_SHA_MISMATCH", result["blockers"])
+        baseline = self.collect(evidence_focus="level_editor_stream")
+        first_source = baseline["inventory"][2]
+        limit = sum(item["bytes"] for item in baseline["inventory"][:2]) + first_source["bytes"] - 1
+        with patch.object(probe, "MAX_TOTAL_BYTES", limit), patch.object(
+            probe, "read_bounded", wraps=probe.read_bounded,
+        ) as reads:
+            limited = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(limited["status"], "BLOCKED")
+        self.assertIn("SOURCE_TOTAL_BYTE_LIMIT", limited["blockers"])
+        self.assertNotIn(self.engine / first_source["path"], [call.args[1] for call in reads.call_args_list])
+        with patch.object(probe, "MAX_SOURCE_FILES", 2):
+            limited = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(limited["source_file_count"], 2)
+        self.assertIn("SOURCE_FILE_COUNT_LIMIT", limited["blockers"])
+        self.write("Engine/Build/Build.version", json.dumps({
+            "MajorVersion": 5, "MinorVersion": 8, "PatchVersion": 3, "Changelist": 56702186,
+        }))
+        with patch.object(probe, "bounded_files", wraps=probe.bounded_files) as scans:
+            mismatched = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(mismatched["status"], "BLOCKED")
+        self.assertTrue(any("ENGINE_VERSION_MISMATCH" in error for error in mismatched["blockers"]))
+        scans.assert_not_called()
+
+    def test_stream_focus_rejects_source_and_optional_manager_links(self):
+        self.stream_fixture()
+        external = self.root / "outside-stream.cpp"
+        external.write_text("NEVER_READ_OUTSIDE_SOURCE\n")
+        source = self.engine / probe.STREAM_PLUGIN_ROOT / "Source/PixelStreaming2Editor/Private/FixtureEditor.cpp"
+        original = source.read_bytes()
+        source.unlink()
+        source.symlink_to(external)
+        with patch.object(probe, "read_bounded", wraps=probe.read_bounded) as reads:
+            result = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertTrue(any("LINK_OR_REPARSE_POINT" in error for error in result["blockers"]))
+        self.assertNotIn(source, [call.args[1] for call in reads.call_args_list])
+        source.unlink()
+        source.write_bytes(original)
+        manager = self.engine / probe.STREAM_PLUGIN_MANAGER
+        manager.unlink()
+        manager.symlink_to(external)
+        result = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertTrue(any("LINK_OR_REPARSE_POINT" in error for error in result["blockers"]))
+
+    def test_stream_focus_missing_optional_paths_or_symbols_are_explicitly_unverified(self):
+        self.stream_fixture()
+        (self.engine / probe.STREAM_PLUGIN_MANAGER).unlink()
+        result = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertIn(probe.STREAM_PLUGIN_MANAGER, result["level_editor_stream_unestablished_paths"])
+        self.assertIn("EnablePlugins", result["level_editor_stream_missing_contexts"])
+        for path in (self.engine / probe.STREAM_PLUGIN_ROOT).rglob("*"):
+            if path.suffix in probe.STREAM_SOURCE_SUFFIXES:
+                comment = ";" if path.suffix == ".ini" else "//"
+                path.write_text(f"{comment} StartStreaming is only a comment.\nvoid DifferentInstalledDeclaration();\n")
+        result = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertEqual(result["level_editor_stream_missing_contexts"], list(probe.STREAM_SYMBOLS))
+        self.assertFalse(any(result["level_editor_stream_observations"].values()))
+        self.assertFalse(result["level_editor_stream_admitted"])
+
+    def test_stream_focus_excerpt_index_and_console_caps_are_preserved(self):
+        self.stream_fixture()
+        noise = []
+        for symbol in probe.STREAM_SYMBOLS:
+            for index in range(35):
+                noise.extend([f"void Fixture_{symbol}_{index}();", *("int FixtureNoise;" for _ in range(58))])
+        self.write(probe.STREAM_PLUGIN_ROOT + "/Source/PixelStreaming2Editor/Private/LongFixture.cpp",
+                   "\n".join(noise))
+        result = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertTrue(result["level_editor_stream_index_truncated"])
+        self.assertTrue(all(len(items) <= probe.MAX_STREAM_OBSERVATIONS_PER_SYMBOL
+                            for items in result["level_editor_stream_observations"].values()))
+        output = probe.console_summary(result)
+        self.assertIn("budget_truncated=true", output)
+        self.assertLessEqual(len(output.splitlines()), probe.MAX_CONSOLE_LINES)
+        self.assertLessEqual(sum(len(excerpt["text"].splitlines()) for item in result["inventory"]
+                                 for excerpt in item["selected_excerpts"]), probe.MAX_EXCERPT_LINES)
+        with patch.object(probe, "MAX_EXCERPT_LINES", 9):
+            limited = self.collect(evidence_focus="level_editor_stream")
+        self.assertTrue(limited["excerpt_limit_reached"])
+        self.assertLessEqual(sum(len(excerpt["text"].splitlines()) for item in limited["inventory"]
+                                 for excerpt in item["selected_excerpts"]), 9)
+
+    def test_stream_review_retains_config_parser_and_complete_startup_bodies_before_generic_uses(self):
+        self.stream_fixture()
+        relative = probe.STREAM_PLUGIN_ROOT
+        self.write(relative + "/Source/PixelStreaming2Settings/Internal/PixelStreaming2PluginSettings.h",
+                   "// UCLASS(config=CommentOnly) must not be selected.\n"
+                   "UCLASS(config=FixtureOnly)\nclass UPixelStreaming2PluginSettings {};\n")
+        self.write(relative + "/Source/PixelStreaming2Settings/Private/PixelStreaming2PluginSettings.cpp",
+                   'const auto FixtureMap = Pair("EditorSource", &CVarEditorSource);\n'
+                   'const auto FixtureStartMap = Pair("EditorStartOnLaunch", &CVarEditorStartOnLaunch);\n'
+                   + "\n".join("int UnrelatedPreamble;" for _ in range(120))
+                   + "\nvoid UPixelStreaming2PluginSettings::PostInitProperties()\n{\n"
+                   + "\n".join("    int InitStep;" for _ in range(40))
+                   + '\n    FParse::Value(FCommandLine::Get(), TEXT("FixtureOnly="), FixtureValue);\n'
+                   + "    FIXTURE_COMMAND_LINE_MAPPING;\n}\n")
+        self.write(relative + "/Source/PixelStreaming2Editor/Private/PixelStreaming2EditorModule.cpp",
+                   "void FPixelStreaming2EditorModule::StartupModule()\n{\n    FIXTURE_READY_CALLBACK;\n}\n"
+                   "void FPixelStreaming2EditorModule::InitEditorStreaming()\n{\n    FIXTURE_MAIN_FRAME_CALLBACK;\n}\n"
+                   "void FPixelStreaming2EditorModule::StartStreaming()\n{\n"
+                   + "\n".join("    int ViewportSetupStep;" for _ in range(48))
+                   + "\n    FIXTURE_VIEWPORT_TAIL;\n    StartSignalling();\n}\n"
+                   "void FPixelStreaming2EditorModule::StartSignalling()\n{\n"
+                   "    if (FixtureAlreadyRunning) { return; }\n"
+                   "    FIXTURE_SERVER_FACTORY;\n    FIXTURE_SERVER_LAUNCH;\n}\n"
+                   "void FixtureUnrelatedMutation() { UNRELATED_BODY_OUTSIDE_DEFINITION; }\n")
+        result = self.collect(evidence_focus="level_editor_stream")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertEqual(result["level_editor_stream_missing_review_contexts"], [])
+        review = [excerpt for item in result["inventory"] for excerpt in item["selected_excerpts"]
+                  if excerpt["selection"] == "level_editor_stream_review"]
+        self.assertEqual(len(result["level_editor_stream_review_contexts"]["editor_startup"]), 2)
+        expected = {
+            "settings_class": "UCLASS(config=FixtureOnly)",
+            "editor_property_map": 'Pair("EditorSource", &CVarEditorSource)',
+            "settings_command_line": "FIXTURE_COMMAND_LINE_MAPPING",
+            "level_editor_start": "FIXTURE_VIEWPORT_TAIL",
+            "builtin_server_launch": "FIXTURE_SERVER_LAUNCH",
+        }
+        for topic, marker in expected.items():
+            text = "\n".join(excerpt["text"] for excerpt in review if excerpt["topic"] == topic)
+            self.assertIn(marker, text, topic)
+            if topic in {"level_editor_start", "builtin_server_launch"}:
+                self.assertNotIn("UNRELATED_BODY_OUTSIDE_DEFINITION", text)
+        output = probe.console_summary(result)
+        self.assertIn("UCLASS(config=FixtureOnly)", output)
+        self.assertIn("FIXTURE_COMMAND_LINE_MAPPING", output)
+        self.assertIn("FIXTURE_SERVER_FACTORY", output)
+        self.assertLessEqual(len(output.splitlines()), probe.MAX_CONSOLE_LINES)
+        with patch.object(probe, "MAX_EXCERPT_LINES", 9):
+            limited = self.collect(evidence_focus="level_editor_stream")
+        self.assertTrue(limited["excerpt_limit_reached"])
+        self.assertLessEqual(sum(len(excerpt["text"].splitlines()) for item in limited["inventory"]
+                                 for excerpt in item["selected_excerpts"]), 9)
+
 
 if __name__ == "__main__":
     unittest.main()
