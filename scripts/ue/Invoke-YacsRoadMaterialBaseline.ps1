@@ -77,6 +77,30 @@ function Get-BaselineIdentity {
     }
     return [ordered]@{ path = [IO.Path]::GetFullPath($Path); size_bytes = $length; sha256 = $digest }
 }
+# Windows can retain Start-Process stdout/stderr redirection handles briefly
+# after the owned Editor has exited. Retry ONLY the two sharing/lock HResults;
+# never skip a log, synthesize a digest, or retry a changed/invalid input.
+function Get-BaselineClosedEditorLogIdentity {
+    param([Parameter(Mandatory)][string] $Path)
+    for ($attempt = 1; $attempt -le 40; $attempt++) {
+        try { return Get-BaselineIdentity $Path 64MB -AllowEmpty }
+        catch {
+            $reason = $_.Exception
+            $locked = $false
+            while ($null -ne $reason) {
+                if ($reason -is [IO.IOException] -and
+                    $reason.HResult -in @(-2147024864, -2147024863)) {
+                    $locked = $true
+                    break
+                }
+                $reason = $reason.InnerException
+            }
+            if (-not $locked -or $attempt -ge 40) { throw }
+            Start-Sleep -Milliseconds 250
+        }
+    }
+}
+
 function Assert-BaselineIdentity {
     param($Identity, [long] $Limit = 512MB)
     $actual = Get-BaselineIdentity $Identity.path $Limit
@@ -408,7 +432,7 @@ try {
         foreach ($name in @('owned-editor.log', 'owned-editor-stdout.log', 'owned-editor-stderr.log')) {
             $path = Join-Path $EvidenceRoot $name
             if (Test-Path -LiteralPath $path -PathType Leaf) {
-                try { $receipt.proof_files[$name] = Get-BaselineIdentity $path 64MB -AllowEmpty }
+                try { $receipt.proof_files[$name] = Get-BaselineClosedEditorLogIdentity $path }
                 catch { $receipt.secondary_errors += $_.Exception.Message }
             }
         }

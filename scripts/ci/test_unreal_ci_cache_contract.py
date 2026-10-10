@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path, PureWindowsPath
 import unittest
 import shlex
+import shutil
 import subprocess
 import tempfile
 
@@ -96,6 +97,84 @@ class UnrealCiCacheContractTests(unittest.TestCase):
             260,
         )
         self.assertLess(len(str(base / "rm-38058683514-1" / deepest_asset)), 260)
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 required")
+    def test_editor_redirected_log_read_retries_only_transient_windows_locks(self):
+        wrapper = ROOT / "scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1"
+        fixture = r'''
+param([string] $Wrapper)
+$ErrorActionPreference = 'Stop'
+$tokens = $null
+$errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile(
+    $Wrapper, [ref] $tokens, [ref] $errors
+)
+if ($errors.Count) { throw 'Cannot parse the real native wrapper.' }
+$definitions = @($ast.FindAll({
+    param($node)
+    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+        $node.Name -eq 'Get-BaselineClosedEditorLogIdentity'
+}, $true))
+if ($definitions.Count -ne 1) { throw 'Expected one actual retry helper.' }
+Invoke-Expression $definitions[0].Extent.Text
+$script:calls = 0
+$script:sleeps = 0
+function Start-Sleep {
+    param([int] $Milliseconds)
+    if ($Milliseconds -ne 250) { throw 'Wrong bounded retry interval.' }
+    $script:sleeps++
+}
+function Get-BaselineIdentity {
+    param([string] $Path, [long] $Limit, [switch] $AllowEmpty)
+    if ($Path -ne 'fixture.log' -or $Limit -ne 64MB -or -not $AllowEmpty) {
+        throw 'Changed log identity or bound.'
+    }
+    $script:calls++
+    if ($script:calls -le 2) {
+        throw [IO.IOException]::new('SYNTHETIC sharing violation', -2147024864)
+    }
+    return @{ path=$Path; size_bytes=0; sha256='synthetic' }
+}
+$result = Get-BaselineClosedEditorLogIdentity 'fixture.log'
+if ($result.sha256 -ne 'synthetic' -or $script:calls -ne 3 -or
+    $script:sleeps -ne 2) { throw 'Transient sharing lock was not retried.' }
+$script:calls = 0
+$script:sleeps = 0
+function Get-BaselineIdentity {
+    param([string] $Path, [long] $Limit, [switch] $AllowEmpty)
+    $script:calls++
+    throw [IO.IOException]::new('SYNTHETIC missing file', -2147024894)
+}
+$failed = $false
+try { $null = Get-BaselineClosedEditorLogIdentity 'fixture.log' }
+catch { $failed = $true }
+if (-not $failed -or $script:calls -ne 1 -or $script:sleeps -ne 0) {
+    throw 'Unrelated I/O failure must fail immediately.'
+}
+$script:calls = 0
+$script:sleeps = 0
+function Get-BaselineIdentity {
+    param([string] $Path, [long] $Limit, [switch] $AllowEmpty)
+    $script:calls++
+    throw [IO.IOException]::new('SYNTHETIC persistent lock', -2147024864)
+}
+$failed = $false
+try { $null = Get-BaselineClosedEditorLogIdentity 'fixture.log' }
+catch { $failed = $true }
+if (-not $failed -or $script:calls -ne 40 -or $script:sleeps -ne 39) {
+    throw 'Persistent lock must fail closed after forty attempts.'
+}
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test_editor_log_retry.ps1"
+            path.write_text(fixture, encoding="utf-8")
+            subprocess.run(
+                ["pwsh", "-NoProfile", "-File", str(path), str(wrapper)],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
     def test_native_road_reader_requires_retained_byte_pinned_automation_proof(self):
         reader = (ROOT / "scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1").read_text(

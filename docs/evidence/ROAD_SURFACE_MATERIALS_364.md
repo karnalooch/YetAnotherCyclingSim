@@ -340,3 +340,42 @@ Both new exact-SHA CI and the independent native rerun remain required.
 The #364 asphalt canary, saved/fresh-rendered consumer and final owner
 visual audit remain pending. Performance stays `DEFERRED_AFTER_M3` /
 `performance_pass: false`.
+
+## Real native map read and bounded redirected-log teardown fix — 2026-10-10
+
+[Normal exact-head CI 38062379452](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38062379452)
+**PASS** at `50d02fa69bdf4bbbe5679759245672621bec9d90`.
+[Native run 38062375118](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38062375118)
+**FAILED on host receipt teardown**, but notably progressed through the
+previously failing LFS stage and an actual native Unreal Editor read:
+
+- [Retained artifact 11673672792](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38062375118/artifacts/11673672792)
+  contains `session-preparation.json` with status
+  `ACCEPTED_CONSUMER_BYTES_STAGED` (236 dependencies, 14 consumer assets),
+  `road-material-baseline.json` with
+  `ROAD_MATERIAL_BASELINE_READ_ONLY_COMPLETE`, and original Editor logs.
+- UE **5.8.2-56702186** genuinely started on the frozen saved derived consumer,
+  MapCheck finished with **zero errors and warnings**, and the native reader
+  reported **1 road, 186 supports, 1024 Landscape components**. The owned
+  Editor returned exit code **0**.
+- Reader receipt recorded `read_only: true`,
+  `pre_post_inventory_equal: true`, `saved_asset_bytes_unchanged: true`,
+  `persistent_world_mutation: false`, `material_authoring_verified: false`,
+  `full_mesh_geometry_hash_verified: false`, and correct M3 deferrals.
+- **The overall native job did not pass**. Host receipt `status: FAILED`,
+  `reader_pass: false` after Windows rejected hashing the two redirected
+  `owned-editor-stdout.log` / `owned-editor-stderr.log` files while still
+  open by another process. The wrapper's fail-closed finalization correctly
+  rejected partial evidence. No accepted native stage/merge is inferred.
+
+The scoped repair adds a **bounded sharing-violation-only retry** for the
+real redirected Editor stdout/stderr identity reads, up to forty attempts
+with 250ms pauses (no new process launch or output mutation). Every log
+must still hash successfully with its existing 64MiB bound and stable
+size/mtime check. Non-sharing failures fail immediately; persistent locks
+still FAIL the host receipt. A dedicated actual PowerShell function test
+exercises transient success, immediate unrelated I/O rejection and bounded
+persistent failure. The current document section is a candidate pending
+protected exact-head CI plus a **separate independent native rerun**.
+Owner visual `PENDING_FINAL_M3` and performance
+`DEFERRED_AFTER_M3` / `performance_pass: false` remain unchanged.
