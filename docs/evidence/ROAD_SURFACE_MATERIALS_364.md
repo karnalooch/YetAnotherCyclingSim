@@ -307,3 +307,36 @@ the error remains fail-closed and preserves the original wrong bytes.
 staging/read result on the new exact SHA. No native scene/material admission,
 saved consumer or geometry change claimed. PR remains Draft; owner visual
 `PENDING_FINAL_M3`, FPS `DEFERRED_AFTER_M3`, `performance_pass: false`.
+
+## Native LFS checkout diagnosis and offline hydration repair — 2026-10-10
+
+[Native run 38061545088](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38061545088)
+at `e950d6b19fd721fff4bbc699ec03b9c919d4b2a1`
+**FAILED during dependency hydration, before Unreal** despite
+[exact-head protected CI 38061548431](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38061548431)
+passing. [Artifact 11673397029](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38061545088/artifacts/11673397029)
+identifies `Content/Generated/YACS/MaskReview/M_MaskReview_1.uasset`
+(expected 11,780 bytes, SHA-256
+`0d6a1a6061fd8922b44f6c7ae7d49b9219182149deed1cca42d5f4c0d2047068`)
+as still the **exact committed 130-byte Git LFS pointer** (SHA-256
+`00a8cfcafa5946a7c7ca36b70463c34bc9dc2bee1328f72a6bd8c6e8cfc20229`).
+This source is short, so the previously suspected long-path boundary
+**does not explain the observed failure**. Short isolated checkout remains
+a harmless Windows path safety improvement, not an admission claim.
+
+The active original asset cache, original Automation summary and exact source
+fingerprints were all verified and unchanged. The current repair candidate
+initializes Git LFS filters **locally inside only the fresh code-only checkout**,
+under the isolated Actions Git environment, with automatic smudging disabled.
+It then performs bounded batches of explicit-pinned `git lfs checkout`
+against the already SHA-256-checked offline cache, verifying each batch before
+continuation. No remote fetch, arbitrary input, silent overwrite of modified
+owner assets, geodata/geometry change or weakened hash guard is introduced.
+A synthetic test exercises missing local filters, empty global/system config,
+skip-smudge and multi-batch hydration before comparing original bytes.
+
+**This is a candidate, not evidence that the native stage now passes.**
+Both new exact-SHA CI and the independent native rerun remain required.
+The #364 asphalt canary, saved/fresh-rendered consumer and final owner
+visual audit remain pending. Performance stays `DEFERRED_AFTER_M3` /
+`performance_pass: false`.

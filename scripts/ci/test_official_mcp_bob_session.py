@@ -9,6 +9,7 @@ from copy import deepcopy
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -595,6 +596,38 @@ class OfficialMcpBobSessionTests(unittest.TestCase):
         self.assertIn("observed_sha256=" + digest(mismatch), message)
         self.assertIn("observed_size=" + str(len(mismatch)), message)
         self.assertEqual(target.read_bytes(), mismatch)
+
+    def test_missing_local_lfs_filter_is_bootstrapped_without_global_git_config(self):
+        # The real Actions runner deliberately isolates Git global/system
+        # configuration. A fresh code-only checkout therefore cannot assume
+        # the synthetic fixture's previously installed local LFS filters.
+        for key in ("filter.lfs.process", "filter.lfs.smudge", "filter.lfs.clean"):
+            self.git("config", "--local", "--unset-all", key)
+        with tempfile.TemporaryDirectory(dir=self.base) as directory:
+            isolated = Path(directory) / "empty-global.gitconfig"
+            isolated.write_text("", encoding="utf-8")
+            with (
+                mock.patch.dict(
+                    os.environ,
+                    {
+                        "GIT_CONFIG_GLOBAL": str(isolated),
+                        "GIT_CONFIG_NOSYSTEM": "1",
+                        "GIT_LFS_SKIP_SMUDGE": "1",
+                    },
+                ),
+                mock.patch.object(self.session, "LFS_CHECKOUT_BATCH", 3),
+            ):
+                self.session._hydrate_dependencies(self.rows, self.cache)
+                installed = self.git(
+                    "config", "--local", "--get", "filter.lfs.process"
+                ).decode()
+                self.assertIn("git-lfs filter-process", installed)
+        for row in self.rows:
+            self.assertEqual(
+                (self.root / row["path"]).read_bytes(),
+                self.dependency_payloads[row["path"]],
+            )
+        self.git("diff", "--exit-code", "--", *self.dependency_payloads)
 
     def test_owner_asset_mismatch_is_rejected_before_any_pointer_is_replaced(self):
         owner = self.rows[-1]
