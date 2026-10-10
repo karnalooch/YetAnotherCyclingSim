@@ -1922,13 +1922,27 @@ Julka profiles; the full profile fails closed while these layers are missing.
 
 Worlds intended for production must use non-destructive Landscape Edit Layers unless a documented engine limitation blocks them.
 
+### Project-wide Landscape freeze with local repair and simplification
+
+**Owner decision, 2026-10-10 (Issue #471):** the accepted Landscape is **globally frozen by default**. Preserve its footprint, metric CRS, resolution/grid, macro topography, source provenance, recoverable `Base_DTM`, and accepted checkpoints. Do not globally reimport heightmaps, smooth/blur, resample, decimate or broadly sculpt terrain simply to improve appearance.
+
+**Local exceptions are allowed project-wide** when a scoped approved issue identifies a real terrain/road/seam/contact defect **or** a justified need to simplify overly complex **local** geometry while maintaining source-faithful appearance, collision and interfaces. Diagnose the owning surface and evidence first; this is no free-form artistic terrain redesign and materials/PCG may not camouflage geometric defects.
+
+- Specify the metric AOI, Landscape components or owned near-field mesh, failure/simplification rationale and source/checkpoint fingerprints; mutate only the smallest justified region.
+- Keep the original `Base_DTM` source intact. Use `Local_Corrections` for terrain fixes, `Road_Earthworks` for road-specific cut/fill, or separately owned derived meshes when heightfields are inadequate. Preserve an executable rollback route; an engine-limitation alternative must be equivalently reversible.
+- Protect canonical road XY/grade/crossfall, Road Physics Profile, World Authority, GIS registration, hard exclusions, landforms and neighbouring surface interfaces. Check road contact, collision and sightlines. Simplification must demonstrably resolve a local defect/complexity without sacrificing the required 1:1 fidelity.
+- Record before/after geometry, footprint, displacement extrema, interface checks, exact source hashes, regeneration and rollback receipts. Inspect close rider-camera and distant views, and obtain the issue's native/fresh-load evidence, owner review and protected exact-SHA checks. **A material-only no-geometry-change proof does not cover a terrain correction.**
+- Preserve existing case-specific limits (including #445) and issue dependency gates. This decision creates **no blanket displacement allowance** and does not authorize unrelated map edits under #335 or #364.
+
+The rule supersedes historical blanket no-terrain-edit restrictions only for **separately scoped local repair/simplification**, without retroactively admitting older experiments or unresolved road/BOB/PCG geometry.
+
 Recommended logical layers:
 
 | Layer | Purpose |
 |---|---|
 | `Base_DTM` | imported canonical macro terrain; normally not hand-edited |
 | `Road_Earthworks` | spline-driven road cut/fill and shoulder tie-in |
-| `Local_Corrections` | small bounded visual corrections with documented reason |
+| `Local_Corrections` | bounded repairs or justified local simplification; AOI, cause, delta and rollback documented |
 | `Water_or_Special` | only when a later feature actually requires it |
 
 Rules:

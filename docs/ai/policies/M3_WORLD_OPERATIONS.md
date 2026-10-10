@@ -106,6 +106,18 @@ canonical road XY/physics, weakened exclusions or invented macro geography.
 Material-only proofs must still establish their own unchanged-geometry claim;
 a geometry correction requires its own delta and rollback evidence.
 
+Project-wide owner decision, 2026-10-10 (Issue #471): the accepted global
+Landscape remains frozen; local repair **or simplification** for a confirmed
+defect or justified local complexity need is allowed within a separately scoped
+issue. This extends the 2026-10-08 local/seam exceptions; no global smoothing
+or macro-terrain edit is implied. Follow `docs/WORLD_BUILDING_BIBLE.md`
+section 6 for source/AOI ownership, reversible `Local_Corrections`,
+`Road_Earthworks` or derived geometry, before/after deltas, seam/contact
+checks and rollback/native/visual proof. Preserve `Base_DTM`, road/physics,
+original grid/CRS, existing case-specific limits and dependency gates.
+The #335 mask-only freeze and #364 material-only consumer retain their
+task-specific no-mutation contracts without a separate approved repair issue.
+
 ### Deferred red-overlay review
 
 Owner decision, 2026-10-04: retain the red surface problem-review overlay and
