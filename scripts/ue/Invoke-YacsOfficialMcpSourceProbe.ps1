@@ -1,7 +1,7 @@
 #requires -Version 7.4
 <#
 .SYNOPSIS
-    Collect installed official MCP declarations for Issue #384, without activation.
+    Collect installed official MCP declarations for Issues #384/#364, without activation.
 
 .DESCRIPTION
     Uses the canonical engine resolver and a bounded filesystem-only collector.
@@ -14,7 +14,7 @@ param(
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^[0-9a-f]{40}$')]
     [string] $ExpectedHead,
-    [ValidateSet('stock_control_flow', 'domain_extension')]
+    [ValidateSet('stock_control_flow', 'domain_extension', 'material_declarations')]
     [string] $EvidenceFocus = 'stock_control_flow',
     [string] $ArtifactRoot
 )
@@ -139,4 +139,8 @@ $python = Get-Command python -ErrorAction Stop
 if ($LASTEXITCODE -ne 0) {
     throw "Official MCP source probe is blocked (collector exit $LASTEXITCODE); retain its receipt."
 }
-Write-Host 'Filesystem source evidence collected. Guard parity and #384 admission remain unverified.'
+if ($EvidenceFocus -eq 'material_declarations') {
+    Write-Host 'Filesystem material declarations collected. Runtime schemas, execution and #364 authoring remain unverified.'
+} else {
+    Write-Host 'Filesystem source evidence collected. Guard parity and #384 admission remain unverified.'
+}

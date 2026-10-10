@@ -28,7 +28,12 @@ MAX_SOURCE_FILES = 4096
 MAX_DEPTH = 12
 MAX_EXCERPT_LINES = 2400
 MAX_CONSOLE_LINES = 500
-EVIDENCE_FOCUSES = ("stock_control_flow", "domain_extension")
+EVIDENCE_FOCUSES = ("stock_control_flow", "domain_extension", "material_declarations")
+MATERIAL_TOOL_NAME = "MaterialInstanceTools"
+# Discovery candidates, not confirmed installed filenames or API capabilities.
+MATERIAL_MODULE = re.compile(r"material_?instance(?:_?(?:tools|toolset))?", re.IGNORECASE)
+MAX_MATERIAL_DEFINITIONS = 64
+MAX_MATERIAL_BODY_LINES = 80
 PLUGIN_ROOTS = {
     "ModelContextProtocol": "Engine/Plugins/Experimental/ModelContextProtocol",
     "ToolsetRegistry": "Engine/Plugins/Experimental/ToolsetRegistry",
@@ -355,6 +360,110 @@ def select_domain_extension(
     receipt["excerpt_limit_reached"] = remaining == 0
 
 
+def select_material_declarations(
+    receipt: dict[str, Any], sources: list[tuple[dict[str, Any], bytes]],
+) -> None:
+    """Observe installed declarations without importing or invoking Epic code."""
+    remaining = MAX_EXCERPT_LINES
+    total_definitions = 0
+    observed = []
+    unestablished = []
+    for item, data in sources:
+        path = Path(item["path"])
+        if source_priority(path, item["role"])[0] >= 100:
+            continue
+        text = data.decode("utf-8-sig")
+        lines = text.splitlines()
+        candidate = bool(MATERIAL_MODULE.fullmatch(path.stem))
+        if path.suffix != ".py":
+            # Native candidates retain actual comment-masked declaration
+            # contexts, with no guessed class, method or invocation contract.
+            code = "\n".join(cpp_code_lines(lines))
+            if not candidate and not re.search(r"\b" + MATERIAL_TOOL_NAME + r"\b", code):
+                continue
+            excerpts, used = selected_excerpts(data, min(remaining, 150), path)
+            for excerpt in excerpts:
+                excerpt["selection"] = "material_native_candidate"
+            item["selected_excerpts"] = excerpts
+            remaining -= used
+            unestablished.append({"path": item["path"], "reason": "NATIVE_MATERIAL_DECLARATIONS_REQUIRE_REVIEW"})
+            continue
+        try:
+            tree = ast.parse(text)
+        except SyntaxError:
+            if candidate:
+                unestablished.append({"path": item["path"], "reason": "SOURCE_PARSE_UNESTABLISHED"})
+            continue
+        classes = [node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
+                   and (node.name == MATERIAL_TOOL_NAME or any(
+                       isinstance(value, ast.Constant) and value.value == MATERIAL_TOOL_NAME
+                       for decorator in node.decorator_list for value in ast.walk(decorator)))]
+        if not classes:
+            if candidate:
+                unestablished.append({"path": item["path"], "reason": "MATERIAL_TOOLSET_DECLARATION_UNESTABLISHED"})
+            continue
+        definitions = []
+        methods = []
+        for owner in sorted(classes, key=lambda node: node.lineno):
+            definitions.append((owner, "class", owner.name))
+            owned = [node for node in owner.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
+            methods.extend(owned)
+            definitions.extend((node, "method", owner.name) for node in owned)
+        total_definitions += len(definitions)
+        available = max(0, MAX_MATERIAL_DEFINITIONS - len(observed))
+        retained = []
+        for node, kind, owner in definitions[:available]:
+            first = min([node.lineno, *[decorator.lineno for decorator in node.decorator_list]]) - 1
+            # A class header stops before its body; methods include their real
+            # body, capped independently before the global excerpt budget.
+            first_body = node.body[0]
+            signature_end = min([first_body.lineno, *[decorator.lineno
+                                for decorator in getattr(first_body, "decorator_list", [])]]) - 1
+            end = signature_end if kind == "class" else (node.end_lineno or node.lineno)
+            signature = "\n".join(lines[node.lineno - 1:max(node.lineno, signature_end)])
+            decorators = [ast.get_source_segment(text, decorator) or "" for decorator in node.decorator_list]
+            declaration = {
+                "path": item["path"], "sha256": item["sha256"], "kind": kind,
+                "owner": owner, "name": node.name, "line": node.lineno,
+                "signature": signature[:600], "signature_truncated": len(signature) > 600,
+                "decorators": [value[:240] for value in decorators[:8]],
+                "decorators_truncated": len(node.decorator_list) > 8,
+                "decorator_text_truncated": any(len(value) > 240 for value in decorators[:8]),
+            }
+            retained.append(declaration)
+            observed.append(declaration)
+            bounded_end = min(end, first + MAX_MATERIAL_BODY_LINES, first + remaining)
+            if bounded_end > first:
+                item["selected_excerpts"].append({
+                    "start_line": first + 1, "end_line": bounded_end,
+                    "text": "\n".join(line[:600] for line in lines[first:bounded_end]),
+                    "selection": "material_declaration", "name": node.name,
+                    "budget_truncated": bounded_end < end,
+                    "context_window_truncated": end > first + MAX_MATERIAL_BODY_LINES,
+                    "source_line_truncated": any(len(line) > 600 for line in lines[first:bounded_end]),
+                })
+                remaining -= bounded_end - first
+        item["material_declarations"] = {
+            "definitions": retained, "total": len(definitions), "truncated": len(retained) < len(definitions),
+            "method_count": len(methods),
+        }
+        if not methods:
+            unestablished.append({"path": item["path"], "reason": "MATERIAL_METHOD_DECLARATIONS_UNESTABLISHED"})
+    receipt["material_declaration_observations"] = observed
+    receipt["material_declaration_total"] = total_definitions
+    receipt["material_declaration_index_truncated"] = len(observed) < total_definitions
+    receipt["material_declaration_unestablished"] = unestablished
+    receipt["material_declaration_status"] = "DECLARATIONS_REQUIRE_PRIMARY_REVIEW"
+    receipt["material_declaration_scope"] = "INSTALLED_SOURCE_DECLARATIONS_ONLY"
+    receipt["source_only"] = True
+    receipt["editor_execution_performed"] = False
+    receipt["material_tool_execution_performed"] = False
+    receipt["material_authoring_admitted"] = False
+    receipt["excerpt_limit_reached"] = remaining == 0
+    if not any(item["kind"] == "method" for item in observed):
+        receipt["blockers"].append("MATERIAL_METHOD_DECLARATIONS_UNESTABLISHED")
+
+
 def collect(
     *, engine_root: Path, project: Path, repository_root: Path,
     expected_sha: str, actual_sha: str, host_context: dict[str, Any] | None = None,
@@ -362,7 +471,7 @@ def collect(
 ) -> dict[str, Any]:
     receipt: dict[str, Any] = {
         "schema_version": 1,
-        "issue": 384,
+        "issue": 364 if evidence_focus == "material_declarations" else 384,
         "status": "BLOCKED",
         "checked_at_utc": datetime.now(timezone.utc).isoformat(),
         "exact_sha": expected_sha,
@@ -433,6 +542,10 @@ def collect(
                 "ToolsetRegistry", "ModelContextProtocol", "AutomationTestToolset", "AutomationController"}
                 and path.suffix in {".h", ".cpp"} and source_priority(path, role)[0] < 100):
             extension_sources.append((item, data))
+        if (evidence_focus == "material_declarations"
+                and role not in {"engine_build", "ModelContextProtocol", "ToolsetRegistry"}
+                and path.suffix in {".h", ".cpp", ".py"}):
+            extension_sources.append((item, data))
         return data
 
     try:
@@ -477,7 +590,8 @@ def collect(
             raise ProbeBlocked("MISSING_EXPERIMENTAL_TOOLSETS_TREE")
         checked_path(engine_root, toolsets_root)
         for path in bounded_files(toolsets_root, descriptors_only=True):
-            relevant = path.stem in TOOLSET_NAMES
+            relevant = path.stem in TOOLSET_NAMES or (
+                evidence_focus == "material_declarations" and path.stem == MATERIAL_TOOL_NAME)
             python_root = path.parent / "Content/Python"
             if python_root.is_dir():
                 checked_path(engine_root, python_root)
@@ -488,6 +602,10 @@ def collect(
                     for item in bounded_files(python_root)
                     if item.suffix == ".py"
                 )
+                if evidence_focus == "material_declarations" and not relevant:
+                    relevant = any(MATERIAL_MODULE.fullmatch(item.stem)
+                                   for item in bounded_files(python_root) if item.suffix == ".py"
+                                   and source_priority(item, path.stem)[0] < 100)
             if relevant:
                 if path.stem in roots:
                     raise ProbeBlocked(f"AMBIGUOUS_PLUGIN_DESCRIPTOR: {path.stem}")
@@ -554,6 +672,8 @@ def collect(
             if not includes:
                 receipt["automation_controller_unestablished"].append("NO_APPROVED_NAMED_INCLUDE_OBSERVED")
             select_domain_extension(receipt, extension_sources)
+        if evidence_focus == "material_declarations":
+            select_material_declarations(receipt, extension_sources)
         combined = "\n".join(text for texts in source_texts.values() for text in texts)
         candidates = {
             "stock_inspection": ("SceneTools", "ActorTools", "ObjectTools"),
@@ -583,6 +703,11 @@ def collect(
         "Running-editor paths, if observed, do not prove active plugin or registry state.",
         "No map/object read, MCP transport, test run, BOB dispatch or guard parity was proved.",
     ]
+    if evidence_focus == "material_declarations":
+        receipt["limitations"].extend([
+            "Observed material names, decorators and method bodies are source declarations, not runtime schemas.",
+            "Parameter/resource restrictions, material execution and saved/reloaded consumer proof remain unverified.",
+        ])
     return receipt
 
 
@@ -656,6 +781,34 @@ def console_summary(receipt: dict[str, Any]) -> str:
     ]
     host["process_list_truncated"] = len(processes) > 8
     lines.append("RUNNING_EDITOR_OBSERVATION " + json.dumps(host, sort_keys=True))
+
+    if receipt.get("evidence_focus") == "material_declarations":
+        lines.append("EVIDENCE_FOCUS material_declarations; source-only; schemas / execution / authoring: UNVERIFIED")
+        lines.append("MATERIAL_DECLARATION_COUNTS " + json.dumps({
+            "total": receipt.get("material_declaration_total", 0),
+            "retained": len(receipt.get("material_declaration_observations", [])),
+            "index_truncated": receipt.get("material_declaration_index_truncated", False),
+        }, sort_keys=True))
+        lines.append("MATERIAL_DECLARATION_UNESTABLISHED " + json.dumps(
+            receipt.get("material_declaration_unestablished", [])[:16], sort_keys=True))
+        for item in receipt["inventory"]:
+            for declaration in item.get("material_declarations", {}).get("definitions", []):
+                if len(lines) < MAX_CONSOLE_LINES:
+                    lines.append("MATERIAL_DECLARATION " + json.dumps(declaration, sort_keys=True))
+            for excerpt in item["selected_excerpts"]:
+                room = min(80, MAX_CONSOLE_LINES - len(lines) - 1)
+                if room <= 0:
+                    continue
+                selected = excerpt["text"].splitlines()[:room]
+                if not selected:
+                    continue
+                clipped = excerpt.get("budget_truncated", False) or len(selected) < len(excerpt["text"].splitlines())
+                end_line = excerpt["start_line"] + len(selected) - 1
+                lines.append(f"SOURCE {item['path']}:{excerpt['start_line']}-{end_line} "
+                             f"sha256={item['sha256']} selection={excerpt['selection']} "
+                             f"budget_truncated={str(clipped).lower()}")
+                lines.extend(f"{excerpt['start_line'] + index}: {line}" for index, line in enumerate(selected))
+        return "\n".join(lines)
 
     if receipt.get("evidence_focus") == "domain_extension":
         lines.append("EVIDENCE_FOCUS domain_extension; native wiring / argument parity: UNVERIFIED")

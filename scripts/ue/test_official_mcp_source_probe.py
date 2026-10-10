@@ -436,6 +436,120 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
         self.assertTrue(result["domain_extension_observations"]["mcp_schema_consumer"])
         self.assertLessEqual(len(output.splitlines()), 500)
 
+    def material_fixture(self, *, source=None):
+        relative = "Engine/Plugins/Experimental/Toolsets/ZMaterialFixture"
+        self.plugin("ZMaterialFixture", relative)
+        return self.write(relative + "/Content/Python/toolsets/material_instance.py", source or (
+            "raise RuntimeError('EPIC_SOURCE_MUST_NEVER_EXECUTE')\n"
+            "@toolset_registry.toolset(name='MaterialInstanceTools')\n"
+            "class FixtureMaterialTools:\n"
+            "    @toolset_registry.tool_call\n"
+            "    @staticmethod\n"
+            "    def get_fixture_parameter(reference: str, name: str) -> float:\n"
+            "        return ACTUAL_READ_DECLARATION_BODY\n"
+            "    @toolset_registry.tool_call\n"
+            "    def set_fixture_parameter(reference: str, name: str, value: float) -> bool:\n"
+            "        return ACTUAL_WRITE_DECLARATION_BODY\n"))
+
+    def test_material_focus_discovers_actual_decorated_declarations_without_execution(self):
+        path = self.material_fixture()
+        before = {item: item.read_bytes() for item in self.engine.rglob("*") if item.is_file()}
+        stock = self.collect()
+        self.assertNotIn("ZMaterialFixture", stock["plugins"])
+        self.assertEqual(stock["issue"], 384)
+        result = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertEqual(result["issue"], 364)
+        observed = result["material_declaration_observations"]
+        self.assertEqual([item["name"] for item in observed],
+                         ["FixtureMaterialTools", "get_fixture_parameter", "set_fixture_parameter"])
+        self.assertIn("name='MaterialInstanceTools'", observed[0]["decorators"][0])
+        self.assertEqual(observed[1]["line"], 6)
+        self.assertIn("reference: str, name: str", observed[1]["signature"])
+        self.assertEqual(observed[1]["decorators"], ["toolset_registry.tool_call", "staticmethod"])
+        self.assertEqual(observed[0]["signature"], "class FixtureMaterialTools:")
+        self.assertTrue(all(item["sha256"] == hashlib.sha256(path.read_bytes()).hexdigest() for item in observed))
+        output = probe.console_summary(result)
+        self.assertIn("ACTUAL_READ_DECLARATION_BODY", output)
+        self.assertIn("ACTUAL_WRITE_DECLARATION_BODY", output)
+        self.assertNotIn("EPIC_SOURCE_MUST_NEVER_EXECUTE", output)
+        for key in ("guard_parity_verified", "runtime_schema_verified", "official_mcp_admitted",
+                    "mcp_server_started", "plugin_activation_performed", "persistent_content_mutation_performed",
+                    "editor_execution_performed", "material_tool_execution_performed", "material_authoring_admitted",
+                    "performance_pass"):
+            self.assertIs(result[key], False)
+        self.assertEqual(before, {item: item.read_bytes() for item in before})
+
+    def test_material_focus_missing_and_literal_only_evidence_fail_closed(self):
+        result = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("MATERIAL_METHOD_DECLARATIONS_UNESTABLISHED", result["blockers"])
+        self.material_fixture(source=(
+            "# class MaterialInstanceTools is not an actual declaration.\n"
+            "EXAMPLE = 'class MaterialInstanceTools'\n"
+            "class Unrelated:\n    def set_fixture(self):\n        return False\n"))
+        result = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["material_declaration_observations"], [])
+        self.assertEqual(result["material_declaration_unestablished"][0]["reason"],
+                         "MATERIAL_TOOLSET_DECLARATION_UNESTABLISHED")
+        self.material_fixture(source="class MaterialInstanceTools:\n    pass\n")
+        self.assertEqual(self.collect(evidence_focus="material_declarations")["status"], "BLOCKED")
+
+    def test_material_focus_tests_cannot_satisfy_or_spend_declaration_budget(self):
+        relative = "Engine/Plugins/Experimental/Toolsets/MaterialInstanceTools"
+        self.plugin("MaterialInstanceTools", relative)
+        self.write(relative + "/Content/Python/Tests/material_instance.py",
+                   "class MaterialInstanceTools:\n    def get_fixture(self):\n        SHIPPED_TEST_MUST_NOT_PRINT\n")
+        result = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["material_declaration_observations"], [])
+        self.assertNotIn("SHIPPED_TEST_MUST_NOT_PRINT", probe.console_summary(result))
+
+    def test_material_focus_definition_body_and_console_budgets_are_explicit(self):
+        source = "class MaterialInstanceTools:\n    def get_fixture(self):\n"
+        source += "\n".join(f"        value_{index} = {index}" for index in range(120)) + "\n"
+        source += "\n".join(f"    def set_fixture_{index}(self):\n        return False" for index in range(80))
+        self.material_fixture(source=source)
+        result = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertEqual(len(result["material_declaration_observations"]), probe.MAX_MATERIAL_DEFINITIONS)
+        self.assertTrue(result["material_declaration_index_truncated"])
+        item = next(item for item in result["inventory"] if item.get("material_declarations"))
+        body = next(excerpt for excerpt in item["selected_excerpts"] if excerpt["name"] == "get_fixture")
+        self.assertTrue(body["context_window_truncated"])
+        self.assertTrue(body["budget_truncated"])
+        self.assertEqual(len(body["text"].splitlines()), probe.MAX_MATERIAL_BODY_LINES)
+        self.assertLessEqual(len(probe.console_summary(result).splitlines()), probe.MAX_CONSOLE_LINES)
+        with patch.object(probe, "MAX_EXCERPT_LINES", 9):
+            limited = self.collect(evidence_focus="material_declarations")
+        self.assertTrue(limited["excerpt_limit_reached"])
+        self.assertLessEqual(sum(len(excerpt["text"].splitlines()) for item in limited["inventory"]
+                                 for excerpt in item["selected_excerpts"]), 9)
+
+    def test_material_discovery_rejects_link_escape_and_preserves_global_read_budget(self):
+        path = self.material_fixture()
+        result = self.collect(evidence_focus="material_declarations")
+        preceding = 0
+        for item in result["inventory"]:
+            if item["path"] == path.relative_to(self.engine).as_posix():
+                break
+            preceding += item["bytes"]
+        with patch.object(probe, "MAX_TOTAL_BYTES", preceding + path.stat().st_size - 1), patch.object(
+            probe, "read_bounded", wraps=probe.read_bounded,
+        ) as reads:
+            blocked = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(blocked["status"], "BLOCKED")
+        self.assertIn("SOURCE_TOTAL_BYTE_LIMIT", blocked["blockers"])
+        self.assertNotIn(path, [call.args[1] for call in reads.call_args_list])
+        outside = self.root / "outside-material.py"
+        outside.write_text("NEVER_READ_OR_EXECUTE\n")
+        path.unlink()
+        path.symlink_to(outside)
+        result = self.collect(evidence_focus="material_declarations")
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertTrue(any("LINK_OR_REPARSE_POINT" in error for error in result["blockers"]))
+
 
 if __name__ == "__main__":
     unittest.main()
