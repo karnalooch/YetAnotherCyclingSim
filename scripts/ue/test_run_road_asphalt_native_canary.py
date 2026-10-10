@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 import tempfile
 import unittest
+import subprocess
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
@@ -12,6 +14,27 @@ from scripts.ue import run_road_asphalt_native_canary as native
 
 
 class NativeCanaryBoundaryTests(unittest.TestCase):
+    def test_unreal_execute_python_script_bootstraps_exact_repo_without_pythonpath(self):
+        """Simulate UE standalone execution with no ambient project PYTHONPATH."""
+        script = Path(__file__).resolve().parent / "run_road_asphalt_native_canary.py"
+        with tempfile.TemporaryDirectory() as temp:
+            source = (
+                "import runpy, sys; "
+                "sys.path = [p for p in sys.path if 'YetAnotherCyclingSim' not in p]; "
+                "scope = runpy.run_path(sys.argv[1], run_name='native_import_fixture'); "
+                "assert scope['ROOT'] == __import__('pathlib').Path(sys.argv[1]).resolve().parents[2]; "
+                "assert scope['session'].__name__ == 'scripts.ci.official_mcp_bob_session'"
+            )
+            process = subprocess.run(
+                [sys.executable, "-I", "-c", source, str(script)],
+                cwd=temp,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            self.assertEqual(process.returncode, 0, process.stderr)
+
     def test_owned_run_token_and_exclusive_proof_leaf(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

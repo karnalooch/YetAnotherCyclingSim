@@ -13,6 +13,14 @@ import json
 import os
 from pathlib import Path
 import re
+import sys
+
+# -ExecutePythonScript opens an absolute file inside UE's embedded Python;
+# unlike `python -m`, it does not promise the project root on sys.path.
+# Select only the root of this exact invoked script, never a searched checkout.
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from scripts.ci import official_mcp_bob_session as session
 from scripts.ue import read_road_material_baseline as baseline
@@ -20,7 +28,6 @@ from scripts.ue import road_asphalt_slot_canary as canary
 from scripts.ue import road_asphalt_source_preflight as source
 from scripts.ue import sa_calobra_whole_map_prep as prep
 
-ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_NAME = "road-asphalt-canary.json"
 MAX_RECEIPT_BYTES = 2 * 1024 * 1024
 

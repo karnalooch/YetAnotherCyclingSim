@@ -443,3 +443,24 @@ Future #364 batches must separately prove real shader output, authored
 shoulder-top/wall slot separation, a new saved material-only derived consumer,
 fresh reopening and review frames from both road directions. Do not merge until
 all applicable technical/review gates and final M3 owner audit policy are met.
+
+## Transient Unreal Python bootstrap correction — 2026-10-10
+
+[Native #38065442572](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38065442572)
+at `99da397bf880d9d4a68449d7bc1c2bc7404dd580` **failed** in its second
+Editor process, after the complete read-only baseline PASS. The retained
+[artifact 11674572801](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38065442572/artifacts/11674572801)
+confirms that `asphalt-source-preflight.json` succeeded with two pinned original
+renders and that the Editor launched. Its actual `asphalt-editor.log`
+records `ModuleNotFoundError: No module named 'scripts'` at line 17 of
+`run_road_asphalt_native_canary.py`. Unreal's `-ExecutePythonScript`
+does not automatically add the script's repository root to Python's path.
+The Editor exited 3; no material import, assignment or rollback was observed.
+
+The corrective candidate inserts only `Path(__file__).resolve().parents[2]`
+into the transient script's Python search path before any repository imports.
+The host continues to verify exact committed script bytes and isolated checkout.
+A hosted regression executes the real Python entry with `-I` and an unrelated
+working directory, with no ambient project import path; it never starts UE.
+Source, map, material and geometry inputs are unchanged, and no success is
+claimed until a fresh exact-SHA CI and independent native Editor trial pass.
