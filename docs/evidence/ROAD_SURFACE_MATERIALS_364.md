@@ -729,3 +729,58 @@ before choosing any quality iteration, then a distinct shoulder/edge/wall
 ownership pass and ultimately complete-area M3 owner review.
 This source candidate is **not a native render PASS** until separately
 proven at its new exact SHA.
+
+## First real road Lit PNGs and Windows GPU-exit follow-up — 2026-10-10
+
+At exact SHA `fc4430197015c2d7823950c5458cc74ac05f957b`,
+[protected CI 38075979780](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38075979780)
+**PASS**, including hosted tests, Windows Unreal/Automation and Aggregate CI.
+The independently gated
+[native 38075976518](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38075976518)
+**FAILED only the new GPU Lit step**: complete native accepted baseline,
+transient slot-zero asphalt and saved/fresh-reloaded derivative all
+**passed on the same SHA**. Its
+[artifact 11679615853](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38075976518/artifacts/11679615853)
+contains four **real 1280×720 UE5.8 Lit PNGs**, two forward and two reverse
+of window 0112, source camera/FOV pinned, and exact per-PNG
+hashes in `road-asphalt-lit-review.json`. The observed screenshot
+nonuniformity was 1531/1647/1723/1737 sampled RGB values.
+
+Technical visual inspection now shows real muted grey, micro-cracked
+asphalt road (first material appears on **road** pixels), but also
+hard-edged light shoulders/support faces, pronounced vertical tan cliff
+striations and black wedge/seam artifacts in the first forward
+hairpin view. Neither road material quality, shoulder/wall ownership
+nor entire area can be marked 8/10 / owner PASS from these frames.
+These defects must remain actionable in #364 and #372 review; visual
+material alone cannot conceal geometry defects or thaw frozen Landscape.
+
+Two independent final-proof defects are captured:
+1. `road-asphalt-lit-review.json` is `ROAD_ASPHALT_LIT_REVIEW_FAILED`
+   **despite four captured PNGs**, with
+   `errors=["dirty scene: native map/content is dirty"]`. Spawning and
+   removing even a `transient=True` CameraActor in the *derived
+   in-memory* UWorld can mark that map package dirty. All original asset
+   SHA/inventory checks passed, and no saved map was changed. The repair
+   explicitly accepts **only the known derived map's unsaved dirty
+   package** and **zero dirty content packages**, with an exact package
+   path audit in the native receipt. The original source and any other
+   package dirt remain hard-fail; full after-render geometry, actor,
+   support, Landscape and byte-exact saved packages still must match.
+2. The owning real GUI `UnrealEditor.exe -RenderOffscreen` returned
+   **-1073741819 / 0xC0000005 access violation** during shutdown *after*
+   all four PNGs, a `QUIT_EDITOR`, and log line `LogExit: Exiting.`.
+   Neither native proof nor renderer acceptance is claimed from those
+   images. The candidate inserts ten seconds of **no new frames/tasks**
+   after final screenshot completion before camera teardown/exit and
+   disables the concurrent RHI thread with `-norhithread` for a
+   bounded diagnostic shutdown. The Windows process **must still exit 0**,
+   with four authenticated original-size PNGs, a pristine source/saved
+   map and positive `road-asphalt-gpu-host-receipt.json`, before
+   the native job may mark this subgate PASS. A real exit crash or
+   foreign dirty asset is never downgraded to success.
+
+This is a new small diagnostic native candidate, NOT an admitted
+render. No maps/packages are saved or edited by the GPU run; original
+Landscape frozen globally. Final owner M3 visual audit and
+`DEFERRED_AFTER_M3` FPS remain unchanged.

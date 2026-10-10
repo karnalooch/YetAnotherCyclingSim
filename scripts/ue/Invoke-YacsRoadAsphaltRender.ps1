@@ -212,7 +212,8 @@ try {
         ('"' + (Join-Path $root 'YetAnotherCyclingSim.uproject') + '"'),
         '/Engine/Maps/Entry',
         '-DisablePlugins=ModelContextProtocol,Wingman,AndroidFileServer',
-        '-RenderOffscreen', '-Unattended', '-NoPause', '-NoSplash', '-NoSound',
+        '-RenderOffscreen', '-norhithread',
+        '-Unattended', '-NoPause', '-NoSplash', '-NoSound',
         '-NoLiveCoding', '-NoVSync', '-NoP4', '-ScriptErrorsAreFatal',
         '-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False',
         ('-ExecutePythonScript="' + $script + '"'),
@@ -262,6 +263,12 @@ try {
         $data.camera_csv_sha256 -cne '15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3' -or
         $data.native_lit_frames_retained -isnot [bool] -or
         -not $data.native_lit_frames_retained -or
+        $data.transient_dirty_package_audit.no_original_or_content_package_dirty -isnot [bool] -or
+        -not $data.transient_dirty_package_audit.no_original_or_content_package_dirty -or
+        $data.transient_dirty_package_audit.dirty_derived_package_saved -isnot [bool] -or
+        $data.transient_dirty_package_audit.dirty_derived_package_saved -or
+        $data.transient_dirty_package_audit.dirty_content_count -ne 0 -or
+        $data.gpu_shutdown_quiescence_seconds -ne 10.0 -or
         $data.sources_and_saved_assets_unchanged -isnot [bool] -or
         -not $data.sources_and_saved_assets_unchanged -or
         $data.owner_visual_status -cne 'PENDING_FINAL_M3' -or

@@ -7,7 +7,8 @@ import hashlib
 import io
 import json
 import unittest
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 from scripts.ue import road_asphalt_gpu_review as gpu
 
@@ -100,6 +101,59 @@ class RoadGpuReviewContractTests(unittest.TestCase):
             ):
                 with self.assertRaisesRegex(ValueError, "uniform"):
                     gpu.frame_statistics("synthetic-blank.png")
+
+    def test_transient_camera_dirties_only_the_unsaved_derived_map(self):
+        def fake_api(map_paths, content_paths):
+            return SimpleNamespace(
+                EditorLoadingAndSavingUtils=SimpleNamespace(
+                    get_dirty_map_packages=lambda: map_paths,
+                    get_dirty_content_packages=lambda: content_paths,
+                )
+            )
+
+        report = gpu.audit_transient_capture_dirty_packages(
+            fake_api([gpu.saved.MAP], [])
+        )
+        self.assertTrue(report["derived_map_dirty_in_memory"])
+        self.assertTrue(report["no_original_or_content_package_dirty"])
+        self.assertFalse(report["dirty_derived_package_saved"])
+        self.assertEqual(report["dirty_content_count"], 0)
+        self.assertFalse(
+            gpu.audit_transient_capture_dirty_packages(
+                fake_api([], [])
+            )["derived_map_dirty_in_memory"]
+        )
+        for maps, content in (
+            ([gpu.session.operation.MAP_PACKAGE], []),
+            (["/Game/Other/L_World"], []),
+            ([gpu.saved.MAP], ["/Game/Generated/YACS/T_Changed"]),
+            ([], ["/Game/Materials/M_Changed"]),
+            ([gpu.saved.MAP] * 9, []),
+        ):
+            with self.subTest(maps=maps, content=content):
+                with self.assertRaises(ValueError):
+                    gpu.audit_transient_capture_dirty_packages(
+                        fake_api(maps, content)
+                    )
+
+    def test_gpu_screenshot_completion_quiesces_before_editor_exit(self):
+        class Dummy:
+            def __init__(self):
+                self.stopped = False
+                self.busy = False
+                self.task = None
+                self.finish_requested_at = 40.0
+                self.events = []
+            def stop(self):
+                self.events.append("stop")
+
+        job = Dummy()
+        with patch.object(gpu.time, "monotonic", return_value=49.9):
+            gpu.RoadLitCapture.tick(job, 0.05)
+        self.assertEqual(job.events, [])
+        with patch.object(gpu.time, "monotonic", return_value=50.0):
+            gpu.RoadLitCapture.tick(job, 0.05)
+        self.assertEqual(job.events, ["stop"])
 
     def test_pure_library_import_cannot_launch_unreal_or_capture(self):
         self.assertNotIn("unreal", gpu.__dict__)

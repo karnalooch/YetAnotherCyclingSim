@@ -202,6 +202,46 @@ def authenticate_render_context():
     }
 
 
+def audit_transient_capture_dirty_packages(api):
+    """Admit only camera/viewport dirt in the unsaved *derived* world.
+
+    Unreal marks its current map dirty when an otherwise transient CameraActor
+    is spawned and destroyed. That package dirt is not a saved map mutation:
+    whole-world normalized inventory and immutable on-disk SHA checks remain
+    separate mandatory gates. Every content-package dirt or foreign map dirt
+    remains a hard failure.
+    """
+    loading = api.EditorLoadingAndSavingUtils
+    maps = list(loading.get_dirty_map_packages())
+    content = list(loading.get_dirty_content_packages())
+    require(
+        len(maps) <= 8 and len(content) <= 8,
+        "GPU camera produced unbounded dirty package inventory",
+    )
+
+    def name(pkg):
+        if hasattr(pkg, "get_path_name"):
+            return pkg.get_path_name()
+        require(isinstance(pkg, str), "Unidentified Unreal dirty package object")
+        return pkg
+
+    map_paths = sorted(name(pkg) for pkg in maps)
+    content_paths = sorted(name(pkg) for pkg in content)
+    require(
+        not content_paths and all(path == saved.MAP for path in map_paths),
+        "GPU camera changed non-derived map/content package: "
+        + repr({"maps": map_paths, "content": content_paths}),
+    )
+    return {
+        "derived_map_dirty_in_memory": bool(map_paths),
+        "dirty_map_paths": map_paths,
+        "dirty_content_count": len(content_paths),
+        "no_original_or_content_package_dirty": True,
+        "dirty_derived_package_saved": False,
+        "geometry_or_material_changes_admitted": False,
+    }
+
+
 class RoadLitCapture:
     def __init__(self, api, context, world, landscape):
         self.api = api
@@ -223,6 +263,8 @@ class RoadLitCapture:
         self.priming = False
         self.stopped = False
         self.busy = False
+        self.finish_requested_at = None
+        self.transient_dirty_audit = None
 
     def start(self):
         self.busy = True
@@ -295,7 +337,16 @@ class RoadLitCapture:
         self.submitted = time.monotonic()
 
     def tick(self, _delta):
-        if self.stopped or self.busy or self.task is None:
+        if self.stopped or self.busy:
+            return
+        if self.finish_requested_at is not None:
+            # Let completed screenshot tasks, GPU/RHI and DDC work drain before
+            # releasing the Python callback and requesting Editor shutdown.
+            # No new camera pose/asset/save operation is submitted during this.
+            if time.monotonic() - self.finish_requested_at >= 10.0:
+                self.stop()
+            return
+        if self.task is None:
             return
         self.busy = True
         try:
@@ -322,7 +373,7 @@ class RoadLitCapture:
             self.index += 1
             self.task = None
             if self.index == len(self.context["frames"]):
-                self.stop()
+                self.finish_requested_at = time.monotonic()
             else:
                 self.submit_pose()
         except Exception:
@@ -363,6 +414,12 @@ class RoadLitCapture:
             except Exception as exc:
                 errors.append("viewport: " + str(exc))
         context = self.context
+        try:
+            self.transient_dirty_audit = audit_transient_capture_dirty_packages(
+                self.api
+            )
+        except Exception as exc:
+            errors.append("dirty package ownership: " + str(exc))
         for label, action in (
             ("native scene", lambda: saved.expected_saved_inventory(
                 context["original"]["native_inventory"],
@@ -370,7 +427,6 @@ class RoadLitCapture:
                 context["manifest"]["material_instance"],
                 observed_map_package=saved.MAP,
             )),
-            ("dirty scene", lambda: baseline.dirty_packages(self.api)),
             ("saved package hashes", lambda: saved.verify_retained_files(
                 context["retained"], context["manifest"]["assets"]
             )),
@@ -424,6 +480,8 @@ class RoadLitCapture:
                 entry.startswith("camera:") for entry in errors
             ),
             "sources_and_saved_assets_unchanged": not errors,
+            "transient_dirty_package_audit": self.transient_dirty_audit,
+            "gpu_shutdown_quiescence_seconds": 10.0,
             "native_lit_frames_retained": not errors,
             "gpu_shader_compilation_admitted": False,
             "road_pixel_visibility_admitted": False,
