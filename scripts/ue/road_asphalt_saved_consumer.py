@@ -236,13 +236,23 @@ def produced_files():
     require(folder.is_dir(), "New derived material asset package root is missing")
     rows, total = [], 0
     for path in sorted(folder.rglob("*")):
-        require(path.is_file() and not path.is_symlink(), "Unexpected package family member")
+        relative = path.relative_to(ROOT).as_posix()
+        checked = session._safe_path(ROOT, relative)
+        # The saved material family has nested directories. Audit every
+        # directory for reparse aliases, but inventory/hash only actual package
+        # files. Never skip an unexpected regular file or link.
+        if checked.is_dir():
+            require(not checked.is_symlink(), "Generated package directory is an alias")
+            continue
         require(
-            any(path.name.endswith(suffix) for suffix in SIDECARS),
+            checked.is_file() and not checked.is_symlink(),
+            "Unexpected package family member",
+        )
+        require(
+            any(checked.name.endswith(suffix) for suffix in SIDECARS),
             "Unapproved generated road-material file type",
         )
-        relative = path.relative_to(ROOT).as_posix()
-        identity = session._identity(session._safe_path(ROOT, relative), MAX_ASSET_BYTES)
+        identity = session._identity(checked, MAX_ASSET_BYTES)
         total += identity["size_bytes"]
         require(total <= MAX_TOTAL_BYTES and len(rows) < MAX_ASSET_COUNT,
                 "Generated material package count or byte budget exceeded")

@@ -632,3 +632,35 @@ never edits the original source map package and never loosens material,
 geometry or hash admission. Tests cover both observed-world cases and
 foreign-map rejection. This source change remains unverified until
 protected CI and a new exact-SHA native save/reload result.
+
+## Genuine save passed; package inventory must traverse real directory nodes — 2026-10-10
+
+At exact source `77e87e45cc3568113bca83f2be4269c85d4f5c5f`,
+[protected CI #38072942254](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38072942254)
+**PASS**. In the independently gated
+[native run #38072938977](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38072938977),
+the accepted baseline and reversible road canary passed; UE5.8 saved all six
+Material Forge assets and
+`L_SaCalobraRoadAsphaltReview.umap`. The
+[retained failure artifact #11677547020](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38072938977/artifacts/11677547020)
+records **no final manifest or fresh reload**. The post-save package inventory
+failed at `produced_files()`, line 239,
+`ValueError: Unexpected package family member`.
+
+This was caused by scanning `folder.rglob("*")` and treating every member as
+a regular package file: Material Forge necessarily places assets in nested
+`aged_mountain_asphalt/base/<graph-hash>/` directories. The scoped fix
+authenticates **every** descendant's path with the pre-existing
+`session._safe_path` junction/symlink/reparse-point guard, then explicitly
+allows ordinary directories to be traversed while **requiring that every
+non-directory member** be a bounded approved `.uasset`, `.umap` or
+permitted package sidecar. All actual files still undergo SHA-256, size/count
+limits, independent persistent-copy verification and no-overwrite rules.
+Neither path aliases, unknown files nor silent filesystem omissions are
+admitted. Synthetic regression builds a real nested 1-map/6-asset structure,
+rejects an unexpected file and rejects symlinks when the host permits
+their creation.
+
+Original accepted world, road/support geometry and Landscape remain frozen.
+Successful `SaveMap` alone is **not** a fresh-opened consumer proof; the
+candidate requires a new exact-SHA protected CI and native two-process reload.

@@ -221,6 +221,41 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "differs"):
                     saved.verify_retained_files(retained, delivered)
 
+    def test_generated_package_tree_audits_directories_and_all_seven_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            folder = root / saved.PREFIX
+            expected_paths = [saved.MAP_FILE] + [
+                saved.PREFIX + f"aged_mountain_asphalt/base/abcdef/T_{i}.uasset"
+                for i in range(6)
+            ]
+            for i, relative in enumerate(expected_paths):
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(f"native-package-{i}".encode("utf-8"))
+            with patch.object(saved, "ROOT", root):
+                rows = saved.produced_files()
+                self.assertEqual(
+                    [row["path"] for row in rows], sorted(expected_paths)
+                )
+                self.assertEqual(len(rows), 7)
+                extra = folder / "aged_mountain_asphalt/base/abcdef/UNAPPROVED.txt"
+                extra.write_text("not a package", encoding="utf-8")
+                with self.assertRaisesRegex(
+                    ValueError, "Unapproved generated road-material file type"
+                ):
+                    saved.produced_files()
+                extra.unlink()
+                # Never silently accept an asset file with a real path alias.
+                alias = folder / "aged_mountain_asphalt/base/abcdef/ALIAS.uasset"
+                try:
+                    alias.symlink_to(root / expected_paths[1])
+                except (OSError, NotImplementedError):
+                    pass  # Symlink privilege may be unavailable on Windows.
+                else:
+                    with self.assertRaisesRegex(ValueError, "reparse|symlink"):
+                        saved.produced_files()
+
     def test_schema_and_packages_are_fixed_to_new_separate_namespace(self):
         self.assertEqual(
             saved.MAP_FILE,
