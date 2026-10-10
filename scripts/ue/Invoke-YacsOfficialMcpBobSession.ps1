@@ -423,6 +423,7 @@ function Write-SessionFixedFailureLogContext {
     $lines = $File.text -split '\r?\n'
     $matched = [Collections.Generic.SortedSet[int]]::new()
     $startup = [Collections.Generic.SortedSet[int]]::new()
+    $nativeMilestones = [Collections.Generic.SortedSet[int]]::new()
     $categories = [ordered]@{
         engine = '(?i)LogInit:.*(?:Engine Version|Build:)'
         bob = '(?i)LogPluginManager:.*(?:YacsBobInspection|ModelContextProtocol|ToolsetRegistry)|YacsBob|BOB_|LogModelContextProtocol'
@@ -441,6 +442,7 @@ function Write-SessionFixedFailureLogContext {
         if ($lines[$index] -match '(?i)error C[0-9]+|fatal error|error LNK[0-9]+|LogPython:.*(?:Error|Fatal)|Traceback|Exception|(?:Runtime|Attribute|Type|Value|Name|Import|ModuleNotFound|Syntax)Error|Assertion failed') {
             for ($line = [Math]::Max(0, $index - 1); $line -le [Math]::Min($index + 2, $lines.Length - 1); $line++) { [void]$matched.Add($line) }
         }
+        if (-not $DiagnosePreviousFailure -and $lines[$index].Contains('LogYacsBobOfficialSession:')) { [void]$nativeMilestones.Add($index) }
         if ($DiagnosePreviousFailure) {
             foreach ($category in $categories.Keys) {
                 if ($lines[$index] -match $categories[$category]) {
@@ -451,6 +453,10 @@ function Write-SessionFixedFailureLogContext {
         }
     }
     $chosen = @($matched | Select-Object -First 16) + @($matched | Select-Object -Last 8)
+    if (-not $DiagnosePreviousFailure -and $nativeMilestones.Count -gt 0) {
+        $chosen = @($matched | Select-Object -First 12) + @($matched | Select-Object -Last 8) `
+            + @($nativeMilestones | Select-Object -First 2) + @($nativeMilestones | Select-Object -Last 2)
+    }
     if ($DiagnosePreviousFailure) {
         # Five independently reserved categories (at most four each) plus
         # four error-context lines retain the existing 24-line hard cap.
@@ -494,7 +500,7 @@ function Write-SessionFixedFailureLogContext {
             Write-Host ('PREVIOUS_SESSION_LAUNCH_OBSERVATION ' + $Name + ' ' + ($observation | ConvertTo-Json -Compress))
         }
     }
-    return [ordered]@{ lines = $context; truncated = ($matched.Count + $startup.Count) -gt $context.Count
+    return [ordered]@{ lines = $context; truncated = ($matched.Count + $startup.Count + $nativeMilestones.Count) -gt $context.Count
         identity_scope = $identityScope
         launch_observations = $observations; command_line_observed = $commandLines.Count -gt 0; launch_observations_truncated = $commandLines.Count -gt $observations.Count }
 }

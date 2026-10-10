@@ -580,9 +580,21 @@ then exceeded the shared 420-second deadline. The fixed client was not launched;
 official readiness, Automation, transport and BOB remain unverified. The saved
 host receipt is 440,247 bytes, SHA-256
 `b19aa1b9d474ef7be6eff646da53d17a6e57225a672d3a29f043d5fd501b2f45`.
-A fixed read-only diagnostic must authenticate the retained Editor log and
-native/context evidence before changing lifecycle behavior. The timeout alone
-does not establish its cause or the absence of a native receipt.
+[Read-only diagnostic 38013335203](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38013335203)
+at `211a1a4c1a9eb5fcf3125f432e380cd44643e7d8` authenticated the old
+host receipt, both build records, preparation/scene/transport contexts and all
+three retained Editor logs. The actual command line contained the proof opt-in
+and both domain/MCP plugin selections; the domain DLL loaded. Both
+`native-counter.json` and `native-session.json` were absent. This establishes
+the retained observations, not the lifecycle cause. Source review found no
+context schema mismatch and confirmed that failures before trusted-input
+admission suppress the native receipt without logging their reason.
+The next candidate adds bounded native lifecycle/failure log records and
+reserves their first/last lines within the existing 24-line failure console
+limit. It preserves all context, listener, operation and authority guards and
+the native 180-second / host 420-second deadlines. A fresh exact-source native
+attempt is needed to establish the otherwise missing failure phase; no
+historical timeout cause or readiness PASS is inferred.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 

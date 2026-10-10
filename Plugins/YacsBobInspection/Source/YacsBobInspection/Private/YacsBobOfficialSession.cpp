@@ -33,6 +33,8 @@
 
 #include <atomic>
 
+DEFINE_LOG_CATEGORY_STATIC(LogYacsBobOfficialSession, Log, All);
+
 namespace
 {
 using FResult = FYacsBobInspectionToolset::FResult;
@@ -174,6 +176,8 @@ struct FYacsBobOfficialSession : TSharedFromThis<FYacsBobOfficialSession, ESPMod
     std::atomic<int32> DeniedInputs{0};
     bool bRequestReserved = false;
     bool bPythonStartupComplete = false;
+    bool bFirstTickLogged = false;
+    bool bFailureLogged = false;
     bool bTrustedInputs = false;
     bool bNativePythonSettingsRead = false;
     bool bPythonRemoteExecution = false;
@@ -188,6 +192,20 @@ struct FYacsBobOfficialSession : TSharedFromThis<FYacsBobOfficialSession, ESPMod
     FTSTicker::FDelegateHandle TickHandle;
 
     FString File(const TCHAR* Name) const { return Root / SessionRelative / Name; }
+
+    const TCHAR* PhaseName() const
+    {
+        switch (Phase)
+        {
+        case EPhase::WaitingInputs: return TEXT("WaitingInputs");
+        case EPhase::Discovering: return TEXT("Discovering");
+        case EPhase::Ready: return TEXT("Ready");
+        case EPhase::Running: return TEXT("Running");
+        case EPhase::Completed: return TEXT("Completed");
+        case EPhase::Failed: return TEXT("Failed");
+        }
+        return TEXT("Unknown");
+    }
 
     TArray<FString> Census() const
     {
@@ -393,6 +411,12 @@ struct FYacsBobOfficialSession : TSharedFromThis<FYacsBobOfficialSession, ESPMod
 
     void Fail(const FString& Message)
     {
+        if (!bFailureLogged)
+        {
+            bFailureLogged = true;
+            UE_LOG(LogYacsBobOfficialSession, Error, TEXT("Failed: phase=%s elapsed=%.3f python=%d trusted=%d reason=%s"),
+                PhaseName(), FPlatformTime::Seconds() - StartedAt, bPythonStartupComplete ? 1 : 0, bTrustedInputs ? 1 : 0, *Message);
+        }
         Error = Message;
         Phase = EPhase::Failed;
         Receipt();
@@ -401,6 +425,7 @@ struct FYacsBobOfficialSession : TSharedFromThis<FYacsBobOfficialSession, ESPMod
 
     bool Inputs()
     {
+        UE_LOG(LogYacsBobOfficialSession, Log, TEXT("Inputs entered."));
         Root = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
         FPaths::NormalizeDirectoryName(Root);
         FString ExpectedRoot = FPlatformMisc::GetEnvironmentVariable(TEXT("YACS_MCP_BOB_PROJECT_ROOT"));
@@ -457,6 +482,7 @@ struct FYacsBobOfficialSession : TSharedFromThis<FYacsBobOfficialSession, ESPMod
             return false;
         }
         bTrustedInputs = true;
+        UE_LOG(LogYacsBobOfficialSession, Log, TEXT("Inputs trusted."));
         return true;
     }
 
@@ -556,6 +582,12 @@ struct FYacsBobOfficialSession : TSharedFromThis<FYacsBobOfficialSession, ESPMod
     bool Tick(float)
     {
         check(IsInGameThread());
+        if (!bFirstTickLogged)
+        {
+            bFirstTickLogged = true;
+            UE_LOG(LogYacsBobOfficialSession, Log, TEXT("First tick: elapsed=%.3f python=%d"),
+                FPlatformTime::Seconds() - StartedAt, bPythonStartupComplete ? 1 : 0);
+        }
         if (Phase == EPhase::Failed) { return false; }
         if (FPlatformTime::Seconds() - StartedAt > 180)
         {
@@ -585,9 +617,11 @@ struct FYacsBobOfficialSession : TSharedFromThis<FYacsBobOfficialSession, ESPMod
             AsyncResult.Reset(UAutomationTestToolset::DiscoverTests(false));
             if (!AsyncResult.IsValid()) { Fail(TEXT("Official discovery returned no async object.")); return false; }
             Phase = EPhase::Discovering;
+            UE_LOG(LogYacsBobOfficialSession, Log, TEXT("Discovery entered."));
         }
         if (Phase == EPhase::Discovering && AsyncResult->bIsComplete)
         {
+            UE_LOG(LogYacsBobOfficialSession, Log, TEXT("Discovery completed."));
             UAutomationTestToolsetSubsystem* Subsystem = GEditor->GetEditorSubsystem<UAutomationTestToolsetSubsystem>();
             const TSharedPtr<FJsonObject> Status = ParseObject(UAutomationTestToolset::GetTestStatus());
             if (!AsyncResult->Error.IsEmpty() || !Subsystem || !Subsystem->IsControllerReady()
@@ -598,6 +632,7 @@ struct FYacsBobOfficialSession : TSharedFromThis<FYacsBobOfficialSession, ESPMod
                 return false;
             }
             Phase = EPhase::Ready;
+            UE_LOG(LogYacsBobOfficialSession, Log, TEXT("Ready."));
         }
         if (Phase == EPhase::Ready || Phase == EPhase::Running || Phase == EPhase::Completed)
         {
@@ -742,12 +777,17 @@ TSharedPtr<FYacsBobOfficialSession, ESPMode::ThreadSafe> StartYacsBobOfficialSes
 {
     if (!FParse::Param(FCommandLine::Get(), TEXT("YacsBobOfficialProof"))) { return nullptr; }
     const TSharedRef<FYacsBobOfficialSession, ESPMode::ThreadSafe> Session = MakeShared<FYacsBobOfficialSession, ESPMode::ThreadSafe>();
+    UE_LOG(LogYacsBobOfficialSession, Log, TEXT("Opted-in factory: pid=%u"), FPlatformProcess::GetCurrentProcessId());
     if (IPythonScriptPlugin* Python = IPythonScriptPlugin::Get())
     {
         const TWeakPtr<FYacsBobOfficialSession, ESPMode::ThreadSafe> Weak = Session;
         Python->RegisterOnPythonInitialized(FSimpleDelegate::CreateLambda([Weak]()
         {
-            if (const TSharedPtr<FYacsBobOfficialSession, ESPMode::ThreadSafe> Owned = Weak.Pin()) { Owned->bPythonStartupComplete = true; }
+            if (const TSharedPtr<FYacsBobOfficialSession, ESPMode::ThreadSafe> Owned = Weak.Pin())
+            {
+                Owned->bPythonStartupComplete = true;
+                UE_LOG(LogYacsBobOfficialSession, Log, TEXT("Python startup callback."));
+            }
         }));
     }
     Session->TickHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([Session](float Delta) { return Session->Tick(Delta); }));
