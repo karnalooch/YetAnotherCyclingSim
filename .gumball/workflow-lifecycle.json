@@ -24,7 +24,7 @@
     {
       "file": "official-unreal-mcp-source-probe.yml",
       "state": "CURRENT",
-      "reason": "Issues #384/#364 owner-only branch-scoped read-only installed UE 5.8.2 official MCP/registry/test and material declaration inventory. Fresh code-only checkout, isolated long-path Git configuration and serial shared host lane; no build/editor launch/plugin activation or persistent world mutation. Source metadata is not runtime schemas, material authoring or MCP admission."
+      "reason": "Issues #384/#364 owner-only branch-scoped read-only installed UE 5.8.2 official MCP/registry/test, material and Level Editor streaming declaration inventory. Explicit focus selection preserves existing inspections. Fresh code-only checkout, isolated long-path Git configuration and serial shared host lane; no build/editor launch/plugin activation or persistent world mutation. Source metadata is not runtime schemas, a working stream, material authoring or MCP admission."
     },
     {
       "file": "road-material-source-proof.yml",

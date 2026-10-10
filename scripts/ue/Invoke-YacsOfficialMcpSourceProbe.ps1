@@ -14,7 +14,7 @@ param(
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^[0-9a-f]{40}$')]
     [string] $ExpectedHead,
-    [ValidateSet('stock_control_flow', 'domain_extension', 'material_declarations')]
+    [ValidateSet('stock_control_flow', 'domain_extension', 'material_declarations', 'level_editor_stream')]
     [string] $EvidenceFocus = 'stock_control_flow',
     [string] $ArtifactRoot
 )
@@ -139,7 +139,9 @@ $python = Get-Command python -ErrorAction Stop
 if ($LASTEXITCODE -ne 0) {
     throw "Official MCP source probe is blocked (collector exit $LASTEXITCODE); retain its receipt."
 }
-if ($EvidenceFocus -eq 'material_declarations') {
+if ($EvidenceFocus -eq 'level_editor_stream') {
+    Write-Host 'Installed Level Editor streaming declarations collected. No plugin or stream was started.'
+} elseif ($EvidenceFocus -eq 'material_declarations') {
     Write-Host 'Filesystem material declarations collected. Runtime schemas, execution and #364 authoring remain unverified.'
 } else {
     Write-Host 'Filesystem source evidence collected. Guard parity and #384 admission remain unverified.'

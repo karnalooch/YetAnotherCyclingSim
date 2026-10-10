@@ -1,4 +1,4 @@
-"""Collect bounded installed Epic source evidence without activating Unreal MCP.
+"""Collect bounded installed Epic source evidence without activating Unreal plugins.
 
 This filesystem probe records declarations for a later human/API review. It
 does not establish runtime schemas, restrict a server, execute tools or admit
@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+from collections.abc import Callable
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -28,7 +29,9 @@ MAX_SOURCE_FILES = 4096
 MAX_DEPTH = 12
 MAX_EXCERPT_LINES = 2400
 MAX_CONSOLE_LINES = 500
-EVIDENCE_FOCUSES = ("stock_control_flow", "domain_extension", "material_declarations")
+EVIDENCE_FOCUSES = (
+    "stock_control_flow", "domain_extension", "material_declarations", "level_editor_stream",
+)
 MATERIAL_TOOL_NAME = "MaterialInstanceTools"
 # Discovery candidates, not confirmed installed filenames or API capabilities.
 MATERIAL_MODULE = re.compile(r"material_?instance(?:_?(?:tools|toolset))?", re.IGNORECASE)
@@ -43,6 +46,19 @@ TOOLSET_NAMES = {
     "ObjectToolset", "SceneTools", "ActorTools", "ObjectTools",
 }
 SOURCE_SUFFIXES = {".h", ".cpp", ".py", ".ini", ".cs"}
+STREAM_PLUGIN_ROOT = "Engine/Plugins/Media/PixelStreaming2"
+STREAM_MODULES = ("PixelStreaming2Settings", "PixelStreaming2Editor")
+STREAM_PLUGIN_MANAGER = "Engine/Source/Runtime/Projects/Private/PluginManager.cpp"
+STREAM_SOURCE_SUFFIXES = {".h", ".cpp", ".ini", ".cs"}
+# Candidate search anchors, not assumed CLI names or verified capabilities.
+STREAM_SYMBOLS = (
+    "EditorPixelStreaming", "StartOnLaunch", "StartStreamingWithEditor",
+    "LevelEditorViewport", "StreamType", "StartSignalling", "ViewerPort",
+    "StreamerPort", "FAutoConsoleCommand", "EnablePlugins", "StartStreaming", "StopStreaming",
+)
+MAX_STREAM_OBSERVATIONS_PER_SYMBOL = 24
+MAX_STREAM_CONTEXTS_PER_SYMBOL = 3
+MAX_STREAM_CONTEXT_LINES = 56
 INTEREST = re.compile(
     r"\b(?:AllowedNames|BlockedNames|SetNameFilters|IsToolEnabled|ExecuteTool|"
     r"RegisterToolset|GetToolsetJsonSchema\w*|OnRefreshTools|RefreshTools|"
@@ -464,6 +480,133 @@ def select_material_declarations(
         receipt["blockers"].append("MATERIAL_METHOD_DECLARATIONS_UNESTABLISHED")
 
 
+def select_level_editor_stream(
+    receipt: dict[str, Any], sources: list[tuple[dict[str, Any], bytes]],
+) -> None:
+    """Select installed editor-streaming contexts; never infer runtime wiring.
+
+    Comments cannot establish an observation. String literals remain visible
+    because actual cvar/command registrations and FParse keys use them.
+    """
+    prepared = []
+    for item, data in sources:
+        lines = data.decode("utf-8-sig").splitlines()
+        code = cpp_code_lines(lines) if Path(item["path"]).suffix != ".ini" else [
+            "" if line.lstrip().startswith((";", "#")) else line for line in lines
+        ]
+        prepared.append((item, lines, code))
+    remaining = MAX_EXCERPT_LINES
+    observations = {}
+    counts = {}
+    for symbol in STREAM_SYMBOLS:
+        candidates = []
+        for item, lines, code in prepared:
+            if item["role"] == "PluginManager" and symbol != "EnablePlugins":
+                continue
+            for index, line in enumerate(code):
+                if symbol not in line:
+                    continue
+                # Prefer registrations/parsing and enum headers over repeated
+                # uses of a candidate name in menu/viewport implementation.
+                nearby = "\n".join(code[max(0, index - 6):index + 7])
+                registration = bool(re.search(
+                    r"\b(?:FParse|FCommandLine|FAutoConsoleCommand\w*|TAutoConsoleVariable|"
+                    r"RegisterConsole\w*|Register\w*|Create\w*)\b", nearby))
+                header_enum = symbol == "LevelEditorViewport" and Path(item["path"]).suffix == ".h"
+                candidates.append((not (registration or header_enum),
+                                   Path(item["path"]).suffix not in {".cpp", ".h"},
+                                   item["path"], index, item, lines, code))
+        candidates.sort(key=lambda candidate: candidate[:4])
+        counts[symbol] = len(candidates)
+        observations[symbol] = [
+            {"path": item["path"], "line": index + 1, "sha256": item["sha256"]}
+            for _, _, _, index, item, _, _ in candidates[:MAX_STREAM_OBSERVATIONS_PER_SYMBOL]
+        ]
+        retained_spans: dict[str, list[tuple[int, int]]] = {}
+        retained_contexts = 0
+        for _, _, _, index, item, lines, code in candidates:
+            if retained_contexts >= MAX_STREAM_CONTEXTS_PER_SYMBOL or remaining <= 0:
+                break
+            previous = retained_spans.setdefault(item["path"], [])
+            if any(start <= index < end for start, end in previous):
+                continue
+            start = max(0, index - 6)
+            end = min(len(lines), start + MAX_STREAM_CONTEXT_LINES)
+            bounded_end = min(end, start + remaining)
+            item["selected_excerpts"].append({
+                "start_line": start + 1, "end_line": bounded_end, "match_line": index + 1,
+                "text": "\n".join(line[:600] for line in lines[start:bounded_end]),
+                "selection": "level_editor_stream_context", "topic": symbol,
+                "topic_context_index": retained_contexts,
+                "budget_truncated": bounded_end < end,
+                "context_window_truncated": end < len(lines),
+                "source_line_truncated": any(len(line) > 600 for line in lines[start:bounded_end]),
+                "code_line_offsets": [cursor - start for cursor in range(start, bounded_end)
+                                      if code[cursor].strip()],
+            })
+            previous.append((start, end))
+            remaining -= bounded_end - start
+            retained_contexts += 1
+    receipt["level_editor_stream_observations"] = observations
+    receipt["level_editor_stream_observation_counts"] = counts
+    receipt["level_editor_stream_index_truncated"] = any(
+        counts[symbol] > len(observations[symbol]) for symbol in STREAM_SYMBOLS)
+    receipt["level_editor_stream_missing_contexts"] = [
+        symbol for symbol in STREAM_SYMBOLS if not observations[symbol]]
+    receipt["level_editor_stream_status"] = "INSTALLED_SOURCE_CONTEXTS_REQUIRE_REVIEW"
+    receipt["excerpt_limit_reached"] = remaining == 0
+
+
+def collect_level_editor_stream(
+    receipt: dict[str, Any], engine_root: Path, record: Callable[[Path, str], bytes],
+) -> None:
+    """Read only the fixed PixelStreaming2 preset, without Toolsets discovery."""
+    root = engine_root / STREAM_PLUGIN_ROOT
+    descriptor_path = root / "PixelStreaming2.uplugin"
+    if not descriptor_path.exists():
+        raise ProbeBlocked("MISSING_PLUGIN_DESCRIPTOR: PixelStreaming2")
+    plugin = json.loads(record(descriptor_path, "PixelStreaming2"))
+    if not isinstance(plugin, dict) or not isinstance(plugin.get("Modules", []), list):
+        raise ProbeBlocked("INVALID_PLUGIN_DESCRIPTOR: PixelStreaming2")
+    if any(not isinstance(item, dict) for item in plugin.get("Modules", [])):
+        raise ProbeBlocked("INVALID_PLUGIN_MODULE_DESCRIPTOR: PixelStreaming2")
+    receipt["plugins"]["PixelStreaming2"] = {
+        "descriptor_path": descriptor_path.relative_to(engine_root).as_posix(),
+        "version": plugin.get("Version"), "version_name": plugin.get("VersionName"),
+        "enabled_by_default": plugin.get("EnabledByDefault"),
+        "modules": [item.get("Name") for item in plugin.get("Modules", [])],
+    }
+    sources = []
+    for role, relative in (
+        *((name, f"Source/{name}") for name in STREAM_MODULES),
+        ("PixelStreaming2Config", "Config"),
+    ):
+        source_root = root / relative
+        if not source_root.exists():
+            receipt["level_editor_stream_unestablished_paths"].append(
+                source_root.relative_to(engine_root).as_posix())
+            if role in STREAM_MODULES:
+                receipt["blockers"].append(f"MISSING_PLUGIN_SOURCES: {role}")
+            continue
+        checked_path(engine_root, source_root)
+        native_count = 0
+        for path in bounded_files(source_root):
+            if path.suffix not in STREAM_SOURCE_SUFFIXES or source_priority(path, role)[0] >= 100:
+                continue
+            data = record(path, role)
+            sources.append((receipt["inventory"][-1], data))
+            native_count += path.suffix in {".h", ".cpp"}
+        if role in STREAM_MODULES and not native_count:
+            receipt["blockers"].append(f"MISSING_PLUGIN_SOURCES: {role}")
+    manager_path = engine_root / STREAM_PLUGIN_MANAGER
+    if manager_path.exists():
+        data = record(manager_path, "PluginManager")
+        sources.append((receipt["inventory"][-1], data))
+    else:
+        receipt["level_editor_stream_unestablished_paths"].append(STREAM_PLUGIN_MANAGER)
+    select_level_editor_stream(receipt, sources)
+
+
 def collect(
     *, engine_root: Path, project: Path, repository_root: Path,
     expected_sha: str, actual_sha: str, host_context: dict[str, Any] | None = None,
@@ -471,7 +614,7 @@ def collect(
 ) -> dict[str, Any]:
     receipt: dict[str, Any] = {
         "schema_version": 1,
-        "issue": 364 if evidence_focus == "material_declarations" else 384,
+        "issue": 364 if evidence_focus in {"material_declarations", "level_editor_stream"} else 384,
         "status": "BLOCKED",
         "checked_at_utc": datetime.now(timezone.utc).isoformat(),
         "exact_sha": expected_sha,
@@ -493,6 +636,16 @@ def collect(
         "performance_status": "DEFERRED_AFTER_M3",
         "performance_pass": False,
     }
+    if evidence_focus == "level_editor_stream":
+        receipt.update({
+            "source_only": True,
+            "editor_execution_performed": False,
+            "signalling_server_started": False,
+            "streaming_started": False,
+            "stream_connection_verified": False,
+            "level_editor_stream_admitted": False,
+            "level_editor_stream_unestablished_paths": [],
+        })
     total_bytes = 0
     remaining_lines = MAX_EXCERPT_LINES
     role_lines = {"ToolsetRegistry": 650, "ModelContextProtocol": 850,
@@ -584,35 +737,39 @@ def collect(
         if host_context and host_context.get("active_engine_matches_resolver") is False:
             receipt["blockers"].append("RUNNING_EDITOR_ENGINE_MISMATCH_OR_UNVERIFIED_PATH")
 
-        roots = {name: engine_root / relative for name, relative in PLUGIN_ROOTS.items()}
-        toolsets_root = engine_root / "Engine/Plugins/Experimental/Toolsets"
-        if not toolsets_root.is_dir():
-            raise ProbeBlocked("MISSING_EXPERIMENTAL_TOOLSETS_TREE")
-        checked_path(engine_root, toolsets_root)
-        for path in bounded_files(toolsets_root, descriptors_only=True):
-            relevant = path.stem in TOOLSET_NAMES or (
-                evidence_focus == "material_declarations" and path.stem == MATERIAL_TOOL_NAME)
-            python_root = path.parent / "Content/Python"
-            if python_root.is_dir():
-                checked_path(engine_root, python_root)
-                # Find a relevant shipped module by filename without guessing
-                # which plugin contains generic editor toolsets on this build.
-                relevant = relevant or any(
-                    re.fullmatch(r"(?:actor|scene|object)(?:_tools|_toolset)?", item.stem, re.I)
-                    for item in bounded_files(python_root)
-                    if item.suffix == ".py"
-                )
-                if evidence_focus == "material_declarations" and not relevant:
-                    relevant = any(MATERIAL_MODULE.fullmatch(item.stem)
-                                   for item in bounded_files(python_root) if item.suffix == ".py"
-                                   and source_priority(item, path.stem)[0] < 100)
-            if relevant:
-                if path.stem in roots:
-                    raise ProbeBlocked(f"AMBIGUOUS_PLUGIN_DESCRIPTOR: {path.stem}")
-                roots[path.stem] = path.parent
-        for required in ("AutomationTestToolset",):
-            if required not in roots:
-                receipt["blockers"].append(f"MISSING_PLUGIN_DESCRIPTOR: {required}")
+        roots = {}
+        if evidence_focus == "level_editor_stream":
+            collect_level_editor_stream(receipt, engine_root, record)
+        else:
+            roots = {name: engine_root / relative for name, relative in PLUGIN_ROOTS.items()}
+            toolsets_root = engine_root / "Engine/Plugins/Experimental/Toolsets"
+            if not toolsets_root.is_dir():
+                raise ProbeBlocked("MISSING_EXPERIMENTAL_TOOLSETS_TREE")
+            checked_path(engine_root, toolsets_root)
+            for path in bounded_files(toolsets_root, descriptors_only=True):
+                relevant = path.stem in TOOLSET_NAMES or (
+                    evidence_focus == "material_declarations" and path.stem == MATERIAL_TOOL_NAME)
+                python_root = path.parent / "Content/Python"
+                if python_root.is_dir():
+                    checked_path(engine_root, python_root)
+                    # Find a relevant shipped module by filename without guessing
+                    # which plugin contains generic editor toolsets on this build.
+                    relevant = relevant or any(
+                        re.fullmatch(r"(?:actor|scene|object)(?:_tools|_toolset)?", item.stem, re.I)
+                        for item in bounded_files(python_root)
+                        if item.suffix == ".py"
+                    )
+                    if evidence_focus == "material_declarations" and not relevant:
+                        relevant = any(MATERIAL_MODULE.fullmatch(item.stem)
+                                       for item in bounded_files(python_root) if item.suffix == ".py"
+                                       and source_priority(item, path.stem)[0] < 100)
+                if relevant:
+                    if path.stem in roots:
+                        raise ProbeBlocked(f"AMBIGUOUS_PLUGIN_DESCRIPTOR: {path.stem}")
+                    roots[path.stem] = path.parent
+            for required in ("AutomationTestToolset",):
+                if required not in roots:
+                    receipt["blockers"].append(f"MISSING_PLUGIN_DESCRIPTOR: {required}")
 
         source_texts: dict[str, list[str]] = {}
         priority_roles = ("ToolsetRegistry", "ModelContextProtocol", "AutomationTestToolset")
@@ -708,6 +865,11 @@ def collect(
             "Observed material names, decorators and method bodies are source declarations, not runtime schemas.",
             "Parameter/resource restrictions, material execution and saved/reloaded consumer proof remain unverified.",
         ])
+    if evidence_focus == "level_editor_stream":
+        receipt["limitations"].extend([
+            "PixelStreaming2 candidates are installed source contexts, not verified command-line or cvar contracts.",
+            "No plugin activation, signalling server, editor stream, browser connection or visual review was performed.",
+        ])
     return receipt
 
 
@@ -781,6 +943,40 @@ def console_summary(receipt: dict[str, Any]) -> str:
     ]
     host["process_list_truncated"] = len(processes) > 8
     lines.append("RUNNING_EDITOR_OBSERVATION " + json.dumps(host, sort_keys=True))
+
+    if receipt.get("evidence_focus") == "level_editor_stream":
+        lines[0] = f"Level Editor streaming source probe: {receipt['status']}"
+        lines.append("EVIDENCE_FOCUS level_editor_stream; source-only; activation / signalling / browser stream: UNVERIFIED")
+        lines.append("STREAM_CONTEXT_COUNTS " + json.dumps(
+            receipt.get("level_editor_stream_observation_counts", {}), sort_keys=True))
+        lines.append("MISSING_STREAM_CONTEXTS " + json.dumps(
+            receipt.get("level_editor_stream_missing_contexts", list(STREAM_SYMBOLS))))
+        lines.append("STREAM_PATHS_UNESTABLISHED " + json.dumps(
+            receipt.get("level_editor_stream_unestablished_paths", [])))
+        printed = set()
+        for topic in STREAM_SYMBOLS:
+            budget = 34
+            excerpts = [(item, excerpt) for item in receipt["inventory"]
+                        for excerpt in item["selected_excerpts"] if excerpt.get("topic") == topic]
+            excerpts.sort(key=lambda pair: pair[1].get("topic_context_index", 0))
+            for item, excerpt in excerpts:
+                original = excerpt["text"].splitlines()
+                numbered = [(excerpt["start_line"] + index, original[index])
+                            for index in excerpt.get("code_line_offsets", range(len(original)))
+                            if (item["path"], excerpt["start_line"] + index) not in printed]
+                room = min(budget, MAX_CONSOLE_LINES - len(lines) - 1)
+                if room <= 0 or not numbered:
+                    continue
+                selected = numbered[:room]
+                clipped = excerpt.get("budget_truncated", False) or len(selected) < len(numbered)
+                lines.append(f"SOURCE {item['path']}:{excerpt['start_line']}-{excerpt['end_line']} "
+                             f"sha256={item['sha256']} topic={topic} "
+                             f"match_line={excerpt.get('match_line')} budget_truncated={str(clipped).lower()} "
+                             f"context_window_truncated={str(excerpt.get('context_window_truncated', False)).lower()}")
+                lines.extend(f"{number}: {line}" for number, line in selected)
+                printed.update((item["path"], number) for number, _ in selected)
+                budget -= len(selected)
+        return "\n".join(lines)
 
     if receipt.get("evidence_focus") == "material_declarations":
         lines.append("EVIDENCE_FOCUS material_declarations; source-only; schemas / execution / authoring: UNVERIFIED")
