@@ -28,6 +28,14 @@ on:
       - 'scripts/ue/road_asphalt_saved_consumer.py'
       - 'scripts/ue/road_shoulder_window.py'
       - 'scripts/ue/test_road_shoulder_window.py'
+      - 'scripts/ue/road_shoulder_sources.py'
+      - 'scripts/ue/test_road_shoulder_sources.py'
+      - 'scripts/ue/road_shoulder_network.py'
+      - 'scripts/ue/test_road_shoulder_network.py'
+      - 'scripts/ue/road_material_views.py'
+      - 'scripts/ue/test_road_material_views.py'
+      - 'Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h'
+      - 'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsRoadMaterialInspectionLibrary.cpp'
       - 'scripts/ue/road_shoulder_material.py'
       - 'scripts/ue/test_road_shoulder_material.py'
       - 'scripts/ue/capture_sa_calobra_shoulder_contact.py'
@@ -103,7 +111,9 @@ jobs:
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/364-road-surface-materials'
     runs-on: [self-hosted, yacs-ue58]
-    timeout-minutes: 22
+    # Full-network save/reload and the bounded 68-pose (3 priming each) GPU sample.
+    # Host GPU deadline is 1200 s; native readiness/frame/error gates are unchanged.
+    timeout-minutes: 38
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
       YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
@@ -153,8 +163,11 @@ jobs:
           }
           $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
           if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Existing pinned Python is missing.' }
-          & $python -m unittest scripts.ue.test_read_road_material_baseline
-          if ($LASTEXITCODE -ne 0) { throw 'Read-only road material baseline contract failed.' }
+          & $python -B -m unittest scripts.ue.test_read_road_material_baseline `
+            scripts.ue.test_road_shoulder_sources scripts.ue.test_road_shoulder_network `
+            scripts.ue.test_road_material_views scripts.ue.test_invoke_road_saved_consumer `
+            scripts.ue.test_invoke_road_asphalt_render
+          if ($LASTEXITCODE -ne 0) { throw 'Road baseline/source/network/host contracts failed before native work.' }
           $proof = Join-Path (Get-Location).Path 'Saved/RuntimeProof/RoadMaterialBaseline/${{ github.run_id }}-${{ github.run_attempt }}'
           "YACS_ROAD_NATIVE_PROOF=$proof" >> $env:GITHUB_ENV
 

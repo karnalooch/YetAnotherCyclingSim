@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+
 import csv
 import hashlib
 import io
@@ -157,12 +159,163 @@ class RoadGpuReviewContractTests(unittest.TestCase):
             gpu.RoadLitCapture.tick(job, 0.05)
         self.assertEqual(job.events, ["stop"])
 
+    def test_host_plan_authenticates_all_source_poses_not_just_count(self):
+        plan = gpu.material_views.current_view_plan()
+        with tempfile.TemporaryDirectory() as temp:
+            proof = Path(temp)
+            path = proof / gpu.EXPECTED_VIEW_PLAN
+
+            def write(value):
+                raw = json.dumps(value, sort_keys=True).encode()
+                path.write_bytes(raw)
+                return hashlib.sha256(raw).hexdigest()
+
+            digest = write(plan)
+            with patch.dict("os.environ", {"YACS_ROAD_MATERIAL_VIEW_PLAN_SHA256": digest}):
+                observed, identity = gpu.authenticated_view_plan(proof)
+                self.assertEqual(observed, plan)
+                self.assertEqual(identity["sha256"], digest)
+                self.assertEqual(observed["frame_count"], 68)
+            with patch.dict("os.environ", {"YACS_ROAD_MATERIAL_VIEW_PLAN_SHA256": "a" * 64}):
+                with self.assertRaisesRegex(ValueError, "bytes changed"):
+                    gpu.authenticated_view_plan(proof)
+            for mutate in (
+                lambda value: value["frames"].reverse(),
+                lambda value: value["frames"][15]["camera_location_cm"].__setitem__(0, -99),
+                lambda value: value.update(whole_area_owner_accepted=True),
+            ):
+                changed = deepcopy(plan)
+                mutate(changed)
+                digest = write(changed)
+                with patch.dict("os.environ", {"YACS_ROAD_MATERIAL_VIEW_PLAN_SHA256": digest}):
+                    with self.assertRaisesRegex(ValueError, "source poses"):
+                        gpu.authenticated_view_plan(proof)
+
     def test_pure_library_import_cannot_launch_unreal_or_capture(self):
         self.assertNotIn("unreal", gpu.__dict__)
         self.assertFalse(hasattr(gpu, "RUN_IMMEDIATELY"))
         self.assertEqual(gpu.RECEIPT, "road-asphalt-lit-review.json")
         self.assertEqual(gpu.FRAME_DEADLINE_SECONDS, 90)
-        self.assertEqual(gpu.TOTAL_DEADLINE_SECONDS, 380)
+        self.assertEqual(gpu.TOTAL_DEADLINE_SECONDS, 1080)
+
+
+class RoadGpuNativePoseTests(unittest.TestCase):
+    """Exercise native pose boundaries through the actual submission/tick path."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.proof = Path(temporary.name)
+        self.row = {
+            "frame_id": "window-0112-forward-00001",
+            "window_id": "synthetic-native-pose-test",
+            "direction": "forward", "station_m": 5.0,
+            "camera_location_cm": [1.0, 2.0, 3.0],
+            "target_cm": [4.0, 6.0, 3.0],
+            "road_position_cm": [1.0, 2.0, 0.0],
+            "fov_deg": 76.0,
+        }
+        self.vector = lambda x, y, z: SimpleNamespace(x=x, y=y, z=z)
+        self.component = SimpleNamespace(
+            set_editor_property=Mock(), get_editor_property=Mock(return_value=76.0),
+        )
+        self.camera = SimpleNamespace(
+            set_actor_location=Mock(), set_actor_rotation=Mock(return_value=True),
+            get_component_by_class=Mock(return_value=self.component),
+            get_actor_location=Mock(return_value=self.vector(1, 2, 3)),
+            get_actor_forward_vector=Mock(return_value=self.vector(0.6, 0.8, 0)),
+        )
+        self.api = SimpleNamespace(
+            Vector=self.vector, CameraComponent=object(),
+            MathLibrary=SimpleNamespace(find_look_at_rotation=Mock(return_value=object())),
+            ViewModeIndex=SimpleNamespace(VMI_LIT=object()),
+            ComparisonTolerance=SimpleNamespace(LOW=object()),
+            AutomationLibrary=SimpleNamespace(
+                set_editor_viewport_view_mode=Mock(),
+                finish_loading_before_screenshot=Mock(),
+                take_high_res_screenshot=Mock(side_effect=self.screenshot),
+            ),
+        )
+        self.job = gpu.RoadLitCapture(
+            self.api, {"proof": self.proof, "frames": [self.row]}, object(), object()
+        )
+        self.job.camera = self.camera
+        self.job.prepare_pose = Mock()
+        self.job.stop = Mock()
+        self.enterContext(patch.object(gpu, "decode_png", return_value=(1, 1, 3, b"rgb")))
+        self.enterContext(patch.object(gpu, "frame_statistics", return_value={
+            "width": 1280, "height": 720, "unique_sampled_rgb": 24,
+        }))
+
+    def screenshot(self, **arguments):
+        self.assertIs(arguments["camera"], self.camera)
+        Path(arguments["filename"]).write_bytes(b"SYNTHETIC PNG")
+        return SimpleNamespace(is_valid_task=lambda: True, is_task_done=lambda: True)
+
+    def test_rotation_setter_failure_cannot_submit_a_png(self):
+        for result in (False, None, 1):
+            with self.subTest(result=result):
+                self.camera.set_actor_rotation.return_value = result
+                with self.assertRaisesRegex(ValueError, "rotation setter rejected"):
+                    self.job.submit_pose()
+                self.assertIsNone(self.job.pending_camera_observation)
+        self.job.prepare_pose.assert_not_called()
+        self.api.AutomationLibrary.take_high_res_screenshot.assert_not_called()
+
+    def test_successful_but_noop_rotation_cannot_reuse_previous_view(self):
+        self.camera.get_actor_forward_vector.return_value = self.vector(1, 0, 0)
+        with self.assertRaisesRegex(ValueError, "forward direction differs"):
+            self.job.submit_pose()
+        self.api.AutomationLibrary.take_high_res_screenshot.assert_not_called()
+        self.assertIsNone(self.job.pending_camera_observation)
+
+    def test_readback_observes_drift_during_loading_barrier(self):
+        def rotate_during_loading():
+            self.camera.get_actor_forward_vector.return_value = self.vector(-0.6, -0.8, 0)
+
+        self.api.AutomationLibrary.finish_loading_before_screenshot.side_effect = rotate_during_loading
+        with self.assertRaisesRegex(ValueError, "forward direction differs"):
+            self.job.submit_pose()
+        self.api.AutomationLibrary.take_high_res_screenshot.assert_not_called()
+
+    def test_nonfinite_or_zero_native_forward_is_rejected(self):
+        for values in ((0, 0, 0), (float("nan"), 0, 0), (0, float("inf"), 0)):
+            with self.subTest(values=values):
+                self.camera.get_actor_forward_vector.return_value = self.vector(*values)
+                with self.assertRaisesRegex(ValueError, "forward vector is invalid"):
+                    self.job.submit_pose()
+        self.api.AutomationLibrary.take_high_res_screenshot.assert_not_called()
+
+    def test_each_prime_and_final_retains_actual_pose_without_replacing_source_pose(self):
+        requested = deepcopy(self.row)
+        self.job.submit_pose()
+        for _ in range(gpu.PRIMING_FRAMES + 1):
+            self.job.tick(0.05)
+        self.job.stop.assert_not_called()
+        self.assertEqual(self.row, requested)
+        self.assertEqual(len(self.job.frames), 1)
+        frame = self.job.frames[0]
+        self.assertEqual({key: frame[key] for key in requested}, requested)
+        observations = [frame["native_camera_observation"], *(
+            prime["native_camera_observation"] for prime in frame["priming_frames"]
+        )]
+        self.assertEqual(observations, [{
+            "rotation_setter_accepted": True,
+            "location_cm": [1.0, 2.0, 3.0],
+            "forward_unit": [0.6, 0.8, 0.0],
+            "fov_deg": 76.0, "forward_error": 0.0,
+        }] * (gpu.PRIMING_FRAMES + 1))
+        self.assertEqual(self.camera.get_actor_forward_vector.call_count,
+                         gpu.PRIMING_FRAMES + 1)
+
+    def test_direction_is_rechecked_between_priming_captures(self):
+        self.job.submit_pose()
+        self.camera.get_actor_forward_vector.return_value = self.vector(-0.6, -0.8, 0)
+        self.job.tick(0.05)
+        self.job.stop.assert_called_once()
+        self.assertIn("forward direction differs", self.job.stop.call_args.args[0])
+        self.assertEqual(self.api.AutomationLibrary.take_high_res_screenshot.call_count, 1)
+        self.assertEqual(self.job.frames, [])
 
 
 class RoadGpuStopLifecycleTests(unittest.TestCase):
@@ -175,18 +328,28 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
         prior = proof / "saved-road-host-receipt.json"
         stage.write_text("synthetic stage", encoding="utf-8")
         prior.write_text("synthetic prior proof", encoding="utf-8")
-        frames = [{"frame_id": frame} for frame in gpu.FRAME_IDS]
+        view_plan = gpu.material_views.current_view_plan()
+        plan_path = proof / gpu.EXPECTED_VIEW_PLAN
+        plan_path.write_text(json.dumps(view_plan), encoding="utf-8")
+        frames = deepcopy(view_plan["frames"])
         context = {
             "proof": proof, "retained": proof / "retained",
             "exact_sha": "a" * 40, "run_token": "synthetic-stop-test",
             "original": {"native_inventory": {}},
             "manifest": {
                 "material_instance": "/Game/Synthetic/MI_Road",
-                "shoulder_window": {"material": {}}, "assets": [],
+                "shoulder_network": {"material": {}, "support_count": 186,
+                    "material_target_count": 185, "selected_triangle_count": 70000},
+                "material_master": "/Game/Synthetic/M_Road", "texture_objects": {},
+                "dry_asphalt_response": {}, "road_mesh": {}, "assets": [],
                 "expected_normalized_inventory_sha256": "b" * 64,
             },
             "manifest_id": {"sha256": "c" * 64, "size_bytes": 1},
+            "profile_identity": {"file": gpu.saved.PROFILE_DIAGNOSTIC,
+                                 "sha256": "e" * 64, "size_bytes": 1},
             "rows": [], "source_dependencies": [], "frames": frames,
+            "source_plan": {}, "view_plan": view_plan,
+            "view_plan_identity": gpu.session._identity(plan_path),
             "stage_path": stage, "stage_identity": gpu.session._identity(stage),
             "host_receipt_identity": gpu.session._identity(prior),
         }
@@ -240,9 +403,12 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
             (gpu.saved, "expected_saved_inventory", "scene comparison", "b" * 64),
             (gpu.saved.shoulder, "verify_loaded", "shoulder mesh", None),
             (gpu.saved.shoulder_material, "verify_material", "shoulder material", None),
+            (gpu.saved, "verify_road_mesh", "road full buffers", None),
+            (gpu.saved, "verify_material_instance", "dry response", None),
             (gpu.saved, "verify_retained_files", "saved packages", None),
             (gpu.session, "_verify_rows", "source assets", None),
             (gpu.saved, "verified_manifest_identity", "manifest", context["manifest_id"]),
+            (gpu.saved, "verified_profile_identity", "profile diagnostic", context["profile_identity"]),
         ):
             self.enterContext(patch.object(target, name, side_effect=record(label, result)))
         original_identity = gpu.session._identity
@@ -253,6 +419,8 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
                 events.append("stage identity")
             elif path == prior:
                 events.append("prior proof")
+            elif path == plan_path:
+                events.append("camera plan")
             return original_identity(path, *args)
 
         def write_receipt(path, value):
@@ -268,6 +436,8 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
             "dirty maps", "dirty content", "native inventory", "scene comparison",
             "shoulder mesh", "shoulder material", "saved packages", "source assets",
             "stage identity", "manifest", "prior proof",
+            "road full buffers", "dry response", "camera plan",
+            "profile diagnostic",
         }
         self.assertCountEqual(events, [*cleanup, *guards, "receipt written", "release lifecycle"])
         self.assertLess(max(events.index(name) for name in cleanup),
@@ -282,6 +452,7 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
         self.assertEqual(receipt["gpu_shutdown_quiescence_seconds"], 10.0)
         self.assertFalse(receipt["whole_area_visual_admitted"])
         self.assertFalse(receipt["performance_pass"])
+        self.assertEqual(receipt["road_profile_diagnostic_sha256"], "e" * 64)
         return receipt
 
     def test_successful_stop_finishes_cleanup_and_proof_before_releasing_script_lifecycle(self):
@@ -296,8 +467,8 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
         self.assertEqual(receipt["errors"], ["synthetic capture callback failure"])
         for field in (
             "native_lit_frames_retained", "capture_readiness_verified",
-            "sources_and_saved_assets_unchanged", "window0112_shoulder_material_ids_verified",
-            "window0112_wall_material_unchanged",
+            "sources_and_saved_assets_unchanged", "shoulder_network_material_ids_verified",
+            "shoulder_wall_materials_unchanged",
         ):
             self.assertFalse(receipt[field])
 

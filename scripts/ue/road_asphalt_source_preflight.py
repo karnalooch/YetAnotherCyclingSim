@@ -13,15 +13,15 @@ from pathlib import Path
 from scripts.assets.road_material_contract import check_asphalt_replay
 from scripts.manage_local_workspace import load_workspace
 
-SOURCE_HEAD = "6fa54b508019bd4a1b4aa6fad601835295ec664f"
-SOURCE_RUN = "38045485913-1"
+SOURCE_HEAD = "b385c6cf601764ab91220caa24d8a2d1d2d033e8"
+SOURCE_RUN = "38089061451-1"
 SOURCE_RECEIPT_SHA256 = (
-    "3626bf85da28d63908feb9d820171dc03d9d6cc444c8f799f7048f7a8052f79c"
+    "6a073cf0223b47ac0734017a9e6691b749c871275ad2279a1b8f0aaec9439236"
 )
 SOURCE_FINGERPRINT = (
-    "b4d93e24d2059c74e0b8d44f23ee10632e63f44c5c932b3ee1b849e0a6868d97"
+    "0968cc9e3a4c882faada014bb498a844fe09414d6960e209f7ffc02922fbce99"
 )
-GRAPH_SHA256 = "6b381516854c44dc4bdeb69b69fbb2b97ecf22c228db2c09204822d7f0bc0970"
+GRAPH_SHA256 = "25257e365ec99155d6e2e5a89ec527d153a7156427ad67777444f90b1b5561cd"
 SOURCE_RELATIVE = (
     "material-forge/road-asphalt/" + SOURCE_HEAD + "/" + SOURCE_RUN
 )

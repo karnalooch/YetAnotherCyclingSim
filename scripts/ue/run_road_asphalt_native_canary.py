@@ -124,6 +124,9 @@ def main():
         and result.get("all_186_supports_unchanged") is True
         and result.get("landscape_1024_components_unchanged") is True
         and result.get("material_authoring_admitted") is False
+        and result.get("dry_surface_response_verified") is True
+        and result.get("import_receipt", {}).get("family") == canary.FAMILY
+        and result.get("import_receipt", {}).get("variant") == canary.VARIANT
         and result.get("source_receipt_sha256") == source.SOURCE_RECEIPT_SHA256
         and result.get("graph_sha256") == source.GRAPH_SHA256,
         "Native asphalt rollback or provenance did not pass",
@@ -149,6 +152,8 @@ def main():
         "frozen_map": map_row,
         "staging_sha256": preparation_sha,
         "source_gate": source_gate,
+        "material_family": canary.FAMILY,
+        "material_variant": canary.VARIANT,
         "native_projection": projection,
         "result": result,
         "all_source_assets_unchanged": True,

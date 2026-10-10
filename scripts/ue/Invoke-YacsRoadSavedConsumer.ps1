@@ -1,5 +1,5 @@
 #requires -Version 7.4
-<# Save only a new #364 asphalt-derived map and verify it in a fresh Editor. #>
+<# Save only a new #364 road/shoulder material map and verify it in a fresh Editor. #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string] $ExpectedHead,
@@ -11,6 +11,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) { throw 'Saved road asphalt requires the trusted Windows host.' }
+$PROFILE_DIAGNOSTIC = 'road-network-profile-diagnostic.json'
 $root = $null
 $evidence = $null
 $editor = $null
@@ -20,6 +21,10 @@ $receipt = [ordered]@{
     native_baseline_authenticated = $false
     transient_canary_authenticated = $false
     saved_derived_consumer = $false; fresh_reload_verified = $false
+    shoulder_network_fresh_reload_verified = $false
+    shoulder_support_count = 0; shoulder_material_target_count = 0
+    shoulder_selected_triangle_count = 0
+    road_profile_diagnostic_sha256 = $null
     original_map_saved = $false; original_landscape_mutated = $false
     gpu_shader_verified = $false; owner_visual_status = 'PENDING_FINAL_M3'
     performance_status = 'DEFERRED_AFTER_M3'; performance_pass = $false
@@ -108,6 +113,57 @@ function Write-ExclusiveReceipt {
     $file = [IO.File]::Open($Path, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
     try { $file.Write($raw, 0, $raw.Length) } finally { $file.Dispose() }
 }
+function Resolve-ProfileRetainedRoot {
+    param($Workspace, [string] $ConfigPath, [string] $ExactHead,
+          [string] $Token, [string] $RecordedRoot)
+    if ($Workspace.schema_version -ne 1 -or $Workspace.work -isnot [string] -or
+        [string]::IsNullOrWhiteSpace($Workspace.work) -or
+        [IO.Path]::IsPathRooted($Workspace.work) -or
+        $Workspace.work -match '[:\x00\r\n"]' -or
+        ($Workspace.work -split '[\\/]') -contains '..') {
+        throw 'Profile retained work root is not a bounded canonical workspace path.'
+    }
+    Assert-PlainPath $ConfigPath
+    $configRoot = Split-Path -Parent ([IO.Path]::GetFullPath($ConfigPath))
+    $work = [IO.Path]::GetFullPath((Join-Path $configRoot $Workspace.work))
+    if (-not $work.StartsWith(($configRoot.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar),
+                             [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Profile retained work root escaped the canonical workspace.'
+    }
+    $expected = [IO.Path]::GetFullPath((Join-Path $work ('road-materials/saved-consumers/' + $ExactHead + '/' + $Token)))
+    Assert-PlainPath $expected
+    Assert-PlainPath $RecordedRoot
+    if (-not [string]::Equals([IO.Path]::GetFullPath($RecordedRoot), $expected,
+                             [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Profile retained root differs from the exact prepared head and token.'
+    }
+    return $expected
+}
+function Get-ProfileCopies {
+    param($Pin, [string] $ProofRoot, [string] $RetainedRoot)
+    # This separate source/native diagnostic is only hashed, never parsed into
+    # or embedded in the 4 MiB material manifest / 2 MiB process receipts.
+    if ($Pin -isnot [Collections.IDictionary] -or $Pin.Count -ne 3 -or
+        @($Pin.Keys) -cnotcontains 'file' -or @($Pin.Keys) -cnotcontains 'sha256' -or
+        @($Pin.Keys) -cnotcontains 'size_bytes' -or
+        $Pin.file -isnot [string] -or $Pin.file -cne $PROFILE_DIAGNOSTIC -or
+        $Pin.sha256 -isnot [string] -or $Pin.sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+        ($Pin.size_bytes -isnot [long] -and $Pin.size_bytes -isnot [int]) -or
+        $Pin.size_bytes -le 0 -or $Pin.size_bytes -gt 8MB) {
+        throw 'Profile diagnostic pin is not the exact bounded sidecar identity.'
+    }
+    $proofCopy = Get-Identity (Join-Path $ProofRoot $PROFILE_DIAGNOSTIC) 8MB
+    $retainedCopy = Get-Identity (Join-Path $RetainedRoot $PROFILE_DIAGNOSTIC) 8MB
+    if ([string]::Equals($proofCopy.path, $retainedCopy.path, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Profile diagnostic requires distinct proof and retained copies.'
+    }
+    foreach ($copy in @($proofCopy, $retainedCopy)) {
+        if ($copy.sha256 -cne $Pin.sha256 -or $copy.size_bytes -ne $Pin.size_bytes) {
+            throw 'Profile diagnostic copy differs from the authenticated material manifest.'
+        }
+    }
+    return [ordered]@{ proof = $proofCopy; retained = $retainedCopy }
+}
 function Require-IdleHost {
     $state = & (Join-Path $root 'scripts/runner/Get-YacsUnrealHostState.ps1')
     if ($state.status -cne 'IDLE') {
@@ -124,6 +180,74 @@ function Require-ExactSource {
     if ($LASTEXITCODE -ne 0 -or $working.Count -ne 1 -or
         $working[0] -cne $committed[0]) {
         throw 'Saved asphalt executable differs from exact committed Git bytes: ' + $Relative
+    }
+}
+function Assert-NetworkManifest {
+    param($Manifest, [string] $ExactHead)
+    if ($Manifest -isnot [Collections.IDictionary] -or
+        $Manifest.schema_version -ne 1 -or $Manifest.issue -ne 364 -or
+        $Manifest.status -cne 'SAVED_ROAD_ASPHALT_CONSUMER_PREPARED' -or
+        $Manifest.exact_sha -cne $ExactHead -or
+        $Manifest.material_changes -cne 'road_slot_zero_and_network_outer_shoulder_ids') {
+        throw 'Saved material manifest is not the exact full-network schema.'
+    }
+    $flags = @{ map_saved = $true; landscape_1024_unchanged = $true
+        canonical_saved = $false; source_scene_mutated = $false
+        road_slot_zero_only = $false; support_186_unchanged = $false
+        fresh_reload_verified = $false; performance_pass = $false }
+    foreach ($name in $flags.Keys) {
+        if ($Manifest[$name] -isnot [bool] -or $Manifest[$name] -ne $flags[$name]) {
+            throw ('Saved network manifest changed protected flag: ' + $name)
+        }
+    }
+    $network = $Manifest.shoulder_network
+    if ($network -isnot [Collections.IDictionary] -or
+        $network.schema_version -ne 2 -or $network.status -cne 'SHOULDER_NETWORK_PREPARED' -or
+        $network.support_count -ne 186 -or $network.material_target_count -ne 185 -or
+        $network.excluded_parapet_count -ne 1 -or
+        $network.owners -isnot [Collections.IList] -or $network.owners.Count -ne 186) {
+        throw 'Saved source-owned support coverage is incomplete.'
+    }
+    $flags = @{ rollback_verified = $true; source_vertices_topology_normals_uv_preserved = $true
+        original_wall_material_preserved = $true; excluded_parapet_unchanged = $true
+        whole_area_admitted = $false; performance_pass = $false }
+    foreach ($name in $flags.Keys) {
+        if ($network[$name] -isnot [bool] -or $network[$name] -ne $flags[$name]) {
+            throw ('Saved network proof changed protected flag: ' + $name)
+        }
+    }
+    $selected = $network.selected_triangle_count
+    if (($selected -isnot [long] -and $selected -isnot [int]) -or
+        $selected -le 0 -or $selected -gt $network.total_triangle_count) {
+        throw 'Saved network selected-triangle inventory is invalid.'
+    }
+    return $selected
+}
+function Assert-FreshNetworkReceipt {
+    param($Fresh, [string] $ExactHead, [string] $ManifestSha,
+          [long] $SelectedTriangles, [string] $ProfileSha)
+    if ($Fresh.status -cne 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_PASS' -or
+        $Fresh.exact_sha -cne $ExactHead -or
+        $Fresh.saved_manifest_sha256 -cne $ManifestSha -or
+        $Fresh.evidence_manifest_sha256 -cne $ManifestSha -or
+        $Fresh.road_profile_diagnostic_sha256 -cne $ProfileSha -or
+        $Fresh.shoulder_support_count -ne 186 -or
+        $Fresh.shoulder_material_target_count -ne 185 -or
+        $Fresh.shoulder_selected_triangle_count -ne $SelectedTriangles -or
+        $Fresh.owner_visual_status -cne 'PENDING_FINAL_M3') {
+        throw 'Fresh reload differs from the exact saved network material inventory.'
+    }
+    $flags = @{ fresh_process = $true; shoulder_network_fresh_reload_verified = $true
+        shoulder_positions_indices_normals_uv_unchanged = $true
+        shoulder_wall_materials_unchanged = $true; road_full_buffers_unchanged = $true
+        dry_asphalt_response_verified = $true; new_saved_asset_bytes_unchanged = $true
+        road_material_reapplied = $false
+        shoulder_material_reapplied = $false; source_scene_mutated = $false
+        performance_pass = $false }
+    foreach ($name in $flags.Keys) {
+        if ($Fresh[$name] -isnot [bool] -or $Fresh[$name] -ne $flags[$name]) {
+            throw ('Fresh reload changed protected network flag: ' + $name)
+        }
     }
 }
 function Invoke-OwnedEditor {
@@ -216,7 +340,12 @@ try {
         'scripts/ue/road_asphalt_slot_canary.py',
         'scripts/ue/import_material_forge_variant.py',
         'scripts/ue/road_shoulder_window.py',
+        'scripts/ue/road_shoulder_sources.py',
+        'scripts/ue/road_shoulder_network.py',
+        'scripts/ue/road_material_views.py',
         'scripts/ue/road_shoulder_material.py',
+        'Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h',
+        'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsRoadMaterialInspectionLibrary.cpp',
         'scripts/ue/capture_sa_calobra_shoulder_contact.py',
         'scripts/proof/sa_calobra_shoulder_contact.py',
         'scripts/proof/sa_calobra_tpp_survey.py',
@@ -245,6 +374,12 @@ try {
     }
     $receipt.native_baseline_authenticated = $true
     $receipt.transient_canary_authenticated = $true
+    $workspace = Read-Json $WorkspaceConfig
+    if ($workspace.identity.sha256 -cne $baseline.value.proof_files.workspace_config.sha256 -or
+        $workspace.identity.size_bytes -ne $baseline.value.proof_files.workspace_config.size_bytes) {
+        throw 'Profile workspace configuration differs from the authenticated native baseline.'
+    }
+    $receipt.proof_files.workspace_config = $workspace.identity
     $engine = Get-Identity ([string] $baseline.value.proof_files.editor_executable.path) 1GB
     if ($engine.sha256 -cne $baseline.value.proof_files.editor_executable.sha256) {
         throw 'Unreal Editor executable differs from the original approved native baseline.'
@@ -266,7 +401,9 @@ try {
         throw 'Saved road map preparation receipt is not an authentic first-stage candidate.'
     }
     $receipt.proof_files.saved_prepared = $saved.identity
-    $manifest = Read-Json (Join-Path $evidence 'road-asphalt-saved-manifest.json')
+    # A measured full-network upper bound is ~1.99 MB before material/API/assets.
+    # Only this manifest grows to 4 MiB; host/prepared/fresh receipts stay at 2 MiB.
+    $manifest = Read-Json (Join-Path $evidence 'road-asphalt-saved-manifest.json') 4MB
     if ($saved.value.evidence_manifest.file -cne 'road-asphalt-saved-manifest.json' -or
         $saved.value.evidence_manifest.sha256 -cne $manifest.identity.sha256 -or
         $saved.value.evidence_manifest.size_bytes -ne $manifest.identity.size_bytes -or
@@ -274,7 +411,13 @@ try {
         $saved.value.manifest.size_bytes -ne $manifest.identity.size_bytes) {
         throw 'Downloadable material manifest is not pinned to the native retained evidence.'
     }
+    $selectedTriangles = Assert-NetworkManifest $manifest.value $ExpectedHead
     $receipt.proof_files.saved_manifest = $manifest.identity
+    $retainedRoot = Resolve-ProfileRetainedRoot $workspace.value $WorkspaceConfig `
+        $ExpectedHead $RunToken $saved.value.retained_root
+    $profileCopies = Get-ProfileCopies $manifest.value.road_profile_diagnostic $evidence $retainedRoot
+    $receipt.proof_files.road_profile_diagnostic = $profileCopies.proof
+    $receipt.proof_files.retained_road_profile_diagnostic = $profileCopies.retained
     Assert-Identity $baseline.identity 2MB
     Assert-Identity $asphalt.identity 2MB
     Assert-Identity $nativeRead.identity 2MB
@@ -283,26 +426,14 @@ try {
     $receipt.status = 'SAVED_CONSUMER_FRESH_RELOADING'
     Invoke-OwnedEditor 'reload'
     $fresh = Read-Json (Join-Path $evidence 'road-asphalt-saved-reloaded.json')
-    if ($fresh.value.status -cne 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_PASS' -or
-        $fresh.value.exact_sha -cne $ExpectedHead -or
-        $fresh.value.saved_manifest_sha256 -cne $saved.value.manifest.sha256 -or
-        $fresh.value.evidence_manifest_sha256 -cne $manifest.identity.sha256 -or
-        $fresh.value.fresh_process -isnot [bool] -or -not $fresh.value.fresh_process -or
-        $fresh.value.road_material_reapplied -isnot [bool] -or $fresh.value.road_material_reapplied -or
-        $fresh.value.shoulder_material_reapplied -isnot [bool] -or $fresh.value.shoulder_material_reapplied -or
-        $fresh.value.window0112_shoulder_fresh_reload_verified -isnot [bool] -or
-        -not $fresh.value.window0112_shoulder_fresh_reload_verified -or
-        $fresh.value.window0112_selected_triangle_count -ne 436 -or
-        $fresh.value.source_scene_mutated -isnot [bool] -or $fresh.value.source_scene_mutated -or
-        $fresh.value.new_saved_asset_bytes_unchanged -isnot [bool] -or
-        -not $fresh.value.new_saved_asset_bytes_unchanged -or
-        $fresh.value.performance_pass -isnot [bool] -or $fresh.value.performance_pass -or
-        $fresh.value.owner_visual_status -cne 'PENDING_FINAL_M3') {
-        throw 'Fresh reload does not satisfy the saved asphalt no-mutation proof.'
-    }
+    Assert-FreshNetworkReceipt $fresh.value $ExpectedHead $manifest.identity.sha256 `
+        $selectedTriangles $profileCopies.proof.sha256
     $receipt.proof_files.fresh_reload = $fresh.identity
     Assert-Identity $saved.identity 2MB
-    Assert-Identity $manifest.identity 2MB
+    Assert-Identity $manifest.identity 4MB
+    Assert-Identity $profileCopies.proof 8MB
+    Assert-Identity $profileCopies.retained 8MB
+    Assert-Identity $workspace.identity 2MB
     Assert-Identity $baseline.identity 2MB
     Assert-Identity $asphalt.identity 2MB
     Assert-Identity $engine 1GB
@@ -312,7 +443,11 @@ try {
     Require-IdleHost
     $receipt.saved_derived_consumer = $true
     $receipt.fresh_reload_verified = $true
-    $receipt.window0112_shoulder_material_ids_verified = $true
+    $receipt.shoulder_network_fresh_reload_verified = $true
+    $receipt.shoulder_support_count = 186
+    $receipt.shoulder_material_target_count = 185
+    $receipt.shoulder_selected_triangle_count = $selectedTriangles
+    $receipt.road_profile_diagnostic_sha256 = $profileCopies.proof.sha256
     $receipt.status = 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS'
 }
 catch {
@@ -337,6 +472,7 @@ finally {
         $receipt.status = 'FAILED'
         $receipt.saved_derived_consumer = $false
         $receipt.fresh_reload_verified = $false
+        $receipt.shoulder_network_fresh_reload_verified = $false
         $receipt.error = 'Owned saved consumer process teardown failed.'
     }
     if ($null -ne $evidence -and (Test-Path -LiteralPath $evidence -PathType Container)) {
@@ -348,7 +484,8 @@ finally {
     }
 }
 if ($receipt.status -cne 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS' -or
-    -not $receipt.saved_derived_consumer -or -not $receipt.fresh_reload_verified) {
+    -not $receipt.saved_derived_consumer -or -not $receipt.fresh_reload_verified -or
+    -not $receipt.shoulder_network_fresh_reload_verified) {
     throw 'Durable new-map asphalt save and fresh native reload were not both verified.'
 }
 Write-Host 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS; owner visual/FPS/GPU rendering remain pending.'

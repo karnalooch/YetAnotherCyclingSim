@@ -1,7 +1,7 @@
-"""Issue #364: four pinned, road-facing lit screenshots from a freshly saved consumer.
+"""Issue #364: pinned whole-network road views from a freshly saved consumer.
 
-This is a bounded technical GPU rendering canary, not owner approval or a
-whole-map visual audit. The camera identities/poses come from an immutable
+This is representative technical GPU review across the current area.
+Final owner visual approval and exhaustive road-pixel visibility remain separate. The camera identities/poses come from an immutable
 previously captured bidirectional road survey, never guessed free cameras.
 Only a transient camera and viewport state may change; nothing is saved.
 """
@@ -14,6 +14,7 @@ import io
 import json
 import math
 import os
+import re
 from pathlib import Path
 import sys
 import time
@@ -30,6 +31,7 @@ from scripts.proof.sa_calobra_shoulder_contact import (  # noqa: E402
 )
 from scripts.ue import read_road_material_baseline as baseline  # noqa: E402
 from scripts.ue import road_asphalt_saved_consumer as saved  # noqa: E402
+from scripts.ue import road_material_views as material_views  # noqa: E402
 from scripts.ue import sa_calobra_whole_map_prep as prep  # noqa: E402
 from scripts.ue.sa_calobra_detail_capture import decode_png  # noqa: E402
 from scripts.ue.prepare_landscape_capture import (  # noqa: E402
@@ -43,9 +45,13 @@ RECEIPT = "road-asphalt-lit-review.json"
 RESOLUTION = (1280, 720)
 MAX_CSV_BYTES = 1024 * 1024
 MAX_FRAME_BYTES = 16 * 1024 * 1024
-TOTAL_DEADLINE_SECONDS = 380
+# The authenticated plan expands four comparison views to 68 area views.
+# Per-pose loading, three priming captures and 90 s frame checks stay intact.
+TOTAL_DEADLINE_SECONDS = 1080
 FRAME_DEADLINE_SECONDS = 90
 PRIMING_FRAMES = 3
+EXPECTED_VIEW_PLAN = "road-asphalt-expected-view-plan.json"
+CAMERA_FORWARD_TOLERANCE = 0.00001
 
 
 def require(value, message):
@@ -137,6 +143,21 @@ def frame_statistics(png_path):
     }
 
 
+def authenticated_view_plan(proof):
+    """Authenticate host-selected source poses before opening the saved world."""
+    path = session._safe_path(proof, EXPECTED_VIEW_PLAN)
+    expected_sha = os.environ.get("YACS_ROAD_MATERIAL_VIEW_PLAN_SHA256", "")
+    require(re.fullmatch(r"[0-9a-f]{64}", expected_sha), "Missing host camera-plan hash")
+    identity = session._identity(path, MAX_CSV_BYTES)
+    require(identity["sha256"] == expected_sha, "Expected camera-plan bytes changed")
+    plan = session._read_json(path, limit=MAX_CSV_BYTES)
+    require(plan == material_views.current_view_plan(ROOT),
+            "Expected camera plan differs from authenticated whole-network source poses")
+    require(session._identity(path, MAX_CSV_BYTES) == identity,
+            "Expected camera plan changed during authentication")
+    return plan, identity
+
+
 def authenticate_render_context():
     session._assert_isolated_root()
     require(saved.ROOT == ROOT == session.ROOT == prep.ROOT,
@@ -151,7 +172,8 @@ def authenticate_render_context():
     fresh_receipt = session._read_json(session._safe_path(proof, saved.RELOADED))
     manifest_path = session._safe_path(retained, saved.MANIFEST)
     manifest_id = saved.verified_manifest_identity(proof, retained)
-    manifest = session._read_json(manifest_path)
+    manifest = session._read_json(manifest_path, limit=saved.JSON_LIMIT)
+    profile_identity = saved.verified_profile_identity(proof, retained, manifest.get("road_profile_diagnostic"))
     require(
         host.get("schema_version") == 1
         and host.get("status") == "ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS"
@@ -175,15 +197,25 @@ def authenticate_render_context():
         and fresh_receipt.get("fresh_process") is True
         and fresh_receipt.get("road_material_reapplied") is False
         and fresh_receipt.get("shoulder_material_reapplied") is False
-        and fresh_receipt.get("window0112_shoulder_fresh_reload_verified") is True
+        and fresh_receipt.get("shoulder_network_fresh_reload_verified") is True
+        and fresh_receipt.get("shoulder_support_count") == 186
+        and fresh_receipt.get("shoulder_material_target_count") == 185
+        and fresh_receipt.get("shoulder_selected_triangle_count")
+        == manifest.get("shoulder_network", {}).get("selected_triangle_count")
+        and fresh_receipt.get("road_full_buffers_unchanged") is True
+        and fresh_receipt.get("dry_asphalt_response_verified") is True
+        and fresh_receipt.get("road_profile_diagnostic_sha256") == profile_identity["sha256"]
         and manifest.get("status") == "SAVED_ROAD_ASPHALT_CONSUMER_PREPARED"
         and manifest.get("exact_sha") == exact_sha
         and manifest.get("staging_sha256") == staged_sha
         and manifest.get("map_package") == saved.MAP
         and manifest.get("road_slot_zero_only") is False
         and manifest.get("support_186_unchanged") is False
-        and manifest.get("shoulder_window", {}).get("rollback_verified") is True
-        and manifest.get("material_changes") == "road_slot_zero_and_window0112_outer_shoulder_ids"
+        and manifest.get("shoulder_network", {}).get("rollback_verified") is True
+        and manifest.get("shoulder_network", {}).get("support_count") == 186
+        and manifest.get("shoulder_network", {}).get("material_target_count") == 185
+        and manifest.get("native_mesh_hash_format") == saved.shoulder.HASH_FORMAT
+        and manifest.get("material_changes") == "road_slot_zero_and_network_outer_shoulder_ids"
         and manifest.get("landscape_1024_unchanged") is True
         and manifest.get("metric_tile_cm") == 400
         and manifest.get("performance_pass") is False,
@@ -193,7 +225,8 @@ def authenticate_render_context():
     source = session._safe_path(ROOT, SURVEY)
     survey_identity = session._identity(source, MAX_CSV_BYTES)
     require(survey_identity["sha256"] == SURVEY_SHA256, "Road camera CSV pin differs")
-    frames = validated_road_views(source.read_bytes(), SURVEY_SHA256)
+    view_plan, view_plan_identity = authenticated_view_plan(proof)
+    frames = view_plan["frames"]
     return {
         "exact_sha": exact_sha,
         "staging_sha256": staged_sha,
@@ -202,12 +235,15 @@ def authenticate_render_context():
         "retained": retained,
         "manifest": manifest,
         "manifest_id": manifest_id,
+        "profile_identity": profile_identity,
         "original": original,
         "rows": rows,
         "source_dependencies": stage["source_dependencies"],
         "stage_path": stage_path,
         "stage_identity": stage_identity,
         "frames": frames,
+        "view_plan": view_plan,
+        "view_plan_identity": view_plan_identity,
         "survey_identity": survey_identity,
         "host_receipt_identity": session._identity(
             session._safe_path(proof, "saved-road-host-receipt.json")
@@ -278,6 +314,7 @@ class RoadLitCapture:
         self.prime_evidence = []
         self.completed_priming_frames = 0
         self.pending_path = None
+        self.pending_camera_observation = None
         self.pose_readiness = None
         self.residency_leases = {}
         self.residency_released = False
@@ -322,7 +359,7 @@ class RoadLitCapture:
             and len(set(material_paths.values())) == 4,
             "Expected four distinct authenticated road textures",
         )
-        gravel_paths = self.context["manifest"]["shoulder_window"]["material"]["texture_objects"]
+        gravel_paths = self.context["manifest"]["shoulder_network"]["material"]["texture_objects"]
         require(set(gravel_paths) == {"BaseColor", "Normal_DX", "Roughness"}
                 and len(set(gravel_paths.values())) == 3,
                 "Expected three authenticated shoulder textures")
@@ -397,33 +434,62 @@ class RoadLitCapture:
 
     def submit_pose(self):
         row = self.context["frames"][self.index]
+        self.pending_camera_observation = None
         eye = self.api.Vector(*row["camera_location_cm"])
         target = self.api.Vector(*row["target_cm"])
         rotation = self.api.MathLibrary.find_look_at_rotation(eye, target)
         self.camera.set_actor_location(eye, False, False)
-        self.camera.set_actor_rotation(rotation, False)
+        # UE 5.8 AActor exposes K2_SetActorRotation as SetActorRotation with a
+        # bool success result; GetActorForwardVector returns its world-space X
+        # direction. Verify both the setter and its actual result before each
+        # prime/final capture, including after the native loading barrier.
+        # https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/AActor
+        require(self.camera.set_actor_rotation(rotation, False) is True,
+                "Fixed road camera rotation setter rejected the requested pose")
         component = self.camera.get_component_by_class(self.api.CameraComponent)
         component.set_editor_property("field_of_view", row["fov_deg"])
-        actual = self.camera.get_actor_location()
-        require(
-            all(
-                abs(float(getattr(actual, axis)) - number) <= 0.1
-                for axis, number in zip(
-                    ("x", "y", "z"), row["camera_location_cm"], strict=True
-                )
-            ),
-            "Fixed road camera location did not read back",
-        )
-        require(
-            abs(float(component.get_editor_property("field_of_view")) - 76.0) <= 0.001,
-            "Fixed road camera FOV differs",
-        )
         self.api.AutomationLibrary.set_editor_viewport_view_mode(
             self.api.ViewModeIndex.VMI_LIT
         )
         if self.prime_index == 0:
             self.prepare_pose(row, eye, rotation)
         self.api.AutomationLibrary.finish_loading_before_screenshot()
+        location = self.camera.get_actor_location()
+        actual = [float(getattr(location, axis)) for axis in ("x", "y", "z")]
+        require(
+            all(
+                math.isfinite(value) and abs(value - number) <= 0.1
+                for value, number in zip(actual, row["camera_location_cm"], strict=True)
+            ),
+            "Fixed road camera location did not read back",
+        )
+        fov = float(component.get_editor_property("field_of_view"))
+        require(
+            math.isfinite(fov) and abs(fov - row["fov_deg"]) <= 0.001,
+            "Fixed road camera FOV differs",
+        )
+        observed = self.camera.get_actor_forward_vector()
+        forward = [float(getattr(observed, axis)) for axis in ("x", "y", "z")]
+        length = math.hypot(*forward)
+        require(all(math.isfinite(value) for value in forward)
+                and math.isfinite(length) and length > 0.0,
+                "Fixed road camera forward vector is invalid")
+        unit = [value / length for value in forward]
+        expected = [target - eye for target, eye in zip(
+            row["target_cm"], row["camera_location_cm"], strict=True)]
+        distance = math.hypot(*expected)
+        require(math.isfinite(distance) and distance > 0.0,
+                "Pinned road camera look direction is invalid")
+        forward_error = math.dist(unit, [value / distance for value in expected])
+        require(forward_error <= CAMERA_FORWARD_TOLERANCE,
+                "Fixed road camera forward direction differs from the pinned target")
+        self.pending_camera_observation = {
+            "rotation_setter_accepted": True,
+            "location_cm": actual,
+            "forward_unit": unit,
+            "fov_deg": fov,
+            "forward_error": forward_error,
+        }
         filename = (
             self.root / "priming" / f"{row['frame_id']}-{self.prime_index:02d}.png"
             if self.prime_index < PRIMING_FRAMES
@@ -440,7 +506,7 @@ class RoadLitCapture:
             capture_hdr=False,
             comparison_tolerance=self.api.ComparisonTolerance.LOW,
             comparison_notes=(
-                "YACS accepted window0112 road asphalt; technical capture, "
+                "YACS current road network asphalt and gravel; technical capture, "
                 "final owner visual pending"
             ),
             delay=0.0,
@@ -484,6 +550,7 @@ class RoadLitCapture:
                 self.prime_evidence.append({
                     "file": path.relative_to(self.proof).as_posix(),
                     **session._identity(path, MAX_FRAME_BYTES),
+                    "native_camera_observation": self.pending_camera_observation,
                 })
                 self.completed_priming_frames += 1
                 self.prime_index += 1
@@ -497,6 +564,7 @@ class RoadLitCapture:
             self.frames.append(
                 {**row, "file": path.relative_to(self.proof).as_posix(),
                  **identity, **info, "render_mode": "lit",
+                 "native_camera_observation": self.pending_camera_observation,
                  "capture_readiness": self.pose_readiness,
                  "priming_frames": list(self.prime_evidence)}
             )
@@ -559,16 +627,31 @@ class RoadLitCapture:
                 baseline.native_inventory(self.api, prep, saved.MAP),
                 context["manifest"]["material_instance"],
                 observed_map_package=saved.MAP,
-                shoulder_receipt=context["manifest"]["shoulder_window"],
+                shoulder_receipt=context["manifest"]["shoulder_network"],
             )),
             ("shoulder native mesh", lambda: saved.shoulder.verify_loaded(
-                self.api, context["manifest"]["shoulder_window"]
+                self.api, context["manifest"]["shoulder_network"], context["source_plan"]
             )),
             ("shoulder material", lambda: saved.shoulder_material.verify_material(
-                self.api, context["manifest"]["shoulder_window"]["material"], context["source_dependencies"]
+                self.api, context["manifest"]["shoulder_network"]["material"], context["source_dependencies"]
+            )),
+            ("road full buffers", lambda: saved.verify_road_mesh(
+                self.api, context["manifest"]["road_mesh"]
+            )),
+            ("dry asphalt response", lambda: saved.verify_material_instance(
+                self.api, context["manifest"]["material_instance"],
+                context["manifest"]["material_master"], context["manifest"]["texture_objects"],
+                expected_response=context["manifest"]["dry_asphalt_response"],
+            )),
+            ("camera plan", lambda: require(
+                session._identity(session._safe_path(self.proof, EXPECTED_VIEW_PLAN), MAX_CSV_BYTES)
+                == context["view_plan_identity"], "Expected whole-network camera plan changed"
             )),
             ("saved package hashes", lambda: saved.verify_retained_files(
                 context["retained"], context["manifest"]["assets"]
+            )),
+            ("frozen profile diagnostic", lambda: saved.verified_profile_identity(
+                self.proof, context["retained"], context["profile_identity"]
             )),
             ("source assets", lambda: session._verify_rows(ROOT, context["rows"])),
             ("stage identity", lambda: require(
@@ -610,11 +693,13 @@ class RoadLitCapture:
             "run_token": context["run_token"],
             "map_package": saved.MAP,
             "saved_manifest_sha256": context["manifest_id"]["sha256"],
+            "road_profile_diagnostic_sha256": context["profile_identity"]["sha256"],
             "camera_csv_sha256": SURVEY_SHA256,
-            "window": "0112",
+            "view_plan_sha256": context["view_plan_identity"]["sha256"],
+            "material_view_sampling": {k: v for k, v in context["view_plan"].items() if k != "frames"},
             "view_authority": "accepted_bidirectional_tpp_source_camera",
             "frame_count": len(self.frames),
-            "expected_frame_count": len(FRAME_IDS),
+            "expected_frame_count": len(context["frames"]),
             "frames": self.frames,
             "errors": errors,
             "transient_camera_destroyed": not any(
@@ -633,9 +718,15 @@ class RoadLitCapture:
             "road_pixel_visibility_admitted": False,
             "whole_area_visual_admitted": False,
             "shoulder_wall_materials_admitted": False,
-            "window0112_shoulder_material_ids_verified": not errors,
-            "window0112_selected_triangle_count": len(saved.shoulder.SHOULDER_IDS),
-            "window0112_wall_material_unchanged": not errors,
+            "shoulder_network_material_ids_verified": not errors,
+            "shoulder_support_count": context["manifest"]["shoulder_network"]["support_count"],
+            "shoulder_material_target_count": context["manifest"]["shoulder_network"]["material_target_count"],
+            "shoulder_selected_triangle_count": context["manifest"]["shoulder_network"]["selected_triangle_count"],
+            "shoulder_wall_materials_unchanged": not errors,
+            "road_full_buffers_unchanged": not errors,
+            "dry_asphalt_response_verified": not errors,
+            "exhaustive_road_pixel_visibility": False,
+            "whole_area_owner_accepted": False,
             "owner_visual_status": "PENDING_FINAL_M3",
             "performance_status": "DEFERRED_AFTER_M3",
             "performance_pass": False,
@@ -669,7 +760,7 @@ def main():
         inventories,
         context["manifest"]["material_instance"],
         observed_map_package=saved.MAP,
-        shoulder_receipt=context["manifest"]["shoulder_window"],
+        shoulder_receipt=context["manifest"]["shoulder_network"],
     )
     require(
         digest == context["manifest"]["expected_normalized_inventory_sha256"],
@@ -680,10 +771,13 @@ def main():
         context["manifest"]["material_instance"],
         context["manifest"]["material_master"],
         context["manifest"]["texture_objects"],
+        expected_response=context["manifest"]["dry_asphalt_response"],
     )
     saved.shoulder_material.verify_material(
-        unreal, context["manifest"]["shoulder_window"]["material"], context["source_dependencies"])
-    saved.shoulder.verify_loaded(unreal, context["manifest"]["shoulder_window"])
+        unreal, context["manifest"]["shoulder_network"]["material"], context["source_dependencies"])
+    context["source_plan"] = saved.shoulder_sources.load_sources()
+    saved.shoulder.verify_loaded(unreal, context["manifest"]["shoulder_network"], context["source_plan"])
+    saved.verify_road_mesh(unreal, context["manifest"]["road_mesh"])
     landscape = list(unreal.GameplayStatics.get_all_actors_of_class(
         world, unreal.Landscape
     ))

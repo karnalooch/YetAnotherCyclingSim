@@ -59,7 +59,7 @@ class RoadCaptureReadinessTests(unittest.TestCase):
             "proof": self.root,
             "manifest": {
                 "texture_objects": self.paths,
-                "shoulder_window": {"material": {"texture_objects": self.gravel_paths}},
+                "shoulder_network": {"material": {"texture_objects": self.gravel_paths}},
             },
             "frames": [self.row],
         }
@@ -120,9 +120,10 @@ class RoadCaptureReadinessTests(unittest.TestCase):
             set_editor_property=Mock(), get_editor_property=Mock(return_value=76.0)
         )
         self.job.camera = SimpleNamespace(
-            set_actor_location=Mock(), set_actor_rotation=Mock(),
+            set_actor_location=Mock(), set_actor_rotation=Mock(return_value=True),
             get_component_by_class=Mock(return_value=component),
             get_actor_location=Mock(return_value=self.api.Vector(1, 2, 3)),
+            get_actor_forward_vector=Mock(return_value=self.api.Vector(1, 0, 0)),
         )
         self.job.stop = Mock()
         self.enterContext(patch.object(gpu, "decode_png", return_value=(1, 1, 3, b"rgb")))

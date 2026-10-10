@@ -43,14 +43,45 @@ Both archives were downloaded and their bytes independently verified. The
 intermediate native run stopped at the source bridge: the previous base bundle
 does not contain `dry_varied`. It did not reach new material authoring.
 
-The isolated follow-up changes only the dry recipe's periodic lattice
-addressing: canonical tile coordinates and explicit neighbouring-index wrap
-replace floating modulo there. Seed, frequencies, contrast, material response,
-historical recipes and wrap thresholds remain unchanged. All 76 source tests
-pass locally, including regression rejection of both measured failed seam
-axes. This is a candidate fix until two new native source renders pass; no
-GPU compiler lowering or new visual result is inferred from the numerical
-model used to diagnose the boundary risk.
+The isolated fix at `b385c6cf601764ab91220caa24d8a2d1d2d033e8` changes only
+the dry recipe's periodic lattice addressing: canonical tile coordinates and
+explicit neighbouring-index wrap replace floating modulo there. Seed,
+frequencies, contrast, material response, historical recipes and wrap
+thresholds remain unchanged. All 76 source tests pass locally, including
+regression rejection of both measured failed seam axes.
+
+[Source proof 38089061451](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38089061451)
+then passed two actual renders, both with exit 0 and identical graph/all five
+map bytes. The original `source-proof.json` is 15,357 bytes, SHA-256
+`6a073cf0223b47ac0734017a9e6691b749c871275ad2279a1b8f0aaec9439236`.
+Its retained producer fingerprint is
+`0968cc9e3a4c882faada014bb498a844fe09414d6960e209f7ffc02922fbce99`;
+the graph is
+`25257e365ec99155d6e2e5a89ec527d153a7156427ad67777444f90b1b5561cd`.
+The native source bridge now selects exactly this producer/run and receipt.
+
+All three original archives were independently downloaded and byte-verified:
+
+| Source artifact | ZIP bytes | SHA-256 |
+|---|---:|---|
+| [Receipt/logs 11683416306](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38089061451/artifacts/11683416306) | 3,989 | `0d7761bcda19b8598ca841e48627d027edd3c4561da275c6cf5430e1863a919b` |
+| [Run-a 11682901906](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38089061451/artifacts/11682901906) | 20,532,813 | `ebbf30a7dec71b92ff177d8072f150dc2d8a5918bc8ded2ea11e18cc92ae2ef0` |
+| [Run-b 11683666047](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38089061451/artifacts/11683666047) | 20,532,813 | `e4d0b31460afb3b21e0f3e13312cde73247d843b89f260b90b4a3c79298b4ce8` |
+
+Independent pixel remeasurement confirms `DetailMasks` wrap X/Y fell from
+0.063345/0.072007 to 0.012891/0.012899 under the unchanged QA rule. Both
+axes are now close to their adjacent interior pixel steps. Mean roughness is
+0.936347; the minimum 0.898039 is the 8-bit quantization of the 0.90 lower
+bound. Large-scale colour variation remains a visual candidate for Unreal
+review. The numerical diagnosis does not establish the GPU compiler's actual
+lowering of the prior floating modulo expression.
+
+The strict retained replay checker also passed locally using explicit,
+hash-verified Windows CRLF catalog input bytes. Git's current JSON checkout
+policy makes the catalog and upstream file CRLF on the host and LF locally;
+those two conversions exactly reproduce the retained producer fingerprint.
+No source, receipt or map bytes were rewritten to obtain this verification.
+Windows source tests completed 76 tests with two unavailable-platform skips.
 
 The full-network consumer under integration source-authenticates all 186
 support owners before assignment, assigns only the two outer top strips on
@@ -66,6 +97,8 @@ authoring API. API review used Epic's UE 5.8 documentation for
 and [FDynamicMeshAttributeSet](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/GeometryCore/FDynamicMeshAttributeSet).
 Compilation and `CyclingPhysics.World.RoadMaterialReadOnlyInspection` Automation
 remain pending until the exact new native source is built on the host.
+The initial build in CI 38089067078 was cancelled after a concurrent branch
+update; its failed aggregate gate is not build or Automation acceptance.
 
 The representative camera plan selects 68 existing, authenticated survey poses:
 both directions in all 24 occupied 250 m road cells, the original four
@@ -74,6 +107,29 @@ comparisons, Nudo, the accepted hairpin and elevation extremes. It represents
 owner acceptance. Full-network save, independent reopening and these GPU
 captures remain pending. Owner visual status stays `PENDING_FINAL_M3` and
 performance stays `DEFERRED_AFTER_M3`, `performance_pass: false`.
+
+The integrated local contract suite completed **237 tests, with six skipped
+because PowerShell is unavailable locally**. Documentation/architecture and
+diff checks passed. Independent reviews caught and corrected the importer
+receipt key mismatch and a missing camera-direction readback. Each final and
+priming capture now observes the camera after loading; the host independently
+compares its location, FOV and forward vector against the pinned survey pose.
+These local results do not replace the new full-network native proof. At the
+owner's request, UE Remote review follows completion of the corrected material
+scene and must show that verified version.
+
+The integrated source-only profile diagnostic records all 17,125 frozen
+pavement cross sections across the 185 road windows. It retains the original
+edge/centre XYZ, signed crossfall, each track's longitudinal grade and local
+curvature in a separate bounded 8 MiB compact file, linked by SHA-256 from
+the material manifest and rehashed during fresh reload and GPU review.
+Its status explicitly keeps `real_road_match_validated=false`; it neither
+authors geometry nor turns DTM inference into measured road banking.
+The frozen hairpin producer uses a provisional 2% inward design, the ordinary
+network smooths and globally bounds DTM-derived banking within each source
+part, and Nudo deliberately uses a level transverse bridge profile with end
+blends. Establishing faithful real-road profiles remains the separate
+measurement and geometry workstream requested by the owner.
 
 ## Current proof boundary
 

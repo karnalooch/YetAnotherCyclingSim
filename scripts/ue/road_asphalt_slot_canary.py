@@ -8,7 +8,10 @@ Source authentication and actual Unreal execution remain independent proof gates
 from __future__ import annotations
 
 from copy import deepcopy
+import math
 from pathlib import Path
+
+from scripts.assets.road_material_contract import FAMILY, VARIANT
 
 ROAD_LABEL = "YACS_PERSIST_ROAD"
 ROAD_VERTICES = 856250
@@ -67,8 +70,8 @@ def verify_import_receipt(receipt, expected_graph_sha256):
     """Source/scale provenance is mandatory before touching the road slot."""
     require(isinstance(receipt, dict), "material import receipt is missing")
     require(receipt.get("status") == "IMPORTED_UE_REVIEW_PENDING"
-            and receipt.get("family") == "aged_mountain_asphalt"
-            and receipt.get("variant") == "base"
+            and receipt.get("family") == FAMILY
+            and receipt.get("variant") == VARIANT
             and receipt.get("graph_sha256") == expected_graph_sha256
             and receipt.get("tile_metres") == 4
             and receipt.get("normal_convention") == "DirectX"
@@ -80,8 +83,42 @@ def verify_import_receipt(receipt, expected_graph_sha256):
     assets = receipt.get("assets")
     require(isinstance(assets, dict)
             and isinstance(assets.get("instance"), str)
-            and assets["instance"].startswith(ASPHALT_DESTINATION + "/"),
+            and assets["instance"].startswith(
+                f"{ASPHALT_DESTINATION}/{FAMILY}/{VARIANT}/"
+            ),
             "asphalt canary instance is outside its scoped package")
+    response = receipt.get("dry_asphalt_response")
+    require(isinstance(response, dict)
+            and response.get("status") == "DRY_ASPHALT_RESPONSE_READBACK_VERIFIED"
+            and response.get("orm_srgb") is False
+            and response.get("orm_compression") == "TC_MASKS"
+            and response.get("orm_texture") == assets.get("textures", {}).get("ORM")
+            and isinstance(response.get("orm_texture"), str)
+            and response.get("shader_gpu_compilation_verified") is False
+            and response.get("visual_accepted") is False,
+            "dry asphalt native response readback is missing or differs")
+    scalars = response.get("scalar_parameter_values")
+    expected_scalars = {"TileSizeCm": 400.0, "DrySpecular": 0.2, "DryMetallic": 0.0}
+    require(isinstance(scalars, dict) and set(scalars) == set(expected_scalars)
+            and response.get("scalar_parameter_names") == sorted(expected_scalars),
+            "dry asphalt scalar parameter inventory differs")
+    for name, expected in expected_scalars.items():
+        actual = scalars[name]
+        require(type(actual) in (int, float) and math.isfinite(actual)
+                and abs(actual - expected) <= 0.000001,
+                "dry asphalt scalar readback differs: " + name)
+    bindings = receipt.get("dry_surface_connections")
+    require(isinstance(bindings, dict)
+            and bindings.get("scope") == "NATIVE_CREATION_CONNECTION_RETURNS"
+            and bindings.get("roughness_source") == "WorldAlignedTexture(ORMTex).G"
+            and bindings.get("roughness_multiplier_used") is False,
+            "dry asphalt direct roughness binding evidence differs")
+    connections = bindings.get("connections")
+    require(isinstance(connections, dict) and set(connections) == {
+                "orm_projection_to_green_mask", "green_mask_to_roughness",
+                "DrySpecular", "DryMetallic",
+            } and all(value is True for value in connections.values()),
+            "dry asphalt material connection did not succeed")
 
 
 def authenticate_asphalt_replay(
@@ -110,7 +147,7 @@ def authenticate_asphalt_replay(
             and runs[1].get("run") == "run-b"
             and runs[0].get("graph_sha256") == runs[1].get("graph_sha256"),
             "asphalt graph identities differ")
-    variant = proof_root / "run-a/aged_mountain_asphalt/base"
+    variant = proof_root / "run-a" / FAMILY / VARIANT
     return variant, replay
 
 
@@ -269,6 +306,11 @@ def candidate_on_loaded_accepted_map(
         variant, destination_root=ASPHALT_DESTINATION, save_assets=False
     )
     verify_import_receipt(imported, replay["runs"][0]["graph_sha256"])
+    require(
+        forge.verify_dry_asphalt_response(instance, imported["assets"])
+        == imported["dry_asphalt_response"],
+        "dry asphalt effective response changed before road assignment",
+    )
     actors = list(api.get_editor_subsystem(api.EditorActorSubsystem).get_all_level_actors())
     result = try_road_only_material(snapshot, actors, instance, imported)
     result["source_head"] = replay["source_head"]
@@ -276,4 +318,5 @@ def candidate_on_loaded_accepted_map(
     result["source_receipt_sha256"] = replay["authenticated_source_receipt"]["sha256"]
     result["graph_sha256"] = replay["runs"][0]["graph_sha256"]
     result["import_receipt"] = imported
+    result["dry_asphalt_response_verified"] = True
     return result

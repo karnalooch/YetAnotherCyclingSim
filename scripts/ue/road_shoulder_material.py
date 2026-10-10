@@ -1,6 +1,6 @@
 """Create the bounded #364 gravel material; never assign geometry or save assets.
 
-The caller owns window-0112 triangle selection, slot assignment, rollback and
+The caller owns whole-network triangle selection, slot assignment, rollback and
 saved/fresh-rendered proof. This helper only consumes the three immutable,
 already staged FillGravel textures. Its two new assets must be saved explicitly
 by the caller; no import, source-texture edit, world edit or displacement occurs.
@@ -18,7 +18,7 @@ import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-DESTINATION_ROOT = "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderWindow0112"
+DESTINATION_ROOT = "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork"
 ENGINE_VERSION = "5.8.2-56702186+++UE5+Release-5.8"
 LIBRARY = (
     "Content/Generated/YACS/TextureMaterialPrep/Libraries/"
@@ -68,8 +68,8 @@ def asset_paths(destination_root):
     return {
         role: destination_root + "/" + name + "." + name
         for role, name in (
-            ("master", "M_ShoulderWindow0112"),
-            ("instance", "MI_ShoulderWindow0112"),
+            ("master", "M_ShoulderNetwork"),
+            ("instance", "MI_ShoulderNetwork"),
         )
     }
 
@@ -231,7 +231,7 @@ def create_material(api, destination_root, source_dependencies):
             "Shoulder material assets already exist; refuse overwrite")
     lib = api.MaterialEditingLibrary
     tools = api.AssetToolsHelpers.get_asset_tools()
-    master = tools.create_asset("M_ShoulderWindow0112", destination_root,
+    master = tools.create_asset("M_ShoulderNetwork", destination_root,
                                 api.Material, api.MaterialFactoryNew())
     require(master is not None and master.get_path_name() == paths["master"],
             "Shoulder master creation failed")
@@ -254,7 +254,7 @@ def create_material(api, destination_root, source_dependencies):
                 "Shoulder material property connection failed: " + str(prop))
 
     tile = node(api.MaterialExpressionScalarParameter, parameter_name="TileSizeCm",
-                group="Shoulder Window 0112", default_value=TILE_SIZE_CM)
+                group="Road Gravel", default_value=TILE_SIZE_CM)
     projected = {}
     for parameter, channel in TEXTURES.items():
         normal = channel == "Normal_DX"
@@ -262,7 +262,7 @@ def create_material(api, destination_root, source_dependencies):
                    api.MaterialSamplerType.SAMPLERTYPE_COLOR if channel == "BaseColor" else
                    api.MaterialSamplerType.SAMPLERTYPE_MASKS)
         texture = node(api.MaterialExpressionTextureObjectParameter,
-                       parameter_name=parameter, group="Shoulder Window 0112",
+                       parameter_name=parameter, group="Road Gravel",
                        texture=textures[channel], sampler_type=sampler)
         function = api.load_asset(PROJECTION_ROOT + ("WorldAlignedNormal" if normal else "WorldAlignedTexture"))
         require(function is not None, "Required native shoulder projection is missing")
@@ -284,7 +284,7 @@ def create_material(api, destination_root, source_dependencies):
     output(node(api.MaterialExpressionConstant, r=0.0), "", api.MaterialProperty.MP_METALLIC)
     output(node(api.MaterialExpressionConstant, r=1.0), "", api.MaterialProperty.MP_AMBIENT_OCCLUSION)
     require(not lib.recompile_material(master), "Shoulder material compilation reported errors")
-    instance = tools.create_asset("MI_ShoulderWindow0112", destination_root,
+    instance = tools.create_asset("MI_ShoulderNetwork", destination_root,
                                   api.MaterialInstanceConstant, api.MaterialInstanceConstantFactoryNew())
     require(instance is not None and instance.get_path_name() == paths["instance"],
             "Shoulder instance creation failed")

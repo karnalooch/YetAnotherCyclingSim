@@ -23,7 +23,9 @@ class NativeCanaryBoundaryTests(unittest.TestCase):
                 "sys.path = [p for p in sys.path if 'YetAnotherCyclingSim' not in p]; "
                 "scope = runpy.run_path(sys.argv[1], run_name='native_import_fixture'); "
                 "assert scope['ROOT'] == __import__('pathlib').Path(sys.argv[1]).resolve().parents[2]; "
-                "assert scope['session'].__name__ == 'scripts.ci.official_mcp_bob_session'"
+                "assert scope['session'].__name__ == 'scripts.ci.official_mcp_bob_session'; "
+                "from scripts.assets.road_material_contract import FAMILY, VARIANT; "
+                "assert (scope['canary'].FAMILY, scope['canary'].VARIANT) == (FAMILY, VARIANT)"
             )
             process = subprocess.run(
                 [sys.executable, "-I", "-c", source, str(script)],

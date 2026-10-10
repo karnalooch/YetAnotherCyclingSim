@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import hashlib
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -41,7 +42,7 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
         ]
         self.new_material = (
             saved.PACKAGE
-            + "/aged_mountain_asphalt/base/6b381516854c/MI_MaterialForge.MI_MaterialForge"
+            + "/aged_mountain_asphalt/dry_varied/6b381516854c/MI_MaterialForge.MI_MaterialForge"
         )
 
     def new_inventory(self):
@@ -150,37 +151,41 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 observed_map_package=saved.MAP,
             )
 
-    def test_shoulder_allows_one_source_owned_extra_slot_and_preserves_other_state(self):
-        original = deepcopy(self.old)
-        original["road_supports"][1]["slots"] = [{"path": saved.shoulder.OLD_MATERIAL}]
-        original["mesh_material_collision_snapshot"][1]["materials"] = [saved.shoulder.OLD_MATERIAL]
-        receipt = {
-            "support_label": original["road_supports"][1]["label"],
-            "material": {"assets": saved.shoulder_material.asset_paths(
-                saved.PACKAGE + "/ShoulderWindow0112"
-            )},
-        }
-        assets = receipt["material"]["assets"]
-        after = self.new_inventory()
-        after["road_supports"][1]["slots"] = [
-            {"path": saved.shoulder.OLD_MATERIAL},
-            {"path": assets["instance"], "parent": assets["master"],
-             "class": "MaterialInstanceConstant", "effective_color": None},
-        ]
-        after["mesh_material_collision_snapshot"][1]["materials"] = [
-            saved.shoulder.OLD_MATERIAL, assets["instance"],
-        ]
+    def test_network_allows_only_source_owned_outer_slots_and_preserves_parapet(self):
+        original, after = deepcopy(self.old), self.new_inventory()
+        assets = saved.shoulder_material.asset_paths(saved.shoulder_material.DESTINATION_ROOT)
+        receipt = {"schema_version": 2, "support_count": 186, "material_target_count": 185,
+                   "owners": [], "material": {"assets": assets}}
+        for i in range(186):
+            target = i != 181
+            material = (saved.shoulder_sources.SUPPORT_MATERIAL if target
+                        else saved.shoulder_sources.PARAPET_MATERIAL)
+            label = original["road_supports"][i + 1]["label"]
+            receipt["owners"].append({"support_label": label, "material_target": target,
+                "kind": "ordinary" if target else "parapet",
+                "source": {"original_material_path": material}})
+            for inventory in (original, after):
+                inventory["road_supports"][i + 1]["slots"] = [{"path": material}]
+                inventory["mesh_material_collision_snapshot"][i + 1]["materials"] = [material]
+            if target:
+                after["road_supports"][i + 1]["slots"].append({
+                    "path": assets["instance"], "parent": assets["master"],
+                    "class": "MaterialInstanceConstant", "effective_color": None})
+                after["mesh_material_collision_snapshot"][i + 1]["materials"].append(assets["instance"])
+
         def verify(value, selection=receipt):
             return saved.expected_saved_inventory(
                 original, value, self.new_material,
                 observed_map_package=saved.session.operation.MAP_PACKAGE,
                 shoulder_receipt=selection,
             )
+
         verify(after)
-        self.assertEqual(len(original["road_supports"][1]["slots"]), 1)
+        self.assertTrue(all(len(row["slots"]) == 1 for row in original["road_supports"][1:]))
         for mutate in (
             lambda value: value["road_supports"][1]["slots"][0].update(path="changed-wall"),
-            lambda value: value["road_supports"][2]["slots"].append({"path": assets["instance"]}),
+            lambda value: value["road_supports"][182]["slots"].append({"path": assets["instance"]}),
+            lambda value: value["road_supports"][186]["slots"].pop(),
             lambda value: value["mesh_material_collision_snapshot"][1].update(collision="BLOCK_ALL"),
             lambda value: value["landscape"].update(component_count=1023),
         ):
@@ -188,22 +193,81 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
             mutate(value)
             with self.assertRaises(ValueError):
                 verify(value)
-        for label in ("missing-support", original["road_supports"][0]["label"]):
+        for mutate in (
+            lambda value: value["owners"].pop(),
+            lambda value: value["owners"][1].update(support_label=value["owners"][0]["support_label"]),
+            lambda value: value["owners"][181].update(material_target=True),
+            lambda value: value["material"]["assets"].update(instance="/Game/Unapproved/MI.MI"),
+        ):
+            value = deepcopy(receipt)
+            mutate(value)
             with self.assertRaises(ValueError):
-                verify(after, {**receipt, "support_label": label})
+                verify(after, value)
+
+    def test_fresh_road_full_buffers_reject_geometry_corner_or_id_drift(self):
+        summary = {"vertex_count": 856250, "triangle_count": 1711760,
+                   "uv_set_count": 0, "positions_indices_blake3": "a" * 64,
+                   "triangle_corner_normals_uv_blake3": "b" * 64,
+                   "material_ids_blake3": "c" * 64}
+        component = object()
+        road = SimpleNamespace(get_dynamic_mesh_component=lambda: component)
+        api = SimpleNamespace(EditorActorSubsystem=object(),
+            get_editor_subsystem=lambda _: SimpleNamespace(get_all_level_actors=lambda: [road]))
+        with patch.object(saved.baseline, "road_support_actors", return_value=[road]), \
+             patch.object(saved.shoulder, "inspect_mesh", return_value={"summary": summary}) as read:
+            self.assertEqual(saved.verify_road_mesh(api, summary), summary)
+            read.assert_called_once_with(api, component)
+            for field in ("positions_indices_blake3", "triangle_corner_normals_uv_blake3", "material_ids_blake3"):
+                changed = {**summary, field: "d" * 64}
+                with self.subTest(field=field), self.assertRaisesRegex(ValueError, "full native buffers"):
+                    saved.verify_road_mesh(api, changed)
 
     def test_downloadable_manifest_must_match_retained_bytes(self):
         with tempfile.TemporaryDirectory() as directory:
             proof, retained = Path(directory) / "proof", Path(directory) / "retained"
             proof.mkdir()
             retained.mkdir()
-            value = {"shoulder_window": {"selected_triangle_ids": [0, 1, 50, 51]}}
+            value = {"shoulder_network": {"selected_triangle_ids": [0, 1, 50, 51]}}
             expected = saved.write_once(retained / saved.MANIFEST, value)
             saved.write_once(proof / saved.MANIFEST, value)
             self.assertEqual(saved.verified_manifest_identity(proof, retained), expected)
             (proof / saved.MANIFEST).write_bytes((proof / saved.MANIFEST).read_bytes().replace(b"50", b"52"))
             with self.assertRaisesRegex(ValueError, "Downloadable material manifest differs"):
                 saved.verified_manifest_identity(proof, retained)
+
+    def test_profile_diagnostic_is_retained_once_and_both_copies_remain_byte_pinned(self):
+        with tempfile.TemporaryDirectory() as directory:
+            proof, retained = Path(directory) / "proof", Path(directory) / "retained"
+            proof.mkdir()
+            retained.mkdir()
+            plan = object()
+            report = {"synthetic_file_contract_fixture": True, "values": [0, 1, 2]}
+            with patch.object(saved.shoulder_sources, "network_profile_report", return_value=report) as read:
+                identity = saved.write_profile_diagnostic(proof, retained, plan)
+                read.assert_called_once_with(plan)
+                with self.assertRaises(FileExistsError):
+                    saved.write_profile_diagnostic(proof, retained, plan)
+            self.assertEqual(identity["file"], saved.PROFILE_DIAGNOSTIC)
+            original = (proof / saved.PROFILE_DIAGNOSTIC).read_bytes()
+            self.assertEqual(json.loads(original), report)
+            self.assertEqual(identity["sha256"], hashlib.sha256(original).hexdigest())
+            self.assertEqual(identity["size_bytes"], len(original))
+            for folder in (proof, retained):
+                path = folder / saved.PROFILE_DIAGNOSTIC
+                path.write_bytes(original.replace(b"[0,1,2]", b"[0,1,3]"))
+                with self.assertRaisesRegex(ValueError, "diagnostic bytes changed"):
+                    saved.verified_profile_identity(proof, retained, identity)
+                path.write_bytes(original)
+            for changed in (
+                {**identity, "file": "../another.json"},
+                {**identity, "size_bytes": saved.shoulder_sources.PROFILE_REPORT_MAX_BYTES + 1},
+                {**identity, "size_bytes": True},
+                {**identity, "sha256": "unverified"},
+                {**identity, "extra": 1},
+            ):
+                with self.assertRaisesRegex(ValueError, "fixed file/byte contract"):
+                    saved.verified_profile_identity(proof, retained, changed)
+            self.assertEqual(saved.verified_profile_identity(proof, retained, identity), identity)
 
     def test_editor_dispatch_keeps_source_dependency_role_separate_from_scene_assets(self):
         # Real staging has 14 scene rows and 236 unique dependency rows, with
@@ -319,7 +383,7 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
             root = Path(temp)
             folder = root / saved.PREFIX
             expected_paths = [saved.MAP_FILE] + [
-                saved.PREFIX + f"aged_mountain_asphalt/base/abcdef/T_{i}.uasset"
+                saved.PREFIX + f"aged_mountain_asphalt/dry_varied/abcdef/T_{i}.uasset"
                 for i in range(6)
             ]
             for i, relative in enumerate(expected_paths):
@@ -332,7 +396,7 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                     [row["path"] for row in rows], sorted(expected_paths)
                 )
                 self.assertEqual(len(rows), 7)
-                extra = folder / "aged_mountain_asphalt/base/abcdef/UNAPPROVED.txt"
+                extra = folder / "aged_mountain_asphalt/dry_varied/abcdef/UNAPPROVED.txt"
                 extra.write_text("not a package", encoding="utf-8")
                 with self.assertRaisesRegex(
                     ValueError, "Unapproved generated road-material file type"
@@ -340,7 +404,7 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                     saved.produced_files()
                 extra.unlink()
                 # Never silently accept an asset file with a real path alias.
-                alias = folder / "aged_mountain_asphalt/base/abcdef/ALIAS.uasset"
+                alias = folder / "aged_mountain_asphalt/dry_varied/abcdef/ALIAS.uasset"
                 try:
                     alias.symlink_to(root / expected_paths[1])
                 except (OSError, NotImplementedError):
