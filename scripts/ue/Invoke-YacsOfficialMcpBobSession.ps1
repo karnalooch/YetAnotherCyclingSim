@@ -387,8 +387,8 @@ function Read-SessionFixedFailureFile {
     if ($DiagnosePreviousFailure) {
         if ($Name -cnotin @('accepted-session-build.json', 'session-preparation.json', 'session-context.json', 'transport-context.json', 'native-counter.json', 'native-session.json', 'owned-editor.log', 'owned-editor-stdout.log', 'owned-editor-stderr.log')) { throw 'Previous failure readback covers only its nine fixed session files.' }
         $path = if ($Name.EndsWith('.json', [StringComparison]::Ordinal) -and $Name -cne 'accepted-session-build.json') {
-            Join-Path 'D:\yacs\runner\_work\s384\38011502540-1\Saved\RuntimeProof\OfficialMcpBob' $Name
-        } else { Join-Path 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38011502540-1' $Name }
+            Join-Path 'D:\yacs\runner\_work\s384\38013644520-1\Saved\RuntimeProof\OfficialMcpBob' $Name
+        } else { Join-Path 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38013644520-1' $Name }
     } else {
         if ($Name -cin @('accepted-session-build.json', 'session-preparation.json', 'session-context.json', 'transport-context.json', 'native-counter.json')) { throw 'Retained context receipts are read only in fixed previous-failure mode.' }
         $path = if ($Name -ceq 'native-session.json') { Join-Path $SessionRoot 'Saved/RuntimeProof/OfficialMcpBob/native-session.json' }
@@ -399,6 +399,12 @@ function Read-SessionFixedFailureFile {
     $before = Get-Item -LiteralPath $path -Force
     $size = $before.Length
     $ticks = $before.LastWriteTimeUtc.Ticks
+    $observeMetadata = $DiagnosePreviousFailure -and $Name -cin @('session-context.json', 'transport-context.json')
+    if ($observeMetadata) {
+        $creationTicks = $before.CreationTimeUtc.Ticks
+        $createdUtc = $before.CreationTimeUtc.ToString('o')
+        $writtenUtc = $before.LastWriteTimeUtc.ToString('o')
+    }
     if ($before.PSIsContainer -or $size -gt $limit -or $readBudget.bytes + $size + 1 -gt 64MB) { throw 'Fixed failure files exceed their read bound.' }
     # Charge the reserved read even if instability later rejects this log.
     $readBudget.bytes += $size + 1
@@ -411,12 +417,18 @@ function Read-SessionFixedFailureFile {
     Assert-SessionPlainPath $path
     $after = Get-Item -LiteralPath $path -Force
     if ($count -ne $size -or $count -ne $after.Length -or $ticks -ne $after.LastWriteTimeUtc.Ticks) { throw 'Fixed failure log changed during readback.' }
+    if ($observeMetadata -and $creationTicks -ne $after.CreationTimeUtc.Ticks) { throw 'Fixed retained context metadata changed during readback.' }
     $bytes = [byte[]]::new($count)
     [Array]::Copy($buffer, $bytes, $count)
-    return [ordered]@{ bytes = $bytes; text = [Text.Encoding]::UTF8.GetString($bytes); identity = [ordered]@{
+    $result = [ordered]@{ bytes = $bytes; text = [Text.Encoding]::UTF8.GetString($bytes); identity = [ordered]@{
         path = [IO.Path]::GetFullPath($path); size_bytes = $count
         sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
     } }
+    if ($observeMetadata) {
+        $result['filesystem_metadata'] = [ordered]@{ scope = 'CURRENT_OBSERVED_FILESYSTEM_METADATA; NOT_ORIGINAL_HASH_PINNED_CHRONOLOGY'
+            creation_time_utc = $createdUtc; last_write_time_utc = $writtenUtc }
+    }
+    return $result
 }
 function Write-SessionFixedFailureLogContext {
     param([string] $Name, $File)
@@ -442,7 +454,7 @@ function Write-SessionFixedFailureLogContext {
         if ($lines[$index] -match '(?i)error C[0-9]+|fatal error|error LNK[0-9]+|LogPython:.*(?:Error|Fatal)|Traceback|Exception|(?:Runtime|Attribute|Type|Value|Name|Import|ModuleNotFound|Syntax)Error|Assertion failed') {
             for ($line = [Math]::Max(0, $index - 1); $line -le [Math]::Min($index + 2, $lines.Length - 1); $line++) { [void]$matched.Add($line) }
         }
-        if (-not $DiagnosePreviousFailure -and $lines[$index].Contains('LogYacsBobOfficialSession:')) { [void]$nativeMilestones.Add($index) }
+        if ($lines[$index].Contains('LogYacsBobOfficialSession:')) { [void]$nativeMilestones.Add($index) }
         if ($DiagnosePreviousFailure) {
             foreach ($category in $categories.Keys) {
                 if ($lines[$index] -match $categories[$category]) {
@@ -462,7 +474,8 @@ function Write-SessionFixedFailureLogContext {
         # four error-context lines retain the existing 24-line hard cap.
         $chosen = @($matched | Select-Object -First 2) + @($matched | Select-Object -Last 2)
         foreach ($category in $categories.Keys) {
-            $chosen += @($categoryLines[$category] | Select-Object -First 2) + @($categoryLines[$category] | Select-Object -Last 2)
+            $selected = if ($category -ceq 'bob' -and $nativeMilestones.Count -gt 0) { $nativeMilestones } else { $categoryLines[$category] }
+            $chosen += @($selected | Select-Object -First 2) + @($selected | Select-Object -Last 2)
         }
     }
     $context = @()
@@ -505,13 +518,23 @@ function Write-SessionFixedFailureLogContext {
         launch_observations = $observations; command_line_observed = $commandLines.Count -gt 0; launch_observations_truncated = $commandLines.Count -gt $observations.Count }
 }
 function Invoke-SessionPreviousFailureDiagnostic {
-    $previousRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38011502540-1'
-    if (-not [string]::Equals([IO.Path]::GetFullPath((Join-Path $RepoRoot 'Saved/RuntimeProof/OfficialMcpBobSession/38011502540-1')), $previousRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Fixed previous failure requires its exact retained checkout.' }
+    $previousRoot = 'D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_official-mcp-native-probe\Saved\RuntimeProof\OfficialMcpBobSession\38013644520-1'
+    if (-not [string]::Equals([IO.Path]::GetFullPath((Join-Path $RepoRoot 'Saved/RuntimeProof/OfficialMcpBobSession/38013644520-1')), $previousRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Fixed previous failure requires its exact retained checkout.' }
     $readBudget = [ordered]@{ bytes = 0 }
     $file = Read-SessionFixedFailureFile 'accepted-session-build.json'
-    if ($null -eq $file -or $file.identity.size_bytes -ne 440247 -or $file.identity.sha256 -cne 'b19aa1b9d474ef7be6eff646da53d17a6e57225a672d3a29f043d5fd501b2f45') { throw 'The retained host receipt differs from the original console-pinned bytes.' }
+    if ($null -eq $file -or $file.identity.size_bytes -ne 442120 -or $file.identity.sha256 -cne '43aabf46532692520645dd4bb5eaf4e6a17f07c873889e6985a657374d290f28') { throw 'The retained host receipt differs from the original console-pinned bytes.' }
     $previous = $file.text | ConvertFrom-Json -AsHashtable -Depth 40
-    if ($previous -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $previous.schema_version 1) -or $previous.exact_sha -cne '2baa276fcdd35920490495709c7d7379820c5c03' -or $previous.run -cne '38011502540' -or $previous.attempt -cne '1' -or $previous.status -cne 'BLOCKED') { throw 'The retained receipt disagrees with the exact failed run/source.' }
+    if ($previous -isnot [Collections.IDictionary] -or -not (Test-SessionInteger $previous.schema_version 1) -or $previous.exact_sha -cne '9b50911a058f1213fad6f17bd85086fa76830e2f' -or $previous.run -cne '38013644520' -or $previous.attempt -cne '1' -or $previous.status -cne 'BLOCKED') { throw 'The retained receipt disagrees with the exact failed run/source.' }
+    # Read this original string without ConvertFrom-Json's date coercion.
+    $document = [Text.Json.JsonDocument]::Parse([string]$file.text)
+    try {
+        $start = $document.RootElement.GetProperty('attempt_started_at_utc')
+        if ($start.ValueKind -ne [Text.Json.JsonValueKind]::String) { throw 'The pinned attempt start is not an original JSON string.' }
+        $attemptStarted = $start.GetString()
+    } finally { $document.Dispose() }
+    if ($attemptStarted.Length -gt 64 -or $attemptStarted -cnotmatch '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{7}Z$') { throw 'The pinned attempt start is not its bounded UTC timestamp.' }
+    $parsedStart = [DateTime]::MinValue
+    if (-not [DateTime]::TryParseExact($attemptStarted, 'o', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::RoundtripKind, [ref]$parsedStart)) { throw 'The pinned attempt start is not a valid UTC timestamp.' }
     foreach ($flag in @('accepted_bytes_staged', 'source_unchanged', 'editor_launched')) {
         if ($previous[$flag] -isnot [bool] -or -not $previous[$flag]) { throw 'The exact failed session did not record staging and Editor startup.' }
     }
@@ -520,12 +543,13 @@ function Invoke-SessionPreviousFailureDiagnostic {
     }
     if ($null -ne $previous.owned_client_pid -or ($previous.owned_editor_pid -isnot [int] -and $previous.owned_editor_pid -isnot [long]) -or $previous.owned_editor_pid -le 0 -or $previous.proof_files -isnot [Collections.IDictionary]) { throw 'The recorded owned-session boundary differs from the no-client timeout.' }
     $diagnostic = [ordered]@{
-        schema_version = 1; exact_sha = $ExpectedHead; previous_run = '38011502540-1'; previous_exact_sha = $previous.exact_sha
+        schema_version = 1; exact_sha = $ExpectedHead; previous_run = '38013644520-1'; previous_exact_sha = $previous.exact_sha
         previous_receipt = $file.identity; source_only = $true; compile_performed = $false; editor_launched = $false; listener_started = $false
         official_mcp_admitted = $false; native_automation_verified = $false; native_bob_capture_verified = $false
         status = 'READ_ONLY_NATIVE_READINESS_FAILURE_DIAGNOSTIC'; previous_error = Get-SessionSafeFailureText ([string]$previous.error)
         recorded_session = [ordered]@{}; build_records = [ordered]@{}; files = [ordered]@{}; context = [ordered]@{}; gaps = @()
     }
+    $diagnostic.recorded_session['attempt_started_at_utc'] = $attemptStarted
     foreach ($field in @('editor_launched', 'owned_editor_pid', 'owned_client_pid', 'owned_editor_exit_observed', 'owned_client_exit_observed', 'listener_started', 'accepted_bytes_staged')) {
         $value = $previous[$field]
         if ($null -ne $value -and $value -isnot [bool] -and $value -isnot [int] -and $value -isnot [long]) { throw 'A recorded ownership scalar is malformed.' }
@@ -582,6 +606,7 @@ function Invoke-SessionPreviousFailureDiagnostic {
                 $observation['identity_scope'] = 'CURRENT_OBSERVED_RETAINED_BYTES; NO_ORIGINAL_HOST_HASH'
                 $diagnostic.gaps += ('No original host hash for retained ' + $name)
             }
+            if ($observed.Contains('filesystem_metadata')) { $observation['filesystem_metadata'] = $observed.filesystem_metadata }
             Write-Host ('PREVIOUS_SESSION_FILE ' + $name + ' ' + ($observation | ConvertTo-Json -Depth 4 -Compress))
             if ($name.EndsWith('.log', [StringComparison]::Ordinal)) {
                 $observed['identity_scope'] = $observation.identity_scope
@@ -614,7 +639,7 @@ function Invoke-SessionPreviousFailureDiagnostic {
         }
     }
     Write-SessionJson (Join-Path $ArtifactRoot 'previous-session-failure-diagnostic.json') $diagnostic
-    $receipt['diagnostic_previous_run'] = '38011502540-1'
+    $receipt['diagnostic_previous_run'] = '38013644520-1'
     $receipt.proof_files.previous_session_failure_diagnostic = Get-SessionFileIdentity (Join-Path $ArtifactRoot 'previous-session-failure-diagnostic.json') 1MB
     $receipt.proof_files.previous_failed_receipt = Get-SessionFileIdentity $target 1MB
     Write-Host ('PREVIOUS_SESSION_FAILURE ' + $diagnostic.previous_error)

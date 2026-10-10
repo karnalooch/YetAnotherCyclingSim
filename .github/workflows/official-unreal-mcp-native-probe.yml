@@ -20,7 +20,7 @@ on:
         description: Fixed accepted checkpoint session, or retained previous failure readback
         type: choice
         options: [accepted_session, diagnose_previous_failure]
-        default: accepted_session
+        default: diagnose_previous_failure
         required: true
 
 permissions:
@@ -33,7 +33,7 @@ concurrency:
 
 jobs:
   compile:
-    name: Verify the fixed accepted official MCP session
+    name: Read the fixed official MCP startup deadline
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
@@ -62,7 +62,7 @@ jobs:
         working-directory: _official-mcp-native-probe
         env:
           YACS_CHECKPOINT_READ_TOKEN: ${{ github.token }}
-          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'accepted_session' }}
+          NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'diagnose_previous_failure' }}
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1

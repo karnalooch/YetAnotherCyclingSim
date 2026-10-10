@@ -595,6 +595,18 @@ limit. It preserves all context, listener, operation and authority guards and
 the native 180-second / host 420-second deadlines. A fresh exact-source native
 attempt is needed to establish the otherwise missing failure phase; no
 historical timeout cause or readiness PASS is inferred.
+[Instrumented attempt 38013644520](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38013644520)
+at `9b50911a058f1213fad6f17bd85086fa76830e2f` passed the builds and
+accepted staging but again failed before MCP readiness. Its complete four
+native milestones show the Python callback, first tick at 9.548 seconds, then
+failure in `WaitingInputs` at 209.654 seconds with Python initialized and inputs
+untrusted. The unchanged native 180-second check precedes marker visibility and
+input admission; the host subsequently reached its shared 420-second deadline.
+This identifies the failure phase, not the cost of any one preparation stage
+or marker availability at the nominal deadline. The next fixed readback will authenticate
+the retained host/context/log bytes and separately labels current filesystem
+timestamps. Source analysis counts 354 pre-context Git processes and a later
+2,782-file host source check; neither count is a measured Windows duration.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 
