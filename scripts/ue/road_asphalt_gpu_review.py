@@ -32,6 +32,11 @@ from scripts.ue import read_road_material_baseline as baseline  # noqa: E402
 from scripts.ue import road_asphalt_saved_consumer as saved  # noqa: E402
 from scripts.ue import sa_calobra_whole_map_prep as prep  # noqa: E402
 from scripts.ue.sa_calobra_detail_capture import decode_png  # noqa: E402
+from scripts.ue.prepare_landscape_capture import (  # noqa: E402
+    HEIGHT_MIP_LEASE_SECONDS,
+    _height_texture_objects,
+    prepare_capture,
+)
 
 SURVEY = "docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv"
 RECEIPT = "road-asphalt-lit-review.json"
@@ -40,6 +45,7 @@ MAX_CSV_BYTES = 1024 * 1024
 MAX_FRAME_BYTES = 16 * 1024 * 1024
 TOTAL_DEADLINE_SECONDS = 380
 FRAME_DEADLINE_SECONDS = 90
+PRIMING_FRAMES = 3
 
 
 def require(value, message):
@@ -252,6 +258,7 @@ class RoadLitCapture:
         require(not self.root.exists(), "GPU review output already exists; no overwrite")
         self.root.mkdir(parents=True, exist_ok=False)
         (self.root / "frames").mkdir()
+        (self.root / "priming").mkdir()
         self.camera = None
         self.viewport_before = None
         self.handle = None
@@ -260,7 +267,13 @@ class RoadLitCapture:
         self.frames = []
         self.started = time.monotonic()
         self.submitted = None
-        self.priming = False
+        self.prime_index = 0
+        self.prime_evidence = []
+        self.completed_priming_frames = 0
+        self.pending_path = None
+        self.pose_readiness = None
+        self.residency_leases = {}
+        self.residency_released = False
         self.stopped = False
         self.busy = False
         self.finish_requested_at = None
@@ -288,6 +301,88 @@ class RoadLitCapture:
         finally:
             self.busy = False
 
+    def prepare_pose(self, row, eye, rotation):
+        """Reuse the accepted terrain capture path, not a screenshot-only barrier.
+
+        The original source survey primed the active viewport and checked full
+        map-owned height mip residency. Merely aiming a CameraActor omits that
+        streaming input. Keep source geometry/LOD/materials fixed and retain
+        before/after residency telemetry instead of assuming a terrain defect.
+        """
+        material_paths = self.context["manifest"]["texture_objects"]
+        require(
+            set(material_paths) == {"BaseColor", "Normal_DX", "ORM", "DetailMasks"}
+            and len(set(material_paths.values())) == 4,
+            "Expected four distinct authenticated road textures",
+        )
+        road_textures = []
+        for channel, path in sorted(material_paths.items()):
+            texture = self.api.load_asset(path)
+            require(
+                texture is not None and texture.get_path_name() == path,
+                "Pinned road texture missing before residency request: " + channel,
+            )
+            self.residency_leases[path] = texture
+            texture.set_force_mip_levels_to_be_resident(HEIGHT_MIP_LEASE_SECONDS, 0)
+            road_textures.append((channel, texture))
+        # Register before the helper call so partial setup also cleans up.
+        for texture in _height_texture_objects(self.api, self.landscape):
+            self.residency_leases[texture.get_path_name()] = texture
+        output = session._safe_path(self.root, "readiness/" + row["frame_id"])
+        report = prepare_capture(
+            self.api, self.landscape, eye, rotation, output,
+            request_height_mips=True,
+        )
+        require(
+            report.get("status") == "NATIVE_LOADING_AND_MIPS_READY"
+            and report.get("viewport_primed_at_rider_camera") is True
+            and report.get("height_mip_lease_requested") is True
+            and report.get("native_loading_barrier_completed") is True,
+            "Accepted native terrain capture preparation did not complete",
+        )
+        materials = []
+        for channel, texture in road_textures:
+            raw = self.api.YacsTextureAuditLibrary.describe_texture(texture)
+            require(isinstance(raw, str) and len(raw) <= 16384,
+                    "Unbounded native road texture telemetry")
+            metadata = json.loads(raw)
+            require(
+                isinstance(metadata, dict)
+                and "error" not in metadata
+                and metadata.get("is_default_texture") is False
+                and metadata.get("is_compiling") is False
+                and type(metadata.get("mips")) is int
+                and metadata["mips"] > 0
+                and metadata.get("resident_mips") == metadata["mips"],
+                "Road texture is not fully resident: " + channel,
+            )
+            materials.append({"channel": channel, "asset": texture.get_path_name(),
+                              "native_readback": metadata})
+        material_id = saved.write_once(output / "road-texture-readiness.json", {
+            "schema_version": 1, "status": "ROAD_TEXTURE_MIPS_READY",
+            "textures": materials, "lease_seconds": HEIGHT_MIP_LEASE_SECONDS,
+            "material_parameters_changed": False, "saved_to_map": False,
+        })
+        self.pose_readiness = {
+            "status": report["status"],
+            "height_receipt": session._identity(output / "capture-readiness.json", 8 * 1024 * 1024),
+            "material_receipt": material_id,
+            "height_mip_lease_requested": True,
+            "viewport_primed_at_rider_camera": True,
+            "material_texture_count": len(materials),
+        }
+
+    def release_residency(self):
+        """End only this isolated capture's expiring requests, including failures."""
+        errors = []
+        for name, texture in self.residency_leases.items():
+            try:
+                texture.set_force_mip_levels_to_be_resident(0.0, 0)
+            except Exception as exc:
+                errors.append("mip lease: " + name + ": " + str(exc))
+        self.residency_released = not errors
+        return errors
+
     def submit_pose(self):
         row = self.context["frames"][self.index]
         eye = self.api.Vector(*row["camera_location_cm"])
@@ -314,8 +409,15 @@ class RoadLitCapture:
         self.api.AutomationLibrary.set_editor_viewport_view_mode(
             self.api.ViewModeIndex.VMI_LIT
         )
+        if self.prime_index == 0:
+            self.prepare_pose(row, eye, rotation)
         self.api.AutomationLibrary.finish_loading_before_screenshot()
-        filename = self.root / "frames" / (row["frame_id"] + ".png")
+        filename = (
+            self.root / "priming" / f"{row['frame_id']}-{self.prime_index:02d}.png"
+            if self.prime_index < PRIMING_FRAMES
+            else self.root / "frames" / (row["frame_id"] + ".png")
+        )
+        self.pending_path = filename
         require(not filename.exists(), "Road review PNG already exists")
         self.task = self.api.AutomationLibrary.take_high_res_screenshot(
             res_x=RESOLUTION[0],
@@ -362,14 +464,32 @@ class RoadLitCapture:
             if not self.task.is_task_done():
                 return
             row = self.context["frames"][self.index]
-            path = self.root / "frames" / (row["frame_id"] + ".png")
-            require(path.exists(), "Unreal screenshot task completed without PNG")
+            path = self.pending_path
+            require(path is not None and path.exists(),
+                    "Unreal screenshot task completed without PNG")
+            if self.prime_index < PRIMING_FRAMES:
+                decode_png(path, RESOLUTION)
+                self.prime_evidence.append({
+                    "file": path.relative_to(self.proof).as_posix(),
+                    **session._identity(path, MAX_FRAME_BYTES),
+                })
+                self.completed_priming_frames += 1
+                self.prime_index += 1
+                self.task = None
+                self.submit_pose()
+                return
+            require(len(self.prime_evidence) == PRIMING_FRAMES,
+                    "Road pose did not complete all priming frames")
             info = frame_statistics(path)
             identity = session._identity(path, MAX_FRAME_BYTES)
             self.frames.append(
                 {**row, "file": path.relative_to(self.proof).as_posix(),
-                 **identity, **info, "render_mode": "lit"}
+                 **identity, **info, "render_mode": "lit",
+                 "capture_readiness": self.pose_readiness,
+                 "priming_frames": list(self.prime_evidence)}
             )
+            self.prime_index = 0
+            self.prime_evidence = []
             self.index += 1
             self.task = None
             if self.index == len(self.context["frames"]):
@@ -413,6 +533,7 @@ class RoadLitCapture:
                 )
             except Exception as exc:
                 errors.append("viewport: " + str(exc))
+        errors.extend(self.release_residency())
         context = self.context
         try:
             self.transient_dirty_audit = audit_transient_capture_dirty_packages(
@@ -458,6 +579,8 @@ class RoadLitCapture:
                 errors.append(label + ": " + str(exc))
         if len(self.frames) != len(context["frames"]):
             errors.append("Incomplete road-facing bidirectional render frames")
+        if self.completed_priming_frames != len(context["frames"]) * PRIMING_FRAMES:
+            errors.append("Incomplete per-pose priming sequence")
         receipt = {
             "schema_version": 1,
             "issue": 364,
@@ -482,6 +605,11 @@ class RoadLitCapture:
             "sources_and_saved_assets_unchanged": not errors,
             "transient_dirty_package_audit": self.transient_dirty_audit,
             "gpu_shutdown_quiescence_seconds": 10.0,
+            "priming_frames_per_pose": PRIMING_FRAMES,
+            "completed_priming_frames": self.completed_priming_frames,
+            "residency_requests_released": self.residency_released,
+            "capture_readiness_verified": not errors,
+            "terrain_geometry_repaired": False,
             "native_lit_frames_retained": not errors,
             "gpu_shader_compilation_admitted": False,
             "road_pixel_visibility_admitted": False,
