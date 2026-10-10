@@ -23,6 +23,21 @@ not perform a new Unreal build or Automation run. Original native receipts and
 images are retained in
 [artifact 11679925399](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38078459124/artifacts/11679925399).
 
+The completed bounded shoulder proof is exact commit
+`1ef46dacedba5ed1fc909422529be41808d3dbe4`:
+[CI 38084736631](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38084736631)
+and [native/GPU 38084733503](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38084733503)
+both PASS. CI reused equivalent Unreal build/Automation evidence; the new
+native run performed the material assignment, rollback, save, separate fresh
+reload and GPU capture. All three owned editor processes exited 0.
+[Four same-camera before/after pairs and selected original receipts](../experiments/sa-calobra-road-shoulder-window0112-20261010/README.md)
+are retained in the repository. This completes the single-support canary,
+not whole-area #364 delivery or M3 owner acceptance.
+
+GPU PASS covers capture, texture readiness, conservation checks and observed
+process exit 0. The separate `gpu_shader_compilation_admitted=false` and
+`road_pixel_visibility_admitted=false` admission flags remain unchanged.
+
 | Check | Actual status |
 |---|---|
 | Asphalt source replay | Two independent 2048 × 2048 renders of the same base recipe PASS; graph and all five map bytes match |
@@ -31,13 +46,13 @@ images are retained in
 | Native GPU review at `396861de` | PASS: four final same-camera frames, forward/reverse in window 0112; each readiness receipt records full 12/12 resident mips for all four asphalt textures before capture |
 | Full geometry and rendered normal/UV conservation | Baseline counts and saved-file checks do not prove every mesh buffer; the current shoulder candidate adds exact checks on its sole changed support |
 | Current shoulder candidate: local checks | Integrated 63-test suite completed successfully with 2 platform-dependent skips; `py_compile` PASS |
-| Shoulder material at `8faed55c`: save and fresh reload | PASS: exact 436-ID selection, rollback, material/source checks, saved derivative and separate fresh process; independent manifest and inventory review PASS |
-| Shoulder GPU at `8faed55c` | Four final frames and all in-editor checks completed; the host failed on exit `-1073741819` after normal-looking shutdown. No complete GPU PASS; lifecycle correction below requires a new native run |
+| Shoulder material at `1ef46da`: save and fresh reload | PASS: exact 436-ID selection, rollback, material/source checks, saved derivative and separate fresh process; independent manifest and inventory review PASS |
+| Shoulder GPU at `1ef46da` | PASS: four final frames, twelve priming frames, all readiness/conservation checks and observed process exit 0; four-pair technical image review completed |
 | Whole-area visual acceptance | Unaccepted; four bounded road frames do not establish whole-area acceptance |
 | Owner visual status | `PENDING_FINAL_M3` |
 | Performance | `DEFERRED_AFTER_M3`, `performance_pass: false` |
 
-### Current shoulder candidate
+### Completed window 0112 shoulder canary
 
 The bounded #364 change targets exactly **436 source-owned outer top
 triangle IDs on the sole window 0112 support**. Only those material IDs may
@@ -48,7 +63,7 @@ projection matching the provider's 1.5 m source scale; it imports or edits no
 source texture. See the pinned source and use limits in the
 [asset plan](../ASSET_PLAN.md#sa-calobra-road-material-preparation--2026-10-10).
 
-At `8faed55c067d42856c2d6a8eca8b5a15f237a5d8`, native before/after and
+At `1ef46dacedba5ed1fc909422529be41808d3dbe4`, native before/after and
 fresh-load checks passed for the target mesh's positions, triangle indices and
 every rendered corner normal. The support has no UV sets; no UV data was
 invented. Its exact 436-ID assignment delta is separate from those immutable
@@ -56,10 +71,10 @@ geometry/attribute checks. The downloadable manifest retains all 436 IDs,
 hashes and native API declarations, pinned across fresh reload and final
 in-editor GPU checks. After the lifecycle correction, the integrated local
 63-test suite completed with two PowerShell/Windows skips, and `py_compile`
-passed. The saved consumer has
-independent technical review PASS. The GPU process's nonzero shutdown still
-blocks complete native/render acceptance; a new lifecycle candidate remains
-unproven until its own run succeeds.
+passed. Independent review confirmed the complete native/save/reload/GPU
+chain, including process exit 0, and technical image review confirmed the
+visible aggregate shoulders. Full buffer proof remains limited to support
+112; other supports retain inventory checks.
 
 This remains material-only #364 work: no geometry, Base_DTM, road physics,
 displacement or weather change. The unresolved inner seam belongs to #459 and
@@ -67,6 +82,55 @@ is outside this patch; material work must not conceal it. The owner audits the
 complete assembled M3 world at the end, before FPS measurement. Intermediate
 technical proof and retained review images continue without changing
 `PENDING_FINAL_M3` or the deferred performance status.
+
+### Final native proof and retained comparison
+
+The successful run's full
+[artifact 11682625600](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38084733503/artifacts/11682625600)
+is 23,062,207 bytes, SHA-256
+`e18e3780255794b18b150e498b80a7aa69e608d110ff8ead16d765f0bd7673b5`.
+Independent audit verified every extracted file against that ZIP, 63
+references to 55 distinct files, all 16 original 1280 x 720 PNGs and the
+readiness receipts. Every pose has four asphalt textures at 12/12 mips and
+three gravel textures at 11/11 mips. Camera positions, targets, station,
+direction and FOV match the pinned CSV and the asphalt baseline exactly.
+
+Prepare PID 27604 and fresh-reload PID 5056 exited 0. GPU PID 14720 exited 0
+after 79.7248 seconds; the host observed that exit, verified four final frames
+and recorded no errors. The complete saved manifest is 22,701 bytes, SHA-256
+`ccd13145400c756e5d27efd332f84fe87001a8e1e4fe00e08df00997310e5cbd`.
+The unchanged support position/index and corner-normal hashes remain those
+listed in the earlier native result below; its entire `shoulder_window`
+proof is identical. The expected normalized inventory remains
+`3c9098b4ce21292165b35201b140b4e01dbc60b363489c27c652513a4ce0f49d`.
+The original nine native material/map packages remain in the host's retained
+output, with their native hash checks and identities in the manifest.
+
+The selected repository copy includes eight final before/after PNGs and the
+native material, save, reload, GPU and readiness receipts, all byte-for-byte
+copies with a [retained-file index](../experiments/sa-calobra-road-shoulder-window0112-20261010/retained-files.json).
+Full engine logs and priming images remain in the linked complete artifacts.
+Technical review confirms aggregate on the foreground strips and no visible
+wall repaint. Sharp boundaries, rhythmic light/dark patches at middle distance,
+the lower road's unchanged beige shoulders and #459's dark seam remain visible.
+The lifecycle-only correction introduces no meaningful visual change against
+the earlier captured shoulder frames. This successful run does not establish
+the earlier access violation's engine-level cause; the native log still
+contains the engine's normal `QUIT_EDITOR` shutdown command.
+
+### Next bounded #364 scope
+
+Continue with source mapping and coverage of the remaining ordinary shoulder
+tops using the same proven 150 cm material. The baseline has 186 supports;
+183 have counts consistent with the regular 27-column producer, but counts
+and material names alone cannot establish ownership. First map source windows
+to candidates `000`-`180`; keep `181`-`185` explicit for separate qualification.
+The latter set includes a parapet, irregular Nudo construction, two windows
+whose source flags need checking and the large accepted hairpin. Do not copy
+the 0112 constants: only support 112 has 110 sections and 436 selected IDs.
+Every newly changed support requires source-authenticated selection and full
+before/after/fresh-load buffer checks. Preserve #459 and the final M3 owner
+audit; complete-area coverage and technical review are still required.
 
 ### Shoulder recipe checkout correction
 
@@ -152,14 +216,15 @@ artifact is
 23,062,216 bytes, verified SHA-256
 `895f0f10ad9835d9d7212fa9581b66f4c9e8b18a5dfe301ea75baecd3a2fa2ee`.
 
-The narrow follow-up removes the explicit `quit_editor()` from the Slate
+The narrow follow-up removed the explicit `quit_editor()` from the Slate
 callback and leaves `set_keep_python_script_alive(False)` as the exit request
 for the existing `-ExecutePythonScript` process. This follows the project's
 [`stage3g_capture_passo_giau_landscape.py`](../../scripts/ue/stage3g_capture_passo_giau_landscape.py)
 lifecycle precedent. No capture settings, cleanup sequence, ten-second wait,
 material assignment or exit-code gate changes. The shutdown cause is still a
-hypothesis, not an established engine diagnosis; the correction requires a new
-exact-SHA native run with exit 0 and all existing proof checks.
+hypothesis, not an established engine diagnosis. The subsequent exact-SHA
+run at `1ef46da` passed with exit 0 and all existing proof checks, as recorded
+above.
 Two new regressions execute the real stop/receipt path with synthetic native
 boundaries. They require cleanup, all existing checks and a written receipt
 before lifecycle release; the capture-error case must retain failed status.

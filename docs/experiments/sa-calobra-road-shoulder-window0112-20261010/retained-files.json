@@ -1,0 +1,240 @@
+{
+  "artifacts": {
+    "baseline": {
+      "artifact_id": 11679925399,
+      "run_id": 38078459124,
+      "sha256": "40bea0431d5cc983cca1147e06892d4c841511a3345d55c49f37118cdcbc8709"
+    },
+    "candidate": {
+      "artifact_id": 11682625600,
+      "run_id": 38084733503,
+      "sha256": "e18e3780255794b18b150e498b80a7aa69e608d110ff8ead16d765f0bd7673b5"
+    }
+  },
+  "capture_commits": {
+    "baseline": "396861de0884135d18006e6d3f133edebef639aa",
+    "candidate": "1ef46dacedba5ed1fc909422529be41808d3dbe4"
+  },
+  "files": [
+    {
+      "artifact_member": "road-asphalt-lit-review.json",
+      "capture": "baseline",
+      "file": "baseline/road-asphalt-lit-review.json",
+      "sha256": "dc9dcb17e9484116471230525bc8788834d3f49087c3b2bb45af3359a38783d1",
+      "size_bytes": 10191
+    },
+    {
+      "artifact_member": "road-asphalt-gpu-host-receipt.json",
+      "capture": "baseline",
+      "file": "baseline/road-asphalt-gpu-host-receipt.json",
+      "sha256": "a45eb7ad25003432c6e1b2c8b5ef8208d60cf4d8543acd9646e8835557b62dc1",
+      "size_bytes": 5321
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/frames/window-0112-forward-00001.png",
+      "capture": "baseline",
+      "file": "baseline/road-asphalt-lit-review/frames/window-0112-forward-00001.png",
+      "sha256": "8bb59fa1d2c678b221c00194d21c6f9ea8a421c5887c03f6b58f6921db00e1a5",
+      "size_bytes": 1480771
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/frames/window-0112-forward-00002.png",
+      "capture": "baseline",
+      "file": "baseline/road-asphalt-lit-review/frames/window-0112-forward-00002.png",
+      "sha256": "35b0d8df2ae48718c5c0c148d8465fe66402588364628c169f48aae87f2d7e6e",
+      "size_bytes": 1513300
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/frames/window-0112-reverse-00001.png",
+      "capture": "baseline",
+      "file": "baseline/road-asphalt-lit-review/frames/window-0112-reverse-00001.png",
+      "sha256": "94f7fdc81110f4c72b2eb114a59d2a2ca73095380c0bc2a1c4235d8a265bdaa9",
+      "size_bytes": 1277176
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/frames/window-0112-reverse-00002.png",
+      "capture": "baseline",
+      "file": "baseline/road-asphalt-lit-review/frames/window-0112-reverse-00002.png",
+      "sha256": "cdc65b0f23693fbc345af25322a072fd6235aa93cd6aa1f5fd107dfc4b218410",
+      "size_bytes": 1256718
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review.json",
+      "sha256": "aaa49bbaaf255033cc1f1ef56216ebb4676d3910fad4652131328d06f3dbcd52",
+      "size_bytes": 10335
+    },
+    {
+      "artifact_member": "road-asphalt-gpu-host-receipt.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-gpu-host-receipt.json",
+      "sha256": "2b9e77950f4f8b13cad98fc7c425e3aea8a53da907db998398d172afc1855813",
+      "size_bytes": 5322
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/frames/window-0112-forward-00001.png",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review/frames/window-0112-forward-00001.png",
+      "sha256": "fea559955680a17621f9a0713fddbfebf03003ab69f62d5c992bce6d2801d891",
+      "size_bytes": 1536643
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/frames/window-0112-forward-00002.png",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review/frames/window-0112-forward-00002.png",
+      "sha256": "4181e753fd2e4ce36351dc2982fff5e569b8d467bc32d3426d4e1ad9eab99c25",
+      "size_bytes": 1562041
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/frames/window-0112-reverse-00001.png",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review/frames/window-0112-reverse-00001.png",
+      "sha256": "b528f3733bcb5befcdefc6189adcf7d06f3e1b489f5591a4830746cce322c9b9",
+      "size_bytes": 1324130
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/frames/window-0112-reverse-00002.png",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review/frames/window-0112-reverse-00002.png",
+      "sha256": "480c8bc697fb3367174036116ded0d54b1666cc0962282fe19f7a6c6849c10c4",
+      "size_bytes": 1306295
+    },
+    {
+      "artifact_member": "session-preparation.json",
+      "capture": "candidate",
+      "file": "candidate/session-preparation.json",
+      "sha256": "4c544a40aff62a3d847c2929780243d4436c314f579042031448a6ea6c576a4d",
+      "size_bytes": 50978
+    },
+    {
+      "artifact_member": "road-material-baseline.json",
+      "capture": "candidate",
+      "file": "candidate/road-material-baseline.json",
+      "sha256": "35b2e1c0d08fb3cfab860e7a2b384d990b7cffc9ca457ba2ac14b1c9faa261b9",
+      "size_bytes": 805601
+    },
+    {
+      "artifact_member": "host-receipt.json",
+      "capture": "candidate",
+      "file": "candidate/host-receipt.json",
+      "sha256": "41f7c1f90ef44dc0dcde840d75be019566d174958450360c12753c4add01be2c",
+      "size_bytes": 21402
+    },
+    {
+      "artifact_member": "asphalt-host-receipt.json",
+      "capture": "candidate",
+      "file": "candidate/asphalt-host-receipt.json",
+      "sha256": "efc5b57fdb1fb6df556225d43c2e4be342271a7da03603346e89b219124c2a4d",
+      "size_bytes": 2709
+    },
+    {
+      "artifact_member": "road-asphalt-canary.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-canary.json",
+      "sha256": "38a351a0d23ab943a5a1d6a868579756686289704499f0337a6e1d23396663c4",
+      "size_bytes": 5464
+    },
+    {
+      "artifact_member": "asphalt-source-preflight.json",
+      "capture": "candidate",
+      "file": "candidate/asphalt-source-preflight.json",
+      "sha256": "3ed6a098342eaf1e15cbdc6b2fd96a3032a68a5f1582ff1d2290090b4a481ee8",
+      "size_bytes": 609
+    },
+    {
+      "artifact_member": "road-asphalt-saved-manifest.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-saved-manifest.json",
+      "sha256": "ccd13145400c756e5d27efd332f84fe87001a8e1e4fe00e08df00997310e5cbd",
+      "size_bytes": 22701
+    },
+    {
+      "artifact_member": "road-asphalt-saved-prepared.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-saved-prepared.json",
+      "sha256": "77c06bb5d28f2dacfd40dc9b8c79752184267b67bc52fc9a4b73851d063710fe",
+      "size_bytes": 750
+    },
+    {
+      "artifact_member": "road-asphalt-saved-reloaded.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-saved-reloaded.json",
+      "sha256": "5d1b146f27b71cd5d580e1dad17ed1e0a79776ec9a2ecaac8d921d140a8d904c",
+      "size_bytes": 1252
+    },
+    {
+      "artifact_member": "saved-road-host-receipt.json",
+      "capture": "candidate",
+      "file": "candidate/saved-road-host-receipt.json",
+      "sha256": "3c0b99e1af7f2066b6229f7c333530ae69d0ae73f3b69b74b54cddeeb0d7db4d",
+      "size_bytes": 4183
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/readiness/window-0112-forward-00001/capture-readiness.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review/readiness/window-0112-forward-00001/capture-readiness.json",
+      "sha256": "ba93d4a1647dada117dd5181df38b29d9d5dd25dd50be6c722580bcff6b445b8",
+      "size_bytes": 291401
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/readiness/window-0112-forward-00001/road-texture-readiness.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review/readiness/window-0112-forward-00001/road-texture-readiness.json",
+      "sha256": "9a6795a4582dc463611bd94296aea4ead9bba14202841b00ad5580a2cd33fb7b",
+      "size_bytes": 4984
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/readiness/window-0112-forward-00002/capture-readiness.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review/readiness/window-0112-forward-00002/capture-readiness.json",
+      "sha256": "c07b27112ea0dc8431b341e9167390dd3438693752ec529147213cbdbb352a0d",
+      "size_bytes": 292361
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/readiness/window-0112-forward-00002/road-texture-readiness.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review/readiness/window-0112-forward-00002/road-texture-readiness.json",
+      "sha256": "9a6795a4582dc463611bd94296aea4ead9bba14202841b00ad5580a2cd33fb7b",
+      "size_bytes": 4984
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/readiness/window-0112-reverse-00001/capture-readiness.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review/readiness/window-0112-reverse-00001/capture-readiness.json",
+      "sha256": "99e24396a964133598765d2bb2e7221b70881df84973bc01553b78d4b7e65798",
+      "size_bytes": 292361
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/readiness/window-0112-reverse-00001/road-texture-readiness.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review/readiness/window-0112-reverse-00001/road-texture-readiness.json",
+      "sha256": "9a6795a4582dc463611bd94296aea4ead9bba14202841b00ad5580a2cd33fb7b",
+      "size_bytes": 4984
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/readiness/window-0112-reverse-00002/capture-readiness.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review/readiness/window-0112-reverse-00002/capture-readiness.json",
+      "sha256": "99e24396a964133598765d2bb2e7221b70881df84973bc01553b78d4b7e65798",
+      "size_bytes": 292361
+    },
+    {
+      "artifact_member": "road-asphalt-lit-review/readiness/window-0112-reverse-00002/road-texture-readiness.json",
+      "capture": "candidate",
+      "file": "candidate/road-asphalt-lit-review/readiness/window-0112-reverse-00002/road-texture-readiness.json",
+      "sha256": "9a6795a4582dc463611bd94296aea4ead9bba14202841b00ad5580a2cd33fb7b",
+      "size_bytes": 4984
+    }
+  ],
+  "full_engine_logs_included": false,
+  "issue": 364,
+  "native_asset_binaries_included": false,
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_pass": false,
+  "performance_status": "DEFERRED_AFTER_M3",
+  "priming_images_included": false,
+  "schema_version": 1,
+  "scope": "one source-owned support; technical material/save/reload/render evidence",
+  "window": "0112"
+}

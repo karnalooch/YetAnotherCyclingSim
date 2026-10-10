@@ -193,13 +193,15 @@ This is bounded technical evidence; whole-area visual acceptance remains open.
 The current **shoulder candidate** assigns existing CC0 Poly Haven
 `rock_ground` / `FillGravel` at 150 cm only to 436 source-owned outer top triangle
 IDs on one window 0112 support. Slot 0 interior faces and walls keep their
-original material. At `8faed55c`, before/after, rollback and fresh-load checks
+original material. At `1ef46da`, before/after, rollback and fresh-load checks
 passed for positions, indices and every rendered corner normal (the support
 has zero UV sets); only the explicit selected material IDs change. The local
 63-test suite passed with two platform-dependent skips and `py_compile` PASS.
-Four final GPU frames and in-editor checks completed, but a nonzero shutdown
-still blocks the full GPU result; a narrow lifecycle correction awaits native
-proof. No geometry, Base_DTM or road physics edit belongs to
+The complete native/GPU run now passes with four final frames, all in-editor
+checks and observed exit 0. Four before/after pairs and selected native
+receipts are retained in the
+[window 0112 comparison](experiments/sa-calobra-road-shoulder-window0112-20261010/README.md).
+No geometry, Base_DTM or road physics edit belongs to
 this material patch; the unresolved inner seam remains #459 debt. See the
 [current source and native evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md).
 
@@ -211,11 +213,12 @@ this material patch; the unresolved inner seam remains #459 debt. See the
 | Source-to-consumer handoff | Authenticate the retained two-run receipt and both source bundles against unchanged current inputs | **Done for the asphalt baseline:** authenticated source consumed by the native canary and saved consumer |
 | Windows cache identity | Qualify current/cache inputs using the existing cache authority before native execution | **PASS at `396861de`:** protected CI reused equivalent build/Automation evidence and native execution passed |
 | Saved-scene inventory | Fresh isolated Entry process loads the accepted derived consumer; record road/support slots, parents, projection functions and unchanged source bytes | **PASS for the asphalt baseline:** native read completed; this does not establish shoulder selection or full mesh-buffer conservation |
-| Material-only conservation | Preserve positions, vertex/triangle IDs, topology and rendered corner normals/UVs, plus transforms/collision/Landscape bindings; permit only the named material assignment delta | **PASS for support 112 at `8faed55c`:** exact before/after and fresh-load hashes, 436-ID delta and rollback; other supports/Landscape retain full inventory checks |
-| Road canary | Apply the validated asphalt to the authorized road slot without saving; verify shader, 400 cm projection, DirectX normals and exact restoration | **PASS at `396861de`:** native reversible canary, then separate saved/freshly reopened consumer proof |
-| Shoulder canary | Verify source-owned top/side selection; apply licensed gravel to the bounded tops while preserving walls, interior material and geometry | **Saved/fresh reload PASS at `8faed55c`:** 436 outer top IDs, `FillGravel` 150 cm in slot 1; complete GPU proof still blocked by exit failure; no Nudo/parapet expansion |
+| Material-only conservation | Preserve positions, vertex/triangle IDs, topology and rendered corner normals/UVs, plus transforms/collision/Landscape bindings; permit only the named material assignment delta | **PASS for support 112 at `1ef46da`:** exact before/after, rollback, fresh-load and final GPU checks, 436-ID delta; other supports/Landscape retain full inventory checks |
+| Road canary | Apply the validated asphalt to the authorized road slot without saving; verify 400 cm projection, DirectX normals and exact restoration | **PASS at `396861de`:** native reversible canary, then separate saved/freshly reopened consumer proof |
+| Shoulder canary | Verify source-owned top/side selection; apply licensed gravel to the bounded tops while preserving walls, interior material and geometry | **Complete native/save/reload/GPU PASS at `1ef46da`:** 436 outer top IDs, `FillGravel` 150 cm in slot 1, actual exit 0; no Nudo/parapet expansion |
 | Edges and technical appearance | Inspect both directions, bends, close/distant views and shoulder/Landscape transitions; retain real images and defect locations | **Partial:** four same-camera shoulder frames show aggregate on the bounded strips; rhythmic distant patches and sharp boundaries remain review notes, seam #459 stays visible; whole-area review pending |
-| Save, reopen and deliver | Save only derived outputs; fresh reload/render proves bindings and conservation; pass required native/asset/review/CI checks and merge #470 | **Partial:** asphalt baseline and saved/fresh-reloaded shoulder PASS; GPU exit correction and complete #364 delivery pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
+| Whole-area shoulder coverage | Source-map all supports and explicitly qualify exceptional geometry; preserve each changed mesh and capture representative views | **Next:** source-map `000`-`180`; qualify `181`-`185` separately. Matching counts/material labels are insufficient; the 0112 constants do not generalize |
+| Save, reopen and deliver | Save only derived outputs; fresh reload/render proves bindings and conservation; pass required native/asset/review/CI checks and merge #470 | **Partial:** asphalt baseline and complete window 0112 shoulder canary PASS; complete-area #364 delivery remains pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
 
 #### Complete the remaining world foundation after #364
 
@@ -298,9 +301,9 @@ Forge importer and scoped proof collectors remain available under the current
 policy. The `396861de` asphalt baseline now has native assignment,
 saved/fresh-rendered consumer proof and four final same-camera frames with full
 mip warmup. The 436-triangle shoulder now has saved/fresh-load conservation
-proof and four retained frames at `8faed55c`; a nonzero GPU shutdown still
-blocks complete GPU proof. Whole-area visual acceptance and complete #364
-delivery remain pending.
+proof and four retained frames at `1ef46da`, including a clean GPU process
+exit and independent proof review. Whole-area visual acceptance and complete
+#364 delivery remain pending.
 
 From step 3 onward, use official Epic MCP for supported generic editor control
 within YACS constraints; do not add custom generic workarounds. Custom toolsets

@@ -1,0 +1,135 @@
+{
+  "lease_seconds": 120.0,
+  "material_parameters_changed": false,
+  "saved_to_map": false,
+  "schema_version": 1,
+  "status": "ROAD_TEXTURE_MIPS_READY",
+  "textures": [
+    {
+      "asset": "/Game/Generated/YACS/RoadAsphaltConsumer/aged_mountain_asphalt/base/6b381516854c/T_MF_BaseColor.T_MF_BaseColor",
+      "channel": "BaseColor",
+      "native_readback": {
+        "description": "Streamed 2048x2048 [DXT1]",
+        "is_compiling": false,
+        "is_default_texture": false,
+        "mips": 12,
+        "pixel_format": "DXT1",
+        "resident_mips": 12,
+        "size_x": 2048,
+        "size_y": 2048,
+        "source_mips": 1,
+        "srgb": true,
+        "texture": "/Game/Generated/YACS/RoadAsphaltConsumer/aged_mountain_asphalt/base/6b381516854c/T_MF_BaseColor.T_MF_BaseColor",
+        "virtual_texture": false
+      }
+    },
+    {
+      "asset": "/Game/Generated/YACS/RoadAsphaltConsumer/aged_mountain_asphalt/base/6b381516854c/T_MF_DetailMasks.T_MF_DetailMasks",
+      "channel": "DetailMasks",
+      "native_readback": {
+        "description": "Streamed 2048x2048 [DXT1]",
+        "is_compiling": false,
+        "is_default_texture": false,
+        "mips": 12,
+        "pixel_format": "DXT1",
+        "resident_mips": 12,
+        "size_x": 2048,
+        "size_y": 2048,
+        "source_mips": 1,
+        "srgb": false,
+        "texture": "/Game/Generated/YACS/RoadAsphaltConsumer/aged_mountain_asphalt/base/6b381516854c/T_MF_DetailMasks.T_MF_DetailMasks",
+        "virtual_texture": false
+      }
+    },
+    {
+      "asset": "/Game/Generated/YACS/RoadAsphaltConsumer/aged_mountain_asphalt/base/6b381516854c/T_MF_NormalDX.T_MF_NormalDX",
+      "channel": "Normal_DX",
+      "native_readback": {
+        "description": "Streamed 2048x2048 [BC5]",
+        "is_compiling": false,
+        "is_default_texture": false,
+        "mips": 12,
+        "pixel_format": "BC5",
+        "resident_mips": 12,
+        "size_x": 2048,
+        "size_y": 2048,
+        "source_mips": 1,
+        "srgb": false,
+        "texture": "/Game/Generated/YACS/RoadAsphaltConsumer/aged_mountain_asphalt/base/6b381516854c/T_MF_NormalDX.T_MF_NormalDX",
+        "virtual_texture": false
+      }
+    },
+    {
+      "asset": "/Game/Generated/YACS/RoadAsphaltConsumer/aged_mountain_asphalt/base/6b381516854c/T_MF_ORM.T_MF_ORM",
+      "channel": "ORM",
+      "native_readback": {
+        "description": "Streamed 2048x2048 [DXT1]",
+        "is_compiling": false,
+        "is_default_texture": false,
+        "mips": 12,
+        "pixel_format": "DXT1",
+        "resident_mips": 12,
+        "size_x": 2048,
+        "size_y": 2048,
+        "source_mips": 1,
+        "srgb": false,
+        "texture": "/Game/Generated/YACS/RoadAsphaltConsumer/aged_mountain_asphalt/base/6b381516854c/T_MF_ORM.T_MF_ORM",
+        "virtual_texture": false
+      }
+    },
+    {
+      "asset": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_FillGravel.T_Source_FillGravel",
+      "channel": "Shoulder_BaseColor",
+      "native_readback": {
+        "description": "Streamed 1024x1024 [DXT1]",
+        "is_compiling": false,
+        "is_default_texture": false,
+        "mips": 11,
+        "pixel_format": "DXT1",
+        "resident_mips": 11,
+        "size_x": 1024,
+        "size_y": 1024,
+        "source_mips": 1,
+        "srgb": true,
+        "texture": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_FillGravel.T_Source_FillGravel",
+        "virtual_texture": false
+      }
+    },
+    {
+      "asset": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/FillGravel/T_Normal.T_Normal",
+      "channel": "Shoulder_Normal_DX",
+      "native_readback": {
+        "description": "Streamed 1024x1024 [BC5]",
+        "is_compiling": false,
+        "is_default_texture": false,
+        "mips": 11,
+        "pixel_format": "BC5",
+        "resident_mips": 11,
+        "size_x": 1024,
+        "size_y": 1024,
+        "source_mips": 1,
+        "srgb": false,
+        "texture": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/FillGravel/T_Normal.T_Normal",
+        "virtual_texture": false
+      }
+    },
+    {
+      "asset": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/FillGravel/T_Roughness.T_Roughness",
+      "channel": "Shoulder_Roughness",
+      "native_readback": {
+        "description": "Streamed 1024x1024 [DXT1]",
+        "is_compiling": false,
+        "is_default_texture": false,
+        "mips": 11,
+        "pixel_format": "DXT1",
+        "resident_mips": 11,
+        "size_x": 1024,
+        "size_y": 1024,
+        "source_mips": 1,
+        "srgb": false,
+        "texture": "/Game/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/FillGravel/T_Roughness.T_Roughness",
+        "virtual_texture": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "issue": 364,
+  "exact_sha": "1ef46dacedba5ed1fc909422529be41808d3dbe4",
+  "run_token": "38084733503-1",
+  "status": "ROAD_ASPHALT_GPU_LIT_REVIEW_HOST_PASS",
+  "authenticated_saved_and_reloaded": true,
+  "original_map_mutated": false,
+  "geometry_mutated": false,
+  "native_lit_frames_retained": true,
+  "verified_frame_count": 4,
+  "gpu_shader_compilation_admitted": false,
+  "road_pixel_visibility_admitted": false,
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_status": "DEFERRED_AFTER_M3",
+  "performance_pass": false,
+  "editor_pid": 14720,
+  "editor_exit_code": 0,
+  "editor_exit_observed": true,
+  "stopped_on_failure": false,
+  "max_editor_seconds": 480,
+  "program_executable": {
+    "path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+    "sha256": "6f9c95c131f37cbdc384ade02fcf6ed828baa366b25234d0d85e212244cac9aa",
+    "size_bytes": 512952
+  },
+  "source_receipts": {
+    "baseline": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\host-receipt.json",
+      "sha256": "41f7c1f90ef44dc0dcde840d75be019566d174958450360c12753c4add01be2c",
+      "size_bytes": 21402
+    },
+    "saved_host": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\saved-road-host-receipt.json",
+      "sha256": "3c0b99e1af7f2066b6229f7c333530ae69d0ae73f3b69b74b54cddeeb0d7db4d",
+      "size_bytes": 4183
+    },
+    "saved_prepared": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-saved-prepared.json",
+      "sha256": "77c06bb5d28f2dacfd40dc9b8c79752184267b67bc52fc9a4b73851d063710fe",
+      "size_bytes": 750
+    },
+    "fresh_reload": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-saved-reloaded.json",
+      "sha256": "5d1b146f27b71cd5d580e1dad17ed1e0a79776ec9a2ecaac8d921d140a8d904c",
+      "size_bytes": 1252
+    }
+  },
+  "evidence": {
+    "window-0112-forward-00001": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-lit-review\\frames\\window-0112-forward-00001.png",
+      "sha256": "fea559955680a17621f9a0713fddbfebf03003ab69f62d5c992bce6d2801d891",
+      "size_bytes": 1536643
+    },
+    "window-0112-forward-00002": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-lit-review\\frames\\window-0112-forward-00002.png",
+      "sha256": "4181e753fd2e4ce36351dc2982fff5e569b8d467bc32d3426d4e1ad9eab99c25",
+      "size_bytes": 1562041
+    },
+    "window-0112-reverse-00001": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-lit-review\\frames\\window-0112-reverse-00001.png",
+      "sha256": "b528f3733bcb5befcdefc6189adcf7d06f3e1b489f5591a4830746cce322c9b9",
+      "size_bytes": 1324130
+    },
+    "window-0112-reverse-00002": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-lit-review\\frames\\window-0112-reverse-00002.png",
+      "sha256": "480c8bc697fb3367174036116ded0d54b1666cc0962282fe19f7a6c6849c10c4",
+      "size_bytes": 1306295
+    },
+    "render_receipt": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-lit-review.json",
+      "sha256": "aaa49bbaaf255033cc1f1ef56216ebb4676d3910fad4652131328d06f3dbcd52",
+      "size_bytes": 10335
+    },
+    "road-asphalt-gpu-editor.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-gpu-editor.log",
+      "sha256": "a8830b31440902f1982887a6854797d82002f21d7843093951ca9da85e5c3025",
+      "size_bytes": 370359
+    },
+    "road-asphalt-gpu-stdout.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-gpu-stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "road-asphalt-gpu-stderr.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-gpu-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    }
+  },
+  "error": null,
+  "secondary_errors": [],
+  "editor_seconds": 79.7248211
+}

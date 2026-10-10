@@ -2446,13 +2446,15 @@ frames in both directions with full mip warmup. Whole-area appearance remains
 unaccepted. The current shoulder candidate selects only 436 source-owned
 outer top triangle IDs on one window 0112 support for CC0 Poly Haven
 `rock_ground` / `FillGravel` at 150 cm in slot 1; interior tops and walls retain
-their literal original slot 0 material. At `8faed55c`, native before/after,
+their literal original slot 0 material. At `1ef46da`, native before/after,
 rollback, saved/fresh-load and independent manifest checks passed for that
 support's positions/indices and corner normals (zero UV sets). The four real
 frames show aggregate shoulders without visible wall repaint, but repeated
-middle-distance patches and sharp edges remain review notes. The GPU process
-returned a nonzero shutdown code after capture, so full GPU proof still awaits
-the narrow lifecycle correction. Preserve the accepted #363 consumer, Base_DTM, geometry and
+middle-distance patches and sharp edges remain review notes. The complete
+GPU run now passes with observed exit 0 and independent proof review. Four
+same-camera before/after pairs and selected original receipts are retained in
+the [window 0112 comparison](experiments/sa-calobra-road-shoulder-window0112-20261010/README.md).
+Preserve the accepted #363 consumer, Base_DTM, geometry and
 road physics; the unresolved inner seam remains #459 debt outside this patch.
 Continue rider-height review of both directions, bends, shoulder tops, support
 sides and Landscape transitions, with retained whole-area review images before

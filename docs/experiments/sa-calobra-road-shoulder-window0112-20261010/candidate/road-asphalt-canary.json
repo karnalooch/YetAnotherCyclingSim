@@ -1,0 +1,122 @@
+{
+  "all_source_assets_unchanged": true,
+  "engine_version": "5.8.2-56702186+++UE5+Release-5.8",
+  "exact_sha": "1ef46dacedba5ed1fc909422529be41808d3dbe4",
+  "frozen_map": {
+    "path": "Content/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview.umap",
+    "sha256": "bf2b92945865e2307990b6d3da40095dfa0774d28affb32a1e42e55f288764dd",
+    "size_bytes": 185187721
+  },
+  "issue": 364,
+  "map_package": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview",
+  "map_saved": false,
+  "native_material_bind_and_rollback_verified": true,
+  "native_projection": {
+    "WorldAlignedNormal": {
+      "expression_count": 72,
+      "input_names": [
+        "Normal",
+        "TextureObject",
+        "TextureSize",
+        "WorldPosition",
+        "WorldSpace",
+        "Use High Quality Normals",
+        "ProjectionTransitionContrast"
+      ],
+      "output_names": [
+        "Z Texture",
+        "XY Texture",
+        "XYZ Texture",
+        "XYZFlatTop"
+      ],
+      "path": "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedNormal.WorldAlignedNormal"
+    },
+    "WorldAlignedTexture": {
+      "expression_count": 38,
+      "input_names": [
+        "World Space Normal",
+        "TextureObject",
+        "TextureSize",
+        "WorldPosition",
+        "Export Float 4",
+        "ProjectionTransitionContrast"
+      ],
+      "output_names": [
+        "XYZ Texture",
+        "XY Texture",
+        "Z Texture"
+      ],
+      "path": "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture.WorldAlignedTexture"
+    }
+  },
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_pass": false,
+  "performance_status": "DEFERRED_AFTER_M3",
+  "project": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1",
+  "result": {
+    "all_186_supports_unchanged": true,
+    "canary_material": "/Game/Generated/YACS/RoadAsphaltCanary/aged_mountain_asphalt/base/2dc1279f5e90/MI_MaterialForge.MI_MaterialForge",
+    "consumer_snapshot_restored": true,
+    "full_geometry_hash_verified": false,
+    "graph_sha256": "6b381516854c44dc4bdeb69b69fbb2b97ecf22c228db2c09204822d7f0bc0970",
+    "import_receipt": {
+      "assets": {
+        "instance": "/Game/Generated/YACS/RoadAsphaltCanary/aged_mountain_asphalt/base/2dc1279f5e90/MI_MaterialForge.MI_MaterialForge",
+        "master": "/Game/Generated/YACS/RoadAsphaltCanary/aged_mountain_asphalt/base/2dc1279f5e90/M_MaterialForge.M_MaterialForge",
+        "textures": {
+          "BaseColor": "/Game/Generated/YACS/RoadAsphaltCanary/aged_mountain_asphalt/base/2dc1279f5e90/T_MF_BaseColor.T_MF_BaseColor",
+          "DetailMasks": "/Game/Generated/YACS/RoadAsphaltCanary/aged_mountain_asphalt/base/2dc1279f5e90/T_MF_DetailMasks.T_MF_DetailMasks",
+          "Normal_DX": "/Game/Generated/YACS/RoadAsphaltCanary/aged_mountain_asphalt/base/2dc1279f5e90/T_MF_NormalDX.T_MF_NormalDX",
+          "ORM": "/Game/Generated/YACS/RoadAsphaltCanary/aged_mountain_asphalt/base/2dc1279f5e90/T_MF_ORM.T_MF_ORM"
+        }
+      },
+      "family": "aged_mountain_asphalt",
+      "geometry_changed": false,
+      "graph_sha256": "6b381516854c44dc4bdeb69b69fbb2b97ecf22c228db2c09204822d7f0bc0970",
+      "landscape_mutated": false,
+      "local_mask_channels": {
+        "B": "binder_micro_variation",
+        "G": "patches",
+        "R": "cracks"
+      },
+      "normal_convention": "DirectX",
+      "saved": false,
+      "semantic_owner": "PCG/PCGEx",
+      "status": "IMPORTED_UE_REVIEW_PENDING",
+      "tile_metres": 4.0,
+      "variant": "base",
+      "world_semantics_generated": false
+    },
+    "landscape_1024_components_unchanged": true,
+    "material_authoring_admitted": false,
+    "owner_visual_status": "PENDING_FINAL_M3",
+    "performance_pass": false,
+    "performance_status": "DEFERRED_AFTER_M3",
+    "previous_material": "/Game/Worlds/SaCalobra/CheckpointMaterials/MI_Accepted_0.MI_Accepted_0",
+    "road_component": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview.L_SaCalobraMaterialReview:PersistentLevel.DynamicMeshActor_0.DynamicMeshComponent",
+    "road_label": "YACS_PERSIST_ROAD",
+    "road_slot_readback": true,
+    "saved_consumer_verified": false,
+    "source_fingerprint": "b4d93e24d2059c74e0b8d44f23ee10632e63f44c5c932b3ee1b849e0a6868d97",
+    "source_head": "6fa54b508019bd4a1b4aa6fad601835295ec664f",
+    "source_receipt_sha256": "3626bf85da28d63908feb9d820171dc03d9d6cc444c8f799f7048f7a8052f79c",
+    "status": "ROAD_ASPHALT_TRANSIENT_CANARY_ROLLED_BACK"
+  },
+  "saved_consumer_verified": false,
+  "schema_version": 1,
+  "shader_gpu_compilation_verified": false,
+  "source_gate": {
+    "graph_sha256": "6b381516854c44dc4bdeb69b69fbb2b97ecf22c228db2c09204822d7f0bc0970",
+    "native_material_verified": false,
+    "performance_pass": false,
+    "proof_root": "D:\\yacs\\work\\material-forge\\road-asphalt\\6fa54b508019bd4a1b4aa6fad601835295ec664f\\38045485913-1",
+    "source_changed": false,
+    "source_fingerprint": "b4d93e24d2059c74e0b8d44f23ee10632e63f44c5c932b3ee1b849e0a6868d97",
+    "source_head": "6fa54b508019bd4a1b4aa6fad601835295ec664f",
+    "source_receipt_sha256": "3626bf85da28d63908feb9d820171dc03d9d6cc444c8f799f7048f7a8052f79c",
+    "status": "PINNED_ROAD_ASPHALT_SOURCE_READY",
+    "verified_original_runs": 2
+  },
+  "staging_sha256": "4c544a40aff62a3d847c2929780243d4436c314f579042031448a6ea6c576a4d",
+  "status": "ROAD_ASPHALT_TRANSIENT_CANARY_ROLLED_BACK"
+}
