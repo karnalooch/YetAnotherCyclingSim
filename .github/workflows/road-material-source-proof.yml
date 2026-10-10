@@ -9,6 +9,8 @@ on:
       - 'scripts/assets/test_run_road_asphalt_source_proof.py'
       - 'scripts/assets/road_material_contract.py'
       - 'scripts/assets/test_road_material_contract.py'
+      - 'scripts/assets/material_forge.py'
+      - 'scripts/assets/test_material_forge.py'
       - 'worldgen/materials/material_forge/**'
 
 permissions:
@@ -20,7 +22,7 @@ concurrency:
 
 jobs:
   asphalt:
-    name: Authenticate and replay only asphalt base
+    name: Authenticate and replay only dry_varied asphalt
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
@@ -79,16 +81,16 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the persistent road source proof path.' }
           "YACS_ROAD_ASPHALT_PROOF=$proof" >> $env:GITHUB_ENV
 
-      - name: Check source contract and render current base twice
+      - name: Check source contract and render dry_varied twice
         shell: pwsh
         working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           $ErrorActionPreference = 'Stop'
-          & $env:YACS_ROAD_FORGE_PY -m unittest scripts.assets.test_road_material_contract scripts.assets.test_run_road_asphalt_source_proof
+          & $env:YACS_ROAD_FORGE_PY -m unittest scripts.assets.test_material_forge scripts.assets.test_road_material_contract scripts.assets.test_run_road_asphalt_source_proof
           if ($LASTEXITCODE -ne 0) { throw 'Road material source contract tests failed.' }
           & $env:YACS_ROAD_FORGE_PY scripts/assets/run_road_asphalt_source_proof.py `
             --expected-head $env:GITHUB_SHA --run $env:GITHUB_RUN_ID --attempt $env:GITHUB_RUN_ATTEMPT
-          if ($LASTEXITCODE -ne 0) { throw 'Current asphalt base source proof failed.' }
+          if ($LASTEXITCODE -ne 0) { throw 'Current dry_varied asphalt source proof failed.' }
           if (-not (Test-Path -LiteralPath (Join-Path $env:YACS_ROAD_ASPHALT_PROOF 'source-proof.json') -PathType Leaf)) {
             throw 'Persistent road asphalt source receipt is missing.'
           }

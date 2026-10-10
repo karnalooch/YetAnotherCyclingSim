@@ -1,11 +1,13 @@
 """Synthetic producer input-gate tests; never native render evidence."""
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from scripts.assets import run_road_asphalt_source_proof as proof
+from scripts.assets import road_material_contract as contract
 
 METADATA = """[remap]
 importer="texture"
@@ -108,6 +110,31 @@ class PrimedSourceGateTests(unittest.TestCase):
             encoding="utf-8",
         )
         self.assertIn(ICON, self.check()["primed_icon_imports"])
+
+
+class RoadRecipeSelectionTests(unittest.TestCase):
+    def test_only_dry_varied_is_selected_with_the_existing_five_map_contract(self):
+        catalog = json.loads(contract.DEFAULT_CATALOG.read_bytes())
+        family, variant = proof.source_recipe(catalog)
+        self.assertEqual((family["id"], variant["id"]), (contract.FAMILY, "dry_varied"))
+        self.assertEqual(variant["seed"], 101)
+        self.assertEqual(variant["roughness"], 0.94)
+        self.assertEqual(variant["normal_strength"], 0.24)
+        self.assertEqual(family["tile_metres"], 4)
+        self.assertEqual(len(proof.CHANNELS), 5)
+
+    def test_legacy_fallback_or_modified_dry_recipe_fails_before_authoring(self):
+        for failure in ("missing", "duplicate", "glossy"):
+            catalog = json.loads(contract.DEFAULT_CATALOG.read_bytes())
+            family, variant = proof.source_recipe(catalog)
+            if failure == "missing":
+                family["variants"].remove(variant)
+            elif failure == "duplicate":
+                family["variants"].append(dict(variant))
+            else:
+                variant["roughness"] = 0.82
+            with self.subTest(failure=failure), self.assertRaises(ValueError):
+                proof.source_recipe(catalog)
 
 
 if __name__ == "__main__":

@@ -295,6 +295,15 @@ fixed importer and scoped material scripts retain their native proof obligations
 | Shoulder and support faces | The original checkpoint shares one brown slot across support tops and walls; the verified canary selects 436 source-owned outer top triangle IDs on the sole window 0112 support | Complete native/save/fresh-reload/GPU PASS at `1ef46da`: gravel only in slot 1 for those IDs; slot 0 and its literal material remain on interior tops and walls, with actual GPU exit 0. Preserve nominal 0.5 m shoulders and BOB contact limits; no Nudo/parapet expansion. |
 | Gravel / mineral transition | [`texture library v2`](../worldgen/materials/sa_calobra_texture_library_v2_20261005.json) records `FillGravel` from Poly Haven `rock_ground`, CC0, pinned channels/hashes and provider-reported 1.5 x 1.5 m dimensions; existing outputs belong to [`Texture Material Prep`](tooling/TEXTURE_MATERIAL_PREP.md) | Native source/material checks at `1ef46da` verify existing BaseColor, DirectX normal and roughness at 150 cm without import or source edits. Each 1024 px map reached 11/11 mips in all four successful poses. Four-pair technical review is retained; complete-area and final owner review remain pending. Keep source masks and observation/Unknown semantics independent. |
 
+Owner appearance feedback, 2026-10-10: retain Material Forge as the asphalt
+producer, reduce the glossy appearance substantially, and increase irregular
+aggregate, wear and repair variation. The next source candidate is
+`aged_mountain_asphalt/dry_varied`; its source and Unreal results are pending.
+Gravel shoulders must cover the whole existing road network. The separately
+requested hairpin improvement concerns actual banking/crossfall and longitudinal
+profiling, not guardrail assets; material edits must preserve that geometry for
+its own source-relative diagnosis and correction.
+
 The #338/#462 transient road consumers are a separate branch lineage from this
 material checkpoint. Select the actual admitted saved consumer and its source
 hashes before integration; do not assume that a material-library proof delivered

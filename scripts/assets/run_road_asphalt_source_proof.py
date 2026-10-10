@@ -1,4 +1,4 @@
-"""Render only the current road asphalt base twice in the persistent workspace.
+"""Render only the current dry_varied asphalt twice in the persistent workspace.
 
 Reuses the pinned Material Forge producer. This establishes source determinism,
 not Unreal consumption, human appearance acceptance or performance admission.
@@ -19,7 +19,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from scripts.assets.road_material_contract import _read, check_asphalt_source
+from scripts.assets.road_material_contract import (
+    FAMILY,
+    VARIANT,
+    _catalog,
+    _read,
+    check_asphalt_source,
+)
 from scripts.manage_local_workspace import load_workspace
 from scripts.ue.official_mcp_source_probe import bounded_files, checked_path
 
@@ -189,6 +195,14 @@ def primed_source_identity(source: Path) -> dict:
     }
 
 
+def source_recipe(catalog: dict) -> tuple[dict, dict]:
+    """Select the one strictly pinned recipe before any authoring or render."""
+    _catalog(catalog)
+    family = next(item for item in catalog["families"] if item["id"] == FAMILY)
+    variant = next(item for item in family["variants"] if item["id"] == VARIANT)
+    return family, variant
+
+
 def prove(expected_head: str, run: str, attempt: str) -> dict:
     from scripts.assets import material_forge as forge
 
@@ -242,12 +256,7 @@ def prove(expected_head: str, run: str, attempt: str) -> dict:
         checked_path(workspace, path)
         sha(path)
     checked_path(workspace, source / ".godot/imported")
-    family = next(
-        item
-        for item in forge.load_catalog()["families"]
-        if item["id"] == "aged_mountain_asphalt"
-    )
-    variant = next(item for item in family["variants"] if item["id"] == "base")
+    family, variant = source_recipe(forge.load_catalog())
     upstreams = forge.load_upstreams()
     work = Path(config["work"])
     checked_path(workspace, work)
@@ -261,7 +270,7 @@ def prove(expected_head: str, run: str, attempt: str) -> dict:
     proof_root.mkdir(parents=True, exist_ok=False)
     receipts = []
     for name in ("run-a", "run-b"):
-        directory = proof_root / name / "aged_mountain_asphalt/base"
+        directory = proof_root / name / FAMILY / VARIANT
         entry = forge.author_variant(mm.parent, directory, family, variant, upstreams)
         log = proof_root / (name + "-render.log")
         with log.open("xb") as stream:

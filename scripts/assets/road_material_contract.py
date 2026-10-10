@@ -1,4 +1,4 @@
-"""Read-only source contract for the first aged_mountain_asphalt/base canary.
+"""Read-only source contract for aged_mountain_asphalt/dry_varied.
 
 This verifies retained producer receipts and their bytes, including a separately
 authenticated two-run record. It never renders, imports Unreal assets, or grants
@@ -20,15 +20,25 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CATALOG = ROOT / "worldgen/materials/material_forge/families.json"
 FAMILY = "aged_mountain_asphalt"
-VARIANT = "base"
+VARIANT = "dry_varied"
+SEED = 101
+GENERATOR_VERSION = 5
 STATUS = "MAP_CHECKS_PASS_UE_REVIEW_PENDING"
 PARAMETERS = {
-    "brightness": 0.3,
-    "surface_a": 0.62,
-    "surface_b": 0.22,
-    "roughness": 0.82,
-    "normal_strength": 0.48,
+    "brightness": 0.31,
+    "surface_a": 0.48,
+    "surface_b": 0.90,
+    "roughness": 0.94,
+    "normal_strength": 0.24,
 }
+SURFACE_FIELD_SHA256 = "4e5df9c82a0a7dc5cc7618f281567ed940369d2d325262dcd8e2c7ba2e35897e"
+COLOR_CODE_SHA256 = "25366bc901d287ed1fd71da1072daf494da06fb35a6c69cf0ed2880f419b8af6"
+COLOR_OUTPUT_SHA256 = "fc98416854b24483554e1bfa391504924ce1c779aa228200631a96e68f01b10d"
+ROUGHNESS_EXPRESSION = (
+    "clamp(0.940000+0.055000*($variation($uv)-0.5)"
+    "+0.018000*$crack($uv)-0.012000*$pore($uv),0.90,0.99)"
+)
+AO_EXPRESSION = "clamp(1.0-0.090000*$crack($uv)-0.025000*$pore($uv),0.0,1.0)"
 MASKS = {"R": "cracks", "G": "patches", "B": "binder_micro_variation"}
 SUFFIXES = {
     "BaseColor": "BaseColor.png",
@@ -217,16 +227,17 @@ def _catalog(data: dict[str, Any]) -> None:
         "Catalog asphalt ownership changed",
     )
     variants = [row for row in family.get("variants", []) if row.get("id") == VARIANT]
-    _require(len(variants) == 1, "Catalog must contain one base variant")
-    base = variants[0]
+    _require(len(variants) == 1, "Catalog must contain one dry_varied variant")
+    variant = variants[0]
     _require(
-        type(base.get("seed")) is int and base["seed"] == 101, "Catalog seed changed"
+        type(variant.get("seed")) is int and variant["seed"] == SEED,
+        "Catalog seed changed",
     )
     for name, expected in PARAMETERS.items():
-        _number(base.get(name), expected, "catalog " + name)
+        _number(variant.get(name), expected, "catalog " + name)
     _require(
-        not base.get("refinement") and not base.get("landscape"),
-        "Unexpected base refinement",
+        not variant.get("refinement") and not variant.get("landscape"),
+        "Unexpected dry_varied refinement",
     )
 
 
@@ -247,7 +258,7 @@ def _engine(engine: Any) -> None:
 
 def _graph(graph: dict[str, Any]) -> None:
     _require(
-        type(graph.get("seed_int")) is int and graph["seed_int"] == 101,
+        type(graph.get("seed_int")) is int and graph["seed_int"] == SEED,
         "Graph seed changed",
     )
     rows = graph.get("nodes")
@@ -258,20 +269,71 @@ def _graph(graph: dict[str, Any]) -> None:
     nodes = {row.get("name"): row for row in rows}
     _require(len(nodes) == len(rows), "Duplicate graph node")
     for node_name, expected in {
-        "Limestone_Form": {"seed": 101, "fractures": 0.62, "pores": 0.22},
-        "Limestone_Color": {"brightness": 0.3},
-        "Height_Normal": {"strength": 0.48},
+        "Limestone_Form": {"seed": SEED, "fractures": 0.48, "pores": 0.90},
+        "Limestone_Color": {"brightness": 0.31},
+        "Height_Normal": {"strength": 0.24},
     }.items():
         for name, value in expected.items():
             _number(nodes[node_name]["parameters"].get(name), value, "graph " + name)
+    # Match actual shader text, not a variant label or editable scalar alone.
+    # This includes periodic helpers and the coarse/middle/micro field recipe.
+    for actual, expected, label in (
+        (
+            nodes["Limestone_Form"]["shader_model"].get("global"),
+            SURFACE_FIELD_SHA256,
+            "surface field",
+        ),
+        (
+            nodes["Limestone_Color"]["shader_model"].get("code"),
+            COLOR_CODE_SHA256,
+            "colour recipe",
+        ),
+        (
+            nodes["Limestone_Color"]["shader_model"]["outputs"][0].get("rgb"),
+            COLOR_OUTPUT_SHA256,
+            "colour output",
+        ),
+    ):
+        _require(
+            isinstance(actual, str)
+            and hashlib.sha256(actual.encode("utf-8")).hexdigest() == expected,
+            "Graph " + label + " changed",
+        )
     response = nodes["Limestone_Response"]["shader_model"]["outputs"]
     _require(
         isinstance(response, list)
-        and len(response) >= 1
-        and response[0].get("f")
-        == "clamp(0.820000+0.070000*$variation($uv)+0.030000*$crack($uv)-0.060000*$pore($uv),0.0,1.0)",
+        and len(response) >= 2
+        and response[0].get("f") == ROUGHNESS_EXPRESSION
+        and response[1].get("f") == AO_EXPRESSION,
         "Graph roughness recipe changed",
     )
+
+
+def _dry_statistics(value: Any) -> dict[str, float]:
+    _require(
+        isinstance(value, dict)
+        and set(value) == {
+            "roughness_min", "roughness_max", "roughness_mean", "roughness_std",
+            "basecolor_luma_std", "basecolor_25cm_luma_std",
+            "patch_coverage_fraction", "normal_xy_rms",
+        },
+        "Missing dry asphalt source statistics",
+    )
+    stats = {key: _number(item, None, "dry asphalt " + key) for key, item in value.items()}
+    _require(
+        0.90 - 1 / 255 <= stats["roughness_min"]
+        <= stats["roughness_mean"] <= stats["roughness_max"] <= 0.99 + 1 / 255
+        and 0.003 <= stats["roughness_std"] <= 0.05,
+        "Dry asphalt roughness statistics failed",
+    )
+    _require(
+        0.012 <= stats["basecolor_luma_std"] <= 0.5
+        and 0.008 <= stats["basecolor_25cm_luma_std"] <= stats["basecolor_luma_std"]
+        and 0.02 <= stats["patch_coverage_fraction"] <= 0.40
+        and 0 < stats["normal_xy_rms"] <= 1,
+        "Dry asphalt variation statistics failed",
+    )
+    return stats
 
 
 def check_asphalt_source(
@@ -334,7 +396,7 @@ def _check_asphalt_source(root: Path, catalog_path: Path) -> dict[str, Any]:
         )
         _ownership(document)
     _require(
-        type(provenance.get("seed")) is int and provenance["seed"] == 101,
+        type(provenance.get("seed")) is int and provenance["seed"] == SEED,
         "Source seed changed",
     )
     _number(provenance.get("tile_metres"), 4, "source tile_metres")
@@ -353,7 +415,7 @@ def _check_asphalt_source(root: Path, catalog_path: Path) -> dict[str, Any]:
     _require(
         provenance.get("generator") == "yacs-material-forge"
         and type(provenance.get("generator_version")) is int
-        and provenance["generator_version"] == 4,
+        and provenance["generator_version"] == GENERATOR_VERSION,
         "Source generator changed",
     )
     _require(
@@ -397,6 +459,7 @@ def _check_asphalt_source(root: Path, catalog_path: Path) -> dict[str, Any]:
         and validation.get("performance_accepted") is False,
         "Source receipt claims unsupported admission",
     )
+    dry_statistics = _dry_statistics(validation.get("dry_asphalt_statistics"))
     error = _number(
         validation.get("normal_length_error_p99"), None, "normal length error"
     )
@@ -522,10 +585,11 @@ def _check_asphalt_source(root: Path, catalog_path: Path) -> dict[str, Any]:
         "status": "ROAD_ASPHALT_SOURCE_CONTRACT_VERIFIED",
         "family": FAMILY,
         "variant": VARIANT,
-        "seed": 101,
+        "seed": SEED,
         "tile_metres": 4,
         "tile_size_cm": 400,
         "parameters": dict(PARAMETERS),
+        "dry_asphalt_statistics": dry_statistics,
         "maps": evidence_maps,
         "retained_receipts": receipts,
         "total_read_bytes": budget[0],

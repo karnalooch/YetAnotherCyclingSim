@@ -2437,6 +2437,15 @@ Heavy proof cadence is defined in `CI_VALIDATION_TIERS.md`.
 
 World success is judged from the rider camera.
 
+Owner feedback, 2026-10-10: deliver the complete current road material result,
+using Material Forge for dry, substantially less glossy asphalt with irregular
+aggregate, wear and repair variation, plus gravel shoulders throughout the
+existing network. Internal small checks are implementation details, not repeated
+owner handoffs. The hairpin request concerns realistic banking/crossfall and
+longitudinal profiling, not roadside barriers. Diagnose and correct that geometry
+against admitted road/source evidence through the separate road-geometry scope;
+do not use material variation to conceal it or invent a supposedly real profile.
+
 Current #364 [asphalt/shoulder evidence](evidence/ROAD_SURFACE_MATERIALS_364.md)
 includes a verified asphalt baseline at exact
 `396861de0884135d18006e6d3f133edebef639aa`: protected CI 38078462035 PASS with

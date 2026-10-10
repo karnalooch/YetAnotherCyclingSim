@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import tempfile
@@ -32,7 +33,7 @@ def _png(path: Path, array: np.ndarray) -> None:
     Image.fromarray(np.asarray(array, dtype=np.uint8)).save(path)
 
 
-def _variant_fixture(root: Path, size: int = 64) -> None:
+def _variant_fixture(root: Path, size: int = 64, variant: str = "base") -> None:
     export = root / "export"
     export.mkdir(parents=True)
     yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
@@ -45,7 +46,7 @@ def _variant_fixture(root: Path, size: int = 64) -> None:
     ny = 0.08 * np.cos(phase)
     nz = np.sqrt(np.maximum(0, 1 - nx * nx - ny * ny))
     normal = (np.stack([nx, ny, nz], axis=2) + 1) * 0.5
-    rough = 0.82 + 0.03 * np.sin(phase)
+    rough = (0.94 if variant == "dry_varied" else 0.82) + 0.03 * np.sin(phase)
     orm = np.stack([np.full_like(rough, 0.95), rough, np.zeros_like(rough)], axis=2)
     detail = np.stack(
         [
@@ -55,6 +56,8 @@ def _variant_fixture(root: Path, size: int = 64) -> None:
         ],
         axis=2,
     )
+    if variant == "dry_varied":
+        detail[..., 1] = 0.90 * (np.cos(phase) > 0.80)
     for name, array in (
         ("BaseColor", color),
         ("Normal_DX", normal),
@@ -93,7 +96,7 @@ def _variant_fixture(root: Path, size: int = 64) -> None:
         json.dumps(
             {
                 "family": "aged_mountain_asphalt",
-                "variant": "base",
+                "variant": variant,
                 "semantic_owner": forge.SEMANTIC_OWNER,
                 "world_semantics_generated": False,
                 "normal_convention": "DirectX",
@@ -114,7 +117,7 @@ class MaterialForgeContractTests(unittest.TestCase):
         self.assertNotIn("clamp(patch,0.0,1.0)", forge.ASPHALT_FUNCTION)
 
     def test_visual_v3_uses_family_specific_surface_structures(self):
-        self.assertEqual(forge.GENERATOR_VERSION, 4)
+        self.assertEqual(forge.GENERATOR_VERSION, 5)
         self.assertIn("yacs_rect_patch", forge.ASPHALT_FUNCTION)
         self.assertIn("yacs_contour_crack", forge.ASPHALT_FUNCTION)
         self.assertNotIn("coarse_cells = yacs_cells(q,23.0", forge.ASPHALT_FUNCTION)
@@ -181,6 +184,111 @@ class MaterialForgeContractTests(unittest.TestCase):
         catalog = forge.load_catalog()
         self.assertEqual(len(catalog["families"]), 3)
         self.assertTrue(all(len(f["variants"]) >= 3 for f in catalog["families"]))
+
+    def test_dry_variant_keeps_one_tile_and_historical_recipe_unchanged(self):
+        from scripts.assets import road_material_contract as contract
+
+        family = next(
+            row for row in forge.load_catalog()["families"]
+            if row["id"] == contract.FAMILY
+        )
+        variants = {row["id"]: row for row in family["variants"]}
+        dry = variants["dry_varied"]
+        base = forge._load_base_builder()
+        self.assertEqual(
+            hashlib.sha256(forge.ASPHALT_FUNCTION.encode()).hexdigest(),
+            "be5a6ba281d68989044f57012bd619ae7b4f02e6e44c150cb9c7c9221dc5aec2",
+        )
+        for historical in ("base", "worn", "repaired"):
+            self.assertEqual(
+                forge._replace_surface_function(base, family["id"], variants[historical]),
+                base.FIELD.split("vec4 yacs_limestone(", 1)[0] + forge.ASPHALT_FUNCTION,
+            )
+        self.assertEqual(
+            forge._response_expressions(family["id"], 0.82, variants["base"])[0],
+            "clamp(0.820000+0.070000*$variation($uv)+0.030000*$crack($uv)"
+            "-0.060000*$pore($uv),0.0,1.0)",
+        )
+        self.assertEqual(dry["seed"], variants["base"]["seed"])
+        self.assertEqual(family["tile_metres"], 4)
+        self.assertEqual(len(forge.ALL_CHANNELS), 5)
+        self.assertEqual(dry["normal_strength"], variants["base"]["normal_strength"] / 2)
+        self.assertEqual(
+            hashlib.sha256(
+                forge._replace_surface_function(base, family["id"], dry).encode()
+            ).hexdigest(),
+            contract.SURFACE_FIELD_SHA256,
+        )
+        self.assertEqual(
+            forge._response_expressions(family["id"], dry["roughness"], dry),
+            (contract.ROUGHNESS_EXPRESSION, contract.AO_EXPRESSION),
+        )
+
+    def test_dry_authoring_uses_pinned_shader_and_keeps_displacement_disabled(self):
+        from scripts.assets import road_material_contract as contract
+
+        family = next(
+            row for row in forge.load_catalog()["families"]
+            if row["id"] == contract.FAMILY
+        )
+        variant = next(row for row in family["variants"] if row["id"] == contract.VARIANT)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            mm = root / "synthetic-mm"
+            (mm / "nodes").mkdir(parents=True)
+            # Stub upstream authoring input only; this is not a native graph render.
+            (mm / "material_maker.exe").write_bytes(b"synthetic tool")
+            (mm / "nodes/material.mmg").write_text(json.dumps({
+                "parameters": {},
+                "shader_model": {"inputs": [{"name": name} for name in (
+                    "albedo_tex", "roughness_tex", "ao_tex", "depth_tex",
+                    "normal_tex", "emission_tex",
+                )]},
+            }))
+            output = root / "candidate"
+            forge.author_variant(mm, output, family, variant, forge.load_upstreams())
+            graph = json.loads((output / "Material.ptex").read_bytes())
+            contract._graph(graph)
+            material = next(row for row in graph["nodes"] if row["name"] == "PBR_Output")
+            self.assertEqual(material["parameters"]["metallic"], 0)
+            self.assertEqual(material["parameters"]["depth_scale"], 0)
+            self.assertEqual(material["parameters"]["emission_energy"], 0)
+            self.assertEqual(len(material["shader_model"]["exports"]["YACS/Textures"]["files"]), 5)
+
+    def test_dry_source_qa_measures_actual_pixels_and_retains_statistics(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _variant_fixture(root, variant="dry_varied")
+            result = forge.check_variant(root, expected_resolution=64)
+            stats = result["dry_asphalt_statistics"]
+            self.assertGreaterEqual(stats["roughness_min"], 0.90 - 1 / 255)
+            self.assertLessEqual(stats["roughness_max"], 0.99 + 1 / 255)
+            self.assertGreater(stats["basecolor_25cm_luma_std"], 0.008)
+            self.assertGreater(stats["patch_coverage_fraction"], 0.02)
+            self.assertLess(stats["patch_coverage_fraction"], 0.40)
+            self.assertFalse(result["visual_accepted"])
+
+    def test_dry_source_qa_rejects_gloss_uniform_coarse_colour_and_solid_repairs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _variant_fixture(root, variant="dry_varied")
+            arrays = []
+            for name in ("BaseColor", "Normal_DX", "ORM", "DetailMasks"):
+                with Image.open(root / "export" / f"{forge.EXPORT_PREFIX}_{name}.png") as image:
+                    arrays.append(np.asarray(image, dtype=np.float32) / 255)
+            for failure in ("gloss", "flat_roughness", "micro_only", "solid_repairs"):
+                color, normal, orm, detail = [value.copy() for value in arrays]
+                if failure == "gloss":
+                    orm[0, 0, 1] = 0.82
+                elif failure == "flat_roughness":
+                    orm[..., 1] = 0.94
+                elif failure == "micro_only":
+                    yy, xx = np.indices(color.shape[:2])
+                    color[:] = (0.31 + 0.04 * ((xx + yy) % 2))[..., None]
+                else:
+                    detail[..., 1] = 0.90
+                with self.subTest(failure=failure), self.assertRaises(ValueError):
+                    forge._dry_asphalt_statistics(color, normal, orm, detail)
 
     def test_validator_accepts_periodic_nonmetallic_fixture(self):
         with tempfile.TemporaryDirectory() as directory:

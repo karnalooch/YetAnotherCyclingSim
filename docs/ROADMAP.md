@@ -205,7 +205,15 @@ No geometry, Base_DTM or road physics edit belongs to
 this material patch; the unresolved inner seam remains #459 debt. See the
 [current source and native evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md).
 
-#### Finish #364 in bounded batches
+#### Finish #364 as one complete delivery
+
+Owner feedback, 2026-10-10: complete the current road network as one user
+deliverable, with internal incremental checks. Use Material Forge to produce
+substantially less glossy, dry asphalt with irregular aggregate, wear and repair
+variation, and provide gravel shoulders along the whole existing network.
+The hairpin concern is realistic banking/crossfall and longitudinal profiling;
+it was not a request for guardrails. Inspect those source-relative geometry
+questions separately from this material-only conservation proof.
 
 | Batch | Concrete output and completion check | Current status |
 |---|---|---|
@@ -216,6 +224,7 @@ this material patch; the unresolved inner seam remains #459 debt. See the
 | Material-only conservation | Preserve positions, vertex/triangle IDs, topology and rendered corner normals/UVs, plus transforms/collision/Landscape bindings; permit only the named material assignment delta | **PASS for support 112 at `1ef46da`:** exact before/after, rollback, fresh-load and final GPU checks, 436-ID delta; other supports/Landscape retain full inventory checks |
 | Road canary | Apply the validated asphalt to the authorized road slot without saving; verify 400 cm projection, DirectX normals and exact restoration | **PASS at `396861de`:** native reversible canary, then separate saved/freshly reopened consumer proof |
 | Shoulder canary | Verify source-owned top/side selection; apply licensed gravel to the bounded tops while preserving walls, interior material and geometry | **Complete native/save/reload/GPU PASS at `1ef46da`:** 436 outer top IDs, `FillGravel` 150 cm in slot 1, actual exit 0; no Nudo/parapet expansion |
+| Dry, varied asphalt | Improve the Material Forge source recipe and authenticate two independent renders before native consumption | **In progress:** new `dry_varied` candidate; historical `base` remains the comparison, not acceptance of the revised appearance |
 | Edges and technical appearance | Inspect both directions, bends, close/distant views and shoulder/Landscape transitions; retain real images and defect locations | **Partial:** four same-camera shoulder frames show aggregate on the bounded strips; rhythmic distant patches and sharp boundaries remain review notes, seam #459 stays visible; whole-area review pending |
 | Whole-area shoulder coverage | Source-map all supports and explicitly qualify exceptional geometry; preserve each changed mesh and capture representative views | **Next:** source-map `000`-`180`; qualify `181`-`185` separately. Matching counts/material labels are insufficient; the 0112 constants do not generalize |
 | Save, reopen and deliver | Save only derived outputs; fresh reload/render proves bindings and conservation; pass required native/asset/review/CI checks and merge #470 | **Partial:** asphalt baseline and complete window 0112 shoulder canary PASS; complete-area #364 delivery remains pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |

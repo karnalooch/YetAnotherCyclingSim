@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import shutil
@@ -47,22 +48,51 @@ def _synthetic_bundle(root: Path) -> None:
     """Mock retained CPU/Godot assertions; Height is deliberately not real EXR."""
     (root / "export").mkdir(parents=True)
     shutil.copyfile(contract.DEFAULT_CATALOG, root / "catalog.json")
+
+    def literal(path: str, name: str) -> str:
+        # Read source text without importing the producer's numpy/Pillow runtime.
+        tree = ast.parse((contract.ROOT / path).read_text(encoding="utf-8"))
+        for node in tree.body:
+            if isinstance(node, ast.Assign) and any(
+                isinstance(target, ast.Name) and target.id == name
+                for target in node.targets
+            ):
+                return ast.literal_eval(node.value)
+        raise AssertionError("Missing source field fixture")
+
+    helpers = literal("scripts/assets/build_material_maker_limestone.py", "FIELD")
+    field = helpers.split("vec4 yacs_limestone(", 1)[0] + literal(
+        "scripts/assets/material_forge.py", "DRY_ASPHALT_FUNCTION"
+    )
     graph = {
         "seed_int": 101,
         "nodes": [
             {
                 "name": "Limestone_Form",
-                "parameters": {"seed": 101, "fractures": 0.62, "pores": 0.22},
+                "parameters": {"seed": 101, "fractures": 0.48, "pores": 0.90},
+                "shader_model": {"global": field},
             },
-            {"name": "Limestone_Color", "parameters": {"brightness": 0.3}},
-            {"name": "Height_Normal", "parameters": {"strength": 0.48}},
+            {
+                "name": "Limestone_Color",
+                "parameters": {"brightness": 0.31},
+                "shader_model": {
+                    "code": "float $(name_uv)_tone = clamp($brightness"
+                    "+0.200000*($variation($uv)-0.5)-0.045000*$crack($uv)"
+                    "-0.050000*$pore($uv),0.0,1.0);",
+                    "outputs": [{
+                        "rgb": "vec3(($(name_uv)_tone*0.97)*1.000000,"
+                        "($(name_uv)_tone*0.985)*1.000000,"
+                        "($(name_uv)_tone)*1.000000)"
+                    }],
+                },
+            },
+            {"name": "Height_Normal", "parameters": {"strength": 0.24}},
             {
                 "name": "Limestone_Response",
                 "shader_model": {
                     "outputs": [
-                        {
-                            "f": "clamp(0.820000+0.070000*$variation($uv)+0.030000*$crack($uv)-0.060000*$pore($uv),0.0,1.0)"
-                        }
+                        {"f": contract.ROUGHNESS_EXPRESSION},
+                        {"f": contract.AO_EXPRESSION},
                     ]
                 },
             },
@@ -83,7 +113,7 @@ def _synthetic_bundle(root: Path) -> None:
     provenance = {
         "status": contract.STATUS,
         "family": contract.FAMILY,
-        "variant": "base",
+        "variant": contract.VARIANT,
         "seed": 101,
         "tile_metres": 4,
         "parameters": {**contract.PARAMETERS, "refinement": {}, "landscape": {}},
@@ -92,7 +122,7 @@ def _synthetic_bundle(root: Path) -> None:
         "normal_convention": "DirectX",
         "local_mask_channels": contract.MASKS,
         "generator": "yacs-material-forge",
-        "generator_version": 4,
+        "generator_version": contract.GENERATOR_VERSION,
         "graph": "Material.ptex",
         "graph_sha256": _sha(root / "Material.ptex"),
         "recipe": "scripts/assets/material_forge.py",
@@ -108,7 +138,7 @@ def _synthetic_bundle(root: Path) -> None:
     validation = {
         "status": contract.STATUS,
         "family": contract.FAMILY,
-        "variant": "base",
+        "variant": contract.VARIANT,
         "semantic_owner": "PCG/PCGEx",
         "world_semantics_generated": False,
         "normal_convention": "DirectX",
@@ -117,6 +147,16 @@ def _synthetic_bundle(root: Path) -> None:
         "visual_accepted": False,
         "performance_accepted": False,
         "normal_length_error_p99": 0.008,
+        "dry_asphalt_statistics": {
+            "roughness_min": 0.918,
+            "roughness_max": 0.974,
+            "roughness_mean": 0.94,
+            "roughness_std": 0.01,
+            "basecolor_luma_std": 0.034,
+            "basecolor_25cm_luma_std": 0.028,
+            "patch_coverage_fraction": 0.13,
+            "normal_xy_rms": 0.06,
+        },
         "maps": {},
     }
     native = {"valid": True, "engine": engine, "images": {}}
@@ -188,7 +228,7 @@ class RoadAsphaltSourceContractTests(unittest.TestCase):
     def setUp(self) -> None:
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
-        self.root = Path(self.directory.name) / "base"
+        self.root = Path(self.directory.name) / contract.VARIANT
         shutil.copytree(self.template.name, self.root)
 
     def check(self) -> dict:
@@ -299,7 +339,10 @@ class RoadAsphaltSourceContractTests(unittest.TestCase):
     def test_current_catalog_cannot_authorize_a_different_recipe(self):
         self.edit(
             "catalog.json",
-            lambda data: data["families"][0]["variants"][0].update(roughness=0.8),
+            lambda data: next(
+                row for row in data["families"][0]["variants"]
+                if row["id"] == contract.VARIANT
+            ).update(roughness=0.8),
         )
         self.edit(
             "provenance.json", lambda data: data["parameters"].update(roughness=0.8)
@@ -322,6 +365,48 @@ class RoadAsphaltSourceContractTests(unittest.TestCase):
         self.edit("Material.ptex", lambda data: data.update(seed_int=999))
         with self.assertRaisesRegex(ValueError, "graph hash mismatch"):
             self.check()
+
+    def test_legacy_base_labels_and_generator_cannot_pass_the_dry_contract(self):
+        for field, value in (("variant", "base"), ("generator_version", 4)):
+            with self.subTest(field=field):
+                original = json.loads((self.root / "provenance.json").read_bytes())
+                self.edit("provenance.json", lambda data: data.update({field: value}))
+                with self.assertRaises(ValueError):
+                    self.check()
+                _write(self.root / "provenance.json", original)
+
+    def test_rehashed_shader_drift_cannot_be_hidden_by_matching_parameters(self):
+        for index, field in ((0, "global"), (1, "code")):
+            with self.subTest(index=index):
+                original = (self.root / "Material.ptex").read_bytes()
+                self.edit(
+                    "Material.ptex",
+                    lambda data: data["nodes"][index]["shader_model"].update({field: "legacy field"}),
+                )
+                digest = _sha(self.root / "Material.ptex")
+                self.edit("provenance.json", lambda data: data.update(graph_sha256=digest))
+                self.edit("render-receipt.json", lambda data: data.update(graph_sha256=digest))
+                with self.assertRaisesRegex(ValueError, "Graph .* changed"):
+                    self.check()
+                (self.root / "Material.ptex").write_bytes(original)
+
+    def test_claimed_dry_statistics_cannot_admit_glossy_or_uniform_source(self):
+        for field, value in (
+            ("roughness_min", 0.82),
+            ("roughness_std", 0.0),
+            ("basecolor_25cm_luma_std", 0.001),
+            ("patch_coverage_fraction", 0.8),
+        ):
+            with self.subTest(field=field):
+                original = json.loads((self.root / "validation.json").read_bytes())
+                self.edit(
+                    "validation.json",
+                    lambda data: data["dry_asphalt_statistics"].update({field: value}),
+                )
+                self.refresh_render_validation()
+                with self.assertRaisesRegex(ValueError, "Dry asphalt .* statistics failed"):
+                    self.check()
+                _write(self.root / "validation.json", original)
 
     def test_directx_and_geometry_semantics_flags_are_required(self):
         for key, value in (
@@ -635,7 +720,7 @@ class RoadAsphaltReplayContractTests(unittest.TestCase):
             runs.append(
                 {
                     "run": label,
-                    "directory": label + "\\aged_mountain_asphalt\\base",
+                    "directory": label + "\\aged_mountain_asphalt\\dry_varied",
                     "fingerprint": "d" * 64,
                     "source": source,
                     "graph_sha256": source["retained_receipts"]["Material.ptex"][
@@ -768,9 +853,9 @@ class RoadAsphaltReplayContractTests(unittest.TestCase):
     def test_only_two_literal_directories_in_fixed_order_are_allowed(self):
         original = self.receipt["runs"][0]["directory"]
         for directory in (
-            "../run-a/aged_mountain_asphalt/base",
+            "../run-a/aged_mountain_asphalt/dry_varied",
             "D:/outside/base",
-            "run-b/aged_mountain_asphalt/base",
+            "run-b/aged_mountain_asphalt/dry_varied",
             "run-a/aged_mountain_asphalt/worn",
         ):
             with self.subTest(directory=directory):
@@ -791,20 +876,20 @@ class RoadAsphaltReplayContractTests(unittest.TestCase):
             row["directory"] = row["directory"].replace("\\", "/")
         self.save()
         self.assertEqual(
-            self.check()["runs"][0]["directory"], "run-a/aged_mountain_asphalt/base"
+            self.check()["runs"][0]["directory"], "run-a/aged_mountain_asphalt/dry_varied"
         )
 
     def test_height_tamper_in_one_run_is_rejected(self):
         path = (
             self.root
-            / "run-b/aged_mountain_asphalt/base/export/YACS_Material_Height.exr"
+            / "run-b/aged_mountain_asphalt/dry_varied/export/YACS_Material_Height.exr"
         )
         path.write_bytes(path.read_bytes() + b"changed")
         with self.assertRaisesRegex(ValueError, "Map changed.*Height"):
             self.check()
 
     def test_self_consistent_but_different_run_bytes_cannot_pass_outer_true_flag(self):
-        root = self.root / "run-b/aged_mountain_asphalt/base"
+        root = self.root / "run-b/aged_mountain_asphalt/dry_varied"
         height = root / "export/YACS_Material_Height.exr"
         height.write_bytes(height.read_bytes() + b"different")
         for name, change in (
@@ -876,7 +961,7 @@ class RoadAsphaltReplayContractTests(unittest.TestCase):
             if "run-b" in directory.parts:
                 path = (
                     self.root
-                    / "run-a/aged_mountain_asphalt/base/MATERIAL_MAKER_LICENSE.txt"
+                    / "run-a/aged_mountain_asphalt/dry_varied/MATERIAL_MAKER_LICENSE.txt"
                 )
                 path.write_bytes(path.read_bytes() + b"changed later")
             return source
