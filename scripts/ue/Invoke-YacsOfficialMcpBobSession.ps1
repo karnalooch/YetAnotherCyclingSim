@@ -59,17 +59,18 @@ $receipt = [ordered]@{
     persistent_world_mutation = $false; performance_pass = $false; performance_status = 'DEFERRED_AFTER_M3'
     error = $null; secondary_errors = @()
     owned_editor_pid = $null; owned_client_pid = $null; owned_editor_exit_observed = $false; owned_client_exit_observed = $false
-    startup_config_overrides = @(); loopback_binding = @(); proof_files = [ordered]@{}
+    startup_config_overrides = @(); host_stage_events = @(); loopback_binding = @(); proof_files = [ordered]@{}
 }
 
 function Assert-SessionPlainPath {
     param([Parameter(Mandatory)][string] $Path)
     $cursor = [IO.Path]::GetFullPath($Path)
     while ($cursor) {
-        if (Test-Path -LiteralPath $cursor) {
-            if ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) {
-                throw 'The session refuses symlinks and junctions.'
-            }
+        try { $attributes = [IO.File]::GetAttributes($cursor) }
+        catch [IO.FileNotFoundException] { $attributes = $null }
+        catch [IO.DirectoryNotFoundException] { $attributes = $null }
+        if ($null -ne $attributes -and ($attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw 'The session refuses symlinks and junctions.'
         }
         $parent = [IO.Path]::GetDirectoryName($cursor)
         if ($parent -eq $cursor) { break }
@@ -314,6 +315,13 @@ function Assert-SessionOwnLoopback {
 }
 function Assert-SessionAttemptDeadline {
     if ($attemptTimer.Elapsed.TotalSeconds -ge 420) { throw 'The entire owned Editor/client attempt exceeded its shared 420 second deadline.' }
+}
+function Write-SessionHostStage {
+    param([ValidateSet('WAITING_CONTEXT', 'CONTEXT_VERIFIED', 'TRACKED_SOURCES_VERIFIED', 'TRANSPORT_CONTEXT_PUBLISHED')][string] $Stage)
+    $event = [ordered]@{ stage = $Stage; at_utc = (Get-Date).ToUniversalTime().ToString('o')
+        attempt_elapsed_seconds = $attemptTimer.Elapsed.TotalSeconds }
+    $receipt.host_stage_events += $event
+    Write-Host ('SESSION_HOST_STAGE ' + ($event | ConvertTo-Json -Compress))
 }
 function Assert-SessionStagedBinaries {
     foreach ($row in $receipt.staged_binary_provenance) {
@@ -922,11 +930,14 @@ try {
         }
     $receipt.editor_launched = $true
     $receipt.owned_editor_pid = $ownedEditor.Id
+    Write-SessionHostStage 'WAITING_CONTEXT'
     $context = Wait-SessionObject (Join-Path $proofRoot 'session-context.json') $ownedEditor
     Assert-SessionJsonFields $context.value @('schema_version', 'exact_sha', 'source_sha256', 'profile_sha256', 'profile_source_sha', 'consumer_source_sha', 'consumer_assets', 'landscape')
     if (-not (Test-SessionInteger $context.value.schema_version 1) -or $context.value.exact_sha -cne $ExpectedHead `
         -or $context.value.landscape.path -isnot [string] -or [string]::IsNullOrWhiteSpace($context.value.landscape.path)) { throw 'The actual native session context is invalid.' }
+    Write-SessionHostStage 'CONTEXT_VERIFIED'
     Assert-SessionTrackedSources $SessionRoot
+    Write-SessionHostStage 'TRACKED_SOURCES_VERIFIED'
     $receipt.proof_files.session_context = $context.identity
     $marker = [ordered]@{
         schema_version = 1; exact_sha = $ExpectedHead; project_root = $SessionRoot
@@ -935,6 +946,7 @@ try {
     }
     Write-SessionJson (Join-Path $proofRoot 'transport-context.json') $marker
     $receipt.proof_files.transport_context = Get-SessionFileIdentity (Join-Path $proofRoot 'transport-context.json') 1MB
+    Write-SessionHostStage 'TRANSPORT_CONTEXT_PUBLISHED'
     $counter = Wait-SessionObject (Join-Path $proofRoot 'native-counter.json') $ownedEditor
     Assert-SessionJsonFields $counter.value @('schema_version', 'exact_sha', 'body_invocation_count')
     if (-not (Test-SessionInteger $counter.value.schema_version 1) -or $counter.value.exact_sha -cne $ExpectedHead `

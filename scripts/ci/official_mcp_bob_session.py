@@ -16,6 +16,9 @@ from pathlib import Path
 import re
 import stat
 import subprocess
+import tempfile
+import threading
+import time
 from typing import Any
 
 from scripts.assets.restore_workspace_data import restore
@@ -80,6 +83,9 @@ JSON_LIMIT = 2 * 1024 * 1024
 PROFILE_LIMIT = operation.adapter.MAX_INPUT_BYTES
 FILE_LIMIT = 512 * 1024 * 1024
 TOTAL_LIMIT = 2 * 1024 * 1024 * 1024
+GIT_BATCH_OBJECTS = 512
+GIT_BATCH_PATH_BYTES = 1024
+GIT_BATCH_BYTES = operation.adapter.MAX_INPUT_BYTES
 POINTER = re.compile(
     rb"version https://git-lfs.github.com/spec/v1\noid sha256:([0-9a-f]{64})\nsize ([0-9]+)\n\Z"
 )
@@ -380,6 +386,216 @@ def _git(*args: str) -> bytes:
     return result.stdout
 
 
+def _git_bounded(
+    args: tuple[str, ...], output_limit: int, *, request: bytes = b"", deadline: float
+) -> bytes:
+    """Read at most cap+1 bytes, with bounded input and no captured stderr.
+
+    A reader thread keeps the pipe draining on Windows too. The main thread's
+    deadline covers process and pipe completion; overflow kills the process.
+    Only this private raw-object reader uses this boundary, never a shell.
+    """
+    _require(
+        0 < output_limit <= GIT_BATCH_BYTES + GIT_BATCH_OBJECTS * 128
+        and len(request) <= GIT_BATCH_OBJECTS * (GIT_BATCH_PATH_BYTES + 64),
+        "committed Git batch exceeds its acquisition bound",
+    )
+    _require(
+        time.monotonic() < deadline,
+        "committed Git batch exceeded its existing process deadline",
+    )
+    output = bytearray()
+    errors = []
+    with tempfile.TemporaryFile() as input_file:
+        input_file.write(request)
+        input_file.seek(0)
+        process = subprocess.Popen(
+            ["git", "-C", str(ROOT), *args],
+            stdin=input_file,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            bufsize=0,
+        )
+
+        def read_output():
+            try:
+                while len(output) <= output_limit:
+                    block = process.stdout.read(
+                        min(65536, output_limit + 1 - len(output))
+                    )
+                    if not block:
+                        break
+                    output.extend(block)
+                if len(output) > output_limit:
+                    process.kill()
+            except OSError as exc:
+                errors.append(exc)
+            finally:
+                process.stdout.close()
+
+        reader = None
+        try:
+            reader = threading.Thread(target=read_output, daemon=True)
+            reader.start()
+            process.wait(timeout=max(0, deadline - time.monotonic()))
+            reader.join(timeout=max(0, deadline - time.monotonic()))
+            _require(
+                not reader.is_alive()
+                and not errors
+                and process.returncode == 0
+                and len(output) <= output_limit
+                and time.monotonic() <= deadline,
+                "committed Git batch output is incomplete or exceeds its bound",
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise ValueError(
+                "committed Git batch exceeded its existing process deadline"
+            ) from exc
+        finally:
+            if process.poll() is None:
+                process.kill()
+            process.wait(timeout=5)
+            if reader is not None and reader.ident is not None:
+                reader.join(timeout=1)
+            else:
+                process.stdout.close()
+    return bytes(output)
+
+
+def _git_blob_inventory(exact_sha: str, paths: tuple[str, ...]) -> dict[str, str]:
+    _require(
+        isinstance(exact_sha, str)
+        and operation.adapter.SHA40.fullmatch(exact_sha)
+        and 0 < len(paths) <= GIT_BATCH_OBJECTS
+        and len(set(paths)) == len(paths),
+        "committed Git path inventory is invalid",
+    )
+    for path in paths:
+        _safe_path(ROOT, path)
+        _require(
+            len(path.encode()) <= GIT_BATCH_PATH_BYTES
+            and not any(c in path for c in "\r\n\t"),
+            "committed Git path is not canonical",
+        )
+    raw = _git_bounded(
+        ("--literal-pathspecs", "ls-tree", "-rz", exact_sha, "--", *paths),
+        GIT_BATCH_OBJECTS * (GIT_BATCH_PATH_BYTES + 64),
+        deadline=time.monotonic() + 120,
+    )
+    _require(raw.endswith(b"\0"), "committed Git inventory framing is invalid")
+    entries = raw[:-1].split(b"\0")
+    _require(
+        0 < len(entries) <= GIT_BATCH_OBJECTS,
+        "committed Git inventory exceeds its bound",
+    )
+    inventory = {}
+    for entry in entries:
+        match = re.fullmatch(rb"100(?:644|755) blob ([0-9a-f]{40})\t([^\0]+)", entry)
+        _require(match is not None, "committed Git inventory requires regular blobs")
+        path = match[2].decode("utf-8")
+        _safe_path(ROOT, path)
+        _require(
+            len(match[2]) <= GIT_BATCH_PATH_BYTES
+            and not any(c in path for c in "\r\n\t")
+            and path not in inventory
+            and any(
+                path == selected or path.startswith(selected + "/")
+                for selected in paths
+            ),
+            "committed Git inventory path is invalid or duplicated",
+        )
+        inventory[path] = match[1].decode()
+    return inventory
+
+
+def _git_blobs(inventory: dict[str, str], *, blob_limit: int) -> dict[str, bytes]:
+    """Authenticate raw blobs against exact-commit tree OIDs, without smudging.
+
+    Metadata is bounded before any payload acquisition. Only proven immutable
+    blob OIDs reach the second process; its stdout cap is the exact sum of their
+    declared sizes and framing. Both processes share the existing 120s bound.
+    Every invocation rereads its worktree separately; nothing is cached.
+    """
+    _require(
+        0 < len(inventory) <= GIT_BATCH_OBJECTS and 0 < blob_limit <= JSON_LIMIT,
+        "committed Git blob inventory exceeds its bound",
+    )
+    for path, oid in inventory.items():
+        _safe_path(ROOT, path)
+        _require(
+            len(path.encode()) <= GIT_BATCH_PATH_BYTES
+            and not any(c in path for c in "\r\n\t")
+            and isinstance(oid, str)
+            and operation.adapter.SHA40.fullmatch(oid) is not None,
+            "committed Git path or object ID is invalid",
+        )
+    deadline = time.monotonic() + 120
+    request = b"".join(
+        f"{oid} {index}\n".encode() for index, oid in enumerate(inventory.values())
+    )
+    metadata = _git_bounded(
+        ("cat-file", "--batch-check=%(objectname) %(objecttype) %(objectsize) %(rest)"),
+        len(inventory) * 128,
+        request=request,
+        deadline=deadline,
+    )
+    _require(metadata.endswith(b"\n"), "committed Git metadata framing is invalid")
+    lines = metadata[:-1].split(b"\n")
+    _require(len(lines) == len(inventory), "committed Git metadata inventory differs")
+    sizes = []
+    for index, ((path, oid), line) in enumerate(zip(inventory.items(), lines)):
+        match = re.fullmatch(
+            rb"([0-9a-f]{40}) blob (0|[1-9][0-9]*) (0|[1-9][0-9]*)", line
+        )
+        _require(
+            match is not None
+            and match[1].decode() == oid
+            and match[3] == str(index).encode(),
+            "committed Git metadata identity or order differs",
+        )
+        size = int(match[2])
+        _require(size <= blob_limit, "committed Git blob exceeds its file bound")
+        sizes.append(size)
+    _require(
+        sum(sizes) <= GIT_BATCH_BYTES, "committed Git blobs exceed their total bound"
+    )
+    headers = [
+        f"{oid} blob {size}\n".encode() for oid, size in zip(inventory.values(), sizes)
+    ]
+    raw = _git_bounded(
+        ("cat-file", "--batch"),
+        sum(len(header) + size + 1 for header, size in zip(headers, sizes)),
+        request=b"".join((oid + "\n").encode() for oid in inventory.values()),
+        deadline=deadline,
+    )
+    blobs, offset = {}, 0
+    for (path, oid), size, header in zip(inventory.items(), sizes, headers):
+        _require(
+            raw[offset : offset + len(header)] == header,
+            "committed Git blob header or order differs",
+        )
+        offset += len(header)
+        body = raw[offset : offset + size]
+        offset += size
+        _require(
+            len(body) == size and raw[offset : offset + 1] == b"\n",
+            "committed Git blob payload is truncated or has invalid framing",
+        )
+        # Git's admitted repository object format is SHA-1; policy/file proofs
+        # continue to use SHA-256. A response header cannot authenticate itself.
+        _require(
+            hashlib.sha1(f"blob {size}\0".encode() + body).hexdigest() == oid,
+            "committed Git blob bytes differ from their tree object ID",
+        )
+        blobs[path] = body
+        offset += 1
+    _require(
+        offset == len(raw) and time.monotonic() <= deadline,
+        "committed Git blobs contain trailing output or exceeded their deadline",
+    )
+    return blobs
+
+
 def _assert_isolated_root() -> None:
     _require(WINDOWS_HOST, "session staging requires the trusted Windows host")
     _safe_path(ROOT, "YetAnotherCyclingSim.uproject")
@@ -431,19 +647,16 @@ def _workspace() -> dict:
 
 
 def _source_dependency_inventory(exact_sha: str) -> list[dict]:
-    paths = (
-        _git("ls-tree", "-r", "--name-only", exact_sha, "--", *ASSET_ROOTS)
-        .decode()
-        .splitlines()
-    )
+    inventory = _git_blob_inventory(exact_sha, ASSET_ROOTS)
     _require(
-        len(paths) == FROZEN_DEPENDENCY_COUNT,
+        len(inventory) == FROZEN_DEPENDENCY_COUNT,
         "frozen scene dependency inventory differs",
     )
+    blobs = _git_blobs(inventory, blob_limit=512)
     rows, witnesses = [], []
-    for path in sorted(paths):
+    for path in sorted(inventory):
         _safe_path(ROOT, path)
-        raw = _git("show", f"{exact_sha}:{path}")
+        raw = blobs[path]
         match = POINTER.fullmatch(raw)
         _require(
             match is not None, "frozen scene dependency is not a committed LFS pointer"
@@ -547,14 +760,18 @@ def _sources(exact_sha: str) -> dict[str, str]:
         "session staging requires unchanged tracked files",
     )
     inventory = operation._source_inventory(exact_sha)
+    paths = tuple(dict.fromkeys((*inventory, *UTILITY_SOURCE_PATHS)))
+    tree = _git_blob_inventory(exact_sha, paths)
+    _require(set(tree) == set(paths), "committed session source inventory differs")
+    blobs = _git_blobs(tree, blob_limit=JSON_LIMIT)
     hashes = {}
-    for relative in (*inventory, *UTILITY_SOURCE_PATHS):
+    for relative in paths:
         path = _safe_path(ROOT, relative)
         identity = _identity(path, JSON_LIMIT)
         with path.open("rb") as stream:
             raw = stream.read(JSON_LIMIT + 1)
         _require(
-            len(raw) <= JSON_LIMIT and raw == _git("show", exact_sha + ":" + relative),
+            len(raw) <= JSON_LIMIT and raw == blobs[relative],
             "executing session source differs from committed HEAD",
         )
         _require(

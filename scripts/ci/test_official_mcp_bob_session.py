@@ -13,6 +13,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 from types import SimpleNamespace
 import unittest
 from unittest import mock
@@ -933,6 +934,371 @@ class OfficialMcpBobSessionTests(unittest.TestCase):
                 path.write_bytes(original)
                 self.identity.assert_not_called()
                 self.assert_no_context()
+
+    def test_source_bytes_are_compared_after_committed_batch_read(self):
+        original = self.session._git_blobs
+
+        def change_source(inventory, **kwargs):
+            blobs = original(inventory, **kwargs)
+            path = self.root / "scripts/ue/ma2141_road_preview.py"
+            path.write_bytes(
+                path.read_bytes() + b"\n# SYNTHETIC changed after Git metadata\n"
+            )
+            return blobs
+
+        with mock.patch.object(self.session, "_git_blobs", side_effect=change_source):
+            with self.assertRaisesRegex(ValueError, "differs from committed HEAD"):
+                self.session._sources(self.exact_sha)
+
+    def test_context_rechecks_source_mutation_at_final_boundary(self):
+        self.stage()
+        observed = self.identity.side_effect
+
+        def change_source():
+            if self.identity.call_count == 2:
+                path = self.root / "scripts/ue/ma2141_road_preview.py"
+                path.write_bytes(path.read_bytes() + b"\n# SYNTHETIC boundary drift\n")
+            return observed()
+
+        self.identity.side_effect = change_source
+        with mock.patch.object(
+            self.session, "_sources", wraps=self.session._sources
+        ) as sources:
+            with self.assertRaisesRegex(ValueError, "unchanged tracked files"):
+                self.context()
+        self.assertEqual(sources.call_count, 2)
+        self.assert_no_context()
+
+    def test_source_guard_uses_fixed_process_count_without_skipping_closure(self):
+        inventory = operation._source_inventory(self.exact_sha)
+        paths = tuple(dict.fromkeys((*inventory, *self.session.UTILITY_SOURCE_PATHS)))
+        expected = {
+            path: digest(self.git("show", self.exact_sha + ":" + path))
+            for path in inventory
+        }
+        real_popen = subprocess.Popen
+        with mock.patch.object(subprocess, "Popen", wraps=real_popen) as popen:
+            actual = self.session._sources(self.exact_sha)
+        self.assertEqual(actual, expected)
+        self.assertEqual(popen.call_count, 6)
+        self.assertLess(popen.call_count, 3 + len(paths))
+        self.assertFalse(any("show" in call.args[0] for call in popen.call_args_list))
+
+
+class CommittedGitBatchTests(unittest.TestCase):
+    """Real local Git and adversarial pipe fixtures; no Windows/UE timing proof."""
+
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.root = Path(self.directory.name)
+        patcher = mock.patch.object(production, "ROOT", self.root)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.payloads = {
+            "a.bin": b"first\n\0binary",
+            "b.bin": b"other",
+            "empty.bin": b"",
+            "path with space.bin": b"first\n\0binary",
+        }
+        for path, raw in self.payloads.items():
+            (self.root / path).write_bytes(raw)
+        self.git("init", "--quiet")
+        self.git("add", ".")
+        self.git(
+            "-c",
+            "user.name=Synthetic batch",
+            "-c",
+            "user.email=batch@example.invalid",
+            "commit",
+            "--quiet",
+            "-m",
+            "Synthetic raw Git fixture",
+        )
+        self.sha = self.git("rev-parse", "HEAD").decode().strip()
+        self.inventory = production._git_blob_inventory(self.sha, tuple(self.payloads))
+        self.metadata = b"".join(
+            f"{oid} blob {len(self.payloads[path])} {index}\n".encode()
+            for index, (path, oid) in enumerate(self.inventory.items())
+        )
+        self.raw = b"".join(
+            f"{oid} blob {len(self.payloads[path])}\n".encode()
+            + self.payloads[path]
+            + b"\n"
+            for path, oid in self.inventory.items()
+        )
+
+    def git(self, *args):
+        return subprocess.run(
+            ["git", "-C", str(self.root), *args],
+            check=True,
+            capture_output=True,
+            timeout=30,
+        ).stdout
+
+    def test_real_git_matches_show_binary_blobs_and_shared_oids(self):
+        baseline = {
+            path: self.git("show", self.sha + ":" + path) for path in self.payloads
+        }
+        real_popen = subprocess.Popen
+        with mock.patch.object(subprocess, "Popen", wraps=real_popen) as popen:
+            actual = production._git_blobs(
+                self.inventory, blob_limit=production.JSON_LIMIT
+            )
+        self.assertEqual(actual, baseline)
+        self.assertEqual(popen.call_count, 2)
+        self.assertEqual(self.inventory["a.bin"], self.inventory["path with space.bin"])
+
+    def test_actual_repository_batch_payloads_match_individual_show(self):
+        # Structural process reduction on this Linux checkout, not a Windows
+        # benchmark or native/MCP proof. Read committed bytes even if edited.
+        sha = (
+            subprocess.check_output(["git", "-C", str(REPOSITORY), "rev-parse", "HEAD"])
+            .decode()
+            .strip()
+        )
+        paths = tuple(
+            dict.fromkeys(
+                (*operation._source_inventory(sha), *production.UTILITY_SOURCE_PATHS)
+            )
+        )
+        real_popen = subprocess.Popen
+        with mock.patch.object(production, "ROOT", REPOSITORY):
+            with mock.patch.object(subprocess, "Popen", wraps=real_popen) as individual:
+                baseline = {
+                    path: production._git("show", sha + ":" + path) for path in paths
+                }
+            with mock.patch.object(subprocess, "Popen", wraps=real_popen) as batched:
+                tree = production._git_blob_inventory(sha, paths)
+                actual = production._git_blobs(tree, blob_limit=production.JSON_LIMIT)
+        self.assertEqual(actual, baseline)
+        self.assertEqual(individual.call_count, len(paths))
+        self.assertEqual(batched.call_count, 3)
+        self.assertLess(batched.call_count, individual.call_count)
+
+    def test_actual_frozen_pointer_inventory_matches_individual_show(self):
+        sha = (
+            subprocess.check_output(["git", "-C", str(REPOSITORY), "rev-parse", "HEAD"])
+            .decode()
+            .strip()
+        )
+        paths = (
+            subprocess.check_output(
+                [
+                    "git",
+                    "-C",
+                    str(REPOSITORY),
+                    "ls-tree",
+                    "-r",
+                    "--name-only",
+                    sha,
+                    "--",
+                    *production.ASSET_ROOTS,
+                ]
+            )
+            .decode()
+            .splitlines()
+        )
+        real_popen = subprocess.Popen
+        with mock.patch.object(production, "ROOT", REPOSITORY):
+            with mock.patch.object(subprocess, "Popen", wraps=real_popen) as individual:
+                baseline = {}
+                for path in sorted(paths):
+                    pointer = production.POINTER.fullmatch(
+                        production._git("show", sha + ":" + path)
+                    )
+                    self.assertIsNotNone(pointer)
+                    baseline[path] = dict(
+                        path=path,
+                        sha256=pointer[1].decode(),
+                        size_bytes=int(pointer[2]),
+                    )
+            with mock.patch.object(subprocess, "Popen", wraps=real_popen) as batched:
+                actual = production._source_dependency_inventory(sha)
+        self.assertEqual(actual, list(baseline.values()))
+        self.assertEqual(individual.call_count, production.FROZEN_DEPENDENCY_COUNT)
+        self.assertEqual(batched.call_count, 3)
+        self.assertLess(batched.call_count, individual.call_count)
+
+    def test_invalid_metadata_fails_before_payload_acquisition(self):
+        lines = self.metadata.splitlines(keepends=True)
+        first_oid = next(iter(self.inventory.values())).encode()
+        cases = {
+            "missing": first_oid + b" missing\n" + b"".join(lines[1:]),
+            "nonblob": self.metadata.replace(b" blob ", b" tree ", 1),
+            "oversize": lines[0].split(b" blob ")[0]
+            + b" blob 2097153 0\n"
+            + b"".join(lines[1:]),
+            "wrong_oid": b"0" * 40 + self.metadata[40:],
+            "wrong_order": b"".join(reversed(lines)),
+            "wrong_token": self.metadata.replace(b" 0\n", b" 2\n", 1),
+            "extra": self.metadata + lines[0],
+            "truncated": self.metadata[:-1],
+            "leading_zero_size": self.metadata.replace(b" blob 13 ", b" blob 013 ", 1),
+            "nul": self.metadata + b"\0",
+        }
+        for name, metadata in cases.items():
+            with (
+                self.subTest(case=name),
+                mock.patch.object(
+                    production, "_git_bounded", return_value=metadata
+                ) as read,
+            ):
+                with self.assertRaises(ValueError):
+                    production._git_blobs(
+                        self.inventory, blob_limit=production.JSON_LIMIT
+                    )
+                self.assertEqual(read.call_count, 1)
+
+    def test_total_payload_bound_rejects_before_raw_process(self):
+        with (
+            mock.patch.object(production, "GIT_BATCH_BYTES", 1),
+            mock.patch.object(
+                production, "_git_bounded", return_value=self.metadata
+            ) as read,
+        ):
+            with self.assertRaisesRegex(ValueError, "total bound"):
+                production._git_blobs(self.inventory, blob_limit=production.JSON_LIMIT)
+        self.assertEqual(read.call_count, 1)
+
+    def test_metadata_and_payload_share_deadline_and_exact_output_budget(self):
+        with mock.patch.object(
+            production, "_git_bounded", side_effect=[self.metadata, self.raw]
+        ) as read:
+            self.assertEqual(
+                production._git_blobs(self.inventory, blob_limit=production.JSON_LIMIT),
+                self.payloads,
+            )
+        metadata, payload = read.call_args_list
+        self.assertEqual(metadata.kwargs["deadline"], payload.kwargs["deadline"])
+        self.assertEqual(payload.args[1], len(self.raw))
+        self.assertEqual(
+            payload.kwargs["request"],
+            b"".join((oid + "\n").encode() for oid in self.inventory.values()),
+        )
+
+    def test_expired_metadata_budget_prevents_payload_process_launch(self):
+        now = [100.0]
+        original = production._git_bounded
+
+        def metadata_then_expire(args, *rest, **kwargs):
+            if args[1].startswith("--batch-check"):
+                now[0] = 230.0
+                return self.metadata
+            return original(args, *rest, **kwargs)
+
+        with (
+            mock.patch.object(production.time, "monotonic", side_effect=lambda: now[0]),
+            mock.patch.object(
+                production, "_git_bounded", side_effect=metadata_then_expire
+            ),
+            mock.patch.object(subprocess, "Popen") as popen,
+        ):
+            with self.assertRaisesRegex(ValueError, "process deadline"):
+                production._git_blobs(self.inventory, blob_limit=production.JSON_LIMIT)
+        popen.assert_not_called()
+
+    def test_invalid_payload_headers_bytes_and_framing_fail_closed(self):
+        first_header = self.raw.split(b"\n", 1)[0] + b"\n"
+        header_size = len(first_header)
+        first_body = self.payloads[next(iter(self.inventory))]
+        first_record = first_header + first_body + b"\n"
+        cases = {
+            "wrong_oid": b"0" * 40 + self.raw[40:],
+            "nonblob": self.raw.replace(b" blob ", b" tree ", 1),
+            "changed_size": self.raw.replace(b" blob 13\n", b" blob 14\n", 1),
+            "wrong_order": self.raw[len(first_record) :] + first_record,
+            "truncated_body": self.raw[: header_size + len(first_body) - 1],
+            "missing_lf": self.raw[:-1],
+            "wrong_lf": self.raw[:-1] + b"\0",
+            "wrong_bytes": self.raw[:header_size] + b"X" + self.raw[header_size + 1 :],
+            "trailing": self.raw + b"extra\n",
+        }
+        for name, raw in cases.items():
+            with (
+                self.subTest(case=name),
+                mock.patch.object(
+                    production, "_git_bounded", side_effect=[self.metadata, raw]
+                ),
+            ):
+                with self.assertRaises(ValueError):
+                    production._git_blobs(
+                        self.inventory, blob_limit=production.JSON_LIMIT
+                    )
+
+    def test_missing_and_nonblob_objects_are_rejected_by_real_git(self):
+        for oid in ("0" * 40, self.sha):
+            with self.subTest(oid=oid), self.assertRaises(ValueError):
+                production._git_blobs({"a.bin": oid}, blob_limit=production.JSON_LIMIT)
+
+    def test_inventory_and_tree_outputs_require_canonical_closed_regular_paths(self):
+        for paths in (("../escape",), ("a.bin", "a.bin"), ("a.bin\nother",), ()):
+            with self.subTest(paths=paths), self.assertRaises(ValueError):
+                production._git_blob_inventory(self.sha, paths)
+        entry = f"100644 blob {next(iter(self.inventory.values()))}\ta.bin\0".encode()
+        for raw in (
+            entry[:-1],
+            entry + entry,
+            entry.replace(b"100644", b"120000"),
+            entry.replace(b"a.bin", b"unexpected.bin"),
+        ):
+            with (
+                self.subTest(raw=raw),
+                mock.patch.object(production, "_git_bounded", return_value=raw),
+            ):
+                with self.assertRaises(ValueError):
+                    production._git_blob_inventory(self.sha, ("a.bin",))
+
+    def run_pipe_fixture(self, program, output_limit, seconds=2):
+        original = subprocess.Popen
+        processes = []
+
+        def launch(_args, **kwargs):
+            process = original([sys.executable, "-c", program], **kwargs)
+            processes.append(process)
+            return process
+
+        with mock.patch.object(subprocess, "Popen", side_effect=launch):
+            try:
+                return production._git_bounded(
+                    ("cat-file", "--batch"),
+                    output_limit,
+                    request=b"synthetic\n",
+                    deadline=time.monotonic() + seconds,
+                )
+            finally:
+                self.assertTrue(processes)
+                self.assertIsNotNone(processes[0].poll())
+                self.assertTrue(processes[0].stdout.closed)
+
+    def test_pipe_output_budget_kills_writer_after_cap_plus_one(self):
+        with self.assertRaisesRegex(ValueError, "output is incomplete"):
+            self.run_pipe_fixture(
+                "import os,time; os.write(1,b'x'*100000); time.sleep(5)", 4
+            )
+
+    def test_pipe_deadline_kills_and_reaps_stalled_writer(self):
+        with self.assertRaisesRegex(ValueError, "process deadline"):
+            self.run_pipe_fixture("import time; time.sleep(5)", 4, seconds=0.05)
+
+    def test_pipe_reader_start_failure_kills_reaps_and_closes_pipe(self):
+        with mock.patch.object(
+            production.threading.Thread,
+            "start",
+            side_effect=RuntimeError("synthetic no thread"),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "synthetic no thread"):
+                self.run_pipe_fixture("import time; time.sleep(5)", 4)
+
+    def test_pipe_nonzero_exit_fails_and_stderr_is_never_captured(self):
+        with self.assertRaises(ValueError):
+            self.run_pipe_fixture("import sys; sys.exit(2)", 4)
+        self.assertEqual(
+            self.run_pipe_fixture(
+                "import os; os.write(2,b'x'*100000); os.write(1,b'pass')", 4
+            ),
+            b"pass",
+        )
 
 
 if __name__ == "__main__":

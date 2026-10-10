@@ -55,6 +55,7 @@ def main() -> None:
         raise RuntimeError(
             "The fixed bootstrap lacks its owned exact-source project context"
         )
+    initial_source_started = time.monotonic()
     session._assert_isolated_root()
     sources = session._sources(expected)
     for relative in (SCRIPT, CALLER):
@@ -62,6 +63,10 @@ def main() -> None:
             raise RuntimeError(
                 "The bootstrap/caller is absent from the pinned source inventory"
             )
+    unreal.log(
+        "YACS_BOB_BOOTSTRAP_INITIAL_SOURCE_VERIFIED "
+        f"elapsed_seconds={time.monotonic() - initial_source_started:.3f}"
+    )
 
     settings_class = unreal.load_class(
         None, "/Script/PythonScriptPlugin.PythonScriptPluginSettings"
@@ -76,11 +81,16 @@ def main() -> None:
     # This private property is not exposed to Python in the installed engine.
     # Early config adoption sets it false; the native owner independently reads
     # the actual bRemoteExecution FBoolProperty before starting its listener.
+    context_preparation_started = time.monotonic()
     context = session.prepare_native_session_context()
     if context.get("exact_sha") != expected:
         raise RuntimeError(
             "The actual native checkpoint context differs from the pinned revision"
         )
+    unreal.log(
+        "YACS_BOB_BOOTSTRAP_CONTEXT_PREPARED "
+        f"elapsed_seconds={time.monotonic() - context_preparation_started:.3f}"
+    )
 
     # -ExecutePythonScript otherwise releases its command after main returns.
     # The existing tick/keepalive convention retains this exact owned caller.

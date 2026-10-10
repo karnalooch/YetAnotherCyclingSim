@@ -603,10 +603,28 @@ failure in `WaitingInputs` at 209.654 seconds with Python initialized and inputs
 untrusted. The unchanged native 180-second check precedes marker visibility and
 input admission; the host subsequently reached its shared 420-second deadline.
 This identifies the failure phase, not the cost of any one preparation stage
-or marker availability at the nominal deadline. The next fixed readback will authenticate
-the retained host/context/log bytes and separately labels current filesystem
-timestamps. Source analysis counts 354 pre-context Git processes and a later
-2,782-file host source check; neither count is a measured Windows duration.
+or marker availability at the nominal deadline.
+[Fixed readback 38015171281](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38015171281)
+at `0fc8d8b87db4b6c8663f4845f961efa6e6eefd4d` authenticated the original
+host/context/log bytes and observed both native receipts absent. The original
+host start is `2026-10-10T01:42:56.3369494Z`. Separately labelled current
+filesystem metadata records context publication at `01:47:09.5082640Z` and
+transport publication at `01:47:43.6509744Z`; these timestamps are not original
+hash-pinned chronology. They support a preparation delay without measuring
+individual stage costs.
+
+The next candidate batches immutable committed Git reads: 354 pre-context
+Git processes become 21. All three independent HEAD/clean/worktree-byte checks
+remain separate. Tree object IDs, preflight blob types/sizes/order, bounded
+raw acquisition and object hashes authenticate the same source/pointer bytes.
+Accepted metadata, scene and physical-asset validation remain unchanged.
+The later 2,782-file host check retains every ancestor/reparse check, using
+direct filesystem attributes instead of the PowerShell provider. Fixed host
+and bootstrap stage timings are added; neither native 180-second nor host
+420-second limits or validation order change. Seventy focused synthetic and
+real-Git session/client tests pass. Linux raw-read parity confirms identical
+bytes, not Windows timing or native admission. A fresh accepted-session proof
+must establish the runtime effect.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 
