@@ -550,17 +550,17 @@ function Read-SessionVerifiedGreenJson {
     # parsed values back into a file and relabeling them as original bytes.
     $target = Join-Path $ArtifactRoot ('verified-original-' + [IO.Path]::GetFileName($Path))
     Assert-SessionPlainPath $target
-    $input = [IO.File]::OpenRead($Path)
+    $sourceStream = [IO.File]::OpenRead($Path)
     $output = [IO.File]::Open($target, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
     try {
         $buffer = [byte[]]::new(8192)
         $copiedBytes = 0L
-        while (($count = $input.Read($buffer, 0, $buffer.Length)) -gt 0) {
+        while (($count = $sourceStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
             $copiedBytes += $count
             if ($copiedBytes -gt $identity.size_bytes) { throw 'A raw GREEN copy grew beyond its authenticated byte bound.' }
             $output.Write($buffer, 0, $count)
         }
-    } finally { $output.Dispose(); $input.Dispose() }
+    } finally { $output.Dispose(); $sourceStream.Dispose() }
     $retained = Get-SessionFileIdentity $target $identity.size_bytes
     if ($retained.sha256 -cne $identity.sha256 -or (Get-SessionFileIdentity $Path $identity.size_bytes).sha256 -cne $identity.sha256) {
         throw 'The exclusive retained raw GREEN JSON copy differs.'
@@ -613,10 +613,10 @@ function Invoke-SessionVerifiedGreenReadback {
     $budget = [ordered]@{ bytes = 0L }
     $protected = [ordered]@{}
     $hostPath = Join-Path $oldArtifact 'accepted-session-build.json'
-    $host = Read-SessionVerifiedGreenJson $hostPath @{
+    $verifiedHostDocument = Read-SessionVerifiedGreenJson $hostPath @{
         path = $hostPath; size_bytes = 449384; sha256 = 'e42ec494ed4835a007fe5133f7379434b71088ab1d0018e88ffcec28c6500353'
     } 1MB $budget
-    $h = $host.value
+    $h = $verifiedHostDocument.value
     if (-not (Test-SessionInteger $h.schema_version 1) -or $h.exact_sha -cne $oldSha -or $h.run -cne '38027596123' `
         -or $h.attempt -cne '1' -or $h.status -cne 'ACCEPTED_SESSION_LOCAL_PROOF_VERIFIED' `
         -or $h.build_root -cne $oldProject -or $h.session_root -cne $oldSession -or $h.plugin_package_root -cne $oldPackage `
@@ -664,7 +664,7 @@ function Invoke-SessionVerifiedGreenReadback {
         if (-not (Test-SessionInteger $file.value.schema_version 1) -or $file.value.exact_sha -cne $oldSha) { throw 'A GREEN JSON schema/source identity differs.' }
         Add-SessionUnitProtectedIdentity $protected $file.identity.path $file.identity $file.identity.size_bytes
     }
-    Add-SessionUnitProtectedIdentity $protected $hostPath $host.identity 1MB
+    Add-SessionUnitProtectedIdentity $protected $hostPath $verifiedHostDocument.identity 1MB
     Assert-SessionJsonFields $c @('schema_version', 'exact_sha', 'source_sha256', 'profile_sha256', 'profile_source_sha', 'consumer_source_sha', 'consumer_assets', 'landscape')
     Assert-SessionJsonFields $marker @('schema_version', 'exact_sha', 'project_root', 'owned_editor_pid', 'source_sha256', 'session_context_sha256')
     Assert-SessionJsonFields $read['native-counter.json'].value @('schema_version', 'exact_sha', 'body_invocation_count')
@@ -869,7 +869,7 @@ function Invoke-SessionVerifiedGreenReadback {
         source_only = $true; compile_performed = $false; editor_launched = $false; listener_started = $false
         official_mcp_transport_verified = $false; native_automation_verified = $false; native_bob_capture_verified = $false
         official_mcp_admitted = $false; persistent_world_mutation = $false; performance_pass = $false
-        original_run = '38027596123-1'; original_exact_sha = $oldSha; original_host = $host.identity
+        original_run = '38027596123-1'; original_exact_sha = $oldSha; original_host = $verifiedHostDocument.identity
         original_verified_flags = [ordered]@{ official_mcp_transport_verified = $h.official_mcp_transport_verified
             native_automation_verified = $h.native_automation_verified; native_bob_capture_verified = $h.native_bob_capture_verified }
         original_owned_editor_pid = $h.owned_editor_pid; original_owned_client_pid = $h.owned_client_pid
@@ -897,7 +897,7 @@ function Invoke-SessionVerifiedGreenReadback {
         $diagnostic.original_evidence[$name] = $read[$name].identity
         $diagnostic.retained_raw_evidence[$name] = $read[$name].retained_raw
     }
-    $diagnostic.retained_raw_evidence['accepted-session-build.json'] = $host.retained_raw
+    $diagnostic.retained_raw_evidence['accepted-session-build.json'] = $verifiedHostDocument.retained_raw
     $diagnostic.retained_raw_evidence['runtime-dependencies.json'] = $runtime.retained_raw
     foreach ($row in $diagnostic.retained_raw_evidence.Values) { Add-SessionUnitProtectedIdentity $protected $row.path $row $row.size_bytes }
     $diagnostic.protected_input_count = $protected.Count
@@ -919,7 +919,7 @@ function Invoke-SessionVerifiedGreenReadback {
     if ($consoleJson.Length -gt 16KB) { throw 'The fixed GREEN console summary exceeds its 16KiB bound.' }
     Write-Host ('VERIFIED_GREEN_READBACK ' + $consoleJson)
     return [ordered]@{ protected = $protected; descriptor = $descriptor; native_paths = $nativePaths; bob_rows = $bobRows
-        old_plugin = $oldPlugin; old_source_sha = $oldSha; old_host_identity = $host.identity }
+        old_plugin = $oldPlugin; old_source_sha = $oldSha; old_host_identity = $verifiedHostDocument.identity }
 }
 function Get-SessionUnitOwnedListeners {
     param([int] $OwnedPid)
@@ -955,17 +955,17 @@ function Invoke-SessionInputBoundaryUnit {
         Assert-SessionPlainPath $target
         if (Test-Path -LiteralPath $target) { throw 'The fixed unit refuses to replace a copied input.' }
         New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
-        $input = [IO.File]::OpenRead($row.identity.path)
+        $sourceStream = [IO.File]::OpenRead($row.identity.path)
         $output = [IO.File]::Open($target, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
         try {
             $buffer = [byte[]]::new(8192)
             $copiedBytes = 0L
-            while (($count = $input.Read($buffer, 0, $buffer.Length)) -gt 0) {
+            while (($count = $sourceStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
                 $copiedBytes += $count
                 if ($copiedBytes -gt $row.identity.size_bytes) { throw 'A unit input grew beyond its authenticated copy bound.' }
                 $output.Write($buffer, 0, $count)
             }
-        } finally { $output.Dispose(); $input.Dispose() }
+        } finally { $output.Dispose(); $sourceStream.Dispose() }
         $copied = Get-SessionFileIdentity $target $row.identity.size_bytes
         if ($copied.sha256 -cne $row.identity.sha256 -or $copied.size_bytes -ne $row.identity.size_bytes) { throw 'A fixed unit input copy differs.' }
         $unit.copied_inputs[$row.relative] = $copied

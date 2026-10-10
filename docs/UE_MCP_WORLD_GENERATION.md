@@ -925,6 +925,15 @@ will authenticate the successful raw receipt without rebuilding the project;
 the separate input-boundary check reuses the pinned native plugin in a fresh
 owned lightweight project.
 
+[First positive readback 38029365716](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38029365716)
+at `299eaac301de1a4da334241a24821e506ceb6aa3` passed Windows parsing, then
+failed before unit launch because local `$host` collides with PowerShell's
+read-only automatic `$Host` variable. Its current host status is `BLOCKED`,
+with all current runtime verification flags false. This is a reader naming
+error, not a failed historical native session or an InputBoundary result.
+The correction renames that local document variable; actual receipt review
+and the separate unit still require a successful run.
+
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
 hosted Python, equivalent exact-head Unreal proof reuse and Aggregate.
