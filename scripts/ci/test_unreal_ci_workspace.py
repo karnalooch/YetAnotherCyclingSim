@@ -116,9 +116,7 @@ class UnrealWorkspaceTests(unittest.TestCase):
             env_file.read_text(), "YACS_UNREAL_WORKTREE=_unreal-build-101-1\n"
         )
         self.assertEqual(cache.select(self.workspace), self.name)
-        self.assertTrue(
-            (self.root / "Binaries/Win64" / cache.BINARY_NAMES[0]).exists()
-        )
+        self.assertTrue((self.root / "Binaries/Win64" / cache.BINARY_NAMES[0]).exists())
         self.assertFalse((self.workspace / "_unreal-build-101-1").exists())
 
     def test_detects_raw_crlf_against_git_blob_even_if_git_filters_it(self):
