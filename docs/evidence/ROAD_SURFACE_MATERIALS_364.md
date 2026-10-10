@@ -191,3 +191,30 @@ world-aligned projection; actual road-specific native proof is still required.
    `performance_pass: false` until the later reference-PC benchmark actually
    passes. Neither source tests nor a protected merge can manufacture those
    admissions.
+
+### Bounded asphalt-only material binding candidate — 2026-10-10
+
+`scripts/ue/road_asphalt_slot_canary.py` adds a small native-session library for
+the **asphalt road actor only**. It consumes the independently authenticated
+two-run `aged_mountain_asphalt/base` source bridge and reuses
+`import_material_forge_variant.import_variant(..., save_assets=False)`
+with metric `TileSizeCm = 400` and DirectX normals. The candidate requires
+the accepted one-road / 186-support / 1024-Landscape inventory and the pinned
+road's 856,250 vertices and 1,711,760 triangles. It does not author road
+geometry, Landscape layers, shoulder materials or retaining-wall slots.
+
+A transient test sets **only road material slot zero**, reads back the bound
+Material Instance and verifies that the native actor/mesh/collision/Landscape
+snapshot differs only in that named road binding. It always attempts to restore
+the original material and checks complete pre/post snapshot equality, including
+all 186 supports. A failed assignment, changed source or unexpected shared
+support binding fails closed. No package or map saving is performed; unsaved
+candidate assets are confined to a distinct `/Game/Generated/YACS/RoadAsphaltCanary`
+namespace.
+
+This is a **code/test candidate, not completed Unreal validation**. The existing
+read-only native baseline must pass independently before the candidate is wired
+into a serial isolated Editor proof. Geometry/normal/UV hashes, native shader
+compilation, material projection, visual review, saved/reloaded consumer,
+roadside shoulder/wall separation and whole-area admission remain pending.
+No bypass of the existing active-cache trust gate is authorized.
