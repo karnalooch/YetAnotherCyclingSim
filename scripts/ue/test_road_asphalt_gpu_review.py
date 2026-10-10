@@ -6,6 +6,8 @@ import csv
 import hashlib
 import io
 import json
+from pathlib import Path
+import tempfile
 import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -161,6 +163,143 @@ class RoadGpuReviewContractTests(unittest.TestCase):
         self.assertEqual(gpu.RECEIPT, "road-asphalt-lit-review.json")
         self.assertEqual(gpu.FRAME_DEADLINE_SECONDS, 90)
         self.assertEqual(gpu.TOTAL_DEADLINE_SECONDS, 380)
+
+
+class RoadGpuStopLifecycleTests(unittest.TestCase):
+    def assert_stop_lifecycle(self, error=None):
+        """Exercise real stop/receipt code with synthetic native boundaries."""
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        proof = Path(temporary.name)
+        stage = proof / "stage.json"
+        prior = proof / "saved-road-host-receipt.json"
+        stage.write_text("synthetic stage", encoding="utf-8")
+        prior.write_text("synthetic prior proof", encoding="utf-8")
+        frames = [{"frame_id": frame} for frame in gpu.FRAME_IDS]
+        context = {
+            "proof": proof, "retained": proof / "retained",
+            "exact_sha": "a" * 40, "run_token": "synthetic-stop-test",
+            "original": {"native_inventory": {}},
+            "manifest": {
+                "material_instance": "/Game/Synthetic/MI_Road",
+                "shoulder_window": {"material": {}}, "assets": [],
+                "expected_normalized_inventory_sha256": "b" * 64,
+            },
+            "manifest_id": {"sha256": "c" * 64, "size_bytes": 1},
+            "rows": [], "source_dependencies": [], "frames": frames,
+            "stage_path": stage, "stage_identity": gpu.session._identity(stage),
+            "host_receipt_identity": gpu.session._identity(prior),
+        }
+        events = []
+
+        def record(name, result=None):
+            def invoke(*_args, **_kwargs):
+                events.append(name)
+                return result
+            return invoke
+
+        position = SimpleNamespace(x=1.0, y=2.0, z=3.0)
+        viewport_before = (position, object())
+        actors = SimpleNamespace(destroy_actor=Mock(side_effect=record("camera", True)))
+        viewport = SimpleNamespace(
+            set_level_viewport_camera_info=Mock(side_effect=record("viewport restore")),
+            get_level_viewport_camera_info=Mock(
+                side_effect=record("viewport readback", viewport_before)
+            ),
+        )
+
+        def release_lifecycle(keep_alive):
+            self.assertIs(keep_alive, False)
+            self.assertTrue((proof / gpu.RECEIPT).is_file())
+            events.append("release lifecycle")
+
+        api = SimpleNamespace(
+            EditorActorSubsystem="actors", UnrealEditorSubsystem="viewport",
+            get_editor_subsystem={"actors": actors, "viewport": viewport}.__getitem__,
+            unregister_slate_post_tick_callback=Mock(side_effect=record("callback")),
+            EditorLoadingAndSavingUtils=SimpleNamespace(
+                get_dirty_map_packages=Mock(side_effect=record("dirty maps", [gpu.saved.MAP])),
+                get_dirty_content_packages=Mock(side_effect=record("dirty content", [])),
+            ),
+            EditorPythonScripting=SimpleNamespace(
+                set_keep_python_script_alive=Mock(side_effect=release_lifecycle)
+            ),
+            SystemLibrary=SimpleNamespace(quit_editor=Mock()),
+        )
+        job = gpu.RoadLitCapture(api, context, object(), object())
+        job.camera, job.handle, job.viewport_before = object(), object(), viewport_before
+        job.frames = frames
+        job.completed_priming_frames = len(frames) * gpu.PRIMING_FRAMES
+        job.residency_leases = {
+            "synthetic texture": SimpleNamespace(
+                set_force_mip_levels_to_be_resident=Mock(side_effect=record("mip release"))
+            )
+        }
+        for target, name, label, result in (
+            (gpu.baseline, "native_inventory", "native inventory", {}),
+            (gpu.saved, "expected_saved_inventory", "scene comparison", "b" * 64),
+            (gpu.saved.shoulder, "verify_loaded", "shoulder mesh", None),
+            (gpu.saved.shoulder_material, "verify_material", "shoulder material", None),
+            (gpu.saved, "verify_retained_files", "saved packages", None),
+            (gpu.session, "_verify_rows", "source assets", None),
+            (gpu.saved, "verified_manifest_identity", "manifest", context["manifest_id"]),
+        ):
+            self.enterContext(patch.object(target, name, side_effect=record(label, result)))
+        original_identity = gpu.session._identity
+        original_writer = gpu.saved.write_once
+
+        def identity(path, *args):
+            if path == stage:
+                events.append("stage identity")
+            elif path == prior:
+                events.append("prior proof")
+            return original_identity(path, *args)
+
+        def write_receipt(path, value):
+            result = original_writer(path, value)
+            events.append("receipt written")
+            return result
+
+        self.enterContext(patch.object(gpu.session, "_identity", side_effect=identity))
+        self.enterContext(patch.object(gpu.saved, "write_once", side_effect=write_receipt))
+        job.stop(error)
+        cleanup = {"callback", "camera", "viewport restore", "viewport readback", "mip release"}
+        guards = {
+            "dirty maps", "dirty content", "native inventory", "scene comparison",
+            "shoulder mesh", "shoulder material", "saved packages", "source assets",
+            "stage identity", "manifest", "prior proof",
+        }
+        self.assertCountEqual(events, [*cleanup, *guards, "receipt written", "release lifecycle"])
+        self.assertLess(max(events.index(name) for name in cleanup),
+                        min(events.index(name) for name in guards))
+        self.assertLess(max(events.index(name) for name in guards), events.index("receipt written"))
+        self.assertLess(events.index("receipt written"), events.index("release lifecycle"))
+        api.SystemLibrary.quit_editor.assert_not_called()
+        self.assertTrue(job.stopped)
+        receipt = json.loads((proof / gpu.RECEIPT).read_text(encoding="utf-8"))
+        self.assertTrue(receipt["transient_camera_destroyed"])
+        self.assertTrue(receipt["residency_requests_released"])
+        self.assertEqual(receipt["gpu_shutdown_quiescence_seconds"], 10.0)
+        self.assertFalse(receipt["whole_area_visual_admitted"])
+        self.assertFalse(receipt["performance_pass"])
+        return receipt
+
+    def test_successful_stop_finishes_cleanup_and_proof_before_releasing_script_lifecycle(self):
+        receipt = self.assert_stop_lifecycle()
+        self.assertEqual(receipt["status"], "ROAD_ASPHALT_LIT_REVIEW_FRAMES_RETAINED")
+        self.assertEqual(receipt["errors"], [])
+        self.assertTrue(receipt["native_lit_frames_retained"])
+
+    def test_capture_error_still_cleans_up_and_returns_failed_proof_before_lifecycle_release(self):
+        receipt = self.assert_stop_lifecycle("synthetic capture callback failure")
+        self.assertEqual(receipt["status"], "ROAD_ASPHALT_LIT_REVIEW_FAILED")
+        self.assertEqual(receipt["errors"], ["synthetic capture callback failure"])
+        for field in (
+            "native_lit_frames_retained", "capture_readiness_verified",
+            "sources_and_saved_assets_unchanged", "window0112_shoulder_material_ids_verified",
+            "window0112_wall_material_unchanged",
+        ):
+            self.assertFalse(receipt[field])
 
 
 if __name__ == "__main__":

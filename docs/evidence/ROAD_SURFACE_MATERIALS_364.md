@@ -30,15 +30,16 @@ images are retained in
 | Native asphalt baseline at `396861de` | PASS: read-only scene inventory, reversible road canary, saved derived consumer and fresh reopening |
 | Native GPU review at `396861de` | PASS: four final same-camera frames, forward/reverse in window 0112; each readiness receipt records full 12/12 resident mips for all four asphalt textures before capture |
 | Full geometry and rendered normal/UV conservation | Baseline counts and saved-file checks do not prove every mesh buffer; the current shoulder candidate adds exact checks on its sole changed support |
-| Current shoulder candidate: local checks | Integrated 61-test suite completed successfully with 2 platform-dependent skips; `py_compile` PASS |
-| Current shoulder candidate: native and GPU | Checkout corrected; the retry reached native support selection but stopped before gravel creation at a cross-role dependency handoff error; corrected handoff below, fresh native/GPU pending |
+| Current shoulder candidate: local checks | Integrated 63-test suite completed successfully with 2 platform-dependent skips; `py_compile` PASS |
+| Shoulder material at `8faed55c`: save and fresh reload | PASS: exact 436-ID selection, rollback, material/source checks, saved derivative and separate fresh process; independent manifest and inventory review PASS |
+| Shoulder GPU at `8faed55c` | Four final frames and all in-editor checks completed; the host failed on exit `-1073741819` after normal-looking shutdown. No complete GPU PASS; lifecycle correction below requires a new native run |
 | Whole-area visual acceptance | Unaccepted; four bounded road frames do not establish whole-area acceptance |
 | Owner visual status | `PENDING_FINAL_M3` |
 | Performance | `DEFERRED_AFTER_M3`, `performance_pass: false` |
 
 ### Current shoulder candidate
 
-The next bounded #364 change targets exactly **436 source-owned outer top
+The bounded #364 change targets exactly **436 source-owned outer top
 triangle IDs on the sole window 0112 support**. Only those material IDs may
 change from slot 0 to slot 1. Interior tops and walls retain slot 0 and its
 literal original material instance. The added slot uses the existing staged
@@ -47,16 +48,18 @@ projection matching the provider's 1.5 m source scale; it imports or edits no
 source texture. See the pinned source and use limits in the
 [asset plan](../ASSET_PLAN.md#sa-calobra-road-material-preparation--2026-10-10).
 
-The candidate must compare hashes of the target mesh's positions and triangle
-indices, plus every rendered triangle corner's normals and UVs, before and
-after assignment and after fresh loading. Its exact 436-ID assignment delta is
-separate from those immutable geometry/attribute checks. The manifest retains
-all 436 IDs, hashes and native API declarations, with its durable copy pinned
-across fresh reload and GPU checks. The integrated local 61-test suite completed
-successfully with two skips requiring PowerShell/Windows, and `py_compile`
-passed. Native save/reload and GPU evidence for this candidate are **NOT RUN**;
-no candidate native PASS is claimed. The baseline run above does not validate
-the shoulder changes in this patch.
+At `8faed55c067d42856c2d6a8eca8b5a15f237a5d8`, native before/after and
+fresh-load checks passed for the target mesh's positions, triangle indices and
+every rendered corner normal. The support has no UV sets; no UV data was
+invented. Its exact 436-ID assignment delta is separate from those immutable
+geometry/attribute checks. The downloadable manifest retains all 436 IDs,
+hashes and native API declarations, pinned across fresh reload and final
+in-editor GPU checks. After the lifecycle correction, the integrated local
+63-test suite completed with two PowerShell/Windows skips, and `py_compile`
+passed. The saved consumer has
+independent technical review PASS. The GPU process's nonzero shutdown still
+blocks complete native/render acceptance; a new lifecycle candidate remains
+unproven until its own run succeeds.
 
 This remains material-only #364 work: no geometry, Base_DTM, road physics,
 displacement or weather change. The unresolved inner seam belongs to #459 and
@@ -104,6 +107,63 @@ scene/source paths. The integrated local suite is now 61 tests, with two
 unavailable-PowerShell skips. Fresh native material/save/render proof remains
 required. Failure artifact `11681067447` has SHA-256
 `ed5c595849c70de65f6d5c98eab19a79e60c0a0c1e9980bac4debf16e21e0b16`.
+
+### Shoulder native material result and GPU exit correction
+
+Commit `8faed55c067d42856c2d6a8eca8b5a15f237a5d8` passed
+[CI 38083586294](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38083586294),
+using verified equivalent Unreal build/Automation evidence without a new
+compile or Automation run. In
+[native 38083583775](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38083583775),
+the accepted baseline, reversible asphalt canary, saved shoulder consumer and
+fresh reload passed. Prepare PID 31380 and separate reload PID 8660 both
+exited 0. Independent review verified all nine saved-host file references and
+reconstructed the expected road/support/Landscape inventory from baseline.
+
+The unique owner is `YACS_PERSIST_SUPPORT_112`: 4,050 vertices, 6,208 triangles,
+zero UV sets and a 0 cm maximum difference against all 5,232 source interior
+triangles. Exactly 436 outer top MaterialIDs change to 1; the remaining 5,772
+stay 0. Slot 0 interior tops and walls keep the original material. The target
+position/index hash is
+`aac7a97734192b30994916f2a521e14c1be0194741ec4111184a759e854e037f`
+and its corner-normal/UV hash is
+`c4e55257197cc083ac1a75d495b93e86afd0ecb85acca4e5fbb526203228fdb1`,
+unchanged before/after assignment and verified after fresh load. Full buffer
+proof applies to this support; the other 185 supports and 1,024 Landscape
+components retain their existing full inventory checks. The manifest is
+22,701 bytes, SHA-256
+`ff3c13e5a748edd9190e3ed0003189f7c390acc745da4edd78a2be035dd3ffea`.
+
+All four final 1280 x 720 images and twelve priming images were retained with
+the same cameras. Each final pose records all four asphalt textures at 12/12
+mips and all three 1024 px gravel textures at 11/11 mips. Final in-editor
+source, package, mesh, material and manifest checks passed. Technical image
+review sees grey-brown aggregate replacing the flat beige foreground shoulder
+strips, with no visible wall repaint. The lower road's beige shoulders and the
+dark inner seam remain visible. Repeated light/dark patches are noticeable at
+middle distance in reverse views; material boundaries remain sharp. These
+observations do not admit the entire area's appearance or conceal #459 debt.
+
+The GPU host nevertheless returned **-1073741819 / 0xC0000005** after all
+frames, `QUIT_EDITOR` and `LogExit: Exiting.`. Its failed status is retained;
+successful image generation does not override the required zero exit. The
+artifact is
+[11680954421](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38083583775/artifacts/11680954421),
+23,062,216 bytes, verified SHA-256
+`895f0f10ad9835d9d7212fa9581b66f4c9e8b18a5dfe301ea75baecd3a2fa2ee`.
+
+The narrow follow-up removes the explicit `quit_editor()` from the Slate
+callback and leaves `set_keep_python_script_alive(False)` as the exit request
+for the existing `-ExecutePythonScript` process. This follows the project's
+[`stage3g_capture_passo_giau_landscape.py`](../../scripts/ue/stage3g_capture_passo_giau_landscape.py)
+lifecycle precedent. No capture settings, cleanup sequence, ten-second wait,
+material assignment or exit-code gate changes. The shutdown cause is still a
+hypothesis, not an established engine diagnosis; the correction requires a new
+exact-SHA native run with exit 0 and all existing proof checks.
+Two new regressions execute the real stop/receipt path with synthetic native
+boundaries. They require cleanup, all existing checks and a written receipt
+before lifecycle release; the capture-error case must retain failed status.
+The integrated 63-test suite passed with two unavailable-PowerShell skips.
 
 ## Historical owner pause and first native attempt — 2026-10-10
 

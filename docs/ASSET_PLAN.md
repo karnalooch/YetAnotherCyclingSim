@@ -292,8 +292,8 @@ fixed importer and scoped material scripts retain their native proof obligations
 |---|---|---|
 | Asphalt | Material Forge `aged_mountain_asphalt/base`, `worn`, `repaired` in [`families.json`](../worldgen/materials/material_forge/families.json); seeds 101/137/173, declared 4 m tile, roughness 0.82/0.86/0.78 | The `base` recipe has authenticated two-run source replay and the native baseline above at 400 cm. Its four consumed 2048 px textures reached all 12 mips before each final frame. This does not admit `worn`/`repaired` or the whole area's appearance. |
 | Saved pavement | The original [`create_accepted_scene_checkpoint.py`](../scripts/ue/create_accepted_scene_checkpoint.py) uses `/Engine/BasicShapes/BasicShapeMaterial`; the isolated derived asphalt consumer now has saved/fresh-load native proof | Preserve the original #363 checkpoint. The metric projection comes from the authenticated source scale, not an assumed road UV contract. Baseline counts and saved-file checks do not prove complete mesh-buffer conservation. |
-| Shoulder and support faces | The original checkpoint shares one brown slot across support tops and walls; the current candidate selects 436 source-owned outer top triangle IDs on the sole window 0112 support | Add gravel only in slot 1 for those IDs; retain slot 0 and its literal original material on interior tops and walls. The local 61-test suite completed with 2 platform-dependent skips; candidate native/GPU are NOT RUN. Preserve nominal 0.5 m shoulders and BOB contact limits; no Nudo/parapet expansion. |
-| Gravel / mineral transition | [`texture library v2`](../worldgen/materials/sa_calobra_texture_library_v2_20261005.json) records `FillGravel` from Poly Haven `rock_ground`, CC0, pinned channels/hashes and provider-reported 1.5 x 1.5 m dimensions; existing outputs belong to [`Texture Material Prep`](tooling/TEXTURE_MATERIAL_PREP.md) | Reuse the existing staged BaseColor, DirectX normal and roughness at 150 cm without import or texture edits. Source provenance does not establish a shoulder footprint or visual admission; candidate native/GPU and final owner review remain pending. Keep source masks and observation/Unknown semantics independent. |
+| Shoulder and support faces | The original checkpoint shares one brown slot across support tops and walls; the current candidate selects 436 source-owned outer top triangle IDs on the sole window 0112 support | Native save/fresh reload PASS at `8faed55c`: gravel only in slot 1 for those IDs; slot 0 and its literal material remain on interior tops and walls. Full GPU proof still fails on process shutdown. Preserve nominal 0.5 m shoulders and BOB contact limits; no Nudo/parapet expansion. |
+| Gravel / mineral transition | [`texture library v2`](../worldgen/materials/sa_calobra_texture_library_v2_20261005.json) records `FillGravel` from Poly Haven `rock_ground`, CC0, pinned channels/hashes and provider-reported 1.5 x 1.5 m dimensions; existing outputs belong to [`Texture Material Prep`](tooling/TEXTURE_MATERIAL_PREP.md) | Native source/material checks at `8faed55c` verify existing BaseColor, DirectX normal and roughness at 150 cm without import or source edits. Each 1024 px map reached 11/11 mips in the four captured poses. GPU process completion and final owner review remain pending. Keep source masks and observation/Unknown semantics independent. |
 
 The #338/#462 transient road consumers are a separate branch lineage from this
 material checkpoint. Select the actual admitted saved consumer and its source
@@ -309,7 +309,8 @@ verifies CPU-approved source hashes, uses native `WorldAlignedTexture` /
 `WorldAlignedNormal` and converts the provenance tile size to `TileSizeCm` with
 material-instance readback. The verified asphalt baseline uses this path at
 400 cm. The bounded shoulder candidate reuses these projection helpers at
-150 cm and still requires its own native projection/normal and GPU proof.
+150 cm; native material/projection/normal checks and fresh reload passed at
+`8faed55c`, while complete GPU proof remains blocked on process shutdown.
 Under the 2026-10-09 owner decision,
 performance measurement is deferred until after assembled M3 closeout. It is not
 permission to regenerate the mesh, assume a 2 x 2 m texture scale or transplant
@@ -319,9 +320,11 @@ For the current shoulder candidate, require before/after and fresh-load hashes
 of the target positions and triangle indices, plus every rendered corner's
 normals and UVs. The exact 436 material-ID changes are the only mesh assignment
 delta; retain their full manifest with native API declarations and hashes
-across reload and GPU proof. The integrated local 61-test suite completed
-successfully with two platform-dependent skips and `py_compile` PASS;
-native/GPU are NOT RUN. Keep source vertices, grade, crossfall, width, collision
+across reload and GPU proof. At `8faed55c`, these native checks and independent
+manifest review passed for support 112; other supports retain inventory checks.
+The local 63-test suite passed with two platform-dependent skips and
+`py_compile` PASS. A narrow exit lifecycle correction still requires complete
+native/GPU success. Keep source vertices, grade, crossfall, width, collision
 and BOB/CUT inputs unchanged. No geometry, Base_DTM, road physics, displacement
 or weather edit belongs to this material patch. The unresolved inner seam
 remains #459 debt. Inspect both

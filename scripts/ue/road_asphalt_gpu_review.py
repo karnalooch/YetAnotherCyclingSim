@@ -643,10 +643,9 @@ class RoadLitCapture:
         try:
             saved.write_once(session._safe_path(self.proof, RECEIPT), receipt)
         finally:
-            try:
-                self.api.EditorPythonScripting.set_keep_python_script_alive(False)
-            finally:
-                self.api.SystemLibrary.quit_editor()
+            # Release the -ExecutePythonScript lifecycle after proof and cleanup.
+            # The host still requires an observed zero process exit.
+            self.api.EditorPythonScripting.set_keep_python_script_alive(False)
 
 
 def main():
