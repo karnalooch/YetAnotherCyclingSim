@@ -67,13 +67,19 @@ per-file qualification, cache admission or a successful scene read. Resolve the
 specific identity contract on resumption, retaining byte/source checks and the
 existing cache authority.
 
-An authenticated two-run source bridge remains an **uncommitted local
-candidate** in `scripts/assets/road_material_contract.py` and its tests: 45
+An authenticated two-run source bridge remains a **checkpoint candidate** in `scripts/assets/road_material_contract.py` and its tests: 45
 contract tests passed, but independent review did not finish before the stop.
 Its strict raw receipt/current-input comparison remains; Linux and Windows raw
 catalog/source fingerprints differ with their EOL bytes. No complete bridge or
 native material admission is claimed from the separately downloaded Linux
 bundles. A complete mesh/normal/UV hash reader was researched but not implemented.
+
+The owner subsequently authorized publishing all retained work to the existing
+Draft PR branch. The bridge and its tests are committed as an incomplete
+checkpoint together with this status update; implementation remains paused.
+A normal push can trigger automatic CI, but no manual native job is dispatched
+by this checkpoint publication. The 45 contract tests were rerun successfully;
+independent review and native material validation remain pending.
 
 Resume batches are recorded in the [authoritative roadmap](../ROADMAP.md).
 

@@ -608,5 +608,326 @@ class RoadAsphaltSourceContractTests(unittest.TestCase):
             self.check()
 
 
+class RoadAsphaltReplayContractTests(unittest.TestCase):
+    """Synthetic authenticated receipt fixtures, not two native render executions."""
+
+    SOURCE_HEAD = "1" * 40
+    SOURCE_FINGERPRINT = "2" * 64
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.template = tempfile.TemporaryDirectory()
+        _synthetic_bundle(Path(cls.template.name))
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.template.cleanup()
+
+    def setUp(self) -> None:
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.root = Path(self.directory.name)
+        runs = []
+        for label in ("run-a", "run-b"):
+            directory = self.root / label / contract.FAMILY / contract.VARIANT
+            shutil.copytree(self.template.name, directory)
+            source = contract.check_asphalt_source(directory)
+            runs.append(
+                {
+                    "run": label,
+                    "directory": label + "\\aged_mountain_asphalt\\base",
+                    "fingerprint": "d" * 64,
+                    "source": source,
+                    "graph_sha256": source["retained_receipts"]["Material.ptex"][
+                        "sha256"
+                    ],
+                    "map_sha256": {
+                        name: row["sha256"] for name, row in source["maps"].items()
+                    },
+                }
+            )
+        self.receipt = {
+            "schema_version": 1,
+            "issue": 364,
+            "exact_sha": self.SOURCE_HEAD,
+            "run": "123",
+            "attempt": "1",
+            "status": "ROAD_ASPHALT_SOURCE_DETERMINISM_PASS",
+            "source_fingerprint": self.SOURCE_FINGERPRINT,
+            "runs": runs,
+            "godot_sha256": "b" * 64,
+            "material_maker_sha256": "c" * 64,
+            "tool_archive_hashes_verified": True,
+            "source_commit": contract.MM_SOURCE,
+            "primed_source_identity": {
+                "source_commit": contract.MM_SOURCE,
+                "program_inputs_unchanged": True,
+                "primed_icon_imports": {
+                    "fixture.svg.import": {
+                        "source_blob_id": "3" * 40,
+                        "sha256": "4" * 64,
+                    }
+                },
+            },
+            "two_run_graph_and_map_bytes_equal": True,
+            "rendered_variant_count": 2,
+            "unreal_consumption_verified": False,
+            "world_mutation": False,
+            "human_visual_status": "PENDING_FINAL_M3",
+            "performance_status": "DEFERRED_AFTER_M3",
+            "performance_pass": False,
+        }
+        self.save()
+
+    def save(self) -> None:
+        _write(self.root / "source-proof.json", self.receipt)
+
+    def check(self, *, digest=None, source_head=None, fingerprint=None) -> dict:
+        return contract.check_asphalt_replay(
+            self.root,
+            digest if digest is not None else _sha(self.root / "source-proof.json"),
+            source_head if source_head is not None else self.SOURCE_HEAD,
+            fingerprint if fingerprint is not None else self.SOURCE_FINGERPRINT,
+        )
+
+    def test_replay_binds_retained_bytes_and_keeps_native_and_tool_admission_false(
+        self,
+    ):
+        before = {
+            p.relative_to(self.root).as_posix(): _sha(p)
+            for p in self.root.rglob("*")
+            if p.is_file()
+        }
+        result = self.check()
+        self.assertEqual(result["source_head"], self.SOURCE_HEAD)
+        self.assertEqual(
+            result["authenticated_source_receipt"]["sha256"],
+            _sha(self.root / "source-proof.json"),
+        )
+        self.assertEqual([row["run"] for row in result["runs"]], ["run-a", "run-b"])
+        self.assertIs(result["producer_attestation_authenticated"], True)
+        self.assertIs(result["retained_two_run_graph_and_map_bytes_equal"], True)
+        self.assertIs(result["producer_reported_tool_archive_hashes_verified"], True)
+        for key in (
+            "producer_binary_independently_verified",
+            "unreal_verified",
+            "renders_executed_by_reader",
+            "world_mutation",
+            "geometry_changed",
+            "height_displacement_used",
+            "performance_pass",
+        ):
+            self.assertIs(result[key], False)
+        self.assertEqual(result["human_visual_status"], "PENDING_FINAL_M3")
+        self.assertNotIn("execution_head", result)
+        self.assertLess(len(json.dumps(result)), 32 * 1024)
+        self.assertEqual(result, self.check())
+        self.assertEqual(
+            before,
+            {
+                p.relative_to(self.root).as_posix(): _sha(p)
+                for p in self.root.rglob("*")
+                if p.is_file()
+            },
+        )
+
+    def test_raw_receipt_is_authenticated_before_json_parse(self):
+        with (
+            patch.object(
+                contract, "_json", side_effect=AssertionError("must not parse")
+            ),
+            self.assertRaisesRegex(ValueError, "authentication failed"),
+        ):
+            self.check(digest="0" * 64)
+
+    def test_source_head_and_current_fingerprint_gate_are_exact(self):
+        with self.assertRaisesRegex(ValueError, "source HEAD mismatch"):
+            self.check(source_head="0" * 40)
+        with self.assertRaisesRegex(ValueError, "source fingerprint mismatch"):
+            self.check(fingerprint="0" * 64)
+
+    def test_top_admission_claims_must_preserve_real_boolean_scope(self):
+        for key, value in (
+            ("tool_archive_hashes_verified", 1),
+            ("two_run_graph_and_map_bytes_equal", False),
+            ("unreal_consumption_verified", True),
+            ("world_mutation", True),
+            ("performance_pass", 0),
+            ("human_visual_status", "ACCEPTED"),
+            ("performance_status", "PASS"),
+            ("rendered_variant_count", True),
+        ):
+            with self.subTest(key=key):
+                original = self.receipt[key]
+                self.receipt[key] = value
+                self.save()
+                with self.assertRaises(ValueError):
+                    self.check()
+                self.receipt[key] = original
+
+    def test_only_two_literal_directories_in_fixed_order_are_allowed(self):
+        original = self.receipt["runs"][0]["directory"]
+        for directory in (
+            "../run-a/aged_mountain_asphalt/base",
+            "D:/outside/base",
+            "run-b/aged_mountain_asphalt/base",
+            "run-a/aged_mountain_asphalt/worn",
+        ):
+            with self.subTest(directory=directory):
+                self.receipt["runs"][0]["directory"] = directory
+                self.save()
+                with self.assertRaisesRegex(ValueError, "directory/order"):
+                    self.check()
+        self.receipt["runs"][0]["directory"] = original
+        self.receipt["runs"].reverse()
+        self.save()
+        with self.assertRaisesRegex(ValueError, "directory/order"):
+            self.check()
+
+    def test_posix_literal_directories_are_supported_without_changing_receipt_bytes(
+        self,
+    ):
+        for row in self.receipt["runs"]:
+            row["directory"] = row["directory"].replace("\\", "/")
+        self.save()
+        self.assertEqual(
+            self.check()["runs"][0]["directory"], "run-a/aged_mountain_asphalt/base"
+        )
+
+    def test_height_tamper_in_one_run_is_rejected(self):
+        path = (
+            self.root
+            / "run-b/aged_mountain_asphalt/base/export/YACS_Material_Height.exr"
+        )
+        path.write_bytes(path.read_bytes() + b"changed")
+        with self.assertRaisesRegex(ValueError, "Map changed.*Height"):
+            self.check()
+
+    def test_self_consistent_but_different_run_bytes_cannot_pass_outer_true_flag(self):
+        root = self.root / "run-b/aged_mountain_asphalt/base"
+        height = root / "export/YACS_Material_Height.exr"
+        height.write_bytes(height.read_bytes() + b"different")
+        for name, change in (
+            (
+                "validation.json",
+                lambda data: data["maps"]["Height"].update(sha256=_sha(height)),
+            ),
+            (
+                "export/YACS_Material_native-check.json",
+                lambda data: data["images"]["Height.exr"].update(sha256=_sha(height)),
+            ),
+            (
+                "render-receipt.json",
+                lambda data: data.update(
+                    validation_sha256=_sha(root / "validation.json")
+                ),
+            ),
+        ):
+            document = json.loads((root / name).read_bytes())
+            change(document)
+            _write(root / name, document)
+        source = contract.check_asphalt_source(root)
+        self.receipt["runs"][1]["source"] = source
+        self.receipt["runs"][1]["map_sha256"] = {
+            name: row["sha256"] for name, row in source["maps"].items()
+        }
+        self.save()
+        with self.assertRaisesRegex(ValueError, "two-run graph/map bytes differ"):
+            self.check()
+
+    def test_outer_graph_and_map_bindings_are_checked_against_actual_files(self):
+        self.receipt["runs"][0]["map_sha256"]["Height"] = "0" * 64
+        self.save()
+        with self.assertRaisesRegex(ValueError, "graph/map bindings"):
+            self.check()
+
+    def test_embedded_receipts_cannot_gain_independent_native_authority(self):
+        self.receipt["runs"][0]["source"]["producer_binary_independently_verified"] = (
+            True
+        )
+        self.save()
+        with self.assertRaisesRegex(ValueError, "source receipt differs"):
+            self.check()
+
+    def test_missing_unchanged_source_attestation_rejects(self):
+        self.receipt["primed_source_identity"]["program_inputs_unchanged"] = False
+        self.save()
+        with self.assertRaisesRegex(ValueError, "source was not unchanged"):
+            self.check()
+
+    def test_joint_byte_cap_is_checked_before_any_variant_read(self):
+        limit = self.check()["total_read_bytes"] - 1
+        with (
+            patch.object(contract, "MAX_TOTAL_BYTES", limit),
+            patch.object(
+                contract,
+                "check_asphalt_source",
+                side_effect=AssertionError("must preflight first"),
+            ),
+            self.assertRaisesRegex(ValueError, "source byte budget"),
+        ):
+            self.check()
+
+    def test_first_run_changes_during_second_run_are_rejected(self):
+        original = contract.check_asphalt_source
+
+        def mutate_first_run(directory):
+            source = original(directory)
+            if "run-b" in directory.parts:
+                path = (
+                    self.root
+                    / "run-a/aged_mountain_asphalt/base/MATERIAL_MAKER_LICENSE.txt"
+                )
+                path.write_bytes(path.read_bytes() + b"changed later")
+            return source
+
+        with (
+            patch.object(
+                contract, "check_asphalt_source", side_effect=mutate_first_run
+            ),
+            self.assertRaisesRegex(
+                ValueError, "Replay source changed before completion"
+            ),
+        ):
+            self.check()
+
+    def test_authenticated_top_receipt_changes_during_run_reads_are_rejected(self):
+        original = contract.check_asphalt_source
+
+        def mutate_top(directory):
+            source = original(directory)
+            if "run-b" in directory.parts:
+                path = self.root / "source-proof.json"
+                path.write_bytes(path.read_bytes() + b" ")
+            return source
+
+        with (
+            patch.object(contract, "check_asphalt_source", side_effect=mutate_top),
+            self.assertRaisesRegex(
+                ValueError, "Replay source changed before completion"
+            ),
+        ):
+            self.check()
+
+    def test_current_catalog_raw_identity_must_match_original_embedded_receipts(self):
+        catalog = self.root / "changed-catalog.json"
+        data = json.loads(contract.DEFAULT_CATALOG.read_bytes())
+        data["families"][1]["label"] = "Changed documentary catalog byte"
+        _write(catalog, data)
+        original = contract.check_asphalt_source
+
+        def different_catalog(directory):
+            return original(directory, catalog)
+
+        with (
+            patch.object(contract, "DEFAULT_CATALOG", catalog),
+            patch.object(
+                contract, "check_asphalt_source", side_effect=different_catalog
+            ),
+            self.assertRaisesRegex(ValueError, "source receipt differs"),
+        ):
+            self.check()
+
+
 if __name__ == "__main__":
     unittest.main()

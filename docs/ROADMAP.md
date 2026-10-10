@@ -203,7 +203,7 @@ Full mesh/normal/UV conservation is also unproved. See the
 | Batch | Concrete output and completion check | Pause status |
 |---|---|---|
 | Asphalt source | Pin tools, recipe and scale; render twice; authenticate graph and five maps | **Done:** current base recipe, 4 m / 400 cm; source-only proof |
-| Source-to-consumer handoff | Authenticate the retained two-run receipt and both source bundles against unchanged current inputs | **Local candidate:** 45 contract tests passed; uncommitted and independent review incomplete |
+| Source-to-consumer handoff | Authenticate the retained two-run receipt and both source bundles against unchanged current inputs | **Checkpoint candidate:** 45 contract tests passed; committed for the owner-requested remote checkpoint; independent review incomplete |
 | Windows cache identity | Compare actual current/cache file bytes with committed inputs; qualify the exact EOL differences using existing cache authority | **Blocked:** mismatch recorded; no native read or build performed |
 | Saved-scene inventory | Fresh isolated Entry process loads only the accepted derived consumer; record road/support slots, parents, projection functions and unchanged saved bytes | **Prepared:** reader/launcher reviewed; actual execution pending |
 | Material-only conservation | Prove positions, vertex/triangle IDs, topology, material IDs and complete normal/UV layers unchanged, plus transforms/collision/Landscape bindings | **Pending:** counts and saved-file hashes alone are insufficient |

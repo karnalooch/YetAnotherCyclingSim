@@ -1,7 +1,8 @@
 """Read-only source contract for the first aged_mountain_asphalt/base canary.
 
-This verifies retained producer receipts and their bytes. It never renders,
-imports Unreal assets, establishes two-run replay, or grants visual admission.
+This verifies retained producer receipts and their bytes, including a separately
+authenticated two-run record. It never renders, imports Unreal assets, or grants
+visual admission.
 """
 
 from __future__ import annotations
@@ -42,6 +43,7 @@ MAX_MAP_BYTES = 32 * 1024 * 1024
 MAX_TOTAL_BYTES = 128 * 1024 * 1024
 MAX_JSON_BYTES = 1024 * 1024
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
+SHA1 = re.compile(r"[0-9a-f]{40}\Z")
 IDENTITY_FIELDS = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
 _WINDOWS = os.name == "nt"
 
@@ -549,4 +551,285 @@ def _check_asphalt_source(root: Path, catalog_path: Path) -> dict[str, Any]:
     ).encode("utf-8")
     _require(len(encoded) <= 16 * 1024, "Source receipt exceeds output bound")
     result["source_receipt_sha256"] = hashlib.sha256(encoded).hexdigest()
+    return result
+
+
+def check_asphalt_replay(
+    proof_root: Path,
+    expected_receipt_sha256: str,
+    expected_source_head: str,
+    expected_source_fingerprint: str,
+) -> dict[str, Any]:
+    """Authenticate retained two-run bytes with a trusted caller's source gate.
+
+    The caller supplies the approved raw receipt digest and unchanged current
+    Forge fingerprint. Source HEAD belongs to that producer, not this reader's
+    execution. No producer binary is independently authenticated here.
+    """
+    try:
+        return _check_asphalt_replay(
+            Path(proof_root).absolute(),
+            _digest(expected_receipt_sha256, "expected receipt digest"),
+            expected_source_head,
+            _digest(expected_source_fingerprint, "expected source fingerprint"),
+        )
+    except (
+        OSError,
+        AttributeError,
+        KeyError,
+        TypeError,
+        OverflowError,
+        RecursionError,
+        UnicodeError,
+    ) as exc:
+        raise ValueError("Invalid or unreadable asphalt replay bundle") from exc
+
+
+def _check_asphalt_replay(
+    root: Path, expected_digest: str, source_head: str, source_fingerprint: str
+) -> dict[str, Any]:
+    _require(
+        isinstance(source_head, str) and bool(SHA1.fullmatch(source_head)),
+        "Invalid expected source HEAD",
+    )
+    _safe_path(root, directory=True)
+    budget = [0]
+    receipt_path = root / "source-proof.json"
+    raw, receipt_identity, receipt_stat = _read(receipt_path, MAX_JSON_BYTES, budget)
+    _require(
+        receipt_identity["sha256"] == expected_digest,
+        "Replay receipt authentication failed",
+    )
+    receipt = _json(raw)
+    _require(
+        set(receipt)
+        == {
+            "schema_version",
+            "issue",
+            "exact_sha",
+            "run",
+            "attempt",
+            "status",
+            "source_fingerprint",
+            "runs",
+            "godot_sha256",
+            "material_maker_sha256",
+            "tool_archive_hashes_verified",
+            "source_commit",
+            "primed_source_identity",
+            "two_run_graph_and_map_bytes_equal",
+            "rendered_variant_count",
+            "unreal_consumption_verified",
+            "world_mutation",
+            "human_visual_status",
+            "performance_status",
+            "performance_pass",
+        },
+        "Unexpected replay receipt fields",
+    )
+    for name, expected in {
+        "schema_version": 1,
+        "issue": 364,
+        "rendered_variant_count": 2,
+    }.items():
+        _require(
+            type(receipt[name]) is int and receipt[name] == expected,
+            "Unexpected replay " + name,
+        )
+    _require(
+        receipt["status"] == "ROAD_ASPHALT_SOURCE_DETERMINISM_PASS",
+        "Replay producer did not pass",
+    )
+    _require(receipt["exact_sha"] == source_head, "Replay source HEAD mismatch")
+    _require(
+        receipt["source_fingerprint"] == source_fingerprint,
+        "Replay source fingerprint mismatch",
+    )
+    _require(
+        receipt["source_commit"] == MM_SOURCE, "Replay producer source pin changed"
+    )
+    _require(
+        all(
+            isinstance(receipt[name], str)
+            and bool(re.fullmatch(r"[0-9]{1,20}", receipt[name]))
+            for name in ("run", "attempt")
+        ),
+        "Invalid replay workflow identity",
+    )
+    for name, expected in {
+        "tool_archive_hashes_verified": True,
+        "two_run_graph_and_map_bytes_equal": True,
+        "unreal_consumption_verified": False,
+        "world_mutation": False,
+        "performance_pass": False,
+    }.items():
+        _require(receipt[name] is expected, "Unsupported replay claim: " + name)
+    _require(
+        receipt["human_visual_status"] == "PENDING_FINAL_M3"
+        and receipt["performance_status"] == "DEFERRED_AFTER_M3",
+        "Replay review/performance scope changed",
+    )
+    _digest(receipt["godot_sha256"], "replay Godot digest")
+    _digest(receipt["material_maker_sha256"], "replay Material Maker digest")
+    primed = receipt["primed_source_identity"]
+    _require(
+        isinstance(primed, dict)
+        and set(primed)
+        == {"source_commit", "program_inputs_unchanged", "primed_icon_imports"},
+        "Invalid primed-source attestation",
+    )
+    _require(
+        primed["source_commit"] == MM_SOURCE
+        and primed["program_inputs_unchanged"] is True,
+        "Replay producer source was not unchanged",
+    )
+    imports = primed["primed_icon_imports"]
+    _require(
+        isinstance(imports, dict) and 0 < len(imports) <= 32,
+        "Invalid primed import attestation",
+    )
+    for name, entry in imports.items():
+        _require(
+            isinstance(name, str)
+            and len(name) <= 256
+            and isinstance(entry, dict)
+            and set(entry) == {"source_blob_id", "sha256"},
+            "Invalid primed import identity",
+        )
+        _require(
+            isinstance(entry["source_blob_id"], str)
+            and bool(SHA1.fullmatch(entry["source_blob_id"])),
+            "Invalid primed import blob",
+        )
+        _digest(entry["sha256"], "primed import digest")
+    runs = receipt["runs"]
+    _require(isinstance(runs, list) and len(runs) == 2, "Replay needs exactly two runs")
+    stable = {receipt_path: receipt_stat}
+    # Preflight the complete fixed read set before either source checker runs.
+    # Each checker reads the catalog once; charge both reads to the shared cap.
+    expected_bytes = budget[0]
+    for run in ("run-a", "run-b"):
+        directory = root / run / FAMILY / VARIANT
+        inputs = [(DEFAULT_CATALOG, MAX_JSON_BYTES)]
+        inputs += [
+            (directory / name, MAX_JSON_BYTES)
+            for name in (
+                "Material.ptex",
+                "provenance.json",
+                "validation.json",
+                "render-receipt.json",
+                "export/YACS_Material_native-check.json",
+            )
+        ]
+        inputs.append((directory / "MATERIAL_MAKER_LICENSE.txt", 64 * 1024))
+        inputs += [
+            (directory / ("export/YACS_Material_" + suffix), MAX_MAP_BYTES)
+            for suffix in SUFFIXES.values()
+        ]
+        for path, limit in inputs:
+            info = _safe_path(path)
+            _require(
+                0 < info.st_size <= limit,
+                "Replay input exceeds its nonempty byte bound",
+            )
+            expected_bytes += info.st_size
+            _require(
+                expected_bytes <= MAX_TOTAL_BYTES, "Replay source byte budget exceeded"
+            )
+            stable[path] = _identity(info)
+    checked_runs = []
+    for label, row in zip(("run-a", "run-b"), runs, strict=True):
+        _require(
+            isinstance(row, dict)
+            and set(row)
+            == {
+                "run",
+                "directory",
+                "fingerprint",
+                "source",
+                "graph_sha256",
+                "map_sha256",
+            },
+            "Unexpected replay run fields",
+        )
+        relative = label + "/" + FAMILY + "/" + VARIANT
+        _require(
+            row["run"] == label
+            and row["directory"] in (relative, relative.replace("/", "\\")),
+            "Unexpected replay run directory/order",
+        )
+        _digest(row["fingerprint"], "replay graph fingerprint")
+        checked = check_asphalt_source(root / label / FAMILY / VARIANT)
+        _require(
+            row["source"] == checked,
+            "Retained source receipt differs from current checked bytes: " + label,
+        )
+        graph_sha = checked["retained_receipts"]["Material.ptex"]["sha256"]
+        map_sha = {name: entry["sha256"] for name, entry in checked["maps"].items()}
+        _require(
+            row["graph_sha256"] == graph_sha and row["map_sha256"] == map_sha,
+            "Replay run graph/map bindings differ: " + label,
+        )
+        _require(
+            checked["producer_reported_godot_sha256"] == receipt["godot_sha256"],
+            "Replay Godot attestation differs from render",
+        )
+        checked_runs.append(
+            {
+                "run": label,
+                "directory": relative,
+                "fingerprint": row["fingerprint"],
+                "source": checked,
+                "graph_sha256": graph_sha,
+                "map_sha256": map_sha,
+            }
+        )
+    _require(
+        all(
+            checked_runs[0][name] == checked_runs[1][name]
+            for name in ("fingerprint", "graph_sha256", "map_sha256")
+        ),
+        "Retained two-run graph/map bytes differ",
+    )
+    actual_bytes = budget[0] + sum(
+        row["source"]["total_read_bytes"] for row in checked_runs
+    )
+    _require(actual_bytes == expected_bytes, "Replay read inventory changed")
+    for path, before in stable.items():
+        _assert_identity(
+            before,
+            _identity(_safe_path(path)),
+            "Replay source changed before completion",
+        )
+    result = {
+        "schema_version": 1,
+        "status": "ROAD_ASPHALT_REPLAY_RECEIPT_VERIFIED",
+        "source_head": source_head,
+        "source_fingerprint": source_fingerprint,
+        "source_fingerprint_gate_scope": "TRUSTED_CALLER_SUPPLIED_CURRENT_FORGE_FINGERPRINT",
+        "original_workflow_run": receipt["run"],
+        "original_workflow_attempt": receipt["attempt"],
+        "authenticated_source_receipt": receipt_identity,
+        "producer_attestation_authenticated": True,
+        "producer_reported_tool_archive_hashes_verified": True,
+        "producer_program_inputs_unchanged_attested": True,
+        "producer_binary_independently_verified": False,
+        "retained_two_run_graph_and_map_bytes_equal": True,
+        "renders_executed_by_reader": False,
+        "runs": checked_runs,
+        "total_read_bytes": actual_bytes,
+        "read_only": True,
+        "unreal_verified": False,
+        "world_mutation": False,
+        "geometry_changed": False,
+        "height_displacement_used": False,
+        "human_visual_status": "PENDING_FINAL_M3",
+        "performance_status": "DEFERRED_AFTER_M3",
+        "performance_pass": False,
+    }
+    encoded = json.dumps(
+        result, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode("utf-8")
+    _require(len(encoded) <= 32 * 1024, "Replay evidence exceeds output bound")
+    result["replay_receipt_sha256"] = hashlib.sha256(encoded).hexdigest()
     return result
