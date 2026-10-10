@@ -596,3 +596,39 @@ Landscape components exactly; there is no bypass for actors. New offline
 tests reproduce both phases, reject an incorrect declared phase or foreign
 map, and fail on altered actor transforms. New protected exact-SHA CI and
 independent native save/reload are required. This fix alone is **not PASS**.
+
+## SaveMap successfully wrote the map; Editor world remained the source — 2026-10-10
+
+[Protected exact-head CI #38072282586](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38072282586)
+**PASS** at `a1ffacddb14be4a3fc76287fdc6ad6ed685dec71`.
+[Independent native #38072278630](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38072278630)
+**FAILED in prepare** after the original source native baseline and transient
+road-slot canary **passed again**. The retained
+[artifact #11677521256](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38072278630/artifacts/11677521256)
+shows that the genuine Material Forge six packages were saved and Unreal
+successfully wrote
+`/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview.umap`:
+`LogFileHelpers: Saving map ...` completed. No fresh-reload receipt exists.
+Failure occurred *after* SaveMap: the Python script tried to read the
+current Editor world as if it was already the new map and
+`read_road_material_baseline.native_inventory` refused
+`ValueError: wrong loaded consumer map`.
+
+The installed UE 5.8 `EditorLoadingAndSavingUtils.save_map(world, MAP)`
+writes a **new derived map package**, but does not guarantee swapping the
+current Editor world to that destination. This is a contract error in
+the **follow-up in-memory inspection**, not evidence that the derived map
+file was absent or that accepted source geometry changed.
+
+The next bounded fix observes the actual Editor world package immediately
+after saving (must be **exactly the original source map or the new derived
+map**, no arbitrary package), requires the new `.umap` file to physically
+exist and checks the full current-world inventory using that observed
+identity. The **fresh, separately owned second Editor** remains the
+mandatory authority for loading and comparing the new persisted map
+against the expected full normalized road/support/Landscape snapshot.
+The code **does not** use this in-process check as fresh reload proof,
+never edits the original source map package and never loosens material,
+geometry or hash admission. Tests cover both observed-world cases and
+foreign-map rejection. This source change remains unverified until
+protected CI and a new exact-SHA native save/reload result.

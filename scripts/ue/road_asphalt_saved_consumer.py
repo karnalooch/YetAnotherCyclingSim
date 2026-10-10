@@ -182,6 +182,22 @@ def native_world(api, package):
     baseline.dirty_packages(api)
 
 
+def active_map_after_save(api):
+    """Observe the live Editor world; SaveMap need not change its package name.
+
+    This is a read-only identity check. The separately launched fresh reload
+    must later verify the durable derived map bytes and every saved binding.
+    """
+    world = api.get_editor_subsystem(api.UnrealEditorSubsystem).get_editor_world()
+    require(world is not None, "Saved road Editor world disappeared")
+    owner = world.get_path_name().split(".")[0]
+    require(
+        owner in (session.operation.MAP_PACKAGE, MAP),
+        "SaveMap left an unapproved map loaded",
+    )
+    return owner
+
+
 def verify_material_instance(api, instance_path, master_path, paths):
     inst = api.load_asset(instance_path)
     require(inst is not None and isinstance(inst, api.MaterialInstanceConstant),
@@ -359,9 +375,12 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows):
         require(api.EditorLoadingAndSavingUtils.save_map(world, MAP),
                 "New material-only derived map save failed")
         saved = True
-        after = baseline.native_inventory(api, prep, MAP)
+        require((ROOT / MAP_FILE).is_file(), "New derived map file was not saved")
+        observed_map = active_map_after_save(api)
+        after = baseline.native_inventory(api, prep, observed_map)
         inventory_hash = expected_saved_inventory(
-            inventory_before, after, instance_path, observed_map_package=MAP,
+            inventory_before, after, instance_path,
+            observed_map_package=observed_map,
         )
     except Exception:
         if not saved:

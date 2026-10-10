@@ -7,6 +7,7 @@ import hashlib
 from pathlib import Path
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from scripts.ue import road_asphalt_saved_consumer as saved
@@ -148,6 +149,32 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 self.old, altered, self.new_material,
                 observed_map_package=saved.MAP,
             )
+
+    def test_savemap_may_keep_original_world_until_fresh_editor_reload(self):
+        def mock_editor(package):
+            world = SimpleNamespace(
+                get_path_name=lambda: package + "." + package.rsplit("/", 1)[-1]
+            )
+            system = SimpleNamespace(get_editor_world=lambda: world)
+            return SimpleNamespace(
+                UnrealEditorSubsystem=object(),
+                get_editor_subsystem=lambda cls: system,
+            )
+
+        source = saved.session.operation.MAP_PACKAGE
+        for package in (source, saved.MAP):
+            with self.subTest(package=package):
+                self.assertEqual(
+                    saved.active_map_after_save(mock_editor(package)), package
+                )
+                stage = self.new_inventory()
+                stage["map_package"] = package
+                if package == saved.MAP:
+                    # The other test verifies exact actor path rebasing
+                    # rather than weakening the complete scene equality.
+                    self.assertNotEqual(stage["map_package"], self.old["map_package"])
+        with self.assertRaisesRegex(ValueError, "unapproved map"):
+            saved.active_map_after_save(mock_editor("/Game/Unapproved/L_Other"))
 
     def test_world_identity_normalizes_but_materials_are_not_aliases(self):
         before = saved.session.operation.MAP_PACKAGE
