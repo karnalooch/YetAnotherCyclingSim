@@ -10,6 +10,7 @@ import tempfile
 import unittest
 import zlib
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from scripts.assets import road_material_contract as contract
@@ -476,6 +477,133 @@ class RoadAsphaltSourceContractTests(unittest.TestCase):
         with (
             patch.object(contract, "_read", side_effect=change_prior_map),
             self.assertRaisesRegex(ValueError, "before contract completion"),
+        ):
+            self.check()
+
+    def test_windows_distinct_path_creation_and_handle_change_times_are_supported(self):
+        original = contract.os.fstat
+
+        def windows_handle(fd):
+            info = original(fd)
+            return SimpleNamespace(
+                **{name: getattr(info, name) for name in contract.IDENTITY_FIELDS},
+                st_mode=info.st_mode,
+            )
+
+        def distinct_change_time(fd):
+            info = windows_handle(fd)
+            info.st_ctime_ns += 100
+            return info
+
+        # Synthetic CPython Windows API semantics, not actual Windows/native proof.
+        with (
+            patch.object(contract, "_WINDOWS", True),
+            patch.object(contract.os, "fstat", side_effect=distinct_change_time),
+        ):
+            self.assertEqual(self.check()["tile_size_cm"], 400)
+
+    def test_windows_handle_change_time_drift_during_read_still_rejects(self):
+        original = contract.os.fstat
+        calls = 0
+
+        def changing_handle(fd):
+            nonlocal calls
+            calls += 1
+            info = original(fd)
+            values = {name: getattr(info, name) for name in contract.IDENTITY_FIELDS}
+            values["st_ctime_ns"] += calls
+            return SimpleNamespace(**values, st_mode=info.st_mode)
+
+        with (
+            patch.object(contract, "_WINDOWS", True),
+            patch.object(contract.os, "fstat", side_effect=changing_handle),
+            self.assertRaisesRegex(
+                ValueError, "Source changed during read.*st_ctime_ns"
+            ),
+        ):
+            self.check()
+
+    def test_windows_cross_view_identity_size_and_mtime_drift_still_reject(self):
+        original = contract.os.fstat
+        for changed_field in ("st_dev", "st_ino", "st_size", "st_mtime_ns"):
+            with self.subTest(field=changed_field):
+
+                def different_handle(fd, field=changed_field):
+                    info = original(fd)
+                    values = {
+                        name: getattr(info, name) for name in contract.IDENTITY_FIELDS
+                    }
+                    values[field] += 1
+                    return SimpleNamespace(**values, st_mode=info.st_mode)
+
+                with (
+                    patch.object(contract, "_WINDOWS", True),
+                    patch.object(contract.os, "fstat", side_effect=different_handle),
+                    self.assertRaisesRegex(
+                        ValueError, "Source changed before read.*" + changed_field
+                    ) as error,
+                ):
+                    self.check()
+                self.assertLess(len(str(error.exception).encode("utf-8")), 2048)
+                self.assertNotIn(str(self.root), str(error.exception))
+                self.assertIn('"expected":', str(error.exception))
+                self.assertIn('"observed":', str(error.exception))
+
+    def test_non_windows_cross_view_ctime_remains_exact(self):
+        original = contract.os.fstat
+
+        def different_ctime(fd):
+            info = original(fd)
+            values = {name: getattr(info, name) for name in contract.IDENTITY_FIELDS}
+            values["st_ctime_ns"] += 1
+            return SimpleNamespace(**values, st_mode=info.st_mode)
+
+        with (
+            patch.object(contract, "_WINDOWS", False),
+            patch.object(contract.os, "fstat", side_effect=different_ctime),
+            self.assertRaisesRegex(
+                ValueError, "Source changed before read.*st_ctime_ns"
+            ),
+        ):
+            self.check()
+
+    def test_opened_nonregular_handle_is_rejected(self):
+        original = contract.os.fstat
+
+        def nonregular_handle(fd):
+            info = original(fd)
+            values = {name: getattr(info, name) for name in contract.IDENTITY_FIELDS}
+            return SimpleNamespace(**values, st_mode=0)
+
+        with (
+            patch.object(contract.os, "fstat", side_effect=nonregular_handle),
+            self.assertRaisesRegex(ValueError, "Opened source is not a regular file"),
+        ):
+            self.check()
+
+    def test_windows_path_ctime_drift_remains_rejected_independently(self):
+        original = contract._safe_path
+        catalog_observations = 0
+
+        def changed_path(path, *, directory=False):
+            nonlocal catalog_observations
+            info = original(path, directory=directory)
+            if path.name == "catalog.json":
+                catalog_observations += 1
+                if catalog_observations == 2:
+                    values = {
+                        name: getattr(info, name) for name in contract.IDENTITY_FIELDS
+                    }
+                    values["st_ctime_ns"] += 1
+                    return SimpleNamespace(**values, st_mode=info.st_mode)
+            return info
+
+        with (
+            patch.object(contract, "_WINDOWS", True),
+            patch.object(contract, "_safe_path", side_effect=changed_path),
+            self.assertRaisesRegex(
+                ValueError, "Source changed after read.*st_ctime_ns"
+            ),
         ):
             self.check()
 

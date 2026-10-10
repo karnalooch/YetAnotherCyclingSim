@@ -42,6 +42,8 @@ MAX_MAP_BYTES = 32 * 1024 * 1024
 MAX_TOTAL_BYTES = 128 * 1024 * 1024
 MAX_JSON_BYTES = 1024 * 1024
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
+IDENTITY_FIELDS = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
+_WINDOWS = os.name == "nt"
 
 
 def _require(condition: bool, message: str) -> None:
@@ -82,7 +84,41 @@ def _safe_path(path: Path, *, directory: bool = False) -> os.stat_result:
 
 
 def _identity(info: os.stat_result) -> tuple[int, ...]:
-    return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+    return tuple(getattr(info, name) for name in IDENTITY_FIELDS)
+
+
+def _assert_identity(
+    expected: tuple[int, ...], observed: tuple[int, ...], message: str
+) -> None:
+    if expected == observed:
+        return
+    differing_fields = [
+        {"field": field, "expected": before, "observed": after}
+        for field, before, after in zip(
+            IDENTITY_FIELDS[: len(expected)], expected, observed, strict=True
+        )
+        if before != after
+    ]
+    detail = json.dumps(differing_fields, separators=(",", ":"))
+    # Only fixed field names and OS integers; never include source paths/content.
+    if len(detail.encode("utf-8")) > 1800:
+        detail = '[{"diagnostic_truncated":true}]'
+    raise ValueError(message + "; differing_fields=" + detail)
+
+
+def _assert_path_handle(
+    path_info: os.stat_result, handle_info: os.stat_result, message: str
+) -> None:
+    _require(stat.S_ISREG(handle_info.st_mode), "Opened source is not a regular file")
+    path_identity = _identity(path_info)
+    handle_identity = _identity(handle_info)
+    # CPython 3.12/3.13 Windows lstat returns creation time in st_ctime,
+    # while fstat returns FILE_BASIC_INFO.ChangeTime (Python/fileutils.c).
+    # Compare ctime within each view below; device/inode/size/mtime remain exact.
+    if _WINDOWS:
+        path_identity = path_identity[:-1]
+        handle_identity = handle_identity[:-1]
+    _assert_identity(path_identity, handle_identity, message)
 
 
 def _read(
@@ -96,19 +132,19 @@ def _read(
         budget[0] + before.st_size <= MAX_TOTAL_BYTES, "Source byte budget exceeded"
     )
     with path.open("rb") as stream:
-        _require(
-            _identity(os.fstat(stream.fileno())) == _identity(before),
-            "Source changed before read",
-        )
+        handle_before = os.fstat(stream.fileno())
+        _assert_path_handle(before, handle_before, "Source changed before read")
         raw = stream.read(before.st_size)
-        _require(
-            _identity(os.fstat(stream.fileno())) == _identity(before),
+        handle_after = os.fstat(stream.fileno())
+        _assert_identity(
+            _identity(handle_before),
+            _identity(handle_after),
             "Source changed during read",
         )
     _require(len(raw) == before.st_size, "Source changed size during read")
-    _require(
-        _identity(_safe_path(path)) == _identity(before), "Source changed after read"
-    )
+    after = _safe_path(path)
+    _assert_identity(_identity(before), _identity(after), "Source changed after read")
+    _assert_path_handle(after, handle_after, "Source changed after read")
     budget[0] += len(raw)
     return (
         raw,
@@ -474,8 +510,9 @@ def _check_asphalt_source(root: Path, catalog_path: Path) -> dict[str, Any]:
         "Unexpected retained render invocation",
     )
     for path, before in stable_inputs.items():
-        _require(
-            _identity(_safe_path(path)) == before,
+        _assert_identity(
+            before,
+            _identity(_safe_path(path)),
             "Source changed before contract completion",
         )
     result = {

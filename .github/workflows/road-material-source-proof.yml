@@ -71,7 +71,7 @@ jobs:
           if (-not (Test-Path -LiteralPath $python -PathType Leaf)) {
             throw 'Pinned Material Forge Python environment is missing.'
           }
-          & $python -c "import numpy, PIL; assert numpy.__version__ == '2.3.5' and PIL.__version__ == '12.3.0'"
+          & $python -c "import sys, numpy, PIL; print('ROAD_SOURCE_PYTHON ' + sys.version); assert numpy.__version__ == '2.3.5' and PIL.__version__ == '12.3.0'"
           if ($LASTEXITCODE -ne 0) { throw 'Existing Material Forge Python versions differ from the admitted pins.' }
           "YACS_ROAD_FORGE_PY=$python" >> $env:GITHUB_ENV
           $proof = & $python -c "import os; from pathlib import Path; from scripts.manage_local_workspace import load_workspace; print(Path(load_workspace()['work']) / 'material-forge/road-asphalt' / os.environ['GITHUB_SHA'] / (os.environ['GITHUB_RUN_ID'] + '-' + os.environ['GITHUB_RUN_ATTEMPT']))"
