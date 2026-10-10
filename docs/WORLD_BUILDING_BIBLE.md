@@ -2423,6 +2423,13 @@ Heavy proof cadence is defined in `CI_VALIDATION_TIERS.md`.
 
 World success is judged from the rider camera.
 
+Current #364 [asphalt/shoulder evidence](evidence/ROAD_SURFACE_MATERIALS_364.md)
+proves the 4 m asphalt base's source replay, not its native road appearance.
+Inspect the actual road consumer from rider height, including both travel
+directions, bends, shoulder tops, support sides and the Landscape transition.
+Preserve the accepted #363 consumer and require material-only conservation,
+saved/fresh-rendered proof and whole-area review images before technical delivery.
+
 **Current M3 owner decision — 2026-10-10:** "zrób to jak najlepiej potrafisz,
 ja zrobię audyt wizualny na końcu m3 przed testem fpsów". For #364 and the
 remaining M3 implementation, the owner audits the complete assembled consumer

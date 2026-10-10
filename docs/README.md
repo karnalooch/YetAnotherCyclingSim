@@ -102,6 +102,7 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Blender headless producer contract | [`tooling/BLENDER_HEADLESS.md`](tooling/BLENDER_HEADLESS.md) | **Active supporting tool** |
 | Sa Calobra material foundation | [`tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md`](tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md) | **Reusable workflow / retained candidate history; current acceptance in whole-map handoff** |
 | Sa Calobra whole-map surface preparation | [`tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md`](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) | **#363 accepted/frozen and #446 merged; full-grid saved/fresh-reloaded/fresh-rendered material consumer admitted; performance deferred after M3** |
+| Road asphalt and shoulder evidence | [`evidence/ROAD_SURFACE_MATERIALS_364.md`](evidence/ROAD_SURFACE_MATERIALS_364.md) | **#364 in progress: authenticated 4 m asphalt source replay passed; native road/shoulder consumer proof pending** |
 | Sa Calobra material repair sequence | [`tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md`](tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md) | **Historical recovery plan; #381 closed superseded by merged #446** |
 | Sa Calobra cliff / erosion presentation pass | [`tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md`](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md) | **Active #429 non-destructive selector foundation; production dressing pending** |
 | CI cost / proof cadence | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | **Authoritative** |

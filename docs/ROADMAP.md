@@ -194,6 +194,13 @@ This fixed inspector does not admit stock `MaterialInstanceTools`; #364 needs
 separate version-matched schemas, argument/resource restrictions and material-only
 native authoring proof before using those tools.
 
+The [#364 evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md) retains the
+installed material declaration audit and authenticated two-run 4 m asphalt
+source replay. Stock mutation remains unadmitted; the existing fixed Material
+Forge importer and scoped proof collectors remain available under the current
+policy. Native road/shoulder assignment, conservation, saved/fresh-rendered
+consumer proof and whole-area review images are still pending.
+
 From step 3 onward, use official Epic MCP for supported generic editor control
 within YACS constraints; do not add custom generic workarounds. Custom toolsets
 carry only YACS domain knowledge. MCP stays an interface; BOB, World Authority,

@@ -1,0 +1,91 @@
+name: Road material native proof
+
+on:
+  push:
+    branches: [codex/364-road-surface-materials]
+    paths:
+      - '.github/workflows/road-material-native-proof.yml'
+      - 'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1'
+      - 'scripts/ue/read_road_material_baseline.py'
+      - 'scripts/ue/test_read_road_material_baseline.py'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-unreal-ci-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  baseline:
+    name: Read accepted road materials in a fresh isolated editor
+    if: >-
+      github.actor == github.repository_owner &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/364-road-surface-materials'
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 15
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
+    steps:
+      - name: Isolate Git configuration and enable long paths
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'road-material-native-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths in isolated Git configuration.' }
+
+      - name: Checkout exact code-only native reader
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: _road-material-native-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Check reader contract before shared-host work
+        shell: pwsh
+        working-directory: _road-material-native-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Join-Path (Get-Location).Path 'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1'),
+            [ref]$tokens, [ref]$errors
+          ) | Out-Null
+          if ($errors.Count) { throw ($errors.Message -join "`n") }
+          $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Existing pinned Python is missing.' }
+          & $python -m unittest scripts.ue.test_read_road_material_baseline
+          if ($LASTEXITCODE -ne 0) { throw 'Read-only road material baseline contract failed.' }
+          $proof = Join-Path (Get-Location).Path 'Saved/RuntimeProof/RoadMaterialBaseline/${{ github.run_id }}-${{ github.run_attempt }}'
+          "YACS_ROAD_NATIVE_PROOF=$proof" >> $env:GITHUB_ENV
+
+      - name: Stage verified consumer and read native baseline
+        shell: pwsh
+        working-directory: _road-material-native-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
+
+      - name: Retain native inventory and owned-process evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-material-native-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_NATIVE_PROOF }}/**
+          if-no-files-found: warn
+          retention-days: 14
