@@ -204,6 +204,7 @@ def authenticate_render_context():
         "manifest_id": manifest_id,
         "original": original,
         "rows": rows,
+        "source_dependencies": stage["source_dependencies"],
         "stage_path": stage_path,
         "stage_identity": stage_identity,
         "frames": frames,
@@ -564,7 +565,7 @@ class RoadLitCapture:
                 self.api, context["manifest"]["shoulder_window"]
             )),
             ("shoulder material", lambda: saved.shoulder_material.verify_material(
-                self.api, context["manifest"]["shoulder_window"]["material"], context["rows"]
+                self.api, context["manifest"]["shoulder_window"]["material"], context["source_dependencies"]
             )),
             ("saved package hashes", lambda: saved.verify_retained_files(
                 context["retained"], context["manifest"]["assets"]
@@ -682,7 +683,7 @@ def main():
         context["manifest"]["texture_objects"],
     )
     saved.shoulder_material.verify_material(
-        unreal, context["manifest"]["shoulder_window"]["material"], context["rows"])
+        unreal, context["manifest"]["shoulder_window"]["material"], context["source_dependencies"])
     saved.shoulder.verify_loaded(unreal, context["manifest"]["shoulder_window"])
     landscape = list(unreal.GameplayStatics.get_all_actors_of_class(
         world, unreal.Landscape

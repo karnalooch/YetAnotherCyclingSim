@@ -30,8 +30,8 @@ images are retained in
 | Native asphalt baseline at `396861de` | PASS: read-only scene inventory, reversible road canary, saved derived consumer and fresh reopening |
 | Native GPU review at `396861de` | PASS: four final same-camera frames, forward/reverse in window 0112; each readiness receipt records full 12/12 resident mips for all four asphalt textures before capture |
 | Full geometry and rendered normal/UV conservation | Baseline counts and saved-file checks do not prove every mesh buffer; the current shoulder candidate adds exact checks on its sole changed support |
-| Current shoulder candidate: local checks | Integrated 59-test suite completed successfully with 2 platform-dependent skips; `py_compile` PASS |
-| Current shoulder candidate: native and GPU | First attempt stopped at the recipe's raw-byte checkout guard before the saved-material editor launched; LF checkout correction below; shoulder/native GPU still NOT RUN |
+| Current shoulder candidate: local checks | Integrated 61-test suite completed successfully with 2 platform-dependent skips; `py_compile` PASS |
+| Current shoulder candidate: native and GPU | Checkout corrected; the retry reached native support selection but stopped before gravel creation at a cross-role dependency handoff error; corrected handoff below, fresh native/GPU pending |
 | Whole-area visual acceptance | Unaccepted; four bounded road frames do not establish whole-area acceptance |
 | Owner visual status | `PENDING_FINAL_M3` |
 | Performance | `DEFERRED_AFTER_M3`, `performance_pass: false` |
@@ -52,7 +52,7 @@ indices, plus every rendered triangle corner's normals and UVs, before and
 after assignment and after fresh loading. Its exact 436-ID assignment delta is
 separate from those immutable geometry/attribute checks. The manifest retains
 all 436 IDs, hashes and native API declarations, with its durable copy pinned
-across fresh reload and GPU checks. The integrated local 59-test suite completed
+across fresh reload and GPU checks. The integrated local 61-test suite completed
 successfully with two skips requiring PowerShell/Windows, and `py_compile`
 passed. Native save/reload and GPU evidence for this candidate are **NOT RUN**;
 no candidate native PASS is claimed. The baseline run above does not validate
@@ -83,6 +83,27 @@ while an unmatched JSON control becomes CRLF. The six-test saved-host suite
 passed with one unavailable-PowerShell parser skip. A fresh native run remains
 required. The original failure artifact is `11680528146`, SHA-256
 `e95eec21856185fd5bd135f3fb770c2de478eeccdb10abe2da3081db22227ba5`.
+
+### Shoulder source dependency handoff correction
+
+At `1e5d8b1579c56d364102e0ce1d4ea811d246aa47`,
+[CI 38082699835](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38082699835)
+passed, including 27/27 fresh Unreal Automation tests without recompilation.
+[Native 38082696315](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38082696315)
+passed the corrected checkout, native source-owned support selection and API
+checks, but stopped before gravel creation: the caller passed the combined
+scene/source rows into the unique-dependency validator. The authentic staging
+receipt contains 14 consumer rows and 236 unique source dependencies, with ten
+valid paths shared across those distinct roles.
+
+Prepare, fresh reload and both GPU checks now receive the authenticated
+`source_dependencies` list explicitly. The combined inventory still guards
+every original package; the material validator still rejects duplicate source
+dependencies. A dispatcher regression covers both editor actions with shared
+scene/source paths. The integrated local suite is now 61 tests, with two
+unavailable-PowerShell skips. Fresh native material/save/render proof remains
+required. Failure artifact `11681067447` has SHA-256
+`ed5c595849c70de65f6d5c98eab19a79e60c0a0c1e9980bac4debf16e21e0b16`.
 
 ## Historical owner pause and first native attempt — 2026-10-10
 

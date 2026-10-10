@@ -195,7 +195,7 @@ The current **shoulder candidate** assigns existing CC0 Poly Haven
 IDs on one window 0112 support. Slot 0 interior faces and walls keep their
 original material. Before/after and fresh-load checks must preserve positions,
 indices and every rendered corner's normals/UVs; only the explicit selected
-material IDs may change. The integrated local 59-test suite completed
+material IDs may change. The integrated local 61-test suite completed
 successfully with two platform-dependent skips and `py_compile` PASS; candidate
 native/GPU are NOT RUN. No geometry, Base_DTM or road physics edit belongs to
 this material patch; the unresolved inner seam remains #459 debt. See the
@@ -211,7 +211,7 @@ this material patch; the unresolved inner seam remains #459 debt. See the
 | Saved-scene inventory | Fresh isolated Entry process loads the accepted derived consumer; record road/support slots, parents, projection functions and unchanged source bytes | **PASS for the asphalt baseline:** native read completed; this does not establish shoulder selection or full mesh-buffer conservation |
 | Material-only conservation | Preserve positions, vertex/triangle IDs, topology and rendered corner normals/UVs, plus transforms/collision/Landscape bindings; permit only the named material assignment delta | **Candidate pending:** exact target hashes before/after and fresh load; baseline counts and saved-file hashes alone are insufficient |
 | Road canary | Apply the validated asphalt to the authorized road slot without saving; verify shader, 400 cm projection, DirectX normals and exact restoration | **PASS at `396861de`:** native reversible canary, then separate saved/freshly reopened consumer proof |
-| Shoulder canary | Verify source-owned top/side selection; apply licensed gravel to the bounded tops while preserving walls, interior material and geometry | **Current candidate:** 436 outer top IDs on the sole window 0112 support, `FillGravel` 150 cm in slot 1; local 59-test suite PASS with 2 platform-dependent skips, native/GPU NOT RUN; no Nudo/parapet expansion |
+| Shoulder canary | Verify source-owned top/side selection; apply licensed gravel to the bounded tops while preserving walls, interior material and geometry | **Current candidate:** 436 outer top IDs on the sole window 0112 support, `FillGravel` 150 cm in slot 1; local 61-test suite PASS with 2 platform-dependent skips, native/GPU NOT RUN; no Nudo/parapet expansion |
 | Edges and technical appearance | Inspect both directions, bends, close/distant views and shoulder/Landscape transitions; retain real images and defect locations | **Partial:** four final same-camera asphalt frames with full mip warmup; candidate and whole-area review pending; seam #459 remains visible debt |
 | Save, reopen and deliver | Save only derived outputs; fresh reload/render proves bindings and conservation; pass required native/asset/review/CI checks and merge #470 | **Partial:** asphalt baseline PASS; shoulder candidate and complete #364 delivery pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
 

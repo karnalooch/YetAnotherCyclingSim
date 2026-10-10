@@ -8,7 +8,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from scripts.ue import road_asphalt_saved_consumer as saved
 from scripts.ue.test_road_asphalt_slot_canary import CanaryTests
@@ -204,6 +204,44 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
             (proof / saved.MANIFEST).write_bytes((proof / saved.MANIFEST).read_bytes().replace(b"50", b"52"))
             with self.assertRaisesRegex(ValueError, "Downloadable material manifest differs"):
                 saved.verified_manifest_identity(proof, retained)
+
+    def test_editor_dispatch_keeps_source_dependency_role_separate_from_scene_assets(self):
+        # Real staging has 14 scene rows and 236 unique dependency rows, with
+        # ten valid paths shared across those roles. Only the dependency list
+        # belongs to the material validator; the union still guards all files.
+        dependencies = list(saved.shoulder_material.SOURCE_PINS.values())
+        consumer = [dependencies[0]]
+        stage = {"consumer_assets": consumer, "source_dependencies": dependencies}
+        rows = consumer + dependencies
+        saved.shoulder_material.source_rows(dependencies)
+        with self.assertRaisesRegex(ValueError, "duplicate source dependency"):
+            saved.shoulder_material.source_rows(rows)
+        api = SimpleNamespace(
+            Paths=SimpleNamespace(project_dir=lambda: str(saved.ROOT),
+                convert_relative_path_to_full=lambda value: value),
+            SystemLibrary=SimpleNamespace(get_engine_version=lambda: "5.8.2-56702186+++UE5+Release-5.8",
+                quit_editor=Mock()),
+        )
+        trial = {"result": {"graph_sha256": saved.asphalt_source.GRAPH_SHA256,
+                            "source_receipt_sha256": saved.asphalt_source.SOURCE_RECEIPT_SHA256}}
+        original, identity = {"native_inventory": {}}, {"sha256": "a" * 64, "size_bytes": 100}
+        for action in ("prepare", "reload"):
+            with self.subTest(action=action), \
+                 patch.dict("os.environ", {"YACS_ROAD_SAVED_ACTION": action}), \
+                 patch.dict("sys.modules", {"unreal": api}), \
+                 patch.object(saved.session, "_assert_isolated_root"), \
+                 patch.object(saved, "proof_paths", return_value=("b" * 40, "a" * 64, "1-1", Path("proof"), Path("retained"))), \
+                 patch.object(saved, "verified_staging", return_value=(Path("stage"), identity, stage, {}, rows)), \
+                 patch.object(saved, "verified_predecessors", return_value=(original, trial)), \
+                 patch.object(saved.baseline, "dirty_packages"), \
+                 patch.object(saved.prep, "assert_isolated_bootstrap"), \
+                 patch.object(saved.session, "_verify_rows") as verify_files, \
+                 patch.object(saved.session, "_identity", return_value=identity), \
+                 patch.object(saved, action) as dispatch:
+                saved.main()
+                self.assertIs(dispatch.call_args.kwargs["source_dependencies"], dependencies)
+                self.assertIs(dispatch.call_args.args[-1], rows)
+                verify_files.assert_called_once_with(saved.ROOT, rows)
 
     def test_savemap_may_keep_original_world_until_fresh_editor_reload(self):
         def mock_editor(package):

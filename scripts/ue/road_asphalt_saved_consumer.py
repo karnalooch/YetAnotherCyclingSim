@@ -346,7 +346,7 @@ def verify_retained_files(retained, rows):
             require(actual == expected, "Saved road material package differs: " + name)
 
 
-def prepare(api, proof, retained, exact_sha, staging_sha, original, rows):
+def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, source_dependencies):
     require(not (ROOT / MAP_FILE).exists(), "Existing road-only saved map cannot be overwritten")
     require(not (ROOT / PREFIX).exists(), "Existing asphalt consumer package tree")
     before = original["native_inventory"]
@@ -409,8 +409,8 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows):
             "Original shoulder material IDs differ before authoring")
     material_api = shoulder.native_api_evidence(api, support_component)
     gravel, gravel_receipt = shoulder_material.create_material(
-        api, PACKAGE + "/ShoulderWindow0112", rows)
-    shoulder_material.verify_material(api, gravel_receipt, rows)
+        api, PACKAGE + "/ShoulderWindow0112", source_dependencies)
+    shoulder_material.verify_material(api, gravel_receipt, source_dependencies)
     for path in gravel_receipt["assets"].values():
         asset = api.load_asset(path)
         require(asset is not None and api.EditorAssetLibrary.save_loaded_asset(
@@ -533,7 +533,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows):
     }))
 
 
-def reload(api, proof, retained, exact_sha, staging_sha, original, rows):
+def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, source_dependencies):
     prepare_row = session._read_json(session._safe_path(proof, PREPARED), limit=JSON_LIMIT)
     require(
         prepare_row.get("status") == "ROAD_ASPHALT_SAVED_PREPARED"
@@ -583,7 +583,7 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows):
         api, manifest["material_instance"], manifest["material_master"],
         manifest["texture_objects"],
     )
-    shoulder_material.verify_material(api, manifest["shoulder_window"]["material"], rows)
+    shoulder_material.verify_material(api, manifest["shoulder_window"]["material"], source_dependencies)
     shoulder.verify_loaded(api, manifest["shoulder_window"])
     require(
         instance.get_path_name() == manifest["material_instance"],
@@ -638,7 +638,7 @@ def main():
     session._assert_isolated_root()
     require(ROOT == session.ROOT == prep.ROOT, "Saved consumer modules belong to another checkout")
     exact_sha, staging_sha, token, proof, retained = proof_paths()
-    staging_path, stage_identity, _stage, _map_row, rows = verified_staging(
+    staging_path, stage_identity, stage, _map_row, rows = verified_staging(
         exact_sha, staging_sha
     )
     original, trial = verified_predecessors(proof, exact_sha, staging_sha)
@@ -660,9 +660,11 @@ def main():
     baseline.dirty_packages(unreal)
     prep.assert_isolated_bootstrap(unreal)
     if action == "prepare":
-        prepare(unreal, proof, retained, exact_sha, staging_sha, original, rows)
+        prepare(unreal, proof, retained, exact_sha, staging_sha, original, rows,
+                source_dependencies=stage["source_dependencies"])
     else:
-        reload(unreal, proof, retained, exact_sha, staging_sha, original, rows)
+        reload(unreal, proof, retained, exact_sha, staging_sha, original, rows,
+               source_dependencies=stage["source_dependencies"])
     session._verify_rows(ROOT, rows)
     require(
         session._identity(staging_path, JSON_LIMIT) == stage_identity,
