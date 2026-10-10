@@ -14,6 +14,30 @@ from scripts.ue import run_road_asphalt_native_canary as native
 
 
 class NativeCanaryBoundaryTests(unittest.TestCase):
+    def test_canonical_dry_canary_result_passes_native_boundary(self):
+        result = {
+            "status": "ROAD_ASPHALT_TRANSIENT_CANARY_ROLLED_BACK",
+            "consumer_snapshot_restored": True,
+            "road_slot_readback": True,
+            "all_186_supports_unchanged": True,
+            "landscape_1024_components_unchanged": True,
+            "material_authoring_admitted": False,
+            "dry_asphalt_response_verified": True,
+            "import_receipt": {"family": native.canary.FAMILY, "variant": native.canary.VARIANT},
+            "source_receipt_sha256": native.source.SOURCE_RECEIPT_SHA256,
+            "graph_sha256": native.source.GRAPH_SHA256,
+        }
+        native.validate_canary_result(result)
+        for change in (
+            {"dry_asphalt_response_verified": False},
+            {"dry_asphalt_response_verified": None, "dry_surface_response_verified": True},
+            {"consumer_snapshot_restored": False},
+            {"source_receipt_sha256": "0" * 64},
+            {"graph_sha256": "0" * 64},
+        ):
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                native.validate_canary_result({**result, **change})
+
     def test_unreal_execute_python_script_bootstraps_exact_repo_without_pythonpath(self):
         """Simulate UE standalone execution with no ambient project PYTHONPATH."""
         script = Path(__file__).resolve().parent / "run_road_asphalt_native_canary.py"

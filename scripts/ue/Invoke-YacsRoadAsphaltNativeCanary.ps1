@@ -178,8 +178,8 @@ try {
     $sourceEvidence = Get-Identity $preflightPath 32KB
     $sourceGate = Get-Content -LiteralPath $preflightPath -Raw | ConvertFrom-Json -AsHashtable
     if ($sourceGate.status -cne 'PINNED_ROAD_ASPHALT_SOURCE_READY' -or
-        $sourceGate.source_receipt_sha256 -cne '3626bf85da28d63908feb9d820171dc03d9d6cc444c8f799f7048f7a8052f79c' -or
-        $sourceGate.graph_sha256 -cne '6b381516854c44dc4bdeb69b69fbb2b97ecf22c228db2c09204822d7f0bc0970' -or
+        $sourceGate.source_receipt_sha256 -cne '6a073cf0223b47ac0734017a9e6691b749c871275ad2279a1b8f0aaec9439236' -or
+        $sourceGate.graph_sha256 -cne '25257e365ec99155d6e2e5a89ec527d153a7156427ad67777444f90b1b5561cd' -or
         $sourceGate.native_material_verified -isnot [bool] -or
         $sourceGate.native_material_verified -or $sourceGate.verified_original_runs -ne 2) {
         throw 'Original asphalt CPU proof is not admitted for transient native use.'

@@ -95,10 +95,33 @@ authoring API. API review used Epic's UE 5.8 documentation for
 [FBlake3](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Core/FBlake3),
 [FBlake3Hash](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Core/FBlake3Hash)
 and [FDynamicMeshAttributeSet](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/GeometryCore/FDynamicMeshAttributeSet).
-Compilation and `CyclingPhysics.World.RoadMaterialReadOnlyInspection` Automation
-remain pending until the exact new native source is built on the host.
 The initial build in CI 38089067078 was cancelled after a concurrent branch
 update; its failed aggregate gate is not build or Automation acceptance.
+The subsequent [CI 38089333376](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38089333376)
+at `52d7a6fd3ea8d354a4e69522e470c1fcd62ef1d3` actually compiled the unchanged
+native inspector and completed **28/28 Automation tests**, with editor exit 0.
+Its compile/proof fingerprints are respectively
+`18040d5e7a7e1fc3a6bc74f78dd8f025459237aa40e0fdd97c0f6b2050b962f5`
+and `417c89dbcb6fe8306717adfc2e6f5a9f090634fee555505730ed7408c9bb827d`.
+[CI 38089666262](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38089666262)
+at the full-network revision `4234f41908072d59645c0055dad83aa960973e8f`
+passed by authenticating and reusing those equivalent native fingerprints;
+it did not perform another build or Automation execution.
+
+The first full-network [native run 38089663072](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38089663072)
+successfully staged and read the frozen scene, then failed before material
+authoring because the PowerShell canary still pinned the previous base recipe.
+Its Python preflight had already authenticated the correct dry two-render
+source. Original [artifact 11683487567](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38089663072/artifacts/11683487567)
+is 110,553 bytes, SHA-256
+`37c9dc27610c08feb7bc4115bf8870a17ac1a674f70c72c1ff997a70eec62c9d`,
+independently downloaded and verified. No full-network save or GPU capture
+occurred. The follow-up aligns both host source pins with the authenticated
+dry bridge and corrects the native result gate to the producer's
+`dry_asphalt_response_verified` field. Regression checks for both boundaries
+now run before staging a native session. All 27 focused boundary/import tests
+and the documentation/architecture guards passed locally. Source/map identity
+checks and all admission limits remain enforced.
 
 The representative camera plan selects 68 existing, authenticated survey poses:
 both directions in all 24 occupied 250 m road cells, the original four

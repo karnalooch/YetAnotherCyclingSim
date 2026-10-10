@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import unittest
+import re
 from pathlib import Path
 
+from scripts.ue import road_asphalt_source_preflight as preflight
 
 ROOT = Path(__file__).resolve().parents[2]
 WRAPPER = ROOT / "scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1"
@@ -35,6 +37,18 @@ class NativeAsphaltHostContractTests(unittest.TestCase):
             "Require-Source",
         ):
             self.assertIn(token, self.host)
+
+    def test_host_admits_the_same_authenticated_forge_source_as_python(self):
+        """Catch stale host pins before reserving a native material session."""
+        for field, expected in (
+            ("source_receipt_sha256", preflight.SOURCE_RECEIPT_SHA256),
+            ("graph_sha256", preflight.GRAPH_SHA256),
+        ):
+            with self.subTest(field=field):
+                pins = re.findall(
+                    rf"\$sourceGate\.{field}\s+-cne\s+'([0-9a-f]{{64}})'", self.host
+                )
+                self.assertEqual(pins, [expected])
 
     def test_transient_scope_is_unambiguous_and_failure_stops(self):
         for token in (

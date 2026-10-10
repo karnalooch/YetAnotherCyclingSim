@@ -164,6 +164,8 @@ jobs:
           $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
           if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Existing pinned Python is missing.' }
           & $python -B -m unittest scripts.ue.test_read_road_material_baseline `
+            scripts.ue.test_road_asphalt_source_preflight scripts.ue.test_invoke_road_asphalt_native_canary `
+            scripts.ue.test_run_road_asphalt_native_canary `
             scripts.ue.test_road_shoulder_sources scripts.ue.test_road_shoulder_network `
             scripts.ue.test_road_material_views scripts.ue.test_invoke_road_saved_consumer `
             scripts.ue.test_invoke_road_asphalt_render

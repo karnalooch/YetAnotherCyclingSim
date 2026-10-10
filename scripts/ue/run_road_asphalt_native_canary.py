@@ -68,6 +68,24 @@ def assert_pinned_entry_source(exact_sha):
     )
 
 
+def validate_canary_result(result):
+    """Admit the real canary's result using the shared dry-asphalt contract."""
+    require(
+        result.get("status") == "ROAD_ASPHALT_TRANSIENT_CANARY_ROLLED_BACK"
+        and result.get("consumer_snapshot_restored") is True
+        and result.get("road_slot_readback") is True
+        and result.get("all_186_supports_unchanged") is True
+        and result.get("landscape_1024_components_unchanged") is True
+        and result.get("material_authoring_admitted") is False
+        and result.get("dry_asphalt_response_verified") is True
+        and result.get("import_receipt", {}).get("family") == canary.FAMILY
+        and result.get("import_receipt", {}).get("variant") == canary.VARIANT
+        and result.get("source_receipt_sha256") == source.SOURCE_RECEIPT_SHA256
+        and result.get("graph_sha256") == source.GRAPH_SHA256,
+        "Native asphalt rollback or provenance did not pass",
+    )
+
+
 def main():
     exact_sha = os.environ.get("YACS_ROAD_MATERIAL_EXPECTED_HEAD", "")
     preparation_sha = os.environ.get("YACS_ROAD_MATERIAL_PREPARATION_SHA256", "")
@@ -117,20 +135,7 @@ def main():
         unreal, source.source_root(), source.SOURCE_RECEIPT_SHA256,
         source.SOURCE_HEAD, source.SOURCE_FINGERPRINT,
     )
-    require(
-        result.get("status") == "ROAD_ASPHALT_TRANSIENT_CANARY_ROLLED_BACK"
-        and result.get("consumer_snapshot_restored") is True
-        and result.get("road_slot_readback") is True
-        and result.get("all_186_supports_unchanged") is True
-        and result.get("landscape_1024_components_unchanged") is True
-        and result.get("material_authoring_admitted") is False
-        and result.get("dry_surface_response_verified") is True
-        and result.get("import_receipt", {}).get("family") == canary.FAMILY
-        and result.get("import_receipt", {}).get("variant") == canary.VARIANT
-        and result.get("source_receipt_sha256") == source.SOURCE_RECEIPT_SHA256
-        and result.get("graph_sha256") == source.GRAPH_SHA256,
-        "Native asphalt rollback or provenance did not pass",
-    )
+    validate_canary_result(result)
     after = baseline.native_inventory(unreal, prep, session.operation.MAP_PACKAGE)
     require(after == original, "Native asphalt did not fully restore the original scene")
     session._verify_rows(ROOT, all_rows)
