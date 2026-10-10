@@ -59,10 +59,10 @@ def load_registry(root: Path = ROOT) -> dict:
     return data
 
 
-def validate(root: Path = ROOT) -> list[str]:
+def validate(root: Path = ROOT, registry: dict | None = None) -> list[str]:
     errors = []
     try:
-        data = load_registry(root)
+        data = load_registry(root) if registry is None else registry
         if data.get("schema_version") != 1:
             errors.append("invalid role registry schema")
         if data.get("current_milestone") != ACTIVE_MILESTONE:

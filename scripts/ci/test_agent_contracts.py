@@ -1,8 +1,6 @@
 """Regression tests for source-routed YACS agent contracts."""
 
-import json
-from pathlib import Path
-import tempfile
+from copy import deepcopy
 import unittest
 
 from scripts.ci.agent_contracts import (
@@ -70,52 +68,31 @@ class AgentContractsTest(unittest.TestCase):
                     verify_handoff({**task, forbidden: True}, self.data)
 
     def test_role_privilege_escalation_is_rejected(self):
-        with tempfile.TemporaryDirectory() as temp:
-            target = Path(temp)
-            (target / "docs/ai").mkdir(parents=True)
-            source = ROOT / "docs/ai/ROLE_REGISTRY.json"
-            data = json.loads(source.read_text(encoding="utf-8"))
-            data["roles"]["proof-qa"]["can_merge"] = True
-            dest = target / "docs/ai/ROLE_REGISTRY.json"
-            dest.write_text(json.dumps(data), encoding="utf-8")
-            issues = validate(target)
-            self.assertTrue(
-                any("role privilege escalation" in issue for issue in issues),
-                issues,
-            )
+        data = deepcopy(self.data)
+        data["roles"]["proof-qa"]["can_merge"] = True
+        issues = validate(registry=data)
+        self.assertTrue(
+            any("role privilege escalation" in issue for issue in issues),
+            issues,
+        )
 
     def test_missing_policy_document_is_rejected(self):
-        with tempfile.TemporaryDirectory() as temp:
-            target = Path(temp)
-            (target / "docs/ai").mkdir(parents=True)
-            data = json.loads(
-                (ROOT / "docs/ai/ROLE_REGISTRY.json").read_text(
-                    encoding="utf-8"
-                )
-            )
-            (target / "docs/ai/ROLE_REGISTRY.json").write_text(
-                json.dumps(data), encoding="utf-8"
-            )
-            errors = validate(target)
-            self.assertTrue(
-                any("missing/unsafe reference" in error for error in errors),
-                errors,
-            )
+        data = deepcopy(self.data)
+        data["policy_documents"][0] = "docs/ai/policies/NOT_FOUND.md"
+        errors = validate(registry=data)
+        self.assertTrue(
+            any("missing/unsafe reference" in error for error in errors),
+            errors,
+        )
 
     def test_role_paths_must_remain_within_repository(self):
-        with tempfile.TemporaryDirectory() as temp:
-            target = Path(temp)
-            (target / "docs/ai").mkdir(parents=True)
-            data = json.loads(
-                (ROOT / "docs/ai/ROLE_REGISTRY.json").read_text(
-                    encoding="utf-8"
-                )
-            )
-            data["roles"]["world-data"]["card"] = "../../outside.md"
-            (target / "docs/ai/ROLE_REGISTRY.json").write_text(
-                json.dumps(data), encoding="utf-8"
-            )
-            self.assertTrue(validate(target))
+        data = deepcopy(self.data)
+        data["roles"]["world-data"]["card"] = "../../outside.md"
+        errors = validate(registry=data)
+        self.assertTrue(
+            any("missing/unsafe reference" in error for error in errors),
+            errors,
+        )
 
 
 if __name__ == "__main__":
