@@ -984,6 +984,18 @@ listener cause is established. A corrected diagnostic preserves the original
 declared log identities separately from current observed retained-path bytes.
 Only an exact size/hash match may be labelled original verified log bytes.
 
+[Qualified startup diagnostic 38031958490](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38031958490)
+at `a96bdf280473db2d544e38126447906f24a5fa67` succeeded. The original
+9,576-byte Editor log still matches SHA-256
+`25ceff31d98f13646aa171eaff0bb967a3bb51d77c3c13340604d6c4f4327825`
+and records `LogTrace: Display: Control listening on port 1985`. The declared
+397-byte stdout is now 1,150 bytes with a different hash, explicitly retained
+as a current observation; the empty stderr matches. This supplies a trace
+startup clue, not the missing OS endpoint row. The limited installed-source
+excerpts did not establish a suppression flag. The source-only job opened no
+Editor or server and supplies no unit verification. Its 24,159-byte diagnostic
+is SHA-256 `c40b03f428b685ac79355f4b9f30685a933ec1541be08b7fd9c604c7033b3533`.
+
 Protected [CI 38002861390](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38002861390)
 passed for `4afa5e43d1e2fc58abcd0264408065e5d21d3ed4`, including
 hosted Python, equivalent exact-head Unreal proof reuse and Aggregate.

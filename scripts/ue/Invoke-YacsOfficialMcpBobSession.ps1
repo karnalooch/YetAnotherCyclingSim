@@ -988,10 +988,18 @@ function Select-SessionUnitFailureContext {
     param([byte[]] $Bytes, [switch] $EngineSource)
     # Decode bounded line prefixes only; even a giant raw line cannot allocate
     # an unbounded string. Keep first/last selected contexts and report omissions.
-    $pattern = if ($EngineSource) { '(?i)notracectrl|trace.?control|ControlThread|Listen|Start.*Control|Control.*Start' }
+    $controlArgumentPattern = '(?i)FParse::.*(?:control|ctrl)|(?:control|ctrl).*FParse::|TEXT\(\s*"[^"]*(?:control|ctrl)[^"]*"|bUseControl|bEnableControl|ControlPort'
+    $initializationPattern = '(?i)FParse::.*(?:trace|control|ctrl)|(?:trace|control|ctrl).*FParse::|FInitializeDesc|Writer_InitializeControl|FTraceAuxiliary::Initialize|bUseControl|bEnableControl|ControlPort'
+    $pattern = if ($EngineSource) { '(?i)notracectrl|trace.?control|ControlThread|Listen|Start.*Control|Control.*Start|' + $initializationPattern + '|' + $controlArgumentPattern }
         else { '(?i)trace|listen|socket|tcp|udp|error|warning|fatal|LogInit:|LogPython:|ModelContextProtocol|YacsBobInspection' }
-    $priorityPattern = if ($EngineSource) { '(?i)notracectrl' }
+    $priorityPattern = if ($EngineSource) { '(?i)notracectrl|' + $initializationPattern + '|' + $controlArgumentPattern }
         else { '(?i)listen|TraceControl|Trace.*(?:control|server|port|tcp)|(?:control|server|port|tcp).*Trace|ModelContextProtocol.*(?:bind|start|port|server)|(?:bind|start|port|server).*ModelContextProtocol' }
+    $controlArguments = [Collections.Generic.List[object]]::new()
+    $controlArgumentMatches = 0
+    $controlContext = [Collections.Generic.List[object]]::new()
+    $controlSeen = [Collections.Generic.HashSet[int]]::new()
+    $controlStart = 0; $controlUntil = 0
+    $radius = if ($EngineSource) { 3 } else { 2 }
     $priorityFirst = [Collections.Generic.List[object]]::new()
     $priorityLast = [Collections.Generic.Queue[object]]::new()
     $directFirst = [Collections.Generic.List[object]]::new()
@@ -1016,9 +1024,10 @@ function Select-SessionUnitFailureContext {
         $row = [ordered]@{ line = $line; text = $text; raw_line_prefix_truncated = $rowOversized }
         $match = -not $skip -and $text -match $pattern
         $priorityMatch = -not $skip -and $text -match $priorityPattern
-        if ($priorityMatch) { $priorityStart = [Math]::Max(1, $line - 2); $priorityUntil = $line + 2; $priorityMatches++ }
+        if ($priorityMatch) { $priorityStart = [Math]::Max(1, $line - $radius); $priorityUntil = $line + $radius; $priorityMatches++ }
+        if ($EngineSource -and -not $skip -and $text -match $controlArgumentPattern) { $controlStart = [Math]::Max(1, $line - $radius); $controlUntil = $line + $radius }
         $rows = @()
-        if ($match) { $rows += @($previous.ToArray()); $rows += $row; $following = 2 }
+        if ($match) { $rows += @($previous.ToArray()); $rows += $row; $following = $radius }
         elseif ($following -gt 0) { if (-not $skip) { $rows += $row }; $following-- }
         foreach ($candidate in $rows) {
             $newRow = $seen.Add($candidate.line)
@@ -1028,9 +1037,16 @@ function Select-SessionUnitFailureContext {
             $safeBytes = [Text.Encoding]::UTF8.GetBytes($safe)
             if ($safeBytes.Length -gt 768) { $safe = [Text.Encoding]::UTF8.GetString($safeBytes, 0, 736) + '[TRUNCATED]' }
             $value = [ordered]@{ line = $candidate.line; text = $safe; raw_line_prefix_truncated = $candidate.raw_line_prefix_truncated }
+            if ($EngineSource -and $candidate.line -ge $controlStart -and $candidate.line -le $controlUntil -and $controlSeen.Add($candidate.line)) {
+                if ($controlContext.Count -lt 84) { $controlContext.Add($value) }
+            }
             if ($priority -and $prioritySeen.Add($candidate.line)) {
                 if ($priorityFirst.Count -lt 2) { $priorityFirst.Add($value) }
                 else { if ($priorityLast.Count -ge 2) { [void]$priorityLast.Dequeue() }; $priorityLast.Enqueue($value) }
+            }
+            if ($EngineSource -and $candidate.line -eq $line -and $candidate.text -match $controlArgumentPattern) {
+                $controlArgumentMatches++
+                if ($controlArguments.Count -lt 12) { $controlArguments.Add($value) }
             }
             if ($priorityMatch -and $candidate.line -eq $line) {
                 if ($directFirst.Count -lt 2) { $directFirst.Add($value) }
@@ -1041,7 +1057,7 @@ function Select-SessionUnitFailureContext {
             if ($first.Count -lt 12) { $first.Add($value) }
             else { if ($last.Count -ge 12) { [void]$last.Dequeue() }; $last.Enqueue($value) }
         }
-        if (-not $skip) { $previous.Enqueue($row); if ($previous.Count -gt 2) { [void]$previous.Dequeue() } }
+        if (-not $skip) { $previous.Enqueue($row); if ($previous.Count -gt $radius) { [void]$previous.Dequeue() } }
         else { $previous.Clear() }
     }
     $chosen = @($first.ToArray()) + @($last.ToArray())
@@ -1051,16 +1067,19 @@ function Select-SessionUnitFailureContext {
         $chosen = @($directFirst.ToArray()) + @($directLast.ToArray()) + @($priorityFirst.ToArray()) + @($priorityLast.ToArray()) `
             + @($first.ToArray() | Select-Object -First 8) + @($last.ToArray() | Select-Object -Last 8)
     }
+    # Actual control argument rows always precede broad initialization matches;
+    # retain up to twelve of them under the existing serialized context bound.
+    if ($EngineSource) { $chosen = @($controlArguments.ToArray()) + @($controlContext.ToArray()) + $chosen }
     $context = @(); $contextBytes = 0; $contextJsonBytes = 2
     $emitted = [Collections.Generic.HashSet[int]]::new()
     foreach ($row in $chosen) {
         if (-not $emitted.Add($row.line)) { continue }
         $cost = [Text.Encoding]::UTF8.GetByteCount(($row | ConvertTo-Json -Depth 3 -Compress))
         if ($context.Count -gt 0) { $cost++ }
-        if ($contextJsonBytes + $cost -gt 4KB) { continue }
+        if ($context.Count -ge 24 -or $contextJsonBytes + $cost -gt 4KB) { continue }
         $context += $row; $contextJsonBytes += $cost; $contextBytes += [Text.Encoding]::UTF8.GetByteCount($row.text)
     }
-    return [ordered]@{ lines = $context; scanned_line_count = $line; matching_context_count = $selected; priority_direct_match_count = $priorityMatches
+    return [ordered]@{ lines = $context; scanned_line_count = $line; matching_context_count = $selected; priority_direct_match_count = $priorityMatches; direct_control_argument_match_count = $controlArgumentMatches
         truncated = ($context.Count -lt $selected -or $offset -lt $Bytes.Length -or $oversized)
         maximum_lines = 24; maximum_row_utf8_bytes = 768; decoded_context_limit_bytes = 4KB; decoded_context_bytes = $contextBytes
         context_json_limit_bytes = 4KB; context_json_bytes = $contextJsonBytes }
