@@ -772,6 +772,30 @@ The current diagnostic host receipt is 422,608 bytes, SHA-256
 [artifact 11657930874](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38019785377/artifacts/11657930874)
 is 428,019 bytes, archive SHA-256
 `1743d17d37d9bfe6faf3709c8507d4881887cc117098746bf476c7cb1e2bc369`.
+[Storage diagnostic 38020860094](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38020860094)
+passed at `3a66f5571e16bc8a8fc39da5707103a1c5a85953`, including Windows
+parsing and all eight fixed directory observations. Both old native/config Git
+states matched before and after; no cleanup occurred. [Ordinary CI 38020863514](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38020863514)
+also passed. The 30,868-byte inventory is SHA-256
+`77d497f8ec4bb53ee070f5fa7de8e12b1daa77387e278c1810b344b7d24afb8a`.
+Only the two old project `Intermediate` directories are selected for the next
+fixed cleanup: `38015883833-1` contains 2,750,359,177 logical bytes with
+metadata digest `d651d8e61bf13a10c902496e1620c1f26dd2b292913fb4adc0e8ca2f318a7b56`;
+`38016857639-1` contains 2,750,359,182 bytes with digest
+`8bbb390391d0cd68560f124c78b60447e45ec843393b4d7a44ee3acf2218858e`.
+Each contains 196 files / 23 directories. Their approximately 5.12 GiB sum is
+logical storage, not an observed increase in free space. The fixed cleanup
+must authenticate the inventory, recheck its metadata and native/config state,
+and verify retained proof/binary hashes before and after individual generated
+file removal. RoadForge/plugin intermediates, source, assets, Git/cache data,
+all evidence/DLLs/binary module manifests and latest `38018565445-1` remain protected.
+Free space was 6.50 GiB at `03:32:27.8224666Z`; actual before/after free-space
+observations and the unchanged disk reserve are required before another build.
+The current storage diagnostic host receipt is 423,106 bytes, SHA-256
+`3333583b85589451209883bbf95efa44c33b25d2fe08fbefdfeb25dba159f174`;
+[artifact 11658940776](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38020860094/artifacts/11658940776)
+is 432,762 bytes, archive SHA-256
+`b08b757a9aa2c34cb822ac417cec36d724d499e424316729bf1b493197354c36`.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 

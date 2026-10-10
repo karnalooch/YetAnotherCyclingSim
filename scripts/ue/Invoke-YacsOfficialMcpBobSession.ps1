@@ -16,11 +16,14 @@ param(
     [ValidatePattern('^[0-9a-f]{40}$')]
     [string] $ExpectedHead,
     # One fixed retained session failure only; no caller-supplied paths or PIDs.
-    [switch] $DiagnosePreviousFailure
+    [switch] $DiagnosePreviousFailure,
+    # Only two console-pinned obsolete project Intermediate directories.
+    [switch] $ReclaimVerifiedOldBuildIntermediates
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if ($DiagnosePreviousFailure -and $ReclaimVerifiedOldBuildIntermediates) { throw 'The fixed diagnostic and reclaim modes are mutually exclusive.' }
 if (-not $IsWindows) { throw 'The accepted BOB session requires Windows.' }
 $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
 $runId = [string]$env:GITHUB_RUN_ID
@@ -732,7 +735,7 @@ function Get-SessionStorageGitState {
         head = $PinnedHead; tracked_native_config_unchanged = $true; untracked_native_config_absent = $true }
 }
 function Measure-SessionStorageIntermediate {
-    param([string] $Path, $Budget)
+    param([string] $Path, $Budget, [switch] $IncludeEntries)
     Assert-SessionPlainPath $Path
     if (-not [IO.Directory]::Exists($Path)) { throw 'The fixed Intermediate directory is absent.' }
     $rows = [Collections.Generic.Dictionary[string, string]]::new([StringComparer]::Ordinal)
@@ -790,8 +793,10 @@ function Measure-SessionStorageIntermediate {
         }
         $digest = [Convert]::ToHexString($algorithm.GetHashAndReset()).ToLowerInvariant()
     } finally { $algorithm.Dispose() }
-    return [ordered]@{ logical_bytes = $bytes; file_count = $files; directory_count = $directories
+    $result = [ordered]@{ logical_bytes = $bytes; file_count = $files; directory_count = $directories
         newest_last_write_utc = [DateTime]::new($newest, [DateTimeKind]::Utc).ToString('o'); inventory_sha256 = $digest }
+    if ($IncludeEntries) { $result['entries'] = $rows }
+    return $result
 }
 function Invoke-SessionFixedStorageInventory {
     # These two old producers are observations only. Latest 380185 remains protected.
@@ -872,6 +877,264 @@ function Invoke-SessionFixedStorageInventory {
     $receipt.proof_files.fixed_old_intermediate_storage_inventory = Get-SessionFileIdentity $path 1MB
     Write-Host ('FIXED_STORAGE_RECEIPT_IDENTITY ' + ($receipt.proof_files.fixed_old_intermediate_storage_inventory | ConvertTo-Json -Compress))
 }
+function Assert-SessionReclaimNativeIdle {
+    Assert-SessionIdleHost
+    $timer = [Diagnostics.Stopwatch]::StartNew()
+    # Editor IDLE alone does not exclude a locally owned build. Do not terminate
+    # any of these processes, and do not treat an unreadable dotnet owner as idle.
+    $processes = @(Get-CimInstance Win32_Process -OperationTimeoutSec 10 -ErrorAction Stop |
+        Where-Object { $_.Name -in @('UnrealBuildTool.exe', 'AutomationTool.exe', 'MSBuild.exe', 'cl.exe', 'link.exe', 'rc.exe', 'dotnet.exe') })
+    if ($processes.Count -gt 256 -or $timer.Elapsed.TotalSeconds -ge 15) { throw 'Native build ownership observation exceeded its fixed bound.' }
+    foreach ($process in $processes) {
+        if ($timer.Elapsed.TotalSeconds -ge 15) { throw 'Native build ownership observation exhausted 15 seconds.' }
+        try { $native = Get-Process -Id ([int]$process.ProcessId) -ErrorAction Stop }
+        catch {
+            if ($_.CategoryInfo.Category -eq [Management.Automation.ErrorCategory]::ObjectNotFound) { continue }
+            throw 'A native process owner cannot be verified; preserve both Intermediate directories.'
+        }
+        if ($null -eq $native) { continue }
+        try {
+            if ($native.HasExited) { continue }
+            if ($native.ProcessName -ine [IO.Path]::GetFileNameWithoutExtension([string]$process.Name)) { throw 'Native process identity changed during the ownership observation.' }
+            if ($process.Name -ine 'dotnet.exe') { throw 'A native builder/compiler is active; preserve both old Intermediate directories.' }
+            if ($process.CommandLine -isnot [string] -or [string]::IsNullOrWhiteSpace($process.CommandLine) -or $process.CommandLine.Length -gt 8192) {
+                throw 'A live dotnet process has unestablished bounded build ownership.'
+            }
+            if ($process.CommandLine -imatch 'UnrealBuildTool|AutomationTool|MSBuild|(?:^|\s)(?:build|msbuild)(?:\s|$)') {
+                throw 'A dotnet native/build owner is active; preserve both old Intermediate directories.'
+            }
+        } finally { $native.Dispose() }
+    }
+}
+function Get-SessionReclaimProtectedIdentities {
+    param($Identities)
+    $timer = [Diagnostics.Stopwatch]::StartNew()
+    $observed = [ordered]@{}
+    $bytesRead = 0L
+    if ($Identities.Count -gt 128) { throw 'The fixed protected proof/binary identity set exceeds 128 files.' }
+    foreach ($path in $Identities.Keys) {
+        $expected = $Identities[$path]
+        $bytesRead += [long]$expected.size_bytes
+        if ($bytesRead -gt 2GB -or $timer.Elapsed.TotalSeconds -ge 90) { throw 'The fixed protected identity phase exceeds 2GiB or 90 seconds.' }
+        Assert-SessionPlainPath $path
+        $before = [IO.FileInfo]::new($path)
+        $before.Refresh()
+        if (-not $before.Exists -or ($before.Attributes -band [IO.FileAttributes]::Directory) -or $before.Length -ne $expected.size_bytes) { throw 'A protected proof/binary file differs from its authenticated size.' }
+        $ticks = $before.LastWriteTimeUtc.Ticks
+        $created = $before.CreationTimeUtc.Ticks
+        $attributes = $before.Attributes
+        $stream = [IO.File]::Open($path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+        $algorithm = [Security.Cryptography.IncrementalHash]::CreateHash([Security.Cryptography.HashAlgorithmName]::SHA256)
+        try {
+            $buffer = [byte[]]::new(1MB)
+            $count = 0L
+            while (($part = $stream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+                $count += $part
+                if ($count -gt $expected.size_bytes -or $timer.Elapsed.TotalSeconds -ge 90) { throw 'A protected file changed or exceeded its hash time bound.' }
+                $algorithm.AppendData($buffer, 0, $part)
+            }
+            $digest = [Convert]::ToHexString($algorithm.GetHashAndReset()).ToLowerInvariant()
+        } finally { $algorithm.Dispose(); $stream.Dispose() }
+        Assert-SessionPlainPath $path
+        $before.Refresh()
+        if (-not $before.Exists -or $count -ne $expected.size_bytes -or $before.Length -ne $expected.size_bytes -or $before.LastWriteTimeUtc.Ticks -ne $ticks `
+            -or $before.CreationTimeUtc.Ticks -ne $created -or $before.Attributes -ne $attributes -or $digest -cne $expected.sha256 `
+            -or $timer.Elapsed.TotalSeconds -ge 90) { throw 'Protected proof/binary bytes changed or differ from their authenticated anchor/time bound.' }
+        # Authenticated empty redirected logs are valid protected evidence too.
+        $observed[$path] = [ordered]@{ path = $path; size_bytes = $count; sha256 = $digest }
+    }
+    return $observed
+}
+function Assert-SessionReclaimEntry {
+    param([string] $Root, [string] $Row, [switch] $AfterChildRemoval)
+    $fields = $Row.TrimEnd("`n").Split([char]0)
+    if ($fields.Count -ne 5) { throw 'A frozen Intermediate metadata row is malformed.' }
+    $relative = $fields[0]
+    if ($relative -cne '.' -and ($relative -cmatch '(^|/)(\.\.?)(/|$)|[\\:\x00]' -or [IO.Path]::IsPathRooted($relative))) { throw 'A frozen Intermediate entry is not relative and canonical.' }
+    $path = if ($relative -ceq '.') { [IO.Path]::GetFullPath($Root) } else { [IO.Path]::GetFullPath((Join-Path $Root $relative)) }
+    if (-not [string]::Equals($path, [IO.Path]::GetFullPath($Root), [StringComparison]::OrdinalIgnoreCase) `
+        -and -not $path.StartsWith(([IO.Path]::GetFullPath($Root).TrimEnd('\') + '\'), [StringComparison]::OrdinalIgnoreCase)) { throw 'A frozen Intermediate entry escaped its exact root.' }
+    Assert-SessionPlainPath $path
+    $attributes = [IO.File]::GetAttributes($path)
+    $isDirectory = ($attributes -band [IO.FileAttributes]::Directory) -ne 0
+    $item = if ($isDirectory) { [IO.DirectoryInfo]::new($path) } else { [IO.FileInfo]::new($path) }
+    $item.Refresh()
+    $length = if ($isDirectory) { 0L } else { $item.Length }
+    if (-not $item.Exists -or [int]$attributes -ne [int]$fields[1] -or $item.Attributes -ne $attributes -or $length -ne [long]$fields[2] `
+        -or $item.CreationTimeUtc.Ticks -ne [long]$fields[4] `
+        -or (-not ($AfterChildRemoval -and $isDirectory) -and $item.LastWriteTimeUtc.Ticks -ne [long]$fields[3])) { throw 'A frozen Intermediate entry changed before individual removal.' }
+    # Directory write times change when this operation removes their children.
+    # Their original complete metadata was checked before the first mutation;
+    # creation, attributes, ancestors and emptiness remain mandatory here.
+    return [ordered]@{ path = $path; is_directory = $isDirectory; size_bytes = $length }
+}
+function Invoke-SessionFixedIntermediateReclaim {
+    $cleanup = [ordered]@{ schema_version = 1; exact_sha = $ExpectedHead; run = $runId; attempt = $attempt; status = 'PREFLIGHT_PENDING'
+        maintenance_only = $true; cleanup_performed = $false
+        compile_performed = $false; editor_launched = $false; official_mcp_admitted = $false; official_mcp_transport_verified = $false
+        cleanup_scope = 'ONLY_TWO_FROZEN_PROJECT_INTERMEDIATE_TREES'; protected_latest_run = '38018565445-1'
+        deleted_file_count = 0; deleted_directory_count = 0; deleted_logical_bytes = 0L; deletion_started = $false
+        free_before_bytes = [IO.DriveInfo]::new('D:\').AvailableFreeSpace; free_after_bytes = $null; observed_free_space_delta_bytes = $null
+        new_disk_reserve_passed = $false; protected_before = [ordered]@{}; protected_after = [ordered]@{}; runs = [ordered]@{}
+        error = $null; secondary_errors = @(); entry_limit = 100000; metadata_and_delete_time_limit_seconds = 45
+        protected_identity_limit = 128; protected_phase_byte_limit = 2GB; protected_phase_time_limit_seconds = 90 }
+    $identities = [Collections.Generic.Dictionary[string, object]]::new([StringComparer]::OrdinalIgnoreCase)
+    $targets = @()
+    $failure = $null
+    try {
+        $inventoryPath = Join-Path $RepoRoot 'Saved/RuntimeProof/OfficialMcpBobSession/38020860094-1/fixed-old-intermediate-storage-inventory.json'
+        $anchor = Get-SessionFileIdentity $inventoryPath 1MB
+        if ($anchor.size_bytes -ne 30868 -or $anchor.sha256 -cne '77d497f8ec4bb53ee070f5fa7de8e12b1daa77387e278c1810b344b7d24afb8a') { throw 'The reviewed fixed storage inventory raw anchor differs.' }
+        $read = Read-SessionJson $inventoryPath 1MB
+        $inventory = $read.value
+        if ($read.identity.sha256 -cne $anchor.sha256 -or -not (Test-SessionInteger $inventory.schema_version 1) `
+            -or $inventory.exact_sha -cne '3a66f5571e16bc8a8fc39da5707103a1c5a85953' -or $inventory.protected_latest_run -cne '38018565445-1' `
+            -or $inventory.source_only -isnot [bool] -or -not $inventory.source_only -or $inventory.cleanup_performed -isnot [bool] -or $inventory.cleanup_performed `
+            -or $inventory.runs -isnot [Collections.IDictionary] -or $inventory.runs.Count -ne 2) { throw 'The authenticated storage inventory does not match the reviewed source/run/scope.' }
+        $cleanup['reviewed_inventory'] = $anchor
+        $identities.Add($anchor.path, $anchor)
+        $pins = @(
+            @{ run = '38015883833'; sha = '9be44d403af3997b56f68c04df14c402f70001ce'; receipt_sha = 'b22a7b1eabecda906127afed3cbd63f3a50115ac7d8a55be280b0352fea09e75'; bytes = 2750359177L; metadata_sha = 'd651d8e61bf13a10c902496e1620c1f26dd2b292913fb4adc0e8ca2f318a7b56' },
+            @{ run = '38016857639'; sha = 'aceaefb437962ce3dc0af301db32c4ac2cf66592'; receipt_sha = '0076721aff4f5af496d2f720a0f6826633594e8a61d25b12c9b922ce9318d6e6'; bytes = 2750359182L; metadata_sha = '8bbb390391d0cd68560f124c78b60447e45ec843393b4d7a44ee3acf2218858e' }
+        )
+        foreach ($pin in $pins) {
+            $id = $pin.run + '-1'
+            $project = Join-Path 'D:\yacs\runner\_work\b384' ($id + '-session-project')
+            $package = Join-Path 'D:\yacs\runner\_work\b384' ($id + '-session-plugin')
+            $session = Join-Path 'D:\yacs\runner\_work\s384' $id
+            $oldArtifact = Join-Path $RepoRoot ('Saved/RuntimeProof/OfficialMcpBobSession/' + $id)
+            $target = Join-Path $project 'Intermediate'
+            $old = $inventory.runs[$id]
+            if ($old -isnot [Collections.IDictionary] -or $old.exact_sha -cne $pin.sha -or $old.project_root -cne $project `
+                -or $old.plugin_package_root -cne $package -or $old.status -cne 'READ_ONLY_OBSERVATIONS_RETAINED; CLEANUP_NOT_ADMITTED' `
+                -or $old.directories.Intermediate.path -cne $target -or $old.directories.Intermediate.status -cne 'STABLE_METADATA_ONLY; SEPARATE_CLEANUP_PREVIEW_REQUIRED' `
+                -or $old.directories.Intermediate.metadata.inventory_sha256 -cne $pin.metadata_sha `
+                -or -not (Test-SessionInteger $old.directories.Intermediate.metadata.logical_bytes $pin.bytes) `
+                -or -not (Test-SessionInteger $old.directories.Intermediate.metadata.file_count 196) `
+                -or -not (Test-SessionInteger $old.directories.Intermediate.metadata.directory_count 23)) { throw 'One of the two reviewed project Intermediate targets differs from its fixed metadata anchor.' }
+            $hostPath = Join-Path $oldArtifact 'accepted-session-build.json'
+            $hostAnchor = Get-SessionFileIdentity $hostPath 1MB
+            if ($hostAnchor.size_bytes -ne 443055 -or $hostAnchor.sha256 -cne $pin.receipt_sha `
+                -or $old.original_host_receipt.sha256 -cne $pin.receipt_sha -or $old.original_host_receipt.path -cne $hostAnchor.path) { throw 'An old protected host raw anchor differs.' }
+            $hostRead = Read-SessionJson $hostPath 1MB
+            $hostReceipt = $hostRead.value
+            if ($hostRead.identity.sha256 -cne $hostAnchor.sha256 -or -not (Test-SessionInteger $hostReceipt.schema_version 1) `
+                -or $hostReceipt.exact_sha -cne $pin.sha -or $hostReceipt.run -cne $pin.run -or $hostReceipt.attempt -cne '1' -or $hostReceipt.status -cne 'BLOCKED' `
+                -or $hostReceipt.build_root -cne $project -or $hostReceipt.plugin_package_root -cne $package -or $hostReceipt.session_root -cne $session `
+                -or -not (Test-SessionInteger $hostReceipt.project_build.exit_code 0) -or -not (Test-SessionInteger $hostReceipt.plugin_build.exit_code 0) `
+                -or $hostReceipt.source_unchanged -isnot [bool] -or -not $hostReceipt.source_unchanged `
+                -or $hostReceipt.proof_files -isnot [Collections.IDictionary] -or $hostReceipt.binary_provenance -isnot [array] -or $hostReceipt.binary_provenance.Count -ne 7 `
+                -or $hostReceipt.staged_binary_provenance -isnot [array] -or $hostReceipt.staged_binary_provenance.Count -ne 7) { throw 'An authenticated old producer build or protected binary closure differs.' }
+            $protected = @($hostAnchor) + @($hostReceipt.proof_files.Values) + @($hostReceipt.project_build.log, $hostReceipt.project_build.stderr, $hostReceipt.plugin_build.log, $hostReceipt.plugin_build.stderr)
+            foreach ($group in @('binary_provenance', 'staged_binary_provenance')) {
+                $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+                foreach ($row in $hostReceipt[$group]) {
+                    if ($row -isnot [Collections.IDictionary] -or $row.identity -isnot [Collections.IDictionary] -or -not $seen.Add([string]$row.identity.path)) { throw 'An old fixed binary closure contains a malformed/duplicate identity.' }
+                    $protected += $row.identity
+                }
+                if (@($hostReceipt[$group] | Where-Object { $_.identity.path.EndsWith('.dll', [StringComparison]::OrdinalIgnoreCase) }).Count -ne 4 `
+                    -or @($hostReceipt[$group] | Where-Object { $_.identity.path.EndsWith('.modules', [StringComparison]::OrdinalIgnoreCase) }).Count -ne 3) { throw 'The protected closure must retain four DLLs and three unchanged module manifests.' }
+            }
+            foreach ($identity in $protected) {
+                if ($identity -isnot [Collections.IDictionary] -or $identity.path -isnot [string] -or $identity.path.Length -gt 1024 `
+                    -or $identity.sha256 -isnot [string] -or $identity.sha256 -cnotmatch '^[0-9a-f]{64}$' `
+                    -or ($identity.size_bytes -isnot [int] -and $identity.size_bytes -isnot [long]) -or $identity.size_bytes -lt 0 -or $identity.size_bytes -gt 1GB) { throw 'A protected identity is not a bounded authenticated file.' }
+                $path = [IO.Path]::GetFullPath($identity.path)
+                if ($path -cne $identity.path) { throw 'A protected identity path is not canonical.' }
+                $allowed = $false
+                foreach ($root in @($project, $package, $session, $oldArtifact)) { if ($path.StartsWith(($root.TrimEnd('\') + '\'), [StringComparison]::OrdinalIgnoreCase)) { $allowed = $true } }
+                if (-not $allowed -or $path.StartsWith(($target + '\'), [StringComparison]::OrdinalIgnoreCase)) { throw 'A protected proof/binary identity is outside its fixed old roots or inside the deletion target.' }
+                if ($identities.ContainsKey($path)) {
+                    if ($identities[$path].sha256 -cne $identity.sha256 -or $identities[$path].size_bytes -ne $identity.size_bytes) { throw 'Protected identity anchors conflict.' }
+                } else { $identities.Add($path, $identity) }
+            }
+            $targets += @{ id = $id; project = $project; path = $target; pin = $pin; entries = $null }
+            $cleanup.runs[$id] = [ordered]@{ project_intermediate = $target; original_host = $hostAnchor; expected_metadata_sha256 = $pin.metadata_sha
+                deleted_files = 0; deleted_directories = 0; deleted_logical_bytes = 0L; deleted_entries = @() }
+        }
+        Assert-SessionReclaimNativeIdle
+        $cleanup.protected_before = Get-SessionReclaimProtectedIdentities $identities
+        $budget = @{ entries = 0; timer = [Diagnostics.Stopwatch]::StartNew() }
+        foreach ($target in $targets) {
+            $cleanup.runs[$target.id]['current_native_config_git_before'] = Get-SessionStorageGitState $target.project $target.pin.sha $budget
+            $tracked = Invoke-SessionStorageGit $target.project @('ls-files', '--', 'Intermediate') $budget
+            if ($tracked.exit_code -ne 0 -or $tracked.stdout.Length -ne 0) { throw 'The exact project Intermediate target contains tracked files or an unestablished Git state.' }
+            $first = Measure-SessionStorageIntermediate $target.path $budget
+            $second = Measure-SessionStorageIntermediate $target.path $budget -IncludeEntries
+            if ($first.inventory_sha256 -cne $target.pin.metadata_sha -or $second.inventory_sha256 -cne $target.pin.metadata_sha `
+                -or $second.logical_bytes -ne $target.pin.bytes -or $second.file_count -ne 196 -or $second.directory_count -ne 23) { throw 'Current Intermediate bytes/counts/metadata differ from the reviewed fixed inventory.' }
+            $target.entries = $second.entries
+        }
+        # Both targets and every preservation anchor pass before any removal.
+        foreach ($target in $targets) {
+            foreach ($row in $target.entries.Values) {
+                if ($budget.timer.Elapsed.TotalSeconds -ge 45) { throw 'The fixed metadata/deletion phase exhausted 45 seconds before mutation.' }
+                [void](Assert-SessionReclaimEntry $target.path $row)
+            }
+        }
+        Assert-SessionReclaimNativeIdle
+        foreach ($target in $targets) {
+            $rows = @($target.entries.Values)
+            $fileRows = @($rows | Where-Object { ([int]$_.Split([char]0)[1] -band [int][IO.FileAttributes]::Directory) -eq 0 })
+            $directoryRows = @($rows | Where-Object { ([int]$_.Split([char]0)[1] -band [int][IO.FileAttributes]::Directory) -ne 0 } | Sort-Object { $_.Split([char]0)[0].Length } -Descending)
+            foreach ($row in @($fileRows + $directoryRows)) {
+                if ($budget.entries -ge 100000 -or $budget.timer.Elapsed.TotalSeconds -ge 45) { throw 'The fixed deletion phase exceeded 100000 entries or 45 seconds.' }
+                $budget.entries++
+                $entry = Assert-SessionReclaimEntry $target.path $row -AfterChildRemoval
+                $cleanup.deletion_started = $true
+                if ($cleanup.runs[$target.id].deleted_entries.Count -ge 219) { throw 'The fixed successful-removal path inventory exceeds 219 entries for one target.' }
+                if ($entry.is_directory) {
+                    # Non-recursive removal fails if an unexpected entry appeared.
+                    [IO.Directory]::Delete($entry.path, $false)
+                    $cleanup.cleanup_performed = $true
+                    $cleanup.deleted_directory_count++; $cleanup.runs[$target.id].deleted_directories++
+                } else {
+                    [IO.File]::Delete($entry.path)
+                    $cleanup.cleanup_performed = $true
+                    $cleanup.deleted_file_count++; $cleanup.deleted_logical_bytes += $entry.size_bytes
+                    $cleanup.runs[$target.id].deleted_files++; $cleanup.runs[$target.id].deleted_logical_bytes += $entry.size_bytes
+                }
+                $cleanup.runs[$target.id].deleted_entries += [ordered]@{ relative_path = $row.Split([char]0)[0]
+                    type = if ($entry.is_directory) { 'directory' } else { 'file' }; logical_bytes = $entry.size_bytes }
+            }
+        }
+        $cleanup['entries_observed_and_removed'] = $budget.entries
+        $cleanup['metadata_and_delete_elapsed_seconds'] = $budget.timer.Elapsed.TotalSeconds
+    } catch {
+        $failure = $_
+        $cleanup.error = Get-SessionSafeFailureText $_.Exception.Message
+        $cleanup.status = if ($cleanup.deletion_started) { 'PARTIAL_RECLAIM_BLOCKED' } else { 'PREFLIGHT_BLOCKED; NOTHING_REMOVED' }
+    } finally {
+        if ($cleanup.deletion_started) {
+            try {
+                $cleanup.protected_after = Get-SessionReclaimProtectedIdentities $identities
+                $afterBudget = @{ entries = 0; timer = [Diagnostics.Stopwatch]::StartNew() }
+                foreach ($target in $targets) { $cleanup.runs[$target.id]['current_native_config_git_after'] = Get-SessionStorageGitState $target.project $target.pin.sha $afterBudget }
+                Assert-SessionReclaimNativeIdle
+                Assert-YacsDiskReserve -Path $BuildRoot
+                $cleanup.new_disk_reserve_passed = $true
+            } catch {
+                $cleanup.secondary_errors += Get-SessionSafeFailureText $_.Exception.Message
+                if ($null -eq $failure) { $failure = $_ }
+                $cleanup.status = 'RECLAIM_POSTCHECK_BLOCKED; NO_NATIVE_ADMISSION'
+            }
+        }
+        $cleanup.free_after_bytes = [IO.DriveInfo]::new('D:\').AvailableFreeSpace
+        $cleanup.observed_free_space_delta_bytes = $cleanup.free_after_bytes - $cleanup.free_before_bytes
+        if ($null -eq $failure) { $cleanup.status = 'TWO_FIXED_INTERMEDIATE_TREES_REMOVED; PROTECTED_BYTES_UNCHANGED' }
+        $cleanupPath = Join-Path $ArtifactRoot 'fixed-old-intermediate-reclaim.json'
+        if ([Text.Encoding]::UTF8.GetByteCount(($cleanup | ConvertTo-Json -Depth 30)) -gt 1MB) { throw 'The fixed reclaim receipt exceeds 1MiB; retain host failure evidence.' }
+        Write-SessionJson $cleanupPath $cleanup
+        $receipt.proof_files.fixed_old_intermediate_reclaim = Get-SessionFileIdentity $cleanupPath 1MB
+        Write-Host ('FIXED_RECLAIM_RECEIPT_IDENTITY ' + ($receipt.proof_files.fixed_old_intermediate_reclaim | ConvertTo-Json -Compress))
+        Write-Host ('FIXED_RECLAIM_SUMMARY ' + (([ordered]@{ status = $cleanup.status; deleted_files = $cleanup.deleted_file_count; deleted_directories = $cleanup.deleted_directory_count
+            deleted_logical_bytes = $cleanup.deleted_logical_bytes; free_before_bytes = $cleanup.free_before_bytes; free_after_bytes = $cleanup.free_after_bytes
+            observed_free_space_delta_bytes = $cleanup.observed_free_space_delta_bytes; new_disk_reserve_passed = $cleanup.new_disk_reserve_passed; error = $cleanup.error
+            maintenance_only = $true; cleanup_performed = $cleanup.cleanup_performed
+            protected_before_count = $cleanup.protected_before.Count; protected_after_count = $cleanup.protected_after.Count; official_mcp_admitted = $false }) | ConvertTo-Json -Compress))
+    }
+    if ($null -ne $failure) { throw 'The fixed reclaim failed closed; inspect its retained partial/preflight receipt.' }
+}
 function Write-SessionCurrentFailureReadback {
     if (-not $artifactOwned -or $receipt.status -cne 'BLOCKED') { return }
     $readBudget = [ordered]@{ bytes = 0 }
@@ -940,6 +1203,11 @@ try {
     Assert-SessionIdleHost
     New-Item -ItemType Directory -Path $ArtifactRoot | Out-Null
     $artifactOwned = $true
+    if ($ReclaimVerifiedOldBuildIntermediates) {
+        Invoke-SessionFixedIntermediateReclaim
+        $receipt.status = 'FIXED_GENERATED_INTERMEDIATE_MAINTENANCE_COMPLETED; NO_NATIVE_ADMISSION'
+        return
+    }
     if ($DiagnosePreviousFailure) {
         Invoke-SessionPreviousFailureDiagnostic
         Invoke-SessionFixedStorageInventory
@@ -1369,7 +1637,7 @@ finally {
     Stop-SessionOwnedProcess $ownedEditor 'editor'
     Stop-SessionOwnedProcess $ownedBuild 'build' -BuildTree
     if ($artifactOwned) {
-        if ($receipt.status -ceq 'BLOCKED') {
+        if ($receipt.status -ceq 'BLOCKED' -and -not $ReclaimVerifiedOldBuildIntermediates) {
             try { Write-SessionCurrentFailureReadback }
             catch { $receipt.secondary_errors += ('Cannot retain current failure readback (' + $_.Exception.GetType().Name + ').') }
         }
