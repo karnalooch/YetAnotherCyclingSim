@@ -176,6 +176,13 @@ if (-not $failed -or $script:calls -ne 40 -or $script:sleeps -ne 39) {
                 timeout=30,
             )
 
+    def test_asphalt_host_wrapper_must_have_exact_lf_windows_checkout(self):
+        attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
+        self.assertIn(
+            "scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1 text eol=lf",
+            attributes,
+        )
+
     def test_native_road_reader_requires_retained_byte_pinned_automation_proof(self):
         reader = (ROOT / "scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1").read_text(
             encoding="utf-8"
