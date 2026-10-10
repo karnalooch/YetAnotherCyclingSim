@@ -540,12 +540,15 @@ inventory comparison. Fifty-three offline session/client tests and independent
 source/lifecycle reviews pass; these are preparation evidence.
 [First integrated attempt 38007485025](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38007485025)
 at `cd61e0133fc9be749cb0688c6536f09f4ea63a14` passed Windows parsing
-and the original-project build. The independently owned plugin build exited
-**6**; its compiler errors remain in the retained build log pending fixed
-readback. Accepted bytes were not staged and no Editor or MCP listener started.
-The workflow defaults temporarily to that fixed read-only failure diagnostic;
-the accepted-session mode remains explicit. New native dependency compilation
-and the actual accepted session remain unverified.
+and the original-project build. The independently owned plugin compiled but
+linking exited **6**: `LNK2019` for the `FJsonObjectWrapper` constructor used by
+the official `MakeTextResult` helper, followed by `LNK1120` for one unresolved
+symbol. [Fixed read-only diagnostic 38008679525](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38008679525)
+authenticated this retained failure without starting a build or Editor.
+Accepted bytes were not staged and no MCP listener started. The domain module
+now declares its direct `JsonUtilities` dependency. The workflow returns to
+the accepted-session default; successful plugin linking and the actual
+accepted session remain unverified.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 

@@ -251,6 +251,11 @@ struct FYacsBobOfficialSession : TSharedFromThis<FYacsBobOfficialSession, ESPMod
     bool CheckInventory()
     {
         if (!CheckNativePythonSettings()) { return false; }
+        if (UE::ModelContextProtocol::ShouldAutoStartServer())
+        {
+            Error = TEXT("The effective MCP automatic-startup setting changed.");
+            return false;
+        }
         IModelContextProtocolModule* Module = IModelContextProtocolModule::Get();
         if (!Module || !GlobalRegistry.IsValid() || !GlobalRegistry->ToolsetRegistry.GetBlockedNames().Contains(BlockAll)
             || Census() != LibraryClasses || Module->GetTools().Num() != 1
