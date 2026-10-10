@@ -30,6 +30,19 @@ jobs:
       GIT_LFS_SKIP_SMUDGE: '1'
       YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
     steps:
+      - name: Isolate Git configuration and enable long paths
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'road-material-source-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths in isolated Git configuration.' }
+
       - name: Checkout exact code-only source proof
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
