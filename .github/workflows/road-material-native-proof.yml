@@ -28,6 +28,12 @@ on:
       - 'scripts/ue/test_road_asphalt_saved_consumer.py'
       - 'scripts/ue/Invoke-YacsRoadSavedConsumer.ps1'
       - 'scripts/ue/test_invoke_road_saved_consumer.py'
+      - 'scripts/ue/road_asphalt_gpu_review.py'
+      - 'scripts/ue/test_road_asphalt_gpu_review.py'
+      - 'scripts/ue/Invoke-YacsRoadAsphaltRender.ps1'
+      - 'scripts/ue/test_invoke_road_asphalt_render.py'
+      - 'scripts/proof/sa_calobra_shoulder_contact.py'
+      - 'docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv'
       - 'scripts/assets/road_material_contract.py'
 
 permissions:
@@ -87,7 +93,7 @@ jobs:
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/364-road-surface-materials'
     runs-on: [self-hosted, yacs-ue58]
-    timeout-minutes: 15
+    timeout-minutes: 22
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
       YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
@@ -125,7 +131,8 @@ jobs:
           foreach ($script in @(
             'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1',
             'scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1',
-            'scripts/ue/Invoke-YacsRoadSavedConsumer.ps1'
+            'scripts/ue/Invoke-YacsRoadSavedConsumer.ps1',
+            'scripts/ue/Invoke-YacsRoadAsphaltRender.ps1'
           )) {
             $errors = $null
             [System.Management.Automation.Language.Parser]::ParseFile(
@@ -167,6 +174,16 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ue/Invoke-YacsRoadSavedConsumer.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
+
+      - name: Capture native road-facing lit GPU review
+        shell: pwsh
+        working-directory: rm-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ue/Invoke-YacsRoadAsphaltRender.ps1 `
             -ExpectedHead $env:GITHUB_SHA `
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
             -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG

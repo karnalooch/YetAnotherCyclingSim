@@ -28,6 +28,7 @@ scripts/ci/Test-YacsCodeOnlyCheckout.ps1 text eol=lf
 scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1 text eol=lf
 scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1 text eol=lf
 scripts/ue/Invoke-YacsRoadSavedConsumer.ps1 text eol=lf
+scripts/ue/Invoke-YacsRoadAsphaltRender.ps1 text eol=lf
 
 # Unreal Engine and source media binary assets
 *.uasset filter=lfs diff=lfs merge=lfs -text

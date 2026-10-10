@@ -664,3 +664,68 @@ their creation.
 Original accepted world, road/support geometry and Landscape remain frozen.
 Successful `SaveMap` alone is **not** a fresh-opened consumer proof; the
 candidate requires a new exact-SHA protected CI and native two-process reload.
+
+## M3 native road-facing GPU Lit review candidate — 2026-10-10
+
+The [first complete exact-head saved + independent fresh-reload proof
+38073659235](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38073659235)
+and [protected CI 38073662051](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38073662051)
+are both **PASS** at `c57ef87e476bf8a4fc2ff1e9c7bb6c2b0449fd32`.
+The previous read-only Scene Inventory, transient asphalt bind/rollback,
+saved `RoadAsphaltConsumer` derived map, six Material Forge assets,
+durable SHA-256 bytes and a **separate fresh Editor reopen without reapplication**
+are now **technically verified**. These are source/asset/scene checks with
+`-NullRHI`, not pixel/lighting acceptance.
+
+The next bounded #364 subgate is **four road-facing, bidirectional GPU Lit
+screenshots** from the exact frozen window **0112**. The producer is the
+unchanged
+`docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv` (raw SHA-256
+`15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3`),
+not a new interpolated map, invented camera or route restaging. Exact IDs are
+`window-0112-forward-00001`, `window-0112-forward-00002`,
+`window-0112-reverse-00001` and `window-0112-reverse-00002`. The 1280×720,
+76-degree-FOV road poses are reused as photographed by the accepted
+TPP source. No sphere/traffic/collision actor is created; only a transient
+camera is allowed. The original CSV includes an unreviewed visual status,
+which is not silently upgraded by this reuse.
+
+The new `scripts/ue/road_asphalt_gpu_review.py` strictly authenticates
+the current same-exact-SHA native base, transient canary and saved/fresh
+consumer host receipts, stage identity, source camera CSV, all retained
+derived asset byte hashes and the full real saved road/support/Landscape
+inventory **before** requesting any screenshots. It opens the **saved
+derived** map in a new GUI `UnrealEditor.exe -RenderOffscreen` process
+(not `-NullRHI`). The native `AutomationLibrary` produces four independently
+named Lit PNGs with complete format/CRC/dimension checks and fixed sampled
+non-blank diversity, retains per-frame SHA-256/bytes and camera provenance,
+destroys the transient camera, restores viewport position, then checks
+the exact complete scene and all immutable packages again.
+
+The new serialized host `Invoke-YacsRoadAsphaltRender.ps1` only starts
+after existing exact-SHA protected CI, read-only baseline, transient
+road-slot canary **and native saved/fresh reload** have passed in the
+same run. It refuses an owner-active Editor, authenticates the installed
+Unreal commandline executable and derived same-directory GUI executable,
+enforces strict source/checkout boundaries, caps the render Editor to 480s,
+requires four exact file IDs and checks every output hash. Retained
+`road-asphalt-lit-review.json` and
+`road-asphalt-gpu-host-receipt.json` record failure as failure; a missing
+PNG, crash, alias, saved-asset drift or unsupported material is not
+coerced to a PASS. The workflow keeps the normal 22-minute serial
+native-job cap, including preparation and GPU work.
+
+**Admission boundary:** this is a four-frame **technical camera/render canary**,
+not whole-area approval. Valid lit screenshots do not alone certify that
+asphalt covers specific visible pixels, that GPU shader compilation produced
+the intended normals/roughness, or that shoulder tops vs retaining walls
+have correct material ownership. `road_pixel_visibility_admitted=false`,
+`gpu_shader_compilation_admitted=false`,
+`shoulder_wall_materials_admitted=false`,
+`whole_area_visual_admitted=false`, owner visual
+`PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` /
+`performance_pass=false`. The resulting four PNGs must be inspected
+before choosing any quality iteration, then a distinct shoulder/edge/wall
+ownership pass and ultimately complete-area M3 owner review.
+This source candidate is **not a native render PASS** until separately
+proven at its new exact SHA.
