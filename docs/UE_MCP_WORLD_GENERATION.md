@@ -715,6 +715,27 @@ the host receipt is 422,608 bytes, SHA-256
 [Artifact 11656793802](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38018320423/artifacts/11656793802)
 is 427,248 bytes, archive SHA-256
 `0635866a12ca40c6d39428c3880e1e6bb27cf7d63b644ef216149726c9c6d3eb`.
+[Corrected session 38018565445](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38018565445)
+at `98b6042e495e79a6460f221190a9d5dfd79a08f0` passed both builds, accepted
+staging, the corrected config containment and listener readiness.
+[Ordinary CI 38018568041](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38018568041)
+also passed at that source. Owned Editor
+38100 reported `Ready` at `03:01:06.143`; owned client 268 started. Host context
+was verified at 110.882 seconds, the full source scan took 6.301 seconds, and
+transport was published at 117.204 seconds. The native session later failed
+at `03:03:25.263`, `phase=Completed elapsed=187.425`, under the unchanged
+180-second bound. The client exited nonzero with `TRANSPORT_BLOCKED` /
+`error_type=ValueError`; its exact failing validation is not yet established.
+`Completed` is set only after the test/producer/four-packet checks, but does not
+establish completed client verification or native admission. The retained
+failure is read next without another build or Editor; no deadline is extended.
+Pre-Editor disk reserve was 6.96 GiB, so another fresh build also needs a
+verified storage plan that preserves evidence and owner work.
+The host receipt is 444,401 bytes, SHA-256
+`eec147e2013a644ee7edbf81041da59597736626ad4bbb8fe609a8b9ee0eca3e`;
+[artifact 11657602552](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38018565445/artifacts/11657602552)
+is 2,935,256 bytes, archive SHA-256
+`afb7d52de02456f890ef132c36784e4f4b8255c9a79f3b23282d074645f12b4a`.
 The ordinary project descriptor and guarded baseline are unchanged;
 #384 stays open and #364 stays blocked.
 
