@@ -66,8 +66,9 @@ Owner decision, 2026-10-05, [#384](https://github.com/karnalooch/YetAnotherCycli
 adopt official Epic Unreal MCP through a bounded spike **only after full #363
 Landscape material acceptance and protected merge**, before #364 asphalt/shoulder.
 The fixed native inspection/test session and separate InputBoundary execution
-are verified on 2026-10-10. Final source-only evidence readback and protected
-delivery remain pending. Start #364 only after protected PR #467 is merged and
+are verified on 2026-10-10, with authenticated source-only receipt readback in
+[run 38040872136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136).
+Start #364 only after protected PR #467 is merged and
 #384 is closed as completed. This delivers the fixed read-only inspector;
 broader tool/authoring admission requires separate proof.
 See [the MCP decision and DoD](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption)

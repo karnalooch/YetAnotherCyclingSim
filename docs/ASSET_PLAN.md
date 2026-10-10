@@ -276,7 +276,9 @@ Read-only inventory at `bfbc48057b8b84d087a3685cd71972678a32d412`.
 The #363 material admission/merge prerequisite was satisfied on 2026-10-09.
 #384's fixed native inspection/test session, authenticated original receipt
 readback and separate [InputBoundary](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402)
-passed; final delivery-head receipt readback remains pending.
+passed. Authenticated source-only
+[receipt readback 38040872136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136)
+passed separately, without a new native session or unit execution.
 Start [#364](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364) only
 after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467)
 is merged and #384 is closed as completed; then stop MCP infrastructure work.

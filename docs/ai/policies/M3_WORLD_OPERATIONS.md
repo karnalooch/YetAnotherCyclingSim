@@ -190,8 +190,11 @@ passed `YacsBobInspection.InputBoundary` at execution SHA
 `2016a91f03438f1d866be0eb26f3ae49fd43b803`, using the strengthened test compiled
 at `0ee5eaf39e0d673fee061f7e33372710278d50be`. The original runtime receipt's
 `official_mcp_admitted: false` remains unchanged; these proofs support only
-the fixed inspection/test interface's protected delivery. Final delivery-head
-receipt readback remains pending.
+the fixed inspection/test interface's protected delivery. Authenticated
+source-only [receipt readback 38040872136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136)
+passed at reader SHA `df80c44a027102560767d9aaa14edab12526fd6d`, checking
+retained native/unit evidence without a new build or Editor launch. This reader
+revision remains separate from the runtime, unit and protected-merge revisions.
 
 Start #364 only after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467)
 is merged and [#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384)

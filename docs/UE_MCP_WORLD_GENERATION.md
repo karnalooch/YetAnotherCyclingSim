@@ -1,6 +1,6 @@
 # YACS UE-MCP world-generation architecture
 
-**Status:** #384's bounded native inspection/test session and separate InputBoundary test are verified. PR #467 delivers the fixed BOB inspector, shared Git-blob refactor and repeatable RMS calculation; final source-only evidence readback and protected closeout remain pending. Start #364 only after PR #467 is protected-merged and #384 is closed as completed. The ordinary project keeps the server disabled; broader tool or authoring admission requires separate proof.
+**Status:** #384's bounded native inspection/test session, separate InputBoundary test and authenticated source-only evidence readback are verified. PR #467 delivers the fixed BOB inspector, shared Git-blob refactor and repeatable RMS calculation. Start #364 only after PR #467 is protected-merged and #384 is closed as completed. The ordinary project keeps the server disabled; broader tool or authoring admission requires separate proof.
 **Tracking:** #384 adoption; #385 documentation; #85 historical integration; follow-ups #376 (Performance MCP), #377 (Buildings MCP)
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
@@ -162,10 +162,20 @@ the original report bytes and hash remain unchanged. The earlier BOM-blocked
 attempt [38038830197](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38038830197)
 remains blocked and is not relabelled by this successful retry.
 
-Final source-only readback is pending. It must authenticate the original
-runtime receipt, retained compilation and successful unit separately, without
-launching an Editor or compiler. Required exact-head CI and review still gate
-protected delivery. **Start #364 only after PR #467 is merged and #384 is closed
+Authenticated source-only readback at
+`df80c44a027102560767d9aaa14edab12526fd6d` passed in
+[run 38040872136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136).
+It authenticated the original runtime receipt, retained compilation and
+successful unit separately, including the raw report and all three original
+owned logs. The closed conservation inventories contain 15 copied inputs,
+57 fresh identities (5,958,949 logical bytes) and 138 protected identities
+(48,499,484 logical bytes). The 19,912-byte unit readback has SHA-256
+`3210141eeea7ac2e20d5f0298a89151ab7970f389254eb9a6ac31a5206c59d83`.
+This readback launched no Editor, compiler, Automation test or MCP session;
+its current execution/admission flags remain false. Runtime, compilation,
+unit execution, readback and later documentation/merge revisions are distinct.
+Required exact-head CI and review gate protected delivery.
+**Start #364 only after PR #467 is merged and #384 is closed
 as completed. Then stop MCP infrastructure work and return to asphalt/shoulder.**
 Stock material tools need their own actual-schema and native authoring proof
 for #364. M3 remains in progress; performance stays `DEFERRED_AFTER_M3` with
@@ -1161,7 +1171,7 @@ Aggregate gate. That CI does not enable or test this disabled-by-default plugin.
 - [x] Agent reads an actual Actor/UObject and verifies its identity (fixed session 241104de).
 - [x] One existing relevant Automation Test completes through the official toolset, with real results/logs (ProfileInterpolation, run 38027596123).
 - [x] One real BOB inspector executes through a thin domain tool and matches the direct invocation on identical inputs (fixed session 241104de).
-- [x] Result + proof + receipt are retrievable, hash/identity-bound and explicit about domain FAIL/review states (fixed session 241104de).
+- [x] Result + proof + receipt are retrievable, hash/identity-bound and explicit about domain FAIL/review states (fixed session 241104de; authenticated readback 38040872136).
 - [x] Fail-closed behavior and absence of unauthorized persistent/authority changes are verified for the fixed session; separate InputBoundary run 38039426402 verifies its native absence checks. Broader tool or authoring cutover requires separate admission.
 
 Delivery completes only when required integration/build/Automation,

@@ -13,7 +13,8 @@
     "Authenticated original receipt readback: https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38029602978",
     "Strengthened test separately compiled at 0ee5eaf39e0d673fee061f7e33372710278d50be: https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38035299343",
     "Separate InputBoundary success at execution 2016a91f03438f1d866be0eb26f3ae49fd43b803, with direct before/after MCP absence and no world/performance admission: https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402",
-    "Final delivery-head receipt readback remains pending; protected PR #467 merge and completed Issue #384 gate downstream implementation."
+    "Authenticated source-only receipt readback at df80c44a027102560767d9aaa14edab12526fd6d, without a new native or unit execution: https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136",
+    "Protected PR #467 merge and completed Issue #384 gate downstream implementation."
   ],
   "do_not_copy": [
     "YACS map, actor and test identities",

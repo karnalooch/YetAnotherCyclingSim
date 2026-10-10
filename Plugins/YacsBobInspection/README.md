@@ -32,8 +32,12 @@ admission, persistent mutation and performance PASS remain false.
 Authenticated original receipt readback passed in
 [run 38029602978](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38029602978).
 The original session verifies its fixed official listener; it does not prove
-absence of all other owned TCP endpoints or Wingman. Final delivery-head
-receipt readback remains pending.
+absence of all other owned TCP endpoints or Wingman. Authenticated source-only
+[receipt readback 38040872136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136)
+passed at reader SHA `df80c44a027102560767d9aaa14edab12526fd6d`, checking the
+retained successful native/unit receipts and unit report. It performed no
+new build, Editor launch, MCP session or unit execution; its current runtime
+verification flags remain false.
 
 Separate `YacsBobInspection.InputBoundary` passed in
 [run 38039426402](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402)
