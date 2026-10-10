@@ -52,6 +52,13 @@ def _variant_fixture(root: Path, size: int = 64, variant: str = "base") -> None:
     yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
     phase = 2 * np.pi * (xx / size * 4 + yy / size * 3)
     color_scalar = 0.45 + 0.06 * np.sin(phase)
+    if variant == "dry_varied":
+        # A deterministic multi-scale signal exercises rendered-map QA, not
+        # the Forge surface implementation. Broad variation is deliberately
+        # small relative to the independently seeded, softened small grains.
+        grain = np.random.default_rng(171).uniform(-1.0, 1.0, (size, size))
+        grain = 0.8 * grain + 0.1 * np.roll(grain, 1, 0) + 0.1 * np.roll(grain, 1, 1)
+        color_scalar = 0.31 + 0.008 * np.sin(2 * np.pi * (xx + yy) / size) + 0.075 * grain
     color = np.stack(
         [color_scalar * 0.97, color_scalar * 0.985, color_scalar], axis=2
     )
@@ -271,7 +278,8 @@ class MaterialForgeContractTests(unittest.TestCase):
     def test_dry_visual_correction_preserves_the_exact_periodic_helper(self):
         # The b385 fix for source run 38087789852/c773f871 stays byte-exact.
         # The later UE9242 appearance rejection changes the surface recipe.
-        helper, surface = forge.DRY_ASPHALT_FUNCTION.split("vec4 yacs_limestone(", 1)
+        helper, remainder = forge.DRY_ASPHALT_FUNCTION.split("vec4 yacs_dry_grains(", 1)
+        surface = remainder.split("vec4 yacs_limestone(", 1)[1]
         self.assertIn("vec2 p = fract(uv)*cells;", helper)
         self.assertNotIn("mod(", helper)
         self.assertNotIn("yacs_noise(", surface)
@@ -299,9 +307,9 @@ class MaterialForgeContractTests(unittest.TestCase):
             spans[field] = tones[1] - tones[0]
         # Equal source excursions expose the old cloud-dominant mix directly;
         # these probes do not assert visual acceptance or rendered statistics.
-        self.assertLess(spans["wear"], 0.035)
+        self.assertLess(spans["wear"], 0.010)
         self.assertGreater(spans["aggregate"], 0.05)
-        self.assertLess(spans["wear"], spans["aggregate"] / 2)
+        self.assertLess(spans["wear"] + spans["middle"], spans["aggregate"] / 5)
         self.assertGreater(spans["middle"], spans["wear"])
 
     def test_dry_crack_attenuation_reaches_colour_height_and_response(self):
@@ -349,25 +357,31 @@ class MaterialForgeContractTests(unittest.TestCase):
     def test_dry_source_qa_measures_actual_pixels_and_retains_statistics(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            _variant_fixture(root, variant="dry_varied")
-            result = forge.check_variant(root, expected_resolution=64)
+            _variant_fixture(root, size=256, variant="dry_varied")
+            result = forge.check_variant(root, expected_resolution=256)
             stats = result["dry_asphalt_statistics"]
             self.assertGreaterEqual(stats["roughness_min"], 0.90 - 1 / 255)
             self.assertLessEqual(stats["roughness_max"], 0.99 + 1 / 255)
-            self.assertGreater(stats["basecolor_25cm_luma_std"], 0.008)
+            self.assertGreater(stats["basecolor_25cm_luma_std"], 0.0015)
+            self.assertLess(stats["basecolor_25cm_luma_std"], 0.009)
+            self.assertGreater(stats["basecolor_grain_luma_rms"], 0.018)
+            self.assertLess(stats["basecolor_coarse_variance_fraction"], 0.12)
             self.assertGreater(stats["patch_coverage_fraction"], 0.02)
             self.assertLess(stats["patch_coverage_fraction"], 0.40)
             self.assertFalse(result["visual_accepted"])
 
-    def test_dry_source_qa_rejects_gloss_uniform_coarse_colour_and_solid_repairs(self):
+    def test_dry_source_qa_rejects_gloss_flat_colour_clouds_and_solid_repairs(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            _variant_fixture(root, variant="dry_varied")
+            _variant_fixture(root, size=256, variant="dry_varied")
             arrays = []
             for name in ("BaseColor", "Normal_DX", "ORM", "DetailMasks"):
                 with Image.open(root / "export" / f"{forge.EXPORT_PREFIX}_{name}.png") as image:
                     arrays.append(np.asarray(image, dtype=np.float32) / 255)
-            for failure in ("gloss", "flat_roughness", "micro_only", "solid_repairs"):
+            for failure in (
+                "gloss", "flat_roughness", "micro_only", "flat_colour",
+                "clouds", "solid_repairs",
+            ):
                 color, normal, orm, detail = [value.copy() for value in arrays]
                 if failure == "gloss":
                     orm[0, 0, 1] = 0.82
@@ -376,10 +390,37 @@ class MaterialForgeContractTests(unittest.TestCase):
                 elif failure == "micro_only":
                     yy, xx = np.indices(color.shape[:2])
                     color[:] = (0.31 + 0.04 * ((xx + yy) % 2))[..., None]
+                elif failure == "flat_colour":
+                    color[:] = 0.31
+                elif failure == "clouds":
+                    yy, xx = np.indices(color.shape[:2])
+                    color[:] = (0.31 + 0.05 * np.sin(2 * np.pi * (xx + yy) / 256))[..., None]
                 else:
                     detail[..., 1] = 0.90
                 with self.subTest(failure=failure), self.assertRaises(ValueError):
                     forge._dry_asphalt_statistics(color, normal, orm, detail)
+
+    def test_dry_source_qa_rejects_measured_f75_cloud_statistics(self):
+        # Measured from native source d91/run-a, used by the f75 consumer.
+        # Its old lower-only coarse gate passed, although 25.77% of colour
+        # variance survived the 25 cm average and grain contrast was weaker.
+        measured = {
+            "roughness_min": 0.8980392217636108,
+            "roughness_max": 0.9647058844566345,
+            "roughness_std": 0.008278615772724152,
+            "basecolor_luma_std": 0.027441481128335,
+            "basecolor_25cm_luma_std": 0.0139301223680377,
+            "basecolor_grain_luma_rms": 0.01592494712771696,
+            "basecolor_coarse_variance_fraction": 0.25768859927694754,
+            "patch_coverage_fraction": 0.180433988571167,
+        }
+        with self.assertRaisesRegex(ValueError, "25 cm colour variation"):
+            forge._assert_dry_asphalt_statistics(measured)
+        # Lowering broad contrast alone must still reject missing aggregate.
+        with self.assertRaisesRegex(ValueError, "resolved aggregate"):
+            forge._assert_dry_asphalt_statistics({
+                **measured, "basecolor_25cm_luma_std": 0.005,
+            })
 
     def test_validator_accepts_periodic_nonmetallic_fixture(self):
         with tempfile.TemporaryDirectory() as directory:

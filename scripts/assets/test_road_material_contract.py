@@ -78,7 +78,7 @@ def _synthetic_bundle(root: Path) -> None:
                 "shader_model": {
                     "code": "float $(name_uv)_tone = clamp($brightness"
                     "+0.200000*($variation($uv)-0.5)-0.045000*$crack($uv)"
-                    "-0.020000*$pore($uv),0.0,1.0);",
+                    "-0.014000*$pore($uv),0.0,1.0);",
                     "outputs": [{
                         "rgb": "vec3(($(name_uv)_tone*0.97)*1.000000,"
                         "($(name_uv)_tone*0.985)*1.000000,"
@@ -153,7 +153,9 @@ def _synthetic_bundle(root: Path) -> None:
             "roughness_mean": 0.94,
             "roughness_std": 0.01,
             "basecolor_luma_std": 0.034,
-            "basecolor_25cm_luma_std": 0.028,
+            "basecolor_25cm_luma_std": 0.006,
+            "basecolor_grain_luma_rms": 0.029,
+            "basecolor_coarse_variance_fraction": 0.031142,
             "patch_coverage_fraction": 0.13,
             "normal_xy_rms": 0.06,
         },
@@ -390,11 +392,16 @@ class RoadAsphaltSourceContractTests(unittest.TestCase):
                     self.check()
                 (self.root / "Material.ptex").write_bytes(original)
 
-    def test_claimed_dry_statistics_cannot_admit_glossy_or_uniform_source(self):
+    def test_claimed_dry_statistics_cannot_admit_glossy_uniform_or_cloudy_source(self):
         for field, value in (
             ("roughness_min", 0.82),
             ("roughness_std", 0.0),
             ("basecolor_25cm_luma_std", 0.001),
+            # Measured f75 source macro contrast and its high broad-signal share.
+            ("basecolor_25cm_luma_std", 0.013930),
+            ("basecolor_coarse_variance_fraction", 0.258),
+            ("basecolor_grain_luma_rms", 0.004),
+            ("basecolor_luma_std", 0.10),
             ("patch_coverage_fraction", 0.8),
         ):
             with self.subTest(field=field):

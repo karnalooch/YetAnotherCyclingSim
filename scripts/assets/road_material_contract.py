@@ -31,8 +31,8 @@ PARAMETERS = {
     "roughness": 0.94,
     "normal_strength": 0.24,
 }
-SURFACE_FIELD_SHA256 = "97bca24369096d5f9950d8ee6c901f4cc755001eda311f79583661fdbd6b01fd"
-COLOR_CODE_SHA256 = "7c17586b7fd5b612986a01f21c8eb90da32513fa29c721fbe2d27388b501c5f5"
+SURFACE_FIELD_SHA256 = "47ab2c0c7094aad3b41d978afcf239ce98cadab9e9cccb77cfc1ad9bf87134d3"
+COLOR_CODE_SHA256 = "966d6c6e406b5a3d1b4ec5b80fd8652bf324169f39532e4d917261d6fc725f13"
 COLOR_OUTPUT_SHA256 = "fc98416854b24483554e1bfa391504924ce1c779aa228200631a96e68f01b10d"
 ROUGHNESS_EXPRESSION = (
     "clamp(0.940000+0.055000*($variation($uv)-0.5)"
@@ -315,6 +315,7 @@ def _dry_statistics(value: Any) -> dict[str, float]:
         and set(value) == {
             "roughness_min", "roughness_max", "roughness_mean", "roughness_std",
             "basecolor_luma_std", "basecolor_25cm_luma_std",
+            "basecolor_grain_luma_rms", "basecolor_coarse_variance_fraction",
             "patch_coverage_fraction", "normal_xy_rms",
         },
         "Missing dry asphalt source statistics",
@@ -327,8 +328,10 @@ def _dry_statistics(value: Any) -> dict[str, float]:
         "Dry asphalt roughness statistics failed",
     )
     _require(
-        0.012 <= stats["basecolor_luma_std"] <= 0.5
-        and 0.008 <= stats["basecolor_25cm_luma_std"] <= stats["basecolor_luma_std"]
+        0.018 <= stats["basecolor_luma_std"] <= 0.065
+        and 0.0015 <= stats["basecolor_25cm_luma_std"] <= 0.009
+        and 0.018 <= stats["basecolor_grain_luma_rms"] <= 0.065
+        and 0.001 <= stats["basecolor_coarse_variance_fraction"] <= 0.12
         and 0.02 <= stats["patch_coverage_fraction"] <= 0.40
         and 0 < stats["normal_xy_rms"] <= 1,
         "Dry asphalt variation statistics failed",

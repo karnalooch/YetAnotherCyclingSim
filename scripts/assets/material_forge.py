@@ -116,18 +116,83 @@ float yacs_dry_noise(vec2 uv, float cells, float salt) {
     float d = dot(yacs_gradient(next_cell,salt),f-vec2(1.0));
     return 0.5+0.7*mix(mix(a,b,weight.x),mix(c,d,weight.x),weight.y);
 }
+vec4 yacs_dry_grains(vec2 uv, float cells, float salt) {
+    // Periodic, jittered Voronoi grains. Unlike interpolated gradient noise,
+    // each mineral has its own flat interior and a narrow binder boundary.
+    // Wrap integer neighbours explicitly, including negative edge neighbours.
+    vec2 p = fract(uv)*cells;
+    vec2 origin = floor(p);
+    vec2 local = fract(p);
+    float first = 100.0;
+    float second = 100.0;
+    vec2 nearest_delta = vec2(0.0);
+    vec2 nearest_index = vec2(0.0);
+    for (int y=-1; y<=1; y++) {
+        for (int x=-1; x<=1; x++) {
+            vec2 offset = vec2(float(x),float(y));
+            vec2 index = origin+offset;
+            index.x = index.x < 0.0 ? index.x+cells : index.x;
+            index.y = index.y < 0.0 ? index.y+cells : index.y;
+            index.x = index.x >= cells ? index.x-cells : index.x;
+            index.y = index.y >= cells ? index.y-cells : index.y;
+            vec2 point = 0.08+0.84*vec2(
+                yacs_hash(index,salt),yacs_hash(index,salt+7.0)
+            );
+            vec2 delta = offset+point-local;
+            float distance2 = dot(delta,delta);
+            if (distance2 < first) {
+                second = first;
+                first = distance2;
+                nearest_delta = delta;
+                nearest_index = index;
+            } else {
+                second = min(second,distance2);
+            }
+        }
+    }
+    // Each piece has an independently rotated, stretched and bevelled
+    // polygonal footprint. A radial distance cut made the previous probe
+    // look like equal round beads; a full cell fill would become paving.
+    float angle = 6.28318530718*yacs_hash(nearest_index,salt+29.0);
+    vec2 axis = vec2(cos(angle),sin(angle));
+    vec2 sides = abs(vec2(
+        dot(nearest_delta,axis),dot(nearest_delta,vec2(-axis.y,axis.x))
+    ));
+    float stretch = mix(0.88,1.16,yacs_hash(nearest_index,salt+31.0));
+    sides = sides*vec2(stretch,1.0/stretch);
+    float bevel = mix(0.12,0.40,yacs_hash(nearest_index,salt+37.0));
+    float polygon_radius = max(sides.x,sides.y)+bevel*min(sides.x,sides.y);
+    return vec4(
+        polygon_radius,sqrt(second)-sqrt(first),
+        yacs_hash(nearest_index,salt+19.0),yacs_hash(nearest_index,salt+23.0)
+    );
+}
 vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
     vec2 warp = vec2(yacs_dry_noise(uv,9.0,seed),yacs_dry_noise(uv,13.0,seed+3.0))-0.5;
     vec2 detail_warp = vec2(yacs_dry_noise(uv,37.0,seed+5.0),yacs_dry_noise(uv,37.0,seed+7.0))-0.5;
-    vec2 q = uv+0.028*warp+0.003*detail_warp;
+    vec2 q = uv+0.004*warp+0.00065*detail_warp;
 
     float coarse = 0.62*yacs_dry_noise(q,3.0,seed+11.0)
                  + 0.38*yacs_dry_noise(q,7.0,seed+13.0);
     float middle = 0.60*yacs_dry_noise(q,29.0,seed+17.0)
                  + 0.40*yacs_dry_noise(q,61.0,seed+19.0);
-    float aggregate = 0.60*yacs_dry_noise(q,257.0,seed+23.0)
-                    + 0.40*yacs_dry_noise(q,521.0,seed+29.0);
+    // At the unchanged 4 m source tile: 12.62 / 7.39 mm mean cell pitch.
+    // Irregular clipped cell interiors expose approximately 4-14 mm aggregate,
+    // resolved by about 2-7 texels at 2K, twice that at 4K. Two independently
+    // seeded populations and non-directional warp avoid a visible cell grid.
+    vec4 coarse_cells = yacs_dry_grains(q,317.0,seed+23.0);
+    vec4 fine_cells = yacs_dry_grains(q,541.0,seed+29.0);
+    float coarse_radius = mix(0.24,0.47,coarse_cells.w);
+    float fine_radius = mix(0.25,0.50,fine_cells.w);
+    float coarse_grain = smoothstep(0.016,0.105,coarse_cells.y)
+                       *(1.0-smoothstep(0.62*coarse_radius,coarse_radius,coarse_cells.x));
+    float fine_grain = smoothstep(0.012,0.090,fine_cells.y)
+                     *(1.0-smoothstep(0.60*fine_radius,fine_radius,fine_cells.x));
     float micro = yacs_dry_noise(q,733.0,seed+31.0);
+    float aggregate = clamp(
+        0.40+0.64*coarse_grain*(coarse_cells.z-0.28)
+        +0.24*fine_grain*(fine_cells.z-0.28)+0.10*(micro-0.5),0.0,1.0
+    );
     float wear = smoothstep(0.30,0.70,0.66*coarse+0.34*middle);
 
     float repair_field = 0.56*yacs_dry_noise(q,5.0,seed+37.0)
@@ -149,14 +214,18 @@ vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
     // Attenuate the shared field so all five exports retain the same relief.
     crack *= 0.20*(1.0-0.70*patch_mask);
 
-    float height = 0.50+0.018*(aggregate-0.5)+0.006*(micro-0.5);
-    height += 0.004*(middle-0.5)+0.003*patch_mask;
+    // Relief follows aggregate coverage, not mineral brightness or broad
+    // wear. This keeps light/dark stones on the same physical surface and
+    // prevents broad colour mottling from becoming lumpy normal-map relief.
+    float height = 0.50+0.012*(coarse_grain-0.4)+0.004*(fine_grain-0.4);
+    height += 0.002*(micro-0.5)+0.001*patch_mask;
     height -= clamp(fractures,0.0,1.6)*0.022*crack;
-    // Keep metre-scale wear subordinate to the existing centimetre/millimetre
-    // binder and aggregate fields; dominant wear read as marble in UE.
+    // Broad appearance accounts for only 12% of the mix; exposed minerals
+    // carry the contrast. Equal-amplitude gradient octaves previously lost
+    // their fine detail in mips, leaving cloudy 25 cm patches in the road.
     float variation = clamp(
-        0.5+1.65*(0.18*(wear-0.5)+0.32*(middle-0.5)
-        +0.38*(aggregate-0.5)+0.12*(micro-0.5)),0.0,1.0
+        0.5+1.35*(0.04*(wear-0.5)+0.08*(middle-0.5)
+        +0.86*(aggregate-0.5)+0.02*(micro-0.5)),0.0,1.0
     );
     return vec4(clamp(height,0.0,1.0),crack,patch_mask,variation);
 }
@@ -480,7 +549,7 @@ def _color_code(
     pore_scale = _profile_scale(profile, "pore_color_scale")
     if family_id == "aged_mountain_asphalt":
         if _is_dry_asphalt(family_id, variant):
-            variation, crack, pore = 0.200, -0.045, -0.020
+            variation, crack, pore = 0.200, -0.045, -0.014
         else:
             variation, crack, pore = 0.085, -0.060, -0.030
     elif family_id == "regional_limestone":
@@ -774,15 +843,19 @@ def _dry_asphalt_statistics(
 ) -> dict[str, float]:
     """Measure the rendered dry recipe, not its intended scalar settings.
 
-    Sixteen blocks per 4 m tile measure 25 cm appearance changes after micro
-    detail has averaged away. This is source QA, not an Unreal appearance gate.
+    Sixteen blocks per 4 m tile measure 25 cm appearance changes. Residuals
+    inside 128 blocks measure grain below 31.25 mm, independently of the
+    broad signal. This is source QA, not an Unreal appearance gate.
     """
     roughness = orm[..., 1]
     luma = color @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32)
     height, width = luma.shape
-    if height % 16 or width % 16:
-        raise ValueError("Dry asphalt statistics need a 16-block source grid")
+    if height % 128 or width % 128 or min(height, width) < 256:
+        raise ValueError("Dry asphalt statistics need a resolved 128-block source grid")
     coarse = luma.reshape(16, height // 16, 16, width // 16).mean(axis=(1, 3))
+    grain_blocks = luma.reshape(128, height // 128, 128, width // 128)
+    grain = grain_blocks - grain_blocks.mean(axis=(1, 3), keepdims=True)
+    luma_variance = float(luma.var())
     stats = {
         "roughness_min": float(roughness.min()),
         "roughness_max": float(roughness.max()),
@@ -790,9 +863,16 @@ def _dry_asphalt_statistics(
         "roughness_std": float(roughness.std()),
         "basecolor_luma_std": float(luma.std()),
         "basecolor_25cm_luma_std": float(coarse.std()),
+        "basecolor_grain_luma_rms": float(np.sqrt(np.mean(grain ** 2))),
+        "basecolor_coarse_variance_fraction": float(coarse.var()) / max(luma_variance, 1e-12),
         "patch_coverage_fraction": float(np.mean(detail[..., 1] > 0.25)),
         "normal_xy_rms": float(np.sqrt(np.mean((normal[..., :2] * 2 - 1) ** 2))),
     }
+    _assert_dry_asphalt_statistics(stats)
+    return stats
+
+
+def _assert_dry_asphalt_statistics(stats: dict[str, float]) -> None:
     # One UNORM8 step accommodates source export quantization, not a lower
     # roughness recipe. Actual min/max/mean are retained for the UE comparison.
     if not (
@@ -802,14 +882,19 @@ def _dry_asphalt_statistics(
         raise ValueError("Dry asphalt roughness is outside 0.90..0.99")
     if stats["roughness_std"] < 0.003:
         raise ValueError("Dry asphalt roughness variation is missing")
-    if (
-        stats["basecolor_luma_std"] < 0.012
-        or stats["basecolor_25cm_luma_std"] < 0.008
-    ):
-        raise ValueError("Dry asphalt coarse colour variation is missing")
+    if not 0.018 <= stats["basecolor_luma_std"] <= 0.065:
+        raise ValueError("Dry asphalt colour contrast is outside granular bounds")
+    # The former lower-only 0.008 coarse gate rewarded the cloud-like f75
+    # result. Retain gentle larger-scale variation, but reject both a uniform
+    # salt-and-pepper map and broad mottling that dominates the visible grain.
+    if not 0.0015 <= stats["basecolor_25cm_luma_std"] <= 0.009:
+        raise ValueError("Dry asphalt 25 cm colour variation is outside bounds")
+    if not 0.018 <= stats["basecolor_grain_luma_rms"] <= 0.065:
+        raise ValueError("Dry asphalt resolved aggregate contrast is outside bounds")
+    if not 0.001 <= stats["basecolor_coarse_variance_fraction"] <= 0.12:
+        raise ValueError("Dry asphalt broad-to-grain contrast is outside bounds")
     if not 0.02 <= stats["patch_coverage_fraction"] <= 0.40:
         raise ValueError("Dry asphalt irregular repair coverage is outside bounds")
-    return stats
 
 
 def check_variant(directory: Path, expected_resolution: int = 2048) -> dict[str, Any]:

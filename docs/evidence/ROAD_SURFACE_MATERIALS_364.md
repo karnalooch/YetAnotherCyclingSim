@@ -1,6 +1,6 @@
 # Road surface materials — Issue #364 evidence
 
-**Recorded:** 2026-10-10
+**Recorded:** 2026-10-11
 
 **Work item:** [#364](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364), in progress; [PR #470](https://github.com/karnalooch/YetAnotherCyclingSim/pull/470) is Draft.
 
@@ -11,6 +11,41 @@ This is a scoped evidence record, not world or material admission. #363's
 remains frozen. #384 completed after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467)
 merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its gate is satisfied.
 This work continues #364, not MCP infrastructure.
+
+## Current refinement after the f75 visual rejection — 2026-10-11
+
+The owner requested another texture-first Material Forge refinement, followed
+by the remaining road/contact defects, with independent specialist review.
+The current technical baseline is `f75e76ba1ecde8a3ac4458557ed51ce60492847c`:
+[protected CI 38092749669](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38092749669)
+and [native/GPU 38092747036](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38092747036)
+passed. The actual host receipt verifies all 68 planned final frames, 186
+support owners, 185 material targets and 67,760 selected shoulder triangles,
+with an observed GPU Editor exit of 0 and fresh-reload conservation. These are
+technical results, not approval of the appearance.
+
+Direct inspection of the original `window-0112-forward-00002`,
+`window-0071-forward-00002` and `window-0081-forward-00008` PNGs confirms the
+remaining broad cloudy asphalt, transverse distant repetition, straight gravel
+boundaries, the inner dark contact edge and severely dark hairpin shadows.
+The retained d91 BaseColor already contains the broad variation. Its dry
+shader combines interpolated fields rather than distinct aggregate grains;
+the old one-sided 25 cm luma minimum also rewards the rejected broad signal.
+
+The next source candidate changes only `dry_varied`: explicit metric aggregate,
+quieter broad colour, and complementary checks rejecting both a flat map and
+cloud-dominated variation. The existing four-metre tile, DirectX normal, dry
+nonmetallic response, deterministic two-render proof and native source pins
+remain required. Historical material variants and provider-scaled CC0
+`rock_ground` gravel remain retained. A new source receipt must be independently
+verified before updating the native source bridge or claiming new images.
+
+Material comparison uses the same f75 camera and lighting plan. Surface-owner
+isolation for #459 is a separate read-only diagnostic; it cannot establish a
+geometry repair. Any later bounded road/terrain correction needs its own
+source-relative delta, rollback and native proof. Owner audit remains
+`PENDING_FINAL_M3`; performance remains `DEFERRED_AFTER_M3` and
+`performance_pass: false`.
 
 ## Whole-network revision following owner feedback
 
