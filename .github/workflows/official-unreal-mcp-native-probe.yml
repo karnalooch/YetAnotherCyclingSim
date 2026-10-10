@@ -67,6 +67,67 @@ jobs:
           NATIVE_PROBE_MODE: ${{ github.event.inputs.mode || 'diagnose_previous_failure' }}
         run: |
           $ErrorActionPreference = 'Stop'
+          $checkoutRoot = (Get-Location).Path
+          $expectedCheckoutRoot = Join-Path $env:GITHUB_WORKSPACE '_official-mcp-native-probe'
+          if (-not [string]::Equals($checkoutRoot, $expectedCheckoutRoot, [StringComparison]::OrdinalIgnoreCase)) {
+            throw 'The fixed JSON rewrite requires this Actions isolated checkout.'
+          }
+          $fixedJsonPaths = @('.gumball/candidates/scoped-agent-role-authority-routing.json', 'docs/ai/ROLE_REGISTRY.json')
+          $beforeRewrite = @()
+          foreach ($relative in $fixedJsonPaths) {
+            $entry = Get-Item -LiteralPath (Join-Path $checkoutRoot $relative) -Force
+            if ($entry.PSIsContainer -or $entry.Length -le 0 -or $entry.Length -gt 64KB) { throw 'A fixed JSON rewrite input is not a bounded nonempty regular file.' }
+            $beforeRewrite += [ordered]@{ relative_path = $relative; size_bytes = $entry.Length }
+            $cursor = [IO.Path]::GetFullPath((Join-Path $checkoutRoot $relative))
+            while ($cursor) {
+              if ([IO.File]::GetAttributes($cursor) -band [IO.FileAttributes]::ReparsePoint) { throw 'The fixed JSON rewrite refuses reparse paths.' }
+              $cursor = [IO.Path]::GetDirectoryName($cursor)
+            }
+          }
+          $gitCommand = Get-Command git -CommandType Application -ErrorAction Stop | Select-Object -First 1
+          if ($gitCommand -isnot [System.Management.Automation.ApplicationInfo] -or $gitCommand.Source -isnot [string] -or
+              [string]::IsNullOrWhiteSpace($gitCommand.Source) -or $gitCommand.Source.Length -gt 1024) { throw 'The fixed JSON rewrite requires one bounded Git executable path.' }
+          $checkoutHead = @(& $gitCommand.Source rev-parse HEAD)
+          if ($LASTEXITCODE -ne 0 -or $checkoutHead.Count -ne 1 -or $checkoutHead[0] -cne $env:TARGET_SHA) { throw 'The fixed JSON rewrite requires the exact Actions target HEAD.' }
+          & $gitCommand.Source diff --cached --quiet --no-ext-diff --no-textconv HEAD -- .gitattributes .gumball/candidates/scoped-agent-role-authority-routing.json docs/ai/ROLE_REGISTRY.json
+          if ($LASTEXITCODE -ne 0) { throw 'The fixed JSON rewrite refuses an index differing from target HEAD.' }
+          & $gitCommand.Source diff --quiet --no-ext-diff --no-textconv HEAD -- .gitattributes .gumball/candidates/scoped-agent-role-authority-routing.json docs/ai/ROLE_REGISTRY.json
+          if ($LASTEXITCODE -ne 0) { throw 'The fixed JSON rewrite refuses index or working content differing from target HEAD.' }
+          $ownedRewrite = $null
+          try {
+            # Git's cached stat can keep old CRLF bytes despite --force.
+            # Remove only these recoverable tracked files before restoring them.
+            foreach ($relative in $fixedJsonPaths) {
+              $path = Join-Path $checkoutRoot $relative
+              $entry = Get-Item -LiteralPath $path -Force
+              if ($entry.PSIsContainer -or ($entry.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $entry.Length -le 0 -or $entry.Length -gt 64KB) { throw 'The fixed JSON deletion requires the checked regular tracked file.' }
+              [IO.File]::Delete($path)
+            }
+            $ownedRewrite = Start-Process -FilePath $gitCommand.Source -WorkingDirectory $checkoutRoot -PassThru -NoNewWindow -ArgumentList @(
+              'checkout-index', '--force', '--', '.gumball/candidates/scoped-agent-role-authority-routing.json', 'docs/ai/ROLE_REGISTRY.json'
+            )
+            if (-not $ownedRewrite.WaitForExit(30000)) { throw 'The fixed JSON checkout exceeded thirty seconds.' }
+            $ownedRewrite.WaitForExit()
+            if ($ownedRewrite.ExitCode -ne 0) { throw 'The fixed JSON checkout failed.' }
+            $afterRewrite = @()
+            foreach ($relative in $fixedJsonPaths) {
+              $entry = Get-Item -LiteralPath (Join-Path $checkoutRoot $relative) -Force
+              if ($entry.PSIsContainer -or ($entry.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $entry.Length -le 0 -or $entry.Length -gt 64KB) { throw 'A rewritten JSON is not a bounded nonempty regular file.' }
+              $afterRewrite += [ordered]@{ relative_path = $relative; size_bytes = $entry.Length }
+            }
+            $rewriteJson = [ordered]@{ path_count = 2; exit_code = 0; scope = 'CURRENT_ISOLATED_CHECKOUT_METADATA'; before = $beforeRewrite; after = $afterRewrite } | ConvertTo-Json -Depth 4 -Compress
+            if ([Text.Encoding]::UTF8.GetByteCount($rewriteJson) -gt 2KB) { throw 'The fixed JSON rewrite metadata exceeds its2KiB bound.' }
+            Write-Host ('MAIN_JSON_CHECKOUT_REWRITTEN ' + $rewriteJson)
+          } finally {
+            if ($null -ne $ownedRewrite) {
+              try {
+                if (-not $ownedRewrite.HasExited) {
+                  $ownedRewrite.Kill($true)
+                  if (-not $ownedRewrite.WaitForExit(10000)) { throw 'The owned JSON rewrite exit was not observed.' }
+                }
+              } finally { $ownedRewrite.Dispose() }
+            }
+          }
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
           foreach ($source in @(
             'scripts/ue/Invoke-YacsOfficialMcpNativeProbe.ps1',

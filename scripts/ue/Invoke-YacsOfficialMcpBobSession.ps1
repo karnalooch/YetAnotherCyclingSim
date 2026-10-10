@@ -671,7 +671,16 @@ function Get-SessionIntegratedMainProvenance {
         if ($currentBlobs[$index] -cnotmatch '^[0-9a-f]{40}$') { throw 'A current main-path raw Git blob is malformed.' }
         $after = Get-SessionFileIdentity $currentIdentities[$relative].path $currentIdentities[$relative].size_bytes
         if ($after.sha256 -cne $currentIdentities[$relative].sha256 -or $after.size_bytes -ne $currentIdentities[$relative].size_bytes `
-            -or $currentBlobs[$index] -cne $headBlobs[$relative]) { throw 'A bounded main raw input changed or differs from executing HEAD.' }
+            -or $currentBlobs[$index] -cne $headBlobs[$relative]) {
+            $receipt['integrated_main_identity_failure'] = [ordered]@{ relative_path = $relative; path_index = $index
+                before = $currentIdentities[$relative]; after = $after; raw_git_blob = $currentBlobs[$index]; head_git_blob = $headBlobs[$relative]
+                raw_bytes_unchanged = $after.sha256 -ceq $currentIdentities[$relative].sha256 -and $after.size_bytes -eq $currentIdentities[$relative].size_bytes
+                raw_blob_equals_head = $currentBlobs[$index] -ceq $headBlobs[$relative] }
+            $failureJson = $receipt.integrated_main_identity_failure | ConvertTo-Json -Depth 5 -Compress
+            if ([Text.Encoding]::UTF8.GetByteCount($failureJson) -gt 4KB) { throw 'The main input failure metadata exceeds its4KiB bound.' }
+            Write-Host ('MAIN_INPUT_IDENTITY_FAILURE ' + $failureJson)
+            throw 'A bounded main raw input changed or differs from executing HEAD.'
+        }
         $exception = $relative -cin @('docs/README.md', 'docs/ai/policies/M3_WORLD_OPERATIONS.md')
         if (-not $exception -and $currentBlobs[$index] -cne $blobs[$relative]) { throw 'An unmodified main-policy input differs from its pinned main blob.' }
         $rows[$relative] = [ordered]@{ main_git_blob = $blobs[$relative]; current_raw_git_blob = $currentBlobs[$index]
@@ -735,6 +744,19 @@ function Invoke-SessionVerifiedGreenReadback {
         '.github/workflows/official-unreal-mcp-native-probe.yml', 'scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1', $testPath)
     $integratedMain = Get-SessionIntegratedMainProvenance
     $allowedChanges += $integratedMain.paths
+    # These two immutable Git blobs differ only by the two literal LF rules.
+    # Windows working .gitattributes bytes need not equal the LF Git blob.
+    $oldAttributes = @(& git -C $RepoRoot ls-tree $oldSha -- .gitattributes)
+    if ($LASTEXITCODE -ne 0 -or $oldAttributes.Count -ne 1 `
+        -or $oldAttributes[0] -cne "100644 blob b9c496b1bbf3be643862a8d23eec8aa63c79ee4e`t.gitattributes") { throw 'The original attributes Git blob differs.' }
+    $currentAttributes = @(& git -C $RepoRoot ls-tree $ExpectedHead -- .gitattributes)
+    if ($LASTEXITCODE -ne 0 -or $currentAttributes.Count -ne 1 `
+        -or $currentAttributes[0] -cne "100644 blob 2f0493d000243006536e3a0cc0374fed641523e2`t.gitattributes") { throw 'The attributes delta is not exactly the two admitted LF rules.' }
+    $attributesDelta = [ordered]@{ path = '.gitattributes'; original_git_blob = 'b9c496b1bbf3be643862a8d23eec8aa63c79ee4e'
+        current_git_blob = '2f0493d000243006536e3a0cc0374fed641523e2'; scope = 'EXACT_TWO_LINE_LF_CHECKOUT_DELTA; NOT_ORIGINAL_ATTRIBUTE_BYTES'
+        added_rules = @('.gumball/candidates/scoped-agent-role-authority-routing.json text eol=lf', 'docs/ai/ROLE_REGISTRY.json text eol=lf')
+        current_raw_sha256 = $receipt.tracked_source_sha256['.gitattributes'] }
+    $allowedChanges += '.gitattributes'
     $changed = @(& git -C $RepoRoot diff --name-only $oldSha $ExpectedHead --)
     if ($LASTEXITCODE -ne 0 -or $changed.Count -gt $allowedChanges.Count) { throw 'Cannot establish the bounded original-to-unit source delta.' }
     foreach ($relative in $changed) {
@@ -983,6 +1005,7 @@ function Invoke-SessionVerifiedGreenReadback {
         original_run = '38027596123-1'; original_exact_sha = $oldSha; original_host = $verifiedHostDocument.identity
         original_source_fingerprints = $h.source_fingerprints; current_unit_source_fingerprints = $receipt.source_fingerprints
         integrated_main_provenance = $integratedMain
+        attributes_checkout_delta = $attributesDelta
         current_unit_test_delta = [ordered]@{ scope = 'CURRENT_UNIT_TEST_ONLY_DELTA; NOT_ORIGINAL_BINARY_PROOF'; path = $testPath
             original_sha256 = $oldTestHash; original_git_blob = $oldTestBlob[0]; current_sha256 = $newTestHash; current_exact_sha = $ExpectedHead
             unchanged_native_runtime_input_count = 11; original_to_current_changed_paths = $changed }

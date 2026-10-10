@@ -67,3 +67,5 @@ docs/experiments/sa-calobra-material-repair-20261006/evidence/native-projection.
 
 # Preserve native detail proof bytes, including Windows-authored JSON receipts.
 docs/experiments/sa-calobra-component230-detail-native-20261008/evidence/** -text whitespace=cr-at-eol
+.gumball/candidates/scoped-agent-role-authority-routing.json text eol=lf
+docs/ai/ROLE_REGISTRY.json text eol=lf
