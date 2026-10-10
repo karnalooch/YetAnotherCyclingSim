@@ -158,6 +158,60 @@ class BaselineBoundaryTests(unittest.TestCase):
         self.assertEqual(len(docs["DynamicMesh.get_vertex_positions"]["doc"]), reader.DOC_LIMIT)
         self.assertFalse(docs["DynamicMesh.get_triangle_count"]["doc_available"])
 
+    def test_unreal_cache_input_checkout_matches_committed_raw_bytes(self):
+        """Compile/proof cache inputs must be byte-identical on Windows and Linux.
+
+        This is a source checkout guard, not cache/proof admission or a native run.
+        """
+        import hashlib
+        import subprocess
+
+        from scripts.ci.classify_changes import (
+            UNREAL_COMPILE_TOOLING_EXACT, UNREAL_PROOF_EXACT,
+        )
+
+        repo = reader.ROOT
+        critical_ps1 = {path for path in
+                        UNREAL_COMPILE_TOOLING_EXACT | UNREAL_PROOF_EXACT
+                        if path.endswith(".ps1")}
+        listing = subprocess.run(
+            ["git", "-C", str(repo), "ls-tree", "-r", "-z", "HEAD", "--",
+             "Source", "Plugins", *sorted(critical_ps1)],
+            check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        ).stdout
+        committed = {}
+        for row in listing.split(b"\\0"):
+            if not row:
+                continue
+            header, marker, name = row.partition(b"\\t")
+            self.assertEqual(marker, b"\\t")
+            mode, obj_type, sha = header.split(b" ")
+            self.assertEqual(obj_type, b"blob")
+            path = name.decode("utf-8")
+            if path.endswith(".cs") or path in critical_ps1:
+                self.assertEqual(mode, b"100644")
+                committed[path] = sha.decode("ascii")
+        self.assertTrue(critical_ps1.issubset(committed))
+        self.assertTrue(any(path.endswith(".cs") for path in committed))
+
+        paths = sorted(committed)
+        attributes = subprocess.run(
+            ["git", "-C", str(repo), "check-attr", "eol", "--", *paths],
+            check=True, capture_output=True, text=True,
+        ).stdout.splitlines()
+        self.assertEqual(len(attributes), len(paths))
+        self.assertEqual({line.rpartition(": eol: ")[0]: line.rpartition(": eol: ")[2]
+                          for line in attributes},
+                         {path: "lf" for path in paths})
+
+        for path, expected in committed.items():
+            with self.subTest(path=path):
+                raw = (repo / path).read_bytes()
+                self.assertNotIn(b"\\r", raw, "fingerprint input has physical CR bytes")
+                git_blob = b"blob " + str(len(raw)).encode("ascii") + b"\\0" + raw
+                self.assertEqual(hashlib.sha1(git_blob).hexdigest(), expected,
+                                 "physical fingerprint input differs from Git HEAD")
+
     def test_native_dirty_package_boundary_fails_closed(self):
         api = SimpleNamespace(EditorLoadingAndSavingUtils=SimpleNamespace(
             get_dirty_map_packages=list, get_dirty_content_packages=list))

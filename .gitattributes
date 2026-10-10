@@ -10,6 +10,19 @@
 *.uproject text eol=lf
 *.uplugin text eol=lf
 *.ini text eol=lf
+
+# The existing Unreal cache fingerprints raw checked-out C# and proof-script
+# bytes. Pin LF for exactly those inputs on Windows as well as on Linux.
+# Do not relax the cache's exact physical-byte/fingerprint comparison.
+*.cs text eol=lf
+scripts/ci/Invoke-YacsUnrealCi.ps1 text eol=lf
+scripts/ci/Resolve-YacsUnrealBuildEnvironment.ps1 text eol=lf
+scripts/ue/Invoke-YacsProof.ps1 text eol=lf
+scripts/ue/Preflight-YacsProof.ps1 text eol=lf
+scripts/ci/Resolve-YacsUnrealEngine.ps1 text eol=lf
+scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1 text eol=lf
+scripts/ci/Resolve-YacsUnrealCiCache.ps1 text eol=lf
+scripts/ci/Test-YacsCodeOnlyCheckout.ps1 text eol=lf
 scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1 text eol=lf
 
 # Unreal Engine and source media binary assets
