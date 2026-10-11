@@ -124,7 +124,9 @@ class ShoulderContactTests(unittest.TestCase):
         owner.capture = SimpleNamespace(start=lambda: events.append("callback"))
         owner._start_capture()
         self.assertEqual(events, [True, "callback"])
-        with patch.object(owner, "_finish", side_effect=lambda _error: events.append("restore")):
+        with patch.object(
+            owner, "_finish", side_effect=lambda _error: events.append("restore")
+        ):
             owner.finish()
         self.assertEqual(events, [True, "callback", "restore", False, "quit"])
 
@@ -135,11 +137,16 @@ class ShoulderContactTests(unittest.TestCase):
         quit_editor = Mock()
         owner.api = SimpleNamespace(
             EditorPythonScripting=SimpleNamespace(
-                set_keep_python_script_alive=Mock(side_effect=RuntimeError("release lost"))
+                set_keep_python_script_alive=Mock(
+                    side_effect=RuntimeError("release lost")
+                )
             ),
             SystemLibrary=SimpleNamespace(quit_editor=quit_editor),
         )
-        with patch.object(owner, "_finish") as cleanup, patch.object(owner, "write") as write:
+        with (
+            patch.object(owner, "_finish") as cleanup,
+            patch.object(owner, "write") as write,
+        ):
             with self.assertRaisesRegex(RuntimeError, "release lost"):
                 owner.finish("capture failed")
         cleanup.assert_called_once_with("capture failed")
