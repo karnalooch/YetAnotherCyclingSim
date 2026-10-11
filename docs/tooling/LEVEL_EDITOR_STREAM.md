@@ -4,8 +4,11 @@
 **Status:** installed-source inspection and authenticated b9fd retarget review
 **PASS**; checkpoint cadence delivered at `c62bbc3e7dcdd9ccaad9b2facef477323413e279`
 with passing protected CI. The persistent material-preview candidate has passed
-independent code review and 75 focused local checks; live stream and
-same-process update proof remain **NOT RUN** until the launch artifact exists.
+independent code review and 93 focused local checks. Protected CI passed at
+`8caf82e`; its native startup stopped with a controlled registry-settings
+failure before opening MCP. Live stream and same-process update proof remain
+**UNQUALIFIED**. The [workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
+records the actual launch evidence and the next startup correction.
 
 The owner selected Epic's **Stream Level Editor** on 2026-10-10. The review
 must show the level viewport and preserve the source geometry and saved
@@ -147,6 +150,16 @@ Editor. Only after both finish may the review job reserve that host and hand
 off its persistent session. The waiter holds no Unreal lock. Missing, pending
 or failed results cannot launch the session. Both push and manual entry points
 retain the same owner and branch scope and require these matching results.
+
+The launcher writes the bounded MCP and registry settings to an additional
+`Config/DefaultEditorPerProjectUserSettings.ini` in the fresh review snapshot
+before UE starts. That file must not already exist; the six authenticated
+source/project configuration files remain unchanged. The registry copies its
+filters during initialization, so changing only its CDO afterwards is not
+sufficient. Epic's [configuration hierarchy](https://dev.epicgames.com/documentation/en-us/unreal-engine/configuration-files-in-unreal-engine)
+supports array operations in the default file; command-line property overrides
+do not support arrays. Actual setting and catalog readbacks still gate startup
+and each material request. The launch receipt hashes the generated overlays.
 
 The manual definition separates `operation=open` from
 `operation=material-request`. The latter requires the existing session token and

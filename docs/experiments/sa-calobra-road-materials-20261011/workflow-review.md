@@ -67,6 +67,34 @@ both volumes, the existing resolved workspace cache and inherited
 has its own explicit traceback; it is not attributed to Zen. This run produced
 no material request receipt, PNG or received-browser-frame proof.
 
+The [third launch at `8caf82e`](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38126488782)
+passed protected CI and the Blender reference; Windows reused the verified
+C++ binaries without compilation or a cache purge. Snapshot preparation and
+the map/camera readback passed. The literal MCP getters worked, then the
+registry settings check found empty `AllowedNames` and `BlockedNames` arrays.
+The controlled `BLOCKED` receipt preserved that diagnosis; the retained log
+contains no engine fatal. The private Python-remote getter and actual catalog
+were not reached, and there was no MCP request, preview PNG or owner handoff.
+
+The startup correction moves the existing Editor settings payload into the
+fresh snapshot's additional `Config/DefaultEditorPerProjectUserSettings.ini`.
+Epic documents this default-file hierarchy and array merge operations, and
+explicitly excludes arrays from command-line property overrides [E10]. The
+registry must receive its filters before subsystem initialization. The new
+file cannot replace an existing overlay; all six original project/config pins
+remain unchanged. Runtime settings, catalog and listener checks remain the
+qualification gates. The earlier empty readback does not by itself establish
+the internal parser behavior that ignored the Saved-file entries.
+
+This third run also measured 82.2569 GiB free on C: and 28.4748 GiB on D: before
+launch. The workspace resolves `D:\yacs\cache\Zen`, but the launching process
+had no `UE-ZenDataPath`; UE used the existing C: data directory. Zen reached
+HTTP and ZenLocal `OK` in 2.352 s. The log contains no Zen warning/error text,
+so the owner's earlier UI warning remains unresolved. The authenticated
+[four-file artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38126488782/artifacts/11697682730)
+is 66,467 bytes, SHA-256
+`a93e74c1e94afbcae084892f2fae1726f9c416f159ca5aaa4334e7630bd8afaa`.
+
 ## Measured local cost
 
 The authenticated [b9fd native checkpoint](README.md) reused compiled C++
@@ -257,3 +285,4 @@ PASS from preview.
 - [E7 — Epic: Stream Tuning Guide](https://dev.epicgames.com/documentation/unreal-engine/stream-tuning-guide)
 - [E8 — Epic: Zenserver data location, including local DDC](https://dev.epicgames.com/documentation/unreal-engine/using-zen-storage-server-as-cooked-output-store-for-unreal-engine?lang=en-US)
 - [E9 — CPython: Windows stat/fstat timestamp inconsistency, issue 157671](https://github.com/python/cpython/issues/157671)
+- [E10 — Epic: Configuration file hierarchy and array settings](https://dev.epicgames.com/documentation/en-us/unreal-engine/configuration-files-in-unreal-engine)

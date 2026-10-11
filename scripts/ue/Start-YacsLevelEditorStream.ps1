@@ -161,8 +161,12 @@ try {
     $scenePath = Join-Path $sessionEvidence 'scene.json'
     $engineLog = Join-Path $sessionEvidence 'editor.log'
     $project = Join-Path $SessionRoot 'YetAnotherCyclingSim.uproject'
-    # Only this fresh snapshot's Saved configuration is authored. All six
-    # pinned source/project configuration files remain byte-identical.
+    # Array filters must enter the startup config hierarchy before the registry
+    # subsystem initializes. This additional default file belongs only to the
+    # fresh snapshot; all six pinned source/project files stay byte-identical.
+    $editorSettingsPath = Join-Path $SessionRoot 'Config/DefaultEditorPerProjectUserSettings.ini'
+    Assert-NoReparseAncestor $editorSettingsPath
+    if (Test-Path -LiteralPath $editorSettingsPath) { throw 'The fresh review snapshot already contains an Editor settings overlay.' }
     $savedConfig = Join-Path $SessionRoot 'Saved/Config/WindowsEditor'
     Assert-NoReparseAncestor $savedConfig
     New-Item -ItemType Directory -Path $savedConfig | Out-Null
@@ -178,14 +182,14 @@ ServerUrlPath=/mcp
 !BlockedNames=ClearArray
 [/Script/UnrealEd.EditorLoadingSavingSettings]
 bAutoSaveEnable=False
-'@ | Set-Content -LiteralPath (Join-Path $savedConfig 'EditorPerProjectUserSettings.ini') -Encoding utf8
+'@ | Set-Content -LiteralPath $editorSettingsPath -Encoding utf8
     @'
 [HTTPServer.Listeners]
 DefaultBindAddress=127.0.0.1
 !ListenerOverrides=ClearArray
 '@ | Set-Content -LiteralPath (Join-Path $savedConfig 'Engine.ini') -Encoding utf8
     $receipt.isolated_session_configuration = @(
-        Get-ChildItem -LiteralPath $savedConfig -File | ForEach-Object {
+        Get-Item -LiteralPath @($editorSettingsPath, (Join-Path $savedConfig 'Engine.ini')) | ForEach-Object {
             [ordered]@{ path = $_.FullName; sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() }
         }
     )
