@@ -141,6 +141,7 @@ def main():
         session_id = destination.name.removeprefix(RUNTIME_SHA[:12] + "-")
         # The executing launcher is the exact committed source; the project is
         # the independent retained snapshot. Keep remote Python execution off.
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         import level_editor_material_bridge
 

@@ -30,6 +30,9 @@
   </section>
   <section class="controls">
     <p>Kamerą sterujesz samodzielnie w podglądzie — WASD.</p>
+    <h2>Lokalna geometria pobocza</h2>
+    <button data-action="repair" data-preset="nearby">Wyrównaj pobocze przy kamerze</button>
+    <p>Korekta obejmuje zwykłe pobocze w pobliżu kamery. Asfalt i teren pozostają bez zmian.</p>
     <h2>Asfalt i przejście w żwir</h2>
     <div class="row">
       <button data-action="surface" data-preset="worn">Zużyty asfalt</button>
@@ -44,7 +47,7 @@
       <button data-action="restore" data-preset="original">Przywróć</button>
     </div>
     <p>Podgląd materiału jest tymczasowy. „Przywróć” przywraca oryginalny asfalt, pobocze i oznaczenia.</p>
-    <p id="detail" role="status" aria-live="polite">Wybierz kolor oznaczeń. Na czas zmiany i wykonania klatki zatrzymaj kamerę.</p>
+    <p id="detail" role="status" aria-live="polite">Zmiany pojawiają się w podglądzie. Kamerą sterujesz sam.</p>
   </section>
   <script>
     const statusLine = document.querySelector('#status');
@@ -54,11 +57,12 @@
     let connected = false;
     let activeEdge = null;
     let activeSurface = null;
+    let repairActive = false;
     function updateButtons() {
       buttons.forEach(x => {
         const selected = (x.dataset.action === 'surface' && x.dataset.preset === activeSurface) || (x.dataset.action === 'edge' || x.dataset.action === 'restore') && x.dataset.preset === activeEdge;
         x.setAttribute('aria-pressed', String(selected));
-        x.disabled = busy || !connected || selected;
+        x.disabled = busy || !connected || selected || (x.dataset.action === 'repair' && repairActive);
       });
     }
     async function refresh() {
@@ -69,6 +73,7 @@
         connected = r.ok && s.connected === true;
         activeEdge = s.active_edge_preset;
         activeSurface = s.active_surface_preset;
+        repairActive = s.shoulder_repair?.state === 'applied';
         statusLine.textContent = s.connected
           ? `UE działa · PID ${s.editor_pid} · krok ${s.sequence} · ${s.map_package}`
           : `Brak aktywnej sesji: ${s.error || 'sprawdź Unreal Editor'}`;
@@ -89,6 +94,7 @@
         statusLine.textContent = `Podgląd gotowy · krok ${result.sequence} · ${result.action}: ${result.preset}`;
         detail.textContent = result.action === 'restore'
           ? 'Oryginalne materiały przywrócone.'
+          : result.action === 'repair' ? 'Lokalna korekta pobocza zastosowana.'
           : result.camera_after ? 'Kamera ustawiona. Sprawdź nowy widok w strumieniu.'
           : 'Materiał zmieniony — efekt widzisz w podglądzie na żywo.';
       } catch (error) {

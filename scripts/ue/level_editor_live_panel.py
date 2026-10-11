@@ -72,6 +72,8 @@ def parse_control(raw: bytes) -> dict:
     action, preset = value["action"], value["preset"]
     if action == "camera":
         require(type(preset) is str and preset in CAMERA_PRESETS, "Camera preset is not allowlisted")
+    elif action == "repair":
+        require(preset == "nearby", "Only nearby shoulder repair is admitted")
     elif action == "surface":
         require(type(preset) is str and preset in bridge.surface_preview.PRESETS, "Surface preset is not allowlisted")
     elif action == "edge":
@@ -96,10 +98,12 @@ def native_request(control: dict, *, token: str, sequence: int, request_id: str)
     }
     if control["action"] == "camera":
         return {**request, "action": "camera", "preset": control["preset"]}
+    if control["action"] == "repair":
+        return {**request, "action": "repair"}
     if control["action"] == "surface":
-        return {**request, "action": "surface", "preset": control["preset"]}
+        return {**request, "action": "surface", "preset": control["preset"], "capture": False}
     if control["action"] == "edge":
-        return {**request, "action": "set", **EDGE_PRESETS[control["preset"]]}
+        return {**request, "action": "set", "capture": False, **EDGE_PRESETS[control["preset"]]}
     return {**request, "action": "restore"}
 
 
@@ -125,6 +129,7 @@ class LivePanel:
             "session_id": self.token,
             "editor_pid": context["identity"]["editor_pid"],
             "sequence": history["sequence"],
+            "shoulder_repair": history["current"].get("shoulder_repair"),
             "active_surface_preset": history["current"].get("surface", {}).get("preset", "unavailable"),
             "active_edge_preset": active_edge_preset(history["current"]),
             "map_package": context["identity"]["map_package"],

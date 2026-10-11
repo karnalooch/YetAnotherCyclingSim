@@ -513,3 +513,20 @@ cycles; their offline tests are not native proof. Owner acceptance remains
 `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false`.
 The later opt-in startup qualification change has parser/docs validation only;
 it has not been loaded into the currently running editor.
+
+### Bounded shoulder geometry candidate — #459 / #473
+
+On 2026-10-11 the owner explicitly authorized a script-only bridge extension and
+restart to correct the observed shoulder steps while preserving asphalt
+alignment. This is separate from #364's material-only conservation claim.
+The candidate repairs a bounded camera-near ordinary support from authenticated
+frozen source and native Landscape contacts. It excludes special structures;
+it must preserve the complete road buffers, Landscape and saved packages.
+Original support mesh references are retained for rollback. No camera tour,
+before/after screenshots or automatic comparison cycle is requested.
+
+Interactive material requests now explicitly set `capture:false`; the capture
+pipeline remains available only when requested for qualification. Geometry
+requests never capture or move the camera. Native readback and exact source
+identity remain required for action completion. Unit tests are not run in this
+iteration at the owner's request; do not report their status as PASS.
