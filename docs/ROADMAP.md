@@ -199,11 +199,15 @@ remain. The 9519 workflow failed its later contact diagnostic on an unavailable
 Python property before any contact image; the completed material frames do not
 establish a contact repair.
 
-The next integrated candidate contains source-clipped narrow white edge lines,
+The integrated candidate contains source-clipped narrow white edge lines,
 eight separate material diagnostic views and corrected 0112 plus bounded 0081
-contact capture. Their actual native execution is pending. Eight individually
-authored crack motifs await actual Godot export after the raw exporter EOL fix;
-no UE crack layer has been admitted. Source-relative contact and road profile
+contact capture. Revision `07ebafad` passed protected CI, but its native preflight
+exposed Windows-dependent package sorting before Unreal started. The portable
+sort and early-failure artifact path are repaired; actual paint/control/contact
+execution is still pending. Eight individually authored crack motifs passed
+[source run 38102423216](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38102423216):
+16 observed Godot exits and all 80 maps independently verified across two
+identical exports per motif. No UE crack layer has been admitted. Source-relative contact and road profile
 corrections remain separately scoped under #459. See the
 [current source and native evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md).
 
@@ -227,7 +231,7 @@ questions separately from this material-only conservation proof.
 | Road canary | Apply the validated asphalt to the authorized slot; verify 400 cm projection, DirectX normals and exact restoration | **PASS at 9519:** authenticated granular source and exact canary restoration |
 | Shoulder coverage | Qualify every source owner, including Nudo; gravel on outer tops, original material on walls/interiors | **PASS at 9519:** 186 owners, 185 material targets and 67,760 selected tops; `rock_ground` remains at its 150 cm provider scale |
 | Edges and appearance | Inspect both directions, bends, close/distant views and shoulder/terrain transitions | **In progress:** improved grain and shoulder material transition in reviewed 95e7 frames; eight controlled native views pending to diagnose remaining bands |
-| Local surface details | Author restrained crack motifs and reference-matched white edge markings with stable source-owned placement | **In progress:** eight crack motifs await actual source exports; source-clipped continuous off-white lines await native saved/fresh and image review |
+| Local surface details | Author restrained crack motifs and reference-matched white edge markings with stable source-owned placement | **Source PASS at `07ebafad`:** eight crack motifs, 16 actual Godot exits and 80 independently verified maps; UE crack consumption and continuous off-white lines still await native saved/fresh and image review |
 | Contact/profile debt | Isolate the owning surface and prove bounded source-relative corrections separately | **#459 open:** 9519 failed before contact capture; public bounds fix and separate 0112/0081 visibility diagnostics pending; no repair admitted |
 | Save, reopen and deliver | Save derived outputs, verify fresh reload/render, pass required checks and merge #470 | **In progress:** current native/visual proof and complete #364 delivery pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
 

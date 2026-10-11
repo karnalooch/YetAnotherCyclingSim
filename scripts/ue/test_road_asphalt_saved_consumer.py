@@ -6,7 +6,7 @@ from contextlib import ExitStack, contextmanager
 from copy import deepcopy
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import tempfile
 import unittest
 from types import SimpleNamespace
@@ -761,6 +761,13 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                     [row["path"] for row in rows], sorted(expected_paths)
                 )
                 self.assertEqual(len(rows), 7)
+                # Exercise real Windows path-comparison semantics even when
+                # this contract runs on Linux. Byte/path auditing still uses
+                # the actual disposable package files through _safe_path.
+                windows_paths = [PureWindowsPath(path) for path in folder.rglob("*")]
+                with patch.object(Path, "rglob", return_value=iter(windows_paths)):
+                    windows_rows = saved.produced_files()
+                self.assertEqual(windows_rows, rows)
                 extra = folder / "aged_mountain_asphalt/dry_varied/abcdef/UNAPPROVED.txt"
                 extra.write_text("not a package", encoding="utf-8")
                 with self.assertRaisesRegex(

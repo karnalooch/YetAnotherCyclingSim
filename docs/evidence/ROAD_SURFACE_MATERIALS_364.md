@@ -16,7 +16,7 @@ This work continues #364, not MCP infrastructure.
 
 The owner requested another texture-first Material Forge refinement, followed
 by the remaining road/contact defects, with independent specialist review.
-The current technical baseline is `f75e76ba1ecde8a3ac4458557ed51ce60492847c`:
+The starting technical baseline was `f75e76ba1ecde8a3ac4458557ed51ce60492847c`:
 [protected CI 38092749669](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38092749669)
 and [native/GPU 38092747036](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38092747036)
 passed. The actual host receipt verifies all 68 planned final frames, 186
@@ -197,7 +197,7 @@ not relax source authentication.
 
 ### Authored local crack source contract
 
-The next source-only addition defines eight distinct authored crack motifs in
+The source addition defines eight distinct authored crack motifs in
 `worldgen/materials/material_forge/road_crack_decals.json`, with 1.2–1.8 m
 footprints and 2048-square exports. Each motif uses an individual arrangement
 of interrupted paths, unequal branches and small aggregate chips. Millimetre
@@ -215,12 +215,44 @@ all graph/map bytes. Exporter/shader errors also fail when the process returns
 zero. The existing source workflow runs this bounded addition only for an
 explicit `[road-cracks-source]` commit, under the same serialized host lock.
 
-The local adapter/host tests pass, but CPU previews and test fixtures do not
-establish native Godot exports, UE consumption or road appearance. Actual
-source receipts, local receiver ownership, stable placement, native saved/fresh
-proof and image review remain required before admitting any crack layer.
+Revision `07ebafad08bce8bc227089901cb46785079fefda` passed
+[protected CI 38102426201](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38102426201)
+and [source run 38102423216](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38102423216).
+The source host observed all sixteen distinct Godot processes exit zero within
+their deadlines. Eight motifs each have two complete, byte-identical exports:
+80 maps including the native Height EXRs. Independent read-only replay checked
+every map, graph, recorded process/log, native validation and original receipt.
+The source receipt is 28,571 bytes, SHA-256
+`bdfb2b889a8c8ed48960518909f497d822b5c34e7d4631a890368de984310afb`.
+Both run manifests have SHA-256
+`4918510f4dfd656440baee73862ebb4c951a36b11ab1f446ad8953b4e8eebca6`.
+
+| Original crack source artifact | Bytes | SHA-256 |
+|---|---:|---|
+| [Receipt 11688367643](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38102423216/artifacts/11688367643) | 4,670 | `b92d65de3bdbcc49ec896deaff645bf034777f612883b5f53c4ed759831c3679` |
+| [Run-a 11688242761](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38102423216/artifacts/11688242761) | 1,945,168 | `9451c0d31a244d94529ad608218d62915641be05a1504dcdfd547a4b7632abb6` |
+| [Run-b 11688412564](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38102423216/artifacts/11688412564) | 1,945,169 | `faef253ee887909bdee6376547ea41f0b3164582052ba2f0dadc7d2e1ab17dff` |
+
+The raw-byte source gate remains unchanged. The offline replay uses an explicit
+mirror of the host's two CRLF JSON inputs, checked against their original pins;
+all four executable source files and all exports/receipts remain unmodified.
+These results establish source export determinism. Local receiver ownership,
+stable placement, native saved/fresh proof and image review are still required
+before admitting any UE crack layer.
 No road, shoulder, Landscape, physics or Unreal asset is changed by this
 source-only addition. Owner audit and performance remain pending as above.
+
+The same revision's [native run 38102423208](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38102423208)
+failed during its 257-test preflight, before opening Unreal. One saved-package
+fixture exposed Windows' case-folded `Path` ordering versus the portable
+case-sensitive receipt order. The repair sorts explicit relative POSIX names
+and exercises real `PureWindowsPath` comparison semantics in the same physical
+file audit. It does not change package identities or relax the inventory gate.
+Artifact retention now names the run-owned checkout directly: an early failure
+before `GITHUB_ENV` initialization must not expand an empty variable to `/**`.
+The failed run uploaded no artifact and produced no paint/control/contact PNG.
+The targeted local repair tests pass (57 tests, eight PowerShell-only checks
+skipped on Linux); a new exact-head Windows/native run remains required.
 
 ## Whole-network revision following owner feedback
 

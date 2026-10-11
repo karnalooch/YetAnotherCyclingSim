@@ -481,7 +481,10 @@ def produced_files():
     folder = session._safe_path(ROOT, PREFIX.removesuffix("/"))
     require(folder.is_dir(), "New derived material asset package root is missing")
     rows, total = [], 0
-    for path in sorted(folder.rglob("*")):
+    # Path ordering is case-folded on Windows. Receipts use portable,
+    # case-sensitive POSIX names, including the uppercase map and lower-case
+    # material family, so derive their order explicitly before hashing.
+    for path in sorted(folder.rglob("*"), key=lambda item: item.relative_to(ROOT).as_posix()):
         relative = path.relative_to(ROOT).as_posix()
         checked = session._safe_path(ROOT, relative)
         # The saved material family has nested directories. Audit every

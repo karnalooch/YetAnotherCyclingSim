@@ -137,6 +137,17 @@ class RoadSavedHostContractTests(unittest.TestCase):
         self.assertIn("    concurrency:", self.workflow)
         self.assertIn("    needs: await_ci", self.workflow)
 
+    def test_artifact_path_remains_inside_owned_checkout_on_preflight_failure(self):
+        upload = self.workflow.split("- name: Retain native inventory and owned-process evidence", 1)[1]
+        self.assertIn(
+            "path: ${{ github.workspace }}/rm-${{ github.run_id }}-${{ github.run_attempt }}"
+            "/Saved/RuntimeProof/RoadMaterialBaseline/${{ github.run_id }}-${{ github.run_attempt }}/**",
+            upload,
+        )
+        # The preflight may fail before it can export GITHUB_ENV. An empty
+        # variable must never turn artifact retention into the drive-root /**.
+        self.assertNotIn("path: ${{ env.YACS_ROAD_NATIVE_PROOF }}/**", upload)
+
     def test_exact_git_and_predecessor_proofs_gate_both_editors(self):
         for field in (
             "Require-ExactSource",
