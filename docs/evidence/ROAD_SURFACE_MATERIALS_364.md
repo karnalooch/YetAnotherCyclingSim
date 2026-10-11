@@ -101,6 +101,33 @@ Their source/render/placement proof is still pending. RVT remains an option
 for a justified shoulder/terrain material transition, not a substitute for
 resolving #459 contact geometry.
 
+### Authored local crack source contract
+
+The next source-only addition defines eight distinct authored crack motifs in
+`worldgen/materials/material_forge/road_crack_decals.json`, with 1.2–1.8 m
+footprints and 2048-square exports. Each motif uses an individual arrangement
+of interrupted paths, unequal branches and small aggregate chips. Millimetre
+wall variation preserves those authored shapes. The recipe rejects an outline
+reused through translation, scale, rotation, reflection or a changed seed.
+These are sparse local masks with a 60 mm empty border and CLAMP addressing,
+not another tiled asphalt layer. Height remains authoring-only.
+
+`material_forge_road_decals.py` authors six-node Material Maker graphs and
+validates the unchanged five-map exporter. It leaves native process evidence
+to `run_road_decals_source_proof.py`: the host authenticates the existing
+producer archives, executable bytes, primed source and original PBR node;
+observes sixteen owned Godot exits; retains both complete runs and compares
+all graph/map bytes. Exporter/shader errors also fail when the process returns
+zero. The existing source workflow runs this bounded addition only for an
+explicit `[road-cracks-source]` commit, under the same serialized host lock.
+
+The local adapter/host tests pass, but CPU previews and test fixtures do not
+establish native Godot exports, UE consumption or road appearance. Actual
+source receipts, local receiver ownership, stable placement, native saved/fresh
+proof and image review remain required before admitting any crack layer.
+No road, shoulder, Landscape, physics or Unreal asset is changed by this
+source-only addition. Owner audit and performance remain pending as above.
+
 ## Whole-network revision following owner feedback
 
 The owner requested gravel beside the entire existing road network, a drier

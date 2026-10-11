@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "id": "road_crack_decals",
+  "description": "Eight authored, local surface events. These shapes do not specify road placement or alter the asphalt base.",
+  "resolution": 2048,
+  "empty_border_metres": 0.06,
+  "sampler_address": "clamp",
+  "tileable": false,
+  "semantic_owner": "PCG/PCGEx",
+  "local_mask_channels": {
+    "R": "crack_core",
+    "G": "angular_chips",
+    "B": "faint_local_weathering"
+  },
+  "motifs": [
+    {
+      "id": "drifting_interrupted",
+      "label": "Drifting longitudinal fracture with an unbroken asphalt gap",
+      "extent_metres": 1.8,
+      "seed": 4817,
+      "strokes": [
+        {"strength": 0.88, "points": [[0.39,0.12,0.4],[0.42,0.19,2.4],[0.40,0.25,3.3],[0.46,0.32,4.0],[0.44,0.40,2.7],[0.49,0.46,3.5],[0.48,0.54,1.1],[0.50,0.58,0.3]]},
+        {"strength": 0.78, "points": [[0.53,0.66,0.4],[0.56,0.71,2.8],[0.54,0.78,3.4],[0.61,0.84,1.8],[0.60,0.90,0.3]]},
+        {"strength": 0.62, "points": [[0.44,0.40,2.1],[0.37,0.43,1.5],[0.34,0.48,0.3]]}
+      ],
+      "chips": [
+        {"centre": [0.455,0.324], "size_mm": [8,4], "angle_degrees": 24, "strength": 0.68},
+        {"centre": [0.486,0.463], "size_mm": [4,6], "angle_degrees": -38, "strength": 0.52},
+        {"centre": [0.547,0.781], "size_mm": [7,3], "angle_degrees": 71, "strength": 0.58}
+      ]
+    },
+    {
+      "id": "offset_branches",
+      "label": "Unequal branches from a kinked, offset main fracture",
+      "extent_metres": 1.6,
+      "seed": 9259,
+      "strokes": [
+        {"strength": 0.92, "points": [[0.28,0.14,0.5],[0.33,0.23,3.0],[0.37,0.26,4.5],[0.36,0.35,3.1],[0.44,0.42,5.0],[0.46,0.53,3.2],[0.53,0.59,4.0],[0.55,0.71,2.6],[0.62,0.82,0.4]]},
+        {"strength": 0.76, "points": [[0.44,0.42,3.8],[0.54,0.39,3.0],[0.60,0.32,2.2],[0.72,0.30,0.4]]},
+        {"strength": 0.57, "points": [[0.53,0.59,2.4],[0.43,0.65,1.9],[0.31,0.63,0.4]]}
+      ],
+      "chips": [
+        {"centre": [0.366,0.263], "size_mm": [9,5], "angle_degrees": 46, "strength": 0.72},
+        {"centre": [0.447,0.425], "size_mm": [12,4], "angle_degrees": 12, "strength": 0.64},
+        {"centre": [0.524,0.594], "size_mm": [6,8], "angle_degrees": -22, "strength": 0.57},
+        {"centre": [0.608,0.321], "size_mm": [5,3], "angle_degrees": 67, "strength": 0.48}
+      ]
+    },
+    {
+      "id": "short_oblique",
+      "label": "Short oblique fracture with an offset terminal fragment",
+      "extent_metres": 1.4,
+      "seed": 13033,
+      "strokes": [
+        {"strength": 0.82, "points": [[0.13,0.61,0.3],[0.22,0.59,2.6],[0.28,0.54,3.4],[0.39,0.56,2.8],[0.45,0.51,4.2],[0.55,0.49,3.0],[0.59,0.43,2.1],[0.68,0.41,0.4]]},
+        {"strength": 0.55, "points": [[0.75,0.40,0.3],[0.79,0.37,2.0],[0.85,0.38,0.3]]}
+      ],
+      "chips": [
+        {"centre": [0.285,0.548], "size_mm": [8,5], "angle_degrees": 8, "strength": 0.59},
+        {"centre": [0.452,0.506], "size_mm": [5,9], "angle_degrees": -31, "strength": 0.63}
+      ]
+    },
+    {
+      "id": "unequal_fork",
+      "label": "Asymmetric fork with an abrupt dogleg and a fading arm",
+      "extent_metres": 1.8,
+      "seed": 17491,
+      "strokes": [
+        {"strength": 0.90, "points": [[0.27,0.13,0.3],[0.32,0.22,2.5],[0.30,0.31,4.3],[0.39,0.36,4.8],[0.41,0.47,3.9],[0.48,0.53,4.4]]},
+        {"strength": 0.79, "points": [[0.48,0.53,4.0],[0.60,0.58,3.4],[0.65,0.67,4.0],[0.76,0.70,2.8],[0.82,0.78,0.3]]},
+        {"strength": 0.56, "points": [[0.48,0.53,2.7],[0.45,0.64,2.3],[0.36,0.72,1.9],[0.38,0.81,1.4],[0.32,0.89,0.3]]}
+      ],
+      "chips": [
+        {"centre": [0.309,0.311], "size_mm": [11,6], "angle_degrees": 35, "strength": 0.70},
+        {"centre": [0.475,0.536], "size_mm": [7,10], "angle_degrees": -54, "strength": 0.59},
+        {"centre": [0.645,0.672], "size_mm": [5,4], "angle_degrees": 15, "strength": 0.49}
+      ]
+    },
+    {
+      "id": "broken_repair_corner",
+      "label": "Incomplete old repair corner with a few angular losses",
+      "extent_metres": 1.6,
+      "seed": 22229,
+      "strokes": [
+        {"strength": 0.79, "points": [[0.14,0.32,0.4],[0.25,0.34,3.0],[0.34,0.31,4.5],[0.46,0.35,3.2],[0.56,0.34,4.7],[0.64,0.39,5.2],[0.66,0.49,3.8],[0.70,0.55,4.1],[0.68,0.65,2.3],[0.71,0.72,0.4]]},
+        {"strength": 0.58, "points": [[0.70,0.80,0.4],[0.74,0.85,2.4],[0.73,0.90,0.3]]}
+      ],
+      "chips": [
+        {"centre": [0.340,0.304], "size_mm": [10,5], "angle_degrees": 6, "strength": 0.60},
+        {"centre": [0.551,0.347], "size_mm": [7,11], "angle_degrees": 63, "strength": 0.74},
+        {"centre": [0.637,0.398], "size_mm": [14,8], "angle_degrees": -19, "strength": 0.67},
+        {"centre": [0.670,0.499], "size_mm": [6,4], "angle_degrees": 28, "strength": 0.53},
+        {"centre": [0.693,0.545], "size_mm": [9,6], "angle_degrees": 77, "strength": 0.57}
+      ]
+    },
+    {
+      "id": "sparse_open_network",
+      "label": "Small open network with no closed alligator cells",
+      "extent_metres": 1.5,
+      "seed": 27043,
+      "strokes": [
+        {"strength": 0.78, "points": [[0.19,0.24,0.3],[0.31,0.28,2.5],[0.37,0.38,3.5],[0.49,0.43,4.1],[0.52,0.55,3.0],[0.63,0.61,3.5],[0.70,0.73,0.3]]},
+        {"strength": 0.59, "points": [[0.37,0.38,2.6],[0.31,0.49,2.0],[0.21,0.53,0.3]]},
+        {"strength": 0.69, "points": [[0.49,0.43,3.0],[0.56,0.31,2.4],[0.68,0.27,0.3]]},
+        {"strength": 0.52, "points": [[0.52,0.55,2.2],[0.45,0.64,1.8],[0.47,0.77,0.3]]},
+        {"strength": 0.48, "points": [[0.63,0.61,2.1],[0.76,0.59,1.7],[0.83,0.63,0.3]]}
+      ],
+      "chips": [
+        {"centre": [0.371,0.385], "size_mm": [5,7], "angle_degrees": 11, "strength": 0.55},
+        {"centre": [0.515,0.554], "size_mm": [7,4], "angle_degrees": -29, "strength": 0.61},
+        {"centre": [0.638,0.605], "size_mm": [4,9], "angle_degrees": 53, "strength": 0.52}
+      ]
+    },
+    {
+      "id": "ravelled_slash",
+      "label": "Compact ravelled slash with unequal chips along one side",
+      "extent_metres": 1.2,
+      "seed": 31847,
+      "strokes": [
+        {"strength": 0.88, "points": [[0.20,0.28,0.4],[0.30,0.33,3.4],[0.37,0.43,5.4],[0.47,0.48,6.5],[0.52,0.58,4.0],[0.62,0.63,5.2],[0.71,0.74,0.4]]},
+        {"strength": 0.53, "points": [[0.77,0.79,0.3],[0.81,0.81,1.8],[0.83,0.85,0.3]]}
+      ],
+      "chips": [
+        {"centre": [0.308,0.321], "size_mm": [11,5], "angle_degrees": -18, "strength": 0.71},
+        {"centre": [0.358,0.436], "size_mm": [6,9], "angle_degrees": 51, "strength": 0.65},
+        {"centre": [0.383,0.422], "size_mm": [16,7], "angle_degrees": 23, "strength": 0.77},
+        {"centre": [0.475,0.470], "size_mm": [8,5], "angle_degrees": -46, "strength": 0.62},
+        {"centre": [0.508,0.590], "size_mm": [13,8], "angle_degrees": 72, "strength": 0.70},
+        {"centre": [0.635,0.625], "size_mm": [6,4], "angle_degrees": 15, "strength": 0.53},
+        {"centre": [0.670,0.675], "size_mm": [9,3], "angle_degrees": -32, "strength": 0.57}
+      ]
+    },
+    {
+      "id": "weathered_fragments",
+      "label": "Faded, discontinuous weathering trace across clean asphalt",
+      "extent_metres": 1.4,
+      "seed": 36709,
+      "strokes": [
+        {"strength": 0.43, "points": [[0.17,0.71,0.3],[0.22,0.66,2.8],[0.29,0.65,0.3]]},
+        {"strength": 0.52, "points": [[0.34,0.62,0.3],[0.37,0.55,3.2],[0.45,0.53,2.5],[0.47,0.48,0.3]]},
+        {"strength": 0.37, "points": [[0.50,0.43,0.3],[0.56,0.42,2.6],[0.58,0.37,0.3]]},
+        {"strength": 0.46, "points": [[0.63,0.34,0.3],[0.69,0.36,2.9],[0.74,0.29,0.3]]},
+        {"strength": 0.34, "points": [[0.79,0.26,0.3],[0.82,0.21,2.3],[0.86,0.20,0.3]]}
+      ],
+      "chips": [
+        {"centre": [0.369,0.557], "size_mm": [5,3], "angle_degrees": 46, "strength": 0.38},
+        {"centre": [0.699,0.350], "size_mm": [3,6], "angle_degrees": -15, "strength": 0.32}
+      ]
+    }
+  ]
+}

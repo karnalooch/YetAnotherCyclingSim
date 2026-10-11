@@ -11,6 +11,10 @@ on:
       - 'scripts/assets/test_road_material_contract.py'
       - 'scripts/assets/material_forge.py'
       - 'scripts/assets/test_material_forge.py'
+      - 'scripts/assets/material_forge_road_decals.py'
+      - 'scripts/assets/test_material_forge_road_decals.py'
+      - 'scripts/assets/run_road_decals_source_proof.py'
+      - 'scripts/assets/test_run_road_decals_source_proof.py'
       - 'worldgen/materials/material_forge/**'
 
 permissions:
@@ -22,13 +26,14 @@ concurrency:
 
 jobs:
   asphalt:
-    name: Authenticate and replay only dry_varied asphalt
+    name: Authenticate asphalt and requested local crack sources
     if: >-
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/364-road-surface-materials'
     runs-on: [self-hosted, yacs-ue58]
-    timeout-minutes: 15
+    # The optional crack step owns sixteen bounded renders after the asphalt pair.
+    timeout-minutes: 35
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
       YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
@@ -80,6 +85,9 @@ jobs:
           $proof = & $python -c "import os; from pathlib import Path; from scripts.manage_local_workspace import load_workspace; print(Path(load_workspace()['work']) / 'material-forge/road-asphalt' / os.environ['GITHUB_SHA'] / (os.environ['GITHUB_RUN_ID'] + '-' + os.environ['GITHUB_RUN_ATTEMPT']))"
           if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the persistent road source proof path.' }
           "YACS_ROAD_ASPHALT_PROOF=$proof" >> $env:GITHUB_ENV
+          $decals = & $python -c "import os; from pathlib import Path; from scripts.manage_local_workspace import load_workspace; print(Path(load_workspace()['work']) / 'material-forge/road-decals' / os.environ['GITHUB_SHA'] / (os.environ['GITHUB_RUN_ID'] + '-' + os.environ['GITHUB_RUN_ATTEMPT']))"
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the persistent local crack source proof path.' }
+          "YACS_ROAD_DECAL_PROOF=$decals" >> $env:GITHUB_ENV
 
       - name: Check source contract and render dry_varied twice
         shell: pwsh
@@ -93,6 +101,26 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Current dry_varied asphalt source proof failed.' }
           if (-not (Test-Path -LiteralPath (Join-Path $env:YACS_ROAD_ASPHALT_PROOF 'source-proof.json') -PathType Leaf)) {
             throw 'Persistent road asphalt source receipt is missing.'
+          }
+
+      - name: Render the eight local crack motifs twice when requested
+        if: ${{ contains(github.event.head_commit.message, '[road-cracks-source]') }}
+        shell: pwsh
+        working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          if ($state.status -cne 'IDLE') { throw 'Local crack source yields to existing Unreal ownership.' }
+          if (@(Get-Process -Name 'Godot*' -ErrorAction SilentlyContinue).Count) {
+            throw 'Local crack source yields to an existing Godot process.'
+          }
+          & $env:YACS_ROAD_FORGE_PY -m unittest scripts.assets.test_material_forge_road_decals scripts.assets.test_run_road_decals_source_proof
+          if ($LASTEXITCODE -ne 0) { throw 'Local crack source/host contracts failed.' }
+          & $env:YACS_ROAD_FORGE_PY scripts/assets/run_road_decals_source_proof.py `
+            --expected-head $env:GITHUB_SHA --run $env:GITHUB_RUN_ID --attempt $env:GITHUB_RUN_ATTEMPT
+          if ($LASTEXITCODE -ne 0) { throw 'Current two-run local crack source proof failed.' }
+          if (-not (Test-Path -LiteralPath (Join-Path $env:YACS_ROAD_DECAL_PROOF 'source-proof.json') -PathType Leaf)) {
+            throw 'Persistent local crack source receipt is missing.'
           }
 
       - name: Retain asphalt determinism receipt and render logs
@@ -121,5 +149,32 @@ jobs:
         with:
           name: road-asphalt-run-b-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ env.YACS_ROAD_ASPHALT_PROOF }}/run-b/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain local crack determinism and owned-exit receipt
+        if: ${{ always() && contains(github.event.head_commit.message, '[road-cracks-source]') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-decals-receipt-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_DECAL_PROOF }}/source-proof.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain first complete local crack source bundle
+        if: ${{ always() && contains(github.event.head_commit.message, '[road-cracks-source]') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-decals-run-a-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_DECAL_PROOF }}/run-a/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain second complete local crack source bundle
+        if: ${{ always() && contains(github.event.head_commit.message, '[road-cracks-source]') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-decals-run-b-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_DECAL_PROOF }}/run-b/**
           if-no-files-found: warn
           retention-days: 14
