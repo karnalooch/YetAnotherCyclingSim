@@ -45,12 +45,15 @@ masks, BOB and existing exclusions. Reject unsupported placements. Geometry
 debt remains with its owning issues; never hide it with foliage or rocks.
 Do not implement #366-#374 production systems or M4-M10 ahead of their gates.
 
-PCGEx is absent from the current recorded session. Optional enabled project
-entry is not installation. Approved pin is
+PCGEx remains absent from the canonical project; isolated native diagnostics
+loaded authenticated retained binaries. Optional enabled project entry is not
+installation or exact-head build proof. Approved pin is
 39a8f1bdc65b2c4613a1e87b71d93b4576db0a66, version 0.79 / descriptor UE5.8.0;
 actual engine was 5.8.2 CL56702186. Reverify exact source/patch/load behavior.
-Do not blindly run Bootstrap-YacsPcgEx Install/Validate on retained source:
-Install resets existing checkout; Validate does not accept expected patched state.
+The current Bootstrap-YacsPcgEx supports the authenticated patched state and
+preserves existing checkout/index bytes. Read current implementation evidence;
+the former destructive Install/Validate behavior described in research is historical.
+Never substitute retained binary load for an exact-head native build.
 
 Do not invent node/API/pin/tool names, numeric contact tolerances, asset licenses,
 proof commands or completed work. Discover installed official MCP schemas and

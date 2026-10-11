@@ -1,6 +1,6 @@
 # Sa Calobra PCG world graph — #365 kickoff
 
-**Status:** M3, CPU candidates and native API/mesh inspection; regional graph placement pending.
+**Status:** M3, CPU candidates, native mesh inspection and saved/reloaded mechanical graph; regional placement pending.
 **Owner:** procedural-world. **Base:** `4dd792219bfc2eaf7dc216bd60cbde6628bba792`.
 **Current owner instruction (2026-10-12):** implementation resumed for #365,
 using subagents and the existing Material Forge contract. The planning-only
@@ -9,7 +9,8 @@ The complete researched continuation is recorded in the
 [detailed execution plan](SA_CALOBRA_WORLD_GRAPH_PLAN.md),
 [primary-source/tutorial ledger](SA_CALOBRA_WORLD_GRAPH_RESEARCH.md) and
 [handoff for another LLM](SA_CALOBRA_WORLD_GRAPH_LLM_HANDOFF.md).
-The evidence below describes the existing CPU kickoff, not native completion.
+Evidence below separates CPU candidates, isolated native diagnostics and pending
+regional asset/contact admission; none closes #365.
 The [Roadmap](../ROADMAP.md), [World Building Bible](../WORLD_BUILDING_BIBLE.md)
 and [World Authoring Library](../YACS_WORLD_AUTHORING_LIBRARY.md) own scope,
 methodology and reusable tooling. This adapter is not a second proof framework.
@@ -139,7 +140,7 @@ events before execution, compares cleanup/regeneration, and saves only a new
 isolated diagnostic graph/map. Fresh reload must read the stored recipe before
 regeneration and preserve package bytes. Analytic engine-cube ground and an
 unrelated collider test sampled support/owner exclusion; they cannot supply
-Terrain Authority admission. No native fixture result is claimed before running.
+Terrain Authority admission. Completed fixture evidence is recorded below.
 
 Boulder native inspection: bounds origin cm
 `[-11.01963996887207,-3.200286865234375,43.01846694946289]`, extents cm
@@ -159,8 +160,13 @@ The single Boulder source was recovered with the existing bounded downloader
 records provider URLs, CC0-1.0, source/index/config hashes and command/time.
 FBX: 6,482,860 bytes, SHA256
 `b1125cd1e08a425fa89bc62b96279b40e9a921618e12bfbbe0d575cb78f53c95`.
-Status remains `NOT_MATCHED_TO_HISTORICAL_IMPORT`; source recovery does not
-establish correspondence with the historical native mesh. The provider's
+Initial acquisition status was `NOT_MATCHED_TO_HISTORICAL_IMPORT`. Later native
+readback at `7c57428546ea447617d621abc09e440e27147268`, token `mechanical04`,
+read the loaded mesh's `AssetImportData` registry JSON: exactly one FBX row with
+`FileMD5=e20c1ed68dc10e039761d6bda58c8ef4`, matching the recovered source.
+This establishes correspondence with recorded historical import metadata without
+editing ImportData or reimporting; legacy MD5 metadata is not a new mesh geometry,
+material or regional qualification receipt. The provider's
 [Boulder 01](https://polyhaven.com/a/boulder_01) describes weathered rock, not
 measured Mallorcan limestone. [Provider license](https://polyhaven.com/license)
 was rechecked. Forge appearance cannot supply lithology or mesh support proof.
@@ -189,6 +195,64 @@ Retained validation/provenance/render receipt identities respectively:
 These authenticate a retained material source candidate only. A derived Boulder
 material package, native binding and 4 m/repeat UV proof are still missing.
 Height is inspection/authoring data, never elevation/contact or displacement authority.
+
+### Native mechanical graph and persistence evidence
+
+Implementation SHA `8e0a38b60dc9ef98c8346548ff2e4dd88333c8cd`, token
+`mechanical06`, staged at `D:/yacs/work/pcg365/<SHA>/mechanical06`.
+Run the committed launcher with that SHA/token and actions `inspect`, `create`,
+then `reload`, serially on an idle host. Existing action outputs are never overwritten.
+Inspect and create completed with clean process exit and unchanged staged source
+bytes. `create` reports `MECHANICAL_GRAPH_SAVED`: three fixed synthetic points,
+two equal inventories separated by component cleanup; 27 finite support traces
+hit only `PCG365_AnalyticGround` at Z=0. An unfiltered trace hits the unrelated
+collider, owner-filtered traces exclude it, and an unsupported XY misses.
+Numeric epsilon is analytic fixture precision, not an admitted regional tolerance.
+
+Saved package identities:
+
+| Package under `Content/Generated/YACS/PCG365Mechanical` | Bytes | SHA256 |
+|---|---:|---|
+| `PCG_XYFixture.uasset` | 25206 | `a94915336ffd1ce093b5d43a1fd6af67d3af5054f59ecca6b053f622273e692f` |
+| `L_XYFixture.umap` | 33441 | `a12197b17bb6b7a13dbda601cd2580764ab48beb538b20702d208893b08de9e1` |
+
+Fresh reload completed: `MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED`, clean exit 0,
+`saved_recipe_verified_before_explicit_generation: true`, two matching inventories
+of three points, repeated 27-sample contact fixture and unchanged saved/source bytes.
+Receipts are in `proof/{inspect,create,reload}` with per-action
+`launcher-completed.json`; logs and staged-file registry remain beside them.
+The reload checks stored node/points, component seed 36501, GenerateOnDemand
+and package hashes before explicit generation, then compares both completed runs
+and verifies unchanged package bytes. Cleanup/regeneration can reuse node cache;
+this is lifecycle/inventory evidence, not proof of uncached node execution.
+
+Preserved failed attempts are part of the evidence: `90985ed8/mechanical02`
+used the wrong collision enum; `38d8c03c/mechanical03` auto-exited before the
+asynchronous result; `7c574285/mechanical04` used the C++ class name instead of
+its Python ScriptName; `97f2a346/mechanical05` accessed the new tagged-data wrapper
+as a direct property. That inspection also returned process exit `-1073741819`
+during shutdown, so its receipt alone is not clean completion. Current code uses
+`CollisionResponseType.ECR_BLOCK`, `EditorPythonScripting` keepalive and the
+four-output native tagged-data break. Launcher requires both an error-free receipt
+and clean inspection exit before graph operations; callback exceptions force FAILED.
+API decisions were checked against installed UE 5.8.2 headers, including
+`EngineTypes.h` ScriptName, `EditorPythonScriptingLibrary.h`, `PCGData.h`,
+`PCGComponent.cpp` completion/cleanup ordering and `CreatePoints.cpp` seed behavior.
+
+All native receipts are `LOCAL_DIAGNOSTIC_ONLY`, `placement: false`,
+`qualified_assets: []`, regional terrain contact `NOT_RUN`, native build
+`NOT_RUN_PREBUILT_DEPENDENCY`. There is no PCGEx-specific node execution,
+Material Forge native binding/render, real terrain-owner contact, regional spawner,
+full-area invalidation/override or protected Gumball native admission yet.
+
+Local validation: final bootstrap 10 real-Git cases completed; the initial combined
+test invocation then failed to import the qualification module. Correct direct
+qualification invocation passed 9/9; agent contracts passed 8/8. Critical Ruff,
+PowerShell parser and docs links/i18n/structure/freshness passed. GitHub CI
+[38181719536](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38181719536)
+for `90985ed858bdb19e1520fa7b711bd989a56ac481` passed, including aggregate,
+hosted discovered scripts and security checks; Unreal build/Automation was skipped.
+Later delivery-head CI must be checked independently in Draft PR #474.
 
 ## Authenticated source contract
 
