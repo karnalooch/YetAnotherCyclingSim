@@ -3,6 +3,56 @@
 **Recorded:** 2026-10-11. **Scope:** owner-requested #364 workflow review;
 M3 and the existing role/host boundaries remain in force.
 
+## Current result at `badb984`
+
+The [actual Editor run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38137717962)
+qualified the bounded paint loop: two changes and restoration completed in
+session `38137717962-1`, PID 12484, start FILETIME `134361941812041772`.
+The exact `returnValue` envelopes decoded to the retained native domain results.
+Each request called MCP once. Both sets used one transient MID across 370 unique
+bindings; the second before-state equals the first after-state, and the restored
+state equals the complete initial state. All source/snapshot fingerprints and
+278 retained inputs agree; no world was saved and dirty package lists stayed
+empty. Root and two independent reviewers checked the original evidence.
+
+| Request | Final sequence | Whole-client time | Final result |
+|---|---:|---:|---|
+| `acceptance-one` | 1 | 22.453 s | `COMPLETED` |
+| `acceptance-two` | 2 | 21.484 s | `COMPLETED` |
+| `acceptance-restore` | 3 | 18.578 s | `COMPLETED` |
+
+The eight retained 1280x720 PNGs contain two final images and six priming frames.
+Visual review confirms the same camera and the road markings changing from a
+cool pale tone to a warm orange tone. These durations include client validation
+and capture work; they are not shader-update latency, FPS measurements or a
+comparison with equivalent full-proof coverage. This qualifies `PaintRoughness`
+and `PaintColor`, not the main asphalt master or complete M3 appearance.
+
+The [artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38137717962/artifacts/11701457503)
+contains 41 original files. Its ZIP is 13,330,948 bytes, SHA-256
+`2b39b0056eeb4c07d96d8aad9520440373ef2de6fa36363774fd96dc8dfbcde5`.
+Exact-SHA [protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38137721914)
+and the [Blender reference](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38137721419)
+passed. Windows recorded `compileKind=none`, verified-equivalent binary reuse
+and 19.19 GiB free on D:. Both full material workflows skipped.
+
+The overall Editor job failed its separate receiving-client check after 3.063 s:
+`NO_BROWSER_FRAMES`, `DevTools listener process identity changed.` No browser
+observations were collected. The receiver stored `executable: null` for its
+root Edge PID 3264, while its child identities contain the selected Edge path.
+Cleanup refused that root identity and reported it still running. This proves
+an incomplete identity record; it does not establish which operand of the old
+combined check failed. A bounded receiver correction is prepared separately.
+The native material helpers and the active launch branch remain unchanged.
+
+At 2026-10-11T12:11:27.1461691Z the final host receipt was
+`HTTP_READY_CLIENT_PENDING`, `owner_handoff: true`, with original bindings
+restored and the Editor retained for the owner. This is the recorded handoff,
+not a later live-process observation. Keep the launch branch at `badb984` and
+the shared host assigned to that session. Browser video, final M3 visuals and
+performance remain unqualified. The Zen warning is closed by owner confirmation;
+the retained log reached ZenLocal `OK` in 2.514 s without a Zen warning or fatal.
+
 ## Recommendation
 
 Use one persistent, identified Editor for material preview; update existing
@@ -19,8 +69,8 @@ passed; both complete material workflows actually skipped the ordinary push.
 The owner subsequently authorized implementation of the persistent MCP preview
 and stream integration on 2026-10-11. The candidate adds the native operation,
 bounded client, initial two-call qualification and later manual requests.
-Live qualification remains pending at this code checkpoint; its eventual
-runtime outcome belongs in the launch artifact and PR description. Cache
+Live qualification was pending at that code checkpoint; its later paint result
+is recorded above and in the launch artifact and PR description. Cache
 relocation is not claimed as a completed runtime capability.
 
 Candidate qualification before launch: 75 focused local tests passed across
@@ -448,7 +498,7 @@ ownership. Existing open-editor protections remain.
 The stream target is the latest complete b9fd saved scene; the failed outer
 candidate is not relabelled as accepted.
 
-### 2. Parameter preview in the same process — candidate awaiting live qualification
+### 2. Parameter preview in the same process — paint path qualified at `badb984`
 
 Reuse the current official MCP/private-registry and transient-material patterns.
 Start with the existing scalar `PaintRoughness` and vector `PaintColor` on the
@@ -472,10 +522,10 @@ graph constants, so they need a deliberate parameterization change before they
 can use this path. A graph or texture change may still require shader work or
 reimport. A new reflected tool declaration may require a one-time build/restart.
 
-### 3. Focused capture — fixed preview candidate, wider view selection proposed
+### 3. Focused capture — fixed paint preview qualified, wider views proposed
 
 The full-proof GPU host has no standalone focused mode. Its optional controls
-follow all 68 Lit poses. The new persistent candidate instead returns a bounded
+follow all 68 Lit poses. The persistent paint path instead returns a bounded
 1280x720 capture from its unchanged viewport for each allowed update. This
 explicit preview result cannot satisfy full-area admission. Broader standalone
 view selection remains a separate proposal:

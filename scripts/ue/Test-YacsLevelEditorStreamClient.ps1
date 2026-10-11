@@ -58,19 +58,94 @@ function Get-RemainingMilliseconds([int] $Maximum = 3000) {
     return [Math]::Min($Maximum, $remaining)
 }
 
-function Add-OwnedProcess([Diagnostics.Process] $Process, [int] $ParentId) {
+function Read-OwnedProcessIdentity([Diagnostics.Process] $Process) {
     # Holding the handle keeps this object associated with the original process.
-    $null = $Process.Handle
-    $OwnedProcesses[[string] $Process.Id] = @{
-        process = $Process
-        pid = $Process.Id
-        parent_pid = $ParentId
-        start_ticks = $Process.StartTime.ToUniversalTime().Ticks
-        executable = $Process.Path
+    $observed = @{ pid = $null; has_exited = $null; start_ticks = $null; executable = $null; read_error = $null }
+    try {
+        $null = $Process.Handle
+        $Process.Refresh()
+        $observed.pid = $Process.Id
+        $observed.has_exited = $Process.HasExited
+        if (-not $observed.has_exited) {
+            $observed.start_ticks = $Process.StartTime.ToUniversalTime().Ticks
+            $observed.executable = $Process.Path
+        }
+    }
+    catch { $observed.read_error = $_.Exception.Message }
+    return $observed
+}
+
+function Format-OwnedProcessIdentityFailure([string] $Message, [hashtable] $Expected, [hashtable] $Observed) {
+    $details = [ordered]@{}
+    foreach ($kind in @('expected', 'observed')) {
+        $identity = if ($kind -eq 'expected') { $Expected } else { $Observed }
+        $path = $identity.executable
+        $pathLength = if ($null -eq $path) { 0 } else { $path.Length }
+        $details[$kind] = [ordered]@{
+            pid = $identity.pid
+            # Decimal strings preserve every tick in downstream JSON readers.
+            start_ticks_utc = if ($null -eq $identity.start_ticks) { $null } else { [string] $identity.start_ticks }
+            executable = if ($null -eq $path) { $null } else { $path.Substring(0, [Math]::Min(512, $pathLength)) }
+            executable_length = $pathLength
+            executable_truncated = $pathLength -gt 512
+        }
+        if ($kind -eq 'observed') {
+            $details[$kind].has_exited = $identity.has_exited
+            if ($identity.read_error) {
+                $details[$kind].read_error = $identity.read_error.Substring(0, [Math]::Min(256, $identity.read_error.Length))
+            }
+        }
+    }
+    return "$Message Identity readback: $($details | ConvertTo-Json -Depth 4 -Compress)"
+}
+
+function Assert-OwnedProcessIdentity([Diagnostics.Process] $Process, [hashtable] $Identity, [string] $Message) {
+    $observed = Read-OwnedProcessIdentity $Process
+    if ($observed.read_error -or $observed.has_exited -or $observed.pid -ne $Identity.pid -or
+        $observed.start_ticks -ne $Identity.start_ticks -or
+        [string]::IsNullOrWhiteSpace($Identity.executable) -or [string]::IsNullOrWhiteSpace($observed.executable) -or
+        $observed.executable -ne $Identity.executable) {
+        throw (Format-OwnedProcessIdentityFailure $Message $Identity $observed)
     }
 }
 
-function Observe-OwnedProcesses {
+function Add-OwnedProcess([Diagnostics.Process] $Process, [int] $ParentId, [string] $ExpectedExecutable, [switch] $ForCleanup) {
+    # Cleanup may discover a final child after normal work ends. Keep its path
+    # readback inside the existing 88-second cleanup wait boundary.
+    $admissionLimit = if ($ForCleanup) { 88000 } else { $WorkLimitMilliseconds }
+    $deadline = [Math]::Min($Clock.ElapsedMilliseconds + 2000, $admissionLimit)
+    $observed = Read-OwnedProcessIdentity $Process
+    $expected = @{ pid = $Process.Id; start_ticks = $observed.start_ticks; executable = $ExpectedExecutable }
+    # MainModule/Path may not be available immediately after Process.Start.
+    # Wait for actual readback, never substitute the requested launch path.
+    while ($true) {
+        if ($observed.read_error -or $observed.has_exited -or $observed.pid -ne $expected.pid -or
+            $null -eq $expected.start_ticks -or $observed.start_ticks -ne $expected.start_ticks) {
+            throw (Format-OwnedProcessIdentityFailure 'Refused process admission after identity changed or exited.' $expected $observed)
+        }
+        $remaining = $deadline - $Clock.ElapsedMilliseconds
+        if ($remaining -le 0) {
+            throw (Format-OwnedProcessIdentityFailure 'Timed out waiting for a nonempty process executable readback.' $expected $observed)
+        }
+        if (-not [string]::IsNullOrWhiteSpace($observed.executable)) {
+            if ($ExpectedExecutable -and $observed.executable -ne $ExpectedExecutable) {
+                throw (Format-OwnedProcessIdentityFailure 'The launched browser executable does not match the selected Edge.' $expected $observed)
+            }
+            $OwnedProcesses[[string] $expected.pid] = @{
+                process = $Process
+                pid = $expected.pid
+                parent_pid = $ParentId
+                start_ticks = $expected.start_ticks
+                executable = $observed.executable
+            }
+            return
+        }
+        Start-Sleep -Milliseconds ([Math]::Min(50, $remaining))
+        $observed = Read-OwnedProcessIdentity $Process
+    }
+}
+
+function Observe-OwnedProcesses([switch] $ForCleanup) {
     if (-not $Browser) { return }
     $rows = @(Get-CimInstance Win32_Process -Property ProcessId, ParentProcessId, CreationDate -OperationTimeoutSec 2)
     $changed = $true
@@ -89,14 +164,18 @@ function Observe-OwnedProcesses {
             if (-not $child) { continue }
             try {
                 $null = $child.Handle
-                if ($child.HasExited -or [Math]::Abs($child.StartTime.ToUniversalTime().Ticks - $createdTicks) -gt 10000) {
+                if ($child.Id -ne $row.ProcessId -or $child.HasExited -or
+                    [Math]::Abs($child.StartTime.ToUniversalTime().Ticks - $createdTicks) -gt 10000) {
                     $child.Dispose()
                     continue
                 }
-                Add-OwnedProcess $child ([int] $row.ParentProcessId)
+                Add-OwnedProcess $child ([int] $row.ParentProcessId) -ForCleanup:$ForCleanup
                 $changed = $true
             }
-            catch { $child.Dispose() }
+            catch {
+                if ($ForCleanup) { $CleanupErrors.Add($_.Exception.Message) }
+                $child.Dispose()
+            }
         }
     }
 }
@@ -109,16 +188,14 @@ function Stop-OwnedProcesses {
     # Reobserve after termination to catch a child created between the first
     # snapshot and its parent's exit. Never adopt children born after that exit.
     foreach ($pass in 1..2) {
-        try { Observe-OwnedProcesses } catch { $CleanupErrors.Add($_.Exception.Message) }
+        try { Observe-OwnedProcesses -ForCleanup } catch { $CleanupErrors.Add($_.Exception.Message) }
         # Stop the root first to prevent it from replacing renderer processes.
         $identities = @($OwnedProcesses.Values | Sort-Object @{ Expression = { $_.pid -ne $Browser.Id } }, start_ticks)
         foreach ($identity in $identities) {
             try {
                 $process = $identity.process
                 if ($process.HasExited) { continue }
-                if ($process.StartTime.ToUniversalTime().Ticks -ne $identity.start_ticks -or $process.Path -ne $identity.executable) {
-                    throw "Refused cleanup after process identity changed: $($identity.pid)."
-                }
+                Assert-OwnedProcessIdentity $process $identity "Refused cleanup after process identity changed: $($identity.pid)."
                 $process.Kill()
             }
             catch { $CleanupErrors.Add($_.Exception.Message) }
@@ -228,7 +305,7 @@ try {
         '--autoplay-policy=no-user-gesture-required', '--mute-audio', '--window-size=1280,720', 'about:blank'
     )) { $start.ArgumentList.Add($argument) }
     $Browser = [Diagnostics.Process]::Start($start)
-    Add-OwnedProcess $Browser $PID
+    Add-OwnedProcess $Browser $PID $edgePath
     $receipt.browser_pid = $Browser.Id
     $receipt.browser_started_at_utc = $Browser.StartTime.ToUniversalTime().ToString('o')
     $receipt.status = 'WAITING_FOR_BROWSER_FRAMES'
@@ -245,8 +322,7 @@ try {
             $listenerOwner = Get-Process -Id $listener.OwningProcess -ErrorAction Stop
             try {
                 $ownerIdentity = $OwnedProcesses[[string] $listener.OwningProcess]
-                if ($listenerOwner.HasExited -or $listenerOwner.StartTime.ToUniversalTime().Ticks -ne $ownerIdentity.start_ticks -or
-                    $listenerOwner.Path -ne $ownerIdentity.executable) { throw 'DevTools listener process identity changed.' }
+                Assert-OwnedProcessIdentity $listenerOwner $ownerIdentity 'DevTools listener process identity changed.'
             }
             finally { $listenerOwner.Dispose() }
         }

@@ -1,24 +1,19 @@
 # M3 Level Editor streaming review
 
 **Scope:** owner-requested viewport review for #364 / PR #470, inside M3.
-**Status:** installed-source inspection and authenticated b9fd retarget review
-**PASS**; checkpoint cadence delivered at `c62bbc3e7dcdd9ccaad9b2facef477323413e279`
-with passing protected CI. At `9a7be52`, exact-SHA CI and the Blender reference
-passed; Windows recorded `compileKind=none`. Native startup accepted the eight
-explicit hexadecimal positions, completed the census and registered the exact
-owned toolset. The client verified its loopback listener and one-tool catalog,
-then dispatched one material request. Its returned JSON object failed the
-client's `schema_version` check. The rejected response and native request files
-were not retained by the previous success-only evidence path, so the output
-envelope, actual material mutation, captures and restoration remain unverified.
-The source-only `05c369a` read completed all four return-conversion bodies and
-established the mandatory `returnValue` string envelope. The follow-up client
-now requires that exact envelope before decoding the domain receipt and retains
-bounded responses before validation. This correction still needs a real
-same-process qualification.
-Live stream and same-process update proof remain **UNQUALIFIED**. The
+**Status:** bounded same-process paint preview **PASS** at `badb984`;
+received browser video remains **UNQUALIFIED**. The actual
+[Editor run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38137717962)
+completed two parameter changes and restoration in one identified process.
+Its separate Edge identity check failed before observing browser frames, so
+the overall job is failed. Exact-SHA protected CI and the Blender reference
+passed; Windows recorded `compileKind=none`. Both full material proofs skipped.
+The final receipt retained the Editor for the owner with original bindings
+restored. Freeze the launch branch at `badb984` while that session is in use.
+The Zen warning follow-up is closed by the owner's confirmation. The
 [workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
-records the authenticated launch evidence and current correction.
+records the authenticated evidence, measured client durations and remaining
+receiver correction. Paint preview does not grant final M3 or performance approval.
 
 The owner selected Epic's **Stream Level Editor** on 2026-10-10. The review
 must show the level viewport and preserve the source geometry and saved
@@ -163,8 +158,9 @@ requests must reach the same owned Editor PID/start identity, session, project
 and map. The second request must read the first request's state before applying
 its own values. Each update requires native parameter and slot readback, a small
 fixed-camera PNG response, and an explicit final restoration of the original
-bindings. Saved source and snapshot packages remain unchanged. These are
-acceptance requirements, not claims that the runtime proof has already passed.
+bindings. Saved source and snapshot packages remain unchanged. These requirements
+passed in the retained `badb984` paint qualification; later requests must still
+pass them against their actual session and current sequence.
 
 The session identifier is the exact launch `SessionToken`, for example a
 GitHub run-attempt token. Its stable receipt is
@@ -273,8 +269,8 @@ material/capture API checks independently. Any required failure produces the
 combined controlled `BLOCKED` report before owned tool registration, refresh or
 server startup. Bounded diagnostic comparisons cannot grant admission. Epic's
 viewport streaming may already have started before this Python bootstrap runs,
-so this is specifically an owned MCP admission boundary. Same-process material
-preview qualification remains pending.
+so this is specifically an owned MCP admission boundary. The `badb984` native
+paint qualification passed this boundary and the subsequent material chain.
 
 The manual definition separates `operation=open` from
 `operation=material-request`. The latter requires the existing session token and
@@ -310,6 +306,23 @@ live MediaStream, plus nonzero dimensions. It records a screenshot and closes
 only its own browser processes. A viewer HTTP response alone remains
 `HTTP_READY_CLIENT_PENDING`; actual received frames produce
 `BROWSER_VIDEO_RECEIVED`. Neither status grants M3 visual or performance approval.
+
+The receiving-client correction requires an actual nonempty executable readback
+before recording a process identity. It holds the original process handle and
+waits at most two seconds inside the existing 80-second discovery budget.
+Only final cleanup may use the existing 88-second boundary to admit a child
+created before its held parent's exit. PID and every start-time tick must remain
+equal. The root's observed path must match
+the selected Edge executable. Listener checks and cleanup use the same exact
+identity comparison, with bounded expected/observed diagnostics. A missing path
+is never filled from the requested launch path. The correction has local
+PowerShell contract tests; actual Windows receiving-frame validation is pending.
+
+The failed `badb984` receipt records a root with a null executable and refused
+cleanup. A later browser-only retry still needs the fixed debug port 9237 to be
+free and a fresh output/profile directory. Any remaining old process needs a
+fresh exact identity readback before it can be closed. Keep the retained
+material launcher checkout and Editor unchanged while qualifying the receiver.
 
 Session and scene receipts, engine log and client evidence are retained in the
 workflow artifact. A copy of the session receipt is stored in its prepared
