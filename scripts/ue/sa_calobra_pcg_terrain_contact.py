@@ -20,12 +20,13 @@ def vector(value):
     return result
 
 
-def unpack(hit, actor, component=None):
+def unpack(hit, actor, component=None, require_blocking=True):
     if hit is None:
         return None
     fields = hit.to_tuple()
     require(len(fields) == 18, "Unexpected native hit break shape")
-    require(fields[0] is True and fields[1] is False, "Nonblocking/overlapping query")
+    require(fields[1] is False, "Initial overlap query")
+    require(not require_blocking or fields[0] is True, "Nonblocking world query")
     require(fields[9] == actor, "Unauthorized contact owner")
     require(component is None or fields[10] == component, "Unauthorized component")
     return {
@@ -117,7 +118,9 @@ def measure(root, binding):
             len(hits) == 1,
             "Component trace does not expose exactly one native HitResult",
         )
-        support.append(unpack(hits[0], actor, component))
+        # Component geometry queries use BuildOverlapAll in LineTrace_Geom;
+        # successful geometry hits need not carry a world-channel blocking flag.
+        support.append(unpack(hits[0], actor, component, require_blocking=False))
     require(
         any(row is not None for row in support),
         "No native complex-collision support samples",

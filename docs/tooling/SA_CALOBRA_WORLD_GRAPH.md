@@ -386,6 +386,15 @@ holds (no numerical tolerance), records both bounds and their nonidentity, and
 traces the actual derived collision. This permits a conservative diagnostic;
 it does not certify original/derived geometry equivalence or regional admission.
 
+Attempt `9b86a55a62e13071283537ea167cae2551354c7b/qualification08` repeated
+clean material save/reload and passed conservative bounds, then stopped because
+the direct component ray returned a nonblocking geometry hit. Installed
+`PhysInterface_Chaos.cpp:985–992` uses `BuildOverlapAll()` for `LineTrace_Geom`;
+its successful geometry result is not a world collision-channel blocking claim.
+Next diagnostic accepts the component API's successful return with exact owner,
+component, finite hit and no initial overlap. Landscape world traces still
+require blocking hits. This changes API interpretation, not ground acceptance.
+
 Existing Julka profiles `sa-calobra-pcg-masks-candidate` and
 `sa-calobra-mask-transitions-candidate` verified with zero issues, including
 inherited source closure. Existing `verified_manifest()` also checked fingerprints,
