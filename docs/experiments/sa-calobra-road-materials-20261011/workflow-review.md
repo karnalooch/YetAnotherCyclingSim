@@ -109,14 +109,40 @@ The [artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/3
 is 66,818 bytes, SHA-256
 `a16dd0f7d177cec55f0835ffa7efef8f28f9d4bb992103b6995ed44182be49f3`.
 
-The correction resolves the core UClass type and both legacy bases by exact
-native paths. `ObjectIterator` explicitly accepts a native `Class` [E11]; native
-inheritance checks then require exactly the two source-verified abstract bases.
-No missing alias or empty enumeration can grant admission. All 26 bridge tests
-and an independent 15-case registration review passed. The actual native census,
-private Python-remote getter, generated tool schema and requests remain the
-next runtime qualification; the later material/capture API audit found no
-additional concrete mismatch in the documented UE 5.8 Python interfaces.
+At `f115173`, the correction resolved the core UClass type and both legacy bases
+by exact native paths. `ObjectIterator` accepts a native `Class` [E11], but this
+does not establish that every iterated object can be converted to a function's
+ClassProperty. All 26 bridge tests and an independent 15-case registration
+review passed; the [actual native attempt](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38128418393)
+failed when `MathLibrary.class_is_child_of` rejected `TestClass` during argument
+conversion. The traceback does not identify the candidate or establish failure
+of the parent argument. This is a real native API gap, not a qualified census.
+The private Python-remote getter, generated schema and requests were not reached.
+
+Exact-SHA [CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38128420822)
+and [Blender reference](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38128420326)
+passed. Windows recorded `compileKind=none` and verified-equivalent binary reuse;
+both full material proofs skipped. The [four-file native artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38128418393/artifacts/11699010691)
+is 66,988 bytes, SHA-256
+`5da472dbc6e24ab7a595ce773a64209ba3bcb8843134f2e99f12e4b86386be7d`.
+Its complete Editor log contains no engine fatal. Zen reached HTTP and ZenLocal
+`OK` in 2.294 s, with no retained Zen warning/error. The receipt records
+88,314,204,160 bytes free on C: and 27,897,995,264 bytes on D: before launch.
+
+The next startup collects the existing legacy census, literal `bRemoteExecution`
+getter and material/capture API evidence independently before any owned tool
+registration. A census failure also records four fixed inheritance control pairs
+and candidate identities before calling the disputed API, limited to 256
+elements and four retained failures with explicit counts/truncation. Diagnostic
+comparison with `ClassIterator(Object)` records at most 32,768 yields, their
+representation, duplicate paths and both base memberships; successful completion
+does not establish verified native coverage. Neither diagnostic can admit a
+session or exclude an object from the production census.
+Any failed required check remains controlled `BLOCKED`; the existing scene and
+host receipts retain the combined bounded report. This gathers the next read-only
+boundaries in one attempt without allocating a MID or changing a material.
+Pixel Streaming starts earlier in the existing launcher, so absence of an owned
+MCP listener does not mean absence of the separate streaming listeners.
 
 ## Measured local cost
 

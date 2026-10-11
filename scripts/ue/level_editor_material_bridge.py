@@ -27,6 +27,7 @@ MANIFEST_SHA256 = "974c86813d2ee95d4f3cc244fd3590f7f9711506973c10544f6ede9545573
 ENGINE_VERSION = "5.8.2-56702186+++UE5+Release-5.8"
 PORT = 18784
 REQUEST_LIMIT = 4096
+PREFLIGHT_LIMIT = 16 * 1024
 PNG_LIMIT = 8 * 1024 * 1024
 CAPTURE_SECONDS = 150.0
 PRIMING_COUNT = 3
@@ -386,7 +387,7 @@ def material_api_evidence(api, engine):
             doc = str(getattr(method, "__doc__", "") or "")
             require(
                 callable(method) and 0 < len(doc) <= 32768,
-                "Required native material/capture API is absent",
+                "Required native material/capture API is absent: " + owner + "." + name,
             )
             methods[owner + "." + name] = {
                 "signature": doc.splitlines()[0],
@@ -397,6 +398,377 @@ def material_api_evidence(api, engine):
         "rf_transient_allocator_verified": True,
         "reflected_methods": methods,
     }
+
+
+def preflight_error(error):
+    message = str(error)
+    result = {
+        "type": type(error).__name__[:64],
+        "message": message[:768],
+        "message_truncated": len(message) > 768,
+    }
+    # Count JSON escaping as well as UTF-8, including non-BMP exception text.
+    while len(canonical(result).encode("utf-8")) > 1024:
+        result["message"] = result["message"][: len(result["message"]) // 2]
+        result["message_truncated"] = True
+    return result
+
+
+def diagnostic_class_identity(value):
+    if isinstance(value, type):
+        return {
+            "representation": "python_type",
+            "name": value.__name__[:128],
+            "module": value.__module__[:128],
+            "path": value.static_class().get_path_name()[:256],
+        }
+    return {
+        "representation": "native_class_object",
+        "python_type": type(value).__name__[:128],
+        "path": value.get_path_name()[:256],
+        "object_class": value.get_class().get_path_name()[:256],
+    }
+
+
+def compact_legacy_diagnostics(details):
+    """Keep the disputed identities and outcomes when examples exceed the cap."""
+
+    def text_prefix(value, bound):
+        text = str(value)[:bound]
+        while len(canonical(text).encode("utf-8")) > bound:
+            text = text[: len(text) // 2]
+        return text
+
+    def identity(value):
+        return {
+            key: text_prefix(value[key], 256 if key == "path" else 128)
+            for key in (
+                "representation",
+                "python_type",
+                "path",
+                "object_class",
+                "name",
+                "module",
+            )
+            if key in value
+        }
+
+    def error(value):
+        return {
+            "type": text_prefix(value.get("type", ""), 64),
+            "message": text_prefix(value.get("message", ""), 256),
+            "message_truncated": True,
+        }
+
+    result = {"details_truncated": True, "diagnostic_only": True, "qualified": False}
+    if "error" in details:
+        result["error"] = error(details["error"])
+    if "class_is_child_of_signature" in details:
+        signature = details["class_is_child_of_signature"]
+        result["class_is_child_of_signature"] = (
+            None if signature is None else text_prefix(signature, 256)
+        )
+    if "class_is_child_of_signature_error" in details:
+        result["class_is_child_of_signature_error"] = error(
+            details["class_is_child_of_signature_error"]
+        )
+    if "metaclass_cdo" in details:
+        cdo = details["metaclass_cdo"]
+        result["metaclass_cdo"] = (
+            {"error": error(cdo["error"])} if "error" in cdo else identity(cdo)
+        )
+    result["control_pairs"] = []
+    for row in details.get("control_pairs", [])[:4]:
+        compact = {
+            key: row[key] for key in ("name", "status", "stage", "value") if key in row
+        }
+        if "error" in row:
+            compact["error"] = error(row["error"])
+        result["control_pairs"].append(compact)
+    for name in ("candidate_scan", "class_iterator_comparison"):
+        scan = details.get(name, {})
+        compact = {
+            key: scan[key]
+            for key in (
+                "candidate_limit",
+                "checked_count",
+                "true_count",
+                "false_count",
+                "error_count",
+                "duplicate_path_count",
+                "truncated",
+                "iteration_complete",
+                "native_coverage_verified",
+            )
+            if type(scan.get(key)) in (bool, int)
+        }
+        if scan.get("status") in ("READ", "ERROR"):
+            compact["status"] = scan["status"]
+        if "iteration_error" in scan:
+            compact["iteration_error"] = error(scan["iteration_error"])
+        if name == "class_iterator_comparison":
+            memberships = scan.get("base_memberships", {})
+            compact["base_memberships"] = {
+                path: memberships[path]
+                for path in sorted(ABSTRACT_LEGACY_CLASSES)
+                if type(memberships.get(path)) is bool
+            }
+        compact["first_failures"] = []
+        for row in scan.get("first_failures", [])[:1]:
+            first = {
+                key: row[key]
+                for key in ("index", "stage", "is_metaclass_cdo")
+                if key in row
+            }
+            if "python_type" in row:
+                first["python_type"] = text_prefix(row["python_type"], 128)
+            if "identity" in row:
+                first["identity"] = identity(row["identity"])
+            if "error" in row:
+                first["error"] = error(row["error"])
+            compact["first_failures"].append(first)
+        result[name] = compact
+    return result
+
+
+def class_iterator_diagnostics(api):
+    """Compare the public type iterator without treating it as native coverage."""
+    scan = {
+        "candidate_limit": 32768,
+        "checked_count": 0,
+        "true_count": 0,
+        "false_count": 0,
+        "error_count": 0,
+        "duplicate_path_count": 0,
+        "base_memberships": {path: False for path in sorted(ABSTRACT_LEGACY_CLASSES)},
+        "first_yields": [],
+        "first_failures": [],
+        "truncated": True,
+        "iteration_complete": False,
+        "native_coverage_verified": False,
+    }
+    seen = set()
+    try:
+        base = api.load_class(None, LEGACY_BASE_CLASS)
+        require(
+            base is not None and base.get_path_name() == LEGACY_BASE_CLASS,
+            "Diagnostic legacy base is unavailable or differs",
+        )
+        candidates = iter(api.ClassIterator(api.Object))
+        for index in range(scan["candidate_limit"]):
+            try:
+                candidate = next(candidates)
+            except StopIteration:
+                scan.update({"truncated": False, "iteration_complete": True})
+                break
+            scan["checked_count"] += 1
+            row = {
+                "index": index,
+                "stage": "identity",
+                "python_type": type(candidate).__name__[:128],
+            }
+            try:
+                row["identity"] = diagnostic_class_identity(candidate)
+                # static_class is used only for a type actually yielded by the
+                # iterator. Never substitute a nearest exported Python ancestor.
+                native = (
+                    candidate.static_class()
+                    if isinstance(candidate, type)
+                    else candidate
+                )
+                path = native.get_path_name()
+                if path in seen:
+                    scan["duplicate_path_count"] += 1
+                seen.add(path)
+                if path in scan["base_memberships"]:
+                    scan["base_memberships"][path] = True
+                row["stage"] = "call"
+                value = api.MathLibrary.class_is_child_of(candidate, base)
+                require(
+                    type(value) is bool, "Native class comparison did not return bool"
+                )
+                scan["true_count" if value else "false_count"] += 1
+            except Exception as error:  # noqa: BLE001 - report each native failure; never admit from diagnostics.
+                scan["error_count"] += 1
+                if len(scan["first_failures"]) < 4:
+                    scan["first_failures"].append(
+                        {**row, "error": preflight_error(error)}
+                    )
+            if index < 4:
+                scan["first_yields"].append(
+                    {
+                        "index": index,
+                        "python_type": row["python_type"],
+                        "identity": row.get("identity"),
+                    }
+                )
+    except Exception as error:  # noqa: BLE001 - incomplete diagnostic iteration is an explicit error.
+        scan["iteration_error"] = preflight_error(error)
+    scan["status"] = (
+        "ERROR" if scan["error_count"] or "iteration_error" in scan else "READ"
+    )
+    return scan
+
+
+def legacy_census_diagnostics(api):
+    """Bounded readback after refusal; never supplies an admitted census."""
+    object_path = "/Script/CoreUObject.Object"
+    class_path = "/Script/CoreUObject.Class"
+    editor_path = (
+        "/Script/ModelContextProtocolEditor.ModelContextProtocolEditorToolLibrary"
+    )
+
+    def native(path):
+        value = api.load_class(None, path)
+        require(
+            value is not None and value.get_path_name() == path,
+            "Diagnostic native class is unavailable or differs: " + path,
+        )
+        return value
+
+    result = {"diagnostic_only": True, "qualified": False, "control_pairs": []}
+    try:
+        doc = str(api.MathLibrary.class_is_child_of.__doc__ or "")
+        result["class_is_child_of_signature"] = (
+            doc.splitlines()[0][:256] if doc else None
+        )
+    except Exception as error:  # noqa: BLE001 - signature failure must not hide independent native readbacks.
+        result["class_is_child_of_signature_error"] = preflight_error(error)
+    for name, arguments in (
+        ("python_object_to_object", lambda: (api.Object, api.Object)),
+        ("native_object_to_object", lambda: (native(object_path), native(object_path))),
+        ("legacy_to_object", lambda: (native(LEGACY_BASE_CLASS), native(object_path))),
+        ("editor_to_legacy", lambda: (native(editor_path), native(LEGACY_BASE_CLASS))),
+    ):
+        row = {"name": name, "stage": "identity"}
+        try:
+            test, parent = arguments()
+            row["test"] = diagnostic_class_identity(test)
+            row["parent"] = diagnostic_class_identity(parent)
+            row["stage"] = "call"
+            value = api.MathLibrary.class_is_child_of(test, parent)
+            require(type(value) is bool, "Native class comparison did not return bool")
+            row.update({"status": "READ", "value": value})
+        except Exception as error:  # noqa: BLE001 - retain each control failure independently.
+            row.update({"status": "ERROR", "error": preflight_error(error)})
+        result["control_pairs"].append(row)
+
+    scan = {
+        "candidate_limit": 256,
+        "checked_count": 0,
+        "true_count": 0,
+        "false_count": 0,
+        "error_count": 0,
+        "truncated": True,
+        "iteration_complete": False,
+        "first_failures": [],
+    }
+    result["candidate_scan"] = scan
+    try:
+        metaclass, base = native(class_path), native(LEGACY_BASE_CLASS)
+        metaclass_cdo = None
+        try:
+            metaclass_cdo = api.get_default_object(metaclass)
+            result["metaclass_cdo"] = diagnostic_class_identity(metaclass_cdo)
+        except Exception as error:  # noqa: BLE001 - optional CDO diagnostics cannot authorize or hide a census.
+            result["metaclass_cdo"] = {"error": preflight_error(error)}
+        candidates = iter(api.ObjectIterator(metaclass))
+        for index in range(scan["candidate_limit"]):
+            try:
+                candidate = next(candidates)
+            except StopIteration:
+                scan["truncated"] = False
+                scan["iteration_complete"] = True
+                break
+            scan["checked_count"] += 1
+            row = {
+                "index": index,
+                "stage": "identity",
+                "python_type": type(candidate).__name__[:128],
+            }
+            try:
+                # Preserve the candidate's identity before the ClassProperty
+                # conversion can raise. No candidate is omitted from a census.
+                row["identity"] = diagnostic_class_identity(candidate)
+                row["is_metaclass_cdo"] = (
+                    candidate == metaclass_cdo if metaclass_cdo is not None else None
+                )
+                row["stage"] = "call"
+                value = api.MathLibrary.class_is_child_of(candidate, base)
+                require(
+                    type(value) is bool, "Native class comparison did not return bool"
+                )
+                scan["true_count" if value else "false_count"] += 1
+            except Exception as error:  # noqa: BLE001 - report each native failure; never admit from diagnostics.
+                scan["error_count"] += 1
+                if len(scan["first_failures"]) < 4:
+                    scan["first_failures"].append(
+                        {**row, "error": preflight_error(error)}
+                    )
+        # Reaching the limit remains truncated even if the next element would
+        # end the iterator. This diagnostic never claims a complete census.
+    except Exception as error:  # noqa: BLE001 - incomplete diagnostic iteration is an explicit error.
+        scan["iteration_error"] = preflight_error(error)
+    scan["status"] = (
+        "ERROR" if scan["error_count"] or "iteration_error" in scan else "READ"
+    )
+    result["class_iterator_comparison"] = class_iterator_diagnostics(api)
+    return result
+
+
+def registration_preflight(api, engine):
+    """Run the three existing read-only gates independently before registration."""
+
+    def python_settings():
+        settings = api.get_default_object(
+            api.load_class(
+                None, "/Script/PythonScriptPlugin.PythonScriptPluginSettings"
+            )
+        )
+        require_python_remote_disabled(settings)
+        return settings
+
+    values, checks = {}, {}
+    for name, inspect in (
+        ("legacy_census", lambda: legacy_census(api)),
+        ("python_remote_execution", python_settings),
+        ("material_api_evidence", lambda: material_api_evidence(api, engine)),
+    ):
+        try:
+            values[name] = inspect()
+            checks[name] = {"status": "PASSED"}
+            if name == "python_remote_execution":
+                checks[name]["bRemoteExecution"] = False
+        except Exception as error:  # noqa: BLE001 - every native exception blocks admission but preserves the other gates.
+            checks[name] = {"status": "BLOCKED", "error": preflight_error(error)}
+    if all(check["status"] == "PASSED" for check in checks.values()):
+        return (
+            values["legacy_census"],
+            values["python_remote_execution"],
+            values["material_api_evidence"],
+        )
+    observed = {
+        "schema_version": 1,
+        "status": "BLOCKED",
+        "diagnostic_only": True,
+        "qualified": False,
+        "checks": checks,
+    }
+    # Diagnostics run only after all three admission checks have reported. An
+    # error in this readback cannot hide the original refusals or admit startup.
+    if checks["legacy_census"]["status"] == "BLOCKED":
+        try:
+            observed["legacy_class_diagnostics"] = legacy_census_diagnostics(api)
+        except Exception as error:  # noqa: BLE001 - diagnostic failure cannot replace the original hard refusal.
+            observed["legacy_class_diagnostics"] = {"error": preflight_error(error)}
+    encoded = canonical(observed)
+    if len(encoded.encode("utf-8")) > PREFLIGHT_LIMIT:
+        # The three bounded per-check results take precedence over extra detail.
+        observed["legacy_class_diagnostics"] = compact_legacy_diagnostics(
+            observed.get("legacy_class_diagnostics", {})
+        )
+        encoded = canonical(observed)
+    raise ValueError("Official registration preflight BLOCKED; observed=" + encoded)
 
 
 class MaterialPreview:
@@ -1053,12 +1425,7 @@ def install(api, root, preparation, session_id, launcher_sha):
         api.load_class(None, "/Script/ToolsetRegistry.ToolsetRegistrySettings")
     )
     require_official_settings(settings, registry_settings)
-    libraries = legacy_census(api)
-    python_settings = api.get_default_object(
-        api.load_class(None, "/Script/PythonScriptPlugin.PythonScriptPluginSettings")
-    )
-    require_python_remote_disabled(python_settings)
-    native_material = material_api_evidence(api, engine)
+    libraries, python_settings, native_material = registration_preflight(api, engine)
 
     def guard():
         require_official_settings(settings, registry_settings)
