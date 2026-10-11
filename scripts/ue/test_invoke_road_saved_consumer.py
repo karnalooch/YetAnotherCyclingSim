@@ -321,6 +321,67 @@ foreach ($failure in @('schema', 'unexpected_variant', 'unexpected_readback')) {
         # variable must never turn artifact retention into the drive-root /**.
         self.assertNotIn("path: ${{ env.YACS_ROAD_NATIVE_PROOF }}/**", upload)
 
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell is required for native launch contract")
+    def test_outer_launch_uses_authenticated_adjacent_gui_and_legacy_keeps_null_rhi(self):
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            (workspace / "UnrealEditor-Cmd.exe").write_bytes(b"commandlet identity fixture")
+            (workspace / "UnrealEditor.exe").write_bytes(b"rendered editor identity fixture")
+            runner = workspace / "launch-contract.ps1"
+            runner.write_text(r'''
+param([string] $Wrapper, [string] $Workspace)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$tokens = $null; $errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref]$tokens, [ref]$errors)
+if ($errors.Count) { throw ($errors.Message -join '; ') }
+foreach ($name in @('Assert-PlainPath', 'Get-Identity', 'Assert-Identity', 'Get-SavedEditorLaunch')) {
+    $nodes = @($ast.FindAll({ param($node)
+        $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name
+    }, $true))
+    if ($nodes.Count -ne 1) { throw ('Missing unique production launch function: ' + $name) }
+    . ([scriptblock]::Create($nodes[0].Extent.Text))
+}
+$cmd = Get-Identity (Join-Path $Workspace 'UnrealEditor-Cmd.exe') 1GB
+$legacy = Get-SavedEditorLaunch $cmd $false
+if ($legacy.mode -cne 'NULL_RHI' -or $legacy.program.path -cne $cmd.path -or
+    $legacy.program.sha256 -cne $cmd.sha256 -or $legacy.arguments.Count -ne 1 -or
+    $legacy.arguments[0] -cne '-NullRHI') { throw 'Legacy commandlet launch changed.' }
+$rendered = Get-SavedEditorLaunch $cmd $true
+$gui = Get-Identity (Join-Path $Workspace 'UnrealEditor.exe') 1GB
+if ($rendered.mode -cne 'RENDER_OFFSCREEN' -or $rendered.program.path -cne $gui.path -or
+    $rendered.program.sha256 -cne $gui.sha256 -or $rendered.program.sha256 -ceq $cmd.sha256 -or
+    $rendered.arguments.Count -ne 3 -or ($rendered.arguments -join ',') -cne
+    '-RenderOffscreen,-norhithread,-NoVSync') { throw 'Outer launch lacks the exact adjacent rendered Editor.' }
+Assert-Identity $cmd 1GB
+Assert-Identity $rendered.program 1GB
+[IO.File]::WriteAllBytes($gui.path, [byte[]](1, 2, 3, 4))
+$rejected = $false
+try { Assert-Identity $rendered.program 1GB } catch { $rejected = $true }
+if (-not $rejected) { throw 'Changed rendered executable escaped identity verification.' }
+$bad = @{ path = (Join-Path $Workspace 'different.exe'); sha256 = $cmd.sha256; size_bytes = $cmd.size_bytes }
+$rejected = $false
+try { Get-SavedEditorLaunch $bad $true | Out-Null } catch { $rejected = $true }
+if (-not $rejected) { throw 'An unrelated executable was accepted as the commandline baseline.' }
+Remove-Item -LiteralPath $gui.path
+$rejected = $false
+try { Get-SavedEditorLaunch $cmd $true | Out-Null } catch { $rejected = $true }
+if (-not $rejected) { throw 'Missing GUI silently fell back to commandlet or NullRHI.' }
+$legacy = Get-SavedEditorLaunch $cmd $false
+if ($legacy.program.path -cne $cmd.path) { throw 'Legacy launch unexpectedly requires the GUI.' }
+Write-Output 'SAVED_EDITOR_RENDERING_CONTEXT_CONTRACT_PASS'
+''', encoding="utf-8")
+            result = subprocess.run(
+                [shutil.which("pwsh"), "-NoProfile", "-File", str(runner), str(WRAPPER), str(workspace)],
+                capture_output=True, text=True, timeout=30,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("SAVED_EDITOR_RENDERING_CONTEXT_CONTRACT_PASS", result.stdout)
+        self.assertIn("Start-Process -FilePath $launch.program.path", self.host)
+        self.assertIn("Get-SavedEditorLaunch $engine ([bool]$OuterTerrainCanary)", self.host)
+        self.assertEqual(self.host.count("Assert-Identity $launch.program 1GB"), 2)
+        self.assertIn("editor_executable_sha256 = $launch.program.sha256", self.host)
+
     def test_exact_git_and_predecessor_proofs_gate_both_editors(self):
         for field in (
             "Require-ExactSource",

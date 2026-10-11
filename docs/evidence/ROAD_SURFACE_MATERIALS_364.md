@@ -12,7 +12,73 @@ remains frozen. #384 completed after protected [PR #467](https://github.com/karn
 merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its gate is satisfied.
 This work continues #364, not MCP infrastructure.
 
-## Current 5b99 results and next material comparison
+## Current e81 native preparation failure and wall observations
+
+Revision `e81a4377cc6b8d635c0036adf01fc8427f987ff9` passed
+[protected CI 38111920048](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38111920048),
+including the Unreal build/Automation lane. The
+[native run 38111916743](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38111916743)
+passed 409 Windows preflight tests with two supported skips, baseline readback
+and the reversible asphalt canary. Preparation PID 46996 exited 3 after
+57.556 seconds, before saving the derived map or starting fresh reload/GPU.
+
+The actual traceback reaches the newly reused frozen-Landscape verifier:
+`road_shoulder_material._authenticate_terrain` calls
+`sa_calobra_whole_map_prep.verify_instance`, which rejects the weight texture's
+combined 4033 × 4033 / linear-registration check. It has already resolved all
+eleven texture bindings, drained native asset compilation and rejected default
+or still-compiling texture objects. The old exception does not retain the
+actual dimensions or sRGB value. This is not evidence that a further wait will
+fix the problem. The diagnostic now includes the actual native dimensions,
+format, mip counts and state flags without changing the rejection condition.
+
+That verifier reads `FTexturePlatformData`, and its earlier #363 4033-pixel
+proof ran in `UnrealEditor.exe -RenderOffscreen`. The failed e81 preparation
+used `UnrealEditor-Cmd.exe -NullRHI`. The correction runs only outer-terrain
+save/reload in the existing offscreen GUI Editor, derived from the authenticated
+commandline executable's directory and hashed before/after each owned process.
+Legacy save/reload remains NullRHI. The same idle-host guard, serial ownership,
+420-second deadline and unchanged geometry/texture requirements apply. The
+mode is recorded as requested; a flag does not itself prove the runtime result.
+This restores the verifier's proven execution context without claiming that
+the unrecorded e81 dimensions or cause have been established.
+
+The same correction closes a separate pre-read gap for crack maps: import and
+fresh verification now hold the exact eight selected Texture2D objects through
+one existing native `finish_texture_compilation` call before their strict
+2048-pixel/PBR readback. The call must return literal `True`; there is no GC,
+retry, reimport or settings repair. Its actual API signature is retained in the
+import receipt. Synthetic cold-size tests cover both entry points and confirm
+that a failed finish, a foreign object or persistent CLAMP drift still rejects
+the operation. This is readiness ordering, not an assertion about the unknown
+dimensions in either failed native run.
+
+The correction passed 225 local source/material/consumer/GPU/host/shared-prep
+tests in 57.427 seconds on Python 3.12 with actual PowerShell 7.4.13, without
+skips. Independent host/shared-prep and crack-source reviews found no blocker.
+Both changed host scripts parse, the required Ruff rules pass, and all four
+documentation guards pass. The next native save/reload and capture remain
+required; local fixtures do not grant that result.
+
+The downloaded 31-file native artifact is 204,197 bytes, SHA-256
+`4a8d87fe11d242b0cf94e268d3bd419fe96d019dfef0eab5a858c6aa6e7262c0`.
+The prepare log is 364,965 bytes, SHA-256
+`608372eee970af560e94ebb047f8e9b428e57e41b24ca49ef5c81de408895180`;
+all three retained prepare-log references match the host receipt. This run
+produced no PNG, crack normal comparison or new native wall/CUT payload.
+The earlier 5b99 saved/fresh result and 4258 actual images remain historical
+evidence; neither is presented as an e81 render.
+
+The separate [source run 38111916772](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38111916772)
+passed at e81. Reader PID 41544 exited 0 in 6.118 seconds using the existing
+isolated decoder, without another restoration. The closed wall-contact set
+contains 2,398 rows / 2,270 distinct tile-and-point-index observations at
+195, 200, 205, 210, 215, 220, 225, 230 and 235 m. The CSV is 417,842 bytes,
+SHA-256 `6af3704cc525bcc7282989e74beb061ba6fdec9f3c7492ee6d428ca3b603fb0d`.
+Its reader receipt and source manifest also match their host-pinned sizes and
+hashes. These are raw source observations, not an applied geometry repair.
+
+## Prior 5b99 results and next material comparison
 
 Revision `5b99f3e16a0ccbbda9dc9c489e61f638d4dc453a` passed
 [protected CI 38109506009](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38109506009).
@@ -100,8 +166,9 @@ original source. Terrain is complete within 1 cm of the outer edge and gravel
 within 10 cm, with breakup from the scanned gravel grain; the original inner
 0–8 cm transition remains protected on narrow tapers.
 
-Saved and fresh Editors use NullRHI. Their actual material statistics are
-retained as observations, allowing zero and differences between processes;
+Saved and fresh outer-terrain Editors use offscreen rendering; legacy cases
+remain NullRHI. Their material statistics are retained as observations,
+allowing zero and differences between processes;
 they cannot claim GPU compilation. A separate read-only material-statistics
 check runs after native GPU readiness, together with a targeted closed-log
 check for this material's compile/fallback errors. It does not invent an

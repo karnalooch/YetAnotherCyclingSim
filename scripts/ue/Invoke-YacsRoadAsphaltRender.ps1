@@ -927,7 +927,7 @@ function Assert-OuterTerrainLanes {
     Assert-JsonEqual 3 $material.schema_version 'outer graph schema'
     Assert-JsonEqual 'SHOULDER_MATERIAL_CREATED_REVIEW_PENDING' $material.status 'saved outer material status'
     Assert-JsonEqual $true $material.outer_terrain_enabled 'saved outer graph mode'
-    Assert-JsonEqual $false $material.gpu_compile_verified 'NullRHI is not GPU compilation'
+    Assert-JsonEqual $false $material.gpu_compile_verified 'save is not the fresh GPU capture proof'
     Assert-JsonEqual @() $material.native_compile_errors 'recorded native material errors'
     Assert-JsonEqual 17 $material.unique_texture_objects 'outer unique graph textures'
     Assert-OuterNativeStatistics $material.native_statistics

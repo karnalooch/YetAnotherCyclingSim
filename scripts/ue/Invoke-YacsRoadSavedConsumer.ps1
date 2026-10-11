@@ -41,6 +41,8 @@ $receipt = [ordered]@{
     outer_terrain_owner_labels = @()
     outer_terrain_physical_contact_verified = $false
     outer_terrain_normal_response_verified = $false
+    rendering_mode_requested = $null
+    rendering_arguments_requested = @()
     road_profile_diagnostic_sha256 = $null
     original_map_saved = $false; original_landscape_mutated = $false
     gpu_shader_verified = $false; owner_visual_status = 'PENDING_FINAL_M3'
@@ -186,6 +188,22 @@ function Require-IdleHost {
     if ($state.status -cne 'IDLE') {
         throw 'Saved asphalt authoring must yield to a different active Unreal Editor.'
     }
+}
+function Get-SavedEditorLaunch {
+    param($Commandlet, [bool] $OuterTerrain)
+    if ($Commandlet.path -isnot [string] -or
+        -not $Commandlet.path.EndsWith('UnrealEditor-Cmd.exe', [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Saved material rendering must derive from the authenticated commandline Editor.'
+    }
+    if ($OuterTerrain) {
+        # The frozen whole-map verifier reads platform texture data. Reuse
+        # its proven rendered Editor context, including the existing RHI flag.
+        $gui = Join-Path (Split-Path -Parent $Commandlet.path) 'UnrealEditor.exe'
+        return [ordered]@{ mode = 'RENDER_OFFSCREEN'; program = (Get-Identity $gui 1GB)
+            arguments = @('-RenderOffscreen', '-norhithread', '-NoVSync') }
+    }
+    return [ordered]@{ mode = 'NULL_RHI'; program = $Commandlet
+        arguments = @('-NullRHI') }
 }
 function Require-ExactSource {
     param([string] $Relative)
@@ -357,8 +375,8 @@ function Assert-OuterTerrainReceipt {
     $statistics = @('num_samplers', 'num_pixel_shader_instructions', 'num_pixel_texture_samples',
                     'num_vertex_shader_instructions', 'num_vertex_texture_samples', 'num_virtual_texture_samples',
                     'num_uv_scalars', 'num_interpolator_scalars')
-    # Both Editors use NullRHI. Retain actual observations, including zero,
-    # without calling them GPU compilation or requiring equality across loads.
+    # Save/reload counters remain observations, including zero. Their RHI
+    # context is not the separate cold GPU capture/compile proof below.
     foreach ($row in @($material.native_statistics, $loaded.outer_native_statistics)) {
         if ($row -isnot [Collections.IDictionary] -or $row.Count -ne $statistics.Count -or
             $row.num_virtual_texture_samples -ne 0) {
@@ -542,14 +560,16 @@ function Assert-CrackCanaryReceipt {
 function Invoke-OwnedEditor {
     param([string] $Action)
     Require-IdleHost
+    Assert-Identity $engine 1GB
+    Assert-Identity $launch.program 1GB
     $script = Join-Path $root 'scripts/ue/road_asphalt_saved_consumer.py'
     $arguments = @(('"' + (Join-Path $root 'YetAnotherCyclingSim.uproject') + '"'),
         '/Engine/Maps/Entry', '-DisablePlugins=ModelContextProtocol,Wingman,AndroidFileServer',
         '-Unattended', '-NoPause', '-NoSplash', '-NoSound', '-NoLiveCoding', '-NoP4',
-        '-NullRHI', '-ScriptErrorsAreFatal',
+        '-ScriptErrorsAreFatal',
         '-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False',
         ('-ExecutePythonScript="' + $script + '"'),
-        ('-AbsLog="' + (Join-Path $evidence ('saved-road-' + $Action + '-editor.log')) + '"'))
+        ('-AbsLog="' + (Join-Path $evidence ('saved-road-' + $Action + '-editor.log')) + '"')) + @($launch.arguments)
     $streamOut = Join-Path $evidence ('saved-road-' + $Action + '-stdout.log')
     $streamErr = Join-Path $evidence ('saved-road-' + $Action + '-stderr.log')
     foreach ($path in @($streamOut, $streamErr)) {
@@ -558,7 +578,7 @@ function Invoke-OwnedEditor {
             throw 'An owned saved road material log already exists.'
         }
     }
-    $script:editor = Start-Process -FilePath $engine.path -ArgumentList $arguments `
+    $script:editor = Start-Process -FilePath $launch.program.path -ArgumentList $arguments `
         -WorkingDirectory $root -PassThru -NoNewWindow `
         -RedirectStandardOutput $streamOut -RedirectStandardError $streamErr `
         -Environment @{
@@ -589,7 +609,8 @@ function Invoke-OwnedEditor {
     $script:editor = $null
     $processRow = [ordered]@{ action = $Action; owned_pid = $editorPid
         exit_code = $exitCode; elapsed_seconds = $timer.Elapsed.TotalSeconds
-        deadline_seconds = 420 }
+        deadline_seconds = 420; rendering_mode_requested = $launch.mode
+        editor_executable_sha256 = $launch.program.sha256 }
     $receipt.editor_processes += $processRow
     foreach ($name in @(
         ('saved-road-' + $Action + '-editor.log'),
@@ -602,6 +623,8 @@ function Invoke-OwnedEditor {
         }
         $receipt.proof_files[$name] = Get-ClosedLog $path
     }
+    Assert-Identity $engine 1GB
+    Assert-Identity $launch.program 1GB
     if ($exitCode -ne 0) {
         throw ('Native saved asphalt ' + $Action + ' process failed; original logs retained.')
     }
@@ -690,6 +713,10 @@ try {
     if ($engine.sha256 -cne $baseline.value.proof_files.editor_executable.sha256) {
         throw 'Unreal Editor executable differs from the original approved native baseline.'
     }
+    $launch = Get-SavedEditorLaunch $engine ([bool]$OuterTerrainCanary)
+    $receipt.rendering_mode_requested = $launch.mode
+    $receipt.rendering_arguments_requested = @($launch.arguments)
+    $receipt.proof_files.save_reload_editor_executable = $launch.program
     foreach ($row in $baseline.value.binary_provenance) {
         Assert-Identity $row.copied_identity 512MB
         Assert-Identity $row.original_identity 512MB

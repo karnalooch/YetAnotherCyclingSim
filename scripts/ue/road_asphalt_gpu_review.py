@@ -387,8 +387,8 @@ def authenticate_surface_detail_proofs(host, prepared, fresh, manifest, *, edge_
 def outer_binding_summary(manifest, readback):
     """Validate actual observations; renderer-specific counters are not bindings.
 
-    Save/fresh use NullRHI. Keep their observed native counters in the receipt,
-    without requiring those counts to equal a later SM6 GPU material resource.
+    Keep save/fresh native counters in the receipt without requiring their
+    values to equal the separate cold SM6 GPU capture's material resource.
     The separate GPU verifier must observe a real compiled material after the
     existing loading barrier; this function never grants that admission.
     """
@@ -746,8 +746,8 @@ class RoadLitCapture:
             "material_texture_count": len(materials),
         }
         if self.context.get("outer_terrain_enabled", False) and self.outer_gpu_statistics_before is None:
-            # Save/fresh-reopen use NullRHI. Observe actual GPU statistics only
-            # after the existing native loading and full-mip barrier above.
+            # Observe this fresh capture's actual GPU statistics only after
+            # the existing native loading and full-mip barrier above.
             self.outer_gpu_statistics_before = self.read_outer_gpu_statistics()
 
     def read_outer_gpu_statistics(self):

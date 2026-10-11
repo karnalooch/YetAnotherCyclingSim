@@ -255,14 +255,27 @@ loading preparation. The missing observed values leave the specific mismatch
 unresolved; neither texture settings nor required dimensions are relaxed.
 Both contact steps were skipped. Actual crack images remain pending.
 
+The next revision `e81a4377` passed protected CI 38111920048 and 409 native
+preflight tests (two supported skips), but its preparation process exited 3
+at the newly reused frozen weight texture's dimensions/linear-registration
+check. No new map, fresh reload or image was produced. The actual offending
+values were not retained; the unchanged guard now reports them explicitly.
+Outer save/reload now uses the frozen verifier's previously proven offscreen
+rendering context, with separately hashed GUI Editor bytes and the same owned
+process deadline. Its actual native outcome remains pending.
+The separate source run 38111916772 completed all nine wall-contact transects:
+2,398 rows / 2,270 distinct source observations at 195–235 m, reader exit 0.
+Neither source acquisition nor the successful CI admits the outer blend or
+repairs the wall. See the current [material evidence](evidence/ROAD_SURFACE_MATERIALS_364.md).
+
 The material comparisons retain the unchanged 68 Lit cameras. The first
 combined run selects the existing 16 crack/neutral/normal controls; a separate
 opt-in retains the original eight band controls and adds a two-image
 white-paint coverage comparison at 0083. A five-owner outer shoulder blend reuses the actual frozen Landscape
 surface and adds an independently witnessed UV1 while preserving UV0. Camera
 windows 0013/0071/0097/0112/0082 resolve to supports 018/073/093/112/182;
-Nudo's parapet and the separate contact owners are excluded. Saved NullRHI
-statistics remain observations, with material GPU statistics and actual-image
+Nudo's parapet and the separate contact owners are excluded. Saved material
+statistics remain observations, with fresh GPU statistics and actual-image
 review checked separately. This is implementation/review work, not admission.
 
 #### Finish #364 as one complete delivery

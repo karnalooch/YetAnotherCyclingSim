@@ -400,7 +400,8 @@ def _context(api):
 def _import_api(api):
     evidence = {}
     for cls, name in ((api.AssetToolsHelpers.get_asset_tools(), "import_asset_tasks"),
-                      (api.Texture2D, "blueprint_get_size_x"), (api.Texture2D, "blueprint_get_size_y")):
+                      (api.Texture2D, "blueprint_get_size_x"), (api.Texture2D, "blueprint_get_size_y"),
+                      (api.YacsTextureAuditLibrary, "finish_texture_compilation")):
         method = getattr(cls, name, None)
         doc = str(getattr(method, "__doc__", "") or "")
         require(callable(method) and 0 < len(doc) <= 32768, "Required native crack import API is unavailable: " + name)
@@ -472,6 +473,23 @@ def _verify_textures(api, paths):
     return result
 
 
+def _finish_and_verify_textures(api, paths):
+    """Hold only the selected objects through one native finish and strict readback."""
+    selected = []
+    for motif, channels in paths["textures"].items():
+        for channel, path in channels.items():
+            texture = api.load_asset(path)
+            require(isinstance(texture, api.Texture2D) and texture.get_path_name() == path,
+                    "Pinned crack texture missing before native compilation finish: " + motif + "/" + channel)
+            selected.append(texture)
+    # Import settings and fresh loading can enqueue derived texture builds.
+    # The exact objects remain referenced during the existing size/PBR checks;
+    # no full asset drain, GC, reimport, setting repair or retry occurs here.
+    require(api.YacsTextureAuditLibrary.finish_texture_compilation(selected) is True,
+            "Selected crack textures did not finish native compilation")
+    return _verify_textures(api, paths)
+
+
 def import_textures(api, source_root, pins, motif_ids=CANARY_MOTIFS, *, source_repo_root=ROOT):
     """Return (native textures by motif, receipt). New unsaved assets only."""
     _context(api)
@@ -495,7 +513,7 @@ def import_textures(api, source_root, pins, motif_ids=CANARY_MOTIFS, *, source_r
             require(texture is not None and isinstance(texture, api.Texture2D), "Imported crack texture is missing")
             for key, value in _settings(api, channel).items():
                 texture.set_editor_property(key, value)
-    textures = _verify_textures(api, paths)
+    textures = _finish_and_verify_textures(api, paths)
     require(load_sources(source_root, pins, motif_ids, source_repo_root=source_repo_root) == source,
             "Crack inputs changed during native texture import")
     return textures, {"schema_version": 1, "status": "ROAD_CRACK_TEXTURES_IMPORTED_REVIEW_PENDING",
@@ -519,4 +537,4 @@ def verify_import(api, source_root, pins, receipt, *, source_repo_root=ROOT):
             and receipt.get("texture_count") == 4 * len(source["selected_motifs"])
             and receipt.get("neutral_sources") == _neutral_sources(source_root, source),
             "Crack import source, extent or neutral border differs")
-    return _verify_textures(api, receipt["assets"])
+    return _finish_and_verify_textures(api, receipt["assets"])

@@ -187,7 +187,8 @@ class ImportTask(Texture):
 
 class ImportEngine:
     def __init__(self):
-        self.assets, self.tasks = {}, []
+        self.assets, self.tasks, self.finishes = {}, [], []
+        self.texture_factory = Texture
         self.fail_import = False
         self.api = SimpleNamespace(
             Texture2D=Texture, AssetImportTask=ImportTask,
@@ -195,6 +196,7 @@ class ImportEngine:
             TextureAddress=SimpleNamespace(TA_WRAP="wrap", TA_CLAMP="clamp"),
             AssetToolsHelpers=SimpleNamespace(get_asset_tools=lambda: SimpleNamespace(import_asset_tasks=self.import_tasks)),
             EditorAssetLibrary=SimpleNamespace(does_asset_exist=lambda name: name in self.assets),
+            YacsTextureAuditLibrary=SimpleNamespace(finish_texture_compilation=self.finish_compilation),
             load_asset=lambda name: self.assets.get(name))
 
     def import_tasks(self, tasks):
@@ -203,8 +205,51 @@ class ImportEngine:
             self.tasks.append(task)
             name = task.properties["destination_path"] + "/" + task.properties["destination_name"] + "." + task.properties["destination_name"]
             if not self.fail_import:
-                self.assets[name] = Texture(name)
+                self.assets[name] = self.texture_factory(name)
             task.properties["imported_object_paths"] = [] if self.fail_import else [name]
+
+    def finish_compilation(self, textures):
+        """Disposable selected-texture recorder, not a native readiness proof."""
+        self.finishes.append(list(textures))
+        return True
+
+
+class PendingTexture(Texture):
+    """Synthetic cold-RHI dimensions; only the fixture finish resolves them."""
+    def __init__(self, path, events):
+        super().__init__(path)
+        self.size, self.events = 4, events
+
+    def set_editor_property(self, name, value):
+        self.events.append(("setting", self.path, name, value))
+        super().set_editor_property(name, value)
+
+    def blueprint_get_size_x(self):
+        self.events.append(("size_x", self.path, self.size))
+        return self.size
+
+    def blueprint_get_size_y(self):
+        self.events.append(("size_y", self.path, self.size))
+        return self.size
+
+
+class PendingImportEngine(ImportEngine):
+    def __init__(self):
+        super().__init__()
+        self.events, self.finish_result, self.after_finish = [], True, None
+        self.texture_factory = lambda path: PendingTexture(path, self.events)
+
+    def finish_compilation(self, textures):
+        """Synthetic pending-size completion; no actual Unreal process runs."""
+        super().finish_compilation(textures)
+        self.events.append(("finish", tuple(texture.path for texture in textures)))
+        if self.finish_result is True:
+            for texture in textures:
+                if texture.size == 4:
+                    texture.size = 2048
+            if self.after_finish is not None:
+                self.after_finish(textures)
+        return self.finish_result
 
 
 class TextureReadbackTests(unittest.TestCase):
@@ -288,6 +333,19 @@ class TextureReadbackTests(unittest.TestCase):
         self.assertEqual(missing["observed_class"], "NoneType")
         self.assertEqual(missing["fields_status"], "NOT_READ_WRONG_TEXTURE_CLASS")
         self.assertEqual(missing["fields"], {})
+
+    def test_compilation_refuses_a_missing_or_foreign_object_before_any_size_read(self):
+        for failure in ("missing", "foreign"):
+            engine, texture, paths = self.texture()
+            if failure == "missing":
+                engine.assets.clear()
+            else:
+                texture.path += "_foreign"
+            with self.subTest(failure=failure), \
+                    patch.object(texture, "blueprint_get_size_x", side_effect=AssertionError("Readiness failed before size")), \
+                    self.assertRaisesRegex(ValueError, "Pinned crack texture missing before native compilation finish"):
+                sources._finish_and_verify_textures(engine.api, paths)
+            self.assertEqual(engine.finishes, [])
 
 
 class SourceTests(unittest.TestCase):
@@ -493,6 +551,78 @@ class SourceTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "refuse overwrite"):
                 sources.import_textures(engine.api, self.fixture.root, self.fixture.pins, source_repo_root=self.fixture.repo)
             self.assertEqual(len(engine.tasks), 8)
+
+    def test_cold_import_and_fresh_finish_exactly_selected_maps_before_first_size_read(self):
+        engine = PendingImportEngine()
+        foreign = PendingTexture("/Game/Unrelated.T_Unrelated", engine.events)
+        engine.assets[foreign.path] = foreign
+        with patch.object(sources, "_context"), patch.object(sources, "_decode_neutral_maps", return_value=neutral_fixture()):
+            textures, receipt = sources.import_textures(engine.api, self.fixture.root, self.fixture.pins, source_repo_root=self.fixture.repo)
+            selected = [texture for channels in textures.values() for texture in channels.values()]
+            self.assertEqual(engine.finishes, [selected])
+            self.assertEqual(len(selected), 8)
+            self.assertIsNotNone(receipt["native_api"]["finish_texture_compilation"]["sha256"])
+            finish_index = next(i for i, event in enumerate(engine.events) if event[0] == "finish")
+            self.assertEqual({event[1] for event in engine.events[:finish_index]}, {texture.path for texture in selected})
+            self.assertTrue(all(event[0] == "setting" for event in engine.events[:finish_index]))
+            size_reads = engine.events[finish_index + 1:]
+            self.assertEqual(len(size_reads), 16)
+            self.assertTrue(all(event[0] in ("size_x", "size_y") and event[2] == 2048 for event in size_reads))
+            self.assertEqual(foreign.size, 4)
+            properties = {texture.path: dict(texture.properties) for texture in selected}
+            for texture in selected:
+                texture.size = 4
+            engine.finishes.clear()
+            engine.events.clear()
+            with patch.object(PendingTexture, "set_editor_property", side_effect=AssertionError("Fresh verification must not repair settings")):
+                fresh = sources.verify_import(engine.api, self.fixture.root, self.fixture.pins, receipt, source_repo_root=self.fixture.repo)
+            self.assertEqual(fresh, textures)
+            self.assertEqual(engine.finishes, [selected])
+            self.assertEqual(engine.events[0][0], "finish")
+            self.assertEqual(len(engine.events), 17)
+            self.assertTrue(all(event[0] in ("size_x", "size_y") and event[2] == 2048 for event in engine.events[1:]))
+            self.assertEqual(properties, {texture.path: texture.properties for texture in selected})
+            self.assertEqual(len(engine.tasks), 8)
+            self.assertEqual(foreign.size, 4)
+
+    def test_failed_native_finish_stops_import_and_fresh_before_size_readback(self):
+        for phase in ("import", "fresh"):
+            engine = PendingImportEngine()
+            with self.subTest(phase=phase), patch.object(sources, "_context"), \
+                    patch.object(sources, "_decode_neutral_maps", return_value=neutral_fixture()):
+                if phase == "fresh":
+                    _, receipt = sources.import_textures(engine.api, self.fixture.root, self.fixture.pins, source_repo_root=self.fixture.repo)
+                    for texture in engine.assets.values():
+                        texture.size = 4
+                    engine.finishes.clear()
+                    engine.events.clear()
+                engine.finish_result = False
+                with self.assertRaisesRegex(ValueError, "Selected crack textures did not finish native compilation"):
+                    if phase == "import":
+                        sources.import_textures(engine.api, self.fixture.root, self.fixture.pins, source_repo_root=self.fixture.repo)
+                    else:
+                        sources.verify_import(engine.api, self.fixture.root, self.fixture.pins, receipt, source_repo_root=self.fixture.repo)
+                self.assertEqual(len(engine.finishes), 1)
+                self.assertEqual(len(engine.finishes[0]), 8)
+                self.assertTrue(all(texture.size == 4 for texture in engine.assets.values()))
+                self.assertFalse(any(event[0] in ("size_x", "size_y") for event in engine.events))
+                self.assertEqual(len(engine.tasks), 8)
+
+    def test_successful_cold_finish_does_not_accept_clamp_drift_or_hide_diagnostics(self):
+        engine = PendingImportEngine()
+        engine.after_finish = lambda selected: selected[0].properties.update(address_x="wrap")
+        with patch.object(sources, "_context"), patch.object(sources, "_decode_neutral_maps", return_value=neutral_fixture()), \
+                self.assertRaises(ValueError) as caught:
+            sources.import_textures(engine.api, self.fixture.root, self.fixture.pins, source_repo_root=self.fixture.repo)
+        self.assertTrue(str(caught.exception).startswith(sources.TEXTURE_READBACK_ERROR))
+        row = json.loads(str(caught.exception).removeprefix(sources.TEXTURE_READBACK_ERROR))
+        self.assertEqual(row["fields"]["address_x"]["expected"]["text"], "clamp")
+        self.assertEqual(row["fields"]["address_x"]["observed"]["text"], "wrap")
+        self.assertEqual(row["fields"]["size_x"]["observed"], 2048)
+        self.assertEqual(row["fields"]["size_y"]["observed"], 2048)
+        self.assertEqual(len(engine.finishes), 1)
+        self.assertEqual(len(engine.finishes[0]), 8)
+        self.assertEqual(len(engine.tasks), 8)
 
     def test_failed_native_import_and_source_change_during_import_never_return_receipt(self):
         for failure in ("native", "source"):

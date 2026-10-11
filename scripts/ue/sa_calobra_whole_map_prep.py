@@ -284,7 +284,20 @@ def verify_instance(api, master, instance, receipt):
             row.get("srgb"),
         ) != (4033, 4033, False):
             raise RuntimeError(
-                "Prepared weight texture dimensions/linear registration differ"
+                "Prepared weight texture dimensions/linear registration differ: "
+                + json.dumps(
+                    {
+                        "expected": {"size_x": 4033, "size_y": 4033, "srgb": False},
+                        "observed": {
+                            key: row.get(key)
+                            for key in (
+                                "size_x", "size_y", "srgb", "is_default_texture",
+                                "is_compiling", "pixel_format", "mips", "resident_mips",
+                            )
+                        },
+                    },
+                    sort_keys=True,
+                )[:2048]
             )
         readbacks.append(dict(row, parameter=name))
     return {

@@ -317,6 +317,17 @@ material or geometry acceptance. A separate bounded nine-station read at
 | White edge lines | 370 source-clipped overlays, 10 cm width, 12 cm setback and world Z +1 mm | Native saved/fresh full-buffer proof passed at e4 and 4258. All 68 actual 4258 Lit images reviewed; near continuity is good, far shallow views show pixel gaps. An identical-camera original/full-mask comparison at 0083 will separate mask coverage from remaining image behavior. No collision, shadow, navigation or physics authority. |
 | Local cracks | Eight authored Material Forge motifs; verified source `07ebafad` / `38102423216-1` | Sixteen actual source processes and all 80 maps independently verified. Two source-clipped actors, eight imported maps and eleven owned packages passed saved/fresh at 5b99. Its 16 native controls, UV 0/90 normal-space proof and later sparse network distribution remain pending after the pre-capture GPU readback failure. |
 
+The combined `e81a4377` attempt passed protected CI and native preflight but
+stopped before map save at the frozen whole-map weight texture's native
+dimensions/linear-registration check. The five-owner outer material, crack
+images and native contact payload remain unverified. The original guard is
+retained and now reports actual values on failure. Source-only wall transects
+passed separately in run 38111916772; no geometry or source package changed.
+The next outer save/reload uses the existing offscreen GUI Editor context for
+the frozen platform-texture verifier, preserving its strict dimensions and
+settings. The executable is authenticated before/after both owned processes;
+this pending correction does not grant shader or visual acceptance.
+
 The fixed importer uses native `WorldAlignedTexture` / `WorldAlignedNormal`
 and converts the source scale to `TileSizeCm` with material-instance readback.
 The saved consumer and fresh reader authenticate the complete material and mesh
