@@ -492,3 +492,24 @@ or road/contact geometry (#459). They do not save assets, move actors, change
 terrain/physics, or admit final visual/performance acceptance. Native shader and
 received-frame verification for this candidate must be recorded before claiming
 live delivery. Source-only tests do not satisfy that proof.
+
+Owner interaction update, 2026-10-11: normal startup no longer cycles paint or
+camera presets. Those unchanged native regression checks require the explicit
+`-QualifyPreview` switch; otherwise their receipt status is `NOT_RUN`, never
+PASS. Stream reception remains checked. The panel shows the live stream only,
+without a comparison-image section. The currently loaded bcb702ac bridge still
+captures material operations internally; removing that requirement needs a
+separately loaded bridge revision and is not claimed for the active session.
+
+Native local candidate evidence: launcher `bcb702ac0bdff21a1860b7abda162b4e73f602d2`,
+session `y473surface02`, editor PID 10860. The `worn` surface request
+`panel-8ab9664156ec424cacce0716b5a44ae4` completed at sequence 10 with 186
+read-back bindings; saved/source fingerprints and dirty package inventories
+were unchanged. The resulting Lit capture was inspected and showed cracks,
+patch variation and the shoulder transition. A separate scripted Edge receiver
+confirmed increasing received frames after the change. The stronger preset and
+native surface restoration were not run after the owner stopped comparison
+cycles; their offline tests are not native proof. Owner acceptance remains
+`PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false`.
+The later opt-in startup qualification change has parser/docs validation only;
+it has not been loaded into the currently running editor.

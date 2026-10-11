@@ -45,19 +45,15 @@
     </div>
     <p>Podgląd materiału jest tymczasowy. „Przywróć” przywraca oryginalny asfalt, pobocze i oznaczenia.</p>
     <p id="detail" role="status" aria-live="polite">Wybierz kolor oznaczeń. Na czas zmiany i wykonania klatki zatrzymaj kamerę.</p>
-    <h2>Klatka potwierdzająca zmianę materiału</h2>
-    <img id="capture" hidden alt="Klatka podglądu wygenerowana przez Unreal Engine">
   </section>
   <script>
     const statusLine = document.querySelector('#status');
     const detail = document.querySelector('#detail');
-    const capture = document.querySelector('#capture');
     const buttons = [...document.querySelectorAll('button')];
     let busy = false;
     let connected = false;
     let activeEdge = null;
     let activeSurface = null;
-    let frameUrl = null;
     function updateButtons() {
       buttons.forEach(x => {
         const selected = (x.dataset.action === 'surface' && x.dataset.preset === activeSurface) || (x.dataset.action === 'edge' || x.dataset.action === 'restore') && x.dataset.preset === activeEdge;
@@ -94,16 +90,7 @@
         detail.textContent = result.action === 'restore'
           ? 'Oryginalne materiały przywrócone.'
           : result.camera_after ? 'Kamera ustawiona. Sprawdź nowy widok w strumieniu.'
-          : 'Materiał zmieniony. Poniżej klatka potwierdzająca zmianę w UE.';
-        capture.hidden = true;
-        capture.removeAttribute('src');
-        if (frameUrl) { URL.revokeObjectURL(frameUrl); frameUrl = null; }
-        if (result.frame_available) {
-          const frame = await fetch('/api/frame.png', {cache:'no-store'});
-          if (!frame.ok) throw new Error('Zmiana wykonana, ale klatka potwierdzająca jest niedostępna.');
-          frameUrl = URL.createObjectURL(await frame.blob());
-          capture.src = frameUrl; capture.hidden = false;
-        }
+          : 'Materiał zmieniony — efekt widzisz w podglądzie na żywo.';
       } catch (error) {
         detail.textContent = `Nie udało się potwierdzić całej operacji: ${error.message}. Sprawdź strumień; nie ponawiam automatycznie.`;
       }

@@ -14,7 +14,8 @@ param(
     [string] $ExpectedHead,
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9_-]{0,47}$')]
-    [string] $SessionToken
+    [string] $SessionToken,
+    [switch] $QualifyPreview
 )
 
 Set-StrictMode -Version Latest
@@ -297,6 +298,9 @@ DefaultBindAddress=127.0.0.1
     # manual material requests. No checkout, build, restart or save between calls.
     $stableReceipt = Join-Path $SessionRoot 'level-editor-stream-session.json'
     $receipt | ConvertTo-Json -Depth 24 | Set-Content -LiteralPath $stableReceipt -Encoding utf8
+    # Interactive startup never moves the owner camera or cycles materials.
+    # Explicit qualification retains the full native regression sequence.
+    if ($QualifyPreview) {
     $requests = @(
         [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'acceptance-one'; action = 'set'; expected_sequence = 0; paint_roughness = 0.35; paint_color = @(0.35, 0.50, 0.70, 1.0) },
         [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'acceptance-two'; action = 'set'; expected_sequence = 1; paint_roughness = 0.75; paint_color = @(0.65, 0.30, 0.20, 1.0) },
@@ -365,6 +369,10 @@ DefaultBindAddress=127.0.0.1
         })
         viewport_fov_verified = $false
         owner_visual_status = 'PENDING_FINAL_M3'
+    }
+    } else {
+        $receipt.material_acceptance = @{ status = 'NOT_RUN'; reason = 'Interactive startup; use -QualifyPreview for native regression.' }
+        $receipt.camera_acceptance = @{ status = 'NOT_RUN'; reason = 'Owner controls the camera.' }
     }
     $receipt.status = 'HTTP_READY_CLIENT_PENDING'
     $clientRoot = Join-Path $EvidenceRoot 'client'
