@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import time
 import traceback
 
 import unreal
@@ -17,6 +18,11 @@ import unreal
 OUTPUT = Path(os.environ["YACS_PCG_PROBE_OUTPUT"])
 ACTION = os.environ["YACS_PCG_PROBE_ACTION"]
 HEAD = os.environ["YACS_PCG_PROBE_EXPECTED_HEAD"]
+PACKAGE = "/Game/Generated/YACS/PCG365Mechanical"
+GRAPH_PATH = PACKAGE + "/PCG_XYFixture"
+MAP_PATH = PACKAGE + "/L_XYFixture"
+FIXTURE_POINTS = ((0, 0, 50, 36501), (200, 0, 50, 36502), (0, 200, 50, 36503))
+ACTIVE = None
 
 
 def write_new(name, value):
@@ -27,6 +33,23 @@ def write_new(name, value):
 
 def vector(value):
     return [float(value.x), float(value.y), float(value.z)]
+
+
+def native_tool(class_path, name, arguments):
+    cls = unreal.load_class(None, class_path)
+    if not cls:
+        raise RuntimeError("Missing installed toolset: " + class_path)
+    registry = unreal.ToolsetRegistry
+    if not registry.is_toolset_class_registered(cls):
+        registry.register_toolset_class(cls)
+    schema = json.loads(registry.get_toolset_json_schema(cls))
+    result = registry.execute_tool(schema["name"], name, json.dumps(arguments))
+    if not result.get_editor_property("bIsComplete") or result.error:
+        raise RuntimeError("Native synchronous reader failed: " + str(result.error))
+    wrapped = json.loads(result.value)
+    if not isinstance(wrapped, dict) or set(wrapped) != {"returnValue"}:
+        raise RuntimeError("Unexpected native tool result wrapper")
+    return wrapped["returnValue"]
 
 
 def inspect_mesh(path):
@@ -179,17 +202,363 @@ def main():
         "status": "FAILED",
     }
     try:
+        if ACTION in {"create", "reload"}:
+            global ACTIVE
+            ACTIVE = MechanicalGraph(receipt)
+            ACTIVE.begin()
+            return
         if ACTION != "inspect":
-            raise RuntimeError(
-                "Graph authoring requires reviewed installed skill/API inspection"
-            )
+            raise RuntimeError("Unknown native diagnostic action")
         receipt.update(inspect())
     except Exception:
         receipt["error"] = traceback.format_exc()
         unreal.log_error(receipt["error"])
-    finally:
-        write_new(ACTION + "-receipt.json", receipt)
-        unreal.SystemLibrary.quit_editor()
+    finish(receipt)
+
+
+def finish(receipt):
+    write_new(ACTION + "-receipt.json", receipt)
+    unreal.SystemLibrary.quit_editor()
+
+
+def pin(node, field):
+    pins = list(node.get_editor_property(field))
+    if not pins:
+        raise RuntimeError("Native graph pin missing: " + field)
+    return pins[0].get_editor_property("properties").get_editor_property("label")
+
+
+def transform_record(transform, seed):
+    return {
+        "position_cm": vector(transform.translation),
+        "scale": vector(transform.scale3d),
+        "seed": int(seed),
+        "rotation_xyzw": [float(getattr(transform.rotation, axis)) for axis in "xyzw"],
+    }
+
+
+class MechanicalGraph:
+    """Three synthetic points; independent of region eligibility and asset admission."""
+
+    def __init__(self, receipt):
+        self.receipt = receipt
+        self.phase = "initial"
+        self.completed = False
+        self.cleaned = False
+        self.cancelled = False
+        self.runs = []
+        self.start = time.monotonic()
+        self.callback = None
+
+    def begin(self):
+        if ACTION == "create":
+            schemas = {
+                name: native_tool(
+                    "/Script/PCGToolset.PCGToolset",
+                    "GetNativeNodeSchema",
+                    {"nodeName": name},
+                )
+                for name in ("Create Points", "Projection", "Static Mesh Spawner")
+            }
+            write_new("native-node-schemas.json", schemas)
+            if unreal.EditorAssetLibrary.does_asset_exist(
+                GRAPH_PATH
+            ) or unreal.EditorAssetLibrary.does_asset_exist(MAP_PATH):
+                raise RuntimeError("Preserve existing mechanical graph/map")
+            if not unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).new_level(
+                MAP_PATH, is_partitioned_world=False
+            ):
+                raise RuntimeError("Mechanical map creation failed")
+            self.world = unreal.get_editor_subsystem(
+                unreal.UnrealEditorSubsystem
+            ).get_editor_world()
+            self.graph = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
+                "PCG_XYFixture", PACKAGE, unreal.PCGGraph, unreal.PCGGraphFactory()
+            )
+            node, settings = self.graph.add_node_of_type(unreal.PCGCreatePointsSettings)
+            settings.set_editor_property(
+                "coordinate_space", unreal.PCGCoordinateSpace.WORLD
+            )
+            settings.set_editor_property("cull_points_outside_volume", False)
+            points = []
+            for x, y, z, seed in FIXTURE_POINTS:
+                point = unreal.PCGPoint()
+                point.transform = unreal.Transform(location=unreal.Vector(x, y, z))
+                point.seed = seed
+                points.append(point)
+            settings.set_editor_property("points_to_create", points)
+            node.set_node_position(-250, 0)
+            output = self.graph.get_output_node()
+            if not self.graph.add_edge(
+                node, pin(node, "output_pins"), output, pin(output, "input_pins")
+            ):
+                raise RuntimeError("Native point graph edge failed")
+            actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+            volume = actors.spawn_actor_from_class(unreal.PCGVolume, unreal.Vector())
+            volume.set_actor_label("PCG365_MechanicalPoints")
+            self.component = volume.pcg_component
+            self.component.set_editor_property(
+                "generation_trigger",
+                unreal.PCGComponentGenerationTrigger.GENERATE_ON_DEMAND,
+            )
+            self.component.seed = 36501
+            self.component.set_graph(self.graph)
+            self.create_ground(actors)
+        else:
+            if not unreal.EditorLoadingAndSavingUtils.load_map(MAP_PATH):
+                raise RuntimeError("Fresh mechanical map load failed")
+            self.world = unreal.get_editor_subsystem(
+                unreal.UnrealEditorSubsystem
+            ).get_editor_world()
+            actors = unreal.get_editor_subsystem(
+                unreal.EditorActorSubsystem
+            ).get_all_level_actors()
+            volumes = [
+                actor
+                for actor in actors
+                if isinstance(actor, unreal.PCGVolume)
+                and actor.get_actor_label() == "PCG365_MechanicalPoints"
+            ]
+            if len(volumes) != 1:
+                raise RuntimeError("Saved graph actor inventory differs")
+            self.component = volumes[0].pcg_component
+            if (
+                self.component.seed != 36501
+                or self.component.generation_trigger
+                != unreal.PCGComponentGenerationTrigger.GENERATE_ON_DEMAND
+            ):
+                raise RuntimeError("Saved component seed/trigger differs")
+            self.graph = self.component.get_graph()
+            if self.graph.get_path_name().split(".")[0] != GRAPH_PATH:
+                raise RuntimeError("Saved graph identity differs")
+            settings = [node.get_settings() for node in self.graph.nodes]
+            if len(settings) != 1 or not isinstance(
+                settings[0], unreal.PCGCreatePointsSettings
+            ):
+                raise RuntimeError("Saved graph node structure differs")
+            stored = [
+                transform_record(point.transform, point.seed)
+                for point in settings[0].points_to_create
+            ]
+            expected = [
+                transform_record(
+                    unreal.Transform(location=unreal.Vector(x, y, z)), seed
+                )
+                for x, y, z, seed in FIXTURE_POINTS
+            ]
+            if (
+                stored != expected
+                or settings[0].coordinate_space != unreal.PCGCoordinateSpace.WORLD
+                or settings[0].cull_points_outside_volume
+            ):
+                raise RuntimeError("Saved recipe differs before regeneration")
+            self.receipt["saved_recipe_verified_before_explicit_generation"] = True
+        self.component.on_pcg_graph_generated_external.add_callable(self.generated)
+        self.component.on_pcg_graph_cancelled_external.add_callable(
+            self.cancelled_event
+        )
+        self.component.on_pcg_graph_cleaned_external.add_callable(self.cleaned_event)
+        self.phase = "generation1"
+        self.callback = unreal.register_slate_post_tick_callback(self.tick)
+        self.component.generate_local(True)
+
+    def create_ground(self, actors):
+        mesh = unreal.load_asset("/Engine/BasicShapes/Cube.Cube")
+        for label, location, scale in (
+            ("PCG365_AnalyticGround", (0, 0, -5), (10, 10, 0.1)),
+            ("PCG365_UnrelatedCollider", (0, 0, 100), (0.2, 0.2, 0.2)),
+        ):
+            actor = actors.spawn_actor_from_class(
+                unreal.StaticMeshActor, unreal.Vector(*location)
+            )
+            actor.set_actor_label(label)
+            actor.static_mesh_component.set_static_mesh(mesh)
+            actor.set_actor_scale3d(unreal.Vector(*scale))
+            actor.static_mesh_component.set_collision_enabled(
+                unreal.CollisionEnabled.QUERY_ONLY
+            )
+            actor.static_mesh_component.set_collision_response_to_all_channels(
+                unreal.CollisionResponse.BLOCK
+            )
+
+    def contact(self):
+        actors = unreal.get_editor_subsystem(
+            unreal.EditorActorSubsystem
+        ).get_all_level_actors()
+        ground = [
+            actor
+            for actor in actors
+            if actor.get_actor_label() == "PCG365_AnalyticGround"
+        ]
+        if len(ground) != 1:
+            raise RuntimeError("Ambiguous analytic fixture ground")
+        ignore = [actor for actor in actors if actor != ground[0]]
+        foreign = unreal.SystemLibrary.line_trace_single(
+            self.world,
+            unreal.Vector(0, 0, 300),
+            unreal.Vector(0, 0, -100),
+            unreal.TraceTypeQuery.ECC_VISIBILITY,
+            False,
+            [],
+            unreal.DrawDebugTrace.NONE,
+            True,
+        )
+        if (
+            foreign is None
+            or foreign.to_tuple()[9].get_actor_label() != "PCG365_UnrelatedCollider"
+        ):
+            raise RuntimeError("Unrelated-collider negative control is not effective")
+        rows = []
+        # Finite 3x3 support grid per cube; sampled fixture evidence only.
+        for x, y, _, _ in FIXTURE_POINTS:
+            for dx in (-50, 0, 50):
+                for dy in (-50, 0, 50):
+                    hit = unreal.SystemLibrary.line_trace_single(
+                        self.world,
+                        unreal.Vector(x + dx, y + dy, 300),
+                        unreal.Vector(x + dx, y + dy, -100),
+                        unreal.TraceTypeQuery.ECC_VISIBILITY,
+                        False,
+                        ignore,
+                        unreal.DrawDebugTrace.NONE,
+                        True,
+                    )
+                    values = () if hit is None else hit.to_tuple()
+                    if (
+                        len(values) != 18
+                        or values[0] is not True
+                        or values[1] is not False
+                        or values[9] != ground[0]
+                    ):
+                        raise RuntimeError(
+                            "Fixture trace missed or hit unauthorized owner"
+                        )
+                    if abs(float(values[4].z)) > 0.001:
+                        raise RuntimeError("Analytic ground fixture is not Z=0")
+                    rows.append(
+                        {
+                            "xy_cm": [x + dx, y + dy],
+                            "hit_cm": vector(values[4]),
+                            "owner": values[9].get_actor_label(),
+                        }
+                    )
+        miss = unreal.SystemLibrary.line_trace_single(
+            self.world,
+            unreal.Vector(2000, 2000, 300),
+            unreal.Vector(2000, 2000, -100),
+            unreal.TraceTypeQuery.ECC_VISIBILITY,
+            False,
+            ignore,
+            unreal.DrawDebugTrace.NONE,
+            True,
+        )
+        if miss is not None:
+            raise RuntimeError("Unsupported fixture did not reject")
+        return {
+            "status": "ANALYTIC_FIXTURE_SAMPLED_ONLY",
+            "samples": rows,
+            "unsupported_rejected": True,
+            "unrelated_actor_excluded": True,
+            "regional_terrain_admission": False,
+            "fixture_numeric_epsilon_m": 0.00001,
+        }
+
+    def generated(self, component):
+        if component != self.component:
+            self.cancelled = True
+        self.completed = True
+
+    def cancelled_event(self, component):
+        self.cancelled = True
+
+    def cleaned_event(self, component):
+        self.cleaned = component == self.component
+
+    def snapshot(self):
+        collection = self.component.get_generated_graph_output()
+        rows = []
+        for tagged in collection.tagged_data:
+            data = tagged.data
+            if not isinstance(data, unreal.PCGBasePointData):
+                raise RuntimeError("Native output is not point data")
+            for index in range(data.get_num_points()):
+                rows.append(
+                    transform_record(data.get_transform(index), data.get_seed(index))
+                )
+        rows.sort(key=lambda row: row["seed"])
+        expected = [
+            transform_record(unreal.Transform(location=unreal.Vector(x, y, z)), seed)
+            for x, y, z, seed in FIXTURE_POINTS
+        ]
+        if rows != expected:
+            raise RuntimeError(
+                "Native point transforms/seeds differ from mechanical recipe"
+            )
+        return rows
+
+    def tick(self, delta):
+        try:
+            if self.cancelled or time.monotonic() - self.start > 120:
+                raise RuntimeError("Native generation cancelled or deadline exceeded")
+            if self.phase.startswith("generation") and self.completed:
+                self.runs.append(self.snapshot())
+                self.completed = False
+                if len(self.runs) == 1:
+                    self.phase = "cleanup"
+                    self.component.cleanup_local(True)
+                else:
+                    if self.runs[0] != self.runs[1]:
+                        raise RuntimeError("Native regeneration differs")
+                    self.receipt["fixture_contact"] = self.contact()
+                    self.receipt["runs"] = self.runs
+                    if ACTION == "create":
+                        if not unreal.EditorAssetLibrary.save_loaded_asset(
+                            self.graph, only_if_is_dirty=False
+                        ):
+                            raise RuntimeError("Mechanical graph save failed")
+                        if not unreal.EditorLoadingAndSavingUtils.save_map(
+                            self.world, MAP_PATH
+                        ):
+                            raise RuntimeError("Mechanical map save failed")
+                        root = Path(unreal.Paths.project_dir())
+                        files = []
+                        for package, suffix in (
+                            (GRAPH_PATH, ".uasset"),
+                            (MAP_PATH, ".umap"),
+                        ):
+                            relative = (
+                                "Content/" + package.removeprefix("/Game/") + suffix
+                            )
+                            data = (root / relative).read_bytes()
+                            files.append(
+                                {
+                                    "path": relative,
+                                    "bytes": len(data),
+                                    "sha256": hashlib.sha256(data).hexdigest(),
+                                }
+                            )
+                        write_new(
+                            "saved-packages.json", {"code_sha": HEAD, "files": files}
+                        )
+                    self.receipt["status"] = (
+                        "MECHANICAL_GRAPH_SAVED"
+                        if ACTION == "create"
+                        else "MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED"
+                    )
+                    self.stop()
+            elif self.phase == "cleanup" and self.cleaned:
+                self.phase = "generation2"
+                self.component.generate_local(True)
+        except Exception:
+            self.receipt["error"] = traceback.format_exc()
+            unreal.log_error(self.receipt["error"])
+            self.stop()
+
+    def stop(self):
+        if self.callback is not None:
+            unreal.unregister_slate_post_tick_callback(self.callback)
+            self.callback = None
+        finish(self.receipt)
 
 
 main()

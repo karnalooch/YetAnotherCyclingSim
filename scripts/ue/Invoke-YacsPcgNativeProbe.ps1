@@ -146,6 +146,15 @@ if ($Action -ne 'inspect') {
 New-Item -ItemType Directory -Path $Proof -Force | Out-Null
 $Output = Join-Path $Proof $Action
 $Receipt = Join-Path $Output "$Action-receipt.json"
+if ($Action -eq 'reload') {
+    $saved = Get-Content (Join-Path $Proof 'create/saved-packages.json') -Raw | ConvertFrom-Json
+    if ($saved.code_sha -cne $ExpectedHead -or $saved.files.Count -ne 2) { throw 'Saved mechanical package identity mismatch.' }
+    if (@($saved.files.path | Sort-Object -Unique).Count -ne 2) { throw 'Duplicate saved mechanical package path.' }
+    foreach ($entry in $saved.files) {
+        if ([string]$entry.path -notmatch '^Content/Generated/YACS/PCG365Mechanical/(PCG_XYFixture\.uasset|L_XYFixture\.umap)$') { throw 'Unexpected mechanical package path.' }
+        Assert-SameFile (Join-Path $Root $entry.path) $entry
+    }
+}
 if (Test-Path -LiteralPath $Output) { throw 'Preserve existing action output.' }
 New-Item -ItemType Directory -Path $Output | Out-Null
 # Recheck host ownership immediately before launching the sole owned process.
@@ -193,6 +202,10 @@ try {
 if ($process.ExitCode -ne 0) { throw "Owned native probe exit=$($process.ExitCode); see $Proof" }
 if (-not (Test-Path -LiteralPath $Receipt -PathType Leaf)) { throw 'Probe exited without action receipt.' }
 $result = Get-Content -LiteralPath $Receipt -Raw | ConvertFrom-Json
-if ($Action -eq 'inspect' -and $result.status -cne 'NATIVE_INSPECTION_COMPLETED') { throw 'Native inspection did not complete; inspect receipt diagnostics.' }
+$expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'}[$Action]
+if ($result.status -cne $expectedStatus -or $result.code_sha -cne $ExpectedHead -or $result.placement -isnot [bool] -or $result.placement) { throw 'Native diagnostic did not complete; inspect receipt diagnostics.' }
+if ($Action -eq 'reload') {
+    foreach ($entry in $saved.files) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
+}
 foreach ($entry in (Get-Content (Join-Path $Root 'staged-files.json') -Raw | ConvertFrom-Json).files) { Assert-SameFile (Join-Path $Root $entry.path) $entry.identity }
 Write-Host "LOCAL_DIAGNOSTIC_ONLY: $Action completed; inspect $Receipt. Native build NOT RUN."

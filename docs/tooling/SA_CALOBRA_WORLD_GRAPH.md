@@ -1,6 +1,6 @@
 # Sa Calobra PCG world graph — #365 kickoff
 
-**Status:** M3, CPU input preparation and deterministic XY candidates; native graph and placement NOT RUN.
+**Status:** M3, CPU candidates and native API/mesh inspection; regional graph placement pending.
 **Owner:** procedural-world. **Base:** `4dd792219bfc2eaf7dc216bd60cbde6628bba792`.
 **Current owner instruction (2026-10-12):** implementation resumed for #365,
 using subagents and the existing Material Forge contract. The planning-only
@@ -126,6 +126,33 @@ the official registry wraps output in `returnValue`. The retained emitted schema
 also confirms input `skillPaths` and output `instructions`. The consumer was
 corrected to those observed names. No graph or source map was saved by this run.
 
+Native inspection at `fba989c91d9f83842ace99960ffdfeb5f0ba3fa6`, token
+`inspect03`, completed in an owned isolated Editor. The skill path was
+`/PCGToolset/Skills/Skill_PCGGraphGeneration.Skill_PCGGraphGeneration_C`,
+instruction-content identity
+`fc1113b6d72c9a629af6bda19293104968d991671d0b9d32e922fcdaa8aa7d50`.
+No primitive or example graphs were available in that isolated catalog. The
+next mechanical fixture therefore uses native Create Points and graph Output,
+with three synthetic fixed-seed points; it is deliberately not regional scatter.
+It reads node schemas before authoring, binds completion/cancellation/cleanup
+events before execution, compares cleanup/regeneration, and saves only a new
+isolated diagnostic graph/map. Fresh reload must read the stored recipe before
+regeneration and preserve package bytes. Analytic engine-cube ground and an
+unrelated collider test sampled support/owner exclusion; they cannot supply
+Terrain Authority admission. No native fixture result is claimed before running.
+
+Boulder native inspection: bounds origin cm
+`[-11.01963996887207,-3.200286865234375,43.01846694946289]`, extents cm
+`[64.36442565917969,91.6882553100586,50.434513092041016]`, four LODs,
+vertex inventory `[234411,122537,44796,15918]`. The material slot `boulder_01`
+currently references `/Engine/EngineMaterials/WorldGridMaterial`. Source-model
+UV-channel query returned `[1,0,0,0]`; installed `GetNumUVChannels` inspects
+MeshDescription, so zeros on generated LODs are not proof of missing render UVs.
+Render UV/material physical scale and support geometry remain unverified.
+ImportData points to the historical `D:/ExternalAssets/.../boulder_01_2k.fbx`,
+which does not prove correspondence with the newly recovered bytes. All staged
+source packages remained byte-identical. No real mesh qualification PASS.
+
 The single Boulder source was recovered with the existing bounded downloader
 (2K, five files, 34.2 MiB, 256 MiB cap, no overwrite) into
 `D:/yacs/data/assets/pcg365-boulder-source`. The acquisition SHA256 receipt
@@ -137,6 +164,31 @@ establish correspondence with the historical native mesh. The provider's
 [Boulder 01](https://polyhaven.com/a/boulder_01) describes weathered rock, not
 measured Mallorcan limestone. [Provider license](https://polyhaven.com/license)
 was rechecked. Forge appearance cannot supply lithology or mesh support proof.
+
+Retained Forge candidate `D:/yacs/material-forge-v2-final/run-a/regional_limestone/base`
+(Weathered pale) was rechecked with the existing `material_forge.check_variant`
+CPU validator without rewriting its receipt: `MAP_CHECKS_PASS_UE_REVIEW_PENDING`.
+Producer SHA: `ba9e9cfef724f5a7ab2fbaaa0269e4442398be3d`; Material Maker
+`4d29a815489866aae483281cf44b2cfe48d3cc3e`, Godot 4.7.2, seed 211,
+physical tile 4 m. It is a procedural artistic candidate, not a geological scan.
+`refined_b` was not found among retained files; do not substitute its historical
+description for the actual `base` bytes. The accepted five-role baseline is unchanged.
+
+| Retained 2048-square map | SHA256 |
+|---|---|
+| BaseColor | `a397b418d316763afcb4fd0b8a80670bd9fad3080b8495b7e8259b6fb8303bb0` |
+| Normal_DX | `90c78d7cc53a02a6ca2e052643712b7065b7b05e9300e9dc493263786183a034` |
+| ORM | `99ed7cada4a03578495fe9f179fadcb7f7d7df7bea578c49b09ff0b64284d032` |
+| DetailMasks | `40bc6bf1d71bf5fcffccf457f9afad1e6f3a52da3ad9ef768c81e4d58e9df7fc` |
+| Height EXR | `13df224ee533162ae91ca7ca11504dc242bb09355928f0ebd16571de18d96c19` |
+
+Retained validation/provenance/render receipt identities respectively:
+`2da21368e9dd52a0528cfcf3926fa3f6464a287913186f660c13b44f8cb629fa`,
+`e05fc44a876959b0692d4bd3faf3c49e70ccaa4ed74d9b88a674a7e104a8cdf9`,
+`3ef37e8d3d862ac5d8bd9f1fd3f7b9088be233b25158bf3a8c8c5be5bc6cc3d6`.
+These authenticate a retained material source candidate only. A derived Boulder
+material package, native binding and 4 m/repeat UV proof are still missing.
+Height is inspection/authoring data, never elevation/contact or displacement authority.
 
 ## Authenticated source contract
 
