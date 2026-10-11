@@ -67,6 +67,7 @@ def _plan(owner, snapshot, center, trace):
     for a, b in zip(rows, rows[1:]):
         station.append(station[-1] + math.dist(a[13][:2], b[13][:2]))
     delta = {}
+    deferred = []
     for i, row in enumerate(rows):
         end_weight = max(0., min(1., station[i] / TAPER_CM, (station[-1] - station[i]) / TAPER_CM))
         for column in (0, 1, 25, 26):
@@ -75,8 +76,12 @@ def _plan(owner, snapshot, center, trace):
             if not weight:
                 continue
             dz = 8. if column in (1, 25) else trace(p) - p[2]
-            require(abs(dz) <= MAX_DELTA_CM, 'Terrain contact requires more than 50 cm; owner rejected')
-            delta[top_ids[p]] = dz * weight
+            if abs(dz) > MAX_DELTA_CM:
+                deferred.append({'row': i, 'column': column, 'required_delta_cm': dz})
+                continue
+            # Fade before the bounded contact limit; larger earthworks remain untouched.
+            contact_weight = min(1., (MAX_DELTA_CM - abs(dz)) / 10.) if column in (0, 26) else 1.
+            delta[top_ids[p]] = dz * weight * contact_weight
     require(any(abs(v) > EPS_CM for v in delta.values()), 'No repairable shoulder in viewport AOI')
     # Native support walls have separate vertices, including clipped crossings.
     # Infer their retained bottom from each exact XY column; map upper edge to
@@ -116,7 +121,7 @@ def _plan(owner, snapshot, center, trace):
                for vid, dz in delta.items() if abs(dz) > 1e-8}
     require(all(_weight(vertices[vid], center) > 0 for vid in changes), 'Interpolated wall extends outside AOI')
     return changes, {'label': owner['support_label'], 'window_id': owner['window_id'],
-                     'changed_vertices': len(changes), 'wall_vertices': len(set(changes) & wall_ids),
+                     'deferred_contacts': deferred, 'changed_vertices': len(changes), 'wall_vertices': len(set(changes) & wall_ids),
                      'max_displacement_cm': max(abs(delta[v]) for v in changes),
                      'bounds_cm': [[min(p[k] for p in changes.values()) for k in range(3)],
                                    [max(p[k] for p in changes.values()) for k in range(3)]]}
