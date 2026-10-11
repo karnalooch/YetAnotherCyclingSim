@@ -350,6 +350,13 @@ Python binding requires an FName/string for `get_asset_by_object_path`. Material
 completion and downstream measurements were not admitted; next attempt passes
 the observed string argument without changing verification scope.
 
+Attempt `0ae3e97967d8100b983952e376391cadb95c07b9/qualification05` wrote
+the material binding receipt and seven packages, but editor shutdown exited 3:
+`Object is not packaged: ModeManagerInteractiveToolsContext None`. Successful
+action JSON does not override failed process completion. Next attempt initializes
+an unsaved diagnostic editor world and lets the startup Python stack unwind before
+requesting quit through a Slate callback; clean exit remains mandatory.
+
 Existing Julka profiles `sa-calobra-pcg-masks-candidate` and
 `sa-calobra-mask-transitions-candidate` verified with zero issues, including
 inherited source closure. Existing `verified_manifest()` also checked fingerprints,

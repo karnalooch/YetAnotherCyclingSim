@@ -24,6 +24,7 @@ GRAPH_PATH = PACKAGE + "/PCG_XYFixture"
 MAP_PATH = PACKAGE + "/L_XYFixture"
 FIXTURE_POINTS = ((0, 0, 50, 36501), (200, 0, 50, 36502), (0, 200, 50, 36503))
 ACTIVE = None
+QUIT_CALLBACK = None
 
 
 def write_new(name, value):
@@ -217,6 +218,9 @@ def main():
     }
     try:
         if ACTION in {"material", "material-reload", "terrain"}:
+            unreal.EditorPythonScripting.set_keep_python_script_alive(True)
+            if not unreal.EditorLoadingAndSavingUtils.new_blank_map(False):
+                raise RuntimeError("Transient diagnostic editor world initialization failed")
             root = Path(unreal.Paths.project_dir()).resolve()
             sys.path.insert(0, str(root))
             from scripts.ue import sa_calobra_pcg_material_binding as binding_helper
@@ -272,6 +276,22 @@ def main():
 
 def finish(receipt):
     write_new(ACTION + "-receipt.json", receipt)
+    if ACTION in {"material", "material-reload", "terrain"}:
+        # Let the startup-script stack unwind before editor teardown. This is
+        # lifecycle sequencing, not a substitute for clean process completion.
+        global QUIT_CALLBACK
+        ticks = 0
+
+        def quit_after_tick(delta):
+            nonlocal ticks
+            ticks += 1
+            if ticks < 2:
+                return
+            unreal.unregister_slate_post_tick_callback(QUIT_CALLBACK)
+            unreal.SystemLibrary.quit_editor()
+
+        QUIT_CALLBACK = unreal.register_slate_post_tick_callback(quit_after_tick)
+        return
     unreal.SystemLibrary.quit_editor()
 
 
