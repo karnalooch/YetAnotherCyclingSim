@@ -287,7 +287,8 @@ five-role material package may be saved or edited.
 Prepared helpers duplicate the staged Boulder into
 `/Game/Generated/YACS/PCG365Qualification`, import the pinned Forge variant through
 the existing producer, and verify stored mesh slots, effective MI/parent, 400 cm
-world-aligned projection and zero WPO/displacement. Explicit save and fresh
+ world-aligned projection, disconnected public WPO and disabled tessellation.
+Protected displacement inputs remain unverified as recorded below. Explicit save and fresh
 readback must complete before contact measurement. Native results are NOT RUN
 until the per-action process finishes cleanly with matching source/package hashes.
 
@@ -394,6 +395,48 @@ its successful geometry result is not a world collision-channel blocking claim.
 Next diagnostic accepts the component API's successful return with exact owner,
 component, finite hit and no initial overlap. Landscape world traces still
 require blocking hits. This changes API interpretation, not ground acceptance.
+
+### Completed isolated material and real-ground measurements
+
+Exact code `796429df484ca46e6657b4ecce178410a0fd8850`, token `qualification10`:
+inspect, material save, fresh material readback and terrain measurement each
+completed with exit 0, matching launcher markers and unchanged staged/source
+and saved-package bytes. Token `qualification09` at the same SHA retained an
+inspection shutdown failure (`-1073741819`); it was not admitted or overwritten.
+Evidence root: `D:/yacs/work/pcg365/796429df484ca46e6657b4ecce178410a0fd8850/qualification10/proof`.
+Terrain receipt SHA256
+`b3ed101371549ab8edebb7165b6ecb17fff1869f088f4f6fc9109a9de2099d86`.
+Material Forge is bound to the saved diagnostic Boulder duplicate, with one slot,
+four pinned textures, verified MI parent and native 4 m WorldAligned projection.
+Original Boulder and accepted Landscape packages remain unchanged. This is
+material binding/persistence evidence, not GPU render or visual acceptance.
+
+The 9x9 source-envelope grid produced 59 actual complex-collision mesh hits and
+22 misses. Each of five diagnostic centres therefore yielded 59 Landscape-only
+height/slope comparisons (295 total). Five exact Landscape collision components
+were observed, `QUERY_AND_PHYSICS`, `BlockAll`. Unrelated and PCG-tagged collider
+controls intercepted unfiltered traces while filtered traces hit Landscape;
+all-actors-excluded and outside-ground controls missed. No scene was saved.
+
+| Diagnostic UE XY (cm) | Max sampled gap (m) | Max slope (deg) | Max absolute source/native residual (m) |
+|---|---:|---:|---:|
+| 16800, 70400 | 1.186259 | 39.726149 | 0.013497 |
+| 4800, 96800 | 1.050903 | 52.809230 | 0.038569 |
+| 184800, 180800 | 1.149272 | 37.469204 | 0.016132 |
+| 181600, 189600 | 0.648728 | 18.773911 | 0.014474 |
+| 91200, 200800 | 0.507792 | 27.694986 | 0.006143 |
+
+These are identity rotation/scale, zero embedding and the lowest sampled
+nonpenetrating vertical translation. Large gaps demonstrate that this naive
+transform does not establish a visually grounded placement. No regional rock
+selector, approved orientation/embedding policy, continuous support, protected
+material displacement, independent datum uncertainty or latest-road compatibility
+has been qualified. Numeric acceptance limits remain REQUIRED_UNSET; do not turn
+observed maxima into arbitrary thresholds. `qualified_assets: []`, `placement:
+false`, owner visual audit PENDING_FINAL_M3, performance DEFERRED_AFTER_M3/false.
+The next bounded work is a justified support/orientation/embedding policy and
+fixture matrix, followed by render/owner review through existing proof admission.
+Do not alter accepted terrain or conceal these gaps with vegetation/materials.
 
 Existing Julka profiles `sa-calobra-pcg-masks-candidate` and
 `sa-calobra-mask-transitions-candidate` verified with zero issues, including

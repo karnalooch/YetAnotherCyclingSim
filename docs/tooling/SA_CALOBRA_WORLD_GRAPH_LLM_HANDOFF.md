@@ -10,6 +10,17 @@ exclusive host/proof gates still apply. The complete plan is in
 [CPU evidence](SA_CALOBRA_WORLD_GRAPH.md) are part of the handoff, not optional
 chat context. Do not depend on the previous LLM conversation.
 
+Latest native packet: code `796429df484ca46e6657b4ecce178410a0fd8850`,
+`qualification10`, clean inspect/material-save/fresh-readback/real-ground actions.
+Material Forge is saved on an isolated Boulder duplicate. Real #363 Landscape
+contact yielded 59 mesh support hits and 295 ground comparisons at five diagnostic
+centres. Naive identity rotation/zero embedding leaves maximum sampled gaps
+0.507792–1.186259 m; do not admit that placement or hide it. Read the full evidence
+table and preserved failed attempts before proceeding. Protected material inputs,
+numeric limits, continuous support, regional rock selectors, latest #364 road
+contact, GPU render and owner acceptance remain unresolved. The generated end-M3
+image is explicitly a concept, never a native screenshot or geography authority.
+
 ## Copyable starting prompt
 
 ```text
