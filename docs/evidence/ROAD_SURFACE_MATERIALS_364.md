@@ -85,12 +85,36 @@ source bridge with `ValueError: Graph surface field changed`. It did not save
 the new material consumer or render new road frames. The next integration pins
 the verified new producer instead of relaxing that gate.
 
-The pending edge integration uses a source-derived material coordinate only
-on the authenticated outer shoulder tops. Its explicit delta is one appended
-material UV channel plus the existing material assignments. Positions,
-topology, normals and the complete original UV prefix must remain unchanged;
-the new channel has its own source-distance witness, full hash, rollback and
-fresh-load checks. This is not a geometry repair or native PASS claim.
+The edge integration at `95e7fc22cb24bc1495179fdce1ffa45965f8110e` passed
+[protected CI and the actual Unreal build/Automation](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38098305035).
+Its native baseline, transient asphalt canary, saved/fresh consumer and all
+68 ordered GPU frames passed in
+[run 38098301959](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38098301959).
+The source-derived material coordinate is confined to authenticated outer
+shoulder tops. Its explicit delta is one appended material UV channel plus
+material assignments. Positions, topology, normals and the complete original
+UV prefix remain unchanged. The actual native one-to-zero UV preflight, the new
+source-distance witnesses, full UV hash and fresh reload all passed.
+
+Original [artifact 11686303649](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38098301959/artifacts/11686303649)
+was independently downloaded and verified: 395,390,861 bytes, SHA-256
+`ac1d6fa2dca93502bbedef28d2b1a7a3632736c1049ec371851b74d6c8370da4`.
+All 68 final PNG hashes match the host receipt, seven retained source receipts
+match their recorded hashes, and the camera plan is byte-identical to f75.
+The GPU Editor's actual observed exit is zero. Initial direct review finds
+clearer fine aggregate and much quieter broad colour; distant transverse
+repetition remains visible in 0071 and Nudo-0. The original dark contact line,
+hairpin profile and faceted terrain remain unresolved.
+
+The overall native workflow is **failed** because its subsequent contact-only
+diagnostic stopped before launching an Editor: Windows converted the unpinned
+`Get-YacsUnrealHostState.ps1` line endings, violating the raw committed-byte
+check. No twelve-frame contact diagnostic or retained pavement producer copy
+was created. The scoped follow-up pins that helper to LF; a real Git checkout
+fixture reproduces the original single-file mismatch and checks all fifty
+source/helper files after the fix. The raw-byte gate remains unchanged. This
+separate failure does not invalidate the already retained 68 material frames,
+and those frames do not establish a contact repair or owner visual acceptance.
 
 The owner additionally requested sparse, individually authored crack motifs,
 subtle edge erosion and white edge lines matching the supplied reference.

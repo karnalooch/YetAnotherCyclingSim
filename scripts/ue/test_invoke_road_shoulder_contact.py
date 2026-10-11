@@ -7,7 +7,9 @@ import copy
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -42,6 +44,77 @@ class RoadShoulderBridgeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.bridge = production_bridge()
+
+    def test_windows_checkout_preserves_source_closure_and_raw_byte_guard(self):
+        source_guard = WRAPPER.read_text(encoding="utf-8").split(
+            "function Require-ExactSource {", 1
+        )[1].split("\nfunction Require-IdleHost", 1)[0]
+        direct = re.findall(r"^\s*'([^']+)',?$", source_guard, re.MULTILINE)
+        self.assertIn("scripts/runner/Get-YacsUnrealHostState.ps1", direct)
+        plugins = subprocess.check_output(
+            ["git", "-C", str(ROOT), "ls-files", "--", "Plugins/YacsBobInspection"],
+            text=True,
+        ).splitlines()
+        paths = sorted(set(direct) | set(session.operation.BASE_SOURCE_PATHS)
+                       | set(session.UTILITY_SOURCE_PATHS) | set(plugins))
+        originals = {relative: (ROOT / relative).read_bytes() for relative in paths}
+        attributes = (ROOT / ".gitattributes").read_bytes()
+        host_state = "scripts/runner/Get-YacsUnrealHostState.ps1"
+        missing_rule = (host_state + " text eol=lf\n").encode()
+        self.assertIn(missing_rule, attributes)
+        # Exercise real Git conversion, even on Linux. Do not execute any source
+        # fixture or depend on the test host's Git filters, hooks or checkout EOL.
+        environment = {key: value for key, value in os.environ.items()
+                       if not key.startswith("GIT_")}
+        environment.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
+                           GIT_ATTR_NOSYSTEM="1")
+        for pinned in (False, True):
+            with self.subTest(lf_rule_present=pinned), tempfile.TemporaryDirectory() as directory:
+                checkout = Path(directory)
+                (checkout / ".gitattributes").write_bytes(
+                    attributes if pinned else attributes.replace(missing_rule, b"", 1)
+                )
+                for relative, raw in originals.items():
+                    target = checkout / relative
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(raw)
+
+                def git(*arguments):
+                    return subprocess.check_output(
+                        ["git", "-C", str(checkout), "-c", "core.autocrlf=true",
+                         "-c", "core.eol=crlf", "-c", "core.safecrlf=false",
+                         "-c", "core.hooksPath=" + str(checkout / "unused-hooks"),
+                         "-c", "user.name=Disposable fixture",
+                         "-c", "user.email=fixture@example.invalid", *arguments],
+                        env=environment, stderr=subprocess.PIPE,
+                    ).decode().splitlines()
+
+                git("init", "--quiet")
+                git("add", "--", ".")
+                git("commit", "--quiet", "--no-gpg-sign", "-m", "Disposable source identity fixture")
+                committed = git("rev-parse", *("HEAD:" + relative for relative in paths))
+                for relative in paths:
+                    (checkout / relative).unlink()
+                git("checkout-index", "--all", "--force")
+                physical = git("hash-object", "--no-filters", "--", *paths)
+                mismatches = {relative for relative, expected, actual
+                              in zip(paths, committed, physical) if expected != actual}
+                self.assertEqual(len(committed), len(paths))
+                self.assertEqual(len(physical), len(paths))
+                self.assertEqual(mismatches, set() if pinned else {host_state})
+                if not pinned:
+                    self.assertEqual((checkout / host_state).read_bytes(),
+                                     originals[host_state].replace(b"\n", b"\r\n"))
+                    continue
+                for relative, raw in originals.items():
+                    self.assertEqual((checkout / relative).read_bytes(), raw, relative)
+                # A normalized Git diff cannot see this altered byte. The same
+                # no-filters hash used by the production guard must still reject.
+                target = checkout / host_state
+                target.write_bytes(originals[host_state].replace(b"\n", b"\r\n", 1))
+                git("diff", "--quiet", "HEAD", "--", ".", ":(exclude)Content/**")
+                self.assertNotEqual(git("hash-object", "--no-filters", "--", host_state)[0],
+                                    committed[paths.index(host_state)])
 
     def predecessors(self):
         common = dict(schema_version=1, issue=364, exact_sha=HEAD, run_token=TOKEN,
