@@ -12,11 +12,23 @@ Stream Level Editor carries the viewport. The existing official MCP integration
 is the preferred basis for a separately qualified material-update operation.
 Streaming alone neither applies Git changes nor removes scene/graph costs.
 
-The first cadence, launch-order and authenticated b9fd retarget changes are
-implemented in this candidate. The owner subsequently authorized implementation
-of the persistent MCP preview and stream integration on 2026-10-11. That work
-is in progress; live material editing, focused capture and cache relocation
-are not claimed as completed runtime capabilities in this initial checkpoint.
+The first cadence, launch-order and authenticated b9fd retarget changes were
+published at `c62bbc3e7dcdd9ccaad9b2facef477323413e279`. Protected CI
+[38121749832](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38121749832)
+passed; both complete material workflows actually skipped the ordinary push.
+The owner subsequently authorized implementation of the persistent MCP preview
+and stream integration on 2026-10-11. The candidate adds the native operation,
+bounded client, initial two-call qualification and later manual requests.
+Live qualification remains pending at this code checkpoint; its eventual
+runtime outcome belongs in the launch artifact and PR description. Cache
+relocation is not claimed as a completed runtime capability.
+
+Candidate qualification before launch: 75 focused local tests passed across
+the bridge, client, preparation, workflow admission and workspace configuration;
+the changed PowerShell scripts and four workflow blocks parsed successfully.
+Independent Proof QA closed the partial-mutation recovery and separate-client
+checkout findings. These are code/contract results, not native MCP or received
+stream evidence.
 
 ## Measured local cost
 
@@ -63,13 +75,15 @@ repairs for this failure.
 Installed-source evidence adds an important project-specific limit: the existing
 stock material setters call `update_material_instance` and refresh the material
 editor, but their transport has not been qualified in the #364 streamed session.
-The current launcher deliberately disables MCP/Wingman and Python remote
-execution. The #384 bootstrap also exits after its bounded inspection, so it
-cannot simply be inserted into a session that must stay open.
+The previous c62bbc3 launcher deliberately disabled MCP/Wingman and Python
+remote execution. The new candidate enables only its scoped official MCP
+operation; Wingman and Python remote execution stay disabled. The #384 bootstrap
+exits after its bounded inspection, so it cannot simply be inserted into a
+session that must stay open.
 
 ## Prioritized changes
 
-### 1. Explicit complete checkpoints — implemented candidate
+### 1. Explicit complete checkpoints — published and CI-verified
 
 Ordinary branch pushes no longer start full native or source material proof.
 The explicit native and source intents retain owner/branch guards and existing
@@ -77,25 +91,30 @@ proof bodies. Native still waits for successful protected CI at the exact SHA.
 The lock is acquired by the admitted host job. See the authoritative
 [cadence contract](../../CI_VALIDATION_TIERS.md#m3-road-material-iteration-cadence).
 
-The Level Editor launch now waits for its own exact-SHA CI before taking the
-shared host. Otherwise the persistent review session could prevent the later
-CI job from obtaining Unreal ownership. Existing open-editor protections remain.
+The Level Editor launch now waits for its own exact-SHA CI and this PR's
+independent Blender reference proof before taking the shared host. Otherwise
+the persistent review session could prevent a later job from obtaining host
+ownership. Existing open-editor protections remain.
 The stream target is the latest complete b9fd saved scene; the failed outer
 candidate is not relabelled as accepted.
 
-### 2. Parameter preview in the same process — proposed next slice
+### 2. Parameter preview in the same process — candidate awaiting live qualification
 
 Reuse the current official MCP/private-registry and transient-material patterns.
-Start with one existing paint parameter, such as `PaintRoughness`, on the known
-paint consumer. The operation must identify the prepared session, exact map,
+Start with the existing scalar `PaintRoughness` and vector `PaintColor` on the
+known paint consumers. The operation must identify the prepared session, exact map,
 checkpoint, owned slots and current values. It must reject conflicting state.
 
-Use a transient MID for the trial, change the allowed scalar, read it back and
-capture two existing road views before/after. Restore only the operation's own
-slot and camera changes; preserve unrelated dirty packages and owner edits.
-Keep the Editor alive. Qualify two requests with the same PID and map, recording
+Use one transient MID for the trial, change the allowed scalar/vector and read
+both back from the actually bound material. Capture the same existing road
+camera after each of two distinct requests. Restore the original 370 bindings;
+preserve the camera, unrelated dirty packages and owner edits. Keep the Editor
+alive. Qualify both requests with the same PID/start time and map, recording
 elapsed time, values, originals and restoration. There is no map load or C++
-build between values once this operation is installed.
+build between values once this operation is installed. The later request client
+authenticates the retained launcher separately from its fresh code-only
+checkout. Freeze the launch SHA until owner handoff ends; parameter JSON does
+not require a code or documentation push.
 
 Then extend only the controls required by current work: normal strength,
 asphalt variation and transition parameters. Some shoulder widths are currently
@@ -103,11 +122,13 @@ graph constants, so they need a deliberate parameterization change before they
 can use this path. A graph or texture change may still require shader work or
 reimport. A new reflected tool declaration may require a one-time build/restart.
 
-### 3. Focused capture — proposed, distinct from final proof
+### 3. Focused capture — fixed preview candidate, wider view selection proposed
 
-The current GPU host has no standalone focused mode. Its optional controls
-follow all 68 Lit poses. Reuse the existing camera and capture helpers with an
-explicit preview result that cannot satisfy full-area admission.
+The full-proof GPU host has no standalone focused mode. Its optional controls
+follow all 68 Lit poses. The new persistent candidate instead returns a bounded
+1280x720 capture from its unchanged viewport for each allowed update. This
+explicit preview result cannot satisfy full-area admission. Broader standalone
+view selection remains a separate proposal:
 
 | Current question | Existing relevant view family |
 |---|---|
@@ -116,11 +137,11 @@ explicit preview result that cannot satisfy full-area admission.
 | Crack normal response | 0112 / 0082 UV0/90 controls |
 | Shoulder contact | Separate 0112 and 0081 contact families |
 
-A usual small preview could contain four final images and twelve priming images
-instead of the b9 GPU bundle's 336 images: 95.2% fewer images in that capture
-bundle. This is an arithmetic coverage comparison, not a measured 95.2% reduction
-in total run time. Preserve readiness, priming, camera identity, native originals
-and state restoration. Complete checkpoint coverage remains unchanged.
+The first two-request qualification is bounded to two final images and six
+priming images, instead of the b9 GPU bundle's 336 images. These are different
+coverage scopes; the reduced count does not establish a measured runtime
+speedup. Preserve readiness, priming, camera identity, native originals and
+state restoration. Complete checkpoint coverage remains unchanged.
 
 ### 4. Bound graph construction and memory — diagnose before another full run
 
@@ -140,7 +161,7 @@ proposal, not an available switch. Frozen source identity, real mesh assignment
 and final full-map checks must still run. If memory growth persists on a small
 consumer, diagnose that operation before retrying the complete workflow.
 
-### 5. Use the existing D: cache configuration consistently — proposed
+### 5. Use the existing D: cache configuration consistently — partial code correction
 
 Both inspected native logs report a healthy local Zen service, but its data
 directory is still on C:. They also open the 1,679 MiB engine DDC Pak and report
@@ -155,7 +176,10 @@ Verify the actual runner environment and child launch/readback, then use the
 existing resolved cache path consistently. Epic documents `UE-ZenDataPath` and
 `-ZenDataPath` as local-data-path overrides, including for local DDC [E8].
 Preserve the C: cache until the D:
-configuration is verified. No process restart or cache deletion was performed
+configuration is verified. A reviewed runner correction now resolves the
+configured `cache` value instead of hard-coding `root/cache`; its local tests
+passed without creating or moving a cache. It does not change the environment
+of an existing listener. No process restart or cache deletion was performed
 in this review. Cache location is separate from the diagnosed allocation failure.
 
 ### 6. Small supporting savings

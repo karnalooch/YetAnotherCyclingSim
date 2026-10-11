@@ -3,13 +3,21 @@ name: M3 Level Editor review
 on:
   push:
     branches: [codex/364-road-surface-materials]
-    paths:
-      - '.github/workflows/level-editor-review.yml'
-      - 'scripts/ue/Start-YacsLevelEditorStream.ps1'
-      - 'scripts/ue/prepare_level_editor_review.py'
-      - 'scripts/ue/bootstrap_level_editor_stream.py'
-      - 'scripts/ue/Test-YacsLevelEditorStreamClient.ps1'
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Open the verified scene or update its already running preview
+        type: choice
+        default: open
+        options: [open, material-request]
+      session_token:
+        description: Existing launch run-attempt token; required for material-request
+        type: string
+        required: false
+      request_json:
+        description: Bounded material request JSON; required for material-request
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -23,13 +31,14 @@ jobs:
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/364-road-surface-materials' &&
-      (github.event_name == 'workflow_dispatch' ||
+      ((github.event_name == 'workflow_dispatch' &&
+        (inputs.operation == 'open' || inputs.operation == 'material-request')) ||
        (github.event_name == 'push' &&
         contains(github.event.head_commit.message, '[level-editor-review]')))
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - name: Require matching successful CyclingSim CI before reserving Windows
+      - name: Require matching CI and reference proof before reserving Windows
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -46,8 +55,28 @@ jobs:
               IFS='|' read -r ci_id state conclusion <<< "$row"
               if [[ "$state" == "completed" ]]; then
                 if [[ "$conclusion" == "success" ]]; then
-                  echo "Protected exact-SHA CI succeeded: run $ci_id at $GITHUB_SHA"
-                  exit 0
+                  # This PR also admits the independent Blender reference job.
+                  # Its workflow holds the same host lock and rejects an open
+                  # Editor, so finish it before the persistent owner handoff.
+                  reference=$(jq -r --arg sha "$GITHUB_SHA" '
+                    [.workflow_runs[] | select(.name == "Blender Material Forge reference proof" and .head_sha == $sha)]
+                    | sort_by(.created_at) | last
+                    | if . == null then "" else "\(.id)|\(.status)|\(.conclusion // "pending")" end
+                  ' <<< "$payload")
+                  if [[ -n "$reference" ]]; then
+                    IFS='|' read -r reference_id reference_state reference_conclusion <<< "$reference"
+                    if [[ "$reference_state" == "completed" ]]; then
+                      if [[ "$reference_conclusion" == "success" ]]; then
+                        echo "Protected exact-SHA CI $ci_id and Blender reference $reference_id succeeded at $GITHUB_SHA"
+                        exit 0
+                      fi
+                      echo "::error::Exact-SHA Blender reference $reference_id completed with $reference_conclusion; persistent handoff is blocked."
+                      exit 1
+                    fi
+                  fi
+                  echo "CI $ci_id succeeded; awaiting this PR's matching Blender reference before persistent handoff (poll $attempt/90)"
+                  sleep 20
+                  continue
                 fi
                 echo "::error::Exact-SHA CI run $ci_id completed with $conclusion; Level Editor review is blocked."
                 exit 1
@@ -58,7 +87,7 @@ jobs:
             fi
             sleep 20
           done
-          echo "::error::Timed out awaiting successful exact-SHA protected CI. Do not start a persistent Editor before CI finishes."
+          echo "::error::Timed out awaiting successful exact-SHA CI and Blender reference. Do not start a persistent Editor before shared-host jobs finish."
           exit 1
 
   review:
@@ -72,7 +101,7 @@ jobs:
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/364-road-surface-materials' &&
-      (github.event_name == 'workflow_dispatch' ||
+      ((github.event_name == 'workflow_dispatch' && inputs.operation == 'open') ||
        (github.event_name == 'push' &&
         contains(github.event.head_commit.message, '[level-editor-review]')))
     runs-on: [self-hosted, yacs-ue58]
@@ -132,5 +161,85 @@ jobs:
             _level-editor-review-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/LevelEditorStream/**/*.log
             _level-editor-review-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/LevelEditorStream/**/*.png
             !_level-editor-review-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/LevelEditorStream/**/edge-profile/**
+          if-no-files-found: warn
+          retention-days: 7
+  material_request:
+    name: Update the already running material preview
+    needs: await_ci
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    if: >-
+      needs.await_ci.result == 'success' &&
+      github.actor == github.repository_owner &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/364-road-surface-materials' &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.operation == 'material-request'
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 6
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      TARGET_SHA: ${{ github.sha }}
+      YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
+      YACS_PREVIEW_SESSION_TOKEN: ${{ inputs.session_token }}
+      YACS_PREVIEW_REQUEST_JSON: ${{ inputs.request_json }}
+    steps:
+      - name: Isolate request checkout configuration
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'level-material-request-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot configure the isolated material request checkout.' }
+
+      - name: Checkout the verified client without touching the open project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.TARGET_SHA }}
+          path: _level-material-request-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Send one bounded request to the identified running Editor
+        shell: pwsh
+        working-directory: _level-material-request-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          if ((git rev-parse HEAD).Trim() -ne $env:TARGET_SHA -or $LASTEXITCODE -ne 0) { throw 'Request client checkout differs from its exact approved SHA.' }
+          if (git status --porcelain --untracked-files=no) { throw 'Request client tracked checkout is dirty.' }
+          $sessionToken = $env:YACS_PREVIEW_SESSION_TOKEN
+          if ($sessionToken -cnotmatch '^[A-Za-z0-9][A-Za-z0-9_-]{0,47}$') { throw 'A bounded existing session token is required.' }
+          $rawRequest = $env:YACS_PREVIEW_REQUEST_JSON
+          if ([string]::IsNullOrWhiteSpace($rawRequest) -or [Text.Encoding]::UTF8.GetByteCount($rawRequest) -gt 4096) { throw 'Material request must be one nonempty JSON object within 4096 bytes.' }
+          $sessionRoot = "D:\yacs\work\level-editor-review\b9fddea3f602-$sessionToken"
+          $sessionReceipt = Join-Path $sessionRoot 'level-editor-stream-session.json'
+          # The client authenticates the receipt, process, map, values and bounded
+          # request before mutation. No project is copied, cleaned or launched.
+          $output = Join-Path (Get-Location).Path 'Saved/RuntimeProof/LevelEditorMaterialRequest'
+          New-Item -ItemType Directory -Path $output -ErrorAction Stop | Out-Null
+          $requestPath = Join-Path $output 'request.json'
+          [IO.File]::WriteAllText($requestPath, $rawRequest, [Text.UTF8Encoding]::new($false))
+          python -m scripts.ue.level_editor_material_client `
+            --session-receipt $sessionReceipt `
+            --request $requestPath `
+            --output (Join-Path $output 'response')
+          if ($LASTEXITCODE -ne 0) { throw 'The bounded material-preview request failed; inspect the retained response.' }
+
+      - name: Retain only this material request and its small visual response
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: level-material-request-${{ env.TARGET_SHA }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _level-material-request-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/LevelEditorMaterialRequest/**/*.json
+            _level-material-request-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/LevelEditorMaterialRequest/**/*.png
           if-no-files-found: warn
           retention-days: 7

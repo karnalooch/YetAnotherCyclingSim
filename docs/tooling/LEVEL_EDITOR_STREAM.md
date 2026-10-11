@@ -1,13 +1,18 @@
 # M3 Level Editor streaming review
 
 **Scope:** owner-requested viewport review for #364 / PR #470, inside M3.
-**Status:** installed-source inspection **PASS**; isolated launch and receiving-client
-check prepared; live stream **NOT RUN**.
+**Status:** installed-source inspection and authenticated b9fd retarget review
+**PASS**; checkpoint cadence delivered at `c62bbc3e7dcdd9ccaad9b2facef477323413e279`
+with passing protected CI. The persistent material-preview candidate has passed
+independent code review and 75 focused local checks; live stream and
+same-process update proof remain **NOT RUN** until the launch artifact exists.
 
 The owner selected Epic's **Stream Level Editor** on 2026-10-10. The review
-must show the level viewport and preserve the current scene, materials and
-source geometry. This is review support for the existing material delivery,
-not a new world-authoring interface or a whole-editor remote-control service.
+must show the level viewport and preserve the source geometry and saved
+checkpoint. On 2026-10-11 the owner extended this scope to bounded material
+instance parameter previews in that same isolated Editor. This is support for
+#364 material delivery; it grants no general world mutation, source-world save
+or whole-editor remote-control authority.
 
 ## Version and source evidence
 
@@ -86,40 +91,83 @@ requires explicit full-proof intent. Ordinary material corrections no longer
 start the native 68-view bundle or the source renderer automatically. Normal CI
 and its existing compiled-binary reuse remain active.
 
-An open streamed viewport can shorten navigation and visual comparison. It
-does not itself deliver a changed material recipe into that Editor process.
-The current launcher disables MCP/Wingman and Python remote execution; the
-existing remote command bridge still admits only its bounded `smoke-cube`
-command. Installed material-tool declarations are source evidence, not proof
-of live-session refresh. A future bounded refresh must reuse the admitted
-tools, establish the actual session/map/material identity, preserve unsaved
-work and read back the changed visible consumer before claiming delivery.
+An open streamed viewport supplies navigation and visual comparison. The owner
+also requested a separate parameter-update path into that identified process.
+The previous c62bbc3 launcher deliberately disabled MCP/Wingman; its prepared
+stream alone did not deliver material updates. The new candidate combines the
+viewport with one bounded official MCP material-preview operation. It does not
+reuse the #384 bootstrap's exit-after-inspection lifecycle.
 
-Use the current stream for review of its recorded saved checkpoint. Close its
-owned Editor normally before a requested native proof needs the shared host;
-automation must continue to yield to an open interactive session. Full
-save/reload and complete final coverage remain separate checkpoint evidence.
+The integration contract is scalar `PaintRoughness` and vector `PaintColor` on
+the known paint consumers, using transient material instances. Two separate
+requests must reach the same owned Editor PID/start identity, session, project
+and map. The second request must read the first request's state before applying
+its own values. Each update requires native parameter and slot readback, a small
+fixed-camera PNG response, and an explicit final restoration of the original
+bindings. Saved source and snapshot packages remain unchanged. These are
+acceptance requirements, not claims that the runtime proof has already passed.
+
+The session identifier is the exact launch `SessionToken`, for example a
+GitHub run-attempt token. Its stable receipt is
+`D:\yacs\work\level-editor-review\b9fddea3f602-TOKEN\level-editor-stream-session.json`.
+A follow-up request uses the same authenticated client revision and a fresh
+request/output identity. It does not copy the scene, build C++, reopen the map
+or clean the open project's checkout.
+
+Freeze the launch branch at that exact SHA while the owner uses the session.
+Submit parameter values through request JSON, without another code or
+documentation push. A later push has a different launcher identity and its CI
+may need the occupied host; it cannot silently take over the existing session.
+Keep the launch's runtime results in its artifact and PR description until the
+owned Editor closes. Publish the next code/documentation checkpoint after that
+handoff ends, then explicitly open its next session when needed.
+
+Close the owned Editor normally before an explicit full native checkpoint needs
+the shared host. Normal CI retains its open-editor protections. Complete
+save/reload and all 68 final Lit views remain checkpoint evidence; a small
+preview cannot satisfy whole-area or final visual admission.
 
 ### Launch and receiving-client verification
 
 The `M3 Level Editor review` workflow is restricted to the repository owner and
-the current `codex/364-road-surface-materials` branch. A scoped code push starts
+the current `codex/364-road-surface-materials` branch. A branch push starts
 it only with the explicit `[level-editor-review]` commit marker; manual dispatch
-is also supported. Ordinary material/code pushes do not launch a live editor.
+is declared as well. Ordinary material/code pushes do not launch a live editor.
+GitHub documents the **Run workflow** UI button for definitions on the default
+branch, and API/CLI branch dispatch after a workflow has run. This file is still
+in Draft PR #470: the current integration uses its explicit push launch; the
+manual follow-up job is prepared but its dispatch has not been demonstrated.
+Do not infer an available default-branch UI control from the branch definition.
+See [GitHub workflow-dispatch documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_dispatch).
 
-The hosted waiter first requires successful protected PR CI for this exact
-launcher SHA. Only then may the review job reserve the shared Unreal host.
-This prevents the persistent Editor from starting before its own CI needs that
-host. The waiter holds no Unreal lock; pending or failed CI cannot launch the
-session. Both push and manual entry points retain the same owner and branch
-scope and require the matching PR CI result.
+The hosted waiter first requires successful protected PR CI and this PR's
+independent Blender Material Forge reference proof for the exact launcher SHA.
+Both use the shared Windows host; the reference workflow also refuses an open
+Editor. Only after both finish may the review job reserve that host and hand
+off its persistent session. The waiter holds no Unreal lock. Missing, pending
+or failed results cannot launch the session. Both push and manual entry points
+retain the same owner and branch scope and require these matching results.
 
-The native entry point, from an unchanged checkout containing these scripts, is:
+The manual definition separates `operation=open` from
+`operation=material-request`. The latter requires the existing session token and
+a bounded JSON request, conveyed as data through environment variables and a
+file. Its job uses a fresh code-only client checkout and the same host lock;
+it invokes only the material client against the existing session. The native
+request parser owns the allowed actions/parameters, sequence checks and value
+bounds. Requests cannot supply a project path, endpoint, script or tool name.
+The hosted waiter checks the existing successful exact-SHA results; it does
+not launch another CI or reference run for a parameter value.
+
+The workflow prepares its exact-SHA code checkout at
+`D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\_level-editor-review-TOKEN`.
+The launcher and client authenticate that retained location separately from the
+saved scene. For a direct host invocation, use that unchanged prepared checkout
+and its same token; an arbitrary authoring checkout is not an admitted launcher:
 
 ```powershell
 ./scripts/ue/Start-YacsLevelEditorStream.ps1 `
   -ExpectedHead (git rev-parse HEAD) `
-  -SessionToken ([Guid]::NewGuid().ToString('N'))
+  -SessionToken 'TOKEN'
 ```
 
 It checks host ownership, the inspected engine/plugin and free listener ports,

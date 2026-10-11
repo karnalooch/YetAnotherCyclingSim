@@ -94,8 +94,10 @@ $receipt = [ordered]@{
     issue = 364
     status = 'BLOCKED'
     launcher_sha = $ExpectedHead
+    launcher_root = $RepoRoot
     runtime_source_sha = $RuntimeSha
     runtime_source_run = '38116299783-1'
+    session_id = $SessionToken
     session_root = $SessionRoot
     stream_source = 'LevelEditorViewport'
     viewer_url = $ViewerUrl
@@ -123,8 +125,8 @@ try {
     $hostState = & (Join-Path $RepoRoot 'scripts/runner/Get-YacsUnrealHostState.ps1')
     $receipt.host_before = $hostState.status
     if ($hostState.status -ne 'IDLE') { throw "Shared Unreal host is occupied: $($hostState.status). Existing work keeps ownership." }
-    $listeners = @(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object LocalPort -in @(80, 8888))
-    if ($listeners.Count) { throw 'Epic viewer or streamer port is already occupied (80/8888).' }
+    $listeners = @(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object LocalPort -in @(80, 8888, 18784))
+    if ($listeners.Count) { throw 'Epic viewer, streamer or owned MCP port is already occupied (80/8888/18784).' }
     . (Join-Path $RepoRoot 'scripts/ci/Resolve-YacsUnrealEngine.ps1')
     $engine = Resolve-YacsUnrealEngine -ProjectPath (Join-Path $RepoRoot 'YetAnotherCyclingSim.uproject')
     if (-not $engine -or $engine.Version -ne '5.8.2-56702186' -or -not $engine.UnrealEditorPath) { throw 'The inspected UE 5.8.2 CL 56702186 installation is required.' }
@@ -147,15 +149,46 @@ try {
     $scenePath = Join-Path $sessionEvidence 'scene.json'
     $engineLog = Join-Path $sessionEvidence 'editor.log'
     $project = Join-Path $SessionRoot 'YetAnotherCyclingSim.uproject'
+    # Only this fresh snapshot's Saved configuration is authored. All six
+    # pinned source/project configuration files remain byte-identical.
+    $savedConfig = Join-Path $SessionRoot 'Saved/Config/WindowsEditor'
+    Assert-NoReparseAncestor $savedConfig
+    New-Item -ItemType Directory -Path $savedConfig | Out-Null
+    @'
+[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]
+bAutoStartServer=False
+bEnableToolSearch=False
+ServerUrlPath=/mcp
+[/Script/ToolsetRegistry.ToolsetRegistrySettings]
+!AllowedNames=ClearArray
++AllowedNames=/^YacsRoadMaterialPreview$/
++AllowedNames=/^YacsRoadMaterialPreview[.][Pp]review$/
+!BlockedNames=ClearArray
+[/Script/UnrealEd.EditorLoadingSavingSettings]
+bAutoSaveEnable=False
+'@ | Set-Content -LiteralPath (Join-Path $savedConfig 'EditorPerProjectUserSettings.ini') -Encoding utf8
+    @'
+[HTTPServer.Listeners]
+DefaultBindAddress=127.0.0.1
+!ListenerOverrides=ClearArray
+'@ | Set-Content -LiteralPath (Join-Path $savedConfig 'Engine.ini') -Encoding utf8
+    $receipt.isolated_session_configuration = @(
+        Get-ChildItem -LiteralPath $savedConfig -File | ForEach-Object {
+            [ordered]@{ path = $_.FullName; sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() }
+        }
+    )
     $arguments = @(
         ('"' + $project + '"'), $Map,
-        '-EnablePlugins=PixelStreaming2',
-        '-DisablePlugins=ModelContextProtocol,Wingman,AndroidFileServer',
+        '-EnablePlugins=PixelStreaming2,ModelContextProtocol,ToolsetRegistry',
+        '-DisablePlugins=Wingman,AndroidFileServer',
         '-ini:Game:[/Script/PixelStreaming2Settings.PixelStreaming2PluginSettings]:EditorSource=LevelEditorViewport',
         '-ini:Game:[/Script/PixelStreaming2Settings.PixelStreaming2PluginSettings]:EditorStartOnLaunch=True',
         '-ini:Game:[/Script/PixelStreaming2Settings.PixelStreaming2PluginSettings]:EditorUseRemoteSignallingServer=False',
         '-ini:Game:[/Script/PixelStreaming2Settings.PixelStreaming2PluginSettings]:ConnectionURL=ws://127.0.0.1:8888',
         '-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False',
+        '-ini:Engine:[HTTPServer.Listeners]:DefaultBindAddress=127.0.0.1',
+        '-ini:EditorPerProjectUserSettings:[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]:bAutoStartServer=False',
+        '-ini:EditorPerProjectUserSettings:[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]:bEnableToolSearch=False',
         '-ini:EditorPerProjectUserSettings:[/Script/UnrealEd.EditorLoadingSavingSettings]:bAutoSaveEnable=False',
         '-EditorPixelStreamingRes=1280x720', '-RenderOffscreen',
         '-NoP4', '-NoSplash', '-NoSound', '-NoLiveCoding', '-NoVSync',
@@ -189,6 +222,8 @@ try {
     }
     $receipt.editor_pid = $EditorProcess.Id
     $receipt.editor_start_time_utc = $EditorProcess.StartTime.ToUniversalTime().ToString('o')
+    $receipt.editor_start_filetime_utc = $EditorProcess.StartTime.ToUniversalTime().ToFileTimeUtc().ToString()
+    $receipt.editor_executable_path = $engine.UnrealEditorPath
     $deadline = [DateTime]::UtcNow.AddSeconds(240)
     $httpReady = $false
     while ([DateTime]::UtcNow -lt $deadline) {
@@ -208,12 +243,23 @@ try {
         Start-Sleep -Seconds 2
     }
     if (-not $httpReady) { throw 'The native viewport and Epic viewer did not become ready within 240 seconds.' }
-    $listeners = @(Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object LocalPort -in @(80, 8888))
-    if (@($listeners.LocalPort | Select-Object -Unique).Count -ne 2) { throw 'Both Epic viewer and streamer listeners are required.' }
+    $listeners = @(Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object LocalPort -in @(80, 8888, 18784))
+    if (@($listeners.LocalPort | Select-Object -Unique).Count -ne 3) { throw 'Epic viewer, streamer and bounded official MCP listeners are required.' }
     foreach ($listener in $listeners) {
         if (-not $OwnedProcesses.ContainsKey([string] $listener.OwningProcess)) { throw 'A listener belongs to a process outside this review session.' }
     }
+    $mcpListeners = @($listeners | Where-Object LocalPort -eq 18784)
+    if ($mcpListeners.Count -ne 1 -or $mcpListeners[0].LocalAddress -ne '127.0.0.1' -or
+        $mcpListeners[0].OwningProcess -ne $EditorProcess.Id) { throw 'Official MCP must have exactly one loopback listener owned by this Editor.' }
     $receipt.listeners = @($listeners | Select-Object LocalAddress, LocalPort, OwningProcess)
+    $bridgePath = Join-Path $sessionEvidence 'material-bridge-ready.json'
+    $bridge = Get-Content -LiteralPath $bridgePath -Raw | ConvertFrom-Json
+    if ($bridge.status -ne 'MATERIAL_BRIDGE_READY' -or $bridge.session_id -ne $SessionToken -or
+        $bridge.editor_pid -ne $EditorProcess.Id -or $bridge.editor_start_filetime_utc -ne $receipt.editor_start_filetime_utc) {
+        throw 'Native material bridge identity differs from this owned Editor.'
+    }
+    $receipt.material_bridge_ready_sha256 = (Get-FileHash -LiteralPath $bridgePath -Algorithm SHA256).Hash.ToLowerInvariant()
+    Copy-Item -LiteralPath $bridgePath -Destination (Join-Path $EvidenceRoot 'material-bridge-ready.json')
     Copy-Item -LiteralPath $scenePath -Destination (Join-Path $EvidenceRoot 'scene.json')
     foreach ($config in @(Get-NetIPConfiguration | Where-Object { $null -ne $_.IPv4DefaultGateway })) {
         foreach ($address in @($config.IPv4Address)) {
@@ -221,6 +267,54 @@ try {
                 $receipt.lan_viewer_url_candidates += "http://$($address.IPAddress)/"
             }
         }
+    }
+    $receipt.status = 'MATERIAL_BRIDGE_QUALIFICATION_PENDING'
+    # Stable receipt is available to the same bounded client used by future
+    # manual material requests. No checkout, build, restart or save between calls.
+    $stableReceipt = Join-Path $SessionRoot 'level-editor-stream-session.json'
+    $receipt | ConvertTo-Json -Depth 24 | Set-Content -LiteralPath $stableReceipt -Encoding utf8
+    $requests = @(
+        [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'acceptance-one'; action = 'set'; expected_sequence = 0; paint_roughness = 0.35; paint_color = @(0.35, 0.50, 0.70, 1.0) },
+        [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'acceptance-two'; action = 'set'; expected_sequence = 1; paint_roughness = 0.75; paint_color = @(0.65, 0.30, 0.20, 1.0) },
+        [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'acceptance-restore'; action = 'restore'; expected_sequence = 2 }
+    )
+    $nativeResults = @()
+    foreach ($request in $requests) {
+        $requestPath = Join-Path $EvidenceRoot ($request.request_id + '.request.json')
+        $request | ConvertTo-Json -Depth 8 -Compress | Set-Content -LiteralPath $requestPath -Encoding utf8
+        Push-Location -LiteralPath $RepoRoot
+        try {
+            & python -m scripts.ue.level_editor_material_client --session-receipt $stableReceipt --request $requestPath --output (Join-Path $EvidenceRoot $request.request_id)
+            if ($LASTEXITCODE -ne 0) { throw ('Official MCP material request failed: ' + $request.request_id) }
+        }
+        finally { Pop-Location }
+        $nativePath = Join-Path $sessionEvidence ('material-preview/' + $request.request_id + '/receipt.json')
+        $result = Get-Content -LiteralPath $nativePath -Raw | ConvertFrom-Json
+        if ($result.status -ne 'COMPLETED' -or $result.editor_pid -ne $EditorProcess.Id -or
+            $result.editor_start_filetime_utc -ne $receipt.editor_start_filetime_utc -or $result.map_package -ne $Map -or
+            $result.saved_inputs_before_sha256 -ne $result.saved_inputs_after_sha256 -or
+            $result.source_inputs_before_sha256 -ne $result.source_inputs_after_sha256 -or $result.source_world_saved -ne $false) {
+            throw 'Persistent preview did not conserve the same process, map and saved inputs.'
+        }
+        $nativeResults += $result
+    }
+    if (($nativeResults[0].after | ConvertTo-Json -Depth 16 -Compress) -ne ($nativeResults[1].before | ConvertTo-Json -Depth 16 -Compress) -or
+        ($nativeResults[0].before | ConvertTo-Json -Depth 16 -Compress) -ne ($nativeResults[2].after | ConvertTo-Json -Depth 16 -Compress) -or
+        ($nativeResults[0].camera | ConvertTo-Json -Depth 8 -Compress) -ne ($nativeResults[1].camera | ConvertTo-Json -Depth 8 -Compress) -or
+        $nativeResults[2].after.transient_mid -ne $false) { throw 'Two-call native state persistence, camera or original binding restoration differs.' }
+    $receipt.material_acceptance = [ordered]@{
+        status = 'SAME_PROCESS_TWO_UPDATES_RESTORED'
+        request_ids = @($requests.request_id)
+        final_sequence = $nativeResults[2].sequence
+        final_png_count = @($nativeResults.captures | Where-Object priming -eq $false).Count
+        priming_png_count = @($nativeResults.captures | Where-Object priming -eq $true).Count
+        original_bindings_restored = $true
+        source_inputs_unchanged = $true
+        snapshot_inputs_unchanged = $true
+        full_material_visual_proof = $false
+    }
+    if ($receipt.material_acceptance.final_png_count -ne 2 -or $receipt.material_acceptance.priming_png_count -ne 6) {
+        throw 'Persistent preview native image count differs.'
     }
     $receipt.status = 'HTTP_READY_CLIENT_PENDING'
     $clientRoot = Join-Path $EvidenceRoot 'client'

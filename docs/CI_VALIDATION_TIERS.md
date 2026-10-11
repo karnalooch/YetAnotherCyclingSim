@@ -392,7 +392,8 @@ The existing branch-scoped road workflows now require explicit intent:
 | Ordinary iteration | Push without a full-proof marker | Required CI continues; both material proof workflows skip their jobs before reserving the shared host |
 | Native material checkpoint | Commit message includes `[road-material-proof]` | Wait for successful protected CI at this exact SHA, then run the existing baseline, canary, full-network save, independent reload and all 68 Lit cameras |
 | Material source checkpoint | Commit message includes `[road-source-proof]` | Run the existing authenticated source renderer and determinism comparison; use when the source producer or selected source inputs change |
-| Live viewport review | Existing `[level-editor-review]` selection | Open the authenticated saved scene through the separate [Level Editor review](tooling/LEVEL_EDITOR_STREAM.md) workflow |
+| Live viewport review | Explicit `[level-editor-review]` selection | After exact-SHA CI and the applicable Blender reference finish, open the authenticated saved scene through the separate [Level Editor review](tooling/LEVEL_EDITOR_STREAM.md) workflow |
+| Material parameter preview | `material-request` against the existing session and unchanged launcher SHA | Send the bounded paint scalar/vector request to the owned Editor; no new scene copy, build, CI dispatch or full proof |
 
 Feature markers such as `[road-outer-blend]`, `[road-band-controls]`,
 `[road-paint-controls]`, `[road-crack-canary]`, `[shoulder-contact]`,
@@ -428,6 +429,15 @@ inspect the affected views, then request a complete checkpoint at a useful
 review boundary and for the final material candidate. Existing source identity,
 readiness, conservation, full coverage and final admission requirements remain
 mandatory; a partial preview never substitutes for them.
+
+The Level Editor candidate connects its persistent viewport to one scoped
+official MCP tool. Its first qualification requires two separate paint
+parameter updates in the same native process, two final PNGs plus six priming
+captures, native before/after readback and restoration of all 370 original
+bindings. Runtime qualification remains separate from local contract tests.
+Freeze the launch SHA during owner handoff; keep runtime results in that run's
+artifact and PR description until the Editor closes. A documentation push is
+also a new revision and must not invalidate the active request client.
 
 The prepared stream is intended for viewport review and input. Automatic material
 refresh inside a persistent Editor session is not yet runtime-proved, and the

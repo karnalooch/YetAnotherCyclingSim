@@ -19,7 +19,7 @@
     {
       "file": "level-editor-review.yml",
       "state": "CURRENT",
-      "reason": "Issue #364 owner-selected Stream Level Editor review. Owner-only fixed branch and explicit launch marker/manual intent, successful exact-SHA protected CI before the shared non-cancelling host lane, verified independent saved-scene copy, stock inspected PixelStreaming2, exact runtime/launcher labels and bounded receiving-browser proof. Hands one isolated Editor to the owner; no build, source-world mutation, public tunnel, firewall change, visual acceptance or performance admission."
+      "reason": "Issue #364 owner-selected Stream Level Editor and bounded material-instance preview. Owner-only fixed branch, explicit launch/manual intent, successful exact-SHA CI and the applicable Blender reference before the shared non-cancelling host lane. Verified independent saved scene, stock inspected PixelStreaming2, one restricted official MCP paint operation, exact session/process/launcher identity, native readback and small PNG response. Manual material-request reuses the owned session at its unchanged launch SHA. No build, saved source-world mutation, public tunnel, firewall change, visual acceptance or performance admission."
     },
     {
       "file": "official-unreal-mcp-native-probe.yml",

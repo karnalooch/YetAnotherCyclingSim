@@ -9,6 +9,18 @@
 
 ### Decision and status
 
+**#364 iteration extension, owner decision 2026-10-11:** the owner requested
+bounded material-instance parameter updates through official MCP in the same
+isolated Editor used for Stream Level Editor review. PR #467 has been merged
+and #384 is closed as completed; their admitted inspection proof remains
+unchanged. The new [material-preview candidate](tooling/LEVEL_EDITOR_STREAM.md)
+is scoped to the retained b9 road scene, scalar `PaintRoughness`, vector
+`PaintColor`, the exact 370 paint bindings and transient previews with explicit
+restoration. Native session identity, actual reflected schema, two separate
+same-process calls, readback, small rendered evidence and saved-byte
+conservation require their own qualification. This extension does not admit
+stock general authoring tools, source-world saves or further MCP infrastructure.
+
 **Entry gate satisfied — #363 completed through merged PR #446. The fixed native session and separate InputBoundary execution are verified. Protected delivery of PR #467 and completed closure of #384 are the gate for #364.**
 
 The owner approved a small official Unreal MCP adoption workstream between world-finishing step 2 (#363) and step 3 (#364). "Step 2.5" is a shorthand inside **M3**, not a new product milestone or a renumbering of the existing 13 steps.

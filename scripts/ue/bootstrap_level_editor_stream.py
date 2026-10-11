@@ -9,12 +9,12 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from pathlib import Path
 import re
+import sys
 import traceback
+from pathlib import Path
 
 import unreal
-
 
 RUNTIME_SHA = "b9fddea3f6023239da98bec7a5107ed1124cf52e"
 MAP_PACKAGE = "/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview"
@@ -34,7 +34,9 @@ def main():
     destination = Path(os.environ["YACS_LEVEL_EDITOR_REVIEW_ROOT"])
     require(
         destination.parent == Path(r"D:\yacs\work\level-editor-review")
-        and re.fullmatch(RUNTIME_SHA[:12] + r"-[A-Za-z0-9][A-Za-z0-9_-]{0,47}", destination.name),
+        and re.fullmatch(
+            RUNTIME_SHA[:12] + r"-[A-Za-z0-9][A-Za-z0-9_-]{0,47}", destination.name
+        ),
         "Viewport bootstrap destination differs from the fixed review root",
     )
     require(destination.resolve() == destination, "Review project path is redirected")
@@ -74,39 +76,90 @@ def main():
         world = editor.get_editor_world()
         require(world is not None, "No editor world is loaded")
         actual_map = world.get_path_name().split(".", 1)[0]
-        require(actual_map == MAP_PACKAGE, "The loaded map is not the retained road consumer")
-        map_path = destination / ("Content/" + MAP_PACKAGE.removeprefix("/Game/") + ".umap")
-        require(hashlib.sha256(map_path.read_bytes()).hexdigest() == MAP_SHA256,
-                "Saved review map bytes differ from the verified checkpoint")
-        source = unreal.SystemLibrary.get_console_variable_string_value("PixelStreaming2.Editor.Source")
-        autostart = unreal.SystemLibrary.get_console_variable_int_value("PixelStreaming2.Editor.StartOnLaunch")
-        remote = unreal.SystemLibrary.get_console_variable_int_value("PixelStreaming2.Editor.UseRemoteSignallingServer")
-        require(source == "LevelEditorViewport", "Stream source is not LevelEditorViewport")
-        require(autostart == 1 and remote == 0, "Local automatic viewport streaming is not configured")
+        require(
+            actual_map == MAP_PACKAGE,
+            "The loaded map is not the retained road consumer",
+        )
+        map_path = destination / (
+            "Content/" + MAP_PACKAGE.removeprefix("/Game/") + ".umap"
+        )
+        require(
+            hashlib.sha256(map_path.read_bytes()).hexdigest() == MAP_SHA256,
+            "Saved review map bytes differ from the verified checkpoint",
+        )
+        source = unreal.SystemLibrary.get_console_variable_string_value(
+            "PixelStreaming2.Editor.Source"
+        )
+        autostart = unreal.SystemLibrary.get_console_variable_int_value(
+            "PixelStreaming2.Editor.StartOnLaunch"
+        )
+        remote = unreal.SystemLibrary.get_console_variable_int_value(
+            "PixelStreaming2.Editor.UseRemoteSignallingServer"
+        )
+        require(
+            source == "LevelEditorViewport", "Stream source is not LevelEditorViewport"
+        )
+        require(
+            autostart == 1 and remote == 0,
+            "Local automatic viewport streaming is not configured",
+        )
         location = unreal.Vector(*CAMERA)
-        rotation = unreal.MathLibrary.find_look_at_rotation(location, unreal.Vector(*TARGET))
+        rotation = unreal.MathLibrary.find_look_at_rotation(
+            location, unreal.Vector(*TARGET)
+        )
         editor.set_level_viewport_camera_info(location, rotation)
         actual_location, actual_rotation = editor.get_level_viewport_camera_info()
         require(
-            all(abs(getattr(actual_location, field) - value) < 1.0
-                for field, value in zip(("x", "y", "z"), CAMERA)),
+            all(
+                abs(getattr(actual_location, field) - value) < 1.0
+                for field, value in zip(("x", "y", "z"), CAMERA)
+            ),
             "Initial road viewport camera did not read back",
         )
-        receipt.update({
-            "status": "VIEWPORT_SCENE_READY",
-            "engine_version": unreal.SystemLibrary.get_engine_version(),
-            "stream_source": source,
-            "start_on_launch": bool(autostart),
-            "remote_signalling_server": bool(remote),
-            "map_sha256": MAP_SHA256,
-            "initial_camera_source": "window-0112-forward-00001",
-            "initial_camera_source_sha256": SURVEY_SHA256,
-            "initial_camera_location_cm": [actual_location.x, actual_location.y, actual_location.z],
-            "initial_camera_rotation_deg": [actual_rotation.pitch, actual_rotation.yaw, actual_rotation.roll],
-        })
+        receipt.update(
+            {
+                "status": "VIEWPORT_SCENE_READY",
+                "engine_version": unreal.SystemLibrary.get_engine_version(),
+                "stream_source": source,
+                "start_on_launch": bool(autostart),
+                "remote_signalling_server": bool(remote),
+                "map_sha256": MAP_SHA256,
+                "initial_camera_source": "window-0112-forward-00001",
+                "initial_camera_source_sha256": SURVEY_SHA256,
+                "initial_camera_location_cm": [
+                    actual_location.x,
+                    actual_location.y,
+                    actual_location.z,
+                ],
+                "initial_camera_rotation_deg": [
+                    actual_rotation.pitch,
+                    actual_rotation.yaw,
+                    actual_rotation.roll,
+                ],
+            }
+        )
+        session_id = destination.name.removeprefix(RUNTIME_SHA[:12] + "-")
+        # The executing launcher is the exact committed source; the project is
+        # the independent retained snapshot. Keep remote Python execution off.
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import level_editor_material_bridge
+
+        bridge = level_editor_material_bridge.install(
+            unreal, destination, preparation, session_id, receipt["launcher_sha"]
+        )
+        receipt.update(
+            {
+                "session_id": session_id,
+                "editor_start_filetime_utc": bridge["editor_start_filetime_utc"],
+                "material_bridge_status": bridge["status"],
+                "material_bridge_ready": level_editor_material_bridge.READY_RELATIVE,
+                "official_mcp_transport_verified": False,
+            }
+        )
         # -ExecutePythonScript otherwise exits after its script has completed.
         unreal.EditorPythonScripting.set_keep_python_script_alive(True)
     except Exception:
+        receipt["status"] = "BLOCKED"
         receipt["error"] = traceback.format_exc()
         raise
     finally:
