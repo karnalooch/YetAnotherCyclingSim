@@ -241,9 +241,9 @@ generation then prefixes the tool function with that name. It supplies no
 metadata hook for restoring the previous short name. `Find` returns a handler
 only when it is enabled by the registry filters. The actual MCP adapter copies
 `name`, `description` and `inputSchema` directly, so no schema-field translation
-is required. The known reflected FString serialization remains covered by the
-client's existing single JSON-string unwrap; no speculative result-wrapper
-fallback is added.
+is required. At that checkpoint the client retained its earlier single
+JSON-string unwrap; the later `05c369a` evidence below supersedes that assumption.
+No speculative result-wrapper fallback is added.
 
 The naming correction uses a bounded startup pattern for the observed
 `PythonTypes.YacsRoadMaterialPreview_0x` plus eight uppercase hexadecimal digits.
@@ -332,7 +332,53 @@ known missing bodies: `ObjectFunctionToolCall.cpp`, `ToolsetJson.cpp`,
 All paths and hashes were already inventoried (43,544 bytes total). The full
 source and byte/output limits are unchanged; no inspected code is executed.
 The previous four complete bodies remain authenticated in the `1b2e2ea`
-artifact. The runtime response parser stays unchanged pending this evidence.
+artifact. The runtime response parser stayed unchanged in that source-only
+revision pending this evidence.
+
+The [actual `05c369a` source-only run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38137155495)
+passed and observed no running Editor. Its authenticated
+[two-file artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38137155495/artifacts/11701995764)
+is a 45,658-byte ZIP, SHA-256
+`989947f95c8d167a6eb7808942c7f505e44714d8ec8192894ed311ac3c5bd5b9`.
+The original source JSON is 222,612 bytes, SHA-256
+`36408fa8a00eca79419e620c15b3aa466b0f5a03d1a2de4d610024b0383c2138`.
+All four files are `COMPLETE`: 565 + 250 + 124 + 210 = 1149 lines. Their
+43,544 original bytes match the earlier inventory hashes exactly; independent
+QA reconstructed CRLF and final newlines, including the header's UTF-8 BOM.
+No evidence limit or missing context was reported. Editor qualification and
+both full material proofs skipped. Exact-SHA
+[protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38137159994)
+and [Blender reference](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38137159468)
+passed. Windows recorded `compileKind=none` and 19.33 GiB free on D:.
+
+`ObjectFunctionToolCall.cpp` lines 494–520 establish the missing boundary:
+`MakeResult` always creates a new object with the single literal key
+`returnValue`. Our `preview` declares `str`; `tool_call_impl.py` forwards its
+result without adding a tuple or success flag. `FunctionLibraryToolset.cpp`
+serializes the resulting wrapper and `ModelContextProtocolToolResults.h`
+copies that string directly into one MCP text-content item. The client must
+decode the text to exactly `{"returnValue": "<domain JSON>"}`, then decode
+that string to the domain object. The previous parser instead supplied the
+wrapper to the receipt validator. This proves the parser mismatch, without
+recovering the unretained response or material outcome of `9a7be52`.
+
+The follow-up implements that one strict envelope, adds the four source
+hashes to existing startup pins, and preserves bounded rejected responses.
+`mcp-response.json` is saved before domain validation, at most 2 MiB including
+the newline, with its hash and size. It is canonical parsed JSON-RPC, not
+raw HTTP. On a blocked attempt, one local read may retain an existing native
+receipt as `RETAINED_UNVALIDATED`; the path comes only from the independently
+validated request ID. Missing and refused diagnostic reads are explicit and
+cannot mask the primary error. No diagnostic path polls, calls MCP again,
+trusts paths in the rejected result, restores or promotes completion.
+
+Local verification passed 30 full client tests in 2.631 seconds and 53 full
+bridge tests in 0.087 seconds. Regression cases cover the source-defined
+envelope, rejected aliases, extra wrapping, malformed or error responses,
+pre-validation evidence retention, newline-inclusive byte limits, and native
+diagnostic link/size/write refusals without loss of the original error. The
+existing two-change/restore, same-state history, process, PNG and conservation
+fixtures still pass. These synthetic checks do not qualify the real session.
 
 ## Measured local cost
 

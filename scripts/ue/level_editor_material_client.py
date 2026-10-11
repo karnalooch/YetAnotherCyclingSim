@@ -517,13 +517,14 @@ def _domain_result(response):
     require(type(content) is list and len(content) == 1 and type(content[0]) is dict
             and content[0].get("type") == "text" and isinstance(content[0].get("text"), str),
             "Material result must be one bounded text result")
-    value = _json(content[0]["text"])
-    # Installed reflected FString serialization may wrap canonical(result) in
-    # exactly one JSON string before MakeTextResult. Never parse recursively.
-    if isinstance(value, str):
-        value = _json(value)
-    require(type(value) is dict, "Material result must decode to one JSON object")
-    return value
+    # Installed UE 5.8.2 ObjectFunctionToolCall::MakeResult always wraps the
+    # reflected return value in this exact object (source run 38137155495).
+    # Our declared FString contains one canonical domain JSON object. The MCP
+    # MakeTextResult helper preserves the serialized wrapper as its text.
+    envelope = _object(content[0]["text"])
+    require(set(envelope) == {"returnValue"} and type(envelope["returnValue"]) is str,
+            "Material result must contain exactly one reflected returnValue string")
+    return _object(envelope["returnValue"])
 
 
 def _immutable(context):
@@ -550,6 +551,36 @@ def _write(output, name, raw):
         stream.write(raw)
 
 
+def _retain_mcp_response(output, response):
+    # This is the parsed JSON-RPC object in canonical form, not raw HTTP bytes.
+    # Preserve it before domain validation, including responses we reject.
+    raw = canonical(response) + b"\n"
+    require(len(raw) <= JSON_LIMIT, "MCP response exceeds its diagnostic byte bound")
+    name = "mcp-response.json"
+    _write(output, name, raw)
+    return {"path": name, "format": "canonical_parsed_json_rpc",
+            "sha256": digest(raw), "size_bytes": len(raw)}
+
+
+def _retain_native_diagnostic(context, request, output):
+    # Only the independently validated request ID supplies this fixed path.
+    # Read once, without waiting for captures or interpreting unvalidated data.
+    relative = bridge.REQUEST_ROOT + "/" + request["request_id"] + "/receipt.json"
+    observation = {"path": relative, "status": "NOT_OBSERVED"}
+    try:
+        path = _path(context["root"], relative)
+        if path.exists():
+            raw = _read(path)
+            name = "native-diagnostic-receipt.json"
+            _write(output, name, raw)
+            observation.update({"status": "RETAINED_UNVALIDATED", "client_path": name,
+                                "sha256": digest(raw), "size_bytes": len(raw)})
+    except (ValueError, OSError, RuntimeError, TypeError, KeyError) as error:
+        observation.update({"status": "NOT_RETAINED", "diagnostic_error_type": type(error).__name__,
+                            "diagnostic_error": str(error)[:500]})
+    return observation
+
+
 def run(session_receipt, request_path, output):
     """Make at most one domain call and preserve independent native readbacks."""
     started = time.monotonic()
@@ -560,7 +591,7 @@ def run(session_receipt, request_path, output):
     receipt = {"schema_version": 1, "status": "BLOCKED", "tool_call_attempted": False,
                "tools_call_count": 0, "retry_permitted": False, "source_world_saved": False,
                "performance_pass": False, "owner_visual_status": "PENDING_FINAL_M3"}
-    transport = None
+    transport = context = request = None
     try:
         context = _load_context(session_receipt)
         receipt.update(context["identity"])
@@ -586,6 +617,7 @@ def run(session_receipt, request_path, output):
         require(latest == history, "Material history changed before dispatch")
         receipt["tool_call_attempted"], receipt["tools_call_count"] = True, 1
         response = transport.call(name, {parameter: canonical(request).decode("utf-8")})
+        receipt["mcp_response"] = _retain_mcp_response(output, response)
         value = _domain_result(response)
         _receipt(value, context, request["request_id"])
         expected_sequence = history["sequence"] + (request["action"] != "inspect")
@@ -641,6 +673,9 @@ def run(session_receipt, request_path, output):
                 transport.close()
             except (OSError, http.client.HTTPException) as error:
                 receipt.update({"status": "BLOCKED", "close_error_type": type(error).__name__})
+        if (receipt["status"] == "BLOCKED" and receipt["tool_call_attempted"]
+                and context is not None and request is not None):
+            receipt["native_diagnostic"] = _retain_native_diagnostic(context, request, output)
         receipt["elapsed_seconds"] = time.monotonic() - started
         _write(output, CLIENT_RECEIPT, canonical(receipt) + b"\n")
     return receipt

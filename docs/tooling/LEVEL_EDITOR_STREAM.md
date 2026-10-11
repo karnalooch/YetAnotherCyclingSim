@@ -11,8 +11,11 @@ then dispatched one material request. Its returned JSON object failed the
 client's `schema_version` check. The rejected response and native request files
 were not retained by the previous success-only evidence path, so the output
 envelope, actual material mutation, captures and restoration remain unverified.
-The next source-only read targets the four missing return-conversion bodies;
-the response parser is unchanged until that contract is established.
+The source-only `05c369a` read completed all four return-conversion bodies and
+established the mandatory `returnValue` string envelope. The follow-up client
+now requires that exact envelope before decoding the domain receipt and retains
+bounded responses before validation. This correction still needs a real
+same-process qualification.
 Live stream and same-process update proof remain **UNQUALIFIED**. The
 [workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
 records the authenticated launch evidence and current correction.
@@ -42,6 +45,34 @@ This supplies the missing return-conversion and text-result contracts without
 starting another Editor. Ordinary
 automatic selection, owner/ref/path guards and all read/output caps remain.
 The probe is declaration evidence only; it cannot admit a preview session.
+
+### Native result contract and rejected-response evidence
+
+The authenticated [source-only run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38137155495)
+retained all four files completely: 1149 lines and 43,544 original bytes.
+`ObjectFunctionToolCall::MakeResult` places the reflected return value in
+exactly one `returnValue` field. Our declared `FString` contains the domain
+receipt as JSON text; `MakeTextResult` copies the serialized envelope into one
+MCP text-content item. The client therefore performs two fixed, bounded JSON
+decodes: text to the singleton `returnValue` object, then its string to the
+domain object. Alias keys, extra envelope fields, direct domain objects and
+recursive string unwrapping are rejected. MCP errors remain errors. All four
+source implementations are added to the existing startup hash pins.
+
+After the one allowed call returns, the client saves `mcp-response.json`
+before domain validation, within 2 MiB including its final newline. It records
+the canonical form of the already parsed JSON-RPC object, not original HTTP
+bytes. Existing session, process, sequence, material readback, capture and
+source-conservation checks still determine acceptance.
+
+If that attempt is blocked, the client performs one bounded local read of
+the receipt path derived from the independently validated request ID. Existing
+bytes become `native-diagnostic-receipt.json` with `RETAINED_UNVALIDATED`, a
+hash and size; their contents never supply paths or establish completion.
+`NOT_OBSERVED` means the file was absent at that single observation, while
+read/write refusals are `NOT_RETAINED` with a separate diagnostic error.
+Neither result overwrites the primary failure or triggers polling, retry,
+another material call or restoration. A pending capture might finish later.
 
 The authenticated [source read at `1b2e2ea`](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38133509018)
 retained all four files completely: 811 lines, with hashes matching the earlier
@@ -242,8 +273,8 @@ material/capture API checks independently. Any required failure produces the
 combined controlled `BLOCKED` report before owned tool registration, refresh or
 server startup. Bounded diagnostic comparisons cannot grant admission. Epic's
 viewport streaming may already have started before this Python bootstrap runs,
-so this is specifically an owned MCP admission boundary. Native qualification
-of the new complete cross-check remains pending.
+so this is specifically an owned MCP admission boundary. Same-process material
+preview qualification remains pending.
 
 The manual definition separates `operation=open` from
 `operation=material-request`. The latter requires the existing session token and

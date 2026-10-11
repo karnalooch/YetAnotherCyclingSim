@@ -47,15 +47,20 @@ BRIDGE = None
 LOGGER = logging.getLogger(__name__)
 
 # Actual installed UE 5.8.2 source, retained by #384 declaration/control-flow
-# runs 37990333833/37993672276 and #364 run38044121552. No Epic source is copied.
+# runs 37990333833/37993672276 and #364 runs 38044121552, 38133509018 and
+# 38137155495. No Epic source is copied.
 ENGINE_PINS = {
     "Plugins/Experimental/ToolsetRegistry/ToolsetRegistry.uplugin": "2dfc01159b54daea67c62966a48b78254d1d848d84e8df48c708c7a69d3f2062",
     "Plugins/Experimental/ModelContextProtocol/ModelContextProtocol.uplugin": "74420534edcd6baafcb48e0af919d53b84891bdade7b97869b0ef485c3ea1518",
     "Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/__init__.py": "df6a65bc5740271dcd989a1df3208b40282323015ec1aa586895fffb1e97abbb",
+    "Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/tool_call_impl.py": "e2925fc50b1526be5556a3266a32e543cb802bac0ca6942ff0fec15a837f86e4",
     "Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Private/ToolsetRegistry/FunctionLibraryToolset.cpp": "246db3d9f86652f5cbafe07f10caf1a85dcd091877f5e9c2100e0a27972234ea",
+    "Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Private/ToolsetRegistry/ObjectFunctionToolCall.cpp": "c4fe4757cadeb38cb9d359a81c046d173447b1625f7400ad123d7ca44eb4e56b",
+    "Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Private/ToolsetRegistry/ToolsetJson.cpp": "a168e4b6888b8f1111800337fa3a1886ffe0ee670add8c9ef5a30399e6a213b4",
     "Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Public/ToolsetRegistry/UToolsetRegistry.h": "03e3abeec87a10ff1b099cdbdfba9d65349409af49e7d2a1688bb78c77f59d6b",
     "Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Public/ToolsetRegistry/ToolsetRegistry.h": "e80e4fe2c7cb3f63f9bab387eb48194f90d245263e534165eaf7c572f1842152",
     "Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocol/Private/ModelContextProtocolModule.cpp": "86ee49f40a61e754040b72b8f618fa464542881ac04b0723fc3f68f5438880ee",
+    "Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocol/Public/ModelContextProtocolToolResults.h": "b5a9cdeac174739aba689639b39f1ba328d05a1d5886323fb66ad37f149f60d3",
     "Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocolEngine/Public/ModelContextProtocolToolLibrary.h": "5b1536eaa8e5bfdf7508801d32f75f03fb683b69850733a39f6b003b2d565b42",
     "Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocolEngine/Private/ModelContextProtocolToolLibrary.cpp": "c350ebeb1ad3b541d089269724bc79bf2c397b61aeea07e1be99e6b9ca47c885",
     "Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocolEditor/Public/ModelContextProtocolEditorToolLibrary.h": "75ebf03c7ea948b85c4926d5fd222e2bbdcf8ba94311c41a9fb919a6988b67f4",

@@ -76,6 +76,7 @@ class Fixture:
         self.sequence, self.calls, self.transports, self.closes = 0, 0, 0, 0
         self.defer = False
         self.response_edit = self.final_edit = None
+        self.wire_edit = self.last_response = None
         self.call_error = None
         self.tool_extra = None
         self.identity = {"session_id": self.session_id, "editor_pid": 8765,
@@ -218,9 +219,14 @@ class Fixture:
             document(directory / "receipt.json", final)
         if self.response_edit is not None:
             self.response_edit(result)
-        # Exercise the installed FString wrapping path on every positive run.
-        return {"result": {"content": [{"type": "text", "text": client.canonical(
-            client.canonical(result).decode()).decode()}], "isError": False}}
+        # Source run 38137155495: MakeResult wraps the reflected FString in
+        # returnValue; MakeTextResult copies its serialized text unchanged.
+        response = {"result": {"content": [{"type": "text", "text": client.canonical(
+            {"returnValue": client.canonical(result).decode()}).decode()}]}}
+        if self.wire_edit is not None:
+            self.wire_edit(response)
+        self.last_response = copy.deepcopy(response)
+        return response
 
 
 class ClientTests(unittest.TestCase):
@@ -384,13 +390,132 @@ class ClientTests(unittest.TestCase):
         self.assertEqual(0, self.fixture.calls)
         self.assertEqual(1, self.fixture.closes)
 
-    def test_double_json_string_is_rejected_without_recursive_parsing(self):
-        response = {"result": {"content": [{"type": "text", "text": '{"ok":true}'}]}}
+    def test_exact_reflected_return_value_envelope_has_no_aliases_or_recursive_unwrapping(self):
+        payload = '{"ok":true}'
+        envelope = client.canonical({"returnValue": payload}).decode()
+        response = {"result": {"content": [{"type": "text", "text": envelope}]}}
         self.assertEqual({"ok": True}, client._domain_result(response))
-        text = client.canonical(client.canonical(client.canonical({"ok": True}).decode()).decode()).decode()
-        response["result"]["content"][0]["text"] = text
+        invalid = [
+            payload, client.canonical(payload).decode(), client.canonical(envelope).decode(),
+            client.canonical({"ReturnValue": payload}).decode(),
+            client.canonical({"return_value": payload}).decode(),
+            client.canonical({"result": payload}).decode(),
+            client.canonical({"returnValue": payload, "extra": True}).decode(),
+            client.canonical({"returnValue": {"ok": True}}).decode(),
+            client.canonical({"returnValue": None}).decode(),
+            client.canonical({"returnValue": 1}).decode(),
+            client.canonical({"returnValue": client.canonical(payload).decode()}).decode(),
+            client.canonical({"returnValue": '[{"ok":true}]'}).decode(),
+            client.canonical({"returnValue": '{"ok":true,"ok":false}'}).decode(),
+            client.canonical({"returnValue": '{"number":NaN}'}).decode(),
+            '{"returnValue":"{}","returnValue":"{}"}',
+        ]
+        for index, text in enumerate(invalid):
+            with self.subTest(case=index), self.assertRaises(ValueError):
+                response["result"]["content"][0]["text"] = text
+                client._domain_result(response)
+
+    def test_mcp_error_cannot_be_hidden_by_a_valid_domain_result(self):
+        text = client.canonical({"returnValue": '{"ok":true}'}).decode()
+        response = {"result": {"content": [{"type": "text", "text": text}]}}
+        for value in (True, "false", 0):
+            with self.subTest(is_error=value), self.assertRaises(ValueError):
+                client._domain_result({"result": {**response["result"], "isError": value}})
         with self.assertRaises(ValueError):
-            client._domain_result(response)
+            client._domain_result({**response, "error": {"message": "SYNTHETIC failure"}})
+
+    def test_rejected_response_and_native_bytes_are_retained_without_promoting_the_call(self):
+        self.fixture.response_edit = lambda value: value.update(
+            schema_version=True, receipt_relative_path="../untrusted/receipt.json")
+        with mock.patch.object(client.time, "sleep") as sleep:
+            result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertEqual("Native receipt schema differs", result["error"])
+        self.assertEqual(1, self.fixture.calls)
+        self.assertEqual(1, self.fixture.closes)
+        sleep.assert_not_called()
+        output = self.fixture.base / "one-output"
+        raw = (output / "mcp-response.json").read_bytes()
+        self.assertEqual(client.canonical(self.fixture.last_response) + b"\n", raw)
+        self.assertEqual({"path": "mcp-response.json", "format": "canonical_parsed_json_rpc",
+                          "size_bytes": len(raw), "sha256": client.digest(raw)}, result["mcp_response"])
+        native_path = self.fixture.root / client.bridge.REQUEST_ROOT / "one/receipt.json"
+        native_raw = native_path.read_bytes()
+        self.assertEqual(native_raw, (output / "native-diagnostic-receipt.json").read_bytes())
+        self.assertEqual("COMPLETED", client._object(native_raw)["status"])
+        self.assertEqual({"status": "RETAINED_UNVALIDATED", "path": client.bridge.REQUEST_ROOT + "/one/receipt.json",
+                          "client_path": "native-diagnostic-receipt.json", "size_bytes": len(native_raw),
+                          "sha256": client.digest(native_raw)}, result["native_diagnostic"])
+        self.assertFalse((output / "tool-result.json").exists())
+        self.assertFalse((output / "native-receipt.json").exists())
+
+    def test_invalid_envelope_is_retained_even_when_domain_decoding_fails(self):
+        self.fixture.wire_edit = lambda value: value["result"]["content"][0].update(text='{"returnValue":17}')
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertIn("reflected returnValue string", result["error"])
+        output = self.fixture.base / "one-output"
+        self.assertEqual(self.fixture.last_response, client._object((output / "mcp-response.json").read_bytes()))
+        self.assertEqual("RETAINED_UNVALIDATED", result["native_diagnostic"]["status"])
+
+    def test_response_diagnostic_bound_includes_the_final_newline(self):
+        response = {"result": {"content": [{"type": "text", "text": "SYNTHETIC"}]}}
+        raw = client.canonical(response) + b"\n"
+        accepted, rejected = self.fixture.base / "exact-bound", self.fixture.base / "over-bound"
+        accepted.mkdir()
+        rejected.mkdir()
+        with mock.patch.object(client, "JSON_LIMIT", len(raw)):
+            retained = client._retain_mcp_response(accepted, response)
+        self.assertEqual(raw, (accepted / "mcp-response.json").read_bytes())
+        self.assertEqual(len(raw), retained["size_bytes"])
+        with mock.patch.object(client, "JSON_LIMIT", len(raw) - 1), self.assertRaisesRegex(ValueError, "byte bound"):
+            client._retain_mcp_response(rejected, response)
+        self.assertEqual([], list(rejected.iterdir()))
+
+    def test_native_diagnostic_refuses_a_link_without_masking_the_domain_error(self):
+        outside = self.fixture.base / "unrelated.json"
+        write(outside, b"UNRELATED FILE MUST NOT BE COPIED")
+
+        def replace_with_link(_response):
+            path = self.fixture.root / client.bridge.REQUEST_ROOT / "one/receipt.json"
+            path.unlink()
+            path.symlink_to(outside)
+
+        self.fixture.response_edit = lambda value: value.update(schema_version=0)
+        self.fixture.wire_edit = replace_with_link
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertEqual("Native receipt schema differs", result["error"])
+        self.assertEqual("NOT_RETAINED", result["native_diagnostic"]["status"])
+        self.assertIn("symlink/reparse", result["native_diagnostic"]["diagnostic_error"])
+        self.assertFalse((self.fixture.base / "one-output/native-diagnostic-receipt.json").exists())
+
+    def test_oversized_native_diagnostic_does_not_mask_the_domain_error(self):
+        self.fixture.response_edit = lambda value: value.update(schema_version=0)
+        self.fixture.wire_edit = lambda _value: write(
+            self.fixture.root / client.bridge.REQUEST_ROOT / "one/receipt.json", b"x" * (client.JSON_LIMIT + 1))
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertEqual("Native receipt schema differs", result["error"])
+        self.assertEqual("NOT_RETAINED", result["native_diagnostic"]["status"])
+        self.assertIn("diagnostic_error", result["native_diagnostic"])
+        self.assertFalse((self.fixture.base / "one-output/native-diagnostic-receipt.json").exists())
+
+    def test_native_diagnostic_write_failure_preserves_the_primary_error(self):
+        self.fixture.response_edit = lambda value: value.update(schema_version=0)
+        original_write = client._write
+
+        def fail_diagnostic(output, name, raw):
+            if name == "native-diagnostic-receipt.json":
+                raise OSError("SYNTHETIC diagnostic write failure")
+            original_write(output, name, raw)
+
+        with mock.patch.object(client, "_write", side_effect=fail_diagnostic):
+            result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertEqual("Native receipt schema differs", result["error"])
+        self.assertEqual("NOT_RETAINED", result["native_diagnostic"]["status"])
+        self.assertEqual("SYNTHETIC diagnostic write failure", result["native_diagnostic"]["diagnostic_error"])
 
     def test_duplicate_and_stale_requests_never_reach_second_call(self):
         request = self.fixture.request()
@@ -408,6 +533,7 @@ class ClientTests(unittest.TestCase):
         self.assert_blocked(first, calls=1)
         self.assertIn("timed out", first["error"])
         self.assertGreater(first["elapsed_seconds"], 0)
+        self.assertEqual("NOT_OBSERVED", first["native_diagnostic"]["status"])
         next_call = self.fixture.execute(self.fixture.request("next"))
         self.assert_blocked(next_call)
         self.assertIn("pending or uncertain", next_call["error"])
@@ -419,6 +545,8 @@ class ClientTests(unittest.TestCase):
         self.assert_blocked(result, calls=1)
         self.assertEqual(1, self.fixture.calls)
         self.assertEqual(1, self.fixture.closes)
+        self.assertEqual("NOT_OBSERVED", result["native_diagnostic"]["status"])
+        self.assertNotIn("mcp_response", result)
 
     def test_bad_native_before_or_after_cannot_pass_as_parameter_echo(self):
         self.fixture.response_edit = lambda value: value["after"].update(paint_roughness=0.99)
