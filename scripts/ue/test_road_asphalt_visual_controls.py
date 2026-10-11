@@ -419,5 +419,226 @@ WorldNormal=(Material="/Engine/BufferVisualization/WorldNormal.WorldNormal")
         self.assertEqual(controller.report["status"], "FAILED")
 
 
+class PaintCoverageTests(unittest.TestCase):
+    """Exercise the real 370-target resolver/setters with synthetic native objects."""
+    def setUp(self):
+        from scripts.ue import road_edge_marking_consumer as paint
+        from scripts.ue import road_edge_marking_material as material
+        from scripts.ue import road_crack_visual_controls as mid_source
+        from scripts.ue.test_road_crack_visual_controls import Actor, Component
+        from scripts.ue.test_road_asphalt_saved_consumer import RoadAsphaltSavedConsumerContractTests
+
+        ControlTests.setUp(self)
+        self.enterContext(patch.dict(controls.os.environ, {controls.COVERAGE_OWNED_ENV: TOKEN}))
+        for name, raw in (
+            (mid_source.KISMET_CPP, """
+UMaterialInstanceDynamic* UKismetMaterialLibrary::CreateDynamicMaterialInstance(UObject* World, UMaterialInterface* Parent, FName Name, EMIDCreationFlags CreationFlags)
+{ auto* Mid = UMaterialInstanceDynamic::Create(Parent, World, Name);
+  if (EnumHasAnyFlags(CreationFlags, EMIDCreationFlags::Transient)) { Mid->SetFlags(RF_Transient); }
+  return Mid; }
+"""),
+            ("Source/Runtime/Engine/Public/Materials/MaterialInstanceDynamic.h", "K2_GetScalarParameterValue SetScalarParameterValue"),
+            (mid_source.MID_CPP, """
+float UMaterialInstanceDynamic::K2_GetScalarParameterValue(FName ParameterName)
+{ float Value = 0; GetScalarParameterValue(ParameterName, Value); return Value; }
+"""),
+        ):
+            path = self.engine / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(raw)
+
+        class MIC(Object):
+            def __init__(self):
+                super().__init__(material.asset_paths()["instance"])
+                self.scalars = dict(material.SCALARS)
+
+        class MID(Object):
+            def __init__(self, parent):
+                super().__init__("/Engine/Transient.PaintFullMask", parent=parent)
+                self.scalars = dict(parent.scalars)
+                self.setters = []
+                self.ignore_set = False
+
+            def get_scalar_parameter_value(self, name):
+                """Synthetic native effective scalar getter."""
+                return self.scalars[name]
+
+            def set_scalar_parameter_value(self, name, value):
+                """Synthetic native MID-only setter."""
+                self.setters.append((name, value))
+                if not self.ignore_set:
+                    self.scalars[name] = value
+
+        self.paint_mic = MIC()
+        self.mid_allocations = []
+        self.ignore_mid_setter = False
+        self.dirty = []
+
+        def allocate(world, parent, *, creation_flags):
+            """Synthetic allocator enforcing the actual explicit flag argument."""
+            self.assertIs(world, self.world)
+            self.assertIs(parent, self.paint_mic)
+            self.assertEqual(creation_flags, "TRANSIENT")
+            result = MID(parent)
+            result.ignore_set = self.ignore_mid_setter
+            self.mid_allocations.append(result)
+            return result
+
+        def scalar(instance, name, association):
+            """Synthetic read-only MIC scalar getter."""
+            self.assertEqual(association, "global")
+            return instance.scalars[name]
+
+        def dirty_content():
+            """Synthetic read-only dirty package query."""
+            return list(self.dirty)
+
+        receipt = RoadAsphaltSavedConsumerContractTests().marking_receipt()
+        self.actors = self.api.get_editor_subsystem(self.api.EditorActorSubsystem).get_all_level_actors()
+        self.paint_components = []
+        world_path = controls.saved.MAP + "." + controls.saved.MAP.rsplit("/", 1)[-1]
+        for row in receipt["actors"]:
+            path = row["actor"]["path"].replace("<scene>.<world>", world_path)
+            component = Component(path + ".DynamicMeshComponent", self.paint_mic)
+            actor = Actor(path, row["label"], component)
+            row["mesh"] = controls.saved.normalized(component.mesh.path, controls.saved.MAP)
+            self.assertEqual(controls.saved.normalized(paint.existing.actor_snapshot(actor), controls.saved.MAP), row["actor"])
+            self.actors.append(actor)
+            self.paint_components.append(component)
+        self.context["manifest"].update(edge_markings_enabled=True, edge_markings=receipt)
+        self.api.MaterialInstanceConstant, self.api.MaterialInstanceDynamic = MIC, MID
+        self.api.DynamicMeshActor, self.api.DynamicMeshComponent = Actor, Component
+        self.api.MaterialLibrary = SimpleNamespace(create_dynamic_material_instance=allocate)
+        self.api.MIDCreationFlags = SimpleNamespace(TRANSIENT="TRANSIENT")
+        self.api.MaterialParameterAssociation = SimpleNamespace(GLOBAL_PARAMETER="global")
+        self.api.MaterialEditingLibrary.get_material_instance_scalar_parameter_value = scalar
+        self.api.EditorLoadingAndSavingUtils = SimpleNamespace(get_dirty_content_packages=dirty_content)
+        self.api.CollisionEnabled = SimpleNamespace(NO_COLLISION="none")
+        self.api.DynamicMeshComponentTangentsMode = SimpleNamespace(AUTO_CALCULATED="auto")
+
+    def through_original(self):
+        controller = controls.VisualControls(self.api, self.context)
+        controller.begin()
+        for job in controller.plan["jobs"][:-1]:
+            controller.apply(job["job_id"])
+        return controller
+
+    def test_opt_in_appends_exact_pair_after_immutable_eight_and_mutates_only_three_mid_scalars(self):
+        base = controls.control_plan()
+        plan = controls.control_plan(paint_coverage=True)
+        self.assertEqual(controls.digest(base), "debdc9a8b2a7e807f75dcd9d18f1244cef5f887b76f4a374b065a468366f1298")
+        self.assertEqual(plan["legacy_control_plan_sha256"], controls.digest(base))
+        self.assertEqual(plan["jobs"][:8], base["jobs"])
+        self.assertEqual([job["control"] for job in plan["jobs"][8:]], list(controls.COVERAGE_CONTROLS))
+        self.assertEqual({job["camera"]["frame_id"] for job in plan["jobs"][8:]}, {controls.COVERAGE_FRAME_ID})
+        controller = self.through_original()
+        self.assertEqual(len(self.mid_allocations), 1)
+        self.assertTrue(all(component.assignments == [] for component in self.paint_components))
+        original = controller.observe()["paint_coverage"]
+        self.assertEqual(original["binding_count"], 370)
+        self.assertTrue(original["bindings_match_template"])
+        self.assertNotIn("bindings", original)
+        controller.apply(plan["jobs"][-1]["job_id"])
+        mid = self.mid_allocations[0]
+        full = controller.observe()["paint_coverage"]
+        self.assertEqual(mid.setters, list(controls.FULL_MASK_SCALARS.items()))
+        self.assertEqual(full["binding_count"], 370)
+        self.assertEqual(full["bindings_sha256"], controller.paint_binding_templates["transient_mid"]["bindings_sha256"])
+        self.assertEqual(full["scalar_parameters"]["LineWidthCm"], 10.0)
+        self.assertEqual(self.paint_mic.scalars, original["scalar_parameters"])
+        self.assertTrue(all(component.material is mid for component in self.paint_components))
+        self.assertEqual(len(self.edit.nodes), 6)  # Only the existing legacy uniform control.
+        result = controller.restore()
+        self.assertEqual(result["status"], "RESTORED")
+        self.assertEqual(result["paint_restored_observation"], original)
+        self.assertTrue(all(component.material is self.paint_mic for component in self.paint_components))
+        self.assertTrue(all(component.visibility == [] for component in self.paint_components))
+        self.assertIsNone(controller.paint_mid)
+        self.assertEqual(result["dirty_content_count"], 0)
+        self.assertTrue(all(result[name] is True for name in (
+            "paint_bindings_restored", "paint_original_mic_parameters_unchanged",
+            "paint_transient_mid_detached", "paint_transient_mid_ref_released")))
+
+    def test_370th_slot_drift_is_not_hidden_by_a_summary_digest(self):
+        controller = self.through_original()
+        controller.apply(controller.plan["jobs"][-1]["job_id"])
+        self.paint_components[-1].material = self.paint_mic
+        with self.assertRaisesRegex(ValueError, "slot or visibility"):
+            controller.observe()
+        self.assertEqual(controller.report["status"], "FAILED")
+        self.assertTrue(controller.restored)
+        self.assertTrue(all(component.material is self.paint_mic for component in self.paint_components))
+
+    def test_partial_native_assignment_failure_restores_every_target(self):
+        controller = self.through_original()
+        target = self.paint_components[173]
+        setter = target.set_material
+
+        def partial(index, material):
+            setter(index, material)
+            if material is not self.paint_mic:
+                raise RuntimeError("synthetic partial paint assignment")
+
+        with patch.object(target, "set_material", side_effect=partial), self.assertRaisesRegex(RuntimeError, "partial paint"):
+            controller.apply(controller.plan["jobs"][-1]["job_id"])
+        self.assertTrue(controller.restored)
+        self.assertTrue(all(component.material is self.paint_mic for component in self.paint_components))
+        self.assertIs(self.road.material, self.original)
+        self.assertEqual(self.auto.mode, "lit")
+
+    def test_failed_mid_scalar_setter_never_reaches_paint_assignment(self):
+        self.ignore_mid_setter = True
+        controller = controls.VisualControls(self.api, self.context)
+        with self.assertRaisesRegex(ValueError, "effective scalar"):
+            controller.begin()
+        self.assertTrue(all(component.assignments == [] for component in self.paint_components))
+        self.assertTrue(controller.restored)
+        self.assertIsNone(controller.paint_mid)
+
+    def test_restore_continues_after_one_paint_failure_and_keeps_failed_status(self):
+        controller = self.through_original()
+        controller.apply(controller.plan["jobs"][-1]["job_id"])
+        self.paint_components[173].fail_restore = True
+        with self.assertRaisesRegex(RuntimeError, "paint material"):
+            controller.restore()
+        self.assertTrue(all(component.material is self.paint_mic for index, component in enumerate(self.paint_components) if index != 173))
+        self.assertIs(self.road.material, self.original)
+        self.assertEqual(self.auto.mode, "lit")
+        self.assertFalse(controller.report["paint_bindings_restored"])
+        self.assertIsNotNone(controller.paint_mid)
+        self.paint_components[173].fail_restore = False
+        controller.restore()
+        self.assertEqual(controller.report["status"], "FAILED")
+        self.assertIsNone(controller.paint_mid)
+
+    def test_foreign_actor_or_saved_mic_drift_refuses_before_any_control_mutation(self):
+        for change in ("actor", "scalar"):
+            with self.subTest(change=change):
+                if change == "actor":
+                    last = self.actors.pop()
+                else:
+                    self.paint_mic.scalars["LineWidthCm"] = 11.0
+                try:
+                    with self.assertRaises(ValueError):
+                        controls.VisualControls(self.api, self.context).begin()
+                finally:
+                    if change == "actor":
+                        self.actors.append(last)
+                    else:
+                        self.paint_mic.scalars["LineWidthCm"] = 10.0
+                self.assertEqual(self.auto.calls, [])
+                self.assertEqual(self.mid_allocations, [])
+
+    def test_dirty_content_cannot_be_cleared_or_reported_restored(self):
+        controller = self.through_original()
+        controller.apply(controller.plan["jobs"][-1]["job_id"])
+        self.dirty.append("/Game/Synthetic.Dirty")
+        with self.assertRaisesRegex(RuntimeError, "dirty content"):
+            controller.restore()
+        self.assertEqual(self.dirty, ["/Game/Synthetic.Dirty"])
+        self.assertEqual(controller.report["status"], "FAILED")
+        self.assertFalse(controller.restored)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -13,6 +13,7 @@ from unittest.mock import patch
 from scripts.ue import road_shoulder_network as network
 from scripts.ue import road_shoulder_sources as sources
 from scripts.ue import road_shoulder_edges as edges
+from scripts.ue import road_shoulder_material as material
 
 
 def vector(x, y, z):
@@ -134,6 +135,7 @@ class Harness:
         self.fail_assignment = None
         self.fail_restore = None
         self.fail_uv_assignment = None
+        self.fail_outer_uv_assignment = None
         self.actors = [Actor("YACS_PERSIST_ROAD")]
         self.actors.extend(Actor(owner["support_label"], owner, self) for owner in self.plan["owners"])
         self.components = [actor.component for actor in self.actors[1:]]
@@ -193,7 +195,7 @@ class Harness:
         return mesh
 
     def set_triangle_uvs(self, mesh, channel, tid, values, defer_change_notifications):
-        if channel != 0 or defer_change_notifications is not True:
+        if channel not in (0, 1) or defer_change_notifications is not True:
             raise AssertionError("Only the batched appended material channel is allowed")
         component = mesh.component
         self.events.append(("uv", component.actor.label, tid))
@@ -201,6 +203,9 @@ class Harness:
         if self.fail_uv_assignment == (component.actor.label, component.assignment_round, tid):
             self.fail_uv_assignment = None
             raise ValueError("synthetic partial UV assignment failure")
+        if channel == 1 and self.fail_outer_uv_assignment == (component.actor.label, component.assignment_round, tid):
+            self.fail_outer_uv_assignment = None
+            raise ValueError("synthetic partial outer UV assignment failure")
         return mesh, True
 
     def setter(self, mesh, tid, value, defer_change_notifications):
@@ -216,9 +221,9 @@ class Harness:
             raise ValueError("synthetic partial assignment failure")
         return mesh, True
 
-    def prepare(self):
+    def prepare(self, **kwargs):
         with patch.object(network, "native_api_evidence", return_value={"synthetic_fixture_only": True}):
-            return network.prepare(self.api, self.actors, self.plan, self.instance, self.material_receipt)
+            return network.prepare(self.api, self.actors, self.plan, self.instance, self.material_receipt, **kwargs)
 
 
 class NativeBoundaryTests(unittest.TestCase):
@@ -458,6 +463,99 @@ class NetworkTransactionTests(unittest.TestCase):
         self.h.components[182].materials[0] = Material("/wrong/wall")
         with self.assertRaisesRegex(ValueError, "Literal original"):
             network.verify_loaded(self.h.api, receipt, self.h.plan)
+
+
+class OuterTerrainTransactionTests(unittest.TestCase):
+    def setUp(self):
+        self.h = Harness()
+        paths = material.asset_paths(material.DESTINATION_ROOT, outer_terrain=True)
+        self.kwargs = {"outer_instance": Material(paths["instance"]),
+                       "outer_material_receipt": {"schema_version": 3, "assets": paths,
+                           "outer_terrain_enabled": True, "outer_transition": deepcopy(material.OUTER_TRANSITION),
+                           "synthetic_fixture_only": True},
+                       "outer_owner_labels": ["YACS_PERSIST_SUPPORT_000", "YACS_PERSIST_SUPPORT_080"]}
+
+    def assert_restored(self):
+        for owner, component in zip(self.h.plan["owners"], self.h.components, strict=True):
+            self.assertEqual(component.mesh.uv_layers, [])
+            self.assertTrue(all(value == 0 for value in component.mesh.ids))
+            self.assertEqual(component.get_num_materials(), 1)
+            self.assertEqual(component.get_material(0).path, owner["original_material_path"])
+
+    def test_selected_owners_get_second_field_with_complete_uv0_stage_and_read_only_fresh_proof(self):
+        receipt, state = self.h.prepare(**self.kwargs)
+        self.assertEqual(receipt["schema_version"], 4)
+        self.assertFalse(receipt["outer_terrain"]["physical_contact_verified"])
+        self.assertFalse(receipt["whole_area_admitted"])
+        for row, component in zip(receipt["owners"], self.h.components, strict=True):
+            outer = row["support_label"] in self.kwargs["outer_owner_labels"]
+            expected_count = 2 if outer else 1 if row["material_target"] else 0
+            self.assertEqual(component.mesh.get_num_uv_sets(), expected_count)
+            if outer:
+                attribute = row["edge_attribute"]
+                self.assertEqual(attribute["channel"], 0)
+                self.assertEqual(attribute["outer_attribute"]["channel"], 1)
+                self.assertTrue(attribute["uv0_preserved"])
+                self.assertEqual(attribute["outer_attribute"]["original_normals_uv_prefix_blake3"],
+                                 attribute["inner_stage_mesh"]["triangle_corner_normals_uv_blake3"])
+                self.assertEqual(set(component.mesh.uv_layers[1]), set(row["source"]["selected_triangle_ids"]))
+                self.assertEqual(component.get_material(1).path, self.kwargs["outer_instance"].path)
+        self.h.events.clear()
+        self.assertEqual(network.verify_loaded(self.h.api, receipt, self.h.plan), receipt["aggregate_after_sha256"])
+        self.assertEqual(len(self.h.events), 186)
+        self.assertTrue(all(row[0] == "inspect" for row in self.h.events))
+        network.rollback(self.h.api, state)
+        self.assert_restored()
+
+    def test_selection_never_infers_contact_or_accepts_parapet_unknown_duplicate_and_reordered_owners(self):
+        for labels in ([], ["YACS_PERSIST_SUPPORT_181"], ["YACS_PERSIST_SUPPORT_186"],
+                       ["YACS_PERSIST_SUPPORT_000"] * 2, list(reversed(self.kwargs["outer_owner_labels"]))):
+            with self.subTest(labels=labels), self.assertRaises(ValueError):
+                self.h.prepare(**{**self.kwargs, "outer_owner_labels": labels})
+            self.assertEqual(self.h.events, [])
+        receipt, _ = self.h.prepare(**self.kwargs)
+        changed = deepcopy(receipt)
+        changed["outer_terrain"]["physical_contact_verified"] = True
+        with self.assertRaises(ValueError):
+            network.verify_loaded(self.h.api, changed, self.h.plan)
+
+    def test_partial_second_channel_failure_in_both_rounds_restores_all_original_buffers(self):
+        for attempt in (1, 2):
+            self.setUp()
+            self.h.fail_outer_uv_assignment = ("YACS_PERSIST_SUPPORT_080", attempt, 50)
+            with self.subTest(attempt=attempt), self.assertRaisesRegex(ValueError, "partial outer UV"):
+                self.h.prepare(**self.kwargs)
+            self.assert_restored()
+
+    def test_changed_uv0_or_wall_uv1_during_append_is_detected_before_admission_and_rolled_back(self):
+        original = edges.apply_outer
+        for change in ("uv0", "wall"):
+            self.setUp()
+
+            def changed(api, component, coordinates):
+                original(api, component, coordinates)
+                if change == "uv0":
+                    component.mesh.uv_layers[0][0] = ((0.125, 0), (0, 0), (0, 1))
+                else:
+                    component.mesh.uv_layers[1][self.h.plan["owners"][0]["top_triangle_count"]] = ((0, 0),) * 3
+
+            with self.subTest(change=change), patch.object(edges, "apply_outer", side_effect=changed), self.assertRaises(ValueError):
+                self.h.prepare(**self.kwargs)
+            self.assert_restored()
+
+    def test_fresh_chain_rejects_tampered_uv0_stage_even_when_final_summary_is_relabelled(self):
+        receipt, _ = self.h.prepare(**self.kwargs)
+        for field in ("source_coordinates_sha256", "original_normals_uv_prefix_blake3"):
+            changed = deepcopy(receipt)
+            changed["owners"][0]["edge_attribute"][field] = "0" * 64
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                network.verify_loaded(self.h.api, changed, self.h.plan)
+        self.h.components[0].mesh.uv_layers[0][0] = ((0.125, 0), (0, 0), (0, 1))
+        changed = deepcopy(receipt)
+        changed["owners"][0]["after_mesh"] = self.h.snapshot(self.h.components[0])["summary"]
+        changed["aggregate_after_sha256"] = network.digest([row["after_mesh"] for row in changed["owners"]])
+        with self.assertRaisesRegex(ValueError, "Original normals/UV prefix changed"):
+            network.verify_loaded(self.h.api, changed, self.h.plan)
 
 
 if __name__ == "__main__":

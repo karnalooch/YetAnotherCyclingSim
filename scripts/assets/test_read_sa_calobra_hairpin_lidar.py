@@ -172,8 +172,8 @@ class HairpinLidarTests(unittest.TestCase):
             reader, "_decoder", return_value=(SimpleNamespace(open=LasReader), np)
         ).start()
 
-    def run_reader(self):
-        return reader.read(self.cache, self.output)
+    def run_reader(self, *, transect_set=reader.DEFAULT_TRANSECT_SET):
+        return reader.read(self.cache, self.output, transect_set=transect_set)
 
     def test_exact_byte_mismatch_stops_before_decoder(self):
         self.manifest_path.write_bytes(self.manifest_raw + b"\n")
@@ -246,9 +246,63 @@ class HairpinLidarTests(unittest.TestCase):
     def test_csv_bytes_do_not_depend_on_decoder_chunk_boundaries(self):
         first = self.run_reader()
         with patch.object(reader, "CHUNK_SIZE", 3):
-            second = reader.read(self.cache, self.root / "second-evidence")
+            second = reader.read(
+                self.cache, self.root / "second-evidence", transect_set="hairpin-profile"
+            )
         self.assertEqual(second["status"], "OBSERVATIONS_EXPORTED")
         self.assertEqual(first["csv"], second["csv"])
+        self.assertEqual(first["transects"], second["transects"])
+        self.assertEqual(first["parameters"]["transect_set"], "hairpin-profile")
+
+    def test_named_wall_frames_use_exact_source_stations_and_unchanged_bounds(self):
+        frames = reader.transects(self.profile, transect_set="wall-contact")
+        self.assertEqual([f["source_station_m"] for f in frames], list(range(195, 236, 5)))
+        self.assertEqual([f["profile_section_index"] for f in frames], list(range(1560, 1881, 40)))
+        for f in frames:
+            center = [reader.ORIGIN_M[0] + 1000 + f["source_station_m"], reader.ORIGIN_M[1] - 500]
+            self.assertEqual(f["center_epsg25831_m"], center)
+            self.assertEqual(f["along_unit"], [1.0, 0.0])
+            self.assertEqual(f["lateral_unit"], [0.0, -1.0])
+            self.assertEqual(f["bounds_epsg25831_m"], [center[0] - 1, center[1] - 12, center[0] + 1, center[1] + 12])
+            self.assertEqual([s["column"] for s in f["source_samples"]], [0, 12, 24])
+            for sample in f["source_samples"]:
+                self.assertAlmostEqual(sample["frozen_pavement_m"] - sample["candidate_ground_m"], 0.04)
+
+    def test_wall_export_preserves_original_ids_flags_and_only_named_station_counts(self):
+        for index, station in ((1, 195), (2, 205), (3, 225), (5, 235)):
+            old = self.records[index]
+            self.records[index] = (reader.ORIGIN_M[0] + 1000 + station, old[1], *old[2:])
+        report = self.run_reader(transect_set="wall-contact")
+        self.assertEqual(report["status"], "OBSERVATIONS_EXPORTED")
+        self.assertEqual(report["parameters"]["transect_set"], "wall-contact")
+        self.assertEqual(report["parameters"]["source_stations_m"], reader.TRANSECT_SETS["wall-contact"])
+        self.assertEqual(report["parameters"]["max_csv_rows"], 100_000)
+        self.assertEqual(report["parameters"]["max_csv_bytes"], 32 * 1024 * 1024)
+        self.assertEqual(report["selected_tiles"], [self.selected_name])
+        self.assertEqual(self.chunk_calls, [self.selected_name])
+        self.assertEqual(report["post_read_source_status"], "PASS")
+        self.assertEqual(report["rows_per_station"], {str(float(s)): int(s in (195, 205, 225, 235)) for s in range(195, 236, 5)})
+        with (self.output / "hairpin-lidar-points.csv").open(newline="") as stream:
+            rows = list(csv.DictReader(stream))
+        self.assertEqual([int(r["point_index"]) for r in rows], [1, 2, 3, 5])
+        self.assertEqual([float(r["source_station_m"]) for r in rows], [195, 205, 225, 235])
+        self.assertEqual([int(r["classification"]) for r in rows], [2, 65, 17, 2])
+        self.assertEqual([int(r["accepted_by_existing_reader"]) for r in rows], [1, 0, 1, 0])
+        self.assertEqual([int(r["withheld"]) for r in rows], [0, 1, 0, 0])
+        self.assertEqual([int(r["overlap"]) for r in rows], [0, 0, 0, 1])
+        for row, index in zip(rows, (1, 2, 3, 5), strict=True):
+            self.assertEqual(float(row["z_m"]), self.records[index][2])
+            self.assertEqual(int(row["raw_x"]), round(self.records[index][0] * 100))
+        self.assertFalse(report["geometry_mutation"] or report["profile_fit"])
+
+    def test_unknown_transect_set_never_reads_source_or_creates_output(self):
+        for invalid in ("195,200", "all", (195.0, 200.0), None):
+            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, "closed transect set"):
+                reader.transects(self.profile, transect_set=invalid)
+            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, "closed transect set"):
+                self.run_reader(transect_set=invalid)
+            self.assertFalse(self.output.exists())
+        self.decoder.assert_not_called()
 
     def test_wrong_decoder_version_is_reported_without_import_or_install(self):
         versions = {**reader.DECODER_VERSIONS, "laspy": "0.0.0"}
@@ -321,25 +375,35 @@ class HairpinLidarTests(unittest.TestCase):
                 }
             )
         )
+        for selected, extra in (("hairpin-profile", []), ("wall-contact", ["--transect-set", "wall-contact"])):
+            with (
+                self.subTest(selected=selected),
+                patch.object(
+                    reader.sys, "argv",
+                    ["read", "--workspace-config", str(config_path), "--output-name", selected, *extra],
+                ),
+                patch.object(reader.sys, "stdout", io.StringIO()) as stdout,
+            ):
+                self.assertEqual(reader.main(), 2)
+                self.assertEqual(json.loads(stdout.getvalue())["transect_set"], selected)
+            out = self.root / "work" / selected
+            report = json.loads((out / "hairpin-lidar.json").read_text())
+            self.assertEqual(report["status"], "UNAVAILABLE")
+            self.assertEqual(report["parameters"]["transect_set"], selected)
+            self.assertEqual(report["parameters"]["source_stations_m"], list(reader.TRANSECT_SETS[selected]))
+            self.assertFalse(list(out.glob("*.csv")))
+
+    def test_cli_rejects_custom_station_selection_before_loading_workspace(self):
         with (
-            patch.object(
-                reader.sys,
-                "argv",
-                [
-                    "read",
-                    "--workspace-config",
-                    str(config_path),
-                    "--output-name",
-                    "hairpin-test",
-                ],
-            ),
-            patch.object(reader.sys, "stdout", io.StringIO()),
+            patch.object(reader.sys, "argv", ["read", "--output-name", "unknown-set", "--transect-set", "195,200"]),
+            patch.object(reader.sys, "stderr", io.StringIO()),
+            patch.object(reader, "load_workspace") as load,
+            self.assertRaises(SystemExit) as error,
         ):
-            self.assertEqual(reader.main(), 2)
-        out = self.root / "work/hairpin-test"
-        report = json.loads((out / "hairpin-lidar.json").read_text())
-        self.assertEqual(report["status"], "UNAVAILABLE")
-        self.assertFalse(list(out.glob("*.csv")))
+            reader.main()
+        self.assertEqual(error.exception.code, 2)
+        load.assert_not_called()
+        self.decoder.assert_not_called()
 
 
 class ExistingDecoderTests(unittest.TestCase):

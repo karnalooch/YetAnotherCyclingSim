@@ -5,6 +5,8 @@ Material Forge asphalt and source-owned gravel across the current network.
 The explicit edge-marking lane adds source-triangle-clipped render-only paint.
 Its optional crack canary adds two source-clipped overlays with pending native
 WorldNormal review; it never grants shader-space or visual acceptance.
+The optional outer terrain canary blends the frozen Landscape surface on five
+authenticated shoulder owners using a second material UV field only.
 Reload is read-only and never repairs or re-saves any binding. The accepted #363 map,
 Landscape, source road geometry, route and road physics are immutable.
 """
@@ -59,6 +61,22 @@ TEXTURES = {
     "ORMTex": "ORM",
     "DetailMasksTex": "DetailMasks",
 }
+# Exact native4258 frames.window_id -> saved shoulder owner mapping. Camera
+# window ordinals are not support ordinals; nudo-0 also has excluded parapet181.
+# Keep source owner order, which differs from the order of camera windows.
+OUTER_TERRAIN_CANARY = (
+    {"camera_window": "0013", "support_label": "YACS_PERSIST_SUPPORT_018",
+     "window_id": "VIAL_TR70190001272-1-interval-15-tile-1", "kind": "ordinary", "selected_triangle_count": 704},
+    {"camera_window": "0071", "support_label": "YACS_PERSIST_SUPPORT_073",
+     "window_id": "VIAL_TR70190001287-0-interval-51-tile-0", "kind": "ordinary", "selected_triangle_count": 340},
+    {"camera_window": "0097", "support_label": "YACS_PERSIST_SUPPORT_093",
+     "window_id": "reviewed-VIAL_TR70190001272-1-interval-0-1", "kind": "ordinary", "selected_triangle_count": 800},
+    {"camera_window": "0112", "support_label": "YACS_PERSIST_SUPPORT_112",
+     "window_id": "reviewed-VIAL_TR70190001272-1-interval-24-0", "kind": "ordinary", "selected_triangle_count": 436},
+    {"camera_window": "0082", "support_label": "YACS_PERSIST_SUPPORT_182",
+     "window_id": "nudo-0", "kind": "nudo", "selected_triangle_count": 800},
+)
+OUTER_TERRAIN_OWNER_LABELS = tuple(row["support_label"] for row in OUTER_TERRAIN_CANARY)
 
 
 def require(value, message):
@@ -121,7 +139,7 @@ def expected_saved_inventory(original, saved, material_path, *, observed_map_pac
     road = canary.verify_accepted_surface(old)
     if shoulder_receipt is not None:
         owners = shoulder_receipt.get("owners", [])
-        require(shoulder_receipt.get("schema_version") == shoulder.SCHEMA_VERSION
+        require(shoulder_receipt.get("schema_version") in (shoulder.SCHEMA_VERSION, shoulder.OUTER_SCHEMA_VERSION)
                 and shoulder_receipt.get("support_count") == shoulder_sources.OWNER_COUNT
                 and shoulder_receipt.get("material_target_count") == shoulder_sources.OWNER_COUNT - 1
                 and isinstance(owners, list) and len(owners) == shoulder_sources.OWNER_COUNT
@@ -135,6 +153,8 @@ def expected_saved_inventory(original, saved, material_path, *, observed_map_pac
         assets = shoulder_receipt["material"]["assets"]
         require(assets == shoulder_material.asset_paths(shoulder_material.DESTINATION_ROOT),
                 "Shoulder material escaped its bounded package")
+        outer = outer_terrain_receipt({"shoulder_network": shoulder_receipt,
+                                      "outer_terrain_enabled": shoulder_receipt["schema_version"] == shoulder.OUTER_SCHEMA_VERSION})
         for owner in owners:
             label = owner["support_label"]
             original_material = owner["source"]["original_material_path"]
@@ -147,10 +167,11 @@ def expected_saved_inventory(original, saved, material_path, *, observed_map_pac
             require(len(bindings) == 1 and bindings[0]["materials"] == [original_material],
                     "Shoulder material component is missing or ambiguous: " + label)
             if owner["material_target"]:
-                matches[0]["slots"].append({"path": assets["instance"],
-                    "parent": assets["master"], "class": "MaterialInstanceConstant",
+                selected_assets = outer["material"]["assets"] if outer and label in outer["owner_labels"] else assets
+                matches[0]["slots"].append({"path": selected_assets["instance"],
+                    "parent": selected_assets["master"], "class": "MaterialInstanceConstant",
                     "effective_color": None})
-                bindings[0]["materials"].append(assets["instance"])
+                bindings[0]["materials"].append(selected_assets["instance"])
     require(crack_canary_receipt is None or edge_marking_receipt is not None,
             "The local crack inventory requires the complete white edge-marking lane")
     for receipt, projector, name in ((edge_marking_receipt, edge_marking_inventory, "edge marking"),
@@ -179,6 +200,107 @@ def crack_canary_enabled():
     require(value in ("0", "1"), "Explicit crack canary lane must be 0 or 1")
     require(value == "0" or edge_markings_enabled(), "The local crack canary requires white edge markings")
     return value == "1"
+
+
+def outer_terrain_enabled():
+    value = os.environ.get("YACS_ROAD_OUTER_TERRAIN_CANARY", "0")
+    require(value in ("0", "1"), "Explicit outer terrain canary lane must be 0 or 1")
+    return value == "1"
+
+
+def outer_terrain_receipt(manifest):
+    """Validate the bounded variant; full source/native UV proof stays in shoulder.
+
+    The five labels identify already owned top faces. They are not a claim of
+    terrain contact, and exposed 022/185 remain outside this material canary.
+    """
+    require(isinstance(manifest, dict), "Outer terrain manifest is not an object")
+    enabled = manifest.get("outer_terrain_enabled", False)
+    require(type(enabled) is bool, "Outer terrain manifest mode must be an explicit boolean")
+    network = manifest.get("shoulder_network")
+    require(isinstance(network, dict), "Outer terrain lane has no shoulder network")
+    if not enabled:
+        require(network.get("schema_version") == shoulder.SCHEMA_VERSION and "outer_terrain" not in network,
+                "Disabled outer terrain lane contains an unsupported shoulder variant")
+        return None
+    recorded = network.get("outer_terrain")
+    require(network.get("schema_version") == shoulder.OUTER_SCHEMA_VERSION and isinstance(recorded, dict)
+            and recorded.get("owner_labels") == list(OUTER_TERRAIN_OWNER_LABELS)
+            and isinstance(network.get("owners"), list), "Outer terrain canary source selection differs")
+    expected = shoulder.outer_configuration({"owners": network["owners"]}, recorded.get("material"),
+                                            list(OUTER_TERRAIN_OWNER_LABELS))
+    require(expected == recorded, "Outer terrain material/UV contract differs")
+    for wanted in OUTER_TERRAIN_CANARY:
+        matches = [owner for owner in network["owners"] if owner.get("support_label") == wanted["support_label"]]
+        require(len(matches) == 1, "Outer terrain source owner is missing or ambiguous")
+        for row in (matches[0], matches[0].get("source", {})):
+            require(isinstance(row, dict) and row.get("material_target") is True
+                    and type(row.get("selected_triangle_count")) is int
+                    and all(row.get(key) == wanted[key] for key in ("support_label", "window_id", "kind", "selected_triangle_count")),
+                    "Outer terrain camera/source window, kind or top count differs")
+    source = recorded["material"].get("terrain_source", {})
+    textures = {name: shoulder_material._object_path(row["path"]) for name, row in shoulder_material.TERRAIN_PINS.items()
+                if name not in ("master", "instance")}
+    require(isinstance(source, dict) and source.get("source_packages") == shoulder_material.TERRAIN_PINS
+            and source.get("texture_objects") == textures,
+            "Outer terrain does not reuse the eleven frozen Landscape textures")
+    return recorded
+
+
+def outer_terrain_texture_paths(manifest):
+    """The exact eleven additional native readiness objects, in source order."""
+    outer = outer_terrain_receipt(manifest)
+    if outer is None:
+        return []
+    return [outer["material"]["terrain_source"]["texture_objects"][name]
+            for name in shoulder_material.TERRAIN_PINS if name not in ("master", "instance")]
+
+
+def _outer_landscape(api):
+    world = api.get_editor_subsystem(api.UnrealEditorSubsystem).get_editor_world()
+    landscapes = list(api.GameplayStatics.get_all_actors_of_class(world, api.Landscape))
+    require(len(landscapes) == 1, "Outer terrain canary requires exactly one actual saved Landscape")
+    return landscapes[0]
+
+
+def verify_shoulder_materials(api, manifest, source_dependencies, terrain_consumer_assets=None):
+    """Read both saved M/MI variants and actual terrain bindings, without writes.
+
+    Full mesh buffers and per-owner native slots are separately checked by
+    shoulder.verify_loaded and expected_saved_inventory; no duplicate resolver
+    or geometry authoring is performed here.
+    """
+    outer = outer_terrain_receipt(manifest)
+    network = manifest["shoulder_network"]
+    receipts = [network["material"]] + ([] if outer is None else [outer["material"]])
+    packages = {"Content/" + path.split(".", 1)[0].removeprefix("/Game/") + ".uasset"
+                for receipt in receipts for path in receipt["assets"].values()}
+    retained = {row.get("path") for row in manifest.get("assets", []) if isinstance(row, dict)}
+    require(packages.issubset(retained), "Saved shoulder material packages are not fully retained")
+    if outer is None:
+        require(not any(isinstance(path, str) and path.startswith(PREFIX + "ShoulderNetwork/TerrainBlend/")
+                        for path in retained), "Disabled outer terrain lane retained unexpected material packages")
+    base = shoulder_material.verify_material(api, network["material"], source_dependencies)
+    outer_instance = None
+    if outer is not None:
+        require(terrain_consumer_assets is not None, "Outer terrain readback requires the frozen consumer inventory")
+        outer_instance = shoulder_material.verify_material(
+            api, outer["material"], source_dependencies,
+            terrain_consumer_assets=terrain_consumer_assets, landscape=_outer_landscape(api))
+    return {
+        "status": "SHOULDER_MATERIALS_NATIVE_READBACK_VERIFIED", "read_only": True,
+        "base_instance": base.get_path_name(), "outer_terrain_enabled": outer is not None,
+        "outer_instance": None if outer_instance is None else outer_instance.get_path_name(),
+        "outer_owner_labels": [] if outer is None else list(outer["owner_labels"]),
+        "outer_texture_objects": {} if outer is None else dict(outer["material"]["terrain_source"]["texture_objects"]),
+        "outer_native_statistics": None if outer_instance is None else shoulder_material.native_statistics(api, outer_instance),
+        "outer_gpu_compile_verified": False,
+        "landscape_instance": None if outer is None else outer["material"]["terrain_source"]["instance"],
+        "landscape_component_count": 0 if outer is None else outer["material"]["terrain_source"]["landscape_component_count"],
+        "outer_material_reapplied": False, "outer_geometry_reapplied": False,
+        "physical_contact_verified": False, "normal_response_visual_verified": False,
+        "owner_visual_pass": False, "performance_pass": False,
+    }
 
 
 def _surface_modes(edge_markings, crack_canary):
@@ -737,8 +859,10 @@ def verify_retained_files(retained, rows):
 
 
 def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, source_dependencies,
-            edge_markings=False, crack_canary=False):
+            edge_markings=False, crack_canary=False, outer_terrain=False, terrain_consumer_assets=None):
     _surface_modes(edge_markings, crack_canary)
+    require(type(outer_terrain) is bool and (not outer_terrain or terrain_consumer_assets is not None),
+            "Outer terrain preparation requires an explicit mode and frozen consumer inventory")
     require(not (ROOT / MAP_FILE).exists(), "Existing road-only saved map cannot be overwritten")
     require(not (ROOT / PREFIX).exists(), "Existing asphalt consumer package tree")
     before = original["native_inventory"]
@@ -798,10 +922,19 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
     gravel, gravel_receipt = shoulder_material.create_material(
         api, shoulder_material.DESTINATION_ROOT, source_dependencies, receipt["assets"])
     shoulder_material.verify_material(api, gravel_receipt, source_dependencies)
-    for path in gravel_receipt["assets"].values():
-        asset = api.load_asset(path)
-        require(asset is not None and api.EditorAssetLibrary.save_loaded_asset(
-            asset, only_if_is_dirty=False), "Derived shoulder material save failed")
+    outer_instance, outer_material = None, None
+    if outer_terrain:
+        landscape = _outer_landscape(api)
+        outer_instance, outer_material = shoulder_material.create_material(
+            api, shoulder_material.DESTINATION_ROOT, source_dependencies, receipt["assets"],
+            terrain_consumer_assets=terrain_consumer_assets, landscape=landscape)
+        shoulder_material.verify_material(api, outer_material, source_dependencies,
+                                         terrain_consumer_assets=terrain_consumer_assets, landscape=landscape)
+    for material_receipt in [gravel_receipt] + ([] if outer_material is None else [outer_material]):
+        for path in material_receipt["assets"].values():
+            asset = api.load_asset(path)
+            require(asset is not None and api.EditorAssetLibrary.save_loaded_asset(
+                asset, only_if_is_dirty=False), "Derived shoulder material save failed")
     rollback_state = None
     marking_actors, marking_receipt = (), None
     crack_actors, crack_receipt = (), None
@@ -813,7 +946,9 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
             "Saved road material assignment readback differs",
         )
         shoulder_receipt, rollback_state = shoulder.prepare(
-            api, actors, source_plan, gravel, gravel_receipt
+            api, actors, source_plan, gravel, gravel_receipt,
+            **({"outer_instance": outer_instance, "outer_material_receipt": outer_material,
+                "outer_owner_labels": list(OUTER_TERRAIN_OWNER_LABELS)} if outer_terrain else {})
         )
         require(shoulder.inspect_mesh(api, component)["summary"] == road_mesh_before,
                 "Road geometry, corner attributes or triangle IDs changed during material assignment")
@@ -878,6 +1013,11 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
     require(asphalt_source.verify_retained_replay() == source_before,
             "Original asphalt source changed while saving consumer")
     assets = produced_files()
+    if outer_terrain:
+        packages = {"Content/" + path.split(".", 1)[0].removeprefix("/Game/") + ".uasset"
+                    for path in outer_material["assets"].values()}
+        require(packages.issubset({row["path"] for row in assets}),
+                "Both outer terrain material packages must exist before durable retention")
     if crack_canary:
         packages = {"Content/" + path.split(".", 1)[0].removeprefix("/Game/") + ".uasset"
                     for path in crack_receipt["owned_asset_paths"]}
@@ -919,6 +1059,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
         "material_changes": "road_slot_zero_network_outer_shoulder_ids_and_edge_uv",
         "edge_markings_enabled": edge_markings,
         "crack_canary_enabled": crack_canary,
+        "outer_terrain_enabled": outer_terrain,
         "landscape_1024_unchanged": True,
         "road_geometry_unchanged": True,
         "physics_profile_unchanged": True,
@@ -932,6 +1073,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
         manifest["edge_markings"] = marking_receipt
     if crack_canary:
         manifest["crack_canary"] = crack_receipt
+    outer_terrain_receipt(manifest)
     manifest_id = write_once(retained / MANIFEST, manifest)
     require(write_once(session._safe_path(proof, MANIFEST), manifest) == manifest_id,
             "Downloadable material manifest differs from retained native evidence")
@@ -948,6 +1090,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
         "material_saved": True,
         "edge_markings_enabled": edge_markings,
         "crack_canary_enabled": crack_canary,
+        "outer_terrain_enabled": outer_terrain,
         "new_world_only": True,
         "fresh_reload_verified": False,
         "performance_pass": False,
@@ -958,8 +1101,10 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
 
 
 def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, source_dependencies,
-           edge_markings=False, crack_canary=False):
+           edge_markings=False, crack_canary=False, outer_terrain=False, terrain_consumer_assets=None):
     _surface_modes(edge_markings, crack_canary)
+    require(type(outer_terrain) is bool and (not outer_terrain or terrain_consumer_assets is not None),
+            "Outer terrain reload requires an explicit mode and frozen consumer inventory")
     prepare_row = session._read_json(session._safe_path(proof, PREPARED), limit=JSON_LIMIT)
     require(
         prepare_row.get("status") == "ROAD_ASPHALT_SAVED_PREPARED"
@@ -968,6 +1113,7 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
         and prepare_row.get("fresh_reload_verified") is False
         and prepare_row.get("edge_markings_enabled", False) is edge_markings
         and prepare_row.get("crack_canary_enabled", False) is crack_canary
+        and prepare_row.get("outer_terrain_enabled") is outer_terrain
         and prepare_row.get("retained_root") == str(retained),
         "No authentic native saved-consumer preparation",
     )
@@ -996,6 +1142,7 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
         and manifest.get("shoulder_network", {}).get("material_target_count") == 185
         and manifest.get("native_mesh_hash_format") == shoulder.HASH_FORMAT
         and manifest.get("source_scene_mutated") is False
+        and manifest.get("outer_terrain_enabled") is outer_terrain
         and manifest.get("source_receipt_sha256") == asphalt_source.SOURCE_RECEIPT_SHA256
         and manifest.get("graph_sha256") == asphalt_source.GRAPH_SHA256
         and manifest.get("metric_tile_cm") == 400
@@ -1015,7 +1162,7 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
         api, manifest["material_instance"], manifest["material_master"],
         manifest["texture_objects"], expected_response=manifest["dry_asphalt_response"],
     )
-    shoulder_material.verify_material(api, manifest["shoulder_network"]["material"], source_dependencies)
+    shoulder_readback = verify_shoulder_materials(api, manifest, source_dependencies, terrain_consumer_assets)
     shoulder.verify_loaded(api, manifest["shoulder_network"])
     details = verify_surface_details(api, manifest, edge_markings, crack_canary)
     marking_readback, crack_readback = details["edge_markings"], details["crack_canary"]
@@ -1055,6 +1202,11 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
         "fresh_process": True,
         "road_material_reapplied": False,
         "shoulder_material_reapplied": False,
+        "outer_terrain_enabled": outer_terrain,
+        "outer_terrain_fresh_reload_verified": outer_terrain,
+        "outer_material_reapplied": False,
+        "outer_geometry_reapplied": False,
+        "outer_terrain_readback": shoulder_readback if outer_terrain else None,
         "edge_markings_enabled": edge_markings,
         "edge_marking_material_reapplied": False,
         "edge_marking_geometry_reapplied": False,
@@ -1091,6 +1243,7 @@ def main():
     require(action in ("prepare", "reload"), "Explicit saved consumer action required")
     markings = edge_markings_enabled()
     cracks = crack_canary_enabled()
+    outer = outer_terrain_enabled()
     session._assert_isolated_root()
     require(ROOT == session.ROOT == prep.ROOT, "Saved consumer modules belong to another checkout")
     exact_sha, staging_sha, token, proof, retained = proof_paths()
@@ -1117,10 +1270,12 @@ def main():
     prep.assert_isolated_bootstrap(unreal)
     if action == "prepare":
         prepare(unreal, proof, retained, exact_sha, staging_sha, original, rows,
-                source_dependencies=stage["source_dependencies"], edge_markings=markings, crack_canary=cracks)
+                source_dependencies=stage["source_dependencies"], edge_markings=markings, crack_canary=cracks,
+                outer_terrain=outer, terrain_consumer_assets=stage["consumer_assets"])
     else:
         reload(unreal, proof, retained, exact_sha, staging_sha, original, rows,
-               source_dependencies=stage["source_dependencies"], edge_markings=markings, crack_canary=cracks)
+               source_dependencies=stage["source_dependencies"], edge_markings=markings, crack_canary=cracks,
+               outer_terrain=outer, terrain_consumer_assets=stage["consumer_assets"])
     session._verify_rows(ROOT, rows)
     require(
         session._identity(staging_path, JSON_LIMIT) == stage_identity,

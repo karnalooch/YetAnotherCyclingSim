@@ -12,7 +12,124 @@ remains frozen. #384 completed after protected [PR #467](https://github.com/karn
 merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its gate is satisfied.
 This work continues #364, not MCP infrastructure.
 
-## Latest af7 outcomes — native setter failure and exact missing LAZ packages
+## Current 5b99 results and next material comparison
+
+Revision `5b99f3e16a0ccbbda9dc9c489e61f638d4dc453a` passed
+[protected CI 38109506009](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38109506009).
+Its [source run 38109503685](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38109503685)
+successfully restored the approved isolated decoder and exported the eight
+source transects. Setup PIDs 46568 and 9824 exited 0. Reader PID 21104 exited 0
+in 6.321 seconds; all retained source identities matched after the read.
+The independently downloaded artifact is 622,946 bytes, SHA-256
+`e0f55b36bcbd96f00d6f82c54915a99153b401504ccc93e28555d81ce301be25`.
+It contains 2,132 CSV rows / 2,037 distinct tile-and-point-index observations.
+The CSV is 371,067 bytes, SHA-256
+`e96a54f7b90bcafe03a33cd523ee4d6cb714c7af1e8571d93ac950b11a1a3946`;
+the reader receipt is 25,011 bytes, SHA-256
+`f463e70ac0b76edd90a471199ab3cfcdf8251f61b0fcbdb09cb148146185303d`.
+This supersedes the earlier missing-environment outcome; it does not fit or
+admit a road profile. Original geographic inputs remain unchanged.
+
+The observed source stations 95–165 m show a localized disagreement with the
+existing presentation profile, especially at 110/125/135 m. They do not sample
+the separate support-185 wall at 195–235 m. A second closed read-only set,
+`wall-contact`, samples 195, 200, 205, 210, 215, 220, 225, 230 and 235 m with
+the unchanged ±12 m lateral / ±1 m along bounds and source/CSV/process limits.
+The original `hairpin-profile` set remains the default. The host requires
+exactly one of `[hairpin-lidar]` or `[hairpin-wall-lidar]` and checks the returned
+set name and exact stations. Class 2 is not an asphalt label; no point-class,
+nearest-height or minimum-height snap is authorized by an observation receipt.
+The [native run 38109503833](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38109503833)
+passed 358 Windows preflight tests (two supported skips), baseline, the
+reversible asphalt canary, saved preparation and fresh reload. Preparation
+PID 26480 exited 0 in 264.795 seconds; reload PID 23568 exited 0 in 146.271
+seconds. Both crack actors and all 370 paint overlays passed the complete
+saved/fresh buffer and material readbacks. The derived map SHA-256 is
+`c5ff9cd05312f7761f79834c85f26b88b330d2007dc8ad04e43f6e3a5d0bca31`;
+the saved manifest is 3,225,060 bytes, SHA-256
+`0840c8bc87b71942214988061a3748dc34ed18ffb45d58849a0ceb3f35f85d38`.
+
+GPU PID 44636 then exited 3 after 142.506 seconds, before the first capture.
+The traceback stops in `road_crack_sources._verify_textures` at its combined
+BaseColor size/settings check, called before the per-pose native loading
+barrier. The log does not record which observed value differed; asynchronous
+texture construction is a hypothesis, not a measured cause. No PNG or new
+wall/CUT observation was produced, and both later contact steps were skipped.
+The authenticated 44-file artifact is 3,021,662 bytes, SHA-256
+`232388075af3bd62e1a769c9b113eca5b8247eba16ee427dfd9c6063877a9f36`.
+The closed GPU log is 365,922 bytes, SHA-256
+`a2fa78c643119a81493a6298b28aa0c7aad382a028cd38d0894c9aae551946da`;
+21 retained file references match their host receipts. This is saved/fresh
+success followed by GPU failure, not crack appearance or normal admission.
+
+The correction finishes compilation of the same authenticated 7/15/18/26
+material textures immediately after loading the saved map, before reading
+their dimensions. It uses the existing native
+`YacsTextureAuditLibrary.finish_texture_compilation`, which finishes only the
+selected textures and rejects default or still-compiling objects. All original
+2048-pixel crack dimensions, CLAMP, colour-space, compression and normal
+settings remain mandatory. The verifier now reports every actual setting and
+both dimensions separately, including getter errors, so a persistent mismatch
+cannot hide behind the old combined message. No retry, reimport or texture
+setting repair is performed by this readback.
+
+The next material canary adds a separate opaque gravel-to-terrain variant on
+five existing source-owned shoulder tops. It reuses the actual frozen
+Landscape's five roles, eleven texture objects, scalar values, weight-map
+registration and normal-distance response. The shared graph extraction leaves
+the original 146-node Landscape producer unchanged in the regression witness.
+No global Landscape material, weight texture, geometry or RVT setting changes.
+
+The camera ordinal is not the support ordinal. The selection is resolved from
+the retained 4258 frame `window_id` and the source owner's `material_target`:
+
+| Review camera window | Native source owner | Source window | Selected top triangles |
+|---|---|---|---:|
+| 0013 | `YACS_PERSIST_SUPPORT_018` | `VIAL_TR70190001272-1-interval-15-tile-1` | 704 |
+| 0071 | `YACS_PERSIST_SUPPORT_073` | `VIAL_TR70190001287-0-interval-51-tile-0` | 340 |
+| 0097 | `YACS_PERSIST_SUPPORT_093` | `reviewed-VIAL_TR70190001272-1-interval-0-1` | 800 |
+| 0112 | `YACS_PERSIST_SUPPORT_112` | `reviewed-VIAL_TR70190001272-1-interval-24-0` | 436 |
+| 0082 / Nudo-0 | `YACS_PERSIST_SUPPORT_182` | `nudo-0` | 800 |
+
+Nudo's separate parapet owner 181 is excluded. Supports 022 and 185 retain
+their separate contact/geometry diagnosis. The original UV0 inner transition
+is independently hashed before appending UV1, whose first coordinate measures
+the actual outer-edge distance in centimetres. The final native prefix must
+match that intermediate UV0/normal hash. Both rollback stages restore the
+original source. Terrain is complete within 1 cm of the outer edge and gravel
+within 10 cm, with breakup from the scanned gravel grain; the original inner
+0–8 cm transition remains protected on narrow tapers.
+
+Saved and fresh Editors use NullRHI. Their actual material statistics are
+retained as observations, allowing zero and differences between processes;
+they cannot claim GPU compilation. A separate read-only material-statistics
+check runs after native GPU readiness, together with a targeted closed-log
+check for this material's compile/fallback errors. It does not invent an
+unavailable shader-error getter or global shader admission. The added eleven
+maps require their own actual mip residency, giving 18 total road/shoulder
+textures, or 26 with the two crack canaries. Physical contact and the normal
+response still require the actual images.
+
+The separate band diagnosis retains its original eight jobs and hash. An
+explicit `[road-paint-controls]` adds two identical-camera Lit jobs at 0083:
+the original saved paint and a transient full-mask variant. Only three mask
+scalars change; all 370 source-clipped overlays, widths and offsets are
+conserved. Every observation reads all 370 native slots and effective scalar
+values; complete binding templates occur once to keep the receipt below its
+unchanged 2 MiB cap. Restoration checks every original slot and saved MIC.
+The 68 Lit cameras, three primings per pose and both control-plan alternatives
+remain fixed. Each capture also records twelve actual CVar observations and
+GFrameCounter. Missing CVar values remain unknown; these getters do not prove
+effective view AA or temporal-history state. New pixel, normal, owner and
+performance acceptance remains pending.
+
+The first combined runtime invocation selects the two crack actors and five
+outer-blend owners with the existing 16 crack controls, including the neutral
+border and WorldNormal comparisons. The separate 8/10 band/paint control
+family is implemented and reviewed but remains opt-in for the subsequent
+comparison. A run does not claim to have captured both control families.
+
+## Prior af7 outcomes — native setter failure and exact missing LAZ packages
 
 Revision `af7ac202b5d1466db525bae54566e4f7f3b7d95e` passed
 [protected CI 38108180813](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38108180813).
@@ -34,8 +151,9 @@ then judges the result by the full native parameter inventory and effective
 texture/scalar/vector getters after updating the instance. It does not treat
 either boolean as success. Regressions cover successful writes returning false
 and ignored texture, scalar or vector writes returning either false or true.
-The graph, source textures, placement and normal-review gates are unchanged;
-the new saved/fresh and actual-image result is still pending.
+The graph, source textures, placement and normal-review gates are unchanged.
+The subsequent 5b99 saved/fresh result passed; its separate GPU failure is
+recorded above.
 
 The [source run 38108177248](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38108177248)
 passed all 20 decoder/reader tests on the actual Windows host, then correctly
@@ -61,7 +179,8 @@ refuses an existing target, never modifies the base interpreter, records each
 owned process and its actual exit, and reruns all four real import checks
 before any source read. Failed recovery remains failed and retains its logs;
 the ordinary read-only resolver still performs no installation. Recovery and
-actual LiDAR observations have not yet passed on the host.
+actual LiDAR observations had not yet passed at that af7 checkpoint; the
+subsequent successful 5b99 result is recorded above.
 
 The next `[shoulder-contact]` diagnostic also retains a bounded subset of the
 already read native support-185 triangles at source rows 1560–1880. The actual

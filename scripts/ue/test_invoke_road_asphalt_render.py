@@ -10,6 +10,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 
@@ -17,6 +18,22 @@ ROOT = Path(__file__).resolve().parents[2]
 HOST = ROOT / "scripts/ue/Invoke-YacsRoadAsphaltRender.ps1"
 WORKFLOW = ROOT / ".github/workflows/road-material-native-proof.yml"
 ATTRIBUTES = ROOT / ".gitattributes"
+
+
+def add_capture_state_fixture(receipt):
+    """Production snapshot shape over synthetic getters, never renderer evidence."""
+    from scripts.ue import road_asphalt_gpu_review as gpu
+    from scripts.ue.test_road_asphalt_gpu_review import CaptureReadback
+
+    native = CaptureReadback()
+    native.values["r.TSR.ThinGeometryDetection"] = ""  # Missing is explicitly unknown.
+    api = SimpleNamespace(SystemLibrary=native)
+    receipt["capture_state_native_api"] = gpu.capture_state_api_evidence(api)
+    for frame in receipt["frames"]:
+        for capture in [*frame["priming_frames"], frame]:
+            capture.update(native_capture_state_before=gpu.native_capture_state(api),
+                           native_capture_state_after=gpu.native_capture_state(api),
+                           capture_cvars_unchanged=True)
 
 
 class RoadAsphaltGpuHostContractTests(unittest.TestCase):
@@ -224,6 +241,8 @@ class RoadAsphaltGpuHostContractTests(unittest.TestCase):
             "transient_dirty_package_audit": {"no_original_or_content_package_dirty": True,
                 "dirty_derived_package_saved": False, "dirty_content_count": 0},
             "material_view_sampling": {key: value for key, value in plan.items() if key != "frames"}}
+        add_capture_state_fixture(good)
+        self.assertLess(len(json.dumps(good, sort_keys=True, indent=2).encode()), 2 * 1024 * 1024)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             fixture = root / "input.json"
@@ -236,7 +255,8 @@ $ErrorActionPreference = 'Stop'
 $tokens = $null; $errors = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref]$tokens, [ref]$errors)
 if ($errors.Count) { throw ($errors.Message -join '; ') }
-foreach ($name in @('Assert-JsonEqual', 'Assert-ViewPlan', 'Assert-NativeCameraObservation', 'Assert-GpuReviewContract')) {
+foreach ($name in @('Assert-JsonEqual', 'Assert-ViewPlan', 'Assert-NativeCameraObservation',
+                    'Assert-CaptureStateApi', 'Assert-CaptureStatePair', 'Assert-GpuReviewContract')) {
     $nodes = @($ast.FindAll({ param($node)
         $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name
     }, $true))
@@ -249,6 +269,11 @@ function Check($data) {
     Assert-GpuReviewContract $data $plan ('c' * 64) ('b' * 64) 1234 ('a' * 40) '123-1' ('e' * 64)
 }
 Check $fixture.good
+$drift = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+$drift.frames[-1].native_capture_state_after.cvars['r.ScreenPercentage'].raw = '99'
+$drift.frames[-1].native_capture_state_after.cvars['r.ScreenPercentage'].value = 99.0
+$drift.frames[-1].capture_cvars_unchanged = $false
+Check $drift # Observe real drift; never silently override it or claim an effective view state.
 $crackLit = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
 foreach ($frame in $crackLit.frames) { $frame.capture_readiness.material_texture_count = 15 }
 Assert-GpuReviewContract $crackLit $plan ('c' * 64) ('b' * 64) 1234 ('a' * 40) '123-1' ('e' * 64) 15
@@ -264,7 +289,9 @@ foreach ($failure in @('order', 'pose', 'station', 'plan_hash', 'profile', 'prim
                        'mips', 'supports', 'selected_ids', 'walls', 'road_buffers', 'asphalt',
                        'admission', 'edge_uv', 'sampling', 'shader', 'native_location', 'native_rotation',
                        'native_direction', 'native_fov', 'native_error', 'native_nonfinite', 'native_missing',
-                       'prime_direction', 'prime_missing', 'prime_viewmode', 'final_viewmode')) {
+                       'prime_direction', 'prime_missing', 'prime_viewmode', 'final_viewmode',
+                       'snapshot_raw', 'snapshot_nonfinite', 'snapshot_cvar_missing', 'snapshot_getter_missing',
+                       'snapshot_effective', 'snapshot_counter_bool', 'snapshot_stability', 'prime_snapshot')) {
     $data = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
     switch ($failure) {
         'order' { $swap = $data.frames[0]; $data.frames[0] = $data.frames[1]; $data.frames[1] = $swap }
@@ -295,6 +322,14 @@ foreach ($failure in @('order', 'pose', 'station', 'plan_hash', 'profile', 'prim
         'prime_missing' { $data.frames[0].priming_frames[2].Remove('native_camera_observation') | Out-Null }
         'prime_viewmode' { $data.frames[0].priming_frames[2].native_viewmode_after = 'VMI_VISUALIZE_BUFFER' }
         'final_viewmode' { $data.frames[0].native_viewmode_before = 'VMI_UNLIT' }
+        'snapshot_raw' { $data.frames[0].native_capture_state_after.cvars['r.ScreenPercentage'].raw = '99' }
+        'snapshot_nonfinite' { $data.frames[0].native_capture_state_before.cvars['r.ScreenPercentage'].raw = 'NaN' }
+        'snapshot_cvar_missing' { $data.frames[0].native_capture_state_after.cvars.Remove('r.AntiAliasingMethod') | Out-Null }
+        'snapshot_getter_missing' { $data.capture_state_native_api.reflected_methods.Remove('SystemLibrary.get_frame_count') | Out-Null }
+        'snapshot_effective' { $data.frames[0].native_capture_state_after.effective_view_aa = 'TSR' }
+        'snapshot_counter_bool' { $data.frames[0].native_capture_state_after.frame_count = $true }
+        'snapshot_stability' { $data.frames[0].capture_cvars_unchanged = $false }
+        'prime_snapshot' { $data.frames[-1].priming_frames[2].Remove('native_capture_state_before') | Out-Null }
     }
     $rejected = $false
     try { Check $data } catch { $rejected = $true }
@@ -374,6 +409,7 @@ foreach ($failure in @('order', 'pose', 'station', 'plan_hash', 'profile', 'prim
                 "whole_area_visual_admitted", "performance_pass")}}
         # This runs only receipt policy against disposable synthetic data. It
         # does not assert that a native image or restored UE scene exists.
+        add_capture_state_fixture(good)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             fixture = root / "input.json"
@@ -389,6 +425,7 @@ $tokens = $null; $errors = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref]$tokens, [ref]$errors)
 if ($errors.Count) { throw ($errors.Message -join '; ') }
 foreach ($name in @('Assert-JsonEqual', 'Assert-NativeCameraObservation',
+                    'Assert-CaptureStateApi', 'Assert-CaptureStatePair',
                     'Assert-VisualControlObservation', 'Assert-VisualControlContract')) {
     $nodes = @($ast.FindAll({ param($node)
         $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name
@@ -402,11 +439,18 @@ function Check($data) {
         $fixture.lit $fixture.original ('a' * 40) '123-1'
 }
 Check $fixture.good
+$withCracks = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+foreach ($frame in $withCracks.frames) { $frame.capture_readiness.material_texture_count = 15 }
+Assert-VisualControlContract $withCracks $fixture.expected ('c' * 64) ('b' * 64) `
+    $fixture.lit $fixture.original ('a' * 40) '123-1' $false 15
+$rejectedSevenOnly = $false
+try { Check $withCracks } catch { $rejectedSevenOnly = $true }
+if (-not $rejectedSevenOnly) { throw 'Legacy control default admitted the wrong texture lane.' }
 foreach ($failure in @('order', 'camera', 'source_pose', 'mode', 'file', 'count', 'plan', 'plan_hash',
                        'lit_receipt', 'manifest', 'prime_count', 'prime_name', 'prime_mode', 'prime_camera',
                        'material', 'buffer', 'buffer_claim', 'mips', 'restoration', 'view_restore',
                        'saved_bytes', 'owner', 'performance', 'deadline', 'token', 'transient',
-                       'preflight', 'uniform', 'normals', 'api_claim', 'station', 'render_mode', 'visual_claim', 'prime_viewmode')) {
+                       'preflight', 'uniform', 'normals', 'api_claim', 'station', 'render_mode', 'visual_claim', 'prime_viewmode', 'prime_snapshot')) {
     $data = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
     switch ($failure) {
         'order' { $swap = $data.frames[0]; $data.frames[0] = $data.frames[1]; $data.frames[1] = $swap }
@@ -443,6 +487,7 @@ foreach ($failure in @('order', 'camera', 'source_pose', 'mode', 'file', 'count'
         'render_mode' { $data.frames[1].render_mode = 'lit' }
         'visual_claim' { $data.frames[0].visual_quality_reviewed = $true }
         'prime_viewmode' { $data.frames[2].priming_frames[1].native_viewmode_after = 'VMI_LIT' }
+        'prime_snapshot' { $data.frames[7].priming_frames[2].Remove('native_capture_state_after') | Out-Null }
     }
     $rejected = $false
     try { Check $data } catch { $rejected = $true }
@@ -479,7 +524,7 @@ if ($errors.Count) { throw ($errors.Message -join "; ") }
             )
             self.assertEqual(result.returncode, 0, result.stderr)
 
-    def _crack_host_fixture(self, directory):
+    def _crack_host_fixture(self, directory, *, outer_terrain=False):
         """Real provider reports over disposable fake UE; never native image evidence."""
         from scripts.ue import road_crack_visual_controls as controls
         from scripts.ue.test_road_crack_visual_controls import CrackControlTests
@@ -505,11 +550,19 @@ if ($errors.Count) { throw ($errors.Message -join "; ") }
         manifest["shoulder_network"] = {"material": {"texture_objects": {
             channel: f"/Game/Fixture/Shoulder_{channel}.Shoulder_{channel}" for channel in ("BaseColor", "Normal_DX", "Roughness")}}}
         manifest["crack_canary"]["imports"].update(texture_count=8, assets=controls.sources.asset_paths(native.source))
+        if outer_terrain:
+            from scripts.ue.test_road_asphalt_gpu_review import outer_terrain_fixture
+            outer = outer_terrain_fixture()[3]
+            outer["shoulder_network"]["material"]["texture_objects"] = manifest["shoulder_network"]["material"]["texture_objects"]
+            manifest.update(outer)
         paths = {**manifest["texture_objects"], **{
             "Shoulder_" + channel: path for channel, path in manifest["shoulder_network"]["material"]["texture_objects"].items()}, **{
             "Crack_" + motif + "_" + channel: path
             for motif, channels in manifest["crack_canary"]["imports"]["assets"]["textures"].items()
             for channel, path in channels.items()}}
+        if outer_terrain:
+            paths.update({"OuterTerrain_" + name: path for name, path in
+                manifest["shoulder_network"]["outer_terrain"]["material"]["terrain_source"]["texture_objects"].items()})
         material_ready = {"schema_version": 1, "status": "ROAD_TEXTURE_MIPS_READY", "lease_seconds": 1200,
             "material_parameters_changed": False, "saved_to_map": False,
             "textures": [{"channel": channel, "asset": path, "native_readback": {
@@ -558,7 +611,7 @@ if ($errors.Count) { throw ($errors.Message -join "; ") }
                 "render_mode": "buffer_visualization" if job["control"] in controls.BUFFERS else "lit",
                 "priming_frames": priming, "capture_readiness": {"status": "NATIVE_LOADING_AND_MIPS_READY",
                     "height_receipt": height, "material_receipt": texture, "height_mip_lease_requested": True,
-                    "viewport_primed_at_rider_camera": True, "material_texture_count": 15}})
+                    "viewport_primed_at_rider_camera": True, "material_texture_count": len(paths)}})
         restored = controller.restore()
         good = {"schema_version": 1, "issue": 364, "status": "ROAD_CRACK_VISUAL_CONTROLS_FRAMES_RETAINED",
             "exact_sha": native.context["exact_sha"], "run_token": native.context["run_token"], "map_package": controls.saved.MAP,
@@ -575,10 +628,170 @@ if ($errors.Count) { throw ($errors.Message -join "; ") }
             **{key: False for key in ("native_channel_images_reviewed", "buffer_name_readback_verified",
                 "geometry_or_source_texture_change", "map_saved", "source_assets_saved", "whole_area_visual_admitted",
                 "performance_pass", "normal_space_verified")}}
+        add_capture_state_fixture(good)
         return {"good": good, "expected": {"control_plan": plan, "sha256": controls.digest(plan)},
             "network": native.context["view_plan"], "manifest": manifest,
             "lit": {"sha256": "d" * 64, "size_bytes": 100}, "pid": begin["ownership"]["pid"],
             "project": str(native.root), "engine": str(native.engine), "proof": str(proof), "ready": material_ready}
+
+    def _paint_host_fixture(self, *, outer_terrain=False):
+        """Real controller/receipt over 370 fake objects, with no native image claim."""
+        from scripts.ue import road_asphalt_gpu_review as gpu
+        from scripts.ue import road_asphalt_visual_controls as controls
+        from scripts.ue.test_road_asphalt_visual_controls import PaintCoverageTests
+        import struct
+
+        native = PaintCoverageTests()
+        native.setUp()
+        self.addCleanup(native.doCleanups)
+        # Effective UE scalars are float32; exact decimal equality is invalid.
+        native.paint_mic.scalars = {name: struct.unpack('f', struct.pack('f', value))[0]
+                                   for name, value in native.paint_mic.scalars.items()}
+        native.context["manifest"]["crack_canary_enabled"] = True
+        native.context["manifest"]["outer_terrain_enabled"] = outer_terrain
+        plan = controls.control_plan(paint_coverage=True)
+        preflight = controls.preflight(native.api, native.context, plan)
+        controller = controls.VisualControls(native.api, native.context)
+        begin = controller.begin()
+        self.assertTrue(all(component.assignments == [] for component in native.paint_components))
+        frames = []
+        for job in plan["jobs"]:
+            controller.apply(job["job_id"])
+            pose, mode = job["camera"], job["control"]
+            delta = [target - eye for target, eye in zip(pose["target_cm"], pose["camera_location_cm"], strict=True)]
+            length = math.sqrt(sum(value * value for value in delta))
+            camera = {"rotation_setter_accepted": True, "location_cm": list(pose["camera_location_cm"]),
+                "forward_unit": [value / length for value in delta], "fov_deg": pose["fov_deg"], "forward_error": 0.0}
+            viewmode = "VMI_VISUALIZE_BUFFER" if mode in controls.BUFFERS else "VMI_LIT"
+            def capture(relative):
+                return {"file": relative, "sha256": "e" * 64, "size_bytes": 100, "screenshot_elapsed_seconds": 1.0,
+                    "native_viewmode_before": viewmode, "native_viewmode_after": viewmode,
+                    "native_camera_observation": deepcopy(camera),
+                    "native_control_observation_before": controller.observe(),
+                    "native_control_observation_after": controller.observe()}
+            frame = {**deepcopy(pose), **capture(f"road-asphalt-visual-controls/frames/{job['job_id']}.png"),
+                "frame_id": job["job_id"], "source_frame_id": pose["frame_id"], "control_mode": mode,
+                "width": 1280, "height": 720, "unique_sampled_rgb": 100, "visual_quality_reviewed": False,
+                "render_mode": "buffer_visualization" if mode in controls.BUFFERS else "lit",
+                "priming_frames": [capture(f"road-asphalt-visual-controls/priming/{job['job_id']}-{index:02d}.png")
+                                   for index in range(3)],
+                "capture_readiness": {"status": "NATIVE_LOADING_AND_MIPS_READY", "height_mip_lease_requested": True,
+                    "viewport_primed_at_rider_camera": True, "material_texture_count": 26 if outer_terrain else 15,
+                    "height_receipt": {"sha256": "e" * 64, "size_bytes": 100},
+                    "material_receipt": {"sha256": "e" * 64, "size_bytes": 100}}}
+            frames.append(frame)
+        job = gpu.RoadLitCapture.__new__(gpu.RoadLitCapture)
+        job.control_plan, job.control_module, job.control_family = plan, controls, "road-asphalt"
+        job.paint_coverage_enabled = True
+        job.control_preflight, job.control_begin, job.control_restore = preflight, begin, controller.restore()
+        job.control_frames, job.control_completed_priming_frames = frames, 30
+        job.control_max_completed_screenshot_seconds = 1.0
+        job.capture_state_api = None
+        job.edge_marking_readback = {"all_marking_buffers_verified": True, "full_source_buffers_preserved": True, "actor_count": 370}
+        job.context = {**native.context, "manifest_id": {"sha256": "b" * 64},
+                       "view_plan_identity": {"sha256": "c" * 64}, "edge_marking_readback": job.edge_marking_readback}
+        good = job.visual_control_receipt([], {"sha256": "d" * 64, "size_bytes": 100})
+        add_capture_state_fixture(good)
+        legacy = controls.control_plan()
+        return {"good": good, "expected": {"control_plan": plan, "sha256": controls.digest(plan),
+                "legacy_control_plan": legacy, "legacy_control_plan_sha256": controls.digest(legacy)},
+            "manifest": native.context["manifest"], "original": native.context["manifest"]["material_instance"],
+            "lit": {"sha256": "d" * 64, "size_bytes": 100}}
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
+    def test_actual_paint_pair_gate_keeps_full_bindings_native_scalars_and_two_mib_limit(self):
+        fixture = self._paint_host_fixture()
+        raw = (json.dumps(fixture["good"], sort_keys=True, indent=2, allow_nan=False) + "\n").encode()
+        self.assertLess(len(raw), 2 * 1024 * 1024)
+        self.assertEqual(len(fixture["good"]["begin"]["paint_binding_templates"]["original_mic"]["bindings"]), 370)
+        self.assertNotIn("paint_binding_templates", fixture["good"]["restore"])
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            retained = root / "paint-controls.json"
+            retained.write_bytes(raw)
+            fixture["receipt_path"] = str(retained)
+            path = root / "input.json"
+            path.write_text(json.dumps(fixture, allow_nan=False), encoding="utf-8")
+            runner = root / "paint.ps1"
+            runner.write_text(r'''
+param([string] $Wrapper, [string] $InputJson)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$tokens = $null; $errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref]$tokens, [ref]$errors)
+if ($errors.Count) { throw ($errors.Message -join '; ') }
+foreach ($name in @('Assert-PlainPath', 'File-Identity', 'Assert-Identity', 'Read-PinnedJson', 'Assert-JsonEqual',
+    'Assert-NativeCameraObservation', 'Assert-CaptureStateApi', 'Assert-CaptureStatePair',
+    'Assert-VisualControlObservation', 'Assert-PaintScalars', 'Assert-PaintObservation',
+    'Assert-PaintCoverageContract', 'Assert-VisualControlContract')) {
+    $nodes = @($ast.FindAll({ param($node)
+        $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name
+    }, $true))
+    if ($nodes.Count -ne 1) { throw ('Missing unique paint validation: ' + $name) }
+    . ([scriptblock]::Create($nodes[0].Extent.Text))
+}
+$fixture = Get-Content -LiteralPath $InputJson -Raw | ConvertFrom-Json -AsHashtable -Depth 40
+function Check($data, [int] $textures = 15) {
+    Assert-VisualControlContract $data $fixture.expected ('c' * 64) ('b' * 64) $fixture.lit $fixture.original `
+        $fixture.good.exact_sha $fixture.good.run_token $true $textures $fixture.manifest
+}
+$retained = Read-PinnedJson $fixture.receipt_path
+Assert-JsonEqual $fixture.good $retained.value 'complete paint control receipt within unchanged 2 MiB bound'
+Check $retained.value
+$withOuter = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+foreach ($frame in $withOuter.frames) { $frame.capture_readiness.material_texture_count = 26 }
+Check $withOuter 26
+foreach ($failure in @('missing_template', 'last_original_target', 'last_mid_target', 'template_hash', 'duplicate_template',
+    'before_hash', 'prime_hash', 'count', 'matches', 'restore_hash', 'mid_parent', 'mid_flags',
+    'mic_scalar', 'full_scalar', 'width', 'setter_material', 'fourth_setter', 'assignment', 'last_restore',
+    'detach', 'refs', 'dirty', 'buffers', 'pixel_claim', 'legacy_hash', 'legacy_camera', 'pair_camera', 'mips',
+    'snapshot_missing', 'snapshot_zero', 'snapshot_history', 'snapshot_api', 'snapshot_regression')) {
+    $data = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+    switch ($failure) {
+        'missing_template' { $data.begin.paint_binding_templates.Remove('original_mic') | Out-Null }
+        'last_original_target' { $data.begin.paint_binding_templates.original_mic.bindings[-1].component += '_foreign' }
+        'last_mid_target' { $data.begin.paint_binding_templates.transient_mid.bindings[-1].label = 'YACS_FOREIGN' }
+        'template_hash' { $data.begin.paint_binding_templates.original_mic.bindings_sha256 = 'f' * 64 }
+        'duplicate_template' { $data.restore.paint_binding_templates = $data.begin.paint_binding_templates }
+        'before_hash' { $data.frames[8].native_control_observation_before.paint_coverage.bindings_sha256 = 'f' * 64 }
+        'prime_hash' { $data.frames[9].priming_frames[2].native_control_observation_after.paint_coverage.bindings_sha256 = 'f' * 64 }
+        'count' { $data.frames[9].native_control_observation_after.paint_coverage.binding_count = 369 }
+        'matches' { $data.frames[9].native_control_observation_after.paint_coverage.bindings_match_template = $false }
+        'restore_hash' { $data.restore.paint_restored_observation.bindings_sha256 = 'f' * 64 }
+        'mid_parent' { $data.begin.paint_transient_mid.parent = '/Game/Foreign.Foreign' }
+        'mid_flags' { $data.begin.paint_transient_mid.creation_flags = 'NONE' }
+        'mic_scalar' { $data.frames[9].native_control_observation_after.paint_coverage.original_mic_scalar_parameters.EdgeWearMinCm = -0.05 }
+        'full_scalar' { $data.frames[9].native_control_observation_before.paint_coverage.scalar_parameters.EdgeWearSpanCm = 0.72 }
+        'width' { $data.begin.paint_original_scalar_parameters.LineWidthCm = 11.0 }
+        'setter_material' { @($data.restore.calls | Where-Object { $_.function -ceq 'MaterialInstanceDynamic.set_scalar_parameter_value' })[0].material = $data.begin.paint_original_material }
+        'fourth_setter' { $data.restore.calls += @($data.restore.calls | Where-Object { $_.function -ceq 'MaterialInstanceDynamic.set_scalar_parameter_value' })[0] }
+        'assignment' { @($data.restore.calls | Where-Object { $_.function -ceq 'paint_component.set_material' })[0].material = $data.begin.paint_original_material }
+        'last_restore' { @($data.restore.calls | Where-Object { $_.function -ceq 'paint_component.set_material' })[-1].material = $data.begin.paint_transient_mid.path }
+        'detach' { $data.restore.paint_transient_mid_detached = $false }
+        'refs' { $data.restore.paint_transient_mid_ref_released = $false }
+        'dirty' { $data.restore.dirty_content_count = 1 }
+        'buffers' { $data.paint_full_native_buffers_verified = $false }
+        'pixel_claim' { $data.paint_pixel_aliasing_cause_verified = $true }
+        'legacy_hash' { $data.legacy_control_plan_sha256 = 'f' * 64 }
+        'legacy_camera' { $data.legacy_control_plan.jobs[0].camera.station_m += 1 }
+        'pair_camera' { $data.control_plan.jobs[9].camera.station_m += 1 }
+        'mips' { $data.frames[9].capture_readiness.material_texture_count = 7 }
+        'snapshot_missing' { $data.frames[9].priming_frames[2].Remove('native_capture_state_after') | Out-Null }
+        'snapshot_zero' { $data.frames[9].native_capture_state_after.cvars['r.TSR.ThinGeometryDetection'].value = 0 }
+        'snapshot_history' { $data.frames[9].native_capture_state_before.temporal_history_observed = $true }
+        'snapshot_api' { $data.capture_state_native_api.engine_version = 'different' }
+        'snapshot_regression' { $data.frames[9].native_capture_state_after.frame_count = 0 }
+    }
+    $rejected = $false
+    try { Check $data } catch { $rejected = $true }
+    if (-not $rejected) { throw ('Production paint gate admitted ' + $failure) }
+}
+'POWERSHELL_PAINT_PAIR_CASES_PASS'
+''', encoding="utf-8")
+            result = subprocess.run(["pwsh", "-NoProfile", "-File", str(runner), str(HOST), str(path)],
+                                    capture_output=True, text=True, check=False, timeout=60)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("POWERSHELL_PAINT_PAIR_CASES_PASS", result.stdout)
 
     def _run_crack_host_cases(self, directory, fixture, cases):
         fixture_path = directory / "input.json"
@@ -592,10 +805,13 @@ $tokens = $null; $errors = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref]$tokens, [ref]$errors)
 if ($errors.Count) { throw ($errors.Message -join '; ') }
 foreach ($name in @('Assert-PlainPath', 'File-Identity', 'Assert-Identity', 'Read-PinnedJson', 'Assert-JsonEqual',
+                    'Assert-CaptureStateApi', 'Assert-CaptureStatePair',
                     'Assert-NativeCameraObservation', 'Assert-SurfaceDetailLanes', 'Assert-SurfaceDetailGpuReadback',
                     'Assert-CrackControlPlan', 'Get-CrackControlTargets', 'Assert-CrackVisualControlObservation',
-                    'Assert-CrackControlApi', 'Assert-CrackVisualControlContract', 'Assert-CrackTextureReadiness',
-                    'Get-CrackVisualControlArtifacts')) {
+                    'Assert-CrackControlApi', 'Assert-CrackVisualControlContract', 'Assert-MaterialTextureReadiness',
+                    'Get-CrackVisualControlArtifacts', 'Assert-OuterNativeStatistics', 'Get-OuterTerrainTextureBindings',
+                    'Get-OuterTerrainBindingSummary', 'Assert-OuterTerrainLanes', 'Assert-OuterTerrainGpuReadback',
+                    'Log-Identity', 'Get-OuterTerrainShaderLogObservation', 'Assert-OuterTerrainShaderLog')) {
     $nodes = @($ast.FindAll({ param($node)
         $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name
     }, $true))
@@ -605,7 +821,8 @@ foreach ($name in @('Assert-PlainPath', 'File-Identity', 'Assert-Identity', 'Rea
 $fixture = Get-Content -LiteralPath $InputJson -Raw | ConvertFrom-Json -AsHashtable -Depth 40
 function Check($data) {
     Assert-CrackVisualControlContract $data $fixture.expected ('c' * 64) ('b' * 64) $fixture.lit `
-        $fixture.manifest $fixture.pid $fixture.project $fixture.good.exact_sha $fixture.good.run_token $fixture.network
+        $fixture.manifest $fixture.pid $fixture.project $fixture.good.exact_sha $fixture.good.run_token $fixture.network `
+        $fixture.ready.textures.Count
 }
 function FreshData { return ($fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40) }
 function Reject($action, $label) {
@@ -634,7 +851,7 @@ foreach ($failure in @('order', 'count', 'source_pose', 'camera', 'station', 'pl
     'project', 'token', 'head', 'restore', 'restore_visibility', 'detach', 'refs', 'saved_bytes', 'mic_zero',
     'cleanup', 'dirty_begin', 'dirty_restore', 'duplicate_mid', 'mid_flags', 'begin_calls', 'restore_calls',
     'mic_setter', 'native_api_flags', 'native_api_hash', 'native_api_header', 'normal_claim', 'owner_claim',
-    'performance', 'visual_review', 'source_save', 'geometry_change', 'preflight', 'restore_api', 'lit_receipt', 'prime_viewmode')) {
+    'performance', 'visual_review', 'source_save', 'geometry_change', 'preflight', 'restore_api', 'lit_receipt', 'prime_viewmode', 'prime_snapshot')) {
     $data = FreshData
     switch ($failure) {
         'order' { $swap = $data.frames[0]; $data.frames[0] = $data.frames[1]; $data.frames[1] = $swap }
@@ -710,6 +927,7 @@ foreach ($failure in @('order', 'count', 'source_pose', 'camera', 'station', 'pl
         'restore_api' { $data.restore.native_api.engine_version = 'different' }
         'lit_receipt' { $data.lit_review_receipt.sha256 = 'e' * 64 }
         'prime_viewmode' { $data.frames[15].priming_frames[2].native_viewmode_before = 'VMI_LIT' }
+        'prime_snapshot' { $data.frames[15].priming_frames[2].Remove('native_capture_state_after') | Out-Null }
     }
     Reject { Check $data } $failure
 }
@@ -772,6 +990,151 @@ Files $fixture.good | Out-Null
 ''')
 
     @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
+    def test_actual_outer_lanes_keep_nullrhi_distinct_and_verify_all_twenty_six_textures(self):
+        from scripts.ue.test_road_asphalt_gpu_review import outer_terrain_fixture, outer_gpu_statistics_fixture
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = self._crack_host_fixture(root, outer_terrain=True)
+            host, prepared, fresh, manifest = outer_terrain_fixture()
+            manifest["shoulder_network"]["outer_terrain"]["material"].update(
+                status="SHOULDER_MATERIAL_CREATED_REVIEW_PENDING", native_compile_errors=[], unique_texture_objects=17)
+            stats = outer_gpu_statistics_fixture(manifest)
+            before, after = deepcopy(fresh["outer_terrain_readback"]), deepcopy(fresh["outer_terrain_readback"])
+            before["outer_native_statistics"] = deepcopy(stats["native_statistics"])
+            after["outer_native_statistics"] = deepcopy(stats["native_statistics"])
+            fixture["outer_lanes"] = {"host_row": host, "prepared": prepared, "fresh": fresh, "manifest": manifest,
+                "gpu": {"outer_terrain_enabled": True, "outer_terrain_native_bindings_verified": True,
+                    "outer_terrain_gpu_statistics_verified": True, "outer_terrain_physical_contact_verified": False,
+                    "outer_terrain_normal_response_verified": False, "outer_terrain_before": before, "outer_terrain_after": after,
+                    "outer_gpu_statistics_before": stats, "outer_gpu_statistics_after": deepcopy(stats)}}
+            disabled = outer_terrain_fixture(enabled=False)
+            fixture["outer_disabled"] = dict(zip(("host_row", "prepared", "fresh", "manifest"), disabled, strict=True))
+            self._run_crack_host_cases(root, fixture, r'''
+function Outer($rows) {
+    Assert-OuterTerrainLanes $rows.host_row $rows.prepared $rows.fresh $rows.manifest $true
+    Assert-OuterTerrainGpuReadback $rows.gpu $rows.fresh $rows.manifest $true
+}
+Outer $fixture.outer_lanes
+$disabled = $fixture.outer_disabled
+Assert-OuterTerrainLanes $disabled.host_row $disabled.prepared $disabled.fresh $disabled.manifest $false
+$offGpu = @{ outer_terrain_enabled = $false; outer_terrain_native_bindings_verified = $false
+    outer_terrain_gpu_statistics_verified = $false; outer_terrain_physical_contact_verified = $false
+    outer_terrain_normal_response_verified = $false; outer_terrain_before = $null; outer_terrain_after = $null
+    outer_gpu_statistics_before = $null; outer_gpu_statistics_after = $null }
+Assert-OuterTerrainGpuReadback $offGpu $disabled.fresh $disabled.manifest $false
+$offGpu.outer_gpu_statistics_before = $fixture.outer_lanes.gpu.outer_gpu_statistics_before
+Reject { Assert-OuterTerrainGpuReadback $offGpu $disabled.fresh $disabled.manifest $false } 'disabled outer GPU payload'
+if ($fixture.outer_lanes.fresh.outer_terrain_readback.outer_native_statistics.num_samplers -ne 0 -or
+    $fixture.outer_lanes.gpu.outer_gpu_statistics_before.native_statistics.num_samplers -le 0) {
+    throw 'Fixture must distinguish NullRHI zero from the later positive GPU observation.'
+}
+foreach ($failure in @('host_mode', 'prepared_mode', 'fresh_mode', 'fresh_reapply', 'saved_gpu_claim', 'saved_errors',
+                      'fresh_gpu_claim', 'source_channels', 'source_binding', 'owner_nudo', 'owner_parapet', 'uv0',
+                      'shader_scope', 'before_binding', 'after_binding', 'zero_gpu', 'negative_gpu', 'boolean_gpu',
+                      'changed_gpu', 'extra_gpu_field', 'normal_claim', 'contact_claim', 'host_log_omitted')) {
+    $rows = $fixture.outer_lanes | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+    switch ($failure) {
+        'host_mode' { $rows.host_row.outer_terrain_requested = $false }
+        'prepared_mode' { $rows.prepared.outer_terrain_enabled = 1 }
+        'fresh_mode' { $rows.fresh.outer_terrain_enabled = $false }
+        'fresh_reapply' { $rows.fresh.outer_material_reapplied = $true }
+        'saved_gpu_claim' { $rows.manifest.shoulder_network.outer_terrain.material.gpu_compile_verified = $true }
+        'saved_errors' { $rows.manifest.shoulder_network.outer_terrain.material.native_compile_errors = @('synthetic') }
+        'fresh_gpu_claim' { $rows.fresh.outer_terrain_readback.outer_gpu_compile_verified = $true }
+        'source_channels' { $rows.manifest.shoulder_network.outer_terrain.material.terrain_source.texture_objects.Remove('ScreeNormalTex') }
+        'source_binding' { $rows.manifest.shoulder_network.outer_terrain.material.terrain_source.texture_objects.ScreeNormalTex = '/Game/Foreign.Texture' }
+        'owner_nudo' { $rows.manifest.shoulder_network.outer_terrain.owner_labels[4] = 'YACS_PERSIST_SUPPORT_082' }
+        'owner_parapet' { $rows.gpu.outer_terrain_after.outer_owner_labels[4] = 'YACS_PERSIST_SUPPORT_181' }
+        'uv0' { $rows.manifest.shoulder_network.outer_terrain.uv0_stage_witness_required = $false }
+        'shader_scope' { $rows.gpu.outer_gpu_statistics_before.master = '/Game/Foreign.Master' }
+        'before_binding' { $rows.gpu.outer_terrain_before.outer_texture_objects.ScreeNormalTex = '/Game/Foreign.Texture' }
+        'after_binding' { $rows.gpu.outer_terrain_after.landscape_component_count = 1023 }
+        'zero_gpu' { $rows.gpu.outer_gpu_statistics_before.native_statistics.num_samplers = 0 }
+        'negative_gpu' { $rows.gpu.outer_gpu_statistics_before.native_statistics.num_uv_scalars = -1 }
+        'boolean_gpu' { $rows.gpu.outer_gpu_statistics_before.native_statistics.num_samplers = $true }
+        'changed_gpu' { $rows.gpu.outer_gpu_statistics_after.native_statistics.num_samplers += 1 }
+        'extra_gpu_field' { $rows.gpu.outer_gpu_statistics_before.native_statistics.invented = 0 }
+        'normal_claim' { $rows.gpu.outer_terrain_normal_response_verified = $true }
+        'contact_claim' { $rows.gpu.outer_terrain_after.physical_contact_verified = $true }
+        'host_log_omitted' { $rows.gpu.outer_gpu_statistics_before.host_shader_log_check_required = $false }
+    }
+    Reject { Outer $rows } $failure
+}
+# The same sixteen controls retain all 26 source identities, not just a count.
+Get-CrackVisualControlArtifacts $fixture.good $fixture.proof $fixture.manifest $fixture.engine $fixture.project | Out-Null
+foreach ($failure in @('missing_outer', 'last_outer_default', 'outer_not_resident', 'outer_replacement')) {
+    $ready = $fixture.ready | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+    $outer = @($ready.textures | Where-Object { $_.channel -clike 'OuterTerrain_*' })
+    switch ($failure) {
+        'missing_outer' { $ready.textures = @($ready.textures | Where-Object { $_.channel -cne 'OuterTerrain_ScreeNormalTex' }) }
+        'last_outer_default' { $outer[-1].native_readback.is_default_texture = $true }
+        'outer_not_resident' { $outer[-1].native_readback.resident_mips -= 1 }
+        'outer_replacement' { $outer[-1].asset = '/Game/Foreign.Texture' }
+    }
+    Reject { Assert-MaterialTextureReadiness $ready $fixture.manifest } $failure
+}
+$withoutCracks = $fixture.manifest | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+$withoutCracks.crack_canary_enabled = $false; $withoutCracks.Remove('crack_canary')
+$eighteen = $fixture.ready | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+$eighteen.textures = @($eighteen.textures | Where-Object { $_.channel -cnotlike 'Crack_*' })
+if ($eighteen.textures.Count -ne 18) { throw 'Expected eighteen base/shoulder/outer texture readbacks.' }
+Assert-MaterialTextureReadiness $eighteen $withoutCracks
+Reject { Assert-MaterialTextureReadiness $fixture.ready $withoutCracks } 'extra disabled crack textures'
+$wrongCount = FreshData
+$wrongCount.frames[-1].capture_readiness.material_texture_count = 15
+Reject { Check $wrongCount } 'stale fifteen-texture count with outer canary'
+''')
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
+    def test_actual_targeted_shader_log_catches_owned_failure_and_ignores_unrelated_startup_errors(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = self._crack_host_fixture(root)
+            self._run_crack_host_cases(root, fixture, r'''
+$path = Join-Path $fixture.proof 'synthetic-shader-log.log'
+$prefix = '/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/TerrainBlend/'
+$master = $prefix + 'M_ShoulderNetworkTerrain.M_ShoulderNetworkTerrain'
+# Firsthand Epic forum log formatter, with this fixture's material substituted;
+# these strings are not a native rendering or a UE5.8 compiler success witness.
+$unrelated = @(
+    'LogShaderCompilers: Warning: Failed to compile Material /Engine/Unrelated.Unrelated for platform PCD3D_SM6, Default Material will be used in game.',
+    'LogStreaming: Error: Could not find file /Engine/EditorResources/MissingAsset',
+    'LogMaterial: Warning: Missing cached shader map for M_ShoulderNetworkTerrain, compiling.',
+    'LogShaderCompilers: Display: Completed shader compilation for M_ShoulderNetworkTerrain.',
+    'LogMaterial: Error: /Game/Other/M_ShoulderNetworkTerrain_Debug failed to compile material.'
+)
+[IO.File]::WriteAllText($path, ($unrelated -join "`r`n"), [Text.UTF8Encoding]::new($true))
+$before = File-Identity $path
+$observed = Get-OuterTerrainShaderLogObservation $path
+Assert-OuterTerrainShaderLog $observed
+Assert-JsonEqual 0 $observed.matched_line_count 'no targeted failures in unrelated/normal fixture'
+Assert-JsonEqual $false $observed.all_shader_errors_verified 'targeted scan is not universal shader proof'
+Assert-JsonEqual $false $observed.gpu_compilation_admitted 'log observation is not GPU admission'
+Assert-Identity $before
+$failures = @(
+    ('LogShaderCompilers: Warning: Failed to compile Material ' + $master + ' for platform PCD3D_SM6, Default Material will be used in game.'),
+    ('LogMaterial: Error: Failed to compile Material ' + $master),
+    ('LogMaterial: Warning: ' + $prefix + 'MI_ShoulderNetworkTerrain.MI_ShoulderNetworkTerrain: Default Material will be used in game.'),
+    'LogShaderCompilers: Error: M_ShoulderNetworkTerrain [SM6] error X3000: synthetic compile error'
+)
+foreach ($failure in $failures) {
+    [IO.File]::WriteAllText($path, (($unrelated + @($failure)) -join "`r`n"))
+    $observed = Get-OuterTerrainShaderLogObservation $path
+    Assert-JsonEqual 1 $observed.matched_line_count 'one targeted native-format error'
+    Assert-JsonEqual $failure $observed.matched_lines[0].text 'retained exact failure line'
+    Assert-JsonEqual 6 $observed.matched_lines[0].line_number 'retained source line number'
+    Reject { Assert-OuterTerrainShaderLog $observed } 'targeted shader failure'
+}
+[IO.File]::WriteAllText($path, ((1..65 | ForEach-Object { $failures[0] }) -join "`n"))
+$observed = Get-OuterTerrainShaderLogObservation $path
+Assert-JsonEqual 65 $observed.matched_line_count 'all matches counted'
+Assert-JsonEqual 64 $observed.matched_lines.Count 'bounded retained failure lines'
+Assert-JsonEqual $true $observed.matches_truncated 'bounded observation explicitly marked'
+Reject { Assert-OuterTerrainShaderLog $observed } 'truncated error set still fails'
+''')
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
     def test_actual_surface_lane_gates_bind_saved_fresh_and_gpu_without_readback_reapplication(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -779,14 +1142,15 @@ Files $fixture.good | Out-Null
             self._run_crack_host_cases(root, fixture, r'''
 # Evaluate only the production lane guard/settings/environment expressions;
 # no Editor or Windows host operation is invoked by these local policy tests.
-$guard = @($ast.EndBlock.Statements | Where-Object {
+$guards = @($ast.EndBlock.Statements | Where-Object {
     $_ -is [System.Management.Automation.Language.IfStatementAst] -and
-    $_.Extent.Text.StartsWith('if ($CrackCanary -and (-not $EdgeMarkings')
+    ($_.Extent.Text.StartsWith('if ($CrackCanary -and -not $EdgeMarkings') -or
+     $_.Extent.Text.StartsWith('if ($PaintCoverage -and (-not $VisualControls'))
 })
 $processes = @($ast.FindAll({ param($node)
     $node -is [System.Management.Automation.Language.CommandAst] -and $node.GetCommandName() -ceq 'Start-Process'
 }, $true))
-if ($guard.Count -ne 1 -or $processes.Count -ne 1) { throw 'Production lane guard or owned process is not unique.' }
+if ($guards.Count -ne 2 -or $processes.Count -ne 1) { throw 'Production lane guards or owned process differ.' }
 $environmentExpression = $null
 for ($index = 0; $index -lt $processes[0].CommandElements.Count; $index++) {
     $item = $processes[0].CommandElements[$index]
@@ -799,11 +1163,14 @@ $RunToken = $fixture.good.run_token; $ExpectedHead = $fixture.good.exact_sha
 $WorkspaceConfig = 'D:\yacs\workspace.json'
 $readHost = @{ value = @{ proof_files = @{ session_preparation = @{ sha256 = 'f' * 64 } } } }
 $expectedPlan = @{ identity = @{ sha256 = 'c' * 64 } }
-foreach ($mode in @(@($false, $false, $false), @($false, $true, $false),
-                    @($true, $true, $false), @($true, $false, $true))) {
-    $EdgeMarkings, $VisualControls, $CrackCanary = $mode
-    . ([scriptblock]::Create($guard[0].Extent.Text))
-    foreach ($name in @('edgeMarkingSetting', 'visualControlToken', 'crackCanarySetting', 'crackControlToken', 'expectedMaterialTextureCount')) {
+foreach ($OuterTerrainCanary in @($false, $true)) {
+foreach ($mode in @(@($false, $false, $false, $false), @($false, $true, $false, $false),
+                    @($true, $true, $false, $false), @($true, $false, $true, $false),
+                    @($true, $true, $true, $false), @($true, $true, $false, $true), @($true, $true, $true, $true))) {
+    $EdgeMarkings, $VisualControls, $CrackCanary, $PaintCoverage = $mode
+    foreach ($guard in $guards) { . ([scriptblock]::Create($guard.Extent.Text)) }
+    foreach ($name in @('edgeMarkingSetting', 'visualControlToken', 'crackCanarySetting', 'crackControlToken',
+                       'paintCoverageToken', 'expectedVisualControlCount', 'expectedMaterialTextureCount', 'outerTerrainSetting')) {
         $setting = @($ast.EndBlock.Statements | Where-Object {
             $_ -is [System.Management.Automation.Language.AssignmentStatementAst] -and $_.Left.Extent.Text -ceq ('$' + $name)
         })
@@ -813,13 +1180,20 @@ foreach ($mode in @(@($false, $false, $false), @($false, $true, $false),
     $environment = & ([scriptblock]::Create($environmentExpression))
     Assert-JsonEqual $(if ($EdgeMarkings) { '1' } else { '0' }) $environment.YACS_ROAD_EDGE_MARKINGS 'edge environment'
     Assert-JsonEqual $(if ($CrackCanary) { '1' } else { '0' }) $environment.YACS_ROAD_CRACK_CANARY 'crack environment'
+    Assert-JsonEqual $(if ($OuterTerrainCanary) { '1' } else { '0' }) $environment.YACS_ROAD_OUTER_TERRAIN_CANARY 'outer environment'
     Assert-JsonEqual $(if ($VisualControls) { $RunToken } else { $null }) $environment.YACS_ROAD_VISUAL_CONTROLS_OWNED 'inactive asphalt marker cleared'
-    Assert-JsonEqual $(if ($CrackCanary) { $RunToken } else { $null }) $environment.YACS_ROAD_CRACK_CONTROLS_OWNED 'inactive crack marker cleared'
-    Assert-JsonEqual $(if ($CrackCanary) { 15 } else { 7 }) $expectedMaterialTextureCount 'native material texture lane'
+    Assert-JsonEqual $(if ($CrackCanary -and -not $VisualControls) { $RunToken } else { $null }) `
+        $environment.YACS_ROAD_CRACK_CONTROLS_OWNED 'scene presence does not select the crack controller'
+    Assert-JsonEqual $(if ($PaintCoverage) { $RunToken } else { $null }) $environment.YACS_ROAD_PAINT_COVERAGE_OWNED 'inactive paint marker cleared'
+    Assert-JsonEqual $(if ($PaintCoverage) { 10 } else { 8 }) $expectedVisualControlCount 'exact selected asphalt control count'
+    Assert-JsonEqual ($(if ($CrackCanary) { 15 } else { 7 }) + $(if ($OuterTerrainCanary) { 11 } else { 0 })) `
+        $expectedMaterialTextureCount 'native material texture lane'
 }
-foreach ($mode in @(@($false, $false, $true), @($true, $true, $true))) {
-    $EdgeMarkings, $VisualControls, $CrackCanary = $mode
-    Reject { . ([scriptblock]::Create($guard[0].Extent.Text)) } 'incompatible diagnostic switches'
+}
+foreach ($mode in @(@($false, $false, $true, $false), @($false, $true, $true, $false),
+                    @($true, $false, $false, $true), @($false, $true, $false, $true), @($true, $false, $true, $true))) {
+    $EdgeMarkings, $VisualControls, $CrackCanary, $PaintCoverage = $mode
+    Reject { foreach ($guard in $guards) { . ([scriptblock]::Create($guard.Extent.Text)) } } 'incompatible diagnostic switches'
 }
 foreach ($mode in @(@($false, $false), @($true, $false), @($true, $true))) {
     $markings, $cracks = $mode

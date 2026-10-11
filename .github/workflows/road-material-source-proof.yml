@@ -206,7 +206,7 @@ jobs:
           retention-days: 14
 
       - name: Read bounded source hairpin LiDAR transects when requested
-        if: ${{ !cancelled() && steps.source_prerequisites.outcome == 'success' && contains(github.event.head_commit.message, '[hairpin-lidar]') }}
+        if: ${{ !cancelled() && steps.source_prerequisites.outcome == 'success' && (contains(github.event.head_commit.message, '[hairpin-lidar]') || contains(github.event.head_commit.message, '[hairpin-wall-lidar]')) }}
         shell: pwsh
         working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
@@ -217,12 +217,18 @@ jobs:
           $child = $null
           $retained = $null
           $timer = $null
+          $profileRequested = '${{ contains(github.event.head_commit.message, '[hairpin-lidar]') }}' -ceq 'true'
+          $wallRequested = '${{ contains(github.event.head_commit.message, '[hairpin-wall-lidar]') }}' -ceq 'true'
+          $transectSet = if ($wallRequested) { 'wall-contact' } else { 'hairpin-profile' }
+          $sourceStations = if ($wallRequested) { @(195, 200, 205, 210, 215, 220, 225, 230, 235) }
+                            else { @(95, 110, 125, 135, 145, 150, 155, 165) }
           $report = [ordered]@{
             schema_version = 1; status = 'FAILED'; exact_sha = $env:GITHUB_SHA
             run_token = ($env:GITHUB_RUN_ID + '-' + $env:GITHUB_RUN_ATTEMPT)
             owned_pid = $null; exit_code = $null; exit_code_observed = $false
             stopped_after_deadline = $false; deadline_seconds = 180
             observations_available = $false; source_mutated = $false
+            transect_set = $transectSet; source_stations_m = $sourceStations
             interpreter = $null; decoder_environment_status = 'NOT_RUN'
             decoder_restoration_status = 'NOT_REQUESTED'; files = @(); error = $null
           }
@@ -249,6 +255,7 @@ jobs:
             $report.files = $rows
           }
           try {
+            if ($profileRequested -eq $wallRequested) { throw 'Select exactly one closed source LiDAR transect set.' }
             $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
             if ($state.status -cne 'IDLE') { throw 'LiDAR observation reader yields to existing Unreal ownership.' }
             & $env:YACS_ROAD_FORGE_PY -m unittest scripts.assets.test_read_sa_calobra_hairpin_lidar
@@ -297,7 +304,8 @@ jobs:
             if (Test-Path -LiteralPath $retained) { throw 'The source LiDAR evidence directory already exists.' }
             $script = Join-Path (Get-Location).Path 'scripts/assets/read_sa_calobra_hairpin_lidar.py'
             $arguments = @('-I', '-B', ('"' + $script + '"'),
-              '--workspace-config', 'D:\yacs\workspace.json', '--output-name', $outputName)
+              '--workspace-config', 'D:\yacs\workspace.json', '--output-name', $outputName,
+              '--transect-set', $transectSet)
             $timer = [Diagnostics.Stopwatch]::StartNew()
             $child = Start-Process -FilePath $python -ArgumentList $arguments -PassThru -NoNewWindow `
               -WorkingDirectory (Get-Location).Path `
@@ -322,7 +330,10 @@ jobs:
             $report.reader_status = $native.status
             if ($report.exit_code -ne 0 -or $native.status -cne 'OBSERVATIONS_EXPORTED' -or
                 $native.observations_available -isnot [bool] -or -not $native.observations_available -or
-                $native.post_read_source_status -cne 'PASS') {
+                $native.post_read_source_status -cne 'PASS' -or
+                $native.parameters.transect_set -cne $transectSet -or
+                $native.parameters.source_stations_m -isnot [Collections.IList] -or
+                (@($native.parameters.source_stations_m) -join ',') -cne ($sourceStations -join ',')) {
               throw 'Source LiDAR observations are unavailable or failed; retained reader evidence states the cause.'
             }
             $report.observations_available = $true
@@ -354,7 +365,7 @@ jobs:
           }
 
       - name: Retain source hairpin observations and actual reader outcome
-        if: ${{ always() && contains(github.event.head_commit.message, '[hairpin-lidar]') }}
+        if: ${{ always() && (contains(github.event.head_commit.message, '[hairpin-lidar]') || contains(github.event.head_commit.message, '[hairpin-wall-lidar]')) }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: hairpin-lidar-${{ github.sha }}-${{ github.run_attempt }}

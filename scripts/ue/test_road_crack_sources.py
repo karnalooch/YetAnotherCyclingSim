@@ -1,6 +1,7 @@
 """Disposable contract/texture fixtures; none is a Godot or Unreal proof."""
 
 from copy import deepcopy
+from enum import Enum
 import errno
 import hashlib
 import json
@@ -204,6 +205,89 @@ class ImportEngine:
             if not self.fail_import:
                 self.assets[name] = Texture(name)
             task.properties["imported_object_paths"] = [] if self.fail_import else [name]
+
+
+class TextureReadbackTests(unittest.TestCase):
+    """Getter-only diagnostics; placeholder values are fixtures, not a GPU finding."""
+
+    def texture(self, channel="BaseColor"):
+        engine = ImportEngine()
+        path = "/Game/Generated/YACS/RoadAsphaltConsumer/CrackLayer/fixture/drifting_interrupted/T_Crack_" + channel
+        path += ".T_Crack_" + channel
+        texture = Texture(path)
+        texture.properties = {"srgb": channel == "BaseColor", "compression_settings": "normal" if channel == "Normal_DX" else "color",
+                              "address_x": "clamp", "address_y": "clamp"}
+        if channel == "Normal_DX":
+            texture.properties["flip_green_channel"] = False
+        engine.assets[path] = texture
+        return engine, texture, {"textures": {"drifting_interrupted": {channel: path}}}
+
+    def failure(self, engine, paths):
+        with self.assertRaises(ValueError) as caught:
+            sources._verify_textures(engine.api, paths)
+        message = str(caught.exception)
+        self.assertTrue(message.startswith(sources.TEXTURE_READBACK_ERROR))
+        self.assertLess(len(message.encode()), 8192)
+        return json.loads(message.removeprefix(sources.TEXTURE_READBACK_ERROR))
+
+    def test_mismatch_keeps_both_size_reads_all_settings_and_actual_path_without_repair(self):
+        engine, texture, paths = self.texture()
+        texture.properties.update(srgb=False, address_x="wrap")
+        wanted_path = texture.path
+        texture.path += "_foreign"
+        with patch.object(texture, "blueprint_get_size_x", return_value=0) as size_x, \
+                patch.object(texture, "blueprint_get_size_y", return_value=16) as size_y, \
+                patch.object(texture, "set_editor_property", side_effect=AssertionError("Readback must not repair")):
+            row = self.failure(engine, paths)
+        self.assertEqual((row["motif"], row["channel"], row["expected_path"]),
+                         ("drifting_interrupted", "BaseColor", wanted_path))
+        self.assertEqual(row["expected_class"], "Texture2D")
+        fields = row["fields"]
+        self.assertEqual(fields["object_path"]["observed"]["text"], texture.path)
+        self.assertEqual(fields["srgb"], {"expected": True, "observed": False, "status": "READ"})
+        self.assertEqual(fields["address_x"]["expected"]["text"], "clamp")
+        self.assertEqual(fields["address_x"]["observed"]["text"], "wrap")
+        self.assertEqual(fields["compression_settings"]["observed"]["text"], "color")
+        self.assertEqual(fields["size_x"], {"expected": 2048, "observed": 0, "status": "READ"})
+        self.assertEqual(fields["size_y"], {"expected": 2048, "observed": 16, "status": "READ"})
+        size_x.assert_called_once_with()
+        size_y.assert_called_once_with()
+        self.assertEqual(engine.tasks, [])
+
+    def test_normal_enum_and_green_flip_diagnostics_keep_exact_expected_and_observed_values(self):
+        class Address(Enum):
+            WRAP = 0
+            CLAMP = 1
+
+        engine, texture, paths = self.texture("Normal_DX")
+        engine.api.TextureAddress = SimpleNamespace(TA_CLAMP=Address.CLAMP, TA_WRAP=Address.WRAP)
+        texture.properties.update(address_x=Address.CLAMP, address_y=Address.WRAP, flip_green_channel=True)
+        row = self.failure(engine, paths)
+        self.assertEqual(row["channel"], "Normal_DX")
+        fields = row["fields"]
+        self.assertEqual(fields["address_y"]["expected"], {"type": "Address", "text": "Address.CLAMP", "truncated": False})
+        self.assertEqual(fields["address_y"]["observed"], {"type": "Address", "text": "Address.WRAP", "truncated": False})
+        self.assertEqual(fields["flip_green_channel"], {"expected": False, "observed": True, "status": "READ"})
+        self.assertEqual(fields["size_x"]["observed"], 2048)
+        self.assertEqual(fields["size_y"]["observed"], 2048)
+
+    def test_getter_error_is_bounded_and_never_replaced_by_an_invented_size(self):
+        engine, texture, paths = self.texture()
+        with patch.object(texture, "blueprint_get_size_x", side_effect=RuntimeError("fixture getter failure " + "x" * 10000)), \
+                patch.object(texture, "blueprint_get_size_y", return_value=0):
+            fields = self.failure(engine, paths)["fields"]
+        self.assertEqual(fields["size_x"]["status"], "READ_ERROR")
+        self.assertEqual(fields["size_x"]["expected"], 2048)
+        self.assertNotIn("observed", fields["size_x"])
+        self.assertEqual(fields["size_x"]["error"]["type"], "RuntimeError")
+        self.assertTrue(fields["size_x"]["error"]["truncated"])
+        self.assertEqual(len(fields["size_x"]["error"]["text"]), 256)
+        self.assertEqual(fields["size_y"], {"expected": 2048, "observed": 0, "status": "READ"})
+        engine.assets.clear()
+        missing = self.failure(engine, paths)
+        self.assertEqual(missing["observed_class"], "NoneType")
+        self.assertEqual(missing["fields_status"], "NOT_READ_WRONG_TEXTURE_CLASS")
+        self.assertEqual(missing["fields"], {})
 
 
 class SourceTests(unittest.TestCase):

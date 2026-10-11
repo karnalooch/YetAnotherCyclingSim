@@ -67,6 +67,60 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
         ]
         return value
 
+    def outer_material_receipt(self):
+        """Only the structural fixture consumed by saved orchestration tests."""
+        material = saved.shoulder_material
+        return {
+            "schema_version": 3, "outer_terrain_enabled": True,
+            "assets": material.asset_paths(material.DESTINATION_ROOT, outer_terrain=True),
+            "edge_transition": {**material.EDGE_TRANSITION, "outer_terrain_transition": True},
+            "outer_transition": deepcopy(material.OUTER_TRANSITION),
+            "terrain_source": {
+                "source_packages": deepcopy(material.TERRAIN_PINS),
+                "texture_objects": {name: material._object_path(row["path"])
+                                    for name, row in material.TERRAIN_PINS.items() if name not in ("master", "instance")},
+                "instance": material._object_path(material.TERRAIN_PINS["instance"]["path"]),
+                "landscape_component_count": 1024,
+            },
+            "gpu_compile_verified": False,
+            "native_statistics": {"num_samplers": 6, "num_pixel_shader_instructions": 350,
+                "num_pixel_texture_samples": 49, "num_vertex_shader_instructions": 10,
+                "num_vertex_texture_samples": 0, "num_virtual_texture_samples": 0,
+                "num_uv_scalars": 4, "num_interpolator_scalars": 0},
+        }
+
+    def shoulder_inventory_fixture(self, *, outer=False):
+        original, after = deepcopy(self.old), self.new_inventory()
+        assets = saved.shoulder_material.asset_paths(saved.shoulder_material.DESTINATION_ROOT)
+        receipt = {"schema_version": saved.shoulder.OUTER_SCHEMA_VERSION if outer else saved.shoulder.SCHEMA_VERSION,
+                   "support_count": 186, "material_target_count": 185, "rollback_verified": True,
+                   "selected_triangle_count": 67760, "owners": [], "material": {"assets": assets}}
+        outer_material = self.outer_material_receipt() if outer else None
+        for i in range(186):
+            target = i != 181
+            material = saved.shoulder_sources.SUPPORT_MATERIAL if target else saved.shoulder_sources.PARAPET_MATERIAL
+            label = original["road_supports"][i + 1]["label"]
+            receipt["owners"].append({"support_label": label, "material_target": target,
+                "kind": "ordinary" if target else "parapet", "source": {"original_material_path": material}})
+            canary = next((row for row in saved.OUTER_TERRAIN_CANARY if row["support_label"] == label), None)
+            if canary:
+                row = receipt["owners"][-1]
+                fields = {key: value for key, value in canary.items() if key != "camera_window"}
+                row.update(fields)
+                row["source"].update(fields, material_target=True)
+            for inventory in (original, after):
+                inventory["road_supports"][i + 1]["slots"] = [{"path": material}]
+                inventory["mesh_material_collision_snapshot"][i + 1]["materials"] = [material]
+            if target:
+                selected = outer_material["assets"] if outer and label in saved.OUTER_TERRAIN_OWNER_LABELS else assets
+                after["road_supports"][i + 1]["slots"].append({"path": selected["instance"], "parent": selected["master"],
+                    "class": "MaterialInstanceConstant", "effective_color": None})
+                after["mesh_material_collision_snapshot"][i + 1]["materials"].append(selected["instance"])
+        if outer:
+            receipt["outer_terrain"] = saved.shoulder.outer_configuration(
+                {"owners": receipt["owners"]}, outer_material, list(saved.OUTER_TERRAIN_OWNER_LABELS))
+        return original, after, receipt
+
     def marking_receipt(self):
         """Full-count structural fixture only; never source/native evidence."""
         owners = [f"YACS_PERSIST_SUPPORT_{i:03d}" for i in range(186) if i != 181]
@@ -478,7 +532,7 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
 
     @contextmanager
     def saved_lane_fixture(self, *, crack_canary=False, fail_map=False, fail_paint_cleanup=False,
-                           fail_crack_cleanup=False, fail_crack_asset=False):
+                           fail_crack_cleanup=False, fail_crack_asset=False, outer_terrain=False, fail_outer_asset=False):
         """Exercise orchestration and real file pins with explicit native stubs.
 
         Separate tests above and in the paint consumer check full inventories
@@ -491,7 +545,7 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
             proof.mkdir()
             old_asset = SimpleNamespace(get_path_name=lambda: self.old["road_supports"][0]["slots"][0]["path"])
             new_asset = SimpleNamespace(get_path_name=lambda: self.new_material)
-            state = {"material": old_asset, "shoulder": False, "cracks": False,
+            state = {"material": old_asset, "shoulder": False, "cracks": False, "outer": False,
                      "package": saved.session.operation.MAP_PACKAGE}
 
             def set_material(slot, asset):
@@ -510,6 +564,9 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 self.assertIs(only_if_is_dirty, False)
                 if fail_crack_asset and asset.get_path_name() == native_cracks["owned_asset_paths"][-1]:
                     events.append("crack-asset-save-failed")
+                    return False
+                if fail_outer_asset and asset.get_path_name() == outer_material["assets"]["instance"]:
+                    events.append("outer-asset-save-failed")
                     return False
                 relative = "Content/" + asset.get_path_name().split(".", 1)[0].removeprefix("/Game/") + ".uasset"
                 path = root / relative
@@ -533,6 +590,12 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 EditorAssetLibrary=SimpleNamespace(save_loaded_asset=save_asset),
                 EditorLoadingAndSavingUtils=SimpleNamespace(save_map=save_map),
                 CollisionEnabled=SimpleNamespace(NO_COLLISION="NO_COLLISION"))
+            landscape = object()
+            api.Landscape = type("Landscape", (), {})
+            api.GameplayStatics = SimpleNamespace(get_all_actors_of_class=lambda _world, _kind: [landscape])
+            observed_statistics = dict.fromkeys(saved.shoulder_material.STATISTICS_FIELDS, 0)
+            api.MaterialEditingLibrary = SimpleNamespace(get_statistics=lambda _: SimpleNamespace(
+                get_editor_property=lambda name: observed_statistics[name]))
             asphalt_assets = {"instance": self.new_material,
                 "master": self.new_material.rsplit("/", 1)[0] + "/M_MaterialForge.M_MaterialForge",
                 "textures": {name: self.new_material.rsplit("/", 1)[0] + "/T_" + name + ".T_" + name
@@ -548,11 +611,13 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                     save_asset(api.load_asset(path), False)
                 return new_asset, imported
 
-            gravel_receipt = {"assets": saved.shoulder_material.asset_paths(saved.shoulder_material.DESTINATION_ROOT)}
-            shoulder_receipt = {"schema_version": saved.shoulder.SCHEMA_VERSION, "rollback_verified": True,
-                "support_count": 186, "material_target_count": 185, "selected_triangle_count": 67760,
-                "material": gravel_receipt}
-            rollback_state, source_plan, marking_plan, crack_plan = object(), object(), object(), object()
+            shoulder_receipt = self.shoulder_inventory_fixture(outer=outer_terrain)[2]
+            gravel_receipt = shoulder_receipt["material"]
+            outer_material = None if not outer_terrain else shoulder_receipt["outer_terrain"]["material"]
+            outer_instance = None if outer_material is None else api.load_asset(outer_material["assets"]["instance"])
+            rollback_state, marking_plan, crack_plan = object(), object(), object()
+            source_plan = {"owners": shoulder_receipt["owners"]}
+            consumer_assets = list(deepcopy(saved.shoulder_material.TERRAIN_PINS).values())
             native_paint = self.marking_receipt()
             native_paint.pop("material_packages_saved")
             native_paint.pop("native_no_collision")
@@ -563,9 +628,13 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
             crack_actors = (object(), object())
             crack_root = Path(directory) / "crack-source-fixture"
 
-            def prepare_shoulders(*_args):
+            def prepare_shoulders(*_args, **kwargs):
+                self.assertEqual(kwargs, {} if not outer_terrain else {
+                    "outer_instance": outer_instance, "outer_material_receipt": outer_material,
+                    "outer_owner_labels": list(saved.OUTER_TERRAIN_OWNER_LABELS)})
                 events.append("shoulder-asphalt")
                 state["shoulder"] = True
+                state["outer"] = outer_terrain
                 return shoulder_receipt, rollback_state
 
             def rollback_shoulders(_api, rollback):
@@ -573,6 +642,14 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 self.assertIs(state["material"], old_asset)
                 events.append("shoulder-original")
                 state["shoulder"] = False
+                state["outer"] = False
+
+            def create_material(_api, _root, _dependencies, _asphalt, **kwargs):
+                if not kwargs:
+                    return api.load_asset(gravel_receipt["assets"]["instance"]), gravel_receipt
+                self.assertIs(kwargs["terrain_consumer_assets"], consumer_assets)
+                self.assertIs(kwargs["landscape"], landscape)
+                return outer_instance, outer_material
 
             def cleanup_paint(_api, actors, before, package):
                 self.assertIs(actors, paint_actors)
@@ -641,8 +718,9 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 (saved.shoulder, "prepare", {"side_effect": prepare_shoulders}),
                 (saved.shoulder, "rollback", {"side_effect": rollback_shoulders}),
                 (saved.shoulder, "verify_loaded", {}),
-                (saved.shoulder_material, "create_material", {"return_value": (object(), gravel_receipt)}),
-                (saved.shoulder_material, "verify_material", {}),
+                (saved.shoulder_material, "create_material", {"side_effect": create_material}),
+                (saved.shoulder_material, "verify_material", {"side_effect":
+                    lambda _api, receipt, _dependencies, **_kwargs: api.load_asset(receipt["assets"]["instance"])}),
                 (saved.session, "_verify_rows", {}), (saved.session, "_assert_package_members", {}),
                 (markings, "create", {"return_value": (paint_actors, native_paint)}),
                 (markings, "verify_loaded", {"return_value": readback}),
@@ -658,7 +736,8 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                                                           SimpleNamespace(import_variant=forge_import)}))
             yield SimpleNamespace(api=api, proof=proof, retained=retained, events=events, state=state,
                 args=(api, proof, retained, "a" * 40, "b" * 64, {"native_inventory": self.old}, []),
-                kwargs={"source_dependencies": [], "edge_markings": True, "crack_canary": crack_canary},
+                kwargs={"source_dependencies": [], "edge_markings": True, "crack_canary": crack_canary,
+                        "outer_terrain": outer_terrain, "terrain_consumer_assets": consumer_assets},
                 readback=readback, aggregate_white=aggregate_white, crack_readback=crack_readback, patches=patches)
 
     def test_enabled_saved_lane_pins_paint_packages_then_fresh_reopens_without_reapplying(self):
@@ -681,6 +760,175 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
             self.assertFalse(receipt["edge_marking_geometry_reapplied"])
             self.assertEqual(receipt["edge_marking_readback"], lane.readback)
             self.assertTrue(receipt["shoulder_material_edge_uv_fresh_reload_verified"])
+
+    def test_outer_lane_is_explicit_and_requires_exact_five_owner_frozen_surface_contract(self):
+        for value, expected in (("0", False), ("1", True)):
+            with patch.dict("os.environ", {"YACS_ROAD_OUTER_TERRAIN_CANARY": value}):
+                self.assertIs(saved.outer_terrain_enabled(), expected)
+        for value in ("", "true", "yes", "2"):
+            with patch.dict("os.environ", {"YACS_ROAD_OUTER_TERRAIN_CANARY": value}), self.assertRaises(ValueError):
+                saved.outer_terrain_enabled()
+        network = self.shoulder_inventory_fixture(outer=True)[2]
+        manifest = {"outer_terrain_enabled": True, "shoulder_network": network}
+        self.assertEqual(saved.outer_terrain_receipt(manifest), network["outer_terrain"])
+        paths = saved.outer_terrain_texture_paths(manifest)
+        self.assertEqual(len(paths), 11)
+        self.assertEqual(len(set(paths)), 11)
+        self.assertEqual(paths[0], saved.shoulder_material._object_path(saved.shoulder_material.TERRAIN_PINS["WeightTex"]["path"]))
+        for mutate in (
+            lambda value: value.update(outer_terrain_enabled=False),
+            lambda value: value.update(outer_terrain_enabled="1"),
+            lambda value: value["shoulder_network"].update(schema_version=3),
+            lambda value: value["shoulder_network"]["outer_terrain"]["owner_labels"].__setitem__(0, "YACS_PERSIST_SUPPORT_022"),
+            lambda value: value["shoulder_network"]["outer_terrain"].update(physical_contact_verified=True),
+            lambda value: value["shoulder_network"]["outer_terrain"].update(uv_channel=0),
+            lambda value: value["shoulder_network"]["owners"][182].update(window_id="other_nudo_level"),
+            lambda value: value["shoulder_network"]["owners"][182]["source"].update(kind="parapet"),
+            lambda value: value["shoulder_network"]["owners"][18].update(selected_triangle_count=708),
+            lambda value: value["shoulder_network"]["outer_terrain"]["material"]["terrain_source"]["texture_objects"].pop("ScreeNormalTex"),
+            lambda value: value["shoulder_network"]["outer_terrain"]["material"]["terrain_source"]["source_packages"]["WeightTex"].update(sha256="0" * 64),
+        ):
+            changed = deepcopy(manifest)
+            mutate(changed)
+            with self.subTest(mutate=mutate), self.assertRaises(ValueError):
+                saved.outer_terrain_texture_paths(changed)
+        legacy = {"outer_terrain_enabled": False, "shoulder_network": self.shoulder_inventory_fixture()[2]}
+        self.assertEqual(saved.outer_terrain_texture_paths(legacy), [])
+
+    def test_outer_native_helper_reads_both_materials_and_actual_landscape_without_mutators(self):
+        network = self.shoulder_inventory_fixture(outer=True)[2]
+        manifest = {"outer_terrain_enabled": True, "shoulder_network": network, "assets": []}
+        for receipt in (network["material"], network["outer_terrain"]["material"]):
+            manifest["assets"].extend({"path": "Content/" + path.split(".", 1)[0].removeprefix("/Game/") + ".uasset"}
+                                      for path in receipt["assets"].values())
+        landscape, world, dependencies, consumer = object(), object(), object(), object()
+        landscapes = [landscape]
+        statistics = dict.fromkeys(saved.shoulder_material.STATISTICS_FIELDS, 0)
+        api = SimpleNamespace(UnrealEditorSubsystem=object(), Landscape=object(),
+            get_editor_subsystem=lambda _: SimpleNamespace(get_editor_world=lambda: world),
+            GameplayStatics=SimpleNamespace(get_all_actors_of_class=lambda w, cls: landscapes if w is world and cls is api.Landscape else []),
+            MaterialEditingLibrary=SimpleNamespace(get_statistics=lambda _: SimpleNamespace(
+                get_editor_property=lambda name: statistics[name])))
+        before = deepcopy(manifest)
+        with patch.object(saved.shoulder_material, "verify_material", side_effect=lambda _api, receipt, _dependencies, **_kwargs:
+                          SimpleNamespace(get_path_name=lambda: receipt["assets"]["instance"])) as verify:
+            result = saved.verify_shoulder_materials(api, manifest, dependencies, consumer)
+            self.assertEqual(result["status"], "SHOULDER_MATERIALS_NATIVE_READBACK_VERIFIED")
+            self.assertEqual(result["outer_owner_labels"], list(saved.OUTER_TERRAIN_OWNER_LABELS))
+            self.assertEqual(result["landscape_component_count"], 1024)
+            self.assertTrue(result["read_only"])
+            self.assertFalse(result["physical_contact_verified"])
+            self.assertFalse(result["normal_response_visual_verified"])
+            self.assertEqual(result["outer_native_statistics"], statistics)
+            self.assertNotEqual(result["outer_native_statistics"], network["outer_terrain"]["material"]["native_statistics"])
+            self.assertFalse(result["outer_gpu_compile_verified"])
+            self.assertEqual(verify.call_count, 2)
+            self.assertEqual(verify.call_args_list[0].kwargs, {})
+            self.assertIs(verify.call_args_list[1].kwargs["terrain_consumer_assets"], consumer)
+            self.assertIs(verify.call_args_list[1].kwargs["landscape"], landscape)
+            self.assertEqual(manifest, before)
+            verify.reset_mock()
+            manifest["assets"].pop()
+            with self.assertRaisesRegex(ValueError, "fully retained"):
+                saved.verify_shoulder_materials(api, manifest, dependencies, consumer)
+            verify.assert_not_called()
+            manifest["assets"] = before["assets"]
+            for count in (0, 2):
+                landscapes[:] = [landscape] * count
+                with self.subTest(landscape_count=count), self.assertRaisesRegex(ValueError, "exactly one actual"):
+                    saved.verify_shoulder_materials(api, manifest, dependencies, consumer)
+            landscapes[:] = [landscape]
+            with self.assertRaisesRegex(ValueError, "frozen consumer inventory"):
+                saved.verify_shoulder_materials(api, manifest, dependencies)
+
+    def test_outer_saved_lane_retains_only_two_new_packages_and_fresh_never_reauthors(self):
+        for cracks_enabled in (False, True):
+            with self.subTest(cracks=cracks_enabled), self.saved_lane_fixture(
+                    outer_terrain=True, crack_canary=cracks_enabled) as lane:
+                saved.prepare(*lane.args, **lane.kwargs)
+                manifest = json.loads((lane.proof / saved.MANIFEST).read_text())
+                prepared = json.loads((lane.proof / saved.PREPARED).read_text())
+                self.assertIs(manifest["outer_terrain_enabled"], True)
+                self.assertIs(prepared["outer_terrain_enabled"], True)
+                self.assertEqual(manifest["shoulder_network"]["schema_version"], 4)
+                self.assertEqual(manifest["shoulder_network"]["outer_terrain"]["owner_labels"], list(saved.OUTER_TERRAIN_OWNER_LABELS))
+                self.assertEqual(len(manifest["assets"]), 24 if cracks_enabled else 13)
+                self.assertEqual(sum("/TerrainBlend/" in row["path"] for row in manifest["assets"]), 2)
+                saved.verify_retained_files(lane.retained, manifest["assets"])
+                events = list(lane.events)
+                creator = lane.patches[(saved.shoulder_material.__name__, "create_material")]
+                self.assertEqual(creator.call_count, 2)
+                saved.reload(*lane.args, **lane.kwargs)
+                self.assertEqual(creator.call_count, 2)
+                self.assertEqual(lane.events, events)
+                fresh = json.loads((lane.proof / saved.RELOADED).read_text())
+                self.assertIs(fresh["outer_terrain_enabled"], True)
+                self.assertIs(fresh["outer_terrain_fresh_reload_verified"], True)
+                self.assertIs(fresh["outer_material_reapplied"], False)
+                self.assertIs(fresh["outer_geometry_reapplied"], False)
+                self.assertEqual(fresh["outer_terrain_readback"]["outer_owner_labels"], list(saved.OUTER_TERRAIN_OWNER_LABELS))
+                self.assertFalse(fresh["outer_terrain_readback"]["normal_response_visual_verified"])
+                self.assertFalse(fresh["outer_terrain_readback"]["physical_contact_verified"])
+                self.assertEqual(fresh["outer_terrain_readback"]["outer_native_statistics"],
+                                 dict.fromkeys(saved.shoulder_material.STATISTICS_FIELDS, 0))
+                self.assertFalse(fresh["outer_terrain_readback"]["outer_gpu_compile_verified"])
+                lane.patches[(saved.shoulder.__name__, "prepare")].assert_called_once()
+                lane.patches[(saved.shoulder.__name__, "verify_loaded")].assert_called_once()
+
+    def test_outer_package_save_failure_precedes_all_source_writes_and_map_failure_rolls_back_uv_owner(self):
+        with self.saved_lane_fixture(outer_terrain=True, fail_outer_asset=True) as lane:
+            with self.assertRaisesRegex(ValueError, "shoulder material save failed"):
+                saved.prepare(*lane.args, **lane.kwargs)
+            self.assertEqual(lane.events, ["outer-asset-save-failed"])
+            self.assertFalse(lane.state["shoulder"])
+            self.assertFalse(lane.state["outer"])
+            self.assertFalse((lane.proof / saved.PREPARED).exists())
+            lane.patches[(saved.shoulder.__name__, "prepare")].assert_not_called()
+        with self.saved_lane_fixture(outer_terrain=True, crack_canary=True, fail_map=True) as lane:
+            with self.assertRaisesRegex(ValueError, "map save failed"):
+                saved.prepare(*lane.args, **lane.kwargs)
+            self.assertEqual(lane.events, ["road-asphalt", "shoulder-asphalt", "cracks-create", "save-map",
+                "cracks-rollback", "paint-rollback", "road-original", "shoulder-original"])
+            self.assertFalse(lane.state["outer"])
+            self.assertFalse((lane.proof / saved.MANIFEST).exists())
+            lane.patches[(saved.shoulder.__name__, "rollback")].assert_called_once()
+
+    def test_outer_mode_or_missing_frozen_inventory_cannot_silently_skip_a_saved_variant(self):
+        with self.saved_lane_fixture(outer_terrain=True) as lane:
+            with self.assertRaisesRegex(ValueError, "explicit mode and frozen consumer"):
+                saved.prepare(*lane.args, **{**lane.kwargs, "terrain_consumer_assets": None})
+            self.assertEqual(lane.events, [])
+            saved.prepare(*lane.args, **lane.kwargs)
+            events = list(lane.events)
+            with self.assertRaisesRegex(ValueError, "No authentic native saved-consumer preparation"):
+                saved.reload(*lane.args, **{**lane.kwargs, "outer_terrain": False})
+            self.assertEqual(lane.events, events)
+            self.assertFalse((lane.proof / saved.RELOADED).exists())
+
+    def test_outer_inventory_uses_the_correct_material_only_on_five_source_owners(self):
+        original, after, receipt = self.shoulder_inventory_fixture(outer=True)
+
+        def verify(value, selection=receipt):
+            return saved.expected_saved_inventory(original, value, self.new_material,
+                observed_map_package=saved.session.operation.MAP_PACKAGE, shoulder_receipt=selection)
+
+        verify(after)
+        outer = receipt["outer_terrain"]["material"]["assets"]
+        for index in (22, 185, 181):
+            changed = deepcopy(after)
+            row = changed["road_supports"][index + 1]
+            if index == 181:
+                row["slots"].append({"path": outer["instance"]})
+                changed["mesh_material_collision_snapshot"][index + 1]["materials"].append(outer["instance"])
+            else:
+                row["slots"][1].update(path=outer["instance"], parent=outer["master"])
+                changed["mesh_material_collision_snapshot"][index + 1]["materials"][1] = outer["instance"]
+            with self.subTest(unselected_owner=index), self.assertRaises(ValueError):
+                verify(changed)
+        changed = deepcopy(after)
+        changed["road_supports"][19]["slots"][1]["path"] = receipt["material"]["assets"]["instance"]
+        with self.assertRaises(ValueError):
+            verify(changed)
 
     def test_crack_saved_lane_retains_all_packages_and_fresh_reads_explicit_white_aggregate(self):
         with self.saved_lane_fixture(crack_canary=True) as lane:

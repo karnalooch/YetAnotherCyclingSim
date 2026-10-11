@@ -1,8 +1,9 @@
-"""Append one source-owned material UV field; never edit source mesh buffers.
+"""Append source-owned material UV fields; never edit source mesh buffers.
 
 UV0 stores (distance from the inner pavement edge, distance along that edge)
-in centimetres. Each authenticated outer quad gets an affine, nondegenerate
-chart. World-projected PBR textures do not use this chart for texture scale.
+in centimetres. Optional UV1 measures the actual outer edge independently.
+Each authenticated outer quad gets affine, nondegenerate charts. World-
+projected PBR textures do not use these charts for texture scale.
 Only selected top triangles are set; walls/interior/parapets have no new UVs.
 
 The stock UE 5.8 SetMeshTriangleUVs operation creates all three overlay elements
@@ -24,6 +25,7 @@ from scripts.ci import official_mcp_bob_session as session
 from scripts.ue import road_shoulder_sources as sources
 
 CHANNEL = 0
+OUTER_CHANNEL = 1
 HASH_FORMAT = "blake3-256-le-i32-f64-material-uv-v1"
 ENGINE_VERSION = "5.8.2-56702186+++UE5+Release-5.8"
 API_ROOT = "Plugins/Runtime/GeometryScripting/Source/GeometryScriptingCore/"
@@ -46,6 +48,20 @@ def _float32(value):
 
 def triangle_coordinates(owner):
     """Derive actual metric distance from immutable source, without mutation."""
+    return _triangle_coordinates(owner, outer=False)
+
+
+def outer_triangle_coordinates(owner):
+    """UV1 measures the actual outer edge, including source miter and taper.
+
+    The second coordinate remains distance along that same edge. Packing inner
+    and outer distances into one chart would make parallel strips degenerate.
+    This source field does not classify Landscape contact or move either edge.
+    """
+    return _triangle_coordinates(owner, outer=True)
+
+
+def _triangle_coordinates(owner, *, outer):
     require(owner.get("material_target") is True and owner.get("kind") != "parapet",
             "Material edge coordinates require a source-owned outer top")
     sections = owner.get("sections_cm")
@@ -61,17 +77,18 @@ def triangle_coordinates(owner):
             require(all(isinstance(point, (tuple, list)) and len(point) == 3
                         and all(type(v) in (int, float) and math.isfinite(v) for v in point)
                         for point in points), "Nonfinite material edge source coordinate")
-            inner, end, outer = (b, d, a) if column == 0 else (a, c, b)
-            dx, dy = end[0] - inner[0], end[1] - inner[1]
+            origin, end, opposite = ((a, c, b) if column == 0 else (b, d, a)) if outer else (
+                (b, d, a) if column == 0 else (a, c, b))
+            dx, dy = end[0] - origin[0], end[1] - origin[1]
             length = math.hypot(dx, dy)
             require(1e-6 < length <= 10000.0, "Degenerate or unbounded material edge segment")
             tx, ty = dx / length, dy / length
-            width = tx * (outer[1] - inner[1]) - ty * (outer[0] - inner[0])
+            width = tx * (opposite[1] - origin[1]) - ty * (opposite[0] - origin[0])
             require(abs(width) > 1e-6, "Degenerate source shoulder width")
             sign = 1.0 if width > 0 else -1.0
             uv = []
             for point in points:
-                px, py = point[0] - inner[0], point[1] - inner[1]
+                px, py = point[0] - origin[0], point[1] - origin[1]
                 across = sign * (tx * py - ty * px)
                 along = tx * px + ty * py
                 require(-0.0001 <= across <= 100.0 and abs(along) <= 10000.0,
@@ -136,15 +153,24 @@ def verify_zero_uv_round_trip(api, probe):
 def apply(api, component, coordinates, original_uv_set_count):
     """Append only channel zero on the proved UV-free source; one call per top."""
     require(original_uv_set_count == CHANNEL, "The edge shader requires the proved zero-UV source")
+    _append(api, component, coordinates, CHANNEL)
+
+
+def apply_outer(api, component, coordinates):
+    """Append UV1 only after the caller has witnessed the complete UV0 stage."""
+    _append(api, component, coordinates, OUTER_CHANNEL)
+
+
+def _append(api, component, coordinates, channel):
     mesh = component.get_dynamic_mesh()
-    require(mesh.get_num_uv_sets() == original_uv_set_count, "Material UV append would replace an existing channel")
-    require(api.GeometryScript_UVs.set_num_uv_sets(mesh, CHANNEL + 1) == mesh,
+    require(mesh.get_num_uv_sets() == channel, "Material UV append would replace an existing channel")
+    require(api.GeometryScript_UVs.set_num_uv_sets(mesh, channel + 1) == mesh,
             "Native material UV channel creation failed")
     for tid, uv in coordinates:
         values = api.GeometryScriptUVTriangle(
             uv0=api.Vector2D(*uv[0]), uv1=api.Vector2D(*uv[1]), uv2=api.Vector2D(*uv[2]))
         result = api.GeometryScript_UVs.set_mesh_triangle_u_vs(
-            mesh, CHANNEL, tid, values, defer_change_notifications=True)
+            mesh, channel, tid, values, defer_change_notifications=True)
         require(len(result) == 2 and result[0] == mesh and result[1] is True,
                 "Native material UV setter rejected source triangle " + str(tid))
     component.notify_mesh_modified()
@@ -162,17 +188,63 @@ def rollback(api, component, original_uv_set_count):
     component.notify_mesh_modified()
 
 
+def rollback_outer(api, component):
+    """Remove only the explicitly owned UV1, preserving the complete UV0 stage."""
+    mesh = component.get_dynamic_mesh()
+    require(mesh.get_num_uv_sets() in (OUTER_CHANNEL, OUTER_CHANNEL + 1),
+            "Outer material UV rollback would discard an unowned channel")
+    require(api.GeometryScript_UVs.set_num_uv_sets(mesh, OUTER_CHANNEL) == mesh
+            and mesh.get_num_uv_sets() == OUTER_CHANNEL,
+            "Native outer material UV removal did not restore the UV0 prefix")
+    component.notify_mesh_modified()
+
+
 def verify_native(before, snapshot, owner):
     """Require every new triangle coordinate and every original corner byte."""
+    return _verify_field(before, snapshot, owner, CHANNEL)
+
+
+def verify_outer_native(inner_stage, snapshot, owner):
+    """Read the real UV1 witness and compare its full UV0/normal prefix hash."""
+    require(all(inner_stage.get(key) == snapshot.get("summary", {}).get(key)
+                for key in ("vertex_count", "triangle_count", "positions_indices_blake3")),
+            "Outer material field changed source geometry")
+    return _verify_field(inner_stage, snapshot, owner, OUTER_CHANNEL)
+
+
+def verify_inner_stage(before, owner, stage):
+    """Validate the retained UV0 stage used by a final native prefix comparison.
+
+    The caller's immutable saved receipt supplies this earlier native witness;
+    it is not a new read of UV0. The final UV1 inspection must independently
+    match its complete normal/UV0 prefix before this chain is admitted.
+    """
+    require(isinstance(stage, dict) and set(stage) == {"summary", "edge_attribute"},
+            "The retained inner material UV stage is missing")
+    summary, attribute = stage["summary"], stage["edge_attribute"]
+    require(isinstance(summary, dict) and set(summary) == set(before)
+            and before.get("uv_set_count") == CHANNEL and summary.get("uv_set_count") == OUTER_CHANNEL
+            and all(summary.get(key) == before.get(key)
+                    for key in ("vertex_count", "triangle_count", "positions_indices_blake3"))
+            and all(isinstance(summary.get(key), str) and re.fullmatch(r"[0-9a-f]{64}", summary[key])
+                    for key in ("positions_indices_blake3", "triangle_corner_normals_uv_blake3", "material_ids_blake3"))
+            and isinstance(attribute, dict), "Retained UV0 stage geometry or native hashes differ")
+    expected = _field_receipt(before, owner, CHANNEL, attribute.get("uv_blake3"))
+    require(attribute == expected, "Retained UV0 stage no longer matches the source edge field")
+    return expected
+
+
+def _verify_field(before, snapshot, owner, channel):
     witness = snapshot.get("material_uv")
-    require(before["uv_set_count"] == CHANNEL and snapshot["summary"]["uv_set_count"] == CHANNEL + 1
+    require(before["uv_set_count"] == channel and snapshot["summary"]["uv_set_count"] == channel + 1
             and isinstance(witness, dict) and type(witness.get("preserved_uv_set_count")) is int
-            and witness.get("preserved_uv_set_count") == CHANNEL
+            and witness.get("preserved_uv_set_count") == channel
             and witness.get("hash_format") == HASH_FORMAT
             and witness.get("preserved_triangle_corner_normals_uv_blake3")
             == before["triangle_corner_normals_uv_blake3"],
             "Original normals/UV prefix changed or the appended material channel is missing")
-    expected = [[tid, *(v for uv in triangle for v in uv)] for tid, triangle in triangle_coordinates(owner)]
+    coordinates = outer_triangle_coordinates(owner) if channel == OUTER_CHANNEL else triangle_coordinates(owner)
+    expected = [[tid, *(v for uv in triangle for v in uv)] for tid, triangle in coordinates]
     actual = witness.get("triangles")
     require(type(witness.get("set_triangle_count")) is int and witness["set_triangle_count"] == len(expected)
             and isinstance(actual, list) and len(actual) == len(expected),
@@ -183,10 +255,16 @@ def verify_native(before, snapshot, owner):
                 and all(type(v) in (int, float) and math.isfinite(v) for v in received[1:])
                 and all(abs(a - b) <= 0.0001 for a, b in zip(wanted[1:], received[1:], strict=True)),
                 "New material UV source-distance witness differs")
-    uv_hash = witness.get("uv_blake3")
+    return _field_receipt(before, owner, channel, witness.get("uv_blake3"))
+
+
+def _field_receipt(before, owner, channel, uv_hash):
     require(isinstance(uv_hash, str) and re.fullmatch(r"[0-9a-f]{64}", uv_hash),
             "Complete appended material UV digest is missing")
-    return {"channel": CHANNEL, "units": "centimetres", "coordinates": "inner_distance_and_along_edge",
+    coordinates = outer_triangle_coordinates(owner) if channel == OUTER_CHANNEL else triangle_coordinates(owner)
+    expected = [[tid, *(v for uv in triangle for v in uv)] for tid, triangle in coordinates]
+    return {"channel": channel, "units": "centimetres",
+            "coordinates": "outer_distance_and_along_edge" if channel == OUTER_CHANNEL else "inner_distance_and_along_edge",
             "set_triangle_count": len(expected), "unset_nonselected_triangles": True,
             "hash_format": HASH_FORMAT, "uv_blake3": uv_hash,
             "source_coordinates_sha256": hashlib.sha256(json.dumps(

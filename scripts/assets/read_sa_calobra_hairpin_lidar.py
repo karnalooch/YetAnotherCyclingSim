@@ -1,4 +1,4 @@
-"""Read eight source-owned hairpin transects from retained NPC03 points.
+"""Read a closed source-owned transect set from retained NPC03 points.
 
 The predecessor is prepare_sa_calobra_lidar_masks.py: the same authenticated
 LAZ files, LasHeader.parse_crs and LasReader.chunk_iterator are reused. This
@@ -36,6 +36,11 @@ PROFILE_IDENTITY = {
     "sha256": "c0ca612dd5af5a311d1917e41d66f44aa83a9d40eed5e9e784432e06e2a52253",
 }
 STATIONS_M = (95.0, 110.0, 125.0, 135.0, 145.0, 150.0, 155.0, 165.0)
+DEFAULT_TRANSECT_SET = "hairpin-profile"
+TRANSECT_SETS = {
+    DEFAULT_TRANSECT_SET: STATIONS_M,
+    "wall-contact": (195.0, 200.0, 205.0, 210.0, 215.0, 220.0, 225.0, 230.0, 235.0),
+}
 ORIGIN_M = (483000.25, 4409516.25)
 HALF_ALONG_M, HALF_LATERAL_M = 1.0, 12.0
 DECODER_VERSIONS = {
@@ -115,8 +120,17 @@ def _read(path, identity):
     return raw, json.loads(raw)
 
 
-def transects(profile):
+def _stations(transect_set):
+    require(
+        type(transect_set) is str and transect_set in TRANSECT_SETS,
+        "Unknown closed transect set",
+    )
+    return TRANSECT_SETS[transect_set]
+
+
+def transects(profile, *, transect_set=DEFAULT_TRANSECT_SET):
     """Use actual source keys and cross-sections; no closest-road projection."""
+    source_stations = _stations(transect_set)
     require(
         profile.get("origin_epsg_m") == list(ORIGIN_M)
         and profile.get("metric_crs") == "EPSG:25831",
@@ -129,7 +143,7 @@ def transects(profile):
         "Frozen profile source stations differ",
     )
     result = []
-    for station in STATIONS_M:
+    for station in source_stations:
         index = next(i for i, r in enumerate(rows) if r["station_m"] == station)
         row = rows[index]
         xy, z, ground = (
@@ -416,7 +430,7 @@ def _export(paths, headers, frames, output, report, laspy, np):
     require(selected, "No authenticated LAS bounds overlap the source transects")
     report["selected_tiles"] = [p.name for p in selected]
     partial = output / "hairpin-lidar-points.partial.csv"
-    row_count, counts = 0, {str(s): 0 for s in STATIONS_M}
+    row_count, counts = 0, {str(f["source_station_m"]): 0 for f in frames}
     with partial.open("x", encoding="utf-8", newline="") as stream:
         writer = csv.writer(stream, lineterminator="\n")
         writer.writerow(CSV_FIELDS)
@@ -496,8 +510,9 @@ def _export(paths, headers, frames, output, report, laspy, np):
     return partial
 
 
-def read(cache_root, output):
+def read(cache_root, output, *, transect_set=DEFAULT_TRANSECT_SET):
     """Create one new evidence directory; inputs are only opened for reading."""
+    source_stations = _stations(transect_set)
     cache_root, output = Path(cache_root).resolve(), Path(output).resolve()
     require(
         not output.is_relative_to(cache_root),
@@ -524,7 +539,8 @@ def read(cache_root, output):
         },
         "python_version": sys.version,
         "parameters": {
-            "source_stations_m": STATIONS_M,
+            "transect_set": transect_set,
+            "source_stations_m": source_stations,
             "half_along_m": HALF_ALONG_M,
             "half_lateral_m": HALF_LATERAL_M,
             "max_csv_rows": MAX_CSV_ROWS,
@@ -551,7 +567,7 @@ def read(cache_root, output):
         )
         profile_path = _safe(cache_root, PROFILE_RELATIVE)
         _, profile = _read(profile_path, PROFILE_IDENTITY)
-        frames = transects(profile)
+        frames = transects(profile, transect_set=transect_set)
         report.update(profile_identity=PROFILE_IDENTITY, transects=frames)
         pinned = [
             (manifest_path, LIDAR_IDENTITY),
@@ -610,6 +626,9 @@ def read(cache_root, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace-config", type=Path)
+    parser.add_argument(
+        "--transect-set", choices=tuple(TRANSECT_SETS), default=DEFAULT_TRANSECT_SET
+    )
     operation = parser.add_mutually_exclusive_group(required=True)
     operation.add_argument("--output-name")
     operation.add_argument("--probe-decoder", action="store_true")
@@ -635,10 +654,13 @@ def main():
     )
     cache = _safe(Path(workspace["data"]), "world-data/sa-calobra-working-v1")
     output = _safe(Path(workspace["work"]), args.output_name)
-    report = read(cache, output)
+    report = read(cache, output, transect_set=args.transect_set)
     print(
         json.dumps(
-            {k: report[k] for k in ("status", "observations_available", "csv_rows")}
+            {
+                **{k: report[k] for k in ("status", "observations_available", "csv_rows")},
+                "transect_set": report["parameters"]["transect_set"],
+            }
         )
     )
     return {"OBSERVATIONS_EXPORTED": 0, "UNAVAILABLE": 2, "FAILED": 1}[report["status"]]

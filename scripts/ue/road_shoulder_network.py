@@ -24,6 +24,7 @@ from scripts.ue import road_shoulder_edges as edges
 ROOT = Path(__file__).resolve().parents[2]
 HASH_FORMAT = "blake3-256-le-i32-f64-corners-v1"
 SCHEMA_VERSION = 3
+OUTER_SCHEMA_VERSION = 4
 MAX_JSON_CHARS = 48 * 1024 * 1024
 MAX_SUPPORT_VERTICES = 85000
 MAX_SUPPORT_TRIANGLES = 150000
@@ -213,12 +214,19 @@ def verify_slots(component, owner, instance=None):
     return old
 
 
-def verify_delta(before, after, owner, *, assigned):
+def verify_delta(before, after, owner, *, assigned, inner_stage=None):
     target = assigned and owner["material_target"]
     preserved = ("vertex_count", "triangle_count", "positions_indices_blake3") if target else PRESERVED_FIELDS
     require(all(before[field] == after["summary"][field] for field in preserved),
             "Material assignment changed full positions, indices, normals or UV buffers")
-    edge_receipt = edges.verify_native(before, after, owner) if target else None
+    require(inner_stage is None or target, "Excluded or restored source cannot claim an outer material UV stage")
+    if inner_stage is None:
+        edge_receipt = edges.verify_native(before, after, owner) if target else None
+    else:
+        inner_receipt = edges.verify_inner_stage(before, owner, inner_stage)
+        outer_receipt = edges.verify_outer_native(inner_stage["summary"], after, owner)
+        edge_receipt = {**inner_receipt, "inner_stage_mesh": inner_stage["summary"],
+                        "outer_attribute": outer_receipt, "uv0_preserved": True}
     selected = set(owner["selected_triangle_ids"]) if assigned and owner["material_target"] else set()
     require(len(selected) <= after["summary"]["triangle_count"]
             and all(type(tid) is int and 0 <= tid < min(owner["top_triangle_count"],
@@ -249,11 +257,15 @@ def verify_states(api, state, *, assigned):
     summaries = []
     for item in state["items"]:
         target = assigned and item["owner"]["material_target"]
+        outer = target and item.get("outer_terrain", False)
         snapshot = inspect_mesh(api, item["component"],
-                                preserved_uv_set_count=item["before_mesh"]["uv_set_count"] if target else -1)
+                                preserved_uv_set_count=edges.OUTER_CHANNEL if outer else
+                                item["before_mesh"]["uv_set_count"] if target else -1)
         require(snapshot["actor_label"] == item["owner"]["support_label"], "Material owner changed during proof")
-        verify_slots(item["component"], item["owner"], state["instance_path"] if assigned else None)
-        item["edge_attribute"] = verify_delta(item["before_mesh"], snapshot, item["owner"], assigned=assigned)
+        instance_path = state["outer_instance_path"] if outer else state["instance_path"]
+        verify_slots(item["component"], item["owner"], instance_path if assigned else None)
+        item["edge_attribute"] = verify_delta(item["before_mesh"], snapshot, item["owner"], assigned=assigned,
+                                               inner_stage=item["inner_stage"] if outer else None)
         summaries.append(snapshot["summary"])
     return summaries
 
@@ -262,6 +274,12 @@ def rollback(api, state):
     """Restore every attempted owner, then prove all 186 full original buffers."""
     errors = []
     for item in reversed(state["attempted"]):
+        if item.get("outer_attempted", False):
+            try:
+                edges.rollback_outer(api, item["component"])
+                item["outer_attempted"] = False
+            except Exception as exc:
+                errors.append(item["owner"]["support_label"] + " outer material UV: " + str(exc))
         try:
             edges.rollback(api, item["component"], item["before_mesh"]["uv_set_count"])
         except Exception as exc:
@@ -288,12 +306,40 @@ def apply_all(api, state, instance):
     for item in state["items"]:
         if item["owner"]["material_target"]:
             state["attempted"].append(item)
-            item["component"].configure_material_set([item["old_material"], instance], delete_extra_slots=True)
+            target = state["outer_instance"] if item.get("outer_terrain", False) else instance
+            item["component"].configure_material_set([item["old_material"], target], delete_extra_slots=True)
             set_owner_ids(api, item, 1)
             edges.apply(api, item["component"], item["edge_coordinates"], item["before_mesh"]["uv_set_count"])
+            if item.get("outer_terrain", False):
+                inner = inspect_mesh(api, item["component"], preserved_uv_set_count=edges.CHANNEL)
+                item["inner_stage"] = {"summary": inner["summary"], "edge_attribute":
+                    verify_delta(item["before_mesh"], inner, item["owner"], assigned=True)}
+                item["outer_attempted"] = True
+                edges.apply_outer(api, item["component"], item["outer_edge_coordinates"])
 
 
-def prepare(api, actors, source_plan, instance, material_receipt):
+def outer_configuration(source_plan, material_receipt, owner_labels):
+    """The caller chooses existing source-owned top faces; no contact claim."""
+    from scripts.ue import road_shoulder_material as material
+
+    require(isinstance(owner_labels, list) and 1 <= len(owner_labels) < sources.OWNER_COUNT
+            and all(isinstance(label, str) for label in owner_labels)
+            and len(set(owner_labels)) == len(owner_labels), "Outer terrain owner selection is missing or duplicated")
+    eligible = [owner["support_label"] for owner in source_plan["owners"] if owner["material_target"]]
+    require(owner_labels == [label for label in eligible if label in owner_labels],
+            "Outer terrain selection is reordered or outside the authenticated source tops")
+    require(isinstance(material_receipt, dict) and material_receipt.get("schema_version") == 3
+            and material_receipt.get("outer_terrain_enabled") is True
+            and material_receipt.get("outer_transition") == material.OUTER_TRANSITION
+            and material_receipt.get("assets") == material.asset_paths(material.DESTINATION_ROOT, outer_terrain=True),
+            "Outer terrain material variant is not the bounded shared terrain graph")
+    return {"material": material_receipt, "owner_labels": list(owner_labels),
+            "selection": "source_owned_outer_top_faces", "physical_contact_verified": False,
+            "uv_channel": edges.OUTER_CHANNEL, "uv0_stage_witness_required": True}
+
+
+def prepare(api, actors, source_plan, instance, material_receipt, *,
+            outer_instance=None, outer_material_receipt=None, outer_owner_labels=None):
     """Authenticate the whole network, prove rollback, then apply one shared MI.
 
     Return (serializable receipt, rollback state). The caller saves the map and
@@ -302,9 +348,17 @@ def prepare(api, actors, source_plan, instance, material_receipt):
     instance_path = material_receipt["assets"]["instance"]
     require(instance.get_path_name() == instance_path and instance_path.startswith(MATERIAL_ROOT),
             "Shared gravel material escaped the derived consumer")
+    outer = None
+    if outer_instance is not None or outer_material_receipt is not None or outer_owner_labels is not None:
+        require(outer_instance is not None, "Outer terrain material instance is missing")
+        outer = outer_configuration(source_plan, outer_material_receipt, outer_owner_labels)
+        require(outer_instance.get_path_name() == outer["material"]["assets"]["instance"],
+                "Outer terrain instance differs from the source material receipt")
     pairs = owner_components(api, actors, source_plan)
     api_receipt = native_api_evidence(api, pairs[0][1])
-    state = {"items": [], "attempted": [], "instance_path": instance_path}
+    state = {"items": [], "attempted": [], "instance_path": instance_path,
+             "outer_instance": outer_instance,
+             "outer_instance_path": None if outer is None else outer["material"]["assets"]["instance"]}
     total_vertices = total_triangles = 0
     for owner, component in pairs:
         old = verify_slots(component, owner)
@@ -315,13 +369,17 @@ def prepare(api, actors, source_plan, instance, material_receipt):
         require(not owner["material_target"] or snapshot["summary"]["uv_set_count"] == edges.CHANNEL,
                 "Material edge shader requires the authenticated UV-free source")
         edge_coordinates = edges.triangle_coordinates(owner) if owner["material_target"] else []
+        use_outer = outer is not None and owner["support_label"] in outer["owner_labels"]
+        outer_coordinates = edges.outer_triangle_coordinates(owner) if use_outer else []
         total_vertices += snapshot["summary"]["vertex_count"]
         total_triangles += snapshot["summary"]["triangle_count"]
         require(total_vertices <= MAX_TOTAL_VERTICES and total_triangles <= MAX_TOTAL_TRIANGLES,
                 "Whole-support readback exceeds the admitted aggregate budget")
         state["items"].append({"owner": owner, "component": component, "old_material": old,
                                "source": source, "ownership": ownership, "before_mesh": snapshot["summary"],
-                               "edge_coordinates": edge_coordinates, "edge_attribute": None})
+                               "edge_coordinates": edge_coordinates, "edge_attribute": None,
+                               "outer_terrain": use_outer, "outer_edge_coordinates": outer_coordinates,
+                               "outer_attempted": False, "inner_stage": None})
     # No assignment occurs until every source owner, including the parapet, has
     # completed its full geometry witness and original material check.
     try:
@@ -343,7 +401,8 @@ def prepare(api, actors, source_plan, instance, material_receipt):
         for item, summary in zip(state["items"], after, strict=True)
     ]
     receipt = {
-        "schema_version": SCHEMA_VERSION, "status": "SHOULDER_NETWORK_PREPARED",
+        "schema_version": OUTER_SCHEMA_VERSION if outer is not None else SCHEMA_VERSION,
+        "status": "SHOULDER_NETWORK_PREPARED",
         "source_identity": source_plan["source_identity"], "material": material_receipt,
         "material_api": api_receipt, "hash_format": HASH_FORMAT, "owners": owners,
         "support_count": len(owners), "material_target_count": sum(o["material_target"] for o in owners),
@@ -356,13 +415,24 @@ def prepare(api, actors, source_plan, instance, material_receipt):
         "original_wall_material_preserved": True, "excluded_parapet_unchanged": True,
         "whole_area_admitted": False, "performance_pass": False,
     }
+    if outer is not None:
+        receipt["outer_terrain"] = outer
     return receipt, state
 
 
 def verify_loaded(api, receipt, source_plan=None):
     """Read-only fresh load/GPU proof, inheriting source ownership by exact hashes."""
     source_plan = sources.load_sources() if source_plan is None else source_plan
-    require(receipt.get("schema_version") == SCHEMA_VERSION and receipt.get("status") == "SHOULDER_NETWORK_PREPARED"
+    outer = None
+    if receipt.get("schema_version") == OUTER_SCHEMA_VERSION:
+        recorded_outer = receipt.get("outer_terrain")
+        require(isinstance(recorded_outer, dict), "Saved outer terrain variant is missing")
+        outer = outer_configuration(source_plan, recorded_outer.get("material"), recorded_outer.get("owner_labels"))
+        require(outer == recorded_outer, "Saved outer terrain selection/source contract differs")
+    else:
+        require("outer_terrain" not in receipt, "Legacy network cannot claim an outer terrain variant")
+    require(receipt.get("schema_version") in (SCHEMA_VERSION, OUTER_SCHEMA_VERSION)
+            and receipt.get("status") == "SHOULDER_NETWORK_PREPARED"
             and receipt.get("hash_format") == HASH_FORMAT and receipt.get("rollback_verified") is True
             and receipt.get("source_identity") == source_plan["source_identity"]
             and receipt.get("support_count") == sources.OWNER_COUNT
@@ -394,14 +464,24 @@ def verify_loaded(api, receipt, source_plan=None):
                 and proof.get("count_only_or_label_only_ownership") is False
                 and type(delta) in (int, float) and math.isfinite(delta) and 0 <= delta <= 0.0001,
                 "Saved oriented source/native ownership proof is incomplete")
-        verify_slots(component, owner, instance_path)
+        use_outer = outer is not None and owner["support_label"] in outer["owner_labels"]
+        verify_slots(component, owner, outer["material"]["assets"]["instance"] if use_outer else instance_path)
         current = inspect_mesh(api, component,
-                               preserved_uv_set_count=recorded["before_mesh"]["uv_set_count"]
+                               preserved_uv_set_count=edges.OUTER_CHANNEL if use_outer else recorded["before_mesh"]["uv_set_count"]
                                if owner["material_target"] else -1)
         require(current["actor_label"] == owner["support_label"]
                 and current["summary"] == recorded["after_mesh"],
                 "Fresh full native mesh, corner attributes or material IDs changed")
-        edge_attribute = verify_delta(recorded["before_mesh"], current, owner, assigned=True)
+        inner_stage = None
+        if use_outer:
+            attribute = recorded.get("edge_attribute")
+            require(isinstance(attribute, dict) and attribute.get("uv0_preserved") is True
+                    and isinstance(attribute.get("inner_stage_mesh"), dict)
+                    and isinstance(attribute.get("outer_attribute"), dict), "Saved outer UV hash chain is incomplete")
+            inner_stage = {"summary": attribute["inner_stage_mesh"], "edge_attribute": {
+                key: value for key, value in attribute.items()
+                if key not in ("inner_stage_mesh", "outer_attribute", "uv0_preserved")}}
+        edge_attribute = verify_delta(recorded["before_mesh"], current, owner, assigned=True, inner_stage=inner_stage)
         require(edge_attribute == recorded.get("edge_attribute"),
                 "Fresh appended material UV/source witness differs")
         summaries.append(current["summary"])

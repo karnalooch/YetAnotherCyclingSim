@@ -4,6 +4,8 @@ The existing host owns IDLE arbitration, a fresh isolated Editor, authenticated
 saved-consumer context, camera/mip readiness, asynchronous screenshots and final
 whole-world audits. This helper only controls one road material slot and the
 view mode. It never loads/saves a map, saves assets or starts a capture loop.
+An explicitly owned optional pair appends original/full-mask observations of
+the existing white paint. It swaps only its 370 existing material slots.
 
 The host must set YACS_ROAD_VISUAL_CONTROLS_OWNED to its authenticated run token.
 All viewports of that owned Level Editor are established as Lit and returned to
@@ -34,6 +36,11 @@ from scripts.ue import road_material_views as views
 ROOT = Path(__file__).resolve().parents[2]
 ENGINE_VERSION = saved.shoulder_material.ENGINE_VERSION
 OWNED_ENV = "YACS_ROAD_VISUAL_CONTROLS_OWNED"
+COVERAGE_OWNED_ENV = "YACS_ROAD_PAINT_COVERAGE_OWNED"
+COVERAGE_FRAME_ID = "window-0083-forward-00002"
+COVERAGE_CONTROLS = ("paint-original-lit", "paint-fullmask-lit")
+FULL_MASK_SCALARS = {"EdgeWearMinCm": -0.05, "EdgeWearSpanCm": 0.0, "MaskFeatherCm": 0.05}
+PAINT_COUNT = 370
 FRAME_IDS = ("window-0071-forward-00002", "window-0082-forward-00002")
 CONTROLS = ("current-lit", "current-basecolor", "current-worldnormal", "uniform-lit")
 BUFFERS = {"current-basecolor": "BaseColor", "current-worldnormal": "WorldNormal"}
@@ -57,18 +64,28 @@ def digest(value):
                                      allow_nan=False).encode()).hexdigest()
 
 
-def control_plan(root=None):
+def control_plan(root=None, *, paint_coverage=False):
     """Select only two already authenticated cameras; do not invent new poses."""
+    require(type(paint_coverage) is bool, "Paint coverage opt-in must be an explicit boolean")
     network = views.current_view_plan(ROOT if root is None else root)
     by_id = {row["frame_id"]: row for row in network["frames"]}
     require(set(FRAME_IDS) <= set(by_id), "Required diagnostic cameras are absent")
     jobs = [{"job_id": frame_id + "--" + control, "control": control,
              "camera": deepcopy(by_id[frame_id])}
             for frame_id in FRAME_IDS for control in CONTROLS]
-    return {"schema_version": 1, "network_plan_sha256": digest(network),
+    legacy = {"schema_version": 1, "network_plan_sha256": digest(network),
             "survey_sha256": network["survey_sha256"], "resolution": list(RESOLUTION),
             "priming_captures_per_condition": 3, "frame_count": 8, "jobs": jobs,
             "owner_visual_pass": False, "performance_pass": False}
+    if not paint_coverage:
+        return legacy
+    require(COVERAGE_FRAME_ID in by_id, "Paint coverage camera is absent from the authenticated plan")
+    return {**legacy, "schema_version": 2, "frame_count": 10,
+            "jobs": jobs + [{"job_id": COVERAGE_FRAME_ID + "--" + control, "control": control,
+                             "camera": deepcopy(by_id[COVERAGE_FRAME_ID])} for control in COVERAGE_CONTROLS],
+            "legacy_control_plan_sha256": digest(legacy), "legacy_frame_count": 8,
+            "paint_coverage_enabled": True, "paint_coverage_frame_count": 2,
+            "paint_binding_count": PAINT_COUNT, "full_mask_scalar_parameters": dict(FULL_MASK_SCALARS)}
 
 
 def _read_source(root, relative):
@@ -182,6 +199,13 @@ def _owned_context(api, context, plan):
             "Visual controls require the already loaded saved asphalt consumer")
     require(digest(context["view_plan"]) == plan["network_plan_sha256"],
             "Diagnostic cameras differ from the authenticated host camera plan")
+    coverage = os.environ.get(COVERAGE_OWNED_ENV)
+    require(coverage is None or (coverage == token
+            and os.environ.get("YACS_ROAD_CRACK_CONTROLS_OWNED") is None
+            and context["manifest"].get("edge_markings_enabled") is True),
+            "Paint coverage requires the separately marked owned white-paint diagnostic")
+    require(plan == control_plan(paint_coverage=coverage is not None),
+            "Diagnostic plan differs from the explicit eight/ten-frame opt-in")
     return {"pid": os.getpid(), "run_token": token, "project": str(project),
             "map_package": saved.MAP, "consumer_exact_sha": context["exact_sha"],
             "owned_process_marker_verified": True, "host_idle_arbitration_required": True}
@@ -197,8 +221,101 @@ def _verify_files(context):
 
 def preflight(api, context, plan=None):
     """A read-only check the existing runner can perform before its 68 Lit views."""
-    return {"ownership": _owned_context(api, context, control_plan() if plan is None else plan),
-            "native_api": installed_api_evidence(api)}
+    plan = control_plan(paint_coverage=os.environ.get(COVERAGE_OWNED_ENV) is not None) if plan is None else plan
+    result = {"ownership": _owned_context(api, context, plan), "native_api": installed_api_evidence(api)}
+    if plan.get("paint_coverage_enabled"):
+        targets, original = _paint_targets(api, context)
+        _paint_scalars(api, original)
+        result["native_api"]["paint_mid"] = _paint_mid_api_evidence(api)
+        result["paint_binding_count"] = len(targets)
+    return result
+
+
+def _paint_mid_api_evidence(api):
+    """Reuse the already exercised native MID implementation, without a new shader."""
+    from scripts.ue import road_crack_visual_controls as mid_source
+
+    engine = Path(api.Paths.convert_relative_path_to_full(api.Paths.engine_dir())).resolve()
+    text, identity = _read_source(engine, mid_source.KISMET_CPP)
+    body = _function_body(text, "UKismetMaterialLibrary::CreateDynamicMaterialInstance")
+    require(all(name in body for name in ("UMaterialInstanceDynamic::Create", "CreationFlags", "EMIDCreationFlags::Transient"))
+            and re.search(r"\bSetFlags\s*\(\s*RF_Transient\s*\)", body),
+            "Paint MID allocator does not honor its explicit transient flag")
+    header, name, header_id = mid_source._header(engine, "Materials", "MaterialInstanceDynamic")
+    require(all(symbol in header for symbol in ("K2_GetScalarParameterValue", "SetScalarParameterValue")),
+            "Installed paint MID getter/setter declarations differ")
+    text, getter_id = _read_source(engine, mid_source.MID_CPP)
+    getter = _function_body(text, "UMaterialInstanceDynamic::K2_GetScalarParameterValue")
+    require("GetScalarParameterValue" in getter and "return" in getter,
+            "Installed paint MID getter does not read its effective scalar")
+    methods = {}
+    for owner, names in (
+        ("MaterialLibrary", ("create_dynamic_material_instance",)),
+        ("MaterialInstanceDynamic", ("get_scalar_parameter_value", "set_scalar_parameter_value")),
+        ("MaterialEditingLibrary", ("get_material_instance_scalar_parameter_value",)),
+        ("DynamicMeshComponent", ("set_material", "get_material", "get_num_materials")),
+        ("EditorLoadingAndSavingUtils", ("get_dirty_content_packages",)),
+    ):
+        for method_name in names:
+            method = getattr(getattr(api, owner, None), method_name, None)
+            doc = str(getattr(method, "__doc__", "") or "")
+            require(callable(method) and 0 < len(doc) <= 32768,
+                    "Native paint control API has no callable signature: " + owner + "." + method_name)
+            methods[owner + "." + method_name] = {
+                "signature": doc.splitlines()[0], "doc_sha256": hashlib.sha256(doc.encode()).hexdigest()}
+    require(hasattr(api.MIDCreationFlags, "TRANSIENT"), "Native transient MID flag is unavailable")
+    return {"installed_sources": {mid_source.KISMET_CPP: identity, name: header_id, mid_source.MID_CPP: getter_id},
+            "allocator_body_sha256": hashlib.sha256(body.encode()).hexdigest(),
+            "scalar_getter_body_sha256": hashlib.sha256(getter.encode()).hexdigest(),
+            "reflected_methods": methods, "creation_flags": "MIDCreationFlags.TRANSIENT",
+            "rf_transient_set_by_installed_allocator": True, "native_object_flags_readback_verified": False}
+
+
+def _paint_scalars(api, instance, *, dynamic=False):
+    from scripts.ue import road_edge_marking_material as paint
+
+    expected = {**paint.SCALARS, **FULL_MASK_SCALARS} if dynamic else paint.SCALARS
+    result = {}
+    for name, value in expected.items():
+        actual = (instance.get_scalar_parameter_value(name) if dynamic else
+                  api.MaterialEditingLibrary.get_material_instance_scalar_parameter_value(
+                      instance, name, api.MaterialParameterAssociation.GLOBAL_PARAMETER))
+        require(type(actual) in (int, float) and math.isfinite(actual) and abs(actual - value) <= 1e-6,
+                "Paint control effective scalar differs: " + name)
+        result[name] = float(actual)
+    return result
+
+
+def _paint_targets(api, context):
+    from scripts.ue import road_edge_marking_consumer as paint
+
+    receipt = context["manifest"].get("edge_markings")
+    saved.edge_marking_inventory(receipt)
+    rows = receipt["actors"]
+    require(len(rows) == PAINT_COUNT, "Paint control requires the complete 370-slot saved network")
+    actors = paint._actors(api)
+    by_label = paint._paint_actors(actors, [row["label"] for row in rows])
+    result, original = [], None
+    for row in rows:
+        actor = by_label[row["label"]]
+        require(isinstance(actor, api.DynamicMeshActor), "Paint target is not a native DynamicMeshActor")
+        component = actor.get_dynamic_mesh_component()
+        require(isinstance(component, api.DynamicMeshComponent)
+                and actor.get_editor_property("root_component") == component
+                and actor.get_editor_property("hidden") is False
+                and saved.normalized(paint.existing.actor_snapshot(actor), saved.MAP) == row["actor"]
+                and saved.normalized(component.get_path_name(), saved.MAP) == row["component"]
+                and saved.normalized(component.get_dynamic_mesh().get_path_name(), saved.MAP) == row["mesh"],
+                "Paint control native actor/component/mesh differs from its saved receipt")
+        paint._render_flags(api, component)
+        material = component.get_material(0)
+        require(component.get_num_materials() == 1 and isinstance(material, api.MaterialInstanceConstant)
+                and material.get_path_name() == row["material"] == receipt["material"]["assets"]["instance"],
+                "Paint control original material binding differs")
+        require(original is None or material == original, "Paint network no longer shares its one saved MIC")
+        original = material
+        result.append({"label": row["label"], "component": component, "actor": actor})
+    return result, original
 
 
 def _uniform_material(api):
@@ -253,8 +370,13 @@ class VisualControls:
         self.api = api
         self.context = {name: deepcopy(context[name]) for name in (
             "exact_sha", "run_token", "view_plan", "manifest", "retained", "rows", "source_dependencies")}
-        self.plan = control_plan()
+        self.paint_coverage = os.environ.get(COVERAGE_OWNED_ENV) is not None
+        self.plan = control_plan(paint_coverage=self.paint_coverage)
         self.component = self.original = self.uniform = None
+        self.paint_targets = []
+        self.paint_binding_templates = {}
+        self.paint_original = self.paint_mid = None
+        self.paint_assignment_started = False
         self.current = None
         self.started = self.restored = False
         self.report = {"schema_version": 1, "status": "NOT_STARTED", "plan_sha256": digest(self.plan),
@@ -266,6 +388,12 @@ class VisualControls:
                        "map_saved": False, "capture_count_verified": False,
                        "whole_native_scene_audit_owned_by_host": True,
                        "owner_visual_pass": False, "performance_pass": False}
+        if self.paint_coverage:
+            self.report.update(paint_coverage_enabled=True, paint_binding_count=PAINT_COUNT,
+                               full_mask_scalar_parameters=dict(FULL_MASK_SCALARS),
+                               saved_paint_parameters_changed=False, paint_geometry_changed=False,
+                               paint_full_native_buffers_audit_owned_by_host=True,
+                               paint_pixel_aliasing_cause_verified=False)
 
     def _lit(self):
         self.report["calls"].append({"function": "AutomationLibrary.set_editor_viewport_view_mode",
@@ -288,13 +416,26 @@ class VisualControls:
                 "Diagnostic road slot differs from its authenticated saved material")
         self.report["road_component"] = self.component.get_path_name()
         self.report["original_material"] = self.original.get_path_name()
+        if self.paint_coverage:
+            self.paint_targets, self.paint_original = _paint_targets(self.api, self.context)
+            self.report["paint_original_material"] = self.paint_original.get_path_name()
+            self.report["paint_original_scalar_parameters"] = _paint_scalars(self.api, self.paint_original)
+            self._paint_template("original_mic", self.paint_original)
         self.started = True
         try:
             self._lit()
             self.uniform = _uniform_material(self.api)
             self.report["transient_material"] = self.uniform.get_path_name()
+            if self.paint_coverage:
+                self._create_full_mask_material()
             self.report["status"] = "READY"
-            return deepcopy(self.report)
+            result = deepcopy(self.report)
+            if self.paint_coverage:
+                # Full expected bindings occur once in the retained begin.
+                # Each capture still reads all 370 actual slots, compares them
+                # to these templates, and retains its own digest and scalars.
+                result["paint_binding_templates"] = deepcopy(self.paint_binding_templates)
+            return result
         except Exception as exc:
             self._fail(exc)
 
@@ -312,7 +453,7 @@ class VisualControls:
         try:
             index = len(self.report["applied_jobs"])
             require(index < len(self.plan["jobs"]) and self.plan["jobs"][index]["job_id"] == job_id,
-                    "Diagnostic jobs must follow the fixed eight-image plan")
+                    "Diagnostic jobs must follow the fixed eight-image plan and any explicitly appended paint pair")
             if self.current is not None:
                 self._observe()
             job = self.plan["jobs"][index]
@@ -321,6 +462,8 @@ class VisualControls:
                                          "slot": 0, "material": material.get_path_name()})
             self.component.set_material(0, material)
             self.current = job
+            if job["control"] == "paint-fullmask-lit":
+                self._apply_full_mask()
             buffer = BUFFERS.get(job["control"])
             if buffer is None:
                 self._lit()
@@ -346,9 +489,88 @@ class VisualControls:
         mode_name = "VMI_VISUALIZE_BUFFER" if buffer else "VMI_LIT"
         require(self.api.AutomationLibrary.get_editor_active_viewport_view_mode()
                 == getattr(self.api.ViewModeIndex, mode_name), "Diagnostic active viewmode readback differs")
-        return {"control": control, "active_viewmode_readback": mode_name,
+        observed = {"control": control, "active_viewmode_readback": mode_name,
                 "road_material_readback": actual.get_path_name(), "requested_buffer": buffer,
                 "buffer_name_readback_verified": False}
+        if control in COVERAGE_CONTROLS:
+            observed["paint_coverage"] = self._paint_observation(full_mask=control == "paint-fullmask-lit")
+        return observed
+
+    def _paint_template(self, kind, material):
+        bindings = [{"label": target["label"], "component": target["component"].get_path_name(),
+                     "material_readback": material.get_path_name()} for target in self.paint_targets]
+        self.paint_binding_templates[kind] = {"binding_count": len(bindings), "bindings": bindings,
+            "bindings_sha256": digest(bindings), "role": "expected_slot_bindings"}
+
+    def _create_full_mask_material(self):
+        require(self.paint_coverage and self.paint_mid is None and len(self.paint_targets) == PAINT_COUNT,
+                "Paint full-mask probe cannot be allocated twice")
+        world = self.api.get_editor_subsystem(self.api.UnrealEditorSubsystem).get_editor_world()
+        self.report["calls"].append({"function": "MaterialLibrary.create_dynamic_material_instance",
+            "parent": self.paint_original.get_path_name(), "creation_flags": "MIDCreationFlags.TRANSIENT"})
+        self.paint_mid = self.api.MaterialLibrary.create_dynamic_material_instance(
+            world, self.paint_original, creation_flags=self.api.MIDCreationFlags.TRANSIENT)
+        mid = self.paint_mid
+        require(isinstance(mid, self.api.MaterialInstanceDynamic)
+                and mid.get_editor_property("parent") == self.paint_original
+                and mid.get_path_name() != self.paint_original.get_path_name(),
+                "Paint probe did not allocate the owned transient MID with its saved parent")
+        for name, value in FULL_MASK_SCALARS.items():
+            self.report["calls"].append({"function": "MaterialInstanceDynamic.set_scalar_parameter_value",
+                "material": mid.get_path_name(), "parameter": name, "value": value})
+            mid.set_scalar_parameter_value(name, value)
+        _paint_scalars(self.api, mid, dynamic=True)
+        _paint_scalars(self.api, self.paint_original)
+        self.report["paint_transient_mid"] = {"path": mid.get_path_name(),
+            "parent": self.paint_original.get_path_name(), "creation_flags": "TRANSIENT"}
+        self._paint_template("transient_mid", mid)
+
+    def _apply_full_mask(self):
+        require(self.paint_mid is not None and not self.paint_assignment_started,
+                "Paint full-mask probe is missing or has already been applied")
+        mid = self.paint_mid
+        _paint_scalars(self.api, mid, dynamic=True)
+        _paint_scalars(self.api, self.paint_original)
+        # Register ownership before the first setter, including partial failures.
+        self.paint_assignment_started = True
+        for target in self.paint_targets:
+            component = target["component"]
+            self.report["calls"].append({"function": "paint_component.set_material",
+                "component": component.get_path_name(), "slot": 0, "material": mid.get_path_name()})
+            component.set_material(0, mid)
+
+    def _paint_observation(self, *, full_mask):
+        require(self.paint_coverage and len(self.paint_targets) == PAINT_COUNT,
+                "Paint coverage has no complete native target inventory")
+        expected = self.paint_mid if full_mask else self.paint_original
+        require(expected is not None, "Paint coverage material is missing")
+        original_scalars = _paint_scalars(self.api, self.paint_original)
+        if full_mask:
+            require(expected.get_editor_property("parent") == self.paint_original,
+                    "Paint MID no longer inherits the original saved MIC")
+        scalars = _paint_scalars(self.api, expected, dynamic=full_mask)
+        bindings = []
+        for target in self.paint_targets:
+            component, actor = target["component"], target["actor"]
+            actual = component.get_material(0)
+            require(actor.get_dynamic_mesh_component() == component
+                    and actor.get_editor_property("hidden") is False
+                    and component.get_editor_property("visible") is True
+                    and component.get_num_materials() == 1 and actual == expected,
+                    "Paint coverage native slot or visibility readback differs: " + target["label"])
+            bindings.append({"label": target["label"], "component": component.get_path_name(),
+                             "material_readback": actual.get_path_name()})
+        dirty = list(self.api.EditorLoadingAndSavingUtils.get_dirty_content_packages())
+        require(not dirty, "Paint coverage inherited or changed a dirty content package")
+        kind = "transient_mid" if full_mask else "original_mic"
+        template = self.paint_binding_templates[kind]
+        binding_hash = digest(bindings)
+        require(bindings == template["bindings"] and binding_hash == template["bindings_sha256"],
+                "Paint coverage native bindings differ from the retained expected template")
+        return {"binding_count": len(bindings), "bindings_sha256": binding_hash,
+                "binding_template": kind, "bindings_match_template": True, "material_kind": kind,
+                "scalar_parameters": scalars, "original_mic_scalar_parameters": original_scalars,
+                "dirty_content_count": 0, "geometry_buffers_modified": False}
 
     def observe(self):
         require(self.started and not self.restored, "Diagnostic controls are not active")
@@ -361,6 +583,33 @@ class VisualControls:
         if not self.started or self.restored:
             return deepcopy(self.report)
         errors = []
+        if self.paint_coverage:
+            restored = True
+            if self.paint_assignment_started:
+                for target in self.paint_targets:
+                    component = target["component"]
+                    try:
+                        self.report["calls"].append({"function": "paint_component.set_material", "phase": "restore",
+                            "component": component.get_path_name(), "slot": 0, "material": self.paint_original.get_path_name()})
+                        component.set_material(0, self.paint_original)
+                        require(component.get_num_materials() == 1 and component.get_material(0) == self.paint_original,
+                                "Original paint MIC did not read back")
+                    except Exception as exc:
+                        restored = False
+                        errors.append(target["label"] + " paint material: " + str(exc))
+            try:
+                observation = self._paint_observation(full_mask=False)
+                self.report.update(paint_restored_observation=observation,
+                                   paint_original_mic_parameters_unchanged=True,
+                                   dirty_content_count=observation["dirty_content_count"])
+            except Exception as exc:
+                restored = False
+                errors.append("paint restoration readback: " + str(exc))
+            self.report["paint_bindings_restored"] = restored
+            self.report["paint_transient_mid_detached"] = restored
+            if restored:
+                self.paint_mid = None
+            self.report["paint_transient_mid_ref_released"] = self.paint_mid is None
         # Attempt both restorations independently, even after a partial setter
         # failure. Keep a failed session failed and expose every cleanup error.
         try:

@@ -6,6 +6,7 @@ param(
     [Parameter(Mandatory)][ValidatePattern('^[1-9][0-9]{0,19}-[1-9][0-9]{0,5}$')][string] $RunToken,
     [switch] $EdgeMarkings,
     [switch] $CrackCanary,
+    [switch] $OuterTerrainCanary,
     [string] $WorkspaceConfig = 'D:\yacs\workspace.json',
     [string] $RepoRoot = (Join-Path $PSScriptRoot '../..')
 )
@@ -20,6 +21,7 @@ $evidence = $null
 $editor = $null
 $edgeMarkingSetting = if ($EdgeMarkings) { '1' } else { '0' }
 $crackCanarySetting = if ($CrackCanary) { '1' } else { '0' }
+$outerTerrainSetting = if ($OuterTerrainCanary) { '1' } else { '0' }
 $receipt = [ordered]@{
     schema_version = 1; issue = 364; exact_sha = $ExpectedHead
     run_token = $RunToken; status = 'PENDING'
@@ -34,6 +36,11 @@ $receipt = [ordered]@{
     crack_canary_requested = [bool]$CrackCanary
     crack_canary_fresh_reload_verified = $false
     crack_normal_space_verified = $false
+    outer_terrain_requested = [bool]$OuterTerrainCanary
+    outer_terrain_fresh_reload_verified = $false
+    outer_terrain_owner_labels = @()
+    outer_terrain_physical_contact_verified = $false
+    outer_terrain_normal_response_verified = $false
     road_profile_diagnostic_sha256 = $null
     original_map_saved = $false; original_landscape_mutated = $false
     gpu_shader_verified = $false; owner_visual_status = 'PENDING_FINAL_M3'
@@ -193,12 +200,14 @@ function Require-ExactSource {
     }
 }
 function Assert-NetworkManifest {
-    param($Manifest, [string] $ExactHead)
+    param($Manifest, [string] $ExactHead, [bool] $OuterTerrain = $false)
     if ($Manifest -isnot [Collections.IDictionary] -or
         $Manifest.schema_version -ne 1 -or $Manifest.issue -ne 364 -or
         $Manifest.status -cne 'SAVED_ROAD_ASPHALT_CONSUMER_PREPARED' -or
         $Manifest.exact_sha -cne $ExactHead -or
-        $Manifest.material_changes -cne 'road_slot_zero_network_outer_shoulder_ids_and_edge_uv') {
+        $Manifest.material_changes -cne 'road_slot_zero_network_outer_shoulder_ids_and_edge_uv' -or
+        $Manifest.outer_terrain_enabled -isnot [bool] -or
+        $Manifest.outer_terrain_enabled -ne $OuterTerrain) {
         throw 'Saved material manifest is not the exact full-network schema.'
     }
     $flags = @{ map_saved = $true; landscape_1024_unchanged = $true
@@ -211,12 +220,16 @@ function Assert-NetworkManifest {
         }
     }
     $network = $Manifest.shoulder_network
+    $expectedSchema = if ($OuterTerrain) { 4 } else { 3 }
     if ($network -isnot [Collections.IDictionary] -or
-        $network.schema_version -ne 3 -or $network.status -cne 'SHOULDER_NETWORK_PREPARED' -or
+        $network.schema_version -ne $expectedSchema -or $network.status -cne 'SHOULDER_NETWORK_PREPARED' -or
         $network.support_count -ne 186 -or $network.material_target_count -ne 185 -or
         $network.excluded_parapet_count -ne 1 -or
         $network.owners -isnot [Collections.IList] -or $network.owners.Count -ne 186) {
         throw 'Saved source-owned support coverage is incomplete.'
+    }
+    if (-not $OuterTerrain -and $network.Contains('outer_terrain')) {
+        throw 'Disabled outer terrain mode contains an unexpected material variant.'
     }
     if (($network.material_edge_uv_channel -isnot [long] -and $network.material_edge_uv_channel -isnot [int]) -or
         $network.material_edge_uv_channel -ne 0) {
@@ -263,6 +276,147 @@ function Assert-FreshNetworkReceipt {
     foreach ($name in $flags.Keys) {
         if ($Fresh[$name] -isnot [bool] -or $Fresh[$name] -ne $flags[$name]) {
             throw ('Fresh reload changed protected network flag: ' + $name)
+        }
+    }
+}
+function Assert-OuterTerrainReceipt {
+    param($Manifest, $Prepared, $Fresh, [bool] $Requested)
+    foreach ($row in @($Manifest, $Prepared, $Fresh)) {
+        if ($row.outer_terrain_enabled -isnot [bool] -or $row.outer_terrain_enabled -ne $Requested) {
+            throw 'Saved outer terrain variant differs from the explicit host request.'
+        }
+    }
+    foreach ($name in @('outer_material_reapplied', 'outer_geometry_reapplied')) {
+        if ($Fresh[$name] -isnot [bool] -or $Fresh[$name]) {
+            throw 'Fresh outer terrain verification changed its saved scene.'
+        }
+    }
+    if ($Fresh.outer_terrain_fresh_reload_verified -isnot [bool] -or
+        $Fresh.outer_terrain_fresh_reload_verified -ne $Requested) {
+        throw 'Fresh outer terrain verification differs from the requested variant.'
+    }
+    $network = $Manifest.shoulder_network
+    if (-not $Requested) {
+        if ($network.schema_version -ne 3 -or $network.Contains('outer_terrain') -or
+            $null -ne $Fresh.outer_terrain_readback) {
+            throw 'Disabled outer terrain mode contains unexpected material or readback evidence.'
+        }
+        return
+    }
+    # Retained 4258 camera windows 0013/0071/0097/0112/0082, resolved by
+    # window_id and material_target. Camera ordinals are not support indices.
+    $labels = @('018', '073', '093', '112', '182' | ForEach-Object { 'YACS_PERSIST_SUPPORT_' + $_ })
+    $outer = $network.outer_terrain
+    if ($network.schema_version -ne 4 -or $outer -isnot [Collections.IDictionary] -or
+        $outer.owner_labels -isnot [Collections.IList] -or
+        ($outer.owner_labels -join ',') -cne ($labels -join ',') -or
+        $outer.selection -cne 'source_owned_outer_top_faces' -or $outer.uv_channel -ne 1 -or
+        $outer.uv0_stage_witness_required -isnot [bool] -or -not $outer.uv0_stage_witness_required -or
+        $outer.physical_contact_verified -isnot [bool] -or $outer.physical_contact_verified) {
+        throw 'Outer terrain variant escaped the five selected source-owned top surfaces.'
+    }
+    $material = $outer.material
+    $source = $material.terrain_source
+    $loaded = $Fresh.outer_terrain_readback
+    $prefix = '/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/TerrainBlend/'
+    $master = $prefix + 'M_ShoulderNetworkTerrain.M_ShoulderNetworkTerrain'
+    $instance = $prefix + 'MI_ShoulderNetworkTerrain.MI_ShoulderNetworkTerrain'
+    if ($material.schema_version -ne 3 -or
+        $material.status -cne 'SHOULDER_MATERIAL_CREATED_REVIEW_PENDING' -or
+        $material.outer_terrain_enabled -isnot [bool] -or -not $material.outer_terrain_enabled -or
+        $material.assets.master -cne $master -or $material.assets.instance -cne $instance -or
+        $source -isnot [Collections.IDictionary] -or $source.landscape_component_count -ne 1024 -or
+        $source.texture_objects -isnot [Collections.IDictionary] -or $source.texture_objects.Count -ne 11 -or
+        $loaded -isnot [Collections.IDictionary] -or
+        $loaded.status -cne 'SHOULDER_MATERIALS_NATIVE_READBACK_VERIFIED' -or
+        $loaded.outer_terrain_enabled -isnot [bool] -or -not $loaded.outer_terrain_enabled -or
+        $loaded.read_only -isnot [bool] -or -not $loaded.read_only -or
+        $loaded.base_instance -cne $network.material.assets.instance -or
+        $loaded.outer_instance -cne $instance -or
+        $loaded.outer_owner_labels -isnot [Collections.IList] -or
+        ($loaded.outer_owner_labels -join ',') -cne ($labels -join ',') -or
+        $loaded.landscape_instance -cne $source.instance -or $loaded.landscape_component_count -ne 1024 -or
+        $loaded.outer_texture_objects -isnot [Collections.IDictionary] -or
+        $loaded.outer_texture_objects.Count -ne 11) {
+        throw 'Outer material readback does not match both saved instances and the frozen Landscape.'
+    }
+    foreach ($name in @('outer_material_reapplied', 'outer_geometry_reapplied', 'outer_gpu_compile_verified', 'physical_contact_verified',
+                         'normal_response_visual_verified', 'owner_visual_pass', 'performance_pass')) {
+        if ($loaded[$name] -isnot [bool] -or $loaded[$name]) {
+            throw ('Outer material readback changed protected authority: ' + $name)
+        }
+    }
+    foreach ($name in $source.texture_objects.Keys) {
+        if (-not $loaded.outer_texture_objects.Contains($name) -or
+            $source.texture_objects[$name] -isnot [string] -or
+            $source.texture_objects[$name] -cnotmatch '^/Game/Generated/YACS/.+\.[^/]+$' -or
+            $loaded.outer_texture_objects[$name] -cne $source.texture_objects[$name]) {
+            throw 'Fresh outer material changed a frozen Landscape texture binding.'
+        }
+    }
+    $statistics = @('num_samplers', 'num_pixel_shader_instructions', 'num_pixel_texture_samples',
+                    'num_vertex_shader_instructions', 'num_vertex_texture_samples', 'num_virtual_texture_samples',
+                    'num_uv_scalars', 'num_interpolator_scalars')
+    # Both Editors use NullRHI. Retain actual observations, including zero,
+    # without calling them GPU compilation or requiring equality across loads.
+    foreach ($row in @($material.native_statistics, $loaded.outer_native_statistics)) {
+        if ($row -isnot [Collections.IDictionary] -or $row.Count -ne $statistics.Count -or
+            $row.num_virtual_texture_samples -ne 0) {
+            throw 'Outer material native statistics are incomplete.'
+        }
+        foreach ($name in $statistics) {
+            if (-not $row.Contains($name) -or ($row[$name] -isnot [long] -and $row[$name] -isnot [int]) -or
+                $row[$name] -lt 0 -or $row[$name] -gt 1000000) {
+                throw 'Outer material native statistics are not bounded integer observations.'
+            }
+        }
+    }
+    if ($material.native_compile_errors -isnot [Collections.IList] -or $material.native_compile_errors.Count -ne 0 -or
+        $material.unique_texture_objects -ne 17 -or
+        $material.gpu_compile_verified -isnot [bool] -or $material.gpu_compile_verified) {
+        throw 'Outer material has native compilation errors or a changed texture inventory.'
+    }
+    if ($network.owners -isnot [Collections.IList] -or $network.owners.Count -ne 186) {
+        throw 'Outer material lacks the complete support inventory.'
+    }
+    for ($index = 0; $index -lt 186; $index++) {
+        $owner = $network.owners[$index]
+        $label = 'YACS_PERSIST_SUPPORT_' + $index.ToString('D3')
+        if ($owner.support_label -cne $label) { throw 'Outer material support inventory is reordered.' }
+        $attribute = $owner.edge_attribute
+        if ($labels -cnotcontains $label) {
+            if ($attribute -is [Collections.IDictionary] -and
+                ($attribute.Contains('outer_attribute') -or $attribute.Contains('inner_stage_mesh'))) {
+                throw 'Outer UV evidence escaped the five selected owners.'
+            }
+            continue
+        }
+        $before = $owner.before_mesh
+        $inner = $attribute.inner_stage_mesh
+        $after = $owner.after_mesh
+        $field = $attribute.outer_attribute
+        if ($owner.material_target -isnot [bool] -or -not $owner.material_target -or
+            $before.uv_set_count -ne 0 -or $inner.uv_set_count -ne 1 -or $after.uv_set_count -ne 2 -or
+            $attribute.channel -ne 0 -or $field.channel -ne 1 -or
+            $attribute.uv0_preserved -isnot [bool] -or -not $attribute.uv0_preserved -or
+            $attribute.original_normals_uv_prefix_blake3 -cne $before.triangle_corner_normals_uv_blake3 -or
+            $field.original_normals_uv_prefix_blake3 -cne $inner.triangle_corner_normals_uv_blake3 -or
+            $attribute.set_triangle_count -ne $owner.selected_triangle_count -or
+            $field.set_triangle_count -ne $owner.selected_triangle_count -or
+            $field.unset_nonselected_triangles -isnot [bool] -or -not $field.unset_nonselected_triangles) {
+            throw 'Outer UV source selection or complete original normal/UV prefix chain changed.'
+        }
+        foreach ($name in @('vertex_count', 'triangle_count', 'positions_indices_blake3')) {
+            if ($before[$name] -cne $inner[$name] -or $before[$name] -cne $after[$name]) {
+                throw 'Outer material UV creation changed the source positions or topology.'
+            }
+        }
+        foreach ($hash in @($attribute.uv_blake3, $field.uv_blake3,
+                             $before.triangle_corner_normals_uv_blake3, $inner.triangle_corner_normals_uv_blake3,
+                             $after.triangle_corner_normals_uv_blake3)) {
+            if ($hash -isnot [string] -or $hash -cnotmatch '^[0-9a-f]{64}$') {
+                throw 'Outer UV proof lacks a complete native buffer hash.'
+            }
         }
     }
 }
@@ -412,8 +566,10 @@ function Invoke-OwnedEditor {
             YACS_ROAD_SAVED_RUN_TOKEN = $RunToken
             YACS_ROAD_EDGE_MARKINGS = $edgeMarkingSetting
             YACS_ROAD_CRACK_CANARY = $crackCanarySetting
+            YACS_ROAD_OUTER_TERRAIN_CANARY = $outerTerrainSetting
             YACS_ROAD_CRACK_CONTROLS_OWNED = $null
             YACS_ROAD_VISUAL_CONTROLS_OWNED = $null
+            YACS_ROAD_PAINT_COVERAGE_OWNED = $null
             YACS_ROAD_MATERIAL_EXPECTED_HEAD = $ExpectedHead
             YACS_ROAD_MATERIAL_PREPARATION_SHA256 = [string] $baseline.value.proof_files.session_preparation.sha256
             YACS_WORKSPACE_CONFIG = $WorkspaceConfig
@@ -484,6 +640,8 @@ try {
         'scripts/ue/road_shoulder_edges.py',
         'scripts/ue/road_material_views.py',
         'scripts/ue/road_shoulder_material.py',
+        'scripts/ue/build_sa_calobra_whole_map_master.py',
+        'scripts/ue/sa_calobra_whole_map_prep.py',
         'scripts/ue/road_edge_marking_geometry.py',
         'scripts/ue/road_edge_marking_material.py',
         'scripts/ue/road_edge_marking_consumer.py',
@@ -559,7 +717,7 @@ try {
         $saved.value.manifest.size_bytes -ne $manifest.identity.size_bytes) {
         throw 'Downloadable material manifest is not pinned to the native retained evidence.'
     }
-    $selectedTriangles = Assert-NetworkManifest $manifest.value $ExpectedHead
+    $selectedTriangles = Assert-NetworkManifest $manifest.value $ExpectedHead ([bool]$OuterTerrainCanary)
     $receipt.proof_files.saved_manifest = $manifest.identity
     $retainedRoot = Resolve-ProfileRetainedRoot $workspace.value $WorkspaceConfig `
         $ExpectedHead $RunToken $saved.value.retained_root
@@ -578,6 +736,7 @@ try {
         $selectedTriangles $profileCopies.proof.sha256
     Assert-EdgeMarkingReceipt $manifest.value $saved.value $fresh.value ([bool]$EdgeMarkings)
     Assert-CrackCanaryReceipt $manifest.value $saved.value $fresh.value ([bool]$CrackCanary)
+    Assert-OuterTerrainReceipt $manifest.value $saved.value $fresh.value ([bool]$OuterTerrainCanary)
     $receipt.proof_files.fresh_reload = $fresh.identity
     Assert-Identity $saved.identity 2MB
     Assert-Identity $manifest.identity 4MB
@@ -599,6 +758,10 @@ try {
     $receipt.shoulder_selected_triangle_count = $selectedTriangles
     $receipt.edge_markings_fresh_reload_verified = [bool]$EdgeMarkings
     $receipt.crack_canary_fresh_reload_verified = [bool]$CrackCanary
+    $receipt.outer_terrain_fresh_reload_verified = [bool]$OuterTerrainCanary
+    if ($OuterTerrainCanary) {
+        $receipt.outer_terrain_owner_labels = @($manifest.value.shoulder_network.outer_terrain.owner_labels)
+    }
     $receipt.road_profile_diagnostic_sha256 = $profileCopies.proof.sha256
     $receipt.status = 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS'
 }
@@ -625,6 +788,7 @@ finally {
         $receipt.saved_derived_consumer = $false
         $receipt.fresh_reload_verified = $false
         $receipt.shoulder_network_fresh_reload_verified = $false
+        $receipt.outer_terrain_fresh_reload_verified = $false
         $receipt.error = 'Owned saved consumer process teardown failed.'
     }
     if ($null -ne $evidence -and (Test-Path -LiteralPath $evidence -PathType Container)) {

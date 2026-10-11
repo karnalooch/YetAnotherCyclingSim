@@ -294,16 +294,28 @@ repairing it. The subsequent 735 crack candidate passed CI but stopped before
 Unreal on the Windows symlink fixture. Af7 passed that corrected preflight but
 stopped during crack material creation at the texture setter's false return.
 The documented Epic UE-291403 behavior is handled by checking the full actual
-parameter readback; a completed native crack result is still pending.
+parameter readback. Native run 38109503833 at `5b99f3e1` passed saved
+preparation and fresh reload with both crack actors and all 370 paint
+overlays. GPU then exited 3 before the first image at a combined BaseColor
+texture size/settings check; the actual differing value was not retained.
+Crack images, normal review and the skipped wall/CUT observations remain
+pending.
+
+Source run 38109503685 at `5b99f3e1` restored only the previously approved
+decoder packages in a new isolated project environment and completed the
+actual eight source LiDAR transects with reader exit 0. The authenticated
+2,132 rows / 2,037 distinct points inform #459's profile diagnosis, not a
+material or geometry acceptance. A separate bounded nine-station read at
+195–235 m is prepared for the wall outside those first eight transects.
 
 | Role / consumer | Current source or candidate | Proven result and remaining limit |
 |---|---|---|
 | Asphalt | Material Forge `aged_mountain_asphalt/dry_varied`, granular source `27f24ead` / `38096069404-1`; 4 m tile | Two actual byte-identical Godot exports, authenticated source replay and native consumption. Four maps use 400 cm projection and full mip readiness. Reviewed 95e7 images show clearer aggregate and quieter broad colour; distant bands remain unresolved. Historical `base`, `worn` and `repaired` are not newly admitted. |
 | Saved pavement | Isolated derived consumer, preserving the original #363 checkpoint | Full native positions, ordered topology, split normals and original UVs are checked across save/fresh and GPU. Source projection scale is authenticated; route and physics are unchanged. |
 | Shoulder and support faces | 186 source owners, 185 material targets and 67,760 selected outer top triangles | Whole-network native/save/fresh/GPU proof at 9519 includes Nudo; literal original wall/interior materials remain. The explicit appended material UV channel has its own full witness. No blanket gravel assignment to vertical or parapet faces. |
-| Gravel and transitions | [`texture library v2`](../worldgen/materials/sa_calobra_texture_library_v2_20261005.json): Poly Haven `rock_ground`, CC0, pinned BaseColor/DirectX normal/roughness at the provider's 150 cm scale | Existing maps are reused. The source-distance 3–8 cm transition covers asphalt–gravel; `outer_terrain_transition` is still false. Gravel–Landscape tie-in needs its own completed visual/material work. |
-| White edge lines | 370 source-clipped overlays, 10 cm width, 12 cm setback and world Z +1 mm | Native saved/fresh full-buffer proof passed at e4 and 4258. All 68 actual 4258 Lit images reviewed; near continuity is good, far shallow views show pixel gaps requiring diagnosis. No collision, shadow, navigation or physics authority. |
-| Local cracks | Eight authored Material Forge motifs; verified source `07ebafad` / `38102423216-1` | Sixteen actual source processes and all 80 maps independently verified. The next UE candidate has two source-clipped actors, eight imported maps and eleven owned packages. Its 16 native controls, UV 0/90 normal-space proof and later sparse network distribution remain pending. |
+| Gravel and transitions | [`texture library v2`](../worldgen/materials/sa_calobra_texture_library_v2_20261005.json): Poly Haven `rock_ground`, CC0, pinned BaseColor/DirectX normal/roughness at the provider's 150 cm scale | The verified preceding implementation has the 3–8 cm asphalt–gravel transition only. The next five-owner outer variant reuses the frozen Landscape's eleven texture objects and original world mapping, with independently witnessed UV1 and original UV0 preservation. Native compilation, normal response and visual tie-in remain pending. |
+| White edge lines | 370 source-clipped overlays, 10 cm width, 12 cm setback and world Z +1 mm | Native saved/fresh full-buffer proof passed at e4 and 4258. All 68 actual 4258 Lit images reviewed; near continuity is good, far shallow views show pixel gaps. An identical-camera original/full-mask comparison at 0083 will separate mask coverage from remaining image behavior. No collision, shadow, navigation or physics authority. |
+| Local cracks | Eight authored Material Forge motifs; verified source `07ebafad` / `38102423216-1` | Sixteen actual source processes and all 80 maps independently verified. Two source-clipped actors, eight imported maps and eleven owned packages passed saved/fresh at 5b99. Its 16 native controls, UV 0/90 normal-space proof and later sparse network distribution remain pending after the pre-capture GPU readback failure. |
 
 The fixed importer uses native `WorldAlignedTexture` / `WorldAlignedNormal`
 and converts the source scale to `TileSizeCm` with material-instance readback.

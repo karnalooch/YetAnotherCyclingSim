@@ -207,8 +207,8 @@ The unchanged 68 Lit views and corrected 0112 plus bounded 0081 contact capture
 are requested next. The eight buffer controls remain failed/pending and need
 explicit `[road-band-controls]`; a bounded read-only installed-source probe
 will resolve that implementation mismatch. The source-pinned eight-transect
-LiDAR reader for #459 passed 14 local contracts and independent review; actual
-point observations remain pending. Eight individually authored crack motifs passed
+LiDAR reader for #459 passed its initial contracts and independent review;
+the subsequent 5b99 source run exported the actual eight transects. Eight individually authored crack motifs passed
 [source run 38102423216](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38102423216):
 16 observed Godot exits and all 80 maps independently verified across two
 identical exports per motif. No UE crack layer has been admitted. Source-relative contact and road profile
@@ -239,12 +239,31 @@ on the host and found the actual CPython 3.12.10 base with the two existing GIS
 pins; only the previously approved laspy/lazrs packages are absent. A bounded
 recovery now targets a new isolated project venv with the same two approved
 wheel hashes, offline installation and fresh real-import verification. Host
-recovery and LiDAR observations remain pending; the geographic sources and
-road profile are unchanged. The af7 native crack run passed 348 preflight tests
+recovery and LiDAR observations subsequently passed in source run 38109503685
+at `5b99f3e1`: actual reader exit 0, 2,132 rows / 2,037 distinct source points,
+with all source hashes unchanged. A separate closed nine-transect set at
+195–235 m is prepared for the wall; the first eight strips cover 95–165 m and
+cannot resolve that separate contact. The road profile remains unchanged.
+The af7 native crack run passed 348 preflight tests
 but stopped at the texture setter's false return before map save or images.
 The correction uses the full effective parameter readback for the documented
-Epic UE-291403 setter behavior; native saved/fresh and image checks remain
-required.
+Epic UE-291403 setter behavior. Native run 38109503833 at `5b99f3e1`
+subsequently passed preparation and fresh reload with both crack actors and
+all 370 paint overlays. Its GPU process exited 3 before the first image at
+the combined BaseColor texture size/settings readback, before per-pose
+loading preparation. The missing observed values leave the specific mismatch
+unresolved; neither texture settings nor required dimensions are relaxed.
+Both contact steps were skipped. Actual crack images remain pending.
+
+The material comparisons retain the unchanged 68 Lit cameras. The first
+combined run selects the existing 16 crack/neutral/normal controls; a separate
+opt-in retains the original eight band controls and adds a two-image
+white-paint coverage comparison at 0083. A five-owner outer shoulder blend reuses the actual frozen Landscape
+surface and adds an independently witnessed UV1 while preserving UV0. Camera
+windows 0013/0071/0097/0112/0082 resolve to supports 018/073/093/112/182;
+Nudo's parapet and the separate contact owners are excluded. Saved NullRHI
+statistics remain observations, with material GPU statistics and actual-image
+review checked separately. This is implementation/review work, not admission.
 
 #### Finish #364 as one complete delivery
 
@@ -266,8 +285,8 @@ questions separately from this material-only conservation proof.
 | Road canary | Apply the validated asphalt to the authorized slot; verify 400 cm projection, DirectX normals and exact restoration | **PASS at 9519:** authenticated granular source and exact canary restoration |
 | Shoulder coverage | Qualify every source owner, including Nudo; gravel on outer tops, original material on walls/interiors | **PASS at 9519:** 186 owners, 185 material targets and 67,760 selected tops; `rock_ground` remains at its 150 cm provider scale |
 | Edges and appearance | Inspect both directions, bends, close/distant views and shoulder/terrain transitions | **In progress:** improved grain and shoulder material transition in reviewed 95e7 frames; eight controlled native views pending to diagnose remaining bands |
-| Local surface details | Author restrained crack motifs and reference-matched white edge markings with stable source-owned placement | **Source PASS at `07ebafad`:** eight crack motifs, 16 actual Godot exits and 80 independently verified maps; white lines saved/fresh/Lit at 4258, distant appearance unresolved; UE crack consumption still pending after 735 preflight failure |
-| Contact/profile debt | Isolate the owning surface and prove bounded source-relative corrections separately | **#459 open:** all 18 contact images verified/viewed at 4258; support 185 owns the thick hairpin wall. Actual wall-bottom/CUT data, LiDAR observations and source-relative repair remain pending |
+| Local surface details | Author restrained crack motifs and reference-matched white edge markings with stable source-owned placement | **Source PASS at `07ebafad`:** eight crack motifs, 16 actual Godot exits and 80 independently verified maps; white lines saved/fresh/Lit at 4258, distant appearance unresolved; two crack actors saved/fresh at 5b99, GPU failed before images at texture readback |
+| Contact/profile debt | Isolate the owning surface and prove bounded source-relative corrections separately | **#459 open:** all 18 contact images verified/viewed at 4258; support 185 owns the thick hairpin wall. Actual LiDAR at 95–165 m retained at 5b99; the separate wall/CUT observation and source-relative repair remain pending |
 | Save, reopen and deliver | Save derived outputs, verify fresh reload/render, pass required checks and merge #470 | **In progress:** current native/visual proof and complete #364 delivery pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
 
 #### Complete the remaining world foundation after #364

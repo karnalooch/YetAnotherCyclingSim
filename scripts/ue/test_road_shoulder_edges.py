@@ -129,6 +129,78 @@ class EdgeFieldTests(unittest.TestCase):
         self.assertEqual(len(component.mesh.uv_layers), 2)
         self.assertEqual(harness.events, [])
 
+    def test_outer_metric_uses_the_tapered_outer_segment_with_a_nondegenerate_chart(self):
+        owner = owner_fixture()
+        owner["sections_cm"][1][0] = (-10.0, 100.0, 0.0)
+        before = deepcopy(owner)
+        inner = edges.triangle_coordinates(owner)
+        outer = edges.outer_triangle_coordinates(owner)
+        self.assertEqual(owner, before)
+        self.assertEqual(edges.triangle_coordinates(owner), inner)
+        first = outer[0][1]
+        self.assertEqual(first[0], (0, 0))
+        self.assertEqual(first[2][0], 0)
+        self.assertAlmostEqual(first[1][0], 50 / math.sqrt(1.16), places=4)
+        self.assertNotAlmostEqual(first[1][0], 50 - inner[0][1][1][0], places=3)
+        # This centroid's distance is measured from the actual slanted outer
+        # line, independent of the unchanged straight pavement boundary.
+        x, y = (-50 + 0 - 10) / 3, 100 / 3
+        expected = abs(40 * y - 100 * (x + 50)) / math.hypot(40, 100)
+        self.assertAlmostEqual(sum(uv[0] for uv in first) / 3, expected, places=4)
+        self.assertEqual(outer[2][1], ((50, 0), (0, 0), (50, 100)))
+        for _, (a, b, c) in outer:
+            area = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+            self.assertGreater(abs(area), 1)
+
+    def test_outer_native_prefix_chain_and_staged_rollback_preserve_every_uv0_value(self):
+        harness = Harness()
+        component, owner = harness.components[0], harness.plan["owners"][0]
+        before = harness.snapshot(component)["summary"]
+        edges.apply(harness.api, component, edges.triangle_coordinates(owner), 0)
+        inner = harness.snapshot(component, preserved_uv_set_count=0)
+        stage = {"summary": inner["summary"], "edge_attribute": edges.verify_native(before, inner, owner)}
+        uv0 = deepcopy(component.mesh.uv_layers[0])
+        edges.apply_outer(harness.api, component, edges.outer_triangle_coordinates(owner))
+        outer = harness.snapshot(component, preserved_uv_set_count=1)
+        self.assertEqual(edges.verify_inner_stage(before, owner, stage), stage["edge_attribute"])
+        proof = edges.verify_outer_native(stage["summary"], outer, owner)
+        self.assertEqual(proof["channel"], 1)
+        self.assertEqual(proof["original_normals_uv_prefix_blake3"], inner["summary"]["triangle_corner_normals_uv_blake3"])
+        self.assertEqual(component.mesh.uv_layers[0], uv0)
+        self.assertTrue(proof["unset_nonselected_triangles"])
+        for field in ("source_coordinates_sha256", "original_normals_uv_prefix_blake3"):
+            changed = deepcopy(stage)
+            changed["edge_attribute"][field] = "0" * 64
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                edges.verify_inner_stage(before, owner, changed)
+        changed = deepcopy(outer)
+        changed["material_uv"]["preserved_triangle_corner_normals_uv_blake3"] = "0" * 64
+        with self.assertRaises(ValueError):
+            edges.verify_outer_native(stage["summary"], changed, owner)
+        edges.rollback_outer(harness.api, component)
+        self.assertEqual(harness.snapshot(component)["summary"], stage["summary"])
+        self.assertEqual(component.mesh.uv_layers[0], uv0)
+        edges.rollback(harness.api, component, 0)
+        self.assertEqual(harness.snapshot(component)["summary"], before)
+
+    def test_outer_append_requires_existing_uv0_and_refuses_to_overwrite_a_second_channel(self):
+        harness = Harness()
+        component, owner = harness.components[0], harness.plan["owners"][0]
+        coordinates = edges.outer_triangle_coordinates(owner)
+        with self.assertRaises(ValueError):
+            edges.apply_outer(harness.api, component, coordinates)
+        self.assertEqual(component.mesh.uv_layers, [])
+        edges.apply(harness.api, component, edges.triangle_coordinates(owner), 0)
+        edges.apply_outer(harness.api, component, coordinates)
+        before = deepcopy(component.mesh.uv_layers)
+        with self.assertRaises(ValueError):
+            edges.apply_outer(harness.api, component, coordinates)
+        self.assertEqual(component.mesh.uv_layers, before)
+        component.mesh.uv_layers.append({})
+        with self.assertRaisesRegex(ValueError, "unowned channel"):
+            edges.rollback_outer(harness.api, component)
+        self.assertEqual(len(component.mesh.uv_layers), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

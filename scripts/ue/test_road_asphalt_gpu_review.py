@@ -17,6 +17,195 @@ from unittest.mock import Mock, patch
 from scripts.ue import road_asphalt_gpu_review as gpu
 
 
+class CaptureReadback:
+    """Synthetic CVars/counter; never a renderer or temporal-history witness."""
+    def __init__(self):
+        self.values = dict.fromkeys(gpu.CAPTURE_CONSOLE_NAMES, "0")
+        self.values.update({"r.AntiAliasingMethod": "4", "r.ScreenPercentage": "100",
+                            "r.HighResScreenshotDelay": "4"})
+        self.frame = 100
+
+    def get_engine_version(self):
+        return gpu.visual_controls.ENGINE_VERSION
+
+    def get_console_variable_string_value(self, name):
+        """Synthetic get_console_variable_string_value(name) -> str."""
+        return self.values[name]
+
+    def get_frame_count(self):
+        """Synthetic get_frame_count() -> int64."""
+        self.frame += 1
+        return self.frame
+
+
+class CaptureStateTests(unittest.TestCase):
+    def setUp(self):
+        self.native = CaptureReadback()
+        self.api = SimpleNamespace(SystemLibrary=self.native)
+
+    def test_missing_cvar_is_unknown_while_real_zero_is_observed(self):
+        self.native.values["r.TSR.ThinGeometryDetection"] = ""
+        observed = gpu.native_capture_state(self.api)
+        self.assertEqual(observed["cvars"]["r.TSR.ThinGeometryDetection"],
+                         {"status": "UNKNOWN", "raw": "", "value": None})
+        self.assertEqual(observed["cvars"]["r.Test.CameraCut"],
+                         {"status": "OBSERVED", "raw": "0", "value": 0.0})
+        self.assertIsNone(observed["effective_view_aa"])
+        self.assertIsNone(observed["effective_screen_percentage"])
+        self.assertFalse(observed["temporal_history_observed"])
+        self.assertFalse(observed["console_overrides_applied"])
+        self.assertGreater(observed["frame_count"], 0)
+
+    def test_getters_must_be_version_matched_and_cannot_fabricate_bad_values(self):
+        evidence = gpu.capture_state_api_evidence(self.api)
+        self.assertEqual(set(evidence["reflected_methods"]), {
+            "SystemLibrary.get_console_variable_string_value", "SystemLibrary.get_frame_count"})
+        with patch.object(self.native, "get_engine_version", return_value="5.9"), self.assertRaisesRegex(ValueError, "pinned"):
+            gpu.capture_state_api_evidence(self.api)
+        for value in (None, "nan", "inf", "not-a-number", "1" * 129):
+            with self.subTest(value=value), self.assertRaises((ValueError, TypeError)):
+                self.native.values["r.AntiAliasingMethod"] = value
+                gpu.native_capture_state(self.api)
+        self.native.values["r.AntiAliasingMethod"] = "4"
+        for count in (-1, True, 1.0, None):
+            with self.subTest(count=count), patch.object(self.native, "get_frame_count", return_value=count), self.assertRaisesRegex(ValueError, "counter"):
+                gpu.native_capture_state(self.api)
+
+
+class RoadGpuInitialTextureCompilationTests(unittest.TestCase):
+    """Exercise main ordering with the real strict texture-settings reader.
+
+    Pending 4-pixel resources are synthetic. The old native failure did not
+    record which field differed; this fixture does not claim it did.
+    """
+    def setUp(self):
+        from scripts.ue import road_crack_sources as sources
+
+        self.sources = sources
+        self.events = []
+
+        class Texture:
+            def __init__(self, path):
+                self.path, self.ready, self.properties = path, False, {}
+
+            def get_path_name(self):
+                return self.path
+
+            def get_editor_property(self, name):
+                return self.properties[name]
+
+            def blueprint_get_size_x(self):
+                return 2048 if self.ready else 4
+
+            def blueprint_get_size_y(self):
+                return 2048 if self.ready else 4
+
+        source = {"pins_sha256": "a" * 64, "selected_motifs": list(sources.CANARY_MOTIFS)}
+        self.crack_assets = sources.asset_paths(source)
+        manifest = {
+            "texture_objects": {name: "/Game/Fixture/T_" + name + ".T_" + name
+                                for name in ("BaseColor", "Normal_DX", "ORM", "DetailMasks")},
+            "shoulder_network": {"schema_version": 3, "material": {"texture_objects": {
+                name: "/Game/Fixture/Shoulder/T_" + name + ".T_" + name
+                for name in ("BaseColor", "Normal_DX", "Roughness")}}},
+            "outer_terrain_enabled": False, "edge_markings_enabled": True, "crack_canary_enabled": True,
+            "crack_canary": {"imports": {"texture_count": 8, "sources": source, "assets": self.crack_assets}},
+        }
+        self.paths = gpu.material_texture_paths(manifest)
+        self.textures = {path: Texture(path) for path in self.paths.values()}
+        self.api = SimpleNamespace(
+            Texture2D=Texture, load_asset=Mock(side_effect=self.textures.get),
+            TextureCompressionSettings=SimpleNamespace(TC_DEFAULT="DEFAULT", TC_NORMALMAP="NORMALMAP", TC_MASKS="MASKS"),
+            TextureAddress=SimpleNamespace(TA_CLAMP="CLAMP"),
+            Paths=SimpleNamespace(project_dir=lambda: str(gpu.ROOT), convert_relative_path_to_full=lambda path: path),
+            SystemLibrary=SimpleNamespace(get_engine_version=lambda: gpu.visual_controls.ENGINE_VERSION),
+            EditorLoadingAndSavingUtils=SimpleNamespace(load_map=Mock(side_effect=self.load_map)),
+            YacsTextureAuditLibrary=SimpleNamespace(finish_texture_compilation=Mock(side_effect=self.finish)),
+        )
+        for channels in self.crack_assets["textures"].values():
+            for channel, path in channels.items():
+                self.textures[path].properties = sources._settings(self.api, channel)
+        self.context = {"manifest": manifest, "surface_modes": {"edge_markings": True, "crack_canary": True},
+                        "fresh_surface_readback": {"edge_markings": None, "crack_canary": None}}
+        self.enterContext(patch.dict("sys.modules", {"unreal": self.api}))
+        self.enterContext(patch.object(gpu, "authenticate_render_context", return_value=self.context))
+        self.enterContext(patch.object(gpu.baseline, "dirty_packages"))
+        self.enterContext(patch.object(gpu.prep, "assert_isolated_bootstrap"))
+        self.verifier = self.enterContext(patch.object(gpu.saved, "verify_surface_details", side_effect=self.verify))
+        self.inventory = self.enterContext(patch.object(gpu.baseline, "native_inventory", side_effect=self.reach_inventory))
+        self.capture = self.enterContext(patch.object(gpu, "RoadLitCapture"))
+
+    def load_map(self, path):
+        self.assertEqual(path, gpu.saved.MAP)
+        self.events.append("load map")
+        return object()
+
+    def finish(self, selected):
+        self.events.append("finish selected")
+        self.assertEqual(selected, [self.textures[path] for _, path in sorted(self.paths.items())])
+        self.assertEqual(len(selected), 15)
+        for texture in selected:
+            texture.ready = True
+        return True
+
+    def verify(self, api, manifest, **modes):
+        self.events.append("verify settings")
+        self.assertIs(api, self.api)
+        self.assertIs(manifest, self.context["manifest"])
+        self.assertEqual(modes, self.context["surface_modes"])
+        self.sources._verify_textures(api, self.crack_assets)
+        return self.context["fresh_surface_readback"]
+
+    def reach_inventory(self, *_):
+        self.events.append("native inventory")
+        raise RuntimeError("test reached native inventory")
+
+    def test_main_finishes_selected_builds_before_strict_surface_texture_readback(self):
+        with self.assertRaises(ValueError) as pending:
+            self.sources._verify_textures(self.api, self.crack_assets)
+        fields = json.loads(str(pending.exception).removeprefix(self.sources.TEXTURE_READBACK_ERROR))["fields"]
+        self.assertEqual(fields["size_x"]["observed"], 4)
+        self.assertEqual(fields["size_y"]["observed"], 4)
+        properties = {path: deepcopy(texture.properties) for path, texture in self.textures.items()}
+        with self.assertRaisesRegex(RuntimeError, "test reached native inventory"):
+            gpu.main()
+        self.assertEqual(self.events, ["load map", "finish selected", "verify settings", "native inventory"])
+        self.api.YacsTextureAuditLibrary.finish_texture_compilation.assert_called_once()
+        self.assertEqual(properties, {path: texture.properties for path, texture in self.textures.items()})
+        receipt = self.context["loaded_material_texture_compilation"]
+        self.assertEqual(receipt["status"], "SELECTED_TEXTURE_COMPILATION_FINISHED")
+        self.assertEqual(receipt["texture_count"], 15)
+        self.assertEqual(receipt["texture_objects"], self.paths)
+        self.assertFalse(receipt["settings_changed"])
+        self.assertFalse(receipt["source_assets_saved"])
+        self.capture.assert_not_called()
+
+    def test_failed_native_finish_stops_before_surface_readback_or_capture(self):
+        finish = self.api.YacsTextureAuditLibrary.finish_texture_compilation
+        finish.side_effect = lambda selected: self.events.append("finish rejected") or False
+        with self.assertRaisesRegex(ValueError, "did not finish native compilation"):
+            gpu.main()
+        finish.assert_called_once()
+        self.assertEqual(self.events, ["load map", "finish rejected"])
+        self.verifier.assert_not_called()
+        self.inventory.assert_not_called()
+        self.capture.assert_not_called()
+
+    def test_finished_build_keeps_real_clamp_drift_a_hard_failure(self):
+        path = self.crack_assets["textures"][self.sources.CANARY_MOTIFS[0]]["BaseColor"]
+        self.textures[path].properties["address_x"] = "WRAP"
+        with self.assertRaises(ValueError) as wrong_setting:
+            gpu.main()
+        fields = json.loads(str(wrong_setting.exception).removeprefix(self.sources.TEXTURE_READBACK_ERROR))["fields"]
+        self.assertEqual(fields["address_x"]["observed"]["text"], "WRAP")
+        self.assertEqual(fields["size_x"]["observed"], 2048)
+        self.assertEqual(fields["size_y"]["observed"], 2048)
+        self.assertEqual(self.events, ["load map", "finish selected", "verify settings"])
+        self.api.YacsTextureAuditLibrary.finish_texture_compilation.assert_called_once()
+        self.inventory.assert_not_called()
+        self.capture.assert_not_called()
+
+
 def fixture_csv(*, missing=(), duplicate=False, wrong_fov=False):
     """Synthetic values only: never passed off as accepted source proof."""
     headers = [
@@ -51,6 +240,83 @@ def fixture_csv(*, missing=(), duplicate=False, wrong_fov=False):
     if duplicate:
         writer.writerow(rows[-1])
     return stream.getvalue().encode("utf-8")
+
+
+def outer_terrain_fixture(*, enabled=True):
+    """Structural source/fresh fixture; no synthetic renderer admission."""
+    from scripts.ue.test_road_asphalt_saved_consumer import RoadAsphaltSavedConsumerContractTests
+
+    fixture = RoadAsphaltSavedConsumerContractTests()
+    fixture.setUp()
+    network = fixture.shoulder_inventory_fixture(outer=enabled)[2]
+    manifest = {"outer_terrain_enabled": enabled, "shoulder_network": network}
+    prepared = {"outer_terrain_enabled": enabled}
+    fresh = {"outer_terrain_enabled": enabled, "outer_terrain_fresh_reload_verified": enabled,
+             "outer_material_reapplied": False, "outer_geometry_reapplied": False, "outer_terrain_readback": None}
+    host = {"outer_terrain_requested": enabled, "outer_terrain_fresh_reload_verified": enabled,
+            "outer_terrain_owner_labels": list(gpu.saved.OUTER_TERRAIN_OWNER_LABELS) if enabled else [],
+            "outer_terrain_physical_contact_verified": False, "outer_terrain_normal_response_verified": False}
+    if enabled:
+        material = network["outer_terrain"]["material"]
+        fresh["outer_terrain_readback"] = {
+            "status": "SHOULDER_MATERIALS_NATIVE_READBACK_VERIFIED", "read_only": True,
+            "base_instance": network["material"]["assets"]["instance"],
+            "outer_terrain_enabled": True, "outer_instance": material["assets"]["instance"],
+            "outer_owner_labels": list(gpu.saved.OUTER_TERRAIN_OWNER_LABELS),
+            "outer_texture_objects": deepcopy(material["terrain_source"]["texture_objects"]),
+            "outer_native_statistics": dict.fromkeys(gpu.saved.shoulder_material.STATISTICS_FIELDS, 0),
+            "outer_gpu_compile_verified": False, "landscape_instance": material["terrain_source"]["instance"],
+            "landscape_component_count": 1024, "outer_material_reapplied": False,
+            "outer_geometry_reapplied": False, "physical_contact_verified": False,
+            "normal_response_visual_verified": False, "owner_visual_pass": False, "performance_pass": False,
+        }
+    return host, prepared, fresh, manifest
+
+
+def outer_gpu_statistics_fixture(manifest):
+    material = manifest["shoulder_network"]["outer_terrain"]["material"]
+    return {"status": "SHOULDER_TERRAIN_GPU_STATISTICS_VERIFIED", **material["assets"],
+            "native_statistics": deepcopy(material["native_statistics"]), "read_only": True,
+            "gpu_compile_verified": False, "compile_error_text_observed": False,
+            "host_shader_log_check_required": True, "owner_visual_pass": False, "performance_pass": False}
+
+
+class OuterTerrainGpuTests(unittest.TestCase):
+    def test_explicit_saved_fresh_mode_and_bindings_keep_nullrhi_counters_observational(self):
+        for enabled in (False, True):
+            with self.subTest(enabled=enabled):
+                host, prepared, fresh, manifest = outer_terrain_fixture(enabled=enabled)
+                self.assertEqual(gpu.authenticate_outer_terrain_proofs(
+                    host, prepared, fresh, manifest, outer_terrain=enabled), fresh["outer_terrain_readback"])
+                if enabled:
+                    actual_gpu = deepcopy(fresh["outer_terrain_readback"])
+                    actual_gpu["outer_native_statistics"] = outer_gpu_statistics_fixture(manifest)["native_statistics"]
+                    self.assertEqual(gpu.outer_binding_summary(manifest, actual_gpu),
+                                     gpu.outer_binding_summary(manifest, fresh["outer_terrain_readback"]))
+                    self.assertEqual(host["outer_terrain_owner_labels"], [
+                        "YACS_PERSIST_SUPPORT_018", "YACS_PERSIST_SUPPORT_073", "YACS_PERSIST_SUPPORT_093",
+                        "YACS_PERSIST_SUPPORT_112", "YACS_PERSIST_SUPPORT_182"])
+
+    def test_outer_auth_rejects_changed_source_mode_owner_and_false_admission(self):
+        mutations = (
+            lambda h, p, f, m: h.update(outer_terrain_requested=False),
+            lambda h, p, f, m: p.update(outer_terrain_enabled=1),
+            lambda h, p, f, m: f.update(outer_material_reapplied=True),
+            lambda h, p, f, m: h.update(outer_terrain_normal_response_verified=True),
+            lambda h, p, f, m: f["outer_terrain_readback"].update(outer_gpu_compile_verified=True),
+            lambda h, p, f, m: f["outer_terrain_readback"].update(landscape_component_count=1023),
+            lambda h, p, f, m: f["outer_terrain_readback"]["outer_owner_labels"].__setitem__(-1, "YACS_PERSIST_SUPPORT_082"),
+            lambda h, p, f, m: f["outer_terrain_readback"]["outer_texture_objects"].pop("ScreeNormalTex"),
+            lambda h, p, f, m: f["outer_terrain_readback"]["outer_native_statistics"].update(num_samplers=-1),
+            lambda h, p, f, m: f["outer_terrain_readback"]["outer_native_statistics"].update(num_samplers=True),
+            lambda h, p, f, m: m["shoulder_network"]["outer_terrain"]["material"]["terrain_source"]["source_packages"]["WeightTex"].update(sha256="0" * 64),
+        )
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                rows = outer_terrain_fixture()
+                mutation(*rows)
+                with self.assertRaises(ValueError):
+                    gpu.authenticate_outer_terrain_proofs(*rows, outer_terrain=True)
 
 
 class RoadGpuReviewContractTests(unittest.TestCase):
@@ -143,6 +409,27 @@ class RoadGpuReviewContractTests(unittest.TestCase):
             self.assertEqual(job.control_module.digest(job.control_plan),
                              "f6f8a4fef0c10438fee2ee88827f797b9451ebf5d9e1f0b2334f754f593738d8")
             self.assertEqual(job.control_receipt_name, "road-crack-visual-controls.json")
+
+    def test_paint_coverage_is_explicit_and_preserves_the_legacy_eight_plan(self):
+        token = "38100000000-1"
+        base = gpu.visual_controls.control_plan()
+        self.assertEqual(gpu.visual_controls.digest(base), "debdc9a8b2a7e807f75dcd9d18f1244cef5f887b76f4a374b065a468366f1298")
+        for env, paint in (({gpu.visual_controls.COVERAGE_OWNED_ENV: token}, True),
+                           ({gpu.visual_controls.OWNED_ENV: token, gpu.visual_controls.COVERAGE_OWNED_ENV: "wrong"}, True),
+                           ({gpu.visual_controls.OWNED_ENV: token, gpu.visual_controls.COVERAGE_OWNED_ENV: token}, False)):
+            with self.subTest(env=env, paint=paint), tempfile.TemporaryDirectory() as temp:
+                context = {"proof": Path(temp), "run_token": token, "manifest": {"edge_markings_enabled": paint}}
+                with patch.dict("os.environ", env, clear=True), self.assertRaisesRegex(ValueError, "Paint coverage"):
+                    gpu.RoadLitCapture(SimpleNamespace(), context, object(), object())
+                self.assertEqual(list(Path(temp).iterdir()), [])
+        with tempfile.TemporaryDirectory() as temp, patch.dict("os.environ", {
+            gpu.visual_controls.OWNED_ENV: token, gpu.visual_controls.COVERAGE_OWNED_ENV: token}, clear=True):
+            job = gpu.RoadLitCapture(SimpleNamespace(), {"proof": Path(temp), "run_token": token,
+                "manifest": {"edge_markings_enabled": True, "crack_canary_enabled": True}}, object(), object())
+            self.assertEqual(job.control_plan["jobs"][:8], base["jobs"])
+            self.assertEqual(job.control_plan["frame_count"], 10)
+            self.assertEqual(job.control_family, "road-asphalt")
+            self.assertTrue(job.paint_coverage_enabled)
 
     def test_four_pinned_road_poses_are_forward_and_reverse(self):
         raw = fixture_csv()
@@ -316,6 +603,7 @@ class RoadGpuNativePoseTests(unittest.TestCase):
             get_actor_forward_vector=Mock(return_value=self.vector(0.6, 0.8, 0)),
         )
         self.api = SimpleNamespace(
+            SystemLibrary=CaptureReadback(),
             Vector=self.vector, CameraComponent=object(),
             MathLibrary=SimpleNamespace(find_look_at_rotation=Mock(return_value=object())),
             ViewModeIndex=SimpleNamespace(VMI_LIT=object()),
@@ -343,6 +631,32 @@ class RoadGpuNativePoseTests(unittest.TestCase):
         self.assertIs(arguments["camera"], self.camera)
         Path(arguments["filename"]).write_bytes(b"SYNTHETIC PNG")
         return SimpleNamespace(is_valid_task=lambda: True, is_task_done=lambda: True)
+
+    def test_capture_snapshots_bracket_each_prime_and_final_without_history_claims(self):
+        self.api.SystemLibrary.values["r.TSR.ThinGeometryDetection"] = ""
+        self.job.submit_pose()
+        self.api.SystemLibrary.values["r.ScreenPercentage"] = "75"
+        for _ in range(gpu.PRIMING_FRAMES + 1):
+            self.job.tick(0.05)
+        self.job.stop.assert_not_called()
+        frame = self.job.frames[0]
+        captures = frame["priming_frames"] + [frame]
+        self.assertEqual(len(captures), 4)
+        self.assertFalse(captures[0]["capture_cvars_unchanged"])
+        for shot in captures:
+            before, after = shot["native_capture_state_before"], shot["native_capture_state_after"]
+            self.assertLessEqual(before["frame_count"], after["frame_count"])
+            self.assertEqual(before["cvars"]["r.TSR.ThinGeometryDetection"]["status"], "UNKNOWN")
+            self.assertIsNone(after["effective_view_aa"])
+            self.assertFalse(after["temporal_history_observed"])
+
+    def test_regressed_native_frame_counter_stops_before_png_admission(self):
+        self.job.submit_pose()
+        self.api.SystemLibrary.frame = 0
+        self.job.tick(0.05)
+        self.job.stop.assert_called_once()
+        self.assertIn("counter regressed", self.job.stop.call_args.args[0])
+        self.assertEqual(self.job.prime_evidence, [])
 
     def test_rotation_setter_failure_cannot_submit_a_png(self):
         for result in (False, None, 1):
@@ -531,6 +845,7 @@ class RoadGpuControlPhaseTests(unittest.TestCase):
             get_actor_forward_vector=lambda: self.forward,
         )
         self.api = SimpleNamespace(
+            SystemLibrary=CaptureReadback(),
             Vector=self.vector, CameraComponent=object(),
             MathLibrary=SimpleNamespace(find_look_at_rotation=lambda eye, target: (eye, target)),
             ViewModeIndex=SimpleNamespace(VMI_LIT="lit", VMI_VISUALIZE_BUFFER="visualize"),
@@ -548,7 +863,7 @@ class RoadGpuControlPhaseTests(unittest.TestCase):
             """The real controller is independently covered by its dedicated tests."""
 
             def __init__(self, api, context):
-                self.plan = gpu.visual_controls.control_plan()
+                self.plan = deepcopy(owner.job.control_plan)
                 self.current = None
 
             def begin(self):
@@ -634,6 +949,27 @@ class RoadGpuControlPhaseTests(unittest.TestCase):
                                  capture["native_control_observation_after"])
                 self.assertFalse(capture["native_control_observation_before"]["buffer_name_readback_verified"])
 
+    def test_opt_in_pair_follows_all_68_and_legacy_eight_with_snapshots_for_all_312_pngs(self):
+        legacy = deepcopy(self.job.control_plan)
+        self.job.paint_coverage_enabled = True
+        self.job.control_plan = gpu.visual_controls.control_plan(paint_coverage=True)
+        self.complete_lit()
+        for _ in range(10 * (gpu.PRIMING_FRAMES + 1)):
+            self.job.tick(0.05)
+        self.job.stop.assert_not_called()
+        self.assertEqual(len(self.shots), 312)
+        self.assertEqual(len(self.preparations), 78)
+        self.assertEqual(self.job.control_completed_priming_frames, 30)
+        self.assertEqual([row["frame_id"] for row in self.job.frames], [row["frame_id"] for row in self.context["frames"]])
+        self.assertEqual([row["frame_id"] for row in self.job.control_frames[:8]], [row["job_id"] for row in legacy["jobs"]])
+        self.assertEqual([row["control_mode"] for row in self.job.control_frames[8:]], list(gpu.visual_controls.COVERAGE_CONTROLS))
+        for frame in self.job.frames + self.job.control_frames:
+            for shot in frame["priming_frames"] + [frame]:
+                self.assertEqual(set(shot["native_capture_state_before"]["cvars"]), set(gpu.CAPTURE_CONSOLE_NAMES))
+                self.assertEqual(set(shot["native_capture_state_after"]["cvars"]), set(gpu.CAPTURE_CONSOLE_NAMES))
+                self.assertIsNone(shot["native_capture_state_after"]["effective_screen_percentage"])
+                self.assertFalse(shot["native_capture_state_after"]["temporal_history_observed"])
+
     def test_missing_native_api_is_rejected_before_first_camera_or_capture(self):
         self.api.EditorPythonScripting = SimpleNamespace(set_keep_python_script_alive=Mock())
         self.api.get_editor_subsystem = Mock()
@@ -675,10 +1011,51 @@ class RoadGpuControlPhaseTests(unittest.TestCase):
 
 
 class RoadGpuStopLifecycleTests(unittest.TestCase):
+    def test_coverage_receipt_requires_each_restoration_flag_and_keeps_legacy_identity(self):
+        job = gpu.RoadLitCapture.__new__(gpu.RoadLitCapture)
+        job.paint_coverage_enabled = True
+        job.capture_state_api = {"synthetic": True}
+        job.control_family, job.control_module = "road-asphalt", gpu.visual_controls
+        job.control_plan = gpu.visual_controls.control_plan(paint_coverage=True)
+        job.control_frames = [{"frame_id": row["job_id"], "control_mode": row["control"]} for row in job.control_plan["jobs"]]
+        job.control_completed_priming_frames = 30
+        job.control_begin, job.control_preflight = {"status": "READY"}, {}
+        job.control_max_completed_screenshot_seconds = 0.1
+        job.edge_marking_readback = {"status": "EDGE_MARKINGS_FRESH_READBACK_VERIFIED", "all_marking_buffers_verified": True,
+                                    "full_source_buffers_preserved": True, "actor_count": 370, "read_only": True}
+        job.context = {"exact_sha": "a" * 40, "run_token": "12345678-1", "manifest_id": {"sha256": "b" * 64},
+                       "view_plan_identity": {"sha256": "c" * 64}, "edge_marking_readback": deepcopy(job.edge_marking_readback)}
+        restoration = {"status": "RESTORED", "cleanup_errors": [], "original_material_restored": True,
+                       "owned_viewports_returned_to_lit": True, "saved_and_staged_package_bytes_unchanged": True,
+                       "paint_bindings_restored": True, "paint_original_mic_parameters_unchanged": True,
+                       "paint_transient_mid_detached": True, "paint_transient_mid_ref_released": True,
+                       "dirty_content_count": 0}
+        job.control_restore = deepcopy(restoration)
+        receipt = job.visual_control_receipt([], {})
+        self.assertEqual(receipt["status"], "ROAD_ASPHALT_VISUAL_CONTROLS_FRAMES_RETAINED")
+        self.assertEqual(receipt["paint_coverage_frame_count"], 2)
+        self.assertEqual(receipt["legacy_control_plan"], gpu.visual_controls.control_plan())
+        self.assertEqual(receipt["legacy_control_plan_sha256"], job.control_plan["legacy_control_plan_sha256"])
+        self.assertTrue(receipt["paint_full_native_buffers_verified"])
+        self.assertFalse(receipt["paint_pixel_aliasing_cause_verified"])
+        for key, value in [(name, False) for name in restoration if name.startswith("paint_")] + [
+            ("dirty_content_count", 1), ("dirty_content_count", False), ("status", "FAILED")]:
+            with self.subTest(field=key):
+                job.control_restore = {**restoration, key: value}
+                receipt = job.visual_control_receipt([], {})
+                self.assertEqual(receipt["status"], "ROAD_ASPHALT_VISUAL_CONTROLS_FAILED")
+                self.assertFalse(receipt["paint_full_native_buffers_verified"])
+                self.assertFalse(receipt["control_restoration_verified"])
+        job.control_restore = restoration
+        receipt = job.visual_control_receipt(["road surface details: synthetic buffer drift"], {})
+        self.assertFalse(receipt["paint_full_native_buffers_verified"])
+
     def test_partial_crack_restore_cannot_report_verified_restoration(self):
         # Exercise receipt generation directly: the native failure may preserve
         # material bytes while failing visibility, MID cleanup or dirty state.
         job = gpu.RoadLitCapture.__new__(gpu.RoadLitCapture)
+        job.paint_coverage_enabled = False
+        job.capture_state_api = None
         job.control_family = "road-crack"
         job.control_module = SimpleNamespace(digest=lambda _plan: "f" * 64)
         job.control_plan = {"frame_count": 1, "jobs": [{"job_id": "synthetic"}]}
@@ -716,7 +1093,8 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
                 self.assertFalse(receipt["control_restoration_verified"])
                 self.assertFalse(receipt["normal_space_verified"])
 
-    def assert_stop_lifecycle(self, error=None, *, with_controls=False, restore_error=False):
+    def assert_stop_lifecycle(self, error=None, *, with_controls=False, restore_error=False,
+                              outer_terrain=False, outer_binding_drift=False, outer_statistics_drift=False):
         """Exercise real stop/receipt code with synthetic native boundaries."""
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
@@ -749,7 +1127,17 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
             "view_plan_identity": gpu.session._identity(plan_path),
             "stage_path": stage, "stage_identity": gpu.session._identity(stage),
             "host_receipt_identity": gpu.session._identity(prior),
+            "terrain_consumer_assets": [], "shoulder_material_readback": None,
         }
+        outer_after = None
+        if outer_terrain:
+            _, _, fresh, outer_manifest = outer_terrain_fixture()
+            context["manifest"].update(outer_manifest)
+            context.update(outer_terrain_enabled=True, outer_terrain_readback=fresh["outer_terrain_readback"])
+            outer_after = deepcopy(context["outer_terrain_readback"])
+            outer_after["outer_native_statistics"] = outer_gpu_statistics_fixture(context["manifest"])["native_statistics"]
+            if outer_binding_drift:
+                outer_after["outer_owner_labels"][-1] = "YACS_PERSIST_SUPPORT_181"
         events = []
 
         def record(name, result=None):
@@ -793,6 +1181,12 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
         job.frames = frames
         job.completed_priming_frames = len(frames) * gpu.PRIMING_FRAMES
         job.max_completed_screenshot_seconds = 98.964
+        if outer_terrain:
+            job.outer_gpu_statistics_before = outer_gpu_statistics_fixture(context["manifest"])
+            stats_after = deepcopy(job.outer_gpu_statistics_before)
+            if outer_statistics_drift:
+                stats_after["native_statistics"]["num_samplers"] += 1
+            job.read_outer_gpu_statistics = Mock(side_effect=record("outer statistics", stats_after))
         job.residency_leases = {
             "synthetic texture": SimpleNamespace(
                 set_force_mip_levels_to_be_resident=Mock(side_effect=record("mip release"))
@@ -820,7 +1214,7 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
             (gpu.baseline, "native_inventory", "native inventory", {}),
             (gpu.saved, "expected_saved_inventory", "scene comparison", "b" * 64),
             (gpu.saved.shoulder, "verify_loaded", "shoulder mesh", None),
-            (gpu.saved.shoulder_material, "verify_material", "shoulder material", None),
+            (gpu.saved, "verify_shoulder_materials", "shoulder material", outer_after),
             (gpu.saved, "verify_road_mesh", "road full buffers", None),
             (gpu.saved, "verify_surface_details", "surface details", {"edge_markings": None, "crack_canary": None}),
             (gpu.saved, "verify_material_instance", "dry response", None),
@@ -860,6 +1254,8 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
             "road full buffers", "dry response", "camera plan",
             "profile diagnostic", "surface details",
         }
+        if outer_terrain:
+            guards.add("outer statistics")
         expected_writes = ["receipt written"] + (["control receipt written"] if with_controls else [])
         self.assertCountEqual(events, [*cleanup, *guards, *expected_writes, "release lifecycle"])
         self.assertLess(max(events.index(name) for name in cleanup),
@@ -891,6 +1287,27 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
         self.assertEqual(receipt["status"], "ROAD_ASPHALT_LIT_REVIEW_FRAMES_RETAINED")
         self.assertEqual(receipt["errors"], [])
         self.assertTrue(receipt["native_lit_frames_retained"])
+
+    def test_outer_stop_retains_fresh_binding_and_independent_gpu_statistics_without_normal_pass(self):
+        receipt = self.assert_stop_lifecycle(outer_terrain=True)
+        self.assertEqual(receipt["errors"], [])
+        self.assertTrue(receipt["outer_terrain_native_bindings_verified"])
+        self.assertTrue(receipt["outer_terrain_gpu_statistics_verified"])
+        self.assertNotEqual(receipt["outer_terrain_before"]["outer_native_statistics"],
+                            receipt["outer_terrain_after"]["outer_native_statistics"])
+        self.assertEqual(receipt["outer_gpu_statistics_before"], receipt["outer_gpu_statistics_after"])
+        self.assertFalse(receipt["outer_terrain_normal_response_verified"])
+        self.assertFalse(receipt["outer_terrain_physical_contact_verified"])
+        self.assertFalse(receipt["outer_gpu_statistics_after"]["gpu_compile_verified"])
+
+    def test_outer_binding_or_gpu_statistics_drift_fails_receipt_after_full_cleanup(self):
+        for flags in ({"outer_binding_drift": True}, {"outer_statistics_drift": True}):
+            with self.subTest(flags=flags):
+                receipt = self.assert_stop_lifecycle(outer_terrain=True, **flags)
+                self.assertEqual(receipt["status"], "ROAD_ASPHALT_LIT_REVIEW_FAILED")
+                self.assertFalse(receipt["outer_terrain_native_bindings_verified"])
+                self.assertFalse(receipt["outer_terrain_gpu_statistics_verified"])
+                self.assertTrue(receipt["errors"])
 
     def test_capture_error_still_cleans_up_and_returns_failed_proof_before_lifecycle_release(self):
         receipt = self.assert_stop_lifecycle("synthetic capture callback failure")

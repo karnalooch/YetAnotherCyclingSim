@@ -13,6 +13,7 @@ from __future__ import annotations
 from copy import deepcopy
 from functools import lru_cache
 import hashlib
+import json
 import math
 from pathlib import Path
 import re
@@ -417,17 +418,56 @@ def _settings(api, channel):
         **({"flip_green_channel": False} if channel == "Normal_DX" else {})}
 
 
+TEXTURE_READBACK_ERROR = "Crack native texture readback differs: "
+
+
+def _texture_diagnostic_value(value):
+    """Keep native enum text/types and bound unexpected getter/error strings."""
+    if value is None or type(value) in (bool, int):
+        return value
+    text = str(value)
+    return {"type": type(value).__name__[:64], "text": text[:256], "truncated": len(text) > 256}
+
+
+def _texture_field_readback(getter, expected):
+    row = {"expected": _texture_diagnostic_value(expected)}
+    try:
+        actual = getter()
+        row.update(status="READ", observed=_texture_diagnostic_value(actual))
+        return actual == expected, row
+    except Exception as error:  # Native getter failure must remain distinct from a value such as zero.
+        row.update(status="READ_ERROR", error=_texture_diagnostic_value(error))
+        return False, row
+
+
 def _verify_textures(api, paths):
     result = {}
     for motif, channels in paths["textures"].items():
         result[motif] = {}
         for channel, path in channels.items():
             texture = api.load_asset(path)
-            require(texture is not None and isinstance(texture, api.Texture2D) and texture.get_path_name() == path,
-                    "Crack texture object identity differs: " + channel)
-            require(all(texture.get_editor_property(k) == v for k, v in _settings(api, channel).items())
-                    and texture.blueprint_get_size_x() == texture.blueprint_get_size_y() == 2048,
-                    "Crack native texture size, CLAMP or color/normal settings differ: " + channel)
+            valid = isinstance(texture, api.Texture2D)
+            observation = {"motif": motif, "channel": channel, "expected_path": path,
+                           "expected_class": "Texture2D", "observed_class": type(texture).__name__[:64], "fields": {}}
+            if valid:
+                queries = {"object_path": (texture.get_path_name, path),
+                           **{name: (lambda name=name: texture.get_editor_property(name), expected)
+                              for name, expected in _settings(api, channel).items()},
+                           "size_x": (texture.blueprint_get_size_x, 2048),
+                           "size_y": (texture.blueprint_get_size_y, 2048)}
+                # Do not short-circuit: a setting mismatch must not hide the
+                # two actual size reads, or a size mismatch another setting.
+                for name, (getter, expected) in queries.items():
+                    matches, observed = _texture_field_readback(getter, expected)
+                    observation["fields"][name] = observed
+                    valid = valid and matches
+            else:
+                observation["fields_status"] = "NOT_READ_WRONG_TEXTURE_CLASS"
+            if not valid:
+                # The owned Editor log retains this one finite observation.
+                # No waiting, source-size substitution, reimport or repair is
+                # performed here; the caller owns its compilation barrier.
+                raise ValueError(TEXTURE_READBACK_ERROR + json.dumps(observation, sort_keys=True, allow_nan=False))
             result[motif][channel] = texture
     return result
 

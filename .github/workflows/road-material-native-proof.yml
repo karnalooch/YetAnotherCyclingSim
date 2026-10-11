@@ -40,6 +40,8 @@ on:
       - 'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsRoadMaterialInspectionLibrary.cpp'
       - 'scripts/ue/road_shoulder_material.py'
       - 'scripts/ue/test_road_shoulder_material.py'
+      - 'scripts/ue/build_sa_calobra_whole_map_master.py'
+      - 'scripts/ue/sa_calobra_whole_map_prep.py'
       - 'scripts/ue/road_edge_marking_geometry.py'
       - 'scripts/ue/test_road_edge_marking_geometry.py'
       - 'scripts/ue/road_edge_marking_material.py'
@@ -239,6 +241,7 @@ jobs:
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
             -EdgeMarkings `
             -CrackCanary:('${{ contains(github.event.head_commit.message, '[road-crack-canary]') }}' -ceq 'true') `
+            -OuterTerrainCanary:('${{ contains(github.event.head_commit.message, '[road-outer-blend]') }}' -ceq 'true') `
             -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
 
       - name: Capture native road-facing lit GPU review
@@ -251,7 +254,9 @@ jobs:
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
             -EdgeMarkings `
             -VisualControls:('${{ contains(github.event.head_commit.message, '[road-band-controls]') }}' -ceq 'true') `
+            -PaintCoverage:('${{ contains(github.event.head_commit.message, '[road-paint-controls]') }}' -ceq 'true') `
             -CrackCanary:('${{ contains(github.event.head_commit.message, '[road-crack-canary]') }}' -ceq 'true') `
+            -OuterTerrainCanary:('${{ contains(github.event.head_commit.message, '[road-outer-blend]') }}' -ceq 'true') `
             -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
 
       - name: Isolate the existing shoulder contact without changing geometry

@@ -137,6 +137,179 @@ class RoadSavedHostContractTests(unittest.TestCase):
         self.assertIn("    concurrency:", self.workflow)
         self.assertIn("    needs: await_ci", self.workflow)
 
+    def test_outer_variant_is_explicit_in_save_reload_and_both_workflow_calls(self):
+        for value in (
+            "[switch] $OuterTerrainCanary", "YACS_ROAD_OUTER_TERRAIN_CANARY = $outerTerrainSetting",
+            "YACS_ROAD_PAINT_COVERAGE_OWNED = $null",
+            "Assert-NetworkManifest $manifest.value $ExpectedHead ([bool]$OuterTerrainCanary)",
+            "Assert-OuterTerrainReceipt $manifest.value $saved.value $fresh.value ([bool]$OuterTerrainCanary)",
+            "outer_terrain_physical_contact_verified = $false", "outer_terrain_normal_response_verified = $false",
+            "'scripts/ue/build_sa_calobra_whole_map_master.py'", "'scripts/ue/sa_calobra_whole_map_prep.py'",
+        ):
+            self.assertIn(value, self.host)
+        self.assertEqual(self.workflow.count("-OuterTerrainCanary:"), 2)
+        self.assertEqual(self.workflow.count("'[road-outer-blend]'"), 2)
+        self.assertIn("-PaintCoverage:", self.workflow)
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
+    def test_actual_outer_gate_binds_five_owners_fresh_materials_and_original_uv_prefix(self):
+        # Receipt-only fixture: native source, shader and mesh behavior is tested
+        # separately. This runs the actual host gate on altered evidence.
+        labels = [f"YACS_PERSIST_SUPPORT_{index:03d}" for index in (18, 73, 93, 112, 182)]
+        prefix = "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/"
+        base = prefix + "MI_ShoulderNetwork.MI_ShoulderNetwork"
+        assets = {role: prefix + "TerrainBlend/" + name + "." + name for role, name in (
+            ("master", "M_ShoulderNetworkTerrain"), ("instance", "MI_ShoulderNetworkTerrain"))}
+        textures = {"WeightTex": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/T_WholeMapWeights.T_WholeMapWeights"}
+        for role in ("DryGrass", "ForestLitter", "ExposedRock", "DryMineral", "Scree"):
+            for channel in ("BaseColor", "Normal"):
+                name = role + channel + "Tex"
+                textures[name] = "/Game/Generated/YACS/TextureMaterialPrep/" + name + "." + name
+        statistics = {name: 0 for name in (
+            "num_samplers", "num_pixel_shader_instructions", "num_pixel_texture_samples",
+            "num_vertex_shader_instructions", "num_vertex_texture_samples", "num_virtual_texture_samples",
+            "num_uv_scalars", "num_interpolator_scalars")}
+        source = {"landscape_component_count": 1024, "texture_objects": textures,
+                  "instance": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/MI_SaCalobraWholeMapPreparation.MI_SaCalobraWholeMapPreparation"}
+        material = {"schema_version": 3, "status": "SHOULDER_MATERIAL_CREATED_REVIEW_PENDING",
+                    "outer_terrain_enabled": True, "assets": assets, "terrain_source": source,
+                    "native_statistics": statistics, "native_compile_errors": [],
+                    "unique_texture_objects": 17, "gpu_compile_verified": False}
+        outer = {"owner_labels": labels, "selection": "source_owned_outer_top_faces", "uv_channel": 1,
+                 "uv0_stage_witness_required": True, "physical_contact_verified": False, "material": material}
+        owners = []
+        for index in range(186):
+            label = f"YACS_PERSIST_SUPPORT_{index:03d}"
+            owner = {"support_label": label, "edge_attribute": None}
+            if label in labels:
+                before = {"uv_set_count": 0, "vertex_count": 54, "triangle_count": 56,
+                          "positions_indices_blake3": "a" * 64, "triangle_corner_normals_uv_blake3": "b" * 64}
+                inner = {**before, "uv_set_count": 1, "triangle_corner_normals_uv_blake3": "c" * 64}
+                after = {**inner, "uv_set_count": 2, "triangle_corner_normals_uv_blake3": "d" * 64}
+                owner.update(material_target=True, selected_triangle_count=4,
+                    before_mesh=before, after_mesh=after,
+                    edge_attribute={"channel": 0, "uv0_preserved": True, "inner_stage_mesh": inner,
+                        "original_normals_uv_prefix_blake3": "b" * 64, "set_triangle_count": 4,
+                        "uv_blake3": "e" * 64, "outer_attribute": {
+                            "channel": 1, "original_normals_uv_prefix_blake3": "c" * 64,
+                            "set_triangle_count": 4, "unset_nonselected_triangles": True, "uv_blake3": "f" * 64}})
+            owners.append(owner)
+        loaded = {"status": "SHOULDER_MATERIALS_NATIVE_READBACK_VERIFIED", "read_only": True,
+                  "base_instance": base, "outer_terrain_enabled": True, "outer_instance": assets["instance"],
+                  "outer_owner_labels": labels, "outer_texture_objects": textures,
+                  "outer_native_statistics": {**statistics, "num_samplers": 7},
+                  "landscape_instance": source["instance"], "landscape_component_count": 1024,
+                  **{name: False for name in ("outer_material_reapplied", "outer_geometry_reapplied",
+                      "outer_gpu_compile_verified", "physical_contact_verified", "normal_response_visual_verified",
+                      "owner_visual_pass", "performance_pass")}}
+        good = {"manifest": {"outer_terrain_enabled": True, "shoulder_network": {
+                    "schema_version": 4, "owners": owners, "outer_terrain": outer,
+                    "material": {"assets": {"instance": base}}}},
+                "prepared": {"outer_terrain_enabled": True},
+                "fresh": {"outer_terrain_enabled": True, "outer_terrain_fresh_reload_verified": True,
+                    "outer_material_reapplied": False, "outer_geometry_reapplied": False,
+                    "outer_terrain_readback": loaded}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = root / "input.json"
+            fixture.write_text(json.dumps(good), encoding="utf-8")
+            runner = root / "outer-contract.ps1"
+            runner.write_text(r'''
+param([string] $Wrapper, [string] $InputJson)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$tokens = $null; $errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref]$tokens, [ref]$errors)
+if ($errors.Count) { throw ($errors.Message -join '; ') }
+$nodes = @($ast.FindAll({param($node)
+    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq 'Assert-OuterTerrainReceipt'
+}, $true))
+if ($nodes.Count -ne 1) { throw 'Missing unique production outer material gate.' }
+. ([scriptblock]::Create($nodes[0].Extent.Text))
+$good = Get-Content -LiteralPath $InputJson -Raw | ConvertFrom-Json -AsHashtable -Depth 40
+# Zero saved statistics and different fresh numbers are real observations,
+# never a reason to claim GPU readiness or reject an otherwise valid save.
+Assert-OuterTerrainReceipt $good.manifest $good.prepared $good.fresh $true
+foreach ($failure in @('mode', 'prepared_mode', 'fresh_mode', 'fresh_bool', 'reload', 'reapply',
+    'schema', 'labels', 'label_order', 'selection', 'channel', 'physical', 'master', 'instance',
+    'texture', 'texture_count', 'landscape', 'landscape_count', 'read_only', 'owner_acceptance',
+    'gpu_acceptance', 'saved_gpu_acceptance', 'compile_error', 'stat_type', 'stat_negative', 'stat_missing',
+    'stat_virtual_saved', 'stat_virtual_fresh',
+    'owner_order', 'uv_prefix', 'outer_prefix', 'uv0_claim', 'outer_count', 'wall_uv',
+    'position', 'topology', 'final_uv_count', 'missing_hash', 'extra_owner')) {
+    $data = $good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+    $network = $data.manifest.shoulder_network
+    $outer = $network.outer_terrain
+    $loaded = $data.fresh.outer_terrain_readback
+    $owner = $network.owners[18]
+    switch ($failure) {
+        'mode' { $data.manifest.outer_terrain_enabled = $false }
+        'prepared_mode' { $data.prepared.outer_terrain_enabled = $false }
+        'fresh_mode' { $data.fresh.outer_terrain_enabled = $false }
+        'fresh_bool' { $data.fresh.outer_terrain_enabled = 'true' }
+        'reload' { $data.fresh.outer_terrain_fresh_reload_verified = $false }
+        'reapply' { $data.fresh.outer_geometry_reapplied = $true }
+        'schema' { $network.schema_version = 3 }
+        'labels' { $outer.owner_labels[0] = 'YACS_PERSIST_SUPPORT_022' }
+        'label_order' { $outer.owner_labels = @($outer.owner_labels[4..0]) }
+        'selection' { $outer.selection = 'nearest_world_point' }
+        'channel' { $outer.uv_channel = 0 }
+        'physical' { $outer.physical_contact_verified = $true }
+        'master' { $outer.material.assets.master += '_foreign' }
+        'instance' { $loaded.outer_instance += '_foreign' }
+        'texture' { $loaded.outer_texture_objects.WeightTex += '_foreign' }
+        'texture_count' { $loaded.outer_texture_objects.Remove('WeightTex') | Out-Null }
+        'landscape' { $loaded.landscape_instance += '_foreign' }
+        'landscape_count' { $loaded.landscape_component_count = 1023 }
+        'read_only' { $loaded.read_only = $false }
+        'owner_acceptance' { $loaded.owner_visual_pass = $true }
+        'gpu_acceptance' { $loaded.outer_gpu_compile_verified = $true }
+        'saved_gpu_acceptance' { $outer.material.gpu_compile_verified = $true }
+        'compile_error' { $outer.material.native_compile_errors = @('failed') }
+        'stat_type' { $loaded.outer_native_statistics.num_samplers = $true }
+        'stat_negative' { $loaded.outer_native_statistics.num_samplers = -1 }
+        'stat_missing' { $loaded.outer_native_statistics.Remove('num_samplers') | Out-Null }
+        'stat_virtual_saved' { $outer.material.native_statistics.num_virtual_texture_samples = 1 }
+        'stat_virtual_fresh' { $loaded.outer_native_statistics.num_virtual_texture_samples = 1 }
+        'owner_order' { $network.owners[14].support_label = 'YACS_PERSIST_SUPPORT_013' }
+        'uv_prefix' { $owner.edge_attribute.original_normals_uv_prefix_blake3 = 'a' * 64 }
+        'outer_prefix' { $owner.edge_attribute.outer_attribute.original_normals_uv_prefix_blake3 = 'a' * 64 }
+        'uv0_claim' { $owner.edge_attribute.uv0_preserved = $false }
+        'outer_count' { $owner.edge_attribute.outer_attribute.set_triangle_count = 3 }
+        'wall_uv' { $owner.edge_attribute.outer_attribute.unset_nonselected_triangles = $false }
+        'position' { $owner.after_mesh.positions_indices_blake3 = 'f' * 64 }
+        'topology' { $owner.edge_attribute.inner_stage_mesh.triangle_count += 1 }
+        'final_uv_count' { $owner.after_mesh.uv_set_count = 3 }
+        'missing_hash' { $owner.edge_attribute.outer_attribute.uv_blake3 = $null }
+        'extra_owner' { $network.owners[22].edge_attribute = @{ outer_attribute = @{} } }
+    }
+    $rejected = $false
+    try { Assert-OuterTerrainReceipt $data.manifest $data.prepared $data.fresh $true } catch { $rejected = $true }
+    if (-not $rejected) { throw ('Production outer material gate admitted ' + $failure) }
+}
+$disabled = @{ outer_terrain_enabled = $false; shoulder_network = @{schema_version = 3} }
+$fresh = @{outer_terrain_enabled = $false; outer_terrain_fresh_reload_verified = $false;
+    outer_material_reapplied = $false; outer_geometry_reapplied = $false; outer_terrain_readback = $null}
+Assert-OuterTerrainReceipt $disabled $disabled $fresh $false
+foreach ($failure in @('schema', 'unexpected_variant', 'unexpected_readback')) {
+    $data = $disabled | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+    $observed = $fresh | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+    switch ($failure) {
+        'schema' { $data.shoulder_network.schema_version = 4 }
+        'unexpected_variant' { $data.shoulder_network.outer_terrain = @{} }
+        'unexpected_readback' { $observed.outer_terrain_readback = @{} }
+    }
+    $rejected = $false
+    try { Assert-OuterTerrainReceipt $data $data $observed $false } catch { $rejected = $true }
+    if (-not $rejected) { throw ('Disabled outer material mode admitted ' + $failure) }
+}
+'POWERSHELL_OUTER_TERRAIN_CONTRACT_CASES_PASS'
+''', encoding="utf-8")
+            result = subprocess.run(["pwsh", "-NoProfile", "-File", str(runner), str(WRAPPER), str(fixture)],
+                capture_output=True, text=True, check=False, timeout=60)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("POWERSHELL_OUTER_TERRAIN_CONTRACT_CASES_PASS", result.stdout)
+
     def test_artifact_path_remains_inside_owned_checkout_on_preflight_failure(self):
         upload = self.workflow.split("- name: Retain native inventory and owned-process evidence", 1)[1]
         self.assertIn(
@@ -260,6 +433,7 @@ class RoadSavedHostContractTests(unittest.TestCase):
             "exact_sha": "a" * 40, "material_changes": "road_slot_zero_network_outer_shoulder_ids_and_edge_uv",
             "map_saved": True, "landscape_1024_unchanged": True, "canonical_saved": False,
             "source_scene_mutated": False, "road_slot_zero_only": False, "support_186_unchanged": False,
+            "outer_terrain_enabled": False,
             "fresh_reload_verified": False, "performance_pass": False, "shoulder_network": network}
         fresh = {"status": "ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_PASS", "exact_sha": "a" * 40,
             "saved_manifest_sha256": "b" * 64, "evidence_manifest_sha256": "b" * 64,

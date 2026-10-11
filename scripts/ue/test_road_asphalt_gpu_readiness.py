@@ -59,7 +59,8 @@ class RoadCaptureReadinessTests(unittest.TestCase):
             "proof": self.root,
             "manifest": {
                 "texture_objects": self.paths,
-                "shoulder_network": {"material": {"texture_objects": self.gravel_paths}},
+                "outer_terrain_enabled": False,
+                "shoulder_network": {"schema_version": 3, "material": {"texture_objects": self.gravel_paths}},
             },
             "frames": [self.row],
         }
@@ -106,6 +107,11 @@ class RoadCaptureReadinessTests(unittest.TestCase):
         return value
 
     def configure_camera(self):
+        self.api.SystemLibrary = SimpleNamespace(
+            get_engine_version=lambda: gpu.visual_controls.ENGINE_VERSION,
+            get_console_variable_string_value=Mock(return_value="0"),
+            get_frame_count=Mock(return_value=100),
+        )
         self.api.Vector = lambda x, y, z: SimpleNamespace(x=x, y=y, z=z)
         self.api.CameraComponent = object()
         self.api.MathLibrary = SimpleNamespace(find_look_at_rotation=Mock())
@@ -136,6 +142,41 @@ class RoadCaptureReadinessTests(unittest.TestCase):
         self.events.append("shot")
         Path(arguments["filename"]).write_bytes(b"SYNTHETIC PNG")
         return SimpleNamespace(is_valid_task=lambda: True, is_task_done=lambda: True)
+
+    def configure_outer_terrain(self):
+        from scripts.ue.test_road_asphalt_gpu_review import outer_terrain_fixture, outer_gpu_statistics_fixture
+
+        manifest = outer_terrain_fixture()[3]
+        manifest["shoulder_network"]["material"]["texture_objects"] = self.gravel_paths
+        self.job.context["manifest"].update(manifest)
+        self.job.context["outer_terrain_enabled"] = True
+        for path in gpu.saved.outer_terrain_texture_paths(manifest):
+            self.textures[path] = SimpleNamespace(get_path_name=Mock(return_value=path),
+                set_force_mip_levels_to_be_resident=Mock())
+        stats = outer_gpu_statistics_fixture(manifest)
+        instance = SimpleNamespace(get_path_name=lambda: stats["instance"])
+        self.api.load_asset.side_effect = lambda path: instance if path == stats["instance"] else self.textures.get(path)
+
+        def observe(api, material):
+            self.assertIs(api, self.api)
+            self.assertIs(material, instance)
+            self.assertEqual(self.job.pose_readiness["status"], "NATIVE_LOADING_AND_MIPS_READY")
+            self.events.append("outer GPU statistics")
+            return stats
+
+        return self.enterContext(patch.object(gpu.saved.shoulder_material, "verify_gpu_material_statistics", side_effect=observe))
+
+    def configure_cracks(self):
+        from scripts.ue import road_crack_sources as source
+
+        values = {"pins_sha256": "a" * 64, "selected_motifs": list(source.CANARY_MOTIFS)}
+        assets = source.asset_paths(values)
+        self.job.context["manifest"].update(crack_canary_enabled=True, crack_canary={
+            "imports": {"sources": values, "assets": assets, "texture_count": 8}})
+        for channels in assets["textures"].values():
+            for path in channels.values():
+                self.textures[path] = SimpleNamespace(get_path_name=Mock(return_value=path),
+                    set_force_mip_levels_to_be_resident=Mock())
 
     def test_original_height_capture_helper_runs_before_first_screenshot(self):
         self.configure_camera()
@@ -168,16 +209,7 @@ class RoadCaptureReadinessTests(unittest.TestCase):
         self.assertIsNotNone(self.job.finish_requested_at)
 
     def test_crack_canary_requests_and_releases_all_eight_additional_maps(self):
-        from scripts.ue import road_crack_sources as source
-
-        values = {"pins_sha256": "a" * 64, "selected_motifs": list(source.CANARY_MOTIFS)}
-        assets = source.asset_paths(values)
-        self.job.context["manifest"].update(crack_canary_enabled=True, crack_canary={
-            "imports": {"sources": values, "assets": assets, "texture_count": 8}})
-        for channels in assets["textures"].values():
-            for path in channels.values():
-                self.textures[path] = SimpleNamespace(get_path_name=Mock(return_value=path),
-                    set_force_mip_levels_to_be_resident=Mock())
+        self.configure_cracks()
         self.job.prepare_pose(self.row, object(), object())
         self.assertEqual(self.job.pose_readiness["material_texture_count"], 15)
         self.assertEqual(len(self.job.residency_leases), 16)
@@ -185,6 +217,47 @@ class RoadCaptureReadinessTests(unittest.TestCase):
         for texture in self.textures.values():
             self.assertEqual(texture.set_force_mip_levels_to_be_resident.call_args_list,
                              [unittest.mock.call(gpu.HEIGHT_MIP_LEASE_SECONDS, 0), unittest.mock.call(0.0, 0)])
+
+    def test_outer_eighteen_textures_drain_before_stats_and_first_png(self):
+        observer = self.configure_outer_terrain()
+        self.configure_camera()
+        self.job.submit_pose()
+        self.assertEqual(self.events, ["ready", "outer GPU statistics", "shot"])
+        self.assertEqual(self.job.pose_readiness["material_texture_count"], 18)
+        self.assertEqual(len(self.job.residency_leases), 19)
+        observer.assert_called_once()
+        self.assertEqual(self.job.release_residency(), [])
+        for texture in self.textures.values():
+            texture.set_force_mip_levels_to_be_resident.assert_called_with(0.0, 0)
+
+    def test_outer_with_cracks_tracks_all_twenty_six_maps_and_does_not_repeat_stats_each_pose(self):
+        observer = self.configure_outer_terrain()
+        self.configure_cracks()
+        self.job.prepare_pose(self.row, object(), object())
+        self.assertEqual(self.job.pose_readiness["material_texture_count"], 26)
+        self.assertEqual(len(self.job.residency_leases), 27)
+        self.job.phase = "controls"
+        self.job.prepare_pose({**self.row, "frame_id": "synthetic-control"}, object(), object())
+        observer.assert_called_once()
+        self.assertEqual(self.job.pose_readiness["material_texture_count"], 26)
+        self.assertEqual(self.job.release_residency(), [])
+        for texture in self.textures.values():
+            texture.set_force_mip_levels_to_be_resident.assert_called_with(0.0, 0)
+
+    def test_outer_missing_terrain_texture_or_missing_gpu_statistics_stops_before_png(self):
+        observer = self.configure_outer_terrain()
+        self.configure_camera()
+        observer.side_effect = ValueError("synthetic missing compiled GPU statistics")
+        with self.assertRaisesRegex(ValueError, "compiled GPU"):
+            self.job.submit_pose()
+        self.api.AutomationLibrary.take_high_res_screenshot.assert_not_called()
+        self.assertIsNone(self.job.outer_gpu_statistics_before)
+        self.assertEqual(self.job.release_residency(), [])
+        path = gpu.saved.outer_terrain_texture_paths(self.job.context["manifest"])[-1]
+        del self.textures[path]
+        with self.assertRaisesRegex(ValueError, "Pinned road texture missing"):
+            self.job.prepare_pose({**self.row, "frame_id": "missing-outer"}, object(), object())
+        self.api.AutomationLibrary.take_high_res_screenshot.assert_not_called()
 
     def test_crack_maps_cannot_hide_in_disabled_lane_or_replace_a_native_source_map(self):
         from scripts.ue import road_crack_sources as source

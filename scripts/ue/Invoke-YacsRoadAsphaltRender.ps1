@@ -7,14 +7,19 @@ param(
     [switch] $EdgeMarkings,
     [switch] $VisualControls,
     [switch] $CrackCanary,
+    [switch] $PaintCoverage,
+    [switch] $OuterTerrainCanary,
     [string] $WorkspaceConfig = 'D:\yacs\workspace.json',
     [string] $RepoRoot = (Join-Path $PSScriptRoot '../..')
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) { throw 'GPU asphalt review requires an owned Windows runner.' }
-if ($CrackCanary -and (-not $EdgeMarkings -or $VisualControls)) {
-    throw 'The crack canary requires white markings and its own separate diagnostic sequence.'
+if ($CrackCanary -and -not $EdgeMarkings) {
+    throw 'The crack canary scene requires white markings.'
+}
+if ($PaintCoverage -and (-not $VisualControls -or -not $EdgeMarkings)) {
+    throw 'Paint coverage requires the asphalt visual controls and saved white markings.'
 }
 $PROFILE_DIAGNOSTIC = 'road-network-profile-diagnostic.json'
 $root = $null
@@ -25,8 +30,11 @@ $expectedCrackControls = $null
 $edgeMarkingSetting = if ($EdgeMarkings) { '1' } else { '0' }
 $visualControlToken = if ($VisualControls) { $RunToken } else { $null }
 $crackCanarySetting = if ($CrackCanary) { '1' } else { '0' }
-$crackControlToken = if ($CrackCanary) { $RunToken } else { $null }
-$expectedMaterialTextureCount = if ($CrackCanary) { 15 } else { 7 }
+$crackControlToken = if ($CrackCanary -and -not $VisualControls) { $RunToken } else { $null }
+$paintCoverageToken = if ($PaintCoverage) { $RunToken } else { $null }
+$expectedVisualControlCount = if ($PaintCoverage) { 10 } else { 8 }
+$expectedMaterialTextureCount = $(if ($CrackCanary) { 15 } else { 7 }) + $(if ($OuterTerrainCanary) { 11 } else { 0 })
+$outerTerrainSetting = if ($OuterTerrainCanary) { '1' } else { '0' }
 $receipt = [ordered]@{
     schema_version = 1; issue = 364; exact_sha = $ExpectedHead
     run_token = $RunToken; status = 'PREFLIGHT_PENDING'
@@ -42,11 +50,23 @@ $receipt = [ordered]@{
     visual_controls_requested = [bool]$VisualControls
     visual_controls_frames_retained = $false
     visual_control_frame_count = 0
+    paint_coverage_requested = [bool]$PaintCoverage
+    paint_coverage_frames_retained = $false; paint_coverage_frame_count = 0
+    paint_full_native_buffers_verified = $false
+    paint_pixel_aliasing_cause_verified = $false
+    capture_state_snapshots_verified = $false; effective_view_state_verified = $false
     crack_canary_requested = [bool]$CrackCanary
     crack_canary_verified = $false
     crack_control_frames_retained = $false
     crack_control_frame_count = 0
     crack_normal_space_verified = $false
+    outer_terrain_requested = [bool]$OuterTerrainCanary
+    outer_terrain_native_bindings_verified = $false
+    outer_terrain_gpu_statistics_verified = $false
+    outer_terrain_owner_labels = @()
+    outer_terrain_shader_log_observed = $false; outer_terrain_shader_log = $null
+    outer_terrain_physical_contact_verified = $false
+    outer_terrain_normal_response_verified = $false
     road_profile_diagnostic_sha256 = $null
     gpu_shader_compilation_admitted = $false
     road_pixel_visibility_admitted = $false
@@ -123,6 +143,56 @@ function Log-Identity {
             if (-not $locked -or $i -eq 40) { throw }
             Start-Sleep -Milliseconds 250
         }
+    }
+}
+
+function Get-OuterTerrainShaderLogObservation {
+    param([string] $Path)
+    # Epic's compiler/fallback warning is emitted even without Error severity:
+    # https://forums.unrealengine.com/t/randomized-tiling-function-eliminate-repeating-patterns-in-your-textures/124519?page=2
+    # UE release notes document r.MaterialLogErrorOnFailure changing its severity.
+    # This is a targeted observation, not a claim that every shader error is absent.
+    $identity = Log-Identity $Path
+    $prefix = '/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/TerrainBlend/'
+    $names = @('M_ShoulderNetworkTerrain', 'MI_ShoulderNetworkTerrain')
+    $target = '(?<![A-Za-z0-9_])(?:M_ShoulderNetworkTerrain|MI_ShoulderNetworkTerrain)(?![A-Za-z0-9_])'
+    $retainedMatches = [Collections.Generic.List[object]]::new()
+    $lineNumber = 0; $matchCount = 0
+    foreach ($line in [IO.File]::ReadLines($identity.path)) {
+        $lineNumber++
+        if (-not $line.Contains($prefix, [StringComparison]::Ordinal) -and $line -cnotmatch $target) { continue }
+        $category = [regex]::Match($line, '\b(LogShaderCompilers|LogMaterial):\s*(Warning|Error|Fatal):')
+        if (-not $category.Success) { continue }
+        $patterns = [Collections.Generic.List[string]]::new()
+        if ($line -match '\b(?:failed to compile|(?:shader|material) compilation (?:failed|failures?))\b') {
+            $patterns.Add('compile_failure')
+        }
+        if ($line -match '\bdefault material will be used\b') { $patterns.Add('default_material_fallback') }
+        if ($category.Groups[2].Value -cin @('Error', 'Fatal')) { $patterns.Add('targeted_material_or_shader_error') }
+        if ($patterns.Count -eq 0) { continue }
+        $matchCount++
+        if ($retainedMatches.Count -lt 64) {
+            $retainedMatches.Add([ordered]@{ line_number = $lineNumber; category = $category.Groups[1].Value
+                patterns = $patterns.ToArray(); text = $line.Substring(0, [math]::Min($line.Length, 8192))
+                line_truncated = ($line.Length -gt 8192) })
+        }
+    }
+    $after = Log-Identity $Path
+    if ($identity.sha256 -cne $after.sha256 -or $identity.size_bytes -ne $after.size_bytes) {
+        throw 'Closed GPU shader log changed during the targeted read.'
+    }
+    return [ordered]@{ status = 'TARGETED_OUTER_TERRAIN_SHADER_LOG_OBSERVED'; read_only = $true
+        log = $identity; target_package_prefix = $prefix; target_material_names = $names
+        scanned_line_count = $lineNumber; matched_line_count = $matchCount; matched_lines = $retainedMatches.ToArray()
+        matches_truncated = ($matchCount -gt $retainedMatches.Count); all_shader_errors_verified = $false
+        gpu_compilation_admitted = $false; owner_visual_pass = $false }
+}
+
+function Assert-OuterTerrainShaderLog {
+    param($Observation)
+    if ($Observation.status -cne 'TARGETED_OUTER_TERRAIN_SHADER_LOG_OBSERVED' -or
+        $Observation.matched_line_count -ne 0 -or $Observation.matched_lines.Count -ne 0) {
+        throw 'The closed GPU log records an outer terrain material compile error or default fallback.'
     }
 }
 
@@ -215,7 +285,7 @@ function Require-ExactSource {
 }
 
 function Assert-NetworkManifest {
-    param($Manifest, [string] $ExactHead)
+    param($Manifest, [string] $ExactHead, [bool] $OuterTerrain = $false)
     if ($Manifest -isnot [Collections.IDictionary] -or
         $Manifest.schema_version -ne 1 -or $Manifest.issue -ne 364 -or
         $Manifest.status -cne 'SAVED_ROAD_ASPHALT_CONSUMER_PREPARED' -or
@@ -234,7 +304,8 @@ function Assert-NetworkManifest {
     }
     $network = $Manifest.shoulder_network
     if ($network -isnot [Collections.IDictionary] -or
-        $network.schema_version -ne 3 -or $network.status -cne 'SHOULDER_NETWORK_PREPARED' -or
+        $network.schema_version -ne $(if ($OuterTerrain) { 4 } else { 3 }) -or
+        $network.status -cne 'SHOULDER_NETWORK_PREPARED' -or
         $network.support_count -ne 186 -or $network.material_target_count -ne 185 -or
         $network.excluded_parapet_count -ne 1 -or
         $network.owners -isnot [Collections.IList] -or $network.owners.Count -ne 186) {
@@ -367,6 +438,82 @@ function Assert-NativeCameraObservation {
     }
 }
 
+function Assert-CaptureStateApi {
+    param($Api)
+    $names = @('r.AntiAliasingMethod', 'r.ScreenPercentage', 'r.Editor.Viewport.ScreenPercentage',
+        'r.Editor.Viewport.ScreenPercentageMode.RealTime', 'r.Editor.Viewport.ScreenPercentageMode.NonRealTime',
+        'r.DynamicRes.OperationMode', 'r.TSR.ThinGeometryDetection', 'r.TSR.History.ScreenPercentage',
+        'r.HighResScreenshotDelay', 'r.Test.FreezeTemporalSequences', 'r.Test.FreezeTemporalHistories', 'r.Test.CameraCut')
+    Assert-JsonEqual '5.8.2-56702186+++UE5+Release-5.8' $Api.engine_version 'capture getter engine version'
+    Assert-JsonEqual $names $Api.console_names 'bounded capture console inventory'
+    Assert-JsonEqual $true $Api.read_only 'capture getter read-only contract'
+    Assert-JsonEqual $false $Api.effective_view_state_readback_available 'unobserved effective FSceneView/history'
+    $methods = @('SystemLibrary.get_console_variable_string_value', 'SystemLibrary.get_frame_count')
+    if ($Api.reflected_methods -isnot [Collections.IDictionary] -or $Api.reflected_methods.Count -ne 2) {
+        throw 'Capture snapshot getter inventory differs.'
+    }
+    foreach ($name in $methods) {
+        $row = $Api.reflected_methods[$name]
+        if ($null -eq $row -or $row.signature -isnot [string] -or $row.signature.Length -eq 0 -or
+            $row.signature.Length -gt 32768 -or $row.doc_sha256 -cnotmatch '^[0-9a-f]{64}$') {
+            throw 'Capture snapshot native getter lacks a bounded reflected signature/hash.'
+        }
+    }
+}
+
+function Assert-CaptureStatePair {
+    param($Capture, $Api)
+    # CVars and GFrameCounter are observations, not the effective per-view AA,
+    # screen percentage or continuity of the screenshot's temporal history.
+    foreach ($phase in @('before', 'after')) {
+        $state = $Capture[('native_capture_state_' + $phase)]
+        if ($state -isnot [Collections.IDictionary] -or
+            ($state.frame_count -isnot [long] -and $state.frame_count -isnot [int]) -or $state.frame_count -lt 0 -or
+            $state.cvars -isnot [Collections.IDictionary] -or $state.cvars.Count -ne $Api.console_names.Count) {
+            throw 'Capture snapshot has no bounded native frame counter/console inventory.'
+        }
+        Assert-JsonEqual 1 $state.schema_version 'capture snapshot schema'
+        Assert-JsonEqual $true $state.read_only 'capture snapshot read-only'
+        foreach ($name in @('console_overrides_applied', 'temporal_history_observed')) {
+            Assert-JsonEqual $false $state[$name] ('unclaimed capture state ' + $name)
+        }
+        foreach ($name in @('effective_view_aa', 'effective_screen_percentage')) {
+            if (@($state.Keys) -cnotcontains $name) { throw 'Missing explicit unknown effective view state.' }
+            Assert-JsonEqual $null $state[$name] ('unknown effective view state ' + $name)
+        }
+        foreach ($name in $Api.console_names) {
+            $value = $state.cvars[$name]
+            if ($value -isnot [Collections.IDictionary] -or $value.Count -ne 3 -or
+                @($value.Keys) -cnotcontains 'value' -or $value.raw -isnot [string] -or $value.raw.Length -gt 128) {
+                throw 'Capture CVar observation is missing a bounded raw string or explicit value.'
+            }
+            if ([string]::IsNullOrWhiteSpace($value.raw)) {
+                Assert-JsonEqual 'UNKNOWN' $value.status 'missing CVar status'
+                Assert-JsonEqual $null $value.value 'missing CVar cannot become zero'
+            }
+            else {
+                $number = 0.0
+                if (-not [double]::TryParse($value.raw, [Globalization.NumberStyles]::Float,
+                        [Globalization.CultureInfo]::InvariantCulture, [ref]$number) -or -not [double]::IsFinite($number)) {
+                    throw 'Capture CVar raw value is not finite numeric text.'
+                }
+                Assert-JsonEqual 'OBSERVED' $value.status 'present CVar status'
+                Assert-JsonEqual $number $value.value 'native raw/parsed CVar agreement'
+            }
+        }
+    }
+    $before, $after = $Capture.native_capture_state_before, $Capture.native_capture_state_after
+    if ($after.frame_count -lt $before.frame_count) { throw 'Native GFrameCounter regressed across a capture.' }
+    $unchanged = $true
+    foreach ($name in $Api.console_names) {
+        $first, $last = $before.cvars[$name], $after.cvars[$name]
+        if ($first.status -cne $last.status -or $first.raw -cne $last.raw -or $first.value -ne $last.value) {
+            $unchanged = $false
+        }
+    }
+    Assert-JsonEqual $unchanged $Capture.capture_cvars_unchanged 'observed CVar stability, without overriding drift'
+}
+
 function Assert-VisualControlObservation {
     param($Observed, [string] $Control, [string] $OriginalMaterial, [string] $UniformMaterial)
     $buffer = switch -CaseSensitive ($Control) {
@@ -374,6 +521,8 @@ function Assert-VisualControlObservation {
         'current-worldnormal' { 'WorldNormal' }
         'current-lit' { $null }
         'uniform-lit' { $null }
+        'paint-original-lit' { $null }
+        'paint-fullmask-lit' { $null }
         default { throw 'Unsupported visual control mode.' }
     }
     $mode = if ($null -eq $buffer) { 'VMI_LIT' } else { 'VMI_VISUALIZE_BUFFER' }
@@ -385,10 +534,183 @@ function Assert-VisualControlObservation {
     }
 }
 
+function Assert-PaintScalars {
+    param($Actual, [bool] $FullMask)
+    $expected = @{ TileSizeCm = 400.0; LineWidthCm = 10.0; EdgeWearMinCm = 0.08
+        EdgeWearSpanCm = 0.72; MaskFeatherCm = 0.05; PaintRoughness = 0.9; PaintSpecular = 0.2; NormalStrength = 0.35 }
+    if ($FullMask) { $expected.EdgeWearMinCm = -0.05; $expected.EdgeWearSpanCm = 0.0 }
+    if ($Actual -isnot [Collections.IDictionary] -or $Actual.Count -ne 8) { throw 'Paint scalar inventory differs.' }
+    foreach ($name in $expected.Keys) {
+        $value = $Actual[$name]
+        if (($value -isnot [double] -and $value -isnot [int] -and $value -isnot [long]) -or
+            -not [double]::IsFinite($value) -or [math]::Abs($value - $expected[$name]) -gt 0.000001) {
+            throw ('Paint native effective scalar differs: ' + $name)
+        }
+    }
+}
+
+function Assert-PaintObservation {
+    param($Observed, $Template, [string] $Kind, $OriginalScalars)
+    Assert-PaintScalars $Observed.scalar_parameters ($Kind -ceq 'transient_mid')
+    Assert-JsonEqual $OriginalScalars $Observed.original_mic_scalar_parameters 'unchanged saved paint scalar readback'
+    $expected = @{ binding_count = 370; bindings_sha256 = $Template.bindings_sha256; binding_template = $Kind
+        bindings_match_template = $true; material_kind = $Kind; dirty_content_count = 0; geometry_buffers_modified = $false
+        scalar_parameters = $Observed.scalar_parameters; original_mic_scalar_parameters = $OriginalScalars }
+    Assert-JsonEqual $expected $Observed 'complete native paint slot digest/count and effective scalars'
+}
+
+function Assert-PaintCoverageContract {
+    param($Data, $Expected, $Manifest)
+    $legacySha = 'debdc9a8b2a7e807f75dcd9d18f1244cef5f887b76f4a374b065a468366f1298'
+    $plan, $begin, $restored = $Data.control_plan, $Data.begin, $Data.restore
+    $legacy = $Expected.legacy_control_plan
+    Assert-JsonEqual $legacySha $Expected.legacy_control_plan_sha256 'immutable legacy source plan identity'
+    Assert-JsonEqual $legacySha $Data.legacy_control_plan_sha256 'retained legacy plan identity'
+    Assert-JsonEqual $legacySha $plan.legacy_control_plan_sha256 'combined plan legacy identity'
+    Assert-JsonEqual $legacy $Data.legacy_control_plan 'full immutable legacy plan'
+    Assert-JsonEqual $legacy.jobs @($plan.jobs[0..7]) 'unchanged first eight conditions'
+    foreach ($key in @('network_plan_sha256', 'survey_sha256', 'resolution', 'priming_captures_per_condition',
+                       'owner_visual_pass', 'performance_pass')) {
+        Assert-JsonEqual $legacy[$key] $plan[$key] ('unchanged legacy plan field ' + $key)
+    }
+    Assert-JsonEqual 8 $legacy.frame_count 'original eight count'
+    Assert-JsonEqual 1 $legacy.schema_version 'original plan schema'
+    Assert-JsonEqual 2 $plan.schema_version 'explicit combined plan schema'
+    Assert-JsonEqual 8 $plan.legacy_frame_count 'combined plan prefix count'
+    Assert-JsonEqual $true $Manifest.edge_markings_enabled 'saved white scene for paint coverage'
+    $overrides = @{ EdgeWearMinCm = -0.05; EdgeWearSpanCm = 0.0; MaskFeatherCm = 0.05 }
+    foreach ($report in @($plan, $begin, $restored)) {
+        Assert-JsonEqual $true $report.paint_coverage_enabled 'explicit paint opt-in'
+        Assert-JsonEqual 370 $report.paint_binding_count 'all paint targets'
+        Assert-JsonEqual $overrides $report.full_mask_scalar_parameters 'only three paint overrides'
+    }
+    Assert-JsonEqual 2 $plan.paint_coverage_frame_count 'exact pair count'
+    Assert-JsonEqual 2 $Data.paint_coverage_frame_count 'retained pair count'
+    Assert-JsonEqual $true $Data.paint_coverage_enabled 'retained paint opt-in'
+    Assert-JsonEqual $true $Data.paint_full_native_buffers_verified 'full native source/paint buffers after restoration'
+    Assert-JsonEqual $false $Data.paint_pixel_aliasing_cause_verified 'pixel aliasing cause still unreviewed'
+    foreach ($report in @($begin, $restored)) {
+        foreach ($flag in @('saved_paint_parameters_changed', 'paint_geometry_changed', 'paint_pixel_aliasing_cause_verified')) {
+            Assert-JsonEqual $false $report[$flag] ('paint authority ' + $flag)
+        }
+        Assert-JsonEqual $true $report.paint_full_native_buffers_audit_owned_by_host 'full scene buffer audit owner'
+    }
+    foreach ($flag in @('paint_bindings_restored', 'paint_original_mic_parameters_unchanged',
+                       'paint_transient_mid_detached', 'paint_transient_mid_ref_released')) {
+        Assert-JsonEqual $true $restored[$flag] ('native paint restoration ' + $flag)
+    }
+    Assert-JsonEqual 0 $restored.dirty_content_count 'zero dirty paint content'
+    $original = $Manifest.edge_markings.material.assets.instance
+    Assert-JsonEqual '/Game/Generated/YACS/RoadAsphaltConsumer/EdgeMarkings/MI_RoadEdgeMarkings.MI_RoadEdgeMarkings' `
+        $original 'saved paint MIC'
+    Assert-JsonEqual $original $begin.paint_original_material 'native original paint MIC'
+    Assert-PaintScalars $begin.paint_original_scalar_parameters $false
+    foreach ($key in @('paint_original_material', 'paint_original_scalar_parameters', 'paint_transient_mid', 'native_api')) {
+        Assert-JsonEqual $begin[$key] $restored[$key] ('paint restored identity ' + $key)
+    }
+    $mid = $begin.paint_transient_mid
+    if ($mid.path -isnot [string] -or $mid.path.Length -eq 0 -or $mid.path.Length -gt 2048 -or
+        $mid.path -match '[\x00\r\n]' -or $mid.path -ceq $original) { throw 'Paint transient MID path differs.' }
+    Assert-JsonEqual @{ path = $mid.path; parent = $original; creation_flags = 'TRANSIENT' } $mid 'owned paint MID parent/flags'
+    if ($begin.paint_binding_templates.Count -ne 2 -or $restored.Contains('paint_binding_templates') -or
+        $Manifest.edge_markings.actors.Count -ne 370) { throw 'Paint templates are incomplete or duplicated outside begin.' }
+    $world = $Manifest.map_package + '.' + ($Manifest.map_package -split '/')[-1]
+    $targets = @()
+    $unique = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($row in $Manifest.edge_markings.actors) {
+        if ($row.label -cnotmatch '^YACS_ROAD_EDGE_MARKING_[0-9]{3}_edge(0|24)$' -or -not $unique.Add($row.label) -or
+            $row.actor.path -cnotmatch '^<scene>\.<world>:PersistentLevel\.[^:/]+$' -or $row.material -cne $original -or
+            -not $row.component.StartsWith(($row.actor.path + '.'), [StringComparison]::Ordinal)) {
+            throw 'Paint binding differs from the authenticated saved component inventory.'
+        }
+        $targets += @{ label = $row.label; component = $row.component.Replace('<scene>.<world>', $world) }
+    }
+    foreach ($kind in @('original_mic', 'transient_mid')) {
+        $material = if ($kind -ceq 'original_mic') { $original } else { $mid.path }
+        $bindings = @($targets | ForEach-Object { [ordered]@{
+            component = $_.component; label = $_.label; material_readback = $material } })
+        $raw = [Text.Encoding]::UTF8.GetBytes(($bindings | ConvertTo-Json -Compress -Depth 5 -EscapeHandling EscapeNonAscii))
+        $sha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($raw)).ToLowerInvariant()
+        $template = @{ role = 'expected_slot_bindings'; binding_count = 370; bindings = $bindings; bindings_sha256 = $sha }
+        Assert-JsonEqual $template $begin.paint_binding_templates[$kind] ('full expected paint bindings ' + $kind)
+    }
+    for ($index = 8; $index -lt 10; $index++) {
+        $control = @('paint-original-lit', 'paint-fullmask-lit')[$index - 8]
+        $kind = @('original_mic', 'transient_mid')[$index - 8]
+        $job, $frame = $plan.jobs[$index], $Data.frames[$index]
+        Assert-JsonEqual $control $job.control 'paint pair order'
+        Assert-JsonEqual ('window-0083-forward-00002--' + $control) $job.job_id 'paint pair job ID'
+        Assert-JsonEqual 'window-0083-forward-00002' $job.camera.frame_id 'paint pair source camera'
+        Assert-JsonEqual $plan.jobs[8].camera $job.camera 'identical pair camera'
+        $template = $begin.paint_binding_templates[$kind]
+        Assert-PaintObservation $restored.applied_jobs[$index].paint_coverage $template $kind $begin.paint_original_scalar_parameters
+        foreach ($capture in (@($frame) + @($frame.priming_frames))) {
+            foreach ($phase in @('before', 'after')) {
+                Assert-PaintObservation $capture[('native_control_observation_' + $phase)].paint_coverage `
+                    $template $kind $begin.paint_original_scalar_parameters
+            }
+            Assert-JsonEqual $frame.native_control_observation_after.paint_coverage `
+                $capture.native_control_observation_before.paint_coverage 'stable full native paint readback across captures'
+            Assert-JsonEqual $capture.native_control_observation_before $capture.native_control_observation_after 'paint capture restoration-free interval'
+        }
+    }
+    Assert-PaintObservation $restored.paint_restored_observation $begin.paint_binding_templates.original_mic `
+        'original_mic' $begin.paint_original_scalar_parameters
+    $setters = @($restored.calls | Where-Object { $_.function -ceq 'MaterialInstanceDynamic.set_scalar_parameter_value' })
+    $expectedSetters = @('EdgeWearMinCm', 'EdgeWearSpanCm', 'MaskFeatherCm') | ForEach-Object {
+        @{ function = 'MaterialInstanceDynamic.set_scalar_parameter_value'; material = $mid.path; parameter = $_; value = $overrides[$_] }
+    }
+    Assert-JsonEqual @($expectedSetters) $setters 'three native MID-only scalar setters'
+    $assignments = @($restored.calls | Where-Object { $_.function -ceq 'paint_component.set_material' })
+    $expectedAssignments = @()
+    foreach ($phase in @('apply', 'restore')) {
+        foreach ($target in $targets) {
+            $call = @{ function = 'paint_component.set_material'; component = $target.component; slot = 0
+                material = $(if ($phase -ceq 'apply') { $mid.path } else { $original }) }
+            if ($phase -ceq 'restore') { $call.phase = 'restore' }
+            $expectedAssignments += $call
+        }
+    }
+    Assert-JsonEqual $expectedAssignments $assignments 'all 370 native paint assignments and restorations'
+    $api = $begin.native_api.paint_mid
+    Assert-JsonEqual 'MIDCreationFlags.TRANSIENT' $api.creation_flags 'native paint allocation flag'
+    Assert-JsonEqual $true $api.rf_transient_set_by_installed_allocator 'installed paint transient allocator'
+    Assert-JsonEqual $false $api.native_object_flags_readback_verified 'unavailable paint object flag getter'
+    if ($api.installed_sources.Count -ne 3 -or $api.reflected_methods.Count -ne 8 -or
+        $api.allocator_body_sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+        $api.scalar_getter_body_sha256 -cnotmatch '^[0-9a-f]{64}$') { throw 'Paint native MID API evidence differs.' }
+    $names = @($api.installed_sources.Keys)
+    foreach ($relative in @('Source/Runtime/Engine/Private/KismetMaterialLibrary.cpp',
+                            'Source/Runtime/Engine/Private/Materials/MaterialInstanceDynamic.cpp')) {
+        if ($names -cnotcontains $relative) { throw 'Missing installed paint MID implementation.' }
+    }
+    if (@($names | Where-Object { $_ -cmatch '^Source/Runtime/Engine/(Public|Classes)/Materials/MaterialInstanceDynamic\.h$' }).Count -ne 1) {
+        throw 'Paint native MID header is not the bounded installed source.'
+    }
+    foreach ($row in $api.installed_sources.Values) {
+        if ($row.sha256 -cnotmatch '^[0-9a-f]{64}$' -or $row.size_bytes -le 0 -or $row.size_bytes -gt 4MB) {
+            throw 'Unbounded paint MID source identity.'
+        }
+    }
+    foreach ($name in @('MaterialLibrary.create_dynamic_material_instance', 'MaterialInstanceDynamic.get_scalar_parameter_value',
+                       'MaterialInstanceDynamic.set_scalar_parameter_value', 'MaterialEditingLibrary.get_material_instance_scalar_parameter_value',
+                       'DynamicMeshComponent.set_material', 'DynamicMeshComponent.get_material', 'DynamicMeshComponent.get_num_materials',
+                       'EditorLoadingAndSavingUtils.get_dirty_content_packages')) {
+        $row = $api.reflected_methods[$name]
+        if ($null -eq $row -or $row.signature -isnot [string] -or $row.signature.Length -eq 0 -or
+            $row.signature.Length -gt 32768 -or $row.doc_sha256 -cnotmatch '^[0-9a-f]{64}$') {
+            throw 'Paint native MID method signature/hash differs.'
+        }
+    }
+}
+
 function Assert-VisualControlContract {
     param($Data, $Expected, [string] $ViewPlanSha, [string] $ManifestSha,
-          $LitIdentity, [string] $OriginalMaterial, [string] $ExactHead, [string] $Token)
+          $LitIdentity, [string] $OriginalMaterial, [string] $ExactHead, [string] $Token,
+          [bool] $PaintCoverage = $false, [ValidateSet(7, 15, 18, 26)][int] $ExpectedMaterialTextures = 7, $Manifest = $null)
     $plan = $Expected.control_plan
+    $count = if ($PaintCoverage) { 10 } else { 8 }
+    Assert-CaptureStateApi $Data.capture_state_native_api
     if ($Data.schema_version -ne 1 -or $Data.issue -ne 364 -or
         $Data.status -cne 'ROAD_ASPHALT_VISUAL_CONTROLS_FRAMES_RETAINED' -or
         $Data.exact_sha -cne $ExactHead -or $Data.run_token -cne $Token -or
@@ -399,16 +721,19 @@ function Assert-VisualControlContract {
         $Data.lit_review_receipt.file -cne 'road-asphalt-lit-review.json' -or
         $Data.lit_review_receipt.sha256 -cne $LitIdentity.sha256 -or
         $Data.lit_review_receipt.size_bytes -ne $LitIdentity.size_bytes -or
-        $Data.frame_count -ne 8 -or $Data.expected_frame_count -ne 8 -or
-        $Data.frames -isnot [Collections.IList] -or $Data.frames.Count -ne 8 -or
-        $plan.frame_count -ne 8 -or $plan.jobs.Count -ne 8 -or
-        $Data.priming_frames_per_pose -ne 3 -or $Data.completed_priming_frames -ne 24 -or
+        $Data.frame_count -ne $count -or $Data.expected_frame_count -ne $count -or
+        $Data.frames -isnot [Collections.IList] -or $Data.frames.Count -ne $count -or
+        $plan.frame_count -ne $count -or $plan.jobs.Count -ne $count -or
+        $Data.priming_frames_per_pose -ne 3 -or $Data.completed_priming_frames -ne (3 * $count) -or
         $Data.total_deadline_seconds_shared_with_lit -ne 1080 -or $Data.frame_deadline_seconds -ne 180 -or
         $Data.owner_visual_status -cne 'PENDING_FINAL_M3' -or
         $Data.performance_status -cne 'DEFERRED_AFTER_M3' -or $Data.errors.Count -ne 0) {
         throw 'Visual controls do not match the pre-Editor plan, current consumer and 68-frame receipt.'
     }
-    Assert-JsonEqual $plan $Data.control_plan 'exact eight-condition plan'
+    Assert-JsonEqual $plan $Data.control_plan 'exact original eight controls and optional paint pair'
+    if ($PaintCoverage) { Assert-PaintCoverageContract $Data $Expected $Manifest }
+    elseif ($Expected.sha256 -cne 'debdc9a8b2a7e807f75dcd9d18f1244cef5f887b76f4a374b065a468366f1298' -or
+            $Data.Contains('paint_coverage_enabled')) { throw 'Legacy controls cannot silently enable or change the paint pair.' }
     foreach ($name in @('control_restoration_verified', 'capture_readiness_verified',
                          'native_control_observations_verified', 'sources_and_saved_assets_unchanged')) {
         if ($Data[$name] -isnot [bool] -or -not $Data[$name]) { throw ('Visual control proof failed: ' + $name) }
@@ -422,7 +747,7 @@ function Assert-VisualControlContract {
         $Data.begin.plan_sha256 -cne $Expected.sha256 -or $Data.restore.plan_sha256 -cne $Expected.sha256 -or
         $Data.begin.original_material -cne $OriginalMaterial -or
         $Data.begin.transient_material -cnotmatch '^/Engine/Transient\.[^/]+$' -or
-        $Data.restore.applied_jobs.Count -ne 8 -or $Data.restore.cleanup_errors.Count -ne 0 -or
+        $Data.restore.applied_jobs.Count -ne $count -or $Data.restore.cleanup_errors.Count -ne 0 -or
         $Data.begin.ownership.run_token -cne $Token -or
         $Data.begin.ownership.consumer_exact_sha -cne $ExactHead -or
         $Data.begin.ownership.owned_process_marker_verified -isnot [bool] -or
@@ -449,7 +774,7 @@ function Assert-VisualControlContract {
             throw ('Visual control restoration failed: ' + $name)
         }
     }
-    for ($i = 0; $i -lt 8; $i++) {
+    for ($i = 0; $i -lt $count; $i++) {
         $job = $plan.jobs[$i]
         $frame = $Data.frames[$i]
         $pose = $job.camera
@@ -478,9 +803,10 @@ function Assert-VisualControlContract {
         if ($ready.status -cne 'NATIVE_LOADING_AND_MIPS_READY' -or
             $ready.height_mip_lease_requested -isnot [bool] -or -not $ready.height_mip_lease_requested -or
             $ready.viewport_primed_at_rider_camera -isnot [bool] -or -not $ready.viewport_primed_at_rider_camera -or
-            $ready.material_texture_count -ne 7) { throw 'Visual control camera lacks native mip readiness.' }
+            $ready.material_texture_count -ne $ExpectedMaterialTextures) { throw 'Visual control camera lacks native mip readiness.' }
         $captures = @($frame) + @($frame.priming_frames)
         foreach ($capture in $captures) {
+            Assert-CaptureStatePair $capture $Data.capture_state_native_api
             $viewmode = if ($renderMode -ceq 'lit') { 'VMI_LIT' } else { 'VMI_VISUALIZE_BUFFER' }
             Assert-JsonEqual $viewmode $capture.native_viewmode_before 'native visual control viewmode before'
             Assert-JsonEqual $viewmode $capture.native_viewmode_after 'native visual control viewmode after'
@@ -497,6 +823,147 @@ function Assert-VisualControlContract {
             }
         }
     }
+}
+
+function Assert-OuterNativeStatistics {
+    param($Data, [switch] $RequireGpu)
+    $fields = @('num_samplers', 'num_pixel_shader_instructions', 'num_pixel_texture_samples',
+        'num_vertex_shader_instructions', 'num_vertex_texture_samples', 'num_virtual_texture_samples',
+        'num_uv_scalars', 'num_interpolator_scalars')
+    if ($Data -isnot [Collections.IDictionary] -or $Data.Count -ne 8) {
+        throw 'Outer material native statistics are incomplete.'
+    }
+    foreach ($field in $fields) {
+        if (@($Data.Keys) -cnotcontains $field -or
+            ($Data[$field] -isnot [int] -and $Data[$field] -isnot [long]) -or
+            $Data[$field] -lt 0 -or $Data[$field] -gt 1000000) {
+            throw 'Outer material statistics are not bounded native integer observations.'
+        }
+    }
+    Assert-JsonEqual 0 $Data.num_virtual_texture_samples 'outer direct texture sampling'
+    if ($RequireGpu -and ($Data.num_samplers -le 0 -or $Data.num_pixel_shader_instructions -le 0 -or
+        $Data.num_pixel_texture_samples -le 0)) { throw 'Outer GPU material has no compiled statistics after readiness.' }
+}
+
+function Get-OuterTerrainTextureBindings {
+    param($Manifest)
+    $source = $Manifest.shoulder_network.outer_terrain.material.terrain_source
+    $names = @('WeightTex', 'DryGrassBaseColorTex', 'DryGrassNormalTex', 'ForestLitterBaseColorTex',
+        'ForestLitterNormalTex', 'ExposedRockBaseColorTex', 'ExposedRockNormalTex',
+        'DryMineralBaseColorTex', 'DryMineralNormalTex', 'ScreeBaseColorTex', 'ScreeNormalTex')
+    if ($source.texture_objects -isnot [Collections.IDictionary] -or $source.texture_objects.Count -ne 11 -or
+        $source.source_packages -isnot [Collections.IDictionary] -or $source.source_packages.Count -ne 13) {
+        throw 'Outer terrain lacks its eleven textures and thirteen frozen source packages.'
+    }
+    $unique = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($name in $names) {
+        $path = $source.source_packages[$name].path
+        if ($path -isnot [string] -or $path -cnotmatch '^Content/Generated/YACS/[^\r\n]+\.uasset$') {
+            throw 'Outer texture is not a frozen terrain package.'
+        }
+        $package = '/Game/' + $path.Substring(8, $path.Length - 15)
+        $expected = $package + '.' + ($package -split '/')[-1]
+        Assert-JsonEqual $expected $source.texture_objects[$name] ('outer source texture ' + $name)
+        if (-not $unique.Add($expected)) { throw 'Distinct outer terrain channels repeat one texture.' }
+    }
+    return $source.texture_objects
+}
+
+function Get-OuterTerrainBindingSummary {
+    param($Manifest, $Readback)
+    $network, $material = $Manifest.shoulder_network, $Manifest.shoulder_network.outer_terrain.material
+    $prefix = '/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/TerrainBlend/'
+    $labels = @('018', '073', '093', '112', '182' | ForEach-Object { 'YACS_PERSIST_SUPPORT_' + $_ })
+    Assert-JsonEqual ($prefix + 'M_ShoulderNetworkTerrain.M_ShoulderNetworkTerrain') $material.assets.master 'outer master'
+    Assert-JsonEqual ($prefix + 'MI_ShoulderNetworkTerrain.MI_ShoulderNetworkTerrain') $material.assets.instance 'outer instance'
+    Assert-JsonEqual $labels $network.outer_terrain.owner_labels 'five actual source owners'
+    Assert-OuterNativeStatistics $Readback.outer_native_statistics
+    $expected = @{
+        status = 'SHOULDER_MATERIALS_NATIVE_READBACK_VERIFIED'; read_only = $true
+        base_instance = $network.material.assets.instance; outer_terrain_enabled = $true
+        outer_instance = $material.assets.instance; outer_owner_labels = $labels
+        outer_texture_objects = Get-OuterTerrainTextureBindings $Manifest
+        outer_gpu_compile_verified = $false; landscape_instance = $material.terrain_source.instance
+        landscape_component_count = 1024; outer_material_reapplied = $false; outer_geometry_reapplied = $false
+        physical_contact_verified = $false; normal_response_visual_verified = $false
+        owner_visual_pass = $false; performance_pass = $false
+    }
+    $actual = @{}
+    foreach ($key in $Readback.Keys) {
+        if ($key -cne 'outer_native_statistics') { $actual[$key] = $Readback[$key] }
+    }
+    Assert-JsonEqual $expected $actual 'full outer native binding summary'
+    return $actual
+}
+
+function Assert-OuterTerrainLanes {
+    param($HostReceipt, $Prepared, $Fresh, $Manifest, [bool] $Requested)
+    foreach ($row in @($Manifest, $Prepared, $Fresh)) {
+        Assert-JsonEqual $Requested $row.outer_terrain_enabled 'explicit saved outer lane'
+    }
+    Assert-JsonEqual $Requested $HostReceipt.outer_terrain_requested 'requested outer lane'
+    Assert-JsonEqual $Requested $HostReceipt.outer_terrain_fresh_reload_verified 'host fresh outer lane'
+    Assert-JsonEqual $Requested $Fresh.outer_terrain_fresh_reload_verified 'native fresh outer lane'
+    foreach ($name in @('outer_material_reapplied', 'outer_geometry_reapplied')) {
+        Assert-JsonEqual $false $Fresh[$name] ('fresh outer mutation ' + $name)
+    }
+    foreach ($name in @('outer_terrain_physical_contact_verified', 'outer_terrain_normal_response_verified')) {
+        Assert-JsonEqual $false $HostReceipt[$name] ('outer host authority ' + $name)
+    }
+    $network = $Manifest.shoulder_network
+    if (-not $Requested) {
+        Assert-JsonEqual 3 $network.schema_version 'legacy inner-only network'
+        if ($network.Contains('outer_terrain')) { throw 'Disabled outer lane retained an unexpected material variant.' }
+        Assert-JsonEqual $null $Fresh.outer_terrain_readback 'disabled outer readback'
+        Assert-JsonEqual @() $HostReceipt.outer_terrain_owner_labels 'disabled outer owners'
+        return
+    }
+    Assert-JsonEqual 4 $network.schema_version 'outer UV1 network'
+    Assert-JsonEqual 'source_owned_outer_top_faces' $network.outer_terrain.selection 'outer top selection'
+    Assert-JsonEqual 1 $network.outer_terrain.uv_channel 'outer material-only UV1'
+    Assert-JsonEqual $true $network.outer_terrain.uv0_stage_witness_required 'original inner UV0 witness'
+    Assert-JsonEqual $false $network.outer_terrain.physical_contact_verified 'pending physical contact'
+    $material = $network.outer_terrain.material
+    Assert-JsonEqual 3 $material.schema_version 'outer graph schema'
+    Assert-JsonEqual 'SHOULDER_MATERIAL_CREATED_REVIEW_PENDING' $material.status 'saved outer material status'
+    Assert-JsonEqual $true $material.outer_terrain_enabled 'saved outer graph mode'
+    Assert-JsonEqual $false $material.gpu_compile_verified 'NullRHI is not GPU compilation'
+    Assert-JsonEqual @() $material.native_compile_errors 'recorded native material errors'
+    Assert-JsonEqual 17 $material.unique_texture_objects 'outer unique graph textures'
+    Assert-OuterNativeStatistics $material.native_statistics
+    $summary = Get-OuterTerrainBindingSummary $Manifest $Fresh.outer_terrain_readback
+    Assert-JsonEqual $summary.outer_owner_labels $HostReceipt.outer_terrain_owner_labels 'host five-owner summary'
+}
+
+function Assert-OuterTerrainGpuReadback {
+    param($Data, $Fresh, $Manifest, [bool] $Requested)
+    foreach ($name in @('outer_terrain_enabled', 'outer_terrain_native_bindings_verified', 'outer_terrain_gpu_statistics_verified')) {
+        Assert-JsonEqual $Requested $Data[$name] ('GPU outer evidence ' + $name)
+    }
+    foreach ($name in @('outer_terrain_physical_contact_verified', 'outer_terrain_normal_response_verified')) {
+        Assert-JsonEqual $false $Data[$name] ('GPU outer authority ' + $name)
+    }
+    if (-not $Requested) {
+        foreach ($name in @('outer_terrain_before', 'outer_terrain_after', 'outer_gpu_statistics_before', 'outer_gpu_statistics_after')) {
+            Assert-JsonEqual $null $Data[$name] ('disabled GPU outer observation ' + $name)
+        }
+        return
+    }
+    $freshBindings = Get-OuterTerrainBindingSummary $Manifest $Fresh.outer_terrain_readback
+    foreach ($name in @('outer_terrain_before', 'outer_terrain_after')) {
+        Assert-JsonEqual $freshBindings (Get-OuterTerrainBindingSummary $Manifest $Data[$name]) ('same actual outer bindings ' + $name)
+    }
+    $assets = $Manifest.shoulder_network.outer_terrain.material.assets
+    foreach ($name in @('outer_gpu_statistics_before', 'outer_gpu_statistics_after')) {
+        $observed = $Data[$name]
+        Assert-OuterNativeStatistics $observed.native_statistics -RequireGpu
+        $expected = @{ status = 'SHOULDER_TERRAIN_GPU_STATISTICS_VERIFIED'; instance = $assets.instance; master = $assets.master
+            native_statistics = $observed.native_statistics; read_only = $true; gpu_compile_verified = $false
+            compile_error_text_observed = $false; host_shader_log_check_required = $true
+            owner_visual_pass = $false; performance_pass = $false }
+        Assert-JsonEqual $expected $observed ('outer actual GPU statistics ' + $name)
+    }
+    Assert-JsonEqual $Data.outer_gpu_statistics_before $Data.outer_gpu_statistics_after 'unchanged GPU material resource statistics'
 }
 
 function Assert-SurfaceDetailLanes {
@@ -710,8 +1177,10 @@ function Assert-CrackControlApi {
 
 function Assert-CrackVisualControlContract {
     param($Data, $Expected, [string] $ViewPlanSha, [string] $ManifestSha, $LitIdentity,
-          $Manifest, [long] $EditorPid, [string] $ProjectRoot, [string] $ExactHead, [string] $Token, $NetworkPlan)
+          $Manifest, [long] $EditorPid, [string] $ProjectRoot, [string] $ExactHead, [string] $Token, $NetworkPlan,
+          [ValidateSet(15, 26)][int] $ExpectedMaterialTextures = 15)
     Assert-CrackControlPlan $Expected $NetworkPlan
+    Assert-CaptureStateApi $Data.capture_state_native_api
     $plan = $Expected.control_plan
     if ($Data.schema_version -ne 1 -or $Data.issue -ne 364 -or
         $Data.status -cne 'ROAD_CRACK_VISUAL_CONTROLS_FRAMES_RETAINED' -or
@@ -827,6 +1296,7 @@ function Assert-CrackVisualControlContract {
         Assert-JsonEqual $false $frame.visual_quality_reviewed 'unreviewed crack image'
         Assert-CrackVisualControlObservation $restored.applied_jobs[$index] $job.control $targets $begin.transient_mids
         foreach ($capture in (@($frame) + @($frame.priming_frames))) {
+            Assert-CaptureStatePair $capture $Data.capture_state_native_api
             if ($capture.sha256 -cnotmatch '^[0-9a-f]{64}$' -or $capture.size_bytes -le 0 -or $capture.size_bytes -gt 16MB -or
                 ($capture.screenshot_elapsed_seconds -isnot [double] -and $capture.screenshot_elapsed_seconds -isnot [long] -and
                  $capture.screenshot_elapsed_seconds -isnot [int]) -or
@@ -853,7 +1323,7 @@ function Assert-CrackVisualControlContract {
         Assert-JsonEqual 'NATIVE_LOADING_AND_MIPS_READY' $ready.status 'crack loading barrier'
         Assert-JsonEqual $true $ready.height_mip_lease_requested 'crack height residency'
         Assert-JsonEqual $true $ready.viewport_primed_at_rider_camera 'crack rider viewport priming'
-        Assert-JsonEqual 15 $ready.material_texture_count 'crack plus base/shoulder texture residency'
+        Assert-JsonEqual $ExpectedMaterialTextures $ready.material_texture_count 'crack plus base/shoulder/outer texture residency'
         $observed = $frame.native_control_observation_after
         foreach ($actor in $observed.crack_actors) {
             $calls.Add(@{ function = 'crack_component.set_material'; component = $actor.component
@@ -876,7 +1346,7 @@ function Assert-CrackVisualControlContract {
     Assert-JsonEqual $maximumElapsed $Data.max_completed_screenshot_seconds 'observed crack screenshot completion bound'
 }
 
-function Assert-CrackTextureReadiness {
+function Assert-MaterialTextureReadiness {
     param($Data, $Manifest)
     $paths = @{}
     Assert-JsonEqual @('BaseColor', 'DetailMasks', 'Normal_DX', 'ORM') @($Manifest.texture_objects.Keys | Sort-Object) 'base channels'
@@ -884,17 +1354,28 @@ function Assert-CrackTextureReadiness {
     $shoulder = $Manifest.shoulder_network.material.texture_objects
     Assert-JsonEqual @('BaseColor', 'Normal_DX', 'Roughness') @($shoulder.Keys | Sort-Object) 'shoulder channels'
     foreach ($channel in $shoulder.Keys) { $paths[('Shoulder_' + $channel)] = $shoulder[$channel] }
-    $cracks = $Manifest.crack_canary.imports.assets.textures
-    Assert-JsonEqual @('drifting_interrupted', 'short_oblique') @($cracks.Keys | Sort-Object) 'crack residency motifs'
-    foreach ($motif in $cracks.Keys) {
-        Assert-JsonEqual @('BaseColor', 'DetailMasks', 'Normal_DX', 'ORM') @($cracks[$motif].Keys | Sort-Object) 'crack residency channels'
-        foreach ($channel in $cracks[$motif].Keys) { $paths[('Crack_' + $motif + '_' + $channel)] = $cracks[$motif][$channel] }
+    $expectedCount = 7
+    if ($Manifest.Contains('crack_canary_enabled') -and $Manifest.crack_canary_enabled) {
+        $expectedCount += 8
+        $cracks = $Manifest.crack_canary.imports.assets.textures
+        Assert-JsonEqual @('drifting_interrupted', 'short_oblique') @($cracks.Keys | Sort-Object) 'crack residency motifs'
+        foreach ($motif in $cracks.Keys) {
+            Assert-JsonEqual @('BaseColor', 'DetailMasks', 'Normal_DX', 'ORM') @($cracks[$motif].Keys | Sort-Object) 'crack residency channels'
+            foreach ($channel in $cracks[$motif].Keys) { $paths[('Crack_' + $motif + '_' + $channel)] = $cracks[$motif][$channel] }
+        }
+    }
+    if ($Manifest.Contains('outer_terrain_enabled') -and $Manifest.outer_terrain_enabled) {
+        $expectedCount += 11
+        $outer = Get-OuterTerrainTextureBindings $Manifest
+        foreach ($name in $outer.Keys) { $paths[('OuterTerrain_' + $name)] = $outer[$name] }
     }
     $names = [string[]]@($paths.Keys)
     [Array]::Sort($names, [StringComparer]::Ordinal)
     $unique = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     if ($Data.status -cne 'ROAD_TEXTURE_MIPS_READY' -or $Data.textures -isnot [Collections.IList] -or
-        $Data.textures.Count -ne 15 -or $paths.Count -ne 15) { throw 'Crack captures require the exact fifteen material textures.' }
+        $Data.textures.Count -ne $expectedCount -or $paths.Count -ne $expectedCount) {
+        throw 'Captures require the exact selected base/shoulder/crack/outer material textures.'
+    }
     Assert-JsonEqual $false $Data.material_parameters_changed 'texture readiness parameter changes'
     Assert-JsonEqual $false $Data.saved_to_map 'texture readiness map save'
     for ($index = 0; $index -lt $names.Count; $index++) {
@@ -931,7 +1412,7 @@ function Get-CrackVisualControlArtifacts {
             $material.identity.size_bytes -ne $frame.capture_readiness.material_receipt.size_bytes) {
             throw 'Crack material/height readiness sidecar bytes changed.'
         }
-        Assert-CrackTextureReadiness $material.value $Manifest
+        Assert-MaterialTextureReadiness $material.value $Manifest
         $evidence[('crack-control-' + $frame.frame_id + '-height-readiness')] = $height
         $evidence[('crack-control-' + $frame.frame_id + '-material-readiness')] = $material.identity
     }
@@ -953,8 +1434,9 @@ function Get-CrackVisualControlArtifacts {
 function Assert-GpuReviewContract {
     param($Data, $Plan, [string] $PlanSha, [string] $ManifestSha,
           [long] $SelectedTriangles, [string] $ExactHead, [string] $Token, [string] $ProfileSha,
-          [ValidateSet(7, 15)][int] $ExpectedMaterialTextures = 7)
+          [ValidateSet(7, 15, 18, 26)][int] $ExpectedMaterialTextures = 7)
     Assert-ViewPlan $Plan
+    Assert-CaptureStateApi $Data.capture_state_native_api
     if ($Data.status -cne 'ROAD_ASPHALT_LIT_REVIEW_FRAMES_RETAINED' -or
         $Data.schema_version -ne 1 -or $Data.issue -ne 364 -or
         $Data.exact_sha -cne $ExactHead -or $Data.run_token -cne $Token -or
@@ -1002,6 +1484,7 @@ function Assert-GpuReviewContract {
         Assert-JsonEqual $expected $actualPose ('ordered frame ' + $i)
         Assert-NativeCameraObservation $expected $frame.native_camera_observation
         foreach ($capture in (@($frame) + @($frame.priming_frames))) {
+            Assert-CaptureStatePair $capture $Data.capture_state_native_api
             Assert-JsonEqual 'VMI_LIT' $capture.native_viewmode_before 'native Lit viewmode before'
             Assert-JsonEqual 'VMI_LIT' $capture.native_viewmode_after 'native Lit viewmode after'
         }
@@ -1088,9 +1571,11 @@ try {
     $reopenReceipt = Read-PinnedJson (Join-Path $proof 'road-asphalt-saved-reloaded.json')
     # Full-network selected IDs require 4 MiB; other JSON receipts retain 2 MiB.
     $savedManifest = Read-PinnedJson (Join-Path $proof 'road-asphalt-saved-manifest.json') 4MB
-    $selectedTriangles = Assert-NetworkManifest $savedManifest.value $ExpectedHead
+    $selectedTriangles = Assert-NetworkManifest $savedManifest.value $ExpectedHead ([bool]$OuterTerrainCanary)
     Assert-SurfaceDetailLanes $savedHost.value $savedReceipt.value $reopenReceipt.value `
         $savedManifest.value ([bool]$EdgeMarkings) ([bool]$CrackCanary)
+    Assert-OuterTerrainLanes $savedHost.value $savedReceipt.value $reopenReceipt.value `
+        $savedManifest.value ([bool]$OuterTerrainCanary)
     if ($readHost.value.status -cne 'ROAD_MATERIAL_BASELINE_READ_ONLY_COMPLETE' -or
         $readHost.value.exact_sha -cne $ExpectedHead -or
         $savedHost.value.status -cne 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS' -or
@@ -1207,16 +1692,22 @@ import json, sys
 from pathlib import Path
 sys.path.insert(0, sys.argv[1])
 from scripts.ue.road_asphalt_visual_controls import control_plan, digest
-plan = control_plan(Path(sys.argv[1]))
-print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True, allow_nan=False))
+coverage = sys.argv[2] == "1"
+plan = control_plan(Path(sys.argv[1]), paint_coverage=coverage)
+result = {"control_plan": plan, "sha256": digest(plan)}
+if coverage:
+    legacy = control_plan(Path(sys.argv[1]))
+    result.update(legacy_control_plan=legacy, legacy_control_plan_sha256=digest(legacy))
+print(json.dumps(result, sort_keys=True, allow_nan=False))
 '@
-        $controlOutput = @(& $planPython.path -I -B -c $controlCode $root)
+        $controlOutput = @(& $planPython.path -I -B -c $controlCode $root $(if ($PaintCoverage) { '1' } else { '0' }))
         if ($LASTEXITCODE -ne 0 -or $controlOutput.Count -ne 1) {
-            throw 'Cannot derive the eight visual controls before starting the owned Editor.'
+            throw 'Cannot derive the fixed visual controls and optional paint pair before starting the owned Editor.'
         }
         $controlValue = $controlOutput[0] | ConvertFrom-Json -AsHashtable -Depth 40
         if ($controlValue.sha256 -cnotmatch '^[0-9a-f]{64}$' -or
-            $controlValue.control_plan.frame_count -ne 8 -or $controlValue.control_plan.jobs.Count -ne 8) {
+            $controlValue.control_plan.frame_count -ne $expectedVisualControlCount -or
+            $controlValue.control_plan.jobs.Count -ne $expectedVisualControlCount) {
             throw 'Visual control plan has an unexpected identity or scope.'
         }
         $controlPlanPath = Join-Path $proof 'road-asphalt-expected-visual-controls.json'
@@ -1225,7 +1716,7 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
         Assert-JsonEqual $controlValue $expectedControls.value 'retained visual control plan'
         $receipt.expected_visual_control_plan = $expectedControls.identity
     }
-    if ($CrackCanary) {
+    if ($null -ne $crackControlToken) {
         $crackControlCode = @'
 import json, sys
 from pathlib import Path
@@ -1275,8 +1766,10 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
             YACS_ROAD_SAVED_RUN_TOKEN = $RunToken
             YACS_ROAD_EDGE_MARKINGS = $edgeMarkingSetting
             YACS_ROAD_VISUAL_CONTROLS_OWNED = $visualControlToken
+            YACS_ROAD_PAINT_COVERAGE_OWNED = $paintCoverageToken
             YACS_ROAD_CRACK_CANARY = $crackCanarySetting
             YACS_ROAD_CRACK_CONTROLS_OWNED = $crackControlToken
+            YACS_ROAD_OUTER_TERRAIN_CANARY = $outerTerrainSetting
             YACS_ROAD_MATERIAL_EXPECTED_HEAD = $ExpectedHead
             YACS_ROAD_MATERIAL_PREPARATION_SHA256 = [string] $readHost.value.proof_files.session_preparation.sha256
             YACS_ROAD_MATERIAL_VIEW_PLAN_SHA256 = [string] $expectedPlan.identity.sha256
@@ -1295,6 +1788,11 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
     $receipt.editor_exit_observed = $true
     $receipt.editor_exit_code = $renderProcess.ExitCode
     $receipt.editor_seconds = $watch.Elapsed.TotalSeconds
+    if ($OuterTerrainCanary) {
+        $receipt.outer_terrain_shader_log = Get-OuterTerrainShaderLogObservation (Join-Path $proof 'road-asphalt-gpu-editor.log')
+        $receipt.outer_terrain_shader_log_observed = $true
+        Assert-OuterTerrainShaderLog $receipt.outer_terrain_shader_log
+    }
     if ($renderProcess.ExitCode -ne 0) {
         throw 'GPU Unreal review exited nonzero; no render acceptance.'
     }
@@ -1304,6 +1802,7 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
         $savedManifest.identity.sha256 $selectedTriangles $ExpectedHead $RunToken $profileCopies.proof.sha256 `
         $expectedMaterialTextureCount
     Assert-SurfaceDetailGpuReadback $data $reopenReceipt.value ([bool]$EdgeMarkings) ([bool]$CrackCanary)
+    Assert-OuterTerrainGpuReadback $data $reopenReceipt.value $savedManifest.value ([bool]$OuterTerrainCanary)
     $receipt.edge_markings_verified = [bool]$EdgeMarkings
     $receipt.crack_canary_verified = [bool]$CrackCanary
     $expectedIds = @($expectedPlan.value.frames | ForEach-Object { $_.frame_id })
@@ -1345,7 +1844,7 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
                 throw ('Native material texture lacks full mip residency: ' + $expectedIds[$i])
             }
         }
-        if ($CrackCanary) { Assert-CrackTextureReadiness $materialReady.value $savedManifest.value }
+        if ($CrackCanary -or $OuterTerrainCanary) { Assert-MaterialTextureReadiness $materialReady.value $savedManifest.value }
         $receipt.evidence[($expectedIds[$i] + '-height-readiness')] = $heightFile
         $receipt.evidence[($expectedIds[$i] + '-material-readiness')] = $materialReady.identity
     }
@@ -1354,7 +1853,9 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
         $controlReceipt = Read-PinnedJson (Join-Path $proof 'road-asphalt-visual-controls.json')
         $controls = $controlReceipt.value
         Assert-VisualControlContract $controls $expectedControls.value $expectedPlan.identity.sha256 `
-            $savedManifest.identity.sha256 $review.identity $savedManifest.value.material_instance $ExpectedHead $RunToken
+            $savedManifest.identity.sha256 $review.identity $savedManifest.value.material_instance $ExpectedHead $RunToken `
+            ([bool]$PaintCoverage) $expectedMaterialTextureCount $savedManifest.value
+        Assert-JsonEqual $data.capture_state_native_api $controls.capture_state_native_api 'same native capture getter evidence for Lit and controls'
         if ($controls.begin.ownership.pid -ne $receipt.editor_pid) {
             throw 'Visual controls ran in a different process from the owned GPU Editor.'
         }
@@ -1374,7 +1875,7 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
                 $materialReady.identity.sha256 -cne $frame.capture_readiness.material_receipt.sha256 -or
                 $materialReady.identity.size_bytes -ne $frame.capture_readiness.material_receipt.size_bytes -or
                 $materialReady.value.status -cne 'ROAD_TEXTURE_MIPS_READY' -or
-                $materialReady.value.textures.Count -ne 7 -or
+                $materialReady.value.textures.Count -ne $expectedMaterialTextureCount -or
                 $materialReady.value.material_parameters_changed -isnot [bool] -or
                 $materialReady.value.material_parameters_changed -or
                 $materialReady.value.saved_to_map -isnot [bool] -or $materialReady.value.saved_to_map) {
@@ -1388,6 +1889,7 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
                     throw ('Visual control texture lacks full native residency: ' + $frame.frame_id)
                 }
             }
+            if ($CrackCanary -or $OuterTerrainCanary) { Assert-MaterialTextureReadiness $materialReady.value $savedManifest.value }
             $receipt.evidence[('control-' + $frame.frame_id + '-height-readiness')] = $heightFile
             $receipt.evidence[('control-' + $frame.frame_id + '-material-readiness')] = $materialReady.identity
         }
@@ -1407,6 +1909,19 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
             }
             $receipt.evidence[('control-api-' + $relative)] = $actual
         }
+        if ($PaintCoverage) {
+            foreach ($relative in $controls.begin.native_api.paint_mid.installed_sources.Keys) {
+                $pin = $controls.begin.native_api.paint_mid.installed_sources[$relative]
+                $actual = File-Identity (Join-Path $engineRoot $relative) 4MB
+                if ($actual.sha256 -cne $pin.sha256 -or $actual.size_bytes -ne $pin.size_bytes) {
+                    throw ('Installed paint MID source changed: ' + $relative)
+                }
+                $receipt.evidence[('paint-control-api-' + $relative)] = $actual
+            }
+            $receipt.paint_coverage_frames_retained = $true
+            $receipt.paint_coverage_frame_count = 2
+            $receipt.paint_full_native_buffers_verified = $true
+        }
         $allocatorPath = 'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsComponent230Detail.cpp'
         $allocator = File-Identity (Join-Path $root $allocatorPath) 4MB
         $allocatorPin = $controls.begin.native_api.transient_allocator[$allocatorPath]
@@ -1417,14 +1932,15 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
         $receipt.evidence.visual_control_receipt = $controlReceipt.identity
         $receipt.evidence.visual_control_allocator = $allocator
         $receipt.visual_controls_frames_retained = $true
-        $receipt.visual_control_frame_count = 8
+        $receipt.visual_control_frame_count = $expectedVisualControlCount
     }
-    if ($CrackCanary) {
+    if ($null -ne $crackControlToken) {
         $crackControlReceipt = Read-PinnedJson (Join-Path $proof 'road-crack-visual-controls.json')
         $crackControls = $crackControlReceipt.value
         Assert-CrackVisualControlContract $crackControls $expectedCrackControls.value `
             $expectedPlan.identity.sha256 $savedManifest.identity.sha256 $review.identity `
-            $savedManifest.value $receipt.editor_pid $root $ExpectedHead $RunToken $expectedPlan.value
+            $savedManifest.value $receipt.editor_pid $root $ExpectedHead $RunToken $expectedPlan.value $expectedMaterialTextureCount
+        Assert-JsonEqual $data.capture_state_native_api $crackControls.capture_state_native_api 'same native capture getter evidence for Lit and crack controls'
         $engineRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $gui))
         $crackEvidence = Get-CrackVisualControlArtifacts $crackControls $proof $savedManifest.value $engineRoot $root
         foreach ($name in $crackEvidence.Keys) { $receipt.evidence[$name] = $crackEvidence[$name] }
@@ -1455,6 +1971,10 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
     $receipt.shoulder_selected_triangle_count = $selectedTriangles
     $receipt.road_profile_diagnostic_sha256 = $profileCopies.proof.sha256
     $receipt.native_lit_frames_retained = $true
+    $receipt.capture_state_snapshots_verified = $true
+    $receipt.outer_terrain_native_bindings_verified = [bool]$OuterTerrainCanary
+    $receipt.outer_terrain_gpu_statistics_verified = [bool]$OuterTerrainCanary
+    if ($OuterTerrainCanary) { $receipt.outer_terrain_owner_labels = @($data.outer_terrain_after.outer_owner_labels) }
     $receipt.status = 'ROAD_ASPHALT_GPU_LIT_REVIEW_HOST_PASS'
 }
 catch {
@@ -1498,6 +2018,8 @@ finally {
             $receipt.native_lit_frames_retained = $false
             $receipt.shoulder_network_material_ids_verified = $false
             $receipt.shoulder_material_edge_uv_verified = $false
+            $receipt.outer_terrain_native_bindings_verified = $false
+            $receipt.outer_terrain_gpu_statistics_verified = $false
             $receipt.error = 'GPU review process/log teardown did not complete.'
         }
         try {
@@ -1514,9 +2036,19 @@ if ($receipt.status -cne 'ROAD_ASPHALT_GPU_LIT_REVIEW_HOST_PASS' -or
     -not $receipt.shoulder_material_edge_uv_verified) {
     throw 'Road GPU technical evidence failed the independent native host gate.'
 }
-if ($CrackCanary -and (-not $receipt.crack_canary_verified -or
-    -not $receipt.crack_control_frames_retained -or $receipt.crack_control_frame_count -ne 16)) {
+if ($CrackCanary -and -not $receipt.crack_canary_verified) { throw 'Road crack scene did not preserve its full fresh native readback.' }
+if ($null -ne $crackControlToken -and (-not $receipt.crack_control_frames_retained -or $receipt.crack_control_frame_count -ne 16)) {
     throw 'Road crack canary lacks all sixteen independently verified control conditions.'
+}
+if ($VisualControls -and (-not $receipt.visual_controls_frames_retained -or
+    $receipt.visual_control_frame_count -ne $expectedVisualControlCount)) { throw 'Road visual control sequence is incomplete.' }
+if ($PaintCoverage -and (-not $receipt.paint_coverage_frames_retained -or
+    $receipt.paint_coverage_frame_count -ne 2 -or -not $receipt.paint_full_native_buffers_verified)) {
+    throw 'Road paint coverage pair lacks complete native restoration and buffers.'
+}
+if ($OuterTerrainCanary -and (-not $receipt.outer_terrain_native_bindings_verified -or
+    -not $receipt.outer_terrain_gpu_statistics_verified -or -not $receipt.outer_terrain_shader_log_observed)) {
+    throw 'Outer terrain canary lacks its full native bindings, GPU statistics or closed shader log observation.'
 }
 Write-Host ('ROAD_ASPHALT_GPU_LIT_REVIEW_HOST_PASS; ' + $receipt.verified_frame_count +
     ' pinned ordered lit road-facing frames, owner visual and FPS pending.')
