@@ -319,6 +319,15 @@ until justified from measurement and frozen. The source declares inherited
 orthometric height; a specific geoid and independent vertical-datum proof are
 not supplied. Qualification must remain pending while these gates are unresolved.
 
+Native attempt `a634ba6fb7c0d3e86c26578d91073c45447da1f1/qualification01`:
+qualified-source inspection completed with process exit 0 and unchanged staged
+bytes. Material action exited 3 before explicit asset save: Python could not
+resolve `world_position_offset` on `MaterialEditorOnlyData`. Its failed receipt
+is retained under `D:/yacs/work/pcg365/<SHA>/qualification01/proof/material/`.
+Fresh material readback and real-terrain contact were NOT RUN for that attempt;
+no material/contact PASS follows from successful source staging. The correction
+must preserve strict displacement checks and use a new exact-SHA attempt.
+
 Existing Julka profiles `sa-calobra-pcg-masks-candidate` and
 `sa-calobra-mask-transitions-candidate` verified with zero issues, including
 inherited source closure. Existing `verified_manifest()` also checked fingerprints,
