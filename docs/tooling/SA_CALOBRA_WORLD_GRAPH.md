@@ -2,6 +2,12 @@
 
 **Status:** M3, CPU input preparation; native graph and placement NOT RUN.
 **Owner:** procedural-world. **Base:** `4dd792219bfc2eaf7dc216bd60cbde6628bba792`.
+**Current owner instruction:** planning only; no further implementation now.
+The complete researched continuation is recorded in the
+[detailed execution plan](SA_CALOBRA_WORLD_GRAPH_PLAN.md),
+[primary-source/tutorial ledger](SA_CALOBRA_WORLD_GRAPH_RESEARCH.md) and
+[handoff for another LLM](SA_CALOBRA_WORLD_GRAPH_LLM_HANDOFF.md).
+The evidence below describes the existing CPU kickoff, not native completion.
 The [Roadmap](../ROADMAP.md), [World Building Bible](../WORLD_BUILDING_BIBLE.md)
 and [World Authoring Library](../YACS_WORLD_AUTHORING_LIBRARY.md) own scope,
 methodology and reusable tooling. This adapter is not a second proof framework.
@@ -82,6 +88,13 @@ The attempted [Epic 5.8 documentation](https://dev.epicgames.com/documentation/e
 and [PCGEx agent index](https://pcgex.gitbook.io/pcgex/llms.txt) were inaccessible
 during this audit. Matching installed native headers were inspected instead.
 No PCGEx-specific node is implemented or asserted as verified.
+
+Later planning research successfully read canonical Epic pages labelled UE 5.8
+and specific PCGEx pages, while the version-query URLs and PCGEx agent indexes
+remained inaccessible. See the [research ledger](SA_CALOBRA_WORLD_GRAPH_RESEARCH.md)
+for exact retrieval limits, installed headers, bootstrap hazards and the unresolved
+PCGEx documentation/source mismatch. This does not retroactively change the
+original audit's evidence or establish native compatibility.
 
 Existing Stage3G Forest/RouteExclusion graphs and generic patch candidates are
 reusable API patterns. Their Alpine recipes, rectangle exclusions and counts

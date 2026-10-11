@@ -7,6 +7,15 @@
 
 **Execution resumed — 2026-10-11:** the owner authorized #365 after #364 closeout. The current batch authenticates existing Sa Calobra mask inputs on CPU; the running owner editor and preview remain untouched. Native graph, plugin and asset admission remain pending.
 
+**Latest instruction — #365 planning only:** preserve the CPU kickoff and prepare
+the complete continuation for another LLM; do not implement further work now.
+The [detailed world-graph plan](tooling/SA_CALOBRA_WORLD_GRAPH_PLAN.md),
+[research/tutorial ledger](tooling/SA_CALOBRA_WORLD_GRAPH_RESEARCH.md) and
+[LLM handoff](tooling/SA_CALOBRA_WORLD_GRAPH_LLM_HANDOFF.md) cover asset/contact
+qualification → native graph/PCGEx preparation → regeneration → saved fresh
+readback/render. These documents do not complete #365, install PCGEx or activate
+downstream stages. Explicit resumption is required before execution.
+
 **Predecessor checkpoint — 2026-10-10:** [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363) is completed and its whole-area material foundation is accepted and frozen. [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b` after [protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed. #384 is completed after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467) merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its fixed native session, separate [InputBoundary](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402) and authenticated [source-only receipt readback](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136) passed. The approved delivery continues with **#364 asphalt/shoulder → #365 world graph**. Stop MCP infrastructure work. The owner's final whole-area visual audit is at the end of assembled M3, before the FPS benchmark; intermediate technical proof and review images remain required.
 
 Acceptance covers the material baseline on the **2,016.5 m × 2,016.5 m / 1024-component** working Landscape, not a finished rideable world or completed M3. [The material handoff](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) pins the saved/fresh-rendered consumer and native evidence. Canonical-map promotion, unresolved road/CUT/cliff/contact geometry and production PCGEx admission remain outside this acceptance. Performance is **`DEFERRED_AFTER_M3` / `performance_pass: false`**.

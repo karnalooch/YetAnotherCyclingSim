@@ -91,6 +91,16 @@ In particular:
 
 ## 2. Existing systems reused
 
+For the current Sa Calobra #365 continuation, use the
+[detailed plan](tooling/SA_CALOBRA_WORLD_GRAPH_PLAN.md) and
+[API/tutorial audit](tooling/SA_CALOBRA_WORLD_GRAPH_RESEARCH.md).
+They are planning documents under the existing library/Bible authority:
+asset and ground-contact qualification precede native generation; stable
+identity/local invalidation and explicit saved/fresh-process proof follow.
+The existing CPU adapter does not prove these capabilities. PCGEx is absent
+from the recorded session and no further implementation is authorized by the
+current planning-only request.
+
 This is not a second Stage 3G asset pipeline.
 
 The library reuses:

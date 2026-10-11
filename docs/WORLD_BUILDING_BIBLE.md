@@ -2263,6 +2263,13 @@ Materials cannot fix incorrect geometry. If a silhouette is wrong, fix geometry 
 
 ## 11. PCG vegetation and rocks
 
+The current #365 [execution plan](tooling/SA_CALOBRA_WORLD_GRAPH_PLAN.md),
+[primary research](tooling/SA_CALOBRA_WORLD_GRAPH_RESEARCH.md) and
+[LLM handoff](tooling/SA_CALOBRA_WORLD_GRAPH_LLM_HANDOFF.md) apply this methodology
+to the existing Sa Calobra Landscape. They are planning-only supporting documents;
+they neither authorize implementation now nor admit native graph/contact,
+PCGEx availability, persistence or production vegetation.
+
 PCG is the default for repeated **presentation content**, but it is not the default authority for real-world geography.
 
 Where reliable source data exists, PCG rules should consume `World Authority` outputs such as:
