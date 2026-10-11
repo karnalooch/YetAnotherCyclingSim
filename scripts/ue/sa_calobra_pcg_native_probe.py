@@ -8,6 +8,7 @@ Native output remains local diagnostic evidence, not a Proof Broker receipt.
 import hashlib
 import json
 import os
+import sys
 from pathlib import Path
 import time
 import traceback
@@ -170,6 +171,10 @@ def inspect():
         "CollisionEnabled",
         "TraceTypeQuery",
         "DrawDebugTrace",
+        "PrimitiveComponent",
+        "MaterialEditingLibrary",
+        "MaterialEditorOnlyData",
+        "MaterialProperty",
     )
     inventory = {
         name: sorted(
@@ -211,6 +216,45 @@ def main():
         "status": "FAILED",
     }
     try:
+        if ACTION in {"material", "material-reload", "terrain"}:
+            root = Path(unreal.Paths.project_dir()).resolve()
+            sys.path.insert(0, str(root))
+            from scripts.ue import sa_calobra_pcg_material_binding as binding_helper
+
+            if ACTION == "material":
+                binding = binding_helper.prepare_binding(root / "forge-source", HEAD)
+                binding_helper.save_binding(binding)
+                write_new("binding.json", binding)
+                receipt["status"] = "MATERIAL_BINDING_SAVED"
+                receipt["binding"] = binding
+            else:
+                binding = json.loads(
+                    (root / "proof/material/binding.json").read_text(encoding="utf-8")
+                )
+                if binding["code_sha"] != HEAD:
+                    raise RuntimeError("Material binding source SHA differs")
+                receipt["binding_readback"] = binding_helper.verify_binding(binding)
+                if ACTION == "material-reload":
+                    actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+                    actor = actors.spawn_actor_from_class(
+                        unreal.StaticMeshActor, unreal.Vector()
+                    )
+                    actor.static_mesh_component.set_static_mesh(
+                        unreal.load_asset(binding["derived_mesh"])
+                    )
+                    receipt["binding_readback"] = binding_helper.verify_binding(
+                        binding, actor.static_mesh_component
+                    )
+                    receipt["status"] = "MATERIAL_BINDING_FRESH_READBACK"
+                else:
+                    from scripts.ue import sa_calobra_pcg_terrain_contact
+
+                    receipt["contact_measurements"] = (
+                        sa_calobra_pcg_terrain_contact.measure(root, binding)
+                    )
+                    receipt["status"] = "REAL_TERRAIN_CONTACT_MEASURED"
+            finish(receipt)
+            return
         if ACTION in {"create", "reload"}:
             unreal.EditorPythonScripting.set_keep_python_script_alive(True)
             global ACTIVE

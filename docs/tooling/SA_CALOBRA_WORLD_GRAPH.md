@@ -273,6 +273,52 @@ Later delivery-head CI must be checked independently in Draft PR #474.
 
 ## Authenticated source contract
 
+### Material binding and real-ground measurement packet — 2026-10-12
+
+Owner explicitly requested native Forge binding and real-terrain contact assessment.
+Base `462668bcbc07e720e03c821d39925a2d33ec256f` is clean; its
+[CI run38182535894](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38182535894)
+passed. This packet remains #365/M3, owner procedural-world; visual-dcc owns the
+new material helper, coordinator owns staging/contact/docs, specialists review
+source and native API boundaries. Host was IDLE before staging; native actions
+remain serialized. No canonical content, terrain, route/physics or accepted
+five-role material package may be saved or edited.
+
+Prepared helpers duplicate the staged Boulder into
+`/Game/Generated/YACS/PCG365Qualification`, import the pinned Forge variant through
+the existing producer, and verify stored mesh slots, effective MI/parent, 400 cm
+world-aligned projection and zero WPO/displacement. Explicit save and fresh
+readback must complete before contact measurement. Native results are NOT RUN
+until the per-action process finishes cleanly with matching source/package hashes.
+
+Real ground is deliberately the retained #363 accepted Landscape material consumer,
+not the latest #364 road checkpoint. Source config
+[`pcg365_qualification_sources_v1.json`](../../worldgen/sa_calobra/pcg365_qualification_sources_v1.json)
+pins its map and all 14 delivered/material dependency packages, Forge sources and
+source-height witness. Map SHA256
+`bf2b92945865e2307990b6d3da40095dfa0774d28affb32a1e42e55f288764dd`;
+DTM SHA256 `6092a48a949b7b7e8ccf120cb46d59cfd7fdd3522085e8a55162fd52fe5a139a`.
+This explicit substrate diagnostic cannot close latest-road compatibility.
+
+Two source witness preparations produced identical SHA256
+`72b312c5371d38265dd1821d3a416bb658fde39a8d0a86dcf52c9d00b50bc6ae`:
+five bounded XYs, each 9x9 interior AABB samples, four valid DTM neighbours per
+bilinear height, preserved EPSG:25831/0.5 m mapping. The fixed source producer
+checks DTM/inventory/XY hashes again after reading. Four real-GeoTIFF tests cover
+interpolation, NoData, wrong SHA and concurrent drift; PASS is CPU only.
+The XYs remain vegetation-selector diagnostics, not regional rock placement.
+
+Native contact will measure upward complex-collision rays against the derived
+mesh's lower surface and exact Landscape-only owner/component queries, with
+unrelated/generated collider and no-hit controls. A vertical analysis transform
+minimizes sampled penetration; gaps, slope and source/native height residuals are
+measurements, not approved embedding or placement. Finite interior samples do not
+prove continuous support, render-triangle equivalence or perimeter coverage.
+Contact/slope/float/penetration/source-uncertainty limits remain REQUIRED_UNSET
+until justified from measurement and frozen. The source declares inherited
+orthometric height; a specific geoid and independent vertical-datum proof are
+not supplied. Qualification must remain pending while these gates are unresolved.
+
 Existing Julka profiles `sa-calobra-pcg-masks-candidate` and
 `sa-calobra-mask-transitions-candidate` verified with zero issues, including
 inherited source closure. Existing `verified_manifest()` also checked fingerprints,
