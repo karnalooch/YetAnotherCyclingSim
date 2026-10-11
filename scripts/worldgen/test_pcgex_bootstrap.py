@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -118,6 +119,15 @@ class BootstrapTests(unittest.TestCase):
         self.assertEqual(after, self.snapshot())
         report = json.loads((self.root / "report.json").read_text(encoding="utf-8-sig"))
         self.assertEqual(report["compatibility_patch_state"], "applied")
+
+    def test_stat_only_change_does_not_refresh_git_index(self):
+        stamp = self.target.stat()
+        os.utime(self.target, ns=(stamp.st_atime_ns, stamp.st_mtime_ns + 2_000_000_000))
+        before = self.git_metadata()
+        source = self.snapshot()
+        self.run_script()
+        self.assertEqual(before, self.git_metadata())
+        self.assertEqual(source, self.snapshot())
 
     def test_patched_crlf_git_warning_is_not_a_changed_path(self):
         self.run_script('Install')

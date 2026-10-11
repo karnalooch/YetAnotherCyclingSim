@@ -46,12 +46,14 @@ if ($ReportPath.Equals($PluginRoot, [StringComparison]::OrdinalIgnoreCase) -or
 function Invoke-PluginGit {
     param([Parameter(Mandatory=$true)] [string[]] $GitArguments)
     # Git warnings belong to diagnostics, never to machine-readable path output.
+    # diff can refresh stat-only index entries despite --no-optional-locks.
+    # This per-process option keeps validation byte-read-only without changing config.
     $start = [Diagnostics.ProcessStartInfo]::new('git')
     $start.UseShellExecute = $false
     $start.CreateNoWindow = $true
     $start.RedirectStandardOutput = $true
     $start.RedirectStandardError = $true
-    foreach ($argument in @('--no-optional-locks', '-C', $PluginRoot) + $GitArguments) {
+    foreach ($argument in @('--no-optional-locks', '-c', 'diff.autoRefreshIndex=false', '-C', $PluginRoot) + $GitArguments) {
         $start.ArgumentList.Add($argument)
     }
     $process = [Diagnostics.Process]::Start($start)
@@ -166,7 +168,13 @@ $StagedPaths = @()
 $HiddenTrackedPaths = @()
 if (Test-Path -LiteralPath $GitDir) {
     $Dirty = (Invoke-PluginGit @('status', '--porcelain', '--untracked-files=all')) -join [Environment]::NewLine
-    $ChangedPaths = @(Invoke-PluginGit @('diff', 'HEAD', '--name-only'))
+    # --name-only may report stat-only differences when auto-refresh is disabled.
+    # --numstat computes content differences without rewriting the source index.
+    $ChangedPaths = @(Invoke-PluginGit @('diff', 'HEAD', '--numstat', '--no-ext-diff') | ForEach-Object {
+        $fields = $_ -split "`t", 3
+        if ($fields.Count -ne 3) { throw 'Unexpected Git content-diff record.' }
+        $fields[2]
+    })
     $StagedPaths = @(Invoke-PluginGit @('diff', '--cached', '--name-only'))
     # These flags suppress ordinary status/diff evidence; never trust that view.
     $HiddenTrackedPaths = @(Invoke-PluginGit @('ls-files', '-v') | Where-Object { $_ -cmatch '^[a-zS] ' })

@@ -103,13 +103,16 @@ def inspect():
             raise RuntimeError("Native skill reader did not complete synchronously")
         if result.error:
             raise RuntimeError(result.error)
-        return json.loads(result.value)
+        wrapped = json.loads(result.value)
+        if not isinstance(wrapped, dict) or set(wrapped) != {"returnValue"}:
+            raise RuntimeError("Unexpected native tool result wrapper")
+        return wrapped["returnValue"]
 
     skills = call_skill("ListSkills", {})
     selected = [str(path) for path in skills if "Skill_PCGGraphGeneration" in str(path)]
     if len(selected) != 1:
         raise RuntimeError("Expected one installed PCG graph skill: " + repr(selected))
-    details = call_skill("GetSkills", {"SkillPaths": selected})
+    details = call_skill("GetSkills", {"skillPaths": selected})
     prompts = {}
     for path, detail in details.items():
         keys = [key for key in detail if key.casefold() == "instructions"]

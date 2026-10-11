@@ -86,7 +86,8 @@ intermediate images and protected exact-head CI remain pending. No real-scene
 scatter or completion of #365 is claimed.
 
 Forbidden: changing canonical road/physics, `Base_DTM`, Landscape geometry,
-BOB semantics, source masks, live Editor state or streaming; installing plugins;
+BOB semantics, source masks, live Editor state or streaming; treating isolated
+plugin preparation as canonical installation or native placement admission;
 inventing rock geography, species, terrain contact or placement acceptance.
 
 ## Native preparation and mesh qualification — 2026-10-12
@@ -119,6 +120,11 @@ stopped before Editor launch: Git's CRLF warning entered bootstrap's changed-pat
 array through merged stderr/stdout and caused `clean_checkout, expected_patch_only`
 failure. The fix separates Git output streams, with a CRLF regression fixture;
 it does not change retained plugin files or weaken checkout authentication.
+The second attempt at `e8e2c2fd18cea949bfad23f801ef988fa38040d1` authenticated
+and loaded the staged PCGEx modules, then failed in the skill reader because
+the official registry wraps output in `returnValue`. The retained emitted schema
+also confirms input `skillPaths` and output `instructions`. The consumer was
+corrected to those observed names. No graph or source map was saved by this run.
 
 The single Boulder source was recovered with the existing bounded downloader
 (2K, five files, 34.2 MiB, 256 MiB cap, no overwrite) into
