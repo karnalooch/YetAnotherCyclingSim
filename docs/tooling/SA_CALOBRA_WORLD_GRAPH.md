@@ -357,6 +357,24 @@ action JSON does not override failed process completion. Next attempt initialize
 an unsaved diagnostic editor world and lets the startup Python stack unwind before
 requesting quit through a Slate callback; clean exit remains mandatory.
 
+Attempt `1920c6f40b5ae7aa3ae2296e4b30ae39e404b392/qualification06` completed
+inspect, material save and fresh material readback with exit 0, launcher markers,
+unchanged source/staged bytes and saved-package hashes. Derived mesh package
+SHA256 `6613bf07604ea255acceda9eee4686cc0314b78d8b997840a853cf7575a9a1f9`;
+one slot, native 400 cm WorldAligned projection, expected four textures and MI
+parent. All direct registry queries returned; recursive engine closure and GPU
+shader/render acceptance remain unverified. Protected material-input limits above
+still apply. Terrain action exited cleanly but its receipt FAILED the exact mesh
+bounds identity guard before contact sampling. Next diagnostic records both
+bounds values; no tolerance or qualification is inferred from that mismatch.
+
+Owner requested an end-M3 visual concept. Imagegen produced an explicitly labelled
+concept (`KONCEPT M3 — NIE RENDER Z UE`), SHA256
+`62dbfa03962595740ea76ec132b17363cefcf8f1d9c04185372f5ec976d77c87`.
+It illustrates weathered limestone/asphalt/shoulder composition only; invented
+road shapes, shoreline, walls and vegetation are not source authority, scope
+approval, a native screenshot, implementation evidence or visual acceptance.
+
 Existing Julka profiles `sa-calobra-pcg-masks-candidate` and
 `sa-calobra-mask-transitions-candidate` verified with zero issues, including
 inherited source closure. Existing `verified_manifest()` also checked fingerprints,

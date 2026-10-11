@@ -80,7 +80,14 @@ def measure(root, binding):
     require(
         vector(actual_bounds.origin) == bounds["origin"]
         and vector(actual_bounds.box_extent) == bounds["extent"],
-        "Native mesh bounds differ from source witness",
+        "Native mesh bounds differ from source witness: "
+        + repr(
+            {
+                "expected": bounds,
+                "actual_origin": vector(actual_bounds.origin),
+                "actual_extent": vector(actual_bounds.box_extent),
+            }
+        ),
     )
     low = bounds["origin"][2] - bounds["extent"][2] - 100
     high = bounds["origin"][2] + bounds["extent"][2] + 100
