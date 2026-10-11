@@ -5,13 +5,9 @@
 **Scope authority:** `PRODUCT_REQUIREMENTS.md`  
 **World-building method:** `WORLD_BUILDING_BIBLE.md`
 
-**Execution paused — 2026-10-10:** the owner requested an implementation stop,
-a work report and smaller M3 delivery batches. Resume implementation, agent
-execution and native jobs only after the owner resumes the work. Documentation
-and report validation are the current task. The small-batch checklist below is
-the resume plan; it does not start a downstream issue.
+**Execution resumed — 2026-10-11:** the owner authorized #365 after #364 closeout. The current batch authenticates existing Sa Calobra mask inputs on CPU; the running owner editor and preview remain untouched. Native graph, plugin and asset admission remain pending.
 
-**Current M3 checkpoint — 2026-10-10:** [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363) is completed and its whole-area material foundation is accepted and frozen. [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b` after [protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed. #384 is completed after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467) merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its fixed native session, separate [InputBoundary](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402) and authenticated [source-only receipt readback](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136) passed. The approved delivery continues with **#364 asphalt/shoulder → #365 world graph**. Stop MCP infrastructure work. The owner's final whole-area visual audit is at the end of assembled M3, before the FPS benchmark; intermediate technical proof and review images remain required.
+**Predecessor checkpoint — 2026-10-10:** [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363) is completed and its whole-area material foundation is accepted and frozen. [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b` after [protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed. #384 is completed after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467) merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its fixed native session, separate [InputBoundary](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402) and authenticated [source-only receipt readback](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136) passed. The approved delivery continues with **#364 asphalt/shoulder → #365 world graph**. Stop MCP infrastructure work. The owner's final whole-area visual audit is at the end of assembled M3, before the FPS benchmark; intermediate technical proof and review images remain required.
 
 Acceptance covers the material baseline on the **2,016.5 m × 2,016.5 m / 1024-component** working Landscape, not a finished rideable world or completed M3. [The material handoff](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) pins the saved/fresh-rendered consumer and native evidence. Canonical-map promotion, unresolved road/CUT/cliff/contact geometry and production PCGEx admission remain outside this acceptance. Performance is **`DEFERRED_AFTER_M3` / `performance_pass: false`**.
 
@@ -85,14 +81,14 @@ Produce a believable, deterministic Sa Calobra route/world foundation that can s
 | **Route truth** | canonical route XY, distance, grade, curvature and road-physics profile | established; remains authoritative |
 | **Terrain** | real DTM -> metric deterministic Landscape foundation | active / proven source path; architecture being consolidated |
 | **Road & Earthworks** | real Ma-2141 alignment, road mesh, non-destructive cut/fill, shoulder tie-in | remaining road/CUT/contact debt; separate #337/#459 scopes |
-| **Materials** | coherent terrain/road surface foundation | #363 whole-area Landscape foundation accepted/frozen; #364 asphalt/shoulder follows #384's protected delivery gate |
+| **Materials** | coherent terrain/road surface foundation | #363 accepted/frozen; #364 completed through #470 squash and owner manual closeout; #459 geometry debt retained |
 | **Biomes** | valley / forest / exposed limestone-upland PCG and route exclusion | baseline systems exist; preserve the tooling and retune presentation for Mallorca |
 | **Proof** | rider-camera visual acceptance, exact-SHA technical evidence, performance | active |
 | **Tooling** | reproducible authoring, remote editor, CI/proof orchestration | active support work |
 
 ### Foundation dependency order
 
-The list below describes architectural dependencies, not a restart of completed work. The current delivery handoff is #384 → #364, as recorded above; unresolved geometry remains separately scoped.
+The list below describes architectural dependencies, not a restart of completed work. The current delivery handoff is completed #364 → #365 CPU world-graph input preparation; unresolved geometry remains separately scoped.
 
 1. Put the production Landscape on the `WORLD_BUILDING_BIBLE.md` layer model.
 2. Preserve the canonical DTM as `Base_DTM`.
@@ -237,18 +233,27 @@ questions separately from this material-only conservation proof.
 | Material conservation | Preserve positions/topology, normals and original UV prefix; independently witness any named appended material channel | **PASS at 9519:** full original buffer conservation plus separately witnessed appended shoulder UV, rollback and fresh readback |
 | Road canary | Apply the validated asphalt to the authorized slot; verify 400 cm projection, DirectX normals and exact restoration | **PASS at 9519:** authenticated granular source and exact canary restoration |
 | Shoulder coverage | Qualify every source owner, including Nudo; gravel on outer tops, original material on walls/interiors | **PASS at 9519:** 186 owners, 185 material targets and 67,760 selected tops; `rock_ground` remains at its 150 cm provider scale |
-| Edges and appearance | Inspect both directions, bends, close/distant views and shoulder/terrain transitions | **In progress:** dry grain and restrained canaries in reviewed b9fd frames; separate outer blend and ten band/paint controls pending |
+| Edges and appearance | Inspect both directions, bends, close/distant views and shoulder/terrain transitions | **Owner manual closeout:** remaining route review accepted for #364; no automated whole-area PASS. Unresolved shoulder/contact geometry remains #459 |
 | Local surface details | Author restrained crack motifs and reference-matched white edge markings with stable source-owned placement | **Source PASS at `07ebafad`:** eight crack motifs, 16 actual Godot exits and 80 independently verified maps; white lines and two crack actors saved/fresh/Lit at b9fd; 16 crack controls reviewed, normal-space and sparse network distribution unresolved |
 | Contact/profile debt | Isolate the owning surface and prove bounded source-relative corrections separately | **#459 open:** all 22 contact images verified/viewed at b9fd; support185 owns the hairpin wall, support022 hide does not remove the 0112 dark band. Native wall/source CUT payload and source LiDAR retained; final Landscape/contact repair pending |
-| Save, reopen and deliver | Save derived outputs, verify fresh reload/render, pass required checks and merge #470 | **In progress:** current native/visual proof and complete #364 delivery pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
+| Save, reopen and deliver | Save derived outputs, verify fresh reload/render, pass required checks and merge #470 | **Delivered:** #470 merged, protected CI passed; earlier checkpoint freshly reopened/rendered, latest-save readback manually accepted. Final M3 audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
 
 Local delivery update, 2026-10-11: the owner-approved live bridge saved a new
 derived worn-asphalt/shoulder checkpoint at handler `2a00f7eb`. Native exact
 comparison covered 559 dynamic meshes; source asphalt remained unchanged.
-Fresh-process reload and current protected delivery checks remain outstanding,
-and the local shoulder correction retains 50 deferred contacts on one side.
+At that checkpoint, fresh-process reload and protected delivery were outstanding.
+The local shoulder correction retains 50 deferred contacts on one side.
 See [live checkpoint evidence](tooling/LEVEL_EDITOR_STREAM.md#explicit-saved-checkpoint-and-current-native-result--2026-10-11).
-#364 remains open; #365 preparation is read-only until its delivery gate passes.
+#364 is completed after squash merge [#470](https://github.com/karnalooch/YetAnotherCyclingSim/pull/470)
+as `4dd792219bfc2eaf7dc216bd60cbde6628bba792` and release v0.3.1.
+Required PR CI `38174079043` and main CI `38174992518` passed. The owner
+manually accepted the remaining route-review/latest-save-readback gate; this is
+not an automated whole-route or latest fresh-readback PASS. The earlier
+`R2a00f7ebba40` checkpoint was freshly reopened/rendered; the latest
+`Rc6b061b933e6` checkpoint was saved with 186 persistent bindings and 559 native
+mesh comparisons, with fresh reopening NOT RUN. #459 geometry debt stays deferred.
+The #365 predecessor gate is satisfied; its first CPU-only input preparation
+is described in [the world graph kickoff](tooling/SA_CALOBRA_WORLD_GRAPH.md).
 
 #### Prepared handoff from #364 to #365 — 2026-10-11
 
@@ -261,15 +266,16 @@ contact repair as a newly invented prerequisite of the material handoff.
 |---|---|
 | Saved material candidate | `/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface`; map SHA-256 `cf806999d73e6762ba6d91fab8b4e29d6c475a828ad9afcd525462054602ed1a`; five packages, 186 material bindings, 559 native mesh comparisons; local retention only |
 | Native identity | Launcher `6c823eaaeec859cb4c7ae9db52fd82a065351018`, saving handler `2a00f7ebba403cf7cda663bc6fa303c7d72e891b`; checkpoint receipt is the per-package hash authority, not this summary |
-| Material admission | Fresh-process reload/render of the new saved candidate remains NOT RUN. Existing `Invoke-YacsRoadSavedConsumer.ps1` requires an idle host; preserve live Editor PID 14704 and do not bypass that guard |
-| Current CI correction | Run 38167515175 failed five existing camera-error regressions. Production now preserves material state, records BLOCKED and propagates camera errors. Original camera assertions are unchanged; focused suite 112 PASS, two Windows symlink capability skips |
+| Material admission | Earlier `R2a00f7ebba40` freshly reopened/rendered by reader `fde7a363`; latest `Rc6b061b933e6` saved without fresh reopening. Owner manually accepted remaining route/latest-save gate in [comment 6113634845](https://github.com/karnalooch/YetAnotherCyclingSim/pull/470#issuecomment-6113634845); no automated whole-area PASS |
+| Protected delivery | #470 squash `4dd792219bfc2eaf7dc216bd60cbde6628bba792`; required PR CI `38174079043` and main CI `38174992518` PASS; v0.3.1 published. Historical camera failures remain evidence, not current blockers |
 | UE / PCG baseline | Installed UE 5.8.2-56702186; engine PCG descriptor Version 8 / VersionName 1.0. Version-specific API audit remains required before graph authoring |
 | PCGEx baseline | Approved authoring pin `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66`, descriptor 0.79 / UE 5.8.0, with the recorded compatibility patch. The current live snapshot has no PCGExtendedToolkit plugin; its optional enabled project entry is not proof of availability |
 | World inputs | Reauthenticate `pcg-masks-v1-2026-10-04` and applicable transition manifests through the existing Julka identities before consumption. Preserve road, 0.51 m conservative shoulder, BOB, building, water and infrastructure exclusions; unknown height remains unknown |
 | First #365 work after admission | Audit installed pinned APIs and reusable graphs; define stable graph/seed/input identities, then prove deterministic regeneration and saved reload over the current 2016.5 m square. Historical Alpine graphs/counts are not Sa Calobra acceptance |
 
-This is preparation only: #365 remains blocked by #364's protected delivery.
-No PCG graph, scatter, rock placement or plugin installation was executed.
+The #364 protected delivery is complete. #365 starts with authenticated,
+deterministic CPU input preparation while the owner's live Editor remains open.
+No native PCG graph, scatter, rock placement or plugin installation is claimed.
 Final owner audit remains `PENDING_FINAL_M3`; performance remains
 `DEFERRED_AFTER_M3`, `performance_pass: false`.
 
