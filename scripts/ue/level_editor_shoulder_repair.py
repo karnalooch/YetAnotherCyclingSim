@@ -173,7 +173,7 @@ class ShoulderRepair:
         landscapes = {x.get_path_name() for x in actors if isinstance(x, a.LandscapeProxy)}
         require(landscapes, 'Native Landscape collision owner missing')
         ignore = [x for x in actors if x.get_path_name() not in landscapes]
-        start, end = (p[0], p[1], p[2] + 200.), (p[0], p[1], p[2] - 200.)
+        start, end = (p[0], p[1], p[2] + 2000.), (p[0], p[1], p[2] - 2000.)
         hit = a.SystemLibrary.line_trace_single(self.world, a.Vector(*start), a.Vector(*end),
                     a.TraceTypeQuery.ECC_VISIBILITY, True, ignore, a.DrawDebugTrace.NONE, True)
         if hit is None:
@@ -213,8 +213,38 @@ class ShoulderRepair:
                     'radius_cm': RADIUS_CM, 'taper_cm': TAPER_CM, 'road_unchanged': True,
                     'landscape_mutated': False, 'road_summary': current, 'targets': list(self.receipts)})
 
+    def audit_active_contacts(self):
+        """Read both original outer boundaries; never modify the active mesh."""
+        self.observe()
+        require(self.active is not None and len(self.receipts) == 1, 'Contact audit requires an active repair')
+        plan = sources.load_sources()
+        require(plan['source_identity'] == self.manifest['shoulder_network']['source_identity'], 'Frozen source identity differs')
+        receipt = dict(self.receipts[0])
+        owners = [o for o in plan['owners'] if o['support_label'] == receipt['label']]
+        require(len(owners) == 1, 'Contact audit source owner differs')
+        low, high = receipt['bounds_cm']
+        samples = []
+        for index, row in enumerate(owners[0]['sections_cm']):
+            for column, inner in ((0, 1), (26, 25)):
+                p = row[column]
+                if not all(low[k] - EPS_CM <= p[k] <= high[k] + EPS_CM for k in (0, 1)):
+                    continue
+                ground = self._trace(p)
+                width = math.dist(p[:2], row[inner][:2])
+                samples.append({'row': index, 'column': column, 'source_cm': list(p),
+                                'inner_source_cm': list(row[inner]), 'width_cm': width,
+                                'landscape_z_cm': ground,
+                                'delta_cm': None if ground is None else ground - p[2]})
+        require(samples and {x['column'] for x in samples} == {0, 26}, 'Both contact sides were not observed')
+        # This receipt is a read-only contact diagnosis, not an additional repair.
+        receipt['contact_audit'] = {'status': 'READ_ONLY', 'trace_half_range_cm': 2000.,
+                                    'landscape_mutated': False, 'samples': samples}
+        self.receipts = [receipt]
+        return self.observe()
+
     def apply(self):
-        require(self.active is None, 'Restore current repair before applying again')
+        if self.active is not None:
+            return self.audit_active_contacts()
         self.observe()
         plan = sources.load_sources()
         require(plan['source_identity'] == self.manifest['shoulder_network']['source_identity'], 'Frozen source identity differs')

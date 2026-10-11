@@ -55,3 +55,27 @@ class ShoulderRepairWallTests(unittest.TestCase):
         owner, snapshot, _, _ = self.fixture()
         with self.assertRaisesRegex(ValueError, 'more than 50 cm'):
             _plan(owner, snapshot, (650., 2000., 1000.), lambda p: -100.)
+
+
+class ContactAuditTests(unittest.TestCase):
+    def test_active_audit_reads_both_sides_without_replacing_before_receipt(self):
+        from unittest.mock import patch
+        from scripts.ue import level_editor_shoulder_repair as repair
+        obj = object.__new__(repair.ShoulderRepair)
+        obj.active = object()
+        obj.manifest = {'shoulder_network': {'source_identity': 'source'}}
+        original = {'label': 'support', 'bounds_cm': [[0., 0., 0.], [1300., 2000., 200.]]}
+        obj.receipts = [original]
+        obj.observe = lambda: {'targets': obj.receipts}
+        obj._trace = lambda p: p[2] - 150.
+        rows = tuple(tuple((float(j*50), float(i*1000), 100.) for j in range(27)) for i in range(3))
+        plan = {'source_identity': 'source', 'owners': [{'support_label': 'support', 'sections_cm': rows}]}
+        with patch.object(repair.sources, 'load_sources', return_value=plan):
+            result = obj.apply()
+        self.assertNotIn('contact_audit', original)
+        audit = result['targets'][0]['contact_audit']
+        self.assertEqual(audit['status'], 'READ_ONLY')
+        self.assertEqual({r['column'] for r in audit['samples']}, {0,26})
+        self.assertEqual(len(audit['samples']), 6)
+        self.assertTrue(all(r['delta_cm'] == -150. for r in audit['samples']))
+        self.assertFalse(audit['landscape_mutated'])
