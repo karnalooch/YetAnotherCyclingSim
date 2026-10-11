@@ -161,6 +161,10 @@ def inspect():
         "StaticMeshEditorSubsystem",
         "EditorActorSubsystem",
         "SystemLibrary",
+        "CollisionResponseType",
+        "CollisionEnabled",
+        "TraceTypeQuery",
+        "DrawDebugTrace",
     )
     inventory = {
         name: sorted(
@@ -378,7 +382,7 @@ class MechanicalGraph:
                 unreal.CollisionEnabled.QUERY_ONLY
             )
             actor.static_mesh_component.set_collision_response_to_all_channels(
-                unreal.CollisionResponse.BLOCK
+                unreal.CollisionResponseType.ECR_BLOCK
             )
 
     def contact(self):
