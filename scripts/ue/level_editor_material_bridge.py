@@ -18,6 +18,11 @@ import struct
 import time
 from pathlib import Path
 
+if __package__:
+    from . import level_editor_camera_presets as camera_presets
+else:
+    import level_editor_camera_presets as camera_presets
+
 RUNTIME_SHA = "b9fddea3f6023239da98bec7a5107ed1124cf52e"
 MAP_PACKAGE = "/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview"
 MAP_SHA256 = "cbbf374309508fdb2c6f86c6324af4a3824a0c5ed32a4bfc29200ad3b29da183"
@@ -119,9 +124,13 @@ def validate_request(raw, session_id, sequence, used):
         "expected_sequence",
     }
     action = request.get("action")
-    require(action in ("set", "restore", "inspect"), "Unknown preview action")
+    require(action in ("set", "restore", "inspect", "camera"), "Unknown preview action")
     expected = common | (
-        {"paint_roughness", "paint_color"} if action == "set" else set()
+        {"paint_roughness", "paint_color"}
+        if action == "set"
+        else {"preset"}
+        if action == "camera"
+        else set()
     )
     require(set(request) == expected, "Unknown or missing preview field")
     require(
@@ -144,6 +153,8 @@ def validate_request(raw, session_id, sequence, used):
         "Request identity was already used; uncertain calls are never retried",
     )
     require(len(used) < 256, "The bounded preview session request limit was reached")
+    if action == "camera":
+        camera_presets.preset(request["preset"])
     if action == "set":
         color = request["paint_color"]
         values = [request["paint_roughness"]]
@@ -1390,11 +1401,23 @@ class MaterialPreview:
                 (output / "receipt.json").relative_to(self.root)
             ).replace("\\", "/"),
         }
+        previous_camera = None
         try:
             if request["action"] == "set":
                 result["after"] = self.set_values(request)
             elif request["action"] == "restore":
                 result["after"] = self.restore()
+            elif request["action"] == "camera":
+                previous_camera = self.editor.get_level_viewport_camera_info()
+                result.update(
+                    camera_presets.apply(
+                        self.api, self.editor, request["preset"], previous_camera
+                    )
+                )
+                result["after"] = self.observe()
+                require(
+                    result["after"] == before, "Camera move changed material bindings"
+                )
             else:
                 result["after"] = before
             if request["action"] != "inspect":
@@ -1443,7 +1466,25 @@ class MaterialPreview:
                     "capture_pending": False,
                 }
             )
-            self.fail_capture(result, output)
+            if request["action"] == "camera":
+                try:
+                    result["camera_restore_attempted"] = previous_camera is not None
+                    if previous_camera is not None:
+                        self.editor.set_level_viewport_camera_info(*previous_camera)
+                        require(
+                            camera_presets.matches(
+                                self.camera_state(),
+                                camera_presets.state(*previous_camera),
+                            ),
+                            "Camera rollback readback differs",
+                        )
+                        result["camera_restored_after_failure"] = True
+                except Exception as rollback_error:
+                    LOGGER.exception("Owned viewport camera rollback failed")
+                    result["camera_restore_error"] = str(rollback_error)
+                write_new(output / "receipt.json", result)
+            else:
+                self.fail_capture(result, output)
             raise
 
     def submit_capture(self):
@@ -1785,6 +1826,9 @@ def install(api, root, preparation, session_id, launcher_sha):
         "source_world_saved": False,
         "saved_inputs_sha256": manager.saved_digest,
         "source_inputs_sha256": manager.last_source_digest,
+        "camera_source_sha256": file_identity(
+            Path(camera_presets.__file__), 2 * 1024 * 1024
+        )["sha256"],
         "bridge_source_sha256": file_identity(Path(__file__), 2 * 1024 * 1024)[
             "sha256"
         ],

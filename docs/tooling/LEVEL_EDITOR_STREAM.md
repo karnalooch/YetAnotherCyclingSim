@@ -1,15 +1,19 @@
 # M3 Level Editor streaming review
 
 **Scope:** owner-requested viewport review for #364 / PR #470, inside M3.
-**Status:** bounded same-process paint preview **PASS** at `badb984`;
-received browser video remains **UNQUALIFIED**. The actual
-[Editor run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38137717962)
-completed two parameter changes and restoration in one identified process.
-Its separate Edge identity check failed before observing browser frames, so
-the overall job is failed. Exact-SHA protected CI and the Blender reference
-passed; Windows recorded `compileKind=none`. Both full material proofs skipped.
-The final receipt retained the Editor for the owner with original bindings
-restored. Freeze the launch branch at `badb984` while that session is in use.
+**Status:** bounded same-process paint preview **PASS**; automated browser
+video qualification remains pending. The latest recorded
+[Editor run at `e4bac543`](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38141538137)
+retained session `38141538137-1`, Editor PID `46540`, and restored the original
+370 material bindings. Its Edge receiver failed with
+`Cannot convert System.Object[] to System.Uri` and observed no browser frames;
+the overall job is **FAILURE**. The owner's Chrome observation is separate
+manual viewport evidence. Exact-SHA
+[CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38141543196)
+and [Blender reference](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38141542405)
+passed. On 2026-10-11 the owner confirmed this session was closed and authorized
+publication of the next checkpoint. The receiver correction and camera controls
+require their own new native proof; the previous paint proof does not admit them.
 The Zen warning follow-up is closed by the owner's confirmation. The
 [workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
 records the authenticated evidence, measured client durations and remaining
@@ -182,7 +186,82 @@ the shared host. Normal CI retains its open-editor protections. Complete
 save/reload and all 68 final Lit views remain checkpoint evidence; a small
 preview cannot satisfy whole-area or final visual admission.
 
+### Bounded camera requests
+
+The owner authorized five source-derived views on 2026-10-11. They use the
+existing official MCP preview operation with `action=camera` and one fixed
+preset name. Chat instructions map to this allowlist:
+
+| Owner instruction | Preset | Survey frame |
+| --- | --- | --- |
+| `POKAŻ DROGĘ` | `road` | `window-0112-forward-00001` |
+| `POKAŻ WJAZD W NAWRÓT` | `hairpin-entry` | `window-0081-forward-00004` |
+| `POKAŻ ŚRODEK NAWROTU` | `hairpin-middle` | `window-0081-forward-00008` |
+| `POKAŻ WYJAZD Z NAWROTU` | `hairpin-exit` | `window-0081-forward-00012` |
+| `POKAŻ NUDO` | `nudo` | `window-0082-forward-00002` |
+
+The module copies `camera_location_cm` and `target_cm` from the
+[pinned survey](../experiments/sa-calobra-tpp-survey-20261008/frames.csv), whose
+SHA-256 is `15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3`.
+It does not substitute the survey's separate road-position column. Exact-source
+tests authenticate every value. Epic's **Unreal Python 5.8**
+[UnrealEditorSubsystem](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/UnrealEditorSubsystem)
+documents the existing viewport getter/setter, including an absent viewport;
+[MathLibrary](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/MathLibrary)
+documents `find_look_at_rotation`. The installed bridge still requires
+UE 5.8.2 CL 56702186. The survey's 76-degree FOV is reference evidence only:
+this API path does not set or read FOV, and reports `viewport_fov_verified=false`.
+
+A request is data for the existing authenticated client, for example:
+
+```json
+{"schema_version":1,"session_id":"TOKEN","request_id":"camera-001","action":"camera","expected_sequence":9,"preset":"road"}
+```
+
+Use the actual session token and current verified sequence, with a fresh request
+ID. Camera and material requests share the bounded sequence/history. Startup
+qualifies the original three material operations, then the five camera presets
+and a return to `road`; a successful unchanged startup therefore ends at
+sequence 9. The client and ready receipt authenticate the new camera module.
+Native readback must match position within 1 cm and wrapped rotation within
+0.01 degree, preserve material bindings, dirty flags and source/snapshot hashes,
+and complete before another request. A pending material capture blocks a camera
+move. A failed camera transaction attempts a verified camera rollback without
+restoring or replacing the active material preview. Uncertain calls are not
+retried. Requests cannot provide coordinates, arbitrary commands or FOV.
+
+The client returns and retains `camera_before`, `camera_after` and source preset
+provenance. Camera movement does not itself capture an image or establish visual
+acceptance. The existing `operation=material-request` workflow can carry this
+JSON through the same client, but its branch-only manual dispatch remains
+unqualified; a chat instruction is not evidence that it reached Unreal. The
+next native launch must establish actual camera readback and receiver evidence.
+
 ### Launch and receiving-client verification
+
+The owner-facing [PowerShell launcher](../../scripts/ue/Start-YacsRemoteFromGitHub.ps1)
+can run on a computer with PowerShell 7.4+ and GitHub CLI; Unreal remains on
+the existing trusted Windows host. Authenticate `gh` as `karnalooch` with
+repository write access, close the previous owned session normally, then run:
+
+```powershell
+pwsh -NoProfile -File ./scripts/ue/Start-YacsRemoteFromGitHub.ps1
+```
+
+`-CheckOnly` performs reads without publishing or launching. A normal run reads
+the current PR #470 HEAD and creates one **content-identical checkpoint commit**
+with that HEAD as its sole parent and the existing `[level-editor-review]`
+marker. It rechecks the branch and updates it without force; a concurrent
+forward update is rejected. An uncertain write is never automatically retried.
+No local checkout, token embedded in the script, Editor termination or new
+dispatch mechanism is involved. The existing PR-wide path diff still includes
+the Material Forge reference workflow's admitted paths, so its synchronization
+event retains the reference gate even for the unchanged-tree checkpoint.
+
+The printed commit and workflow links identify the requested launch. Publication
+does not establish an Editor, browser frames or a viewer URL: read the actual
+run artifact for those observations. This launcher uses the supported push
+trigger while the branch-only manual dispatch remains unqualified.
 
 The `M3 Level Editor review` workflow is restricted to the repository owner and
 the current `codex/364-road-surface-materials` branch. A branch push starts

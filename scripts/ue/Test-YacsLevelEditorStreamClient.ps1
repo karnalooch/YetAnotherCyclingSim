@@ -58,6 +58,26 @@ function Get-RemainingMilliseconds([int] $Maximum = 3000) {
     return [Math]::Min($Maximum, $remaining)
 }
 
+function Select-BlankDevToolsTarget([object] $Response) {
+    # Invoke-RestMethod emits a JSON array as one pipeline object. Enumerate
+    # its entries explicitly; array member access can otherwise combine fields
+    # from different targets and yield Object[] instead of a single URI.
+    foreach ($entry in $Response) {
+        if ($entry -isnot [pscustomobject]) { throw 'Invalid DevTools target entry.' }
+        if ($entry.PSObject.Properties['type'] -and $entry.PSObject.Properties['url'] -and
+            $entry.type -is [string] -and $entry.url -is [string] -and
+            $entry.type -ceq 'page' -and $entry.url -ceq 'about:blank') {
+            if (-not $entry.PSObject.Properties['webSocketDebuggerUrl'] -or
+                $entry.webSocketDebuggerUrl -isnot [string] -or
+                [string]::IsNullOrWhiteSpace($entry.webSocketDebuggerUrl)) {
+                throw 'DevTools page must supply one nonempty debugger URL string.'
+            }
+            return $entry
+        }
+    }
+    return $null
+}
+
 function Read-OwnedProcessIdentity([Diagnostics.Process] $Process) {
     # Holding the handle keeps this object associated with the original process.
     $observed = @{ pid = $null; has_exited = $null; start_ticks = $null; executable = $null; read_error = $null }
@@ -328,8 +348,8 @@ try {
         }
         if ($listeners.Count) {
             try {
-                $targets = @(Invoke-RestMethod -Uri "http://127.0.0.1:$DebugPort/json/list" -NoProxy -MaximumRedirection 0 -TimeoutSec 2)
-                $target = $targets | Where-Object { $_.type -eq 'page' -and $_.url -eq 'about:blank' } | Select-Object -First 1
+                $targets = Invoke-RestMethod -Uri "http://127.0.0.1:$DebugPort/json/list" -NoProxy -MaximumRedirection 0 -TimeoutSec 2
+                $target = Select-BlankDevToolsTarget $targets
             }
             catch { $receipt.last_discovery_error = $_.Exception.Message }
         }

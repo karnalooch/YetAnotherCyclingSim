@@ -503,5 +503,94 @@ class ProcessIdentityTests(unittest.TestCase):
         self.assertTrue(observed["executable_truncated"])
 
 
+TARGET_RUNNER = r"""
+param([string] $Wrapper, [string] $FixturePath)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$tokens = $null
+$errors = $null
+$ast = [Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref] $tokens, [ref] $errors)
+if ($errors.Count) { throw ($errors | Out-String) }
+$function = $ast.Find({ param($node)
+    $node -is [Management.Automation.Language.FunctionDefinitionAst] -and
+    $node.Name -ceq 'Select-BlankDevToolsTarget'
+}, $true)
+. ([ScriptBlock]::Create($function.Extent.Text))
+# Reproduce Invoke-RestMethod's non-enumerated JSON-array output boundary.
+function Invoke-RestMethod {
+    Write-Output -NoEnumerate (Get-Content -LiteralPath $FixturePath -Raw | ConvertFrom-Json -NoEnumerate)
+}
+try {
+    $targets = Invoke-RestMethod
+    $target = Select-BlankDevToolsTarget $targets
+    $uri = if ($null -ne $target) { ([Uri] $target.webSocketDebuggerUrl).AbsoluteUri } else { $null }
+    @{ uri = $uri; error = $null } | ConvertTo-Json -Compress
+}
+catch { @{ uri = $null; error = $_.Exception.Message } | ConvertTo-Json -Compress }
+"""
+
+
+@unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 is required")
+class DevToolsTargetTests(unittest.TestCase):
+    def select(self, targets):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            runner = root / "target.ps1"
+            fixture = root / "targets.json"
+            runner.write_text(TARGET_RUNNER, encoding="utf-8")
+            fixture.write_text(json.dumps(targets), encoding="utf-8")
+            result = subprocess.run(
+                [
+                    shutil.which("pwsh"),
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-File",
+                    str(runner),
+                    str(WRAPPER),
+                    str(fixture),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=20,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        return json.loads(result.stdout)
+
+    def test_multiple_targets_select_one_matching_page(self):
+        url = "ws://127.0.0.1:9237/devtools/page/owned"
+        result = self.select([
+            {"type": "worker", "url": "about:blank", "webSocketDebuggerUrl": "ws://127.0.0.1:9237/devtools/page/worker"},
+            {"type": "page", "url": "about:blank", "webSocketDebuggerUrl": url},
+            {"type": "page", "url": "about:blank", "webSocketDebuggerUrl": "ws://127.0.0.1:9237/devtools/page/other"},
+        ])
+        self.assertEqual(result, {"uri": url, "error": None})
+
+    def test_fields_from_different_targets_cannot_match(self):
+        result = self.select([
+            {"type": "worker", "url": "about:blank"},
+            {"type": "page", "url": "https://example.test/"},
+        ])
+        self.assertEqual(result, {"uri": None, "error": None})
+
+    def test_empty_and_single_target_arrays(self):
+        self.assertEqual(self.select([]), {"uri": None, "error": None})
+        url = "ws://127.0.0.1:9237/devtools/page/only"
+        self.assertEqual(self.select([
+            {"type": "page", "url": "about:blank", "webSocketDebuggerUrl": url}
+        ]), {"uri": url, "error": None})
+
+    def test_array_or_missing_debugger_url_is_rejected(self):
+        missing = self.select([{"type": "page", "url": "about:blank"}])
+        self.assertIn("one nonempty debugger URL string", missing["error"])
+        for value in (None, [], ["ws://127.0.0.1:9237/devtools/page/one"], ""):
+            with self.subTest(value=value):
+                result = self.select([
+                    {"type": "page", "url": "about:blank", "webSocketDebuggerUrl": value}
+                ])
+                self.assertIsNone(result["uri"])
+                self.assertIn("one nonempty debugger URL string", result["error"])
+
+
 if __name__ == "__main__":
     unittest.main()

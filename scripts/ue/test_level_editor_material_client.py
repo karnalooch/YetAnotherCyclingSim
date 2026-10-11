@@ -111,7 +111,8 @@ class Fixture:
                       "source_world_saved": False, "performance_pass": False,
                       "owner_visual_status": "PENDING_FINAL_M3", "saved_inputs_sha256": self.saved_digest,
                       "source_inputs_sha256": self.source_digest,
-                      "bridge_source_sha256": self.sources["scripts/ue/level_editor_material_bridge.py"]}
+                      "bridge_source_sha256": self.sources["scripts/ue/level_editor_material_bridge.py"],
+                      "camera_source_sha256": self.sources["scripts/ue/level_editor_camera_presets.py"]}
         document(self.root / client.bridge.READY_RELATIVE, self.ready)
         self.host = {"schema_version": 1, "status": "MATERIAL_BRIDGE_QUALIFICATION_PENDING",
                      "owner_handoff": False, "source_world_saved": False,
@@ -209,6 +210,13 @@ class Fixture:
                 final["captures"].append({"path": relative + "/" + name, "sha256": client.digest(PNG),
                                           "size_bytes": len(PNG), "priming": index < 3})
         result = copy.deepcopy(final)
+        if request["action"] == "camera":
+            preset = client.bridge.camera_presets.preset(request["preset"])
+            proof = {"camera_preset": preset,
+                     "camera_before": {"location_cm": [0, 0, 0], "rotation_deg": [0, 0, 0]},
+                     "camera_after": {key: preset[key] for key in ("location_cm", "rotation_deg")}}
+            result.update(copy.deepcopy(proof))
+            final.update(copy.deepcopy(proof))
         if request["action"] == "set":
             result.update({"status": "ACCEPTED", "capture_pending": True, "captures": []})
             for key in ("dirty_after", "saved_inputs_after_sha256", "source_inputs_after_sha256"):
@@ -230,6 +238,34 @@ class Fixture:
 
 
 class ClientTests(unittest.TestCase):
+    def test_camera_and_material_requests_share_history_without_changing_bindings(self):
+        first = self.fixture.execute(self.fixture.request("camera", action="camera", preset="hairpin-entry"))
+        self.assertEqual("COMPLETED", first["status"], first)
+        for key in ("camera_before", "camera_after", "camera_preset"):
+            native = client._object((self.fixture.root / client.bridge.REQUEST_ROOT / "camera/receipt.json").read_bytes())
+            saved = client._object((self.fixture.base / "camera-output" / client.CLIENT_RECEIPT).read_bytes())
+            self.assertEqual(native[key], first[key])
+            self.assertEqual(native[key], saved[key])
+        second = self.fixture.execute(self.fixture.request("paint"))
+        self.assertEqual("COMPLETED", second["status"], second)
+        third = self.fixture.execute(self.fixture.request("camera2", action="camera", preset="nudo"))
+        self.assertEqual("COMPLETED", third["status"], third)
+        self.assertEqual(3, self.fixture.sequence)
+
+    def test_camera_rejects_wrong_preset_receipt(self):
+        def wrong(value):
+            preset = client.bridge.camera_presets.preset("nudo")
+            value["camera_preset"] = preset
+            value["camera_after"] = {key: preset[key] for key in ("location_cm", "rotation_deg")}
+        self.fixture.response_edit = wrong
+        result = self.fixture.execute(self.fixture.request(action="camera", preset="road"))
+        self.assert_blocked(result, calls=1)
+
+    def test_camera_rejects_nonfinite_readback(self):
+        self.fixture.response_edit = lambda value: value["camera_after"]["location_cm"].__setitem__(0, "NaN")
+        result = self.fixture.execute(self.fixture.request(action="camera", preset="road"))
+        self.assert_blocked(result, calls=1)
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)

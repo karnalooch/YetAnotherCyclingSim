@@ -300,7 +300,13 @@ DefaultBindAddress=127.0.0.1
     $requests = @(
         [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'acceptance-one'; action = 'set'; expected_sequence = 0; paint_roughness = 0.35; paint_color = @(0.35, 0.50, 0.70, 1.0) },
         [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'acceptance-two'; action = 'set'; expected_sequence = 1; paint_roughness = 0.75; paint_color = @(0.65, 0.30, 0.20, 1.0) },
-        [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'acceptance-restore'; action = 'restore'; expected_sequence = 2 }
+        [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'acceptance-restore'; action = 'restore'; expected_sequence = 2 },
+        [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'camera-road'; action = 'camera'; expected_sequence = 3; preset = 'road' },
+        [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'camera-entry'; action = 'camera'; expected_sequence = 4; preset = 'hairpin-entry' },
+        [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'camera-middle'; action = 'camera'; expected_sequence = 5; preset = 'hairpin-middle' },
+        [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'camera-exit'; action = 'camera'; expected_sequence = 6; preset = 'hairpin-exit' },
+        [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'camera-nudo'; action = 'camera'; expected_sequence = 7; preset = 'nudo' },
+        [ordered]@{ schema_version = 1; session_id = $SessionToken; request_id = 'camera-return-road'; action = 'camera'; expected_sequence = 8; preset = 'road' }
     )
     $nativeResults = @()
     foreach ($request in $requests) {
@@ -309,7 +315,7 @@ DefaultBindAddress=127.0.0.1
         Push-Location -LiteralPath $RepoRoot
         try {
             & python -m scripts.ue.level_editor_material_client --session-receipt $stableReceipt --request $requestPath --output (Join-Path $EvidenceRoot $request.request_id)
-            if ($LASTEXITCODE -ne 0) { throw ('Official MCP material request failed: ' + $request.request_id) }
+            if ($LASTEXITCODE -ne 0) { throw ('Official MCP preview request failed: ' + $request.request_id) }
         }
         finally { Pop-Location }
         $nativePath = Join-Path $sessionEvidence ('material-preview/' + $request.request_id + '/receipt.json')
@@ -328,7 +334,7 @@ DefaultBindAddress=127.0.0.1
         $nativeResults[2].after.transient_mid -ne $false) { throw 'Two-call native state persistence, camera or original binding restoration differs.' }
     $receipt.material_acceptance = [ordered]@{
         status = 'SAME_PROCESS_TWO_UPDATES_RESTORED'
-        request_ids = @($requests.request_id)
+        request_ids = @($requests[0..2].request_id)
         final_sequence = $nativeResults[2].sequence
         final_png_count = @($nativeResults.captures | Where-Object priming -eq $false).Count
         priming_png_count = @($nativeResults.captures | Where-Object priming -eq $true).Count
@@ -339,6 +345,26 @@ DefaultBindAddress=127.0.0.1
     }
     if ($receipt.material_acceptance.final_png_count -ne 2 -or $receipt.material_acceptance.priming_png_count -ne 6) {
         throw 'Persistent preview native image count differs.'
+    }
+    # The same authenticated client validates each source preset and actual
+    # native camera readback. Return to the initial road view before handoff.
+    $cameraResults = @($nativeResults[3..8])
+    foreach ($result in $cameraResults) {
+        if ($result.action -cne 'camera' -or
+            ($result.after | ConvertTo-Json -Depth 16 -Compress) -ne ($nativeResults[2].after | ConvertTo-Json -Depth 16 -Compress)) {
+            throw 'Camera qualification changed the restored material state.'
+        }
+    }
+    $receipt.camera_acceptance = [ordered]@{
+        status = 'SOURCE_PRESETS_READ_BACK'
+        request_ids = @($requests[3..8].request_id)
+        final_sequence = $nativeResults[8].sequence
+        final_preset = $nativeResults[8].camera_preset.preset
+        views = @($cameraResults | ForEach-Object {
+            [ordered]@{ preset = $_.camera_preset.preset; frame_id = $_.camera_preset.frame_id; camera_before = $_.camera_before; camera_after = $_.camera_after }
+        })
+        viewport_fov_verified = $false
+        owner_visual_status = 'PENDING_FINAL_M3'
     }
     $receipt.status = 'HTTP_READY_CLIENT_PENDING'
     $clientRoot = Join-Path $EvidenceRoot 'client'

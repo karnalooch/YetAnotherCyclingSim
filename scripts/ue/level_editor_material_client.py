@@ -54,6 +54,7 @@ SOURCE_MODULES = {
     "scripts/worldgen/bob_mcp_inspection.py": official_client.operation.adapter,
     "scripts/ue/prepare_level_editor_review.py": preparation,
     "scripts/ue/level_editor_material_bridge.py": bridge,
+    "scripts/ue/level_editor_camera_presets.py": bridge.camera_presets,
 }
 CLIENT_SOURCE = "scripts/ue/level_editor_material_client.py"
 
@@ -313,7 +314,8 @@ def _load_context(receipt_path):
     _identity(ready, context)
     require(ready.get("status") == "MATERIAL_BRIDGE_READY" and type(ready.get("sequence")) is int
             and ready["sequence"] == 0 and ready.get("endpoint") == ENDPOINT
-            and ready.get("bridge_source_sha256") == sources["scripts/ue/level_editor_material_bridge.py"],
+            and ready.get("bridge_source_sha256") == sources["scripts/ue/level_editor_material_bridge.py"]
+            and ready.get("camera_source_sha256") == sources["scripts/ue/level_editor_camera_presets.py"],
             "Native material bridge is not ready at the exact launcher source")
     _schema(ready)
     initial = ready.get("initial_state")
@@ -389,7 +391,7 @@ def _close_values(first, second):
 
 def _receipt(value, context, request_id):
     _identity(value, context)
-    require(value.get("request_id") == request_id and value.get("action") in {"set", "restore", "inspect"}
+    require(value.get("request_id") == request_id and value.get("action") in {"set", "restore", "inspect", "camera"}
             and type(value.get("sequence")) is int and 0 <= value["sequence"] <= HISTORY_LIMIT
             and value.get("receipt_relative_path") == bridge.REQUEST_ROOT + "/" + request_id + "/receipt.json",
             "Native request identity, action, sequence or receipt path differs")
@@ -405,6 +407,8 @@ def _receipt(value, context, request_id):
         require(value["after"] == context["initial"], "Restore did not read back the original bindings and values")
     else:
         require(value["before"] == value["after"], "Inspect changed the native material state")
+    if action == "camera":
+        bridge.camera_presets.validate_receipt(value)
     require(value.get("saved_inputs_before_sha256") == context["saved_digest"]
             and value.get("source_inputs_before_sha256") == context["source_digest"],
             "Native saved-input fingerprint differs before the request")
@@ -469,8 +473,8 @@ def _history(context):
 def _request(raw, context, history):
     value = _object(raw, bridge.REQUEST_LIMIT)
     action = value.get("action")
-    require(action in {"set", "restore", "inspect"}, "Unknown material preview action")
-    require(set(value) == COMMON_REQUEST | ({"paint_roughness", "paint_color"} if action == "set" else set()),
+    require(action in {"set", "restore", "inspect", "camera"}, "Unknown material preview action")
+    require(set(value) == COMMON_REQUEST | ({"paint_roughness", "paint_color"} if action == "set" else {"preset"} if action == "camera" else set()),
             "Unknown or missing material request field")
     require(type(value["schema_version"]) is int and value["schema_version"] == 1
             and value["session_id"] == context["identity"]["session_id"], "Material request belongs to another schema/session")
@@ -485,6 +489,8 @@ def _request(raw, context, history):
             "The last bounded request slot is reserved for restoring the original material")
     if action == "set":
         _values(value)
+    if action == "camera":
+        bridge.camera_presets.preset(value["preset"])
     return value
 
 
@@ -625,6 +631,9 @@ def run(session_receipt, request_path, output):
                 and value["before"] == history["current"], "Native call did not observe the preceding material state")
         if request["action"] == "set":
             require(_close_values(value["after"], request), "Native effective paint values differ from the requested values")
+        if request["action"] == "camera":
+            require(value["camera_preset"]["preset"] == request["preset"],
+                    "Native camera receipt belongs to another requested preset")
         require((value.get("status") == "ACCEPTED" and value.get("capture_pending") is True
                  and request["action"] == "set")
                 or (value.get("status") == "COMPLETED" and value.get("capture_pending") is False),
@@ -664,6 +673,9 @@ def run(session_receipt, request_path, output):
                         "saved_inputs_after_sha256": final["saved_inputs_after_sha256"],
                         "source_inputs_before_sha256": final["source_inputs_before_sha256"],
                         "source_inputs_after_sha256": final["source_inputs_after_sha256"]})
+        if request["action"] == "camera":
+            receipt.update({key: final[key] for key in
+                            ("camera_before", "camera_after", "camera_preset")})
     except (ValueError, OSError, RuntimeError, TypeError, KeyError, subprocess.SubprocessError,
             http.client.HTTPException) as error:
         receipt.update({"status": "BLOCKED", "error_type": type(error).__name__, "error": str(error)[:500]})
