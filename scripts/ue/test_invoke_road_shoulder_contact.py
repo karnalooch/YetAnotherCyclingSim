@@ -154,7 +154,7 @@ class RoadShoulderBridgeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.bridge["prior_contract"](*values, HEAD, TOKEN)
 
-    def test_five_installed_headers_are_read_hashed_and_symbols_version_checked(self):
+    def test_six_installed_headers_include_public_bounds_and_remain_version_checked(self):
         with tempfile.TemporaryDirectory() as directory:
             engine = Path(directory)
             write_json(engine / "Engine/Build/Build.version", {
@@ -168,8 +168,10 @@ class RoadShoulderBridgeTests(unittest.TestCase):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("\n".join(symbols), encoding="utf-8")
             api, pins = self.bridge["primary_api"](engine, HEAD)
-            self.assertEqual(len(api["headers"]), 5)
-            self.assertEqual(len(pins), 7)
+            self.assertEqual(len(api["headers"]), 6)
+            self.assertEqual(len(pins), 8)
+            self.assertEqual(self.bridge["HEADERS"]["Runtime/Engine/Classes/Kismet/KismetSystemLibrary.h"],
+                             ["GetComponentBounds"])
             self.assertEqual(api["engine_version"], "5.8.2-56702186")
             self.assertEqual(api["startup_map_sha256"], hashlib.sha256(entry.read_bytes()).hexdigest())
             for relative, symbols in self.bridge["HEADERS"].items():
@@ -185,13 +187,13 @@ class RoadShoulderBridgeTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "version differs"):
                 self.bridge["primary_api"](engine, HEAD)
 
-    def fixture(self, directory):
+    def fixture(self, directory, *, target="window0112", cut_raw=None):
         root = Path(directory) / ("rm-" + TOKEN)
-        diagnostic = root / "Saved/RuntimeProof/RoadMaterialBaseline" / TOKEN / "shoulder-contact"
+        diagnostic = root / "Saved/RuntimeProof/RoadMaterialBaseline" / TOKEN / contact.target_spec(target)["output_name"]
         diagnostic.mkdir(parents=True)
         retained = Path(directory) / "original"
         retained.mkdir()
-        report, frames = contact_fixtures.ShoulderContactTests().evidence(retained)
+        report, frames = contact_fixtures.ShoulderContactTests().evidence(retained, target=target, cut_raw=cut_raw)
         for frame in frames:
             relative = "readiness/" + frame["frame_id"] + "/capture-readiness.json"
             path = retained / "capture" / relative
@@ -212,16 +214,17 @@ class RoadShoulderBridgeTests(unittest.TestCase):
         write_json(retained / "shoulder-contact.json", report)
         write_json(retained / "capture/survey.json", {"status": "CAPTURED", "frames": frames})
         inputs = dict(exact_sha=HEAD, run_token=TOKEN, retained_root=str(retained),
+                      diagnostic_target=target,
                       files=[self.bridge["identity"](source), api_pin], plan=report["plan"],
                       source_identity=report["source_identity"], api_receipt=api_pin)
         inputs_path = diagnostic / "source-inputs.json"
         input_pin = self.bridge["write_once"](inputs_path, inputs)
         return root, diagnostic, retained, source, report, input_pin
 
-    def complete(self, fixture):
+    def complete(self, fixture, *, target="window0112"):
         root, diagnostic, _retained, _source, _report, input_pin = fixture
         arguments = ["bridge", "complete", str(root), "unused-config", HEAD, TOKEN,
-                     "unused-engine", "unused-engine-identity", input_pin["sha256"]]
+                     "unused-engine", "unused-engine-identity", input_pin["sha256"], target]
         output = io.StringIO()
         with patch.object(session, "ROOT", root), patch.object(session, "_assert_isolated_root"), \
                 patch.object(sys, "argv", arguments), redirect_stdout(output):
@@ -245,6 +248,59 @@ class RoadShoulderBridgeTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 self.complete(fixture)
             self.assertEqual(original.read_bytes(), original_bytes)
+
+    def test_hairpin_target_requires_the_same_run_successful_0112_restoration(self):
+        prior = dict(status="SHOULDER_CONTACT_READ_ONLY_HOST_PASS", exact_sha=HEAD, run_token=TOKEN,
+                     verified_frame_count=12, editor_exit_code=0, error=None, secondary_errors=[],
+                     read_only=True, geometry_mutated=False, original_map_mutated=False,
+                     source_inputs_unchanged=True, restored_visibility_verified=True,
+                     editor_exit_observed=True, stopped_on_failure=False)
+        self.bridge["restored_window0112"](prior, HEAD, TOKEN)
+        for field, value in (("exact_sha", "b" * 40), ("run_token", "124-1"),
+                             ("diagnostic_target", "hairpin0081"),
+                             ("verified_frame_count", 6), ("editor_exit_code", False),
+                             ("editor_exit_observed", False), ("geometry_mutated", True),
+                             ("restored_visibility_verified", False), ("source_inputs_unchanged", False),
+                             ("secondary_errors", ["original bounds changed"])):
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.bridge["restored_window0112"](dict(prior, **{field: value}), HEAD, TOKEN)
+
+    def test_hairpin_retains_six_modes_and_exact_source_cut_in_its_own_directory(self):
+        raw = json.dumps({"operation": "CUT_ONLY", "grid_step_m": 0.5,
+                          "rect": {"min_x": 2080, "min_y": 990, "max_x": 2300, "max_y": 1310,
+                                   "width": 221, "height": 321}}).encode()
+        with (tempfile.TemporaryDirectory() as directory,
+              patch.object(contact, "HAIRPIN_CUT_SHA256", hashlib.sha256(raw).hexdigest()),
+              patch.object(contact, "HAIRPIN_CUT_SIZE", len(raw))):
+            fixture = self.fixture(directory, target="hairpin0081", cut_raw=raw)
+            result = self.complete(fixture, target="hairpin0081")
+            self.assertEqual(result["frame_count"], 6)
+            self.assertEqual(result["retained_file_count"], 15)
+            self.assertEqual(result["diagnostic_target"], "hairpin0081")
+            self.assertEqual(fixture[1].name, "shoulder-contact-0081")
+            self.assertFalse(fixture[1].with_name("shoulder-contact").exists())
+            self.assertEqual((fixture[1] / "source-cut-manifest.json").read_bytes(), raw)
+            self.assertEqual(contact.verify(fixture[1], HEAD, target="hairpin0081")["frame_count"], 6)
+            with self.assertRaises(FileNotFoundError):
+                self.complete(fixture, target="window0112")
+            self.assertFalse(fixture[1].with_name("shoulder-contact").exists())
+
+    def test_failed_initialization_retains_original_error_before_any_survey_read(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = self.fixture(directory)
+            _root, diagnostic, retained, _source, report, _input = fixture
+            report.update(status="FAILED", error="LandscapeComponent has no component_size_quads")
+            report["restoration"]["status"] = "FAILED"
+            raw = json.dumps(report).encode()
+            (retained / "shoulder-contact.json").write_bytes(raw)
+            shutil.rmtree(retained / "capture")
+            with self.assertRaisesRegex(ValueError, "LandscapeComponent has no component_size_quads"):
+                self.complete(fixture)
+            self.assertEqual((diagnostic / "shoulder-contact.json").read_bytes(), raw)
+            self.assertEqual((retained / "shoulder-contact.json").read_bytes(), raw)
+            self.assertTrue((diagnostic / "retained-files.json").exists())
+            self.assertFalse((diagnostic / "verification.json").exists())
+            self.assertFalse((diagnostic / "capture/survey.json").exists())
 
     def test_mutated_source_restoration_camera_or_api_cannot_pass_but_partial_frames_survive(self):
         for failure in ("source", "restore", "camera", "api", "readiness", "missing_frame"):

@@ -63,7 +63,7 @@ def exact_source(expected_head):
     for relative in SOURCE_FILES:
         require(admitted.git(ROOT, "rev-parse", expected_head + ":" + relative)
                 == admitted.git(ROOT, "hash-object", "--no-filters", str(ROOT / relative)),
-                "Crack source executable bytes differ from their committed revision")
+                "Crack source executable bytes differ from their committed revision: " + relative)
     for path in (decals.DEFAULT_RECIPE, decals.forge.DEFAULT_UPSTREAMS):
         admitted.git(ROOT, "ls-files", "--error-unmatch", str(path.relative_to(ROOT)))
 

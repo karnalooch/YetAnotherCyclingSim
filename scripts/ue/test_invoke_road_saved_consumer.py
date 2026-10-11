@@ -332,6 +332,111 @@ foreach ($failure in @('head', 'manifest', 'profile', 'selected', 'supports', 'r
             self.assertIn("POWERSHELL_SAVED_CONTRACT_CASES_PASS", result.stdout)
 
     @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
+    def test_actual_edge_marking_gate_requires_requested_native_and_fresh_proofs(self):
+        # Synthetic policy fixture only: the production PS function must reject
+        # changed authority, stale source witnesses and incomplete actor sets.
+        paint = {"schema_version": 1, "status": "EDGE_MARKINGS_CREATED_REVIEW_PENDING",
+            "plan_sha256": "a" * 64, "actors": [{} for _ in range(370)],
+            "geometry": {"counts": {"source_owner_count": 186, "pavement_owner_count": 185,
+                "excluded_parapet_count": 1, "mesh_count": 370}},
+            "source_correspondence": {"native_source_witness_sha256": "b" * 64},
+            **{key: True for key in ("material_packages_saved", "render_flags_verified_before_append",
+                "full_source_buffers_preserved", "native_surface_correspondence_verified",
+                "all_marking_buffers_verified")},
+            **{key: False for key in ("source_geometry_changed", "source_materials_changed",
+                "collision_enabled", "cast_shadow", "affects_navigation", "physics_authored",
+                "map_saved", "owner_visual_pass", "performance_pass")}}
+        loaded = {"schema_version": 1, "status": "EDGE_MARKINGS_FRESH_READBACK_VERIFIED",
+            "plan_sha256": paint["plan_sha256"], "actor_count": 370,
+            "normal_contract": "normalized_barycentric_native_road_split_corner_normals",
+            "native_source_witness_sha256": "b" * 64,
+            **{key: True for key in ("all_marking_buffers_verified", "full_source_buffers_preserved",
+                "read_only", "caller_fresh_process_and_saved_bytes_required")},
+            "owner_visual_pass": False, "performance_pass": False}
+        good = {"manifest": {"edge_markings_enabled": True, "edge_markings": paint},
+            "prepared": {"edge_markings_enabled": True},
+            "fresh": {"edge_markings_enabled": True, "edge_marking_readback": loaded,
+                "edge_marking_material_reapplied": False, "edge_marking_geometry_reapplied": False,
+                "edge_markings_fresh_reload_verified": True}}
+        disabled = {"manifest": {"edge_markings_enabled": False},
+            "prepared": {"edge_markings_enabled": False},
+            "fresh": {"edge_markings_enabled": False, "edge_marking_readback": None,
+                "edge_marking_material_reapplied": False, "edge_marking_geometry_reapplied": False,
+                "edge_markings_fresh_reload_verified": False}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = root / "input.json"
+            fixture.write_text(json.dumps({"good": good, "disabled": disabled}), encoding="utf-8")
+            runner = root / "edge-contracts.ps1"
+            runner.write_text(r'''
+param([string] $Wrapper, [string] $InputJson)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$tokens = $null; $errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref]$tokens, [ref]$errors)
+if ($errors.Count) { throw ($errors.Message -join '; ') }
+$nodes = @($ast.FindAll({ param($node)
+    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+    $node.Name -ceq 'Assert-EdgeMarkingReceipt'
+}, $true))
+if ($nodes.Count -ne 1) { throw 'Missing unique production edge marking gate.' }
+. ([scriptblock]::Create($nodes[0].Extent.Text))
+$fixture = Get-Content -LiteralPath $InputJson -Raw | ConvertFrom-Json -AsHashtable -Depth 40
+function Check($row, [bool]$enabled) {
+    Assert-EdgeMarkingReceipt $row.manifest $row.prepared $row.fresh $enabled
+}
+Check $fixture.good $true
+Check $fixture.disabled $false
+foreach ($failure in @('request', 'prepare_lane', 'fresh_lane', 'lane_type', 'actors', 'owners',
+                       'parapet', 'plan', 'witness', 'normals', 'packages', 'native', 'buffers',
+                       'collision', 'shadow', 'source', 'material_reapply', 'geometry_reapply',
+                       'read_only', 'fresh', 'owner', 'performance')) {
+    $data = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+    $requested = $true
+    switch ($failure) {
+        'request' { $requested = $false }
+        'prepare_lane' { $data.prepared.edge_markings_enabled = $false }
+        'fresh_lane' { $data.fresh.edge_markings_enabled = $false }
+        'lane_type' { $data.manifest.edge_markings_enabled = 'true' }
+        'actors' { $data.manifest.edge_markings.actors = $data.manifest.edge_markings.actors[0..368] }
+        'owners' { $data.manifest.edge_markings.geometry.counts.pavement_owner_count = 186 }
+        'parapet' { $data.manifest.edge_markings.geometry.counts.excluded_parapet_count = 0 }
+        'plan' { $data.fresh.edge_marking_readback.plan_sha256 = 'c' * 64 }
+        'witness' { $data.fresh.edge_marking_readback.native_source_witness_sha256 = 'c' * 64 }
+        'normals' { $data.fresh.edge_marking_readback.normal_contract = 'invented_up' }
+        'packages' { $data.manifest.edge_markings.material_packages_saved = $false }
+        'native' { $data.manifest.edge_markings.native_surface_correspondence_verified = $false }
+        'buffers' { $data.fresh.edge_marking_readback.all_marking_buffers_verified = $false }
+        'collision' { $data.manifest.edge_markings.collision_enabled = $true }
+        'shadow' { $data.manifest.edge_markings.cast_shadow = $true }
+        'source' { $data.manifest.edge_markings.source_geometry_changed = $true }
+        'material_reapply' { $data.fresh.edge_marking_material_reapplied = $true }
+        'geometry_reapply' { $data.fresh.edge_marking_geometry_reapplied = $true }
+        'read_only' { $data.fresh.edge_marking_readback.read_only = $false }
+        'fresh' { $data.fresh.edge_markings_fresh_reload_verified = $false }
+        'owner' { $data.manifest.edge_markings.owner_visual_pass = $true }
+        'performance' { $data.fresh.edge_marking_readback.performance_pass = $true }
+    }
+    $rejected = $false
+    try { Check $data $requested } catch { $rejected = $true }
+    if (-not $rejected) { throw ('Production marking gate admitted ' + $failure) }
+}
+foreach ($unexpected in @('geometry', 'readback')) {
+    $data = $fixture.disabled | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+    if ($unexpected -ceq 'geometry') { $data.manifest.edge_markings = @{} }
+    else { $data.fresh.edge_marking_readback = @{} }
+    $rejected = $false
+    try { Check $data $false } catch { $rejected = $true }
+    if (-not $rejected) { throw 'Disabled lane admitted unexpected marking evidence.' }
+}
+'POWERSHELL_EDGE_MARKING_CASES_PASS'
+''', encoding="utf-8")
+            result = subprocess.run(["pwsh", "-NoProfile", "-File", str(runner), str(WRAPPER), str(fixture)],
+                capture_output=True, text=True, check=False, timeout=60)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("POWERSHELL_EDGE_MARKING_CASES_PASS", result.stdout)
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
     def test_real_powershell_parser_accepts_owned_host_wrapper(self):
         with tempfile.TemporaryDirectory() as directory:
             fixture = Path(directory) / "parse.ps1"

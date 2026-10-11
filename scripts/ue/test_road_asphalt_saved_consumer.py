@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import ExitStack, contextmanager
 from copy import deepcopy
 import hashlib
 import json
@@ -12,6 +13,9 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from scripts.ue import road_asphalt_saved_consumer as saved
+from scripts.ue import road_edge_marking_consumer as markings
+from scripts.ue import road_edge_marking_material as paint
+from scripts.ue import road_pavement_source_bindings as pavement_bindings
 from scripts.ue.test_road_asphalt_slot_canary import CanaryTests
 
 
@@ -58,6 +62,366 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
             self.new_material
         ]
         return value
+
+    def marking_receipt(self):
+        """Full-count structural fixture only; never source/native evidence."""
+        owners = [f"YACS_PERSIST_SUPPORT_{i:03d}" for i in range(186) if i != 181]
+        assets, rows = paint.asset_paths(), []
+        for owner in owners:
+            for edge in ("edge0", "edge24"):
+                label = markings.ACTOR_PREFIX + owner[-3:] + "_" + edge
+                path = "<scene>.<world>:PersistentLevel." + label
+                rows.append({"label": label, "actor": {
+                    "path": path, "label": label, "location_cm": [0., 0., 0.],
+                    "rotation_deg": [0., 0., 0.], "scale": [1., 1., 1.],
+                }, "component": path + ".DynamicMeshComponent", "material": assets["instance"]})
+        return {"schema_version": 1, "status": "EDGE_MARKINGS_CREATED_REVIEW_PENDING",
+                "material_packages_saved": True, "native_no_collision": "NO_COLLISION",
+                "native_surface_correspondence_verified": True, "all_marking_buffers_verified": True,
+                "full_source_buffers_preserved": True, "original_source_state": {"fixture": True},
+                "geometry": {"owners": [{"support_label": label} for label in owners], "counts": {
+                    "source_owner_count": 186, "pavement_owner_count": 185,
+                    "excluded_parapet_count": 1, "mesh_count": 370,
+                }}, "actors": rows, "material": {"assets": assets},
+                **dict.fromkeys(markings.FALSE_FLAGS, False)}
+
+    def with_marking_inventory(self, receipt=None):
+        receipt = receipt or self.marking_receipt()
+        value = saved.normalized(self.new_inventory(), saved.session.operation.MAP_PACKAGE)
+        additions = saved.edge_marking_inventory(receipt)
+        for field, key in (("actors", lambda row: row[0]),
+                           ("mesh_material_collision_snapshot", lambda row: row["component"])):
+            value[field] = sorted(value[field] + additions[field], key=key)
+        package = saved.session.operation.MAP_PACKAGE
+        world = package + "." + package.rsplit("/", 1)[-1]
+        return json.loads(json.dumps(value).replace("<scene>.<world>", world).replace("<scene>", package))
+
+    def test_saved_inventory_allows_only_exact_verified_render_additions(self):
+        receipt = self.marking_receipt()
+        observed = self.with_marking_inventory(receipt)
+
+        def verify(value, candidate=receipt):
+            return saved.expected_saved_inventory(self.old, value, self.new_material,
+                observed_map_package=saved.session.operation.MAP_PACKAGE, edge_marking_receipt=candidate)
+
+        self.assertEqual(verify(observed), saved.inventory_digest(
+            saved.normalized(observed, saved.session.operation.MAP_PACKAGE)))
+        self.assertEqual(len(self.old["actors"]), 2)  # Input baseline is never rewritten.
+        with self.assertRaisesRegex(ValueError, "changed geometry"):
+            saved.expected_saved_inventory(self.old, observed, self.new_material,
+                observed_map_package=saved.session.operation.MAP_PACKAGE)
+        actor_index = next(i for i, row in enumerate(observed["actors"]) if markings.ACTOR_PREFIX in row[0])
+        component_index = next(i for i, row in enumerate(observed["mesh_material_collision_snapshot"])
+                               if markings.ACTOR_PREFIX in row["component"])
+        mutations = (
+            lambda value: value["actors"][actor_index][1][0].__setitem__(2, 0.1),
+            lambda value: value["actors"].append(["/Game/Foreign.Actor", [0., 0., 0.]]),
+            lambda value: value["actors"].pop(actor_index),
+            lambda value: value["mesh_material_collision_snapshot"][component_index].update(collision="BLOCK_ALL"),
+            lambda value: value["mesh_material_collision_snapshot"][component_index]["materials"].append("extra"),
+            lambda value: value["road_supports"][0].update(vertices=3),
+            lambda value: value["road_supports"].pop(),
+            lambda value: value["landscape"].update(component_count=1023),
+        )
+        for mutate in mutations:
+            changed = deepcopy(observed)
+            mutate(changed)
+            with self.subTest(mutate=mutate), self.assertRaises(ValueError):
+                verify(changed)
+        source, target = saved.session.operation.MAP_PACKAGE, saved.MAP
+        raw = json.dumps(observed).replace(source + "." + source.rsplit("/", 1)[-1],
+                                           target + "." + target.rsplit("/", 1)[-1]).replace(source, target)
+        loaded = json.loads(raw)
+        self.assertEqual(saved.expected_saved_inventory(self.old, loaded, self.new_material,
+            observed_map_package=target, edge_marking_receipt=receipt), verify(observed))
+
+    def test_marking_inventory_rejects_incomplete_ownership_receipts_and_path_aliases(self):
+        receipt = self.marking_receipt()
+        for mutate in (
+            lambda value: value.update(material_packages_saved=False),
+            lambda value: value.update(native_surface_correspondence_verified=False),
+            lambda value: value.update(collision_enabled=True),
+            lambda value: value["geometry"]["owners"].pop(),
+            lambda value: value["geometry"]["owners"][0].update(support_label="YACS_PERSIST_SUPPORT_999"),
+            lambda value: value["actors"].pop(),
+            lambda value: value["actors"].__setitem__(0, value["actors"][1]),
+            lambda value: value["actors"][0]["actor"].update(path="/Game/Foreign.Actor"),
+            lambda value: value["actors"][0]["actor"].update(location_cm=[0., 0., 1.]),
+            lambda value: value["actors"][0].update(component="<scene>.<world>:PersistentLevel.Foreign.Component"),
+            lambda value: value["material"]["assets"].update(instance="/Game/Foreign.MI"),
+        ):
+            changed = deepcopy(receipt)
+            mutate(changed)
+            with self.subTest(mutate=mutate), self.assertRaises(ValueError):
+                saved.edge_marking_inventory(changed)
+
+    def test_edge_lane_is_explicit_and_does_not_silently_skip_an_enabled_receipt(self):
+        for value, expected in (("0", False), ("1", True)):
+            with patch.dict("os.environ", {"YACS_ROAD_EDGE_MARKINGS": value}):
+                self.assertIs(saved.edge_markings_enabled(), expected)
+        for value in ("", "yes", "true", "2"):
+            with patch.dict("os.environ", {"YACS_ROAD_EDGE_MARKINGS": value}), self.assertRaises(ValueError):
+                saved.edge_markings_enabled()
+        self.assertIsNone(saved.verify_edge_markings(None, {}, enabled=False))
+        for manifest, enabled in (({}, True), ({"edge_markings": {}}, False),
+                                  ({"edge_markings_enabled": True}, False),
+                                  ({"edge_markings_enabled": True, "edge_markings": {}}, "1")):
+            with self.subTest(manifest=manifest), self.assertRaises(ValueError):
+                saved.verify_edge_markings(None, manifest, enabled=enabled)
+
+    def test_new_paint_material_save_failure_cleans_only_owned_new_objects(self):
+        original = self.marking_receipt()
+        original.pop("material_packages_saved")
+        original.pop("native_no_collision")
+        snapshot = deepcopy(original)
+        actors, plan, asphalt = (object(), object()), object(), object()
+        saved_assets = {path: object() for path in paint.asset_paths().values()}
+        api = SimpleNamespace(load_asset=lambda path: saved_assets[path],
+            EditorAssetLibrary=SimpleNamespace(save_loaded_asset=Mock(return_value=True)),
+            CollisionEnabled=SimpleNamespace(NO_COLLISION="NO_COLLISION"))
+        with patch.object(markings, "create", return_value=(actors, original)) as create, \
+             patch.object(markings, "_rollback_created") as rollback, \
+             patch.object(markings, "_world", return_value=saved.session.operation.MAP_PACKAGE):
+            actual_actors, receipt = saved.create_edge_markings(api, plan, asphalt)
+            self.assertIs(actual_actors, actors)
+            self.assertTrue(receipt["material_packages_saved"])
+            self.assertEqual(original, snapshot)
+            create.assert_called_once_with(api, plan, asphalt)
+            self.assertEqual([call.args[0] for call in api.EditorAssetLibrary.save_loaded_asset.call_args_list],
+                             list(saved_assets.values()))
+            self.assertTrue(all(call.kwargs == {"only_if_is_dirty": False}
+                                for call in api.EditorAssetLibrary.save_loaded_asset.call_args_list))
+            rollback.assert_not_called()
+            api.EditorAssetLibrary.save_loaded_asset.reset_mock(side_effect=True)
+            api.EditorAssetLibrary.save_loaded_asset.side_effect = [True, False]
+            with self.assertRaisesRegex(ValueError, "marking material save failed"):
+                saved.create_edge_markings(api, plan, asphalt)
+            rollback.assert_called_once_with(api, actors, original["original_source_state"],
+                                             saved.session.operation.MAP_PACKAGE)
+
+    def test_fresh_paint_entry_rebuilds_pinned_plan_then_only_reads_and_requires_package_pins(self):
+        receipt = self.marking_receipt()
+        source, plan = object(), object()
+        manifest = {"edge_markings_enabled": True, "edge_markings": receipt,
+                    "material_instance": "asphalt-mi", "material_master": "asphalt-m",
+                    "texture_objects": {"BaseColor": "existing-tex"},
+                    "assets": [{"path": "Content/" + path.split(".", 1)[0].removeprefix("/Game/") + ".uasset"}
+                               for path in paint.asset_paths().values()]}
+        api = SimpleNamespace(CollisionEnabled=SimpleNamespace(NO_COLLISION="NO_COLLISION"))
+        result = {"status": "EDGE_MARKINGS_FRESH_READBACK_VERIFIED", "read_only": True}
+        before = deepcopy(manifest)
+        with patch.object(saved.shoulder_sources, "load_sources", return_value=source) as load, \
+             patch.object(saved, "load_edge_marking_plan", return_value=plan) as build, \
+             patch.object(markings, "verify_loaded", return_value=result) as verify, \
+             patch.object(markings, "create") as create, \
+             patch.object(saved, "create_edge_markings") as save:
+            self.assertIs(saved.verify_edge_markings(api, manifest, enabled=True), result)
+            load.assert_called_once_with()
+            build.assert_called_once_with(source)
+            verify.assert_called_once_with(api, plan, receipt, {
+                "instance": "asphalt-mi", "master": "asphalt-m", "textures": {"BaseColor": "existing-tex"}})
+            create.assert_not_called()
+            save.assert_not_called()
+            self.assertEqual(manifest, before)
+            verify.reset_mock()
+            manifest["assets"].pop()
+            with self.assertRaisesRegex(ValueError, "retained byte identities"):
+                saved.verify_edge_markings(api, manifest, enabled=True)
+            verify.assert_not_called()
+            manifest["assets"] = before["assets"]
+            manifest["edge_markings"]["native_no_collision"] = "BLOCK_ALL"
+            with self.assertRaisesRegex(ValueError, "collision enum"):
+                saved.verify_edge_markings(api, manifest, enabled=True)
+
+    def test_edge_plan_loader_reads_exact_inert_bytes_before_calling_the_resolver(self):
+        raw = b"not executable Python: explicit loader fixture\r\n"
+        identity = {"sha256": hashlib.sha256(raw).hexdigest(), "size_bytes": len(raw)}
+        source, plan = object(), object()
+        addresses = {"quad_triangles": ((0, 1, 2), (1, 3, 2)), "triangle_bindings": (("fixture",),)}
+        with tempfile.TemporaryDirectory() as directory:
+            data = Path(directory)
+            path = data / Path(saved.session.PROFILE_RELATIVE).parent / markings.PRODUCER_PATH
+            path.parent.mkdir(parents=True)
+            path.write_bytes(raw)
+            with patch.object(saved, "load_workspace", return_value={"data": str(data)}), \
+                 patch.object(markings, "PRODUCER_IDENTITY", identity), \
+                 patch.object(pavement_bindings, "prepare_bindings", return_value=addresses) as bind, \
+                 patch.object(markings, "prepare", return_value=plan) as prepare:
+                self.assertIs(saved.load_edge_marking_plan(source), plan)
+                bind.assert_called_once_with(source, producer_bytes=raw)
+                prepare.assert_called_once_with(source, producer_bytes=raw, **addresses)
+                bind.reset_mock()
+                prepare.reset_mock()
+                path.write_bytes(raw.replace(b"\r\n", b"\n"))
+                with self.assertRaisesRegex(ValueError, "exact retained pavement producer"):
+                    saved.load_edge_marking_plan(source)
+                bind.assert_not_called()
+                prepare.assert_not_called()
+
+    @contextmanager
+    def saved_lane_fixture(self, *, fail_map=False, fail_paint_cleanup=False):
+        """Exercise orchestration and real file pins with explicit native stubs.
+
+        Separate tests above and in the paint consumer check full inventories
+        and mesh behaviour; these synthetic bytes are not Unreal packages.
+        """
+        with tempfile.TemporaryDirectory() as directory, ExitStack() as stack:
+            root, events = Path(directory) / "project", []
+            root.mkdir()
+            proof, retained = Path(directory) / "proof", Path(directory) / "retained"
+            proof.mkdir()
+            old_asset = SimpleNamespace(get_path_name=lambda: self.old["road_supports"][0]["slots"][0]["path"])
+            new_asset = SimpleNamespace(get_path_name=lambda: self.new_material)
+            state = {"material": old_asset, "shoulder": False, "package": saved.session.operation.MAP_PACKAGE}
+
+            def set_material(slot, asset):
+                self.assertEqual(slot, 0)
+                events.append("road-original" if asset is old_asset else "road-asphalt")
+                state["material"] = asset
+
+            component = SimpleNamespace(get_material=lambda _: state["material"], set_material=set_material,
+                get_path_name=lambda: self.old["road_supports"][0]["component"])
+            road = SimpleNamespace(get_actor_label=lambda: saved.canary.ROAD_LABEL,
+                                   get_dynamic_mesh_component=lambda: component)
+            world = SimpleNamespace(get_path_name=lambda: state["package"] + "." + state["package"].rsplit("/", 1)[-1])
+            subsystem = SimpleNamespace(get_all_level_actors=lambda: [road], get_editor_world=lambda: world)
+
+            def save_asset(asset, only_if_is_dirty):
+                self.assertIs(only_if_is_dirty, False)
+                relative = "Content/" + asset.get_path_name().split(".", 1)[0].removeprefix("/Game/") + ".uasset"
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(("SYNTHETIC PACKAGE FIXTURE " + relative).encode())
+                return True
+
+            def save_map(_world, package):
+                events.append("save-map")
+                self.assertEqual(package, saved.MAP)
+                if fail_map:
+                    return False
+                path = root / saved.MAP_FILE
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b"SYNTHETIC DERIVED MAP FIXTURE")
+                return True
+
+            api = SimpleNamespace(EditorActorSubsystem=object(), UnrealEditorSubsystem=object(),
+                get_editor_subsystem=lambda _: subsystem, log=Mock(),
+                load_asset=lambda path: SimpleNamespace(get_path_name=lambda: path),
+                EditorAssetLibrary=SimpleNamespace(save_loaded_asset=save_asset),
+                EditorLoadingAndSavingUtils=SimpleNamespace(save_map=save_map),
+                CollisionEnabled=SimpleNamespace(NO_COLLISION="NO_COLLISION"))
+            asphalt_assets = {"instance": self.new_material,
+                "master": self.new_material.rsplit("/", 1)[0] + "/M_MaterialForge.M_MaterialForge",
+                "textures": {name: self.new_material.rsplit("/", 1)[0] + "/T_" + name + ".T_" + name
+                             for name in saved.TEXTURES.values()}}
+            imported = {"status": "IMPORTED_UE_REVIEW_PENDING", "family": saved.asphalt_contract.FAMILY,
+                "variant": saved.asphalt_contract.VARIANT, "saved": True,
+                "graph_sha256": saved.asphalt_source.GRAPH_SHA256, "tile_metres": 4,
+                "normal_convention": "DirectX", "landscape_mutated": False, "geometry_changed": False,
+                "assets": asphalt_assets, "dry_asphalt_response": {"synthetic": True}}
+
+            def forge_import(*_args, **_kwargs):
+                for path in (asphalt_assets["instance"], asphalt_assets["master"], *asphalt_assets["textures"].values()):
+                    save_asset(api.load_asset(path), False)
+                return new_asset, imported
+
+            gravel_receipt = {"assets": saved.shoulder_material.asset_paths(saved.shoulder_material.DESTINATION_ROOT)}
+            shoulder_receipt = {"schema_version": saved.shoulder.SCHEMA_VERSION, "rollback_verified": True,
+                "support_count": 186, "material_target_count": 185, "selected_triangle_count": 67760,
+                "material": gravel_receipt}
+            rollback_state, source_plan, marking_plan = object(), object(), object()
+            native_paint = self.marking_receipt()
+            native_paint.pop("material_packages_saved")
+            native_paint.pop("native_no_collision")
+            paint_actors = (object(),)
+
+            def prepare_shoulders(*_args):
+                events.append("shoulder-asphalt")
+                state["shoulder"] = True
+                return shoulder_receipt, rollback_state
+
+            def rollback_shoulders(_api, rollback):
+                self.assertIs(rollback, rollback_state)
+                self.assertIs(state["material"], old_asset)
+                events.append("shoulder-original")
+                state["shoulder"] = False
+
+            def cleanup_paint(_api, actors, before, package):
+                self.assertIs(actors, paint_actors)
+                self.assertEqual(before, native_paint["original_source_state"])
+                self.assertIs(state["material"], new_asset)
+                self.assertTrue(state["shoulder"])
+                self.assertEqual(package, saved.session.operation.MAP_PACKAGE)
+                events.append("paint-rollback")
+                if fail_paint_cleanup:
+                    raise ValueError("fixture owned paint cleanup failed")
+
+            readback = {"status": "EDGE_MARKINGS_FRESH_READBACK_VERIFIED", "actor_count": 370, "read_only": True}
+            for owner, name, kwargs in (
+                (saved, "ROOT", {"new": root}),
+                (saved, "native_world", {"side_effect": lambda _api, package: state.update(package=package)}),
+                (saved, "verify_material_instance", {"return_value": new_asset}),
+                (saved, "expected_saved_inventory", {"return_value": "d" * 64}),
+                (saved, "load_edge_marking_plan", {"return_value": marking_plan}),
+                (saved.baseline, "native_inventory", {"return_value": deepcopy(self.old)}),
+                (saved.baseline, "road_support_actors", {"return_value": [road]}),
+                (saved.baseline, "native_projection", {}), (saved.baseline, "dirty_packages", {}),
+                (saved.shoulder_sources, "load_sources", {"return_value": source_plan}),
+                (saved.shoulder_sources, "network_profile_report", {"return_value": {"synthetic": True}}),
+                (saved.asphalt_source, "verify_retained_replay", {"return_value": {"synthetic": True}}),
+                (saved.asphalt_source, "source_root", {"return_value": Path(directory) / "forge-source-fixture"}),
+                (saved.shoulder, "inspect_mesh", {"return_value": {"summary": {"synthetic": True}}}),
+                (saved.shoulder, "prepare", {"side_effect": prepare_shoulders}),
+                (saved.shoulder, "rollback", {"side_effect": rollback_shoulders}),
+                (saved.shoulder, "verify_loaded", {}),
+                (saved.shoulder_material, "create_material", {"return_value": (object(), gravel_receipt)}),
+                (saved.shoulder_material, "verify_material", {}),
+                (saved.session, "_verify_rows", {}), (saved.session, "_assert_package_members", {}),
+                (markings, "create", {"return_value": (paint_actors, native_paint)}),
+                (markings, "verify_loaded", {"return_value": readback}),
+                (markings, "_rollback_created", {"side_effect": cleanup_paint}),
+                (markings, "_world", {"return_value": saved.session.operation.MAP_PACKAGE}),
+            ):
+                stack.enter_context(patch.object(owner, name, **kwargs))
+            stack.enter_context(patch.dict("sys.modules", {"scripts.ue.import_material_forge_variant":
+                                                          SimpleNamespace(import_variant=forge_import)}))
+            yield SimpleNamespace(api=api, proof=proof, retained=retained, events=events, state=state,
+                args=(api, proof, retained, "a" * 40, "b" * 64, {"native_inventory": self.old}, []),
+                kwargs={"source_dependencies": [], "edge_markings": True}, readback=readback)
+
+    def test_enabled_saved_lane_pins_paint_packages_then_fresh_reopens_without_reapplying(self):
+        with self.saved_lane_fixture() as lane:
+            saved.prepare(*lane.args, **lane.kwargs)
+            manifest = json.loads((lane.proof / saved.MANIFEST).read_text())
+            self.assertTrue(manifest["edge_markings_enabled"])
+            self.assertTrue(manifest["edge_markings"]["material_packages_saved"])
+            self.assertEqual(len(manifest["assets"]), 11)
+            self.assertEqual(manifest["material_changes"], "road_slot_zero_network_outer_shoulder_ids_and_edge_uv")
+            self.assertFalse(manifest["source_scene_mutated"])
+            saved.verify_retained_files(lane.retained, manifest["assets"])
+            saved.verified_manifest_identity(lane.proof, lane.retained)
+            events = list(lane.events)
+            saved.reload(*lane.args, **lane.kwargs)
+            self.assertEqual(lane.events, events)
+            receipt = json.loads((lane.proof / saved.RELOADED).read_text())
+            self.assertTrue(receipt["edge_markings_fresh_reload_verified"])
+            self.assertFalse(receipt["edge_marking_material_reapplied"])
+            self.assertFalse(receipt["edge_marking_geometry_reapplied"])
+            self.assertEqual(receipt["edge_marking_readback"], lane.readback)
+            self.assertTrue(receipt["shoulder_material_edge_uv_fresh_reload_verified"])
+
+    def test_outer_failed_map_save_removes_paint_before_restoring_road_and_shoulders(self):
+        for failed_cleanup in (False, True):
+            with self.subTest(cleanup_failure=failed_cleanup), \
+                 self.saved_lane_fixture(fail_map=True, fail_paint_cleanup=failed_cleanup) as lane:
+                expected = "fixture owned paint cleanup failed" if failed_cleanup else "map save failed"
+                with self.assertRaisesRegex(ValueError, expected):
+                    saved.prepare(*lane.args, **lane.kwargs)
+                self.assertEqual(lane.events, ["road-asphalt", "shoulder-asphalt", "save-map", "paint-rollback",
+                                               "road-original", "shoulder-original"])
+                self.assertFalse(lane.state["shoulder"])
+                self.assertFalse((lane.proof / saved.MANIFEST).exists())
+                self.assertFalse((lane.proof / saved.PREPARED).exists())
 
     def test_native_actor_tuples_equal_authentic_json_arrays_without_field_loss(self):
         # The real Unreal inventory builds actors with sorted((path, transform)
@@ -289,9 +653,9 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
         trial = {"result": {"graph_sha256": saved.asphalt_source.GRAPH_SHA256,
                             "source_receipt_sha256": saved.asphalt_source.SOURCE_RECEIPT_SHA256}}
         original, identity = {"native_inventory": {}}, {"sha256": "a" * 64, "size_bytes": 100}
-        for action in ("prepare", "reload"):
-            with self.subTest(action=action), \
-                 patch.dict("os.environ", {"YACS_ROAD_SAVED_ACTION": action}), \
+        for action, mode in (("prepare", "0"), ("reload", "0"), ("prepare", "1"), ("reload", "1")):
+            with self.subTest(action=action, edge_markings=mode), \
+                 patch.dict("os.environ", {"YACS_ROAD_SAVED_ACTION": action, "YACS_ROAD_EDGE_MARKINGS": mode}), \
                  patch.dict("sys.modules", {"unreal": api}), \
                  patch.object(saved.session, "_assert_isolated_root"), \
                  patch.object(saved, "proof_paths", return_value=("b" * 40, "a" * 64, "1-1", Path("proof"), Path("retained"))), \
@@ -304,6 +668,7 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                  patch.object(saved, action) as dispatch:
                 saved.main()
                 self.assertIs(dispatch.call_args.kwargs["source_dependencies"], dependencies)
+                self.assertIs(dispatch.call_args.kwargs["edge_markings"], mode == "1")
                 self.assertIs(dispatch.call_args.args[-1], rows)
                 verify_files.assert_called_once_with(saved.ROOT, rows)
 

@@ -3,11 +3,14 @@
 This is representative technical GPU review across the current area.
 Final owner visual approval and exhaustive road-pixel visibility remain separate. The camera identities/poses come from an immutable
 previously captured bidirectional road survey, never guessed free cameras.
-Only a transient camera and viewport state may change; nothing is saved.
+An optional owned-process diagnostic then captures eight controls in the same
+loop, temporarily swapping one road slot and restoring it before all audits.
+No map or asset is saved.
 """
 
 from __future__ import annotations
 
+from copy import deepcopy
 import csv
 import hashlib
 import io
@@ -31,6 +34,7 @@ from scripts.proof.sa_calobra_shoulder_contact import (  # noqa: E402
 )
 from scripts.ue import read_road_material_baseline as baseline  # noqa: E402
 from scripts.ue import road_asphalt_saved_consumer as saved  # noqa: E402
+from scripts.ue import road_asphalt_visual_controls as visual_controls  # noqa: E402
 from scripts.ue import road_material_views as material_views  # noqa: E402
 from scripts.ue import sa_calobra_whole_map_prep as prep  # noqa: E402
 from scripts.ue.sa_calobra_detail_capture import decode_png  # noqa: E402
@@ -42,6 +46,7 @@ from scripts.ue.prepare_landscape_capture import (  # noqa: E402
 
 SURVEY = "docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv"
 RECEIPT = "road-asphalt-lit-review.json"
+CONTROL_RECEIPT = "road-asphalt-visual-controls.json"
 RESOLUTION = (1280, 720)
 MAX_CSV_BYTES = 1024 * 1024
 MAX_FRAME_BYTES = 16 * 1024 * 1024
@@ -305,11 +310,31 @@ class RoadLitCapture:
         self.context = context
         self.world, self.landscape = world, landscape
         self.proof = context["proof"]
+        marker = os.environ.get(visual_controls.OWNED_ENV)
+        require(marker is None or marker == context.get("run_token"),
+                "Visual control marker differs from the authenticated owned run")
+        self.controls_enabled = marker is not None
+        self.control_plan = visual_controls.control_plan() if self.controls_enabled else None
+        self.control_root = session._safe_path(self.proof, "road-asphalt-visual-controls")
+        require(not self.controls_enabled or not self.control_root.exists(),
+                "Visual control output already exists; no overwrite")
         self.root = session._safe_path(self.proof, "road-asphalt-lit-review")
         require(not self.root.exists(), "GPU review output already exists; no overwrite")
         self.root.mkdir(parents=True, exist_ok=False)
         (self.root / "frames").mkdir()
         (self.root / "priming").mkdir()
+        if self.controls_enabled:
+            self.control_root.mkdir(parents=True, exist_ok=False)
+            (self.control_root / "frames").mkdir()
+            (self.control_root / "priming").mkdir()
+        self.phase = "lit"
+        self.controls = None
+        self.control_preflight = None
+        self.control_begin = self.control_restore = None
+        self.control_frames = []
+        self.control_completed_priming_frames = 0
+        self.control_max_completed_screenshot_seconds = 0.0
+        self.pending_control_observation = None
         self.camera = None
         self.viewport_before = None
         self.handle = None
@@ -331,11 +356,39 @@ class RoadLitCapture:
         self.busy = False
         self.finish_requested_at = None
         self.transient_dirty_audit = None
+        self.edge_marking_readback = None
+
+    def capture_row(self):
+        if self.phase == "lit":
+            return self.context["frames"][self.index]
+        job = self.control_plan["jobs"][self.index]
+        return {**job["camera"], "source_frame_id": job["camera"]["frame_id"],
+                "frame_id": job["job_id"], "control_mode": job["control"]}
+
+    def capture_root(self):
+        return self.root if self.phase == "lit" else self.control_root
+
+    def begin_controls(self):
+        require(self.controls_enabled and self.controls is None
+                and len(self.frames) == len(self.context["frames"]),
+                "Visual controls require the completed original ordered Lit sequence")
+        self.phase = "controls"
+        self.index = 0
+        self.controls = visual_controls.VisualControls(self.api, self.context)
+        require(self.controls.plan == self.control_plan, "Diagnostic control plan changed")
+        self.control_begin = self.controls.begin()
+        require(self.control_preflight is not None and all(
+            self.control_begin.get(key) == self.control_preflight.get(key) for key in ("ownership", "native_api")),
+            "Diagnostic native API/owned context changed after the Lit sequence")
+        self.submit_pose()
 
     def start(self):
         self.busy = True
         try:
             self.api.EditorPythonScripting.set_keep_python_script_alive(True)
+            if self.controls_enabled:
+                self.control_preflight = visual_controls.preflight(
+                    self.api, self.context, self.control_plan)
             viewport = self.api.get_editor_subsystem(self.api.UnrealEditorSubsystem)
             self.viewport_before = viewport.get_level_viewport_camera_info()
             require(self.viewport_before is not None,
@@ -386,7 +439,7 @@ class RoadLitCapture:
         # Register before the helper call so partial setup also cleans up.
         for texture in _height_texture_objects(self.api, self.landscape):
             self.residency_leases[texture.get_path_name()] = texture
-        output = session._safe_path(self.root, "readiness/" + row["frame_id"])
+        output = session._safe_path(self.capture_root(), "readiness/" + row["frame_id"])
         report = prepare_capture(
             self.api, self.landscape, eye, rotation, output,
             request_height_mips=True,
@@ -442,8 +495,9 @@ class RoadLitCapture:
         return errors
 
     def submit_pose(self):
-        row = self.context["frames"][self.index]
+        row = self.capture_row()
         self.pending_camera_observation = None
+        self.pending_control_observation = None
         eye = self.api.Vector(*row["camera_location_cm"])
         target = self.api.Vector(*row["target_cm"])
         rotation = self.api.MathLibrary.find_look_at_rotation(eye, target)
@@ -457,12 +511,17 @@ class RoadLitCapture:
                 "Fixed road camera rotation setter rejected the requested pose")
         component = self.camera.get_component_by_class(self.api.CameraComponent)
         component.set_editor_property("field_of_view", row["fov_deg"])
-        self.api.AutomationLibrary.set_editor_viewport_view_mode(
-            self.api.ViewModeIndex.VMI_LIT
-        )
+        if self.phase == "lit":
+            self.api.AutomationLibrary.set_editor_viewport_view_mode(
+                self.api.ViewModeIndex.VMI_LIT
+            )
+        elif self.prime_index == 0:
+            self.controls.apply(row["frame_id"])
         if self.prime_index == 0:
             self.prepare_pose(row, eye, rotation)
         self.api.AutomationLibrary.finish_loading_before_screenshot()
+        if self.phase == "controls":
+            self.pending_control_observation = self.controls.observe()
         location = self.camera.get_actor_location()
         actual = [float(getattr(location, axis)) for axis in ("x", "y", "z")]
         require(
@@ -500,9 +559,9 @@ class RoadLitCapture:
             "forward_error": forward_error,
         }
         filename = (
-            self.root / "priming" / f"{row['frame_id']}-{self.prime_index:02d}.png"
+            self.capture_root() / "priming" / f"{row['frame_id']}-{self.prime_index:02d}.png"
             if self.prime_index < PRIMING_FRAMES
-            else self.root / "frames" / (row["frame_id"] + ".png")
+            else self.capture_root() / "frames" / (row["frame_id"] + ".png")
         )
         self.pending_path = filename
         require(not filename.exists(), "Road review PNG already exists")
@@ -517,6 +576,8 @@ class RoadLitCapture:
             comparison_notes=(
                 "YACS current road network asphalt and gravel; technical capture, "
                 "final owner visual pending"
+                if self.phase == "lit" else
+                "YACS road band diagnostic; " + row["control_mode"] + "; no visual acceptance"
             ),
             delay=0.0,
             force_game_view=True,
@@ -554,10 +615,21 @@ class RoadLitCapture:
                 return
             # Monotonic submission-to-first-observed-completion latency, not a
             # GPU-only timing. The deadline must precede even a completed task.
-            self.max_completed_screenshot_seconds = max(
-                self.max_completed_screenshot_seconds, elapsed
-            )
-            row = self.context["frames"][self.index]
+            if self.phase == "lit":
+                self.max_completed_screenshot_seconds = max(self.max_completed_screenshot_seconds, elapsed)
+            else:
+                self.control_max_completed_screenshot_seconds = max(
+                    self.control_max_completed_screenshot_seconds, elapsed)
+            row = self.capture_row()
+            control_observations = {}
+            if self.phase == "controls":
+                control_observations = {
+                    "native_control_observation_before": self.pending_control_observation,
+                    "native_control_observation_after": self.controls.observe(),
+                }
+                require(control_observations["native_control_observation_before"]
+                        == control_observations["native_control_observation_after"],
+                        "Diagnostic material/viewmode changed during the native screenshot")
             path = self.pending_path
             require(path is not None and path.exists(),
                     "Unreal screenshot task completed without PNG")
@@ -568,8 +640,12 @@ class RoadLitCapture:
                     **session._identity(path, MAX_FRAME_BYTES),
                     "native_camera_observation": self.pending_camera_observation,
                     "screenshot_elapsed_seconds": elapsed,
+                    **control_observations,
                 })
-                self.completed_priming_frames += 1
+                if self.phase == "lit":
+                    self.completed_priming_frames += 1
+                else:
+                    self.control_completed_priming_frames += 1
                 self.prime_index += 1
                 self.task = None
                 self.submit_pose()
@@ -578,20 +654,26 @@ class RoadLitCapture:
                     "Road pose did not complete all priming frames")
             info = frame_statistics(path)
             identity = session._identity(path, MAX_FRAME_BYTES)
-            self.frames.append(
+            completed_frames = self.frames if self.phase == "lit" else self.control_frames
+            render_mode = "buffer_visualization" if row.get("control_mode") in visual_controls.BUFFERS else "lit"
+            completed_frames.append(
                 {**row, "file": path.relative_to(self.proof).as_posix(),
-                 **identity, **info, "render_mode": "lit",
+                 **identity, **info, "render_mode": render_mode,
                  "native_camera_observation": self.pending_camera_observation,
                  "screenshot_elapsed_seconds": elapsed,
                  "capture_readiness": self.pose_readiness,
-                 "priming_frames": list(self.prime_evidence)}
+                 "priming_frames": list(self.prime_evidence), **control_observations}
             )
             self.prime_index = 0
             self.prime_evidence = []
             self.index += 1
             self.task = None
-            if self.index == len(self.context["frames"]):
-                self.finish_requested_at = time.monotonic()
+            phase_count = len(self.context["frames"]) if self.phase == "lit" else self.control_plan["frame_count"]
+            if self.index == phase_count:
+                if self.phase == "lit" and self.controls_enabled:
+                    self.begin_controls()
+                else:
+                    self.finish_requested_at = time.monotonic()
             else:
                 self.submit_pose()
         except Exception:
@@ -603,12 +685,21 @@ class RoadLitCapture:
         if self.stopped:
             return
         self.stopped = True
-        errors = [error] if error else []
+        # A failed debug channel does not rewrite a completed Lit sequence.
+        # Shared restoration/conservation failures still fail both receipts.
+        errors = [error] if error and self.phase == "lit" else []
+        control_errors = [error] if error and self.phase == "controls" else []
         if self.handle is not None:
             try:
                 self.api.unregister_slate_post_tick_callback(self.handle)
             except Exception as exc:
                 errors.append("callback: " + str(exc))
+        if self.controls is not None:
+            try:
+                self.control_restore = self.controls.restore()
+            except Exception as exc:
+                self.control_restore = deepcopy(self.controls.report)
+                errors.append("visual control restoration: " + str(exc))
         if self.camera is not None:
             try:
                 actors = self.api.get_editor_subsystem(self.api.EditorActorSubsystem)
@@ -646,6 +737,10 @@ class RoadLitCapture:
                 context["manifest"]["material_instance"],
                 observed_map_package=saved.MAP,
                 shoulder_receipt=context["manifest"]["shoulder_network"],
+                edge_marking_receipt=context["manifest"].get("edge_markings"),
+            )),
+            ("road edge markings", lambda: saved.verify_edge_markings(
+                self.api, context["manifest"], enabled=saved.edge_markings_enabled()
             )),
             ("shoulder native mesh", lambda: saved.shoulder.verify_loaded(
                 self.api, context["manifest"]["shoulder_network"], context["source_plan"]
@@ -694,6 +789,10 @@ class RoadLitCapture:
                         result == context["manifest"]["expected_normalized_inventory_sha256"],
                         "Road/support/Landscape snapshot differs after render",
                     )
+                elif label == "road edge markings":
+                    require(result == context.get("edge_marking_readback"),
+                            "Road edge markings readback changed during render")
+                    self.edge_marking_readback = result
             except Exception as exc:
                 errors.append(label + ": " + str(exc))
         if len(self.frames) != len(context["frames"]):
@@ -746,6 +845,9 @@ class RoadLitCapture:
             "shoulder_wall_materials_unchanged": not errors,
             "road_full_buffers_unchanged": not errors,
             "dry_asphalt_response_verified": not errors,
+            "edge_markings_enabled": context["manifest"].get("edge_markings_enabled", False),
+            "edge_markings_before": context.get("edge_marking_readback"),
+            "edge_markings_after": self.edge_marking_readback,
             "exhaustive_road_pixel_visibility": False,
             "whole_area_owner_accepted": False,
             "owner_visual_status": "PENDING_FINAL_M3",
@@ -753,11 +855,64 @@ class RoadLitCapture:
             "performance_pass": False,
         }
         try:
-            saved.write_once(session._safe_path(self.proof, RECEIPT), receipt)
+            lit_identity = saved.write_once(session._safe_path(self.proof, RECEIPT), receipt)
+            if self.controls_enabled:
+                control_receipt = self.visual_control_receipt(errors + control_errors, lit_identity)
+                saved.write_once(session._safe_path(self.proof, CONTROL_RECEIPT), control_receipt)
         finally:
             # Release the -ExecutePythonScript lifecycle after proof and cleanup.
             # The host still requires an observed zero process exit.
             self.api.EditorPythonScripting.set_keep_python_script_alive(False)
+
+    def visual_control_receipt(self, shared_errors, lit_identity):
+        errors = list(shared_errors)
+        if len(self.control_frames) != self.control_plan["frame_count"]:
+            errors.append("Incomplete eight-image road control sequence")
+        if self.control_completed_priming_frames != self.control_plan["frame_count"] * PRIMING_FRAMES:
+            errors.append("Incomplete control priming sequence")
+        if [row.get("frame_id") for row in self.control_frames] != [
+                row["job_id"] for row in self.control_plan["jobs"]]:
+            errors.append("Control frames differ from the fixed ordered diagnostic plan")
+        if self.control_begin is None or self.control_begin.get("status") != "READY":
+            errors.append("Visual control native preflight/begin did not complete")
+        restoration = self.control_restore or {}
+        restored = all(restoration.get(name) is True for name in (
+            "original_material_restored", "owned_viewports_returned_to_lit",
+            "saved_and_staged_package_bytes_unchanged"))
+        if not restored or restoration.get("status") != "RESTORED" or restoration.get("cleanup_errors"):
+            errors.append("Visual control restoration did not complete cleanly")
+        context = self.context
+        return {
+            "schema_version": 1, "issue": 364,
+            "status": ("ROAD_ASPHALT_VISUAL_CONTROLS_FRAMES_RETAINED"
+                       if not errors else "ROAD_ASPHALT_VISUAL_CONTROLS_FAILED"),
+            "exact_sha": context["exact_sha"], "run_token": context["run_token"],
+            "map_package": saved.MAP, "saved_manifest_sha256": context["manifest_id"]["sha256"],
+            "camera_csv_sha256": SURVEY_SHA256,
+            "view_plan_sha256": context["view_plan_identity"]["sha256"],
+            "lit_review_receipt": {"file": RECEIPT, **lit_identity},
+            "control_plan": self.control_plan,
+            "control_plan_sha256": visual_controls.digest(self.control_plan),
+            "preflight": self.control_preflight, "begin": self.control_begin, "restore": self.control_restore,
+            "frame_count": len(self.control_frames),
+            "expected_frame_count": self.control_plan["frame_count"],
+            "frames": self.control_frames, "errors": errors,
+            "priming_frames_per_pose": PRIMING_FRAMES,
+            "completed_priming_frames": self.control_completed_priming_frames,
+            "frame_deadline_seconds": FRAME_DEADLINE_SECONDS,
+            "total_deadline_seconds_shared_with_lit": TOTAL_DEADLINE_SECONDS,
+            "max_completed_screenshot_seconds": self.control_max_completed_screenshot_seconds,
+            "control_restoration_verified": restored,
+            "capture_readiness_verified": not errors,
+            "native_control_observations_verified": not errors,
+            "sources_and_saved_assets_unchanged": not errors,
+            "native_channel_images_reviewed": False,
+            "buffer_name_readback_verified": False,
+            "geometry_or_source_texture_change": False, "map_saved": False,
+            "source_assets_saved": False, "whole_area_visual_admitted": False,
+            "owner_visual_status": "PENDING_FINAL_M3", "performance_status": "DEFERRED_AFTER_M3",
+            "performance_pass": False,
+        }
 
 
 def main():
@@ -775,6 +930,8 @@ def main():
     prep.assert_isolated_bootstrap(unreal)
     world = unreal.EditorLoadingAndSavingUtils.load_map(saved.MAP)
     require(world is not None, "Saved asphalt consumer did not load for lit render")
+    context["edge_marking_readback"] = saved.verify_edge_markings(
+        unreal, context["manifest"], enabled=saved.edge_markings_enabled())
     inventories = baseline.native_inventory(unreal, prep, saved.MAP)
     digest = saved.expected_saved_inventory(
         context["original"]["native_inventory"],
@@ -782,6 +939,7 @@ def main():
         context["manifest"]["material_instance"],
         observed_map_package=saved.MAP,
         shoulder_receipt=context["manifest"]["shoulder_network"],
+        edge_marking_receipt=context["manifest"].get("edge_markings"),
     )
     require(
         digest == context["manifest"]["expected_normalized_inventory_sha256"],

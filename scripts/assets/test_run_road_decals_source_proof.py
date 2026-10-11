@@ -4,6 +4,7 @@ from contextlib import redirect_stdout
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -16,6 +17,72 @@ from scripts.assets import run_road_decals_source_proof as host
 
 
 class RoadDecalHostTests(unittest.TestCase):
+    def test_exact_source_on_real_windows_style_checkout_keeps_raw_byte_gate(self):
+        rule = b"scripts/assets/render_material_forge.gd text eol=lf\n"
+        attributes = (host.ROOT / ".gitattributes").read_bytes()
+        self.assertIn(rule, attributes)
+        originals = {name: (host.ROOT / name).read_bytes() for name in host.SOURCE_FILES}
+        environment = {key: value for key, value in os.environ.items()
+                       if not key.startswith("GIT_")}
+        environment.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
+                           GIT_ATTR_NOSYSTEM="1")
+        for pinned in (False, True):
+            with self.subTest(exporter_lf_pinned=pinned), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                (root / ".gitattributes").write_bytes(
+                    attributes if pinned else attributes.replace(rule, b"", 1))
+                for name, raw in originals.items():
+                    path = root / name
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(raw)
+                recipe, upstreams = root / "fixture-recipe.json", root / "fixture-upstreams.json"
+                recipe.write_bytes(b"{}\n")
+                upstreams.write_bytes(b"{}\n")
+
+                def git(directory, *arguments):
+                    return subprocess.check_output(
+                        ["git", "-C", str(directory), "-c", "core.autocrlf=true",
+                         "-c", "core.eol=crlf", "-c", "core.safecrlf=false",
+                         "-c", "core.hooksPath=" + str(root / "unused-hooks"),
+                         "-c", "user.name=Disposable fixture",
+                         "-c", "user.email=fixture@example.invalid", *arguments],
+                        env=environment, stderr=subprocess.PIPE, text=True).strip()
+
+                git(root, "init", "--quiet")
+                git(root, "add", "--", ".")
+                git(root, "commit", "--quiet", "--no-gpg-sign", "-m", "Disposable source fixture")
+                head = git(root, "rev-parse", "HEAD")
+                for name in originals:
+                    (root / name).unlink()
+                git(root, "checkout-index", "--all", "--force")
+                different_raw_files = [name for name in originals
+                                       if git(root, "rev-parse", head + ":" + name)
+                                       != git(root, "hash-object", "--no-filters", str(root / name))]
+                self.assertEqual(different_raw_files, [] if pinned else
+                                 ["scripts/assets/render_material_forge.gd"])
+                # Git's normalized content diff is empty even when its stat
+                # cache reports a physical newline conversion as modified.
+                self.assertEqual(git(root, "diff", "--quiet"), "")
+                with patch.object(host, "ROOT", root), patch.object(host.admitted, "git", git), \
+                        patch.object(host.decals, "DEFAULT_RECIPE", recipe), \
+                        patch.object(host.decals.forge, "DEFAULT_UPSTREAMS", upstreams):
+                    if not pinned:
+                        with self.assertRaisesRegex(ValueError, "exact clean tracked checkout|revision: scripts/assets/render_material_forge.gd"):
+                            host.exact_source(head)
+                        continue
+                    host.exact_source(head)
+                    for name, raw in originals.items():
+                        self.assertEqual((root / name).read_bytes(), raw)
+                    # A clean normalized content diff cannot admit altered
+                    # executable bytes; either strict source guard rejects it.
+                    name = host.SOURCE_FILES[0]
+                    (root / name).write_bytes(originals[name].replace(b"\n", b"\r\n", 1))
+                    self.assertEqual(git(root, "diff", "--quiet"), "")
+                    self.assertNotEqual(git(root, "rev-parse", head + ":" + name),
+                                        git(root, "hash-object", "--no-filters", str(root / name)))
+                    with self.assertRaisesRegex(ValueError, "exact clean tracked checkout|revision: " + name):
+                        host.exact_source(head)
+
     def command(self, root, text):
         child = root / "render fixture.py"
         child.write_text(text, encoding="utf-8")

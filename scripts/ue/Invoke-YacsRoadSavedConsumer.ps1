@@ -4,6 +4,7 @@
 param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string] $ExpectedHead,
     [Parameter(Mandatory)][ValidatePattern('^[1-9][0-9]{0,19}-[1-9][0-9]{0,5}$')][string] $RunToken,
+    [switch] $EdgeMarkings,
     [string] $WorkspaceConfig = 'D:\yacs\workspace.json',
     [string] $RepoRoot = (Join-Path $PSScriptRoot '../..')
 )
@@ -15,6 +16,7 @@ $PROFILE_DIAGNOSTIC = 'road-network-profile-diagnostic.json'
 $root = $null
 $evidence = $null
 $editor = $null
+$edgeMarkingSetting = if ($EdgeMarkings) { '1' } else { '0' }
 $receipt = [ordered]@{
     schema_version = 1; issue = 364; exact_sha = $ExpectedHead
     run_token = $RunToken; status = 'PENDING'
@@ -24,6 +26,8 @@ $receipt = [ordered]@{
     shoulder_network_fresh_reload_verified = $false
     shoulder_support_count = 0; shoulder_material_target_count = 0
     shoulder_selected_triangle_count = 0
+    edge_markings_requested = [bool]$EdgeMarkings
+    edge_markings_fresh_reload_verified = $false
     road_profile_diagnostic_sha256 = $null
     original_map_saved = $false; original_landscape_mutated = $false
     gpu_shader_verified = $false; owner_visual_status = 'PENDING_FINAL_M3'
@@ -256,6 +260,70 @@ function Assert-FreshNetworkReceipt {
         }
     }
 }
+function Assert-EdgeMarkingReceipt {
+    param($Manifest, $Prepared, $Fresh, [bool] $Requested)
+    foreach ($row in @($Manifest, $Prepared, $Fresh)) {
+        if ($row.edge_markings_enabled -isnot [bool] -or
+            $row.edge_markings_enabled -ne $Requested) {
+            throw 'Saved edge marking lane differs from the explicit host request.'
+        }
+    }
+    foreach ($name in @('edge_marking_material_reapplied', 'edge_marking_geometry_reapplied')) {
+        if ($Fresh[$name] -isnot [bool] -or $Fresh[$name]) {
+            throw 'Fresh edge marking readback reapplied a material or geometry.'
+        }
+    }
+    if ($Fresh.edge_markings_fresh_reload_verified -isnot [bool] -or
+        $Fresh.edge_markings_fresh_reload_verified -ne $Requested) {
+        throw 'Fresh edge marking verification differs from the explicit lane.'
+    }
+    if (-not $Requested) {
+        if ($Manifest.Contains('edge_markings') -or $null -ne $Fresh.edge_marking_readback) {
+            throw 'Disabled edge marking lane contains unexpected geometry or evidence.'
+        }
+        return
+    }
+    $paint = $Manifest.edge_markings
+    $loaded = $Fresh.edge_marking_readback
+    if ($paint.schema_version -ne 1 -or $paint.status -cne 'EDGE_MARKINGS_CREATED_REVIEW_PENDING' -or
+        $paint.plan_sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+        $paint.actors -isnot [Collections.IList] -or $paint.actors.Count -ne 370 -or
+        $paint.geometry.counts.source_owner_count -ne 186 -or
+        $paint.geometry.counts.pavement_owner_count -ne 185 -or
+        $paint.geometry.counts.excluded_parapet_count -ne 1 -or
+        $paint.geometry.counts.mesh_count -ne 370 -or
+        $loaded.schema_version -ne 1 -or $loaded.status -cne 'EDGE_MARKINGS_FRESH_READBACK_VERIFIED' -or
+        $loaded.plan_sha256 -cne $paint.plan_sha256 -or $loaded.actor_count -ne 370 -or
+        $loaded.normal_contract -cne 'normalized_barycentric_native_road_split_corner_normals' -or
+        $loaded.native_source_witness_sha256 -cne $paint.source_correspondence.native_source_witness_sha256) {
+        throw 'Saved edge markings lack complete native source and fresh actor correspondence.'
+    }
+    foreach ($name in @('material_packages_saved', 'render_flags_verified_before_append',
+                         'full_source_buffers_preserved', 'native_surface_correspondence_verified',
+                         'all_marking_buffers_verified')) {
+        if ($paint[$name] -isnot [bool] -or -not $paint[$name]) {
+            throw ('Saved edge markings failed native protection: ' + $name)
+        }
+    }
+    foreach ($name in @('source_geometry_changed', 'source_materials_changed', 'collision_enabled',
+                         'cast_shadow', 'affects_navigation', 'physics_authored', 'map_saved',
+                         'owner_visual_pass', 'performance_pass')) {
+        if ($paint[$name] -isnot [bool] -or $paint[$name]) {
+            throw ('Saved edge markings changed protected authority: ' + $name)
+        }
+    }
+    foreach ($name in @('all_marking_buffers_verified', 'full_source_buffers_preserved', 'read_only',
+                         'caller_fresh_process_and_saved_bytes_required')) {
+        if ($loaded[$name] -isnot [bool] -or -not $loaded[$name]) {
+            throw ('Fresh edge marking buffer proof failed: ' + $name)
+        }
+    }
+    foreach ($name in @('owner_visual_pass', 'performance_pass')) {
+        if ($loaded[$name] -isnot [bool] -or $loaded[$name]) {
+            throw 'Native edge marking readback cannot grant owner or performance acceptance.'
+        }
+    }
+}
 function Invoke-OwnedEditor {
     param([string] $Action)
     Require-IdleHost
@@ -281,6 +349,7 @@ function Invoke-OwnedEditor {
         -Environment @{
             YACS_ROAD_SAVED_ACTION = $Action
             YACS_ROAD_SAVED_RUN_TOKEN = $RunToken
+            YACS_ROAD_EDGE_MARKINGS = $edgeMarkingSetting
             YACS_ROAD_MATERIAL_EXPECTED_HEAD = $ExpectedHead
             YACS_ROAD_MATERIAL_PREPARATION_SHA256 = [string] $baseline.value.proof_files.session_preparation.sha256
             YACS_WORKSPACE_CONFIG = $WorkspaceConfig
@@ -351,6 +420,10 @@ try {
         'scripts/ue/road_shoulder_edges.py',
         'scripts/ue/road_material_views.py',
         'scripts/ue/road_shoulder_material.py',
+        'scripts/ue/road_edge_marking_geometry.py',
+        'scripts/ue/road_edge_marking_material.py',
+        'scripts/ue/road_edge_marking_consumer.py',
+        'scripts/ue/road_pavement_source_bindings.py',
         'Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h',
         'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsRoadMaterialInspectionLibrary.cpp',
         'scripts/ue/capture_sa_calobra_shoulder_contact.py',
@@ -435,6 +508,7 @@ try {
     $fresh = Read-Json (Join-Path $evidence 'road-asphalt-saved-reloaded.json')
     Assert-FreshNetworkReceipt $fresh.value $ExpectedHead $manifest.identity.sha256 `
         $selectedTriangles $profileCopies.proof.sha256
+    Assert-EdgeMarkingReceipt $manifest.value $saved.value $fresh.value ([bool]$EdgeMarkings)
     $receipt.proof_files.fresh_reload = $fresh.identity
     Assert-Identity $saved.identity 2MB
     Assert-Identity $manifest.identity 4MB
@@ -454,6 +528,7 @@ try {
     $receipt.shoulder_support_count = 186
     $receipt.shoulder_material_target_count = 185
     $receipt.shoulder_selected_triangle_count = $selectedTriangles
+    $receipt.edge_markings_fresh_reload_verified = [bool]$EdgeMarkings
     $receipt.road_profile_diagnostic_sha256 = $profileCopies.proof.sha256
     $receipt.status = 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS'
 }

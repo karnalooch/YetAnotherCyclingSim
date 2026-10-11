@@ -125,6 +125,76 @@ Their source/render/placement proof is still pending. RVT remains an option
 for a justified shoulder/terrain material transition, not a substitute for
 resolving #459 contact geometry.
 
+### Latest native result and next integrated candidate
+
+Revision `9519e0c5f9a523c02ddea4c1c8875c41784c4f98` passed
+[protected CI 38099857098](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38099857098).
+Its [native run 38099853386](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38099853386)
+again passed baseline, canary, saved/fresh material consumer and all 68 GPU
+frames. The original ZIP, [artifact 11687752206](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38099853386/artifacts/11687752206),
+contains 395,317,768 bytes and independently matches SHA-256
+`74b0db419ad1a87de8c31241b27b14d5b5bacc9b0fecf8874335a336b20ad437`.
+All 68 final PNG hashes and sizes match both native and host receipts. The
+actual GPU exit is zero; the camera plan remains byte-identical to f75
+(`3fac9564e4c96c0eee237c2103cc4833af93b8bc493b4334e0b88e1e70d37559`).
+The detailed appearance review above concerns the inspected 95e7 images;
+hash verification alone is not a new visual review of all 9519 images.
+
+The subsequent contact diagnostic did launch an owned Editor, then failed
+before any capture: `LandscapeComponent` does not expose
+`component_size_quads` to this Python build. Its real process exit was zero,
+but the native receipt is **FAILED**, so the overall workflow correctly failed.
+The read-only support query had already matched all 5,232 interior top
+triangles with zero coordinate delta. No contact PNG or repair PASS exists.
+The next candidate uses the existing public `SystemLibrary.GetComponentBounds`
+pattern, independently checks its footprint against the actual section bases
+and unchanged 0.5 m grid, and requires a fresh installed-header receipt.
+An initialization failure now reports its original native error before trying
+to open an absent survey, and cannot claim successful restoration.
+
+The same artifact retains the actual unchanged pavement and Nudo producers.
+Their 3,393/6,580 bytes match the source pins. Independent review of the
+pavement producer confirms ordered top triples `(0,1,2)` / `(1,3,2)`, with
+top and bottom faces interleaved. The new explicit source resolver accounts
+for every complete slab before addressing a paint triangle; it never executes
+the archived generator. Native placement must still verify the actual
+triangle IDs, vertices, positions and split corner normals.
+
+The integrated candidate adds 10 cm continuous off-white edge paint, set
+12 cm inside each source edge and raised only 1 mm for rendering. It produces
+370 separate overlays for 185 pavement owners, with no collision, shadow,
+navigation or physics authority. The paint reuses the existing asphalt maps;
+its two material packages and every overlay buffer must survive save and a
+separate fresh process. The full original road/support buffers and existing
+shoulder material UV contract remain protected. A review caught and removed
+an incorrect assumption that the source triangle cross product always points
+up; source winding and actual corner normals are retained unchanged.
+
+After the unchanged 68 Lit frames, eight separately receipted controls reuse
+0071 forward 2 and 0082 forward 2: current Lit, BaseColor, WorldNormal and a
+transient uniform Lit material. They retain three priming images per condition,
+actual camera/view/material observations, texture readiness, installed API
+source hashes and restoration, under the same 180/1080 second deadlines.
+The host pins the eight-condition plan before opening the Editor. These
+controls diagnose the remaining bands; no buffer-name getter, visual PASS or
+saved diagnostic material is claimed.
+
+After a complete, restored twelve-frame 0112 contact diagnostic, a separate
+six-frame `hairpin0081` target uses the existing 0081 forward 8 and reverse 4
+poses. Its local Landscape footprint comes from the exact retained 1,749-byte
+`ma2141-cut-patch.json`, and the complete native support is read in bounded
+chunks. The baseline/support-hidden/local-Landscape-hidden comparison changes
+visibility only. The 68-frame material plan and original twelve-frame target
+remain unchanged. All new paint/control/contact native results are **pending**.
+
+The [source run 38099853373](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38099853373)
+passed the existing two asphalt exports, then stopped the crack addition on
+the raw-byte gate: Windows converted `render_material_forge.gd` to CRLF.
+There were no actual crack exports. The next candidate explicitly pins that
+unchanged exporter to LF. A real Git Windows-style checkout regression checks
+both the repaired checkout and rejection of altered physical bytes; it does
+not relax source authentication.
+
 ### Authored local crack source contract
 
 The next source-only addition defines eight distinct authored crack motifs in

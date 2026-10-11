@@ -61,6 +61,8 @@ scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1 text eol=lf
 scripts/ue/Invoke-YacsRoadShoulderContact.ps1 text eol=lf
 # The read-only contact host also compares this helper with raw committed bytes.
 scripts/runner/Get-YacsUnrealHostState.ps1 text eol=lf
+# The local crack source runner also authenticates the unchanged Godot exporter.
+scripts/assets/render_material_forge.gd text eol=lf
 worldgen/materials/*.json text eol=lf
 # Shoulder source ownership reads this recipe with an exact raw Git-byte guard.
 worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.json text eol=lf

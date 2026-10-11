@@ -380,8 +380,184 @@ class RoadGpuNativePoseTests(unittest.TestCase):
         self.assertEqual(self.job.completed_priming_frames, 3)
 
 
+class RoadGpuControlPhaseTests(unittest.TestCase):
+    """Run the existing 68+8 submission loop against synthetic native boundaries."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        proof = Path(temporary.name)
+        plan = gpu.material_views.current_view_plan()
+        self.context = {
+            "proof": proof, "run_token": "12345678-1", "exact_sha": "a" * 40,
+            "frames": deepcopy(plan["frames"]), "view_plan": deepcopy(plan),
+            "manifest_id": {"sha256": "c" * 64},
+            "view_plan_identity": {"sha256": "d" * 64},
+        }
+        self.mode, self.position, self.forward = "lit", None, None
+        self.shots, self.preparations, self.applied = [], [], []
+        self.vector = lambda x, y, z: SimpleNamespace(x=x, y=y, z=z)
+        self.component = SimpleNamespace(
+            set_editor_property=Mock(), get_editor_property=lambda _name: 76.0)
+
+        def location(value, *_):
+            self.position = value
+
+        def rotation(pair, *_):
+            eye, target = pair
+            delta = [getattr(target, name) - getattr(eye, name) for name in "xyz"]
+            length = sum(value * value for value in delta) ** 0.5
+            self.forward = self.vector(*(value / length for value in delta))
+            return True
+
+        self.camera = SimpleNamespace(
+            set_actor_location=location, set_actor_rotation=rotation,
+            get_component_by_class=lambda _kind: self.component,
+            get_actor_location=lambda: self.position,
+            get_actor_forward_vector=lambda: self.forward,
+        )
+        self.api = SimpleNamespace(
+            Vector=self.vector, CameraComponent=object(),
+            MathLibrary=SimpleNamespace(find_look_at_rotation=lambda eye, target: (eye, target)),
+            ViewModeIndex=SimpleNamespace(VMI_LIT="lit"),
+            ComparisonTolerance=SimpleNamespace(LOW=object()),
+            AutomationLibrary=SimpleNamespace(
+                set_editor_viewport_view_mode=lambda mode: setattr(self, "mode", mode),
+                finish_loading_before_screenshot=lambda: None,
+                take_high_res_screenshot=self.screenshot,
+            ),
+        )
+        owner = self
+
+        class SyntheticControls:
+            """The real controller is independently covered by its dedicated tests."""
+
+            def __init__(self, api, context):
+                self.plan = gpu.visual_controls.control_plan()
+                self.current = None
+
+            def begin(self):
+                owner.assertEqual(len(owner.shots), 68 * (gpu.PRIMING_FRAMES + 1))
+                return {"status": "READY", **owner.job.control_preflight}
+
+            def apply(self, job_id):
+                job = next(row for row in self.plan["jobs"] if row["job_id"] == job_id)
+                self.current = job["control"]
+                owner.applied.append(job_id)
+                owner.mode = "visualize" if self.current in gpu.visual_controls.BUFFERS else "lit"
+
+            def observe(self):
+                expected = "visualize" if self.current in gpu.visual_controls.BUFFERS else "lit"
+                if owner.mode != expected:
+                    raise ValueError("synthetic native diagnostic viewmode drift")
+                return {
+                    "control": self.current, "active_viewmode_readback": expected,
+                    "road_material_readback": "uniform" if self.current == "uniform-lit" else "original",
+                    "requested_buffer": gpu.visual_controls.BUFFERS.get(self.current),
+                    "buffer_name_readback_verified": False,
+                }
+
+        self.enterContext(patch.dict("os.environ", {gpu.visual_controls.OWNED_ENV: self.context["run_token"]}))
+        self.enterContext(patch.object(gpu.visual_controls, "VisualControls", SyntheticControls))
+        self.enterContext(patch.object(gpu, "decode_png", return_value=(1, 1, 3, b"rgb")))
+        self.enterContext(patch.object(gpu, "frame_statistics", return_value={"width": 1280, "height": 720}))
+        self.job = gpu.RoadLitCapture(self.api, self.context, object(), object())
+        self.job.camera = self.camera
+        self.job.stop = Mock()
+        self.job.control_preflight = {"ownership": {"fixture": True}, "native_api": {"fixture": True}}
+
+        def prepare(row, eye, rotation):
+            self.preparations.append((self.job.capture_root(), row["frame_id"]))
+            self.job.pose_readiness = {"status": "NATIVE_LOADING_AND_MIPS_READY"}
+
+        self.job.prepare_pose = prepare
+
+    def screenshot(self, **arguments):
+        path = Path(arguments["filename"])
+        path.write_bytes(b"SYNTHETIC CONTROL PNG")
+        self.shots.append((path, self.mode))
+        return SimpleNamespace(is_valid_task=lambda: True, is_task_done=lambda: True)
+
+    def complete_lit(self):
+        self.job.submit_pose()
+        for _ in range(68 * (gpu.PRIMING_FRAMES + 1)):
+            self.job.tick(0.05)
+        self.assertEqual(len(self.job.frames), 68)
+        self.assertEqual(self.job.phase, "controls")
+        self.assertEqual(len(self.job.control_frames), 0)
+        self.assertIsNone(self.job.finish_requested_at)
+
+    def test_original_68_remain_ordered_before_eight_separate_controls_in_same_loop(self):
+        original = deepcopy(self.context)
+        self.complete_lit()
+        for _ in range(8 * (gpu.PRIMING_FRAMES + 1)):
+            self.job.tick(0.05)
+        self.job.stop.assert_not_called()
+        self.assertEqual(self.context, original)
+        self.assertIsNotNone(self.job.finish_requested_at)
+        self.assertEqual([row["frame_id"] for row in self.job.frames],
+                         [row["frame_id"] for row in original["frames"]])
+        self.assertTrue(all(row["file"].startswith("road-asphalt-lit-review/frames/")
+                            and row["render_mode"] == "lit" for row in self.job.frames))
+        self.assertEqual(len(self.job.control_frames), 8)
+        self.assertEqual(self.job.completed_priming_frames, 204)
+        self.assertEqual(self.job.control_completed_priming_frames, 24)
+        self.assertEqual(self.applied, [job["job_id"] for job in self.job.control_plan["jobs"]])
+        self.assertEqual(len(self.shots), 304)
+        self.assertEqual(len(self.preparations), 76)
+        for frame, job in zip(self.job.control_frames, self.job.control_plan["jobs"], strict=True):
+            self.assertEqual(frame["source_frame_id"], job["camera"]["frame_id"])
+            self.assertEqual(frame["control_mode"], job["control"])
+            self.assertEqual(frame["camera_location_cm"], job["camera"]["camera_location_cm"])
+            self.assertEqual(frame["target_cm"], job["camera"]["target_cm"])
+            self.assertTrue(frame["file"].startswith("road-asphalt-visual-controls/frames/"))
+            for capture in [*frame["priming_frames"], frame]:
+                self.assertEqual(capture["native_control_observation_before"],
+                                 capture["native_control_observation_after"])
+                self.assertFalse(capture["native_control_observation_before"]["buffer_name_readback_verified"])
+
+    def test_missing_native_api_is_rejected_before_first_camera_or_capture(self):
+        self.api.EditorPythonScripting = SimpleNamespace(set_keep_python_script_alive=Mock())
+        self.api.get_editor_subsystem = Mock()
+        with patch.object(gpu.visual_controls, "preflight",
+                          side_effect=ValueError("synthetic missing installed buffer")):
+            self.job.start()
+        self.job.stop.assert_called_once()
+        self.assertIn("missing installed buffer", self.job.stop.call_args.args[0])
+        self.api.get_editor_subsystem.assert_not_called()
+        self.assertEqual(self.shots, [])
+
+    def test_buffer_viewmode_drift_during_task_cannot_become_debug_evidence(self):
+        self.complete_lit()
+        for _ in range(gpu.PRIMING_FRAMES + 1):
+            self.job.tick(0.05)
+        self.assertEqual(self.job.capture_row()["control_mode"], "current-basecolor")
+        self.assertEqual(self.mode, "visualize")
+        self.mode = "lit"
+        shots = len(self.shots)
+        self.job.tick(0.05)
+        self.job.stop.assert_called_once()
+        self.assertIn("diagnostic viewmode drift", self.job.stop.call_args.args[0])
+        self.assertEqual(len(self.shots), shots)
+        self.assertEqual(len(self.job.frames), 68)
+        self.assertEqual(len(self.job.control_frames), 1)
+
+    def test_control_phase_keeps_original_per_shot_and_total_deadlines(self):
+        self.complete_lit()
+        self.job.started = 0.0
+        self.job.submitted = 1000.0
+        self.job.task.is_task_done = Mock(return_value=True)
+        with patch.object(gpu.time, "monotonic", return_value=1080.001):
+            self.job.tick(0.05)
+        self.job.task.is_task_done.assert_not_called()
+        self.job.stop.assert_called_once()
+        self.assertIn("bounded total deadline", self.job.stop.call_args.args[0])
+        self.assertEqual(gpu.FRAME_DEADLINE_SECONDS, 180)
+        self.assertEqual(len(self.job.control_frames), 0)
+
+
 class RoadGpuStopLifecycleTests(unittest.TestCase):
-    def assert_stop_lifecycle(self, error=None):
+    def assert_stop_lifecycle(self, error=None, *, with_controls=False, restore_error=False):
         """Exercise real stop/receipt code with synthetic native boundaries."""
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
@@ -396,7 +572,7 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
         frames = deepcopy(view_plan["frames"])
         context = {
             "proof": proof, "retained": proof / "retained",
-            "exact_sha": "a" * 40, "run_token": "synthetic-stop-test",
+            "exact_sha": "a" * 40, "run_token": "12345678-1",
             "original": {"native_inventory": {}},
             "manifest": {
                 "material_instance": "/Game/Synthetic/MI_Road",
@@ -451,6 +627,8 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
             ),
             SystemLibrary=SimpleNamespace(quit_editor=Mock()),
         )
+        if with_controls:
+            self.enterContext(patch.dict("os.environ", {gpu.visual_controls.OWNED_ENV: context["run_token"]}))
         job = gpu.RoadLitCapture(api, context, object(), object())
         job.camera, job.handle, job.viewport_before = object(), object(), viewport_before
         job.frames = frames
@@ -461,12 +639,31 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
                 set_force_mip_levels_to_be_resident=Mock(side_effect=record("mip release"))
             )
         }
+        if with_controls:
+            restored = {
+                "status": "RESTORED", "cleanup_errors": [],
+                "original_material_restored": True, "owned_viewports_returned_to_lit": True,
+                "saved_and_staged_package_bytes_unchanged": True,
+            }
+
+            def restore_controls():
+                events.append("controls restored")
+                if restore_error:
+                    raise RuntimeError("synthetic control restoration failure")
+                return restored
+
+            job.phase = "controls"
+            job.controls = SimpleNamespace(restore=restore_controls, report={"status": "FAILED"})
+            job.control_begin = {"status": "READY"}
+            job.control_frames = [{"frame_id": row["job_id"]} for row in job.control_plan["jobs"]]
+            job.control_completed_priming_frames = 8 * gpu.PRIMING_FRAMES
         for target, name, label, result in (
             (gpu.baseline, "native_inventory", "native inventory", {}),
             (gpu.saved, "expected_saved_inventory", "scene comparison", "b" * 64),
             (gpu.saved.shoulder, "verify_loaded", "shoulder mesh", None),
             (gpu.saved.shoulder_material, "verify_material", "shoulder material", None),
             (gpu.saved, "verify_road_mesh", "road full buffers", None),
+            (gpu.saved, "verify_edge_markings", "edge markings", None),
             (gpu.saved, "verify_material_instance", "dry response", None),
             (gpu.saved, "verify_retained_files", "saved packages", None),
             (gpu.session, "_verify_rows", "source assets", None),
@@ -488,25 +685,31 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
 
         def write_receipt(path, value):
             result = original_writer(path, value)
-            events.append("receipt written")
+            events.append("control receipt written" if path.name == gpu.CONTROL_RECEIPT else "receipt written")
             return result
 
         self.enterContext(patch.object(gpu.session, "_identity", side_effect=identity))
         self.enterContext(patch.object(gpu.saved, "write_once", side_effect=write_receipt))
         job.stop(error)
         cleanup = {"callback", "camera", "viewport restore", "viewport readback", "mip release"}
+        if with_controls:
+            cleanup.add("controls restored")
         guards = {
             "dirty maps", "dirty content", "native inventory", "scene comparison",
             "shoulder mesh", "shoulder material", "saved packages", "source assets",
             "stage identity", "manifest", "prior proof",
             "road full buffers", "dry response", "camera plan",
-            "profile diagnostic",
+            "profile diagnostic", "edge markings",
         }
-        self.assertCountEqual(events, [*cleanup, *guards, "receipt written", "release lifecycle"])
+        expected_writes = ["receipt written"] + (["control receipt written"] if with_controls else [])
+        self.assertCountEqual(events, [*cleanup, *guards, *expected_writes, "release lifecycle"])
         self.assertLess(max(events.index(name) for name in cleanup),
                         min(events.index(name) for name in guards))
         self.assertLess(max(events.index(name) for name in guards), events.index("receipt written"))
         self.assertLess(events.index("receipt written"), events.index("release lifecycle"))
+        if with_controls:
+            self.assertLess(events.index("receipt written"), events.index("control receipt written"))
+            self.assertLess(events.index("control receipt written"), events.index("release lifecycle"))
         api.SystemLibrary.quit_editor.assert_not_called()
         self.assertTrue(job.stopped)
         receipt = json.loads((proof / gpu.RECEIPT).read_text(encoding="utf-8"))
@@ -518,6 +721,10 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
         self.assertFalse(receipt["whole_area_visual_admitted"])
         self.assertFalse(receipt["performance_pass"])
         self.assertEqual(receipt["road_profile_diagnostic_sha256"], "e" * 64)
+        if with_controls:
+            self.control_receipt = json.loads((proof / gpu.CONTROL_RECEIPT).read_text())
+            self.assertEqual(self.control_receipt["lit_review_receipt"],
+                             {"file": gpu.RECEIPT, **original_identity(proof / gpu.RECEIPT)})
         return receipt
 
     def test_successful_stop_finishes_cleanup_and_proof_before_releasing_script_lifecycle(self):
@@ -536,6 +743,31 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
             "shoulder_wall_materials_unchanged",
         ):
             self.assertFalse(receipt[field])
+
+    def test_controls_restore_before_conservation_and_write_separate_linked_receipt(self):
+        receipt = self.assert_stop_lifecycle(with_controls=True)
+        self.assertEqual(receipt["status"], "ROAD_ASPHALT_LIT_REVIEW_FRAMES_RETAINED")
+        self.assertEqual(receipt["frame_count"], 68)
+        self.assertEqual(receipt["completed_priming_frames"], 204)
+        self.assertEqual(self.control_receipt["status"], "ROAD_ASPHALT_VISUAL_CONTROLS_FRAMES_RETAINED")
+        self.assertEqual(self.control_receipt["frame_count"], 8)
+        self.assertEqual(self.control_receipt["completed_priming_frames"], 24)
+        self.assertTrue(self.control_receipt["control_restoration_verified"])
+
+    def test_control_capture_failure_keeps_valid_lit_sequence_and_marks_debug_failed(self):
+        receipt = self.assert_stop_lifecycle("synthetic debug capture failure", with_controls=True)
+        self.assertEqual(receipt["status"], "ROAD_ASPHALT_LIT_REVIEW_FRAMES_RETAINED")
+        self.assertEqual(receipt["errors"], [])
+        self.assertEqual(self.control_receipt["status"], "ROAD_ASPHALT_VISUAL_CONTROLS_FAILED")
+        self.assertEqual(self.control_receipt["errors"], ["synthetic debug capture failure"])
+        self.assertTrue(self.control_receipt["control_restoration_verified"])
+
+    def test_control_restore_failure_fails_both_receipts_but_runs_all_other_cleanup(self):
+        receipt = self.assert_stop_lifecycle(with_controls=True, restore_error=True)
+        self.assertEqual(receipt["status"], "ROAD_ASPHALT_LIT_REVIEW_FAILED")
+        self.assertTrue(any("control restoration" in value for value in receipt["errors"]))
+        self.assertEqual(self.control_receipt["status"], "ROAD_ASPHALT_VISUAL_CONTROLS_FAILED")
+        self.assertFalse(self.control_receipt["control_restoration_verified"])
 
 
 if __name__ == "__main__":

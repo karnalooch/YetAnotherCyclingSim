@@ -40,6 +40,16 @@ on:
       - 'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsRoadMaterialInspectionLibrary.cpp'
       - 'scripts/ue/road_shoulder_material.py'
       - 'scripts/ue/test_road_shoulder_material.py'
+      - 'scripts/ue/road_edge_marking_geometry.py'
+      - 'scripts/ue/test_road_edge_marking_geometry.py'
+      - 'scripts/ue/road_edge_marking_material.py'
+      - 'scripts/ue/test_road_edge_marking_material.py'
+      - 'scripts/ue/road_edge_marking_consumer.py'
+      - 'scripts/ue/test_road_edge_marking_consumer.py'
+      - 'scripts/ue/road_pavement_source_bindings.py'
+      - 'scripts/ue/test_road_pavement_source_bindings.py'
+      - 'scripts/ue/road_asphalt_visual_controls.py'
+      - 'scripts/ue/test_road_asphalt_visual_controls.py'
       - 'scripts/ue/capture_sa_calobra_shoulder_contact.py'
       - 'scripts/ue/Invoke-YacsRoadShoulderContact.ps1'
       - 'scripts/ue/test_invoke_road_shoulder_contact.py'
@@ -175,6 +185,10 @@ jobs:
             scripts.ue.test_run_road_asphalt_native_canary `
             scripts.ue.test_road_shoulder_sources scripts.ue.test_road_shoulder_network `
             scripts.ue.test_road_shoulder_edges scripts.ue.test_road_shoulder_material `
+            scripts.ue.test_road_edge_marking_geometry scripts.ue.test_road_edge_marking_material `
+            scripts.ue.test_road_edge_marking_consumer scripts.ue.test_road_pavement_source_bindings `
+            scripts.ue.test_road_asphalt_visual_controls scripts.ue.test_road_asphalt_saved_consumer `
+            scripts.ue.test_road_asphalt_gpu_review `
             scripts.ue.test_road_material_views scripts.ue.test_invoke_road_saved_consumer `
             scripts.ue.test_invoke_road_asphalt_render scripts.ue.test_invoke_road_shoulder_contact `
             scripts.ci.test_sa_calobra_shoulder_contact
@@ -210,6 +224,7 @@ jobs:
           ./scripts/ue/Invoke-YacsRoadSavedConsumer.ps1 `
             -ExpectedHead $env:GITHUB_SHA `
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -EdgeMarkings `
             -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
 
       - name: Capture native road-facing lit GPU review
@@ -220,6 +235,7 @@ jobs:
           ./scripts/ue/Invoke-YacsRoadAsphaltRender.ps1 `
             -ExpectedHead $env:GITHUB_SHA `
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -EdgeMarkings -VisualControls `
             -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
 
       - name: Isolate the existing shoulder contact without changing geometry
@@ -231,6 +247,18 @@ jobs:
           ./scripts/ue/Invoke-YacsRoadShoulderContact.ps1 `
             -ExpectedHead $env:GITHUB_SHA `
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
+
+      - name: Inspect the two retained hairpin contact poses
+        if: ${{ contains(github.event.head_commit.message, '[shoulder-contact]') }}
+        shell: pwsh
+        working-directory: rm-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ue/Invoke-YacsRoadShoulderContact.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -Target hairpin0081 `
             -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
 
       - name: Retain native inventory and owned-process evidence

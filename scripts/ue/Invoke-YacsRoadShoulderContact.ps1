@@ -4,6 +4,7 @@
 param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string] $ExpectedHead,
     [Parameter(Mandatory)][ValidatePattern('^[1-9][0-9]{0,19}-[1-9][0-9]{0,5}$')][string] $RunToken,
+    [ValidateSet('window0112', 'hairpin0081')][string] $Target = 'window0112',
     [string] $WorkspaceConfig = 'D:\yacs\workspace.json',
     [string] $RepoRoot = (Join-Path $PSScriptRoot '../..')
 )
@@ -12,8 +13,12 @@ $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) { throw 'Shoulder contact requires the owned Windows native lane.' }
 $root = $proof = $diagnostic = $inputPin = $python = $helperPin = $null
 $nativeComplete = $false
+$diagnosticName = if ($Target -ceq 'hairpin0081') { 'shoulder-contact-0081' } else { 'shoulder-contact' }
+$hostReceiptName = $diagnosticName + '-host-receipt.json'
+$frameCount = if ($Target -ceq 'hairpin0081') { 6 } else { 12 }
 $receipt = [ordered]@{
     schema_version = 1; issue = 459; exact_sha = $ExpectedHead; run_token = $RunToken
+    diagnostic_target = $Target
     status = 'PREFLIGHT_PENDING'; read_only = $true; geometry_mutated = $false
     original_map_mutated = $false; source_inputs_unchanged = $false
     restored_visibility_verified = $false; verified_frame_count = 0
@@ -191,6 +196,7 @@ HEADERS = {
     "Runtime/Landscape/Classes/LandscapeComponent.h": ["SectionBaseX", "SectionBaseY", "ComponentSizeQuads", "ForcedLOD", "LODBias"],
     "Runtime/Engine/Classes/Components/SceneComponent.h": ["SetVisibility", "bVisible"],
     "Runtime/Engine/Classes/Components/PrimitiveComponent.h": ["bCastHiddenShadow"],
+    "Runtime/Engine/Classes/Kismet/KismetSystemLibrary.h": ["GetComponentBounds"],
     "Runtime/GeometryFramework/Public/UDynamicMesh.h": ["GetMeshRef"],
     "Runtime/GeometryCore/Public/DynamicMesh/DynamicMesh3.h": ["TriangleIndicesItr", "IsTriangle", "GetTriangle", "GetVertex", "VertexCount", "TriangleCount"],
 }
@@ -228,6 +234,18 @@ def prior_contract(base, gpu, head, token):
     require(type(gpu.get("verified_frame_count")) is int and gpu["verified_frame_count"] > 0
             and gpu["verified_frame_count"] == gpu.get("expected_frame_count"),
             "Incomplete prior material GPU frame inventory")
+
+def restored_window0112(prior, head, token):
+    require(prior.get("status") == "SHOULDER_CONTACT_READ_ONLY_HOST_PASS"
+            and prior.get("exact_sha") == head and prior.get("run_token") == token
+            and prior.get("diagnostic_target", "window0112") == "window0112"
+            and prior.get("verified_frame_count") == 12
+            and type(prior.get("editor_exit_code")) is int and prior["editor_exit_code"] == 0
+            and prior.get("error") is None and prior.get("secondary_errors") == [],
+            "Hairpin isolation requires this run's restored window0112 diagnostic PASS")
+    flags(prior, {"read_only": True, "geometry_mutated": False, "original_map_mutated": False,
+                  "source_inputs_unchanged": True, "restored_visibility_verified": True,
+                  "editor_exit_observed": True, "stopped_on_failure": False})
 
 def identity(path, limit=512 * MIB):
     path = Path(path)
@@ -279,6 +297,8 @@ def primary_api(engine, head):
 
 def retain_capture(source, destination, plan):
     allowed = {"shoulder-contact.json": 2 * MIB, "capture/survey.json": 2 * MIB}
+    if plan.get("diagnostic_target") == "hairpin0081":
+        allowed["source-cut-manifest.json"] = 32 * 1024
     for row in plan["frames"]:
         allowed["capture/frames/" + row["frame_id"] + ".png"] = 16 * MIB
         allowed["capture/readiness/" + row["frame_id"] + "/capture-readiness.json"] = 8 * MIB
@@ -340,7 +360,10 @@ def retain_producer_sources(frozen, destination, expected_sources):
 
 def main():
     global session
-    mode, root_text, config_text, head, token, engine_text, engine_id, input_sha = sys.argv[1:]
+    arguments = sys.argv[1:]
+    require(len(arguments) in (8, 9), "Unexpected diagnostic bridge argument count")
+    mode, root_text, config_text, head, token, engine_text, engine_id, input_sha = arguments[:8]
+    target = arguments[8] if len(arguments) == 9 else "window0112"
     root, config, engine = Path(root_text), Path(config_text), Path(engine_text)
     sys.path.insert(0, str(root))
     from scripts.ci import official_mcp_bob_session as session
@@ -348,20 +371,23 @@ def main():
     from scripts.ue import road_shoulder_sources as shoulder_sources
     from scripts.proof import sa_calobra_tpp_survey as survey, sa_calobra_shoulder_contact as contact
     from scripts.manage_local_workspace import load_workspace
+    spec = contact.target_spec(target)
     session._assert_isolated_root()
     require(root == session.ROOT and root.name == "rm-" + token, "Diagnostic checkout differs")
     proof = session._safe_path(root, "Saved/RuntimeProof/RoadMaterialBaseline/" + token)
-    diagnostic = session._safe_path(proof, "shoulder-contact")
+    diagnostic = session._safe_path(proof, spec["output_name"])
     inputs_path = diagnostic / "source-inputs.json"
     if mode == "complete":
         inputs, inputs_pin = read(inputs_path)
         require(inputs_pin["sha256"] == input_sha and inputs["exact_sha"] == head
-                and inputs["run_token"] == token, "Diagnostic input receipt changed")
+                and inputs["run_token"] == token
+                and inputs.get("diagnostic_target", "window0112") == target, "Diagnostic input receipt changed")
         source = Path(inputs["retained_root"])
         retained = retain_capture(source, diagnostic, inputs["plan"])
         for row in inputs["files"]:
             same_pin(identity(Path(row["path"])), row)
         report, _ = read(source / "shoulder-contact.json")
+        contact.require_captured(report)
         require(report.get("plan") == inputs["plan"] and report.get("source_identity") == inputs["source_identity"]
                 and report.get("primary_api_receipt_sha256") == inputs["api_receipt"]["sha256"],
                 "Native diagnostic differs from independently pinned source/camera/API evidence")
@@ -369,11 +395,11 @@ def main():
         flags(report.get("source_scene", {}), {"lighting_modified": False})
         flags(report.get("restoration", {}), {"height_mip_leases_released": True})
         for retained_root in (source, diagnostic):
-            result = contact.verify(retained_root, head)
+            result = contact.verify(retained_root, head, target=target)
             verify_readiness(retained_root)
-        require(len(retained) == 26, "Missing original receipt, PNG or native readiness evidence")
+        require(len(retained) == spec["retained_file_count"], "Missing original receipt, PNG or native readiness evidence")
         result.update(run_token=token, retained_file_count=len(retained), source_inputs_unchanged=True,
-                      original_and_artifact_copy_verified=True)
+                      original_and_artifact_copy_verified=True, diagnostic_target=target)
         write_once(diagnostic / "verification.json", result)
         print(json.dumps(result, allow_nan=False))
         return
@@ -392,10 +418,14 @@ def main():
             and base["engine_identity"] == engine_id, "Prior native root/engine identity differs")
     same_pin(base_pin, gpu["source_receipts"]["baseline"])
     files.extend((base_pin, gpu_pin))
+    if target == "hairpin0081":
+        prior, prior_pin = read(proof / "shoulder-contact-host-receipt.json")
+        restored_window0112(prior, head, token)
+        files.append(prior_pin)
     pin(config, base["proof_files"]["workspace_config"], 2 * MIB)
     workspace = load_workspace(config)
     require(Path(workspace["engine"]) == engine, "Installed engine differs from workspace")
-    retained = session._safe_path(Path(workspace["work"]), "road-materials/shoulder-contact/" + head + "/" + token)
+    retained = session._safe_path(Path(workspace["work"]), "road-materials/" + spec["output_name"] + "/" + head + "/" + token)
     require(not retained.is_relative_to(root) and not retained.exists(), "Diagnostic output is stale or inside checkout")
     native, native_pin = read(proof / "road-material-baseline.json", base["proof_files"]["native_baseline"])
     require(native.get("status") == base["status"] and native.get("exact_sha") == head, "Native baseline differs")
@@ -464,18 +494,25 @@ def main():
         pin(local_recipe, limit=2 * MIB)
     camera = root / contact.SURVEY_FILE
     pin(camera, limit=1 * MIB)
-    plan = contact.diagnostic_plan(source, head, camera)
+    view_plan_path = None
+    if target == "hairpin0081":
+        view_plan_path = proof / "road-asphalt-expected-view-plan.json"
+        pin(view_plan_path, gpu["expected_view_plan"], 2 * MIB)
+        contact.cut_bounds((frozen / spec["cut_file"]).read_bytes(), target=target)
+    plan = contact.diagnostic_plan(source, head, camera, target=target, view_plan_path=view_plan_path)
     api, api_pins = primary_api(engine, head)
     api["run_token"] = token
     files.extend(api_pins)
     api_pin = write_once(diagnostic / "native-api-evidence.json", api)
     files.append(api_pin)
     inputs = dict(status="SHOULDER_CONTACT_SOURCE_INPUTS_VERIFIED", exact_sha=head, run_token=token,
+                  diagnostic_target=target,
                   retained_root=str(retained), frozen_root=str(frozen), files=files, plan=plan,
                   source_identity=source["source_identity"], api_receipt=api_pin,
                   retained_source_producers=producers)
     input_pin = write_once(inputs_path, inputs)
     print(json.dumps(dict(status=inputs["status"], exact_sha=head, run_token=token, inputs=input_pin,
+                          diagnostic_target=target, view_plan_path=str(view_plan_path) if view_plan_path else "",
                           retained_root=str(retained), frozen_root=str(frozen), api_receipt=api_pin,
                           program_executable=program, source_input_count=len(files)), allow_nan=False))
 
@@ -499,10 +536,10 @@ try {
     $proof = Join-Path $root ('Saved/RuntimeProof/RoadMaterialBaseline/' + $RunToken)
     Assert-PlainPath $proof
     if (-not (Test-Path -LiteralPath $proof -PathType Container) -or
-        (Test-Path -LiteralPath (Join-Path $proof 'shoulder-contact-host-receipt.json'))) {
+        (Test-Path -LiteralPath (Join-Path $proof $hostReceiptName))) {
         throw 'Diagnostic predecessor root missing or host receipt already exists.'
     }
-    $candidate = Join-Path $proof 'shoulder-contact'
+    $candidate = Join-Path $proof $diagnosticName
     Assert-PlainPath $candidate
     if (Test-Path -LiteralPath $candidate) { throw 'Diagnostic refuses stale output.' }
     [void][IO.Directory]::CreateDirectory($candidate)
@@ -532,10 +569,11 @@ try {
                 ('"' + $engine.Root + '"'), ('"' + $engine.Identity + '"'))
     $childEnvironment = @{ YACS_WORKSPACE_CONFIG = $WorkspaceConfig; PYTHONPATH = ''; PYTHONHOME = ''
         YACS_OWNER_HANDOFF = ''; YACS_MCP_BOB_PROJECT_ROOT = ''; YACS_MCP_BOB_EXPECTED_HEAD = '' }
-    Invoke-OwnedProcess 'source-preflight' $python.path (@('-I', '-B', ('"' + $helper + '"'), 'prepare') + $common + @('none')) 180 $childEnvironment
+    Invoke-OwnedProcess 'source-preflight' $python.path (@('-I', '-B', ('"' + $helper + '"'), 'prepare') + $common + @('none', $Target)) 180 $childEnvironment
     $prepared = Read-PinnedJson (Join-Path $diagnostic 'source-preflight-stdout.log')
     if ($prepared.value.status -cne 'SHOULDER_CONTACT_SOURCE_INPUTS_VERIFIED' -or
-        $prepared.value.exact_sha -cne $ExpectedHead -or $prepared.value.run_token -cne $RunToken) {
+        $prepared.value.exact_sha -cne $ExpectedHead -or $prepared.value.run_token -cne $RunToken -or
+        $prepared.value.diagnostic_target -cne $Target) {
         throw 'Diagnostic source preparation did not pass.'
     }
     $inputPin = $prepared.value.inputs
@@ -561,6 +599,8 @@ try {
     $captureEnvironment.YACS_SHOULDER_CONTACT_EXACT_SHA = $ExpectedHead
     $captureEnvironment.YACS_SHOULDER_CONTACT_WORKTREE = $root
     $captureEnvironment.YACS_SHOULDER_CONTACT_API_RECEIPT = [string]$prepared.value.api_receipt.path
+    $captureEnvironment.YACS_SHOULDER_CONTACT_TARGET = $Target
+    $captureEnvironment.YACS_SHOULDER_CONTACT_VIEW_PLAN = [string]$prepared.value.view_plan_path
     $captureEnvironment.YACS_SA_CALOBRA_TPP_FROZEN_ROOT = [string]$prepared.value.frozen_root
     Invoke-OwnedProcess 'owned-editor' $engine.UnrealEditorPath $arguments 1020 $captureEnvironment
     $nativeComplete = $true
@@ -571,11 +611,12 @@ finally {
         try {
             Assert-Identity $helperPin 2MB
             Assert-Identity $python 1GB
-            Invoke-OwnedProcess 'source-verification' $python.path (@('-I', '-B', ('"' + $helper + '"'), 'complete') + $common + @($inputPin.sha256)) 180 $childEnvironment
+            Invoke-OwnedProcess 'source-verification' $python.path (@('-I', '-B', ('"' + $helper + '"'), 'complete') + $common + @($inputPin.sha256, $Target)) 180 $childEnvironment
             $verified = Read-PinnedJson (Join-Path $diagnostic 'source-verification-stdout.log')
             if ($verified.value.status -cne 'SHOULDER_CONTACT_EVIDENCE_VERIFIED' -or
                 $verified.value.exact_sha -cne $ExpectedHead -or $verified.value.run_token -cne $RunToken -or
-                $verified.value.frame_count -ne 12 -or $verified.value.source_inputs_unchanged -isnot [bool] -or
+                $verified.value.diagnostic_target -cne $Target -or
+                $verified.value.frame_count -ne $frameCount -or $verified.value.source_inputs_unchanged -isnot [bool] -or
                 -not $verified.value.source_inputs_unchanged -or
                 $verified.value.original_and_artifact_copy_verified -isnot [bool] -or
                 -not $verified.value.original_and_artifact_copy_verified) { throw 'Native diagnostic evidence failed verification.' }
@@ -585,7 +626,7 @@ finally {
             $receipt.evidence.retained_files = File-Identity (Join-Path $diagnostic 'retained-files.json') 2MB
             if ($nativeComplete -and $receipt.editor_exit_observed -and $receipt.editor_exit_code -eq 0 -and -not $receipt.stopped_on_failure) {
                 $receipt.source_inputs_unchanged = $true; $receipt.restored_visibility_verified = $true
-                $receipt.verified_frame_count = 12; $receipt.status = 'SHOULDER_CONTACT_READ_ONLY_HOST_PASS'
+                $receipt.verified_frame_count = $frameCount; $receipt.status = 'SHOULDER_CONTACT_READ_ONLY_HOST_PASS'
             }
         }
         catch { $receipt.secondary_errors += $_.Exception.Message; $receipt.status = 'FAILED' }
@@ -606,10 +647,10 @@ finally {
     }
     if ($receipt.secondary_errors.Count -gt 0) { $receipt.status = 'FAILED' }
     if ($proof -and (Test-Path -LiteralPath $proof -PathType Container)) {
-        Write-Exclusive (Join-Path $proof 'shoulder-contact-host-receipt.json') ($receipt | ConvertTo-Json -Depth 40)
+        Write-Exclusive (Join-Path $proof $hostReceiptName) ($receipt | ConvertTo-Json -Depth 40)
     }
 }
 if ($receipt.status -cne 'SHOULDER_CONTACT_READ_ONLY_HOST_PASS') {
     throw ('Read-only shoulder contact failed: ' + $receipt.error + ' ' + ($receipt.secondary_errors -join '; '))
 }
-Write-Host 'SHOULDER_CONTACT_READ_ONLY_HOST_PASS: 12 restored source-owner diagnostic frames; visual review pending.'
+Write-Host ('SHOULDER_CONTACT_READ_ONLY_HOST_PASS: ' + $frameCount + ' restored ' + $Target + ' diagnostic frames; visual review pending.')

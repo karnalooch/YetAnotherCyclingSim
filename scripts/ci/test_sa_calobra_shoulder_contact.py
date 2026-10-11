@@ -1,6 +1,7 @@
 """Failure and conservation tests for the bounded Issue459 diagnostic."""
 
 import csv
+import hashlib
 import io
 import json
 from pathlib import Path
@@ -16,6 +17,8 @@ from scripts.ue.capture_sa_calobra_shoulder_contact import (
     ContactCapture,
     Owner,
     native_triangles,
+    native_support_snapshot,
+    native_component_layout,
     mesh_digest,
     mesh_triangle,
 )
@@ -43,6 +46,123 @@ class Component:
 
 
 class ShoulderContactTests(unittest.TestCase):
+    def test_native_component_bounds_replace_hidden_size_property_and_check_source_grid(
+        self,
+    ):
+        component = Component("source.landscape.component")
+        component.state.update(section_base_x=1008, section_base_y=882)
+        transform = {
+            "rotation_deg": (0.0, 0.0, 0.0),
+            "scale": (50.0, 50.0, 100.0),
+            "location_cm": (125.0, -250.0, 300.0),
+        }
+        origin = SimpleNamespace(x=53675.0, y=47000.0, z=60000.0)
+        extent = SimpleNamespace(x=3150.0, y=3150.0, z=1200.0)
+        getter = Mock(return_value=(origin, extent, 4700.0))
+        api = SimpleNamespace(
+            SystemLibrary=SimpleNamespace(get_component_bounds=getter)
+        )
+        layout = native_component_layout(api, component, transform)
+        self.assertEqual(layout["component_size_quads"], 126)
+        self.assertEqual(layout["bounds_cm"], (50525.0, 43850.0, 56825.0, 50150.0))
+        self.assertEqual(layout["section_base"], (1008, 882))
+        self.assertEqual(
+            layout["native_bounds_query"], "SystemLibrary.GetComponentBounds"
+        )
+        getter.assert_called_once_with(component)
+        # The fixture deliberately has no component_size_quads property.
+        self.assertNotIn("component_size_quads", component.state)
+        for change in (
+            lambda: setattr(origin, "x", 53676.0),
+            lambda: setattr(extent, "x", 3150.25),
+            lambda: setattr(extent, "y", 1575.0),
+            lambda: setattr(extent, "z", float("nan")),
+            lambda: component.state.update(section_base_x=True),
+            lambda: transform.update(rotation_deg=(0.0, 90.0, 0.0)),
+            lambda: transform.update(scale=(100.0, 50.0, 100.0)),
+        ):
+            origin.x, extent.x, extent.y, extent.z = 53675.0, 3150.0, 3150.0, 1200.0
+            component.state["section_base_x"] = 1008
+            transform.update(rotation_deg=(0.0, 0.0, 0.0), scale=(50.0, 50.0, 100.0))
+            change()
+            with self.assertRaises(RuntimeError):
+                native_component_layout(api, component, transform)
+
+    def test_hairpin_snapshot_reads_every_dense_native_id_in_bounded_chunks(self):
+        mesh = SimpleNamespace(get_path_name=lambda: "source.hairpin.mesh")
+        calls = []
+
+        def read(_mesh, ids):
+            calls.append(tuple(ids))
+            self.assertTrue(ids)
+            self.assertLessEqual(len(ids), 12000)
+            return json.dumps(
+                {
+                    "status": "NATIVE_WINDOW0112_SUPPORT_TRIANGLES",
+                    "geometry_mutated": False,
+                    "mesh_path": mesh.get_path_name(),
+                    "vertex_count": 79785,
+                    "triangle_count": 132218,
+                    "returned_triangle_count": len(ids),
+                    "triangles": [
+                        [tid, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+                        for tid in ids
+                    ],
+                }
+            )
+
+        api = SimpleNamespace(
+            YacsLandscapeMeshDiagnosticLibrary=SimpleNamespace(
+                read_window0112_support_triangles=read
+            )
+        )
+        snapshot = native_support_snapshot(api, mesh, target="hairpin0081")
+        self.assertEqual(len(calls), 12)
+        self.assertEqual(
+            tuple(tid for group in calls for tid in group), tuple(range(132218))
+        )
+        self.assertEqual(len(calls[-1]), 218)
+        self.assertEqual(len(snapshot["positions"]), 132218)
+        before = mesh_digest(snapshot)
+        snapshot["positions"][132217] = (
+            (0.0, 0.0, 0.001),
+            (1.0, 0.0, 0.0),
+            (0.0, 1.0, 0.0),
+        )
+        self.assertNotEqual(
+            mesh_digest(snapshot), before
+        )  # Perimeter is conserved too.
+        bad = {
+            "status": "NATIVE_WINDOW0112_SUPPORT_TRIANGLES",
+            "geometry_mutated": False,
+            "mesh_path": mesh.get_path_name(),
+            "vertex_count": 79785,
+            "triangle_count": 132218,
+            "returned_triangle_count": 0,
+            "triangles": [],
+        }
+        api.YacsLandscapeMeshDiagnosticLibrary.read_window0112_support_triangles = Mock(
+            return_value=json.dumps(bad)
+        )
+        with self.assertRaisesRegex(RuntimeError, "exact requested IDs"):
+            native_support_snapshot(api, mesh, target="hairpin0081")
+
+    def test_hairpin_source_interior_uses_all_2401_rows_with_same_support_lowering(
+        self,
+    ):
+        sections = [
+            [[float(i), float(j), 10.04] for j in range(25)] for i in range(2401)
+        ]
+        triangles = list(
+            contract.interior_top_triangles(sections, target="hairpin0081")
+        )
+        self.assertEqual(len(triangles), 115200)
+        self.assertEqual(triangles[0][0], 2)
+        self.assertEqual(triangles[-1][0], 124797)
+        self.assertAlmostEqual(triangles[0][1][0][2], 996.0)
+        with self.assertRaisesRegex(ValueError, "2401x25"):
+            list(contract.interior_top_triangles(sections[:110], target="hairpin0081"))
+
     def test_native_triangle_adapter_preserves_sparse_ids_and_rejects_incomplete_or_nonfinite_reads(
         self,
     ):
@@ -220,6 +340,152 @@ class ShoulderContactTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "camera pose differs"):
                 contract.diagnostic_plan(source, "a" * 40, path)
 
+    def test_hairpin_plan_reuses_two_exact_gpu_poses_without_altering_0112_selection(
+        self,
+    ):
+        path = Path(__file__).resolve().parents[2] / contract.SURVEY_FILE
+        original = {
+            r["frame_id"]: r for r in csv.DictReader(io.StringIO(path.read_text()))
+        }
+        frames = []
+        for frame_id in contract.HAIRPIN_FRAME_IDS:
+            old = original[frame_id]
+            row = {
+                key: json.loads(old[key])
+                for key in (
+                    "road_position_cm",
+                    "camera_location_cm",
+                    "target_cm",
+                    "ball_location_cm",
+                )
+            }
+            row.update(
+                frame_id=frame_id,
+                window_id=old["window_id"],
+                direction=old["direction"],
+                station_m=float(old["station_m"]),
+                fov_deg=float(old["fov_deg"]),
+            )
+            frames.append(row)
+        material = {
+            "frame_count": 68,
+            "survey_sha256": contract.SURVEY_SHA256,
+            "frames": [
+                {key: value for key, value in row.items() if key != "ball_location_cm"}
+                for row in frames
+            ]
+            + [{"frame_id": f"fixture-{i}"} for i in range(66)],
+        }
+        raw = json.dumps(material).encode()
+        with tempfile.TemporaryDirectory() as directory:
+            view_path = Path(directory) / "fixed-material-views.json"
+            view_path.write_bytes(raw)
+            with (
+                patch.object(
+                    contract,
+                    "MATERIAL_VIEW_PLAN_SHA256",
+                    hashlib.sha256(raw).hexdigest(),
+                ),
+                patch.object(contract, "MATERIAL_VIEW_PLAN_SIZE", len(raw)),
+                patch.object(
+                    contract, "build_survey_plan", return_value={"frames": frames}
+                ),
+            ):
+                source = {"windows": [], "source_identity": {}}
+                plan = contract.diagnostic_plan(
+                    source,
+                    "a" * 40,
+                    path,
+                    target="hairpin0081",
+                    view_plan_path=view_path,
+                )
+                self.assertEqual(plan["frame_count"], 6)
+                self.assertEqual(
+                    plan["source_poses"],
+                    ["window-0081-forward-00008", "window-0081-reverse-00004"],
+                )
+                self.assertEqual(plan["frames"][0]["station_m"], 153.86538846592342)
+                self.assertEqual(plan["frames"][3]["station_m"], 230.79808269888514)
+                self.assertEqual(
+                    plan["frames"][0]["camera_location_cm"],
+                    material["frames"][0]["camera_location_cm"],
+                )
+                self.assertEqual(
+                    plan["frames"][3]["camera_location_cm"],
+                    material["frames"][1]["camera_location_cm"],
+                )
+                self.assertEqual(
+                    contract.FRAME_IDS,
+                    (
+                        "window-0112-forward-00001",
+                        "window-0112-forward-00002",
+                        "window-0112-reverse-00001",
+                        "window-0112-reverse-00002",
+                    ),
+                )
+                with self.assertRaisesRegex(ValueError, "authenticated 68-frame"):
+                    contract.diagnostic_plan(
+                        source, "a" * 40, path, target="hairpin0081"
+                    )
+                view_path.write_bytes(raw + b"\n")
+                with self.assertRaisesRegex(ValueError, "plan bytes differ"):
+                    contract.diagnostic_plan(
+                        source,
+                        "a" * 40,
+                        path,
+                        target="hairpin0081",
+                        view_plan_path=view_path,
+                    )
+
+    def test_failed_initialization_reports_original_error_before_missing_survey_and_cannot_restore_pass(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            raw = json.dumps(
+                {
+                    "status": "FAILED",
+                    "error": "LandscapeComponent has no component_size_quads",
+                    "restoration": {"status": "FAILED"},
+                }
+            ).encode()
+            (root / "shoulder-contact.json").write_bytes(raw)
+            with self.assertRaisesRegex(
+                ValueError, "LandscapeComponent has no component_size_quads"
+            ):
+                contract.verify(root, "a" * 40)
+            self.assertEqual((root / "shoulder-contact.json").read_bytes(), raw)
+            self.assertFalse((root / "capture/survey.json").exists())
+        owner = Owner.__new__(Owner)
+        owner.capture = owner.before = owner.mesh = owner.viewport = None
+        owner.transient, owner.report = [], {}
+        with (
+            patch.object(owner, "write"),
+            patch(
+                "scripts.ue.capture_sa_calobra_shoulder_contact.digest",
+                return_value=contract.MAP_SHA256,
+            ),
+        ):
+            owner._finish()
+        self.assertEqual(owner.report["status"], "FAILED")
+        self.assertEqual(owner.report["restoration"]["status"], "FAILED")
+        self.assertEqual(owner.report["error"], "Diagnostic capture was not started")
+        with (
+            patch.object(owner, "write"),
+            patch.object(
+                owner,
+                "release_height_mips",
+                side_effect=RuntimeError("mip release failed"),
+            ),
+            patch(
+                "scripts.ue.capture_sa_calobra_shoulder_contact.digest",
+                return_value=contract.MAP_SHA256,
+            ),
+        ):
+            owner._finish("capture initialization failed")
+        self.assertFalse(owner.report["restoration"]["height_mip_leases_released"])
+        self.assertIn("mip release failed", owner.report["error"])
+
     def test_each_mode_is_local_and_restores_visibility_and_hidden_shadow(self):
         capture = ContactCapture.__new__(ContactCapture)
         capture.support = Component("support")
@@ -259,11 +525,12 @@ class ShoulderContactTests(unittest.TestCase):
             capture.restore_visibility()
         self.assertTrue(capture.components[0].state["visible"])
 
-    def evidence(self, root):
+    def evidence(self, root, *, target="window0112", cut_raw=None):
+        spec = contract.target_spec(target)
         capture = root / "capture"
         (capture / "frames").mkdir(parents=True)
         frames = []
-        for frame in contract.FRAME_IDS:
+        for frame in spec["frame_ids"]:
             for mode in contract.MODES:
                 frame_id = f"{frame}-{mode}"
                 path = f"frames/{frame_id}.png"
@@ -272,7 +539,7 @@ class ShoulderContactTests(unittest.TestCase):
                     "frame_id": frame_id,
                     "source_frame_id": frame,
                     "diagnostic_mode": mode,
-                    "window_id": contract.WINDOW,
+                    "window_id": spec["window_id"],
                     "road_position_cm": [0, 0, 0],
                     "camera_location_cm": [0, 0, 1],
                     "target_cm": [1, 0, 0],
@@ -293,17 +560,19 @@ class ShoulderContactTests(unittest.TestCase):
             "status": "SHOULDER_CONTACT_CAPTURED",
             "exact_sha": "a" * 40,
             "source_road_sha": contract.FROZEN_SHA,
-            "window_id": contract.WINDOW,
+            "window_id": spec["window_id"],
             "geometry_mutated": False,
             "saved_to_map": False,
             "rendered_owner": "PENDING_PAIRED_VISUAL_REVIEW",
             "support": {
-                "interior_top_triangles_compared": 5232,
+                "interior_top_triangles_compared": (spec["section_count"] - 1) * 48,
+                "vertices": spec["mesh_counts"][0],
+                "triangles": spec["mesh_counts"][1],
                 "max_coordinate_delta_cm": 0.0,
                 "triangle_sha256": "a" * 64,
             },
             "landscape": {"components": [{"bounds_cm": [55000, 50000, 58150, 53150]}]},
-            "cut_manifest_sha256": contract.CUT_SHA256,
+            "cut_manifest_sha256": spec["cut_sha256"],
             "restoration": {
                 "status": "RESTORED",
                 "map_sha256": contract.MAP_SHA256,
@@ -311,11 +580,65 @@ class ShoulderContactTests(unittest.TestCase):
             },
             "plan": {"frames": frames},
         }
+        if target == "hairpin0081":
+            bounds = contract.cut_bounds(cut_raw, target=target)
+            (root / "source-cut-manifest.json").write_bytes(cut_raw)
+            report["cut_footprint_cm"] = bounds
+            report["landscape"]["components"] = [{"bounds_cm": bounds}]
+            report["plan"].update(
+                diagnostic_target=target,
+                material_view_plan_sha256=contract.MATERIAL_VIEW_PLAN_SHA256,
+            )
         (root / "shoulder-contact.json").write_text(json.dumps(report))
         (capture / "survey.json").write_text(
             json.dumps({"status": "CAPTURED", "frames": frames})
         )
         return report, frames
+
+    def test_hairpin_verifier_requires_source_cut_bytes_and_six_separate_modes(self):
+        raw = json.dumps(
+            {
+                "operation": "CUT_ONLY",
+                "grid_step_m": 0.5,
+                "rect": {
+                    "min_x": 2080,
+                    "min_y": 990,
+                    "max_x": 2300,
+                    "max_y": 1310,
+                    "width": 221,
+                    "height": 321,
+                },
+            }
+        ).encode()
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(
+                contract, "HAIRPIN_CUT_SHA256", hashlib.sha256(raw).hexdigest()
+            ),
+            patch.object(contract, "HAIRPIN_CUT_SIZE", len(raw)),
+        ):
+            root = Path(directory)
+            report, frames = self.evidence(root, target="hairpin0081", cut_raw=raw)
+            self.assertEqual(
+                contract.verify(root, "a" * 40, target="hairpin0081")["frame_count"], 6
+            )
+            self.assertEqual(
+                report["cut_footprint_cm"], (104000.0, 49500.0, 115000.0, 65500.0)
+            )
+            self.assertFalse(
+                contract.overlaps(contract.CUT_BOUNDS_CM, report["cut_footprint_cm"])
+            )
+            with self.assertRaisesRegex(ValueError, "contract failed"):
+                contract.verify(root, "a" * 40)
+            (root / "source-cut-manifest.json").write_bytes(raw + b"\n")
+            with self.assertRaisesRegex(ValueError, "CUT footprint source differs"):
+                contract.verify(root, "a" * 40, target="hairpin0081")
+            (root / "source-cut-manifest.json").write_bytes(raw)
+            (root / "capture/survey.json").write_text(
+                json.dumps({"status": "CAPTURED", "frames": frames[:-1]})
+            )
+            with self.assertRaisesRegex(ValueError, "inventory"):
+                contract.verify(root, "a" * 40, target="hairpin0081")
 
     def test_verifier_rejects_incomplete_restoration_and_false_surface_owner_pass(self):
         with tempfile.TemporaryDirectory() as temp:

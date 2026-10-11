@@ -4,6 +4,8 @@
 param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string] $ExpectedHead,
     [Parameter(Mandatory)][ValidatePattern('^[1-9][0-9]{0,19}-[1-9][0-9]{0,5}$')][string] $RunToken,
+    [switch] $EdgeMarkings,
+    [switch] $VisualControls,
     [string] $WorkspaceConfig = 'D:\yacs\workspace.json',
     [string] $RepoRoot = (Join-Path $PSScriptRoot '../..')
 )
@@ -14,6 +16,9 @@ $PROFILE_DIAGNOSTIC = 'road-network-profile-diagnostic.json'
 $root = $null
 $proof = $null
 $renderProcess = $null
+$expectedControls = $null
+$edgeMarkingSetting = if ($EdgeMarkings) { '1' } else { '0' }
+$visualControlToken = if ($VisualControls) { $RunToken } else { $null }
 $receipt = [ordered]@{
     schema_version = 1; issue = 364; exact_sha = $ExpectedHead
     run_token = $RunToken; status = 'PREFLIGHT_PENDING'
@@ -24,6 +29,11 @@ $receipt = [ordered]@{
     shoulder_material_edge_uv_verified = $false
     shoulder_support_count = 0; shoulder_material_target_count = 0
     shoulder_selected_triangle_count = 0; expected_view_plan = $null
+    edge_markings_requested = [bool]$EdgeMarkings
+    edge_markings_verified = $false
+    visual_controls_requested = [bool]$VisualControls
+    visual_controls_frames_retained = $false
+    visual_control_frame_count = 0
     road_profile_diagnostic_sha256 = $null
     gpu_shader_compilation_admitted = $false
     road_pixel_visibility_admitted = $false
@@ -344,6 +354,135 @@ function Assert-NativeCameraObservation {
     }
 }
 
+function Assert-VisualControlObservation {
+    param($Observed, [string] $Control, [string] $OriginalMaterial, [string] $UniformMaterial)
+    $buffer = switch -CaseSensitive ($Control) {
+        'current-basecolor' { 'BaseColor' }
+        'current-worldnormal' { 'WorldNormal' }
+        'current-lit' { $null }
+        'uniform-lit' { $null }
+        default { throw 'Unsupported visual control mode.' }
+    }
+    $mode = if ($null -eq $buffer) { 'VMI_LIT' } else { 'VMI_VISUALIZE_BUFFER' }
+    $material = if ($Control -ceq 'uniform-lit') { $UniformMaterial } else { $OriginalMaterial }
+    if ($Observed.control -cne $Control -or $Observed.active_viewmode_readback -cne $mode -or
+        $Observed.road_material_readback -cne $material -or $Observed.requested_buffer -cne $buffer -or
+        $Observed.buffer_name_readback_verified -isnot [bool] -or $Observed.buffer_name_readback_verified) {
+        throw 'Native control observation differs from the exact material, viewmode or requested buffer.'
+    }
+}
+
+function Assert-VisualControlContract {
+    param($Data, $Expected, [string] $ViewPlanSha, [string] $ManifestSha,
+          $LitIdentity, [string] $OriginalMaterial, [string] $ExactHead, [string] $Token)
+    $plan = $Expected.control_plan
+    if ($Data.schema_version -ne 1 -or $Data.issue -ne 364 -or
+        $Data.status -cne 'ROAD_ASPHALT_VISUAL_CONTROLS_FRAMES_RETAINED' -or
+        $Data.exact_sha -cne $ExactHead -or $Data.run_token -cne $Token -or
+        $Data.map_package -cne '/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview' -or
+        $Data.saved_manifest_sha256 -cne $ManifestSha -or $Data.view_plan_sha256 -cne $ViewPlanSha -or
+        $Data.camera_csv_sha256 -cne $plan.survey_sha256 -or
+        $Data.control_plan_sha256 -cne $Expected.sha256 -or
+        $Data.lit_review_receipt.file -cne 'road-asphalt-lit-review.json' -or
+        $Data.lit_review_receipt.sha256 -cne $LitIdentity.sha256 -or
+        $Data.lit_review_receipt.size_bytes -ne $LitIdentity.size_bytes -or
+        $Data.frame_count -ne 8 -or $Data.expected_frame_count -ne 8 -or
+        $Data.frames -isnot [Collections.IList] -or $Data.frames.Count -ne 8 -or
+        $plan.frame_count -ne 8 -or $plan.jobs.Count -ne 8 -or
+        $Data.priming_frames_per_pose -ne 3 -or $Data.completed_priming_frames -ne 24 -or
+        $Data.total_deadline_seconds_shared_with_lit -ne 1080 -or $Data.frame_deadline_seconds -ne 180 -or
+        $Data.owner_visual_status -cne 'PENDING_FINAL_M3' -or
+        $Data.performance_status -cne 'DEFERRED_AFTER_M3' -or $Data.errors.Count -ne 0) {
+        throw 'Visual controls do not match the pre-Editor plan, current consumer and 68-frame receipt.'
+    }
+    Assert-JsonEqual $plan $Data.control_plan 'exact eight-condition plan'
+    foreach ($name in @('control_restoration_verified', 'capture_readiness_verified',
+                         'native_control_observations_verified', 'sources_and_saved_assets_unchanged')) {
+        if ($Data[$name] -isnot [bool] -or -not $Data[$name]) { throw ('Visual control proof failed: ' + $name) }
+    }
+    foreach ($name in @('native_channel_images_reviewed', 'buffer_name_readback_verified',
+                         'geometry_or_source_texture_change', 'map_saved', 'source_assets_saved',
+                         'whole_area_visual_admitted', 'performance_pass')) {
+        if ($Data[$name] -isnot [bool] -or $Data[$name]) { throw ('Visual controls changed authority: ' + $name) }
+    }
+    if ($Data.begin.status -cne 'READY' -or $Data.restore.status -cne 'RESTORED' -or
+        $Data.begin.plan_sha256 -cne $Expected.sha256 -or $Data.restore.plan_sha256 -cne $Expected.sha256 -or
+        $Data.begin.original_material -cne $OriginalMaterial -or
+        $Data.begin.transient_material -cnotmatch '^/Engine/Transient\.[^/]+$' -or
+        $Data.restore.applied_jobs.Count -ne 8 -or $Data.restore.cleanup_errors.Count -ne 0 -or
+        $Data.begin.ownership.run_token -cne $Token -or
+        $Data.begin.ownership.consumer_exact_sha -cne $ExactHead -or
+        $Data.begin.ownership.owned_process_marker_verified -isnot [bool] -or
+        -not $Data.begin.ownership.owned_process_marker_verified) {
+        throw 'Visual control process ownership, transient material or restoration is incomplete.'
+    }
+    foreach ($name in @('ownership', 'native_api')) {
+        Assert-JsonEqual $Data.preflight[$name] $Data.begin[$name] ('preflight control ' + $name)
+    }
+    if ($Data.begin.uniform_node_count -ne 6 -or
+        $Data.begin.view_state_contract -cne 'owned_editor_establish_Lit_and_restore_Lit' -or
+        $Data.begin.buffer_name_getter_available -isnot [bool] -or $Data.begin.buffer_name_getter_available -or
+        $Data.begin.geometry_vertex_normals_preserved -isnot [bool] -or
+        -not $Data.begin.geometry_vertex_normals_preserved) {
+        throw 'Visual control material or viewport contract differs from the owned diagnostic.'
+    }
+    $uniform = @{ base_color_linear = @(0.075, 0.075, 0.075); roughness = 0.933
+        specular = 0.20; metallic = 0.0; ambient_occlusion = 1.0
+        emissive = 0.0; normal_tangent_space = @(0.0, 0.0, 1.0) }
+    Assert-JsonEqual $uniform $Data.begin.uniform_material 'uniform control material'
+    foreach ($name in @('original_material_restored', 'owned_viewports_returned_to_lit',
+                         'saved_and_staged_package_bytes_unchanged')) {
+        if ($Data.restore[$name] -isnot [bool] -or -not $Data.restore[$name]) {
+            throw ('Visual control restoration failed: ' + $name)
+        }
+    }
+    for ($i = 0; $i -lt 8; $i++) {
+        $job = $plan.jobs[$i]
+        $frame = $Data.frames[$i]
+        $pose = $job.camera
+        $actualPose = [ordered]@{}
+        foreach ($key in $pose.Keys) {
+            $actualPose[$key] = if ($key -ceq 'frame_id') { $frame.source_frame_id } else { $frame[$key] }
+        }
+        Assert-JsonEqual $pose $actualPose ('control camera metadata ' + $i)
+        $renderMode = if ($job.control -cin @('current-basecolor', 'current-worldnormal')) {
+            'buffer_visualization'
+        } else { 'lit' }
+        if ($frame.frame_id -cne $job.job_id -or $frame.source_frame_id -cne $pose.frame_id -or
+            $frame.control_mode -cne $job.control -or
+            $frame.file -cne ('road-asphalt-visual-controls/frames/' + $job.job_id + '.png') -or
+            $frame.width -ne 1280 -or $frame.height -ne 720 -or $frame.unique_sampled_rgb -lt 12 -or
+            $frame.render_mode -cne $renderMode -or
+            $frame.visual_quality_reviewed -isnot [bool] -or $frame.visual_quality_reviewed -or
+            $frame.priming_frames -isnot [Collections.IList] -or $frame.priming_frames.Count -ne 3 -or
+            $Data.restore.applied_jobs[$i].job_id -cne $job.job_id) {
+            throw 'Visual control frame, camera or mode order changed.'
+        }
+        Assert-NativeCameraObservation $pose $frame.native_camera_observation
+        Assert-VisualControlObservation $Data.restore.applied_jobs[$i] $job.control `
+            $OriginalMaterial $Data.begin.transient_material
+        $ready = $frame.capture_readiness
+        if ($ready.status -cne 'NATIVE_LOADING_AND_MIPS_READY' -or
+            $ready.height_mip_lease_requested -isnot [bool] -or -not $ready.height_mip_lease_requested -or
+            $ready.viewport_primed_at_rider_camera -isnot [bool] -or -not $ready.viewport_primed_at_rider_camera -or
+            $ready.material_texture_count -ne 7) { throw 'Visual control camera lacks native mip readiness.' }
+        $captures = @($frame) + @($frame.priming_frames)
+        foreach ($capture in $captures) {
+            Assert-NativeCameraObservation $pose $capture.native_camera_observation
+            Assert-VisualControlObservation $capture.native_control_observation_before $job.control `
+                $OriginalMaterial $Data.begin.transient_material
+            Assert-VisualControlObservation $capture.native_control_observation_after $job.control `
+                $OriginalMaterial $Data.begin.transient_material
+        }
+        for ($prime = 0; $prime -lt 3; $prime++) {
+            $expectedFile = 'road-asphalt-visual-controls/priming/' + $job.job_id + ('-{0:d2}.png' -f $prime)
+            if ($frame.priming_frames[$prime].file -cne $expectedFile) {
+                throw 'Visual control priming file differs from the fixed plan.'
+            }
+        }
+    }
+}
+
 function Assert-GpuReviewContract {
     param($Data, $Plan, [string] $PlanSha, [string] $ManifestSha,
           [long] $SelectedTriangles, [string] $ExactHead, [string] $Token, [string] $ProfileSha)
@@ -449,8 +588,14 @@ try {
         'scripts/ue/road_shoulder_edges.py',
         'scripts/ue/road_material_views.py',
         'scripts/ue/road_shoulder_material.py',
+        'scripts/ue/road_edge_marking_geometry.py',
+        'scripts/ue/road_edge_marking_material.py',
+        'scripts/ue/road_edge_marking_consumer.py',
+        'scripts/ue/road_pavement_source_bindings.py',
+        'scripts/ue/road_asphalt_visual_controls.py',
         'Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h',
         'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsRoadMaterialInspectionLibrary.cpp',
+        'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsComponent230Detail.cpp',
         'scripts/ue/capture_sa_calobra_shoulder_contact.py',
         'scripts/proof/sa_calobra_shoulder_contact.py',
         'scripts/proof/sa_calobra_tpp_survey.py',
@@ -467,6 +612,20 @@ try {
     # Full-network selected IDs require 4 MiB; other JSON receipts retain 2 MiB.
     $savedManifest = Read-PinnedJson (Join-Path $proof 'road-asphalt-saved-manifest.json') 4MB
     $selectedTriangles = Assert-NetworkManifest $savedManifest.value $ExpectedHead
+    foreach ($row in @($savedManifest.value, $savedReceipt.value, $reopenReceipt.value)) {
+        if ($row.edge_markings_enabled -isnot [bool] -or
+            $row.edge_markings_enabled -ne [bool]$EdgeMarkings) {
+            throw 'GPU edge marking lane differs from the authenticated saved consumer.'
+        }
+    }
+    if ($savedHost.value.edge_markings_requested -isnot [bool] -or
+        $savedHost.value.edge_markings_requested -ne [bool]$EdgeMarkings -or
+        $savedHost.value.edge_markings_fresh_reload_verified -isnot [bool] -or
+        $savedHost.value.edge_markings_fresh_reload_verified -ne [bool]$EdgeMarkings -or
+        $reopenReceipt.value.edge_markings_fresh_reload_verified -isnot [bool] -or
+        $reopenReceipt.value.edge_markings_fresh_reload_verified -ne [bool]$EdgeMarkings) {
+        throw 'GPU edge markings lack the independently requested fresh-load host proof.'
+    }
     if ($readHost.value.status -cne 'ROAD_MATERIAL_BASELINE_READ_ONLY_COMPLETE' -or
         $readHost.value.exact_sha -cne $ExpectedHead -or
         $savedHost.value.status -cne 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS' -or
@@ -577,6 +736,30 @@ print(json.dumps(current_view_plan(Path(sys.argv[1])), sort_keys=True, allow_nan
     $receipt.expected_frame_count = $expectedPlan.value.frame_count
     $receipt.source_receipts.view_plan_python = $planPython
     $receipt.source_receipts.camera_csv = $cameraSource
+    if ($VisualControls) {
+        $controlCode = @'
+import json, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from scripts.ue.road_asphalt_visual_controls import control_plan, digest
+plan = control_plan(Path(sys.argv[1]))
+print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True, allow_nan=False))
+'@
+        $controlOutput = @(& $planPython.path -I -B -c $controlCode $root)
+        if ($LASTEXITCODE -ne 0 -or $controlOutput.Count -ne 1) {
+            throw 'Cannot derive the eight visual controls before starting the owned Editor.'
+        }
+        $controlValue = $controlOutput[0] | ConvertFrom-Json -AsHashtable -Depth 40
+        if ($controlValue.sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+            $controlValue.control_plan.frame_count -ne 8 -or $controlValue.control_plan.jobs.Count -ne 8) {
+            throw 'Visual control plan has an unexpected identity or scope.'
+        }
+        $controlPlanPath = Join-Path $proof 'road-asphalt-expected-visual-controls.json'
+        Write-ExclusiveReceipt $controlPlanPath $controlValue
+        $expectedControls = Read-PinnedJson $controlPlanPath
+        Assert-JsonEqual $controlValue $expectedControls.value 'retained visual control plan'
+        $receipt.expected_visual_control_plan = $expectedControls.identity
+    }
     Require-IdleHost
     $script = Join-Path $root 'scripts/ue/road_asphalt_gpu_review.py'
     $arguments = @(
@@ -604,6 +787,8 @@ print(json.dumps(current_view_plan(Path(sys.argv[1])), sort_keys=True, allow_nan
         -RedirectStandardOutput $stdout -RedirectStandardError $stderr `
         -Environment @{
             YACS_ROAD_SAVED_RUN_TOKEN = $RunToken
+            YACS_ROAD_EDGE_MARKINGS = $edgeMarkingSetting
+            YACS_ROAD_VISUAL_CONTROLS_OWNED = $visualControlToken
             YACS_ROAD_MATERIAL_EXPECTED_HEAD = $ExpectedHead
             YACS_ROAD_MATERIAL_PREPARATION_SHA256 = [string] $readHost.value.proof_files.session_preparation.sha256
             YACS_ROAD_MATERIAL_VIEW_PLAN_SHA256 = [string] $expectedPlan.identity.sha256
@@ -629,6 +814,13 @@ print(json.dumps(current_view_plan(Path(sys.argv[1])), sort_keys=True, allow_nan
     $data = $review.value
     Assert-GpuReviewContract $data $expectedPlan.value $expectedPlan.identity.sha256 `
         $savedManifest.identity.sha256 $selectedTriangles $ExpectedHead $RunToken $profileCopies.proof.sha256
+    if ($data.edge_markings_enabled -isnot [bool] -or
+        $data.edge_markings_enabled -ne [bool]$EdgeMarkings) {
+        throw 'GPU receipt changed the explicitly selected paint lane.'
+    }
+    Assert-JsonEqual $reopenReceipt.value.edge_marking_readback $data.edge_markings_before 'fresh paint before GPU'
+    Assert-JsonEqual $data.edge_markings_before $data.edge_markings_after 'unchanged paint after GPU'
+    $receipt.edge_markings_verified = [bool]$EdgeMarkings
     $expectedIds = @($expectedPlan.value.frames | ForEach-Object { $_.frame_id })
     for ($i = 0; $i -lt $expectedIds.Count; $i++) {
         $frame = $data.frames[$i]
@@ -672,6 +864,75 @@ print(json.dumps(current_view_plan(Path(sys.argv[1])), sort_keys=True, allow_nan
         $receipt.evidence[($expectedIds[$i] + '-material-readiness')] = $materialReady.identity
     }
     $receipt.evidence.render_receipt = $review.identity
+    if ($VisualControls) {
+        $controlReceipt = Read-PinnedJson (Join-Path $proof 'road-asphalt-visual-controls.json')
+        $controls = $controlReceipt.value
+        Assert-VisualControlContract $controls $expectedControls.value $expectedPlan.identity.sha256 `
+            $savedManifest.identity.sha256 $review.identity $savedManifest.value.material_instance $ExpectedHead $RunToken
+        if ($controls.begin.ownership.pid -ne $receipt.editor_pid) {
+            throw 'Visual controls ran in a different process from the owned GPU Editor.'
+        }
+        foreach ($frame in $controls.frames) {
+            foreach ($capture in (@($frame) + @($frame.priming_frames))) {
+                $file = File-Identity (Join-Path $proof $capture.file) 16MB
+                if ($file.sha256 -cne $capture.sha256 -or $file.size_bytes -ne $capture.size_bytes) {
+                    throw ('Visual control PNG changed: ' + $capture.file)
+                }
+                $receipt.evidence[('control-' + $capture.file)] = $file
+            }
+            $readinessRoot = Join-Path $proof ('road-asphalt-visual-controls/readiness/' + $frame.frame_id)
+            $heightFile = File-Identity (Join-Path $readinessRoot 'capture-readiness.json') 8MB
+            $materialReady = Read-PinnedJson (Join-Path $readinessRoot 'road-texture-readiness.json')
+            if ($heightFile.sha256 -cne $frame.capture_readiness.height_receipt.sha256 -or
+                $heightFile.size_bytes -ne $frame.capture_readiness.height_receipt.size_bytes -or
+                $materialReady.identity.sha256 -cne $frame.capture_readiness.material_receipt.sha256 -or
+                $materialReady.identity.size_bytes -ne $frame.capture_readiness.material_receipt.size_bytes -or
+                $materialReady.value.status -cne 'ROAD_TEXTURE_MIPS_READY' -or
+                $materialReady.value.textures.Count -ne 7 -or
+                $materialReady.value.material_parameters_changed -isnot [bool] -or
+                $materialReady.value.material_parameters_changed -or
+                $materialReady.value.saved_to_map -isnot [bool] -or $materialReady.value.saved_to_map) {
+                throw ('Visual control texture/height readiness changed: ' + $frame.frame_id)
+            }
+            foreach ($texture in $materialReady.value.textures) {
+                $native = $texture.native_readback
+                if ($native.is_default_texture -isnot [bool] -or $native.is_default_texture -or
+                    $native.is_compiling -isnot [bool] -or $native.is_compiling -or
+                    $native.mips -le 0 -or $native.resident_mips -ne $native.mips) {
+                    throw ('Visual control texture lacks full native residency: ' + $frame.frame_id)
+                }
+            }
+            $receipt.evidence[('control-' + $frame.frame_id + '-height-readiness')] = $heightFile
+            $receipt.evidence[('control-' + $frame.frame_id + '-material-readiness')] = $materialReady.identity
+        }
+        $engineRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $gui))
+        $apiSources = $controls.begin.native_api.installed_sources
+        $requiredSources = @(
+            'Source/Developer/FunctionalTesting/Private/AutomationBlueprintFunctionLibrary.cpp',
+            'Source/Developer/FunctionalTesting/Public/AutomationBlueprintFunctionLibrary.h',
+            'Config/BaseEngine.ini'
+        )
+        if ($apiSources.Count -ne 3) { throw 'Unexpected installed visual control source inventory.' }
+        foreach ($relative in $requiredSources) {
+            $actual = File-Identity (Join-Path $engineRoot $relative) 4MB
+            if ($actual.sha256 -cne $apiSources[$relative].sha256 -or
+                $actual.size_bytes -ne $apiSources[$relative].size_bytes) {
+                throw ('Installed visual control API/configuration changed: ' + $relative)
+            }
+            $receipt.evidence[('control-api-' + $relative)] = $actual
+        }
+        $allocatorPath = 'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsComponent230Detail.cpp'
+        $allocator = File-Identity (Join-Path $root $allocatorPath) 4MB
+        $allocatorPin = $controls.begin.native_api.transient_allocator[$allocatorPath]
+        if ($allocator.sha256 -cne $allocatorPin.sha256 -or $allocator.size_bytes -ne $allocatorPin.size_bytes) {
+            throw 'Transient visual-control allocator source changed.'
+        }
+        Assert-Identity $expectedControls.identity 2MB
+        $receipt.evidence.visual_control_receipt = $controlReceipt.identity
+        $receipt.evidence.visual_control_allocator = $allocator
+        $receipt.visual_controls_frames_retained = $true
+        $receipt.visual_control_frame_count = 8
+    }
     foreach ($original in @($readHost.identity, $savedHost.identity, $savedReceipt.identity,
                             $reopenReceipt.identity)) { Assert-Identity $original 2MB }
     Assert-Identity $savedManifest.identity 4MB

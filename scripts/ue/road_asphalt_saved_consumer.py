@@ -1,8 +1,9 @@
 """Author a new road/shoulder material map and verify a separate UE process.
 
 Action prepare is the sole mutation authority: a new derived map, retained
-Material Forge asphalt and source-owned gravel across the current network. Reload is
-read-only and never repairs or re-saves any binding. The accepted #363 map,
+Material Forge asphalt and source-owned gravel across the current network.
+The explicit edge-marking lane adds source-triangle-clipped render-only paint.
+Reload is read-only and never repairs or re-saves any binding. The accepted #363 map,
 Landscape, source road geometry, route and road physics are immutable.
 """
 
@@ -97,7 +98,7 @@ def inventory_digest(snapshot):
 
 
 def expected_saved_inventory(original, saved, material_path, *, observed_map_package,
-                             shoulder_receipt=None):
+                             shoulder_receipt=None, edge_marking_receipt=None):
     """Audit every field using the actual owning map in this Editor phase.
 
     Before SaveMap both snapshots belong to the frozen source map. Only after
@@ -147,8 +148,155 @@ def expected_saved_inventory(original, saved, material_path, *, observed_map_pac
                     "parent": assets["master"], "class": "MaterialInstanceConstant",
                     "effective_color": None})
                 bindings[0]["materials"].append(assets["instance"])
+    if edge_marking_receipt is not None:
+        additions = edge_marking_inventory(edge_marking_receipt)
+        for field, key in (("actors", lambda row: row[0]),
+                           ("mesh_material_collision_snapshot", lambda row: row["component"])):
+            original_paths = {key(row) for row in old[field]}
+            require(not original_paths.intersection(key(row) for row in additions[field]),
+                    "New edge marking objects overlap the accepted scene inventory")
+            old[field] = sorted(old[field] + additions[field], key=key)
     canary._expected_live_snapshot(old, actual, road["component"], material_path)
     return inventory_digest(actual)
+
+
+def edge_markings_enabled():
+    value = os.environ.get("YACS_ROAD_EDGE_MARKINGS", "0")
+    require(value in ("0", "1"), "Explicit edge marking lane must be 0 or 1")
+    return value == "1"
+
+
+def load_edge_marking_plan(source_plan):
+    """Read inert pinned producer bytes; the dedicated resolver owns addresses.
+
+    Loading source data never imports or executes the retained road producer.
+    Native placement separately verifies every addressed triangle and corner.
+    """
+    from scripts.ue import road_edge_marking_consumer as markings
+    from scripts.ue import road_pavement_source_bindings as bindings
+
+    frozen_relative = str(Path(session.PROFILE_RELATIVE).parent).replace("\\", "/")
+    frozen_root = session._safe_path(Path(load_workspace()["data"]), frozen_relative)
+    path = session._safe_path(frozen_root, markings.PRODUCER_PATH)
+    identity = session._identity(path, 32 * 1024)
+    require(identity == markings.PRODUCER_IDENTITY,
+            "Saved edge markings require the exact retained pavement producer")
+    producer = path.read_bytes()
+    require(len(producer) == identity["size_bytes"]
+            and hashlib.sha256(producer).hexdigest() == identity["sha256"],
+            "Pavement producer changed between authentication and preparation")
+    addresses = bindings.prepare_bindings(source_plan, producer_bytes=producer)
+    require(isinstance(addresses, dict) and set(addresses) == {"quad_triangles", "triangle_bindings"},
+            "Pavement binding resolver returned an unsupported contract")
+    return markings.prepare(source_plan, producer_bytes=producer, **addresses)
+
+
+def edge_marking_inventory(receipt):
+    """Project only the exact native paint receipt into the full scene audit.
+
+    No observed actor/component is filtered out. Every source field remains in
+    the comparison; these explicitly authenticated new rows are the only delta.
+    Native enum identity and all geometry/flags are verified separately in the
+    creation or read-only fresh consumer before this structural projection.
+    """
+    from scripts.ue import road_edge_marking_consumer as markings
+    from scripts.ue import road_edge_marking_material as material
+
+    require(isinstance(receipt, dict)
+            and receipt.get("schema_version") == 1
+            and receipt.get("status") == "EDGE_MARKINGS_CREATED_REVIEW_PENDING"
+            and receipt.get("material_packages_saved") is True
+            and receipt.get("native_surface_correspondence_verified") is True
+            and receipt.get("all_marking_buffers_verified") is True
+            and receipt.get("full_source_buffers_preserved") is True
+            and all(receipt.get(flag) is False for flag in markings.FALSE_FLAGS),
+            "Edge marking inventory has no complete render-only native receipt")
+    collision = receipt.get("native_no_collision")
+    require(isinstance(collision, str) and 0 < len(collision) < 128,
+            "Missing native no-collision enum readback")
+    geometry = receipt.get("geometry", {})
+    owners, counts = geometry.get("owners", []), geometry.get("counts", {})
+    require(isinstance(owners, list) and len(owners) == shoulder_sources.OWNER_COUNT - 1
+            and counts.get("source_owner_count") == shoulder_sources.OWNER_COUNT
+            and counts.get("pavement_owner_count") == len(owners)
+            and counts.get("excluded_parapet_count") == 1
+            and counts.get("mesh_count") == len(owners) * 2,
+            "Edge marking inventory lacks complete pavement owner coverage")
+    owner_labels = [row.get("support_label") for row in owners]
+    require(len(set(owner_labels)) == len(owners)
+            and all(isinstance(label, str) and re.fullmatch(r"YACS_PERSIST_SUPPORT_[0-9]{3}", label)
+                    and int(label[-3:]) < shoulder_sources.OWNER_COUNT for label in owner_labels),
+            "Edge marking source ownership is duplicated or out of scope")
+    labels = {markings.ACTOR_PREFIX + label[-3:] + "_" + edge
+              for label in owner_labels for edge in ("edge0", "edge24")}
+    assets = receipt.get("material", {}).get("assets")
+    require(assets == material.asset_paths(), "Edge paint material escaped its bounded namespace")
+    rows = receipt.get("actors", [])
+    require(isinstance(rows, list) and len(rows) == len(labels)
+            and {row.get("label") for row in rows} == labels,
+            "Edge marking native actor receipt is missing, duplicated or foreign")
+    actors, components = [], []
+    for row in rows:
+        state = row.get("actor", {})
+        path, component = state.get("path"), row.get("component")
+        require(state.get("label") == row["label"] and isinstance(path, str)
+                and path.startswith("<scene>.<world>:PersistentLevel.")
+                and ":" not in path.removeprefix("<scene>.<world>:PersistentLevel.")
+                and isinstance(component, str) and component.startswith(path + ".")
+                and state.get("location_cm") == [0., 0., 0.]
+                and state.get("rotation_deg") == [0., 0., 0.]
+                and state.get("scale") == [1., 1., 1.]
+                and row.get("material") == assets["instance"],
+                "Edge marking transform, component ownership or material binding differs")
+        actors.append([path, [state["location_cm"], state["rotation_deg"], state["scale"]]])
+        components.append({"component": component, "materials": [assets["instance"]], "collision": collision})
+    require(len({row[0] for row in actors}) == len(actors)
+            and len({row["component"] for row in components}) == len(components),
+            "Edge marking native object paths are not unique")
+    return {"actors": sorted(actors),
+            "mesh_material_collision_snapshot": sorted(components, key=lambda row: row["component"])}
+
+
+def create_edge_markings(api, plan, asphalt_assets):
+    """Save only the new paint M/MI; the outer transaction owns the derived map."""
+    from scripts.ue import road_edge_marking_consumer as markings
+
+    actors, receipt = markings.create(api, plan, asphalt_assets)
+    try:
+        for path in receipt["material"]["assets"].values():
+            asset = api.load_asset(path)
+            require(asset is not None and api.EditorAssetLibrary.save_loaded_asset(
+                asset, only_if_is_dirty=False), "Derived edge marking material save failed")
+        receipt = {**receipt, "material_packages_saved": True,
+                   "native_no_collision": str(api.CollisionEnabled.NO_COLLISION)}
+        edge_marking_inventory(receipt)
+        return actors, receipt
+    except Exception:
+        markings._rollback_created(api, actors, receipt["original_source_state"], markings._world(api))
+        raise
+
+
+def verify_edge_markings(api, manifest, *, enabled):
+    """Shared fresh-reload/GPU entry point; no spawn, setters, saves or repairs."""
+    require(type(enabled) is bool, "Edge marking mode is not an explicit boolean")
+    receipt = manifest.get("edge_markings")
+    require((receipt is not None) == enabled and manifest.get("edge_markings_enabled", False) is enabled,
+            "Saved edge marking mode differs from the explicitly selected native lane")
+    if not enabled:
+        return None
+    from scripts.ue import road_edge_marking_consumer as markings
+
+    require(receipt.get("native_no_collision") == str(api.CollisionEnabled.NO_COLLISION),
+            "Saved paint collision enum differs from the pinned native API")
+    edge_marking_inventory(receipt)
+    packages = {"Content/" + path.split(".", 1)[0].removeprefix("/Game/") + ".uasset"
+                for path in receipt["material"]["assets"].values()}
+    require(packages.issubset({row["path"] for row in manifest["assets"]}),
+            "Saved paint M/MI packages are not covered by retained byte identities")
+    plan = load_edge_marking_plan(shoulder_sources.load_sources())
+    asphalt_assets = {"instance": manifest["material_instance"], "master": manifest["material_master"],
+                      "textures": manifest["texture_objects"]}
+    return markings.verify_loaded(api, plan, receipt, asphalt_assets)
 
 
 def verified_staging(exact_sha, staging_hash):
@@ -414,7 +562,9 @@ def verify_retained_files(retained, rows):
             require(actual == expected, "Saved road material package differs: " + name)
 
 
-def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, source_dependencies):
+def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, source_dependencies,
+            edge_markings=False):
+    require(type(edge_markings) is bool, "Edge marking mode is not an explicit boolean")
     require(not (ROOT / MAP_FILE).exists(), "Existing road-only saved map cannot be overwritten")
     require(not (ROOT / PREFIX).exists(), "Existing asphalt consumer package tree")
     before = original["native_inventory"]
@@ -428,6 +578,8 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
     )
     canary.verify_accepted_surface(inventory_before)
     baseline.native_projection(api)
+    source_plan = shoulder_sources.load_sources()
+    marking_plan = load_edge_marking_plan(source_plan) if edge_markings else None
     source_before = asphalt_source.verify_retained_replay()
     from scripts.ue import import_material_forge_variant as forge
 
@@ -468,7 +620,6 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
     ) or component.get_path_name() == inventory_before["road_supports"][0]["component"],
             "Road component ownership differs")
     road_mesh_before = shoulder.inspect_mesh(api, component)["summary"]
-    source_plan = shoulder_sources.load_sources()
     gravel, gravel_receipt = shoulder_material.create_material(
         api, shoulder_material.DESTINATION_ROOT, source_dependencies, receipt["assets"])
     shoulder_material.verify_material(api, gravel_receipt, source_dependencies)
@@ -477,6 +628,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
         require(asset is not None and api.EditorAssetLibrary.save_loaded_asset(
             asset, only_if_is_dirty=False), "Derived shoulder material save failed")
     rollback_state = None
+    marking_actors, marking_receipt = (), None
     saved = False
     try:
         component.set_material(0, instance)
@@ -489,15 +641,18 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
         )
         require(shoulder.inspect_mesh(api, component)["summary"] == road_mesh_before,
                 "Road geometry, corner attributes or triangle IDs changed during material assignment")
+        if edge_markings:
+            marking_actors, marking_receipt = create_edge_markings(api, marking_plan, receipt["assets"])
         live = baseline.native_inventory(api, prep, session.operation.MAP_PACKAGE)
         expected_saved_inventory(
             inventory_before, live, instance_path,
             observed_map_package=session.operation.MAP_PACKAGE,
             shoulder_receipt=shoulder_receipt,
+            edge_marking_receipt=marking_receipt,
         )
         world = api.get_editor_subsystem(api.UnrealEditorSubsystem).get_editor_world()
         require(api.EditorLoadingAndSavingUtils.save_map(world, MAP),
-                "New material-only derived map save failed")
+                "New derived road material review map save failed")
         saved = True
         require((ROOT / MAP_FILE).is_file(), "New derived map file was not saved")
         observed_map = active_map_after_save(api)
@@ -508,14 +663,24 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
             inventory_before, after, instance_path,
             observed_map_package=observed_map,
             shoulder_receipt=shoulder_receipt,
+            edge_marking_receipt=marking_receipt,
         )
     except Exception:
         if not saved:
-            component.set_material(0, old_material)
-            if rollback_state is not None:
-                shoulder.rollback(api, rollback_state)
-            require(shoulder.inspect_mesh(api, component)["summary"] == road_mesh_before,
-                    "Original road buffers changed during rollback")
+            try:
+                if marking_receipt is not None:
+                    from scripts.ue import road_edge_marking_consumer as markings
+
+                    # Its baseline includes the new asphalt/shoulder bindings;
+                    # remove paint before restoring those original bindings.
+                    markings._rollback_created(api, marking_actors, marking_receipt["original_source_state"],
+                                               markings._world(api))
+            finally:
+                component.set_material(0, old_material)
+                if rollback_state is not None:
+                    shoulder.rollback(api, rollback_state)
+                require(shoulder.inspect_mesh(api, component)["summary"] == road_mesh_before,
+                        "Original road buffers changed during rollback")
         raise
     session._verify_rows(ROOT, rows)
     session._assert_package_members(ROOT, rows)
@@ -556,6 +721,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
         "dry_asphalt_response": receipt["dry_asphalt_response"],
         "road_profile_diagnostic": profile_identity,
         "material_changes": "road_slot_zero_network_outer_shoulder_ids_and_edge_uv",
+        "edge_markings_enabled": edge_markings,
         "landscape_1024_unchanged": True,
         "road_geometry_unchanged": True,
         "physics_profile_unchanged": True,
@@ -565,6 +731,8 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
         "performance_status": "DEFERRED_AFTER_M3",
         "performance_pass": False,
     }
+    if edge_markings:
+        manifest["edge_markings"] = marking_receipt
     manifest_id = write_once(retained / MANIFEST, manifest)
     require(write_once(session._safe_path(proof, MANIFEST), manifest) == manifest_id,
             "Downloadable material manifest differs from retained native evidence")
@@ -579,6 +747,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
         "retained_root": str(retained),
         "derived_map_sha256": next(x["sha256"] for x in assets if x["path"] == MAP_FILE),
         "material_saved": True,
+        "edge_markings_enabled": edge_markings,
         "new_world_only": True,
         "fresh_reload_verified": False,
         "performance_pass": False,
@@ -588,13 +757,16 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
     }))
 
 
-def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, source_dependencies):
+def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, source_dependencies,
+           edge_markings=False):
+    require(type(edge_markings) is bool, "Edge marking mode is not an explicit boolean")
     prepare_row = session._read_json(session._safe_path(proof, PREPARED), limit=JSON_LIMIT)
     require(
         prepare_row.get("status") == "ROAD_ASPHALT_SAVED_PREPARED"
         and prepare_row.get("exact_sha") == exact_sha
         and prepare_row.get("material_saved") is True
         and prepare_row.get("fresh_reload_verified") is False
+        and prepare_row.get("edge_markings_enabled", False) is edge_markings
         and prepare_row.get("retained_root") == str(retained),
         "No authentic native saved-consumer preparation",
     )
@@ -644,6 +816,7 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
     )
     shoulder_material.verify_material(api, manifest["shoulder_network"]["material"], source_dependencies)
     shoulder.verify_loaded(api, manifest["shoulder_network"])
+    marking_readback = verify_edge_markings(api, manifest, enabled=edge_markings)
     verify_road_mesh(api, manifest["road_mesh"])
     require(
         instance.get_path_name() == manifest["material_instance"],
@@ -654,6 +827,7 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
         original["native_inventory"], after, manifest["material_instance"],
         observed_map_package=MAP,
         shoulder_receipt=manifest["shoulder_network"],
+        edge_marking_receipt=manifest.get("edge_markings"),
     )
     require(
         inventory_hash == manifest["expected_normalized_inventory_sha256"],
@@ -678,6 +852,11 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
         "fresh_process": True,
         "road_material_reapplied": False,
         "shoulder_material_reapplied": False,
+        "edge_markings_enabled": edge_markings,
+        "edge_marking_material_reapplied": False,
+        "edge_marking_geometry_reapplied": False,
+        "edge_markings_fresh_reload_verified": marking_readback is not None,
+        "edge_marking_readback": marking_readback,
         "shoulder_network_fresh_reload_verified": True,
         "shoulder_positions_indices_normals_original_uv_prefix_unchanged": True,
         "shoulder_material_edge_uv_fresh_reload_verified": True,
@@ -702,6 +881,7 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
 def main():
     action = os.environ.get("YACS_ROAD_SAVED_ACTION", "")
     require(action in ("prepare", "reload"), "Explicit saved consumer action required")
+    markings = edge_markings_enabled()
     session._assert_isolated_root()
     require(ROOT == session.ROOT == prep.ROOT, "Saved consumer modules belong to another checkout")
     exact_sha, staging_sha, token, proof, retained = proof_paths()
@@ -728,10 +908,10 @@ def main():
     prep.assert_isolated_bootstrap(unreal)
     if action == "prepare":
         prepare(unreal, proof, retained, exact_sha, staging_sha, original, rows,
-                source_dependencies=stage["source_dependencies"])
+                source_dependencies=stage["source_dependencies"], edge_markings=markings)
     else:
         reload(unreal, proof, retained, exact_sha, staging_sha, original, rows,
-               source_dependencies=stage["source_dependencies"])
+               source_dependencies=stage["source_dependencies"], edge_markings=markings)
     session._verify_rows(ROOT, rows)
     require(
         session._identity(staging_path, JSON_LIMIT) == stage_identity,

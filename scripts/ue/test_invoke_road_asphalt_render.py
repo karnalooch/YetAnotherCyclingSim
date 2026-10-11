@@ -292,6 +292,151 @@ foreach ($failure in @('order', 'pose', 'station', 'plan_hash', 'profile', 'prim
             self.assertIn("POWERSHELL_GPU_CONTRACT_CASES_PASS", result.stdout)
 
     @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
+    def test_actual_control_gate_rejects_changed_images_modes_and_restoration(self):
+        from scripts.ue import road_asphalt_visual_controls as controls
+        from scripts.ue.road_asphalt_saved_consumer import MAP
+
+        plan = controls.control_plan()
+        original = "/Game/Generated/YACS/RoadAsphaltConsumer/MI_Test.MI_Test"
+        transient = "/Engine/Transient.ControlFixture"
+        frames, applied = [], []
+        for job in plan["jobs"]:
+            pose, mode = job["camera"], job["control"]
+            delta = [target - eye for target, eye in zip(pose["target_cm"], pose["camera_location_cm"], strict=True)]
+            length = math.sqrt(sum(value * value for value in delta))
+            camera = {"rotation_setter_accepted": True, "location_cm": list(pose["camera_location_cm"]),
+                "forward_unit": [value / length for value in delta], "fov_deg": pose["fov_deg"], "forward_error": 0.0}
+            observation = {"control": mode,
+                "active_viewmode_readback": "VMI_VISUALIZE_BUFFER" if mode in controls.BUFFERS else "VMI_LIT",
+                "road_material_readback": transient if mode == "uniform-lit" else original,
+                "requested_buffer": controls.BUFFERS.get(mode), "buffer_name_readback_verified": False}
+            capture = {"native_camera_observation": camera,
+                "native_control_observation_before": observation, "native_control_observation_after": observation}
+            frames.append({**deepcopy(pose), **deepcopy(capture), "frame_id": job["job_id"], "source_frame_id": pose["frame_id"],
+                "control_mode": mode, "file": "road-asphalt-visual-controls/frames/" + job["job_id"] + ".png",
+                "width": 1280, "height": 720, "unique_sampled_rgb": 100,
+                "render_mode": "buffer_visualization" if mode in controls.BUFFERS else "lit",
+                "visual_quality_reviewed": False,
+                "capture_readiness": {"status": "NATIVE_LOADING_AND_MIPS_READY",
+                    "height_mip_lease_requested": True, "viewport_primed_at_rider_camera": True,
+                    "material_texture_count": 7},
+                "priming_frames": [{**deepcopy(capture),
+                    "file": f"road-asphalt-visual-controls/priming/{job['job_id']}-{index:02d}.png"}
+                    for index in range(3)]})
+            applied.append({"job_id": job["job_id"], **observation})
+        ownership = {"run_token": "123-1", "consumer_exact_sha": "a" * 40,
+            "owned_process_marker_verified": True, "pid": 1234}
+        native_api = {"engine_version": controls.ENGINE_VERSION, "synthetic_fixture": True}
+        good = {"schema_version": 1, "issue": 364,
+            "status": "ROAD_ASPHALT_VISUAL_CONTROLS_FRAMES_RETAINED",
+            "exact_sha": "a" * 40, "run_token": "123-1", "map_package": MAP,
+            "saved_manifest_sha256": "b" * 64, "view_plan_sha256": "c" * 64,
+            "camera_csv_sha256": plan["survey_sha256"],
+            "lit_review_receipt": {"file": "road-asphalt-lit-review.json", "sha256": "d" * 64, "size_bytes": 100},
+            "control_plan": plan, "control_plan_sha256": controls.digest(plan),
+            "frame_count": 8, "expected_frame_count": 8, "frames": frames,
+            "priming_frames_per_pose": 3, "completed_priming_frames": 24,
+            "total_deadline_seconds_shared_with_lit": 1080, "frame_deadline_seconds": 180,
+            "owner_visual_status": "PENDING_FINAL_M3", "performance_status": "DEFERRED_AFTER_M3", "errors": [],
+            "preflight": {"ownership": ownership, "native_api": native_api},
+            "begin": {"status": "READY", "plan_sha256": controls.digest(plan),
+                "original_material": original, "transient_material": transient,
+                "ownership": ownership, "native_api": native_api,
+                "uniform_node_count": 6, "uniform_material": controls.UNIFORM,
+                "view_state_contract": "owned_editor_establish_Lit_and_restore_Lit",
+                "buffer_name_getter_available": False, "geometry_vertex_normals_preserved": True},
+            "restore": {"status": "RESTORED", "plan_sha256": controls.digest(plan),
+                "applied_jobs": applied, "cleanup_errors": [],
+                "original_material_restored": True, "owned_viewports_returned_to_lit": True,
+                "saved_and_staged_package_bytes_unchanged": True},
+            **{key: True for key in ("control_restoration_verified", "capture_readiness_verified",
+                "native_control_observations_verified", "sources_and_saved_assets_unchanged")},
+            **{key: False for key in ("native_channel_images_reviewed", "buffer_name_readback_verified",
+                "geometry_or_source_texture_change", "map_saved", "source_assets_saved",
+                "whole_area_visual_admitted", "performance_pass")}}
+        # This runs only receipt policy against disposable synthetic data. It
+        # does not assert that a native image or restored UE scene exists.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = root / "input.json"
+            fixture.write_text(json.dumps({"expected": {"control_plan": plan, "sha256": controls.digest(plan)},
+                "original": original, "lit": {"sha256": "d" * 64, "size_bytes": 100}, "good": good},
+                allow_nan=False), encoding="utf-8")
+            runner = root / "control-contracts.ps1"
+            runner.write_text(r'''
+param([string] $Wrapper, [string] $InputJson)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$tokens = $null; $errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref]$tokens, [ref]$errors)
+if ($errors.Count) { throw ($errors.Message -join '; ') }
+foreach ($name in @('Assert-JsonEqual', 'Assert-NativeCameraObservation',
+                    'Assert-VisualControlObservation', 'Assert-VisualControlContract')) {
+    $nodes = @($ast.FindAll({ param($node)
+        $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name
+    }, $true))
+    if ($nodes.Count -ne 1) { throw 'Missing unique production visual control function.' }
+    . ([scriptblock]::Create($nodes[0].Extent.Text))
+}
+$fixture = Get-Content -LiteralPath $InputJson -Raw | ConvertFrom-Json -AsHashtable -Depth 40
+function Check($data) {
+    Assert-VisualControlContract $data $fixture.expected ('c' * 64) ('b' * 64) `
+        $fixture.lit $fixture.original ('a' * 40) '123-1'
+}
+Check $fixture.good
+foreach ($failure in @('order', 'camera', 'source_pose', 'mode', 'file', 'count', 'plan', 'plan_hash',
+                       'lit_receipt', 'manifest', 'prime_count', 'prime_name', 'prime_mode', 'prime_camera',
+                       'material', 'buffer', 'buffer_claim', 'mips', 'restoration', 'view_restore',
+                       'saved_bytes', 'owner', 'performance', 'deadline', 'token', 'transient',
+                       'preflight', 'uniform', 'normals', 'api_claim', 'station', 'render_mode', 'visual_claim')) {
+    $data = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+    switch ($failure) {
+        'order' { $swap = $data.frames[0]; $data.frames[0] = $data.frames[1]; $data.frames[1] = $swap }
+        'camera' { $data.frames[0].native_camera_observation.location_cm[0] += 1 }
+        'source_pose' { $data.frames[0].source_frame_id = 'window-0112-forward-00002' }
+        'mode' { $data.frames[1].native_control_observation_after.active_viewmode_readback = 'VMI_LIT' }
+        'file' { $data.frames[0].file = 'road-asphalt-lit-review/frames/reused.png' }
+        'count' { $data.frames = $data.frames[0..6] }
+        'plan' { $data.control_plan.jobs[0].camera.station_m += 1 }
+        'plan_hash' { $data.control_plan_sha256 = 'e' * 64 }
+        'lit_receipt' { $data.lit_review_receipt.sha256 = 'e' * 64 }
+        'manifest' { $data.saved_manifest_sha256 = 'e' * 64 }
+        'prime_count' { $data.completed_priming_frames = 23 }
+        'prime_name' { $data.frames[0].priming_frames[1].file = $data.frames[0].priming_frames[0].file }
+        'prime_mode' { $data.frames[2].priming_frames[1].native_control_observation_before.active_viewmode_readback = 'VMI_LIT' }
+        'prime_camera' { $data.frames[0].priming_frames[2].native_camera_observation.fov_deg += 1 }
+        'material' { $data.frames[3].native_control_observation_after.road_material_readback = $fixture.original }
+        'buffer' { $data.frames[1].native_control_observation_before.requested_buffer = 'WorldNormal' }
+        'buffer_claim' { $data.frames[1].native_control_observation_after.buffer_name_readback_verified = $true }
+        'mips' { $data.frames[0].capture_readiness.material_texture_count = 6 }
+        'restoration' { $data.restore.status = 'FAILED' }
+        'view_restore' { $data.restore.owned_viewports_returned_to_lit = $false }
+        'saved_bytes' { $data.restore.saved_and_staged_package_bytes_unchanged = $false }
+        'owner' { $data.whole_area_visual_admitted = $true }
+        'performance' { $data.performance_pass = $true }
+        'deadline' { $data.total_deadline_seconds_shared_with_lit = 2160 }
+        'token' { $data.begin.ownership.run_token = '456-1' }
+        'transient' { $data.begin.transient_material = '/Game/Materials/Changed.Changed' }
+        'preflight' { $data.preflight.native_api.engine_version = 'different build' }
+        'uniform' { $data.begin.uniform_material.roughness = 0.2 }
+        'normals' { $data.begin.geometry_vertex_normals_preserved = $false }
+        'api_claim' { $data.begin.buffer_name_getter_available = $true }
+        'station' { $data.frames[0].station_m += 1 }
+        'render_mode' { $data.frames[1].render_mode = 'lit' }
+        'visual_claim' { $data.frames[0].visual_quality_reviewed = $true }
+    }
+    $rejected = $false
+    try { Check $data } catch { $rejected = $true }
+    if (-not $rejected) { throw ('Production visual control gate admitted ' + $failure) }
+}
+'POWERSHELL_VISUAL_CONTROL_CASES_PASS'
+''', encoding="utf-8")
+            result = subprocess.run(["pwsh", "-NoProfile", "-File", str(runner), str(HOST), str(fixture)],
+                capture_output=True, text=True, check=False, timeout=60)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("POWERSHELL_VISUAL_CONTROL_CASES_PASS", result.stdout)
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
     def test_real_powershell_parser_accepts_native_gpu_wrapper(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "check.ps1"

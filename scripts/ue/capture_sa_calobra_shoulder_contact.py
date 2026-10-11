@@ -1,4 +1,4 @@
-"""Capture 12 original-size window0112 owner-isolation frames in isolated CI.
+"""Capture source owner isolation: default 12 window0112 or 6 hairpin0081 frames.
 
 No geometry is generated, no LOD is forced, no map is saved. This script never
 attaches to the owner's editor. The workflow must prove the host idle before
@@ -22,14 +22,12 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from scripts.proof.sa_calobra_shoulder_contact import (  # noqa: E402
-    CUT_BOUNDS_CM,
-    CUT_FILE,
-    CUT_SHA256,
-    WINDOW,
+    cut_bounds,
     diagnostic_plan,
     digest,
     interior_top_triangles,
     overlaps,
+    target_spec,
     triangle_delta,
 )
 from scripts.proof.sa_calobra_tpp_survey import FROZEN_SHA, load_frozen_windows  # noqa: E402
@@ -42,6 +40,7 @@ PRIMARY_SYMBOLS = {
     "SectionBaseX",
     "SectionBaseY",
     "ComponentSizeQuads",
+    "GetComponentBounds",
     "ForcedLOD",
     "LODBias",
     "SetVisibility",
@@ -124,6 +123,64 @@ def native_triangles(api, mesh, ids=(), *, allow_missing=False):
     return report
 
 
+def native_support_snapshot(api, mesh, *, target="window0112"):
+    """Respect the native 12000-face limit while hashing the complete support."""
+    if target == "window0112":
+        return native_triangles(api, mesh)
+    expected = target_spec(target)["mesh_counts"]
+    positions = {}
+    for first in range(0, expected[1], 12000):
+        ids = range(first, min(first + 12000, expected[1]))
+        part = native_triangles(api, mesh, ids)
+        if (part["vertex_count"], part["triangle_count"]) != expected:
+            raise RuntimeError("Hairpin native support buffer inventory differs")
+        if not set(positions).isdisjoint(part["positions"]):
+            raise RuntimeError("Hairpin native support triangle chunks overlap")
+        positions.update(part["positions"])
+    if set(positions) != set(range(expected[1])):
+        raise RuntimeError("Hairpin native support triangle inventory is not dense/complete")
+    return {"vertex_count": expected[0], "triangle_count": expected[1],
+            "returned_triangle_count": len(positions), "positions": positions}
+
+
+def native_component_layout(api, component, landscape_transform):
+    """Use the already exercised native world-bounds API, not hidden properties.
+
+    See sa_calobra_saved_material_consumer.terrain_bounds and the whole-map
+    native capture. The fresh installed KismetSystemLibrary.h receipt proves
+    GetComponentBounds. Source section bases and the actual Landscape transform
+    independently check these world XY bounds against the unchanged 0.5m grid.
+    This reads a footprint; it does not infer terrain height or rendered LOD.
+    """
+    if (landscape_transform["rotation_deg"] != (0.0, 0.0, 0.0)
+            or tuple(landscape_transform["scale"][:2]) != (50.0, 50.0)):
+        raise RuntimeError("Source Landscape transform/grid differs")
+    base = tuple(component.get_editor_property(key) for key in ("section_base_x", "section_base_y"))
+    if any(type(value) is not int or not -2147483648 <= value <= 2147483647 for value in base):
+        raise RuntimeError("Native Landscape section base is invalid")
+    raw = api.SystemLibrary.get_component_bounds(component)
+    if not isinstance(raw, tuple) or len(raw) != 3:
+        raise RuntimeError("Native Landscape component bounds return contract differs")
+    origin, extent, radius = xyz(raw[0]), xyz(raw[1]), raw[2]
+    if (type(radius) not in (int, float)
+            or not all(math.isfinite(value) for value in (*origin, *extent, radius))
+            or min(extent) < 0 or min(extent[:2]) <= 0 or radius <= 0):
+        raise RuntimeError("Native Landscape component bounds are invalid")
+    bounds = (origin[0] - extent[0], origin[1] - extent[1],
+              origin[0] + extent[0], origin[1] + extent[1])
+    location, scale = landscape_transform["location_cm"], landscape_transform["scale"]
+    spans = tuple(2.0 * extent[axis] / scale[axis] for axis in (0, 1))
+    size = round(spans[0])
+    if (not 1 <= size <= 512 or any(abs(span - size) > 0.000001 for span in spans)
+            or any(abs(bounds[axis] - (location[axis] + base[axis] * scale[axis])) > 0.001
+                   for axis in (0, 1))):
+        raise RuntimeError("Native Landscape bounds disagree with the source section grid")
+    return {"section_base": base, "component_size_quads": size, "bounds_cm": bounds,
+            "component_size_source": "native_world_bounds_divided_by_source_grid",
+            "native_bounds_query": "SystemLibrary.GetComponentBounds",
+            "native_origin_cm": origin, "native_extent_cm": extent, "native_radius_cm": float(radius)}
+
+
 def mesh_triangle(snapshot, tid):
     if tid not in snapshot["positions"]:
         raise RuntimeError("Saved support triangle is unavailable: " + str(tid))
@@ -180,8 +237,8 @@ class ContactCapture(SurveyCapture):
         super().__init__(*args, **kwargs)
         self.report.update(
             planned_frames=diagnostic["frames"],
-            frame_count=12,
-            windows=[WINDOW],
+            frame_count=diagnostic["frame_count"],
+            windows=[diagnostic["frames"][0]["window_id"]],
             window_count=1,
             transitions=[],
             capture_kind="Issue459 internal contact surface-owner isolation",
@@ -219,7 +276,7 @@ class ContactCapture(SurveyCapture):
 
     def tick(self, delta):
         if not self.stopped and self.clock() - self.started > 900:
-            self.stop("Bounded 12-frame diagnostic deadline exceeded (900s)")
+            self.stop("Bounded owner-isolation diagnostic deadline exceeded (900s)")
             return
         super().tick(delta)
 
@@ -227,12 +284,14 @@ class ContactCapture(SurveyCapture):
 class Owner:
     def __init__(self, api):
         self.api, self.capture = api, None
+        self.target = os.environ.get("YACS_SHOULDER_CONTACT_TARGET", "window0112")
+        self.spec = target_spec(self.target)
         self.transient = []
         self.before = self.mesh = self.viewport = None
         self.report = {
             "status": "STARTED",
             "source_road_sha": FROZEN_SHA,
-            "window_id": WINDOW,
+            "window_id": self.spec["window_id"],
             "geometry_mutated": False,
             "saved_to_map": False,
             "rendered_owner": "PENDING_PAIRED_VISUAL_REVIEW",
@@ -288,7 +347,7 @@ class Owner:
 
     def _start_capture(self):
         # ExecutePythonScript otherwise exits before the asynchronous Slate
-        # callbacks can collect the twelve images, as in the road GPU loop.
+        # callbacks can collect the images, as in the road GPU loop.
         self.api.EditorPythonScripting.set_keep_python_script_alive(True)
         self.capture.start()
 
@@ -305,12 +364,17 @@ class Owner:
         for action in (
             lambda: self.capture.restore_visibility() if self.capture else None,
             lambda: self.restore_viewport(),
-            lambda: self.release_height_mips(),
         ):
             try:
                 action()
             except Exception:
                 errors.append(traceback.format_exc())
+        height_mips_released = False
+        try:
+            self.release_height_mips()
+            height_mips_released = True
+        except Exception:
+            errors.append(traceback.format_exc())
         for actor in reversed(self.transient):
             try:
                 if not self.actors.destroy_actor(actor):
@@ -327,7 +391,7 @@ class Owner:
                     "Source actor inventory/transforms differ after cleanup"
                 )
             if self.mesh is not None:
-                support_hash = mesh_digest(native_triangles(self.api, self.mesh))
+                support_hash = mesh_digest(native_support_snapshot(self.api, self.mesh, target=self.target))
                 if support_hash != self.report["support"]["triangle_sha256"]:
                     raise RuntimeError("Target support triangle coordinates changed")
             for component, before in getattr(self, "landscape_state", []):
@@ -351,11 +415,11 @@ class Owner:
             status="FAILED" if error else "SHOULDER_CONTACT_CAPTURED",
             error=error,
             restoration={
-                "status": "FAILED" if errors else "RESTORED",
+                "status": "FAILED" if error else "RESTORED",
                 "map_sha256": map_hash,
                 "support_triangle_sha256": support_hash,
                 "transient_actors_destroyed": len(self.transient),
-                "height_mip_leases_released": True,
+                "height_mip_leases_released": height_mips_released,
             },
         )
         self.write()
@@ -394,6 +458,7 @@ class Owner:
             "forced_lod": int(c.get_editor_property("forced_lod")),
             "lod_bias": int(c.get_editor_property("lod_bias")),
             "material": material.get_path_name() if material else None,
+            "layout": native_component_layout(self.api, c, self.landscape_transform),
         }
 
     def start(self):
@@ -431,18 +496,25 @@ class Owner:
         self.report["primary_api_receipt_sha256"] = digest(receipt_path)
         frozen = Path(os.environ["YACS_SA_CALOBRA_TPP_FROZEN_ROOT"])
         source = load_frozen_windows(frozen)
-        if digest(frozen / CUT_FILE) != CUT_SHA256:
-            raise RuntimeError("Target CUT footprint source differs")
+        cut_raw = (frozen / self.spec["cut_file"]).read_bytes()
+        self.cut_footprint = cut_bounds(cut_raw, target=self.target)
+        if self.target == "hairpin0081":
+            # Retain the tiny exact source document so an artifact verifier can
+            # independently derive this AOI, without trusting a receipt's box.
+            with (self.out / "source-cut-manifest.json").open("xb") as stream:
+                stream.write(cut_raw)
         self.report.update(
             source_identity=source["source_identity"],
-            cut_manifest_sha256=CUT_SHA256,
-            cut_footprint_cm=CUT_BOUNDS_CM,
+            cut_manifest_sha256=self.spec["cut_sha256"],
+            cut_footprint_cm=self.cut_footprint,
             geometry_consumers_executed=False,
         )
         diagnostic = diagnostic_plan(
             source,
             expected,
             ROOT / "docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv",
+            target=self.target,
+            view_plan_path=os.environ.get("YACS_SHOULDER_CONTACT_VIEW_PLAN") or None,
         )
         self.report["plan"] = diagnostic
         current = api.get_editor_subsystem(api.UnrealEditorSubsystem).get_editor_world()
@@ -474,8 +546,8 @@ class Owner:
         self.viewport = api.get_editor_subsystem(
             api.UnrealEditorSubsystem
         ).get_level_viewport_camera_info()
-        sections = next(w["sections"] for w in source["windows"] if w["id"] == WINDOW)
-        target = list(interior_top_triangles(sections))
+        sections = next(w["sections"] for w in source["windows"] if w["id"] == self.spec["window_id"])
+        target = list(interior_top_triangles(sections, target=self.target))
         matches = []
         for actor in self.actors.get_all_level_actors():
             if not actor.get_actor_label().startswith("YACS_PERSIST_SUPPORT_"):
@@ -494,7 +566,7 @@ class Owner:
             if probe is None:
                 continue
             if triangle_delta(mesh_triangle(probe, tid), wanted) <= 0.0001:
-                actual = native_triangles(api, mesh)
+                actual = native_support_snapshot(api, mesh, target=self.target)
                 worst = max(
                     triangle_delta(mesh_triangle(actual, i), points)
                     for i, points in target
@@ -518,10 +590,9 @@ class Owner:
             native_ids_in_triangle_digest=True,
             triangle_sha256=mesh_digest(actual),
         )
-        landscape_transform = actor_snapshot(self.landscape)
+        landscape_transform = self.landscape_transform = actor_snapshot(self.landscape)
         if landscape_transform["rotation_deg"] != (0.0, 0.0, 0.0):
             raise RuntimeError("Rotated source Landscape requires explicit owner proof")
-        x, y, _ = landscape_transform["location_cm"]
         sx, sy, _ = landscape_transform["scale"]
         if sx != 50.0 or sy != 50.0:
             raise RuntimeError("Source Landscape must retain accepted 0.5m grid")
@@ -531,25 +602,13 @@ class Owner:
         if len(all_components) != 1024:
             raise RuntimeError("Accepted Landscape component inventory differs")
         for c in all_components:
-            bx, by = (
-                int(c.get_editor_property(p))
-                for p in ("section_base_x", "section_base_y")
-            )
-            size = int(c.get_editor_property("component_size_quads"))
-            bounds = (
-                x + bx * sx,
-                y + by * sy,
-                x + (bx + size) * sx,
-                y + (by + size) * sy,
-            )
-            if overlaps(bounds):
+            layout = native_component_layout(api, c, landscape_transform)
+            if overlaps(layout["bounds_cm"], self.cut_footprint):
                 components.append(c)
                 evidence.append(
                     dict(
                         path=c.get_path_name(),
-                        section_base=[bx, by],
-                        component_size_quads=size,
-                        bounds_cm=bounds,
+                        **layout,
                         state=self.component_state(c),
                     )
                 )

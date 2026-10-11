@@ -166,6 +166,18 @@ class RoadCaptureReadinessTests(unittest.TestCase):
         self.job.stop.assert_not_called()
         self.assertIsNotNone(self.job.finish_requested_at)
 
+    def test_control_pose_reuses_height_and_texture_readiness_in_separate_directory(self):
+        self.job.phase = "controls"
+        row = {**self.row, "frame_id": self.row["frame_id"] + "--current-worldnormal"}
+        self.job.prepare_pose(row, object(), object())
+        output = self.job.control_root / "readiness" / row["frame_id"]
+        self.assertTrue((output / "capture-readiness.json").is_file())
+        self.assertTrue((output / "road-texture-readiness.json").is_file())
+        self.assertFalse((self.job.root / "readiness").exists())
+        self.assertEqual(self.job.pose_readiness["material_texture_count"], 7)
+        self.assertEqual(len(self.job.residency_leases), 8)
+        self.prepare.assert_called_once()
+
     def test_low_material_mip_or_pending_compile_cannot_be_visual_evidence(self):
         for bad in (
             {"resident_mips": 1}, {"is_compiling": True},
