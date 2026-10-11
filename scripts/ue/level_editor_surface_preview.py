@@ -238,8 +238,11 @@ class SurfacePreview:
             a.MaterialEditingLibrary.set_material_instance_parent(instance, master)
             for name, value in PRESETS[self.preset].items():
                 if slot == 1 or not name.startswith('Edge'):
-                    require(a.MaterialEditingLibrary.set_material_instance_scalar_parameter_value(instance, name, value),
-                            'Persistent scalar assignment failed: ' + name)
+                    # UE 5.8.2 returns false even after assigning this value (MaterialEditingLibrary.cpp).
+                    # Require the real parameter inventory and native value readback instead.
+                    require(name in {str(n) for n in a.MaterialEditingLibrary.get_scalar_parameter_names(master)},
+                            'Persistent scalar missing: ' + name)
+                    a.MaterialEditingLibrary.set_material_instance_scalar_parameter_value(instance, name, value)
                     actual = a.MaterialEditingLibrary.get_material_instance_scalar_parameter_value(instance, name)
                     require(math.isfinite(actual) and abs(actual - value) < 1e-5, 'Persistent scalar readback differs')
             a.MaterialEditingLibrary.update_material_instance(instance)

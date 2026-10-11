@@ -154,7 +154,7 @@ class CheckpointTests(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(b'synthetic serialized asset')
             return True
-        def scalar(instance, name, value): instance.values[name] = value; return True
+        def scalar(instance, name, value): instance.values[name] = value; return False
         obj.api = SimpleNamespace(
             Paths=SimpleNamespace(project_dir=lambda: str(project), convert_relative_path_to_full=lambda p: p),
             get_editor_subsystem=lambda _: SimpleNamespace(get_editor_world=lambda: obj.world),
@@ -169,6 +169,7 @@ class CheckpointTests(unittest.TestCase):
                 duplicate_asset=lambda name, root, source: Material(root + '/' + name + '.' + name),
                 create_asset=lambda name, root, cls, factory: Material(root + '/' + name + '.' + name))),
             MaterialEditingLibrary=SimpleNamespace(recompile_material=lambda _: [], set_material_instance_parent=lambda *_: None,
+                get_scalar_parameter_names=lambda _: list(surface.PRESETS["worn"]),
                 set_material_instance_scalar_parameter_value=scalar,
                 get_material_instance_scalar_parameter_value=lambda instance, name: instance.values[name],
                 update_material_instance=lambda _: None))
@@ -225,3 +226,15 @@ class CheckpointTests(unittest.TestCase):
                 obj.checkpoint(temporary, 'c' * 40, repair)
             self.assertEqual(obj.observe(), before)
             self.assertFalse(list(Path(temporary).rglob('checkpoint-receipt.json')))
+
+    def test_scalar_write_without_native_readback_is_rejected(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as temporary:
+            obj, repair, saves = self._fixture(Path(temporary))
+            before = obj.observe()
+            obj.api.MaterialEditingLibrary.get_material_instance_scalar_parameter_value = lambda *_: -999.
+            with self.assertRaisesRegex(ValueError, 'scalar readback differs'):
+                obj.checkpoint(temporary, 'd' * 40, repair)
+            self.assertEqual(obj.observe(), before)
+            self.assertEqual(saves, [])
