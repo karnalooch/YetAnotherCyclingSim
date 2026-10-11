@@ -548,3 +548,27 @@ error remains in the immutable history. Uncertain/failed rollback stays blocked.
 Hot reload is restricted to the compatible instance-state ABI; changes to the
 stable bridge itself still need installation/restart. Native results for this
 revision are pending; unit tests remain NOT RUN at the owner's request.
+
+
+Native local execution on 2026-10-11: baseline
+`b0c0c407be8694dfe5582b7b74f18e9289a9cd73`, session `y473live01`,
+Editor PID 33524. Sequences 1 and 3 returned `RECOVERED` after bounded
+contact failures; exact rollback and saved/source/dirty conservation were
+confirmed. Sequences 2 and 4 reloaded committed handler revisions without
+restarting that editor or moving its camera. Active handler revision:
+`a5b0d4f53a14c4867bf7ed2387443b1bc1834ddc`.
+
+Sequence 5, request `panel-fc47e4cb9d1f4d3aa34d82364cd6cffa`, completed
+the local support112 correction: 491 vertices, including 222 wall vertices,
+maximum vertical displacement 39.395 cm. Complete asphalt buffer digests,
+Landscape and saved/source fingerprints remained unchanged. 47 contact samples
+were deferred because their contact exceeds the bounded operation or lacks a
+bounded Landscape hit. This is a local partial contact repair, not whole-road
+geometry acceptance. Authored normal/UV overlays remain original; corrected
+slope shading is not admitted. No screenshots or camera comparison tour ran.
+
+The panel listens on 127.0.0.1:18785. Repairs and material previews remain
+transient and are not saved assets. General object/rock authoring is not
+implemented: the retained snapshot lacks the catalogued rock mesh and an
+eligible #368 Sa Calobra placement selector. Historical Alpine scatter is not
+a substitute. Final M3 visual acceptance and performance remain unchanged.
