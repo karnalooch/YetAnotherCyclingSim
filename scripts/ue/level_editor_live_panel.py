@@ -72,6 +72,8 @@ def parse_control(raw: bytes) -> dict:
     action, preset = value["action"], value["preset"]
     if action == "camera":
         require(type(preset) is str and preset in CAMERA_PRESETS, "Camera preset is not allowlisted")
+    elif action == "reload":
+        require(preset == "staged", "Only the locally staged committed revision is admitted")
     elif action == "repair":
         require(preset == "nearby", "Only nearby shoulder repair is admitted")
     elif action == "surface":
@@ -98,6 +100,8 @@ def native_request(control: dict, *, token: str, sequence: int, request_id: str)
     }
     if control["action"] == "camera":
         return {**request, "action": "camera", "preset": control["preset"]}
+    if control["action"] == "reload":
+        return {**request, "action": "reload"}
     if control["action"] == "repair":
         return {**request, "action": "repair"}
     if control["action"] == "surface":
@@ -129,6 +133,7 @@ class LivePanel:
             "session_id": self.token,
             "editor_pid": context["identity"]["editor_pid"],
             "sequence": history["sequence"],
+            "script_revision": history["script_revision"],
             "shoulder_repair": history["current"].get("shoulder_repair"),
             "active_surface_preset": history["current"].get("surface", {}).get("preset", "unavailable"),
             "active_edge_preset": active_edge_preset(history["current"]),
@@ -151,7 +156,7 @@ class LivePanel:
             require(not request_path.exists() and not output.exists(), "Panel request identity collided")
             request_path.write_bytes(bridge.canonical(request).encode("utf-8"))
             result = client.run(self.session_receipt, request_path, output)
-            if result.get("status") != "COMPLETED":
+            if result.get("status") not in ("COMPLETED", "RECOVERED"):
                 raise ValueError(result.get("error", "Native preview did not complete"))
             frame = None
             for capture in result.get("captures", []):
@@ -164,7 +169,8 @@ class LivePanel:
                     frame = frame_path.read_bytes()
             self.last_frame = frame
             self.last_result = {
-                "status": "COMPLETED",
+                "status": result["status"],
+                "error": result.get("error"),
                 "action": request["action"],
                 "preset": control["preset"],
                 "sequence": result["sequence"],

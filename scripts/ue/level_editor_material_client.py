@@ -58,6 +58,7 @@ SOURCE_MODULES = {
     "scripts/ue/level_editor_camera_presets.py": bridge.camera_presets,
     "scripts/ue/level_editor_surface_preview.py": bridge.surface_preview,
     "scripts/ue/level_editor_shoulder_repair.py": bridge.shoulder_repair,
+    "scripts/ue/level_editor_script_reload.py": bridge.script_reload,
 }
 # Fixed source-authentication closure of the bounded shoulder source/mesh readers.
 REPAIR_HELPERS = ('scripts.assets.restore_workspace_data', 'scripts.assets.run_sa_calobra_detail_pilot', 'scripts.manage_local_workspace', 'scripts.proof.sa_calobra_tpp_survey', 'scripts.proof.package_sa_calobra_tpp_survey', 'scripts.proof.retain_sa_calobra_tpp_survey', 'scripts.ci.sa_calobra_whole_map_workflow', 'scripts.worldgen.adaptive_terrain_solver', 'scripts.worldgen.bob_terrain_fit_inspector', 'scripts.ue.read_road_material_baseline', 'scripts.ue.road_shoulder_sources', 'scripts.proof.sa_calobra_shoulder_contact', 'scripts.ue.prepare_landscape_capture', 'scripts.ue.sa_calobra_tpp_survey_capture', 'scripts.ue.capture_sa_calobra_shoulder_contact', 'scripts.ue.road_shoulder_window', 'scripts.ue.road_shoulder_edges', 'scripts.ue.road_shoulder_network', 'scripts.ue.sa_calobra_geometry_collision_witness')
@@ -330,6 +331,7 @@ def _load_context(receipt_path):
     require(ready.get("status") == "MATERIAL_BRIDGE_READY" and type(ready.get("sequence")) is int
             and ready["sequence"] == 0 and ready.get("endpoint") == ENDPOINT
             and ready.get("bridge_source_sha256") == sources["scripts/ue/level_editor_material_bridge.py"]
+            and ready.get("reload_source_sha256") == sources["scripts/ue/level_editor_script_reload.py"]
             and ready.get("repair_source_sha256") == sources["scripts/ue/level_editor_shoulder_repair.py"]
             and ready.get("surface_source_sha256") == sources["scripts/ue/level_editor_surface_preview.py"]
             and ready.get("camera_source_sha256") == sources["scripts/ue/level_editor_camera_presets.py"],
@@ -408,13 +410,35 @@ def _close_values(first, second):
 
 def _receipt(value, context, request_id):
     _identity(value, context)
-    require(value.get("request_id") == request_id and value.get("action") in {"set", "restore", "inspect", "camera", "surface", "repair"}
+    require(value.get("request_id") == request_id and value.get("action") in {"set", "restore", "inspect", "camera", "surface", "repair", "reload"}
             and type(value.get("sequence")) is int and 0 <= value["sequence"] <= HISTORY_LIMIT
             and value.get("receipt_relative_path") == bridge.REQUEST_ROOT + "/" + request_id + "/receipt.json",
             "Native request identity, action, sequence or receipt path differs")
     _observation(value.get("before"), context["initial"])
     _observation(value.get("after"), context["initial"])
     action = value["action"]
+    revisions = [value.get("script_revision_before"), value.get("script_revision_after")]
+    require(all(isinstance(item, str) and re.fullmatch(r"[0-9a-f]{40}", item) for item in revisions),
+            "Native script revision identity is missing")
+    if action == "reload" and "script_reload" in value:
+        reload = value["script_reload"]
+        require(type(reload) is dict and set(reload) == {"commit", "previous_commit", "files"}
+                and reload["commit"] == revisions[1] and reload["previous_commit"] == revisions[0]
+                and type(reload["files"]) is dict and set(reload["files"]) == set(bridge.script_reload.FILES)
+                and all(isinstance(item, str) and re.fullmatch(r"[0-9a-f]{64}", item) for item in reload["files"].values()),
+                "Script reload identity differs")
+        blobs = bridge.script_reload._sources(context["launcher_root"], context["identity"]["launcher_sha"], reload["commit"])
+        require(bridge.script_reload._hashes(blobs) == reload["files"], "Reload receipt differs from exact committed source")
+    else:
+        require(revisions[0] == revisions[1], "Non-reload request changed script revision")
+        require(action != "reload" or value.get("status") == "RECOVERED", "Successful reload lacks source evidence")
+    if value.get("status") == "RECOVERED":
+        require(value.get("recovery_verified") is True and isinstance(value.get("error"), str)
+                and bool(value["error"]) and value["after"] == context["initial"]
+                and value.get("restored_after_failure") == value["after"], "Failed mutation recovery is unproved")
+        require(value.get("saved_inputs_before_sha256") == context["saved_digest"]
+                and value.get("source_inputs_before_sha256") == context["source_digest"], "Recovery input fingerprint differs")
+        return
     if action not in ("repair", "restore"):
         require(value["before"].get("shoulder_repair") == value["after"].get("shoulder_repair"), "Material action changed geometry repair state")
     if action == "set":
@@ -442,7 +466,7 @@ def _receipt(value, context, request_id):
 
 def _completed(value, context, request_id):
     _receipt(value, context, request_id)
-    require(value.get("status") == "COMPLETED" and value.get("capture_pending") is False
+    require(value.get("status") in ("COMPLETED", "RECOVERED") and value.get("capture_pending") is False
             and value.get("saved_inputs_after_sha256") == context["saved_digest"]
             and value.get("source_inputs_after_sha256") == context["source_digest"]
             and type(value.get("dirty_before")) is dict and value.get("dirty_after") == value["dirty_before"],
@@ -450,7 +474,7 @@ def _completed(value, context, request_id):
     captures = value.get("captures")
     capture = value.get("capture_requested", value["action"] in ("set", "surface"))
     require(type(capture) is bool and (not capture or value["action"] in ("set", "surface")), "Native capture flag differs")
-    expected_count = 4 if capture else 0
+    expected_count = 4 if capture and value["status"] == "COMPLETED" else 0
     require(type(captures) is list and len(captures) == expected_count,
             "Native capture inventory differs from the fixed request")
     for index, row in enumerate(captures):
@@ -487,21 +511,25 @@ def _history(context):
     changes = sorted((value for value in receipts.values() if value["action"] != "inspect"),
                      key=lambda value: value["sequence"])
     states = [context["initial"]]
+    revisions = [context["identity"]["launcher_sha"]]
     for index, value in enumerate(changes, 1):
         require(value["sequence"] == index and value["before"] == states[-1],
                 "Native material history has a gap, duplicate sequence or stale before-state")
+        require(value["script_revision_before"] == revisions[-1], "Script revision history has a gap")
+        revisions.append(value["script_revision_after"])
         states.append(value["after"])
     for value in receipts.values():
         if value["action"] == "inspect":
-            require(value["sequence"] < len(states) and value["after"] == states[value["sequence"]],
+            require(value["sequence"] < len(states) and value["after"] == states[value["sequence"]]
+                    and value["script_revision_before"] == revisions[value["sequence"]],
                     "Native inspection differs from its preceding material state")
-    return {"receipts": receipts, "sequence": len(changes), "current": states[-1]}
+    return {"receipts": receipts, "sequence": len(changes), "current": states[-1], "script_revision": revisions[-1]}
 
 
 def _request(raw, context, history):
     value = _object(raw, bridge.REQUEST_LIMIT)
     action = value.get("action")
-    require(action in {"set", "restore", "inspect", "camera", "surface", "repair"}, "Unknown material preview action")
+    require(action in {"set", "restore", "inspect", "camera", "surface", "repair", "reload"}, "Unknown material preview action")
     require(set(value) == COMMON_REQUEST | ({"capture"} if "capture" in value else set()) | ({"paint_roughness", "paint_color"} if action == "set" else {"preset"} if action in ("camera", "surface") else set()),
             "Unknown or missing material request field")
     require(type(value["schema_version"]) is int and value["schema_version"] == 1
@@ -661,17 +689,17 @@ def run(session_receipt, request_path, output):
         expected_sequence = history["sequence"] + (request["action"] != "inspect")
         require(value["action"] == request["action"] and value["sequence"] == expected_sequence
                 and value["before"] == history["current"], "Native call did not observe the preceding material state")
-        if request["action"] == "set":
+        if value["status"] != "RECOVERED" and request["action"] == "set":
             require(_close_values(value["after"], request), "Native effective paint values differ from the requested values")
-        if request["action"] == "surface":
+        if value["status"] != "RECOVERED" and request["action"] == "surface":
             require(value["after"]["surface"]["preset"] == request["preset"], "Surface preset readback differs")
-        if request["action"] == "camera":
+        if value["status"] != "RECOVERED" and request["action"] == "camera":
             require(value["camera_preset"]["preset"] == request["preset"],
                     "Native camera receipt belongs to another requested preset")
         require(value.get("capture_requested", request["action"] in ("set", "surface")) == (request["action"] in ("set", "surface") and request.get("capture", True)), "Native capture behavior differs from request")
         require((value.get("status") == "ACCEPTED" and value.get("capture_pending") is True
                  and request["action"] in ("set", "surface"))
-                or (value.get("status") == "COMPLETED" and value.get("capture_pending") is False),
+                or (value.get("status") in ("COMPLETED", "RECOVERED") and value.get("capture_pending") is False),
                 "Native call returned an invalid completion state")
         _write(output, "tool-result.json", canonical(value) + b"\n")
         final_path = _path(context["root"], value["receipt_relative_path"])
@@ -683,11 +711,13 @@ def run(session_receipt, request_path, output):
         final_raw = _read(final_path)
         final = _object(final_raw)
         _completed(final, context, request["request_id"])
-        for key in (*IDENTITY_KEYS, "request_id", "action", "sequence", "before", "after", "dirty_before",
+        for key in (*IDENTITY_KEYS, "request_id", "action", "sequence", "before", "script_revision_before", "script_revision_after", "dirty_before",
                     "saved_inputs_before_sha256", "source_inputs_before_sha256", "receipt_relative_path"):
             require(final.get(key) == value.get(key), "Native final receipt differs from the accepted call")
-        if value["status"] == "COMPLETED":
+        if value["status"] in ("COMPLETED", "RECOVERED"):
             require(final == value, "Synchronous native result differs from its saved receipt")
+        if final["status"] != "RECOVERED":
+            require(final["after"] == value["after"], "Final successful readback differs")
         captures = []
         for row in final["captures"]:
             raw = _png_bytes(_path(context["root"], row["path"]), row)
@@ -700,15 +730,17 @@ def run(session_receipt, request_path, output):
         require(latest["sequence"] == expected_sequence and latest["current"] == final["after"],
                 "Another material request changed the session before final readback")
         _write(output, "native-receipt.json", final_raw)
-        receipt.update({"status": "COMPLETED", "sequence": expected_sequence, "before": final["before"],
-                        "after": final["after"], "process_readback": process, "captures": captures,
+        receipt.update({"status": final["status"], "sequence": expected_sequence, "before": final["before"],
+                        "after": final["after"], "script_revision": final["script_revision_after"], "process_readback": process, "captures": captures,
                         "native_receipt": {"path": value["receipt_relative_path"], "sha256": digest(final_raw),
                                            "size_bytes": len(final_raw)},
                         "saved_inputs_before_sha256": final["saved_inputs_before_sha256"],
                         "saved_inputs_after_sha256": final["saved_inputs_after_sha256"],
                         "source_inputs_before_sha256": final["source_inputs_before_sha256"],
                         "source_inputs_after_sha256": final["source_inputs_after_sha256"]})
-        if request["action"] == "camera":
+        if final["status"] == "RECOVERED":
+            receipt.update(error=final["error"], recovery_verified=True)
+        if final["status"] != "RECOVERED" and request["action"] == "camera":
             receipt.update({key: final[key] for key in
                             ("camera_before", "camera_after", "camera_preset")})
     except (ValueError, OSError, RuntimeError, TypeError, KeyError, subprocess.SubprocessError,

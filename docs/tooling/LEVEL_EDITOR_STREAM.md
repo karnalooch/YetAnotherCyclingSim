@@ -530,3 +530,21 @@ pipeline remains available only when requested for qualification. Geometry
 requests never capture or move the camera. Native readback and exact source
 identity remain required for action completion. Unit tests are not run in this
 iteration at the owner's request; do not report their status as PASS.
+
+
+### Live script revisions and recovered operations — #473
+
+Owner authorization on 2026-10-11 extends the live bridge with script reload
+and recovery after errors. It supersedes mandatory comparison captures for
+interactive changes, not source, native identity or world authority gates.
+The stable bridge loads only the fixed material and shoulder modules from
+an explicitly staged local Git revision. Existing native object references,
+viewport and stream remain owned by the same Editor process. This is not a
+general remote Python endpoint or a promise that native plugin changes reload.
+
+A failed operation is not successful. Only a verified rollback with unchanged
+saved/source fingerprints and dirty inventory may produce `RECOVERED`; the
+error remains in the immutable history. Uncertain/failed rollback stays blocked.
+Hot reload is restricted to the compatible instance-state ABI; changes to the
+stable bridge itself still need installation/restart. Native results for this
+revision are pending; unit tests remain NOT RUN at the owner's request.

@@ -8,6 +8,10 @@ from __future__ import annotations
 import math
 from scripts.ue import road_shoulder_sources as sources
 from scripts.ue.road_shoulder_network import inspect_mesh
+from scripts.ue.sa_calobra_geometry_collision_witness import _hit_result
+
+# Reload compatibility for the bridge-owned ShoulderRepair instance/state.
+LIVE_SCRIPT_ABI = 1
 
 RADIUS_CM = 3000.0
 TAPER_CM = 500.0
@@ -160,13 +164,29 @@ class ShoulderRepair:
         hit = a.SystemLibrary.line_trace_single(self.world, a.Vector(*start), a.Vector(*end),
                     a.TraceTypeQuery.ECC_VISIBILITY, True, ignore, a.DrawDebugTrace.NONE, True)
         require(hit is not None, 'Landscape trace missed')
-        result = a.GameplayStatics.break_hit_result(hit)
+        # UE exports FHitResult's NativeBreakFunc as StructBase.to_tuple(),
+        # not GameplayStatics.break_hit_result. Check the actual native actor
+        # and component; reflected hit_actor can be unavailable in UE 5.8.
+        result = hit.to_tuple()
         require(isinstance(result, tuple) and len(result) == 18, 'Native hit result signature differs')
-        actor, impact = result[9], result[5]
-        require(result[0] is True and actor is not None and actor.get_path_name() in landscapes,
+        actor, component = result[9], result[10]
+        require(result[0] is True and result[1] is False,
+                'Landscape trace is not a blocking non-overlap hit')
+        require(isinstance(actor, a.LandscapeProxy) and actor.get_path_name() in landscapes,
                 'Trace did not hit authenticated native Landscape')
-        require(abs(impact.x-p[0]) < 1. and abs(impact.y-p[1]) < 1. and math.isfinite(impact.z), 'Landscape impact differs from ray')
-        return float(impact.z)
+        require(isinstance(component, a.PrimitiveComponent), 'Landscape hit component missing')
+        component_owner = component.get_owner()
+        require(isinstance(component_owner, a.LandscapeProxy)
+                and component_owner.get_path_name() == actor.get_path_name(),
+                'Landscape hit component owner differs')
+        parsed = _hit_result(hit, start, end)
+        require(parsed is not None, 'Landscape impact missing')
+        require(parsed['actor_path'] in (None, actor.get_path_name())
+                and parsed['component_path'] in (None, component.get_path_name()),
+                'Reflected Landscape hit identity differs from native tuple')
+        impact = parsed['impact_cm']
+        require(all(math.isfinite(value) for value in impact), 'Landscape impact is not finite')
+        return float(impact[2])
 
     def observe(self):
         current = inspect_mesh(self.api, self.road)['summary']
@@ -211,6 +231,8 @@ class ShoulderRepair:
             self.api.GeometryScript_MeshDecomposition.copy_mesh_to_mesh(clone, original)
             require(component.get_dynamic_mesh() == original, 'Native bound mesh changed')
             after = inspect_mesh(self.api, component)['summary']
+            # Position-only candidate preserves authored normal/UV overlays.
+            # Shading normals are therefore not a proof of the new surface slope.
             for key in ('vertex_count', 'triangle_count', 'uv_set_count', 'triangle_corner_normals_uv_blake3', 'material_ids_blake3'):
                 require(after[key] == before['summary'][key], 'Clone changed preserved topology/material/normal/UV buffers')
             require(after['positions_indices_blake3'] != before['summary']['positions_indices_blake3'], 'Native repair made no position change')

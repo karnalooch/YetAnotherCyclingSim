@@ -30,6 +30,10 @@
   </section>
   <section class="controls">
     <p>Kamerą sterujesz samodzielnie w podglądzie — WASD.</p>
+    <details><summary>Aktualizacja narzędzi live</summary>
+      <button data-action="reload" data-preset="staged">Wczytaj przygotowane skrypty</button>
+      <p>Aktualizuje narzędzia bez restartu edytora i bez zmiany kamery.</p>
+    </details>
     <h2>Lokalna geometria pobocza</h2>
     <button data-action="repair" data-preset="nearby">Wyrównaj pobocze przy kamerze</button>
     <p>Korekta obejmuje zwykłe pobocze w pobliżu kamery. Asfalt i teren pozostają bez zmian.</p>
@@ -92,8 +96,10 @@
         const result = await r.json();
         if (!r.ok) throw new Error(result.error || 'Zmiana została odrzucona');
         statusLine.textContent = `Podgląd gotowy · krok ${result.sequence} · ${result.action}: ${result.preset}`;
-        detail.textContent = result.action === 'restore'
-          ? 'Oryginalne materiały przywrócone.'
+        detail.textContent = result.status === 'RECOVERED' ? `Operacja nie powiodła się. Materiały i pobocze przywrócono do stanu początkowego. Sesja nadal działa: ${result.error || ''}`
+          : result.action === 'reload' ? 'Skrypty przeładowane. UE i kamera działają dalej.'
+          : result.action === 'restore'
+          ? 'Oryginalne materiały i pobocze przywrócone.'
           : result.action === 'repair' ? 'Lokalna korekta pobocza zastosowana.'
           : result.camera_after ? 'Kamera ustawiona. Sprawdź nowy widok w strumieniu.'
           : 'Materiał zmieniony — efekt widzisz w podglądzie na żywo.';

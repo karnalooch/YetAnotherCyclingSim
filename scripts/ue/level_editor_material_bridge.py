@@ -22,10 +22,12 @@ if __package__:
     from . import level_editor_camera_presets as camera_presets
     from . import level_editor_surface_preview as surface_preview
     from . import level_editor_shoulder_repair as shoulder_repair
+    from . import level_editor_script_reload as script_reload
 else:
     import level_editor_camera_presets as camera_presets
     import level_editor_surface_preview as surface_preview
     import level_editor_shoulder_repair as shoulder_repair
+    import level_editor_script_reload as script_reload
 
 RUNTIME_SHA = "b9fddea3f6023239da98bec7a5107ed1124cf52e"
 MAP_PACKAGE = "/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview"
@@ -128,7 +130,7 @@ def validate_request(raw, session_id, sequence, used):
         "expected_sequence",
     }
     action = request.get("action")
-    require(action in ("set", "restore", "inspect", "camera", "surface", "repair"), "Unknown preview action")
+    require(action in ("set", "restore", "inspect", "camera", "surface", "repair", "reload"), "Unknown preview action")
     expected = common | (
         {"paint_roughness", "paint_color"}
         if action == "set"
@@ -1076,6 +1078,8 @@ class MaterialPreview:
             "launcher_root": str(Path(__file__).resolve().parents[2]),
         }
         self.sequence, self.used, self.pending = 0, set(), None
+        self.script_revision = launcher_sha
+        self.recovery_blocked = False
         self.mid, self.targets, self.tick_handle = None, [], None
         self.in_tick = False
         self.native_guard = lambda: None
@@ -1381,6 +1385,7 @@ class MaterialPreview:
         }
 
     def handle_json(self, raw):
+        require(not self.recovery_blocked, "Previous mutation recovery is unproved; session remains blocked")
         request = validate_request(
             raw, self.identity["session_id"], self.sequence, self.used
         )
@@ -1409,6 +1414,8 @@ class MaterialPreview:
             "action": request["action"],
             "capture_requested": request["action"] in ("set", "surface") and request.get("capture", True),
             "before": before,
+            "script_revision_before": self.script_revision,
+            "script_revision_after": self.script_revision,
             "dirty_before": dirty,
             "saved_inputs_before_sha256": saved,
             "source_world_saved": False,
@@ -1420,12 +1427,22 @@ class MaterialPreview:
             ).replace("\\", "/"),
         }
         previous_camera = None
+        # Consume each accepted mutation once, including a failed attempt.
+        if request["action"] != "inspect":
+            self.sequence += 1
+        result["sequence"] = self.sequence
         try:
             if request["action"] == "set":
                 result["after"] = self.set_values(request)
             elif request["action"] == "surface":
                 self.surface.apply(request["preset"])
                 result["after"] = self.observe()
+            elif request["action"] == "reload":
+                result["script_reload"] = script_reload.apply(self)
+                self.script_revision = result["script_reload"]["commit"]
+                result["script_revision_after"] = self.script_revision
+                result["after"] = self.observe()
+                require(result["after"] == before, "Script reload changed world state")
             elif request["action"] == "repair":
                 self.shoulder_repair.apply()
                 result["after"] = self.observe()
@@ -1444,9 +1461,6 @@ class MaterialPreview:
                 )
             else:
                 result["after"] = before
-            if request["action"] != "inspect":
-                self.sequence += 1
-            result["sequence"] = self.sequence
             require(
                 dirty_state(self.api) == dirty, "Preview changed dirty package state"
             )
@@ -1506,9 +1520,9 @@ class MaterialPreview:
                 except Exception as rollback_error:
                     LOGGER.exception("Owned viewport camera rollback failed")
                     result["camera_restore_error"] = str(rollback_error)
-                write_new(output / "receipt.json", result)
-            else:
-                self.fail_capture(result, output)
+            self.fail_capture(result, output)
+            if result["status"] == "RECOVERED":
+                return canonical(result)
             raise
 
     def submit_capture(self):
@@ -1549,9 +1563,21 @@ class MaterialPreview:
         self.pending = None
         try:
             result["restored_after_failure"] = self.restore()
+            result["after"] = self.observe()
+            result["saved_inputs_after_sha256"] = self.verify_saved_inputs()
+            result["source_inputs_after_sha256"] = self.last_source_digest
+            result["dirty_after"] = dirty_state(self.api)
+            require(result["after"] == self.original_bindings, "Recovery readback differs from original world")
+            require(result["saved_inputs_after_sha256"] == result["saved_inputs_before_sha256"]
+                    and result["source_inputs_after_sha256"] == result["source_inputs_before_sha256"]
+                    and result["dirty_after"] == result["dirty_before"], "Recovery changed saved/source/dirty state")
+            require("camera_restore_error" not in result, "Camera recovery was not proved")
+            require(result["action"] != "inspect", "Failed inspection cannot advance mutation history")
+            result.update(status="RECOVERED", capture_pending=False, captures=[], recovery_verified=True)
         except Exception as restore_error:
             LOGGER.exception("Owned preview restoration was refused or failed")
             result["restore_error"] = str(restore_error)
+            self.recovery_blocked = True
         if not (output / "receipt.json").exists():
             write_new(output / "receipt.json", result)
 
@@ -1850,6 +1876,7 @@ def install(api, root, preparation, session_id, launcher_sha):
         "source_world_saved": False,
         "saved_inputs_sha256": manager.saved_digest,
         "source_inputs_sha256": manager.last_source_digest,
+        "reload_source_sha256": file_identity(Path(script_reload.__file__), 2 * 1024 * 1024)["sha256"],
         "repair_source_sha256": file_identity(Path(shoulder_repair.__file__), 2 * 1024 * 1024)["sha256"],
         "surface_source_sha256": file_identity(Path(surface_preview.__file__), 2 * 1024 * 1024)["sha256"],
         "camera_source_sha256": file_identity(

@@ -2,6 +2,8 @@
 from __future__ import annotations
 import math
 
+LIVE_SCRIPT_ABI = 1
+
 ROOT = '/Game/Generated/YACS/RoadAsphaltConsumer/'
 ASPHALT = ROOT + 'aged_mountain_asphalt/dry_varied/9c0a41f6e2ae/'
 ROAD_MATERIAL = ASPHALT + 'MI_MaterialForge.MI_MaterialForge'
