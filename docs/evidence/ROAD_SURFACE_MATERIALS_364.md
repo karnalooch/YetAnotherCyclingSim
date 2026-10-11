@@ -2095,3 +2095,22 @@ Blender run `38168498901` was cancelled. The earlier saved checkpoint remains
 retained; subsequent request sequence 10 recovered from
 `Apply a surface preset before checkpointing` and did not save a new candidate.
 PR #470 and release v0.3.1 remain drafts pending outstanding proof and review.
+
+### Fresh saved-consumer readback — 2026-10-11
+
+Reader `fde7a363d484c3693b65efe13eba76fb71bab6e1`, isolated process token
+`v031-reopen02`, returned `SAVED_CHECKPOINT_REOPENED_RENDERED` on UE 5.8.2.
+All five pinned package hashes remained unchanged, 186 persistent material
+bindings and worn scalar values survived reopening, and 558 unchanged actors
+passed native all-attribute mesh comparison at epsilon zero. The frozen road
+buffer hashes matched the saved source summary. The saved repair on support
+112 is authenticated by package bytes; its delta was not independently reproved.
+
+Technical image inspection confirms worn patches/cracks, white road markings
+and shoulder material in the reopened bend. Screenshot SHA-256:
+`fea79eb064a2dbf27e4d4497234b0a58d8175ac3119de01f2cd2c00dba45c81d`.
+This one view does not complete both-direction/whole-area technical coverage.
+Deferred geometry steps remain #459. Owner audit stays `PENDING_FINAL_M3`;
+performance stays `DEFERRED_AFTER_M3`, `performance_pass: false`.
+The first reader attempt exited before asynchronous rendering; the production
+reader now explicitly stays alive until its receipt and render are written.
