@@ -57,6 +57,7 @@ class RoadAsphaltGpuHostContractTests(unittest.TestCase):
     def test_bounded_pinned_windows_host_and_gui_rhi(self):
         for key in (
             "Require-ExactSource",
+            "'scripts/ue/sa_calobra_material_waves.py'",
             "Require-IdleHost",
             "ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS",
             "Get-YacsUnrealHostState.ps1",

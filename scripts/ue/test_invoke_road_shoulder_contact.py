@@ -193,7 +193,8 @@ class RoadShoulderBridgeTests(unittest.TestCase):
         diagnostic.mkdir(parents=True)
         retained = Path(directory) / "original"
         retained.mkdir()
-        report, frames = contact_fixtures.ShoulderContactTests().evidence(retained, target=target, cut_raw=cut_raw)
+        report, frames = contact_fixtures.ShoulderContactTests().evidence(
+            retained, target=target, cut_raw=cut_raw, include_support022=target == "window0112")
         for frame in frames:
             relative = "readiness/" + frame["frame_id"] + "/capture-readiness.json"
             path = retained / "capture" / relative
@@ -208,7 +209,8 @@ class RoadShoulderBridgeTests(unittest.TestCase):
         api = diagnostic / "native-api-evidence.json"
         api.write_text('{"disposable_fixture":true}', encoding="utf-8")
         api_pin = self.bridge["identity"](api)
-        report.update(source_identity={"disposable_fixture": True}, geometry_consumers_executed=False,
+        report.update(source_identity=dict(report.get("source_identity", {}), disposable_fixture=True),
+                      geometry_consumers_executed=False,
                       source_scene={"lighting_modified": False}, primary_api_receipt_sha256=api_pin["sha256"])
         report["restoration"]["height_mip_leases_released"] = True
         write_json(retained / "shoulder-contact.json", report)
@@ -236,13 +238,13 @@ class RoadShoulderBridgeTests(unittest.TestCase):
             fixture = self.fixture(directory)
             before = self.bridge["identity"](fixture[3])
             result = self.complete(fixture)
-            self.assertEqual(result["frame_count"], 12)
-            self.assertEqual(result["retained_file_count"], 26)
+            self.assertEqual(result["frame_count"], 16)
+            self.assertEqual(result["retained_file_count"], 34)
             self.assertTrue(result["original_and_artifact_copy_verified"])
             self.assertEqual(result["rendered_owner"], "PENDING_PAIRED_VISUAL_REVIEW")
             self.assertEqual(before, self.bridge["identity"](fixture[3]))
             for root in (fixture[1], fixture[2]):
-                self.assertEqual(contact.verify(root, HEAD)["frame_count"], 12)
+                self.assertEqual(contact.verify(root, HEAD)["frame_count"], 16)
             original = fixture[1] / "shoulder-contact.json"
             original_bytes = original.read_bytes()
             with self.assertRaises(FileExistsError):
@@ -251,14 +253,15 @@ class RoadShoulderBridgeTests(unittest.TestCase):
 
     def test_hairpin_target_requires_the_same_run_successful_0112_restoration(self):
         prior = dict(status="SHOULDER_CONTACT_READ_ONLY_HOST_PASS", exact_sha=HEAD, run_token=TOKEN,
-                     verified_frame_count=12, editor_exit_code=0, error=None, secondary_errors=[],
+                     verified_frame_count=16, editor_exit_code=0, error=None, secondary_errors=[],
                      read_only=True, geometry_mutated=False, original_map_mutated=False,
                      source_inputs_unchanged=True, restored_visibility_verified=True,
                      editor_exit_observed=True, stopped_on_failure=False)
         self.bridge["restored_window0112"](prior, HEAD, TOKEN)
         for field, value in (("exact_sha", "b" * 40), ("run_token", "124-1"),
                              ("diagnostic_target", "hairpin0081"),
-                             ("verified_frame_count", 6), ("editor_exit_code", False),
+                             ("verified_frame_count", 6), ("verified_frame_count", 12),
+                             ("editor_exit_code", False),
                              ("editor_exit_observed", False), ("geometry_mutated", True),
                              ("restored_visibility_verified", False), ("source_inputs_unchanged", False),
                              ("secondary_errors", ["original bounds changed"])):

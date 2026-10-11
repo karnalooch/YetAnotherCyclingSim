@@ -21,6 +21,7 @@ https://dev.epicgames.com/documentation/en-us/unreal-engine/texturing-material-f
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 from pathlib import Path
 
@@ -142,6 +143,50 @@ for _role, _base, _normal in (
 def require(condition, message):
     if not condition:
         raise ValueError(message)
+
+
+DIAGNOSTIC_PREFIX = "YACS_ROAD_MATERIAL_STAGE "
+DIAGNOSTIC_LINE_LIMIT = 2048
+
+
+def diagnostic_stage(stage, phase, *, material_path, outer_terrain,
+                     path_observed=True, material_role="subject", memory_reader=None):
+    """Flush bounded available-memory observations, not used memory or proof.
+
+    Reading diagnostics cannot change material settings or admission. An absent
+    Windows memory reader remains UNKNOWN. A before-create path is explicitly a
+    target, rather than a claim that its native object already exists.
+    GlobalMemoryStatusEx: ullAvailPhys is system physical headroom;
+    ullAvailPageFile is the maximum commit available to this process.
+    https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/ns-sysinfoapi-memorystatusex
+    """
+    def text(value, limit):
+        return "".join(char if " " <= char <= "~" else "?" for char in str(value)[:limit])
+
+    memory = {"scope": "GLOBAL_MEMORY_STATUS_EX", "status": "UNKNOWN",
+              "system_available_physical_bytes": None, "process_available_commit_bytes": None, "error": None}
+    try:
+        if memory_reader is None:
+            from scripts.ue.sa_calobra_material_waves import available_memory
+            memory_reader = available_memory
+        values = memory_reader()
+        if not isinstance(values, dict) or any(
+            type(values.get(name)) is not int or not 0 <= values[name] < 2 ** 64
+            for name in ("free_physical", "free_commit")
+        ):
+            raise ValueError("Invalid available-memory observation")
+        memory.update(status="READ", system_available_physical_bytes=values["free_physical"],
+                      process_available_commit_bytes=values["free_commit"])
+    except Exception as exc:
+        memory["error"] = text(type(exc).__name__ + ": " + str(exc), 160)
+    row = {"schema_version": 1, "stage": text(stage, 80), "phase": text(phase, 16),
+           "material_path": text(material_path, 384), "material_path_observed": path_observed is True,
+           "material_role": text(material_role, 32),
+           "outer_terrain": outer_terrain is True, "memory": memory}
+    # The fixed field/ASCII bounds above keep even escaped hostile errors and
+    # paths below 2 KiB. Never serialize native objects, inventories or buffers.
+    print(DIAGNOSTIC_PREFIX + json.dumps(row, sort_keys=True, separators=(",", ":")), flush=True)
+    return row
 
 
 def asset_paths(destination_root, *, outer_terrain=False):
@@ -324,6 +369,8 @@ def _authenticate_terrain(api, consumer_assets, source_dependencies, landscape):
     """Read the actual frozen Landscape material, without assigning or repairing it."""
     from scripts.ci import official_mcp_bob_session as session
 
+    diagnostic_stage("terrain.authenticate", "before", outer_terrain=True,
+                     material_path=_object_path(TERRAIN_PINS["instance"]["path"]), path_observed=False)
     require(terrain_prep.ROOT.resolve() == ROOT.resolve(), "Terrain producer belongs to another checkout")
     rows = terrain_rows(consumer_assets, source_dependencies)
     for row in rows.values():
@@ -344,8 +391,12 @@ def _authenticate_terrain(api, consumer_assets, source_dependencies, landscape):
             and instance.get_path_name() == _object_path(rows["instance"]["path"])
             and instance.get_editor_property("parent") == master,
             "Frozen terrain master/instance identity differs")
+    diagnostic_stage("terrain.verify_instance", "before", outer_terrain=True,
+                     material_path=instance.get_path_name())
     readback = terrain_prep.verify_instance(api, master, instance,
                                           {"rendering_recipe": recipe, "source_assets": source_assets})
+    diagnostic_stage("terrain.verify_instance", "after", outer_terrain=True,
+                     material_path=instance.get_path_name())
     lib, association = api.MaterialEditingLibrary, api.MaterialParameterAssociation.GLOBAL_PARAMETER
     scalars = {name: float(lib.get_material_instance_scalar_parameter_value(instance, name, association))
                for name in readback["scalars"]}
@@ -377,6 +428,8 @@ def _authenticate_terrain(api, consumer_assets, source_dependencies, landscape):
         "world_mapping": dict(terrain_prep.WORLD_MAPPING), "material_formula": terrain_prep.FORMULA,
         "terrain_assets_modified": False, "weight_texture_reimported": False,
     }
+    diagnostic_stage("terrain.authenticate", "after", outer_terrain=True,
+                     material_path=instance.get_path_name())
     return {"weight": bindings["WeightTex"],
             "textures": {role: {channel: bindings[role + channel + "Tex"] for channel in ("BaseColor", "Normal")}
                          for role in terrain_prep.ROLES},
@@ -396,9 +449,14 @@ def _terrain_terms(api, master, terrain):
                "roughness": source["scalar_values"][role + "Roughness"]}
         for role, row in source["rendering_recipe"]["roles"].items()}}
     graph = builder.Graph(master)
-    return builder.build_surface_terms(
+    diagnostic_stage("terrain.build_surface_terms", "before", outer_terrain=True,
+                     material_path=master.get_path_name())
+    terms = builder.build_surface_terms(
         graph, terrain["weight"], terrain["textures"], recipe,
         scalar_values={name: source["scalar_values"][name] for name in terrain_prep.SCALARS})
+    diagnostic_stage("terrain.build_surface_terms", "after", outer_terrain=True,
+                     material_path=master.get_path_name())
+    return terms
 
 
 def _api_evidence(api, *, outer_terrain=False):
@@ -689,14 +747,22 @@ def create_material(api, destination_root, source_dependencies, asphalt_assets, 
     output(blend(constant(EDGE_TRANSITION["asphalt_specular"]), "",
                  constant(EDGE_TRANSITION["gravel_specular"]), ""), "", api.MaterialProperty.MP_SPECULAR)
     output(constant(0.0), "", api.MaterialProperty.MP_METALLIC)
+    diagnostic_stage("shoulder.recompile_material", "before", outer_terrain=outer,
+                     material_path=paths["master"])
     compile_errors = lib.recompile_material(master)
     require(not compile_errors, "Shoulder material compilation reported errors: " + str(compile_errors))
+    diagnostic_stage("shoulder.recompile_material", "after", outer_terrain=outer,
+                     material_path=paths["master"])
     instance = tools.create_asset(paths["instance"].rsplit(".", 1)[1], paths["instance"].rsplit("/", 1)[0],
                                   api.MaterialInstanceConstant, api.MaterialInstanceConstantFactoryNew())
     require(instance is not None and instance.get_path_name() == paths["instance"],
             "Shoulder instance creation failed")
     lib.set_material_instance_parent(instance, master)
+    diagnostic_stage("shoulder.update_material_instance", "before", outer_terrain=outer,
+                     material_path=paths["instance"])
     lib.update_material_instance(instance)
+    diagnostic_stage("shoulder.update_material_instance", "after", outer_terrain=outer,
+                     material_path=paths["instance"])
     texture_objects = {channel: texture.get_path_name() for channel, texture in textures.items()}
     asphalt_objects = {channel: texture.get_path_name() for channel, texture in asphalt.items()}
     _verify_instance(api, instance, paths["master"], texture_objects, asphalt_objects,

@@ -665,6 +665,7 @@ try {
         'scripts/ue/road_shoulder_material.py',
         'scripts/ue/build_sa_calobra_whole_map_master.py',
         'scripts/ue/sa_calobra_whole_map_prep.py',
+        'scripts/ue/sa_calobra_material_waves.py',
         'scripts/ue/road_edge_marking_geometry.py',
         'scripts/ue/road_edge_marking_material.py',
         'scripts/ue/road_edge_marking_consumer.py',

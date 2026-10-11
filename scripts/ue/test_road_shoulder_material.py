@@ -11,7 +11,7 @@ import math
 import sys
 import unittest
 from types import ModuleType, SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from scripts.ue import road_shoulder_material as material
 from scripts.ue import test_road_edge_marking_material as paint_fixture
@@ -263,6 +263,48 @@ class ShoulderMaterialTests(unittest.TestCase):
         return material._verify_instance(self.api, self.instance,
                                          material.asset_paths(material.DESTINATION_ROOT)["master"],
                                          self.paths, self.asphalt_paths)
+
+    def test_diagnostic_reads_available_memory_once_without_turning_zero_into_unknown(self):
+        for values in ({"free_physical": 0, "free_commit": 0},
+                       {"free_physical": 12 * 1024 ** 3, "free_commit": 60 * 1024 ** 3}):
+            before = dict(values)
+            reader = Mock(return_value=values)
+            with patch("builtins.print") as emitted:
+                row = material.diagnostic_stage("fixture.verify", "before", material_path=self.master.path,
+                    outer_terrain=True, path_observed=False, memory_reader=reader)
+            reader.assert_called_once_with()
+            emitted.assert_called_once()
+            self.assertIs(emitted.call_args.kwargs["flush"], True)
+            line = emitted.call_args.args[0]
+            self.assertLessEqual(len((line + "\n").encode()), material.DIAGNOSTIC_LINE_LIMIT)
+            self.assertEqual(json.loads(line.removeprefix(material.DIAGNOSTIC_PREFIX)), row)
+            self.assertEqual(row["memory"], {
+                "scope": "GLOBAL_MEMORY_STATUS_EX", "status": "READ", "error": None,
+                "system_available_physical_bytes": values["free_physical"],
+                "process_available_commit_bytes": values["free_commit"],
+            })
+            self.assertFalse(row["material_path_observed"])
+            self.assertEqual(values, before)
+
+    def test_diagnostic_unknown_is_bounded_single_line_and_never_fabricates_zero(self):
+        for failure in (OSError(('\\"\n\x00ż😀' * 1000)), None, {},
+                        {"free_physical": True, "free_commit": 10},
+                        {"free_physical": 10, "free_commit": -1},
+                        {"free_physical": 10, "free_commit": 2 ** 64}):
+            reader = Mock(side_effect=failure) if isinstance(failure, Exception) else Mock(return_value=failure)
+            with self.subTest(failure=type(failure).__name__), patch("builtins.print") as emitted:
+                row = material.diagnostic_stage('"' * 1000, "before", material_path='\\' * 1000,
+                    outer_terrain=True, material_role='"' * 1000, memory_reader=reader)
+            line = emitted.call_args.args[0]
+            self.assertLessEqual(len((line + "\n").encode()), material.DIAGNOSTIC_LINE_LIMIT)
+            self.assertEqual(len(line.splitlines()), 1)
+            self.assertEqual(json.loads(line.removeprefix(material.DIAGNOSTIC_PREFIX)), row)
+            self.assertEqual(row["memory"]["status"], "UNKNOWN")
+            self.assertIsNone(row["memory"]["system_available_physical_bytes"])
+            self.assertIsNone(row["memory"]["process_available_commit_bytes"])
+            self.assertTrue(row["memory"]["error"])
+            self.assertLessEqual(len(row["memory"]["error"]), 160)
+            self.assertIs(emitted.call_args.kwargs["flush"], True)
 
     def test_native_source_rows_are_required_with_exact_hash_size_and_unique_path(self):
         self.assertEqual(material.source_rows(self.sources), material.SOURCE_PINS)

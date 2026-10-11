@@ -24,6 +24,7 @@ from scripts.ue.capture_sa_calobra_shoulder_contact import (
     mesh_digest,
     mesh_triangle,
     read_hairpin_wall_contact,
+    read_support022,
 )
 
 
@@ -49,6 +50,178 @@ class Component:
 
 
 class ShoulderContactTests(unittest.TestCase):
+    def support022_native_fixture(self):
+        from scripts.ue import road_shoulder_sources as sources
+
+        window = {
+            "id": contract.SUPPORT022_WINDOW,
+            "sections": [
+                [[float(i), j / 5.0, 10.0 + j / 100.0] for j in range(25)]
+                for i in range(153)
+            ],
+        }
+        owner = sources._owner(
+            window, 22, sources._support_top_witnesses(window["sections"]), "ordinary"
+        )
+        top = dict(sources.iter_expected_triangles(owner))
+        positions = {**top, **dict.fromkeys(range(7904, 8616), ((1.0, 2.0, 3.0),) * 3)}
+        path = "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.L_SaCalobraAccepted_20261004:PersistentLevel.DynamicMeshActor_23"
+        component = Component(path + ".DynamicMeshComponent")
+        mesh = SimpleNamespace(get_path_name=lambda: component.path + ".DynamicMesh")
+        component.get_dynamic_mesh = lambda: mesh
+        actor = SimpleNamespace(
+            get_actor_label=lambda: contract.SUPPORT022_LABEL,
+            get_path_name=lambda: path,
+            get_actor_location=lambda: SimpleNamespace(x=0.0, y=0.0, z=0.0),
+            get_actor_rotation=lambda: SimpleNamespace(pitch=0.0, yaw=0.0, roll=0.0),
+            get_actor_scale3d=lambda: SimpleNamespace(x=1.0, y=1.0, z=1.0),
+            get_dynamic_mesh_component=lambda: component,
+        )
+        foreign = SimpleNamespace(
+            get_actor_label=lambda: "YACS_PERSIST_SUPPORT_099",
+            get_dynamic_mesh_component=Mock(
+                side_effect=AssertionError("unowned query")
+            ),
+        )
+        counts = {"vertex_count": 5555, "triangle_count": 8616}
+
+        def read(actual_mesh, ids):
+            self.assertIs(actual_mesh, mesh)
+            self.assertEqual(ids, [])
+            return json.dumps(
+                dict(
+                    status="NATIVE_WINDOW0112_SUPPORT_TRIANGLES",
+                    geometry_mutated=False,
+                    mesh_path=mesh.get_path_name(),
+                    **counts,
+                    returned_triangle_count=len(positions),
+                    triangles=[
+                        [tid, *(v for point in tri for v in point)]
+                        for tid, tri in positions.items()
+                    ],
+                )
+            )
+
+        getter = Mock(side_effect=read)
+        api = SimpleNamespace(
+            YacsLandscapeMeshDiagnosticLibrary=SimpleNamespace(
+                read_window0112_support_triangles=getter
+            )
+        )
+        source = {"windows": [window], "source_identity": {"recipe_sha256": "c" * 64}}
+        return (
+            api,
+            source,
+            [foreign, actor],
+            positions,
+            counts,
+            getter,
+            mesh_digest({"positions": top}),
+        )
+
+    def test_support022_requires_nominated_source_and_every_ordered_native_top(self):
+        api, source, actors, positions, counts, getter, source_hash = (
+            self.support022_native_fixture()
+        )
+        with patch(
+            "scripts.ue.capture_sa_calobra_shoulder_contact.SUPPORT022_TOP_SHA256",
+            source_hash,
+        ):
+            component, mesh, evidence = read_support022(api, actors, source)
+            getter.assert_called_once_with(mesh, [])
+            actors[0].get_dynamic_mesh_component.assert_not_called()
+            self.assertEqual(evidence["source_top_triangles_compared"], 7904)
+            self.assertEqual(
+                evidence["triangle_sha256"], mesh_digest({"positions": positions})
+            )
+            self.assertFalse(evidence["native_vertex_ids_observed"])
+            self.assertEqual(evidence["original_visibility"], [True, True])
+            before_calls = getter.call_count
+            with self.assertRaisesRegex(RuntimeError, "missing/ambiguous"):
+                read_support022(api, actors + [actors[1]], source)
+            with self.assertRaisesRegex(RuntimeError, "window/section"):
+                read_support022(api, actors, dict(source, windows=[]))
+            self.assertEqual(getter.call_count, before_calls)
+            original = positions[0]
+            positions[0] = ((*original[0][:2], original[0][2] + 0.001), *original[1:])
+            with self.assertRaisesRegex(RuntimeError, "ordered coordinates"):
+                read_support022(api, actors, source)
+            positions[0] = original
+            counts["vertex_count"] += 1
+            with self.assertRaisesRegex(RuntimeError, "buffer inventory"):
+                read_support022(api, actors, source)
+            counts["vertex_count"] -= 1
+            # Correct cardinality with one substituted TID is not a dense read.
+            positions[9000] = positions.pop(8615)
+            with self.assertRaisesRegex(RuntimeError, "buffer inventory"):
+                read_support022(api, actors, source)
+            positions[8615] = positions.pop(9000)
+            with patch.object(
+                actors[1],
+                "get_actor_scale3d",
+                return_value=SimpleNamespace(x=2.0, y=1.0, z=1.0),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "transform/map"):
+                    read_support022(api, actors, source)
+            self.assertEqual(
+                component.state, {"visible": True, "cast_hidden_shadow": True}
+            )
+
+    def test_cleanup_rechecks_support022_perimeter_even_after_primary_failure(self):
+        api, source, actors, positions, _, _, source_hash = (
+            self.support022_native_fixture()
+        )
+        with patch(
+            "scripts.ue.capture_sa_calobra_shoulder_contact.SUPPORT022_TOP_SHA256",
+            source_hash,
+        ):
+            component, mesh, evidence = read_support022(api, actors, source)
+        owner = Owner.__new__(Owner)
+        owner.api, owner.target = api, "window0112"
+        owner.support022, owner.support022_mesh = component, mesh
+        owner.mesh, owner.before, owner.viewport, owner.transient = (
+            object(),
+            None,
+            None,
+            [],
+        )
+        owner.report = {"support022": evidence}
+        owner.capture = SimpleNamespace(
+            stopped=False,
+            handle=None,
+            restore_visibility=Mock(),
+            mark_cleanup=Mock(),
+            report={"status": "CAPTURED"},
+        )
+        # The only change is a non-top corner outside the 7904 source witnesses.
+        positions[8615] = ((1.0, 2.0, 3.001), (1.0, 2.0, 3.0), (1.0, 2.0, 3.0))
+        with (
+            patch.object(owner, "write"),
+            patch(
+                "scripts.ue.capture_sa_calobra_shoulder_contact.digest",
+                return_value=contract.MAP_SHA256,
+            ),
+            patch(
+                "scripts.ue.capture_sa_calobra_shoulder_contact.native_support_snapshot",
+                side_effect=RuntimeError("primary native read failed"),
+            ),
+        ):
+            owner._finish()
+        self.assertEqual(owner.report["status"], "FAILED")
+        self.assertIn("primary native read failed", owner.report["error"])
+        self.assertIn(
+            "Support022 complete ordered triangle coordinates changed",
+            owner.report["error"],
+        )
+        self.assertEqual(
+            owner.report["restoration"]["support022_triangle_sha256"],
+            mesh_digest({"positions": positions}),
+        )
+        self.assertEqual(
+            owner.report["restoration"]["support022_visibility"], [True, True]
+        )
+        owner.capture.restore_visibility.assert_called_once()
+
     def test_native_component_bounds_replace_hidden_size_property_and_check_source_grid(
         self,
     ):
@@ -335,10 +508,17 @@ class ShoulderContactTests(unittest.TestCase):
             contract, "build_survey_plan", return_value={"frames": frames}
         ):
             plan = contract.diagnostic_plan(source, "a" * 40, path)
-            self.assertEqual(plan["frame_count"], 12)
+            self.assertEqual(plan["frame_count"], 16)
+            self.assertEqual(plan["diagnostic_schema_version"], 2)
             self.assertEqual(
-                {r["diagnostic_mode"] for r in plan["frames"]}, set(contract.MODES)
+                {r["diagnostic_mode"] for r in plan["frames"]},
+                set(contract.WINDOW_MODES),
             )
+            for first, original_row in zip(range(0, 16, 4), frames, strict=True):
+                for control in plan["frames"][first : first + 4]:
+                    for key, value in original_row.items():
+                        if key != "frame_id":
+                            self.assertEqual(control[key], value)
             frames[0]["camera_location_cm"][0] += 0.01
             with self.assertRaisesRegex(ValueError, "camera pose differs"):
                 contract.diagnostic_plan(source, "a" * 40, path)
@@ -492,19 +672,24 @@ class ShoulderContactTests(unittest.TestCase):
     def test_each_mode_is_local_and_restores_visibility_and_hidden_shadow(self):
         capture = ContactCapture.__new__(ContactCapture)
         capture.support = Component("support")
+        capture.support022 = Component("support022")
         capture.components = [Component("landscape-a"), Component("landscape-b")]
         capture.surface_state = [
-            (c, (True, True)) for c in (capture.support, *capture.components)
+            (c, (True, True))
+            for c in (capture.support, *capture.components, capture.support022)
         ]
         capture.index = 0
         capture.pending = {}
-        for mode in contract.MODES:
+        for mode in contract.WINDOW_MODES:
             capture.report = {"planned_frames": [{"diagnostic_mode": mode}]}
             with patch(
                 "scripts.ue.sa_calobra_tpp_survey_capture.SurveyCapture._submit"
             ):
                 capture._submit()
             self.assertEqual(capture.support.state["visible"], mode != "support-hidden")
+            self.assertEqual(
+                capture.support022.state["visible"], mode != "support022-hidden"
+            )
             self.assertTrue(
                 all(
                     c.state["visible"] == (mode != "local-landscape-hidden")
@@ -524,17 +709,29 @@ class ShoulderContactTests(unittest.TestCase):
         # Cleanup attempts every component even when one native readback fails.
         capture.support.fail = True
         capture.components[0].state["visible"] = False
+        capture.support022.state.update(visible=False, cast_hidden_shadow=False)
         with self.assertRaises(RuntimeError):
             capture.restore_visibility()
         self.assertTrue(capture.components[0].state["visible"])
+        self.assertEqual(
+            capture.support022.state, {"visible": True, "cast_hidden_shadow": True}
+        )
+        capture.support022 = None
+        capture.report = {"planned_frames": [{"diagnostic_mode": "support022-hidden"}]}
+        with self.assertRaisesRegex(RuntimeError, "authenticated owner"):
+            capture._submit()
 
-    def evidence(self, root, *, target="window0112", cut_raw=None):
+    def evidence(
+        self, root, *, target="window0112", cut_raw=None, include_support022=False
+    ):
+        if include_support022 and target != "window0112":
+            raise ValueError("Support022 fixture belongs only to window0112")
         spec = contract.target_spec(target)
         capture = root / "capture"
         (capture / "frames").mkdir(parents=True)
         frames = []
         for frame in spec["frame_ids"]:
-            for mode in contract.MODES:
+            for mode in contract.WINDOW_MODES if include_support022 else contract.MODES:
                 frame_id = f"{frame}-{mode}"
                 path = f"frames/{frame_id}.png"
                 write_png(capture / path)
@@ -583,6 +780,64 @@ class ShoulderContactTests(unittest.TestCase):
             },
             "plan": {"frames": frames},
         }
+        if include_support022:
+            prefix = "/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.L_SaCalobraAccepted_20261004:PersistentLevel."
+            primary, neighbour = (
+                prefix + "DynamicMeshActor_113",
+                prefix + "DynamicMeshActor_23",
+            )
+            component = neighbour + ".DynamicMeshComponent"
+            report["support"].update(
+                label="YACS_PERSIST_SUPPORT_112",
+                path=primary,
+                component=primary + ".DynamicMeshComponent",
+            )
+            report["landscape"]["components"][0]["path"] = (
+                prefix + "Landscape.Component"
+            )
+            report["source_identity"] = {"recipe_sha256": "c" * 64}
+            report["support022"] = dict(
+                label=contract.SUPPORT022_LABEL,
+                path=neighbour,
+                component=component,
+                mesh_path=component + ".DynamicMesh",
+                location_cm=[0.0] * 3,
+                rotation_deg=[0.0] * 3,
+                scale=[1.0] * 3,
+                source_window_id=contract.SUPPORT022_WINDOW,
+                source_section_count=153,
+                source_top_triangles_compared=7904,
+                source_top_triangle_sha256=contract.SUPPORT022_TOP_SHA256,
+                source_recipe_sha256="c" * 64,
+                vertices=5555,
+                triangles=8616,
+                max_coordinate_delta_cm=0.0,
+                native_query="YacsLandscapeMeshDiagnosticLibrary.ReadWindow0112SupportTriangles",
+                native_triangle_ids_dense=True,
+                native_triangle_ids_in_digest=True,
+                native_vertex_ids_observed=False,
+                triangle_sha256="b" * 64,
+                original_visibility=[True, True],
+            )
+            report["restoration"].update(
+                support022_triangle_sha256="b" * 64, support022_visibility=[True, True]
+            )
+            report["plan"].update(
+                diagnostic_schema_version=2,
+                frame_count=16,
+                source_poses=list(contract.FRAME_IDS),
+                original_survey_csv_sha256=contract.SURVEY_SHA256,
+            )
+            for row in frames:
+                row["surface_visibility"].update(
+                    support022_visible=row["diagnostic_mode"] != "support022-hidden",
+                    support022_component=component,
+                    support_component=report["support"]["component"],
+                    landscape_components=[
+                        c["path"] for c in report["landscape"]["components"]
+                    ],
+                    hidden_shadow_disabled_on_hidden_surfaces=True,
+                )
         if target == "hairpin0081":
             bounds = contract.cut_bounds(cut_raw, target=target)
             (root / "source-cut-manifest.json").write_bytes(cut_raw)
@@ -597,6 +852,55 @@ class ShoulderContactTests(unittest.TestCase):
             json.dumps({"status": "CAPTURED", "frames": frames})
         )
         return report, frames
+
+    def test_current_verifier_requires_16_frames_and_support022_identity_restore_visibility(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report, frames = self.evidence(root, include_support022=True)
+            self.assertEqual(contract.verify(root, "a" * 40)["frame_count"], 16)
+            self.assertLess(
+                (root / "shoulder-contact.json").stat().st_size, 4 * 1024 * 1024
+            )
+            changes = (
+                lambda r: r.pop("support022"),
+                lambda r: r["plan"].pop("diagnostic_schema_version"),
+                lambda r: r["plan"].update(diagnostic_schema_version=True),
+                lambda r: r["support022"].update(source_top_triangle_sha256="a" * 64),
+                lambda r: r["support022"].update(vertices=5554),
+                lambda r: r["support022"].update(native_vertex_ids_observed=True),
+                lambda r: r["support022"].update(component=r["support"]["component"]),
+                lambda r: r["restoration"].update(support022_triangle_sha256="a" * 64),
+                lambda r: r["restoration"].update(support022_visibility=[True, False]),
+                lambda r: r["plan"]["frames"][3].update(camera_location_cm=[0, 0, 2]),
+            )
+            for change in changes:
+                with self.subTest(change=change):
+                    value = copy.deepcopy(report)
+                    change(value)
+                    (root / "shoulder-contact.json").write_text(json.dumps(value))
+                    with self.assertRaises(ValueError):
+                        contract.verify(root, "a" * 40)
+            (root / "shoulder-contact.json").write_text(json.dumps(report))
+            for field, value in (
+                ("support022_visible", True),
+                ("support022_component", report["support"]["component"]),
+                ("hidden_shadow_disabled_on_hidden_surfaces", False),
+            ):
+                rows = copy.deepcopy(frames)
+                rows[3]["surface_visibility"][field] = value
+                (root / "capture/survey.json").write_text(
+                    json.dumps({"status": "CAPTURED", "frames": rows})
+                )
+                with self.assertRaisesRegex(ValueError, "visibility/owner"):
+                    contract.verify(root, "a" * 40)
+            rows = [r for r in frames if r["diagnostic_mode"] != "support022-hidden"]
+            (root / "capture/survey.json").write_text(
+                json.dumps({"status": "CAPTURED", "frames": rows})
+            )
+            with self.assertRaisesRegex(ValueError, "inventory"):
+                contract.verify(root, "a" * 40)
 
     def test_hairpin_verifier_requires_source_cut_bytes_and_six_separate_modes(self):
         raw = json.dumps(

@@ -12,7 +12,80 @@ remains frozen. #384 completed after protected [PR #467](https://github.com/karn
 merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its gate is satisfied.
 This work continues #364, not MCP infrastructure.
 
-## Current e81 native preparation failure and wall observations
+## Current 56c5 memory failure and separated recovery proof
+
+Revision `56c5dadeadd806c8b6aa58d8508fa20f1ed45457` passed
+[protected CI 38113635913](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38113635913).
+The Unreal job verified equivalent proof reuse (`compileKind=none`,
+`reason=verified-equivalent-proof`); this was not a new build or Automation run.
+The [native run 38113632914](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38113632914)
+passed preflight, the authenticated baseline and the reversible asphalt canary.
+Its offscreen preparation PID 34352 exited 3 after 379.812 seconds, before the
+unchanged 420-second deadline. It did not save the map or start reload/GPU.
+
+The closed Unreal log reports an allocation failure for 4,194,306 bytes and
+the Windows error that the paging file is too small. At that failure Unreal
+recorded `AvailablePhysical=3756032`, `AvailableVirtual=2527232`,
+`PeakUsedPhysical=17959821312` and `UsedVirtual=76600205312` bytes. These are
+the reported memory counters, not a VRAM measurement or proof that shader
+workers caused the exhaustion. Startup and the preceding attempts used three
+local shader workers. The authenticated executable and requested arguments
+were `UnrealEditor.exe -RenderOffscreen -norhithread -NoVSync`.
+
+The last explicit success marker is the asphalt import/save at 05:17:42.399
+UTC. Three later UObject hash compactions do not identify the Python operation
+being executed. The log contains neither the newly detailed WeightTex
+rejection nor a successful 4033-pixel readback, outer material statistics or a
+Python traceback locating the allocation. It therefore does not establish
+whether the outer graph or a subsequent scene operation caused the failure.
+
+The independently downloaded ZIP is 206,502 bytes, contains 31 files and has
+SHA-256 `32b971feebf7d47dabaeffabc15fa92c5d8a3163073f2a33a7453b71fc899221`.
+The prepare log is 382,028 bytes, SHA-256
+`016888aa5878993cda92fdb90479419493e92c46632f93a778d899d92637bcb0`;
+its identity matches the host receipt. The artifact contains **zero PNGs**
+and no reload/GPU result. The 4258 images remain the latest actual images.
+
+The recovery separates existing proof modes. The next native attempt selects
+the two crack canaries and contact diagnostics without the optional outer
+terrain mode, retaining the established NullRHI save/reload and independent
+fresh GPU capture. It must still pass the selected eight-texture completion
+barrier, strict 2048-pixel/PBR checks, all 370 paint witnesses and the sixteen
+normal/neutral/crack controls. Outer terrain remains pending its own run;
+omitting it from this attempt is not acceptance of that feature.
+
+Small flushed stage records now distinguish material verification, mesh
+inspection, ordinary/outer material creation, terrain authentication,
+recompilation and scene/paint/crack preparation. They read the existing Windows
+memory helper, explicitly label unavailable observations and retain bounded
+output. Its [GlobalMemoryStatusEx fields](https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/ns-sysinfoapi-memorystatusex)
+report available system physical memory and the calling process's available
+commit allowance, not process usage or VRAM. They do not configure memory, change a material, extend the
+deadline or relax texture, geometry, source, GPU or image requirements.
+
+The same recovery adds the missing #459 owner isolation at 0112. All four
+existing camera poses retain baseline, support-112-hidden and local-Landscape-
+hidden views, plus a fourth `support022-hidden` view. The current window plan
+therefore requires 16 images; the separate hairpin plan remains six. Historical
+unversioned twelve-image plans remain readable but cannot satisfy the current
+host's sixteen-image prerequisite. The exact nominated owner 022 is checked
+against its authenticated 153 source sections, 5,555 vertices, 8,616 triangles
+and 7,904 ordered top triangles. The existing bounded native API reads TID and
+ordered XYZ, not VID. Its complete returned triangle digest and both supports'
+visibility are checked again after restoration. No geometry is moved, and the
+new control does not yet identify the dark strip or authorize a guessed height
+change. Its actual images and the previously pending hairpin wall/CUT payload
+remain required.
+
+The recovery patch passed 142 focused local tests in two suites (105 material/
+saved-consumer/host tests and 37 contact/host tests), with actual PowerShell
+7.4.13 and no skips. Required Ruff checks, PowerShell parsing and all four
+documentation guards passed. An independent contact review also verified the
+original 4258 twelve-image window and six-image hairpin receipts against the
+current backward-compatible verifier. These checks do not replace the pending
+current native capture.
+
+## Prior e81 native preparation failure and wall observations
 
 Revision `e81a4377cc6b8d635c0036adf01fc8427f987ff9` passed
 [protected CI 38111920048](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38111920048),

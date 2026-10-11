@@ -901,10 +901,14 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
     )
     instance_path = receipt["assets"]["instance"]
     require(instance_path.startswith(PACKAGE + "/"), "Road instance escaped its package")
+    shoulder_material.diagnostic_stage("saved.material_verify", "before", outer_terrain=outer_terrain,
+                                      material_path=instance_path, path_observed=False)
     verify_material_instance(
         api, instance_path, receipt["assets"]["master"],
         receipt["assets"]["textures"], expected_response=receipt["dry_asphalt_response"],
     )
+    shoulder_material.diagnostic_stage("saved.material_verify", "after", outer_terrain=outer_terrain,
+                                      material_path=instance_path)
     actors = list(api.get_editor_subsystem(api.EditorActorSubsystem).get_all_level_actors())
     road = baseline.road_support_actors(actors)[0]
     require(road.get_actor_label() == canary.ROAD_LABEL, "Expected one accepted road")
@@ -918,18 +922,40 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
         "<scene>", session.operation.MAP_PACKAGE
     ) or component.get_path_name() == inventory_before["road_supports"][0]["component"],
             "Road component ownership differs")
+    shoulder_material.diagnostic_stage("saved.road_inspect", "before", outer_terrain=outer_terrain,
+                                      material_path=old_material.get_path_name())
     road_mesh_before = shoulder.inspect_mesh(api, component)["summary"]
+    shoulder_material.diagnostic_stage("saved.road_inspect", "after", outer_terrain=outer_terrain,
+                                      material_path=old_material.get_path_name())
+    shoulder_material.diagnostic_stage("saved.shoulder_create", "before", outer_terrain=False,
+        material_path=shoulder_material.asset_paths(shoulder_material.DESTINATION_ROOT)["instance"],
+        path_observed=False)
     gravel, gravel_receipt = shoulder_material.create_material(
         api, shoulder_material.DESTINATION_ROOT, source_dependencies, receipt["assets"])
+    shoulder_material.diagnostic_stage("saved.shoulder_create", "after", outer_terrain=False,
+                                      material_path=gravel_receipt["assets"]["instance"])
+    shoulder_material.diagnostic_stage("saved.shoulder_verify", "before", outer_terrain=False,
+                                      material_path=gravel_receipt["assets"]["instance"])
     shoulder_material.verify_material(api, gravel_receipt, source_dependencies)
+    shoulder_material.diagnostic_stage("saved.shoulder_verify", "after", outer_terrain=False,
+                                      material_path=gravel_receipt["assets"]["instance"])
     outer_instance, outer_material = None, None
     if outer_terrain:
         landscape = _outer_landscape(api)
+        shoulder_material.diagnostic_stage("saved.outer_create", "before", outer_terrain=True,
+            material_path=shoulder_material.asset_paths(shoulder_material.DESTINATION_ROOT,
+                                                       outer_terrain=True)["instance"], path_observed=False)
         outer_instance, outer_material = shoulder_material.create_material(
             api, shoulder_material.DESTINATION_ROOT, source_dependencies, receipt["assets"],
             terrain_consumer_assets=terrain_consumer_assets, landscape=landscape)
+        shoulder_material.diagnostic_stage("saved.outer_create", "after", outer_terrain=True,
+                                          material_path=outer_material["assets"]["instance"])
+        shoulder_material.diagnostic_stage("saved.outer_verify", "before", outer_terrain=True,
+                                          material_path=outer_material["assets"]["instance"])
         shoulder_material.verify_material(api, outer_material, source_dependencies,
                                          terrain_consumer_assets=terrain_consumer_assets, landscape=landscape)
+        shoulder_material.diagnostic_stage("saved.outer_verify", "after", outer_terrain=True,
+                                          material_path=outer_material["assets"]["instance"])
     for material_receipt in [gravel_receipt] + ([] if outer_material is None else [outer_material]):
         for path in material_receipt["assets"].values():
             asset = api.load_asset(path)
@@ -945,18 +971,34 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
             component.get_material(0).get_path_name() == instance_path,
             "Saved road material assignment readback differs",
         )
+        shoulder_material.diagnostic_stage("saved.shoulder_prepare", "before", outer_terrain=outer_terrain,
+                                          material_path=gravel_receipt["assets"]["instance"])
         shoulder_receipt, rollback_state = shoulder.prepare(
             api, actors, source_plan, gravel, gravel_receipt,
             **({"outer_instance": outer_instance, "outer_material_receipt": outer_material,
                 "outer_owner_labels": list(OUTER_TERRAIN_OWNER_LABELS)} if outer_terrain else {})
         )
+        shoulder_material.diagnostic_stage("saved.shoulder_prepare", "after", outer_terrain=outer_terrain,
+                                          material_path=gravel_receipt["assets"]["instance"])
+        shoulder_material.diagnostic_stage("saved.assigned_road_inspect", "before", outer_terrain=outer_terrain,
+                                          material_path=instance_path)
         require(shoulder.inspect_mesh(api, component)["summary"] == road_mesh_before,
                 "Road geometry, corner attributes or triangle IDs changed during material assignment")
+        shoulder_material.diagnostic_stage("saved.assigned_road_inspect", "after", outer_terrain=outer_terrain,
+                                          material_path=instance_path)
         if edge_markings:
+            shoulder_material.diagnostic_stage("saved.create_edge_markings", "before", outer_terrain=outer_terrain,
+                                              material_path=instance_path, material_role="asphalt_input")
             marking_actors, marking_receipt = create_edge_markings(api, marking_plan, receipt["assets"])
+            shoulder_material.diagnostic_stage("saved.create_edge_markings", "after", outer_terrain=outer_terrain,
+                                              material_path=instance_path, material_role="asphalt_input")
         if crack_canary:
+            shoulder_material.diagnostic_stage("saved.create_crack_canary", "before", outer_terrain=outer_terrain,
+                                              material_path=instance_path, material_role="asphalt_input")
             crack_actors, crack_receipt = create_crack_canary(api, crack_plan, receipt["assets"],
                 white_plan=marking_plan, white_receipt=marking_receipt)
+            shoulder_material.diagnostic_stage("saved.create_crack_canary", "after", outer_terrain=outer_terrain,
+                                              material_path=instance_path, material_role="asphalt_input")
         live = baseline.native_inventory(api, prep, session.operation.MAP_PACKAGE)
         expected_saved_inventory(
             inventory_before, live, instance_path,

@@ -15,7 +15,7 @@ $root = $proof = $diagnostic = $inputPin = $python = $helperPin = $null
 $nativeComplete = $false
 $diagnosticName = if ($Target -ceq 'hairpin0081') { 'shoulder-contact-0081' } else { 'shoulder-contact' }
 $hostReceiptName = $diagnosticName + '-host-receipt.json'
-$frameCount = if ($Target -ceq 'hairpin0081') { 6 } else { 12 }
+$frameCount = if ($Target -ceq 'hairpin0081') { 6 } else { 16 }
 $receipt = [ordered]@{
     schema_version = 1; issue = 459; exact_sha = $ExpectedHead; run_token = $RunToken
     diagnostic_target = $Target
@@ -239,7 +239,7 @@ def restored_window0112(prior, head, token):
     require(prior.get("status") == "SHOULDER_CONTACT_READ_ONLY_HOST_PASS"
             and prior.get("exact_sha") == head and prior.get("run_token") == token
             and prior.get("diagnostic_target", "window0112") == "window0112"
-            and prior.get("verified_frame_count") == 12
+            and prior.get("verified_frame_count") == 16
             and type(prior.get("editor_exit_code")) is int and prior["editor_exit_code"] == 0
             and prior.get("error") is None and prior.get("secondary_errors") == [],
             "Hairpin isolation requires this run's restored window0112 diagnostic PASS")

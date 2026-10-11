@@ -20,6 +20,7 @@ from scripts.ue import road_crack_geometry as crack_geometry
 from scripts.ue import road_crack_material as crack_material
 from scripts.ue import road_crack_sources as crack_sources
 from scripts.ue import road_pavement_source_bindings as pavement_bindings
+from scripts.ue import sa_calobra_material_waves as memory_observation
 from scripts.ue.test_road_asphalt_slot_canary import CanaryTests
 
 
@@ -739,6 +740,50 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 kwargs={"source_dependencies": [], "edge_markings": True, "crack_canary": crack_canary,
                         "outer_terrain": outer_terrain, "terrain_consumer_assets": consumer_assets},
                 readback=readback, aggregate_white=aggregate_white, crack_readback=crack_readback, patches=patches)
+
+    def test_optional_memory_failure_preserves_saved_manifest_and_actual_mutation_order(self):
+        results = []
+        for unknown in (False, True):
+            with self.subTest(unknown=unknown), self.saved_lane_fixture(crack_canary=True, outer_terrain=True) as lane:
+                reader = Mock(side_effect=OSError("fixture memory unavailable")) if unknown else Mock(
+                    return_value={"free_physical": 12 * 1024 ** 3, "free_commit": 60 * 1024 ** 3})
+                observations = []
+
+                def emitted(line, *, flush):
+                    self.assertTrue(flush)
+                    self.assertLessEqual(len((line + "\n").encode()), saved.shoulder_material.DIAGNOSTIC_LINE_LIMIT)
+                    row = json.loads(line.removeprefix(saved.shoulder_material.DIAGNOSTIC_PREFIX))
+                    observations.append((row, list(lane.events)))
+
+                with patch.object(memory_observation, "available_memory", reader), patch("builtins.print", side_effect=emitted):
+                    saved.prepare(*lane.args, **lane.kwargs)
+                self.assertEqual(reader.call_count, len(observations))
+                self.assertTrue(all(row["memory"]["status"] == ("UNKNOWN" if unknown else "READ")
+                                    for row, _events in observations))
+                stages = {(row["stage"], row["phase"]): events for row, events in observations}
+                self.assertEqual(stages[("saved.shoulder_prepare", "before")], ["road-asphalt"])
+                self.assertEqual(stages[("saved.shoulder_prepare", "after")], ["road-asphalt", "shoulder-asphalt"])
+                self.assertNotIn("cracks-create", stages[("saved.create_crack_canary", "before")])
+                self.assertIn("cracks-create", stages[("saved.create_crack_canary", "after")])
+                self.assertNotIn("save-map", stages[("saved.create_crack_canary", "after")])
+                self.assertTrue(all(row["material_path"].startswith("/Game/") for row, _events in observations))
+                results.append(((lane.proof / saved.MANIFEST).read_bytes(), list(lane.events)))
+        self.assertEqual(results[0], results[1])
+
+    def test_unknown_memory_does_not_mask_material_rejection_or_emit_completed_stage(self):
+        with self.saved_lane_fixture() as lane, \
+             patch.object(memory_observation, "available_memory", side_effect=OSError("fixture memory unavailable")), \
+             patch("builtins.print") as emitted:
+            lane.patches[(saved.__name__, "verify_material_instance")].side_effect = ValueError("fixture material drift")
+            with self.assertRaisesRegex(ValueError, "fixture material drift"):
+                saved.prepare(*lane.args, **lane.kwargs)
+            rows = [json.loads(call.args[0].removeprefix(saved.shoulder_material.DIAGNOSTIC_PREFIX))
+                    for call in emitted.call_args_list]
+            self.assertEqual([(row["stage"], row["phase"]) for row in rows], [("saved.material_verify", "before")])
+            self.assertEqual(rows[0]["memory"]["status"], "UNKNOWN")
+            self.assertEqual(lane.events, [])
+            self.assertFalse((lane.proof / saved.MANIFEST).exists())
+            lane.patches[(saved.shoulder_material.__name__, "create_material")].assert_not_called()
 
     def test_enabled_saved_lane_pins_paint_packages_then_fresh_reopens_without_reapplying(self):
         with self.saved_lane_fixture() as lane:

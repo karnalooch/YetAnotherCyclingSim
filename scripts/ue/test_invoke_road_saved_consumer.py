@@ -145,6 +145,7 @@ class RoadSavedHostContractTests(unittest.TestCase):
             "Assert-OuterTerrainReceipt $manifest.value $saved.value $fresh.value ([bool]$OuterTerrainCanary)",
             "outer_terrain_physical_contact_verified = $false", "outer_terrain_normal_response_verified = $false",
             "'scripts/ue/build_sa_calobra_whole_map_master.py'", "'scripts/ue/sa_calobra_whole_map_prep.py'",
+            "'scripts/ue/sa_calobra_material_waves.py'",
         ):
             self.assertIn(value, self.host)
         self.assertEqual(self.workflow.count("-OuterTerrainCanary:"), 2)

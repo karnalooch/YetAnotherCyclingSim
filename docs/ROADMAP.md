@@ -262,7 +262,20 @@ check. No new map, fresh reload or image was produced. The actual offending
 values were not retained; the unchanged guard now reports them explicitly.
 Outer save/reload now uses the frozen verifier's previously proven offscreen
 rendering context, with separately hashed GUI Editor bytes and the same owned
-process deadline. Its actual native outcome remains pending.
+process deadline. That revision, `56c5dade`, passed CI 38113635913 through
+verified equivalent Unreal proof reuse, but native run 38113632914 exhausted
+Windows memory during preparation (exit 3 after 379.812 seconds, below the
+420-second deadline). No map/reload/GPU image was produced. The last explicit
+success was asphalt import; the exact later operation is not recorded.
+Bounded memory-headroom stage records now distinguish those operations. The
+next native attempt runs the existing crack/contact proof without outer terrain
+to recover its sixteen comparison images; the outer feature remains pending
+a separate proof. Texture dimensions, source/geometry checks and fresh GPU
+requirements remain unchanged.
+The 0112 contact plan adds support-022-hidden to its four existing poses:
+16 current images are required while the hairpin diagnostic stays at six.
+The existing native reader checks the nominated 022 geometry before/after;
+this is a bounded #459 ownership observation, not a contact repair.
 The separate source run 38111916772 completed all nine wall-contact transects:
 2,398 rows / 2,270 distinct source observations at 195–235 m, reader exit 0.
 Neither source acquisition nor the successful CI admits the outer blend or

@@ -27,6 +27,15 @@ FRAME_IDS = tuple(
 # unchanged: the optional hairpin diagnostic reuses two of that plan's poses.
 HAIRPIN_FRAME_IDS = ("window-0081-forward-00008", "window-0081-reverse-00004")
 MODES = ("baseline", "support-hidden", "local-landscape-hidden")
+# Keep MODES for historical 12-frame receipts and the unchanged 6-frame hairpin.
+WINDOW_MODES = (*MODES, "support022-hidden")
+DIAGNOSTIC_SCHEMA_VERSION = 2
+SUPPORT022_LABEL = "YACS_PERSIST_SUPPORT_022"
+SUPPORT022_WINDOW = "VIAL_TR70190001272-1-interval-25-tile-0"
+SUPPORT022_SECTION_COUNT = 153
+SUPPORT022_MESH_COUNTS = (5555, 8616)
+SUPPORT022_TOP_COUNT = 7904
+SUPPORT022_TOP_SHA256 = "d745f170865e9cdf76e1c760798fb10ab29abd32763691617f147cd7f0636dcf"
 SURVEY_FILE = "docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv"
 SURVEY_SHA256 = "15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3"
 # The immutable target CUT manifest covers these inclusive 0.5 m source cells.
@@ -51,7 +60,7 @@ def target_spec(target="window0112"):
         return {"target": target, "window_id": WINDOW, "frame_ids": FRAME_IDS,
                 "section_count": 110, "mesh_counts": (4050, 6208),
                 "cut_file": CUT_FILE, "cut_sha256": CUT_SHA256,
-                "output_name": "shoulder-contact", "retained_file_count": 26}
+                "output_name": "shoulder-contact", "retained_file_count": 34}
     if target == "hairpin0081":
         return {"target": target, "window_id": "accepted-hairpin", "frame_ids": HAIRPIN_FRAME_IDS,
                 "section_count": 2401, "mesh_counts": (79785, 132218),
@@ -152,7 +161,7 @@ def diagnostic_plan(source, exact_sha, csv_path, *, target="window0112", view_pl
             poses[frame_id] = dict(source_row, **row)
     steps = []
     for frame_id in frame_ids:
-        for mode in MODES:
+        for mode in WINDOW_MODES if target == "window0112" else MODES:
             row = dict(poses[frame_id], source_frame_id=frame_id, diagnostic_mode=mode)
             row["frame_id"] = f"{frame_id}-{mode}"
             row["file"] = f"frames/{row['frame_id']}.png"
@@ -165,6 +174,8 @@ def diagnostic_plan(source, exact_sha, csv_path, *, target="window0112", view_pl
     }
     if target == "hairpin0081":
         result.update(diagnostic_target=target, material_view_plan_sha256=MATERIAL_VIEW_PLAN_SHA256)
+    else:
+        result["diagnostic_schema_version"] = DIAGNOSTIC_SCHEMA_VERSION
     return result
 
 
@@ -498,6 +509,49 @@ def require_captured(report):
         raise ValueError("Shoulder-contact native capture failed: " + detail[:16384])
 
 
+def verify_support022(report):
+    """Bound the additional owner to its existing source tops and full readback."""
+    row = report.get("support022", {})
+    primary = report.get("support", {})
+    components = report.get("landscape", {}).get("components", [])
+    path, component = row.get("path"), row.get("component")
+    sha = row.get("triangle_sha256")
+    original = row.get("original_visibility")
+    recipe = report.get("source_identity", {}).get("recipe_sha256")
+    restore = report.get("restoration", {})
+    if (
+        row.get("label") != SUPPORT022_LABEL
+        or row.get("source_window_id") != SUPPORT022_WINDOW
+        or row.get("source_section_count") != SUPPORT022_SECTION_COUNT
+        or (row.get("vertices"), row.get("triangles")) != SUPPORT022_MESH_COUNTS
+        or row.get("source_top_triangles_compared") != SUPPORT022_TOP_COUNT
+        or row.get("source_top_triangle_sha256") != SUPPORT022_TOP_SHA256
+        or not isinstance(recipe, str) or len(recipe) != 64
+        or row.get("source_recipe_sha256") != recipe
+        or not 0 <= row.get("max_coordinate_delta_cm", float("inf")) <= 0.0001
+        or row.get("native_query") != "YacsLandscapeMeshDiagnosticLibrary.ReadWindow0112SupportTriangles"
+        or row.get("native_triangle_ids_dense") is not True
+        or row.get("native_triangle_ids_in_digest") is not True
+        or row.get("native_vertex_ids_observed") is not False
+        or not isinstance(sha, str) or len(sha) != 64 or any(c not in "0123456789abcdef" for c in sha)
+        or restore.get("support022_triangle_sha256") != sha
+        or not isinstance(path, str)
+        or not path.startswith("/Game/Worlds/SaCalobra/L_SaCalobraAccepted_20261004.")
+        or not isinstance(component, str) or not component.startswith(path + ".")
+        or not isinstance(row.get("mesh_path"), str) or not row["mesh_path"]
+        or primary.get("label") != "YACS_PERSIST_SUPPORT_112"
+        or path == primary.get("path") or component == primary.get("component")
+        or component in [c.get("path") for c in components]
+        or row.get("location_cm") != [0.0, 0.0, 0.0]
+        or row.get("rotation_deg") != [0.0, 0.0, 0.0]
+        or row.get("scale") != [1.0, 1.0, 1.0]
+        or not isinstance(original, list) or len(original) != 2
+        or any(type(v) is not bool for v in original) or original[0] is not True
+        or restore.get("support022_visibility") != original
+    ):
+        raise ValueError("Support022 source/native identity or full restoration failed")
+
+
 def verify(root, exact_sha, *, target="window0112"):
     root = Path(root)
     spec = target_spec(target)
@@ -544,14 +598,40 @@ def verify(root, exact_sha, *, target="window0112"):
         _wall_require(target == "hairpin0081", "wall observation supplied for a different target")
         verify_wall_contact(report["support_wall_contact"], report,
                             (root / "source-cut-manifest.json").read_bytes())
-    expected = {(frame, mode) for frame in spec["frame_ids"] for mode in MODES}
+    plan = report["plan"]
+    extended = "diagnostic_schema_version" in plan
+    if extended:
+        if (target != "window0112" or type(plan["diagnostic_schema_version"]) is not int
+                or plan["diagnostic_schema_version"] != DIAGNOSTIC_SCHEMA_VERSION):
+            raise ValueError("Unexpected shoulder-contact diagnostic plan version")
+        verify_support022(report)
+    elif "support022" in report:
+        raise ValueError("Support022 observation requires the current diagnostic plan version")
+    modes = WINDOW_MODES if extended else MODES
+    expected_order = [(frame, mode) for frame in spec["frame_ids"] for mode in modes]
+    expected = set(expected_order)
     rows = survey.get("frames", [])
     if (
         len(rows) != len(expected)
         or {(r["source_frame_id"], r["diagnostic_mode"]) for r in rows} != expected
     ):
         raise ValueError("Incomplete or duplicate paired diagnostic frame inventory")
-    planned = {r["frame_id"]: r for r in report["plan"]["frames"]}
+    if extended:
+        if (plan.get("frame_count") != 16 or len(plan["frames"]) != 16
+                or plan.get("source_poses") != list(FRAME_IDS)
+                or plan.get("original_survey_csv_sha256") != SURVEY_SHA256
+                or [(r["source_frame_id"], r["diagnostic_mode"]) for r in plan["frames"]] != expected_order
+                or [(r["source_frame_id"], r["diagnostic_mode"]) for r in rows] != expected_order
+                or any(r["frame_id"] != f'{r["source_frame_id"]}-{r["diagnostic_mode"]}'
+                       or r["file"] != f'frames/{r["frame_id"]}.png' for r in (*plan["frames"], *rows))):
+            raise ValueError("Current support022 diagnostic requires the exact 16-frame plan")
+        for first in range(0, 16, 4):
+            baseline = plan["frames"][first]
+            if any(row[key] != baseline[key] for row in plan["frames"][first:first + 4]
+                   for key in ("road_position_cm", "camera_location_cm", "target_cm",
+                               "ball_location_cm", "station_m", "fov_deg")):
+                raise ValueError("Support022 control changed an original source camera pose")
+    planned = {r["frame_id"]: r for r in plan["frames"]}
     for row in rows:
         if row["window_id"] != spec["window_id"] or row["frame_id"] not in planned:
             raise ValueError("Unexpected diagnostic camera/window identity")
@@ -591,6 +671,15 @@ def verify(root, exact_sha, *, target="window0112"):
             row["diagnostic_mode"] != "local-landscape-hidden"
         ):
             raise ValueError("Diagnostic frame surface visibility differs")
+        if extended and (
+            type(state.get("support022_visible")) is not bool
+            or state["support022_visible"] != (row["diagnostic_mode"] != "support022-hidden")
+            or state.get("support022_component") != report["support022"]["component"]
+            or state.get("support_component") != support.get("component")
+            or state.get("landscape_components") != [c["path"] for c in components]
+            or state.get("hidden_shadow_disabled_on_hidden_surfaces") is not True
+        ):
+            raise ValueError("Support022 diagnostic frame visibility/owner differs")
     return {
         "status": "SHOULDER_CONTACT_EVIDENCE_VERIFIED",
         "exact_sha": exact_sha,

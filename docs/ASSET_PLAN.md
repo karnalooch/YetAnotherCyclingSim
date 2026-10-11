@@ -323,10 +323,20 @@ dimensions/linear-registration check. The five-owner outer material, crack
 images and native contact payload remain unverified. The original guard is
 retained and now reports actual values on failure. Source-only wall transects
 passed separately in run 38111916772; no geometry or source package changed.
-The next outer save/reload uses the existing offscreen GUI Editor context for
-the frozen platform-texture verifier, preserving its strict dimensions and
-settings. The executable is authenticated before/after both owned processes;
-this pending correction does not grant shader or visual acceptance.
+The subsequent `56c5dade` offscreen preparation exhausted Windows memory
+before map save (native run 38113632914, exit 3 after 379.812 seconds). CI
+38113635913 passed with equivalent Unreal proof reuse, not a fresh build or
+Automation run. No texture mismatch values, outer statistics or new images
+were produced; the last explicit success was asphalt import. Bounded stage
+and memory-headroom observations distinguish the later operations. The next
+existing crack/contact proof runs without optional outer terrain and retains
+the sixteen normal controls, all 370 paint witnesses and fresh GPU admission.
+The outer blend still requires its own successful native and visual proof;
+neither texture requirements nor source/geometry constraints are relaxed.
+The accompanying 0112 contact diagnostic adds four support-022-hidden images
+at its unchanged poses and verifies that owner's source top and native
+triangle digest before/after restoration. This addresses a missing isolation
+control; it does not change the exposed 80 mm shoulder step or repair a gap.
 
 The fixed importer uses native `WorldAlignedTexture` / `WorldAlignedNormal`
 and converts the source scale to `TileSizeCm` with material-instance readback.

@@ -1543,6 +1543,7 @@ try {
         'scripts/ue/road_shoulder_edges.py',
         'scripts/ue/road_material_views.py',
         'scripts/ue/road_shoulder_material.py',
+        'scripts/ue/sa_calobra_material_waves.py',
         'scripts/ue/road_edge_marking_geometry.py',
         'scripts/ue/road_edge_marking_material.py',
         'scripts/ue/road_edge_marking_consumer.py',
