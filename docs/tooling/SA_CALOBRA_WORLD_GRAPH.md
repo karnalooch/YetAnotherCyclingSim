@@ -337,6 +337,13 @@ tessellation, but must report protected constant/displacement input readback as
 UNAVAILABLE and maximum geometric displacement as unknown. It cannot claim zero
 displacement or completed material/contact qualification from those partial checks.
 
+Attempt `d08343354bdd172a516f7909ffef4b8f9f1a30ee/qualification03` passed
+the bounded public material readback and reached explicit save of seven assets,
+then failed direct-dependency enumeration (`get_dependencies()` returned `None`).
+No completed binding receipt or clean launcher marker was admitted. Fresh reopen
+and terrain measurement remain NOT RUN for this attempt; partially saved files
+are retained only as failed-attempt evidence, never reused as an accepted result.
+
 Existing Julka profiles `sa-calobra-pcg-masks-candidate` and
 `sa-calobra-mask-transitions-candidate` verified with zero issues, including
 inherited source closure. Existing `verified_manifest()` also checked fingerprints,

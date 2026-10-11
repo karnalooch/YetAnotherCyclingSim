@@ -387,6 +387,7 @@ def save_binding(receipt):
         )
     receipt["saved_packages"] = [file_identity(path) for path in paths]
     registry = unreal.AssetRegistryHelpers.get_asset_registry()
+    registry.scan_paths_synchronous([DESTINATION], force_rescan=True)
     options = unreal.AssetRegistryDependencyOptions(
         include_soft_package_references=True,
         include_hard_package_references=True,
@@ -395,10 +396,42 @@ def save_binding(receipt):
         include_hard_management_references=False,
     )
     dependency_names = set()
+    queries = []
     for path in paths:
-        dependency_names.update(
-            str(name) for name in registry.get_dependencies(path.split(".")[0], options)
+        package = path.split(".")[0]
+        object_path = package + "." + package.rsplit("/", 1)[1]
+        data = registry.get_asset_by_object_path(
+            unreal.SoftObjectPath(object_path), include_only_on_disk_assets=True
         )
+        require(data.is_valid(), "Saved asset absent from disk registry: " + package)
+        raw = registry.get_dependencies(package, options)
+        names = [] if raw is None else sorted(str(name) for name in raw)
+        queries.append(
+            {
+                "package": package,
+                "status": "QUERY_UNAVAILABLE" if raw is None else "RETURNED",
+                "references": names,
+            }
+        )
+        dependency_names.update(names)
+    # K2_GetDependencies returns bool + output array; Python's None is a failed
+    # query, not proof that the package has no references. Independently checked
+    # native slots/parent/texture parameters bind this minimum dependency set.
+    verified = verify_binding(receipt)
+    require(verified["material"]["parent"] == assets["master"], "Master binding drift")
+    expected = {
+        assets["master"].split(".")[0],
+        assets["instance"].split(".")[0],
+        *(path.split(".")[0] for path in assets["textures"].values()),
+    }
+    dependency_names.update(expected)
+    receipt["direct_dependency_queries"] = queries
+    receipt["dependency_query_status"] = (
+        "PENDING_UNAVAILABLE_REGISTRY_QUERIES"
+        if any(query["status"] == "QUERY_UNAVAILABLE" for query in queries)
+        else "DIRECT_QUERIES_RETURNED_NOT_RECURSIVE_CLOSURE"
+    )
+    receipt["native_binding_dependency_packages"] = sorted(expected)
     dependencies = []
     for package in sorted(dependency_names):
         if package.startswith("/Script/"):
@@ -422,7 +455,7 @@ def save_binding(receipt):
         dependencies.append(identity)
     receipt["direct_package_dependencies"] = dependencies
     receipt["dependency_scope"] = (
-        "native registry direct references of explicitly saved assets; not recursive engine closure"
+        "registry references plus independently checked mesh slots, MI parent and texture bindings; query failures explicit; not recursive engine closure"
     )
     receipt["status"] = "ISOLATED_MATERIAL_BINDING_SAVED_RENDER_PENDING"
     receipt["readback"] = verify_binding(receipt)
