@@ -250,6 +250,29 @@ and the local shoulder correction retains 50 deferred contacts on one side.
 See [live checkpoint evidence](tooling/LEVEL_EDITOR_STREAM.md#explicit-saved-checkpoint-and-current-native-result--2026-10-11).
 #364 remains open; #365 preparation is read-only until its delivery gate passes.
 
+#### Prepared handoff from #364 to #365 — 2026-10-11
+
+Owner decision: leave the remaining shoulder steps under #459, preserve the
+existing correction limits, and finish the material delivery. This does not
+waive saved/fresh-rendered material proof, review or protected CI. Do not treat
+contact repair as a newly invented prerequisite of the material handoff.
+
+| Handoff item | Pinned input or remaining action |
+|---|---|
+| Saved material candidate | `/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface`; map SHA-256 `cf806999d73e6762ba6d91fab8b4e29d6c475a828ad9afcd525462054602ed1a`; five packages, 186 material bindings, 559 native mesh comparisons; local retention only |
+| Native identity | Launcher `6c823eaaeec859cb4c7ae9db52fd82a065351018`, saving handler `2a00f7ebba403cf7cda663bc6fa303c7d72e891b`; checkpoint receipt is the per-package hash authority, not this summary |
+| Material admission | Fresh-process reload/render of the new saved candidate remains NOT RUN. Existing `Invoke-YacsRoadSavedConsumer.ps1` requires an idle host; preserve live Editor PID 14704 and do not bypass that guard |
+| Current CI correction | Run 38167515175 failed five existing camera-error regressions. Production now preserves material state, records BLOCKED and propagates camera errors. Original camera assertions are unchanged; focused suite 112 PASS, two Windows symlink capability skips |
+| UE / PCG baseline | Installed UE 5.8.2-56702186; engine PCG descriptor Version 8 / VersionName 1.0. Version-specific API audit remains required before graph authoring |
+| PCGEx baseline | Approved authoring pin `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66`, descriptor 0.79 / UE 5.8.0, with the recorded compatibility patch. The current live snapshot has no PCGExtendedToolkit plugin; its optional enabled project entry is not proof of availability |
+| World inputs | Reauthenticate `pcg-masks-v1-2026-10-04` and applicable transition manifests through the existing Julka identities before consumption. Preserve road, 0.51 m conservative shoulder, BOB, building, water and infrastructure exclusions; unknown height remains unknown |
+| First #365 work after admission | Audit installed pinned APIs and reusable graphs; define stable graph/seed/input identities, then prove deterministic regeneration and saved reload over the current 2016.5 m square. Historical Alpine graphs/counts are not Sa Calobra acceptance |
+
+This is preparation only: #365 remains blocked by #364's protected delivery.
+No PCG graph, scatter, rock placement or plugin installation was executed.
+Final owner audit remains `PENDING_FINAL_M3`; performance remains
+`DEFERRED_AFTER_M3`, `performance_pass: false`.
+
 #### Complete the remaining world foundation after #364
 
 Each row is an existing issue containing small consecutive batches. Finish its

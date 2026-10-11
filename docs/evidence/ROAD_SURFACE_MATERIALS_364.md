@@ -2060,3 +2060,21 @@ asphalt. Map SHA-256 `cf806999d73e6762ba6d91fab8b4e29d6c475a828ad9afcd5254620546
 See [stream evidence](../tooling/LEVEL_EDITOR_STREAM.md#explicit-saved-checkpoint-and-current-native-result--2026-10-11).
 Surface/shoulder tests now 19 PASS. Fresh-process reload remains NOT RUN; the
 new AOI has 50 deferred contacts on one side and is not full geometry repair.
+
+## Material-only closeout continuation — 2026-10-11
+
+The owner deferred the remaining steps/contact geometry to #459 and retained
+its limits. #364 can continue its existing material scope; this is not a waiver
+of fresh reload/render or protected delivery. CI run38167515175 failed five
+camera error tests: the generic material recovery path swallowed camera
+exceptions and reset material state. Production now retains the distinct
+camera rollback contract, preserves materials, records BLOCKED, blocks further
+mutations and propagates the original exception. The existing camera tests
+were not changed. Focused camera/bridge/client/panel suite: 112 PASS, two
+Windows symlink capability skips. This bridge change is source-only for the
+next installation; no live camera action or editor restart was performed.
+
+The [prepared PCG handoff](../ROADMAP.md#prepared-handoff-from-364-to-365--2026-10-11)
+pins saved outputs, engine/plugin baselines, source masks, exclusions and
+remaining gates. The current live review snapshot does not include PCGEx.
+No #365 implementation or source/terrain/physics mutation is claimed.

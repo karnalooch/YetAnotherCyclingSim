@@ -1546,6 +1546,14 @@ class MaterialPreview:
                 except Exception as rollback_error:
                     LOGGER.exception("Owned viewport camera rollback failed")
                     result["camera_restore_error"] = str(rollback_error)
+                # Camera failure has its own rollback contract: preserve live
+                # materials and propagate the original error. Never route it
+                # through material recovery or advertise a recovered mutation.
+                self.sequence -= 1
+                result["sequence"] = self.sequence
+                self.recovery_blocked = True
+                write_new(output / "receipt.json", result)
+                raise
             self.fail_capture(result, output)
             if result["status"] == "RECOVERED":
                 return canonical(result)
