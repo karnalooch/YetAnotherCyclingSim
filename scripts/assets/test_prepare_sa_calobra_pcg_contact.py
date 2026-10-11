@@ -15,6 +15,7 @@ import prepare_sa_calobra_pcg_contact as contact
 
 class ContactWitnessTests(unittest.TestCase):
     def setUp(self):
+        (contact.ROOT / "Saved").mkdir(parents=True, exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(dir=contact.ROOT / "Saved")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)

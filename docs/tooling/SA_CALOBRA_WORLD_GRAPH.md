@@ -438,6 +438,17 @@ The next bounded work is a justified support/orientation/embedding policy and
 fixture matrix, followed by render/owner review through existing proof admission.
 Do not alter accepted terrain or conceal these gaps with vegetation/materials.
 
+Final hosted CI for documentation head
+`c811d7710b9bbd9d6c951ca2c9459d831adb6890`,
+[run38185349182](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38185349182),
+FAILED four contact-witness test setups: the clean Linux checkout has no ignored
+`Saved` directory, so `TemporaryDirectory(dir=ROOT / "Saved")` raised
+FileNotFoundError before any assertion. Fix the fixture to provision its parent;
+retain all interpolation/NoData/identity/drift assertions. Hosted governance,
+repository policy and security lanes passed, but aggregate CI correctly failed.
+The native receipt remains exact to `796429df`; a test/docs-only successor does
+not establish native execution at the newer head or override pending admission.
+
 Existing Julka profiles `sa-calobra-pcg-masks-candidate` and
 `sa-calobra-mask-transitions-candidate` verified with zero issues, including
 inherited source closure. Existing `verified_manifest()` also checked fingerprints,
