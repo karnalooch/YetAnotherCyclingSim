@@ -320,16 +320,16 @@ DOMAIN_RULES = (
     ("reflected_execution", "ToolsetRegistry", ".cpp", r"UToolsetRegistry::ExecuteTool\s*\(", 0, 110, 0),
 )
 # Exact files already inventoried on pinned UE 5.8.2. Their complete bodies are
-# needed to review generated toolset names and MCP result wrapping, not to
-# assume metadata hooks or admit any runtime operation.
+# needed to review reflected execution and result serialization. The previous
+# four complete naming/registry sources are already retained in native evidence.
 DOMAIN_PYTHON_HELPER = (
-    "Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/__init__.py"
+    "Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/tool_call_impl.py"
 )
 DOMAIN_COMPLETE_FILES = (
-    ("ToolsetRegistry", "Engine/Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Private/ToolsetRegistry/FunctionLibraryToolset.cpp"),
-    ("ToolsetRegistry", "Engine/Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Private/ToolsetRegistry/ToolsetRegistry.cpp"),
+    ("ToolsetRegistry", "Engine/Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Private/ToolsetRegistry/ObjectFunctionToolCall.cpp"),
+    ("ToolsetRegistry", "Engine/Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Private/ToolsetRegistry/ToolsetJson.cpp"),
+    ("ModelContextProtocol", "Engine/Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocol/Public/ModelContextProtocolToolResults.h"),
     ("ToolsetRegistry", DOMAIN_PYTHON_HELPER),
-    ("ModelContextProtocol", "Engine/Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocol/Private/ModelContextProtocolToolResults.cpp"),
 )
 CONTROLLER_HEADERS = {
     "IAutomationControllerModule.h": "Engine/Source/Developer/AutomationController/Public/IAutomationControllerModule.h",

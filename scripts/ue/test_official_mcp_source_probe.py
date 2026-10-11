@@ -437,25 +437,34 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
         self.assertLessEqual(len(output.splitlines()), 500)
 
     def test_domain_extension_retains_complete_fixed_files_without_duplicate_contexts(self):
+        registry = "Engine/Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Private/ToolsetRegistry"
+        # Independent literal paths specify this follow-up's evidence contract.
+        # The extra fixture handler tests overlapping selectors, not an UE API.
         sources = (
-            ("// Full naming and schema fixture.\n"
-             "FString FFunctionLibraryToolset::GetToolsetClassName()\n{\n"
-             "    return OBSERVED_NATIVE_NAME;\n}\n"
-             "TFuture FFunctionLibraryToolset::ExecuteToolInternal()\n{\n"
-             "    UFunction* Reflected = nullptr;\n    return CONVERSION_TAIL;\n}\n"),
-            "FToolset* FToolsetRegistry::Find()\n{\n    return ACTUAL_LOOKUP;\n}\n",
-            "raise RuntimeError('SOURCE_MUST_NEVER_EXECUTE')\n"
-            "def tool_call(function):\n    return function\n# " + "x" * 700 + "\n",
-            "FString MakeTextResult()\n{\n    return RESULT_WRAPPING;\n}\n",
+            (f"{registry}/ObjectFunctionToolCall.cpp",
+             ("// Complete execution fixture.\n"
+              "FJsonValue FObjectFunctionToolCall::Execute()\n{\n"
+              "    return REFLECTED_EXECUTION_TAIL;\n}\n"
+              "TFuture FFixtureHandler::ExecuteToolInternal()\n{\n"
+              "    UFunction* Reflected = nullptr;\n    return CONVERSION_TAIL;\n}\n")),
+            (f"{registry}/ToolsetJson.cpp",
+             "FJsonValue StructToJsonSchema()\n{\n    return SCHEMA_CONTRACT_TAIL;\n}\n"),
+            ("Engine/Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocol/Public/ModelContextProtocolToolResults.h",
+             "FString MakeTextResult()\n{\n    return RESULT_WRAPPING;\n}\n"),
+            ("Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/tool_call_impl.py",
+             "raise RuntimeError('SOURCE_MUST_NEVER_EXECUTE')\n"
+             "def tool_call(function):\n    return function\n# " + "x" * 700 + "\n"),
         )
-        for (_, relative), source in zip(probe.DOMAIN_COMPLETE_FILES, sources, strict=True):
+        self.assertEqual(tuple(path for _, path in probe.DOMAIN_COMPLETE_FILES),
+                         tuple(path for path, _ in sources))
+        for relative, source in sources:
             self.write(relative, source)
         result = self.collect(evidence_focus="domain_extension")
         self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
         self.assertEqual(len(result["domain_extension_complete_files"]), 4)
         inventory = {item["path"]: item for item in result["inventory"]}
-        for observation, (_, relative), source in zip(
-                result["domain_extension_complete_files"], probe.DOMAIN_COMPLETE_FILES, sources, strict=True):
+        for observation, (relative, source) in zip(
+                result["domain_extension_complete_files"], sources, strict=True):
             with self.subTest(path=relative):
                 item = inventory[relative]
                 self.assertEqual(observation["status"], "COMPLETE")
@@ -474,7 +483,7 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
         # Observations still identify an existing semantic body, even though its
         # complete file was retained once instead of copying that body twice.
         conversion = result["domain_extension_observations"]["concrete_argument_conversion"]
-        self.assertEqual(conversion[0]["path"], probe.DOMAIN_COMPLETE_FILES[0][1])
+        self.assertEqual(conversion[0]["path"], sources[0][0])
         self.assertEqual(conversion[0]["line"], 6)
         self.assertNotIn("concrete_argument_conversion", result["domain_extension_missing_contexts"])
         self.assertIn("COMPLETE_EXTENSION_FILES", probe.console_summary(result))
@@ -506,13 +515,14 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
         self.assertLessEqual(len(probe.console_summary(result).splitlines()), 500)
 
     def test_domain_extension_exact_paths_do_not_substitute_names_or_collect_other_python(self):
-        helper = "Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/__init__.py"
+        helper = "Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/tool_call_impl.py"
         self.write(helper, "raise RuntimeError('READ_ONLY_HELPER')\n")
         wrong_paths = (
-            "Engine/Plugins/Experimental/ToolsetRegistry/Source/FunctionLibraryToolset.cpp",
-            "Engine/Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry.cpp",
-            "Engine/Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocolToolResults.cpp",
-            "Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/unrelated/__init__.py",
+            "Engine/Plugins/Experimental/ToolsetRegistry/Source/ObjectFunctionToolCall.cpp",
+            "Engine/Plugins/Experimental/ToolsetRegistry/Source/ToolsetJson.cpp",
+            "Engine/Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocolToolResults.h",
+            "Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/unrelated/tool_call_impl.py",
+            "Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/__init__.py",
             "Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/other.py",
         )
         for relative in wrong_paths:
@@ -522,13 +532,13 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
         sources = select.call_args.args[1]
         self.assertEqual([item["path"] for item, _ in sources if item["path"].endswith(".py")], [helper])
         self.assertEqual([item["status"] for item in result["domain_extension_complete_files"]],
-                         ["MISSING", "MISSING", "COMPLETE", "MISSING"])
+                         ["MISSING", "MISSING", "MISSING", "COMPLETE"])
         self.assertTrue(all(item["selected_line_count"] == 0
                             for item in result["domain_extension_complete_files"] if item["status"] == "MISSING"))
         for item in result["inventory"]:
             if item["path"] in wrong_paths:
                 self.assertEqual(item["selected_excerpts"], [])
-        self.assertEqual(result["domain_extension_complete_files"][2]["path"], helper)
+        self.assertEqual(result["domain_extension_complete_files"][3]["path"], helper)
 
     def material_fixture(self, *, source=None):
         relative = "Engine/Plugins/Experimental/Toolsets/ZMaterialFixture"

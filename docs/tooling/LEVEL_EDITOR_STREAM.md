@@ -3,16 +3,16 @@
 **Scope:** owner-requested viewport review for #364 / PR #470, inside M3.
 **Status:** installed-source inspection and authenticated b9fd retarget review
 **PASS**; checkpoint cadence delivered at `c62bbc3e7dcdd9ccaad9b2facef477323413e279`
-with passing protected CI. At `3ecc90f`, exact-SHA CI and the Blender reference
-passed; Windows recorded `compileKind=none`. The naming correction passed
-74 local tests and independent 26-test QA, but the real Editor attempt ended
-in controlled **BLOCKED** at the initial registry-settings readback. The
-hashed overlay contained both literal `{8}` quantifiers; UE returned values
-without those braces. This occurred before the census, owned class registration
-or material requests. The exact internal transformation remains unidentified.
-The follow-up spells out all eight hexadecimal positions in both startup
-patterns, preserving the same allowed names and exact settings checks.
-The native class/schema/client identity contract still needs qualification.
+with passing protected CI. At `9a7be52`, exact-SHA CI and the Blender reference
+passed; Windows recorded `compileKind=none`. Native startup accepted the eight
+explicit hexadecimal positions, completed the census and registered the exact
+owned toolset. The client verified its loopback listener and one-tool catalog,
+then dispatched one material request. Its returned JSON object failed the
+client's `schema_version` check. The rejected response and native request files
+were not retained by the previous success-only evidence path, so the output
+envelope, actual material mutation, captures and restoration remain unverified.
+The next source-only read targets the four missing return-conversion bodies;
+the response parser is unchanged until that contract is established.
 Live stream and same-process update proof remain **UNQUALIFIED**. The
 [workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
 records the authenticated launch evidence and current correction.
@@ -32,12 +32,14 @@ PixelStreaming2 editor/settings declarations using `level_editor_stream`.
 It preserves bounded reads and writes evidence only below the checkout's
 ignored `Saved` directory. It does not enable a plugin, start Unreal or create
 a network listener. Other existing source-inspection focuses remain available.
-For the observed MCP naming mismatch, a source-probe push whose HEAD message
+For the observed MCP contract mismatch, a source-probe push whose HEAD message
 contains `[mcp-domain-source]` selects the existing `domain_extension` focus.
 It retains the complete, bounded contents of four already inventoried files:
-`FunctionLibraryToolset.cpp`, `ToolsetRegistry.cpp`, the exact registry Python
-helper and `ModelContextProtocolToolResults.cpp`. This supplies the naming,
-lookup and result-format contracts without starting another Editor. Ordinary
+`ObjectFunctionToolCall.cpp`, `ToolsetJson.cpp`, `ModelContextProtocolToolResults.h`
+and the exact registry Python `tool_call_impl.py`. These replace the previous
+four full-file priorities, whose complete bodies are retained at `1b2e2ea`.
+This supplies the missing return-conversion and text-result contracts without
+starting another Editor. Ordinary
 automatic selection, owner/ref/path guards and all read/output caps remain.
 The probe is declaration evidence only; it cannot admit a preview session.
 

@@ -288,6 +288,52 @@ bounded values with explicit original lengths and truncation flags, so their
 display limits cannot silently resemble another configuration defect. Native
 qualification remains pending.
 
+The [actual `9a7be52` attempt](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38135683574)
+passed the settings correction and started the owned MCP server. Exact-SHA
+[CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38135686942)
+and [Blender reference](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38135686667)
+passed; Windows recorded `compileKind=none` and 20.86 GiB free on D:. Both full
+material proofs skipped. Local correction checks passed 53 full bridge tests
+and independent 23-test registration QA before publication.
+
+The authenticated [11-file artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38135683574/artifacts/11700609470)
+is 83,411 bytes, SHA-256
+`9eb7635589911f37635aab7b32eab1575354a1b6ce04447399ffcf49778cc55e`.
+Both ready copies are exactly 211,264 bytes, SHA-256
+`9a9a014dce5b28adb0f61f1fb4a2cc5f19fb45c99f8796d21391f61a617d0511`.
+They bind PID 43736, FILETIME 134361922309269381 and session 38135683574-1.
+Complete native coverage now has retained counts: 10,109 Class objects,
+10,126 ObjectIterator objects and 17 exact metaclass CDO exclusions. The first
+four exclusions are recorded with explicit truncation; exactly the two
+abstract legacy bases and zero concrete libraries are present. These counts
+do not retrospectively identify the failing candidate from earlier attempts.
+
+The actual class is `/Engine/PythonTypes.YacsRoadMaterialPreview_0x20FFE68B`.
+The listener on `127.0.0.1:18784` belongs to that same Editor; the real
+`tools/list` is exactly the ready descriptor for its single `.preview` tool,
+with one required `request_json` string. The initial readback has 370 unique
+original material bindings, no MID, and the retained b9 values within float32
+precision. The complete log records initialize, listing and native adapter
+dispatch. Local Zen reached `OK` in 2.476 seconds; no engine fatal is present.
+
+One `set` call was attempted. The client then refused `Native receipt schema
+differs` and forbade retry. Its 13.875-second duration measures the whole
+client entry, not a completed update. The successful text-result parser had
+decoded a JSON object, but that object did not have integer `schema_version=1`.
+Because the response was not saved before this check, its exact fields remain
+unknown. The artifact also does not inventory the native request directory.
+Actual mutation, asynchronous captures, rollback and post-call input
+conservation are therefore unverified. No second call, received browser frame
+or owner handoff occurred.
+
+The existing filesystem-only `domain_extension` read now prioritizes four
+known missing bodies: `ObjectFunctionToolCall.cpp`, `ToolsetJson.cpp`,
+`ModelContextProtocolToolResults.h` and the exact `tool_call_impl.py` helper.
+All paths and hashes were already inventoried (43,544 bytes total). The full
+source and byte/output limits are unchanged; no inspected code is executed.
+The previous four complete bodies remain authenticated in the `1b2e2ea`
+artifact. The runtime response parser stays unchanged pending this evidence.
+
 ## Measured local cost
 
 The authenticated [b9fd native checkpoint](README.md) reused compiled C++
