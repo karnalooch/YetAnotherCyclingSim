@@ -375,6 +375,17 @@ It illustrates weathered limestone/asphalt/shoulder composition only; invented
 road shapes, shoreline, walls and vegetation are not source authority, scope
 approval, a native screenshot, implementation evidence or visual acceptance.
 
+Attempt `9d4fc8e6e219db17639c6208f1aa57fc85a1ee5d/qualification07` repeated
+clean material save/reload. Terrain diagnostic measured derived bounds origin
+`[-11.20713996887207,-3.307353973388672,42.83029317855835]` cm, extent
+`[63.63415336608887,91.53669357299805,50.19459390640259]` cm. These differ
+from original serialized bounds but lie strictly inside the source AABB on all
+three axes. The saved duplicate is independently package-hash bound. Next bounded
+measurement uses the unchanged, larger source grid only if exact containment
+holds (no numerical tolerance), records both bounds and their nonidentity, and
+traces the actual derived collision. This permits a conservative diagnostic;
+it does not certify original/derived geometry equivalence or regional admission.
+
 Existing Julka profiles `sa-calobra-pcg-masks-candidate` and
 `sa-calobra-mask-transitions-candidate` verified with zero issues, including
 inherited source closure. Existing `verified_manifest()` also checked fingerprints,

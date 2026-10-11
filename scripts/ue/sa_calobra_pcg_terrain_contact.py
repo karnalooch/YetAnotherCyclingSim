@@ -77,15 +77,26 @@ def measure(root, binding):
     )
     bounds = request["mesh_bounds_cm"]
     actual_bounds = component.static_mesh.get_bounds()
+    actual_origin = vector(actual_bounds.origin)
+    actual_extent = vector(actual_bounds.box_extent)
+    # The saved duplicate is hash-bound independently. Its rebuilt bounds may
+    # shrink relative to the source's serialized bounds. The source witness grid
+    # remains conservative only when it encloses the measured derived AABB.
     require(
-        vector(actual_bounds.origin) == bounds["origin"]
-        and vector(actual_bounds.box_extent) == bounds["extent"],
-        "Native mesh bounds differ from source witness: "
+        all(
+            actual_extent[i] > 0
+            and bounds["origin"][i] - bounds["extent"][i]
+            <= actual_origin[i] - actual_extent[i]
+            and actual_origin[i] + actual_extent[i]
+            <= bounds["origin"][i] + bounds["extent"][i]
+            for i in range(3)
+        ),
+        "Native mesh bounds escape conservative source witness: "
         + repr(
             {
                 "expected": bounds,
-                "actual_origin": vector(actual_bounds.origin),
-                "actual_extent": vector(actual_bounds.box_extent),
+                "actual_origin": actual_origin,
+                "actual_extent": actual_extent,
             }
         ),
     )
@@ -271,6 +282,9 @@ def measure(root, binding):
         "material_readback": material.verify_binding(binding, component),
         "source_contract": {k: v for k, v in request.items() if k != "points"},
         "mesh_support": {
+            "derived_bounds_cm": {"origin": actual_origin, "extent": actual_extent},
+            "source_bounds_enclose_derived": True,
+            "bounds_identity": "DIFFERENT_DERIVED_PACKAGE_HASH_BOUND",
             "method": "upward complex collision rays; finite 9x9 interior AABB grid; not continuous render-triangle support",
             "trace_signature": str(component.line_trace_component.__doc__),
             "sample_count": len(support),
