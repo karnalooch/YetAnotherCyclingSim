@@ -1,10 +1,12 @@
 """Disposable contract/texture fixtures; none is a Godot or Unreal proof."""
 
 from copy import deepcopy
+import errno
 import hashlib
 import json
 import math
 from pathlib import Path
+import stat
 import struct
 import tempfile
 from types import SimpleNamespace
@@ -270,19 +272,55 @@ class SourceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "statistics differ"):
             self.fixture.load()
 
-    def test_symlink_map_and_repeated_outline_or_nonempty_border_are_rejected(self):
+    def test_link_metadata_on_one_map_is_rejected_without_os_link_privilege(self):
+        path = self.fixture.root / "run-a/short_oblique/export/YACS_Material_ORM.png"
+        original_lstat = Path.lstat
+        # Both real source guards inspect lstat, not Path.is_symlink. Keep all
+        # other paths and every source byte real while exercising both link kinds.
+        for mode, attributes in ((stat.S_IFLNK, 0), (stat.S_IFREG, stat.FILE_ATTRIBUTE_REPARSE_POINT)):
+            observed = []
+
+            def hostile_lstat(candidate, *args, **kwargs):
+                info = original_lstat(candidate, *args, **kwargs)
+                if candidate == path:
+                    observed.append(candidate)
+                    return SimpleNamespace(st_mode=mode, st_file_attributes=attributes)
+                return info
+
+            with self.subTest(mode=mode, attributes=attributes), \
+                    patch.object(Path, "lstat", autospec=True, side_effect=hostile_lstat):
+                with self.assertRaisesRegex(ValueError, "symlink|reparse"):
+                    self.fixture.load()
+                self.assertEqual(observed, [path])
+        self.assertEqual(self.fixture.load()["verified_map_count"], 80)
+
+    def test_real_symlinked_map_is_rejected_when_os_supports_creation(self):
         path = self.fixture.root / "run-a/short_oblique/export/YACS_Material_ORM.png"
         raw = path.read_bytes()
         target = self.fixture.root / "detached-map.png"
         target.write_bytes(raw)
         path.unlink()
-        path.symlink_to(target)
-        with self.assertRaises(ValueError):
+        try:
+            path.symlink_to(target)
+        except NotImplementedError as error:
+            self.skipTest("OS does not implement symlink creation: " + str(error))
+        except OSError as error:
+            if getattr(error, "winerror", None) == 1314:
+                self.skipTest("Windows runner lacks the symlink creation privilege")
+            if error.errno in (errno.ENOSYS, errno.ENOTSUP, errno.EOPNOTSUPP):
+                self.skipTest("OS/filesystem does not support symlink creation: " + str(error))
+            raise
+        with self.assertRaisesRegex(ValueError, "symlink|reparse"):
             self.fixture.load()
-        path.unlink()
-        path.write_bytes(raw)
+
+    def test_repeated_decoded_outline_is_rejected(self):
         self.fixture.edit_validation("run-a", "short_oblique", lambda v: v.update(decoded_core_outline_sha256=sha(b"drifting_interrupted")))
         with self.assertRaisesRegex(ValueError, "repeat one decoded outline"):
+            self.fixture.load()
+
+    def test_nonempty_border_in_authenticated_validation_is_rejected(self):
+        self.fixture.edit_validation("run-a", "short_oblique", lambda v: v["mask_statistics"].update(border_mask_max=1 / 255))
+        with self.assertRaisesRegex(ValueError, "Invalid crack source border_mask_max"):
             self.fixture.load()
 
     def test_source_root_has_one_pinned_location_without_a_fallback(self):

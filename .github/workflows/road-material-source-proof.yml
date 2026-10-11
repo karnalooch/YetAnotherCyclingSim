@@ -221,7 +221,7 @@ jobs:
             owned_pid = $null; exit_code = $null; exit_code_observed = $false
             stopped_after_deadline = $false; deadline_seconds = 180
             observations_available = $false; source_mutated = $false
-            interpreter = $null; files = @(); error = $null
+            interpreter = $null; decoder_environment_status = 'NOT_RUN'; files = @(); error = $null
           }
           function Copy-LidarEvidence {
             if (-not $retained) { return }
@@ -248,16 +248,28 @@ jobs:
           try {
             $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
             if ($state.status -cne 'IDLE') { throw 'LiDAR observation reader yields to existing Unreal ownership.' }
-            # This is the existing GIS interpreter recorded by the source replay.
-            # No environment search, installation or alternative decoder is performed.
-            $python = 'D:\yacs\project\.venv\Scripts\python.exe'
-            $pythonFile = Get-Item -LiteralPath $python -ErrorAction Stop
-            $report.interpreter = [ordered]@{
-              path = $python; size_bytes = $pythonFile.Length
-              sha256 = (Get-FileHash -LiteralPath $python -Algorithm SHA256).Hash.ToLowerInvariant()
-            }
             & $env:YACS_ROAD_FORGE_PY -m unittest scripts.assets.test_read_sa_calobra_hairpin_lidar
             if ($LASTEXITCODE -ne 0) { throw 'Source LiDAR observation contracts failed.' }
+            # The old canonical .venv is absent on the current host. Qualify
+            # only configured/registered existing executables and their actual
+            # imports against the recorded CPython 3.12 x64/package pins.
+            # No directory scan, installation or alternate decoder is performed.
+            $environmentPath = Join-Path $proof 'decoder-environment.json'
+            & $env:YACS_ROAD_FORGE_PY -I -B scripts/assets/read_sa_calobra_hairpin_lidar.py `
+              --workspace-config $env:YACS_WORKSPACE_CONFIG --resolve-decoder $environmentPath
+            $environmentExit = $LASTEXITCODE
+            $environment = Get-Content -LiteralPath $environmentPath -Raw | ConvertFrom-Json -AsHashtable
+            $report.decoder_environment_status = $environment.status
+            if ($environmentExit -ne 0 -or $environment.status -cne 'EXISTING_DECODER_SELECTED' -or
+                $null -eq $environment.selected) { throw 'Existing GIS environment is unavailable; retained metadata states the cause.' }
+            $python = [string]$environment.selected.path
+            if (-not [IO.Path]::IsPathFullyQualified($python)) { throw 'Qualified GIS executable path is not absolute.' }
+            $pythonFile = Get-Item -LiteralPath $python -ErrorAction Stop
+            $report.interpreter = $environment.selected
+            if ($pythonFile.Length -ne $report.interpreter.size_bytes -or
+                (Get-FileHash -LiteralPath $python -Algorithm SHA256).Hash.ToLowerInvariant() -cne $report.interpreter.sha256) {
+              throw 'Qualified GIS interpreter changed before the source read.'
+            }
             $workCode = 'import sys; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from scripts.manage_local_workspace import load_workspace; print(Path(load_workspace()["work"]))'
             $workRows = @(& $env:YACS_ROAD_FORGE_PY -I -B -c $workCode (Get-Location).Path)
             if ($LASTEXITCODE -ne 0 -or $workRows.Count -ne 1 -or

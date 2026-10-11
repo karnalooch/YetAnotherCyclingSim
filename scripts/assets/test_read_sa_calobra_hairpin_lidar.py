@@ -342,5 +342,112 @@ class HairpinLidarTests(unittest.TestCase):
         self.assertFalse(list(out.glob("*.csv")))
 
 
+class ExistingDecoderTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.executable = self.root / "existing-python.exe"
+        self.executable.write_bytes(b"existing executable fixture")
+        self.workspace = {"project": str(self.root / "project")}
+        self.addCleanup(patch.stopall)
+        patch.object(reader.sys, "executable", str(self.executable)).start()
+        patch.object(reader.shutil, "which", return_value=None).start()
+
+    def qualified(self):
+        return {
+            "status": "EXISTING_DECODER_READY",
+            "executable": str(self.executable),
+            "executable_identity": identity(self.executable.read_bytes()),
+            "python_version": [3, 12, 10],
+            "implementation": "cpython", "pointer_bits": 64,
+            "imports_verified": True,
+            "decoder_versions": dict(reader.DECODER_VERSIONS),
+        }
+
+    def child(self, probe, code=0):
+        return SimpleNamespace(
+            returncode=code, stdout=json.dumps(probe).encode(), stderr=b""
+        )
+
+    def test_missing_old_venv_uses_only_successfully_qualified_known_executable(self):
+        with patch.object(
+            reader.subprocess, "run", return_value=self.child(self.qualified())
+        ) as run:
+            report = reader.resolve_existing_decoder(self.workspace)
+        self.assertEqual(report["status"], "EXISTING_DECODER_SELECTED")
+        self.assertEqual(report["candidates"][0]["status"], "MISSING")
+        self.assertEqual(report["selected"]["path"], str(self.executable))
+        self.assertFalse(report["installation_performed"])
+        self.assertFalse(report["source_read"])
+        self.assertEqual(run.call_count, 1)
+        self.assertEqual(run.call_args.kwargs["timeout"], 15)
+        self.assertEqual(run.call_args.args[0][1:3], ["-I", "-B"])
+        self.assertEqual(run.call_args.args[0][-1], "--probe-decoder")
+
+    def test_exit_zero_cannot_qualify_wrong_packages_abi_or_unverified_imports(self):
+        for change in (
+            {"decoder_versions": {**reader.DECODER_VERSIONS, "lazrs": "0.0.0"}},
+            {"python_version": [3, 14, 8]}, {"imports_verified": False},
+            {"pointer_bits": 32}, {"executable_identity": identity(b"different")},
+        ):
+            with self.subTest(change=change), patch.object(
+                reader.subprocess, "run",
+                return_value=self.child({**self.qualified(), **change}),
+            ):
+                report = reader.resolve_existing_decoder(self.workspace)
+                self.assertIsNone(report["selected"])
+                self.assertEqual(report["status"], "GIS_ENVIRONMENT_UNAVAILABLE")
+
+    def test_actual_import_failure_is_not_a_qualified_environment(self):
+        with (
+            patch.object(reader.sys, "version_info", (3, 12, 10)),
+            patch.object(reader, "_decoder", side_effect=ImportError("native DLL absent")),
+        ):
+            report = reader.decoder_environment()
+        self.assertFalse(report["imports_verified"])
+        self.assertEqual(report["status"], "UNAVAILABLE")
+        self.assertIn("native DLL absent", report["error"])
+
+    def test_changed_executable_is_rejected_after_real_probe_result(self):
+        result = self.child(self.qualified())
+
+        def mutate(*args, **kwargs):
+            self.executable.write_bytes(b"changed executable")
+            return result
+
+        with patch.object(reader.subprocess, "run", side_effect=mutate):
+            report = reader.resolve_existing_decoder(self.workspace)
+        self.assertIsNone(report["selected"])
+        self.assertIn("changed during", report["candidates"][-1]["error"])
+
+    def test_timeout_and_missing_candidates_never_select_an_interpreter(self):
+        with patch.object(
+            reader.subprocess, "run",
+            side_effect=reader.subprocess.TimeoutExpired("owned probe", 15),
+        ):
+            report = reader.resolve_existing_decoder(self.workspace)
+        self.assertIsNone(report["selected"])
+        self.assertEqual(report["candidates"][-1]["status"], "TIMED_OUT")
+        self.executable.unlink()
+        with patch.object(reader.subprocess, "run") as run:
+            report = reader.resolve_existing_decoder(self.workspace)
+        run.assert_not_called()
+        self.assertTrue(all(row["status"] == "MISSING" for row in report["candidates"]))
+
+    def test_only_absolute_named_pyvenv_metadata_is_inspected_and_deduplicated(self):
+        config = self.root / "project/.venv/pyvenv.cfg"
+        config.parent.mkdir(parents=True)
+        config.write_text(f"executable = {self.executable}\nhome = relative/path\n")
+        with patch.object(
+            reader.subprocess, "run", return_value=self.child({"status": "UNAVAILABLE"}, 2)
+        ) as run:
+            report = reader.resolve_existing_decoder(self.workspace)
+        self.assertEqual(run.call_count, 1)
+        self.assertEqual(len(report["candidates"]), 2)
+        self.assertIsNone(report["selected"])
+        self.assertEqual(report["project_pyvenv_config"], identity(config.read_bytes()))
+
+
 if __name__ == "__main__":
     unittest.main()

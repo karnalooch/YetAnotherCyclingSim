@@ -3,7 +3,58 @@
 **Milestone:** M3. **PR:** #470 (Draft). **Domain owner:** Visual & DCC.
 **Base SHA:** `f9eeb02771ad036892b157059f07876a07abea61`.
 
-## Observed result, not an appearance PASS
+## Verified 4258 review — all 68 Lit and 18 contact frames
+
+The [native run 38105475021](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105475021)
+at `4258aab3527506d64769ecf974dd061d9e580687` completed baseline, canary,
+save, separate fresh reopen, 68 final Lit views and two contact captures.
+[Artifact 11689633008](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105475021/artifacts/11689633008)
+is 412,622,626 bytes with SHA-256
+`fc93cab4b2346781be8d426615ba0bddbbb96be139f0cafc38fc36d7d4cfc075`.
+Its path inventory and ZIP bounds were checked before extraction. All 272
+Lit PNGs were independently checked against the receipt; the 68-camera plan
+retains SHA-256 `3fac9564e4c96c0eee237c2103cc4833af93b8bc493b4334e0b88e1e70d37559`.
+All 41 separately inventoried contact files and all 18 contact PNGs were also
+checked. Actual save/reload/Lit/contact editor exits were zero.
+
+Three independent review assignments cover every final Lit image: the first
+34, the next 17 and the final 17 in filename order. All 18 original contact
+PNGs were separately viewed, including each baseline/support-hidden/local-
+Landscape-hidden triplet. The primary reviewer additionally inspected the
+0112/0081 Lit examples and the full 0081 forward contact triplet.
+
+| Observation | Representative fixed camera IDs | Consequence |
+|---|---|---|
+| Dry, fine-grained near asphalt; broad colour variation is quieter | 0112 forward 00002, 0141 forward 00001, 0179 reverse 00003 | The current granular source is useful; source export alone was insufficient to establish the appearance. |
+| Near white lines are continuous and follow visible curves; no obvious floating paint or parapet paint | Close views throughout the 68-frame set | Save/fresh full-buffer proof for all 370 overlays is supported by the viewed near-field result. |
+| Far shallow white lines break into regular dots or short dashes | 0083 forward 00002, 0112 forward 00002, 0127 reverse 00004 | Investigate pixel coverage and actual capture/AA state before changing physical width or elevation. Static frames do not prove temporal flicker. |
+| Repeated transverse asphalt bands remain in the distance | 0071 forward 00002, 0082 forward 00002, 0105 reverse 00001, 0173 reverse 00002, 0179 forward 00003 | The separate eight-frame channel/uniform-material diagnostic remains required. The 16 crack controls do not replace it. |
+| Asphalt/gravel and particularly gravel/Landscape boundaries remain geometric and sharp | 0013 forward 00001, 0071 reverse 00001, 0097 forward 00003 | The source-owned outer material transition is unfinished. No flat tint is accepted as a substitute for the real Landscape material. |
+| Pavement and both paint strips end on the same flat cross-edge | 0139 forward 00001/reverse 00000, 0144 forward 00000/reverse 00001 | These are source/geometry ends, not isolated paint holes. |
+| Large dark contact walls, faceted slopes and deep shadows persist | 0112, 0081, 0177 and 0179 | Keep the owning geometry/light questions in their scoped work; material changes have not fixed them. |
+
+In the 0081 forward 00008 and reverse 00004 contact triplets, the thick dark
+wall under the return curve disappears when **support 185** is hidden and
+remains as a vertical wall when the selected Landscape components are hidden.
+The diagnosed area is approximately source rows 1560–1880 on edge0. This is
+distinct from the previously analysed steep inner profile near row 1200.
+Actual retained wall-bottom coordinates and CUT contact are still required;
+wall height and real-road banking are not inferred from a PNG.
+
+At 0112, hiding support 112 does not remove the dark edge of the neighbouring
+return branch. Source-camera projection identifies support **022** on much of
+that visible branch. Its source row 9 edge0 projects to (53.94, 458.06) px;
+the same source point 8 cm lower projects to (54.67, 462.99) px, consistent
+with the visible thin slab side. A separate lower wall is also visible.
+This supports a bounded shoulder-top investigation but is not an executed
+022 visibility isolation or a repair of the larger hairpin wall.
+
+These reviews leave **#364 unfinished and #459 open**. Owner audit remains
+`PENDING_FINAL_M3`; performance is `DEFERRED_AFTER_M3`, `performance_pass: false`.
+
+## Historical initial rejection and readiness repair
+
+### Observed result, not an appearance PASS
 
 The owner rejected the appearance of the initial four Lit road frames. The
 same-camera window-0112 images show hard pale shoulder edges, stretched-looking

@@ -12,6 +12,63 @@ remains frozen. #384 completed after protected [PR #467](https://github.com/karn
 merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its gate is satisfied.
 This work continues #364, not MCP infrastructure.
 
+## Latest observed results — 4258 images and 735 preflight failure
+
+Revision `735f049746da753622b9948251f625331edb772b` passed
+[protected CI 38107099181](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38107099181).
+Its [native run 38107095697](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38107095697)
+stopped **before Unreal**: the real-symlink source fixture raised Windows
+error 1314. The host ran 345 tests, with one error and one unrelated skipped
+test; it produced no crack scene or image. The replacement fixture separates
+real link creation from link/reparse metadata rejection and the independent
+outline/border cases. Only unsupported OS link creation is skipped; ordinary
+I/O errors still fail. The runtime source guards are unchanged.
+
+The [source run 38107095678](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38107095678)
+completed the bounded installed-API read. Seven actual installed files and
+four function bodies are retained; the MID header is in `Public/Materials`,
+while the Kismet header is in `Classes/Kismet`. The API artifact is 1,691 bytes,
+SHA-256 `b48d34df4600acc58c66388f5395dddcbde82fd868e4231206447dfc2f9a7d5e`.
+That source run failed only at the subsequent LiDAR step: the recorded project
+`.venv` executable was absent, before a child or source read. Actual point
+observations are still unavailable. The native preflight traceback establishes
+that the existing Material Forge environment uses the Python 3.12 base library;
+the earlier local Python 3.14 test version was not a host-version observation.
+
+The next source invocation qualifies only already configured or registered
+interpreters: the configured project venv, the calling Material Forge Python,
+PATH's Python and absolute executable/home entries in that project's small
+`pyvenv.cfg`, if present. Each distinct existing candidate gets one 15-second
+read-only child probe. Selection requires actual imports and the unchanged
+four package pins, CPython 3.12 x64, matching executable identity and unchanged
+bytes after the probe. There is no filesystem scan, package installation,
+decoder substitution or geographic source read during qualification. If none
+qualifies, the retained result remains `GIS_ENVIRONMENT_UNAVAILABLE`.
+
+The targeted local verification passed 34 source/decoder contract tests, all
+14 current workflow PowerShell parses, scoped Ruff checks and all four docs
+index guards. The crack fixture additionally passed on Python 3.12 and 3.14;
+simulated Windows error 1314 skips only the OS link-creation case while its
+independent rejection checks still execute. This is not a new Windows/UE PASS.
+
+The completed 4258 artifact has now been independently authenticated: **523
+files**, including all **272 Lit PNGs** (68 final and 204 priming) and **18
+contact PNGs**. All 68 final Lit images and all 18 contact images were directly
+viewed across the independent review assignments. The ZIP is 412,622,626 bytes,
+SHA-256 `fc93cab4b2346781be8d426615ba0bddbbb96be139f0cafc38fc36d7d4cfc075`.
+The fixed 68-camera plan is unchanged. Save PID 10560, reload PID 25412,
+Lit PID 27076 and both contact PIDs 32956/21760 exited 0; both full readbacks
+conserve all 370 white-line actors and original source geometry.
+
+Near white lines follow the source surface and the asphalt has visible fine
+aggregate. Far white lines break into dashes in some shallow views, transverse
+asphalt bands remain, and the outer gravel/terrain transition is still sharp.
+Contact isolation identifies an exposed wall belonging to support 185 at the
+hairpin; it does not repair that wall or establish the correct road profile.
+See the [complete visual findings](ROAD_SURFACE_VISUAL_REVIEW_364.md#verified-4258-review--all-68-lit-and-18-contact-frames).
+Material completion, native crack/normal proof, #459 repair, the owner's final
+M3 audit and performance admission remain pending.
+
 ## Current joint candidate — local cracks and native capture readback
 
 The next integrated candidate consumes the already verified `07ebafad`
@@ -57,8 +114,8 @@ Its separate white-line Lit/contact
 [native run 38105475021](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105475021)
 has passed baseline, canary, save/fresh, the 68-frame Lit capture and both
 contact stages (12 frames at 0112 and six at the hairpin). The full native
-workflow is successful. Artifact verification and direct image review are
-still pending.
+workflow is successful. The artifact and full direct image review are now
+complete as recorded above; remaining appearance defects are not admitted.
 
 The bounded [installed-source read 38105475097](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105475097)
 retained four actual function observations from two CPP files, then failed on
@@ -77,9 +134,9 @@ requires successful source prerequisites and a non-cancelled workflow rather
 than success of the optional API step. Three isolated executions of the real
 inline header resolver passed, including the retained failure when both
 layouts are absent. The next source invocation requests `[hairpin-lidar]` and
-`[road-api-read]`, without `[road-cracks-source]`; actual LiDAR observations
-remain pending. No geometry repair or visual acceptance follows from these
-workflow changes.
+`[road-api-read]`, without `[road-cracks-source]`. That 735 invocation completed
+the API read but found no executable at the old GIS path, as recorded above.
+No geometry repair or visual acceptance follows from these workflow changes.
 
 The integrated preflight was also run locally with Python 3.14.8 and actual
 PowerShell 7.4.13: **345 tests passed, none skipped**, using the exact 26-module

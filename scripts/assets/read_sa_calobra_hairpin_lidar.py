@@ -13,7 +13,11 @@ import hashlib
 import importlib.metadata
 import json
 import math
+import os
 import re
+import shutil
+import struct
+import subprocess
 import sys
 from pathlib import Path
 
@@ -251,6 +255,141 @@ def _decoder(report):
     return laspy, np
 
 
+def decoder_environment():
+    """Qualify an existing interpreter without opening any geographic input."""
+    executable = Path(sys.executable)
+    report = {
+        "status": "UNAVAILABLE",
+        "executable": str(executable),
+        "python_version": list(sys.version_info[:3]),
+        "implementation": sys.implementation.name,
+        "pointer_bits": struct.calcsize("P") * 8,
+        "prefix": sys.prefix,
+        "base_prefix": sys.base_prefix,
+        "base_executable": getattr(sys, "_base_executable", None),
+        "imports_verified": False,
+        "decoder_versions": {},
+        "error": None,
+    }
+    try:
+        report["executable_identity"] = {
+            "size_bytes": executable.stat().st_size,
+            "sha256": digest(executable),
+        }
+        require(
+            report["python_version"][:2] == [3, 12]
+            and report["implementation"] == "cpython"
+            and report["pointer_bits"] == 64,
+            "Existing decoder must match the recorded CPython 3.12 x64 ABI",
+        )
+        _decoder(report)
+        report.update(status="EXISTING_DECODER_READY", imports_verified=True)
+    except Exception as exc:  # noqa: BLE001
+        report["error"] = f"{type(exc).__name__}: {exc}"
+    return report
+
+
+def resolve_existing_decoder(workspace):
+    """Inspect only configured/registered interpreters; never scan or install."""
+    project_venv = Path(workspace["project"]) / ".venv"
+    candidates = [
+        ("configured_project_venv", project_venv / "Scripts/python.exe"),
+        ("calling_interpreter", Path(sys.executable)),
+    ]
+    path_python = shutil.which("python")
+    if path_python:
+        candidates.append(("registered_path_python", Path(path_python)))
+    config = project_venv / "pyvenv.cfg"
+    report = {
+        "schema_version": 1,
+        "status": "GIS_ENVIRONMENT_UNAVAILABLE",
+        "read_only": True,
+        "installation_performed": False,
+        "source_read": False,
+        "configured_project": workspace["project"],
+        "probe_deadline_seconds": 15,
+        "candidates": [],
+        "selected": None,
+    }
+    if config.is_file():
+        raw = config.read_bytes()
+        require(len(raw) <= 8192, "Existing pyvenv metadata exceeds its bound")
+        report["project_pyvenv_config"] = {
+            "size_bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()
+        }
+        metadata = dict(
+            (key.strip(), value.strip())
+            for line in raw.decode("utf-8-sig").splitlines()
+            if "=" in line
+            for key, value in [line.split("=", 1)]
+        )
+        for key in ("executable", "home"):
+            if metadata.get(key):
+                candidate = Path(metadata[key])
+                if candidate.is_absolute():
+                    candidates.append((
+                        "project_pyvenv_" + key,
+                        candidate / "python.exe" if key == "home" else candidate,
+                    ))
+        require(config.read_bytes() == raw, "Existing pyvenv metadata changed")
+    seen = set()
+    # At most five metadata-addressed candidates, each with one bounded child.
+    for origin, candidate in candidates:
+        key = os.path.normcase(os.path.abspath(candidate))
+        if key in seen:
+            continue
+        seen.add(key)
+        row = {"origin": origin, "path": str(candidate), "status": "MISSING"}
+        report["candidates"].append(row)
+        if not candidate.is_absolute() or not candidate.is_file():
+            continue
+        try:
+            before = {
+                "size_bytes": candidate.stat().st_size, "sha256": digest(candidate)
+            }
+            child = subprocess.run(
+                [str(candidate), "-I", "-B", str(Path(__file__).resolve()),
+                 "--probe-decoder"],
+                capture_output=True, timeout=15, check=False,
+            )
+            row["exit_code"] = child.returncode
+            require(
+                len(child.stdout) <= 65536 and len(child.stderr) <= 65536,
+                "Existing interpreter probe output exceeds its bound",
+            )
+            probe = json.loads(child.stdout.decode("utf-8-sig"))
+            row["probe"] = probe
+            require(
+                candidate.stat().st_size == before["size_bytes"]
+                and digest(candidate) == before["sha256"],
+                "Existing interpreter changed during its probe",
+            )
+            require(
+                child.returncode == 0
+                and probe.get("status") == "EXISTING_DECODER_READY"
+                and probe.get("imports_verified") is True
+                and probe.get("decoder_versions") == DECODER_VERSIONS
+                and probe.get("python_version", [])[:2] == [3, 12]
+                and probe.get("implementation") == "cpython"
+                and probe.get("pointer_bits") == 64
+                and Path(probe["executable"]).samefile(candidate)
+                and probe.get("executable_identity") == before,
+                "Existing interpreter has not qualified for the pinned decoder",
+            )
+            row["status"] = "QUALIFIED"
+            report.update(
+                status="EXISTING_DECODER_SELECTED",
+                selected={"path": str(candidate), "origin": origin, **before},
+            )
+            break
+        except subprocess.TimeoutExpired:
+            # subprocess.run kills and waits for its own child on timeout.
+            row.update(status="TIMED_OUT", error="Owned probe exceeded 15 seconds")
+        except Exception as exc:  # noqa: BLE001
+            row.update(status="UNAVAILABLE", error=f"{type(exc).__name__}: {exc}")
+    return report
+
+
 def _check_native_header(header, retained):
     crs = header.parse_crs()
     observed = {
@@ -470,14 +609,30 @@ def read(cache_root, output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--workspace-config", type=Path, required=True)
-    parser.add_argument("--output-name", required=True)
+    parser.add_argument("--workspace-config", type=Path)
+    operation = parser.add_mutually_exclusive_group(required=True)
+    operation.add_argument("--output-name")
+    operation.add_argument("--probe-decoder", action="store_true")
+    operation.add_argument("--resolve-decoder", type=Path)
     args = parser.parse_args()
+    if args.probe_decoder:
+        report = decoder_environment()
+        print(json.dumps(report, allow_nan=False))
+        return 0 if report["status"] == "EXISTING_DECODER_READY" else 2
+    require(args.workspace_config is not None, "Explicit workspace config required")
+    workspace = load_workspace(args.workspace_config)
+    if args.resolve_decoder:
+        require(not args.resolve_decoder.exists(), "Decoder evidence already exists")
+        report = resolve_existing_decoder(workspace)
+        with args.resolve_decoder.open("x", encoding="utf-8") as stream:
+            json.dump(report, stream, indent=2, allow_nan=False)
+            stream.write("\n")
+        print(json.dumps({"status": report["status"], "selected": report["selected"]}))
+        return 0 if report["selected"] is not None else 2
     require(
         re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,95}", args.output_name),
         "Output name must be one new workspace work directory",
     )
-    workspace = load_workspace(args.workspace_config)
     cache = _safe(Path(workspace["data"]), "world-data/sa-calobra-working-v1")
     output = _safe(Path(workspace["work"]), args.output_name)
     report = read(cache, output)

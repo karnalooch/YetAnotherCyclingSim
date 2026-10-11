@@ -281,14 +281,17 @@ coverage limit. The [source/native evidence record](evidence/ROAD_SURFACE_MATERI
 retains its receipts and the subsequent whole-network source and consumer pins.
 
 The latest independently verified full material artifact is revision
-`9519e0c5f9a523c02ddea4c1c8875c41784c4f98`:
-[protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38099857098)
+`4258aab3527506d64769ecf974dd061d9e580687`:
+[protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105477966)
 and all 68 ordered Lit captures in the
-[native run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38099853386)
-passed. The run failed its later contact diagnostic; that failure did not
-establish a geometry repair. Revision `4258aab3` has now passed native save/fresh,
-68 Lit and both contact capture stages with the white lines, but its artifact
-verification and direct image review are still pending.
+[native run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105475021)
+passed, together with save/fresh and both contact captures. The artifact,
+all 68 final Lit images and all 18 contact images have been independently
+verified and viewed. Near white lines follow the road; far pixel gaps,
+transverse asphalt bands and the sharp outer gravel boundary remain open.
+Contact isolation identifies support 185's thick hairpin wall, without
+repairing it. The subsequent 735 crack candidate passed CI but stopped before
+Unreal on the Windows symlink fixture; its native crack result is still pending.
 
 | Role / consumer | Current source or candidate | Proven result and remaining limit |
 |---|---|---|
@@ -296,7 +299,7 @@ verification and direct image review are still pending.
 | Saved pavement | Isolated derived consumer, preserving the original #363 checkpoint | Full native positions, ordered topology, split normals and original UVs are checked across save/fresh and GPU. Source projection scale is authenticated; route and physics are unchanged. |
 | Shoulder and support faces | 186 source owners, 185 material targets and 67,760 selected outer top triangles | Whole-network native/save/fresh/GPU proof at 9519 includes Nudo; literal original wall/interior materials remain. The explicit appended material UV channel has its own full witness. No blanket gravel assignment to vertical or parapet faces. |
 | Gravel and transitions | [`texture library v2`](../worldgen/materials/sa_calobra_texture_library_v2_20261005.json): Poly Haven `rock_ground`, CC0, pinned BaseColor/DirectX normal/roughness at the provider's 150 cm scale | Existing maps are reused. The source-distance 3–8 cm transition covers asphalt–gravel; `outer_terrain_transition` is still false. Gravel–Landscape tie-in needs its own completed visual/material work. |
-| White edge lines | 370 source-clipped overlays, 10 cm width, 12 cm setback and world Z +1 mm | Native saved/fresh full-buffer proof passed at e4 and 4258. The actual 4258 Lit stage has passed; direct image review is pending. No collision, shadow, navigation or physics authority. |
+| White edge lines | 370 source-clipped overlays, 10 cm width, 12 cm setback and world Z +1 mm | Native saved/fresh full-buffer proof passed at e4 and 4258. All 68 actual 4258 Lit images reviewed; near continuity is good, far shallow views show pixel gaps requiring diagnosis. No collision, shadow, navigation or physics authority. |
 | Local cracks | Eight authored Material Forge motifs; verified source `07ebafad` / `38102423216-1` | Sixteen actual source processes and all 80 maps independently verified. The next UE candidate has two source-clipped actors, eight imported maps and eleven owned packages. Its 16 native controls, UV 0/90 normal-space proof and later sparse network distribution remain pending. |
 
 The fixed importer uses native `WorldAlignedTexture` / `WorldAlignedNormal`

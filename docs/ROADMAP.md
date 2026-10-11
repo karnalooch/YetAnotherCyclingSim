@@ -181,10 +181,10 @@ cliff topology. #337 road construction and #459 road/shoulder/CUT contact remain
 open; the independent #338 road preview remains frozen Draft.
 
 **Current delivery:** #364 is open in Draft [PR #470](https://github.com/karnalooch/YetAnotherCyclingSim/pull/470).
-The latest verified material-only native revision is
-`9519e0c5f9a523c02ddea4c1c8875c41784c4f98`:
-[protected CI 38099857098](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38099857098)
-passed, and [native run 38099853386](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38099853386)
+The latest verified road material and paint native revision is
+`4258aab3527506d64769ecf974dd061d9e580687`:
+[protected CI 38105477966](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105477966)
+passed, and [native run 38105475021](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105475021)
 passed baseline, canary, saved/fresh consumer and all 68 ordered GPU frames.
 It verifies 186 source-owned supports, 185 shoulder material targets and
 67,760 selected tops. The new shoulder coordinate is explicitly appended;
@@ -215,8 +215,8 @@ identical exports per motif. No UE crack layer has been admitted. Source-relativ
 corrections remain separately scoped under #459. See the
 [current source and native evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md).
 
-The joint local crack candidate is implemented and under final independent
-review: two source-clipped actors on 0112/Nudo, eight authenticated texture
+The joint local crack candidate is implemented and independently reviewed:
+two source-clipped actors on 0112/Nudo, eight authenticated texture
 imports, full saved/fresh buffer conservation and 16 separate native controls,
 including UV rotation 90 degrees and a neutral-material comparison. Native
 crack appearance and normal-space admission remain pending; this does not yet
@@ -225,10 +225,19 @@ Lit/control screenshot requires actual viewport-mode readback before and after
 capture, and restoration checks cover visibility and transient MID cleanup.
 The separate `4258aab3` white-line run has passed protected CI and the full
 native workflow: save/fresh, 68 Lit and both 0112/0081 contact capture stages.
-Artifact verification and direct image review are pending. Its partial installed-API
-probe identified the forwarding-wrapper and public-header assumptions; the
-bounded source reader is corrected, and LiDAR no longer depends on that
-unrelated optional API step succeeding. Actual LiDAR points remain pending.
+The artifact and every final image have now been independently checked and
+viewed. Near white lines follow the road, but distant pixel gaps, transverse
+asphalt bands and the outer gravel/Landscape transition remain unresolved.
+All 18 contact images were viewed; the thick hairpin wall belongs to support
+185. The candidate has not repaired its contact or road profile.
+
+Revision `735f0497` passed protected CI but its native preflight stopped before
+Unreal on Windows symlink-fixture error 1314. The fixture is corrected without
+changing runtime link rejection. The source run completed the installed-API
+read, then found the old GIS venv absent. A bounded read-only qualification of
+configured/registered existing interpreters is prepared; it retains the exact
+four decoder package pins and CPython 3.12 x64. No installation, source change
+or LiDAR observations are claimed. The next native crack run remains required.
 
 #### Finish #364 as one complete delivery
 
@@ -245,13 +254,13 @@ questions separately from this material-only conservation proof.
 | Asphalt source | Pin tools, recipe and scale; render twice; authenticate graph and five maps | **PASS at `27f24ead`:** granular dry source, 4 m / 400 cm, two actual Godot exports and independent receipt/map verification |
 | Source-to-consumer handoff | Authenticate both retained bundles against current inputs before import | **PASS at 9519:** producer `27f24ead` / `38096069404-1` authenticated and consumed natively |
 | Windows cache identity | Qualify current/cache inputs using the existing authority before native execution | **PASS at 9519:** required protected CI and native build/Automation; next integrated revision still requires its exact checks |
-| Saved-scene inventory | Fresh isolated Entry process loads the accepted consumer and records material/mesh/source identities | **PASS at e4af3a74:** full asphalt/shoulder save and separate fresh reload plus all 370 source-clipped paint overlays; their images remain pending |
+| Saved-scene inventory | Fresh isolated Entry process loads the accepted consumer and records material/mesh/source identities | **PASS at 4258aab3:** full asphalt/shoulder save and separate fresh reload plus all 370 source-clipped paint overlays; all 68 Lit images reviewed |
 | Material conservation | Preserve positions/topology, normals and original UV prefix; independently witness any named appended material channel | **PASS at 9519:** full original buffer conservation plus separately witnessed appended shoulder UV, rollback and fresh readback |
 | Road canary | Apply the validated asphalt to the authorized slot; verify 400 cm projection, DirectX normals and exact restoration | **PASS at 9519:** authenticated granular source and exact canary restoration |
 | Shoulder coverage | Qualify every source owner, including Nudo; gravel on outer tops, original material on walls/interiors | **PASS at 9519:** 186 owners, 185 material targets and 67,760 selected tops; `rock_ground` remains at its 150 cm provider scale |
 | Edges and appearance | Inspect both directions, bends, close/distant views and shoulder/terrain transitions | **In progress:** improved grain and shoulder material transition in reviewed 95e7 frames; eight controlled native views pending to diagnose remaining bands |
-| Local surface details | Author restrained crack motifs and reference-matched white edge markings with stable source-owned placement | **Source PASS at `07ebafad`:** eight crack motifs, 16 actual Godot exits and 80 independently verified maps; white lines saved/fresh PASS at e4af3a74 but images pending; UE crack consumption still pending |
-| Contact/profile debt | Isolate the owning surface and prove bounded source-relative corrections separately | **#459 open:** e4af3a74 never reached contact capture; public bounds fix and separate 0112/0081 visibility diagnostics pending; bounded source LiDAR reader locally verified, actual observations and repair pending |
+| Local surface details | Author restrained crack motifs and reference-matched white edge markings with stable source-owned placement | **Source PASS at `07ebafad`:** eight crack motifs, 16 actual Godot exits and 80 independently verified maps; white lines saved/fresh/Lit at 4258, distant appearance unresolved; UE crack consumption still pending after 735 preflight failure |
+| Contact/profile debt | Isolate the owning surface and prove bounded source-relative corrections separately | **#459 open:** all 18 contact images verified/viewed at 4258; support 185 owns the thick hairpin wall. Actual wall-bottom/CUT data, LiDAR observations and source-relative repair remain pending |
 | Save, reopen and deliver | Save derived outputs, verify fresh reload/render, pass required checks and merge #470 | **In progress:** current native/visual proof and complete #364 delivery pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
 
 #### Complete the remaining world foundation after #364
