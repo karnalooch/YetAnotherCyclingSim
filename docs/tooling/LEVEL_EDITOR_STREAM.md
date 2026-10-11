@@ -4,12 +4,14 @@
 **Status:** installed-source inspection and authenticated b9fd retarget review
 **PASS**; checkpoint cadence delivered at `c62bbc3e7dcdd9ccaad9b2facef477323413e279`
 with passing protected CI. The joined startup correction passed independent
-code review and 93 focused local checks. At `f115173`, protected CI and native
-registry settings passed, but native class inheritance rejected a Python
-argument before opening the owned MCP listener. The 26 local bridge tests and
-15 independent boundary tests did not reproduce that native conversion. The
-joined preflight now collects independent class, Python-remote and material API
-results in the same controlled failure; diagnostics cannot grant admission.
+code review and 93 focused local checks. At `b92890e`, exact-SHA CI and the
+Blender reference passed; native readback confirmed `bRemoteExecution=False`
+and the required material/capture APIs. A complete diagnostic `ClassIterator`
+read returned 10,109 native classes and exactly the two legacy bases, but the
+production `ObjectIterator` inheritance conversion still blocked startup.
+The next correction cross-checks both complete native enumerations and admits
+their differences only by exact metaclass CDO identity. It retains the first
+production failure identity; the original bad candidate remains unidentified.
 Live stream and same-process
 update proof remain **UNQUALIFIED**. The [workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
 records actual launch evidence and the current startup correction.
@@ -166,24 +168,40 @@ do not support arrays. Actual setting and catalog readbacks still gate startup
 and each material request. The launch receipt hashes the generated overlays.
 
 Legacy-library checks resolve the native engine/editor base classes by their
-pinned paths and enumerate native UClass objects through
-[ObjectIterator](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/ObjectIterator).
-Native inheritance checks must return exactly the two source-verified abstract
-bases. Missing or redirected classes, an empty census and any additional
-legacy descendant block startup. The same check remains active during preview.
-The `f115173` native attempt failed during the Python-to-ClassProperty conversion
-without identifying its candidate. Until that is resolved, an independent
-read-only preflight also records the literal Python-remote getter and the
-existing material/capture API checks. On census failure, bounded diagnostics
-record four fixed inheritance control pairs and identities before testing at
-most 256 iterator elements, retaining at most four failures and explicit
-truncation. A separate `ClassIterator(Object)` comparison records up to 32,768
-yielded identities, inheritance outcomes, duplicate counts and base membership;
-even a completed comparison does not claim verified native coverage.
-The combined report is `BLOCKED`, diagnostic-only and unqualified;
-it cannot replace any guard or reach owned tool registration, refresh or server
-startup. Epic's viewport streaming may already have started before this Python
-bootstrap runs, so this is specifically an owned MCP admission boundary.
+pinned paths. The candidate enumerates actual native objects through both
+[ClassIterator(Object)](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/ClassIterator)
+and [ObjectIterator(native Class)](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/ObjectIterator),
+each required to complete within 32,768 elements without duplicates or errors.
+Every class from the first iterator must occur in the second with the same
+native object identity. An additional object is admissible only when its actual
+metaclass derives from the literal core Class, its metaclass CDO has that same
+metaclass, and the candidate is exactly that CDO. This uses the documented
+[object/class/CDO relationship](https://dev.epicgames.com/documentation/en-us/unreal-engine/objects-in-unreal-engine),
+not a name prefix or a substituted Python wrapper. CDO lookups concern only
+these difference objects' metaclasses, never every represented legacy class.
+
+Native inheritance over the complete first set must return exactly the two
+source-verified abstract legacy bases. Missing or redirected classes, incomplete
+coverage and any additional legacy descendant block startup. The same complete
+cross-check remains active during preview. Its per-read counts may change after
+the owned Python tool class is registered; only the two-base legacy result is
+required to remain unchanged between reads.
+
+The `f115173` and `b92890e` production attempts failed during the
+Python-to-ClassProperty conversion without identifying their candidate.
+The `b92890e` diagnostic checked only the first 256 ObjectIterator elements and
+did not reach that failure. The observed core Class CDO does not establish the
+cause. The corrected production path therefore retains candidate identity and
+operation context before each disputed inheritance/coverage call, separately
+from its native error and bounded diagnostic rescans.
+
+The joined preflight also records the literal Python-remote getter and existing
+material/capture API checks independently. Any required failure produces the
+combined controlled `BLOCKED` report before owned tool registration, refresh or
+server startup. Bounded diagnostic comparisons cannot grant admission. Epic's
+viewport streaming may already have started before this Python bootstrap runs,
+so this is specifically an owned MCP admission boundary. Native qualification
+of the new complete cross-check remains pending.
 
 The manual definition separates `operation=open` from
 `operation=material-request`. The latter requires the existing session token and

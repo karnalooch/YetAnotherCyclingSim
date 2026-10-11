@@ -53,9 +53,9 @@ settings wrapper did not recognize `auto_start_server`; the launch flag
 The candidate now uses the exact native UPROPERTY names, and a handled
 bootstrap failure publishes `BLOCKED` without rethrowing into that fatal path.
 The host still rejects failed/dead sessions and never hands them off. Actual
-Python access to the private native `bRemoteExecution` property remains a hard
-pre-listener check to qualify in the next run; missing access cannot default
-to a claim that remote execution is disabled.
+Python access to the literal native `bRemoteExecution` property remained a hard
+pre-listener check after this run; it was subsequently confirmed at `b92890e`.
+Missing access cannot default to a claim that remote execution is disabled.
 
 The owner also reported a Zen warning. The retained Editor log shows Zen using
 its existing C: data directory, reaching HTTP and ZenLocal `OK` after 34.962 s;
@@ -73,7 +73,7 @@ C++ binaries without compilation or a cache purge. Snapshot preparation and
 the map/camera readback passed. The literal MCP getters worked, then the
 registry settings check found empty `AllowedNames` and `BlockedNames` arrays.
 The controlled `BLOCKED` receipt preserved that diagnosis; the retained log
-contains no engine fatal. The private Python-remote getter and actual catalog
+contains no engine fatal. The literal Python-remote getter and actual catalog
 were not reached, and there was no MCP request, preview PNG or owner handoff.
 
 The startup correction moves the existing Editor settings payload into the
@@ -102,7 +102,7 @@ step failed before calling the class iterator because `unreal` did not export
 `ModelContextProtocolToolLibrary`. That missing Python attribute does not prove
 the native base or its subclasses are absent. Legacy-library enumeration must
 resolve the pinned native class and retain its complete inheritance check.
-No own MCP listener, private Python-remote readback, preview request or owner
+No own MCP listener, literal Python-remote readback, preview request or owner
 handoff was reached. The controlled failure produced no engine fatal in the
 retained log; Zen again reported `OK`, with a 2.502-second initialization.
 The [artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38127442726/artifacts/11697204179)
@@ -117,7 +117,7 @@ review passed; the [actual native attempt](https://github.com/karnalooch/YetAnot
 failed when `MathLibrary.class_is_child_of` rejected `TestClass` during argument
 conversion. The traceback does not identify the candidate or establish failure
 of the parent argument. This is a real native API gap, not a qualified census.
-The private Python-remote getter, generated schema and requests were not reached.
+The literal Python-remote getter, generated schema and requests were not reached.
 
 Exact-SHA [CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38128420822)
 and [Blender reference](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38128420326)
@@ -129,7 +129,7 @@ Its complete Editor log contains no engine fatal. Zen reached HTTP and ZenLocal
 `OK` in 2.294 s, with no retained Zen warning/error. The receipt records
 88,314,204,160 bytes free on C: and 27,897,995,264 bytes on D: before launch.
 
-The next startup collects the existing legacy census, literal `bRemoteExecution`
+The `b92890e` startup collects the existing legacy census, literal `bRemoteExecution`
 getter and material/capture API evidence independently before any owned tool
 registration. A census failure also records four fixed inheritance control pairs
 and candidate identities before calling the disputed API, limited to 256
@@ -143,6 +143,54 @@ host receipts retain the combined bounded report. This gathers the next read-onl
 boundaries in one attempt without allocating a MID or changing a material.
 Pixel Streaming starts earlier in the existing launcher, so absence of an owned
 MCP listener does not mean absence of the separate streaming listeners.
+
+The [actual `b92890e` launch](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38130290871)
+confirmed `bRemoteExecution=False` and passed the material/capture API checks.
+All four inheritance controls returned `True`. The diagnostic
+`ClassIterator(Object)` completed with **10,109 native Class objects**, no
+duplicates or errors, both pinned unexported bases present and exactly two
+legacy inheritance matches. This one iterator did not prove complete native
+coverage. Production remained `BLOCKED` on the ClassProperty conversion.
+The separate ObjectIterator diagnostic tested 256 elements without a failure
+and stopped at its declared limit, so the actual bad candidate is still
+unidentified. Observing `/Script/CoreUObject.Default__Class` and its native
+metaclass does not establish that it caused the original failure.
+
+Exact-SHA [CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38130294134)
+and [Blender reference](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38130293828)
+passed; Windows again recorded `compileKind=none`, verified-equivalent binary
+reuse and no cache purge. Both full material proofs skipped. The authenticated
+[four-file artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38130290871/artifacts/11698804381)
+is 70,009 bytes, SHA-256
+`a867084630d3076d82a286878473800ce43f16441c494753ab2b6051faab183d`.
+It records preparation of the independent 278-file snapshot and controlled
+failure in Editor PID 18496, with no engine fatal in the complete retained log.
+Zen reached HTTP and ZenLocal `OK` in **2.477 s**, with no retained warning/error.
+Free-space readback was 91,468,234,752 bytes on C: and 26,560,012,288 bytes on D:.
+The inherited `UE-ZenDataPath` was absent; actual Zen data remained on C: while
+the existing workspace configuration resolved `D:\yacs\cache\Zen`.
+There was no owned MCP listener, material request, PNG or owner handoff.
+
+The next correction checks complete native coverage with both iterators [E11,
+E12]. Each must finish within 32,768 unique objects. Every ClassIterator object
+must also exist in ObjectIterator with the same native identity. A difference
+is admissible only when its actual metaclass is a native subclass of core Class,
+the metaclass's CDO has that same metaclass, and the difference object is exactly
+that CDO [E13]. Only those metaclasses require a CDO lookup. A name beginning
+with `Default__`, absence from ClassIterator or a best-matching Python wrapper
+cannot admit an object. All other differences, errors and incomplete reads
+block. The first complete set still must contain only the two source-pinned
+abstract legacy bases as inheritance matches. Every later guard repeats the
+complete cross-check; it does not pin the global class count across registration
+of the owned Python tool class.
+
+The production path also records the actual candidate identity and operation
+context before disputed native calls, retaining that first failure separately
+from its native error through report compaction. This removes dependence on a
+256-item diagnostic rescan for finding the original failing candidate. These
+are implementation requirements; the corrected census and persistent preview
+still need native qualification. No request, capture or handoff is inferred
+from the successful independent preflight checks.
 
 ## Measured local cost
 
@@ -336,3 +384,5 @@ PASS from preview.
 - [E9 — CPython: Windows stat/fstat timestamp inconsistency, issue 157671](https://github.com/python/cpython/issues/157671)
 - [E10 — Epic: Configuration file hierarchy and array settings](https://dev.epicgames.com/documentation/en-us/unreal-engine/configuration-files-in-unreal-engine)
 - [E11 — Epic: ObjectIterator native Class parameter, Python 5.8](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/ObjectIterator)
+- [E12 — Epic: ClassIterator, Python 5.8](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/ClassIterator)
+- [E13 — Epic: Objects, native classes and class default objects](https://dev.epicgames.com/documentation/en-us/unreal-engine/objects-in-unreal-engine)

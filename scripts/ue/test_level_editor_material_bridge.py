@@ -40,26 +40,43 @@ class NativeClass(NativeObject):
     def __init__(self, name, parent=None):
         super().__init__(name)
         self.parent = parent
+        self.metaclass = None
 
     def get_class(self):
-        return NativeObject("/Script/CoreUObject.Class")
+        return self.metaclass or NativeObject("/Script/CoreUObject.Class")
 
 
 class NativeClassInventory:
     def __init__(self):
-        self.meta = NativeClass("/Script/CoreUObject.Class")
-        self.base = NativeClass(bridge.LEGACY_BASE_CLASS)
+        self.object = NativeClass("/Script/CoreUObject.Object")
+        self.meta = NativeClass("/Script/CoreUObject.Class", self.object)
+        self.base = NativeClass(bridge.LEGACY_BASE_CLASS, self.object)
         self.editor = NativeClass(
             next(iter(bridge.ABSTRACT_LEGACY_CLASSES - {bridge.LEGACY_BASE_CLASS})),
             self.base,
         )
         self.classes = [self.meta, self.base, self.editor]
         self.lookup = {cls.get_path_name(): cls for cls in self.classes}
+        self.lookup[self.object.name] = self.object
         self.loads, self.iterated, self.inheritance = [], [], []
-        # No ModelContextProtocolToolLibrary alias, ClassIterator or CDO getter.
+        self.type_yields, self.type_iterated = None, []
+        self.cdo = NativeClass("/Script/CoreUObject.Default__Class")
+        self.cdo_reads = []
+        for cls in [*self.classes, self.object, self.cdo]:
+            cls.metaclass = self.meta
+
+        class PythonObject:
+            @staticmethod
+            def static_class():
+                return self.object
+
+        # The unexported native MCP base classes still have no Python aliases.
         self.api = SimpleNamespace(
+            Object=PythonObject,
             load_class=self.load_class,
             ObjectIterator=self.objects,
+            ClassIterator=self.class_types,
+            get_default_object=self.default_object,
             MathLibrary=SimpleNamespace(class_is_child_of=self.is_child),
         )
 
@@ -75,7 +92,7 @@ class NativeClassInventory:
 
     def is_child(self, candidate, parent):
         assert isinstance(candidate, NativeClass)
-        assert parent is self.base
+        assert isinstance(parent, NativeClass)
         self.inheritance.append((candidate, parent))
         while candidate is not None:
             if candidate is parent:
@@ -83,16 +100,22 @@ class NativeClassInventory:
             candidate = candidate.parent
         return False
 
+    def class_types(self, root_type):
+        assert root_type is self.api.Object
+        self.type_iterated.append(root_type)
+        return iter(self.classes if self.type_yields is None else self.type_yields)
+
+    def default_object(self, cls):
+        self.cdo_reads.append(cls)
+        assert cls is self.meta, "Never materialize a represented library CDO"
+        return self.cdo
+
 
 class PreflightFixture(NativeClassInventory):
     """Synthetic disputed candidate; does not establish real UE conversion rules."""
 
     def __init__(self):
         super().__init__()
-        self.object = NativeClass("/Script/CoreUObject.Object")
-        self.base.parent = self.object
-        self.meta.parent = self.object
-        self.cdo = NativeClass("/Script/CoreUObject.Default__Class")
         self.settings = NativeSettings({"bRemoteExecution": False})
         self.settings_class = NativeClass(
             "/Script/PythonScriptPlugin.PythonScriptPluginSettings", self.object
@@ -105,7 +128,6 @@ class PreflightFixture(NativeClassInventory):
         )
         self.classes.insert(0, self.object)
         self.type_yields = list(self.classes)
-        self.cdo_reads = []
         self.native_material = {"observed_material_api": True}
 
         class PythonObject:
@@ -789,6 +811,8 @@ class RegistrationBoundaryTests(unittest.TestCase):
             ["/Script/CoreUObject.Class", *sorted(bridge.ABSTRACT_LEGACY_CLASSES)],
         )
         self.assertEqual(inventory.iterated, [inventory.meta])
+        self.assertEqual(inventory.type_iterated, [inventory.api.Object])
+        self.assertEqual(inventory.cdo_reads, [])
         self.assertEqual(
             inventory.inheritance, [(cls, inventory.base) for cls in inventory.classes]
         )
@@ -813,7 +837,12 @@ class RegistrationBoundaryTests(unittest.TestCase):
             with self.subTest(selection=selection):
                 inventory = NativeClassInventory()
                 inventory.classes = [inventory.classes[index] for index in selection]
-                with self.assertRaisesRegex(ValueError, "exactly the two pinned"):
+                expected = (
+                    "Duplicate native"
+                    if selection == [0, 1, 2, 2]
+                    else "exactly the two pinned"
+                )
+                with self.assertRaisesRegex(ValueError, expected):
                     bridge.legacy_census(inventory.api)
 
     def test_concrete_legacy_library_from_either_base_is_refused_on_next_census(self):
@@ -854,6 +883,239 @@ class RegistrationBoundaryTests(unittest.TestCase):
                 bridge.reflected_tool(changed)
 
 
+class NativeCoverageTests(unittest.TestCase):
+    def test_only_exact_default_instances_of_actual_metaclasses_explain_the_difference(
+        self,
+    ):
+        fixture = NativeClassInventory()
+        custom_meta = NativeClass("/Script/Synthetic.CustomMeta", fixture.meta)
+        custom_meta.metaclass = fixture.meta
+        custom_cdo = NativeClass("/Transient/ArbitraryTemplateName")
+        custom_cdo.metaclass = custom_meta
+        fixture.classes.append(custom_meta)
+        fixture.type_yields = list(fixture.classes)
+        fixture.classes.extend([fixture.cdo, custom_cdo])
+
+        def default_object(meta):
+            fixture.cdo_reads.append(meta)
+            if meta is fixture.meta:
+                return fixture.cdo
+            self.assertIs(meta, custom_meta)
+            return custom_cdo
+
+        fixture.api.get_default_object = default_object
+        proof = {}
+        self.assertEqual(
+            bridge.legacy_census(fixture.api, evidence=proof),
+            sorted(bridge.ABSTRACT_LEGACY_CLASSES),
+        )
+        self.assertEqual(fixture.cdo_reads, [fixture.meta, custom_meta])
+        self.assertEqual(
+            (proof["class_count"], proof["object_count"], proof["meta_cdo_count"]),
+            (4, 6, 2),
+        )
+        self.assertTrue(proof["class_iteration_complete"])
+        self.assertTrue(proof["object_iteration_complete"])
+        self.assertTrue(proof["native_coverage_verified"])
+        self.assertEqual(
+            proof["first_meta_cdos"][1],
+            {
+                "candidate_path": custom_cdo.name,
+                "metaclass_path": custom_meta.name,
+                "cdo_path": custom_cdo.name,
+            },
+        )
+
+    def test_non_cdo_native_class_omitted_by_class_iterator_always_blocks(self):
+        for is_legacy in (False, True):
+            with self.subTest(is_legacy=is_legacy):
+                fixture = NativeClassInventory()
+                omitted = NativeClass(
+                    "/Script/Synthetic.Omitted",
+                    fixture.base if is_legacy else fixture.object,
+                )
+                omitted.metaclass = fixture.meta
+                fixture.type_yields = list(fixture.classes)
+                fixture.classes.append(omitted)
+                with self.assertRaisesRegex(
+                    bridge.NativeCensusError, "non-CDO class omitted"
+                ) as caught:
+                    bridge.legacy_census(fixture.api)
+                self.assertEqual(
+                    caught.exception.context["candidate"]["path"], omitted.name
+                )
+                self.assertEqual(caught.exception.context["stage"], "metaclass_cdo")
+                self.assertEqual(fixture.cdo_reads, [fixture.meta])
+                self.assertNotIn(omitted, fixture.cdo_reads)
+
+    def test_same_path_in_two_iterators_requires_same_native_object(self):
+        fixture = NativeClassInventory()
+        fixture.type_yields = list(fixture.classes)
+        replacement = NativeClass(fixture.base.name, fixture.object)
+        replacement.metaclass = fixture.meta
+        fixture.classes[1] = replacement
+        with self.assertRaisesRegex(
+            bridge.NativeCensusError, "native object identity"
+        ) as caught:
+            bridge.legacy_census(fixture.api)
+        self.assertEqual(
+            caught.exception.context["candidate"]["path"], fixture.base.name
+        )
+        self.assertEqual(caught.exception.context["stage"], "coverage_identity")
+        self.assertEqual(fixture.cdo_reads, [])
+
+    def test_every_class_iterator_object_must_also_exist_in_object_iterator(self):
+        fixture = NativeClassInventory()
+        fixture.type_yields = list(fixture.classes)
+        fixture.classes.remove(fixture.base)
+        with self.assertRaisesRegex(
+            bridge.NativeCensusError, "absent from ObjectIterator"
+        ) as caught:
+            bridge.legacy_census(fixture.api)
+        self.assertEqual(
+            caught.exception.context["candidate"]["path"], fixture.base.name
+        )
+        self.assertEqual(caught.exception.context["stage"], "coverage")
+
+    def test_incomplete_or_duplicate_inventory_is_never_admitted(self):
+        for failure in (
+            "class_exception",
+            "object_exception",
+            "object_duplicate",
+            "class_cap",
+            "object_cap",
+        ):
+            with self.subTest(failure=failure):
+                fixture = NativeClassInventory()
+                fixture.type_yields = list(fixture.classes)
+                bound = 32768
+                if failure.endswith("exception"):
+
+                    def failed_iterator(_root, fixture=fixture):
+                        yield fixture.meta
+                        raise RuntimeError("native iterator failed before completion")
+
+                    setattr(
+                        fixture.api,
+                        "ClassIterator"
+                        if failure == "class_exception"
+                        else "ObjectIterator",
+                        failed_iterator,
+                    )
+                elif failure == "object_duplicate":
+                    fixture.classes.append(fixture.base)
+                elif failure == "class_cap":
+                    bound = 3
+                else:
+                    bound = 4
+                    fixture.classes.append(fixture.cdo)
+                proof = {}
+                with (
+                    patch.object(bridge, "NATIVE_CENSUS_LIMIT", bound),
+                    self.assertRaises(bridge.NativeCensusError) as caught,
+                ):
+                    bridge.legacy_census(fixture.api, evidence=proof)
+                self.assertEqual(proof, {})
+                if failure.endswith("cap"):
+                    self.assertEqual(caught.exception.context["stage"], "completion")
+                if failure.endswith("exception"):
+                    self.assertEqual(caught.exception.context["index"], 1)
+                    self.assertIsInstance(caught.exception.native_error, RuntimeError)
+
+    def test_neither_iterator_can_substitute_a_python_type_for_a_native_class(self):
+        for iterator in ("ClassIterator", "ObjectIterator"):
+            with self.subTest(iterator=iterator):
+                fixture = NativeClassInventory()
+                fixture.type_yields = list(fixture.classes)
+
+                class UnexportedWrapper:
+                    static_class = Mock(
+                        side_effect=AssertionError("must not substitute wrapper")
+                    )
+
+                if iterator == "ClassIterator":
+                    fixture.type_yields.append(UnexportedWrapper)
+                else:
+                    fixture.classes.append(UnexportedWrapper)
+                with self.assertRaisesRegex(bridge.NativeCensusError, "Python type"):
+                    bridge.legacy_census(fixture.api)
+                UnexportedWrapper.static_class.assert_not_called()
+                self.assertEqual(fixture.cdo_reads, [])
+
+    def test_difference_requires_uclass_metaclass_and_exact_cdo_owner_and_identity(
+        self,
+    ):
+        for failure in (
+            "non_class_meta",
+            "missing_cdo",
+            "wrong_cdo_owner",
+            "wrong_cdo_identity",
+            "python_cdo",
+        ):
+            with self.subTest(failure=failure):
+                fixture = NativeClassInventory()
+                candidate = NativeClass(fixture.cdo.name)
+                candidate.metaclass = fixture.meta
+                fixture.type_yields = list(fixture.classes)
+                fixture.classes.append(candidate)
+                returned = fixture.cdo
+                if failure == "non_class_meta":
+                    candidate.metaclass = NativeClass(
+                        "/Script/Synthetic.NotAClassMeta", fixture.object
+                    )
+                    candidate.metaclass.metaclass = fixture.meta
+                elif failure == "missing_cdo":
+                    returned = None
+                elif failure == "wrong_cdo_owner":
+                    returned.metaclass = fixture.base
+                elif failure == "python_cdo":
+                    returned = type("PythonCDO", (), {})
+                cdo_read = Mock(return_value=returned)
+                fixture.api.get_default_object = cdo_read
+                with self.assertRaises(bridge.NativeCensusError) as caught:
+                    bridge.legacy_census(fixture.api)
+                if failure == "non_class_meta":
+                    cdo_read.assert_not_called()
+                    self.assertEqual(
+                        caught.exception.context["candidate"]["path"],
+                        candidate.metaclass.name,
+                    )
+                    self.assertEqual(
+                        caught.exception.context["coverage_candidate"]["path"],
+                        candidate.name,
+                    )
+                else:
+                    cdo_read.assert_called_once_with(fixture.meta)
+                    self.assertEqual(
+                        caught.exception.context["candidate"]["path"], candidate.name
+                    )
+
+    def test_repeated_guard_allows_new_nonlegacy_class_but_rejects_a_legacy_descendant(
+        self,
+    ):
+        fixture = NativeClassInventory()
+        original_proof, current_proof = {}, {}
+        original = bridge.legacy_census(fixture.api, evidence=original_proof)
+        own_toolset = NativeClass(
+            "/Script/Python.YacsRoadMaterialPreview", fixture.object
+        )
+        own_toolset.metaclass = fixture.meta
+        fixture.classes.append(own_toolset)
+        self.assertEqual(
+            bridge.legacy_census(fixture.api, evidence=current_proof), original
+        )
+        self.assertEqual(original_proof["class_count"], 3)
+        self.assertEqual(current_proof["class_count"], 4)
+        foreign = NativeClass("/Script/Foreign.UnboundedTools", fixture.base)
+        foreign.metaclass = fixture.meta
+        fixture.classes.append(foreign)
+        with self.assertRaisesRegex(
+            bridge.NativeCensusError, "concrete legacy library"
+        ) as caught:
+            bridge.legacy_census(fixture.api)
+        self.assertEqual(caught.exception.context["candidate"]["path"], foreign.name)
+
+
 class RegistrationPreflightTests(unittest.TestCase):
     def refused(self, fixture):
         with self.assertRaisesRegex(
@@ -890,6 +1152,7 @@ class RegistrationPreflightTests(unittest.TestCase):
     def test_census_failure_keeps_candidate_and_both_independent_readbacks(self):
         fixture = PreflightFixture()
         fixture.classes.insert(0, fixture.cdo)
+        fixture.type_yields.insert(0, fixture.cdo)
         with patch.object(
             bridge, "material_api_evidence", return_value=fixture.native_material
         ) as material:
@@ -928,7 +1191,62 @@ class RegistrationPreflightTests(unittest.TestCase):
         self.assertTrue(comparison["iteration_complete"])
         self.assertTrue(all(comparison["base_memberships"].values()))
         self.assertFalse(comparison["native_coverage_verified"])
-        self.assertEqual(comparison["error_count"], 0)
+        self.assertEqual(comparison["error_count"], 1)
+        production = result["checks"]["legacy_census"]["error"]["census_context"]
+        self.assertEqual(production["candidate"]["path"], fixture.cdo.name)
+        self.assertEqual(production["iterator"], "ClassIterator(Object)")
+        self.assertEqual(production["stage"], "inheritance")
+
+    def test_actual_production_failure_beyond_diagnostic_cap_keeps_its_own_identity(
+        self,
+    ):
+        for failure in ("inheritance", "coverage"):
+            with self.subTest(failure=failure):
+                fixture = PreflightFixture()
+                ordinary = [
+                    NativeClass(f"/Script/Synthetic.Ordinary{index}", fixture.object)
+                    for index in range(300)
+                ]
+                for cls in ordinary:
+                    cls.metaclass = fixture.meta
+                fixture.classes = [*ordinary, *fixture.classes]
+                fixture.type_yields = list(fixture.classes)
+                actual_bad = NativeClass("/Script/Synthetic.ActualLateFailure")
+                actual_bad.metaclass = fixture.meta
+                fixture.classes.append(actual_bad)
+                if failure == "inheritance":
+                    fixture.type_yields.append(actual_bad)
+                with patch.object(
+                    bridge,
+                    "material_api_evidence",
+                    return_value=fixture.native_material,
+                ):
+                    result = self.refused(fixture)
+                primary = result["checks"]["legacy_census"]["error"]
+                context = primary["census_context"]
+                self.assertEqual(context["candidate"]["path"], actual_bad.name)
+                self.assertEqual(
+                    context["candidate"]["object_class"], fixture.meta.name
+                )
+                self.assertEqual(context["index"], 304)
+                self.assertEqual(
+                    context["stage"],
+                    "inheritance" if failure == "inheritance" else "metaclass_cdo",
+                )
+                self.assertEqual(
+                    primary["type"],
+                    "TypeError" if failure == "inheritance" else "ValueError",
+                )
+                capped = result["legacy_class_diagnostics"]["candidate_scan"]
+                self.assertEqual(capped["checked_count"], 256)
+                self.assertEqual(capped["first_failures"], [])
+                self.assertTrue(capped["truncated"])
+                self.assertEqual(
+                    result["checks"]["python_remote_execution"]["status"], "PASSED"
+                )
+                self.assertEqual(
+                    result["checks"]["material_api_evidence"]["status"], "PASSED"
+                )
 
     def test_remote_or_material_failure_alone_still_refuses_without_census_diagnostics(
         self,
@@ -976,6 +1294,7 @@ class RegistrationPreflightTests(unittest.TestCase):
     def test_failed_diagnostic_cannot_hide_three_independent_gate_failures(self):
         fixture = PreflightFixture()
         fixture.classes = []
+        fixture.type_yields = []
         fixture.settings.properties = {"remote_execution": False}
         with (
             patch.object(
@@ -1139,8 +1458,28 @@ class RegistrationPreflightTests(unittest.TestCase):
             scan["error_count"] = 300
         details["metaclass_cdo"]["path"] = "metaclass-cdo:" + huge
         fixture.settings.get_editor_property = Mock(side_effect=ValueError(huge))
+        actual_failure = bridge.NativeCensusError(
+            {
+                "iterator": "ObjectIterator(Class)",
+                "stage": "metaclass_inheritance",
+                "index": 301,
+                "candidate": {
+                    "path": "actual-production-class:" + huge,
+                    "object_class": huge,
+                    "python_type": huge,
+                },
+                "coverage_candidate": {
+                    "path": "actual-coverage-object:" + huge,
+                    "object_class": huge,
+                    "python_type": huge,
+                },
+                "parent_class": huge,
+                "cdo_path": huge,
+            },
+            TypeError(huge),
+        )
         with (
-            patch.object(bridge, "legacy_census", side_effect=TypeError(huge)),
+            patch.object(bridge, "legacy_census", side_effect=actual_failure),
             patch.object(
                 bridge, "material_api_evidence", side_effect=RuntimeError(huge)
             ),
@@ -1152,6 +1491,20 @@ class RegistrationPreflightTests(unittest.TestCase):
         )
         self.assertTrue(
             all(row["error"]["message_truncated"] for row in result["checks"].values())
+        )
+        primary = result["checks"]["legacy_census"]["error"]
+        self.assertEqual(primary["type"], "TypeError")
+        self.assertEqual(primary["census_context"], actual_failure.context)
+        self.assertEqual(primary["census_context"]["index"], 301)
+        self.assertTrue(
+            primary["census_context"]["candidate"]["path"].startswith(
+                "actual-production-class:"
+            )
+        )
+        self.assertTrue(
+            primary["census_context"]["coverage_candidate"]["path"].startswith(
+                "actual-coverage-object:"
+            )
         )
         compact = result["legacy_class_diagnostics"]
         self.assertTrue(compact["details_truncated"])
@@ -1185,6 +1538,7 @@ class RegistrationPreflightTests(unittest.TestCase):
     ):
         fixture = PreflightFixture()
         fixture.classes.insert(0, fixture.cdo)
+        fixture.type_yields.insert(0, fixture.cdo)
         official = NativeSettings(
             {
                 "bAutoStartServer": False,

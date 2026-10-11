@@ -28,6 +28,7 @@ ENGINE_VERSION = "5.8.2-56702186+++UE5+Release-5.8"
 PORT = 18784
 REQUEST_LIMIT = 4096
 PREFLIGHT_LIMIT = 16 * 1024
+NATIVE_CENSUS_LIMIT = 32768
 PNG_LIMIT = 8 * 1024 * 1024
 CAPTURE_SECONDS = 150.0
 PRIMING_COUNT = 3
@@ -294,35 +295,237 @@ def reflected_tool(schema):
     return {key: tool[key] for key in ("name", "description", "inputSchema")}, parameter
 
 
-def legacy_census(api):
-    # The isolated project admits no concrete legacy library. These two base
-    # classes are Abstract in the pinned installed headers. Their Python class
-    # aliases need not be exported. UE 5.8 ObjectIterator accepts a native Class;
-    # ClassIterator instead documents a Python type. Enumerate UClass objects
-    # and use native inheritance without materializing their CDOs.
-    class_path = "/Script/CoreUObject.Class"
-    classes = {}
-    for path in (class_path, *sorted(ABSTRACT_LEGACY_CLASSES)):
-        native_class = api.load_class(None, path)
-        actual = None if native_class is None else native_class.get_path_name()
-        require(
-            actual == path,
-            "Required native census class is unavailable or differs; observed="
-            + canonical({"expected": path, "actual": actual}),
+def bounded_text(value, bound):
+    text = str(value)[:bound]
+    while len(canonical(text).encode("utf-8")) > bound:
+        text = text[: len(text) // 2]
+    return text
+
+
+class NativeCensusError(ValueError):
+    """Keep the original failure and its actual production candidate together."""
+
+    def __init__(self, context, native_error):
+        self.native_error = native_error
+        self.context = {
+            key: bounded_text(context[key], 64)
+            for key in ("iterator", "stage")
+            if key in context
+        }
+        if "index" in context:
+            self.context["index"] = context["index"]
+        for name in ("candidate", "coverage_candidate"):
+            if name not in context:
+                continue
+            candidate = context[name]
+            self.context[name] = {
+                key: bounded_text(candidate[key], bound)
+                for key, bound in (
+                    ("python_type", 64),
+                    ("path", 256),
+                    ("object_class", 192),
+                )
+                if key in candidate
+            }
+        for key in ("parent_class", "cdo_path"):
+            if key in context:
+                self.context[key] = bounded_text(context[key], 192)
+        super().__init__(
+            "Native class census failed; observed="
+            + canonical(
+                {
+                    "context": self.context,
+                    "native_error": preflight_error(native_error),
+                }
+            )
         )
-        classes[path] = native_class
-    names = sorted(
-        cls.get_path_name()
-        for cls in api.ObjectIterator(classes[class_path])
-        if api.MathLibrary.class_is_child_of(cls, classes[LEGACY_BASE_CLASS])
-    )
-    require(
-        len(names) == len(set(names)) and set(names) == ABSTRACT_LEGACY_CLASSES,
-        "Native legacy MCP census must contain exactly the two pinned abstract bases; "
-        "a missing base or concrete legacy library blocks preview-only startup; observed="
-        + canonical({"count": len(names), "first_names": names[:4]}),
-    )
-    return names
+
+
+def legacy_census(api, *, evidence=None):
+    # ClassIterator enumerates class types; ObjectIterator enumerates instances
+    # of UClass, including any actual metaclass default objects. Fully crosscheck
+    # both inventories. Only exact CDO identity can explain an object-only entry.
+    class_path, limit = "/Script/CoreUObject.Class", NATIVE_CENSUS_LIMIT
+    context = {"iterator": "fixed_classes", "stage": "load"}
+
+    def identity(candidate):
+        context["candidate"] = {"python_type": type(candidate).__name__}
+        require(
+            not isinstance(candidate, type),
+            "Native class iterator returned a Python type instead of a native object",
+        )
+        path = candidate.get_path_name()
+        context["candidate"]["path"] = path
+        require(type(path) is str and path, "Native census class has no exact path")
+        metaclass = candidate.get_class()
+        context["candidate"]["object_class"] = metaclass.get_path_name()
+        return path, metaclass
+
+    try:
+        classes = {}
+        for path in (class_path, *sorted(ABSTRACT_LEGACY_CLASSES)):
+            context = {
+                "iterator": "fixed_classes",
+                "stage": "load",
+                "candidate": {"path": path},
+            }
+            native_class = api.load_class(None, path)
+            actual = None if native_class is None else native_class.get_path_name()
+            require(
+                actual == path,
+                "Required native census class is unavailable or differs; observed="
+                + canonical({"expected": path, "actual": actual}),
+            )
+            classes[path] = native_class
+
+        native_classes, names = {}, []
+        context = {"iterator": "ClassIterator(Object)", "stage": "initialize"}
+        candidates = iter(api.ClassIterator(api.Object))
+        for index in range(limit):
+            context = {
+                "iterator": "ClassIterator(Object)",
+                "index": index,
+                "stage": "iterate",
+            }
+            try:
+                candidate = next(candidates)
+            except StopIteration:
+                break
+            context["stage"] = "identity"
+            path, _metaclass = identity(candidate)
+            context["stage"] = "unique_path"
+            require(path not in native_classes, "Duplicate native ClassIterator path")
+            native_classes[path] = candidate
+            context.update({"stage": "inheritance", "parent_class": LEGACY_BASE_CLASS})
+            is_legacy = api.MathLibrary.class_is_child_of(
+                candidate, classes[LEGACY_BASE_CLASS]
+            )
+            require(
+                type(is_legacy) is bool, "Native class comparison did not return bool"
+            )
+            if is_legacy:
+                context["stage"] = "legacy_admission"
+                require(
+                    path in ABSTRACT_LEGACY_CLASSES,
+                    "A concrete legacy library blocks preview-only startup",
+                )
+                names.append(path)
+        else:
+            context["stage"] = "completion"
+            raise ValueError(
+                "ClassIterator reached its bound without proving completion"
+            )
+        context = {"iterator": "ClassIterator(Object)", "stage": "required_bases"}
+        require(
+            set(names) == ABSTRACT_LEGACY_CLASSES,
+            "Native legacy MCP census must contain exactly the two pinned abstract bases",
+        )
+        for path in sorted(ABSTRACT_LEGACY_CLASSES):
+            context["candidate"] = {"path": path}
+            require(
+                native_classes[path] == classes[path],
+                "Pinned legacy base differs from its actual native class",
+            )
+
+        objects, matched, meta_cdos, excluded = {}, set(), {}, []
+        context = {"iterator": "ObjectIterator(Class)", "stage": "initialize"}
+        candidates = iter(api.ObjectIterator(classes[class_path]))
+        for index in range(limit):
+            context = {
+                "iterator": "ObjectIterator(Class)",
+                "index": index,
+                "stage": "iterate",
+            }
+            try:
+                candidate = next(candidates)
+            except StopIteration:
+                break
+            context["stage"] = "identity"
+            path, metaclass = identity(candidate)
+            context["stage"] = "unique_path"
+            require(path not in objects, "Duplicate native ObjectIterator path")
+            objects[path] = candidate
+            if path in native_classes:
+                context["stage"] = "coverage_identity"
+                require(
+                    native_classes[path] == candidate,
+                    "The iterators disagree on native object identity at the same path",
+                )
+                matched.add(path)
+                continue
+            # Query only the actual metaclass of an object absent from the class
+            # inventory. Never obtain a represented library's default instance.
+            object_identity = context["candidate"]
+            meta_path = object_identity["object_class"]
+            context["coverage_candidate"] = object_identity
+            identity(metaclass)
+            context.update(
+                {"stage": "metaclass_inheritance", "parent_class": class_path}
+            )
+            require(
+                api.MathLibrary.class_is_child_of(metaclass, classes[class_path])
+                is True,
+                "Object-only candidate does not have an actual UClass metaclass",
+            )
+            context["candidate"] = object_identity
+            del context["coverage_candidate"]
+            context["stage"] = "metaclass_cdo"
+            if meta_path in meta_cdos:
+                cached_meta, cdo = meta_cdos[meta_path]
+                require(
+                    cached_meta == metaclass, "Metaclass identity changed at its path"
+                )
+            else:
+                cdo = api.get_default_object(metaclass)
+                meta_cdos[meta_path] = (metaclass, cdo)
+            require(
+                cdo is not None and not isinstance(cdo, type),
+                "Actual metaclass CDO is unavailable as a native object",
+            )
+            context["cdo_path"] = cdo.get_path_name()
+            require(
+                cdo.get_class() == metaclass,
+                "Returned default object belongs to another metaclass",
+            )
+            require(
+                cdo == candidate,
+                "ObjectIterator contains a non-CDO class omitted by ClassIterator",
+            )
+            excluded.append(
+                {
+                    "candidate_path": path,
+                    "metaclass_path": meta_path,
+                    "cdo_path": context["cdo_path"],
+                }
+            )
+        else:
+            context["stage"] = "completion"
+            raise ValueError(
+                "ObjectIterator reached its bound without proving completion"
+            )
+        missing = sorted(set(native_classes) - matched)
+        context = {"iterator": "ClassIterator->ObjectIterator", "stage": "coverage"}
+        if missing:
+            identity(native_classes[missing[0]])
+            raise ValueError(
+                "ClassIterator contains a native class absent from ObjectIterator"
+            )
+        if evidence is not None:
+            evidence.update(
+                {
+                    "class_count": len(native_classes),
+                    "object_count": len(objects),
+                    "class_iteration_complete": True,
+                    "object_iteration_complete": True,
+                    "native_coverage_verified": True,
+                    "meta_cdo_count": len(excluded),
+                    "first_meta_cdos": excluded[:4],
+                    "meta_cdo_details_truncated": len(excluded) > 4,
+                }
+            )
+        return sorted(names)
+    except Exception as error:
+        raise NativeCensusError(context, error) from error
 
 
 def require_abstract_base(source, class_name):
@@ -401,6 +604,13 @@ def material_api_evidence(api, engine):
 
 
 def preflight_error(error):
+    if isinstance(error, NativeCensusError):
+        # The native cause and actual production candidate are separate fields.
+        # Truncating exception text must not erase which original call failed.
+        return {
+            **preflight_error(error.native_error),
+            "census_context": error.context,
+        }
     message = str(error)
     result = {
         "type": type(error).__name__[:64],
@@ -433,11 +643,7 @@ def diagnostic_class_identity(value):
 def compact_legacy_diagnostics(details):
     """Keep the disputed identities and outcomes when examples exceed the cap."""
 
-    def text_prefix(value, bound):
-        text = str(value)[:bound]
-        while len(canonical(text).encode("utf-8")) > bound:
-            text = text[: len(text) // 2]
-        return text
+    text_prefix = bounded_text
 
     def identity(value):
         return {
@@ -716,7 +922,7 @@ def legacy_census_diagnostics(api):
     return result
 
 
-def registration_preflight(api, engine):
+def registration_preflight(api, engine, *, census_evidence=None):
     """Run the three existing read-only gates independently before registration."""
 
     def python_settings():
@@ -730,7 +936,7 @@ def registration_preflight(api, engine):
 
     values, checks = {}, {}
     for name, inspect in (
-        ("legacy_census", lambda: legacy_census(api)),
+        ("legacy_census", lambda: legacy_census(api, evidence=census_evidence)),
         ("python_remote_execution", python_settings),
         ("material_api_evidence", lambda: material_api_evidence(api, engine)),
     ):
@@ -1425,7 +1631,10 @@ def install(api, root, preparation, session_id, launcher_sha):
         api.load_class(None, "/Script/ToolsetRegistry.ToolsetRegistrySettings")
     )
     require_official_settings(settings, registry_settings)
-    libraries, python_settings, native_material = registration_preflight(api, engine)
+    census_evidence = {}
+    libraries, python_settings, native_material = registration_preflight(
+        api, engine, census_evidence=census_evidence
+    )
 
     def guard():
         require_official_settings(settings, registry_settings)
@@ -1482,6 +1691,7 @@ def install(api, root, preparation, session_id, launcher_sha):
             "sha256"
         ],
         "legacy_abstract_class_census": libraries,
+        "native_class_census": census_evidence,
         "concrete_legacy_library_count": 0,
         "native_material_api": native_material,
         "engine_source_pins": ENGINE_PINS,
