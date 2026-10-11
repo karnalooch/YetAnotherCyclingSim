@@ -344,6 +344,12 @@ No completed binding receipt or clean launcher marker was admitted. Fresh reopen
 and terrain measurement remain NOT RUN for this attempt; partially saved files
 are retained only as failed-attempt evidence, never reused as an accepted result.
 
+Attempt `49214a1a5574286b9703a3350ecd773fa1d14367/qualification04` reached
+saved-asset registry validation, then rejected `SoftObjectPath`: this installed
+Python binding requires an FName/string for `get_asset_by_object_path`. Material
+completion and downstream measurements were not admitted; next attempt passes
+the observed string argument without changing verification scope.
+
 Existing Julka profiles `sa-calobra-pcg-masks-candidate` and
 `sa-calobra-mask-transitions-candidate` verified with zero issues, including
 inherited source closure. Existing `verified_manifest()` also checked fingerprints,

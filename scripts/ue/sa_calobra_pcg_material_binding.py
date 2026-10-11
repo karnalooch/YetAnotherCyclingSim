@@ -401,7 +401,7 @@ def save_binding(receipt):
         package = path.split(".")[0]
         object_path = package + "." + package.rsplit("/", 1)[1]
         data = registry.get_asset_by_object_path(
-            unreal.SoftObjectPath(object_path), include_only_on_disk_assets=True
+            object_path, include_only_on_disk_assets=True
         )
         require(data.is_valid(), "Saved asset absent from disk registry: " + package)
         raw = registry.get_dependencies(package, options)
