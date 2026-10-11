@@ -1,23 +1,35 @@
 # M3 Level Editor streaming review
 
 **Scope:** owner-requested viewport review for #364 / PR #470, inside M3.
-**Status:** bounded same-process paint preview **PASS**; automated browser
-video qualification remains pending. The latest recorded
-[Editor run at `e4bac543`](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38141538137)
-retained session `38141538137-1`, Editor PID `46540`, and restored the original
-370 material bindings. Its Edge receiver failed with
-`Cannot convert System.Object[] to System.Uri` and observed no browser frames;
-the overall job is **FAILURE**. The owner's Chrome observation is separate
-manual viewport evidence. Exact-SHA
-[CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38141543196)
-and [Blender reference](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38141542405)
-passed. On 2026-10-11 the owner confirmed this session was closed and authorized
-publication of the next checkpoint. The receiver correction and camera controls
-require their own new native proof; the previous paint proof does not admit them.
-The Zen warning follow-up is closed by the owner's confirmation. The
+**Status:** bounded same-process paint preview and five source camera presets
+**PASS**; automated browser video qualification remains pending. The latest
+[Editor run at `78de72ab`](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38147063888)
+retained session `38147063888-1`, Editor PID `19740`, with owner handoff.
+All nine official MCP calls completed: two material changes, restoration of
+370 original bindings, five camera presets and return to the road (sequence 9).
+Actual camera positions/rotations passed readback; source/saved inputs stayed
+unchanged and dirty-package lists remained empty. FOV, camera screenshots and
+a subsequent Chat-issued request remain unverified.
+
+Exact-SHA [CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38147068129)
+and [Blender reference](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38147067669)
+passed. Edge progressed past the earlier array-to-URI failure but failed when
+an asynchronous `VoidTaskResult` contaminated the CDP response (`ContainsKey`
+error). It observed zero frames; cleanup completed. The overall native job is
+**FAILURE**, with `HTTP_READY_CLIENT_PENDING`. The correction suppresses unused
+connect/send completion values while retaining the receive result. Local
+regression tests do not establish actual Windows frame reception.
+
+The [native artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38147063888/artifacts/11705034569)
+was authenticated against SHA-256
+`576112e4c01ba558b659dcfec8d118841fb7a9319a4c1dc8483ca16973d7ee4d`.
+The owner's earlier Chrome observation is separate manual evidence. Prior
+session `38141538137-1` was owner-confirmed closed before publishing `78de72ab`;
+that confirmation does not close the new retained session. Freeze its launch
+branch until its handoff ends. The Zen warning follow-up remains closed by the
+owner's confirmation. The
 [workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
-records the authenticated evidence, measured client durations and remaining
-receiver correction. Paint preview does not grant final M3 or performance approval.
+retains earlier evidence. Viewport proof grants no final M3 or performance approval.
 
 The owner selected Epic's **Stream Level Editor** on 2026-10-10. The review
 must show the level viewport and preserve the source geometry and saved

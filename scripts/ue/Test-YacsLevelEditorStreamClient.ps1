@@ -243,7 +243,8 @@ function Invoke-Cdp([string] $Method, [hashtable] $Parameters = @{}) {
     $bytes = [Text.Encoding]::UTF8.GetBytes($packet)
     $cancel = [Threading.CancellationTokenSource]::new((Get-RemainingMilliseconds))
     try {
-        $WebSocket.SendAsync([ArraySegment[byte]]::new($bytes), [Net.WebSockets.WebSocketMessageType]::Text, $true, $cancel.Token).GetAwaiter().GetResult()
+        # Discard Task<VoidTaskResult> completion; only protocol JSON is output.
+        $null = $WebSocket.SendAsync([ArraySegment[byte]]::new($bytes), [Net.WebSockets.WebSocketMessageType]::Text, $true, $cancel.Token).GetAwaiter().GetResult()
         while ($true) {
             $message = [IO.MemoryStream]::new()
             try {
@@ -365,7 +366,7 @@ try {
     $debugBuilder.Host = '127.0.0.1'
     $WebSocket = [Net.WebSockets.ClientWebSocket]::new()
     $connectCancel = [Threading.CancellationTokenSource]::new((Get-RemainingMilliseconds))
-    try { $WebSocket.ConnectAsync($debugBuilder.Uri, $connectCancel.Token).GetAwaiter().GetResult() }
+    try { $null = $WebSocket.ConnectAsync($debugBuilder.Uri, $connectCancel.Token).GetAwaiter().GetResult() }
     finally { $connectCancel.Dispose() }
     $null = Invoke-Cdp 'Page.enable'
     $null = Invoke-Cdp 'Runtime.enable'

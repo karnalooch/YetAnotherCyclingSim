@@ -559,37 +559,193 @@ class DevToolsTargetTests(unittest.TestCase):
 
     def test_multiple_targets_select_one_matching_page(self):
         url = "ws://127.0.0.1:9237/devtools/page/owned"
-        result = self.select([
-            {"type": "worker", "url": "about:blank", "webSocketDebuggerUrl": "ws://127.0.0.1:9237/devtools/page/worker"},
-            {"type": "page", "url": "about:blank", "webSocketDebuggerUrl": url},
-            {"type": "page", "url": "about:blank", "webSocketDebuggerUrl": "ws://127.0.0.1:9237/devtools/page/other"},
-        ])
+        result = self.select(
+            [
+                {
+                    "type": "worker",
+                    "url": "about:blank",
+                    "webSocketDebuggerUrl": "ws://127.0.0.1:9237/devtools/page/worker",
+                },
+                {"type": "page", "url": "about:blank", "webSocketDebuggerUrl": url},
+                {
+                    "type": "page",
+                    "url": "about:blank",
+                    "webSocketDebuggerUrl": "ws://127.0.0.1:9237/devtools/page/other",
+                },
+            ]
+        )
         self.assertEqual(result, {"uri": url, "error": None})
 
     def test_fields_from_different_targets_cannot_match(self):
-        result = self.select([
-            {"type": "worker", "url": "about:blank"},
-            {"type": "page", "url": "https://example.test/"},
-        ])
+        result = self.select(
+            [
+                {"type": "worker", "url": "about:blank"},
+                {"type": "page", "url": "https://example.test/"},
+            ]
+        )
         self.assertEqual(result, {"uri": None, "error": None})
 
     def test_empty_and_single_target_arrays(self):
         self.assertEqual(self.select([]), {"uri": None, "error": None})
         url = "ws://127.0.0.1:9237/devtools/page/only"
-        self.assertEqual(self.select([
-            {"type": "page", "url": "about:blank", "webSocketDebuggerUrl": url}
-        ]), {"uri": url, "error": None})
+        self.assertEqual(
+            self.select(
+                [{"type": "page", "url": "about:blank", "webSocketDebuggerUrl": url}]
+            ),
+            {"uri": url, "error": None},
+        )
 
     def test_array_or_missing_debugger_url_is_rejected(self):
         missing = self.select([{"type": "page", "url": "about:blank"}])
         self.assertIn("one nonempty debugger URL string", missing["error"])
         for value in (None, [], ["ws://127.0.0.1:9237/devtools/page/one"], ""):
             with self.subTest(value=value):
-                result = self.select([
-                    {"type": "page", "url": "about:blank", "webSocketDebuggerUrl": value}
-                ])
+                result = self.select(
+                    [
+                        {
+                            "type": "page",
+                            "url": "about:blank",
+                            "webSocketDebuggerUrl": value,
+                        }
+                    ]
+                )
                 self.assertIsNone(result["uri"])
                 self.assertIn("one nonempty debugger URL string", result["error"])
+
+
+CDP_RUNNER = r"""
+param([string] $Wrapper, [string] $Mode)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$tokens = $null
+$errors = $null
+$ast = [Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref] $tokens, [ref] $errors)
+if ($errors.Count) { throw ($errors | Out-String) }
+foreach ($name in @('Get-RemainingMilliseconds', 'Invoke-Cdp', 'Invoke-PageExpression')) {
+    $node = $ast.Find({ param($node)
+        $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name
+    }, $true)
+    . ([ScriptBlock]::Create($node.Extent.Text))
+}
+# The async methods really return Task/Task<T>; only socket I/O is replaced.
+# PowerShell exposes Task<VoidTaskResult>'s completion unless it is suppressed.
+Add-Type -TypeDefinition @'
+using System;
+using System.Net.WebSockets;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+public sealed class CdpSocketFixture {
+    public string Mode;
+    public int Sends;
+    public int Receives;
+    public int Connects;
+    private int commandId;
+    public async Task ConnectAsync(Uri uri, CancellationToken token) {
+        await Task.Yield();
+        Connects++;
+        token.ThrowIfCancellationRequested();
+    }
+    public async Task SendAsync(ArraySegment<byte> bytes, WebSocketMessageType type, bool final, CancellationToken token) {
+        await Task.Yield();
+        Sends++;
+        if (Mode == "send-error") throw new InvalidOperationException("fixture send failed");
+        commandId = JsonDocument.Parse(bytes.AsMemory()).RootElement.GetProperty("id").GetInt32();
+    }
+    public Task<WebSocketReceiveResult> ReceiveAsync(ArraySegment<byte> bytes, CancellationToken token) {
+        Receives++;
+        string result = Mode == "protocol-error" ? "\"error\":{\"message\":\"fixture protocol failed\"}" :
+            "\"result\":{\"frameId\":\"owned-frame\",\"result\":{\"value\":17}}";
+        byte[] data = Encoding.UTF8.GetBytes("{\"id\":" + commandId + "," + result + "}");
+        data.CopyTo(bytes.Array, bytes.Offset);
+        return Task.FromResult(new WebSocketReceiveResult(data.Length, WebSocketMessageType.Text, true));
+    }
+}
+'@
+$WebSocket = [CdpSocketFixture]::new()
+$WebSocket.Mode = $Mode
+$Clock = [pscustomobject]@{ElapsedMilliseconds=0}
+$WorkLimitMilliseconds = 80000
+$script:CdpMessageId = 0
+$BrowserEvents = [Collections.Generic.List[string]]::new()
+$errorText = $null
+$result = $null
+try {
+    if ($Mode -eq 'connect') {
+        $debugBuilder = [UriBuilder]::new('ws://127.0.0.1:9237/devtools/page/owned')
+        $connectCancel = [Threading.CancellationTokenSource]::new(3000)
+        $connect = $ast.Find({ param($node)
+            $node -is [Management.Automation.Language.TryStatementAst] -and
+            $node.Body.Extent.Text -match '^\{\s*(\$null\s*=\s*)?\$WebSocket.ConnectAsync'
+        }, $true)
+        if ($null -eq $connect) { throw 'Missing connection statement.' }
+        $result = @(. ([ScriptBlock]::Create($connect.Extent.Text))).Count
+    }
+    elseif ($Mode -eq 'evaluate') { $result = Invoke-PageExpression '17' }
+    else {
+        $navigation = Invoke-Cdp 'Page.navigate' @{url='http://127.0.0.1/'}
+        if ($navigation.ContainsKey('errorText')) { throw 'Unexpected navigation error.' }
+        $result = $navigation.frameId
+    }
+}
+catch { $errorText = $_.Exception.Message }
+@{result=$result;error=$errorText;sends=$WebSocket.Sends;receives=$WebSocket.Receives;connects=$WebSocket.Connects} | ConvertTo-Json -Compress
+"""
+
+
+@unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 is required")
+class CdpTaskBoundaryTests(unittest.TestCase):
+    def run_fixture(self, mode):
+        with tempfile.TemporaryDirectory() as temporary:
+            runner = Path(temporary) / "cdp.ps1"
+            runner.write_text(CDP_RUNNER, encoding="utf-8")
+            result = subprocess.run(
+                [
+                    shutil.which("pwsh"),
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-File",
+                    str(runner),
+                    str(WRAPPER),
+                    mode,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=20,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        return json.loads(result.stdout)
+
+    def test_navigation_returns_only_protocol_result(self):
+        result = self.run_fixture("navigate")
+        self.assertIsNone(result["error"])
+        self.assertEqual(result["result"], "owned-frame")
+        self.assertEqual((result["sends"], result["receives"]), (1, 1))
+
+    def test_page_expression_returns_only_evidence_value(self):
+        result = self.run_fixture("evaluate")
+        self.assertIsNone(result["error"])
+        self.assertEqual(result["result"], 17)
+
+    def test_connection_completion_produces_no_pipeline_value(self):
+        result = self.run_fixture("connect")
+        self.assertIsNone(result["error"])
+        self.assertEqual(result["result"], 0)
+        self.assertEqual(result["connects"], 1)
+
+    def test_protocol_failure_is_not_swallowed(self):
+        result = self.run_fixture("protocol-error")
+        self.assertIn("fixture protocol failed", result["error"])
+        self.assertIsNone(result["result"])
+        self.assertEqual((result["sends"], result["receives"]), (1, 1))
+
+    def test_send_failure_does_not_receive_or_retry(self):
+        result = self.run_fixture("send-error")
+        self.assertIn("fixture send failed", result["error"])
+        self.assertIsNone(result["result"])
+        self.assertEqual((result["sends"], result["receives"]), (1, 0))
 
 
 if __name__ == "__main__":
