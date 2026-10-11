@@ -68,6 +68,7 @@ def _plan(owner, snapshot, center, trace):
         station.append(station[-1] + math.dist(a[13][:2], b[13][:2]))
     delta = {}
     deferred = []
+    confirmed_contacts = 0
     for i, row in enumerate(rows):
         end_weight = max(0., min(1., station[i] / TAPER_CM, (station[-1] - station[i]) / TAPER_CM))
         for column in (0, 1, 25, 26):
@@ -83,9 +84,12 @@ def _plan(owner, snapshot, center, trace):
             if abs(dz) > MAX_DELTA_CM:
                 deferred.append({'row': i, 'column': column, 'required_delta_cm': dz})
                 continue
+            if column in (0, 26):
+                confirmed_contacts += 1
             # Fade before the bounded contact limit; larger earthworks remain untouched.
             contact_weight = min(1., (MAX_DELTA_CM - abs(dz)) / 10.) if column in (0, 26) else 1.
             delta[top_ids[p]] = dz * weight * contact_weight
+    require(confirmed_contacts > 0, 'All terrain contacts require more than 50 cm or have no bounded hit; owner rejected')
     require(any(abs(v) > EPS_CM for v in delta.values()), 'No repairable shoulder in viewport AOI')
     # Native support walls have separate vertices, including clipped crossings.
     # Infer their retained bottom from each exact XY column; map upper edge to
