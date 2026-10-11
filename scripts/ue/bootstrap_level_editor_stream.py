@@ -158,10 +158,13 @@ def main():
         )
         # -ExecutePythonScript otherwise exits after its script has completed.
         unreal.EditorPythonScripting.set_keep_python_script_alive(True)
-    except Exception:
+    except Exception:  # noqa: BLE001 - Persist BLOCKED for the owning launcher's failure gate.
         receipt["status"] = "BLOCKED"
         receipt["error"] = traceback.format_exc()
-        raise
+        # A handled integration failure is a failed launch, not an engine crash.
+        # The launcher rejects this receipt and owns cleanup. Keepalive is set
+        # only after successful installation; an ordinary script exit is safe.
+        # Receipt I/O failures below and other unhandled errors remain fatal.
     finally:
         output.parent.mkdir(parents=True, exist_ok=True)
         temporary = output.with_suffix(".json.tmp")

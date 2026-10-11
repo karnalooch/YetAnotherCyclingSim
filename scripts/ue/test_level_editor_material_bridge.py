@@ -19,6 +19,20 @@ class NativeObject:
         return self.name
 
 
+class NativeSettings:
+    """Generic UObject wrapper with UPROPERTY names and no generated aliases."""
+
+    def __init__(self, properties):
+        self.properties = properties
+        self.reads = []
+
+    def get_editor_property(self, name):
+        self.reads.append(name)
+        if name not in self.properties:
+            raise ValueError("Native settings property is unavailable: " + name)
+        return self.properties[name]
+
+
 class Material(NativeObject):
     def __init__(self, name, parent=None):
         super().__init__(name)
@@ -434,6 +448,207 @@ class PreviewTests(unittest.TestCase):
 
 
 class RegistrationBoundaryTests(unittest.TestCase):
+    def native_settings(self):
+        # Exact UPROPERTY identifiers from UE 5.8.2 ModelContextProtocolSettings.h
+        # (589492fd...) and ToolsetRegistrySubsystem.h (30d55774...).
+        return (
+            NativeSettings(
+                {
+                    "bAutoStartServer": False,
+                    "bEnableToolSearch": False,
+                    "ServerUrlPath": "/mcp",
+                }
+            ),
+            NativeSettings(
+                {"AllowedNames": list(bridge.ALLOWED_NAMES), "BlockedNames": []}
+            ),
+        )
+
+    def test_private_class_wrapper_reads_literal_native_mcp_and_registry_names(self):
+        settings, registry = self.native_settings()
+        bridge.require_official_settings(settings, registry)
+        self.assertEqual(
+            settings.reads, ["bAutoStartServer", "bEnableToolSearch", "ServerUrlPath"]
+        )
+        self.assertEqual(registry.reads, ["AllowedNames", "BlockedNames"])
+
+    def test_every_mcp_setting_is_read_again_and_rejected_if_changed(self):
+        for name, changed in (
+            ("bAutoStartServer", True),
+            ("bAutoStartServer", 0),
+            ("bEnableToolSearch", True),
+            ("bEnableToolSearch", "False"),
+            ("ServerUrlPath", "/other"),
+            ("AllowedNames", []),
+            ("AllowedNames", ["YacsRoadMaterialPreview"]),
+            ("BlockedNames", ["YacsRoadMaterialPreview"]),
+        ):
+            with self.subTest(name=name, changed=changed):
+                settings, registry = self.native_settings()
+                bridge.require_official_settings(settings, registry)
+                owner = settings if name in settings.properties else registry
+                owner.properties[name] = changed
+                with self.assertRaises(ValueError):
+                    bridge.require_official_settings(settings, registry)
+                self.assertEqual(owner.reads.count(name), 2)
+
+    def test_missing_native_setting_is_not_replaced_by_an_alias_or_default(self):
+        for name, alias in (
+            ("bAutoStartServer", "auto_start_server"),
+            ("bEnableToolSearch", "enable_tool_search"),
+            ("ServerUrlPath", "server_url_path"),
+            ("AllowedNames", "allowed_names"),
+            ("BlockedNames", "blocked_names"),
+        ):
+            with self.subTest(name=name):
+                settings, registry = self.native_settings()
+                owner = settings if name in settings.properties else registry
+                owner.properties[alias] = owner.properties.pop(name)
+                with self.assertRaisesRegex(
+                    ValueError, "Native settings property is unavailable"
+                ):
+                    bridge.require_official_settings(settings, registry)
+                self.assertNotIn(alias, owner.reads)
+
+    def test_settings_refusal_reports_only_bounded_values_actually_read(self):
+        settings, registry = self.native_settings()
+        settings.properties.update(
+            {"bAutoStartServer": True, "ServerUrlPath": "/unexpected"}
+        )
+        with self.assertRaises(ValueError) as refused:
+            bridge.require_official_settings(settings, registry)
+        observed = json.loads(str(refused.exception).split("; observed=", 1)[1])
+        self.assertEqual(
+            observed,
+            {
+                "bAutoStartServer": True,
+                "bEnableToolSearch": False,
+                "ServerUrlPath": "/unexpected",
+            },
+        )
+        settings.properties.update({"bAutoStartServer": False, "ServerUrlPath": "/mcp"})
+        registry.properties["AllowedNames"] = ["unexpected" * 100] * 10
+        with self.assertRaises(ValueError) as refused:
+            bridge.require_official_settings(settings, registry)
+        observed = json.loads(str(refused.exception).split("; observed=", 1)[1])
+        self.assertEqual(observed["AllowedNames"]["count"], 10)
+        self.assertEqual(len(observed["AllowedNames"]["first_names"]), 4)
+        self.assertEqual(
+            [len(v) for v in observed["AllowedNames"]["first_names"]], [64] * 4
+        )
+        self.assertEqual(observed["BlockedNames"], {"count": 0, "first_names": []})
+
+    def test_python_remote_execution_requires_live_native_false_without_fallback(self):
+        settings = NativeSettings({"bRemoteExecution": False})
+        bridge.require_python_remote_disabled(settings)
+        for value in (True, None, 0, "False"):
+            with self.subTest(value=value):
+                settings.properties["bRemoteExecution"] = value
+                with self.assertRaisesRegex(ValueError, "must be disabled"):
+                    bridge.require_python_remote_disabled(settings)
+        self.assertEqual(settings.reads, ["bRemoteExecution"] * 5)
+        unreadable = NativeSettings({"remote_execution": False})
+        with self.assertRaisesRegex(
+            ValueError, "Native settings property is unavailable"
+        ):
+            bridge.require_python_remote_disabled(unreadable)
+        self.assertEqual(unreadable.reads, ["bRemoteExecution"])
+
+    def preview_schema(self):
+        return {
+            "tools": [
+                {
+                    "name": "YacsRoadMaterialPreview.Preview",
+                    "description": "Bounded preview",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {"RequestJson": {"type": "string"}},
+                        "required": ["RequestJson"],
+                    },
+                }
+            ],
+        }
+
+    def test_live_registry_inventory_is_checked_again_after_registration(self):
+        own_schema = self.preview_schema()
+        catalog = [copy.deepcopy(own_schema)]
+        calls = []
+
+        def live_schemas():
+            calls.append(True)
+            return bridge.canonical(catalog)
+
+        registry = SimpleNamespace(get_all_toolset_json_schemas=live_schemas)
+        result = bridge.require_registry_catalog(registry, own_schema)
+        self.assertEqual(
+            result,
+            {
+                "toolset_count": 1,
+                "tool_count": 1,
+                "schema_sha256": bridge.digest(catalog),
+            },
+        )
+        catalog.append({"tools": [{"name": "Foreign.Tool"}]})
+        with self.assertRaisesRegex(ValueError, "Live official registry differs"):
+            bridge.require_registry_catalog(registry, own_schema)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(len(catalog), 2)  # Never remove another owner's tools.
+
+    def test_registry_catalog_rejects_missing_extra_or_changed_native_schema(self):
+        own_schema = self.preview_schema()
+        changed = copy.deepcopy(own_schema)
+        changed["tools"][0]["inputSchema"]["properties"]["Other"] = {"type": "string"}
+        for catalog in ([], [own_schema, own_schema], [changed], [None], own_schema):
+            with self.subTest(catalog=catalog):
+                registry = SimpleNamespace(
+                    get_all_toolset_json_schemas=lambda catalog=catalog: (
+                        bridge.canonical(catalog)
+                    )
+                )
+                with self.assertRaises(ValueError):
+                    bridge.require_registry_catalog(registry, own_schema)
+
+    def test_registry_catalog_parser_is_bounded_and_requests_still_require_objects(
+        self,
+    ):
+        own_schema = self.preview_schema()
+        for raw in (
+            '[{"tools":[],"tools":[]}]',
+            '[{"tools":NaN}]',
+            " " * (64 * 1024) + bridge.canonical([own_schema]),
+        ):
+            with self.subTest(raw=raw[:80]):
+                registry = SimpleNamespace(
+                    get_all_toolset_json_schemas=lambda raw=raw: raw
+                )
+                with self.assertRaises(ValueError):
+                    bridge.require_registry_catalog(registry, own_schema)
+        with self.assertRaisesRegex(ValueError, "JSON must be one object"):
+            bridge.validate_request("[]", "synthetic", 0, set())
+
+    def test_catalog_refusal_reports_counts_and_only_short_actual_names(self):
+        catalog = [
+            {
+                "name": "ForeignToolset" * 20,
+                "tools": [{"name": "Foreign.Tool" * 20}] * 7,
+            }
+        ] * 10
+        registry = SimpleNamespace(
+            get_all_toolset_json_schemas=lambda: bridge.canonical(catalog)
+        )
+        with self.assertRaisesRegex(
+            ValueError, "Live official registry differs"
+        ) as refused:
+            bridge.require_registry_catalog(registry, self.preview_schema())
+        observed = json.loads(str(refused.exception).split("; observed=", 1)[1])
+        self.assertEqual(observed["toolset_count"], 10)
+        self.assertEqual(len(observed["first_toolsets"]), 4)
+        for row in observed["first_toolsets"]:
+            self.assertEqual(row["tool_count"], 7)
+            self.assertEqual(len(row["name"]), 64)
+            self.assertEqual([len(v) for v in row["first_tool_names"]], [64, 64])
+        self.assertLess(len(str(refused.exception).encode()), 2048)
+
     def test_allowlisted_legacy_declaration_must_actually_be_abstract(self):
         source = 'UCLASS(Abstract, MinimalAPI, Meta=(DeprecationMessage="legacy")) class UExample : public UObject {}'
         bridge.require_abstract_base(source, "UExample")

@@ -43,6 +43,30 @@ Its receipt records the Python version and observed cross-API timestamp
 differences so the next native launch can establish whether that case occurs
 on this host. Live material and streaming qualification remain pending.
 
+The [next launch at `cae5c07`](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38124969667)
+established the Windows correction on the real host: Python 3.12.10 copied
+278 files / 758,655,493 bytes with 147 cross-API `ctime` differences, preserving
+the original hashes and independent copies. The correct saved map and camera
+were read back in UE 5.8.2. Bridge installation then failed because the generic
+settings wrapper did not recognize `auto_start_server`; the launch flag
+`-ScriptErrorsAreFatal` converted the Python exception into an engine fatal.
+The candidate now uses the exact native UPROPERTY names, and a handled
+bootstrap failure publishes `BLOCKED` without rethrowing into that fatal path.
+The host still rejects failed/dead sessions and never hands them off. Actual
+Python access to the private native `bRemoteExecution` property remains a hard
+pre-listener check to qualify in the next run; missing access cannot default
+to a claim that remote execution is disabled.
+
+The owner also reported a Zen warning. The retained Editor log shows Zen using
+its existing C: data directory, reaching HTTP and ZenLocal `OK` after 34.962 s;
+it contains no Zen warning/error text. The exact UI warning is not retained
+and remains unresolved. The 30.01 GiB reported by that launch's successful CI
+measures D:, not the C: cache volume. The next launcher records free bytes on
+both volumes, the existing resolved workspace cache and inherited
+`UE-ZenDataPath`, without moving data or changing either value. The MCP failure
+has its own explicit traceback; it is not attributed to Zen. This run produced
+no material request receipt, PNG or received-browser-frame proof.
+
 ## Measured local cost
 
 The authenticated [b9fd native checkpoint](README.md) reused compiled C++

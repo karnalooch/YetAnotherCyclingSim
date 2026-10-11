@@ -120,8 +120,20 @@ try {
         if ($LASTEXITCODE -ne 0 -or $changed.Count) { throw 'Launcher requires an unchanged tracked checkout.' }
         & git check-ignore --no-index --quiet -- $ReceiptPath
         if ($LASTEXITCODE -ne 0) { throw 'Review evidence must remain ignored by Git.' }
+        $cacheDiagnostic = & python -c 'import json, os; from pathlib import Path; from scripts.manage_local_workspace import load_workspace; config = load_workspace(); print(json.dumps({"configured_zen_data_path": str(Path(config["cache"]) / "Zen"), "inherited_ue_zen_data_path": os.environ.get("UE-ZenDataPath")}))'
+        if ($LASTEXITCODE -ne 0) { throw 'Cannot read the existing workspace cache configuration.' }
+        $receipt.cache_launch_environment = $cacheDiagnostic | ConvertFrom-Json
     }
     finally { Pop-Location }
+    # The snapshot and the observed default Zen cache are on different volumes.
+    # Measure both; this diagnostic does not change either cache or launch input.
+    $receipt.disk_space_before = @(
+        $driveRoots = @([IO.Path]::GetPathRoot($SessionRoot), [IO.Path]::GetPathRoot($env:LOCALAPPDATA)) | Select-Object -Unique
+        foreach ($driveRoot in $driveRoots) {
+            $drive = [IO.DriveInfo]::new($driveRoot)
+            [ordered]@{ volume = $drive.Name; available_bytes = $drive.AvailableFreeSpace; total_bytes = $drive.TotalSize }
+        }
+    )
     $hostState = & (Join-Path $RepoRoot 'scripts/runner/Get-YacsUnrealHostState.ps1')
     $receipt.host_before = $hostState.status
     if ($hostState.status -ne 'IDLE') { throw "Shared Unreal host is occupied: $($hostState.status). Existing work keeps ownership." }
@@ -228,11 +240,17 @@ DefaultBindAddress=127.0.0.1
     $httpReady = $false
     while ([DateTime]::UtcNow -lt $deadline) {
         $EditorProcess.Refresh()
-        if ($EditorProcess.HasExited) { throw "Owned Editor exited during startup: $($EditorProcess.ExitCode)" }
         Observe-OwnedProcesses
+        $scene = $null
         if (Test-Path -LiteralPath $scenePath) {
             $scene = Get-Content -LiteralPath $scenePath -Raw | ConvertFrom-Json
-            if ($scene.status -ne 'VIEWPORT_SCENE_READY' -or $scene.editor_pid -ne $EditorProcess.Id) { throw 'Native viewport scene validation failed.' }
+            if ($scene.status -ne 'VIEWPORT_SCENE_READY' -or $scene.editor_pid -ne $EditorProcess.Id) {
+                $receipt.native_scene_error = [string] $scene.error
+                throw 'Native viewport scene validation failed; see native_scene_error and scene.json.'
+            }
+        }
+        if ($EditorProcess.HasExited) { throw "Owned Editor exited during startup: $($EditorProcess.ExitCode)" }
+        if ($null -ne $scene) {
             try {
                 $response = Invoke-WebRequest -Uri $ViewerUrl -TimeoutSec 3 -MaximumRedirection 0
                 $httpReady = $response.StatusCode -eq 200 -and $response.Content -match '(?i)pixel.?stream|<video|<!doctype html'

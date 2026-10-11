@@ -50,6 +50,7 @@ ENGINE_PINS = {
     "Plugins/Experimental/ModelContextProtocol/ModelContextProtocol.uplugin": "74420534edcd6baafcb48e0af919d53b84891bdade7b97869b0ef485c3ea1518",
     "Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/__init__.py": "df6a65bc5740271dcd989a1df3208b40282323015ec1aa586895fffb1e97abbb",
     "Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Public/ToolsetRegistry/UToolsetRegistry.h": "03e3abeec87a10ff1b099cdbdfba9d65349409af49e7d2a1688bb78c77f59d6b",
+    "Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Public/ToolsetRegistry/ToolsetRegistry.h": "e80e4fe2c7cb3f63f9bab387eb48194f90d245263e534165eaf7c572f1842152",
     "Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocol/Private/ModelContextProtocolModule.cpp": "86ee49f40a61e754040b72b8f618fa464542881ac04b0723fc3f68f5438880ee",
     "Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocolEngine/Public/ModelContextProtocolToolLibrary.h": "5b1536eaa8e5bfdf7508801d32f75f03fb683b69850733a39f6b003b2d565b42",
     "Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocolEngine/Private/ModelContextProtocolToolLibrary.cpp": "c350ebeb1ad3b541d089269724bc79bf2c397b61aeea07e1be99e6b9ca47c885",
@@ -80,7 +81,7 @@ def _object_pairs(pairs):
     return result
 
 
-def strict_json(raw, limit):
+def strict_json(raw, limit, *, expected_type=dict):
     require(isinstance(raw, (bytes, str)), "JSON must be UTF-8 text")
     if isinstance(raw, bytes):
         raw = raw.decode("utf-8-sig")
@@ -90,7 +91,12 @@ def strict_json(raw, limit):
         object_pairs_hook=_object_pairs,
         parse_constant=lambda _: (_ for _ in ()).throw(ValueError("Non-finite JSON")),
     )
-    require(type(value) is dict, "JSON must be one object")
+    require(
+        type(value) is expected_type,
+        "JSON must be one object"
+        if expected_type is dict
+        else "JSON must be one array",
+    )
     return value
 
 
@@ -899,6 +905,98 @@ class MaterialPreview:
             self.in_tick = False
 
 
+def diagnostic_property(value):
+    if value is None or type(value) is bool:
+        return value
+    if isinstance(value, str):
+        return value[:64]
+    return {"type": type(value).__name__}
+
+
+def require_official_settings(settings, registry_settings):
+    # These native classes are loaded via UClass paths and can use a generic
+    # DeveloperSettings Python wrapper. Use literal UPROPERTY names from their
+    # pinned headers without depending on generated snake_case aliases.
+    auto_start = settings.get_editor_property("bAutoStartServer")
+    tool_search = settings.get_editor_property("bEnableToolSearch")
+    url_path = settings.get_editor_property("ServerUrlPath")
+    require(
+        auto_start is False and tool_search is False and url_path == "/mcp",
+        "Official MCP must start explicitly with eager bounded tool inventory; observed="
+        + canonical(
+            {
+                "bAutoStartServer": diagnostic_property(auto_start),
+                "bEnableToolSearch": diagnostic_property(tool_search),
+                "ServerUrlPath": diagnostic_property(url_path),
+            }
+        ),
+    )
+    allowed = list(registry_settings.get_editor_property("AllowedNames"))
+    blocked = list(registry_settings.get_editor_property("BlockedNames"))
+    require(
+        allowed == list(ALLOWED_NAMES) and not blocked,
+        "Official registry name filters differ from the preview-only allowlist; observed="
+        + canonical(
+            {
+                name: {
+                    "count": len(values),
+                    "first_names": [diagnostic_property(v) for v in values[:4]],
+                }
+                for name, values in (
+                    ("AllowedNames", allowed),
+                    ("BlockedNames", blocked),
+                )
+            }
+        ),
+    )
+
+
+def require_python_remote_disabled(settings):
+    # #384's native owner reads this exact FBoolProperty. A private CDO need
+    # not have a generated Python alias. Missing or unreadable native access
+    # remains a hard failure before StartServer; never infer the value from ini.
+    remote_execution = settings.get_editor_property("bRemoteExecution")
+    require(
+        remote_execution is False,
+        "Native Python remote execution must be disabled; observed="
+        + canonical({"bRemoteExecution": diagnostic_property(remote_execution)}),
+    )
+
+
+def require_registry_catalog(registry, own_schema):
+    # GetAllToolsetJsonSchemas queries the live, filtered registry; the per-class
+    # schema above is a testing API and cannot establish the complete inventory.
+    # The pinned FToolsetRegistry declaration specifies an array of schemas.
+    reflected_tool(own_schema)
+    catalog = strict_json(
+        registry.get_all_toolset_json_schemas(), 64 * 1024, expected_type=list
+    )
+    observed = []
+    for toolset in catalog[:4]:
+        if type(toolset) is not dict:
+            observed.append({"type": type(toolset).__name__})
+            continue
+        tools = toolset.get("tools")
+        observed.append(
+            {
+                "name": diagnostic_property(toolset.get("name")),
+                "tool_count": len(tools) if type(tools) is list else None,
+                "first_tool_names": [
+                    diagnostic_property(
+                        tool.get("name") if type(tool) is dict else tool
+                    )
+                    for tool in (tools[:2] if type(tools) is list else [])
+                ],
+            }
+        )
+    require(
+        len(catalog) == 1 and catalog[0] == own_schema,
+        "Live official registry differs from the single owned preview toolset; observed="
+        + canonical({"toolset_count": len(catalog), "first_toolsets": observed}),
+    )
+    return {"toolset_count": 1, "tool_count": 1, "schema_sha256": digest(catalog)}
+
+
 def install(api, root, preparation, session_id, launcher_sha):
     """Called once by the owned bootstrap before the official listener is started."""
     global BRIDGE
@@ -934,49 +1032,22 @@ def install(api, root, preparation, session_id, launcher_sha):
             None, "/Script/ModelContextProtocolEngine.ModelContextProtocolSettings"
         )
     )
-    require(
-        settings.get_editor_property("auto_start_server") is False
-        and settings.get_editor_property("enable_tool_search") is False
-        and settings.get_editor_property("server_url_path") == "/mcp",
-        "Official MCP must start explicitly with eager bounded tool inventory",
-    )
     registry_settings = api.get_default_object(
         api.load_class(None, "/Script/ToolsetRegistry.ToolsetRegistrySettings")
     )
-    require(
-        list(registry_settings.get_editor_property("allowed_names"))
-        == list(ALLOWED_NAMES)
-        and not list(registry_settings.get_editor_property("blocked_names")),
-        "Official registry name filters differ from the preview-only allowlist",
-    )
+    require_official_settings(settings, registry_settings)
     libraries = legacy_census(api)
     python_settings = api.get_default_object(
         api.load_class(None, "/Script/PythonScriptPlugin.PythonScriptPluginSettings")
     )
-    require(
-        python_settings.get_editor_property("remote_execution") is False,
-        "Native Python remote execution is enabled",
-    )
+    require_python_remote_disabled(python_settings)
     native_material = material_api_evidence(api, engine)
 
     def guard():
-        require(
-            settings.get_editor_property("auto_start_server") is False
-            and settings.get_editor_property("enable_tool_search") is False
-            and settings.get_editor_property("server_url_path") == "/mcp",
-            "Official MCP startup/search settings changed",
-        )
-        require(
-            list(registry_settings.get_editor_property("allowed_names"))
-            == list(ALLOWED_NAMES)
-            and not list(registry_settings.get_editor_property("blocked_names")),
-            "Official MCP registry filters changed",
-        )
+        require_official_settings(settings, registry_settings)
         require(legacy_census(api) == libraries, "Legacy MCP class census changed")
-        require(
-            python_settings.get_editor_property("remote_execution") is False,
-            "Native Python remote execution was enabled",
-        )
+        require_python_remote_disabled(python_settings)
+        require_registry_catalog(api.ToolsetRegistry, schema)
 
     from toolset_registry import tool_call
 
@@ -1004,6 +1075,7 @@ def install(api, root, preparation, session_id, launcher_sha):
     api.SystemLibrary.execute_console_command(
         manager.world, "ModelContextProtocol.RefreshTools"
     )
+    catalog = require_registry_catalog(api.ToolsetRegistry, schema)
     # Fixed repository-owned command, never a remotely supplied command string.
     api.SystemLibrary.execute_console_command(
         manager.world, "ModelContextProtocol.StartServer 18784"
@@ -1016,6 +1088,7 @@ def install(api, root, preparation, session_id, launcher_sha):
         "sequence": 0,
         "endpoint": "http://127.0.0.1:18784/mcp",
         "tool_schema": tool,
+        "registry_catalog": catalog,
         "wire_parameter": parameter,
         "initial_state": manager.original_bindings,
         "source_world_saved": False,
