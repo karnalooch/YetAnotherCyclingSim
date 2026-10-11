@@ -1,9 +1,17 @@
 # Sa Calobra world graph — detailed #365 execution plan
 
-**Status: PLANNING ONLY. No native implementation is authorized by this document.**
-The owner's current instruction is to research and document the complete plan for
-another LLM, delegate the analysis, and implement nothing now. Existing CPU work
-is retained. Resume implementation only when the owner explicitly resumes it.
+**Status: EXECUTION RESUMED by the owner on 2026-10-12 for issue #365.**
+The original planning-only instruction of 2026-10-11 is historical. The owner
+explicitly requested implementation with subagents and reminded the team to use
+Material Forge. Current implementation and evidence are recorded in the
+[CPU kickoff](SA_CALOBRA_WORLD_GRAPH.md); proposed stages below remain pending
+until implemented and proved. This document does not waive admission gates.
+
+Reuse the [Material Forge ownership contract](MATERIAL_FORGE.md): PCG/PCGEx
+owns what and where; Forge owns appearance. Preserve the accepted whole-map
+material baseline. Bind validated Forge/material receipts and UV/physical scale
+to each qualified mesh without deriving terrain contact, classifications or
+Landscape displacement from material-local masks or Height EXR.
 
 **Primary issue:** [#365](https://github.com/karnalooch/YetAnotherCyclingSim/issues/365).
 **Milestone:** M3 — Route & World Foundation, world-finishing step 4 of 13.
@@ -58,7 +66,7 @@ foliage to hide #459 defects. Bounded repair still needs its own approved scope.
 | Item | Planning-session evidence | Consequence |
 |---|---|---|
 | #365 | GitHub readback: open; body specifies M3; milestone field is null; no comments | M3 comes from issue body/Roadmap; do not claim a populated GitHub milestone or change Project metadata |
-| Predecessor #364 | GitHub: closed as completed; #470 merged as `4dd792219bfc2eaf7dc216bd60cbde6628bba792` | Predecessor gate is satisfied; current owner planning-only instruction still prevents new implementation |
+| Predecessor #364 | GitHub: closed as completed; #470 merged as `4dd792219bfc2eaf7dc216bd60cbde6628bba792` | Predecessor gate is satisfied; owner resumed bounded #365 implementation on 2026-10-12 |
 | Predecessor exception | [Owner closeout comment](https://github.com/karnalooch/YetAnotherCyclingSim/pull/470#issuecomment-6113634845) manually accepts remaining route/latest-save gate | Older #470 body says blocked; actual closeout + current Roadmap supersede that historical status only |
 | Saved road foundation | Earlier `R2a00f7ebba40` reopened/rendered; latest `Rc6b061b933e6` saved, fresh reopening NOT RUN | Select and authenticate the actual baseline package set before #365; do not call the latest saved scene freshly proved |
 | Existing CPU adapter | Source/config/test implementation at inspected SHA; prior kickoff reports 21 passing tests and repeatable input receipt | Prior evidence is retained, not rerun or promoted to native proof by this plan |

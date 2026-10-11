@@ -1,9 +1,10 @@
 # Sa Calobra #365 — complete handoff for another LLM
 
-**Current instruction: PLAN AND DOCUMENT ONLY. DO NOT IMPLEMENT.**
-This file is an execution brief for a later explicit implementation task. Reading
-it is not authorization to install PCGEx, modify code/assets, run UE or start CI
-native/GPU work. The complete plan is in
+**Current instruction: IMPLEMENTATION RESUMED for #365 on 2026-10-12.**
+The owner requested building with subagents and reuse of Material Forge. Consult
+the current [implementation evidence](SA_CALOBRA_WORLD_GRAPH.md) before starting
+another packet; do not repeat completed work. Native asset/contact admission and
+exclusive host/proof gates still apply. The complete plan is in
 [SA_CALOBRA_WORLD_GRAPH_PLAN.md](SA_CALOBRA_WORLD_GRAPH_PLAN.md); supporting
 [research/tutorials](SA_CALOBRA_WORLD_GRAPH_RESEARCH.md) and the earlier
 [CPU evidence](SA_CALOBRA_WORLD_GRAPH.md) are part of the handoff, not optional

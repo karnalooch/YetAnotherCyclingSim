@@ -1,8 +1,10 @@
 # Sa Calobra PCG world graph — #365 kickoff
 
-**Status:** M3, CPU input preparation; native graph and placement NOT RUN.
+**Status:** M3, CPU input preparation and deterministic XY candidates; native graph and placement NOT RUN.
 **Owner:** procedural-world. **Base:** `4dd792219bfc2eaf7dc216bd60cbde6628bba792`.
-**Current owner instruction:** planning only; no further implementation now.
+**Current owner instruction (2026-10-12):** implementation resumed for #365,
+using subagents and the existing Material Forge contract. The planning-only
+instruction of 2026-10-11 is superseded; acceptance gates remain unchanged.
 The complete researched continuation is recorded in the
 [detailed execution plan](SA_CALOBRA_WORLD_GRAPH_PLAN.md),
 [primary-source/tutorial ledger](SA_CALOBRA_WORLD_GRAPH_RESEARCH.md) and
@@ -27,6 +29,61 @@ manifest. Scope covers the full 2016.5 m square, not only the Golden Kilometer.
 One source writer owns the adapter/config/tests; the coordinator owns docs.
 Three read-only specialists audited dependency/proof, source masks and APIs.
 No exclusive Unreal, build, GPU or home-runner resource is claimed.
+
+## Resumed implementation — 2026-10-12
+
+`scripts/assets/sa_calobra_world_graph_candidates.py` consumes the authenticated
+inputs with an explicit lattice, horizontal probe radius, clearance and overlap
+priority. Geographic anchor IDs do not change with seed or manifest identity;
+density and native point seeds use separate named streams. The conservative
+footprint rejects unknown/excluded cells, including partial cell intersections.
+These are XY probes, not qualified mesh transforms or terrain contact.
+
+Two local runs on the real 4033-square source grid used spacing 16 cells (8 m),
+radius 0.5 m, clearance 0.25 m, priority `[2,0,1]` and configured seed 36501.
+Both produced fingerprint
+`17110fb45f877586ccbeb9c3ec1e914392abcf9bb548ecf6b24714c4e272e943`:
+64,009 anchors, 124 admitted XY probes, 483 outside-footprint, 37,983 without
+selected centre, 19,216 insufficient-clearance, 5,315 semantic-footprint and
+888 density rejections. Receipts are ignored local artifacts under
+`Saved/RuntimeProof/WorldGraph365/candidates-run-{c,d}/`; this is CPU candidate
+evidence and does not replace Gumball native proof or exact-commit CI.
+
+The PCGEx bootstrap now preserves existing source checkouts,
+validate exact upstream or reviewed-patched state, and reject hidden local
+changes, including assume-unchanged/skip-worktree flags. This does not install
+PCGEx or prove its native build/load. Local validation: 7 candidate tests,
+7 existing input-adapter tests, 4 existing mask tests and 8 real-Git bootstrap
+tests PASS. Sandbox TemporaryDirectory access initially failed with WinError 5;
+the affected suites passed outside the sandbox. Critical Ruff checks and all four
+docs-index guards (links/i18n/structure/freshness), plus agent contracts, PASS.
+
+### Material Forge integration
+
+Reuse [Material Forge](MATERIAL_FORGE.md) and the accepted
+[whole-map material baseline](SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md).
+PCG/PCGEx owns classification and placement; Forge owns appearance. Forge may
+consume authoritative masks without changing their classification or hashes.
+Its local DetailMasks and Height EXR never supply geography, collision support
+or Landscape displacement. Preserve the accepted Landscape material consumer.
+
+For each future qualified mesh, bind the material receipt, package dependency
+closure, UV/physical scale and validated PBR maps to that mesh qualification.
+Reuse `scripts/ue/import_material_forge_variant.py` for validated Forge variants;
+do not treat a material package or the `regional_limestone` family as a qualified
+rock mesh. The accepted five-role surface library and optional Forge variants
+are separate identities; do not silently replace the accepted consumer.
+
+### Native admission remaining
+
+The host audit found UE 5.8.2 CL56702186 and no canonical PCGEx installation.
+Latest road checkpoint `Rc6b061b933e6` resides in the isolated
+`b9fddea3f602-y473install01` project and reports `reload_proof: NOT_RUN`.
+Canonical Content has no corresponding LiveCheckpoints package. Do not substitute
+the older accepted canonical map for this road consumer. Regional StaticMesh
+qualification, admitted terrain contact, native generation, save/fresh reopen,
+intermediate images and protected exact-head CI remain pending. No real-scene
+scatter or completion of #365 is claimed.
 
 Forbidden: changing canonical road/physics, `Base_DTM`, Landscape geometry,
 BOB semantics, source masks, live Editor state or streaming; installing plugins;
