@@ -39,6 +39,11 @@ HAIRPIN_CUT_SIZE = 1749
 MATERIAL_VIEW_PLAN_SHA256 = "3fac9564e4c96c0eee237c2103cc4833af93b8bc493b4334e0b88e1e70d37559"
 MATERIAL_VIEW_PLAN_SIZE = 40501
 MAP_SHA256 = "276d1621fa083850f6d603b6d115b01b74c9a92c182254d15302e786abfbf29c"
+HAIRPIN_WALL_ROWS = (1560, 1880)  # Inclusive source rows; 320 edge0 segments.
+WALL_EVIDENCE_LIMIT = 1024 * 1024
+WALL_TOLERANCE_CM = 0.0001
+NATIVE_TRIANGLE_COLUMNS = ["tid", "p0_x_cm", "p0_y_cm", "p0_z_cm", "p1_x_cm", "p1_y_cm", "p1_z_cm", "p2_x_cm", "p2_y_cm", "p2_z_cm"]
+CUT_NODE_COLUMNS = ["grid_x", "grid_y", "byte_offset", "raw4_hex", "world_x_cm", "world_y_cm", "source_world_z_cm"]
 
 
 def target_spec(target="window0112"):
@@ -206,6 +211,279 @@ def triangle_delta(actual, expected):
     )
 
 
+def _wall_require(condition, message):
+    if not condition:
+        raise ValueError("Hairpin wall/CUT evidence: " + message)
+
+
+def _wall_hash(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
+                                     allow_nan=False).encode()).hexdigest()
+
+
+def _wall_triangle_rows(positions, ids):
+    return [[tid, *(v for point in positions[tid] for v in point)] for tid in ids]
+
+
+def _wall_positions(rows):
+    _wall_require(isinstance(rows, list) and len(rows) <= 1280, "triangle rows unbounded")
+    result = {}
+    for row in rows:
+        _wall_require(isinstance(row, list) and len(row) == 10
+                      and type(row[0]) is int and 0 <= row[0] < 132218
+                      and row[0] not in result
+                      and all(type(v) in (int, float) and math.isfinite(v) for v in row[1:]),
+                      "invalid native triangle ID/corners")
+        result[row[0]] = tuple(tuple(row[k:k + 3]) for k in (1, 4, 7))
+    return result
+
+
+def _wall_segments(positions, source_edges):
+    """Bind actual outer faces to the already compared source pavement edge0.
+
+    No shoulder builder is executed. The two native outer-top faces must share
+    their inner corners with the source core; their actual outer corners define
+    the segment being inspected. Conditional perimeter TIDs are never inferred.
+    """
+    first, last = HAIRPIN_WALL_ROWS
+    _wall_require(isinstance(source_edges, list) and len(source_edges) == last - first + 1,
+                  "source row inventory differs")
+    for i, row in enumerate(source_edges, first):
+        _wall_require(isinstance(row, list) and len(row) == 4 and type(row[0]) is int
+                      and row[0] == i and all(type(v) in (int, float) and math.isfinite(v)
+                                           for v in row[1:]), "source edge row differs")
+    segments, previous = {}, None
+    for i in range(first, last):
+        a, b = positions[i * 52], positions[i * 52 + 1]
+        p, q = (tuple(row[1:3]) + (row[3] - 8.0,)
+                for row in source_edges[i - first:i - first + 2])
+        _wall_require(triangle_delta((a[1], b[0], b[1]), (p, p, q)) <= WALL_TOLERANCE_CM
+                      and a[2] == b[2] and (previous is None or a[0] == previous),
+                      "native outer top is not bound to consecutive source edge0 rows")
+        _wall_require(math.dist(a[0][:2], a[2][:2]) > WALL_TOLERANCE_CM,
+                      "native outer segment has no XY span")
+        segments[i], previous = (a[0], a[2]), a[2]
+    return segments
+
+
+def _wall_parameters(points, a, b):
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    length = math.hypot(dx, dy)
+    values = [((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (length * length)
+              for p in points]
+    eps = WALL_TOLERANCE_CM
+    if (max(values) - min(values) <= eps / length
+            or any(t < -eps / length or t > 1 + eps / length
+                   or math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy) > eps
+                   for t, p in zip(values, points, strict=True))):
+        return None
+    return values
+
+
+def _select_wall_faces(positions, segments):
+    top_count = (target_spec("hairpin0081")["section_count"] - 1) * 52
+    selected = {i: [] for i in segments}
+    for tid in sorted(positions):
+        if tid < top_count:
+            continue
+        points = positions[tid]
+        owners = []
+        for i, (a, b) in segments.items():
+            if any(min(p[axis] for p in points) < min(a[axis], b[axis]) - WALL_TOLERANCE_CM
+                   or max(p[axis] for p in points) > max(a[axis], b[axis]) + WALL_TOLERANCE_CM
+                   for axis in (0, 1)):
+                continue
+            if _wall_parameters(points, a, b) is not None:
+                owners.append(i)
+        _wall_require(len(owners) <= 1, "native wall has ambiguous source-segment ownership")
+        if owners:
+            selected[owners[0]].append(tid)
+    for i, ids in selected.items():
+        if not ids:
+            continue
+        _wall_require(len(ids) <= 2, "multiple native walls overlap one source segment")
+        a, b = segments[i]
+        anchored = False
+        for tid in ids:
+            parameters = _wall_parameters(positions[tid], a, b)
+            tops = [t for p, t in zip(positions[tid], parameters, strict=True)
+                    if abs(p[2] - (a[2] + t * (b[2] - a[2]))) <= WALL_TOLERANCE_CM]
+            anchored |= len(tops) >= 2 and (max(tops) - min(tops)) * math.dist(a[:2], b[:2]) > WALL_TOLERANCE_CM
+        _wall_require(anchored, "native wall does not meet its actual outer top edge")
+        if len(ids) == 2:
+            _wall_require(len(set(positions[ids[0]]) & set(positions[ids[1]])) == 2,
+                          "native wall pair is disconnected")
+    _wall_require(any(selected.values()), "no native wall matched the diagnosed source AOI")
+    return selected
+
+
+def _wall_cut_metadata(raw):
+    cut_bounds(raw, target="hairpin0081")
+    value = json.loads(raw.decode("utf-8-sig"))
+    _wall_require(value.get("layer_encoding") == "LANDSCAPE_TEXTURE_PATCH_WORLD_UNITS_F32_MIN"
+                  and value.get("blend_mode") == "Min" and value.get("height_encoding") == "WorldUnits"
+                  and value.get("zero_height_meaning") == "WorldZero"
+                  and value.get("world_space_unit") == "centimeter"
+                  and value.get("patch_file") == "ma2141-cut-patch.f32"
+                  and value.get("patch_byte_count") == value["rect"]["width"] * value["rect"]["height"] * 4,
+                  "authenticated CUT encoding/byte inventory differs")
+    return value
+
+
+def _wall_cut_keys(walls, cut):
+    """Retain enclosing *source nodes*, not a fitted/interpolated terrain Z."""
+    keys, outside = set(), []
+    rect = cut["rect"]
+    for row in walls:
+        tid = row[1]
+        for corner, k in enumerate((2, 5, 8)):
+            x, y = row[k] / 50.0, row[k + 1] / 50.0
+            if not rect["min_x"] <= x <= rect["max_x"] or not rect["min_y"] <= y <= rect["max_y"]:
+                outside.append([tid, corner])
+                continue
+            keys.update((gx, gy) for gx in {math.floor(x), math.ceil(x)}
+                        for gy in {math.floor(y), math.ceil(y)})
+    _wall_require(len(keys) <= 4096, "CUT source node inventory unbounded")
+    return sorted(keys, key=lambda p: (p[1], p[0])), outside
+
+
+def hairpin_wall_contact(positions, sections, support, source_identity, cut_raw, patch_raw, patch_identity):
+    """Keep a small inert subset of the full native read; never author geometry."""
+    cut = _wall_cut_metadata(cut_raw)
+    _wall_require(isinstance(patch_raw, bytes) and len(patch_raw) == cut["patch_byte_count"]
+                  and hashlib.sha256(patch_raw).hexdigest() == cut["patch_sha256"],
+                  "CUT patch bytes differ before sampling")
+    _wall_require(patch_identity.get("size_bytes") == cut["patch_byte_count"]
+                  and patch_identity.get("sha256_before") == patch_identity.get("sha256_after") == cut["patch_sha256"]
+                  and isinstance(patch_identity.get("path"), str)
+                  and patch_identity["path"].replace("\\", "/").endswith("/" + cut["patch_file"]),
+                  "CUT source file changed during the read")
+    spec = target_spec("hairpin0081")
+    _wall_require(len(sections) == spec["section_count"] and all(len(s) == 25 for s in sections)
+                  and set(positions) == set(range(spec["mesh_counts"][1])),
+                  "complete native/source snapshot is required")
+    first, last = HAIRPIN_WALL_ROWS
+    source_edges = [[i, *(float(v) * 100.0 for v in sections[i][0])]
+                    for i in range(first, last + 1)]
+    segments = _wall_segments(positions, source_edges)
+    selected = _select_wall_faces(positions, segments)
+    walls = [[i, *row] for i, ids in selected.items() for row in _wall_triangle_rows(positions, ids)]
+    keys, outside = _wall_cut_keys(walls, cut)
+    nodes = []
+    for gx, gy in keys:
+        offset = ((gy - cut["rect"]["min_y"]) * cut["rect"]["width"] + gx - cut["rect"]["min_x"]) * 4
+        raw = patch_raw[offset:offset + 4]
+        z = struct.unpack("<f", raw)[0]
+        _wall_require(math.isfinite(z), "nonfinite source CUT node")
+        nodes.append([gx, gy, offset, raw.hex(), gx * 50.0, gy * 50.0, z])
+    result = {
+        "schema_version": 1, "status": "NATIVE_WALL_AND_SOURCE_CUT_OBSERVED",
+        "source_window_id": "accepted-hairpin", "source_edge": 0,
+        "source_rows_inclusive": list(HAIRPIN_WALL_ROWS),
+        "ownership_tolerance_cm": WALL_TOLERANCE_CM,
+        "source_profile_file": "ma2141-profile-candidate.json", "source_profile_sha256": cut["profile_sha256"],
+        "source_recipe_sha256": source_identity["recipe_sha256"], "pavement_profile_lift_cm": 4.0,
+        "support_actor_path": support["path"], "support_component_path": support["component"],
+        "full_native_triangle_sha256": support["triangle_sha256"],
+        "non_top_triangles_scanned": spec["mesh_counts"][1] - (spec["section_count"] - 1) * 52,
+        "geometry_mutated": False, "native_vertex_ids_available": False,
+        "source_patch_identity": patch_identity,
+        "pavement_edge_rows_cm": source_edges,
+        "native_top_columns": NATIVE_TRIANGLE_COLUMNS,
+        "native_top_triangles": _wall_triangle_rows(positions, [i * 52 + k for i in segments for k in (0, 1)]),
+        "wall_columns": ["source_segment_start_row", *NATIVE_TRIANGLE_COLUMNS],
+        "wall_triangles": walls, "segments_without_matched_wall": [i for i, ids in selected.items() if not ids],
+        "cut_source": {
+            "manifest_sha256": HAIRPIN_CUT_SHA256, "patch_file": cut["patch_file"],
+            "patch_sha256": cut["patch_sha256"], "patch_size_bytes": len(patch_raw),
+            "encoding": "little_endian_float32_row_major_y_x_world_z_cm",
+            "node_selection": "floor_ceil_source_grid_nodes_at_native_wall_corner_xy",
+            "sample_status": "SOURCE_NODES_RETAINED" if keys else "NO_NODES_IN_SOURCE_FOOTPRINT",
+            "final_native_landscape_height_observed": False, "height_interpolation_performed": False,
+            "node_columns": CUT_NODE_COLUMNS,
+            "nodes": nodes, "corners_outside_source_patch": outside,
+        },
+    }
+    result["payload_sha256"] = _wall_hash(result)
+    _wall_require(len(json.dumps(result, indent=4, allow_nan=False).encode()) <= WALL_EVIDENCE_LIMIT,
+                  "retained wall/CUT field exceeds 1MiB")
+    return result
+
+
+def verify_wall_contact(value, report, cut_raw):
+    """Check the optional new data without changing historical 4258 checks."""
+    _wall_require(isinstance(value, dict) and value.get("status") == "NATIVE_WALL_AND_SOURCE_CUT_OBSERVED"
+                  and value.get("schema_version") == 1,
+                  "new native observation failed: " + str(value.get("error") if isinstance(value, dict) else value))
+    _wall_require(len(json.dumps(value, indent=4, allow_nan=False).encode()) <= WALL_EVIDENCE_LIMIT,
+                  "retained field exceeds 1MiB")
+    _wall_require(value.get("payload_sha256") == _wall_hash({k: v for k, v in value.items() if k != "payload_sha256"}),
+                  "payload hash differs")
+    cut, support = _wall_cut_metadata(cut_raw), report["support"]
+    _wall_require(support.get("label") == "YACS_PERSIST_SUPPORT_185"
+                  and value.get("source_window_id") == "accepted-hairpin" and value.get("source_edge") == 0
+                  and value.get("source_rows_inclusive") == list(HAIRPIN_WALL_ROWS)
+                  and value.get("ownership_tolerance_cm") == WALL_TOLERANCE_CM
+                  and value.get("source_profile_file") == "ma2141-profile-candidate.json"
+                  and value.get("source_profile_sha256") == cut["profile_sha256"]
+                  and value.get("source_recipe_sha256") == report["source_identity"]["recipe_sha256"]
+                  and value.get("support_actor_path") == support.get("path")
+                  and value.get("support_component_path") == support.get("component")
+                  and value.get("full_native_triangle_sha256") == support["triangle_sha256"]
+                  and value.get("pavement_profile_lift_cm") == 4.0
+                  and report["source_identity"].get("hairpin_pavement_lift_m") == 0.04
+                  and value.get("non_top_triangles_scanned") == 7418
+                  and value.get("native_top_columns") == NATIVE_TRIANGLE_COLUMNS
+                  and value.get("wall_columns") == ["source_segment_start_row", *NATIVE_TRIANGLE_COLUMNS]
+                  and value.get("geometry_mutated") is False and value.get("native_vertex_ids_available") is False,
+                  "source/native wall identity differs")
+    tops = _wall_positions(value.get("native_top_triangles"))
+    first, last = HAIRPIN_WALL_ROWS
+    _wall_require(set(tops) == {i * 52 + k for i in range(first, last) for k in (0, 1)},
+                  "native top face inventory differs")
+    walls = value.get("wall_triangles", [])
+    _wall_require(isinstance(walls, list) and 0 < len(walls) <= 2 * (last - first)
+                  and all(isinstance(row, list) and len(row) == 11 and type(row[0]) is int for row in walls), "wall inventory differs")
+    wall_positions = _wall_positions([row[1:] for row in walls])
+    _wall_require(all(tid >= 124800 for tid in wall_positions), "top face passed as a wall")
+    segments = _wall_segments(tops, value.get("pavement_edge_rows_cm"))
+    selected = _select_wall_faces(wall_positions, segments)
+    _wall_require(walls == [[i, *row] for i, ids in selected.items() for row in _wall_triangle_rows(wall_positions, ids)]
+                  and value.get("segments_without_matched_wall") == [i for i, ids in selected.items() if not ids],
+                  "retained source/wall correspondence differs")
+    source = value.get("cut_source", {})
+    _wall_require(source.get("manifest_sha256") == HAIRPIN_CUT_SHA256
+                  and source.get("patch_file") == cut["patch_file"]
+                  and source.get("patch_sha256") == cut["patch_sha256"]
+                  and source.get("patch_size_bytes") == cut["patch_byte_count"]
+                  and source.get("encoding") == "little_endian_float32_row_major_y_x_world_z_cm"
+                  and source.get("node_selection") == "floor_ceil_source_grid_nodes_at_native_wall_corner_xy"
+                  and source.get("node_columns") == CUT_NODE_COLUMNS
+                  and source.get("final_native_landscape_height_observed") is False
+                  and source.get("height_interpolation_performed") is False
+                  and value.get("source_patch_identity", {}).get("size_bytes") == cut["patch_byte_count"]
+                  and value.get("source_patch_identity", {}).get("sha256_before") == cut["patch_sha256"]
+                  and value.get("source_patch_identity", {}).get("sha256_after") == cut["patch_sha256"]
+                  and isinstance(value.get("source_patch_identity", {}).get("path"), str)
+                  and value["source_patch_identity"]["path"].replace("\\", "/").endswith("/" + cut["patch_file"]),
+                  "CUT source identity/measurement scope differs")
+    keys, outside = _wall_cut_keys(walls, cut)
+    nodes = source.get("nodes", [])
+    _wall_require(isinstance(nodes, list) and len(nodes) == len(keys)
+                  and source.get("sample_status") == ("SOURCE_NODES_RETAINED" if keys else "NO_NODES_IN_SOURCE_FOOTPRINT")
+                  and source.get("corners_outside_source_patch") == outside,
+                  "CUT source node inventory differs")
+    for node, (gx, gy) in zip(nodes, keys, strict=True):
+        offset = ((gy - cut["rect"]["min_y"]) * cut["rect"]["width"] + gx - cut["rect"]["min_x"]) * 4
+        _wall_require(isinstance(node, list) and len(node) == 7
+                      and all(type(v) is int for v in node[:3])
+                      and node[:3] == [gx, gy, offset] and isinstance(node[3], str) and len(node[3]) == 8,
+                      "CUT source byte address differs")
+        z = struct.unpack("<f", bytes.fromhex(node[3]))[0]
+        _wall_require(math.isfinite(z) and node[4:] == [gx * 50.0, gy * 50.0, z],
+                      "CUT raw4/position/height differs")
+
+
 def overlaps(bounds, target=CUT_BOUNDS_CM):
     x0, y0, x1, y1 = bounds
     if not all(math.isfinite(v) for v in bounds) or x1 <= x0 or y1 <= y0:
@@ -260,6 +538,12 @@ def verify(root, exact_sha, *, target="window0112"):
         or (target == "hairpin0081" and (support.get("vertices"), support.get("triangles")) != spec["mesh_counts"])
     ):
         raise ValueError("Source ownership or native geometry conservation failed")
+    # Absence keeps the historical 4258 contract exactly as it was. A present
+    # optional observation must pass completely; FAILED/PENDING is never ignored.
+    if "support_wall_contact" in report:
+        _wall_require(target == "hairpin0081", "wall observation supplied for a different target")
+        verify_wall_contact(report["support_wall_contact"], report,
+                            (root / "source-cut-manifest.json").read_bytes())
     expected = {(frame, mode) for frame in spec["frame_ids"] for mode in MODES}
     rows = survey.get("frames", [])
     if (

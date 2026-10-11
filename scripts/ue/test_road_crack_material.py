@@ -50,6 +50,7 @@ class Engine(paint_fixture.Engine):
         for name in material.EXTRA_NODE_TYPES:
             setattr(self.api, name, name)
         self.fail_override = None
+        self.setter_result = True
         for category in ("texture", "scalar", "vector"):
             setattr(self.api.MaterialEditingLibrary, "set_material_instance_" + category + "_parameter_value",
                     lambda instance, name, value, c=category: self.override(instance, c, name, value))
@@ -86,7 +87,7 @@ class Engine(paint_fixture.Engine):
         if self.fail_override is not None and self.fail_override(instance, category, name, value):
             return False
         instance.overrides[category][name] = value
-        return True
+        return self.setter_result
 
     def scope(self):
         stack = ExitStack()
@@ -288,6 +289,38 @@ class MaterialTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "refuse overwrite"):
             self.engine.create()
         self.assertEqual(self.engine.events, [])
+
+    def test_false_setter_results_still_require_effective_native_values(self):
+        self.engine.setter_result = False  # Epic UE-291403, not an ignored write.
+        instances, receipt = self.engine.create()
+        self.engine.verify(receipt)
+        second = instances["short_oblique"]
+        self.assertIs(second.parameters("texture")["CrackBaseColorTex"],
+                      self.engine.local["short_oblique"]["BaseColor"])
+        self.assertEqual(second.parameters("scalar")["ExtentCm"], 140.0)
+        self.assertTrue(receipt["effective_parameters_read_back"])
+        self.assertFalse(receipt["normal_space_verified"])
+
+    def test_ignored_texture_scalar_or_vector_write_fails_for_either_return_value(self):
+        for category, parameter in (("texture", "CrackBaseColorTex"),
+                                    ("scalar", "ExtentCm"),
+                                    ("vector", "NeutralBaseColor")):
+            for returned in (False, True):
+                with self.subTest(category=category, returned=returned):
+                    engine = Engine()
+                    # Ensure all three requested values differ from inheritance;
+                    # a no-op at an already correct value is not a failed state.
+                    engine.import_receipt["neutral_sources"]["short_oblique"]["base_color_linear"] = [0.07, 0.06, 0.05]
+                    original = engine.override
+
+                    def ignore_one(instance, kind, name, value):
+                        if instance.path.endswith("MI_RoadCracks_short_oblique") and (kind, name) == (category, parameter):
+                            return returned
+                        return original(instance, kind, name, value)
+
+                    engine.override = ignore_one
+                    with self.assertRaisesRegex(ValueError, "Crack (material texture identity|scalar|neutral-source parameter) differs"):
+                        engine.create()
 
     def test_fresh_readback_rejects_wrong_space_clipping_texture_extent_or_unrestored_probe(self):
         instances, receipt = self.engine.create()

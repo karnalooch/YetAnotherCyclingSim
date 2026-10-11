@@ -1,11 +1,13 @@
 """Failure and conservation tests for the bounded Issue459 diagnostic."""
 
 import csv
+import copy
 import hashlib
 import io
 import json
 from pathlib import Path
 import tempfile
+import struct
 import unittest
 from unittest.mock import patch
 from unittest.mock import Mock
@@ -21,6 +23,7 @@ from scripts.ue.capture_sa_calobra_shoulder_contact import (
     native_component_layout,
     mesh_digest,
     mesh_triangle,
+    read_hairpin_wall_contact,
 )
 
 
@@ -661,6 +664,320 @@ class ShoulderContactTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(ValueError, "inventory"):
                 contract.verify(root, "a" * 40)
+
+
+class HairpinWallContactTests(unittest.TestCase):
+    def setUp(self):
+        # Fixed native inventory, small source AOI. These are synthetic unit
+        # fixtures only; no value stands in for an observed native elevation.
+        change = patch.object(contract, "HAIRPIN_WALL_ROWS", (1, 4))
+        change.start()
+        self.addCleanup(change.stop)
+        self.raw = b"".join(
+            struct.pack("<f", 900.0 + gy * 10 + gx)
+            for gy in range(11)
+            for gx in range(11)
+        )
+        cut = {
+            "operation": "CUT_ONLY",
+            "grid_step_m": 0.5,
+            "rect": {
+                "min_x": 0,
+                "min_y": 0,
+                "max_x": 10,
+                "max_y": 10,
+                "width": 11,
+                "height": 11,
+            },
+            "layer_encoding": "LANDSCAPE_TEXTURE_PATCH_WORLD_UNITS_F32_MIN",
+            "blend_mode": "Min",
+            "height_encoding": "WorldUnits",
+            "world_space_unit": "centimeter",
+            "zero_height_meaning": "WorldZero",
+            "patch_file": "ma2141-cut-patch.f32",
+            "patch_byte_count": len(self.raw),
+            "patch_sha256": hashlib.sha256(self.raw).hexdigest(),
+            "profile_sha256": "b" * 64,
+        }
+        self.cut_raw = json.dumps(cut).encode()
+        for name, value in (
+            ("HAIRPIN_CUT_SHA256", hashlib.sha256(self.cut_raw).hexdigest()),
+            ("HAIRPIN_CUT_SIZE", len(self.cut_raw)),
+        ):
+            change = patch.object(contract, name, value)
+            change.start()
+            self.addCleanup(change.stop)
+        self.identity = dict(
+            path="D:/fixture/ma2141-cut-patch.f32",
+            size_bytes=len(self.raw),
+            sha256_before=cut["patch_sha256"],
+            sha256_after=cut["patch_sha256"],
+        )
+        self.source_identity = dict(
+            recipe_sha256="a" * 64, hairpin_pavement_lift_m=0.04
+        )
+        self.support = dict(
+            label="YACS_PERSIST_SUPPORT_185",
+            path="/source.actor",
+            component="/source.actor.mesh",
+            triangle_sha256="a" * 64,
+        )
+        self.sections = [[(0.0, 0.0, 0.0)] * 25 for _ in range(2401)]
+        dummy = ((1000000.0, 1000000.0, 0.0),) * 3
+        self.positions = dict.fromkeys(range(132218), dummy)
+        self.outer = {i: (i * 12.5, 25.0, 1000.0 + i) for i in range(1, 5)}
+        for i in range(1, 5):
+            self.sections[i][0] = (i * 0.125, 0.75, (1008.0 + i) / 100.0)
+        for i in range(1, 4):
+            a, b = self.outer[i], self.outer[i + 1]
+            p, q = (tuple(v * 100 for v in self.sections[k][0]) for k in (i, i + 1))
+            p, q = (*p[:2], p[2] - 8.0), (*q[:2], q[2] - 8.0)
+            self.positions[i * 52], self.positions[i * 52 + 1] = (a, p, b), (p, q, b)
+        a, b = self.outer[1], self.outer[2]
+        ga, gb = (*a[:2], a[2] - 80.0), (*b[:2], b[2] - 120.0)
+        # Actual IDs are intentionally nonconsecutive. A guessed wall offset
+        # or two-triangles-per-source-row formula cannot satisfy this fixture.
+        self.positions[130005], self.positions[131999] = (a, b, gb), (a, gb, ga)
+        a, b = self.outer[2], self.outer[3]
+        crossing = tuple(x + 0.4 * (y - x) for x, y in zip(a, b, strict=True))
+        self.positions[129901] = (crossing, b, (*b[:2], b[2] - 50.0))
+
+    def build(self):
+        return contract.hairpin_wall_contact(
+            self.positions,
+            self.sections,
+            self.support,
+            self.source_identity,
+            self.cut_raw,
+            self.raw,
+            self.identity,
+        )
+
+    def verify(self, value):
+        contract.verify_wall_contact(
+            value,
+            dict(support=self.support, source_identity=self.source_identity),
+            self.cut_raw,
+        )
+
+    def resign(self, value):
+        value["payload_sha256"] = contract._wall_hash(
+            {k: v for k, v in value.items() if k != "payload_sha256"}
+        )
+
+    def test_actual_wall_corners_bind_source_rows_and_partial_crossing_without_guessing_ids(
+        self,
+    ):
+        before = dict(self.positions)
+        value = self.build()
+        self.verify(value)
+        self.assertEqual(
+            [(r[0], r[1]) for r in value["wall_triangles"]],
+            [(1, 130005), (1, 131999), (2, 129901)],
+        )
+        self.assertEqual(value["segments_without_matched_wall"], [3])
+        self.assertEqual(
+            value["wall_triangles"][-1][2:5], list(self.positions[129901][0])
+        )
+        self.assertEqual(self.positions, before)
+        self.assertEqual(value["non_top_triangles_scanned"], 7418)
+        self.assertFalse(value["geometry_mutated"])
+        self.assertFalse(value["native_vertex_ids_available"])
+
+    def test_foreign_side_and_top_are_not_wall_candidates_and_ambiguous_owner_fails(
+        self,
+    ):
+        self.positions[124900] = tuple(
+            (p[0], p[1] + 500.0, p[2]) for p in self.positions[130005]
+        )
+        value = self.build()
+        self.assertNotIn(124900, [r[1] for r in value["wall_triangles"]])
+        self.assertTrue(all(r[1] >= 124800 for r in value["wall_triangles"]))
+        with self.assertRaisesRegex(ValueError, "ambiguous source-segment"):
+            contract._select_wall_faces(
+                self.positions,
+                {1: (self.outer[1], self.outer[2]), 2: (self.outer[1], self.outer[2])},
+            )
+
+    def test_disconnected_floating_or_degenerate_owner_never_gets_an_observation_pass(
+        self,
+    ):
+        original = dict(self.positions)
+        for tid in (130005, 131999):
+            self.positions[tid] = tuple(
+                (*p[:2], p[2] - 5.0) for p in self.positions[tid]
+            )
+        with self.assertRaisesRegex(ValueError, "does not meet its actual outer top"):
+            self.build()
+        self.positions = dict(original)
+        a, gb, ga = self.positions[131999]
+        self.positions[131999] = (a, (*gb[:2], gb[2] - 1.0), ga)
+        with self.assertRaisesRegex(ValueError, "wall pair is disconnected"):
+            self.build()
+        self.positions = original
+        a, p, b = self.positions[52]
+        self.positions[52] = (b, p, b)
+        with self.assertRaisesRegex(ValueError, "no XY span"):
+            self.build()
+
+    def test_source_cut_keeps_exact_row_major_raw_nodes_and_no_interpolated_native_height(
+        self,
+    ):
+        value = self.build()
+        cut = value["cut_source"]
+        self.assertFalse(cut["height_interpolation_performed"])
+        self.assertFalse(cut["final_native_landscape_height_observed"])
+        self.assertEqual(cut["corners_outside_source_patch"], [])
+        shifted = copy.deepcopy(value["wall_triangles"])
+        for row in shifted:
+            for column in (2, 5, 8):
+                row[column] += 100000.0
+        keys, outside = contract._wall_cut_keys(shifted, json.loads(self.cut_raw))
+        self.assertEqual(keys, [])
+        self.assertEqual(len(outside), 3 * len(shifted))
+        self.assertEqual(
+            [node[:2] for node in cut["nodes"]], [[0, 0], [1, 0], [0, 1], [1, 1]]
+        )
+        for gx, gy, offset, raw, x, y, z in cut["nodes"]:
+            self.assertEqual(offset, (gy * 11 + gx) * 4)
+            self.assertEqual(bytes.fromhex(raw), self.raw[offset : offset + 4])
+            self.assertEqual((x, y, z), (gx * 50.0, gy * 50.0, 900.0 + gy * 10 + gx))
+        bad = copy.deepcopy(value)
+        bad["cut_source"]["nodes"][0][3] = struct.pack(
+            ">f", bad["cut_source"]["nodes"][0][-1]
+        ).hex()
+        self.resign(bad)
+        with self.assertRaisesRegex(ValueError, "raw4/position/height"):
+            self.verify(bad)
+
+    def test_hash_source_correspondence_and_retained_payload_bounds_are_enforced(self):
+        value = self.build()
+        value["wall_triangles"][0][4] += 1.0
+        with self.assertRaisesRegex(ValueError, "payload hash"):
+            self.verify(value)
+        value = self.build()
+        value["pavement_edge_rows_cm"][0][3] += 1.0
+        self.resign(value)
+        with self.assertRaisesRegex(ValueError, "not bound to consecutive source"):
+            self.verify(value)
+        with patch.object(contract, "WALL_EVIDENCE_LIMIT", 512):
+            with self.assertRaisesRegex(ValueError, "exceeds 1MiB"):
+                self.build()
+        self.raw = self.raw[:-1] + bytes([self.raw[-1] ^ 1])
+        with self.assertRaisesRegex(ValueError, "patch bytes differ"):
+            self.build()
+
+    def test_file_read_authenticates_whole_patch_before_after_without_native_or_source_writes(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "ma2141-cut-patch.f32"
+            path.write_bytes(self.raw)
+            value = read_hairpin_wall_contact(
+                dict(positions=self.positions),
+                self.sections,
+                self.support,
+                self.source_identity,
+                root,
+                self.cut_raw,
+            )
+            self.verify(value)
+            self.assertEqual(value["source_patch_identity"]["path"], str(path))
+            self.assertEqual(path.read_bytes(), self.raw)
+            with patch(
+                "scripts.ue.capture_sa_calobra_shoulder_contact.digest",
+                side_effect=[self.identity["sha256_before"], "f" * 64],
+            ):
+                with self.assertRaisesRegex(ValueError, "changed during the read"):
+                    read_hairpin_wall_contact(
+                        dict(positions=self.positions),
+                        self.sections,
+                        self.support,
+                        self.source_identity,
+                        root,
+                        self.cut_raw,
+                    )
+
+    def test_optional_failed_field_cannot_fall_back_to_historical_pass(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report, _ = ShoulderContactTests().evidence(
+                root, target="hairpin0081", cut_raw=self.cut_raw
+            )
+            self.assertEqual(
+                contract.verify(root, "a" * 40, target="hairpin0081")["frame_count"], 6
+            )
+            report["support_wall_contact"] = dict(
+                schema_version=1, status="FAILED", error="ambiguous wall"
+            )
+            (root / "shoulder-contact.json").write_text(json.dumps(report))
+            with self.assertRaisesRegex(ValueError, "ambiguous wall"):
+                contract.verify(root, "a" * 40, target="hairpin0081")
+            report["support_wall_contact"] = self.build()
+            report["support"].update(self.support)
+            report["source_identity"] = self.source_identity
+            (root / "shoulder-contact.json").write_text(json.dumps(report))
+            self.assertEqual(
+                contract.verify(root, "a" * 40, target="hairpin0081")["frame_count"], 6
+            )
+            self.assertLess(
+                (root / "shoulder-contact.json").stat().st_size, 2 * 1024 * 1024
+            )
+
+    def test_full_321_row_observation_stays_inside_existing_receipt_budget(self):
+        first, last = 1560, 1880
+        self.raw = b"".join(
+            struct.pack("<f", 900.0 + gy * 10 + gx)
+            for gy in range(11)
+            for gx in range(380, 481)
+        )
+        cut = json.loads(self.cut_raw)
+        cut.update(
+            rect={
+                "min_x": 380,
+                "min_y": 0,
+                "max_x": 480,
+                "max_y": 10,
+                "width": 101,
+                "height": 11,
+            },
+            patch_sha256=hashlib.sha256(self.raw).hexdigest(),
+            patch_byte_count=len(self.raw),
+        )
+        self.cut_raw = json.dumps(cut).encode()
+        self.identity.update(
+            size_bytes=len(self.raw),
+            sha256_before=cut["patch_sha256"],
+            sha256_after=cut["patch_sha256"],
+        )
+        self.positions = dict.fromkeys(
+            range(132218), ((1000000.0, 1000000.0, 0.0),) * 3
+        )
+        for i in range(first, last + 1):
+            self.sections[i][0] = (i * 0.125, 0.75, 10.08)
+        for i in range(first, last):
+            a, b = (i * 12.5, 25.0, 1000.0), ((i + 1) * 12.5, 25.0, 1000.0)
+            p, q = (a[0], 75.0, 1000.0), (b[0], 75.0, 1000.0)
+            self.positions[i * 52], self.positions[i * 52 + 1] = (a, p, b), (p, q, b)
+            ga, gb = (*a[:2], 900.0), (*b[:2], 900.0)
+            tid = 124800 + (i - first) * 2
+            self.positions[tid], self.positions[tid + 1] = (a, b, gb), (a, gb, ga)
+        with (
+            patch.object(contract, "HAIRPIN_WALL_ROWS", (first, last)),
+            patch.object(
+                contract, "HAIRPIN_CUT_SHA256", hashlib.sha256(self.cut_raw).hexdigest()
+            ),
+            patch.object(contract, "HAIRPIN_CUT_SIZE", len(self.cut_raw)),
+        ):
+            value = self.build()
+            self.verify(value)
+            self.assertEqual(len(value["wall_triangles"]), 640)
+            self.assertEqual(len(value["native_top_triangles"]), 640)
+            self.assertEqual(len(value["pavement_edge_rows_cm"]), 321)
+            self.assertLess(
+                len(json.dumps(value, indent=4).encode()), contract.WALL_EVIDENCE_LIMIT
+            )
 
 
 if __name__ == "__main__":

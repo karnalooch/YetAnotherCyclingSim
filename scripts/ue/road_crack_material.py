@@ -369,15 +369,20 @@ def create_materials(api, source_root, pins, import_receipt, asphalt_assets, geo
         instance = tools.create_asset(name, package, api.MaterialInstanceConstant, api.MaterialInstanceConstantFactoryNew())
         require(instance is not None and isinstance(instance, api.MaterialInstanceConstant), "New crack instance creation failed")
         lib.set_material_instance_parent(instance, master)
+        # Refresh inherited metadata as in the admitted Material Forge importer.
+        lib.update_material_instance(instance)
         scalars, vectors = parameters[motif]
+        # Epic UE-291403: these setters may return false after a successful
+        # update. Their bool is not a material readback. The complete native
+        # parameter inventory and each effective value are checked below by
+        # _verify_instance, including the second motif's distinct textures.
+        # https://issues.unrealengine.com/issue/UE-291403
         for parameter, channel in LOCAL_TEXTURES.items():
-            require(lib.set_material_instance_texture_parameter_value(instance, parameter, local[motif][channel]),
-                    "Native crack texture override failed: " + parameter)
+            lib.set_material_instance_texture_parameter_value(instance, parameter, local[motif][channel])
         for parameter, value in scalars.items():
-            require(lib.set_material_instance_scalar_parameter_value(instance, parameter, value), "Native crack scalar override failed: " + parameter)
+            lib.set_material_instance_scalar_parameter_value(instance, parameter, value)
         for parameter, value in vectors.items():
-            require(lib.set_material_instance_vector_parameter_value(instance, parameter, api.LinearColor(*value)),
-                    "Native crack neutral-source override failed: " + parameter)
+            lib.set_material_instance_vector_parameter_value(instance, parameter, api.LinearColor(*value))
         lib.update_material_instance(instance)
         instances[motif] = _verify_instance(api, instance, row, asphalt, local[motif], scalars, vectors)
     # These rechecks read existing asphalt and all source/texture identities;

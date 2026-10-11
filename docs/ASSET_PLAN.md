@@ -291,7 +291,10 @@ verified and viewed. Near white lines follow the road; far pixel gaps,
 transverse asphalt bands and the sharp outer gravel boundary remain open.
 Contact isolation identifies support 185's thick hairpin wall, without
 repairing it. The subsequent 735 crack candidate passed CI but stopped before
-Unreal on the Windows symlink fixture; its native crack result is still pending.
+Unreal on the Windows symlink fixture. Af7 passed that corrected preflight but
+stopped during crack material creation at the texture setter's false return.
+The documented Epic UE-291403 behavior is handled by checking the full actual
+parameter readback; a completed native crack result is still pending.
 
 | Role / consumer | Current source or candidate | Proven result and remaining limit |
 |---|---|---|

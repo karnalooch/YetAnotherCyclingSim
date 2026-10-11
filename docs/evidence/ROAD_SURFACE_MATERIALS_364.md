@@ -12,7 +12,69 @@ remains frozen. #384 completed after protected [PR #467](https://github.com/karn
 merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its gate is satisfied.
 This work continues #364, not MCP infrastructure.
 
-## Latest observed results — 4258 images and 735 preflight failure
+## Latest af7 outcomes — native setter failure and exact missing LAZ packages
+
+Revision `af7ac202b5d1466db525bae54566e4f7f3b7d95e` passed
+[protected CI 38108180813](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38108180813).
+Its [native run 38108177261](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38108177261)
+passed 348 Windows preflight tests (two supported skips), baseline and the
+reversible asphalt canary. Preparation PID 4564 then exited 3 at the first
+local crack texture setter's false return, before saving the derived map or
+capturing any crack images. The independently authenticated native artifact
+is 208,229 bytes, SHA-256
+`10e32cbcecb4eaa44ac3616d09c29a0efa85f35ba1d4b372cf1537aaa0ab916f`.
+The original traceback names `CrackBaseColorTex`; cleanup removed the new crack
+assets and white overlays. This remains a failed native attempt.
+
+Epic's [UE-291403](https://issues.unrealengine.com/issue/UE-291403) documents
+false return values from the texture, scalar and vector setters even after a
+successful update. The correction refreshes inherited MIC metadata after
+assigning its parent, as the existing Material Forge importer already does,
+then judges the result by the full native parameter inventory and effective
+texture/scalar/vector getters after updating the instance. It does not treat
+either boolean as success. Regressions cover successful writes returning false
+and ignored texture, scalar or vector writes returning either false or true.
+The graph, source textures, placement and normal-review gates are unchanged;
+the new saved/fresh and actual-image result is still pending.
+
+The [source run 38108177248](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38108177248)
+passed all 20 decoder/reader tests on the actual Windows host, then correctly
+reported `GIS_ENVIRONMENT_UNAVAILABLE` before starting a LiDAR reader. The
+registered base is CPython 3.12.10 x64, with NumPy 2.3.5 and PyProj 3.8.0;
+only laspy 2.7.0 and lazrs 0.8.2 are absent. The old project venv is absent too.
+The base executable is 104,952 bytes, SHA-256
+`4d6f5f81a4bca11191c4c7c6b43632694d0a4ce74e068619d8fdc161d469859a`.
+The independently checked [LiDAR artifact 11691365092](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38108177248/artifacts/11691365092)
+is 1,418 bytes, SHA-256
+`6eeebfe7bd9006ff4e615467e13904744e2ef4859b7fca6324ba1e58e2f7e552`;
+it contains the failed host receipt and all three candidate outcomes, with no
+point observations or geographic source mutation.
+
+The next `[hairpin-lidar] [restore-hairpin-decoder]` source invocation restores
+the already approved isolated decoder described in
+[dependency provenance](../legal/DEPENDENCY_PROVENANCE.md#sa-calobra-local-laz-decoder--2026-10-04).
+The recovery is restricted to this observed base executable and a new canonical
+project `.venv`, using `--system-site-packages` for the existing two GIS pins.
+It authenticates the same two approved wheel hashes before creating the venv,
+then installs them offline with no dependencies and mandatory hashes. It
+refuses an existing target, never modifies the base interpreter, records each
+owned process and its actual exit, and reruns all four real import checks
+before any source read. Failed recovery remains failed and retains its logs;
+the ordinary read-only resolver still performs no installation. Recovery and
+actual LiDAR observations have not yet passed on the host.
+
+The next `[shoulder-contact]` diagnostic also retains a bounded subset of the
+already read native support-185 triangles at source rows 1560–1880. The actual
+outer-top corners identify matching wall faces, including conditional partial
+faces; perimeter IDs are not inferred from a builder. Each retained wall
+corner selects enclosing nodes from the authenticated source CUT float32
+file, with their raw four bytes and offsets. These are source nodes, not an
+interpolated or observed final Landscape height. The optional receipt field
+is limited to 1 MiB, fails explicitly on ambiguous ownership, and changes no
+geometry, material, camera or source file. The historical 4258 contact
+contract remains valid; new native wall/source measurements are still pending.
+
+## Earlier observed results — 4258 images and 735 preflight failure
 
 Revision `735f049746da753622b9948251f625331edb772b` passed
 [protected CI 38107099181](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38107099181).

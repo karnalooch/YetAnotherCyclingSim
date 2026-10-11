@@ -17,6 +17,8 @@ on:
       - 'scripts/assets/test_run_road_decals_source_proof.py'
       - 'scripts/assets/read_sa_calobra_hairpin_lidar.py'
       - 'scripts/assets/test_read_sa_calobra_hairpin_lidar.py'
+      - 'scripts/assets/restore_sa_calobra_lidar_decoder.py'
+      - 'scripts/assets/test_restore_sa_calobra_lidar_decoder.py'
       - 'worldgen/materials/material_forge/**'
 
 permissions:
@@ -221,7 +223,8 @@ jobs:
             owned_pid = $null; exit_code = $null; exit_code_observed = $false
             stopped_after_deadline = $false; deadline_seconds = 180
             observations_available = $false; source_mutated = $false
-            interpreter = $null; decoder_environment_status = 'NOT_RUN'; files = @(); error = $null
+            interpreter = $null; decoder_environment_status = 'NOT_RUN'
+            decoder_restoration_status = 'NOT_REQUESTED'; files = @(); error = $null
           }
           function Copy-LidarEvidence {
             if (-not $retained) { return }
@@ -260,6 +263,21 @@ jobs:
             $environmentExit = $LASTEXITCODE
             $environment = Get-Content -LiteralPath $environmentPath -Raw | ConvertFrom-Json -AsHashtable
             $report.decoder_environment_status = $environment.status
+            if ($environmentExit -ne 0 -and '${{ contains(github.event.head_commit.message, '[restore-hairpin-decoder]') }}' -ceq 'true') {
+              & $env:YACS_ROAD_FORGE_PY -B -m unittest scripts.assets.test_restore_sa_calobra_lidar_decoder
+              if ($LASTEXITCODE -ne 0) { throw 'Approved LAZ recovery contract failed.' }
+              & $env:YACS_ROAD_FORGE_PY -I -B scripts/assets/restore_sa_calobra_lidar_decoder.py `
+                --workspace-config $env:YACS_WORKSPACE_CONFIG --environment-report $environmentPath --evidence-root $proof
+              $restorationExit = $LASTEXITCODE
+              $restoration = Get-Content -LiteralPath (Join-Path $proof 'decoder-restoration.json') -Raw | ConvertFrom-Json -AsHashtable
+              $report.decoder_restoration_status = $restoration.status
+              if ($restorationExit -ne 0 -or $restoration.status -cne 'APPROVED_LAZ_ENVIRONMENT_RESTORED') {
+                throw 'Approved LAZ recovery failed; existing environment/data are preserved and retained evidence states the cause.'
+              }
+              $environment = $restoration.fresh_environment_probe
+              $environmentExit = 0
+              $report.decoder_environment_status = $environment.status
+            }
             if ($environmentExit -ne 0 -or $environment.status -cne 'EXISTING_DECODER_SELECTED' -or
                 $null -eq $environment.selected) { throw 'Existing GIS environment is unavailable; retained metadata states the cause.' }
             $python = [string]$environment.selected.path

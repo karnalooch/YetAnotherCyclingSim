@@ -234,10 +234,17 @@ All 18 contact images were viewed; the thick hairpin wall belongs to support
 Revision `735f0497` passed protected CI but its native preflight stopped before
 Unreal on Windows symlink-fixture error 1314. The fixture is corrected without
 changing runtime link rejection. The source run completed the installed-API
-read, then found the old GIS venv absent. A bounded read-only qualification of
-configured/registered existing interpreters is prepared; it retains the exact
-four decoder package pins and CPython 3.12 x64. No installation, source change
-or LiDAR observations are claimed. The next native crack run remains required.
+read, then found the old GIS venv absent. The af7 read-only qualification ran
+on the host and found the actual CPython 3.12.10 base with the two existing GIS
+pins; only the previously approved laspy/lazrs packages are absent. A bounded
+recovery now targets a new isolated project venv with the same two approved
+wheel hashes, offline installation and fresh real-import verification. Host
+recovery and LiDAR observations remain pending; the geographic sources and
+road profile are unchanged. The af7 native crack run passed 348 preflight tests
+but stopped at the texture setter's false return before map save or images.
+The correction uses the full effective parameter readback for the documented
+Epic UE-291403 setter behavior; native saved/fresh and image checks remain
+required.
 
 #### Finish #364 as one complete delivery
 

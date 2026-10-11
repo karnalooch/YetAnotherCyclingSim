@@ -25,6 +25,7 @@ from scripts.proof.sa_calobra_shoulder_contact import (  # noqa: E402
     cut_bounds,
     diagnostic_plan,
     digest,
+    hairpin_wall_contact,
     interior_top_triangles,
     overlaps,
     target_spec,
@@ -226,6 +227,22 @@ def set_visibility(component, state):
         )
 
 
+def read_hairpin_wall_contact(actual, sections, support, source_identity, frozen, cut_raw):
+    """Use the completed mesh snapshot and exact inert source bytes only."""
+    cut_bounds(cut_raw, target="hairpin0081")
+    cut = json.loads(cut_raw.decode("utf-8-sig"))
+    path = Path(frozen) / "ma2141-cut-patch.f32"
+    size = path.stat().st_size
+    if size != cut["patch_byte_count"]:
+        raise RuntimeError("Hairpin source CUT patch byte inventory differs")
+    before = digest(path)
+    with path.open("rb") as stream:
+        raw = stream.read(size + 1)
+    identity = dict(path=str(path), size_bytes=size, sha256_before=before, sha256_after=digest(path))
+    return hairpin_wall_contact(actual["positions"], sections, support, source_identity,
+                                cut_raw, raw, identity)
+
+
 class ContactCapture(SurveyCapture):
     def __init__(self, *args, diagnostic, support, components, **kwargs):
         self.support, self.components = support, components
@@ -300,6 +317,8 @@ class Owner:
             "restoration": {"status": "PENDING"},
             "capture_root": "capture",
         }
+        if self.target == "hairpin0081":
+            self.report["support_wall_contact"] = {"schema_version": 1, "status": "PENDING"}
         self.out = Path(os.environ["YACS_SHOULDER_CONTACT_ROOT"])
         if not self.out.is_absolute() or self.out.resolve().is_relative_to(ROOT):
             raise RuntimeError(
@@ -590,6 +609,15 @@ class Owner:
             native_ids_in_triangle_digest=True,
             triangle_sha256=mesh_digest(actual),
         )
+        if self.target == "hairpin0081":
+            try:
+                if actor.get_actor_label() != "YACS_PERSIST_SUPPORT_185":
+                    raise RuntimeError("Diagnosed hairpin source owner label differs")
+                self.report["support_wall_contact"] = read_hairpin_wall_contact(
+                    actual, sections, self.report["support"], source["source_identity"], frozen, cut_raw)
+            except Exception as exc:
+                self.report["support_wall_contact"] = {"schema_version": 1, "status": "FAILED", "error": str(exc)}
+                raise
         landscape_transform = self.landscape_transform = actor_snapshot(self.landscape)
         if landscape_transform["rotation_deg"] != (0.0, 0.0, 0.0):
             raise RuntimeError("Rotated source Landscape requires explicit owner proof")
