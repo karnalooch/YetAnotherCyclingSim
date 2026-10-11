@@ -613,3 +613,42 @@ surface/shoulder 19 PASS; saved consumer/shoulder material/source preflight
 Fresh-process saved-world reload remains NOT RUN: the existing proof launcher
 requires an idle host and must not interrupt the owner's live editor. This
 local saved checkpoint is not remote backup, protected CI or #364 completion.
+
+### Both-side contact diagnosis — #459, 2026-10-11
+
+Owner request: remove the remaining shoulder steps on both sides, scripts only,
+without changing asphalt geometry or restarting UE. Base implementation
+`b2e5ed7d9e1f5ba73fba8f91d3573a4ce2b12fa1`; domain `road-earthworks`.
+The active owner-selected correction is now support022, not support112.
+
+Handler `ae9511aaa3c33862b60a9a0fe6f086c1a8a4df8b` loaded into the same
+Editor PID 14704 at sequence 8. Sequence 9, request
+`panel-f4c0f2a861584746aaa8b9099b0fcdb5`, performs a read-only audit of
+the existing active repair when `repair` is submitted again. It does not claim
+another geometry repair. The panel keeps its ordinary repair button disabled
+while a repair is active. The audit samples both original source outer edges
+against actual native Landscape collision over a wider +/-20 m read-only ray;
+the mutation displacement cap remains 50 cm. Its receipt is immutable in the
+normal bridge history and does not rewrite previous observation dictionaries.
+
+Native results, support022, original 0.5 m shoulder width:
+
+| Source column | Samples / rows | Landscape minus source shoulder Z | Missing hits |
+|---|---|---|---|
+| 0 | 119 / 33–151 | -16.414 to -9.503 cm | 0 |
+| 26 | 119 / 32–150 | -306.933 to -11.387 cm | 0 |
+
+Of column26's 119 samples, 103 exceed the existing displacement limit.
+The audited existing repair bounds, local UE centimetres, are
+`[52453.870,50790.942,45667.162]` to `[58289.298,52834.550,46134.353]`.
+All source/saved fingerprints and the asphalt mesh remain unchanged. Six
+focused planner/audit tests PASS; no second restart and no camera movement.
+No additional visible geometry correction is claimed by this diagnostic.
+
+Proposed next scope is a separately owned local shoulder-to-terrain transition,
+not stretching the 0.5 m shoulder down a 3.07 m drop. It requires source-ground
+profile and exclusion/overlap checks, stable pavement interfaces, explicit
+footprint/topology/normal/collision deltas and rollback. The owner has been
+asked to extend #459 beyond the existing width/displacement operation. Until
+that decision, no new fill, wider geometry or Landscape edit is authorized by
+this diagnostic; global Base_DTM and canonical road remain protected.
