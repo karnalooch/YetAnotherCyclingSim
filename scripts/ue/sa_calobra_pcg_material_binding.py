@@ -209,31 +209,11 @@ def material_readback(assets):
         is None,
         "Forge master has connected WPO",
     )
-    # MP_Displacement is hidden from Python's enum. Its mirrored UPROPERTY input
-    # is available through the installed Material.h editor-only data instead.
-    # Hidden reflected inputs have no generated snake_case property map.
-    # PyWrapperObject resolves native FNames against ObjectInstance->GetClass().
+    # Native Python denies access to the protected editor-only material inputs.
+    # Keep this diagnostic binding separate from geometry qualification.
     require(
         master.get_editor_property("bEnableTessellation") is False,
         "Forge master enables Nanite tessellation",
-    )
-    editor_data = master.get_editor_property("editor_only_data")
-    wpo = editor_data.get_editor_property("WorldPositionOffset")
-    if wpo.get_editor_property("UseConstant"):
-        constant = wpo.get_editor_property("Constant")
-        require(
-            all(float(getattr(constant, axis)) == 0 for axis in "xyz"),
-            "Nonzero constant WPO",
-        )
-    displacement = editor_data.get_editor_property("Displacement")
-    require(
-        displacement.get_editor_property("Expression") is None,
-        "Forge master has connected displacement",
-    )
-    require(
-        not displacement.get_editor_property("UseConstant")
-        or displacement.get_editor_property("Constant") == 0,
-        "Nonzero constant displacement",
     )
     return {
         "instance": instance.get_path_name(),
@@ -242,9 +222,11 @@ def material_readback(assets):
         "projection": "native_world_aligned_4m",
         "world_aligned_functions": sorted(functions),
         "wpo_connected": False,
-        "displacement_connected": False,
+        "displacement_connected": None,
         "nanite_tessellation_enabled": False,
-        "max_displacement_world_m": 0.0,
+        "protected_constant_and_displacement_readback": "UNAVAILABLE",
+        "max_displacement_world_m": None,
+        "geometry_qualification": "PENDING_PROTECTED_INPUT_READBACK",
         "shader_gpu_compilation_verified": False,
     }
 

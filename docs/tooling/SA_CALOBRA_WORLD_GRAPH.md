@@ -328,6 +328,15 @@ Fresh material readback and real-terrain contact were NOT RUN for that attempt;
 no material/contact PASS follows from successful source staging. The correction
 must preserve strict displacement checks and use a new exact-SHA attempt.
 
+Attempt `146ddf750153c87e9006ef90ec05863238919200/qualification02` inspected
+cleanly, but material action again exited 3 before save: native property names
+resolve, while Python refuses protected `WorldPositionOffset` input readback.
+Shutdown also logged a UObject fatal error; no clean completion is admitted.
+The diagnostic binding may verify public disconnected WPO and disabled Nanite
+tessellation, but must report protected constant/displacement input readback as
+UNAVAILABLE and maximum geometric displacement as unknown. It cannot claim zero
+displacement or completed material/contact qualification from those partial checks.
+
 Existing Julka profiles `sa-calobra-pcg-masks-candidate` and
 `sa-calobra-mask-transitions-candidate` verified with zero issues, including
 inherited source closure. Existing `verified_manifest()` also checked fingerprints,
