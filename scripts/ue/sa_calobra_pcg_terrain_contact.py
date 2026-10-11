@@ -29,7 +29,13 @@ def unpack(hit, actor, component=None, require_blocking=True):
     require(not require_blocking or fields[0] is True, "Nonblocking world query")
     require(fields[9] == actor, "Unauthorized contact owner")
     require(component is None or fields[10] == component, "Unauthorized component")
+    require(math.isfinite(fields[2]) and 0 <= fields[2] <= 1, "Invalid ray hit time")
+    require(math.isfinite(fields[3]) and fields[3] >= 0, "Invalid ray hit distance")
     return {
+        "blocking_hit": bool(fields[0]),
+        "initial_overlap": bool(fields[1]),
+        "time": float(fields[2]),
+        "distance_cm": float(fields[3]),
         "position_cm": vector(fields[5]),
         "normal": vector(fields[7]),
         "actor": fields[9].get_path_name(),
@@ -120,7 +126,10 @@ def measure(root, binding):
         )
         # Component geometry queries use BuildOverlapAll in LineTrace_Geom;
         # successful geometry hits need not carry a world-channel blocking flag.
-        support.append(unpack(hits[0], actor, component, require_blocking=False))
+        measured = unpack(hits[0], actor, component, require_blocking=False)
+        require(low <= measured["position_cm"][2] <= high, "Mesh hit outside ray")
+        require(measured["distance_cm"] <= high - low, "Mesh hit distance outside ray")
+        support.append(measured)
     require(
         any(row is not None for row in support),
         "No native complex-collision support samples",
