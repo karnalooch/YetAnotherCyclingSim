@@ -648,7 +648,8 @@ No additional visible geometry correction is claimed by this diagnostic.
 Proposed next scope is a separately owned local shoulder-to-terrain transition,
 not stretching the 0.5 m shoulder down a 3.07 m drop. It requires source-ground
 profile and exclusion/overlap checks, stable pavement interfaces, explicit
-footprint/topology/normal/collision deltas and rollback. The owner has been
-asked to extend #459 beyond the existing width/displacement operation. Until
-that decision, no new fill, wider geometry or Landscape edit is authorized by
-this diagnostic; global Base_DTM and canonical road remain protected.
+footprint/topology/normal/collision deltas and rollback. The owner explicitly declined
+this extension on 2026-10-11 and retained the existing correction limits. No
+new fill, wider geometry or Landscape edit is authorized by this diagnostic.
+The existing bounded correction remains active; larger steps remain unresolved.
+Global Base_DTM and canonical road remain protected.
