@@ -69,6 +69,10 @@ def inspect_mesh(path):
     )
     package = mesh.get_path_name().split(".")[0]
     dependencies = [str(item) for item in registry.get_dependencies(package, options)]
+    asset_data = unreal.AssetRegistryHelpers.create_asset_data(mesh)
+    import_tag = asset_data.get_tag_value("AssetImportData")
+    if import_tag is not None and not isinstance(import_tag, str):
+        raise RuntimeError("Unexpected native import tag return type")
     return {
         "object_path": mesh.get_path_name(),
         "class": mesh.get_class().get_name(),
@@ -87,6 +91,7 @@ def inspect_mesh(path):
         "import_filenames": list(import_data.extract_filenames())
         if import_data
         else [],
+        "loaded_asset_import_tag": json.loads(import_tag) if import_tag else None,
         "package_dependencies": dependencies,
         "missing_game_dependencies": [
             item
@@ -207,6 +212,7 @@ def main():
     }
     try:
         if ACTION in {"create", "reload"}:
+            unreal.EditorPythonScriptingLibrary.set_keep_python_script_alive(True)
             global ACTIVE
             ACTIVE = MechanicalGraph(receipt)
             ACTIVE.begin()
