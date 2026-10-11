@@ -572,3 +572,44 @@ transient and are not saved assets. General object/rock authoring is not
 implemented: the retained snapshot lacks the catalogued rock mesh and an
 eligible #368 Sa Calobra placement selector. Historical Alpine scatter is not
 a substitute. Final M3 visual acceptance and performance remain unchanged.
+
+### Explicit saved checkpoint and current native result — 2026-10-11
+
+The owner subsequently authorized the required tests and one installation
+restart for the explicit `checkpoint` action. The earlier NOT RUN statements
+above describe earlier iterations only. Ordinary surface and repair actions
+remain transient; `checkpoint` creates a new derived map with persistent
+materials, preserving the live source world and stream. On failed checkpoint
+creation, only the five exact revision-owned output package names may be added
+to the dirty inventory; all pre-existing dirty entries and source hashes must
+remain unchanged. Failure is RECOVERED only when live state is conserved.
+
+Session `y473save01`, launcher `6c823eaaeec859cb4c7ae9db52fd82a065351018`,
+Editor PID 14704: repair and worn surface completed as sequences 1 and 2.
+Sequence 3 failed because UE 5.8.2's scalar setter returns false even after
+assignment. Recovery preserved the active scene. Revision
+`2a00f7ebba403cf7cda663bc6fa303c7d72e891b` replaced that unreliable return
+check with parameter inventory and exact native scalar readback. Sequence 4
+reloaded it without restarting UE; sequence 5 saved the derived checkpoint.
+
+Saved map: `/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface`.
+Native request: `panel-ac7fe7ff172d4e7b91eb47dbe7aec03b`.
+The five saved packages contain 186 persistent surface bindings and 559
+exact-compared dynamic meshes. Map SHA-256:
+`cf806999d73e6762ba6d91fab8b4e29d6c475a828ad9afcd525462054602ed1a`.
+Receipt and packages are retained in the live snapshot under
+`D:/yacs/work/level-editor-review/b9fddea3f602-y473save01/Content/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/`.
+
+The new viewport AOI changed 654 vertices (302 wall vertices), maximum
+39.395 cm, on support112. All 50 deferred contacts are on outer column zero.
+This is still partial geometry repair. Do not stretch the narrow shoulder down
+a 0.57–2 m cliff or enlarge the displacement cap. Source-bounded outer earthwork
+and actual contact/overlap diagnosis remain #459 work. Both-sides/world-wide
+repair, corrected normal shading and final visual acceptance are not claimed.
+
+Local tests: bridge/client/panel 102 PASS, two Windows symlink capability skips;
+surface/shoulder 19 PASS; saved consumer/shoulder material/source preflight
+73 PASS. A regression rejects a scalar setter whose actual readback differs.
+Fresh-process saved-world reload remains NOT RUN: the existing proof launcher
+requires an idle host and must not interrupt the owner's live editor. This
+local saved checkpoint is not remote backup, protected CI or #364 completion.

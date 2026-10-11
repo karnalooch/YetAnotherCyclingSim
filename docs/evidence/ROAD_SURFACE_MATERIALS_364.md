@@ -2049,3 +2049,14 @@ and the global Landscape freeze. Preserved normals may need a separate shading
 correction. #364 remains OPEN; #365 PCG remains dependency-blocked. Final M3
 owner visual acceptance stays pending and performance stays
 `DEFERRED_AFTER_M3`, `performance_pass: false`.
+
+Native follow-up: session `y473save01`, PID 14704, saved a derived checkpoint
+at handler revision `2a00f7ebba403cf7cda663bc6fa303c7d72e891b` after one
+authorized installation restart and subsequent live reload. The failed first
+save recovered without losing the worn surface or repair. Final request
+`panel-ac7fe7ff172d4e7b91eb47dbe7aec03b` completed: five saved packages,
+186 persistent material bindings, 559 exact native mesh comparisons, unchanged
+asphalt. Map SHA-256 `cf806999d73e6762ba6d91fab8b4e29d6c475a828ad9afcd525462054602ed1a`.
+See [stream evidence](../tooling/LEVEL_EDITOR_STREAM.md#explicit-saved-checkpoint-and-current-native-result--2026-10-11).
+Surface/shoulder tests now 19 PASS. Fresh-process reload remains NOT RUN; the
+new AOI has 50 deferred contacts on one side and is not full geometry repair.

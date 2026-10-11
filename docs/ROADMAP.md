@@ -242,6 +242,14 @@ questions separately from this material-only conservation proof.
 | Contact/profile debt | Isolate the owning surface and prove bounded source-relative corrections separately | **#459 open:** all 22 contact images verified/viewed at b9fd; support185 owns the hairpin wall, support022 hide does not remove the 0112 dark band. Native wall/source CUT payload and source LiDAR retained; final Landscape/contact repair pending |
 | Save, reopen and deliver | Save derived outputs, verify fresh reload/render, pass required checks and merge #470 | **In progress:** current native/visual proof and complete #364 delivery pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
 
+Local delivery update, 2026-10-11: the owner-approved live bridge saved a new
+derived worn-asphalt/shoulder checkpoint at handler `2a00f7eb`. Native exact
+comparison covered 559 dynamic meshes; source asphalt remained unchanged.
+Fresh-process reload and current protected delivery checks remain outstanding,
+and the local shoulder correction retains 50 deferred contacts on one side.
+See [live checkpoint evidence](tooling/LEVEL_EDITOR_STREAM.md#explicit-saved-checkpoint-and-current-native-result--2026-10-11).
+#364 remains open; #365 preparation is read-only until its delivery gate passes.
+
 #### Complete the remaining world foundation after #364
 
 Each row is an existing issue containing small consecutive batches. Finish its
