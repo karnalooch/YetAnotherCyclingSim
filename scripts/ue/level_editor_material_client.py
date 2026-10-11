@@ -410,7 +410,7 @@ def _close_values(first, second):
 
 def _receipt(value, context, request_id):
     _identity(value, context)
-    require(value.get("request_id") == request_id and value.get("action") in {"set", "restore", "inspect", "camera", "surface", "repair", "reload"}
+    require(value.get("request_id") == request_id and value.get("action") in {"set", "restore", "inspect", "camera", "surface", "repair", "reload", "checkpoint"}
             and type(value.get("sequence")) is int and 0 <= value["sequence"] <= HISTORY_LIMIT
             and value.get("receipt_relative_path") == bridge.REQUEST_ROOT + "/" + request_id + "/receipt.json",
             "Native request identity, action, sequence or receipt path differs")
@@ -434,7 +434,7 @@ def _receipt(value, context, request_id):
         require(action != "reload" or value.get("status") == "RECOVERED", "Successful reload lacks source evidence")
     if value.get("status") == "RECOVERED":
         require(value.get("recovery_verified") is True and isinstance(value.get("error"), str)
-                and bool(value["error"]) and value["after"] == context["initial"]
+                and bool(value["error"]) and value["after"] == (value["before"] if action == "checkpoint" else context["initial"])
                 and value.get("restored_after_failure") == value["after"], "Failed mutation recovery is unproved")
         require(value.get("saved_inputs_before_sha256") == context["saved_digest"]
                 and value.get("source_inputs_before_sha256") == context["source_digest"], "Recovery input fingerprint differs")
@@ -457,6 +457,20 @@ def _receipt(value, context, request_id):
         require(value["after"] == context["initial"], "Restore did not read back the original bindings and values")
     else:
         require(value["before"] == value["after"], "Inspect changed the native material state")
+    if action == "checkpoint":
+        checkpoint = value.get("checkpoint")
+        prefix = "Content/Generated/YACS/LiveCheckpoints/R" + revisions[1][:12] + "/"
+        require(type(checkpoint) is dict and checkpoint.get("status") == "DERIVED_CHECKPOINT_SAVED"
+                and checkpoint.get("revision") == revisions[1] and checkpoint.get("active_source_unchanged") is True
+                and checkpoint.get("reload_proof") == "NOT_RUN", "Checkpoint completion evidence differs")
+        rows = checkpoint.get("files")
+        require(type(rows) is list and 5 <= len(rows) <= 32 and len({row["path"] for row in rows}) == len(rows),
+                "Checkpoint saved-file inventory differs")
+        for row in rows:
+            require(type(row) is dict and set(row) == {"path", "bytes", "sha256"}
+                    and isinstance(row["path"], str) and row["path"].startswith(prefix), "Checkpoint path differs")
+            identity = preparation._file_identity(_path(context["root"], row["path"]))
+            require(identity == {"size_bytes": row["bytes"], "sha256": row["sha256"]}, "Saved checkpoint bytes changed")
     if action == "camera":
         bridge.camera_presets.validate_receipt(value)
     require(value.get("saved_inputs_before_sha256") == context["saved_digest"]
@@ -469,7 +483,8 @@ def _completed(value, context, request_id):
     require(value.get("status") in ("COMPLETED", "RECOVERED") and value.get("capture_pending") is False
             and value.get("saved_inputs_after_sha256") == context["saved_digest"]
             and value.get("source_inputs_after_sha256") == context["source_digest"]
-            and type(value.get("dirty_before")) is dict and value.get("dirty_after") == value["dirty_before"],
+            and type(value.get("dirty_before")) is dict
+            and (bridge.recovery_dirty_conserved(value) if value["status"] == "RECOVERED" else value.get("dirty_after") == value["dirty_before"]),
             "Native request is incomplete, blocked or changed saved/dirty state")
     captures = value.get("captures")
     capture = value.get("capture_requested", value["action"] in ("set", "surface"))
@@ -529,7 +544,7 @@ def _history(context):
 def _request(raw, context, history):
     value = _object(raw, bridge.REQUEST_LIMIT)
     action = value.get("action")
-    require(action in {"set", "restore", "inspect", "camera", "surface", "repair", "reload"}, "Unknown material preview action")
+    require(action in {"set", "restore", "inspect", "camera", "surface", "repair", "reload", "checkpoint"}, "Unknown material preview action")
     require(set(value) == COMMON_REQUEST | ({"capture"} if "capture" in value else set()) | ({"paint_roughness", "paint_color"} if action == "set" else {"preset"} if action in ("camera", "surface") else set()),
             "Unknown or missing material request field")
     require(type(value["schema_version"]) is int and value["schema_version"] == 1
@@ -738,6 +753,8 @@ def run(session_receipt, request_path, output):
                         "saved_inputs_after_sha256": final["saved_inputs_after_sha256"],
                         "source_inputs_before_sha256": final["source_inputs_before_sha256"],
                         "source_inputs_after_sha256": final["source_inputs_after_sha256"]})
+        if final["status"] == "COMPLETED" and request["action"] == "checkpoint":
+            receipt["checkpoint"] = final["checkpoint"]
         if final["status"] == "RECOVERED":
             receipt.update(error=final["error"], recovery_verified=True)
         if final["status"] != "RECOVERED" and request["action"] == "camera":

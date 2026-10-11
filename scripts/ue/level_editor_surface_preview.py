@@ -1,4 +1,4 @@
-"""Bounded transient road/shoulder appearance; no geometry, imports or saves."""
+"""Bounded live appearance and explicit, isolated derived-world checkpoints."""
 from __future__ import annotations
 import math
 
@@ -196,6 +196,116 @@ class SurfacePreview:
             # Fail back to authenticated original bindings, never retain a partial application.
             self.restore(check=False)
             raise
+
+
+    def checkpoint(self, session_root, revision, repair):
+        """Save a new derived world; never rebind or save the active source world.
+
+        A failed attempt retains its uniquely named partial assets for diagnosis;
+        it never deletes assets, retries over an existing destination, or claims a
+        checkpoint until every save and active-world readback has succeeded.
+        """
+        import hashlib
+        import json
+        import re
+        from pathlib import Path
+        a = self.api
+        require(type(revision) is str and re.fullmatch(r'[0-9a-f]{40,64}', revision), 'Checkpoint revision differs')
+        before = self.observe()
+        require(self.preset in PRESETS, 'Apply a surface preset before checkpointing')
+        repair_before = repair.observe()
+        editor = a.get_editor_subsystem(a.UnrealEditorSubsystem)
+        require(editor.get_editor_world() == self.world, 'Active checkpoint world differs')
+        project = Path(a.Paths.convert_relative_path_to_full(a.Paths.project_dir())).resolve()
+        session = Path(session_root).resolve()
+        require(session == project or project in session.parents or session in project.parents,
+                'Checkpoint session is outside the live project')
+        root = '/Game/Generated/YACS/LiveCheckpoints/R' + revision[:12]
+        disk = project / 'Content' / root.removeprefix('/Game/')
+        require(not disk.exists() and not a.EditorAssetLibrary.does_directory_exist(root),
+                'Checkpoint destination already exists; never overwrite')
+        tools = a.AssetToolsHelpers.get_asset_tools()
+        assets = []
+        instances = {}
+        for slot, suffix in ((0, 'Road'), (1, 'Shoulder')):
+            master = tools.duplicate_asset('M_' + suffix, root, self.materials[slot])
+            require(isinstance(master, a.Material) and master.get_path_name() == root + '/M_' + suffix + '.M_' + suffix,
+                    'Persistent material duplication failed')
+            require(not a.MaterialEditingLibrary.recompile_material(master), 'Checkpoint material compilation failed')
+            factory = a.MaterialInstanceConstantFactoryNew()
+            instance = tools.create_asset('MI_' + suffix, root, a.MaterialInstanceConstant, factory)
+            require(isinstance(instance, a.MaterialInstanceConstant), 'Persistent material instance creation failed')
+            a.MaterialEditingLibrary.set_material_instance_parent(instance, master)
+            for name, value in PRESETS[self.preset].items():
+                if slot == 1 or not name.startswith('Edge'):
+                    require(a.MaterialEditingLibrary.set_material_instance_scalar_parameter_value(instance, name, value),
+                            'Persistent scalar assignment failed: ' + name)
+                    actual = a.MaterialEditingLibrary.get_material_instance_scalar_parameter_value(instance, name)
+                    require(math.isfinite(actual) and abs(actual - value) < 1e-5, 'Persistent scalar readback differs')
+            a.MaterialEditingLibrary.update_material_instance(instance)
+            assets.extend((master, instance))
+            instances[slot] = instance
+        map_package = root + '/L_RoadSurface'
+        copy = a.EditorAssetLibrary.duplicate_loaded_asset(self.world, map_package)
+        require(isinstance(copy, a.World) and copy != self.world and copy.get_path_name() == map_package + '.L_RoadSurface',
+                'Derived world duplication failed')
+        require(editor.get_editor_world() == self.world, 'World duplication changed active editor world')
+        originals = {actor.get_actor_label(): actor for actor in a.GameplayStatics.get_all_actors_of_class(self.world, a.DynamicMeshActor)}
+        copies = {}
+        for actor in a.GameplayStatics.get_all_actors_of_class(copy, a.DynamicMeshActor):
+            label = actor.get_actor_label()
+            require(label not in copies, 'Duplicate checkpoint actor label')
+            copies[label] = actor
+        require(set(copies) == set(originals) and 'YACS_PERSIST_ROAD' in copies, 'Checkpoint actor inventory differs')
+        options = a.GeometryScriptIsSameMeshOptions()
+        for token in ('checkconnectivity', 'checkedgeids', 'checknormals', 'checkcolors', 'checkuvs', 'checkgroups', 'checkattributes'):
+            names = [name for name in dir(options) if name.replace('_', '').lower() == token]
+            require(len(names) == 1, 'Native mesh comparison option unavailable: ' + token)
+            options.set_editor_property(names[0], True)
+        options.set_editor_property('epsilon', 0.0)
+        for label, actor in sorted(copies.items()):
+            source_component = originals[label].get_dynamic_mesh_component()
+            component = actor.get_dynamic_mesh_component()
+            require(component != source_component and component.get_dynamic_mesh() != source_component.get_dynamic_mesh(),
+                    'Derived world shares owned mesh: ' + label)
+            result = a.GeometryScript_MeshComparison.is_same_mesh_as(source_component.get_dynamic_mesh(), component.get_dynamic_mesh(), options)
+            require(isinstance(result, tuple) and len(result) == 3 and result[1] is True,
+                    'Derived native mesh differs: ' + label)
+            require(actor.get_actor_transform() == originals[label].get_actor_transform(), 'Derived actor transform differs: ' + label)
+        bindings = []
+        for label, source_component, slot, _ in self.targets:
+            component = copies[label].get_dynamic_mesh_component()
+            component.set_material(slot, instances[slot])
+            require(component.get_material(slot) == instances[slot], 'Derived binding readback differs')
+            bindings.append({'label': label, 'slot': slot, 'material': instances[slot].get_path_name()})
+        # Reject leftover transient materials anywhere in the copied dynamic meshes.
+        for actor in copies.values():
+            component = actor.get_dynamic_mesh_component()
+            for slot in range(component.get_num_materials()):
+                material = component.get_material(slot)
+                require(material is None or not material.get_path_name().startswith('/Engine/Transient'),
+                        'Checkpoint retains a transient material')
+        for asset in assets + [copy]:
+            require(a.EditorAssetLibrary.save_loaded_asset(asset, False), 'Checkpoint asset save failed: ' + asset.get_path_name())
+        require(editor.get_editor_world() == self.world and self.observe() == before and repair.observe() == repair_before,
+                'Checkpoint changed active source state')
+        files = []
+        for path in sorted(disk.rglob('*')):
+            if path.is_file():
+                files.append({'path': path.relative_to(project).as_posix(), 'bytes': path.stat().st_size,
+                              'sha256': hashlib.sha256(path.read_bytes()).hexdigest()})
+        require(any(row['path'].endswith('/L_RoadSurface.umap') for row in files), 'Saved checkpoint map file missing')
+        require(sum(row['path'].endswith('.uasset') for row in files) >= 4, 'Saved checkpoint materials missing')
+        receipt = {'schema_version': 1, 'status': 'DERIVED_CHECKPOINT_SAVED', 'revision': revision,
+                   'map_package': map_package, 'source_world': self.world.get_path_name(), 'preset': self.preset,
+                   'bindings': bindings, 'files': files, 'native_mesh_comparison': {'epsilon': 0.0, 'all_attributes': True,
+                   'actor_count': len(copies), 'road_equal': True}, 'repair': repair_before,
+                   'geometry_scope_issue': 459, 'material_scope_issue': 364, 'visual_acceptance': False,
+                   'reload_proof': 'NOT_RUN', 'active_source_unchanged': True}
+        receipt_path = disk / 'checkpoint-receipt.json'
+        receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+        receipt['receipt_path'] = str(receipt_path)
+        return receipt
 
     def restore(self,check=True):
         if check: self.observe()

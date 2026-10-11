@@ -2022,3 +2022,30 @@ This is a new small diagnostic native candidate, NOT an admitted
 render. No maps/packages are saved or edited by the GPU run; original
 Landscape frozen globally. Final owner M3 visual audit and
 `DEFERRED_AFTER_M3` FPS remain unchanged.
+
+## Live material checkpoint candidate — 2026-10-11
+
+Issue #473 supports #364 with explicit derived-world checkpoint saving. The
+fixed `checkpoint` command duplicates the current world and persistent road /
+shoulder materials into a new revision-owned package directory. It verifies
+all dynamic-mesh copies with native exact comparison and preserves the active
+world, camera, source packages and route alignment. Existing destinations are
+never overwritten. Failed saves retain only the named partial output packages,
+preserve the live preview, and remain failures. Saved bytes are authenticated
+by the client; this is not fresh-editor reopening or visual acceptance.
+
+Local validation: material bridge/client/panel 102 PASS, two Windows symlink
+capability skips; surface/shoulder 18 PASS; saved consumer, shoulder material and
+source preflight 73 PASS. The existing all-out-of-bounds shoulder regression
+remains intact: production now rejects repairs with no verified bounded outer
+contact instead of lowering the test requirement. Native checkpoint NOT RUN.
+
+Live session `y473live01` applied worn materials and a bounded repair to support
+112 without restarting PID 33524. Both inner edges are targeted, but 47 outer
+contacts on column zero remain deferred: terrain is beyond the 50 cm bound or
+the bounded trace misses. This is not a whole-road or both-sides completion.
+Further contact geometry belongs to #459 and must preserve canonical asphalt
+and the global Landscape freeze. Preserved normals may need a separate shading
+correction. #364 remains OPEN; #365 PCG remains dependency-blocked. Final M3
+owner visual acceptance stays pending and performance stays
+`DEFERRED_AFTER_M3`, `performance_pass: false`.

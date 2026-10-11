@@ -111,6 +111,8 @@ class Fixture:
                       "source_world_saved": False, "performance_pass": False,
                       "owner_visual_status": "PENDING_FINAL_M3", "saved_inputs_sha256": self.saved_digest,
                       "source_inputs_sha256": self.source_digest,
+                      "repair_source_sha256": self.sources["scripts/ue/level_editor_shoulder_repair.py"],
+                      "reload_source_sha256": self.sources["scripts/ue/level_editor_script_reload.py"],
                       "bridge_source_sha256": self.sources["scripts/ue/level_editor_material_bridge.py"],
                       "surface_source_sha256": self.sources["scripts/ue/level_editor_surface_preview.py"],
                       "camera_source_sha256": self.sources["scripts/ue/level_editor_camera_presets.py"]}
@@ -197,6 +199,7 @@ class Fixture:
         directory = self.root / relative
         directory.mkdir(parents=True)
         final = {"schema_version": 1, **self.identity, "request_id": request["request_id"], "action": request["action"],
+                 "script_revision_before": LAUNCHER_SHA, "script_revision_after": LAUNCHER_SHA,
                  "sequence": self.sequence, "before": before, "after": copy.deepcopy(self.state),
                  "receipt_relative_path": relative + "/receipt.json", "source_world_saved": False,
                  "performance_pass": False, "owner_visual_status": "PENDING_FINAL_M3", "status": "COMPLETED",
@@ -336,6 +339,88 @@ class ClientTests(unittest.TestCase):
         tool, parameter = client._schema(ready)
         self.assertEqual(ready["tool_schema"], tool)
         self.assertEqual("request_json", parameter)
+
+    def checkpoint_receipt(self):
+        self.assertEqual("COMPLETED", self.fixture.execute(self.fixture.request("base", "restore"))["status"])
+        value = client._object((self.fixture.root / client.bridge.REQUEST_ROOT / "base/receipt.json").read_bytes())
+        rows = []
+        for name in ("M_Road.uasset", "MI_Road.uasset", "M_Shoulder.uasset", "MI_Shoulder.uasset", "L_RoadSurface.umap"):
+            relative = "Content/Generated/YACS/LiveCheckpoints/R" + LAUNCHER_SHA[:12] + "/" + name
+            raw = ("synthetic saved " + name).encode()
+            write(self.fixture.root / relative, raw)
+            rows.append({"path": relative, "bytes": len(raw), "sha256": client.digest(raw)})
+        value.update(action="checkpoint", checkpoint={"status": "DERIVED_CHECKPOINT_SAVED", "revision": LAUNCHER_SHA,
+                     "active_source_unchanged": True, "reload_proof": "NOT_RUN", "files": rows})
+        return value
+
+    def test_checkpoint_completion_reads_saved_bytes_and_preserves_world(self):
+        value = self.checkpoint_receipt()
+        client._completed(value, self.context(), "base")
+        self.assertEqual(value["before"], value["after"])
+        write(self.fixture.root / value["checkpoint"]["files"][0]["path"], b"tampered")
+        with self.assertRaisesRegex(ValueError, "checkpoint bytes changed"):
+            client._completed(value, self.context(), "base")
+
+    def test_completed_checkpoint_does_not_use_partial_failure_dirty_exception(self):
+        value = self.checkpoint_receipt()
+        value["dirty_after"]["content"].append("/Game/Generated/YACS/LiveCheckpoints/R" + LAUNCHER_SHA[:12] + "/M_Road")
+        with self.assertRaisesRegex(ValueError, "saved/dirty state"):
+            client._completed(value, self.context(), "base")
+
+    def recover_final(self, final):
+        self.fixture.state = copy.deepcopy(self.fixture.initial)
+        final.update(status="RECOVERED", error="synthetic native failure", recovery_verified=True,
+                     after=copy.deepcopy(self.fixture.initial), restored_after_failure=copy.deepcopy(self.fixture.initial),
+                     captures=[])
+
+    def test_recovered_failure_remains_error_but_next_request_continues(self):
+        self.fixture.final_edit = self.recover_final
+        failed = self.fixture.execute(self.fixture.request())
+        self.assertEqual("RECOVERED", failed["status"], failed.get("error"))
+        self.assertEqual("synthetic native failure", failed["error"])
+        self.assertEqual([], failed["captures"])
+        self.assertFalse(failed["performance_pass"])
+        self.fixture.final_edit = None
+        next_result = self.fixture.execute(self.fixture.request("next"))
+        self.assertEqual("COMPLETED", next_result["status"], next_result.get("error"))
+        self.assertEqual(2, next_result["sequence"])
+        self.assertEqual(self.fixture.initial, next_result["before"])
+
+    def test_reload_history_authenticates_source_and_rejects_revision_gap(self):
+        self.assertEqual("COMPLETED", self.fixture.execute(self.fixture.request("reload", "restore"))["status"])
+        self.assertEqual("COMPLETED", self.fixture.execute(self.fixture.request("next", "restore"))["status"])
+        folder = self.fixture.root / client.bridge.REQUEST_ROOT
+        first = client._object((folder / "reload/receipt.json").read_bytes())
+        second = client._object((folder / "next/receipt.json").read_bytes())
+        blobs = {path: b"synthetic committed source" for path in client.bridge.script_reload.FILES}
+        first.update(action="reload", script_revision_after="b" * 40,
+                     script_reload={"commit": "b" * 40, "previous_commit": LAUNCHER_SHA,
+                                    "files": client.bridge.script_reload._hashes(blobs)})
+        second.update(script_revision_before="b" * 40, script_revision_after="b" * 40)
+        document(folder / "reload/receipt.json", first)
+        document(folder / "next/receipt.json", second)
+        with mock.patch.object(client.bridge.script_reload, "_sources", return_value=blobs) as source:
+            history = client._history(self.context())
+            self.assertEqual("b" * 40, history["script_revision"])
+            source.assert_called_with(self.fixture.launcher_root, LAUNCHER_SHA, "b" * 40)
+            second.update(script_revision_before=LAUNCHER_SHA, script_revision_after=LAUNCHER_SHA)
+            document(folder / "next/receipt.json", second)
+            with self.assertRaisesRegex(ValueError, "revision history has a gap"):
+                client._history(self.context())
+            first["script_reload"]["files"][next(iter(blobs))] = "0" * 64
+            document(folder / "reload/receipt.json", first)
+            with self.assertRaisesRegex(ValueError, "exact committed source"):
+                client._history(self.context())
+
+    def test_unproved_recovery_blocks_history_and_followup(self):
+        def unproved(final):
+            self.recover_final(final)
+            final["recovery_verified"] = False
+        self.fixture.final_edit = unproved
+        self.assert_blocked(self.fixture.execute(self.fixture.request()), calls=1)
+        self.fixture.final_edit = None
+        self.assert_blocked(self.fixture.execute(self.fixture.request("next")), calls=0)
+        self.assertEqual(1, self.fixture.calls)
 
     def test_two_changes_share_native_state_and_restore_original_bindings(self):
         first = self.fixture.execute(self.fixture.request())
@@ -512,6 +597,14 @@ class ClientTests(unittest.TestCase):
     def test_native_diagnostic_refuses_a_link_without_masking_the_domain_error(self):
         outside = self.fixture.base / "unrelated.json"
         write(outside, b"UNRELATED FILE MUST NOT BE COPIED")
+        probe = self.fixture.base / "link-capability-probe"
+        try:
+            probe.symlink_to(outside)
+        except OSError as error:
+            if getattr(error, "winerror", None) == 1314:
+                self.skipTest("Host lacks Windows privilege to create the synthetic file symlink")
+            raise
+        probe.unlink()
 
         def replace_with_link(_response):
             path = self.fixture.root / client.bridge.REQUEST_ROOT / "one/receipt.json"

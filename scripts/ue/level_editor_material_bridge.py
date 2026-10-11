@@ -130,7 +130,7 @@ def validate_request(raw, session_id, sequence, used):
         "expected_sequence",
     }
     action = request.get("action")
-    require(action in ("set", "restore", "inspect", "camera", "surface", "repair", "reload"), "Unknown preview action")
+    require(action in ("set", "restore", "inspect", "camera", "surface", "repair", "reload", "checkpoint"), "Unknown preview action")
     expected = common | (
         {"paint_roughness", "paint_color"}
         if action == "set"
@@ -281,6 +281,28 @@ def dirty_state(api):
         )
         for name in ("get_dirty_map_packages", "get_dirty_content_packages")
     }
+
+
+
+def recovery_dirty_conserved(result):
+    before, after = result.get("dirty_before"), result.get("dirty_after")
+    if before == after:
+        return True
+    if result.get("action") != "checkpoint" or type(before) is not dict or type(after) is not dict:
+        return False
+    keys = {"get_dirty_map_packages", "get_dirty_content_packages"}
+    revision = result.get("script_revision_after", "")
+    if set(before) != keys or set(after) != keys or not re.fullmatch(r"[0-9a-f]{40}", revision):
+        return False
+    root = "/Game/Generated/YACS/LiveCheckpoints/R" + revision[:12] + "/"
+    allowed = {"get_dirty_map_packages": {root + "L_RoadSurface"},
+               "get_dirty_content_packages": {root + name for name in ("M_Road", "MI_Road", "M_Shoulder", "MI_Shoulder")}}
+    for key in keys:
+        if type(before[key]) is not list or type(after[key]) is not list:
+            return False
+        if not set(before[key]) <= set(after[key]) or not set(after[key]) - set(before[key]) <= allowed[key]:
+            return False
+    return True
 
 
 def vector(value):
@@ -1443,6 +1465,10 @@ class MaterialPreview:
                 result["script_revision_after"] = self.script_revision
                 result["after"] = self.observe()
                 require(result["after"] == before, "Script reload changed world state")
+            elif request["action"] == "checkpoint":
+                result["checkpoint"] = self.surface.checkpoint(self.root, self.script_revision, self.shoulder_repair)
+                result["after"] = self.observe()
+                require(result["after"] == before, "Checkpoint changed active world state")
             elif request["action"] == "repair":
                 self.shoulder_repair.apply()
                 result["after"] = self.observe()
@@ -1562,15 +1588,16 @@ class MaterialPreview:
             self.tick_handle = None
         self.pending = None
         try:
-            result["restored_after_failure"] = self.restore()
+            result["restored_after_failure"] = self.observe() if result["action"] == "checkpoint" else self.restore()
             result["after"] = self.observe()
             result["saved_inputs_after_sha256"] = self.verify_saved_inputs()
             result["source_inputs_after_sha256"] = self.last_source_digest
             result["dirty_after"] = dirty_state(self.api)
-            require(result["after"] == self.original_bindings, "Recovery readback differs from original world")
+            recovery_target = result["before"] if result["action"] == "checkpoint" else self.original_bindings
+            require(result["after"] == recovery_target, "Recovery readback differs from conserved world")
             require(result["saved_inputs_after_sha256"] == result["saved_inputs_before_sha256"]
                     and result["source_inputs_after_sha256"] == result["source_inputs_before_sha256"]
-                    and result["dirty_after"] == result["dirty_before"], "Recovery changed saved/source/dirty state")
+                    and recovery_dirty_conserved(result), "Recovery changed saved/source/dirty state")
             require("camera_restore_error" not in result, "Camera recovery was not proved")
             require(result["action"] != "inspect", "Failed inspection cannot advance mutation history")
             result.update(status="RECOVERED", capture_pending=False, captures=[], recovery_verified=True)

@@ -328,6 +328,8 @@ class Fixture:
             None,
             None,
         )
+        manager.script_revision = "a" * 40
+        manager.recovery_blocked = False
         manager.in_tick = False
         manager.native_guard = lambda: None
         manager.saved_digest, manager.last_source_digest = "b" * 64, "c" * 64
@@ -455,8 +457,9 @@ class PreviewTests(unittest.TestCase):
 
     def test_partial_slot_assignment_rolls_back_only_owned_mid(self):
         self.fixture.components[2].fail_once = True
-        with self.assertRaisesRegex(RuntimeError, "slot setter failed"):
-            self.manager.handle_json(self.fixture.request("partial"))
+        result = json.loads(self.manager.handle_json(self.fixture.request("partial")))
+        self.assertEqual(result["status"], "RECOVERED")
+        self.assertIn("slot setter failed", result["error"])
         self.assertTrue(
             all(
                 component.material is self.fixture.original
@@ -464,15 +467,42 @@ class PreviewTests(unittest.TestCase):
             )
         )
         self.assertIsNone(self.manager.mid)
-        self.assertEqual(self.fixture.receipt("partial")["status"], "BLOCKED")
-        self.assertEqual(self.manager.sequence, 0)
+        self.assertEqual(self.fixture.receipt("partial")["status"], "RECOVERED")
+        self.assertEqual(self.manager.sequence, 1)
+
+    def test_failed_checkpoint_preserves_active_preview_without_global_restore(self):
+        self.manager.handle_json(self.fixture.request("paint", capture=False))
+        active = self.manager.observe()
+        self.assertNotEqual(active, self.manager.original_bindings)
+        self.manager.surface = SimpleNamespace(checkpoint=Mock(side_effect=RuntimeError("checkpoint save failed")))
+        self.manager.shoulder_repair = object()
+        with patch.object(self.manager, "observe", return_value=active), patch.object(self.manager, "restore") as restore:
+            result = json.loads(self.manager.handle_json(self.fixture.request("checkpoint", action="checkpoint")))
+        self.assertEqual(result["status"], "RECOVERED")
+        self.assertIn("checkpoint save failed", result["error"])
+        self.assertEqual(result["after"], active)
+        self.assertEqual(result["before"], active)
+        restore.assert_not_called()
+
+    def test_recovered_mutation_allows_next_change_without_new_session(self):
+        self.fixture.components[2].fail_once = True
+        result = json.loads(self.manager.handle_json(self.fixture.request("failed")))
+        self.assertEqual(result["status"], "RECOVERED")
+        self.assertTrue(result["recovery_verified"])
+        self.assertEqual(result["after"], self.manager.original_bindings)
+        self.assertEqual(result["dirty_before"], result["dirty_after"])
+        response = json.loads(self.manager.handle_json(self.fixture.request("next")))
+        self.assertEqual(response["sequence"], 2)
+        self.fixture.complete()
+        self.assertEqual(self.fixture.receipt("next")["status"], "COMPLETED")
 
     def test_vector_failure_after_scalar_restores_original_bindings(self):
         self.fixture.api.MaterialLibrary.create_dynamic_material_instance = (
             self.failing_mid
         )
-        with self.assertRaisesRegex(RuntimeError, "vector setter failed"):
-            self.manager.handle_json(self.fixture.request("partial-parameters"))
+        result = json.loads(self.manager.handle_json(self.fixture.request("partial-parameters")))
+        self.assertEqual(result["status"], "RECOVERED")
+        self.assertIn("vector setter failed", result["error"])
         self.assertEqual(self.fixture.mids[0].scalar, 0.35)
         self.assertEqual(self.fixture.original.scalar, 0.90)
         self.assertTrue(
@@ -487,10 +517,10 @@ class PreviewTests(unittest.TestCase):
         self.manager.handle_json(self.fixture.request("first"))
         self.fixture.complete()
         self.fixture.components[2].fail_once = True
-        with self.assertRaisesRegex(RuntimeError, "slot setter failed"):
-            self.manager.handle_json(
-                self.fixture.request("restore-failure", action="restore")
-            )
+        result = json.loads(self.manager.handle_json(
+            self.fixture.request("restore-failure", action="restore")))
+        self.assertEqual(result["status"], "RECOVERED")
+        self.assertIn("slot setter failed", result["error"])
         self.assertTrue(
             all(
                 component.material is self.fixture.original
@@ -498,7 +528,7 @@ class PreviewTests(unittest.TestCase):
             )
         )
         self.assertEqual(self.manager.observe(), self.manager.original_bindings)
-        self.assertEqual(self.fixture.receipt("restore-failure")["status"], "BLOCKED")
+        self.assertEqual(self.fixture.receipt("restore-failure")["status"], "RECOVERED")
 
     def failing_mid(self, *args, **kwargs):
         mid = self.fixture.create_mid(*args, **kwargs)
@@ -521,6 +551,10 @@ class PreviewTests(unittest.TestCase):
             )
         )
         self.assertIn("restore_error", self.fixture.receipt("foreign"))
+        self.assertEqual(self.fixture.receipt("foreign")["status"], "BLOCKED")
+        self.assertTrue(self.manager.recovery_blocked)
+        with self.assertRaisesRegex(ValueError, "recovery is unproved"):
+            self.manager.handle_json(self.fixture.request("later"))
 
     def test_live_getter_change_is_rejected_without_overwriting_owner(self):
         self.manager.handle_json(self.fixture.request("first"))
@@ -577,7 +611,7 @@ class PreviewTests(unittest.TestCase):
         self.manager.tick(0.1)
         self.assertIsNone(self.manager.pending)
         self.assertEqual(self.manager.observe(), self.manager.original_bindings)
-        self.assertEqual(self.fixture.receipt("capture-failure")["status"], "BLOCKED")
+        self.assertEqual(self.fixture.receipt("capture-failure")["status"], "RECOVERED")
 
     def test_loading_barrier_cannot_reenter_the_capture_state_machine(self):
         def nested_slate_tick():
@@ -593,6 +627,35 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(
             self.fixture.receipt("reentrant-barrier")["status"], "COMPLETED"
         )
+
+
+class CheckpointRecoveryDirtyTests(unittest.TestCase):
+    def result(self):
+        root = "/Game/Generated/YACS/LiveCheckpoints/R" + "a" * 12 + "/"
+        before = {"get_dirty_map_packages": ["/Game/OwnerMap"], "get_dirty_content_packages": ["/Game/OwnerMaterial"]}
+        after = copy.deepcopy(before)
+        after["get_dirty_map_packages"].append(root + "L_RoadSurface")
+        after["get_dirty_content_packages"].extend(root + name for name in ("M_Road", "MI_Road", "M_Shoulder", "MI_Shoulder"))
+        return {"action": "checkpoint", "script_revision_after": "a" * 40, "dirty_before": before, "dirty_after": after}
+
+    def test_five_owned_additions_are_retained_without_deleting_owner_state(self):
+        result = self.result()
+        self.assertTrue(bridge.recovery_dirty_conserved(result))
+        result["action"] = "surface"
+        self.assertFalse(bridge.recovery_dirty_conserved(result))
+
+    def test_foreign_additions_removed_owner_packages_and_wrong_revision_fail(self):
+        mutations = (
+            lambda row: row["dirty_after"]["get_dirty_content_packages"].append("/Game/Foreign"),
+            lambda row: row["dirty_after"]["get_dirty_map_packages"].remove("/Game/OwnerMap"),
+            lambda row: row.update(script_revision_after="b" * 40),
+            lambda row: row["dirty_after"]["get_dirty_map_packages"].append(row["dirty_after"]["get_dirty_content_packages"][-1]),
+        )
+        for mutate in mutations:
+            row = self.result()
+            mutate(row)
+            with self.subTest(row=row):
+                self.assertFalse(bridge.recovery_dirty_conserved(row))
 
 
 class RegistrationBoundaryTests(unittest.TestCase):

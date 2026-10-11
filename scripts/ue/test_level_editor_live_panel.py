@@ -26,6 +26,9 @@ class LivePanelProtocolTests(unittest.TestCase):
             {"action": "edge", "preset": "cool"},
             {"action": "edge", "preset": "magenta"},
             {"action": "restore", "preset": "original"},
+            {"action": "reload", "preset": "staged"},
+            {"action": "checkpoint", "preset": "current"},
+            {"action": "repair", "preset": "nearby"},
         ):
             with self.subTest(value=value):
                 self.assertEqual(panel.parse_control(json.dumps(value).encode()), value)
@@ -65,6 +68,7 @@ class LivePanelProtocolTests(unittest.TestCase):
             "request_id": "panel-" + "a" * 32,
             "expected_sequence": 4,
             "action": "set",
+            "capture": False,
             "paint_roughness": 0.9,
             "paint_color": [0.76, 0.73, 0.66, 1.0],
         })

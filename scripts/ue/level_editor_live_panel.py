@@ -72,6 +72,8 @@ def parse_control(raw: bytes) -> dict:
     action, preset = value["action"], value["preset"]
     if action == "camera":
         require(type(preset) is str and preset in CAMERA_PRESETS, "Camera preset is not allowlisted")
+    elif action == "checkpoint":
+        require(preset == "current", "Only current derived checkpoint is admitted")
     elif action == "reload":
         require(preset == "staged", "Only the locally staged committed revision is admitted")
     elif action == "repair":
@@ -100,6 +102,8 @@ def native_request(control: dict, *, token: str, sequence: int, request_id: str)
     }
     if control["action"] == "camera":
         return {**request, "action": "camera", "preset": control["preset"]}
+    if control["action"] == "checkpoint":
+        return {**request, "action": "checkpoint"}
     if control["action"] == "reload":
         return {**request, "action": "reload"}
     if control["action"] == "repair":
@@ -177,6 +181,7 @@ class LivePanel:
                 "request_id": request_id,
                 "frame_available": self.last_frame is not None,
                 "camera_after": result.get("camera_after"),
+                "checkpoint": result.get("checkpoint"),
             }
             return self.last_result
         finally:
