@@ -1,0 +1,11 @@
+{
+  "diagnostic_target": "hairpin0081",
+  "exact_sha": "b9fddea3f6023239da98bec7a5107ed1124cf52e",
+  "frame_count": 6,
+  "original_and_artifact_copy_verified": true,
+  "rendered_owner": "PENDING_PAIRED_VISUAL_REVIEW",
+  "retained_file_count": 15,
+  "run_token": "38116299783-1",
+  "source_inputs_unchanged": true,
+  "status": "SHOULDER_CONTACT_EVIDENCE_VERIFIED"
+}

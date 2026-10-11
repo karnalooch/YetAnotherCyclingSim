@@ -128,6 +128,15 @@ class SnapshotFixture:
         args.update(overrides)
         return preparation.prepare(self.destination, LAUNCHER_SHA, **args)
 
+    def pad_metadata(self, name, size_bytes):
+        """Make real, authenticated JSON bytes exactly the requested size."""
+        self.documents[name]["synthetic_padding"] = ""
+        self.refresh_evidence()
+        self.documents[name]["synthetic_padding"] = "x" * (size_bytes - self.anchors[name][1])
+        self.refresh_evidence()
+        if self.anchors[name][1] != size_bytes:
+            raise AssertionError("Synthetic metadata padding did not reach the requested size")
+
 
 class LevelEditorSnapshotTests(unittest.TestCase):
     def setUp(self):
@@ -215,6 +224,37 @@ class LevelEditorSnapshotTests(unittest.TestCase):
                     reader.assert_not_called()
                 self.assertFalse(self.fixture.destination.exists())
                 path.write_bytes(original)
+
+    def test_full_network_manifest_has_its_own_four_mib_read_bound(self):
+        manifest = "road-asphalt-saved-manifest.json"
+        manifest_limit = preparation.METADATA_READ_LIMITS[manifest]
+        self.assertEqual(manifest_limit, 4 * 1024 * 1024)
+        self.assertEqual(preparation.JSON_LIMIT, 2 * 1024 * 1024)
+        self.fixture.pad_metadata(manifest, manifest_limit)
+        self.fixture.pad_metadata("host-receipt.json", preparation.JSON_LIMIT)
+        source_before, project_before = tree_bytes(self.fixture.source), tree_bytes(self.fixture.project)
+
+        receipt = self.fixture.prepare()
+
+        self.assertEqual(receipt["status"], "SYNTHETIC_SNAPSHOT_PREPARED")
+        copied = self.fixture.destination / "ReviewEvidence" / manifest
+        self.assertEqual(identity(copied.read_bytes()), {
+            "sha256": self.fixture.anchors[manifest][0], "size_bytes": manifest_limit})
+        self.assert_source_unchanged(source_before, project_before)
+        self.assertFalse(receipt["unreal_launched"])
+        self.assertFalse(receipt["stream_verified"])
+
+    def test_each_metadata_limit_rejects_one_extra_byte_before_any_parse_or_copy(self):
+        for name in preparation.PINNED_METADATA:
+            with self.subTest(name=name):
+                limit = preparation.METADATA_READ_LIMITS.get(name, preparation.JSON_LIMIT)
+                self.fixture.pad_metadata(name, limit + 1)
+                with mock.patch.object(preparation, "_read_json") as reader:
+                    self.reject_without_source_change("not a bounded regular file")
+                    reader.assert_not_called()
+                self.assertFalse(self.fixture.destination.exists())
+                del self.fixture.documents[name]["synthetic_padding"]
+                self.fixture.refresh_evidence()
 
     def test_changed_asset_bytes_fail_hash_check_without_readiness(self):
         path = self.fixture.source / self.fixture.asset_rows[0]["path"]

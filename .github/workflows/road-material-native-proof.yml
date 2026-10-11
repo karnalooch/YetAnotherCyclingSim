@@ -138,7 +138,9 @@ jobs:
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/364-road-surface-materials'
     runs-on: [self-hosted, yacs-ue58]
-    # Full-network save/reload and the bounded 68-pose (3 priming each) GPU sample.
+    # Every selection retains full-network save/reload and all 68 Lit poses.
+    # Explicit markers select crack controls or the separate band/paint family;
+    # outer terrain and contact remain independent, opt-in proof selections.
     # Host GPU deadline is 1200 s; native total is 1080 s, per-shot watchdog 180 s.
     # Texture readiness, image quality, pose and conservation gates remain enforced.
     timeout-minutes: 38

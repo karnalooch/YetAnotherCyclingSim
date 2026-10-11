@@ -280,33 +280,24 @@ The earlier single-support 0112 trial is historical evidence, not the current
 coverage limit. The [source/native evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md)
 retains its receipts and the subsequent whole-network source and consumer pins.
 
-The latest independently verified full material artifact is revision
-`4258aab3527506d64769ecf974dd061d9e580687`:
-[protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105477966)
-and all 68 ordered Lit captures in the
-[native run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105475021)
-passed, together with save/fresh and both contact captures. The artifact,
-all 68 final Lit images and all 18 contact images have been independently
-verified and viewed. Near white lines follow the road; far pixel gaps,
-transverse asphalt bands and the sharp outer gravel boundary remain open.
-Contact isolation identifies support 185's thick hairpin wall, without
-repairing it. The subsequent 735 crack candidate passed CI but stopped before
-Unreal on the Windows symlink fixture. Af7 passed that corrected preflight but
-stopped during crack material creation at the texture setter's false return.
-The documented Epic UE-291403 behavior is handled by checking the full actual
-parameter readback. Native run 38109503833 at `5b99f3e1` passed saved
-preparation and fresh reload with both crack actors and all 370 paint
-overlays. GPU then exited 3 before the first image at a combined BaseColor
-texture size/settings check; the actual differing value was not retained.
-Crack images, normal review and the skipped wall/CUT observations remain
-pending.
+The latest independently verified full material result is revision
+`b9fddea3f6023239da98bec7a5107ed1124cf52e`:
+[protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38116301824)
+and [native run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38116299783)
+passed. Actual save/fresh/GPU coverage is 68 Lit + 16 crack controls + 22 contact
+views. The archive and all extracted identities were checked; independent
+material and road specialists inspected the images. Dry grain and near white
+lines are useful progress. The two restrained crack canaries show no obvious
+rectangular outline, but normal-space orientation and later sparse distribution
+remain unresolved. Far line gaps, asphalt bands and the outer gravel boundary
+still need the separate ten-control/outer-blend attempt.
 
-Source run 38109503685 at `5b99f3e1` restored only the previously approved
-decoder packages in a new isolated project environment and completed the
-actual eight source LiDAR transects with reader exit 0. The authenticated
-2,132 rows / 2,037 distinct points inform #459's profile diagnosis, not a
-material or geometry acceptance. A separate bounded nine-station read at
-195–235 m is prepared for the wall outside those first eight transects.
+The new support022-hidden control leaves the 0112 dark edge band visible.
+Support185 owns the thick hairpin wall, and its native wall/source CUT payload
+is now present. Source LiDAR at 95–165 m and 195–235 m is retained. These
+observations support #459 analysis; they do not repair geometry or establish
+final native Landscape contact. See the
+[current review and originals](experiments/sa-calobra-road-materials-20261011/README.md).
 
 | Role / consumer | Current source or candidate | Proven result and remaining limit |
 |---|---|---|
@@ -314,29 +305,16 @@ material or geometry acceptance. A separate bounded nine-station read at
 | Saved pavement | Isolated derived consumer, preserving the original #363 checkpoint | Full native positions, ordered topology, split normals and original UVs are checked across save/fresh and GPU. Source projection scale is authenticated; route and physics are unchanged. |
 | Shoulder and support faces | 186 source owners, 185 material targets and 67,760 selected outer top triangles | Whole-network native/save/fresh/GPU proof at 9519 includes Nudo; literal original wall/interior materials remain. The explicit appended material UV channel has its own full witness. No blanket gravel assignment to vertical or parapet faces. |
 | Gravel and transitions | [`texture library v2`](../worldgen/materials/sa_calobra_texture_library_v2_20261005.json): Poly Haven `rock_ground`, CC0, pinned BaseColor/DirectX normal/roughness at the provider's 150 cm scale | The verified preceding implementation has the 3–8 cm asphalt–gravel transition only. The next five-owner outer variant reuses the frozen Landscape's eleven texture objects and original world mapping, with independently witnessed UV1 and original UV0 preservation. Native compilation, normal response and visual tie-in remain pending. |
-| White edge lines | 370 source-clipped overlays, 10 cm width, 12 cm setback and world Z +1 mm | Native saved/fresh full-buffer proof passed at e4 and 4258. All 68 actual 4258 Lit images reviewed; near continuity is good, far shallow views show pixel gaps. An identical-camera original/full-mask comparison at 0083 will separate mask coverage from remaining image behavior. No collision, shadow, navigation or physics authority. |
-| Local cracks | Eight authored Material Forge motifs; verified source `07ebafad` / `38102423216-1` | Sixteen actual source processes and all 80 maps independently verified. Two source-clipped actors, eight imported maps and eleven owned packages passed saved/fresh at 5b99. Its 16 native controls, UV 0/90 normal-space proof and later sparse network distribution remain pending after the pre-capture GPU readback failure. |
+| White edge lines | 370 source-clipped overlays, 10 cm width, 12 cm setback and world Z +1 mm | Native saved/fresh full-buffer proof and all 68 actual Lit images passed at b9fd; near continuity is good, far shallow views show pixel gaps. An identical-camera original/full-mask comparison at 0083 will separate mask coverage from remaining image behavior. No collision, shadow, navigation or physics authority. |
+| Local cracks | Eight authored Material Forge motifs; verified source `07ebafad` / `38102423216-1` | Sixteen actual source processes and all 80 maps independently verified. Two source-clipped actors, eight imported maps and eleven owned packages passed saved/fresh/GPU at b9fd. All 16 native controls, including UV 0/90 cases, were inspected; weak normal signal leaves normal-space correctness unresolved. Sparse network distribution and edge erosion remain pending. |
 
-The combined `e81a4377` attempt passed protected CI and native preflight but
-stopped before map save at the frozen whole-map weight texture's native
-dimensions/linear-registration check. The five-owner outer material, crack
-images and native contact payload remain unverified. The original guard is
-retained and now reports actual values on failure. Source-only wall transects
-passed separately in run 38111916772; no geometry or source package changed.
-The subsequent `56c5dade` offscreen preparation exhausted Windows memory
-before map save (native run 38113632914, exit 3 after 379.812 seconds). CI
-38113635913 passed with equivalent Unreal proof reuse, not a fresh build or
-Automation run. No texture mismatch values, outer statistics or new images
-were produced; the last explicit success was asphalt import. Bounded stage
-and memory-headroom observations distinguish the later operations. The next
-existing crack/contact proof runs without optional outer terrain and retains
-the sixteen normal controls, all 370 paint witnesses and fresh GPU admission.
-The outer blend still requires its own successful native and visual proof;
-neither texture requirements nor source/geometry constraints are relaxed.
-The accompanying 0112 contact diagnostic adds four support-022-hidden images
-at its unchanged poses and verifies that owner's source top and native
-triangle digest before/after restoration. This addresses a missing isolation
-control; it does not change the exposed 80 mm shoulder step or repair a gap.
+The prior outer attempts at e81 and 56c5 failed before map save, first at the
+frozen WeightTex check and later on Windows memory exhaustion. The current
+b9fd result recovers crack/contact proof without outer terrain. The next
+separate selection retains 18 exact textures, full save/fresh/GPU conservation,
+all 68 Lit cameras and ten band/paint controls. Stage/memory observations will
+locate any recurrence. Strict texture and geometry requirements remain
+unchanged; outer material appearance/normal response is still pending.
 
 The fixed importer uses native `WorldAlignedTexture` / `WorldAlignedNormal`
 and converts the source scale to `TileSizeCm` with material-instance readback.

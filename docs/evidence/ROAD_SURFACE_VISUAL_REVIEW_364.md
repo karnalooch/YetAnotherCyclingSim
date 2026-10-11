@@ -3,7 +3,37 @@
 **Milestone:** M3. **PR:** #470 (Draft). **Domain owner:** Visual & DCC.
 **Base SHA:** `f9eeb02771ad036892b157059f07876a07abea61`.
 
-## Verified 4258 review — all 68 Lit and 18 contact frames
+## Current b9fd review — material progress and retained defects
+
+The [current original evidence](../experiments/sa-calobra-road-materials-20261011/README.md)
+comes from `b9fddea3f6023239da98bec7a5107ed1124cf52e`, successful native
+run 38116299783. The live artifact digest, archive and all 629 extracted file
+identities were verified. The material specialist reviewed all 68 final Lit
+frames and 16 crack controls; the road specialist reviewed the new 16-view
+0112 and six-view 0081 contact sets. The primary reviewer checked representative
+original Lit, WorldNormal and contact images.
+
+Dry mat/aggregate response and near white-line continuity are useful progress.
+Two source-owned crack patches are restrained, without an obvious rectangular
+outline. They do not yet establish sparse network distribution or dedicated
+edge erosion. Their 0/90 degree UV cases are recorded, but tiny/subpixel crack
+features yield an inconclusive WorldNormal orientation comparison; retain
+`normal_space_verified: false` rather than strengthening material relief for
+the diagnostic. Captured buffer names still lack native string readback.
+
+Far line gaps, transverse asphalt bands and the sharp gravel/terrain boundary
+remain. The next existing outer blend and ten band/paint controls will test
+those named defects independently, retaining every original Lit camera.
+At 0112, hiding nominated support022 removes its shoulder/wall contribution
+but does not remove the dark narrow road-edge band. The separate support112
+and local-Landscape hides also leave that band. At 0081, support185 owns the
+tall exposed wall; actual native wall/source CUT observations are now retained,
+but final native Landscape height and a geometry repair are not established.
+
+The original receipts are unchanged. #364 remains in progress and #459 open;
+owner audit is `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` with no PASS.
+
+## Historical 4258 review — all 68 Lit and 18 contact frames
 
 The [native run 38105475021](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105475021)
 at `4258aab3527506d64769ecf974dd061d9e580687` completed baseline, canary,

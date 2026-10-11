@@ -1,0 +1,2 @@
+# Preserve the exact original Windows receipts and native PNG evidence.
+b9fd/** -text whitespace=cr-at-eol

@@ -41,6 +41,9 @@ NATIVE_BUILD_ID = "55116800"
 RECEIPT_NAME = "level-editor-review-preparation.json"
 FILE_LIMIT = 512 * 1024 * 1024
 JSON_LIMIT = 2 * 1024 * 1024
+# The complete shoulder/paint/crack manifest already uses the native producer's
+# 4 MiB bound. Host, reload, staging and output receipts retain their 2 MiB cap.
+METADATA_READ_LIMITS = {"road-asphalt-saved-manifest.json": 4 * 1024 * 1024}
 TOTAL_LIMIT = 2 * 1024 * 1024 * 1024
 FILE_COUNT_LIMIT = 384
 MIN_FREE_BYTES = 5 * 1024 * 1024 * 1024
@@ -151,12 +154,16 @@ def _metadata(source_root, checked_root, anchors):
     paths = {}
     # Authenticate the entire anchor set before parsing any metadata.
     for name, pair in anchors.items():
+        limit = METADATA_READ_LIMITS.get(name, JSON_LIMIT)
         for base in (checked_root, native_root):
             path = _path(base, name)
-            _require(_identity(path, JSON_LIMIT) == _anchor(pair),
+            _require(_identity(path, limit) == _anchor(pair),
                      "checked-in/native evidence differs from immutable anchor: " + name)
         paths[name] = _path(native_root, name)
-    return {name: _read_json(path, anchors[name]) for name, path in paths.items()}
+    return {
+        name: _read_json(path, anchors[name], limit=METADATA_READ_LIMITS.get(name, JSON_LIMIT))
+        for name, path in paths.items()
+    }
 
 
 def _validate_metadata(documents, source_root, anchors, map_sha256):

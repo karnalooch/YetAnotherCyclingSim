@@ -12,7 +12,54 @@ remains frozen. #384 completed after protected [PR #467](https://github.com/karn
 merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its gate is satisfied.
 This work continues #364, not MCP infrastructure.
 
-## Current 56c5 memory failure and separated recovery proof
+## Current b9fd saved, fresh and GPU result
+
+Revision `b9fddea3f6023239da98bec7a5107ed1124cf52e` passed
+[protected CI 38116301824](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38116301824)
+and the complete [native run 38116299783](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38116299783).
+The CI Unreal lane reused verified equivalent proof; this does not claim a
+fresh compilation or Automation run. Actual native save, separate fresh reopen,
+GPU capture and both contact processes exited zero. The selection retained
+**68 Lit, 16 crack controls, 16 window0112 and six hairpin0081 final frames**.
+All 370 paint overlays, two crack actors, 186 source supports, 185 shoulder
+targets and 67,760 selected tops retain their full material/buffer checks.
+
+The [authenticated original subset and role handoff](../experiments/sa-calobra-road-materials-20261011/README.md)
+pins artifact 11694637100, 476,694,696 bytes, SHA-256
+`d580f706d7b645ada9ebea9244126a30de1d22d88a4a0da5a68594ef6a84f7d6`.
+The live artifact identity, archive digest and all 629 extracted file identities
+were checked. The independent material reviewer inspected all 68 final Lit
+images and 16 crack controls; the road reviewer inspected the contact set.
+
+The asphalt is dry and granular; the two crack canaries are subtle and show no
+visible rectangular patch outline. UV0/90 cases and neutral channel comparisons
+are present, but the small normal signal does not confidently establish crack
+normal-space correctness. The original receipt remains
+`normal_space_verified: false`; no network crack distribution or dedicated
+edge-erosion proof is claimed. Near white lines are continuous, while distant
+pixel gaps, asphalt bands and the hard outer gravel boundary remain open.
+
+The new 0112 `support022-hidden` view leaves the narrow dark road-edge band
+visible, as do the other independent hides. This rejects sole ownership by
+support022 rather than authorizing a guessed height change. Hairpin0081 now
+retains actual native wall/source CUT observations. Support185 owns its exposed
+wall; final native Landscape height and a contact/profile repair remain #459
+work. Materials have not repaired that geometry.
+
+The next separate attempt selects **outer terrain + band/paint controls**:
+five existing shoulder owners, 18 exact selected textures, the same 68 Lit
+cameras and ten diagnostic controls. Crack and contact families need not repeat
+in this attempt. It retains the strict frozen-texture verifier, source and full
+buffer conservation, actual save/fresh/GPU checks, and current flushed stage
+records. The earlier outer-terrain failure remains unresolved until this run.
+The Level Editor preparer now supports a manifest-only 4 MiB read bound because
+the successful b9fd manifest is 3,225,316 bytes; other metadata stay at 2 MiB.
+The live stream remains pending a verified current-runtime retarget and launch.
+
+Owner audit stays `PENDING_FINAL_M3`; performance is `DEFERRED_AFTER_M3`,
+`performance_pass: false`. This result does not close #364 or #459.
+
+## Historical 56c5 memory failure and separated recovery proof
 
 Revision `56c5dadeadd806c8b6aa58d8508fa20f1ed45457` passed
 [protected CI 38113635913](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38113635913).
@@ -44,7 +91,8 @@ SHA-256 `32b971feebf7d47dabaeffabc15fa92c5d8a3163073f2a33a7453b71fc899221`.
 The prepare log is 382,028 bytes, SHA-256
 `016888aa5878993cda92fdb90479419493e92c46632f93a778d899d92637bcb0`;
 its identity matches the host receipt. The artifact contains **zero PNGs**
-and no reload/GPU result. The 4258 images remain the latest actual images.
+and no reload/GPU result. At that time, 4258 held the latest actual images;
+the current b9fd result above supersedes that image availability statement.
 
 The recovery separates existing proof modes. The next native attempt selects
 the two crack canaries and contact diagnostics without the optional outer

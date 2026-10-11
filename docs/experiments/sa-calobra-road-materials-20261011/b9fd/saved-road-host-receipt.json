@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "issue": 364,
+  "exact_sha": "b9fddea3f6023239da98bec7a5107ed1124cf52e",
+  "run_token": "38116299783-1",
+  "status": "ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS",
+  "native_baseline_authenticated": true,
+  "transient_canary_authenticated": true,
+  "saved_derived_consumer": true,
+  "fresh_reload_verified": true,
+  "shoulder_network_fresh_reload_verified": true,
+  "shoulder_support_count": 186,
+  "shoulder_material_target_count": 185,
+  "shoulder_selected_triangle_count": 67760,
+  "edge_markings_requested": true,
+  "edge_markings_fresh_reload_verified": true,
+  "crack_canary_requested": true,
+  "crack_canary_fresh_reload_verified": true,
+  "crack_normal_space_verified": false,
+  "outer_terrain_requested": false,
+  "outer_terrain_fresh_reload_verified": false,
+  "outer_terrain_owner_labels": [],
+  "outer_terrain_physical_contact_verified": false,
+  "outer_terrain_normal_response_verified": false,
+  "rendering_mode_requested": "NULL_RHI",
+  "rendering_arguments_requested": [
+    "-NullRHI"
+  ],
+  "road_profile_diagnostic_sha256": "b2f5f3306157ba4431371d9d7e1bf0241e19874fea4f9a3009899b614b52821d",
+  "original_map_saved": false,
+  "original_landscape_mutated": false,
+  "gpu_shader_verified": false,
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_status": "DEFERRED_AFTER_M3",
+  "performance_pass": false,
+  "editor_processes": [
+    {
+      "action": "prepare",
+      "owned_pid": 36044,
+      "exit_code": 0,
+      "elapsed_seconds": 261.166809,
+      "deadline_seconds": 420,
+      "rendering_mode_requested": "NULL_RHI",
+      "editor_executable_sha256": "ae92f55952a3c9a7def90983fcf5aedce52d8ee8e4565fbd923985e9d9d3e05e"
+    },
+    {
+      "action": "reload",
+      "owned_pid": 25592,
+      "exit_code": 0,
+      "elapsed_seconds": 143.8870181,
+      "deadline_seconds": 420,
+      "rendering_mode_requested": "NULL_RHI",
+      "editor_executable_sha256": "ae92f55952a3c9a7def90983fcf5aedce52d8ee8e4565fbd923985e9d9d3e05e"
+    }
+  ],
+  "proof_files": {
+    "workspace_config": {
+      "path": "D:\\yacs\\workspace.json",
+      "sha256": "6329f1ac0cf0c2d5f51eddd8ec1090f243652c18ba48a89b9b31b51bd2f9b0ed",
+      "size_bytes": 384
+    },
+    "save_reload_editor_executable": {
+      "path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe",
+      "sha256": "ae92f55952a3c9a7def90983fcf5aedce52d8ee8e4565fbd923985e9d9d3e05e",
+      "size_bytes": 512952
+    },
+    "saved-road-prepare-editor.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\saved-road-prepare-editor.log",
+      "sha256": "6107cb66924ec37ea92a64761118cf44cb1394b0311273c3829ea61521102595",
+      "size_bytes": 452436
+    },
+    "saved-road-prepare-stdout.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\saved-road-prepare-stdout.log",
+      "sha256": "8cf542212c36bc40acf3b8c4606813c06e4fe06bc97e120783d2be374fd6a6f5",
+      "size_bytes": 1234
+    },
+    "saved-road-prepare-stderr.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\saved-road-prepare-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "saved_prepared": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\road-asphalt-saved-prepared.json",
+      "sha256": "25919a338b65db412e75aaaa7fd60ff6193c46571f2bc4411df632ea8c8a3726",
+      "size_bytes": 853
+    },
+    "saved_manifest": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\road-asphalt-saved-manifest.json",
+      "sha256": "974c86813d2ee95d4f3cc244fd3590f7f9711506973c10544f6ede954557344a",
+      "size_bytes": 3225316
+    },
+    "road_profile_diagnostic": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\road-network-profile-diagnostic.json",
+      "sha256": "b2f5f3306157ba4431371d9d7e1bf0241e19874fea4f9a3009899b614b52821d",
+      "size_bytes": 5684256
+    },
+    "retained_road_profile_diagnostic": {
+      "path": "D:\\yacs\\work\\road-materials\\saved-consumers\\b9fddea3f6023239da98bec7a5107ed1124cf52e\\38116299783-1\\road-network-profile-diagnostic.json",
+      "sha256": "b2f5f3306157ba4431371d9d7e1bf0241e19874fea4f9a3009899b614b52821d",
+      "size_bytes": 5684256
+    },
+    "saved-road-reload-editor.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\saved-road-reload-editor.log",
+      "sha256": "396c1cdae866c50d7f7beca5178be8c364704a90de73bcde31a1fbe94f82c59b",
+      "size_bytes": 350295
+    },
+    "saved-road-reload-stdout.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\saved-road-reload-stdout.log",
+      "sha256": "8cf542212c36bc40acf3b8c4606813c06e4fe06bc97e120783d2be374fd6a6f5",
+      "size_bytes": 1234
+    },
+    "saved-road-reload-stderr.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\saved-road-reload-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "fresh_reload": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\road-asphalt-saved-reloaded.json",
+      "sha256": "3cfab0e6f9dfa76ae16bc194f0d668ec5f9c6cb0e771fbc58ce726aafec7b7ee",
+      "size_bytes": 3527
+    }
+  },
+  "error": null,
+  "secondary_errors": []
+}

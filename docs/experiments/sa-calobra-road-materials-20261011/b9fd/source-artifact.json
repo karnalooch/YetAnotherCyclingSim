@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "repo": "karnalooch/YetAnotherCyclingSim",
+  "pr": 470,
+  "issue": 364,
+  "exact_sha": "b9fddea3f6023239da98bec7a5107ed1124cf52e",
+  "run_id": 38116299783,
+  "run_attempt": 1,
+  "artifact_id": 11694637100,
+  "archive_sha256": "d580f706d7b645ada9ebea9244126a30de1d22d88a4a0da5a68594ef6a84f7d6",
+  "archive_size_bytes": 476694696,
+  "archive_file_count": 629,
+  "all_archive_file_identities_verified": true,
+  "retained_files": [
+    {
+      "file": "asphalt-host-receipt.json",
+      "size_bytes": 2710,
+      "sha256": "134c7e04a978922b0eaee44823d07939b72de89e034687b7ba1723258c4aa9ce"
+    },
+    {
+      "file": "saved-road-host-receipt.json",
+      "size_bytes": 6370,
+      "sha256": "3914a7f240cd05251edc671ce04b89bf4d8986152f2bf3428bca2fb22e78a5f3"
+    },
+    {
+      "file": "road-asphalt-gpu-host-receipt.json",
+      "size_bytes": 225913,
+      "sha256": "79aa15d123141a5cdef081898983a86097cdf2bbe176c647e8b783fc8c14f6db"
+    },
+    {
+      "file": "shoulder-contact-host-receipt.json",
+      "size_bytes": 5788,
+      "sha256": "a021a4834fd5b41d70138f12e5543022b36b2485c6298c4527588a3906fc2bc5"
+    },
+    {
+      "file": "shoulder-contact-0081-host-receipt.json",
+      "size_bytes": 5849,
+      "sha256": "0f3dee043b15e76e411788f09684a3e1eedf9c2e6be78a411facc5af9a4d2d49"
+    },
+    {
+      "file": "road-crack-expected-visual-controls.json",
+      "size_bytes": 13132,
+      "sha256": "54ddda71198a2da232b768ffabf181337640ccdb3eaa6fc165af365fb2fc35e1"
+    },
+    {
+      "file": "shoulder-contact/verification.json",
+      "size_bytes": 365,
+      "sha256": "20e462034628d1c7e381f5f08cf1b995f14045ec087fef7876753708d21168c2"
+    },
+    {
+      "file": "shoulder-contact-0081/verification.json",
+      "size_bytes": 365,
+      "sha256": "6ec1fd95e893ccc2752aa9af362c118aeec027bce8632a36b057c3068dcf5052"
+    },
+    {
+      "file": "road-crack-visual-controls/frames/window-0112-forward-00002--cracks-lit.png",
+      "size_bytes": 1623976,
+      "sha256": "bb21ab28182d7b5fe242740cce0029ca79cfd72f0e98448fdb324c526689a6da"
+    },
+    {
+      "file": "road-crack-visual-controls/frames/window-0082-forward-00002--cracks-lit.png",
+      "size_bytes": 1270909,
+      "sha256": "b4d39c98819e9f07eede269b0d9ac6f8eef3df0fc904cac7b676937f81a412e9"
+    },
+    {
+      "file": "shoulder-contact/capture/frames/window-0112-forward-00002-support022-hidden.png",
+      "size_bytes": 1003154,
+      "sha256": "66fb3d4a9020f68640b0812f2ed0c9104337eb198bd0accc10b78d7b9f75a836"
+    },
+    {
+      "file": "shoulder-contact-0081/capture/frames/window-0081-reverse-00004-baseline.png",
+      "size_bytes": 830051,
+      "sha256": "53c96fdaa88e64fe7e738ce0ad8e2b5db294b770123ff2939ec0802af7e0629b"
+    }
+  ],
+  "original_image_bytes_preserved": true,
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_status": "DEFERRED_AFTER_M3",
+  "performance_pass": false
+}
