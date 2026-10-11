@@ -91,6 +91,46 @@ inventing rock geography, species, terrain contact or placement acceptance.
 
 ## Authenticated inputs
 
+## Native preparation and mesh qualification — 2026-10-12
+
+[CI run 38179277475](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38179277475)
+passed for `1c14beecfd81a6463711ebc9957047900f45b36e`, including the
+Aggregate CI gate and hosted script tests. Unreal build/Automation was skipped;
+that run is not native PCG evidence.
+
+`scripts/assets/sa_calobra_pcg_qualification.py` adds a structural binding check
+for source/license, imported StaticMesh bounds/support, materials/UV/world WPO,
+terrain identity/datum and measured contact policies plus native fixture claims.
+It always returns `placement: false` and `proof_authenticity: NOT_VERIFIED`.
+It does not admit evidence, replace Gumball, set tolerances, or qualify a real
+asset. Retained source/license/material evidence keeps its own producer SHA;
+new native observations must match the qualification SHA. Nine CPU fixtures PASS.
+
+The retained PCGEx checkout under the runner's `_phase2c-pcgex-cliff` project
+matches approved commit `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66` and the
+reviewed patch; its 40 DLLs declare engine BuildId `55116800`. These are retained
+prebuilt binaries, not a build of current YACS code. The isolated local diagnostic
+launcher `scripts/ue/Invoke-YacsPcgNativeProbe.ps1` authenticates retained sources,
+stages the plugin without PDB/Intermediate, and preserves canonical Content.
+Its Python consumer reads Epic's installed `Skill_PCGGraphGeneration` through
+the reflected skill API before graph authoring, then inventories native APIs
+and mesh dimensions. Outputs are `LOCAL_DIAGNOSTIC_ONLY`, never a new broker
+receipt. Graph generation/save/fresh reload are still pending at this checkpoint.
+
+The single Boulder source was recovered with the existing bounded downloader
+(2K, five files, 34.2 MiB, 256 MiB cap, no overwrite) into
+`D:/yacs/data/assets/pcg365-boulder-source`. The acquisition SHA256 receipt
+records provider URLs, CC0-1.0, source/index/config hashes and command/time.
+FBX: 6,482,860 bytes, SHA256
+`b1125cd1e08a425fa89bc62b96279b40e9a921618e12bfbbe0d575cb78f53c95`.
+Status remains `NOT_MATCHED_TO_HISTORICAL_IMPORT`; source recovery does not
+establish correspondence with the historical native mesh. The provider's
+[Boulder 01](https://polyhaven.com/a/boulder_01) describes weathered rock, not
+measured Mallorcan limestone. [Provider license](https://polyhaven.com/license)
+was rechecked. Forge appearance cannot supply lithology or mesh support proof.
+
+## Authenticated source contract
+
 Existing Julka profiles `sa-calobra-pcg-masks-candidate` and
 `sa-calobra-mask-transitions-candidate` verified with zero issues, including
 inherited source closure. Existing `verified_manifest()` also checked fingerprints,
