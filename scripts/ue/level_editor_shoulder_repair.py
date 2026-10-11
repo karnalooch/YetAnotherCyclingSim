@@ -75,7 +75,11 @@ def _plan(owner, snapshot, center, trace):
             weight = _weight(p, center) * end_weight
             if not weight:
                 continue
-            dz = 8. if column in (1, 25) else trace(p) - p[2]
+            ground = trace(p) if column in (0, 26) else None
+            if column in (0, 26) and ground is None:
+                deferred.append({'row': i, 'column': column, 'reason': 'no_bounded_landscape_hit'})
+                continue
+            dz = 8. if column in (1, 25) else ground - p[2]
             if abs(dz) > MAX_DELTA_CM:
                 deferred.append({'row': i, 'column': column, 'required_delta_cm': dz})
                 continue
@@ -168,7 +172,8 @@ class ShoulderRepair:
         start, end = (p[0], p[1], p[2] + 200.), (p[0], p[1], p[2] - 200.)
         hit = a.SystemLibrary.line_trace_single(self.world, a.Vector(*start), a.Vector(*end),
                     a.TraceTypeQuery.ECC_VISIBILITY, True, ignore, a.DrawDebugTrace.NONE, True)
-        require(hit is not None, 'Landscape trace missed')
+        if hit is None:
+            return None
         # UE exports FHitResult's NativeBreakFunc as StructBase.to_tuple(),
         # not GameplayStatics.break_hit_result. Check the actual native actor
         # and component; reflected hit_actor can be unavailable in UE 5.8.
