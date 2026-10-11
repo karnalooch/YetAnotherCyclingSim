@@ -488,7 +488,10 @@ class MechanicalGraph:
         collection = self.component.get_generated_graph_output()
         rows = []
         for tagged in collection.tagged_data:
-            data = tagged.data
+            fields = tagged.to_tuple()
+            if len(fields) != 4:
+                raise RuntimeError("Unexpected native tagged-data break shape")
+            data = fields[0]
             if not isinstance(data, unreal.PCGBasePointData):
                 raise RuntimeError("Native output is not point data")
             for index in range(data.get_num_points()):

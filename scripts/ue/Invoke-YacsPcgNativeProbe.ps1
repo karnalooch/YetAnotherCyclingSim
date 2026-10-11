@@ -72,6 +72,8 @@ if ($Action -ne 'inspect') {
     foreach ($entry in $registry.files) { Assert-SameFile (Join-Path $Root $entry.path) $entry.identity }
     $inspection = Get-Content (Join-Path $Proof 'inspect/inspect-receipt.json') -Raw | ConvertFrom-Json
     if ($inspection.status -cne 'NATIVE_INSPECTION_COMPLETED') { throw 'Native inspection must complete before graph operations.' }
+    $completedInspection = Get-Content (Join-Path $Proof 'inspect/launcher-completed.json') -Raw | ConvertFrom-Json
+    if ($completedInspection.code_sha -cne $ExpectedHead -or $completedInspection.exit_code -ne 0) { throw 'Native inspection process did not finish cleanly.' }
 } else {
     if (Test-Path -LiteralPath $Root) { throw 'Preserve existing stage; choose a fresh RunToken.' }
     New-Item -ItemType Directory -Path $Proof -Force | Out-Null
@@ -209,4 +211,5 @@ if ($Action -eq 'reload') {
     foreach ($entry in $saved.files) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
 }
 foreach ($entry in (Get-Content (Join-Path $Root 'staged-files.json') -Raw | ConvertFrom-Json).files) { Assert-SameFile (Join-Path $Root $entry.path) $entry.identity }
+[ordered]@{code_sha=$ExpectedHead;exit_code=0;staged_bytes_unchanged=$true;proof_admission='LOCAL_DIAGNOSTIC_ONLY'} | ConvertTo-Json | Set-Content (Join-Path $Output 'launcher-completed.json') -Encoding utf8
 Write-Host "LOCAL_DIAGNOSTIC_ONLY: $Action completed; inspect $Receipt. Native build NOT RUN."
