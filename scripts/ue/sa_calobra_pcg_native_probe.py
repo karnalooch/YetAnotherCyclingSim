@@ -212,7 +212,7 @@ def main():
     }
     try:
         if ACTION in {"create", "reload"}:
-            unreal.EditorPythonScriptingLibrary.set_keep_python_script_alive(True)
+            unreal.EditorPythonScripting.set_keep_python_script_alive(True)
             global ACTIVE
             ACTIVE = MechanicalGraph(receipt)
             ACTIVE.begin()
