@@ -200,6 +200,7 @@ def read_native(api, saved):
 
 def main():
     import unreal as api
+    api.EditorPythonScripting.set_keep_python_script_alive(True)
     token = os.environ['YACS_CHECKPOINT_PROOF_TOKEN']
     require(re.fullmatch('[A-Za-z0-9][A-Za-z0-9_-]{0,47}', token), 'Invalid proof token')
     require(Path(api.Paths.project_dir()).resolve() == PROJECT, 'Wrong proof project root')
