@@ -157,6 +157,16 @@ AABB is `hypot(abs(origin.x)+extent.x, abs(origin.y)+extent.y)/100 =
 The existing CPU candidate fixture assumes radius 0.5 m: its 124 admitted probes
 cannot be reused for this Boulder. Re-evaluate eligibility with the final scaled
 footprint, material/WPO envelope and admitted support/contact contract first.
+Two CPU envelope sensitivity runs at `137a367395e76d406408e6f8f38fd54313b7d8e7`
+used this 1.2118825350159463 m radius, spacing 16 cells, clearance 0.25 m and
+priority `2 0 1`. Both produced fingerprint
+`8e8849465bed2d0f72e1f9b6a92e700cbd9a9dce5f51dbfd72136dcadd98b69f`:
+64,009 anchors, 5 selected XY envelopes; 23,898 clearance, 1,588 footprint-semantic,
+483 AOI, 37,983 no-centre and 52 density rejections. Outputs are retained in
+`Saved/RuntimeProof/WorldGraph365/boulder-envelope-{a,b}/world-graph-candidates.json`.
+This remains the existing **vegetation-selector** probe contract: the five XYs
+are not rock-placement semantics or qualified Boulder positions. No Z/contact,
+regional rock mask, material/WPO envelope or native spawner admission is inferred.
 ImportData points to the historical `D:/ExternalAssets/.../boulder_01_2k.fbx`,
 which does not prove correspondence with the newly recovered bytes. All staged
 source packages remained byte-identical. No real mesh qualification PASS.
