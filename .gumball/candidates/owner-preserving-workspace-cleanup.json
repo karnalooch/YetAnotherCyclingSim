@@ -1,0 +1,16 @@
+{
+  "id": "owner-preserving-workspace-cleanup",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "ci",
+  "problem": "Workspace substring matching terminated an interactive editor whose launcher script lived under the runner.",
+  "invariant": "Cleanup must verify exclusive process ownership inside the destructive helper, including fallback kill paths, not only in workflow ordering.",
+  "evidence": [
+    "CI run 38168499513 job 114557325505",
+    "scripts/ci/test_unreal_workspace_owner_guard.py"
+  ],
+  "do_not_copy": [
+    "YACS host names and local paths"
+  ],
+  "failure_behavior": "Unknown or local ownership preserves processes and logs; stale unattended CI cleanup remains available.",
+  "status": "candidate"
+}

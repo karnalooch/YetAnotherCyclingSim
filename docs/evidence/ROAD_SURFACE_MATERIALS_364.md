@@ -2078,3 +2078,20 @@ The [prepared PCG handoff](../ROADMAP.md#prepared-handoff-from-364-to-365--2026-
 pins saved outputs, engine/plugin baselines, source masks, exclusions and
 remaining gates. The current live review snapshot does not include PCGEx.
 No #365 implementation or source/terrain/physics mutation is claimed.
+
+
+### Owner preview interruption during closeout — 2026-10-11
+
+CI run `38168499513`, job `114557325505`, terminated owner Editor PID `14704`
+at `2026-10-11T19:41:23Z`. The cleanup helper matched a Python launcher path
+inside the runner workspace even though the owner project lived outside it.
+Its ownership check ran too late. The helper now enforces the existing host
+ownership contract before mutations and both kill paths. Executable fixture
+regressions preserve the owner process/log and still clean stale unattended CI.
+
+That run passed on `194159b7aca552164cb9e08a92eb5b3159f9b0fe` using
+`verified-equivalent-proof`; it did not fresh-load the new material checkpoint.
+Blender run `38168498901` was cancelled. The earlier saved checkpoint remains
+retained; subsequent request sequence 10 recovered from
+`Apply a surface preset before checkpointing` and did not save a new candidate.
+PR #470 and release v0.3.1 remain drafts pending outstanding proof and review.
