@@ -256,6 +256,38 @@ existing hashed ready receipt carries the four identity fields to the client,
 which still compares the complete actual `tools/list` descriptor. These are
 implementation checks awaiting the next real preview qualification.
 
+At `3ecc90f`, exact-SHA [CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38134673382)
+and [Blender reference](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38134672975)
+passed after 74 full bridge/client tests and independent 26-test focused QA.
+Windows recorded `mode=static compileKind=none reason=verified-equivalent-proof`
+with 22.11 GiB free on D:. Both full material proofs skipped. The
+[Editor attempt](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38134669588)
+opened PID 8732 and ended in controlled `BLOCKED` at the initial registry
+settings check. This attempt did not reach census, registration, an owned MCP
+listener, requests, captures or owner handoff. The complete log contains no
+engine fatal; local Zen reached HTTP and ZenLocal `OK` in 2.636 seconds.
+
+The [four-file artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38134669588/artifacts/11700802022)
+is 67,446 bytes, SHA-256
+`bedb34ff231237dda0a09a97db80f6058e081f53f0242ef108f397f5a5b0757d`.
+Its original session JSON is 8,316 bytes, SHA-256
+`8de19b374cb5e6e97fd2a8e22c43be052d664a2441305bc6210c9c6e4ae2d743`.
+The written INI was independently reconstructed from the exact launcher:
+465 bytes, UTF-8 without BOM, CRLF and final CRLF. Its hash equals the launch
+receipt's `1731c3ee10f4aeab170eb5c2e8cb650c51f330da23e7cafc99909c9fa405b333`;
+both `{8}` quantifiers and end anchors are present. The first native property
+value has lost its braces. The missing end of the second displayed value is
+only the bridge's 64-character diagnostic truncation, not separate evidence
+of a lost anchor. The exact internal UE transformation is not established.
+
+The correction replaces each config-facing repetition quantifier with eight
+explicit `[0-9A-F]` classes in the launcher and bridge. The admitted set of
+names remains identical; exact native setting equality is still mandatory.
+The pure Python identity validator is unchanged. Filter diagnostics now carry
+bounded values with explicit original lengths and truncation flags, so their
+display limits cannot silently resemble another configuration defect. Native
+qualification remains pending.
+
 ## Measured local cost
 
 The authenticated [b9fd native checkpoint](README.md) reused compiled C++

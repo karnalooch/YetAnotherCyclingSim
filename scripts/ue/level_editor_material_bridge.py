@@ -35,8 +35,8 @@ PRIMING_COUNT = 3
 READY_RELATIVE = "Saved/LevelEditorStream/material-bridge-ready.json"
 REQUEST_ROOT = "Saved/LevelEditorStream/material-preview"
 ALLOWED_NAMES = (
-    "/^PythonTypes[.]YacsRoadMaterialPreview_0x[0-9A-F]{8}$/",
-    "/^PythonTypes[.]YacsRoadMaterialPreview_0x[0-9A-F]{8}[.][Pp]review$/",
+    "/^PythonTypes[.]YacsRoadMaterialPreview_0x[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]$/",
+    "/^PythonTypes[.]YacsRoadMaterialPreview_0x[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][.][Pp]review$/",
 )
 LEGACY_BASE_CLASS = "/Script/ModelContextProtocolEngine.ModelContextProtocolToolLibrary"
 ABSTRACT_LEGACY_CLASSES = {
@@ -1558,11 +1558,11 @@ class MaterialPreview:
             self.in_tick = False
 
 
-def diagnostic_property(value):
+def diagnostic_property(value, limit=64):
     if value is None or type(value) is bool:
         return value
     if isinstance(value, str):
-        return value[:64]
+        return value[:limit]
     return {"type": type(value).__name__}
 
 
@@ -1593,7 +1593,14 @@ def require_official_settings(settings, registry_settings):
             {
                 name: {
                     "count": len(values),
-                    "first_names": [diagnostic_property(v) for v in values[:4]],
+                    "first_names": [diagnostic_property(v, 256) for v in values[:4]],
+                    "first_name_lengths": [
+                        len(v) if isinstance(v, str) else None for v in values[:4]
+                    ],
+                    "first_name_truncated": [
+                        isinstance(v, str) and len(v) > 256 for v in values[:4]
+                    ],
+                    "names_truncated": len(values) > 4,
                 }
                 for name, values in (
                     ("AllowedNames", allowed),

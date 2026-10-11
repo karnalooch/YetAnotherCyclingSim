@@ -170,6 +170,8 @@ try {
     $savedConfig = Join-Path $SessionRoot 'Saved/Config/WindowsEditor'
     Assert-NoReparseAncestor $savedConfig
     New-Item -ItemType Directory -Path $savedConfig | Out-Null
+    # Actual UE 5.8.2 readback removed braces from the repetition quantifier.
+    # Spell out all eight hex positions to preserve the exact allowed names.
     @'
 [/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]
 bAutoStartServer=False
@@ -177,8 +179,8 @@ bEnableToolSearch=False
 ServerUrlPath=/mcp
 [/Script/ToolsetRegistry.ToolsetRegistrySettings]
 !AllowedNames=ClearArray
-+AllowedNames=/^PythonTypes[.]YacsRoadMaterialPreview_0x[0-9A-F]{8}$/
-+AllowedNames=/^PythonTypes[.]YacsRoadMaterialPreview_0x[0-9A-F]{8}[.][Pp]review$/
++AllowedNames=/^PythonTypes[.]YacsRoadMaterialPreview_0x[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]$/
++AllowedNames=/^PythonTypes[.]YacsRoadMaterialPreview_0x[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][.][Pp]review$/
 !BlockedNames=ClearArray
 [/Script/UnrealEd.EditorLoadingSavingSettings]
 bAutoSaveEnable=False

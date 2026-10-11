@@ -682,9 +682,37 @@ class RegistrationBoundaryTests(unittest.TestCase):
         self.assertEqual(observed["AllowedNames"]["count"], 10)
         self.assertEqual(len(observed["AllowedNames"]["first_names"]), 4)
         self.assertEqual(
-            [len(v) for v in observed["AllowedNames"]["first_names"]], [64] * 4
+            [len(v) for v in observed["AllowedNames"]["first_names"]], [256] * 4
         )
-        self.assertEqual(observed["BlockedNames"], {"count": 0, "first_names": []})
+        self.assertEqual(observed["AllowedNames"]["first_name_lengths"], [1000] * 4)
+        self.assertEqual(observed["AllowedNames"]["first_name_truncated"], [True] * 4)
+        self.assertTrue(observed["AllowedNames"]["names_truncated"])
+        self.assertEqual(
+            observed["BlockedNames"],
+            {
+                "count": 0,
+                "first_names": [],
+                "first_name_lengths": [],
+                "first_name_truncated": [],
+                "names_truncated": False,
+            },
+        )
+
+    def test_filter_diagnostics_preserve_both_full_anchored_transport_patterns(self):
+        settings, registry = self.native_settings()
+        registry.properties["BlockedNames"] = ["Foreign"]
+        with self.assertRaises(ValueError) as refused:
+            bridge.require_official_settings(settings, registry)
+        observed = json.loads(str(refused.exception).split("; observed=", 1)[1])
+        allowed = observed["AllowedNames"]
+        self.assertEqual(allowed["first_names"], list(bridge.ALLOWED_NAMES))
+        self.assertEqual(
+            allowed["first_name_lengths"],
+            [len(value) for value in bridge.ALLOWED_NAMES],
+        )
+        self.assertEqual(allowed["first_name_truncated"], [False, False])
+        self.assertFalse(allowed["names_truncated"])
+        self.assertTrue(all(value.endswith("$/") for value in allowed["first_names"]))
 
     def test_python_remote_execution_requires_live_native_false_without_fallback(self):
         settings = NativeSettings({"bRemoteExecution": False})
@@ -1000,10 +1028,18 @@ class RegistrationBoundaryTests(unittest.TestCase):
     def test_preview_filters_are_anchored_to_only_the_observed_generated_shape(self):
         patterns = [re.compile(value[1:-1]) for value in bridge.ALLOWED_NAMES]
         name = self.preview_identity()["toolset_name"]
-        for accepted in (name, name + ".preview", name + ".Preview"):
-            self.assertTrue(
-                any(pattern.fullmatch(accepted) for pattern in patterns), accepted
-            )
+        for valid_hex in ("F5C3E262", "0123ABCD", "00000000", "FFFFFFFF"):
+            for suffix in ("", ".preview", ".Preview"):
+                accepted = name.replace("F5C3E262", valid_hex) + suffix
+                self.assertTrue(
+                    any(pattern.search(accepted) for pattern in patterns), accepted
+                )
+        for invalid_hex in ("F5C3E26", "F5C3E2620", "f5c3e262", "F5C3E26G"):
+            for suffix in ("", ".preview", ".Preview"):
+                refused = name.replace("F5C3E262", invalid_hex) + suffix
+                self.assertFalse(
+                    any(pattern.search(refused) for pattern in patterns), refused
+                )
         for refused in (
             "Prefix" + name,
             name + "Suffix",
@@ -1013,8 +1049,42 @@ class RegistrationBoundaryTests(unittest.TestCase):
             name.replace("F5C3E262", "F5C3E2620"),
         ):
             self.assertFalse(
-                any(pattern.fullmatch(refused) for pattern in patterns), refused
+                any(pattern.search(refused) for pattern in patterns), refused
             )
+
+    def test_written_launcher_ini_matches_exact_transport_tuple(self):
+        launcher = Path(__file__).with_name("Start-YacsLevelEditorStream.ps1")
+        source = launcher.read_text(encoding="utf-8-sig")
+        payloads = re.findall(
+            r"(?m)^    @'\n(\[/Script/ModelContextProtocolEngine[.]ModelContextProtocolSettings\]\n[\s\S]*?)"
+            r"\n'@ \| Set-Content -LiteralPath \$editorSettingsPath -Encoding utf8$",
+            source,
+        )
+        self.assertEqual(
+            len(payloads), 1, "Expected one directly written literal settings payload"
+        )
+        # Materialize the literal as the observed Windows Set-Content CRLF
+        # bytes; this checks both producers, not Unreal's config import internals.
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "DefaultEditorPerProjectUserSettings.ini"
+            path.write_bytes(
+                (payloads[0].replace("\n", "\r\n") + "\r\n").encode("utf-8")
+            )
+            values, section = [], None
+            for line in path.read_text(encoding="utf-8").splitlines():
+                if line.startswith("["):
+                    section = line
+                elif (
+                    section == "[/Script/ToolsetRegistry.ToolsetRegistrySettings]"
+                    and line.startswith("+AllowedNames=")
+                ):
+                    values.append(line.removeprefix("+AllowedNames="))
+        self.assertEqual(tuple(values), bridge.ALLOWED_NAMES)
+        for value in values:
+            self.assertEqual(value.count("[0-9A-F]"), 8)
+            self.assertNotIn("{", value)
+            self.assertNotIn("}", value)
+            self.assertTrue(value.startswith("/^") and value.endswith("$/"))
 
     def test_preview_schema_and_catalog_bind_to_the_same_exact_native_name(self):
         identity = self.preview_identity()

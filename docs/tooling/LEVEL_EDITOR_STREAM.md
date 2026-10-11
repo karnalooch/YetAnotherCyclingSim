@@ -3,26 +3,19 @@
 **Scope:** owner-requested viewport review for #364 / PR #470, inside M3.
 **Status:** installed-source inspection and authenticated b9fd retarget review
 **PASS**; checkpoint cadence delivered at `c62bbc3e7dcdd9ccaad9b2facef477323413e279`
-with passing protected CI. The joined startup correction passed independent
-code review and 93 focused local checks. At `b92890e`, exact-SHA CI and the
-Blender reference passed; native readback confirmed `bRemoteExecution=False`
-and the required material/capture APIs. A complete diagnostic `ClassIterator`
-read returned 10,109 native classes and exactly the two legacy bases, but the
-production `ObjectIterator` inheritance conversion still blocked startup.
-At `5fa5d09`, protected CI and the Blender reference passed. Native flow passed
-the complete cross-check, Python-remote and material/capture preflight, then
-constructed the preview manager. UE registered the toolset as
-`PythonTypes.YacsRoadMaterialPreview_0xF5C3E262`, which the current exact allowlist
-does not admit. The following availability check ended in controlled `BLOCKED`.
-No successful census counts were retained before this later failure; the old
-ObjectIterator candidate remains unidentified.
-The source-only follow-up at `1b2e2ea` passed on the installed engine and
-retained all four requested files completely. The naming correction binds the
-actual generated class, native schema and client descriptor to one identity;
-it still needs a real Editor run.
-Live stream and same-process
-update proof remain **UNQUALIFIED**. The [workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
-records actual launch evidence and the current startup correction.
+with passing protected CI. At `3ecc90f`, exact-SHA CI and the Blender reference
+passed; Windows recorded `compileKind=none`. The naming correction passed
+74 local tests and independent 26-test QA, but the real Editor attempt ended
+in controlled **BLOCKED** at the initial registry-settings readback. The
+hashed overlay contained both literal `{8}` quantifiers; UE returned values
+without those braces. This occurred before the census, owned class registration
+or material requests. The exact internal transformation remains unidentified.
+The follow-up spells out all eight hexadecimal positions in both startup
+patterns, preserving the same allowed names and exact settings checks.
+The native class/schema/client identity contract still needs qualification.
+Live stream and same-process update proof remain **UNQUALIFIED**. The
+[workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
+records the authenticated launch evidence and current correction.
 
 The owner selected Epic's **Stream Level Editor** on 2026-10-10. The review
 must show the level viewport and preserve the source geometry and saved
@@ -195,6 +188,11 @@ The two startup name filters admit only the observed generated-name shape:
 `PythonTypes.YacsRoadMaterialPreview_0x` followed by eight uppercase hexadecimal
 digits, and that same name followed by `.preview` or `.Preview`. This is the
 preview's bounded admission policy, not a universal UE naming guarantee.
+The config-facing patterns spell out eight consecutive `[0-9A-F]` classes.
+This is equivalent to `[0-9A-F]{8}`, whose braces disappeared between the
+authenticated startup file and the `3ecc90f` native property readback. The
+pure Python identity validator retains its original quantifier. Filter
+diagnostics retain bounded values with explicit lengths and truncation flags.
 Before defining the owned class, the live filtered registry catalog must be
 empty. After registration it must equal exactly that class's native schema.
 
