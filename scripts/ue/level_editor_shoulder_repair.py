@@ -8,7 +8,6 @@ from __future__ import annotations
 import math
 from scripts.ue import road_shoulder_sources as sources
 from scripts.ue.road_shoulder_network import inspect_mesh
-from scripts.ue.sa_calobra_geometry_collision_witness import _hit_result
 
 RADIUS_CM = 3000.0
 TAPER_CM = 500.0
@@ -160,9 +159,14 @@ class ShoulderRepair:
         start, end = (p[0], p[1], p[2] + 200.), (p[0], p[1], p[2] - 200.)
         hit = a.SystemLibrary.line_trace_single(self.world, a.Vector(*start), a.Vector(*end),
                     a.TraceTypeQuery.ECC_VISIBILITY, True, ignore, a.DrawDebugTrace.NONE, True)
-        result = _hit_result(hit, start, end)
-        require(result is not None and result['actor_path'] in landscapes, 'Trace did not hit authenticated native Landscape')
-        return result['impact_cm'][2]
+        require(hit is not None, 'Landscape trace missed')
+        result = a.GameplayStatics.break_hit_result(hit)
+        require(isinstance(result, tuple) and len(result) == 18, 'Native hit result signature differs')
+        actor, impact = result[9], result[5]
+        require(result[0] is True and actor is not None and actor.get_path_name() in landscapes,
+                'Trace did not hit authenticated native Landscape')
+        require(abs(impact.x-p[0]) < 1. and abs(impact.y-p[1]) < 1. and math.isfinite(impact.z), 'Landscape impact differs from ray')
+        return float(impact.z)
 
     def observe(self):
         current = inspect_mesh(self.api, self.road)['summary']
