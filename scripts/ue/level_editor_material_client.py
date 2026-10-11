@@ -366,10 +366,11 @@ def _load_context(receipt_path):
 
 
 def _schema(ready):
+    toolset_name = bridge.validate_preview_toolset_identity(ready.get("toolset_identity"))
     tool = ready.get("tool_schema")
     require(type(tool) is dict and tool.get("name") in {
-        "YacsRoadMaterialPreview.preview", "YacsRoadMaterialPreview.Preview"},
-        "Native registry exposes an unexpected tool")
+        toolset_name + ".preview", toolset_name + ".Preview"},
+        "Native registry tool differs from its authenticated generated class")
     parameter = ready.get("wire_parameter")
     require(parameter in {"request_json", "RequestJson"}, "Unexpected preview wire parameter")
     inputs = tool.get("inputSchema")

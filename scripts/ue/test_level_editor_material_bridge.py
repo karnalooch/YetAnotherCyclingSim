@@ -2,6 +2,7 @@
 
 import copy
 import json
+import re
 import struct
 import tempfile
 import unittest
@@ -18,6 +19,9 @@ class NativeObject:
 
     def get_path_name(self):
         return self.name
+
+    def get_name(self):
+        return self.name.rsplit(".", 1)[-1]
 
 
 class NativeSettings:
@@ -41,9 +45,13 @@ class NativeClass(NativeObject):
         super().__init__(name)
         self.parent = parent
         self.metaclass = None
+        self.outer = None
 
     def get_class(self):
         return self.metaclass or NativeObject("/Script/CoreUObject.Class")
+
+    def get_outer(self):
+        return self.outer
 
 
 class NativeClassInventory:
@@ -694,11 +702,24 @@ class RegistrationBoundaryTests(unittest.TestCase):
             bridge.require_python_remote_disabled(unreadable)
         self.assertEqual(unreadable.reads, ["bRemoteExecution"])
 
-    def preview_schema(self):
+    @staticmethod
+    def preview_identity():
+        class_name = "YacsRoadMaterialPreview_0xF5C3E262"
+        outer_name = "/Synthetic/PythonTypes"
         return {
+            "class_name": class_name,
+            "class_path": outer_name + "." + class_name,
+            "outer_name": outer_name,
+            "toolset_name": "PythonTypes." + class_name,
+        }
+
+    def preview_schema(self):
+        toolset_name = self.preview_identity()["toolset_name"]
+        return {
+            "name": toolset_name,
             "tools": [
                 {
-                    "name": "YacsRoadMaterialPreview.Preview",
+                    "name": toolset_name + ".Preview",
                     "description": "Bounded preview",
                     "inputSchema": {
                         "type": "object",
@@ -719,7 +740,9 @@ class RegistrationBoundaryTests(unittest.TestCase):
             return bridge.canonical(catalog)
 
         registry = SimpleNamespace(get_all_toolset_json_schemas=live_schemas)
-        result = bridge.require_registry_catalog(registry, own_schema)
+        result = bridge.require_registry_catalog(
+            registry, own_schema, self.preview_identity()
+        )
         self.assertEqual(
             result,
             {
@@ -730,7 +753,9 @@ class RegistrationBoundaryTests(unittest.TestCase):
         )
         catalog.append({"tools": [{"name": "Foreign.Tool"}]})
         with self.assertRaisesRegex(ValueError, "Live official registry differs"):
-            bridge.require_registry_catalog(registry, own_schema)
+            bridge.require_registry_catalog(
+                registry, own_schema, self.preview_identity()
+            )
         self.assertEqual(len(calls), 2)
         self.assertEqual(len(catalog), 2)  # Never remove another owner's tools.
 
@@ -746,7 +771,9 @@ class RegistrationBoundaryTests(unittest.TestCase):
                     )
                 )
                 with self.assertRaises(ValueError):
-                    bridge.require_registry_catalog(registry, own_schema)
+                    bridge.require_registry_catalog(
+                        registry, own_schema, self.preview_identity()
+                    )
 
     def test_registry_catalog_parser_is_bounded_and_requests_still_require_objects(
         self,
@@ -762,7 +789,9 @@ class RegistrationBoundaryTests(unittest.TestCase):
                     get_all_toolset_json_schemas=lambda raw=raw: raw
                 )
                 with self.assertRaises(ValueError):
-                    bridge.require_registry_catalog(registry, own_schema)
+                    bridge.require_registry_catalog(
+                        registry, own_schema, self.preview_identity()
+                    )
         with self.assertRaisesRegex(ValueError, "JSON must be one object"):
             bridge.validate_request("[]", "synthetic", 0, set())
 
@@ -779,7 +808,9 @@ class RegistrationBoundaryTests(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "Live official registry differs"
         ) as refused:
-            bridge.require_registry_catalog(registry, self.preview_schema())
+            bridge.require_registry_catalog(
+                registry, self.preview_schema(), self.preview_identity()
+            )
         observed = json.loads(str(refused.exception).split("; observed=", 1)[1])
         self.assertEqual(observed["toolset_count"], 10)
         self.assertEqual(len(observed["first_toolsets"]), 4)
@@ -862,25 +893,217 @@ class RegistrationBoundaryTests(unittest.TestCase):
                 )
 
     def test_only_one_required_string_preview_tool_is_admitted(self):
-        tool = {
-            "name": "YacsRoadMaterialPreview.Preview",
-            "description": "Bounded preview",
-            "inputSchema": {
-                "type": "object",
-                "properties": {"RequestJson": {"type": "string"}},
-                "required": ["RequestJson"],
-            },
-        }
-        self.assertEqual(
-            bridge.reflected_tool({"tools": [tool]}), (tool, "RequestJson")
-        )
-        for changed in (
-            {"tools": [tool, tool]},
-            {"tools": [{**tool, "name": "MaterialInstanceTools.SetParent"}]},
-            {"tools": [{**tool, "inputSchema": {"type": "object", "properties": {}}}]},
+        identity = self.preview_identity()
+        schema = self.preview_schema()
+        tool = schema["tools"][0]
+        self.assertEqual(bridge.reflected_tool(schema, identity), (tool, "RequestJson"))
+        for tools in (
+            [tool, tool],
+            [{**tool, "name": "MaterialInstanceTools.SetParent"}],
+            [{**tool, "inputSchema": {"type": "object", "properties": {}}}],
         ):
             with self.assertRaises(ValueError):
-                bridge.reflected_tool(changed)
+                bridge.reflected_tool({**schema, "tools": tools}, identity)
+
+    def test_preview_identity_reads_actual_native_class_and_outer_without_assuming_root(
+        self,
+    ):
+        api = SimpleNamespace(Class=NativeClass, Object=NativeObject)
+        for outer_name in ("/Script/PythonTypes", "/Synthetic/Owned/PythonTypes"):
+            with self.subTest(outer_name=outer_name):
+                expected = self.preview_identity()
+                expected["outer_name"] = outer_name
+                expected["class_path"] = outer_name + "." + expected["class_name"]
+                native = NativeClass(expected["class_path"])
+                native.outer = NativeObject(outer_name)
+                self.assertEqual(
+                    bridge.read_preview_toolset_identity(api, native), expected
+                )
+                self.assertEqual(
+                    bridge.validate_preview_toolset_identity(expected),
+                    expected["toolset_name"],
+                )
+                native.name = native.name.replace("F5C3E262", "DEADBEEF")
+                changed = bridge.read_preview_toolset_identity(api, native)
+                self.assertNotEqual(changed, expected)
+                with self.assertRaises(ValueError):
+                    bridge.reflected_tool(self.preview_schema(), changed)
+
+    def test_preview_identity_refuses_python_class_substitution_or_non_native_outer(
+        self,
+    ):
+        api = SimpleNamespace(Class=NativeClass, Object=NativeObject)
+        for non_class in (
+            None,
+            NativeClass,
+            NativeObject(self.preview_identity()["class_path"]),
+        ):
+            with (
+                self.subTest(non_class=non_class),
+                self.assertRaisesRegex(ValueError, "native Class"),
+            ):
+                bridge.read_preview_toolset_identity(api, non_class)
+        native = NativeClass(self.preview_identity()["class_path"])
+        for outer in (None, SimpleNamespace(get_name=lambda: "/Synthetic/PythonTypes")):
+            native.outer = outer
+            with (
+                self.subTest(outer=outer),
+                self.assertRaisesRegex(ValueError, "native outer"),
+            ):
+                bridge.read_preview_toolset_identity(api, native)
+
+    def test_preview_identity_rejects_foreign_generated_shapes_and_ambiguous_paths(
+        self,
+    ):
+        identity = self.preview_identity()
+        cases = [None, {}, {**identity, "extra": "ignored"}]
+        for field, values in (
+            (
+                "class_name",
+                (
+                    "YacsRoadMaterialPreview",
+                    "YacsRoadMaterialPreview_0xf5c3e262",
+                    "YacsRoadMaterialPreview_0xF5C3E26",
+                    "YacsRoadMaterialPreview_0xF5C3E2620",
+                    "OtherPreview_0xF5C3E262",
+                    123,
+                ),
+            ),
+            (
+                "outer_name",
+                (
+                    "PythonTypes",
+                    "/Synthetic//PythonTypes",
+                    "/Synthetic/../PythonTypes",
+                    "/Synthetic/./PythonTypes",
+                    "/Synthetic.PythonTypes",
+                    "/Other/PythonTypes_PY",
+                    "/Other/Foreign",
+                    "/Synthetic/PythönTypes",
+                    "/" + "x" * 245 + "/PythonTypes",
+                ),
+            ),
+            (
+                "class_path",
+                (identity["class_path"] + "_Other", "/Other." + identity["class_name"]),
+            ),
+            (
+                "toolset_name",
+                ("YacsRoadMaterialPreview", "PythonTypes.Other_0xF5C3E262"),
+            ),
+        ):
+            cases.extend({**identity, field: value} for value in values)
+        for changed in cases:
+            with self.subTest(identity=changed), self.assertRaises(ValueError):
+                bridge.validate_preview_toolset_identity(changed)
+
+    def test_preview_filters_are_anchored_to_only_the_observed_generated_shape(self):
+        patterns = [re.compile(value[1:-1]) for value in bridge.ALLOWED_NAMES]
+        name = self.preview_identity()["toolset_name"]
+        for accepted in (name, name + ".preview", name + ".Preview"):
+            self.assertTrue(
+                any(pattern.fullmatch(accepted) for pattern in patterns), accepted
+            )
+        for refused in (
+            "Prefix" + name,
+            name + "Suffix",
+            name + ".SetParent",
+            name + ".preview.More",
+            name.replace("PythonTypes.", "Other."),
+            name.replace("F5C3E262", "F5C3E2620"),
+        ):
+            self.assertFalse(
+                any(pattern.fullmatch(refused) for pattern in patterns), refused
+            )
+
+    def test_preview_schema_and_catalog_bind_to_the_same_exact_native_name(self):
+        identity = self.preview_identity()
+        schema = self.preview_schema()
+        foreign = identity["toolset_name"].replace("F5C3E262", "DEADBEEF")
+        for top_name, tool_name in (
+            (None, schema["tools"][0]["name"]),
+            (foreign, schema["tools"][0]["name"]),
+            (schema["name"], foreign + ".Preview"),
+            (foreign, foreign + ".Preview"),
+        ):
+            changed = copy.deepcopy(schema)
+            changed["name"] = top_name
+            changed["tools"][0]["name"] = tool_name
+            registry = SimpleNamespace(
+                get_all_toolset_json_schemas=lambda changed=changed: bridge.canonical(
+                    [changed]
+                )
+            )
+            with self.subTest(top_name=top_name, tool_name=tool_name):
+                with self.assertRaises(ValueError):
+                    bridge.reflected_tool(changed, identity)
+                with self.assertRaises(ValueError):
+                    bridge.require_registry_catalog(registry, changed, identity)
+
+    def test_existing_owned_shape_catalog_blocks_installer_before_class_or_registration(
+        self,
+    ):
+        settings, registry_settings = self.native_settings()
+        cdos = {
+            "/Script/ModelContextProtocolEngine.ModelContextProtocolSettings": settings,
+            "/Script/ToolsetRegistry.ToolsetRegistrySettings": registry_settings,
+        }
+        catalog = Mock(return_value=bridge.canonical([self.preview_schema()]))
+        define_class, register, console = Mock(), Mock(), Mock()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            pins = {}
+            for module, name in (
+                ("ModelContextProtocolEngine", "ModelContextProtocolToolLibrary"),
+                ("ModelContextProtocolEditor", "ModelContextProtocolEditorToolLibrary"),
+            ):
+                relative = f"Plugins/Experimental/ModelContextProtocol/Source/{module}/Public/{name}.h"
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(
+                    f"UCLASS(Abstract) class U{name} : public UObject {{}}",
+                    encoding="utf-8",
+                )
+                pins[relative] = bridge.file_identity(path)["sha256"]
+            api = SimpleNamespace(
+                Paths=SimpleNamespace(
+                    engine_dir=lambda: str(root), convert_relative_path_to_full=str
+                ),
+                SystemLibrary=SimpleNamespace(
+                    get_engine_version=lambda: bridge.ENGINE_VERSION,
+                    execute_console_command=console,
+                ),
+                load_class=lambda _outer, path: path,
+                get_default_object=cdos.__getitem__,
+                ToolsetRegistry=SimpleNamespace(
+                    get_all_toolset_json_schemas=catalog,
+                    register_toolset_class=register,
+                ),
+                uclass=define_class,
+            )
+            with (
+                patch.object(bridge, "BRIDGE", None),
+                patch.object(bridge, "ENGINE_PINS", pins),
+                patch.object(
+                    bridge,
+                    "registration_preflight",
+                    return_value=(
+                        sorted(bridge.ABSTRACT_LEGACY_CLASSES),
+                        NativeSettings({"bRemoteExecution": False}),
+                        {},
+                    ),
+                ),
+                patch.object(bridge, "MaterialPreview") as preview,
+                self.assertRaisesRegex(ValueError, "registry must be empty") as refused,
+            ):
+                bridge.install(api, root, {}, "synthetic-session", "a" * 40)
+            self.assertFalse((root / bridge.READY_RELATIVE).exists())
+        self.assertIn(self.preview_identity()["toolset_name"], str(refused.exception))
+        catalog.assert_called_once_with()
+        preview.assert_not_called()
+        define_class.assert_not_called()
+        register.assert_not_called()
+        console.assert_not_called()
 
 
 class NativeCoverageTests(unittest.TestCase):

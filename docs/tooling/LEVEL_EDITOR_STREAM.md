@@ -16,6 +16,10 @@ constructed the preview manager. UE registered the toolset as
 does not admit. The following availability check ended in controlled `BLOCKED`.
 No successful census counts were retained before this later failure; the old
 ObjectIterator candidate remains unidentified.
+The source-only follow-up at `1b2e2ea` passed on the installed engine and
+retained all four requested files completely. The naming correction binds the
+actual generated class, native schema and client descriptor to one identity;
+it still needs a real Editor run.
 Live stream and same-process
 update proof remain **UNQUALIFIED**. The [workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
 records actual launch evidence and the current startup correction.
@@ -43,6 +47,14 @@ helper and `ModelContextProtocolToolResults.cpp`. This supplies the naming,
 lookup and result-format contracts without starting another Editor. Ordinary
 automatic selection, owner/ref/path guards and all read/output caps remain.
 The probe is declaration evidence only; it cannot admit a preview session.
+
+The authenticated [source read at `1b2e2ea`](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38133509018)
+retained all four files completely: 811 lines, with hashes matching the earlier
+inventory. The artifact is 40,023 bytes, SHA-256
+`efe51894ab0f370df8face4a8f7b4e801a6c2326f894dcfcb4aafc0fe8864a69`.
+`GetToolsetClassName` derives the qualifier from the actual class outer and
+combines it with the actual class name; it provides no metadata override for
+the previous short name. The MCP adapter reads native `inputSchema` directly.
 
 Epic's UE 5.8 API documents
 `IPixelStreaming2EditorModule::StartStreaming` with
@@ -178,6 +190,24 @@ sufficient. Epic's [configuration hierarchy](https://dev.epicgames.com/documenta
 supports array operations in the default file; command-line property overrides
 do not support arrays. Actual setting and catalog readbacks still gate startup
 and each material request. The launch receipt hashes the generated overlays.
+
+The two startup name filters admit only the observed generated-name shape:
+`PythonTypes.YacsRoadMaterialPreview_0x` followed by eight uppercase hexadecimal
+digits, and that same name followed by `.preview` or `.Preview`. This is the
+preview's bounded admission policy, not a universal UE naming guarantee.
+Before defining the owned class, the live filtered registry catalog must be
+empty. After registration it must equal exactly that class's native schema.
+
+The installer reads the owned native class's name, path and outer name. The
+outer must be an ordinary bounded absolute package name whose final segment
+is `PythonTypes`; its full package root is read, not guessed. The generated
+class name and full class path must agree with that outer. The derived toolset
+name must equal the native schema's top-level name and the tool's prefix.
+Those four identity fields are recorded in `ready.toolset_identity`, covered
+by the launch receipt's existing hash and rechecked by later native guards.
+The client uses the same identity validator and still requires the actual MCP
+`tools/list` to equal the one authenticated tool descriptor. An additional
+tool, a different generated class or an old unqualified name blocks the call.
 
 Legacy-library checks resolve the native engine/editor base classes by their
 pinned paths. The candidate enumerates actual native objects through both

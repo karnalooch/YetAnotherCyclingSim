@@ -35,8 +35,8 @@ PRIMING_COUNT = 3
 READY_RELATIVE = "Saved/LevelEditorStream/material-bridge-ready.json"
 REQUEST_ROOT = "Saved/LevelEditorStream/material-preview"
 ALLOWED_NAMES = (
-    "/^YacsRoadMaterialPreview$/",
-    "/^YacsRoadMaterialPreview[.][Pp]review$/",
+    "/^PythonTypes[.]YacsRoadMaterialPreview_0x[0-9A-F]{8}$/",
+    "/^PythonTypes[.]YacsRoadMaterialPreview_0x[0-9A-F]{8}[.][Pp]review$/",
 )
 LEGACY_BASE_CLASS = "/Script/ModelContextProtocolEngine.ModelContextProtocolToolLibrary"
 ABSTRACT_LEGACY_CLASSES = {
@@ -52,6 +52,7 @@ ENGINE_PINS = {
     "Plugins/Experimental/ToolsetRegistry/ToolsetRegistry.uplugin": "2dfc01159b54daea67c62966a48b78254d1d848d84e8df48c708c7a69d3f2062",
     "Plugins/Experimental/ModelContextProtocol/ModelContextProtocol.uplugin": "74420534edcd6baafcb48e0af919d53b84891bdade7b97869b0ef485c3ea1518",
     "Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/__init__.py": "df6a65bc5740271dcd989a1df3208b40282323015ec1aa586895fffb1e97abbb",
+    "Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Private/ToolsetRegistry/FunctionLibraryToolset.cpp": "246db3d9f86652f5cbafe07f10caf1a85dcd091877f5e9c2100e0a27972234ea",
     "Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Public/ToolsetRegistry/UToolsetRegistry.h": "03e3abeec87a10ff1b099cdbdfba9d65349409af49e7d2a1688bb78c77f59d6b",
     "Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Public/ToolsetRegistry/ToolsetRegistry.h": "e80e4fe2c7cb3f63f9bab387eb48194f90d245263e534165eaf7c572f1842152",
     "Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocol/Private/ModelContextProtocolModule.cpp": "86ee49f40a61e754040b72b8f618fa464542881ac04b0723fc3f68f5438880ee",
@@ -266,17 +267,74 @@ def close_values(first, second):
     )
 
 
-def reflected_tool(schema):
+def validate_preview_toolset_identity(identity):
+    """Bind the observed generated shape to one exact native class, not a family."""
+    require(
+        type(identity) is dict
+        and set(identity) == {"class_name", "class_path", "outer_name", "toolset_name"}
+        and all(type(value) is str for value in identity.values()),
+        "Preview toolset identity must contain exactly four native string fields",
+    )
+    class_name, outer_name = identity["class_name"], identity["outer_name"]
+    # This is our bounded admission policy for the generated shape observed in
+    # run38131946787, not a universal Unreal/Python class naming convention.
+    require(
+        re.fullmatch(r"YacsRoadMaterialPreview_0x[0-9A-F]{8}", class_name) is not None,
+        "Unexpected native preview class name; observed="
+        + bounded_text(class_name, 128),
+    )
+    require(
+        len(outer_name) <= 256
+        and re.fullmatch(r"/(?:[A-Za-z0-9_]+/)*PythonTypes", outer_name) is not None,
+        "Unexpected native preview outer package; observed="
+        + bounded_text(outer_name, 300),
+    )
+    # FFunctionLibraryToolset::GetToolsetClassName uses the actual outer's last
+    # slash-delimited segment. The admitted PythonTypes outer is its ordinary
+    # package branch, never the separate *_PY package/module transformation.
+    toolset_name = outer_name.rsplit("/", 1)[1] + "." + class_name
+    require(
+        identity["class_path"] == outer_name + "." + class_name
+        and identity["toolset_name"] == toolset_name,
+        "Native preview class path or qualified toolset name differs",
+    )
+    return toolset_name
+
+
+def read_preview_toolset_identity(api, native_class):
+    require(
+        isinstance(native_class, api.Class),
+        "Owned preview static_class did not return a native Class",
+    )
+    outer = native_class.get_outer()
+    require(isinstance(outer, api.Object), "Owned preview class has no native outer")
+    class_name, outer_name = native_class.get_name(), outer.get_name()
+    require(
+        type(class_name) is str and type(outer_name) is str,
+        "Owned preview class and outer names must be native strings",
+    )
+    identity = {
+        "class_name": class_name,
+        "class_path": native_class.get_path_name(),
+        "outer_name": outer_name,
+        "toolset_name": outer_name.rsplit("/", 1)[-1] + "." + class_name,
+    }
+    validate_preview_toolset_identity(identity)
+    return identity
+
+
+def reflected_tool(schema, identity):
+    toolset_name = validate_preview_toolset_identity(identity)
     require(
         type(schema) is dict
+        and schema.get("name") == toolset_name
         and type(schema.get("tools")) is list
         and len(schema["tools"]) == 1,
-        "The native preview registry must expose exactly one tool",
+        "The native preview registry must expose exactly the owned toolset and one tool",
     )
     tool = schema["tools"][0]
     require(
-        tool.get("name")
-        in ("YacsRoadMaterialPreview.preview", "YacsRoadMaterialPreview.Preview"),
+        tool.get("name") in (toolset_name + ".preview", toolset_name + ".Preview"),
         "Unexpected native preview tool name",
     )
     inputs = tool.get("inputSchema", {})
@@ -1558,11 +1616,11 @@ def require_python_remote_disabled(settings):
     )
 
 
-def require_registry_catalog(registry, own_schema):
+def require_registry_catalog(registry, own_schema, identity):
     # GetAllToolsetJsonSchemas queries the live, filtered registry; the per-class
     # schema above is a testing API and cannot establish the complete inventory.
     # The pinned FToolsetRegistry declaration specifies an array of schemas.
-    reflected_tool(own_schema)
+    reflected_tool(own_schema, identity)
     catalog = strict_json(
         registry.get_all_toolset_json_schemas(), 64 * 1024, expected_type=list
     )
@@ -1635,12 +1693,36 @@ def install(api, root, preparation, session_id, launcher_sha):
     libraries, python_settings, native_material = registration_preflight(
         api, engine, census_evidence=census_evidence
     )
+    catalog_before = strict_json(
+        api.ToolsetRegistry.get_all_toolset_json_schemas(),
+        64 * 1024,
+        expected_type=list,
+    )
+    require(
+        catalog_before == [],
+        "Official registry must be empty before defining the owned preview class; observed="
+        + canonical(
+            {
+                "toolset_count": len(catalog_before),
+                "first_names": [
+                    diagnostic_property(row.get("name") if type(row) is dict else row)
+                    for row in catalog_before[:4]
+                ],
+            }
+        ),
+    )
 
     def guard():
         require_official_settings(settings, registry_settings)
         require(legacy_census(api) == libraries, "Legacy MCP class census changed")
         require_python_remote_disabled(python_settings)
-        require_registry_catalog(api.ToolsetRegistry, schema)
+        require(
+            YacsRoadMaterialPreview.static_class() == native_toolset_class
+            and read_preview_toolset_identity(api, native_toolset_class)
+            == toolset_identity,
+            "Owned native preview class identity changed",
+        )
+        require_registry_catalog(api.ToolsetRegistry, schema, toolset_identity)
 
     from toolset_registry import tool_call
 
@@ -1655,20 +1737,23 @@ def install(api, root, preparation, session_id, launcher_sha):
             """Preview or restore bounded paint parameters in the owned retained scene."""
             return manager.handle_json(request_json)
 
+    native_toolset_class = YacsRoadMaterialPreview.static_class()
+    toolset_identity = read_preview_toolset_identity(api, native_toolset_class)
     api.ToolsetRegistry.register_toolset_class(YacsRoadMaterialPreview)
     require(
         api.ToolsetRegistry.is_toolset_class_registered(YacsRoadMaterialPreview),
-        "Official registry did not register the preview toolset",
+        "Official preview toolset is unavailable after the registration call, including name-filter rejection; observed="
+        + canonical(toolset_identity),
     )
     schema = strict_json(
         api.ToolsetRegistry.get_toolset_json_schema(YacsRoadMaterialPreview), 64 * 1024
     )
-    tool, parameter = reflected_tool(schema)
+    tool, parameter = reflected_tool(schema, toolset_identity)
     guard()
     api.SystemLibrary.execute_console_command(
         manager.world, "ModelContextProtocol.RefreshTools"
     )
-    catalog = require_registry_catalog(api.ToolsetRegistry, schema)
+    catalog = require_registry_catalog(api.ToolsetRegistry, schema, toolset_identity)
     # Fixed repository-owned command, never a remotely supplied command string.
     api.SystemLibrary.execute_console_command(
         manager.world, "ModelContextProtocol.StartServer 18784"
@@ -1681,6 +1766,7 @@ def install(api, root, preparation, session_id, launcher_sha):
         "sequence": 0,
         "endpoint": "http://127.0.0.1:18784/mcp",
         "tool_schema": tool,
+        "toolset_identity": dict(toolset_identity),
         "registry_catalog": catalog,
         "wire_parameter": parameter,
         "initial_state": manager.original_bindings,

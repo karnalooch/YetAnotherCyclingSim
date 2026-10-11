@@ -83,7 +83,12 @@ class Fixture:
                          "map_package": client.preparation.MAP_PACKAGE,
                          "runtime_source_sha": client.preparation.RUNTIME_SHA, "launcher_sha": LAUNCHER_SHA,
                          "launcher_root": str(self.launcher_root)}
-        self.tool = {"name": "YacsRoadMaterialPreview.preview", "description": "Synthetic fixture",
+        # Synthetic native identity, not a claim about the real package root.
+        class_name = "YacsRoadMaterialPreview_0xA1B2C3D4"
+        self.toolset_identity = {"class_name": class_name, "outer_name": "/Engine/PythonTypes",
+                                 "class_path": "/Engine/PythonTypes." + class_name,
+                                 "toolset_name": "PythonTypes." + class_name}
+        self.tool = {"name": self.toolset_identity["toolset_name"] + ".preview", "description": "Synthetic fixture",
                      "inputSchema": {"type": "object", "properties": {"request_json": {"type": "string"}},
                                      "required": ["request_json"]}}
         self.sources = {relative: client.digest((client.ROOT / relative).read_bytes())
@@ -100,6 +105,7 @@ class Fixture:
             {"path": row["source_path"], "sha256": row["sha256"], "size_bytes": row["size_bytes"]} for row in rows]))
         self.ready = {"schema_version": 1, "status": "MATERIAL_BRIDGE_READY", **self.identity,
                       "sequence": 0, "endpoint": client.ENDPOINT, "tool_schema": self.tool,
+                      "toolset_identity": self.toolset_identity,
                       "wire_parameter": "request_json", "initial_state": self.initial,
                       "source_world_saved": False, "performance_pass": False,
                       "owner_visual_status": "PENDING_FINAL_M3", "saved_inputs_sha256": self.saved_digest,
@@ -250,6 +256,43 @@ class ClientTests(unittest.TestCase):
         document(self.fixture.host_path, self.fixture.host)
         with self.assertRaisesRegex(ValueError, "hand off"):
             self.context()
+
+    def test_authenticated_ready_requires_generated_class_and_tool_to_agree(self):
+        original = copy.deepcopy(self.fixture.ready)
+        cases = [
+            {"toolset_identity": None},
+            {"toolset_identity": original["toolset_identity"] | {"class_path": "/Engine/Foreign.Class"}},
+            {"tool_schema": original["tool_schema"] | {"name": "YacsRoadMaterialPreview.preview"}},
+            {"tool_schema": original["tool_schema"] | {
+                "name": "PythonTypes.YacsRoadMaterialPreview_0x11223344.preview"}},
+        ]
+        for edit in cases:
+            with self.subTest(edit=edit):
+                # Re-sign the synthetic receipt so rejection tests semantic
+                # identity binding rather than the earlier raw-file hash gate.
+                document(self.fixture.root / client.bridge.READY_RELATIVE, original | edit)
+                self.fixture.host["material_bridge_ready_sha256"] = client.digest(
+                    (self.fixture.root / client.bridge.READY_RELATIVE).read_bytes())
+                document(self.fixture.host_path, self.fixture.host)
+                with self.assertRaises(ValueError):
+                    self.context()
+        self.assertEqual(0, self.fixture.calls)
+        self.assertEqual(0, self.fixture.transports)
+
+    def test_mcp_catalog_must_match_concrete_ready_name_before_call(self):
+        self.fixture.tool = self.fixture.tool | {
+            "name": "PythonTypes.YacsRoadMaterialPreview_0x11223344.preview"}
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result)
+        self.assertIn("Actual MCP tools/list", result["error"])
+        self.assertEqual(0, self.fixture.calls)
+
+    def test_generated_tool_capitalization_keeps_exact_class_identity(self):
+        ready = copy.deepcopy(self.fixture.ready)
+        ready["tool_schema"]["name"] = ready["toolset_identity"]["toolset_name"] + ".Preview"
+        tool, parameter = client._schema(ready)
+        self.assertEqual(ready["tool_schema"], tool)
+        self.assertEqual("request_json", parameter)
 
     def test_two_changes_share_native_state_and_restore_original_bindings(self):
         first = self.fixture.execute(self.fixture.request())

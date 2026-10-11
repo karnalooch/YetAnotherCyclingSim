@@ -177,8 +177,8 @@ bEnableToolSearch=False
 ServerUrlPath=/mcp
 [/Script/ToolsetRegistry.ToolsetRegistrySettings]
 !AllowedNames=ClearArray
-+AllowedNames=/^YacsRoadMaterialPreview$/
-+AllowedNames=/^YacsRoadMaterialPreview[.][Pp]review$/
++AllowedNames=/^PythonTypes[.]YacsRoadMaterialPreview_0x[0-9A-F]{8}$/
++AllowedNames=/^PythonTypes[.]YacsRoadMaterialPreview_0x[0-9A-F]{8}[.][Pp]review$/
 !BlockedNames=ClearArray
 [/Script/UnrealEd.EditorLoadingSavingSettings]
 bAutoSaveEnable=False

@@ -224,6 +224,38 @@ D: had 25,218,703,360. The ready receipt was not written, so no successful
 census counters or excluded identities from this run are claimed. There was
 no owned MCP listener startup, material request, PNG or owner handoff.
 
+The [source-only `1b2e2ea` run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38133509018)
+succeeded without an Editor process. The existing probe read 322 files /
+2,536,440 bytes and retained all four requested bodies completely, totaling
+811 lines. Their hashes match the earlier inventory. The authenticated
+[two-file artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38133509018/artifacts/11699349641)
+is 40,023 bytes, SHA-256
+`efe51894ab0f370df8face4a8f7b4e801a6c2326f894dcfcb4aafc0fe8864a69`.
+Exact-SHA [CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38133513325)
+and [Blender reference](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38133512817)
+passed. Editor launch and both complete material workflows skipped.
+
+The complete source confirms the naming defect: `GetToolsetClassName` combines
+the actual class name with a qualifier derived from its actual outer; schema
+generation then prefixes the tool function with that name. It supplies no
+metadata hook for restoring the previous short name. `Find` returns a handler
+only when it is enabled by the registry filters. The actual MCP adapter copies
+`name`, `description` and `inputSchema` directly, so no schema-field translation
+is required. The known reflected FString serialization remains covered by the
+client's existing single JSON-string unwrap; no speculative result-wrapper
+fallback is added.
+
+The naming correction uses a bounded startup pattern for the observed
+`PythonTypes.YacsRoadMaterialPreview_0x` plus eight uppercase hexadecimal digits.
+It binds the exact native class name, class path and actual outer to the
+derived toolset name; it does not guess the full outer's package root. Native
+schema and client descriptor must belong to that same identity. A preexisting
+enabled handler is rejected by a required empty catalog before declaring the
+owned class; the later catalog must equal exactly its native schema. The
+existing hashed ready receipt carries the four identity fields to the client,
+which still compares the complete actual `tools/list` descriptor. These are
+implementation checks awaiting the next real preview qualification.
+
 ## Measured local cost
 
 The authenticated [b9fd native checkpoint](README.md) reused compiled C++
