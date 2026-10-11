@@ -5,7 +5,13 @@
 **Scope authority:** `PRODUCT_REQUIREMENTS.md`  
 **World-building method:** `WORLD_BUILDING_BIBLE.md`
 
-**Current M3 checkpoint — 2026-10-10:** [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363) is completed and its whole-area material foundation is accepted and frozen. [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b` after [protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed. The delivery order is **#384 bounded official MCP inspection/test spike → #364 asphalt/shoulder → #365 world graph**. #384's fixed native session, separate [InputBoundary](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402) and authenticated [source-only receipt readback](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136) passed. Start #364 only after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467) is merged and [#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384) is closed as completed; then stop MCP infrastructure work.
+**Execution paused — 2026-10-10:** the owner requested an implementation stop,
+a work report and smaller M3 delivery batches. Resume implementation, agent
+execution and native jobs only after the owner resumes the work. Documentation
+and report validation are the current task. The small-batch checklist below is
+the resume plan; it does not start a downstream issue.
+
+**Current M3 checkpoint — 2026-10-10:** [#363](https://github.com/karnalooch/YetAnotherCyclingSim/issues/363) is completed and its whole-area material foundation is accepted and frozen. [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446) merged into `main` as `ad9a487ba2177fd49bb2d90784bac9a9f661ab3b` after [protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/37978579196) passed. #384 is completed after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467) merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its fixed native session, separate [InputBoundary](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402) and authenticated [source-only receipt readback](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136) passed. The approved delivery continues with **#364 asphalt/shoulder → #365 world graph**. Stop MCP infrastructure work. The owner's final whole-area visual audit is at the end of assembled M3, before the FPS benchmark; intermediate technical proof and review images remain required.
 
 Acceptance covers the material baseline on the **2,016.5 m × 2,016.5 m / 1024-component** working Landscape, not a finished rideable world or completed M3. [The material handoff](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) pins the saved/fresh-rendered consumer and native evidence. Canonical-map promotion, unresolved road/CUT/cliff/contact geometry and production PCGEx admission remain outside this acceptance. Performance is **`DEFERRED_AFTER_M3` / `performance_pass: false`**.
 
@@ -112,11 +118,24 @@ This is an ordered M3 delivery sequence, not a new nested milestone hierarchy. C
 The benchmark is due after the assembled M3 world is closed out, rather than
 at each intermediate handoff. This supersedes the earlier 2A/2B measurement
 deadline. Record `DEFERRED_AFTER_M3` with `performance_pass: false`; retain
-whole-area owner visual acceptance, saved/fresh-rendered consumers, native
-build/Automation/asset evidence and protected CI/review. The later benchmark
+saved/fresh-rendered consumers, native build/Automation/asset evidence and
+protected CI/review. The later benchmark
 still measures the actual assembled consumer at its exact SHA against the
 same full-area scope, reference hardware and budgets. No performance PASS or
 later-stage exception is implied.
+
+**Owner decision — 2026-10-10:** "zrób to jak najlepiej potrafisz, ja zrobię
+audyt wizualny na końcu m3 przed testem fpsów". For #364 and the remaining M3
+implementation, the owner performs the whole-area visual audit on the complete
+assembled M3 consumer, before #373's FPS benchmark. This supersedes repeated
+owner visual signoff as an intermediate handoff or rollout prerequisite.
+Continue native build/Automation/material/asset checks, saved and freshly
+rendered consumer proof, exact-SHA review images, technical review and protected
+CI at each scoped delivery. Inspect those images and retain defects and unknowns
+for the final audit; intermediate technical completion is not owner visual PASS.
+The accepted #363 checkpoint and its historical owner evidence remain accepted.
+Performance remains `DEFERRED_AFTER_M3`, with `performance_pass: false` until
+actual measured admission.
 
 The 500–1000 m Golden Kilometer is an **additional representative check inside this Landscape**, not an acquisition boundary, reduced implementation scope or replacement for whole-Landscape visual/performance acceptance. Step 13 concerns subsequent expansion **outside the current Landscape** to the remaining playable route. It does not mean that the current Landscape must wait until step 13 to receive its environment foundation. Keep the full 13-step sequence as the execution scope; prepare the complete baseline mask set before detailed quality refinement.
 
@@ -130,14 +149,159 @@ The 500–1000 m Golden Kilometer is an **additional representative check inside
 8. [**Foliage system**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/369) — place trees, shrubs, grass and understory through deterministic, budgeted instancing/culling/LOD or Nanite policies rather than unconstrained scatter density.
 9. [**Roadside procedural foundation**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/370) — establish rule-driven placement for the structural roadside layer such as barriers, posts, signs, walls, drainage and bounded rock/vegetation treatment where source evidence or admitted rules justify it. Rich hero dressing, selected buildings and lived-in scenes remain M7.
 10. [**Surface and biome blending**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/371) — remove hard visual seams between asphalt, shoulders, soil, rock and biome domains through reproducible transition logic; blending may improve presentation but may not conceal geometric disagreement.
-11. [**Whole-Landscape visual review and rider-camera check**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/372) — review appearance across the entire current Landscape with integrated materials, PCG/PCGEx, biomes, foliage, rocks and roadside foundation. Include different environments, road/terrain transitions and demanding broad views. An approximately **500–1000 m** Golden Kilometer supplies an additional detailed rider-camera check; it does not replace the full-area review. Concrete proof remains tracked in scoped Issues rather than a new roadmap stage.
-12. [**Whole-Landscape reference-PC performance gate**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/373) — retain the performance obligation and measure it after assembled M3 closeout under the 2026-10-09 owner decision. Measure traversal and representative demanding views across the entire current Landscape against `performance/PERFORMANCE_FRAMEWORK.md` and `performance/BUDGETS.md`, including the 1920×1080 / 60 FPS target on the reference RTX 2070 Super system and applicable frame/GPU/memory/streaming evidence. Retain location-specific results; a passing Golden Kilometer alone does not admit whole-Landscape performance.
-13. [**Full-route rollout**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/374) — after the entire current Landscape is visually and technically accepted, expand the same accepted systems **beyond the current Landscape** across the remaining playable route and verify representative problem areas plus the end-to-end rider-camera experience. Record performance as deferred to after assembled M3 closeout, rather than claiming that the rollout is within budget. The entire current Landscape is the preceding authoring and acceptance area, not a new expansion target at this step.
+11. [**Whole-Landscape visual review and rider-camera check**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/372) — prepare and inspect the whole-area review evidence with integrated materials, PCG/PCGEx, biomes, foliage, rocks and roadside foundation. Include different environments, road/terrain transitions and demanding broad views. An approximately **500–1000 m** Golden Kilometer supplies an additional detailed rider-camera check; it does not replace the full-area review. Carry this review contract onto the complete #374 assembled consumer for the owner's final audit before #373; intermediate evidence is not owner visual PASS.
+12. [**Whole-Landscape reference-PC performance gate**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/373) — retain the performance obligation and measure it after assembled M3 closeout and the owner's final visual audit under the 2026-10-09/10 decisions. Measure traversal and representative demanding views across the entire current Landscape against `performance/PERFORMANCE_FRAMEWORK.md` and `performance/BUDGETS.md`, including the 1920×1080 / 60 FPS target on the reference RTX 2070 Super system and applicable frame/GPU/memory/streaming evidence. Retain location-specific results; a passing Golden Kilometer alone does not admit whole-Landscape performance.
+13. [**Full-route rollout**](https://github.com/karnalooch/YetAnotherCyclingSim/issues/374) — after the entire current Landscape has technical admission and retained saved/fresh-rendered review evidence, expand the same proven systems **beyond the current Landscape** across the remaining playable route and verify representative problem areas plus the end-to-end rider-camera experience. Bind the owner's final whole-area audit to this complete assembled M3 consumer before #373. Record performance as deferred to after assembled M3 closeout, rather than claiming that the rollout is within budget. The entire current Landscape is the preceding authoring and acceptance area, not a new expansion target at this step.
 
 
 **Issue dependency gate:** steps are separate execution issues in the YACS — MVP Project. Reuse #335 for step 1; each later issue has a native GitHub `blocked_by` dependency on its immediate predecessor. Steps 2–13 remain `Blocked` while that predecessor is open. Do not begin implementation, open an implementation PR or move a step to Ready/In progress until the predecessor is completed with required proof and merged implementation where applicable. Closing as not planned or merely having green CI does not satisfy the gate. Change the order or remove a dependency only with explicit owner authorization. GitHub records the dependency; this execution rule governs agents because the dependency does not itself prevent branch/PR creation.
 
-**Authorized execution-order exception — 2026-10-09:** keep the 13 step identifiers above, but execute **#372 whole-area visual/technical acceptance → #374 full-route assembly and implementation closeout → #373 performance measurement**. Retain #372 as an additional prerequisite of #373. The native graph still has #373 blocking #374 and must be reconciled before #374 starts; this documentation does not change dependencies or Project columns. #363 is completed, so #384's material entry gate is satisfied; downstream work remains gated by its own open predecessors. M3 implementation closeout carries the outstanding benchmark debt; performance/release admission remains pending until measured evidence passes.
+**Authorized execution-order exception — 2026-10-09, clarified 2026-10-10:** keep the 13 step identifiers and **#372 whole-area review evidence/technical checks → #374 full-route assembly and implementation closeout → #373 performance measurement**. The owner's final visual audit uses #372's review contract on the complete #374 assembled consumer, before #373; it is not a repeated intermediate signoff. Retain #372 as an additional prerequisite of #373. The native graph still has #373 blocking #374 and must be reconciled before #374 starts; this documentation does not change dependencies or Project columns. #363 and #384 are completed; downstream work remains gated by its own open predecessors. M3 implementation closeout carries the outstanding owner-audit and benchmark obligations until each actually passes.
+
+### Small delivery batches and current checkpoint — 2026-10-10
+
+The M3 goal is one believable, reproducible route/world foundation supporting
+an end-to-end ride. First finish the **entire current 2016.5 m square Landscape**;
+then extend the accepted systems along the approved playable route. The roughly
+29–30 km planning estimate is not canonical chainage. This is not permission to
+expand to the entire island, implement weather, add M7 hero dressing or start M4.
+
+Use the existing issue IDs and named batches below, not new nested milestone
+numbers. Deliver one bounded implementation batch at a time, with a concrete
+output and its relevant check. Independent read-only review can run in parallel.
+Reuse existing tools and proven inputs; investigate a specific failure before
+rerunning native work. A source proof, prepared script, green CI and a saved
+Unreal consumer are separate completion states.
+
+**Verified foundations:** #335 World Authority, #349 GIS source
+planning, #363 Landscape materials and #384 bounded official MCP adoption are
+closed as completed. #429's cliff/erosion classification foundation is complete;
+#443/#445 were closed as historical/not planned and do not admit production
+cliff topology. #337 road construction and #459 road/shoulder/CUT contact remain
+open; the independent #338 road preview remains frozen Draft.
+
+The current independently verified road material result is
+`b9fddea3f6023239da98bec7a5107ed1124cf52e`:
+[protected CI 38116301824](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38116301824)
+and [native run 38116299783](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38116299783)
+passed. CI reused verified equivalent Unreal proof. Actual native save, separate
+fresh reload and GPU capture passed with **68 Lit, 16 crack controls, 16
+window0112 and six hairpin0081 final frames**. All archive identities were
+checked, and independent material/road specialists reviewed the images.
+The result verifies 370 white overlays, two local crack actors, 186 source
+supports, 185 shoulder targets and 67,760 selected tops, retaining original
+source geometry, normals and UVs alongside explicitly witnessed material UVs.
+
+Dry asphalt grain, subtle local cracks and near white lines are visible.
+Distant line gaps, transverse asphalt bands and the hard outer gravel boundary
+remain. The crack UV0/90/neutral controls were captured, but their weak normal
+signal leaves normal-space correctness unresolved; two canaries do not prove
+network-wide crack distribution or edge erosion. The next separate native
+selection uses the existing five-owner outer blend and ten band/paint controls,
+with the same 68 Lit cameras and 18 exact selected textures. The previous outer
+preparation failed first at the WeightTex check and later on Windows memory;
+its strict checks and new diagnostic stage records remain intact.
+
+At 0112, the new support022-hidden view leaves the dark narrow edge band
+visible, as do support112 and local-Landscape hides. At 0081, support185 owns
+the tall exposed wall; actual native wall/source CUT observations now accompany
+the source LiDAR evidence. Final native Landscape height and source-relative
+contact/profile corrections remain separately scoped under #459/#337.
+Material proof does not repair this geometry or grant road-physics admission.
+
+The [current material evidence](evidence/ROAD_SURFACE_MATERIALS_364.md) retains
+source pins, prior failed attempts and their limits. The
+[original review subset and role handoff](experiments/sa-calobra-road-materials-20261011/README.md)
+pin the successful b9fd images. Stream Level Editor preparation now supports the
+manifest-specific 4 MiB bound; a verified current-runtime
+retarget remains required before launch; no live stream is claimed. #364 and M3 remain in
+progress, owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` /
+`performance_pass: false`.
+
+#### Finish #364 as one complete delivery
+
+Owner feedback, 2026-10-10: complete the current road network as one user
+deliverable, with internal incremental checks. Use Material Forge to produce
+substantially less glossy, dry asphalt with irregular aggregate, wear and repair
+variation, and provide gravel shoulders along the whole existing network.
+The hairpin concern is realistic banking/crossfall and longitudinal profiling;
+it was not a request for guardrails. Inspect those source-relative geometry
+questions separately from this material-only conservation proof.
+
+| Batch | Concrete output and completion check | Current status |
+|---|---|---|
+| Asphalt source | Pin tools, recipe and scale; render twice; authenticate graph and five maps | **PASS at `27f24ead`:** granular dry source, 4 m / 400 cm, two actual Godot exports and independent receipt/map verification |
+| Source-to-consumer handoff | Authenticate both retained bundles against current inputs before import | **PASS at 9519:** producer `27f24ead` / `38096069404-1` authenticated and consumed natively |
+| Windows cache identity | Qualify current/cache inputs using the existing authority before native execution | **PASS at 9519:** required protected CI and native build/Automation; next integrated revision still requires its exact checks |
+| Saved-scene inventory | Fresh isolated Entry process loads the accepted consumer and records material/mesh/source identities | **PASS at b9fd:** full asphalt/shoulder save and separate fresh reload, all 370 source-clipped paint overlays and two crack canaries; all 68 Lit images reviewed |
+| Material conservation | Preserve positions/topology, normals and original UV prefix; independently witness any named appended material channel | **PASS at 9519:** full original buffer conservation plus separately witnessed appended shoulder UV, rollback and fresh readback |
+| Road canary | Apply the validated asphalt to the authorized slot; verify 400 cm projection, DirectX normals and exact restoration | **PASS at 9519:** authenticated granular source and exact canary restoration |
+| Shoulder coverage | Qualify every source owner, including Nudo; gravel on outer tops, original material on walls/interiors | **PASS at 9519:** 186 owners, 185 material targets and 67,760 selected tops; `rock_ground` remains at its 150 cm provider scale |
+| Edges and appearance | Inspect both directions, bends, close/distant views and shoulder/terrain transitions | **In progress:** dry grain and restrained canaries in reviewed b9fd frames; separate outer blend and ten band/paint controls pending |
+| Local surface details | Author restrained crack motifs and reference-matched white edge markings with stable source-owned placement | **Source PASS at `07ebafad`:** eight crack motifs, 16 actual Godot exits and 80 independently verified maps; white lines and two crack actors saved/fresh/Lit at b9fd; 16 crack controls reviewed, normal-space and sparse network distribution unresolved |
+| Contact/profile debt | Isolate the owning surface and prove bounded source-relative corrections separately | **#459 open:** all 22 contact images verified/viewed at b9fd; support185 owns the hairpin wall, support022 hide does not remove the 0112 dark band. Native wall/source CUT payload and source LiDAR retained; final Landscape/contact repair pending |
+| Save, reopen and deliver | Save derived outputs, verify fresh reload/render, pass required checks and merge #470 | **In progress:** current native/visual proof and complete #364 delivery pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
+
+Local delivery update, 2026-10-11: the owner-approved live bridge saved a new
+derived worn-asphalt/shoulder checkpoint at handler `2a00f7eb`. Native exact
+comparison covered 559 dynamic meshes; source asphalt remained unchanged.
+Fresh-process reload and current protected delivery checks remain outstanding,
+and the local shoulder correction retains 50 deferred contacts on one side.
+See [live checkpoint evidence](tooling/LEVEL_EDITOR_STREAM.md#explicit-saved-checkpoint-and-current-native-result--2026-10-11).
+#364 remains open; #365 preparation is read-only until its delivery gate passes.
+
+#### Prepared handoff from #364 to #365 — 2026-10-11
+
+Owner decision: leave the remaining shoulder steps under #459, preserve the
+existing correction limits, and finish the material delivery. This does not
+waive saved/fresh-rendered material proof, review or protected CI. Do not treat
+contact repair as a newly invented prerequisite of the material handoff.
+
+| Handoff item | Pinned input or remaining action |
+|---|---|
+| Saved material candidate | `/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface`; map SHA-256 `cf806999d73e6762ba6d91fab8b4e29d6c475a828ad9afcd525462054602ed1a`; five packages, 186 material bindings, 559 native mesh comparisons; local retention only |
+| Native identity | Launcher `6c823eaaeec859cb4c7ae9db52fd82a065351018`, saving handler `2a00f7ebba403cf7cda663bc6fa303c7d72e891b`; checkpoint receipt is the per-package hash authority, not this summary |
+| Material admission | Fresh-process reload/render of the new saved candidate remains NOT RUN. Existing `Invoke-YacsRoadSavedConsumer.ps1` requires an idle host; preserve live Editor PID 14704 and do not bypass that guard |
+| Current CI correction | Run 38167515175 failed five existing camera-error regressions. Production now preserves material state, records BLOCKED and propagates camera errors. Original camera assertions are unchanged; focused suite 112 PASS, two Windows symlink capability skips |
+| UE / PCG baseline | Installed UE 5.8.2-56702186; engine PCG descriptor Version 8 / VersionName 1.0. Version-specific API audit remains required before graph authoring |
+| PCGEx baseline | Approved authoring pin `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66`, descriptor 0.79 / UE 5.8.0, with the recorded compatibility patch. The current live snapshot has no PCGExtendedToolkit plugin; its optional enabled project entry is not proof of availability |
+| World inputs | Reauthenticate `pcg-masks-v1-2026-10-04` and applicable transition manifests through the existing Julka identities before consumption. Preserve road, 0.51 m conservative shoulder, BOB, building, water and infrastructure exclusions; unknown height remains unknown |
+| First #365 work after admission | Audit installed pinned APIs and reusable graphs; define stable graph/seed/input identities, then prove deterministic regeneration and saved reload over the current 2016.5 m square. Historical Alpine graphs/counts are not Sa Calobra acceptance |
+
+This is preparation only: #365 remains blocked by #364's protected delivery.
+No PCG graph, scatter, rock placement or plugin installation was executed.
+Final owner audit remains `PENDING_FINAL_M3`; performance remains
+`DEFERRED_AFTER_M3`, `performance_pass: false`.
+
+#### Complete the remaining world foundation after #364
+
+Each row is an existing issue containing small consecutive batches. Finish its
+predecessor and required technical delivery before activating the next issue.
+Existing experiments are reusable evidence, not completed production stages.
+
+| Issue / workstream | Small consecutive batches | Ready for the next handoff when |
+|---|---|---|
+| #337 / #459 road and contact debt | Identify the actual owning surface at each retained defect; verify source stations/topology/CUT/FILL; apply only separately admitted local corrections and prove fresh-load contact | Rideability, road/terrain contact and collision have their own proof; material acceptance does not close this debt |
+| #365 world graph | Audit the pinned UE/PCGEx APIs and existing graph; connect admitted masks/route inputs; regenerate with fixed seeds and compare outputs after reload | Stable identities, exclusions and unknown handling are proved across the current area |
+| #366 safe road corridor | Define clearance including asset extent/scale; enforce exclusion for trees/rocks/props; inspect the whole current road network after regeneration | The rideable corridor remains clear without moving the road |
+| #367 biomes | Build admitted valley/lower-Mediterranean, forest and exposed-limestone domains; select licensed palettes; verify deterministic distribution and exclusions | Whole-area biome character follows evidence or explicitly named fallback limits |
+| #368 rocks, cliffs and scree | Reuse admitted classification; verify Landscape/mesh surface ownership; add bounded dressing and inspect steep faces/contact after reload | Production topology and dressing have their own proof; historical rejected variants remain rejected |
+| #369 foliage | Select trees/shrubs/grass/understory; configure deterministic density and instancing/culling/LOD; verify asset-size exclusions and retained instance counts | Whole-area vegetation is reproducible and technically budgeted; density is not an invented measured fact |
+| #370 roadside structure | Derive evidenced side/placement rules; add barriers/posts/signs/walls/drainage; verify clearance and reload | Structural foundation is reproducible; unknown infrastructure and M7 hero content are not fabricated |
+| #371 blending | Inspect asphalt/shoulder/soil/rock/biome seams; add bounded deterministic transitions; compare close/distant views after reload | Transitions preserve hard exclusions and geographic domains and do not hide geometry errors |
+| #372 review preparation | Capture different environments, transitions, area edges and demanding views; run the additional Golden Kilometer rider check; retain P1–P5 / R4C2 / R4C3 review locations | Saved/fresh-rendered whole-area technical evidence and an explicit defect queue are ready for assembly; this is not final owner signoff |
+| #374 complete-route assembly | Reconcile the existing dependency/body mismatch with the already approved audit/benchmark order; verify sources outside the current Landscape; extend the accepted systems and inspect an end-to-end ride | The complete derived consumer is saved, freshly loaded/rendered and technically delivered; no fabricated FPS PASS |
+| Final owner audit | Present the complete assembled M3 consumer; review the full area/route from the rider camera; fix and recapture the owner's concrete findings | The owner explicitly accepts that exact assembled visual candidate |
+| #373 performance | Freeze the assembled/audited candidate; measure traversal and demanding whole-area views on the reference PC; diagnose/optimize and repeat only affected checks | Actual 1920×1080 / 60 FPS and applicable frame/GPU/memory/streaming budgets pass with exact-SHA evidence |
+
+**Order after world dressing:** #372 technical review evidence → #374 assembly
+→ final owner visual audit → #373 FPS. Existing #372/#374 issue text still
+contains earlier intermediate-owner-signoff language, and the native graph
+still needs the documented #373/#374 reconciliation. Synchronize that metadata
+before #374 starts; this checklist does not edit GitHub dependencies or columns.
+M3 implementation can retain benchmark debt at closeout, but performance
+admission stays false until measurement passes. Preserve the accepted #363
+checkpoint throughout.
 
 ### Official Unreal MCP adoption between materials and asphalt
 
@@ -182,6 +346,17 @@ Prove the restricted surface and safety parity before cutover. After success,
 This fixed inspector does not admit stock `MaterialInstanceTools`; #364 needs
 separate version-matched schemas, argument/resource restrictions and material-only
 native authoring proof before using those tools.
+
+The [#364 evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md) retains the
+installed material declaration audit and authenticated two-run 4 m asphalt
+source replay. Stock mutation remains unadmitted; the existing fixed Material
+Forge importer and scoped proof collectors remain available under the current
+policy. The `396861de` asphalt baseline now has native assignment,
+saved/fresh-rendered consumer proof and four final same-camera frames with full
+mip warmup. The 436-triangle shoulder now has saved/fresh-load conservation
+proof and four retained frames at `1ef46da`, including a clean GPU process
+exit and independent proof review. Whole-area visual acceptance and complete
+#364 delivery remain pending.
 
 From step 3 onward, use official Epic MCP for supported generic editor control
 within YACS constraints; do not add custom generic workarounds. Custom toolsets
@@ -229,10 +404,11 @@ M3 is complete when:
 - the Landscape workflow is non-destructive and reproducible;
 - World Authority-backed masks/domains and generated presentation are reproducible, with route exclusion enforced;
 - valley / forest / exposed limestone-upland material, biome, foliage and rock foundations are usable from the rider camera;
-- the entire current Landscape has visual acceptance and technical admission before expansion beyond it; the Golden Kilometer is an additional detailed check;
+- the entire current Landscape has technical admission and retained saved/fresh-rendered review evidence before expansion beyond it; the Golden Kilometer is an additional detailed check;
 - full-route world generation uses the accepted M3 systems rather than ad-hoc per-location reconstruction;
 - rider-camera proof has no obvious grid, floating-road, black-wedge or major intersection failures;
 - required exact-SHA Unreal proof passes;
+- the owner completes the whole-area visual audit on the assembled M3 consumer before #373's FPS benchmark; intermediate technical completion does not count as that audit;
 - the deferred reference-PC 1080p/60 benchmark is explicitly retained for the assembled world after M3 closeout; performance admission remains pending until it actually passes;
 - documentation and provenance are current.
 
@@ -416,11 +592,13 @@ cheap iteration
 
 See `CI_VALIDATION_TIERS.md`.
 
-For current M3 world assembly, the 2026-10-09 owner decision supersedes the
-performance-before-closeout timing above: owner visual acceptance and required
-exact-SHA technical/protected closeout proceed with `DEFERRED_AFTER_M3`, then
-the assembled world is benchmarked under #373. Budgets and measured admission
-remain unchanged. The legacy `L_CyclingTest` lane is regression-only unless
+For current M3 world assembly, the 2026-10-09/10 owner decisions supersede the
+intermediate owner-signoff and performance-before-closeout timing above:
+scoped exact-SHA technical/protected delivery, saved/fresh-rendered proof and
+retained review images continue with `DEFERRED_AFTER_M3`. The owner audits the
+complete assembled M3 consumer at the end, then #373 measures FPS. No technical
+handoff supplies owner visual PASS or performance PASS. Budgets and measured
+admission remain unchanged. The legacy `L_CyclingTest` lane is regression-only unless
 legacy authoring inputs change; it cannot admit the current Sa Calobra world.
 
 A technical GREEN result and a visual PASS are independent decisions.

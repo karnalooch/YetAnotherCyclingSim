@@ -180,14 +180,23 @@ def import_weight(inputs):
     return texture
 
 
-def build_graph(material, weights, textures, recipe):
-    graph = Graph(material)
+def build_surface_terms(graph, weights, textures, recipe, *, scalar_values=None):
+    """Build the same five-role surface on a caller-owned new graph.
+
+    This reuses the frozen material's world registration, role projection and
+    normal response without loading a map, importing textures, assigning a
+    Landscape material or saving any asset. Callers using an existing instance
+    supply its verified scalar values; the original producer keeps its defaults.
+    """
     add, multiply = unreal.MaterialExpressionAdd, unreal.MaterialExpressionMultiply
     subtract, divide = (
         unreal.MaterialExpressionSubtract,
         unreal.MaterialExpressionDivide,
     )
-    params = {name: graph.scalar(name, value) for name, value in SCALARS.items()}
+    values = SCALARS if scalar_values is None else scalar_values
+    if set(values) != set(SCALARS):
+        raise ValueError("Whole-map surface scalar inventory differs")
+    params = {name: graph.scalar(name, values[name]) for name in SCALARS}
     position = graph.node(unreal.MaterialExpressionWorldPosition)
     xy = graph.node(
         unreal.MaterialExpressionComponentMask, r=True, g=True, b=False, a=False
@@ -301,23 +310,28 @@ def build_graph(material, weights, textures, recipe):
     diagnostic_color = graph.lerp(sums["Domain"], checker_color, params["CheckerMix"])
     # Diagnostics emit their legend colors. The ordinary preparation mode keeps
     # the exact same macro albedo while camera distance changes only micro normals.
-    graph.output(
-        graph.binary(
+    return {
+        "BaseColor": graph.binary(
             multiply,
             sums["BaseColor"],
             graph.unary(unreal.MaterialExpressionOneMinus, diagnostic),
         ),
-        unreal.MaterialProperty.MP_BASE_COLOR,
-    )
-    graph.output(
-        graph.binary(multiply, diagnostic_color, diagnostic),
-        unreal.MaterialProperty.MP_EMISSIVE_COLOR,
-    )
-    graph.output(
-        graph.lerp(normal, graph.color([0.0, 0.0, 1.0]), diagnostic),
-        unreal.MaterialProperty.MP_NORMAL,
-    )
-    graph.output(sums["Roughness"], unreal.MaterialProperty.MP_ROUGHNESS)
+        "Emissive": graph.binary(multiply, diagnostic_color, diagnostic),
+        "Normal": graph.lerp(normal, graph.color([0.0, 0.0, 1.0]), diagnostic),
+        "Roughness": sums["Roughness"],
+    }
+
+
+def build_graph(material, weights, textures, recipe):
+    graph = Graph(material)
+    terms = build_surface_terms(graph, weights, textures, recipe)
+    for channel, prop in (
+        ("BaseColor", unreal.MaterialProperty.MP_BASE_COLOR),
+        ("Emissive", unreal.MaterialProperty.MP_EMISSIVE_COLOR),
+        ("Normal", unreal.MaterialProperty.MP_NORMAL),
+        ("Roughness", unreal.MaterialProperty.MP_ROUGHNESS),
+    ):
+        graph.output(terms[channel], prop)
     # No WPO, pixel depth offset, displacement, tessellation, AO, or opacity.
     return len(graph.nodes)
 

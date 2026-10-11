@@ -232,6 +232,14 @@ exceptions preserve the exact canonical `Saved/Logs/YetAnotherCyclingSim.log`
 and `Saved/RuntimeProof/CI/RegionTerrain/*/*.log` files. Windows may retain file
 locks even for exited Unreal processes; these logs are neither build cache nor
 reusable proof. The existing scoped process/lock guard still runs before cleanup.
+The cleanup helper itself checks host ownership before any mutation and again
+before both process-termination paths and log deletion. Only `IDLE` or
+`REMOTE_BUSY` with zero local/unknown Editors permits cleanup; missing, failed or
+unknown ownership probes fail closed. A preview launcher's script path inside the
+runner workspace does not transfer ownership of its interactive Editor to CI.
+This also protects callers whose workflow checks ownership only after cleanup.
+The current-run bootstrap is retained through final cleanup; that step never
+falls back to a potentially stale helper in the warm worktree.
 Other generated files, including old JSON/PNG receipts, remain disposable.
 Sa Calobra import/capture use per-run `-AbsLog` destinations and new evidence
 directories; upload is restricted to the exact run ID and attempt. A failed
@@ -239,7 +247,68 @@ preparation cannot upload old-run diagnostic files under the new commit name.
 This preserves locked diagnostics without suppressing other cleanup failures. The
 code-only LFS contract and exact HEAD are then rechecked. Preserved outputs are
 only candidates for reuse; they are never trusted without fingerprint and
-environment checks. A compile-fingerprint mismatch is **not** cache corruption:
+environment checks. Line-ending changes are provenance changes, not grounds to bypass the check.
+Git pins LF for every current C# and compile/proof-script fingerprint input,
+including the attributes file itself. The native #364 checkout-byte regression
+compares the physical Windows/Linux working files with exact committed Git
+blobs. A future change to `.gitattributes` is classified as Unreal RUNTIME,
+and the attributes file participates in the proof fingerprint: the normal,
+serialized Unreal CI lane must renew green proof before read-only consumers may
+reuse the active cache. If LF/CRLF changes compiled bytes, the compile
+fingerprint differs and the existing WARM COMPILE path validates those binaries.
+A read-only native consumer must **fail closed** while such provenance is stale;
+it must not rewrite state.json, retroactively certify a failed proof, invalidate
+another owner's cache, or run Unreal before the normal verification lane.
+The #364 native workflow first waits on a hosted worker for the same-SHA
+successful protected `CyclingSim CI` run, without reserving the shared Unreal
+concurrency lock. Only then does its Windows baseline job acquire the existing
+lock and check cache state again. A failed/cancelled/timed-out upstream CI cannot
+launch the native reader, and no green CI alone substitutes for runtime proof.
+Windows cache raw-byte reconciliation — #364 (2026-10-10):
+`Resolve-YacsUnrealCiCache.ps1` invokes the pinned
+`materialize_unreal_cache_inputs.py` **only** during normal serialized
+`CyclingSim CI` Resolve, after the isolated tracked checkout is cleaned and
+before cache admission. It accepts exactly the Git index's C# and critical
+PowerShell inputs with `eol=lf`; source modifications other than CRLF drift
+are rejected. It atomically replaces CRLF-only drift with authenticated raw
+HEAD Git blob bytes because Git for Windows checkout conversion did not reliably
+rematerialize LF in the existing RoadForge build-rule file. The repair verifies
+every physical input against its committed blob and compares both physical
+compile/proof fingerprints to the hosted exact-SHA values. The cache
+state, compiled DLLs, assets, editor and local authoring checkout remain
+untouched. Any failure rejects reuse before build/Automation or proof
+publication; standalone read-only native consumers never repair the cache.
+
+When the active retained cache checkout itself has noncanonical raw source
+bytes (or a dirty/unverifiable tracked source identity), cache selection
+**preserves the old pointer/worktree and skips destructive cleanup**, choosing a
+fresh run-scoped checkout instead. This uses the existing locked-binary recovery
+pattern: the normal UBT/Automation gate must build/verify anew before publishing
+the fresh cache pointer. It avoids treating Windows Git's EOL conversion as a
+trusted source of exact physical bytes; no old cache state is relabeled green.
+The one-time fresh compile may cost more than warm reuse but is safer than
+repeatedly mutating an inconsistent cache. Only CI worktrees are eligible;
+interactive `D:\\yacs\\project` remains outside this mechanism.
+
+**Unreal binary fingerprint correction — M3 #364 (2026-10-10).**
+The previous `yacs-unreal-binary-v1` filesystem traversal under `Plugins/`
+included engine-generated `Plugins/*/Binaries/**` and
+`Plugins/*/Intermediate/**` as unknown runtime inputs. On the persistent
+Windows cache this hashed DLLs and intermediates produced by the preceding
+build, while the hosted Linux code-only checkout had no such outputs. Both the
+compile fingerprint and its dependent Automation proof fingerprint could then
+differ even when every tracked Git source byte matched exactly.
+
+`yacs-unreal-binary-v2` excludes **only these plugin build-output trees**
+from its binary-input traversal, pruning them before filesystem enumeration.
+Normal repository source under `Plugins/*/Source/**`, `*.uplugin`,
+`Build/**` and unknown *non-generated* plugin runtime inputs remain in the
+compile fingerprint. The new namespace forces a fresh exact-SHA cache identity,
+requiring ordinary successful Unreal build/Automation before any green cache
+can be published. This is not permission to rewrite, delete or ignore existing
+DLLs, weaken CI proof or change physics/world geometry.
+
+A compile-fingerprint mismatch is **not** cache corruption:
 when engine/toolchain provenance still matches, the lane invalidates the green
 stamp but keeps `Intermediate/Binaries` and performs a WARM COMPILE. Missing
 final project DLLs are handled the same way because UBT can relink/rebuild them
@@ -312,6 +381,84 @@ difference directly:
 These timings are evidence from that runner/revision, not a guaranteed future
 performance budget. The architectural invariant is the cache decision and
 fail-closed provenance, not a specific duration.
+
+### M3 road-material iteration cadence
+
+Owner decision, 2026-10-11: routine #364 material corrections must not launch a
+full scene preparation and render bundle after every push. Compile reuse and
+scene reuse are separate costs. The native
+[b9fd checkpoint](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38116299783)
+reused compiled binaries, but its baseline, save preparation, independent reload
+and GPU processes took 91.368, 261.167, 143.887 and 771.374 seconds respectively.
+Those four processes alone total 21.1 minutes, before the additional canary,
+contact diagnostics, host preparation and artifact upload.
+
+The existing branch-scoped road workflows now require explicit intent:
+
+| Work | Trigger on `codex/364-road-surface-materials` | Meaning |
+|---|---|---|
+| Ordinary iteration | Push without a full-proof marker | Required CI continues; both material proof workflows skip their jobs before reserving the shared host |
+| Native material checkpoint | Commit message includes `[road-material-proof]` | Wait for successful protected CI at this exact SHA, then run the existing baseline, canary, full-network save, independent reload and all 68 Lit cameras |
+| Material source checkpoint | Commit message includes `[road-source-proof]` | Run the existing authenticated source renderer and determinism comparison; use when the source producer or selected source inputs change |
+| Live viewport review | Explicit `[level-editor-review]` selection | After exact-SHA CI and the applicable Blender reference finish, open the authenticated saved scene through the separate [Level Editor review](tooling/LEVEL_EDITOR_STREAM.md) workflow |
+| Material parameter preview | `material-request` against the existing session and unchanged launcher SHA | Send the bounded paint scalar/vector request to the owned Editor; no new scene copy, build, CI dispatch or full proof |
+
+Feature markers such as `[road-outer-blend]`, `[road-band-controls]`,
+`[road-paint-controls]`, `[road-crack-canary]`, `[shoulder-contact]`,
+`[road-cracks-source]` and `[road-api-read]` select optional work only after the
+corresponding full-proof intent is present. They never request a heavy proof
+by themselves. The native and source intents are separate; a native request
+does not regenerate source textures automatically. Request source proof first,
+review its result, then request native proof in a separate push. Combining both
+heavy requests can keep the shared host busy long enough to exhaust the native
+CI waiter's existing deadline.
+
+The marker must be in the final HEAD commit message of the push; a PR body or
+an earlier pushed commit is not the selector. Repeat every desired feature
+marker at each checkpoint because selections do not carry over from earlier
+runs. GitHub's string matching is case-insensitive, and even a quoted marker
+inside the HEAD message counts as intent. Omit the literal full-proof markers
+from ordinary commit messages, including commits documenting this policy.
+
+Both proof workflows retain owner/repository/branch/event guards. Their push
+triggers have no path filter, so an explicit checkpoint can be requested after
+a documentation-only followup without editing a runtime file. The shared host
+lock is job-scoped and acquired only by an admitted native/source job; the
+hosted CI waiter holds no Unreal lock. This is the existing temporary #364
+branch entry point, not an additional Gumball command or proof framework.
+Rerunning an older Actions run uses that run's old workflow and SHA; it does
+not adopt this cadence or prove a later head.
+
+Ordinary CI may still use Windows because classification covers the complete
+PR diff. STATIC/RUNTIME/COMPILE fingerprint checks remain unchanged. A skipped
+material job grants no new native evidence. Record the last successful runtime
+SHA separately from the current launcher/docs SHA. Accumulate small fixes,
+inspect the affected views, then request a complete checkpoint at a useful
+review boundary and for the final material candidate. Existing source identity,
+readiness, conservation, full coverage and final admission requirements remain
+mandatory; a partial preview never substitutes for them.
+
+The Level Editor candidate connects its persistent viewport to one scoped
+official MCP tool. Its first qualification requires two separate paint
+parameter updates in the same native process, two final PNGs plus six priming
+captures, native before/after readback and restoration of all 370 original
+bindings. Runtime qualification remains separate from local contract tests.
+Freeze the launch SHA during owner handoff; keep runtime results in that run's
+artifact and PR description until the Editor closes. A documentation push is
+also a new revision and must not invalidate the active request client.
+
+The prepared stream is intended for viewport review and input. Automatic material
+refresh inside a persistent Editor session is not yet runtime-proved, and the
+current native host has no standalone focused mode: optional controls still
+follow the full 68-view suite. Neither capability may be claimed from the
+cadence change. M3 owner audit remains `PENDING_FINAL_M3`; performance remains
+`DEFERRED_AFTER_M3`, `performance_pass: false`.
+
+This implements the already adopted Gumball explicit-heavy-proof invariant in
+the two temporary YACS workflows; no new upstream framework or candidate is
+needed. Actions selector and rerun semantics follow GitHub's official
+[expression reference](https://docs.github.com/en/actions/reference/workflows-and-actions/expressions)
+and [rerun contract](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs).
 
 ### Executable workflow lifecycle
 

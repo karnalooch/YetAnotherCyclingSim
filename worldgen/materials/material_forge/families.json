@@ -45,6 +45,16 @@
           "surface_b": 1.12,
           "roughness": 0.78,
           "normal_strength": 0.46
+        },
+        {
+          "id": "dry_varied",
+          "label": "Dry varied aged",
+          "seed": 101,
+          "brightness": 0.31,
+          "surface_a": 0.48,
+          "surface_b": 0.9,
+          "roughness": 0.94,
+          "normal_strength": 0.24
         }
       ]
     },

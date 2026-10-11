@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "runtime_sha": "2ec534c0b62a18b05eb3ce066a151b0d9bb3bc08",
+  "run_id": 38119538994,
+  "attempt": 1,
+  "artifact_id": 11695610744,
+  "artifact_size_bytes": 216516,
+  "artifact_sha256": "7d27a4ea3bb3b10740d2bbda387a0370eec9e3edb5438c77161822db4bd6eb7c",
+  "artifact_member_count": 31,
+  "png_count": 0,
+  "source_log": {
+    "artifact_member": "saved-road-prepare-editor.log",
+    "size_bytes": 478698,
+    "sha256": "b74392a1ff1726a9b2487b5c06aeed8ab664b2573d110e467fc13619e5eadf41"
+  },
+  "retained_files": [
+    {
+      "path": "saved-road-host-receipt.json",
+      "size_bytes": 3320,
+      "sha256": "992827022ef6ee6f308ef8ae72a03995d9b98c4a280511477ba3f5de712b79bd",
+      "original_bytes": true
+    },
+    {
+      "path": "cache-resolution.json",
+      "size_bytes": 2015,
+      "sha256": "7a787c030dc42cb8661398faccd6ae5ad44daf9d10c47e30d5ffac6338b8a9d9",
+      "original_bytes": true
+    },
+    {
+      "path": "stage-observations.json",
+      "size_bytes": 12412,
+      "sha256": "f43e5743da894f7919adfe4c96de755d6dad00d686008a36e2293bf938c73d14",
+      "original_bytes": false
+    }
+  ]
+}

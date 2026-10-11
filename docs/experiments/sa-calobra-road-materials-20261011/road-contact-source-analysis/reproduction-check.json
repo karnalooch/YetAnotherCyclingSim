@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "status": "PINNED_OFFLINE_REPLAY_PASS",
+  "original_script_sha256": "c6749331b88f734d732956ba1b08c9e01ab6afc320b28d1a3fb49a43bc01ccea",
+  "packaged_script_sha256": "3cb5f7b6282661278f83752727fb66828530ca29b71cd10f2eb3dd988f59c188",
+  "path_adapter_only": true,
+  "original_function_ast_preserved": [
+    "describe",
+    "main",
+    "verify_inputs",
+    "write_json"
+  ],
+  "added_function": "configure_cli",
+  "runtime": {
+    "python": "3.12.14",
+    "matplotlib": "3.10.8"
+  },
+  "all_six_input_hashes_verified_before_and_after": true,
+  "outputs": [
+    {
+      "file": "native-wall-source-comparison.json",
+      "size_bytes": 10781,
+      "sha256": "20f6162fca3f007bab7e6faff8a6652b09cc496a22a6c1b936b35c5508e220fd",
+      "byte_identical_to_reviewed_original": true,
+      "retained_in_package": true
+    },
+    {
+      "file": "native-wall-endpoints.json",
+      "size_bytes": 161545,
+      "sha256": "7393935fad60ffff7f01d8172a32e7419198e4a9961cabeea8d0a41b4bffde0a",
+      "byte_identical_to_reviewed_original": true,
+      "retained_in_package": false
+    },
+    {
+      "file": "source-facet-crossings.json",
+      "size_bytes": 202631,
+      "sha256": "fbf5271947a2a7a723ff3ae2c4e2ea1f7383db39e5227166853c8cdaca5d0489",
+      "byte_identical_to_reviewed_original": true,
+      "retained_in_package": false
+    },
+    {
+      "file": "hypothetical-bottom-envelope.json",
+      "size_bytes": 352136,
+      "sha256": "868ef36b44316974d3a804ca5b6094c585d9ed91b53800348fa9d1128f112de9",
+      "byte_identical_to_reviewed_original": true,
+      "retained_in_package": true
+    },
+    {
+      "file": "wall-transects.csv",
+      "size_bytes": 1494,
+      "sha256": "0074a45627a2d85b8c6a6e083f1ab0682313db3e1d601eb78c4fe05fdc3ca434",
+      "byte_identical_to_reviewed_original": true,
+      "retained_in_package": true
+    },
+    {
+      "file": "native-wall-source-transects.png",
+      "size_bytes": 300874,
+      "sha256": "e0fe73224c331bc23d2b4069c1849841edf4f867cd88d39b6e19f956e942b01c",
+      "byte_identical_to_reviewed_original": true,
+      "retained_in_package": true
+    },
+    {
+      "file": "native-wall-facet-contact.png",
+      "size_bytes": 185755,
+      "sha256": "ba174345cff07f2633b856cb71574f35979b30758e8006da6fb747cfbb3fd3ce",
+      "byte_identical_to_reviewed_original": true,
+      "retained_in_package": true
+    }
+  ],
+  "geometry_repair_applied": false,
+  "final_native_landscape_height_observed": false,
+  "owner_visual_pass": false
+}

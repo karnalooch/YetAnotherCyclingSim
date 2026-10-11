@@ -94,11 +94,6 @@ jobs:
             --run '${{ github.run_id }}-${{ github.run_attempt }}'
           if ($LASTEXITCODE -ne 0) { throw 'Unreal cache selection/retention failed; preserve worktrees.' }
 
-      - name: Remove bootstrap checkout
-        shell: pwsh
-        run: |
-          Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup') -Recurse -Force
-
       - name: Checkout exact caller revision without LFS payloads
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -697,12 +692,11 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $worktree = Join-Path $env:GITHUB_WORKSPACE $env:YACS_UNREAL_WORKTREE
-          $helper = Join-Path $worktree 'scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
+          # Always use this run's exact-head bootstrap. A failed checkout may
+          # leave an older, unsafe helper in the persistent warm worktree.
+          $helper = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
           if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
-            $helper = Join-Path $env:GITHUB_WORKSPACE '_bootstrap-cleanup/scripts/ci/Release-YacsUnrealWorkspaceLocks.ps1'
-          }
-          if (-not (Test-Path -LiteralPath $helper -PathType Leaf)) {
-            throw 'Unreal workspace lock helper is unavailable from both active checkout and bootstrap.'
+            throw 'Current-run bootstrap lock helper unavailable; preserving processes and worktree.'
           }
           & $helper -Workspace $env:GITHUB_WORKSPACE
 

@@ -5,9 +5,30 @@
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
 
+## Live surface candidate — #473 / #364
+
+Owner authorization on 2026-10-11 adds two fixed transient asphalt/shoulder
+presentation presets and permits one restart to load the extension. The
+[local stream contract](tooling/LEVEL_EDITOR_STREAM.md#surface-preview-extension--local-candidate)
+owns this candidate; it does not expand the admitted #384 inspector or grant
+arbitrary authoring. Native proof remains required. Raised contact geometry is
+separately owned by #459.
+
 ## Official Unreal MCP adoption
 
 ### Decision and status
+
+**#364 iteration extension, owner decision 2026-10-11:** the owner requested
+bounded material-instance parameter updates through official MCP in the same
+isolated Editor used for Stream Level Editor review. PR #467 has been merged
+and #384 is closed as completed; their admitted inspection proof remains
+unchanged. The new [material-preview candidate](tooling/LEVEL_EDITOR_STREAM.md)
+is scoped to the retained b9 road scene, scalar `PaintRoughness`, vector
+`PaintColor`, the exact 370 paint bindings and transient previews with explicit
+restoration. Native session identity, actual reflected schema, two separate
+same-process calls, readback, small rendered evidence and saved-byte
+conservation require their own qualification. This extension does not admit
+stock general authoring tools, source-world saves or further MCP infrastructure.
 
 **Entry gate satisfied — #363 completed through merged PR #446. The fixed native session and separate InputBoundary execution are verified. Protected delivery of PR #467 and completed closure of #384 are the gate for #364.**
 

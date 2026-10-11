@@ -142,11 +142,25 @@ Measure performance after the assembled M3 world is closed out. This supersedes
 the earlier 2A-to-2B measurement deadline and the performance prerequisite for
 the intermediate #363 → #384 → #364 handoff. Record `DEFERRED_AFTER_M3` and
 `performance_pass: false`; this is neither a performance PASS nor final
-performance admission. Preserve whole-area owner visual acceptance, saved and
-fresh-rendered consumer proof, native build/Automation/asset proof, review and
+performance admission. Preserve the final whole-area owner visual audit, saved
+and fresh-rendered consumer proof, native build/Automation/asset proof, review and
 protected CI. The later benchmark retains exact-SHA/default-branch provenance,
 the full-area scope, reference hardware and existing budgets. This decision
 does not authorize an exception for later product milestones.
+
+Owner decision, 2026-10-10 (#364 and remaining M3 implementation): "zrób to jak
+najlepiej potrafisz, ja zrobię audyt wizualny na końcu m3 przed testem fpsów".
+The owner performs the whole-area visual audit on the complete assembled M3
+consumer, before the FPS benchmark. This supersedes mandatory owner visual
+signoff at each intermediate material/world handoff or rollout. Continue native
+build/Automation/material/asset checks, saved/fresh-rendered consumer proof,
+exact-SHA review images, technical review and protected CI; inspect the images
+and preserve unresolved defects for the final audit. Technical completion is
+not owner visual PASS, and performance remains `DEFERRED_AFTER_M3` /
+`performance_pass: false`. Keep #372 → #374 → #373: #372 prepares whole-area
+review evidence, the owner's audit applies to the complete #374 assembled
+consumer before #373. Historical #363 acceptance and original receipts remain
+unchanged; this decision grants no future-milestone, geometry or authority waiver.
 
 ### Region migration and LFS retirement
 
@@ -386,4 +400,6 @@ A terrain recovery is not accepted because one hairpin looks good. After the
 baseline hairpin passes, prove at least a normal/moderate slope corridor and a
 large-elevation-difference/earthworks case. Run the relevant performance proof
 after neutral geometry passes visually, not as a substitute for visual acceptance.
+For current M3, retain the neutral-geometry checks and images; the 2026-10-10
+decision above places the owner's audit and FPS benchmark after world assembly.
 

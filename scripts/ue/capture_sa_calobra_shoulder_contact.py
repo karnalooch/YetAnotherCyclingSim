@@ -1,4 +1,4 @@
-"""Capture 12 original-size window0112 owner-isolation frames in isolated CI.
+"""Capture source owner isolation: default 16 window0112 or 6 hairpin0081 frames.
 
 No geometry is generated, no LOD is forced, no map is saved. This script never
 attaches to the owner's editor. The workflow must prove the host idle before
@@ -22,14 +22,21 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from scripts.proof.sa_calobra_shoulder_contact import (  # noqa: E402
-    CUT_BOUNDS_CM,
-    CUT_FILE,
-    CUT_SHA256,
-    WINDOW,
+    MODES,
+    WINDOW_MODES,
+    SUPPORT022_LABEL,
+    SUPPORT022_WINDOW,
+    SUPPORT022_SECTION_COUNT,
+    SUPPORT022_MESH_COUNTS,
+    SUPPORT022_TOP_COUNT,
+    SUPPORT022_TOP_SHA256,
+    cut_bounds,
     diagnostic_plan,
     digest,
+    hairpin_wall_contact,
     interior_top_triangles,
     overlaps,
+    target_spec,
     triangle_delta,
 )
 from scripts.proof.sa_calobra_tpp_survey import FROZEN_SHA, load_frozen_windows  # noqa: E402
@@ -42,6 +49,7 @@ PRIMARY_SYMBOLS = {
     "SectionBaseX",
     "SectionBaseY",
     "ComponentSizeQuads",
+    "GetComponentBounds",
     "ForcedLOD",
     "LODBias",
     "SetVisibility",
@@ -124,6 +132,64 @@ def native_triangles(api, mesh, ids=(), *, allow_missing=False):
     return report
 
 
+def native_support_snapshot(api, mesh, *, target="window0112"):
+    """Respect the native 12000-face limit while hashing the complete support."""
+    if target == "window0112":
+        return native_triangles(api, mesh)
+    expected = target_spec(target)["mesh_counts"]
+    positions = {}
+    for first in range(0, expected[1], 12000):
+        ids = range(first, min(first + 12000, expected[1]))
+        part = native_triangles(api, mesh, ids)
+        if (part["vertex_count"], part["triangle_count"]) != expected:
+            raise RuntimeError("Hairpin native support buffer inventory differs")
+        if not set(positions).isdisjoint(part["positions"]):
+            raise RuntimeError("Hairpin native support triangle chunks overlap")
+        positions.update(part["positions"])
+    if set(positions) != set(range(expected[1])):
+        raise RuntimeError("Hairpin native support triangle inventory is not dense/complete")
+    return {"vertex_count": expected[0], "triangle_count": expected[1],
+            "returned_triangle_count": len(positions), "positions": positions}
+
+
+def native_component_layout(api, component, landscape_transform):
+    """Use the already exercised native world-bounds API, not hidden properties.
+
+    See sa_calobra_saved_material_consumer.terrain_bounds and the whole-map
+    native capture. The fresh installed KismetSystemLibrary.h receipt proves
+    GetComponentBounds. Source section bases and the actual Landscape transform
+    independently check these world XY bounds against the unchanged 0.5m grid.
+    This reads a footprint; it does not infer terrain height or rendered LOD.
+    """
+    if (landscape_transform["rotation_deg"] != (0.0, 0.0, 0.0)
+            or tuple(landscape_transform["scale"][:2]) != (50.0, 50.0)):
+        raise RuntimeError("Source Landscape transform/grid differs")
+    base = tuple(component.get_editor_property(key) for key in ("section_base_x", "section_base_y"))
+    if any(type(value) is not int or not -2147483648 <= value <= 2147483647 for value in base):
+        raise RuntimeError("Native Landscape section base is invalid")
+    raw = api.SystemLibrary.get_component_bounds(component)
+    if not isinstance(raw, tuple) or len(raw) != 3:
+        raise RuntimeError("Native Landscape component bounds return contract differs")
+    origin, extent, radius = xyz(raw[0]), xyz(raw[1]), raw[2]
+    if (type(radius) not in (int, float)
+            or not all(math.isfinite(value) for value in (*origin, *extent, radius))
+            or min(extent) < 0 or min(extent[:2]) <= 0 or radius <= 0):
+        raise RuntimeError("Native Landscape component bounds are invalid")
+    bounds = (origin[0] - extent[0], origin[1] - extent[1],
+              origin[0] + extent[0], origin[1] + extent[1])
+    location, scale = landscape_transform["location_cm"], landscape_transform["scale"]
+    spans = tuple(2.0 * extent[axis] / scale[axis] for axis in (0, 1))
+    size = round(spans[0])
+    if (not 1 <= size <= 512 or any(abs(span - size) > 0.000001 for span in spans)
+            or any(abs(bounds[axis] - (location[axis] + base[axis] * scale[axis])) > 0.001
+                   for axis in (0, 1))):
+        raise RuntimeError("Native Landscape bounds disagree with the source section grid")
+    return {"section_base": base, "component_size_quads": size, "bounds_cm": bounds,
+            "component_size_source": "native_world_bounds_divided_by_source_grid",
+            "native_bounds_query": "SystemLibrary.GetComponentBounds",
+            "native_origin_cm": origin, "native_extent_cm": extent, "native_radius_cm": float(radius)}
+
+
 def mesh_triangle(snapshot, tid):
     if tid not in snapshot["positions"]:
         raise RuntimeError("Saved support triangle is unavailable: " + str(tid))
@@ -152,6 +218,64 @@ def actor_snapshot(actor):
     }
 
 
+def read_support022(api, actors, source):
+    """Read only the nominated neighbour; compare all source tops before hiding.
+
+    The existing canonical-map query returns ordered TIDs and XYZ, not VIDs.
+    Its complete 8616-face read also conserves the 712 non-top faces. The
+    authenticated source helper evaluates comparison witnesses only; no frozen
+    producer or geometry authoring function is executed.
+    """
+    from scripts.ue import road_shoulder_sources as sources
+
+    windows = [row for row in source["windows"] if row["id"] == SUPPORT022_WINDOW]
+    if (len(windows) != 1 or len(windows[0]["sections"]) != SUPPORT022_SECTION_COUNT
+            or windows[0].get("nudo_structure", False) is not False):
+        raise RuntimeError("Support022 frozen source window/section identity differs")
+    window = windows[0]
+    owner = sources._owner(window, 22, sources._support_top_witnesses(window["sections"]), "ordinary")
+    expected = dict(sources.iter_expected_triangles(owner))
+    source_hash = mesh_digest({"positions": expected})
+    if len(expected) != SUPPORT022_TOP_COUNT or source_hash != SUPPORT022_TOP_SHA256:
+        raise RuntimeError("Support022 authenticated oriented source tops differ")
+    matches = [actor for actor in actors if actor.get_actor_label() == SUPPORT022_LABEL]
+    if len(matches) != 1:
+        raise RuntimeError("Nominated support022 actor is missing/ambiguous")
+    actor = matches[0]
+    snapshot = actor_snapshot(actor)
+    if (not snapshot["path"].startswith(MAP + ".")
+            or snapshot["location_cm"] != (0.0, 0.0, 0.0)
+            or snapshot["rotation_deg"] != (0.0, 0.0, 0.0)
+            or snapshot["scale"] != (1.0, 1.0, 1.0)):
+        raise RuntimeError("Nominated support022 source actor transform/map differs")
+    component = actor.get_dynamic_mesh_component()
+    if not component.get_path_name().startswith(snapshot["path"] + "."):
+        raise RuntimeError("Nominated support022 component ownership differs")
+    mesh = component.get_dynamic_mesh()
+    actual = native_triangles(api, mesh)
+    if ((actual["vertex_count"], actual["triangle_count"]) != SUPPORT022_MESH_COUNTS
+            or set(actual["positions"]) != set(range(SUPPORT022_MESH_COUNTS[1]))):
+        raise RuntimeError("Support022 complete native buffer inventory differs")
+    worst = max(triangle_delta(mesh_triangle(actual, tid), points) for tid, points in expected.items())
+    if worst > 0.0001:
+        raise RuntimeError("Support022 source top/native ordered coordinates differ")
+    original = visibility(component)
+    if not original[0]:
+        raise RuntimeError("Support022 source surface is not initially visible")
+    evidence = dict(
+        snapshot, component=component.get_path_name(), mesh_path=mesh.get_path_name(),
+        source_window_id=SUPPORT022_WINDOW, source_section_count=SUPPORT022_SECTION_COUNT,
+        source_recipe_sha256=source["source_identity"]["recipe_sha256"],
+        source_top_triangles_compared=len(expected), source_top_triangle_sha256=source_hash,
+        max_coordinate_delta_cm=worst, vertices=actual["vertex_count"], triangles=actual["triangle_count"],
+        native_query="YacsLandscapeMeshDiagnosticLibrary.ReadWindow0112SupportTriangles",
+        native_triangle_ids_dense=True, native_triangle_ids_in_digest=True,
+        native_vertex_ids_observed=False, triangle_sha256=mesh_digest(actual),
+        original_visibility=list(original),
+    )
+    return component, mesh, evidence
+
+
 def visibility(component):
     return (
         bool(component.get_editor_property("visible")),
@@ -169,10 +293,28 @@ def set_visibility(component, state):
         )
 
 
+def read_hairpin_wall_contact(actual, sections, support, source_identity, frozen, cut_raw):
+    """Use the completed mesh snapshot and exact inert source bytes only."""
+    cut_bounds(cut_raw, target="hairpin0081")
+    cut = json.loads(cut_raw.decode("utf-8-sig"))
+    path = Path(frozen) / "ma2141-cut-patch.f32"
+    size = path.stat().st_size
+    if size != cut["patch_byte_count"]:
+        raise RuntimeError("Hairpin source CUT patch byte inventory differs")
+    before = digest(path)
+    with path.open("rb") as stream:
+        raw = stream.read(size + 1)
+    identity = dict(path=str(path), size_bytes=size, sha256_before=before, sha256_after=digest(path))
+    return hairpin_wall_contact(actual["positions"], sections, support, source_identity,
+                                cut_raw, raw, identity)
+
+
 class ContactCapture(SurveyCapture):
-    def __init__(self, *args, diagnostic, support, components, **kwargs):
+    def __init__(self, *args, diagnostic, support, components, support022=None, **kwargs):
         self.support, self.components = support, components
-        self.surface_state = [(c, visibility(c)) for c in (support, *components)]
+        self.support022 = support022
+        surfaces = (support, *components, *((support022,) if support022 is not None else ()))
+        self.surface_state = [(c, visibility(c)) for c in surfaces]
         if any(not state[0] for _, state in self.surface_state):
             raise RuntimeError(
                 "Target source surfaces are not initially visible; owner unknown"
@@ -180,8 +322,8 @@ class ContactCapture(SurveyCapture):
         super().__init__(*args, **kwargs)
         self.report.update(
             planned_frames=diagnostic["frames"],
-            frame_count=12,
-            windows=[WINDOW],
+            frame_count=diagnostic["frame_count"],
+            windows=[diagnostic["frames"][0]["window_id"]],
             window_count=1,
             transitions=[],
             capture_kind="Issue459 internal contact surface-owner isolation",
@@ -193,10 +335,13 @@ class ContactCapture(SurveyCapture):
 
     def _submit(self):
         mode = self.report["planned_frames"][self.index]["diagnostic_mode"]
+        support022 = getattr(self, "support022", None)
+        if mode not in (WINDOW_MODES if support022 is not None else MODES):
+            raise RuntimeError("Diagnostic visibility mode has no authenticated owner")
         for component, original in self.surface_state:
             hidden = (component == self.support and mode == "support-hidden") or (
-                component != self.support and mode == "local-landscape-hidden"
-            )
+                component in self.components and mode == "local-landscape-hidden"
+            ) or (component == support022 and mode == "support022-hidden")
             set_visibility(component, (False, False) if hidden else original)
         super()._submit()
         self.pending["surface_visibility"] = {
@@ -206,6 +351,11 @@ class ContactCapture(SurveyCapture):
             "support_component": self.support.get_path_name(),
             "landscape_components": [c.get_path_name() for c in self.components],
         }
+        if support022 is not None:
+            self.pending["surface_visibility"].update(
+                support022_visible=visibility(support022)[0],
+                support022_component=support022.get_path_name(),
+            )
 
     def restore_visibility(self):
         errors = []
@@ -219,7 +369,7 @@ class ContactCapture(SurveyCapture):
 
     def tick(self, delta):
         if not self.stopped and self.clock() - self.started > 900:
-            self.stop("Bounded 12-frame diagnostic deadline exceeded (900s)")
+            self.stop("Bounded owner-isolation diagnostic deadline exceeded (900s)")
             return
         super().tick(delta)
 
@@ -227,12 +377,15 @@ class ContactCapture(SurveyCapture):
 class Owner:
     def __init__(self, api):
         self.api, self.capture = api, None
+        self.target = os.environ.get("YACS_SHOULDER_CONTACT_TARGET", "window0112")
+        self.spec = target_spec(self.target)
         self.transient = []
         self.before = self.mesh = self.viewport = None
+        self.support022 = self.support022_mesh = None
         self.report = {
             "status": "STARTED",
             "source_road_sha": FROZEN_SHA,
-            "window_id": WINDOW,
+            "window_id": self.spec["window_id"],
             "geometry_mutated": False,
             "saved_to_map": False,
             "rendered_owner": "PENDING_PAIRED_VISUAL_REVIEW",
@@ -241,6 +394,8 @@ class Owner:
             "restoration": {"status": "PENDING"},
             "capture_root": "capture",
         }
+        if self.target == "hairpin0081":
+            self.report["support_wall_contact"] = {"schema_version": 1, "status": "PENDING"}
         self.out = Path(os.environ["YACS_SHOULDER_CONTACT_ROOT"])
         if not self.out.is_absolute() or self.out.resolve().is_relative_to(ROOT):
             raise RuntimeError(
@@ -270,7 +425,27 @@ class Owner:
         try:
             self._finish(error)
         finally:
-            self.api.SystemLibrary.quit_editor()
+            try:
+                self.api.EditorPythonScripting.set_keep_python_script_alive(False)
+            except Exception:
+                # Slate may catch callback exceptions after stop() has set its
+                # guard. Do not leave a successful receipt if release fails.
+                lifecycle_error = traceback.format_exc()
+                self.report.update(status="FAILED", error=lifecycle_error)
+                try:
+                    if self.capture:
+                        self.capture.mark_cleanup(lifecycle_error)
+                finally:
+                    self.write()
+                raise
+            finally:
+                self.api.SystemLibrary.quit_editor()
+
+    def _start_capture(self):
+        # ExecutePythonScript otherwise exits before the asynchronous Slate
+        # callbacks can collect the images, as in the road GPU loop.
+        self.api.EditorPythonScripting.set_keep_python_script_alive(True)
+        self.capture.start()
 
     def _finish(self, error=None):
         errors = [error] if error else []
@@ -285,12 +460,17 @@ class Owner:
         for action in (
             lambda: self.capture.restore_visibility() if self.capture else None,
             lambda: self.restore_viewport(),
-            lambda: self.release_height_mips(),
         ):
             try:
                 action()
             except Exception:
                 errors.append(traceback.format_exc())
+        height_mips_released = False
+        try:
+            self.release_height_mips()
+            height_mips_released = True
+        except Exception:
+            errors.append(traceback.format_exc())
         for actor in reversed(self.transient):
             try:
                 if not self.actors.destroy_actor(actor):
@@ -307,7 +487,7 @@ class Owner:
                     "Source actor inventory/transforms differ after cleanup"
                 )
             if self.mesh is not None:
-                support_hash = mesh_digest(native_triangles(self.api, self.mesh))
+                support_hash = mesh_digest(native_support_snapshot(self.api, self.mesh, target=self.target))
                 if support_hash != self.report["support"]["triangle_sha256"]:
                     raise RuntimeError("Target support triangle coordinates changed")
             for component, before in getattr(self, "landscape_state", []):
@@ -317,6 +497,26 @@ class Owner:
                     )
         except Exception:
             errors.append(traceback.format_exc())
+        support022_hash = support022_visibility = None
+        if getattr(self, "support022_mesh", None) is not None:
+            # Do not skip the neighbour readback if primary-support/map checks
+            # failed. Both complete triangle buffers remain independently read.
+            try:
+                actual022 = native_triangles(self.api, self.support022_mesh)
+                if ((actual022["vertex_count"], actual022["triangle_count"]) != SUPPORT022_MESH_COUNTS
+                        or set(actual022["positions"]) != set(range(SUPPORT022_MESH_COUNTS[1]))):
+                    raise RuntimeError("Support022 native buffer inventory changed during capture")
+                support022_hash = mesh_digest(actual022)
+                if support022_hash != self.report["support022"]["triangle_sha256"]:
+                    raise RuntimeError("Support022 complete ordered triangle coordinates changed")
+            except Exception:
+                errors.append(traceback.format_exc())
+            try:
+                support022_visibility = list(visibility(self.support022))
+                if support022_visibility != self.report["support022"]["original_visibility"]:
+                    raise RuntimeError("Support022 original visibility/hidden shadow did not restore")
+            except Exception:
+                errors.append(traceback.format_exc())
         error = "\n".join(errors) if errors else None
         if self.capture:
             try:
@@ -331,13 +531,18 @@ class Owner:
             status="FAILED" if error else "SHOULDER_CONTACT_CAPTURED",
             error=error,
             restoration={
-                "status": "FAILED" if errors else "RESTORED",
+                "status": "FAILED" if error else "RESTORED",
                 "map_sha256": map_hash,
                 "support_triangle_sha256": support_hash,
                 "transient_actors_destroyed": len(self.transient),
-                "height_mip_leases_released": True,
+                "height_mip_leases_released": height_mips_released,
             },
         )
+        if getattr(self, "support022_mesh", None) is not None:
+            self.report["restoration"].update(
+                support022_triangle_sha256=support022_hash,
+                support022_visibility=support022_visibility,
+            )
         self.write()
 
     def restore_viewport(self):
@@ -374,6 +579,7 @@ class Owner:
             "forced_lod": int(c.get_editor_property("forced_lod")),
             "lod_bias": int(c.get_editor_property("lod_bias")),
             "material": material.get_path_name() if material else None,
+            "layout": native_component_layout(self.api, c, self.landscape_transform),
         }
 
     def start(self):
@@ -411,18 +617,25 @@ class Owner:
         self.report["primary_api_receipt_sha256"] = digest(receipt_path)
         frozen = Path(os.environ["YACS_SA_CALOBRA_TPP_FROZEN_ROOT"])
         source = load_frozen_windows(frozen)
-        if digest(frozen / CUT_FILE) != CUT_SHA256:
-            raise RuntimeError("Target CUT footprint source differs")
+        cut_raw = (frozen / self.spec["cut_file"]).read_bytes()
+        self.cut_footprint = cut_bounds(cut_raw, target=self.target)
+        if self.target == "hairpin0081":
+            # Retain the tiny exact source document so an artifact verifier can
+            # independently derive this AOI, without trusting a receipt's box.
+            with (self.out / "source-cut-manifest.json").open("xb") as stream:
+                stream.write(cut_raw)
         self.report.update(
             source_identity=source["source_identity"],
-            cut_manifest_sha256=CUT_SHA256,
-            cut_footprint_cm=CUT_BOUNDS_CM,
+            cut_manifest_sha256=self.spec["cut_sha256"],
+            cut_footprint_cm=self.cut_footprint,
             geometry_consumers_executed=False,
         )
         diagnostic = diagnostic_plan(
             source,
             expected,
             ROOT / "docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv",
+            target=self.target,
+            view_plan_path=os.environ.get("YACS_SHOULDER_CONTACT_VIEW_PLAN") or None,
         )
         self.report["plan"] = diagnostic
         current = api.get_editor_subsystem(api.UnrealEditorSubsystem).get_editor_world()
@@ -454,8 +667,8 @@ class Owner:
         self.viewport = api.get_editor_subsystem(
             api.UnrealEditorSubsystem
         ).get_level_viewport_camera_info()
-        sections = next(w["sections"] for w in source["windows"] if w["id"] == WINDOW)
-        target = list(interior_top_triangles(sections))
+        sections = next(w["sections"] for w in source["windows"] if w["id"] == self.spec["window_id"])
+        target = list(interior_top_triangles(sections, target=self.target))
         matches = []
         for actor in self.actors.get_all_level_actors():
             if not actor.get_actor_label().startswith("YACS_PERSIST_SUPPORT_"):
@@ -474,7 +687,7 @@ class Owner:
             if probe is None:
                 continue
             if triangle_delta(mesh_triangle(probe, tid), wanted) <= 0.0001:
-                actual = native_triangles(api, mesh)
+                actual = native_support_snapshot(api, mesh, target=self.target)
                 worst = max(
                     triangle_delta(mesh_triangle(actual, i), points)
                     for i, points in target
@@ -498,10 +711,25 @@ class Owner:
             native_ids_in_triangle_digest=True,
             triangle_sha256=mesh_digest(actual),
         )
-        landscape_transform = actor_snapshot(self.landscape)
+        if self.target == "window0112":
+            if actor.get_actor_label() != "YACS_PERSIST_SUPPORT_112":
+                raise RuntimeError("Diagnosed window0112 primary source owner label differs")
+            self.support022, self.support022_mesh, self.report["support022"] = read_support022(
+                api, self.actors.get_all_level_actors(), source)
+            if self.support022 == support:
+                raise RuntimeError("Support022 cannot alias the primary source component")
+        if self.target == "hairpin0081":
+            try:
+                if actor.get_actor_label() != "YACS_PERSIST_SUPPORT_185":
+                    raise RuntimeError("Diagnosed hairpin source owner label differs")
+                self.report["support_wall_contact"] = read_hairpin_wall_contact(
+                    actual, sections, self.report["support"], source["source_identity"], frozen, cut_raw)
+            except Exception as exc:
+                self.report["support_wall_contact"] = {"schema_version": 1, "status": "FAILED", "error": str(exc)}
+                raise
+        landscape_transform = self.landscape_transform = actor_snapshot(self.landscape)
         if landscape_transform["rotation_deg"] != (0.0, 0.0, 0.0):
             raise RuntimeError("Rotated source Landscape requires explicit owner proof")
-        x, y, _ = landscape_transform["location_cm"]
         sx, sy, _ = landscape_transform["scale"]
         if sx != 50.0 or sy != 50.0:
             raise RuntimeError("Source Landscape must retain accepted 0.5m grid")
@@ -511,25 +739,13 @@ class Owner:
         if len(all_components) != 1024:
             raise RuntimeError("Accepted Landscape component inventory differs")
         for c in all_components:
-            bx, by = (
-                int(c.get_editor_property(p))
-                for p in ("section_base_x", "section_base_y")
-            )
-            size = int(c.get_editor_property("component_size_quads"))
-            bounds = (
-                x + bx * sx,
-                y + by * sy,
-                x + (bx + size) * sx,
-                y + (by + size) * sy,
-            )
-            if overlaps(bounds):
+            layout = native_component_layout(api, c, landscape_transform)
+            if overlaps(layout["bounds_cm"], self.cut_footprint):
                 components.append(c)
                 evidence.append(
                     dict(
                         path=c.get_path_name(),
-                        section_base=[bx, by],
-                        component_size_quads=size,
-                        bounds_cm=bounds,
+                        **layout,
                         state=self.component_state(c),
                     )
                 )
@@ -568,8 +784,9 @@ class Owner:
             diagnostic=diagnostic,
             support=support,
             components=components,
+            support022=self.support022,
         )
-        self.capture.start()
+        self._start_capture()
 
 
 def main():

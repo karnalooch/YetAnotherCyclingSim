@@ -17,6 +17,11 @@
   },
   "workflows": [
     {
+      "file": "level-editor-review.yml",
+      "state": "CURRENT",
+      "reason": "Issue #364 owner-selected Stream Level Editor and bounded material-instance preview. Owner-only fixed branch, explicit launch/manual intent, successful exact-SHA CI and the applicable Blender reference before the shared non-cancelling host lane. Verified independent saved scene, stock inspected PixelStreaming2, one restricted official MCP paint operation, exact session/process/launcher identity, native readback and small PNG response. Manual material-request reuses the owned session at its unchanged launch SHA. No build, saved source-world mutation, public tunnel, firewall change, visual acceptance or performance admission."
+    },
+    {
       "file": "official-unreal-mcp-native-probe.yml",
       "state": "CURRENT",
       "reason": "Issue #384 owner-only branch-scoped opt-in BOB plugin BuildPlugin compilation. Isolated code-only checkout, canonical exact engine, idle shared host and serial host lane; no Editor/MCP launch, live project changes or native/transport/admission claims from a compile result."
@@ -24,7 +29,17 @@
     {
       "file": "official-unreal-mcp-source-probe.yml",
       "state": "CURRENT",
-      "reason": "Issue #384 owner-only branch-scoped read-only installed UE 5.8.2 official MCP/registry/test declaration inventory. Isolated code-only checkout, serial shared host lane, no build/editor launch/plugin activation or persistent world mutation; source metadata is not MCP guard parity or adoption admission."
+      "reason": "Issues #384/#364 owner-only branch-scoped read-only installed UE 5.8.2 official MCP/registry/test, material and Level Editor streaming declaration inventory. Explicit focus selection preserves existing inspections. Fresh code-only checkout, isolated long-path Git configuration and serial shared host lane; no build/editor launch/plugin activation or persistent world mutation. Source metadata is not runtime schemas, a working stream, material authoring or MCP admission."
+    },
+    {
+      "file": "road-material-source-proof.yml",
+      "state": "CURRENT",
+      "reason": "Issue #364 owner-only source checkpoint with explicit commit intent on the fixed branch. Replays selected asphalt twice through authenticated Material Forge, optionally checks crack/API sources, retains evidence and acquires the shared host lock only after admission. Ordinary pushes skip; no Unreal launch, world mutation, visual acceptance or performance admission."
+    },
+    {
+      "file": "road-material-native-proof.yml",
+      "state": "CURRENT",
+      "reason": "Issue #364 owner-only native checkpoint with explicit commit intent on the fixed branch. Requires protected exact-SHA CI before reserving the shared host, reuses verified compiled binaries and runs the existing baseline, canary, isolated full-network save/fresh reload and all 68 Lit poses plus requested controls. Ordinary pushes skip; source geometry, readiness, conservation and final admission remain enforced."
     },
     {
       "file": "blender-material-forge-reference.yml",

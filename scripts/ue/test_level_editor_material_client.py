@@ -1,0 +1,799 @@
+"""Synthetic host/HTTP fixtures for the owned material preview client.
+
+No test launches Unreal, a server, Git, PowerShell or a host workflow. Successful
+fixtures exercise the real path/context/history/readback controller, replacing
+only immutable Git acquisition, Windows observation and the HTTP peer. They
+are not native proof, browser reception or owner visual acceptance.
+"""
+
+from __future__ import annotations
+
+import copy
+import struct
+import tempfile
+import unittest
+import zlib
+from pathlib import Path
+from unittest import mock
+
+from scripts.ue import level_editor_material_client as client
+
+LAUNCHER_SHA = "a" * 40
+START_TIME = "134050000000000000"
+
+
+def write(path, raw):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(raw)
+
+
+def document(path, value):
+    write(path, client.canonical(value) + b"\n")
+
+
+def float32(value):
+    return struct.unpack("f", struct.pack("f", value))[0]
+
+
+def png():
+    def chunk(kind, data):
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+
+    header = struct.pack(">IIBBBBB", 1280, 720, 8, 2, 0, 0, 0)
+    pixels = (b"\x00" + b"\x35\x45\x55" * 1280) * 720
+    # Explicit fixture marker and padding preserve the same >4 KiB bound as
+    # native captures. This is a valid PNG, with no claim about scene pixels.
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header)
+            + chunk(b"tEXt", b"Fixture\0SYNTHETIC NOT UNREAL " + b"x" * 8192)
+            + chunk(b"IDAT", zlib.compress(pixels)) + chunk(b"IEND", b""))
+
+
+PNG = png()
+
+
+def original_state():
+    prefix = client.preparation.MAP_PACKAGE + ".SyntheticWorld:PersistentLevel."
+    rows = [{"actor": prefix + f"Paint{i}", "component": prefix + f"Paint{i}.Component",
+             "slot": 0, "material": client.bridge.PAINT_MATERIAL,
+             "original_material": client.bridge.PAINT_MATERIAL} for i in range(370)]
+    return {"paint_roughness": float32(0.90), "paint_color": [float32(v) for v in [0.64, 0.63, 0.59, 1.0]],
+            "binding_count": 370, "binding_sha256": client.digest(client.canonical(rows)), "bindings": rows,
+            "bound_material": client.bridge.PAINT_MATERIAL, "parent_material": client.bridge.PAINT_MASTER,
+            "transient_mid": False}
+
+
+class Fixture:
+    def __init__(self, base):
+        self.base = base
+        self.review_root = base / "review"
+        self.source_root = base / "retained-source"
+        self.session_id = "synthetic-1"
+        self.launcher_root = self.source_root.parent / ("_level-editor-review-" + self.session_id)
+        self.root = self.review_root / (client.preparation.RUNTIME_SHA[:12] + "-" + self.session_id)
+        self.host_path = self.root / client.SESSION_RECEIPT
+        self.initial = original_state()
+        self.state = copy.deepcopy(self.initial)
+        self.sequence, self.calls, self.transports, self.closes = 0, 0, 0, 0
+        self.defer = False
+        self.response_edit = self.final_edit = None
+        self.wire_edit = self.last_response = None
+        self.call_error = None
+        self.tool_extra = None
+        self.identity = {"session_id": self.session_id, "editor_pid": 8765,
+                         "editor_start_filetime_utc": START_TIME, "project_root": str(self.root),
+                         "map_package": client.preparation.MAP_PACKAGE,
+                         "runtime_source_sha": client.preparation.RUNTIME_SHA, "launcher_sha": LAUNCHER_SHA,
+                         "launcher_root": str(self.launcher_root)}
+        # Synthetic native identity, not a claim about the real package root.
+        class_name = "YacsRoadMaterialPreview_0xA1B2C3D4"
+        self.toolset_identity = {"class_name": class_name, "outer_name": "/Engine/PythonTypes",
+                                 "class_path": "/Engine/PythonTypes." + class_name,
+                                 "toolset_name": "PythonTypes." + class_name}
+        self.tool = {"name": self.toolset_identity["toolset_name"] + ".preview", "description": "Synthetic fixture",
+                     "inputSchema": {"type": "object", "properties": {"request_json": {"type": "string"}},
+                                     "required": ["request_json"]}}
+        self.sources = {relative: client.digest((client.ROOT / relative).read_bytes())
+                        for relative in (*client.SOURCE_MODULES, client.CLIENT_SOURCE)}
+        rows = [{"path": f"Content/Synthetic/Input{i}.uasset", "source_path": str(self.source_root / f"Content/Synthetic/Input{i}.uasset"),
+                 "sha256": client.digest(f"SYNTHETIC {i}".encode()), "size_bytes": 12} for i in range(272)]
+        for relative, pair in client.preparation.PINNED_PROJECT_FILES.items():
+            path = self.launcher_root / relative
+            write(path, (client.ROOT / relative).read_bytes())
+            rows.append({"path": relative, "source_path": str(path), "sha256": pair[0], "size_bytes": pair[1]})
+        self.saved_digest = client.digest(client.canonical([
+            {key: row[key] for key in ("path", "sha256", "size_bytes")} for row in rows]))
+        self.source_digest = client.digest(client.canonical([
+            {"path": row["source_path"], "sha256": row["sha256"], "size_bytes": row["size_bytes"]} for row in rows]))
+        self.ready = {"schema_version": 1, "status": "MATERIAL_BRIDGE_READY", **self.identity,
+                      "sequence": 0, "endpoint": client.ENDPOINT, "tool_schema": self.tool,
+                      "toolset_identity": self.toolset_identity,
+                      "wire_parameter": "request_json", "initial_state": self.initial,
+                      "source_world_saved": False, "performance_pass": False,
+                      "owner_visual_status": "PENDING_FINAL_M3", "saved_inputs_sha256": self.saved_digest,
+                      "source_inputs_sha256": self.source_digest,
+                      "repair_source_sha256": self.sources["scripts/ue/level_editor_shoulder_repair.py"],
+                      "reload_source_sha256": self.sources["scripts/ue/level_editor_script_reload.py"],
+                      "bridge_source_sha256": self.sources["scripts/ue/level_editor_material_bridge.py"],
+                      "surface_source_sha256": self.sources["scripts/ue/level_editor_surface_preview.py"],
+                      "camera_source_sha256": self.sources["scripts/ue/level_editor_camera_presets.py"]}
+        document(self.root / client.bridge.READY_RELATIVE, self.ready)
+        self.host = {"schema_version": 1, "status": "MATERIAL_BRIDGE_QUALIFICATION_PENDING",
+                     "owner_handoff": False, "source_world_saved": False,
+                     "runtime_source_sha": client.preparation.RUNTIME_SHA, "launcher_sha": LAUNCHER_SHA,
+                     "launcher_root": str(self.launcher_root),
+                     "session_id": self.session_id, "session_root": str(self.root), "stream_source": "LevelEditorViewport",
+                     "editor_pid": 8765, "editor_start_filetime_utc": START_TIME,
+                     "editor_start_time_utc": "2026-10-11T10:00:00.0000000Z",
+                     "editor_executable_path": r"D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe",
+                     "material_bridge_ready_sha256": client.digest((self.root / client.bridge.READY_RELATIVE).read_bytes())}
+        document(self.host_path, self.host)
+        document(self.root / client.preparation.RECEIPT_NAME, {
+            "status": "READY_FOR_EDITOR_LAUNCH", "runtime_source_sha": client.preparation.RUNTIME_SHA,
+            "launcher_sha": LAUNCHER_SHA, "snapshot_files": rows, "synthetic": False,
+            "snapshot_root": str(self.root), "runtime_source_root": str(self.source_root),
+            "map_package": client.preparation.MAP_PACKAGE, "map_sha256": client.preparation.MAP_SHA256})
+        self.process = {key: self.host[key] for key in ("editor_pid", "editor_start_filetime_utc", "editor_executable_path")}
+        self.process["listeners"] = [{"address": "127.0.0.1", "port": 18784, "pid": 8765}]
+        self.process["command_line"] = (f'"{self.host["editor_executable_path"]}" '
+                                        f'"{self.root / "YetAnotherCyclingSim.uproject"}" '
+                                        f'{client.preparation.MAP_PACKAGE} -RenderOffscreen')
+
+    def request(self, name="one", action="set", sequence=None, **changes):
+        result = {"schema_version": 1, "session_id": self.session_id, "request_id": name,
+                  "action": action, "expected_sequence": self.sequence if sequence is None else sequence}
+        if action == "set":
+            result.update({"paint_roughness": 0.35, "paint_color": [0.35, 0.50, 0.70, 1.0]})
+        result.update(changes)
+        return result
+
+    def execute(self, request, output_name=None):
+        name = output_name or request["request_id"]
+        request_path = self.base / (name + "-request.json")
+        document(request_path, request)
+        return client.run(self.host_path, request_path, self.base / (name + "-output"))
+
+    def transport(self):
+        fixture = self
+        self.transports += 1
+
+        class Peer:
+            def initialize(self):
+                pass
+
+            def _post(self, method, params):
+                assert method == "tools/list" and params == {}
+                tools = [copy.deepcopy(fixture.tool)]
+                if fixture.tool_extra is not None:
+                    tools.append(fixture.tool_extra)
+                return {"result": {"tools": tools}}
+
+            def call(self, name, arguments):
+                assert name == fixture.tool["name"] and set(arguments) == {"request_json"}
+                return fixture.native(client._object(arguments["request_json"]))
+
+            def close(self):
+                fixture.closes += 1
+
+        return Peer()
+
+    def native(self, request):
+        self.calls += 1
+        if self.call_error is not None:
+            raise self.call_error
+        assert request["expected_sequence"] == self.sequence
+        before = copy.deepcopy(self.state)
+        if request["action"] == "restore":
+            self.state = copy.deepcopy(self.initial)
+        elif request["action"] == "set":
+            self.state["transient_mid"] = True
+            self.state["bound_material"] = "/Engine/Transient.SyntheticPreviewMID"
+            self.state["parent_material"] = client.bridge.PAINT_MATERIAL
+            self.state["paint_roughness"] = float32(request["paint_roughness"])
+            self.state["paint_color"] = [float32(value) for value in request["paint_color"]]
+            for row in self.state["bindings"]:
+                row["material"] = self.state["bound_material"]
+            self.state["binding_sha256"] = client.digest(client.canonical(self.state["bindings"]))
+        if request["action"] != "inspect":
+            self.sequence += 1
+        relative = client.bridge.REQUEST_ROOT + "/" + request["request_id"]
+        directory = self.root / relative
+        directory.mkdir(parents=True)
+        final = {"schema_version": 1, **self.identity, "request_id": request["request_id"], "action": request["action"],
+                 "script_revision_before": LAUNCHER_SHA, "script_revision_after": LAUNCHER_SHA,
+                 "sequence": self.sequence, "before": before, "after": copy.deepcopy(self.state),
+                 "receipt_relative_path": relative + "/receipt.json", "source_world_saved": False,
+                 "performance_pass": False, "owner_visual_status": "PENDING_FINAL_M3", "status": "COMPLETED",
+                 "capture_pending": False, "captures": [], "dirty_before": {"map": [], "content": []},
+                 "dirty_after": {"map": [], "content": []}, "saved_inputs_before_sha256": self.saved_digest,
+                 "saved_inputs_after_sha256": self.saved_digest, "source_inputs_before_sha256": self.source_digest,
+                 "source_inputs_after_sha256": self.source_digest}
+        if request["action"] == "set":
+            for index in range(4):
+                name = f"priming-{index}.png" if index < 3 else "preview.png"
+                write(directory / name, PNG)
+                final["captures"].append({"path": relative + "/" + name, "sha256": client.digest(PNG),
+                                          "size_bytes": len(PNG), "priming": index < 3})
+        result = copy.deepcopy(final)
+        if request["action"] == "camera":
+            preset = client.bridge.camera_presets.preset(request["preset"])
+            proof = {"camera_preset": preset,
+                     "camera_before": {"location_cm": [0, 0, 0], "rotation_deg": [0, 0, 0]},
+                     "camera_after": {key: preset[key] for key in ("location_cm", "rotation_deg")}}
+            result.update(copy.deepcopy(proof))
+            final.update(copy.deepcopy(proof))
+        if request["action"] == "set":
+            result.update({"status": "ACCEPTED", "capture_pending": True, "captures": []})
+            for key in ("dirty_after", "saved_inputs_after_sha256", "source_inputs_after_sha256"):
+                del result[key]
+        if self.final_edit is not None:
+            self.final_edit(final)
+        if not self.defer:
+            document(directory / "receipt.json", final)
+        if self.response_edit is not None:
+            self.response_edit(result)
+        # Source run 38137155495: MakeResult wraps the reflected FString in
+        # returnValue; MakeTextResult copies its serialized text unchanged.
+        response = {"result": {"content": [{"type": "text", "text": client.canonical(
+            {"returnValue": client.canonical(result).decode()}).decode()}]}}
+        if self.wire_edit is not None:
+            self.wire_edit(response)
+        self.last_response = copy.deepcopy(response)
+        return response
+
+
+class ClientTests(unittest.TestCase):
+    def test_camera_and_material_requests_share_history_without_changing_bindings(self):
+        first = self.fixture.execute(self.fixture.request("camera", action="camera", preset="hairpin-entry"))
+        self.assertEqual("COMPLETED", first["status"], first)
+        for key in ("camera_before", "camera_after", "camera_preset"):
+            native = client._object((self.fixture.root / client.bridge.REQUEST_ROOT / "camera/receipt.json").read_bytes())
+            saved = client._object((self.fixture.base / "camera-output" / client.CLIENT_RECEIPT).read_bytes())
+            self.assertEqual(native[key], first[key])
+            self.assertEqual(native[key], saved[key])
+        second = self.fixture.execute(self.fixture.request("paint"))
+        self.assertEqual("COMPLETED", second["status"], second)
+        third = self.fixture.execute(self.fixture.request("camera2", action="camera", preset="nudo"))
+        self.assertEqual("COMPLETED", third["status"], third)
+        self.assertEqual(3, self.fixture.sequence)
+
+    def test_camera_rejects_wrong_preset_receipt(self):
+        def wrong(value):
+            preset = client.bridge.camera_presets.preset("nudo")
+            value["camera_preset"] = preset
+            value["camera_after"] = {key: preset[key] for key in ("location_cm", "rotation_deg")}
+        self.fixture.response_edit = wrong
+        result = self.fixture.execute(self.fixture.request(action="camera", preset="road"))
+        self.assert_blocked(result, calls=1)
+
+    def test_camera_rejects_nonfinite_readback(self):
+        self.fixture.response_edit = lambda value: value["camera_after"]["location_cm"].__setitem__(0, "NaN")
+        result = self.fixture.execute(self.fixture.request(action="camera", preset="road"))
+        self.assert_blocked(result, calls=1)
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.fixture = Fixture(Path(self.temporary.name))
+        for patcher in (
+            mock.patch.object(client, "WINDOWS_HOST", True),
+            mock.patch.object(client, "REVIEW_ROOT", self.fixture.review_root),
+            mock.patch.object(client.preparation, "SOURCE_ROOT", self.fixture.source_root),
+            mock.patch.object(client, "_sources", return_value=self.fixture.sources),
+            mock.patch.object(client, "_windows_observation", side_effect=lambda _pid: copy.deepcopy(self.fixture.process)),
+            mock.patch.object(client, "_Transport", side_effect=self.fixture.transport),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def context(self):
+        return client._load_context(self.fixture.host_path)
+
+    def assert_blocked(self, result, calls=0):
+        self.assertEqual("BLOCKED", result["status"], result)
+        self.assertEqual(calls, result["tools_call_count"])
+        self.assertFalse(result["retry_permitted"])
+
+    def test_real_path_context_accepts_qualification_and_final_handoff(self):
+        self.assertEqual(self.fixture.root, self.context()["root"])
+        self.fixture.host.update(status="BROWSER_VIDEO_RECEIVED", owner_handoff=True)
+        document(self.fixture.host_path, self.fixture.host)
+        self.assertEqual(self.fixture.identity, self.context()["identity"])
+        self.fixture.host["owner_handoff"] = False
+        document(self.fixture.host_path, self.fixture.host)
+        with self.assertRaisesRegex(ValueError, "hand off"):
+            self.context()
+
+    def test_authenticated_ready_requires_generated_class_and_tool_to_agree(self):
+        original = copy.deepcopy(self.fixture.ready)
+        cases = [
+            {"toolset_identity": None},
+            {"toolset_identity": original["toolset_identity"] | {"class_path": "/Engine/Foreign.Class"}},
+            {"tool_schema": original["tool_schema"] | {"name": "YacsRoadMaterialPreview.preview"}},
+            {"tool_schema": original["tool_schema"] | {
+                "name": "PythonTypes.YacsRoadMaterialPreview_0x11223344.preview"}},
+        ]
+        for edit in cases:
+            with self.subTest(edit=edit):
+                # Re-sign the synthetic receipt so rejection tests semantic
+                # identity binding rather than the earlier raw-file hash gate.
+                document(self.fixture.root / client.bridge.READY_RELATIVE, original | edit)
+                self.fixture.host["material_bridge_ready_sha256"] = client.digest(
+                    (self.fixture.root / client.bridge.READY_RELATIVE).read_bytes())
+                document(self.fixture.host_path, self.fixture.host)
+                with self.assertRaises(ValueError):
+                    self.context()
+        self.assertEqual(0, self.fixture.calls)
+        self.assertEqual(0, self.fixture.transports)
+
+    def test_mcp_catalog_must_match_concrete_ready_name_before_call(self):
+        self.fixture.tool = self.fixture.tool | {
+            "name": "PythonTypes.YacsRoadMaterialPreview_0x11223344.preview"}
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result)
+        self.assertIn("Actual MCP tools/list", result["error"])
+        self.assertEqual(0, self.fixture.calls)
+
+    def test_generated_tool_capitalization_keeps_exact_class_identity(self):
+        ready = copy.deepcopy(self.fixture.ready)
+        ready["tool_schema"]["name"] = ready["toolset_identity"]["toolset_name"] + ".Preview"
+        tool, parameter = client._schema(ready)
+        self.assertEqual(ready["tool_schema"], tool)
+        self.assertEqual("request_json", parameter)
+
+    def checkpoint_receipt(self):
+        self.assertEqual("COMPLETED", self.fixture.execute(self.fixture.request("base", "restore"))["status"])
+        value = client._object((self.fixture.root / client.bridge.REQUEST_ROOT / "base/receipt.json").read_bytes())
+        rows = []
+        for name in ("M_Road.uasset", "MI_Road.uasset", "M_Shoulder.uasset", "MI_Shoulder.uasset", "L_RoadSurface.umap"):
+            relative = "Content/Generated/YACS/LiveCheckpoints/R" + LAUNCHER_SHA[:12] + "/" + name
+            raw = ("synthetic saved " + name).encode()
+            write(self.fixture.root / relative, raw)
+            rows.append({"path": relative, "bytes": len(raw), "sha256": client.digest(raw)})
+        value.update(action="checkpoint", checkpoint={"status": "DERIVED_CHECKPOINT_SAVED", "revision": LAUNCHER_SHA,
+                     "active_source_unchanged": True, "reload_proof": "NOT_RUN", "files": rows})
+        return value
+
+    def test_checkpoint_completion_reads_saved_bytes_and_preserves_world(self):
+        value = self.checkpoint_receipt()
+        client._completed(value, self.context(), "base")
+        self.assertEqual(value["before"], value["after"])
+        write(self.fixture.root / value["checkpoint"]["files"][0]["path"], b"tampered")
+        with self.assertRaisesRegex(ValueError, "checkpoint bytes changed"):
+            client._completed(value, self.context(), "base")
+
+    def test_completed_checkpoint_does_not_use_partial_failure_dirty_exception(self):
+        value = self.checkpoint_receipt()
+        value["dirty_after"]["content"].append("/Game/Generated/YACS/LiveCheckpoints/R" + LAUNCHER_SHA[:12] + "/M_Road")
+        with self.assertRaisesRegex(ValueError, "saved/dirty state"):
+            client._completed(value, self.context(), "base")
+
+    def recover_final(self, final):
+        self.fixture.state = copy.deepcopy(self.fixture.initial)
+        final.update(status="RECOVERED", error="synthetic native failure", recovery_verified=True,
+                     after=copy.deepcopy(self.fixture.initial), restored_after_failure=copy.deepcopy(self.fixture.initial),
+                     captures=[])
+
+    def test_recovered_failure_remains_error_but_next_request_continues(self):
+        self.fixture.final_edit = self.recover_final
+        failed = self.fixture.execute(self.fixture.request())
+        self.assertEqual("RECOVERED", failed["status"], failed.get("error"))
+        self.assertEqual("synthetic native failure", failed["error"])
+        self.assertEqual([], failed["captures"])
+        self.assertFalse(failed["performance_pass"])
+        self.fixture.final_edit = None
+        next_result = self.fixture.execute(self.fixture.request("next"))
+        self.assertEqual("COMPLETED", next_result["status"], next_result.get("error"))
+        self.assertEqual(2, next_result["sequence"])
+        self.assertEqual(self.fixture.initial, next_result["before"])
+
+    def test_reload_history_authenticates_source_and_rejects_revision_gap(self):
+        self.assertEqual("COMPLETED", self.fixture.execute(self.fixture.request("reload", "restore"))["status"])
+        self.assertEqual("COMPLETED", self.fixture.execute(self.fixture.request("next", "restore"))["status"])
+        folder = self.fixture.root / client.bridge.REQUEST_ROOT
+        first = client._object((folder / "reload/receipt.json").read_bytes())
+        second = client._object((folder / "next/receipt.json").read_bytes())
+        blobs = {path: b"synthetic committed source" for path in client.bridge.script_reload.FILES}
+        first.update(action="reload", script_revision_after="b" * 40,
+                     script_reload={"commit": "b" * 40, "previous_commit": LAUNCHER_SHA,
+                                    "files": client.bridge.script_reload._hashes(blobs)})
+        second.update(script_revision_before="b" * 40, script_revision_after="b" * 40)
+        document(folder / "reload/receipt.json", first)
+        document(folder / "next/receipt.json", second)
+        with mock.patch.object(client.bridge.script_reload, "_sources", return_value=blobs) as source:
+            history = client._history(self.context())
+            self.assertEqual("b" * 40, history["script_revision"])
+            source.assert_called_with(self.fixture.launcher_root, LAUNCHER_SHA, "b" * 40)
+            second.update(script_revision_before=LAUNCHER_SHA, script_revision_after=LAUNCHER_SHA)
+            document(folder / "next/receipt.json", second)
+            with self.assertRaisesRegex(ValueError, "revision history has a gap"):
+                client._history(self.context())
+            first["script_reload"]["files"][next(iter(blobs))] = "0" * 64
+            document(folder / "reload/receipt.json", first)
+            with self.assertRaisesRegex(ValueError, "exact committed source"):
+                client._history(self.context())
+
+    def test_unproved_recovery_blocks_history_and_followup(self):
+        def unproved(final):
+            self.recover_final(final)
+            final["recovery_verified"] = False
+        self.fixture.final_edit = unproved
+        self.assert_blocked(self.fixture.execute(self.fixture.request()), calls=1)
+        self.fixture.final_edit = None
+        self.assert_blocked(self.fixture.execute(self.fixture.request("next")), calls=0)
+        self.assertEqual(1, self.fixture.calls)
+
+    def test_two_changes_share_native_state_and_restore_original_bindings(self):
+        first = self.fixture.execute(self.fixture.request())
+        self.assertEqual("COMPLETED", first["status"], first.get("error"))
+        second = self.fixture.execute(self.fixture.request("two", paint_roughness=0.75, paint_color=[0.65, 0.30, 0.20, 1.0]))
+        self.assertEqual("COMPLETED", second["status"], second.get("error"))
+        restored = self.fixture.execute(self.fixture.request("restore", "restore"))
+        self.assertEqual("COMPLETED", restored["status"], restored.get("error"))
+        self.assertEqual(first["after"], second["before"])
+        self.assertEqual(second["after"], restored["before"])
+        self.assertEqual(self.fixture.initial, restored["after"])
+        self.assertEqual((1, 2, 3), tuple(row["sequence"] for row in (first, second, restored)))
+        self.assertEqual((8765, 8765, 8765), tuple(row["editor_pid"] for row in (first, second, restored)))
+        self.assertEqual((4, 4, 0), tuple(len(row["captures"]) for row in (first, second, restored)))
+        self.assertEqual(3, self.fixture.calls)
+        self.assertEqual(3, self.fixture.closes)
+        self.assertTrue(first["process_readback"]["project_argument_verified"])
+        self.assertTrue(all(type(row["elapsed_seconds"]) is float and row["elapsed_seconds"] > 0
+                            and row["performance_pass"] is False for row in (first, second, restored)))
+
+    def test_inspection_does_not_increment_sequence_or_capture(self):
+        result = self.fixture.execute(self.fixture.request("inspect", "inspect"))
+        self.assertEqual("COMPLETED", result["status"], result.get("error"))
+        self.assertEqual(0, result["sequence"])
+        self.assertEqual(result["before"], result["after"])
+        self.assertEqual([], result["captures"])
+
+    def test_followup_checkout_keeps_the_six_original_launcher_sources(self):
+        self.assertNotEqual(client.ROOT, self.fixture.launcher_root)
+        context = self.context()
+        self.assertEqual(self.fixture.launcher_root, context["launcher_root"])
+        self.assertEqual(set(client.preparation.PINNED_PROJECT_FILES), set(context["retained_project_inputs"]))
+        result = self.fixture.execute(self.fixture.request("followup"))
+        self.assertEqual("COMPLETED", result["status"], result.get("error"))
+        relative = next(iter(client.preparation.PINNED_PROJECT_FILES))
+        path = self.fixture.launcher_root / relative
+        write(path, path.read_bytes() + b"changed")
+        with self.assertRaisesRegex(ValueError, "Retained launcher project input bytes"):
+            self.context()
+
+    def test_input_boundaries_refuse_unknown_duplicate_nonfinite_and_stale(self):
+        context = self.context()
+        history = client._history(context)
+        edits = [{"schema_version": True}, {"expected_sequence": True}, {"expected_sequence": -1},
+                 {"session_id": "other"}, {"action": "save"}, {"request_id": "../escape"},
+                 {"paint_roughness": True}, {"paint_roughness": 1.01}, {"paint_color": [0, 0, 0, 0.5]},
+                 {"paint_color": [0, 0, 0]}, {"path": "/Game/Other"}, {"paint_color": [0, 0, False, 1]}]
+        for edit in edits:
+            with self.subTest(edit=edit), self.assertRaises(ValueError):
+                client._request(client.canonical(self.fixture.request(**edit)), context, history)
+        raw = client.canonical(self.fixture.request())
+        for bad in (raw[:-1] + b',"schema_version":1}', raw.replace(b"0.35", b"1e999"),
+                    raw.replace(b"0.35", b"NaN"), b" " * 4096 + raw):
+            with self.subTest(raw=bad[:50]), self.assertRaises(ValueError):
+                client._request(bad, context, history)
+        restore = self.fixture.request("restore", "restore", paint_roughness=0.1)
+        with self.assertRaises(ValueError):
+            client._request(client.canonical(restore), context, history)
+
+    def test_owned_process_and_listener_cannot_be_receipt_echoes(self):
+        original = copy.deepcopy(self.fixture.process)
+        edits = [{"editor_pid": 8766}, {"editor_start_filetime_utc": "134050000000000001"},
+                 {"editor_executable_path": r"D:\Other\UnrealEditor.exe"},
+                 {"listeners": [{"address": "0.0.0.0", "port": 18784, "pid": 8765}]},
+                 {"listeners": [{"address": "127.0.0.1", "port": 18784, "pid": 9999}]},
+                 {"command_line": original["command_line"].replace("YetAnotherCyclingSim.uproject", "Other.uproject")},
+                 {"command_line": original["command_line"].replace(client.preparation.MAP_PACKAGE, "/Engine/Maps/Entry")}]
+        for edit in edits:
+            self.fixture.process = original | edit
+            with self.subTest(edit=edit), self.assertRaises(ValueError):
+                self.context()
+        self.fixture.process = original
+
+    def test_ready_source_and_launcher_anchor_must_match(self):
+        self.fixture.ready["bridge_source_sha256"] = "0" * 64
+        document(self.fixture.root / client.bridge.READY_RELATIVE, self.fixture.ready)
+        with self.assertRaisesRegex(ValueError, "ready bytes"):
+            self.context()
+        self.fixture.host["material_bridge_ready_sha256"] = client.digest(
+            (self.fixture.root / client.bridge.READY_RELATIVE).read_bytes())
+        document(self.fixture.host_path, self.fixture.host)
+        with self.assertRaisesRegex(ValueError, "exact launcher source"):
+            self.context()
+
+    def test_extra_tool_blocks_before_domain_call(self):
+        self.fixture.tool_extra = {"name": "execute_python", "inputSchema": {}}
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result)
+        self.assertEqual(0, self.fixture.calls)
+        self.assertEqual(1, self.fixture.closes)
+
+    def test_exact_reflected_return_value_envelope_has_no_aliases_or_recursive_unwrapping(self):
+        payload = '{"ok":true}'
+        envelope = client.canonical({"returnValue": payload}).decode()
+        response = {"result": {"content": [{"type": "text", "text": envelope}]}}
+        self.assertEqual({"ok": True}, client._domain_result(response))
+        invalid = [
+            payload, client.canonical(payload).decode(), client.canonical(envelope).decode(),
+            client.canonical({"ReturnValue": payload}).decode(),
+            client.canonical({"return_value": payload}).decode(),
+            client.canonical({"result": payload}).decode(),
+            client.canonical({"returnValue": payload, "extra": True}).decode(),
+            client.canonical({"returnValue": {"ok": True}}).decode(),
+            client.canonical({"returnValue": None}).decode(),
+            client.canonical({"returnValue": 1}).decode(),
+            client.canonical({"returnValue": client.canonical(payload).decode()}).decode(),
+            client.canonical({"returnValue": '[{"ok":true}]'}).decode(),
+            client.canonical({"returnValue": '{"ok":true,"ok":false}'}).decode(),
+            client.canonical({"returnValue": '{"number":NaN}'}).decode(),
+            '{"returnValue":"{}","returnValue":"{}"}',
+        ]
+        for index, text in enumerate(invalid):
+            with self.subTest(case=index), self.assertRaises(ValueError):
+                response["result"]["content"][0]["text"] = text
+                client._domain_result(response)
+
+    def test_mcp_error_cannot_be_hidden_by_a_valid_domain_result(self):
+        text = client.canonical({"returnValue": '{"ok":true}'}).decode()
+        response = {"result": {"content": [{"type": "text", "text": text}]}}
+        for value in (True, "false", 0):
+            with self.subTest(is_error=value), self.assertRaises(ValueError):
+                client._domain_result({"result": {**response["result"], "isError": value}})
+        with self.assertRaises(ValueError):
+            client._domain_result({**response, "error": {"message": "SYNTHETIC failure"}})
+
+    def test_rejected_response_and_native_bytes_are_retained_without_promoting_the_call(self):
+        self.fixture.response_edit = lambda value: value.update(
+            schema_version=True, receipt_relative_path="../untrusted/receipt.json")
+        with mock.patch.object(client.time, "sleep") as sleep:
+            result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertEqual("Native receipt schema differs", result["error"])
+        self.assertEqual(1, self.fixture.calls)
+        self.assertEqual(1, self.fixture.closes)
+        sleep.assert_not_called()
+        output = self.fixture.base / "one-output"
+        raw = (output / "mcp-response.json").read_bytes()
+        self.assertEqual(client.canonical(self.fixture.last_response) + b"\n", raw)
+        self.assertEqual({"path": "mcp-response.json", "format": "canonical_parsed_json_rpc",
+                          "size_bytes": len(raw), "sha256": client.digest(raw)}, result["mcp_response"])
+        native_path = self.fixture.root / client.bridge.REQUEST_ROOT / "one/receipt.json"
+        native_raw = native_path.read_bytes()
+        self.assertEqual(native_raw, (output / "native-diagnostic-receipt.json").read_bytes())
+        self.assertEqual("COMPLETED", client._object(native_raw)["status"])
+        self.assertEqual({"status": "RETAINED_UNVALIDATED", "path": client.bridge.REQUEST_ROOT + "/one/receipt.json",
+                          "client_path": "native-diagnostic-receipt.json", "size_bytes": len(native_raw),
+                          "sha256": client.digest(native_raw)}, result["native_diagnostic"])
+        self.assertFalse((output / "tool-result.json").exists())
+        self.assertFalse((output / "native-receipt.json").exists())
+
+    def test_invalid_envelope_is_retained_even_when_domain_decoding_fails(self):
+        self.fixture.wire_edit = lambda value: value["result"]["content"][0].update(text='{"returnValue":17}')
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertIn("reflected returnValue string", result["error"])
+        output = self.fixture.base / "one-output"
+        self.assertEqual(self.fixture.last_response, client._object((output / "mcp-response.json").read_bytes()))
+        self.assertEqual("RETAINED_UNVALIDATED", result["native_diagnostic"]["status"])
+
+    def test_response_diagnostic_bound_includes_the_final_newline(self):
+        response = {"result": {"content": [{"type": "text", "text": "SYNTHETIC"}]}}
+        raw = client.canonical(response) + b"\n"
+        accepted, rejected = self.fixture.base / "exact-bound", self.fixture.base / "over-bound"
+        accepted.mkdir()
+        rejected.mkdir()
+        with mock.patch.object(client, "JSON_LIMIT", len(raw)):
+            retained = client._retain_mcp_response(accepted, response)
+        self.assertEqual(raw, (accepted / "mcp-response.json").read_bytes())
+        self.assertEqual(len(raw), retained["size_bytes"])
+        with mock.patch.object(client, "JSON_LIMIT", len(raw) - 1), self.assertRaisesRegex(ValueError, "byte bound"):
+            client._retain_mcp_response(rejected, response)
+        self.assertEqual([], list(rejected.iterdir()))
+
+    def test_native_diagnostic_refuses_a_link_without_masking_the_domain_error(self):
+        outside = self.fixture.base / "unrelated.json"
+        write(outside, b"UNRELATED FILE MUST NOT BE COPIED")
+        probe = self.fixture.base / "link-capability-probe"
+        try:
+            probe.symlink_to(outside)
+        except OSError as error:
+            if getattr(error, "winerror", None) == 1314:
+                self.skipTest("Host lacks Windows privilege to create the synthetic file symlink")
+            raise
+        probe.unlink()
+
+        def replace_with_link(_response):
+            path = self.fixture.root / client.bridge.REQUEST_ROOT / "one/receipt.json"
+            path.unlink()
+            path.symlink_to(outside)
+
+        self.fixture.response_edit = lambda value: value.update(schema_version=0)
+        self.fixture.wire_edit = replace_with_link
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertEqual("Native receipt schema differs", result["error"])
+        self.assertEqual("NOT_RETAINED", result["native_diagnostic"]["status"])
+        self.assertIn("symlink/reparse", result["native_diagnostic"]["diagnostic_error"])
+        self.assertFalse((self.fixture.base / "one-output/native-diagnostic-receipt.json").exists())
+
+    def test_oversized_native_diagnostic_does_not_mask_the_domain_error(self):
+        self.fixture.response_edit = lambda value: value.update(schema_version=0)
+        self.fixture.wire_edit = lambda _value: write(
+            self.fixture.root / client.bridge.REQUEST_ROOT / "one/receipt.json", b"x" * (client.JSON_LIMIT + 1))
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertEqual("Native receipt schema differs", result["error"])
+        self.assertEqual("NOT_RETAINED", result["native_diagnostic"]["status"])
+        self.assertIn("diagnostic_error", result["native_diagnostic"])
+        self.assertFalse((self.fixture.base / "one-output/native-diagnostic-receipt.json").exists())
+
+    def test_native_diagnostic_write_failure_preserves_the_primary_error(self):
+        self.fixture.response_edit = lambda value: value.update(schema_version=0)
+        original_write = client._write
+
+        def fail_diagnostic(output, name, raw):
+            if name == "native-diagnostic-receipt.json":
+                raise OSError("SYNTHETIC diagnostic write failure")
+            original_write(output, name, raw)
+
+        with mock.patch.object(client, "_write", side_effect=fail_diagnostic):
+            result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertEqual("Native receipt schema differs", result["error"])
+        self.assertEqual("NOT_RETAINED", result["native_diagnostic"]["status"])
+        self.assertEqual("SYNTHETIC diagnostic write failure", result["native_diagnostic"]["diagnostic_error"])
+
+    def test_duplicate_and_stale_requests_never_reach_second_call(self):
+        request = self.fixture.request()
+        self.assertEqual("COMPLETED", self.fixture.execute(request)["status"])
+        duplicate = self.fixture.execute(self.fixture.request("one"), "duplicate")
+        self.assert_blocked(duplicate)
+        stale = self.fixture.execute(self.fixture.request("stale", sequence=0))
+        self.assert_blocked(stale)
+        self.assertEqual(1, self.fixture.calls)
+
+    def test_timeout_is_uncertain_and_next_call_refuses_pending_directory(self):
+        self.fixture.defer = True
+        with mock.patch.object(client, "POLL_SECONDS", 0):
+            first = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(first, calls=1)
+        self.assertIn("timed out", first["error"])
+        self.assertGreater(first["elapsed_seconds"], 0)
+        self.assertEqual("NOT_OBSERVED", first["native_diagnostic"]["status"])
+        next_call = self.fixture.execute(self.fixture.request("next"))
+        self.assert_blocked(next_call)
+        self.assertIn("pending or uncertain", next_call["error"])
+        self.assertEqual(1, self.fixture.calls)
+
+    def test_transport_failure_is_not_retried(self):
+        self.fixture.call_error = TimeoutError("SYNTHETIC transport timeout")
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertEqual(1, self.fixture.calls)
+        self.assertEqual(1, self.fixture.closes)
+        self.assertEqual("NOT_OBSERVED", result["native_diagnostic"]["status"])
+        self.assertNotIn("mcp_response", result)
+
+    def test_bad_native_before_or_after_cannot_pass_as_parameter_echo(self):
+        self.fixture.response_edit = lambda value: value["after"].update(paint_roughness=0.99)
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertIn("effective paint", result["error"])
+
+    def test_native_final_identity_or_conservation_drift_is_blocked(self):
+        self.fixture.final_edit = lambda value: value.update(source_inputs_after_sha256="0" * 64)
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertIn("saved/dirty", result["error"])
+
+    def test_png_hash_mismatch_blocks_completed_receipt(self):
+        def corrupt(final):
+            write(self.fixture.root / final["captures"][-1]["path"], PNG + b"changed")
+
+        self.fixture.final_edit = corrupt
+        result = self.fixture.execute(self.fixture.request())
+        self.assert_blocked(result, calls=1)
+        self.assertIn("PNG bytes", result["error"])
+
+    def test_redirected_receipt_path_is_rejected(self):
+        alternative = self.fixture.base / "outside"
+        alternative.mkdir()
+        alias = self.fixture.review_root / (client.preparation.RUNTIME_SHA[:12] + "-alias")
+        try:
+            alias.symlink_to(alternative, target_is_directory=True)
+        except OSError as error:
+            self.skipTest(f"Host cannot create a synthetic directory link: {error}")
+        with self.assertRaisesRegex(ValueError, "symlink/reparse"):
+            client._load_context(alias / client.SESSION_RECEIPT)
+
+    def test_last_history_slot_is_reserved_for_restore(self):
+        context = self.context()
+        history = {"receipts": {f"prior-{i}": {} for i in range(255)}, "sequence": 255,
+                   "current": self.fixture.initial}
+        with self.assertRaisesRegex(ValueError, "reserved"):
+            client._request(client.canonical(self.fixture.request(sequence=255)), context, history)
+        restored = client._request(client.canonical(self.fixture.request("restore", "restore", sequence=255)), context, history)
+        self.assertEqual("restore", restored["action"])
+
+    def test_fresh_output_is_never_overwritten(self):
+        output = self.fixture.base / "existing"
+        output.mkdir()
+        marker = output / "unique.txt"
+        marker.write_bytes(b"keep")
+        with self.assertRaisesRegex(ValueError, "already exists"):
+            client.run(self.fixture.host_path, self.fixture.base / "absent.json", output)
+        self.assertEqual(b"keep", marker.read_bytes())
+        self.assertEqual(0, self.fixture.calls)
+
+
+class SourceGateTests(unittest.TestCase):
+    def test_actual_head_mismatch_blocks_before_blob_or_network_read(self):
+        with mock.patch.object(client.committed_git, "_git_bounded", return_value=b"b" * 40 + b"\n"), \
+                mock.patch.object(client.committed_git, "_read_exact_blobs") as blobs:
+            with self.assertRaisesRegex(ValueError, "Actual client HEAD"):
+                client._sources(LAUNCHER_SHA)
+            blobs.assert_not_called()
+
+    def test_target_sha_and_modified_client_are_refused(self):
+        paths = (*client.SOURCE_MODULES, client.CLIENT_SOURCE)
+        blobs = {path: (client.ROOT / path).read_bytes() for path in paths}
+        with mock.patch.object(client.committed_git, "_git_bounded", return_value=LAUNCHER_SHA.encode() + b"\n"), \
+                mock.patch.object(client.committed_git, "_read_exact_blobs", return_value=blobs), \
+                mock.patch.dict(client.os.environ, {"TARGET_SHA": "b" * 40}), \
+                self.assertRaisesRegex(ValueError, "TARGET_SHA"):
+            client._sources(LAUNCHER_SHA)
+        with mock.patch.object(client.committed_git, "_git_bounded", return_value=LAUNCHER_SHA.encode() + b"\n"), \
+                mock.patch.object(client.committed_git, "_read_exact_blobs", return_value=blobs), \
+                mock.patch.dict(client.os.environ, {"TARGET_SHA": LAUNCHER_SHA}):
+            self.assertEqual(client.digest(blobs[client.CLIENT_SOURCE]), client._sources(LAUNCHER_SHA)[client.CLIENT_SOURCE])
+            blobs[client.CLIENT_SOURCE] = b"different committed bytes"
+            with self.assertRaisesRegex(ValueError, "committed launcher bytes"):
+                client._sources(LAUNCHER_SHA)
+
+
+    def test_explicit_host_upgrade_preserves_native_closure_and_ancestry(self):
+        head = "b" * 40
+        paths = (*client.SOURCE_MODULES, client.CLIENT_SOURCE)
+        blobs = {path: (client.ROOT / path).read_bytes() for path in paths}
+        baseline = {path: blobs[path] for path in client.SOURCE_MODULES}
+        with mock.patch.dict(client.os.environ, {"YACS_LEVEL_EDITOR_CLIENT_SHA": head, "TARGET_SHA": head}), \
+                mock.patch.object(client.committed_git, "_git_bounded", side_effect=[head.encode(), LAUNCHER_SHA.encode()]), \
+                mock.patch.object(client.committed_git, "_read_exact_blobs", side_effect=[blobs, baseline]):
+            self.assertEqual(client.digest(blobs[client.CLIENT_SOURCE]), client._sources(LAUNCHER_SHA)[client.CLIENT_SOURCE])
+        altered = dict(baseline)
+        altered[next(iter(altered))] = b"other native bytes"
+        with mock.patch.dict(client.os.environ, {"YACS_LEVEL_EDITOR_CLIENT_SHA": head, "TARGET_SHA": head}), \
+                mock.patch.object(client.committed_git, "_git_bounded", side_effect=[head.encode(), LAUNCHER_SHA.encode()]), \
+                mock.patch.object(client.committed_git, "_read_exact_blobs", side_effect=[blobs, altered]), \
+                self.assertRaisesRegex(ValueError, "native/helper closure"):
+            client._sources(LAUNCHER_SHA)
+        with mock.patch.dict(client.os.environ, {"YACS_LEVEL_EDITOR_CLIENT_SHA": head}), \
+                mock.patch.object(client.committed_git, "_git_bounded", side_effect=[head.encode(), b"c" * 40]), \
+                self.assertRaisesRegex(ValueError, "not a descendant"):
+            client._sources(LAUNCHER_SHA)
+
+
+    def test_managed_launcher_requires_explicit_pin_and_exact_executing_root(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            managed = root / "managed"
+            managed.mkdir()
+            source = root / "runner/source"
+            source.mkdir(parents=True)
+            with mock.patch.object(client, "ROOT", managed), \
+                    mock.patch.object(client.preparation, "SOURCE_ROOT", source), \
+                    mock.patch.dict(client.os.environ, {}, clear=True):
+                with self.assertRaisesRegex(ValueError, "fixed launch-session path"):
+                    client._launcher_root(str(managed), "session")
+                with mock.patch.dict(client.os.environ, {"YACS_LEVEL_EDITOR_CLIENT_SHA": "b" * 40}):
+                    self.assertEqual(managed, client._launcher_root(str(managed), "session"))
+                    with self.assertRaisesRegex(ValueError, "fixed launch-session path"):
+                        client._launcher_root(str(root / "foreign"), "session")
+
+
+if __name__ == "__main__":
+    unittest.main()

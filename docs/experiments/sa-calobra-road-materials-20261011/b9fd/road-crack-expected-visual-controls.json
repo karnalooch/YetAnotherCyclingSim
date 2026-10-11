@@ -1,0 +1,434 @@
+{
+  "control_plan": {
+    "frame_count": 16,
+    "jobs": [
+      {
+        "camera": {
+          "camera_location_cm": [
+            58520.05450440308,
+            52341.70600329629,
+            46659.7797300969
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0112-forward-00002",
+          "road_position_cm": [
+            58972.43407088867,
+            52130.994966778686,
+            46408.89952744225
+          ],
+          "station_m": 35.533179724061036,
+          "target_cm": [
+            59696.2413772656,
+            51793.857308350525,
+            46399.49120319479
+          ],
+          "window_id": "reviewed-VIAL_TR70190001272-1-interval-24-0"
+        },
+        "control": "base-basecolor",
+        "job_id": "window-0112-forward-00002--base-basecolor"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            58520.05450440308,
+            52341.70600329629,
+            46659.7797300969
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0112-forward-00002",
+          "road_position_cm": [
+            58972.43407088867,
+            52130.994966778686,
+            46408.89952744225
+          ],
+          "station_m": 35.533179724061036,
+          "target_cm": [
+            59696.2413772656,
+            51793.857308350525,
+            46399.49120319479
+          ],
+          "window_id": "reviewed-VIAL_TR70190001272-1-interval-24-0"
+        },
+        "control": "neutral-basecolor",
+        "job_id": "window-0112-forward-00002--neutral-basecolor"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            58520.05450440308,
+            52341.70600329629,
+            46659.7797300969
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0112-forward-00002",
+          "road_position_cm": [
+            58972.43407088867,
+            52130.994966778686,
+            46408.89952744225
+          ],
+          "station_m": 35.533179724061036,
+          "target_cm": [
+            59696.2413772656,
+            51793.857308350525,
+            46399.49120319479
+          ],
+          "window_id": "reviewed-VIAL_TR70190001272-1-interval-24-0"
+        },
+        "control": "base-roughness",
+        "job_id": "window-0112-forward-00002--base-roughness"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            58520.05450440308,
+            52341.70600329629,
+            46659.7797300969
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0112-forward-00002",
+          "road_position_cm": [
+            58972.43407088867,
+            52130.994966778686,
+            46408.89952744225
+          ],
+          "station_m": 35.533179724061036,
+          "target_cm": [
+            59696.2413772656,
+            51793.857308350525,
+            46399.49120319479
+          ],
+          "window_id": "reviewed-VIAL_TR70190001272-1-interval-24-0"
+        },
+        "control": "neutral-roughness",
+        "job_id": "window-0112-forward-00002--neutral-roughness"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            58520.05450440308,
+            52341.70600329629,
+            46659.7797300969
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0112-forward-00002",
+          "road_position_cm": [
+            58972.43407088867,
+            52130.994966778686,
+            46408.89952744225
+          ],
+          "station_m": 35.533179724061036,
+          "target_cm": [
+            59696.2413772656,
+            51793.857308350525,
+            46399.49120319479
+          ],
+          "window_id": "reviewed-VIAL_TR70190001272-1-interval-24-0"
+        },
+        "control": "base-worldnormal",
+        "job_id": "window-0112-forward-00002--base-worldnormal"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            58520.05450440308,
+            52341.70600329629,
+            46659.7797300969
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0112-forward-00002",
+          "road_position_cm": [
+            58972.43407088867,
+            52130.994966778686,
+            46408.89952744225
+          ],
+          "station_m": 35.533179724061036,
+          "target_cm": [
+            59696.2413772656,
+            51793.857308350525,
+            46399.49120319479
+          ],
+          "window_id": "reviewed-VIAL_TR70190001272-1-interval-24-0"
+        },
+        "control": "neutral-worldnormal",
+        "job_id": "window-0112-forward-00002--neutral-worldnormal"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            58520.05450440308,
+            52341.70600329629,
+            46659.7797300969
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0112-forward-00002",
+          "road_position_cm": [
+            58972.43407088867,
+            52130.994966778686,
+            46408.89952744225
+          ],
+          "station_m": 35.533179724061036,
+          "target_cm": [
+            59696.2413772656,
+            51793.857308350525,
+            46399.49120319479
+          ],
+          "window_id": "reviewed-VIAL_TR70190001272-1-interval-24-0"
+        },
+        "control": "cracks-lit",
+        "job_id": "window-0112-forward-00002--cracks-lit"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            58520.05450440308,
+            52341.70600329629,
+            46659.7797300969
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0112-forward-00002",
+          "road_position_cm": [
+            58972.43407088867,
+            52130.994966778686,
+            46408.89952744225
+          ],
+          "station_m": 35.533179724061036,
+          "target_cm": [
+            59696.2413772656,
+            51793.857308350525,
+            46399.49120319479
+          ],
+          "window_id": "reviewed-VIAL_TR70190001272-1-interval-24-0"
+        },
+        "control": "cracks-worldnormal",
+        "job_id": "window-0112-forward-00002--cracks-worldnormal"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            126255.77438750403,
+            39592.93239490535,
+            67709.15250835742
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0082-forward-00002",
+          "road_position_cm": [
+            125897.40827086054,
+            39245.2767894417,
+            67462.5197009283
+          ],
+          "station_m": 39.94374219674143,
+          "target_cm": [
+            125324.02248423095,
+            38689.02782069985,
+            67459.90720904173
+          ],
+          "window_id": "nudo-0"
+        },
+        "control": "base-basecolor",
+        "job_id": "window-0082-forward-00002--base-basecolor"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            126255.77438750403,
+            39592.93239490535,
+            67709.15250835742
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0082-forward-00002",
+          "road_position_cm": [
+            125897.40827086054,
+            39245.2767894417,
+            67462.5197009283
+          ],
+          "station_m": 39.94374219674143,
+          "target_cm": [
+            125324.02248423095,
+            38689.02782069985,
+            67459.90720904173
+          ],
+          "window_id": "nudo-0"
+        },
+        "control": "neutral-basecolor",
+        "job_id": "window-0082-forward-00002--neutral-basecolor"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            126255.77438750403,
+            39592.93239490535,
+            67709.15250835742
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0082-forward-00002",
+          "road_position_cm": [
+            125897.40827086054,
+            39245.2767894417,
+            67462.5197009283
+          ],
+          "station_m": 39.94374219674143,
+          "target_cm": [
+            125324.02248423095,
+            38689.02782069985,
+            67459.90720904173
+          ],
+          "window_id": "nudo-0"
+        },
+        "control": "base-roughness",
+        "job_id": "window-0082-forward-00002--base-roughness"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            126255.77438750403,
+            39592.93239490535,
+            67709.15250835742
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0082-forward-00002",
+          "road_position_cm": [
+            125897.40827086054,
+            39245.2767894417,
+            67462.5197009283
+          ],
+          "station_m": 39.94374219674143,
+          "target_cm": [
+            125324.02248423095,
+            38689.02782069985,
+            67459.90720904173
+          ],
+          "window_id": "nudo-0"
+        },
+        "control": "neutral-roughness",
+        "job_id": "window-0082-forward-00002--neutral-roughness"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            126255.77438750403,
+            39592.93239490535,
+            67709.15250835742
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0082-forward-00002",
+          "road_position_cm": [
+            125897.40827086054,
+            39245.2767894417,
+            67462.5197009283
+          ],
+          "station_m": 39.94374219674143,
+          "target_cm": [
+            125324.02248423095,
+            38689.02782069985,
+            67459.90720904173
+          ],
+          "window_id": "nudo-0"
+        },
+        "control": "base-worldnormal",
+        "job_id": "window-0082-forward-00002--base-worldnormal"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            126255.77438750403,
+            39592.93239490535,
+            67709.15250835742
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0082-forward-00002",
+          "road_position_cm": [
+            125897.40827086054,
+            39245.2767894417,
+            67462.5197009283
+          ],
+          "station_m": 39.94374219674143,
+          "target_cm": [
+            125324.02248423095,
+            38689.02782069985,
+            67459.90720904173
+          ],
+          "window_id": "nudo-0"
+        },
+        "control": "neutral-worldnormal",
+        "job_id": "window-0082-forward-00002--neutral-worldnormal"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            126255.77438750403,
+            39592.93239490535,
+            67709.15250835742
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0082-forward-00002",
+          "road_position_cm": [
+            125897.40827086054,
+            39245.2767894417,
+            67462.5197009283
+          ],
+          "station_m": 39.94374219674143,
+          "target_cm": [
+            125324.02248423095,
+            38689.02782069985,
+            67459.90720904173
+          ],
+          "window_id": "nudo-0"
+        },
+        "control": "cracks-lit",
+        "job_id": "window-0082-forward-00002--cracks-lit"
+      },
+      {
+        "camera": {
+          "camera_location_cm": [
+            126255.77438750403,
+            39592.93239490535,
+            67709.15250835742
+          ],
+          "direction": "forward",
+          "fov_deg": 76.0,
+          "frame_id": "window-0082-forward-00002",
+          "road_position_cm": [
+            125897.40827086054,
+            39245.2767894417,
+            67462.5197009283
+          ],
+          "station_m": 39.94374219674143,
+          "target_cm": [
+            125324.02248423095,
+            38689.02782069985,
+            67459.90720904173
+          ],
+          "window_id": "nudo-0"
+        },
+        "control": "cracks-worldnormal",
+        "job_id": "window-0082-forward-00002--cracks-worldnormal"
+      }
+    ],
+    "network_plan_sha256": "4bfb1aa75201863bf854a15d7bbc1691fc42765e694a22621b28f64fb9e72d75",
+    "owner_visual_pass": false,
+    "performance_pass": false,
+    "priming_captures_per_condition": 3,
+    "resolution": [
+      1280,
+      720
+    ],
+    "schema_version": 1,
+    "survey_sha256": "15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3"
+  },
+  "sha256": "f6f8a4fef0c10438fee2ee88827f797b9451ebf5d9e1f0b2334f754f593738d8"
+}

@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "issue": 364,
+  "exact_sha": "1ef46dacedba5ed1fc909422529be41808d3dbe4",
+  "run_token": "38084733503-1",
+  "status": "ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS",
+  "native_baseline_authenticated": true,
+  "transient_canary_authenticated": true,
+  "saved_derived_consumer": true,
+  "fresh_reload_verified": true,
+  "original_map_saved": false,
+  "original_landscape_mutated": false,
+  "gpu_shader_verified": false,
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_status": "DEFERRED_AFTER_M3",
+  "performance_pass": false,
+  "editor_processes": [
+    {
+      "action": "prepare",
+      "owned_pid": 27604,
+      "exit_code": 0,
+      "elapsed_seconds": 42.4696873,
+      "deadline_seconds": 420
+    },
+    {
+      "action": "reload",
+      "owned_pid": 5056,
+      "exit_code": 0,
+      "elapsed_seconds": 32.9731928,
+      "deadline_seconds": 420
+    }
+  ],
+  "proof_files": {
+    "saved-road-prepare-editor.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\saved-road-prepare-editor.log",
+      "sha256": "632e51cc6c6692e637f3fa4c89bbe1ddb334314cb77463f73e500dec08bfa2f7",
+      "size_bytes": 367484
+    },
+    "saved-road-prepare-stdout.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\saved-road-prepare-stdout.log",
+      "sha256": "13e5f0147a847597670f827431323dcfa60dfbdb7e74c37c6c9a62f5d2c78500",
+      "size_bytes": 1234
+    },
+    "saved-road-prepare-stderr.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\saved-road-prepare-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "saved_prepared": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-saved-prepared.json",
+      "sha256": "77c06bb5d28f2dacfd40dc9b8c79752184267b67bc52fc9a4b73851d063710fe",
+      "size_bytes": 750
+    },
+    "saved_manifest": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-saved-manifest.json",
+      "sha256": "ccd13145400c756e5d27efd332f84fe87001a8e1e4fe00e08df00997310e5cbd",
+      "size_bytes": 22701
+    },
+    "saved-road-reload-editor.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\saved-road-reload-editor.log",
+      "sha256": "aabf6e0f88ce2286b73c49a9ba5d5bd7a6979acf2f0bf0f409ef4eefa5a9d654",
+      "size_bytes": 349974
+    },
+    "saved-road-reload-stdout.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\saved-road-reload-stdout.log",
+      "sha256": "13e5f0147a847597670f827431323dcfa60dfbdb7e74c37c6c9a62f5d2c78500",
+      "size_bytes": 1234
+    },
+    "saved-road-reload-stderr.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\saved-road-reload-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "fresh_reload": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-asphalt-saved-reloaded.json",
+      "sha256": "5d1b146f27b71cd5d580e1dad17ed1e0a79776ec9a2ecaac8d921d140a8d904c",
+      "size_bytes": 1252
+    }
+  },
+  "error": null,
+  "secondary_errors": [],
+  "window0112_shoulder_material_ids_verified": true
+}

@@ -35,6 +35,23 @@ $Names = @(
     'UnrealCEFSubProcess.exe'
 )
 
+function Assert-NoLocalEditorOwner {
+    # A launcher script below GITHUB_WORKSPACE does not make an interactive
+    # editor a stale CI process. Protect owner sessions before every kill path.
+    $HostProbe = Join-Path $PSScriptRoot '../runner/Get-YacsUnrealHostState.ps1'
+    if (-not (Test-Path -LiteralPath $HostProbe -PathType Leaf)) {
+        throw 'Cannot verify Unreal host ownership; preserving processes and logs.'
+    }
+    $HostState = & $HostProbe
+    if ($HostState.status -notin @('IDLE', 'REMOTE_BUSY') -or
+        $HostState.local_or_unknown_count -ne 0) {
+        throw "Unreal workspace cleanup refused: status=$($HostState.status). Local/unknown Editors and their logs are preserved."
+    }
+}
+
+# Probe errors and unknown statuses fail closed before any process or file mutation.
+Assert-NoLocalEditorOwner
+
 function Test-NativeProcessAlive {
     param([int] $ProcessId)
 
@@ -244,6 +261,7 @@ foreach ($Process in $Stale) {
     $TargetProcessId = [int]$Process.ProcessId
     Write-Host ("Stopping stale workspace process {0} pid={1} with child tree." -f $Process.Name, $TargetProcessId)
 
+    Assert-NoLocalEditorOwner
     & taskkill.exe /PID $TargetProcessId /T /F | Write-Host
     $TaskkillExit = $LASTEXITCODE
     if ($TaskkillExit -ne 0) {
@@ -306,6 +324,7 @@ if (Test-Path -LiteralPath $LockedLog -PathType Leaf) {
     $LastDeleteError = $null
     for ($Attempt = 1; $Attempt -le $Attempts; $Attempt++) {
         try {
+            Assert-NoLocalEditorOwner
             Remove-Item -LiteralPath $LockedLog -Force -ErrorAction Stop
             $LastDeleteError = $null
             break
@@ -337,6 +356,7 @@ if (Test-Path -LiteralPath $LockedLog -PathType Leaf) {
                         $Locker.ProcessName,
                         $Locker.ProcessId
                 )
+                Assert-NoLocalEditorOwner
                 & taskkill.exe /PID ([int]$Locker.ProcessId) /T /F | Write-Host
                 $KilledKnownLocker = $true
             }
@@ -346,6 +366,7 @@ if (Test-Path -LiteralPath $LockedLog -PathType Leaf) {
             $PostKillAttempts = [Math]::Max(1, $LogReleaseTimeoutSec * 4)
             for ($Attempt = 1; $Attempt -le $PostKillAttempts; $Attempt++) {
                 try {
+                    Assert-NoLocalEditorOwner
                     Remove-Item -LiteralPath $LockedLog -Force -ErrorAction Stop
                     $LastDeleteError = $null
                     break

@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "issue": 364,
+  "exact_sha": "2ec534c0b62a18b05eb3ce066a151b0d9bb3bc08",
+  "run_token": "38119538994-1",
+  "status": "FAILED",
+  "native_baseline_authenticated": true,
+  "transient_canary_authenticated": true,
+  "saved_derived_consumer": false,
+  "fresh_reload_verified": false,
+  "shoulder_network_fresh_reload_verified": false,
+  "shoulder_support_count": 0,
+  "shoulder_material_target_count": 0,
+  "shoulder_selected_triangle_count": 0,
+  "edge_markings_requested": true,
+  "edge_markings_fresh_reload_verified": false,
+  "crack_canary_requested": false,
+  "crack_canary_fresh_reload_verified": false,
+  "crack_normal_space_verified": false,
+  "outer_terrain_requested": true,
+  "outer_terrain_fresh_reload_verified": false,
+  "outer_terrain_owner_labels": [],
+  "outer_terrain_physical_contact_verified": false,
+  "outer_terrain_normal_response_verified": false,
+  "rendering_mode_requested": "RENDER_OFFSCREEN",
+  "rendering_arguments_requested": [
+    "-RenderOffscreen",
+    "-norhithread",
+    "-NoVSync"
+  ],
+  "road_profile_diagnostic_sha256": null,
+  "original_map_saved": false,
+  "original_landscape_mutated": false,
+  "gpu_shader_verified": false,
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_status": "DEFERRED_AFTER_M3",
+  "performance_pass": false,
+  "editor_processes": [
+    {
+      "action": "prepare",
+      "owned_pid": 24628,
+      "exit_code": 3,
+      "elapsed_seconds": 385.4429058,
+      "deadline_seconds": 420,
+      "rendering_mode_requested": "RENDER_OFFSCREEN",
+      "editor_executable_sha256": "6f9c95c131f37cbdc384ade02fcf6ed828baa366b25234d0d85e212244cac9aa"
+    }
+  ],
+  "proof_files": {
+    "workspace_config": {
+      "path": "D:\\yacs\\workspace.json",
+      "sha256": "6329f1ac0cf0c2d5f51eddd8ec1090f243652c18ba48a89b9b31b51bd2f9b0ed",
+      "size_bytes": 384
+    },
+    "save_reload_editor_executable": {
+      "path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+      "sha256": "6f9c95c131f37cbdc384ade02fcf6ed828baa366b25234d0d85e212244cac9aa",
+      "size_bytes": 512952
+    },
+    "saved-road-prepare-editor.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38119538994-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38119538994-1\\saved-road-prepare-editor.log",
+      "sha256": "b74392a1ff1726a9b2487b5c06aeed8ab664b2573d110e467fc13619e5eadf41",
+      "size_bytes": 478698
+    },
+    "saved-road-prepare-stdout.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38119538994-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38119538994-1\\saved-road-prepare-stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "saved-road-prepare-stderr.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38119538994-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38119538994-1\\saved-road-prepare-stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    }
+  },
+  "error": "Native saved asphalt prepare process failed; original logs retained.",
+  "secondary_errors": []
+}

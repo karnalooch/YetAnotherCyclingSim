@@ -37,6 +37,36 @@ if ($ActualHead -ne $ExpectedHead) {
     throw "Unreal cache provenance mismatch: HEAD '$ActualHead' != expected '$ExpectedHead'."
 }
 
+# Only the normal, serialized Windows CI lane may rehydrate old CRLF
+# checkout inputs. Read-only native probes and the author's Editor never mutate.
+if ($Action -eq 'Resolve' -and $IsWindows -and
+    $env:GITHUB_ACTIONS -eq 'true' -and
+    $env:GITHUB_WORKFLOW -eq 'CyclingSim CI') {
+    if (-not $env:GITHUB_WORKSPACE -or -not $env:YACS_UNREAL_WORKTREE -or
+        $env:YACS_UNREAL_WORKTREE -cnotmatch '^_unreal-(ci-warm|build-[0-9]+-[0-9]+)$') {
+        throw 'Canonical Windows Unreal CI worktree identity is unavailable.'
+    }
+    $ExpectedWorktreeRoot = [IO.Path]::GetFullPath(
+        (Join-Path $env:GITHUB_WORKSPACE $env:YACS_UNREAL_WORKTREE)
+    )
+    if (-not [string]::Equals($RepoRoot, $ExpectedWorktreeRoot,
+                             [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Unreal checkout canonicalization refuses an unrelated worktree.'
+    }
+    Push-Location -LiteralPath $RepoRoot
+    try {
+        & python -m scripts.ci.materialize_unreal_cache_inputs `
+            --repo-root $RepoRoot `
+            --expected-head $ExpectedHead `
+            --expected-compile-fingerprint $ExpectedCompileFingerprint `
+            --expected-proof-fingerprint $ExpectedProofFingerprint
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Unreal CI physical source bytes differ from hosted exact-SHA fingerprints.'
+        }
+    }
+    finally { Pop-Location }
+}
+
 $EnvironmentResolverPath = Join-Path $RepoRoot 'scripts/ci/Resolve-YacsUnrealBuildEnvironment.ps1'
 if (-not (Test-Path -LiteralPath $EnvironmentResolverPath -PathType Leaf)) {
     throw "Canonical Unreal build-environment resolver is missing: $EnvironmentResolverPath"
@@ -49,6 +79,34 @@ $EngineRoot = if ($Engine) { [string] $Engine.Root } else { 'unresolved' }
 $ToolchainIdentity = if ($BuildEnvironment) { [string] $BuildEnvironment.Toolchain.Identity } else { 'unresolved' }
 $EnvironmentIdentity = if ($BuildEnvironment) { [string] $BuildEnvironment.Identity } else { 'unresolved' }
 
+# An old green state is not sufficient for native reuse after the current-run
+# RuntimeProof tree has been cleaned. Retain the original bounded Automation
+# summary under the build-cache allowlist, pinned by its actual byte digest.
+function Test-RetainedUnrealProofSummary {
+    param($CachedState)
+    try {
+        $pin = [string]$CachedState.ProofSummarySha256
+        $size = $CachedState.ProofSummarySizeBytes
+        if ($pin -cnotmatch '^[0-9a-f]{64}$' -or ($size -isnot [int] -and $size -isnot [long]) -or
+            $size -le 0 -or $size -gt 2MB) { return $false }
+        $path = Join-Path $StateDir ('proof-summary-' + $pin + '.json')
+        $item = Get-Item -LiteralPath $path -Force -ErrorAction Stop
+        if ($item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+            $item.Length -ne $size) { return $false }
+        $bytes = [IO.File]::ReadAllBytes($path)
+        $sha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+        if ($bytes.Length -ne $size -or $sha -cne $pin) { return $false }
+        $proof = [Text.Encoding]::UTF8.GetString($bytes).TrimStart([char]0xFEFF) | ConvertFrom-Json
+        if ($proof.Head -cne [string]$CachedState.ProofHead -or
+            $proof.ExpectedHead -cne [string]$CachedState.ProofHead -or
+            $proof.Failed -ne 0 -or $proof.Errors -ne 0 -or $proof.Discovered -le 0) {
+            return $false
+        }
+        return $true
+    }
+    catch { return $false }
+}
+
 if ($Action -eq 'Record') {
     if (-not $CompletedMode) { throw '-CompletedMode is required for Record.' }
     if ($CompletedMode -eq 'runtime' -and $CompletedCompileKind -ne 'none') {
@@ -58,13 +116,23 @@ if ($Action -eq 'Record') {
         throw 'Compile proof must record CompletedCompileKind=warm or cold.'
     }
     $SummaryPath = Join-Path $EvidenceDir 'unreal_ci_summary.json'
-    if (-not (Test-Path -LiteralPath $SummaryPath -PathType Leaf)) {
-        throw "Cannot record Unreal cache state without successful proof summary: $SummaryPath"
+    $sourceItem = Get-Item -LiteralPath $SummaryPath -Force -ErrorAction Stop
+    if ($sourceItem.PSIsContainer -or ($sourceItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+        $sourceItem.Length -le 0 -or $sourceItem.Length -gt 2MB) {
+        throw 'Cannot record an absent, linked or unbounded Unreal Automation summary.'
     }
-    $Summary = Get-Content -LiteralPath $SummaryPath -Raw | ConvertFrom-Json
-    if ([int]$Summary.Failed -ne 0 -or [int]$Summary.Errors -ne 0 -or [int]$Summary.Discovered -le 0) {
-        throw 'Refusing to record non-green Unreal proof state.'
+    $SummaryBytes = [IO.File]::ReadAllBytes($SummaryPath)
+    if ($SummaryBytes.Length -ne $sourceItem.Length) {
+        throw 'Automation summary changed while recording the cache.'
     }
+    $Summary = [Text.Encoding]::UTF8.GetString($SummaryBytes).TrimStart([char]0xFEFF) | ConvertFrom-Json
+    if ($Summary.Head -cne $ExpectedHead -or $Summary.ExpectedHead -cne $ExpectedHead -or
+        [int]$Summary.Failed -ne 0 -or [int]$Summary.Errors -ne 0 -or [int]$Summary.Discovered -le 0) {
+        throw 'Refusing to record non-green or wrong-HEAD Unreal proof state.'
+    }
+    $SummarySha256 = [Convert]::ToHexString(
+        [Security.Cryptography.SHA256]::HashData($SummaryBytes)
+    ).ToLowerInvariant()
     if (-not $Engine -or $EnvironmentIdentity -eq 'unresolved') {
         throw 'Cannot record cache state because UE/toolchain identity is unresolved.'
     }
@@ -88,6 +156,23 @@ if ($Action -eq 'Record') {
     }
 
     New-Item -ItemType Directory -Path $StateDir -Force | Out-Null
+    $retained = Join-Path $StateDir ('proof-summary-' + $SummarySha256 + '.json')
+    if (Test-Path -LiteralPath $retained) {
+        $oldItem = Get-Item -LiteralPath $retained -Force
+        if ($oldItem.PSIsContainer -or ($oldItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+            $oldItem.Length -ne $SummaryBytes.Length -or
+            (Get-FileHash -LiteralPath $retained -Algorithm SHA256).Hash.ToLowerInvariant() -cne $SummarySha256) {
+            throw 'Existing retained Automation summary differs; refusing overwrite.'
+        }
+    }
+    else {
+        # A separate immutable content-addressed file prevents loss of an older proof
+        # if later state publication fails. No fabricated or rewritten summary.
+        $stream = [IO.File]::Open($retained, [IO.FileMode]::CreateNew,
+                                  [IO.FileAccess]::Write, [IO.FileShare]::None)
+        try { $stream.Write($SummaryBytes, 0, $SummaryBytes.Length) }
+        finally { $stream.Dispose() }
+    }
     $State = [ordered]@{
         SchemaVersion = 3
         CompileFingerprint = $ExpectedCompileFingerprint
@@ -100,6 +185,8 @@ if ($Action -eq 'Record') {
         ProofPassed = $true
         CompileHead = $CompileHead
         ProofHead = $ExpectedHead
+        ProofSummarySha256 = $SummarySha256
+        ProofSummarySizeBytes = $SummaryBytes.Length
         LastCompileKind = $CompletedCompileKind
         BuildCachePolicy = 'ubt-native-incremental-v1'
         UpdatedUtc = (Get-Date).ToUniversalTime().ToString('o')
@@ -194,6 +281,12 @@ if ($State) {
             $Mode = 'runtime'
             $CompileKind = 'none'
             $Reason = 'proof-fingerprint-mismatch'
+            $Purge = $false
+        }
+        elseif (-not (Test-RetainedUnrealProofSummary $State)) {
+            $Mode = 'runtime'
+            $CompileKind = 'none'
+            $Reason = 'retained-proof-summary-unavailable'
             $Purge = $false
         }
         else {

@@ -85,6 +85,7 @@ TOTAL_LIMIT = 2 * 1024 * 1024 * 1024
 GIT_BATCH_OBJECTS = 512
 GIT_BATCH_PATH_BYTES = 1024
 GIT_BATCH_BYTES = operation.adapter.MAX_INPUT_BYTES
+LFS_CHECKOUT_BATCH = 16  # bounded Windows argv and deterministic native hydration
 POINTER = re.compile(
     rb"version https://git-lfs.github.com/spec/v1\noid sha256:([0-9a-f]{64})\nsize ([0-9]+)\n\Z"
 )
@@ -506,10 +507,15 @@ def _source_dependency_inventory(exact_sha: str) -> list[dict]:
 
 def _verify_rows(root: Path, rows: list[dict]) -> None:
     for row in rows:
+        observed = _identity(_safe_path(root, row["path"]))
+        expected = {key: row[key] for key in ("sha256", "size_bytes")}
         _require(
-            _identity(_safe_path(root, row["path"]))
-            == {key: row[key] for key in ("sha256", "size_bytes")},
-            "accepted asset bytes differ",
+            observed == expected,
+            "accepted asset bytes differ: "
+            f"{row['path']} (expected_size={expected['size_bytes']}, "
+            f"observed_size={observed['size_bytes']}, "
+            f"expected_sha256={expected['sha256']}, "
+            f"observed_sha256={observed['sha256']})",
         )
 
 
@@ -557,14 +563,24 @@ def _hydrate_dependencies(rows: list[dict], cache: Path) -> None:
             "accepted LFS cache object is missing or corrupt",
         )
     if pending:
-        _git(
-            "-c",
-            "lfs.storage=" + str(cache),
-            "lfs",
-            "checkout",
-            "--",
-            *(row["path"] for row in pending),
-        )
+        # Windows Actions runs with isolated Git global/system configuration.
+        # Unlike synthetic fixtures, fresh actions/checkout repositories do not
+        # inherit any LFS filter installation. Bootstrap only this throwaway
+        # repository after every cache object has passed its SHA/size preflight.
+        # Keep automatic smudging disabled: only the fixed pinned paths below
+        # may be hydrated from the authenticated offline object store.
+        _git("lfs", "install", "--local", "--skip-smudge")
+        for start in range(0, len(pending), LFS_CHECKOUT_BATCH):
+            batch = pending[start : start + LFS_CHECKOUT_BATCH]
+            _git(
+                "-c",
+                "lfs.storage=" + str(cache),
+                "lfs",
+                "checkout",
+                "--",
+                *(row["path"] for row in batch),
+            )
+            _verify_rows(ROOT, batch)
     _verify_rows(ROOT, rows)
 
 

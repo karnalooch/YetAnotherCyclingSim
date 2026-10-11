@@ -2,6 +2,36 @@
 [CmdletBinding()]
 param([string]$WorkspaceConfig = (Join-Path $PSScriptRoot '../../../workspace.json'))
 $ErrorActionPreference = 'Stop'
+function Resolve-YacsRunnerZenDataPath {
+    param([string]$WorkspaceRoot, $Config)
+    if ($Config.cache -isnot [string]) { throw 'Configured cache path must be a string.' }
+    $relative = [string]$Config.cache
+    if ([IO.Path]::IsPathRooted($relative) -or $relative -match '(^|[\\/])\.\.([\\/]|$)') {
+        throw 'Configured cache path must remain below the workspace root.'
+    }
+    $root = [IO.Path]::GetFullPath($WorkspaceRoot)
+    $cacheRoot = [IO.Path]::GetFullPath((Join-Path $root $relative))
+    $zenDataPath = Join-Path $cacheRoot 'Zen'
+    $prefix = $root.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+    if (-not $zenDataPath.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Configured Zen data path must remain below the workspace root.'
+    }
+    $ancestor = $zenDataPath
+    while ($ancestor) {
+        try {
+            $item = Get-Item -LiteralPath $ancestor -Force -ErrorAction Stop
+        } catch [System.Management.Automation.ItemNotFoundException] {
+            $item = $null
+        }
+        if ($item -and ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw 'Configured Zen data path cannot traverse a link or junction.'
+        }
+        if ([string]::Equals($ancestor.TrimEnd('\', '/'), $root.TrimEnd('\', '/'),
+                [StringComparison]::OrdinalIgnoreCase)) { break }
+        $ancestor = Split-Path -Parent $ancestor
+    }
+    return $zenDataPath
+}
 $WorkspaceConfig = (Resolve-Path -LiteralPath $WorkspaceConfig).Path
 $installer = Join-Path $PSScriptRoot 'Install-YacsPortablePowerShell.ps1'
 if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) { throw 'Portable PowerShell installer is missing.' }
@@ -15,6 +45,7 @@ if ($LASTEXITCODE -ne 0 -or $pinnedVersion -ne '7.6.6') { throw "Pinned PowerShe
 $env:PATH = "$pinnedPwshRoot;$env:PATH"
 $config = Get-Content -LiteralPath $WorkspaceConfig -Raw | ConvertFrom-Json
 $root = Split-Path -Parent $WorkspaceConfig
+$zenDataPath = Resolve-YacsRunnerZenDataPath -WorkspaceRoot $root -Config $config
 $relative = [string]$config.runner
 if ([int]$config.schema_version -ne 1 -or [IO.Path]::IsPathRooted($relative) -or $relative -match '(^|[\\/])\.\.([\\/]|$)') { throw 'Invalid configured runner path.' }
 $runnerRoot = [IO.Path]::GetFullPath((Join-Path $root $relative))
@@ -36,7 +67,7 @@ foreach ($listener in $listeners) {
 if (Get-Process Runner.Worker -ErrorAction SilentlyContinue) { throw 'A runner worker is active.' }
 $env:YACS_WORKSPACE_CONFIG = $WorkspaceConfig
 $env:ACTIONS_RUNNER_HOOK_JOB_STARTED = Join-Path $PSScriptRoot 'Invoke-YacsJobStarted.ps1'
-[Environment]::SetEnvironmentVariable('UE-ZenDataPath', (Join-Path $root 'cache/Zen'), 'Process')
+[Environment]::SetEnvironmentVariable('UE-ZenDataPath', $zenDataPath, 'Process')
 $env:TEMP = Join-Path $root 'work/runner-temp'
 $env:TMP = $env:TEMP
 $env:PIP_CACHE_DIR = Join-Path $root 'cache/pip'

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>YACS · Mallorca live</title>
+  <style>
+    :root { color-scheme: dark; font: 15px system-ui, sans-serif; background:#111820; color:#eef3f8 }
+    body { margin:0; min-height:100vh; display:grid; grid-template-columns:minmax(420px,2fr) minmax(280px,1fr); gap:14px; padding:14px; box-sizing:border-box }
+    section { min-width:0; background:#1b2631; border:1px solid #324353; border-radius:12px; padding:14px }
+    h1,h2,p { margin:0 0 12px } h1 { font-size:20px } h2 { font-size:16px }
+    .stream { display:flex; flex-direction:column; gap:10px }
+    iframe { width:100%; min-height:68vh; border:0; border-radius:8px; background:#000 }
+    .controls { display:flex; flex-direction:column; gap:12px }
+    .row { display:flex; flex-wrap:wrap; gap:8px }
+    button { border:1px solid #438dd0; border-radius:8px; padding:9px 12px; background:#173d5c; color:white; cursor:pointer }
+    button:hover { background:#20547c } button:disabled { opacity:.5; cursor:wait }
+    button[aria-pressed="true"] { outline:2px solid #7ee3a5; opacity:1; cursor:default }
+    #status { color:#a8d7ff; min-height:22px } #detail { color:#b8c4d0; font-size:13px; line-height:1.5 }
+    #capture { display:block; width:100%; min-height:120px; object-fit:contain; background:#080b0e; border-radius:8px }
+    #capture[hidden] { display:none }
+    @media(max-width:850px) { body { grid-template-columns:1fr } iframe { min-height:55vh } }
+  </style>
+</head>
+<body>
+  <section class="stream">
+    <h1>Majorka · podgląd na żywo</h1>
+    <iframe src="http://127.0.0.1/?AutoConnect=true&amp;AutoPlayVideo=true" allow="autoplay; fullscreen" allowfullscreen title="Strumień Unreal Engine"></iframe>
+    <p id="status">Łączenie z przypisaną sesją Unreal…</p>
+  </section>
+  <section class="controls">
+    <p>Kamerą sterujesz samodzielnie w podglądzie — WASD.</p>
+    <details><summary>Aktualizacja narzędzi live</summary>
+      <button data-action="reload" data-preset="staged">Wczytaj przygotowane skrypty</button>
+      <p>Aktualizuje narzędzia bez restartu edytora i bez zmiany kamery.</p>
+    </details>
+    <button data-action="checkpoint" data-preset="current">Zapisz nową kopię sceny</button>
+    <h2>Lokalna geometria pobocza</h2>
+    <button data-action="repair" data-preset="nearby">Wyrównaj pobocze przy kamerze</button>
+    <p>Korekta obejmuje zwykłe pobocze w pobliżu kamery. Asfalt i teren pozostają bez zmian.</p>
+    <h2>Asfalt i przejście w żwir</h2>
+    <div class="row">
+      <button data-action="surface" data-preset="worn">Zużyty asfalt</button>
+      <button data-action="surface" data-preset="strong">Mocniejsze zużycie</button>
+    </div>
+    <p>Zmienia powierzchnię asfaltu i przejście w pobocze. Wystający rant wymaga osobnej korekty geometrii.</p>
+    <h2>Oznaczenia krawędzi · wariant diagnostyczny</h2>
+    <div class="row">
+      <button data-action="edge" data-preset="warm">Ciepła biel</button>
+      <button data-action="edge" data-preset="cool">Chłodna szarość</button>
+      <button data-action="edge" data-preset="magenta">Test: magenta</button>
+      <button data-action="restore" data-preset="original">Przywróć</button>
+    </div>
+    <p>Podgląd materiału jest tymczasowy. „Przywróć” przywraca oryginalny asfalt, pobocze i oznaczenia.</p>
+    <p id="detail" role="status" aria-live="polite">Zmiany pojawiają się w podglądzie. Kamerą sterujesz sam.</p>
+  </section>
+  <script>
+    const statusLine = document.querySelector('#status');
+    const detail = document.querySelector('#detail');
+    const buttons = [...document.querySelectorAll('button')];
+    let busy = false;
+    let connected = false;
+    let activeEdge = null;
+    let activeSurface = null;
+    let repairActive = false;
+    function updateButtons() {
+      buttons.forEach(x => {
+        const selected = (x.dataset.action === 'surface' && x.dataset.preset === activeSurface) || (x.dataset.action === 'edge' || x.dataset.action === 'restore') && x.dataset.preset === activeEdge;
+        x.setAttribute('aria-pressed', String(selected));
+        x.disabled = busy || !connected || selected || (x.dataset.action === 'repair' && repairActive);
+      });
+    }
+    async function refresh() {
+      if (busy) return;
+      try {
+        const r = await fetch('/api/status', {cache:'no-store'});
+        const s = await r.json();
+        connected = r.ok && s.connected === true;
+        activeEdge = s.active_edge_preset;
+        activeSurface = s.active_surface_preset;
+        repairActive = s.shoulder_repair?.state === 'applied';
+        statusLine.textContent = s.connected
+          ? `UE działa · PID ${s.editor_pid} · krok ${s.sequence} · ${s.map_package}`
+          : `Brak aktywnej sesji: ${s.error || 'sprawdź Unreal Editor'}`;
+      } catch (_) { connected = false; statusLine.textContent = 'Panel nie może odczytać sesji UE.'; }
+      updateButtons();
+    }
+    async function apply(button) {
+      if (busy) return;
+      busy = true; updateButtons();
+      statusLine.textContent = 'Wysyłam ograniczoną zmianę do UE…';
+      try {
+        const r = await fetch('/api/preview', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:button.dataset.action,preset:button.dataset.preset})
+        });
+        const result = await r.json();
+        if (!r.ok) throw new Error(result.error || 'Zmiana została odrzucona');
+        statusLine.textContent = `Podgląd gotowy · krok ${result.sequence} · ${result.action}: ${result.preset}`;
+        detail.textContent = result.status === 'RECOVERED' ? (result.action === 'checkpoint' ? `Zapis nie powiódł się. Bieżący podgląd zachowany: ${result.error || ''}` : `Operacja nie powiodła się. Materiały i pobocze przywrócono do stanu początkowego. Sesja nadal działa: ${result.error || ''}`)
+          : result.action === 'checkpoint' ? 'Nowa kopia sceny zapisana. Bieżący podgląd działa dalej.'
+          : result.action === 'reload' ? 'Skrypty przeładowane. UE i kamera działają dalej.'
+          : result.action === 'restore'
+          ? 'Oryginalne materiały i pobocze przywrócone.'
+          : result.action === 'repair' ? 'Lokalna korekta pobocza zastosowana.'
+          : result.camera_after ? 'Kamera ustawiona. Sprawdź nowy widok w strumieniu.'
+          : 'Materiał zmieniony — efekt widzisz w podglądzie na żywo.';
+      } catch (error) {
+        detail.textContent = `Nie udało się potwierdzić całej operacji: ${error.message}. Sprawdź strumień; nie ponawiam automatycznie.`;
+      }
+      finally { busy = false; await refresh(); }
+    }
+    buttons.forEach(button => button.addEventListener('click', () => apply(button)));
+    updateButtons(); refresh();
+    setInterval(refresh, 15000);
+  </script>
+</body>
+</html>

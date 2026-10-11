@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "issue": 459,
+  "exact_sha": "b9fddea3f6023239da98bec7a5107ed1124cf52e",
+  "run_token": "38116299783-1",
+  "diagnostic_target": "hairpin0081",
+  "status": "SHOULDER_CONTACT_READ_ONLY_HOST_PASS",
+  "read_only": true,
+  "geometry_mutated": false,
+  "original_map_mutated": false,
+  "source_inputs_unchanged": true,
+  "restored_visibility_verified": true,
+  "verified_frame_count": 6,
+  "rendered_owner": "PENDING_PAIRED_VISUAL_REVIEW",
+  "owner_visual_pass": false,
+  "performance_status": "DEFERRED_AFTER_M3",
+  "performance_pass": false,
+  "editor_pid": 33448,
+  "editor_exit_observed": true,
+  "editor_exit_code": 0,
+  "stopped_on_failure": false,
+  "max_editor_seconds": 1020,
+  "processes": [
+    {
+      "name": "source-preflight",
+      "pid": 3856,
+      "exit_observed": true,
+      "exit_code": 0,
+      "stopped_on_failure": false,
+      "deadline_seconds": 180,
+      "elapsed_seconds": 10.4296034
+    },
+    {
+      "name": "owned-editor",
+      "pid": 33448,
+      "exit_observed": true,
+      "exit_code": 0,
+      "stopped_on_failure": false,
+      "deadline_seconds": 1020,
+      "elapsed_seconds": 46.8132343
+    },
+    {
+      "name": "source-verification",
+      "pid": 8348,
+      "exit_observed": true,
+      "exit_code": 0,
+      "stopped_on_failure": false,
+      "deadline_seconds": 180,
+      "elapsed_seconds": 4.5618948
+    }
+  ],
+  "evidence": {
+    "source_inputs": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\shoulder-contact-0081\\source-inputs.json",
+      "sha256": "2db33a55bee7f377ca38bd5da68c946c906b8117c6baaeac4a5162575372c5ce",
+      "size_bytes": 201408
+    },
+    "primary_api": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\shoulder-contact-0081\\native-api-evidence.json",
+      "sha256": "295c7f71006b1eabcbd6db0f3737d84689fde69a028f1e7a6406cc576a545295",
+      "size_bytes": 2279
+    },
+    "verification": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\shoulder-contact-0081\\verification.json",
+      "size_bytes": 365,
+      "sha256": "6ec1fd95e893ccc2752aa9af362c118aeec027bce8632a36b057c3068dcf5052"
+    },
+    "retained_files": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\shoulder-contact-0081\\retained-files.json",
+      "size_bytes": 3192,
+      "sha256": "4b5e167db211f87d4b2666eba59a00444be03842c4dc62f93846c835d415db39"
+    },
+    "source-preflight-stdout.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\shoulder-contact-0081\\source-preflight-stdout.log",
+      "size_bytes": 1471,
+      "sha256": "0961679d135a71cf3e00a9dea11057da99b2ba3da4cfda8f81f561e28e82d6a7"
+    },
+    "source-preflight-stderr.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\shoulder-contact-0081\\source-preflight-stderr.log",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "owned-editor.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\shoulder-contact-0081\\owned-editor.log",
+      "size_bytes": 366029,
+      "sha256": "a0c7bc1ff44328ea9652f9c66821c8b0287e700a1e9b45e818f1e10ff35b86a8"
+    },
+    "owned-editor-stdout.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\shoulder-contact-0081\\owned-editor-stdout.log",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "owned-editor-stderr.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\shoulder-contact-0081\\owned-editor-stderr.log",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "source-verification-stdout.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\shoulder-contact-0081\\source-verification-stdout.log",
+      "size_bytes": 346,
+      "sha256": "82c195db1c6ac9940c6ac67b666fcc5f29809f17468475d44a54582020a518cb"
+    },
+    "source-verification-stderr.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38116299783-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38116299783-1\\shoulder-contact-0081\\source-verification-stderr.log",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "error": null,
+  "secondary_errors": [],
+  "program_executable": {
+    "path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+    "sha256": "6f9c95c131f37cbdc384ade02fcf6ed828baa366b25234d0d85e212244cac9aa",
+    "size_bytes": 512952
+  },
+  "retained_root": "D:\\yacs\\work\\road-materials\\shoulder-contact-0081\\b9fddea3f6023239da98bec7a5107ed1124cf52e\\38116299783-1",
+  "source_input_count": 662
+}

@@ -270,69 +270,80 @@ Droga pozostaje częścią systemu YACS; nie kupujemy „gotowej trasy”. Asset
 
 **Wchodzi:** część wizualna w 3G/7, wetness w 8.
 
-#### Sa Calobra road-material preparation — 2026-10-09
+#### Sa Calobra road-material preparation — 2026-10-11
 
-Read-only inventory at `bfbc48057b8b84d087a3685cd71972678a32d412`.
-The #363 material admission/merge prerequisite was satisfied on 2026-10-09.
-#384's fixed native inspection/test session, authenticated original receipt
-readback and separate [InputBoundary](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402)
-passed. Authenticated source-only
-[receipt readback 38040872136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136)
-passed separately, without a new native session or unit execution.
-Start [#364](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364) only
-after protected [PR #467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467)
-is merged and #384 is closed as completed; then stop MCP infrastructure work.
-The fixed inspector does not admit
-stock `MaterialInstanceTools`: #364 requires separate version-matched schemas,
-argument/resource restrictions and material-only native authoring proof before use.
-This inventory selects no production asset, performs no import/application and
-does not promote material-prep fallback roles into geographic road domains.
+#363 and #384's entry gates are satisfied;
+[#364](https://github.com/karnalooch/YetAnotherCyclingSim/issues/364) continues in
+Draft [PR #470](https://github.com/karnalooch/YetAnotherCyclingSim/pull/470).
+The current scope is the existing road network, including Nudo and the hairpin.
+The earlier single-support 0112 trial is historical evidence, not the current
+coverage limit. The [source/native evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md)
+retains its receipts and the subsequent whole-network source and consumer pins.
 
-| Role / consumer | Existing source or candidate | Preparation limit |
+The latest independently verified full material result is revision
+`b9fddea3f6023239da98bec7a5107ed1124cf52e`:
+[protected CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38116301824)
+and [native run](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38116299783)
+passed. Actual save/fresh/GPU coverage is 68 Lit + 16 crack controls + 22 contact
+views. The archive and all extracted identities were checked; independent
+material and road specialists inspected the images. Dry grain and near white
+lines are useful progress. The two restrained crack canaries show no obvious
+rectangular outline, but normal-space orientation and later sparse distribution
+remain unresolved. Far line gaps, asphalt bands and the outer gravel boundary
+still need the separate ten-control/outer-blend attempt.
+
+The new support022-hidden control leaves the 0112 dark edge band visible.
+Support185 owns the thick hairpin wall, and its native wall/source CUT payload
+is now present. Source LiDAR at 95–165 m and 195–235 m is retained. These
+observations support #459 analysis; they do not repair geometry or establish
+final native Landscape contact. See the
+[current review and originals](experiments/sa-calobra-road-materials-20261011/README.md).
+
+| Role / consumer | Current source or candidate | Proven result and remaining limit |
 |---|---|---|
-| Asphalt | Material Forge `aged_mountain_asphalt/base`, `worn`, `repaired` in [`families.json`](../worldgen/materials/material_forge/families.json); seeds 101/137/173, declared 4 m tile, roughness 0.82/0.86/0.78 | Existing YACS procedural recipes. [`MATERIAL_FORGE.md`](tooling/MATERIAL_FORGE.md) records a first base render/CPU check; it does not admit all variants or the current road consumer. Requested 2048 resolution is not measured consumed texture size. |
-| Saved pavement | [`create_accepted_scene_checkpoint.py`](../scripts/ue/create_accepted_scene_checkpoint.py) uses an instance of `/Engine/BasicShapes/BasicShapeMaterial`, one slot and colour readback | This is the retained checkpoint recipe, not a textured asphalt system. Its authored buffers contain positions/triangles without a metric UV contract. Verify actual saved bindings and geometry hashes before future material assignment. |
-| Shoulder and support faces | The same checkpoint builds top/side support faces with one brown material slot | Establish shoulder-top versus support-wall selection from admitted frozen geometry before choosing a material. Neither gravel nor masonry has been approved for this slot by this inventory. Preserve nominal 0.5 m shoulders and existing BOB contact limits. |
-| Gravel / mineral transition | [`texture library v2`](../worldgen/materials/sa_calobra_texture_library_v2_20261005.json) records candidate `FillGravel` from Poly Haven `rock_ground`, CC0, pinned channels/hashes and provider-reported 1.5 x 1.5 m dimensions; existing outputs belong to [`Texture Material Prep`](tooling/TEXTURE_MATERIAL_PREP.md) | Its visual acceptance remains pending; terrain-fill provenance is not shoulder admission. A prepared role or fallback texture does not establish a shoulder footprint, hydrology/geology or road material approval. Keep source masks and observation/Unknown semantics independent. |
+| Asphalt | Material Forge `aged_mountain_asphalt/dry_varied`, granular source `27f24ead` / `38096069404-1`; 4 m tile | Two actual byte-identical Godot exports, authenticated source replay and native consumption. Four maps use 400 cm projection and full mip readiness. Reviewed 95e7 images show clearer aggregate and quieter broad colour; distant bands remain unresolved. Historical `base`, `worn` and `repaired` are not newly admitted. |
+| Saved pavement | Isolated derived consumer, preserving the original #363 checkpoint | Full native positions, ordered topology, split normals and original UVs are checked across save/fresh and GPU. Source projection scale is authenticated; route and physics are unchanged. |
+| Shoulder and support faces | 186 source owners, 185 material targets and 67,760 selected outer top triangles | Whole-network native/save/fresh/GPU proof at 9519 includes Nudo; literal original wall/interior materials remain. The explicit appended material UV channel has its own full witness. No blanket gravel assignment to vertical or parapet faces. |
+| Gravel and transitions | [`texture library v2`](../worldgen/materials/sa_calobra_texture_library_v2_20261005.json): Poly Haven `rock_ground`, CC0, pinned BaseColor/DirectX normal/roughness at the provider's 150 cm scale | The verified preceding implementation has the 3–8 cm asphalt–gravel transition only. The next five-owner outer variant reuses the frozen Landscape's eleven texture objects and original world mapping, with independently witnessed UV1 and original UV0 preservation. Native compilation, normal response and visual tie-in remain pending. |
+| White edge lines | 370 source-clipped overlays, 10 cm width, 12 cm setback and world Z +1 mm | Native saved/fresh full-buffer proof and all 68 actual Lit images passed at b9fd; near continuity is good, far shallow views show pixel gaps. An identical-camera original/full-mask comparison at 0083 will separate mask coverage from remaining image behavior. No collision, shadow, navigation or physics authority. |
+| Local cracks | Eight authored Material Forge motifs; verified source `07ebafad` / `38102423216-1` | Sixteen actual source processes and all 80 maps independently verified. Two source-clipped actors, eight imported maps and eleven owned packages passed saved/fresh/GPU at b9fd. All 16 native controls, including UV 0/90 cases, were inspected; weak normal signal leaves normal-space correctness unresolved. Sparse network distribution and edge erosion remain pending. |
 
-The #338/#462 transient road consumers are a separate branch lineage from this
-material checkpoint. Select the actual admitted saved consumer and its source
-hashes before integration; do not assume that a material-library proof delivered
-the current road. The engine-parent road/support materials inherit roughness;
-this inventory has not measured their PBR values. Preserve road-deviation review
-colours while preparing final material comparisons.
+The prior outer attempts at e81 and 56c5 failed before map save, first at the
+frozen WeightTex check and later on Windows memory exhaustion. The current
+b9fd result recovers crack/contact proof without outer terrain. The next
+separate selection retains 18 exact textures, full save/fresh/GPU conservation,
+all 68 Lit cameras and ten band/paint controls. Stage/memory observations will
+locate any recurrence. Strict texture and geometry requirements remain
+unchanged; outer material appearance/normal response is still pending.
 
-The existing
-[`import_material_forge_variant.py`](../scripts/ue/import_material_forge_variant.py)
-verifies CPU-approved source hashes, uses native `WorldAlignedTexture` /
-`WorldAlignedNormal` and converts the provenance tile size to `TileSizeCm` with
-material-instance readback. This is a possible reuse path when metric road UVs
-are absent; it still needs version-matched native projection/normal evidence and
-road-specific visual/technical proof. Under the 2026-10-09 owner decision,
-performance measurement is deferred until after assembled M3 closeout. It is not
-permission to regenerate the mesh, assume a 2 x 2 m texture scale or transplant
-the old prototype-road recipe.
+The fixed importer uses native `WorldAlignedTexture` / `WorldAlignedNormal`
+and converts the source scale to `TileSizeCm` with material-instance readback.
+The saved consumer and fresh reader authenticate the complete material and mesh
+state. Stock `MaterialInstanceTools` remain unadmitted; #384 is completed and
+this work does not restart its infrastructure. The #338/#462 transient road
+consumers belong to a separate branch lineage and cannot silently replace this
+checkpoint.
 
-After both entry gates, authenticate the retained CPU-validated
-`aged_mountain_asphalt/base` bundle before the first comparison: seed 101,
-4 m tile, roughness 0.82 and normal strength 0.48. Reuse
-`import_material_forge_variant.py` with `save_assets=False` and 400 cm projection,
-with actual surface/slot ownership and native projection/normal proof.
-Availability of `worn` or `repaired` receipts does not make them prerequisites
-of that first base proof. Begin with a bounded comparison on the actual admitted
-saved road/shoulder consumer: keep source vertices, grade, crossfall, width,
-collision and BOB/CUT inputs byte-identical; use approved source maps, explicit
-physical scale and roughness, and preserve rollback/readback. Inspect both
-travel directions, bends, shoulder/wall separation and the Landscape transition
-without covering unresolved geometric seams. Retain future wetness parameter
-compatibility without implementing weather. Expand the admitted material across
-the entire existing 2,016.5 m square and require whole-area visual, fresh rendered
-reopening and technical admission; the Golden Kilometer remains an additional
-check. Record performance as `DEFERRED_AFTER_M3`, not PASS, and retain the
-reference budgets and exact-SHA/default-branch provenance for the later
-assembled-world benchmark. The
-[prepared official MCP kickoff](UE_MCP_WORLD_GENERATION.md#prepared-kickoff-after-material-acceptance--2026-10-09)
-defines the intermediate step and its stop condition.
+Owner feedback requires dry irregular aggregate, restrained wear and repair
+variation, white edge lines and gravel shoulders along the whole current
+network. Sparse cracks must retain source owner/station, actual face clipping,
+clearance from paint and stable authored variation. Two canaries alone do not
+complete that request. Per-capture native mode/readiness and complete cleanup
+remain required; source exports and graph tests are not rendered appearance.
+
+Keep source vertices, grade, crossfall, width, collision, `Base_DTM`, route
+physics and BOB/CUT inputs unchanged in the material-only proof. Hairpin
+banking, longitudinal profile and contact/CUT defects remain separately
+source-relative work under #459. Blending cannot establish their repair.
+Inspect both travel directions, bends, near/distant material repetition,
+shoulder/wall separation and both material boundaries without hiding unresolved
+seams. Preserve future wetness compatibility without adding weather now.
+
+Whole-area technical/visual review and fresh rendered reopening remain required;
+the Golden Kilometer is an additional check. Final owner visual status stays
+`PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false`.
+Retain the reference budgets and exact-SHA/default-branch provenance for the
+later assembled-world benchmark.
 
 ### 4.5 Kolarz
 

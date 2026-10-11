@@ -1,0 +1,415 @@
+name: Road material source proof
+
+# Full material evidence is explicit; feature markers alone never reserve the host.
+on:
+  push:
+    branches: [codex/364-road-surface-materials]
+
+permissions:
+  contents: read
+
+jobs:
+  asphalt:
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    name: Authenticate asphalt and requested local crack sources
+    if: >-
+      github.event_name == 'push' &&
+      github.actor == github.repository_owner &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/364-road-surface-materials' &&
+      contains(github.event.head_commit.message, '[road-source-proof]')
+    runs-on: [self-hosted, yacs-ue58]
+    # The optional crack step owns sixteen bounded renders after the asphalt pair.
+    timeout-minutes: 35
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
+    steps:
+      - name: Isolate Git configuration and enable long paths
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'road-material-source-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          Set-Content -LiteralPath $isolated -Value '' -Encoding ascii
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths in isolated Git configuration.' }
+
+      - name: Checkout exact code-only source proof
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Verify checkout and idle shared render host
+        id: source_prerequisites
+        shell: pwsh
+        working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) {
+            throw 'Road source checkout differs from the event SHA.'
+          }
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          if ($state.status -cne 'IDLE') {
+            throw "Road source render yields to existing host ownership: $($state.status)."
+          }
+          $godot = @(Get-Process -Name 'Godot*' -ErrorAction SilentlyContinue)
+          if ($godot.Count) { throw 'Road source render yields to an existing Godot process.' }
+          $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python -PathType Leaf)) {
+            throw 'Pinned Material Forge Python environment is missing.'
+          }
+          & $python -c "import sys, numpy, PIL; print('ROAD_SOURCE_PYTHON ' + sys.version); assert numpy.__version__ == '2.3.5' and PIL.__version__ == '12.3.0'"
+          if ($LASTEXITCODE -ne 0) { throw 'Existing Material Forge Python versions differ from the admitted pins.' }
+          "YACS_ROAD_FORGE_PY=$python" >> $env:GITHUB_ENV
+          $proof = & $python -c "import os; from pathlib import Path; from scripts.manage_local_workspace import load_workspace; print(Path(load_workspace()['work']) / 'material-forge/road-asphalt' / os.environ['GITHUB_SHA'] / (os.environ['GITHUB_RUN_ID'] + '-' + os.environ['GITHUB_RUN_ATTEMPT']))"
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the persistent road source proof path.' }
+          "YACS_ROAD_ASPHALT_PROOF=$proof" >> $env:GITHUB_ENV
+          $decals = & $python -c "import os; from pathlib import Path; from scripts.manage_local_workspace import load_workspace; print(Path(load_workspace()['work']) / 'material-forge/road-decals' / os.environ['GITHUB_SHA'] / (os.environ['GITHUB_RUN_ID'] + '-' + os.environ['GITHUB_RUN_ATTEMPT']))"
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the persistent local crack source proof path.' }
+          "YACS_ROAD_DECAL_PROOF=$decals" >> $env:GITHUB_ENV
+
+      - name: Check source contract and render dry_varied twice
+        shell: pwsh
+        working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & $env:YACS_ROAD_FORGE_PY -m unittest scripts.assets.test_material_forge scripts.assets.test_road_material_contract scripts.assets.test_run_road_asphalt_source_proof
+          if ($LASTEXITCODE -ne 0) { throw 'Road material source contract tests failed.' }
+          & $env:YACS_ROAD_FORGE_PY scripts/assets/run_road_asphalt_source_proof.py `
+            --expected-head $env:GITHUB_SHA --run $env:GITHUB_RUN_ID --attempt $env:GITHUB_RUN_ATTEMPT
+          if ($LASTEXITCODE -ne 0) { throw 'Current dry_varied asphalt source proof failed.' }
+          if (-not (Test-Path -LiteralPath (Join-Path $env:YACS_ROAD_ASPHALT_PROOF 'source-proof.json') -PathType Leaf)) {
+            throw 'Persistent road asphalt source receipt is missing.'
+          }
+
+      - name: Render the eight local crack motifs twice when requested
+        if: ${{ contains(github.event.head_commit.message, '[road-cracks-source]') }}
+        shell: pwsh
+        working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          if ($state.status -cne 'IDLE') { throw 'Local crack source yields to existing Unreal ownership.' }
+          if (@(Get-Process -Name 'Godot*' -ErrorAction SilentlyContinue).Count) {
+            throw 'Local crack source yields to an existing Godot process.'
+          }
+          & $env:YACS_ROAD_FORGE_PY -m unittest scripts.assets.test_material_forge_road_decals scripts.assets.test_run_road_decals_source_proof
+          if ($LASTEXITCODE -ne 0) { throw 'Local crack source/host contracts failed.' }
+          & $env:YACS_ROAD_FORGE_PY scripts/assets/run_road_decals_source_proof.py `
+            --expected-head $env:GITHUB_SHA --run $env:GITHUB_RUN_ID --attempt $env:GITHUB_RUN_ATTEMPT
+          if ($LASTEXITCODE -ne 0) { throw 'Current two-run local crack source proof failed.' }
+          if (-not (Test-Path -LiteralPath (Join-Path $env:YACS_ROAD_DECAL_PROOF 'source-proof.json') -PathType Leaf)) {
+            throw 'Persistent local crack source receipt is missing.'
+          }
+
+      - name: Read installed road diagnostic API symbols when requested
+        if: ${{ contains(github.event.head_commit.message, '[road-api-read]') }}
+        shell: pwsh
+        working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          if ($state.status -cne 'IDLE') { throw 'Installed road API read yields to existing Unreal ownership.' }
+          $proof = Join-Path (Get-Location).Path 'road-api-evidence'
+          New-Item -ItemType Directory -Path $proof -ErrorAction Stop | Out-Null
+          $code = @'
+          import hashlib, json, os, re, sys
+          from pathlib import Path
+          sys.path.insert(0, sys.argv[1])
+          from scripts.ue.road_asphalt_visual_controls import _function_body
+          engine = Path('D:/yacs/engine/UE_5.8/Engine')
+          result = {'schema_version': 1, 'status': 'FAILED',
+                    'exact_sha': os.environ['GITHUB_SHA'],
+                    'run_token': os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT'],
+                    'read_only': True, 'native_call_executed': False,
+                    'engine_source_redistributed': False, 'files': {}, 'functions': {}, 'error': None}
+          wanted = {
+            'Source/Developer/FunctionalTesting/Private/AutomationBlueprintFunctionLibrary.cpp': [
+              'UAutomationBlueprintFunctionLibrary::SetEditorViewportVisualizeBuffer',
+              'UAutomationBlueprintFunctionLibrary::SetEditorViewportViewMode',
+              'UAutomationBlueprintFunctionLibrary::GetEditorActiveViewportViewMode'],
+            'Source/Runtime/Engine/Private/KismetMaterialLibrary.cpp': [
+              'UKismetMaterialLibrary::CreateDynamicMaterialInstance'],
+            'Source/Developer/FunctionalTesting/Public/AutomationBlueprintFunctionLibrary.h': [],
+            'Config/BaseEngine.ini': [], 'Build/Build.version': []}
+          try:
+            # UE 5.8 moved public Engine headers; inspect only these two
+            # documented layouts and retain the actual selected path/hash.
+            for folder, name in [('Materials', 'MaterialInstanceDynamic'), ('Kismet', 'KismetMaterialLibrary')]:
+              candidates = ['Source/Runtime/Engine/'+base+'/'+folder+'/'+name+'.h' for base in ('Public', 'Classes')]
+              found = [relative for relative in candidates if (engine/relative).is_file()]
+              assert found, name + ' header is absent from the two documented layouts'
+              wanted[found[0]] = []
+            for relative, functions in wanted.items():
+              path = engine / relative
+              assert path.is_file() and not path.is_symlink() and path.stat().st_size <= 4*1024*1024, relative
+              raw = path.read_bytes()
+              identity = {'size_bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}
+              text = raw.decode('utf-8-sig')
+              result['files'][relative] = identity
+              for name in functions:
+                body = _function_body(text, name)
+                symbols = sorted(set(re.findall(r'\b[A-Za-z_]\w*\b', body)))
+                calls = sorted(set(re.findall(r'\b([A-Za-z_]\w*)\s*\(', body)))
+                result['functions'][name] = {
+                  'body_sha256': hashlib.sha256(body.encode()).hexdigest(),
+                  'symbols': symbols, 'calls': calls,
+                  'buffer_parameter_statements': [re.findall(r'\b[A-Za-z_]\w*\b', line)
+                    for line in body.splitlines() if 'BufferName' in line][:8]}
+              if relative.endswith('MaterialInstanceDynamic.h'):
+                result['mid_scalar_methods'] = sorted(set(re.findall(
+                  r'\b\w*(?:GetScalarParameterValue|SetScalarParameterValue)\w*\b', text)))
+              assert path.read_bytes() == raw, relative + ' changed during read'
+            result['status'] = 'INSTALLED_ROAD_API_SYMBOLS_READ'
+          except Exception as exc:
+            result['error'] = str(exc)
+            raise
+          finally:
+            Path(sys.argv[2]).write_text(json.dumps(result, indent=2)+'\n', encoding='utf-8')
+          '@
+          & $env:YACS_ROAD_FORGE_PY -I -B -c $code (Get-Location).Path (Join-Path $proof 'installed-road-api.json')
+          if ($LASTEXITCODE -ne 0) { throw 'Installed road API read did not complete; retained receipt states the cause.' }
+
+      - name: Retain the read-only installed road API outcome
+        if: ${{ always() && contains(github.event.head_commit.message, '[road-api-read]') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-api-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ github.workspace }}/_road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}/road-api-evidence/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Read bounded source hairpin LiDAR transects when requested
+        if: ${{ !cancelled() && steps.source_prerequisites.outcome == 'success' && (contains(github.event.head_commit.message, '[hairpin-lidar]') || contains(github.event.head_commit.message, '[hairpin-wall-lidar]')) }}
+        shell: pwsh
+        working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          $proof = Join-Path (Get-Location).Path 'hairpin-lidar-evidence'
+          New-Item -ItemType Directory -Path $proof -ErrorAction Stop | Out-Null
+          $child = $null
+          $retained = $null
+          $timer = $null
+          $profileRequested = '${{ contains(github.event.head_commit.message, '[hairpin-lidar]') }}' -ceq 'true'
+          $wallRequested = '${{ contains(github.event.head_commit.message, '[hairpin-wall-lidar]') }}' -ceq 'true'
+          $transectSet = if ($wallRequested) { 'wall-contact' } else { 'hairpin-profile' }
+          $sourceStations = if ($wallRequested) { @(195, 200, 205, 210, 215, 220, 225, 230, 235) }
+                            else { @(95, 110, 125, 135, 145, 150, 155, 165) }
+          $report = [ordered]@{
+            schema_version = 1; status = 'FAILED'; exact_sha = $env:GITHUB_SHA
+            run_token = ($env:GITHUB_RUN_ID + '-' + $env:GITHUB_RUN_ATTEMPT)
+            owned_pid = $null; exit_code = $null; exit_code_observed = $false
+            stopped_after_deadline = $false; deadline_seconds = 180
+            observations_available = $false; source_mutated = $false
+            transect_set = $transectSet; source_stations_m = $sourceStations
+            interpreter = $null; decoder_environment_status = 'NOT_RUN'
+            decoder_restoration_status = 'NOT_REQUESTED'; files = @(); error = $null
+          }
+          function Copy-LidarEvidence {
+            if (-not $retained) { return }
+            $rows = @()
+            foreach ($name in @('source-lidar-manifest.json', 'hairpin-lidar.json',
+                                'hairpin-lidar-points.csv', 'hairpin-lidar-points.partial.csv')) {
+              $source = Join-Path $retained $name
+              if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { continue }
+              $file = Get-Item -LiteralPath $source
+              if ($file.Length -gt 32MB) { throw 'Source LiDAR evidence exceeds its byte bound.' }
+              $hash = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant()
+              $target = Join-Path $proof $name
+              if (-not (Test-Path -LiteralPath $target)) {
+                Copy-Item -LiteralPath $source -Destination $target -ErrorAction Stop
+              }
+              if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant() -cne $hash -or
+                  (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant() -cne $hash) {
+                throw 'Source LiDAR evidence changed while retaining its review copy.'
+              }
+              $rows += [ordered]@{ file = $name; size_bytes = $file.Length; sha256 = $hash }
+            }
+            $report.files = $rows
+          }
+          try {
+            if ($profileRequested -eq $wallRequested) { throw 'Select exactly one closed source LiDAR transect set.' }
+            $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+            if ($state.status -cne 'IDLE') { throw 'LiDAR observation reader yields to existing Unreal ownership.' }
+            & $env:YACS_ROAD_FORGE_PY -m unittest scripts.assets.test_read_sa_calobra_hairpin_lidar
+            if ($LASTEXITCODE -ne 0) { throw 'Source LiDAR observation contracts failed.' }
+            # The old canonical .venv is absent on the current host. Qualify
+            # only configured/registered existing executables and their actual
+            # imports against the recorded CPython 3.12 x64/package pins.
+            # No directory scan, installation or alternate decoder is performed.
+            $environmentPath = Join-Path $proof 'decoder-environment.json'
+            & $env:YACS_ROAD_FORGE_PY -I -B scripts/assets/read_sa_calobra_hairpin_lidar.py `
+              --workspace-config $env:YACS_WORKSPACE_CONFIG --resolve-decoder $environmentPath
+            $environmentExit = $LASTEXITCODE
+            $environment = Get-Content -LiteralPath $environmentPath -Raw | ConvertFrom-Json -AsHashtable
+            $report.decoder_environment_status = $environment.status
+            if ($environmentExit -ne 0 -and '${{ contains(github.event.head_commit.message, '[restore-hairpin-decoder]') }}' -ceq 'true') {
+              & $env:YACS_ROAD_FORGE_PY -B -m unittest scripts.assets.test_restore_sa_calobra_lidar_decoder
+              if ($LASTEXITCODE -ne 0) { throw 'Approved LAZ recovery contract failed.' }
+              & $env:YACS_ROAD_FORGE_PY -I -B scripts/assets/restore_sa_calobra_lidar_decoder.py `
+                --workspace-config $env:YACS_WORKSPACE_CONFIG --environment-report $environmentPath --evidence-root $proof
+              $restorationExit = $LASTEXITCODE
+              $restoration = Get-Content -LiteralPath (Join-Path $proof 'decoder-restoration.json') -Raw | ConvertFrom-Json -AsHashtable
+              $report.decoder_restoration_status = $restoration.status
+              if ($restorationExit -ne 0 -or $restoration.status -cne 'APPROVED_LAZ_ENVIRONMENT_RESTORED') {
+                throw 'Approved LAZ recovery failed; existing environment/data are preserved and retained evidence states the cause.'
+              }
+              $environment = $restoration.fresh_environment_probe
+              $environmentExit = 0
+              $report.decoder_environment_status = $environment.status
+            }
+            if ($environmentExit -ne 0 -or $environment.status -cne 'EXISTING_DECODER_SELECTED' -or
+                $null -eq $environment.selected) { throw 'Existing GIS environment is unavailable; retained metadata states the cause.' }
+            $python = [string]$environment.selected.path
+            if (-not [IO.Path]::IsPathFullyQualified($python)) { throw 'Qualified GIS executable path is not absolute.' }
+            $pythonFile = Get-Item -LiteralPath $python -ErrorAction Stop
+            $report.interpreter = $environment.selected
+            if ($pythonFile.Length -ne $report.interpreter.size_bytes -or
+                (Get-FileHash -LiteralPath $python -Algorithm SHA256).Hash.ToLowerInvariant() -cne $report.interpreter.sha256) {
+              throw 'Qualified GIS interpreter changed before the source read.'
+            }
+            $workCode = 'import sys; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from scripts.manage_local_workspace import load_workspace; print(Path(load_workspace()["work"]))'
+            $workRows = @(& $env:YACS_ROAD_FORGE_PY -I -B -c $workCode (Get-Location).Path)
+            if ($LASTEXITCODE -ne 0 -or $workRows.Count -ne 1 -or
+                -not [IO.Path]::IsPathFullyQualified($workRows[0])) { throw 'Cannot resolve the canonical LiDAR evidence root.' }
+            $outputName = 'hairpin-lidar-' + $report.run_token
+            $retained = Join-Path $workRows[0] $outputName
+            if (Test-Path -LiteralPath $retained) { throw 'The source LiDAR evidence directory already exists.' }
+            $script = Join-Path (Get-Location).Path 'scripts/assets/read_sa_calobra_hairpin_lidar.py'
+            $arguments = @('-I', '-B', ('"' + $script + '"'),
+              '--workspace-config', 'D:\yacs\workspace.json', '--output-name', $outputName,
+              '--transect-set', $transectSet)
+            $timer = [Diagnostics.Stopwatch]::StartNew()
+            $child = Start-Process -FilePath $python -ArgumentList $arguments -PassThru -NoNewWindow `
+              -WorkingDirectory (Get-Location).Path `
+              -RedirectStandardOutput (Join-Path $proof 'reader-stdout.log') `
+              -RedirectStandardError (Join-Path $proof 'reader-stderr.log')
+            $report.owned_pid = $child.Id
+            if (-not $child.WaitForExit(180000)) {
+              $report.stopped_after_deadline = $true
+              $child.Kill()
+              if (-not $child.WaitForExit(10000)) { throw 'Owned LiDAR reader did not stop within ten seconds.' }
+              throw 'Owned LiDAR observation reader exceeded 180 seconds.'
+            }
+            if (-not $child.WaitForExit(10000)) { throw 'Owned LiDAR reader exit did not settle.' }
+            $report.exit_code = $child.ExitCode
+            $report.exit_code_observed = $true
+            $report.elapsed_seconds = $timer.Elapsed.TotalSeconds
+            Copy-LidarEvidence
+            if ((Get-FileHash -LiteralPath $python -Algorithm SHA256).Hash.ToLowerInvariant() -cne $report.interpreter.sha256) {
+              throw 'Existing LiDAR interpreter changed during the read.'
+            }
+            $native = Get-Content -LiteralPath (Join-Path $proof 'hairpin-lidar.json') -Raw | ConvertFrom-Json -AsHashtable
+            $report.reader_status = $native.status
+            if ($report.exit_code -ne 0 -or $native.status -cne 'OBSERVATIONS_EXPORTED' -or
+                $native.observations_available -isnot [bool] -or -not $native.observations_available -or
+                $native.post_read_source_status -cne 'PASS' -or
+                $native.parameters.transect_set -cne $transectSet -or
+                $native.parameters.source_stations_m -isnot [Collections.IList] -or
+                (@($native.parameters.source_stations_m) -join ',') -cne ($sourceStations -join ',')) {
+              throw 'Source LiDAR observations are unavailable or failed; retained reader evidence states the cause.'
+            }
+            $report.observations_available = $true
+            $report.status = 'HAIRPIN_LIDAR_OBSERVATIONS_RETAINED'
+          } catch {
+            $report.error = $_.Exception.Message
+            throw
+          } finally {
+            try {
+              if ($null -ne $child) {
+                if (-not $child.HasExited) {
+                  $child.Kill()
+                  if (-not $child.WaitForExit(10000)) { throw 'Owned LiDAR cleanup exceeded ten seconds.' }
+                }
+                $report.exit_code = $child.ExitCode
+                $report.exit_code_observed = $true
+                $report.elapsed_seconds = $timer.Elapsed.TotalSeconds
+              }
+              Copy-LidarEvidence
+            } catch {
+              $report.status = 'FAILED'
+              $report.observations_available = $false
+              $report.error = ([string]$report.error + '; cleanup: ' + $_.Exception.Message).TrimStart('; ')
+              throw
+            } finally {
+              if ($null -ne $child) { $child.Dispose() }
+              $report | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $proof 'host-receipt.json') -Encoding utf8NoBOM
+            }
+          }
+
+      - name: Retain source hairpin observations and actual reader outcome
+        if: ${{ always() && (contains(github.event.head_commit.message, '[hairpin-lidar]') || contains(github.event.head_commit.message, '[hairpin-wall-lidar]')) }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: hairpin-lidar-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ github.workspace }}/_road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}/hairpin-lidar-evidence/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain asphalt determinism receipt and render logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-asphalt-receipt-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ env.YACS_ROAD_ASPHALT_PROOF }}/source-proof.json
+            ${{ env.YACS_ROAD_ASPHALT_PROOF }}/*.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain first complete asphalt source bundle
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-asphalt-run-a-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_ASPHALT_PROOF }}/run-a/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain second complete asphalt source bundle
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-asphalt-run-b-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_ASPHALT_PROOF }}/run-b/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain local crack determinism and owned-exit receipt
+        if: ${{ always() && contains(github.event.head_commit.message, '[road-cracks-source]') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-decals-receipt-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_DECAL_PROOF }}/source-proof.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain first complete local crack source bundle
+        if: ${{ always() && contains(github.event.head_commit.message, '[road-cracks-source]') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-decals-run-a-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_DECAL_PROOF }}/run-a/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Retain second complete local crack source bundle
+        if: ${{ always() && contains(github.event.head_commit.message, '[road-cracks-source]') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-decals-run-b-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.YACS_ROAD_DECAL_PROOF }}/run-b/**
+          if-no-files-found: warn
+          retention-days: 14

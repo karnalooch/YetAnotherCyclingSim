@@ -1,0 +1,372 @@
+{
+  "schema_version": 1,
+  "issue": 364,
+  "exact_sha": "1ef46dacedba5ed1fc909422529be41808d3dbe4",
+  "run_token": "38084733503-1",
+  "status": "ROAD_MATERIAL_BASELINE_READ_ONLY_COMPLETE",
+  "project_root": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1",
+  "proof_root": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1",
+  "started_at_utc": "2026-10-10T20:45:55.7686178Z",
+  "ended_at_utc": "2026-10-10T20:47:16.2601406Z",
+  "source_fingerprints": {
+    "compile": "36e9d5dfc579c77f4a55e222a431c132e7de178ebc6ee19e8edbfc1441cf3708",
+    "proof": "8b746054d4acb6e1cc466ddf9f30bf24aae69cdbe25506fba10c5fc40e0b716c"
+  },
+  "currentEnvironmentIdentity": "2cf6c58583f45fdb8d79bd1029125ae75133ffa6ad01bbb9f602dbf016280e19",
+  "engine_identity": "root=d:\\yacs\\engine\\ue_5.8|association=5.8|version=5.8.2-56702186|buildVersionSha256=ff99fc3dd98e7c7fd2f5700334bc792dfb7baced3828cdee32940bb69581a6a4|buildBatSha256=4f71b08ebc3fe2ba7918a5be7a0b3f22cf7ce5530049873e9eca8df946bc1cb3|editorCmdSha256=ae92f55952a3c9a7def90983fcf5aedce52d8ee8e4565fbd923985e9d9d3e05e",
+  "native_engine_build_id": "55116800",
+  "cache_provenance": {
+    "root": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-build-37690136030-1",
+    "actual_head": "1ef46dacedba5ed1fc909422529be41808d3dbe4",
+    "original_state": {
+      "SchemaVersion": 3,
+      "CompileFingerprint": "36e9d5dfc579c77f4a55e222a431c132e7de178ebc6ee19e8edbfc1441cf3708",
+      "ProofFingerprint": "8b746054d4acb6e1cc466ddf9f30bf24aae69cdbe25506fba10c5fc40e0b716c",
+      "EngineIdentity": "root=d:\\yacs\\engine\\ue_5.8|association=5.8|version=5.8.2-56702186|buildVersionSha256=ff99fc3dd98e7c7fd2f5700334bc792dfb7baced3828cdee32940bb69581a6a4|buildBatSha256=4f71b08ebc3fe2ba7918a5be7a0b3f22cf7ce5530049873e9eca8df946bc1cb3|editorCmdSha256=ae92f55952a3c9a7def90983fcf5aedce52d8ee8e4565fbd923985e9d9d3e05e",
+      "EngineRoot": "D:\\yacs\\engine\\UE_5.8",
+      "ToolchainIdentity": "cl=c:\\program files (x86)\\microsoft visual studio\\2022\\buildtools\\vc\\tools\\msvc\\14.44.35207\\bin\\hostx64\\x64\\cl.exe|clSha256=88c8344236a27a6e727e0a8edc49aaa2690bdc7a9464b9d18cc7abe70a9f1c0d|link=c:\\program files (x86)\\microsoft visual studio\\2022\\buildtools\\vc\\tools\\msvc\\14.44.35207\\bin\\hostx64\\x64\\link.exe|linkSha256=ca11e6c45debd34bf652dfe984c5360a531a005ed78bf72852330c9c2590cf0d|rc=c:\\program files (x86)\\windows kits\\10\\bin\\10.0.26100.0\\x64\\rc.exe|rcSha256=43da1503c262c30894c851589bf0155f8365d77e63a5f7bc13982320e3a6b42d",
+      "EnvironmentIdentity": "2cf6c58583f45fdb8d79bd1029125ae75133ffa6ad01bbb9f602dbf016280e19",
+      "CompilePassed": true,
+      "ProofPassed": true,
+      "CompileHead": "3262a7529c97e1ed34f1ba5a436c2b84e06db55d",
+      "ProofHead": "1e5d8b1579c56d364102e0ce1d4ea811d246aa47",
+      "ProofSummarySha256": "d41172d272f0983dcc987f5578cf5fea9a00c89a0be4b355ec348c0952712595",
+      "ProofSummarySizeBytes": 616,
+      "LastCompileKind": "none",
+      "BuildCachePolicy": "ubt-native-incremental-v1",
+      "UpdatedUtc": "2026-10-10T20:14:34.2752604Z"
+    },
+    "pointer_identity": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_yacs-unreal-ci\\active.json",
+      "size_bytes": 64,
+      "sha256": "0cb7910bac013ff6db51c413439a6e540f7db0d06a40d1bc81fa5df2139e239b"
+    },
+    "state_identity": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-build-37690136030-1\\Saved\\BuildCache\\UnrealCi\\state.json",
+      "size_bytes": 1704,
+      "sha256": "f7412efc94aee524c6520f8781876d7f284fd01b30a1d99eeee60d38df698eae"
+    },
+    "resolver": {
+      "SchemaVersion": 3,
+      "Head": "1ef46dacedba5ed1fc909422529be41808d3dbe4",
+      "Mode": "static",
+      "CompileKind": "none",
+      "Reason": "verified-equivalent-proof",
+      "PurgeBuildCache": false,
+      "PreviousStateInvalidated": false,
+      "CompileFingerprint": "36e9d5dfc579c77f4a55e222a431c132e7de178ebc6ee19e8edbfc1441cf3708",
+      "ProofFingerprint": "8b746054d4acb6e1cc466ddf9f30bf24aae69cdbe25506fba10c5fc40e0b716c",
+      "EngineIdentity": "root=d:\\yacs\\engine\\ue_5.8|association=5.8|version=5.8.2-56702186|buildVersionSha256=ff99fc3dd98e7c7fd2f5700334bc792dfb7baced3828cdee32940bb69581a6a4|buildBatSha256=4f71b08ebc3fe2ba7918a5be7a0b3f22cf7ce5530049873e9eca8df946bc1cb3|editorCmdSha256=ae92f55952a3c9a7def90983fcf5aedce52d8ee8e4565fbd923985e9d9d3e05e",
+      "EngineRoot": "D:\\yacs\\engine\\UE_5.8",
+      "ToolchainIdentity": "cl=c:\\program files (x86)\\microsoft visual studio\\2022\\buildtools\\vc\\tools\\msvc\\14.44.35207\\bin\\hostx64\\x64\\cl.exe|clSha256=88c8344236a27a6e727e0a8edc49aaa2690bdc7a9464b9d18cc7abe70a9f1c0d|link=c:\\program files (x86)\\microsoft visual studio\\2022\\buildtools\\vc\\tools\\msvc\\14.44.35207\\bin\\hostx64\\x64\\link.exe|linkSha256=ca11e6c45debd34bf652dfe984c5360a531a005ed78bf72852330c9c2590cf0d|rc=c:\\program files (x86)\\windows kits\\10\\bin\\10.0.26100.0\\x64\\rc.exe|rcSha256=43da1503c262c30894c851589bf0155f8365d77e63a5f7bc13982320e3a6b42d",
+      "EnvironmentIdentity": "2cf6c58583f45fdb8d79bd1029125ae75133ffa6ad01bbb9f602dbf016280e19",
+      "PreviousProofHead": "1e5d8b1579c56d364102e0ce1d4ea811d246aa47",
+      "ExpectedBinaries": [
+        "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-build-37690136030-1\\Binaries\\Win64\\UnrealEditor-YetAnotherCyclingSim.dll",
+        "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-build-37690136030-1\\Binaries\\Win64\\UnrealEditor-YetAnotherCyclingSimEditor.dll"
+      ],
+      "BuildCachePolicy": "ubt-native-incremental-v1",
+      "TimestampUtc": "2026-10-10T20:46:01.3914829Z"
+    }
+  },
+  "binary_provenance": [
+    {
+      "relative": "Binaries/Win64/UnrealEditor.modules",
+      "original_identity": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-build-37690136030-1\\Binaries\\Win64\\UnrealEditor.modules",
+        "size_bytes": 198,
+        "sha256": "27cde22f9e06a4ed5a2e2f8613d61efdaf743c413ed7ed16bb943a8c891e0036"
+      },
+      "copied_identity": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Binaries\\Win64\\UnrealEditor.modules",
+        "size_bytes": 198,
+        "sha256": "27cde22f9e06a4ed5a2e2f8613d61efdaf743c413ed7ed16bb943a8c891e0036"
+      },
+      "original_CompileHead": "3262a7529c97e1ed34f1ba5a436c2b84e06db55d",
+      "original_ProofHead": "1e5d8b1579c56d364102e0ce1d4ea811d246aa47",
+      "native_engine_build_id": "55116800"
+    },
+    {
+      "relative": "Binaries/Win64/UnrealEditor-YetAnotherCyclingSim.dll",
+      "original_identity": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-build-37690136030-1\\Binaries\\Win64\\UnrealEditor-YetAnotherCyclingSim.dll",
+        "size_bytes": 1593856,
+        "sha256": "e61ecc37ee4e46dc1af1764be2d79b90ef41c257d974e6d39bad87f592a62ac9"
+      },
+      "copied_identity": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Binaries\\Win64\\UnrealEditor-YetAnotherCyclingSim.dll",
+        "size_bytes": 1593856,
+        "sha256": "e61ecc37ee4e46dc1af1764be2d79b90ef41c257d974e6d39bad87f592a62ac9"
+      },
+      "original_CompileHead": "3262a7529c97e1ed34f1ba5a436c2b84e06db55d",
+      "original_ProofHead": "1e5d8b1579c56d364102e0ce1d4ea811d246aa47",
+      "native_engine_build_id": "55116800"
+    },
+    {
+      "relative": "Binaries/Win64/UnrealEditor-YetAnotherCyclingSimEditor.dll",
+      "original_identity": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-build-37690136030-1\\Binaries\\Win64\\UnrealEditor-YetAnotherCyclingSimEditor.dll",
+        "size_bytes": 760320,
+        "sha256": "9d5e86c44ddca9ea15560f8ad64e8257323718950be777885de2b1b9649ff475"
+      },
+      "copied_identity": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Binaries\\Win64\\UnrealEditor-YetAnotherCyclingSimEditor.dll",
+        "size_bytes": 760320,
+        "sha256": "9d5e86c44ddca9ea15560f8ad64e8257323718950be777885de2b1b9649ff475"
+      },
+      "original_CompileHead": "3262a7529c97e1ed34f1ba5a436c2b84e06db55d",
+      "original_ProofHead": "1e5d8b1579c56d364102e0ce1d4ea811d246aa47",
+      "native_engine_build_id": "55116800"
+    },
+    {
+      "relative": "Plugins/RoadForge/Binaries/Win64/UnrealEditor.modules",
+      "original_identity": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-build-37690136030-1\\Plugins\\RoadForge\\Binaries\\Win64\\UnrealEditor.modules",
+        "size_bytes": 96,
+        "sha256": "5f763b7d1f377ad04dfccb696084264b1c09a4d433a2443da25da09109e7da3b"
+      },
+      "copied_identity": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Plugins\\RoadForge\\Binaries\\Win64\\UnrealEditor.modules",
+        "size_bytes": 96,
+        "sha256": "5f763b7d1f377ad04dfccb696084264b1c09a4d433a2443da25da09109e7da3b"
+      },
+      "original_CompileHead": "3262a7529c97e1ed34f1ba5a436c2b84e06db55d",
+      "original_ProofHead": "1e5d8b1579c56d364102e0ce1d4ea811d246aa47",
+      "native_engine_build_id": "55116800"
+    },
+    {
+      "relative": "Plugins/RoadForge/Binaries/Win64/UnrealEditor-RoadForge.dll",
+      "original_identity": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-build-37690136030-1\\Plugins\\RoadForge\\Binaries\\Win64\\UnrealEditor-RoadForge.dll",
+        "size_bytes": 105984,
+        "sha256": "9ace653f3af246e0fbc6fcb39c6818b34700a0458f06b5f256266b02422b867c"
+      },
+      "copied_identity": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Plugins\\RoadForge\\Binaries\\Win64\\UnrealEditor-RoadForge.dll",
+        "size_bytes": 105984,
+        "sha256": "9ace653f3af246e0fbc6fcb39c6818b34700a0458f06b5f256266b02422b867c"
+      },
+      "original_CompileHead": "3262a7529c97e1ed34f1ba5a436c2b84e06db55d",
+      "original_ProofHead": "1e5d8b1579c56d364102e0ce1d4ea811d246aa47",
+      "native_engine_build_id": "55116800"
+    }
+  ],
+  "helper_processes": [
+    {
+      "name": "current-fingerprints",
+      "owned_pid": 38788,
+      "exit_code": 0,
+      "deadline_seconds": 60,
+      "elapsed_seconds": 1.2908401,
+      "stdout": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\current-fingerprints-stdout.log",
+        "size_bytes": 158,
+        "sha256": "a66b07494d3c0a7541987e7beca0181074fd8dc024acd8da2756efda201d14ee"
+      },
+      "stderr": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\current-fingerprints-stderr.log",
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "cache-fingerprints",
+      "owned_pid": 19260,
+      "exit_code": 0,
+      "deadline_seconds": 60,
+      "elapsed_seconds": 0.2802901,
+      "stdout": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\cache-fingerprints-stdout.log",
+        "size_bytes": 158,
+        "sha256": "a66b07494d3c0a7541987e7beca0181074fd8dc024acd8da2756efda201d14ee"
+      },
+      "stderr": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\cache-fingerprints-stderr.log",
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "cache-resolver",
+      "owned_pid": 41400,
+      "exit_code": 0,
+      "deadline_seconds": 60,
+      "elapsed_seconds": 0.8741508,
+      "stdout": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\cache-resolver-stdout.log",
+        "size_bytes": 107,
+        "sha256": "c6b5dfd6071fa88b71d6ba8bdbd8a3f2e817ee6c26f7ca53cbc34258a87ef1e2"
+      },
+      "stderr": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\cache-resolver-stderr.log",
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "accepted-consumer-stage",
+      "owned_pid": 15108,
+      "exit_code": 0,
+      "deadline_seconds": 180,
+      "elapsed_seconds": 36.367807,
+      "stdout": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\accepted-consumer-stage-stdout.log",
+        "size_bytes": 414,
+        "sha256": "b2048f20a6b037cf2483547270ae130daa9df304ce5699da040263c004cc3f89"
+      },
+      "stderr": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\accepted-consumer-stage-stderr.log",
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "final-current-fingerprints",
+      "owned_pid": 15732,
+      "exit_code": 0,
+      "deadline_seconds": 60,
+      "elapsed_seconds": 0.2762299,
+      "stdout": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\final-current-fingerprints-stdout.log",
+        "size_bytes": 158,
+        "sha256": "a66b07494d3c0a7541987e7beca0181074fd8dc024acd8da2756efda201d14ee"
+      },
+      "stderr": {
+        "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\final-current-fingerprints-stderr.log",
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "host_checks": [
+    {
+      "status": "IDLE",
+      "checked_at_utc": "2026-10-10T20:45:58.3724110Z",
+      "remote_ci_count": 0,
+      "local_or_unknown_count": 0
+    },
+    {
+      "status": "IDLE",
+      "checked_at_utc": "2026-10-10T20:46:38.4358173Z",
+      "remote_ci_count": 0,
+      "local_or_unknown_count": 0
+    },
+    {
+      "status": "IDLE",
+      "checked_at_utc": "2026-10-10T20:47:16.2481985Z",
+      "remote_ci_count": 0,
+      "local_or_unknown_count": 0
+    }
+  ],
+  "proof_files": {
+    "workspace_config": {
+      "path": "D:\\yacs\\workspace.json",
+      "size_bytes": 384,
+      "sha256": "6329f1ac0cf0c2d5f51eddd8ec1090f243652c18ba48a89b9b31b51bd2f9b0ed"
+    },
+    "executed_wrapper": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\scripts\\ue\\Invoke-YacsRoadMaterialBaseline.ps1",
+      "size_bytes": 31393,
+      "sha256": "f0f6b6021046dd8db0c248c6fb5a4532cfaa91401261d92aa781e38d9458977f"
+    },
+    "executed_reader": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\scripts\\ue\\read_road_material_baseline.py",
+      "size_bytes": 18620,
+      "sha256": "78dc3f58c4da6e5c7cb7d33fd3319418c8f8b78e60133416253cdcb18cd9c9a4"
+    },
+    "python_executable": {
+      "path": "D:\\yacs\\tool-cache\\material-forge\\python\\Scripts\\python.exe",
+      "size_bytes": 274424,
+      "sha256": "0b471133e110cfb53a061cad528ce8e517d7b9ac41a0a396c39ad795a487fc14"
+    },
+    "engine_manifest": {
+      "path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.modules",
+      "size_bytes": 32290,
+      "sha256": "bbe466e4330f3fddea1120a9070a7402f5a9655404223f55c9e0d1d322568747"
+    },
+    "editor_executable": {
+      "path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe",
+      "size_bytes": 512952,
+      "sha256": "ae92f55952a3c9a7def90983fcf5aedce52d8ee8e4565fbd923985e9d9d3e05e"
+    },
+    "cache-pointer.json": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\cache-pointer.json",
+      "size_bytes": 64,
+      "sha256": "0cb7910bac013ff6db51c413439a6e540f7db0d06a40d1bc81fa5df2139e239b"
+    },
+    "cache-state-original.json": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\cache-state-original.json",
+      "size_bytes": 1704,
+      "sha256": "f7412efc94aee524c6520f8781876d7f284fd01b30a1d99eeee60d38df698eae"
+    },
+    "cache-proof-summary.json": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\cache-proof-summary.json",
+      "size_bytes": 616,
+      "sha256": "d41172d272f0983dcc987f5578cf5fea9a00c89a0be4b355ec348c0952712595"
+    },
+    "cache_resolution": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\cache-resolution.json",
+      "size_bytes": 2015,
+      "sha256": "74b8139b4a1603e1bf0ac7395ee9cdf84cdc3492b04143f9e991b70e10c0cf9c"
+    },
+    "session_preparation": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\session-preparation.json",
+      "size_bytes": 50978,
+      "sha256": "4c544a40aff62a3d847c2929780243d4436c314f579042031448a6ea6c576a4d"
+    },
+    "native_baseline": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\road-material-baseline.json",
+      "size_bytes": 805601,
+      "sha256": "35b2e1c0d08fb3cfab860e7a2b384d990b7cffc9ca457ba2ac14b1c9faa261b9"
+    },
+    "owned-editor.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\owned-editor.log",
+      "size_bytes": 350387,
+      "sha256": "c8749991f8d1e6c09eee34d1a9864d22ba9667bb2caea7e232a65c7642892e8c"
+    },
+    "owned-editor-stdout.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\owned-editor-stdout.log",
+      "size_bytes": 1234,
+      "sha256": "13e5f0147a847597670f827431323dcfa60dfbdb7e74c37c6c9a62f5d2c78500"
+    },
+    "owned-editor-stderr.log": {
+      "path": "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\owned-editor-stderr.log",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "owned_editor_pid": 10868,
+  "owned_editor_exit_observed": true,
+  "owned_editor_exit_code": 0,
+  "owned_editor_stopped_on_failure": false,
+  "editor_deadline_seconds": 420,
+  "reader_pass": true,
+  "read_only": true,
+  "material_authoring_verified": false,
+  "persistent_world_mutation": false,
+  "official_mcp_admitted": false,
+  "render_verified": false,
+  "owner_visual_pass": false,
+  "performance_pass": false,
+  "performance_status": "DEFERRED_AFTER_M3",
+  "error": null,
+  "secondary_errors": [],
+  "editor_arguments": [
+    "\"D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\YetAnotherCyclingSim.uproject\"",
+    "/Engine/Maps/Entry",
+    "-DisablePlugins=ModelContextProtocol,Wingman,AndroidFileServer",
+    "-unattended",
+    "-NoSplash",
+    "-NoSound",
+    "-NoLiveCoding",
+    "-NullRHI",
+    "-ScriptErrorsAreFatal",
+    "-NoPause",
+    "-NoP4",
+    "-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False",
+    "-ExecutePythonScript=\"D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\scripts\\ue\\read_road_material_baseline.py\"",
+    "-abslog=\"D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\rm-38084733503-1\\Saved\\RuntimeProof\\RoadMaterialBaseline\\38084733503-1\\owned-editor.log\""
+  ],
+  "editor_started_at_utc": "2026-10-10T20:46:38.4713320Z",
+  "editor_elapsed_seconds": 36.5479505
+}
