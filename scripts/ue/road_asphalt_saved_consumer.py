@@ -117,7 +117,7 @@ def expected_saved_inventory(original, saved, material_path, *, observed_map_pac
     road = canary.verify_accepted_surface(old)
     if shoulder_receipt is not None:
         owners = shoulder_receipt.get("owners", [])
-        require(shoulder_receipt.get("schema_version") == 2
+        require(shoulder_receipt.get("schema_version") == shoulder.SCHEMA_VERSION
                 and shoulder_receipt.get("support_count") == shoulder_sources.OWNER_COUNT
                 and shoulder_receipt.get("material_target_count") == shoulder_sources.OWNER_COUNT - 1
                 and isinstance(owners, list) and len(owners) == shoulder_sources.OWNER_COUNT
@@ -470,7 +470,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
     road_mesh_before = shoulder.inspect_mesh(api, component)["summary"]
     source_plan = shoulder_sources.load_sources()
     gravel, gravel_receipt = shoulder_material.create_material(
-        api, shoulder_material.DESTINATION_ROOT, source_dependencies)
+        api, shoulder_material.DESTINATION_ROOT, source_dependencies, receipt["assets"])
     shoulder_material.verify_material(api, gravel_receipt, source_dependencies)
     for path in gravel_receipt["assets"].values():
         asset = api.load_asset(path)
@@ -555,7 +555,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
         "road_mesh": road_mesh_before,
         "dry_asphalt_response": receipt["dry_asphalt_response"],
         "road_profile_diagnostic": profile_identity,
-        "material_changes": "road_slot_zero_and_network_outer_shoulder_ids",
+        "material_changes": "road_slot_zero_network_outer_shoulder_ids_and_edge_uv",
         "landscape_1024_unchanged": True,
         "road_geometry_unchanged": True,
         "physics_profile_unchanged": True,
@@ -617,7 +617,7 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
         and manifest.get("canonical_saved") is False
         and manifest.get("road_slot_zero_only") is False
         and manifest.get("support_186_unchanged") is False
-        and manifest.get("material_changes") == "road_slot_zero_and_network_outer_shoulder_ids"
+        and manifest.get("material_changes") == "road_slot_zero_network_outer_shoulder_ids_and_edge_uv"
         and manifest.get("shoulder_network", {}).get("rollback_verified") is True
         and manifest.get("shoulder_network", {}).get("support_count") == 186
         and manifest.get("shoulder_network", {}).get("material_target_count") == 185
@@ -679,7 +679,8 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
         "road_material_reapplied": False,
         "shoulder_material_reapplied": False,
         "shoulder_network_fresh_reload_verified": True,
-        "shoulder_positions_indices_normals_uv_unchanged": True,
+        "shoulder_positions_indices_normals_original_uv_prefix_unchanged": True,
+        "shoulder_material_edge_uv_fresh_reload_verified": True,
         "shoulder_wall_materials_unchanged": True,
         "shoulder_support_count": manifest["shoulder_network"]["support_count"],
         "shoulder_material_target_count": manifest["shoulder_network"]["material_target_count"],

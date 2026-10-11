@@ -270,7 +270,27 @@ class Owner:
         try:
             self._finish(error)
         finally:
-            self.api.SystemLibrary.quit_editor()
+            try:
+                self.api.EditorPythonScripting.set_keep_python_script_alive(False)
+            except Exception:
+                # Slate may catch callback exceptions after stop() has set its
+                # guard. Do not leave a successful receipt if release fails.
+                lifecycle_error = traceback.format_exc()
+                self.report.update(status="FAILED", error=lifecycle_error)
+                try:
+                    if self.capture:
+                        self.capture.mark_cleanup(lifecycle_error)
+                finally:
+                    self.write()
+                raise
+            finally:
+                self.api.SystemLibrary.quit_editor()
+
+    def _start_capture(self):
+        # ExecutePythonScript otherwise exits before the asynchronous Slate
+        # callbacks can collect the twelve images, as in the road GPU loop.
+        self.api.EditorPythonScripting.set_keep_python_script_alive(True)
+        self.capture.start()
 
     def _finish(self, error=None):
         errors = [error] if error else []
@@ -569,7 +589,7 @@ class Owner:
             support=support,
             components=components,
         )
-        self.capture.start()
+        self._start_capture()
 
 
 def main():

@@ -201,6 +201,8 @@ def authenticate_render_context():
         and fresh_receipt.get("road_material_reapplied") is False
         and fresh_receipt.get("shoulder_material_reapplied") is False
         and fresh_receipt.get("shoulder_network_fresh_reload_verified") is True
+        and fresh_receipt.get("shoulder_positions_indices_normals_original_uv_prefix_unchanged") is True
+        and fresh_receipt.get("shoulder_material_edge_uv_fresh_reload_verified") is True
         and fresh_receipt.get("shoulder_support_count") == 186
         and fresh_receipt.get("shoulder_material_target_count") == 185
         and fresh_receipt.get("shoulder_selected_triangle_count")
@@ -215,10 +217,13 @@ def authenticate_render_context():
         and manifest.get("road_slot_zero_only") is False
         and manifest.get("support_186_unchanged") is False
         and manifest.get("shoulder_network", {}).get("rollback_verified") is True
+        and manifest.get("shoulder_network", {}).get("schema_version") == 3
+        and manifest.get("shoulder_network", {}).get("source_vertices_topology_normals_uv_prefix_preserved") is True
+        and manifest.get("shoulder_network", {}).get("material_edge_uv_appended") is True
         and manifest.get("shoulder_network", {}).get("support_count") == 186
         and manifest.get("shoulder_network", {}).get("material_target_count") == 185
         and manifest.get("native_mesh_hash_format") == saved.shoulder.HASH_FORMAT
-        and manifest.get("material_changes") == "road_slot_zero_and_network_outer_shoulder_ids"
+        and manifest.get("material_changes") == "road_slot_zero_network_outer_shoulder_ids_and_edge_uv"
         and manifest.get("landscape_1024_unchanged") is True
         and manifest.get("metric_tile_cm") == 400
         and manifest.get("performance_pass") is False,
@@ -734,6 +739,7 @@ class RoadLitCapture:
             "whole_area_visual_admitted": False,
             "shoulder_wall_materials_admitted": False,
             "shoulder_network_material_ids_verified": not errors,
+            "shoulder_material_edge_uv_verified": not errors,
             "shoulder_support_count": context["manifest"]["shoulder_network"]["support_count"],
             "shoulder_material_target_count": context["manifest"]["shoulder_network"]["material_target_count"],
             "shoulder_selected_triangle_count": context["manifest"]["shoulder_network"]["selected_triangle_count"],

@@ -78,7 +78,7 @@ bool IsAcceptedLabel(const FString& Label, bool& bRoad)
 
 FString InspectNative(const FDynamicMesh3& Mesh, bool bRoad, int32 WitnessCount,
     const FString& Label, const FString& ComponentPath, const FString& MeshPath,
-    const FString& MapPackage)
+    const FString& MapPackage, int32 PreservedUVSetCount = -1)
 {
     const int32 Vertices = Mesh.VertexCount(), Triangles = Mesh.TriangleCount();
     if (Vertices <= 0 || Triangles <= 0 || WitnessCount < 0 || WitnessCount > Triangles
@@ -93,10 +93,18 @@ FString InspectNative(const FDynamicMesh3& Mesh, bool bRoad, int32 WitnessCount,
     const int32 UVSets = Attributes->NumUVLayers();
     if (UVSets < 0 || UVSets > 4)
     { return TEXT("{\"error\":\"native UV layer budget exceeded\"}"); }
+    if (PreservedUVSetCount < -1 || (PreservedUVSetCount >= 0
+        && (bRoad || PreservedUVSetCount + 1 != UVSets)))
+    { return TEXT("{\"error\":\"material UV witness requires exactly one appended support channel\"}"); }
 
-    FBlake3 Geometry, Corners, MaterialIds;
+    FBlake3 Geometry, Corners, MaterialIds, PreservedCorners;
     FHashRecord Header; Header.Integer(1); Header.Integer(Vertices); Header.Integer(Triangles); Header.AddTo(Geometry);
     FHashRecord CornerHeader; CornerHeader.Integer(1); CornerHeader.Integer(UVSets); CornerHeader.AddTo(Corners);
+    if (PreservedUVSetCount >= 0)
+    {
+        FHashRecord PrefixHeader; PrefixHeader.Integer(1); PrefixHeader.Integer(PreservedUVSetCount);
+        PrefixHeader.AddTo(PreservedCorners);
+    }
     for (int32 V = 0; V < Vertices; ++V)
     {
         const FVector3d P = Mesh.GetVertex(V);
@@ -138,6 +146,9 @@ FString InspectNative(const FDynamicMesh3& Mesh, bool bRoad, int32 WitnessCount,
         }
         for (int32 Layer = 0; Layer < UVSets; ++Layer)
         {
+            // Exactly the previous complete normal/UV byte stream, before the
+            // named new material channel. Full Corners still hashes every UV.
+            if (Layer == PreservedUVSetCount) { CornerRecord.AddTo(PreservedCorners); }
             const auto* UV = Attributes->GetUVLayer(Layer);
             if (!UV) { return TEXT("{\"error\":\"missing declared native UV layer\"}"); }
             const bool bSet = UV->IsSetTriangle(T);
@@ -173,6 +184,39 @@ FString InspectNative(const FDynamicMesh3& Mesh, bool bRoad, int32 WitnessCount,
         }
     }
     Writer->WriteArrayEnd();
+    if (PreservedUVSetCount >= 0)
+    {
+        const auto* MaterialUV = Attributes->GetUVLayer(PreservedUVSetCount);
+        FBlake3 MaterialUVHash;
+        FHashRecord UVHeader; UVHeader.Integer(1); UVHeader.Integer(PreservedUVSetCount);
+        UVHeader.Integer(Triangles); UVHeader.AddTo(MaterialUVHash);
+        int32 SetCount = 0;
+        Writer->WriteObjectStart(TEXT("material_uv"));
+        Writer->WriteValue(TEXT("preserved_uv_set_count"), PreservedUVSetCount);
+        Writer->WriteValue(TEXT("preserved_triangle_corner_normals_uv_blake3"), Hex(PreservedCorners));
+        Writer->WriteValue(TEXT("hash_format"), TEXT("blake3-256-le-i32-f64-material-uv-v1"));
+        Writer->WriteArrayStart(TEXT("triangles"));
+        for (int32 T = 0; T < Triangles; ++T)
+        {
+            const bool bSet = MaterialUV->IsSetTriangle(T);
+            FHashRecord UVRecord; UVRecord.Integer(T); UVRecord.Boolean(bSet);
+            const FIndex3i Face = bSet ? MaterialUV->GetTriangle(T) : FIndex3i(-1, -1, -1);
+            if (bSet) { ++SetCount; Writer->WriteArrayStart(); Writer->WriteValue(T); }
+            for (int32 E : {Face.A, Face.B, Face.C})
+            {
+                FVector2f Value(0, 0);
+                if (bSet) { MaterialUV->GetElement(E, Value); }
+                UVRecord.Number(Value.X); UVRecord.Number(Value.Y);
+                if (bSet) { Writer->WriteValue(Value.X); Writer->WriteValue(Value.Y); }
+            }
+            UVRecord.AddTo(MaterialUVHash);
+            if (bSet) { Writer->WriteArrayEnd(); }
+        }
+        Writer->WriteArrayEnd();
+        Writer->WriteValue(TEXT("set_triangle_count"), SetCount);
+        Writer->WriteValue(TEXT("uv_blake3"), Hex(MaterialUVHash));
+        Writer->WriteObjectEnd();
+    }
     Writer->WriteValue(TEXT("material_ids_included"), !bRoad);
     Writer->WriteArrayStart(TEXT("material_ids"));
     if (!bRoad)
@@ -192,7 +236,8 @@ FString InspectNative(const FDynamicMesh3& Mesh, bool bRoad, int32 WitnessCount,
 }
 }
 
-FString UYacsRoadMaterialInspectionLibrary::InspectMesh(UDynamicMeshComponent* Component, int32 WitnessTriangleCount)
+FString UYacsRoadMaterialInspectionLibrary::InspectMesh(UDynamicMeshComponent* Component, int32 WitnessTriangleCount,
+    int32 PreservedUVSetCount)
 {
     if (!IsInGameThread() || !IsValid(Component) || !IsValid(Component->GetOwner()))
     { return TEXT("{\"error\":\"inspection requires an owned component on the editor game thread\"}"); }
@@ -211,7 +256,7 @@ FString UYacsRoadMaterialInspectionLibrary::InspectMesh(UDynamicMeshComponent* C
     { return TEXT("{\"error\":\"inspection requires the accepted road or support owner\"}"); }
     UDynamicMesh* Mesh = Component->GetDynamicMesh();
     return InspectNative(Mesh->GetMeshRef(), bRoad, WitnessTriangleCount, Label,
-        Component->GetPathName(), Mesh->GetPathName(), Map);
+        Component->GetPathName(), Mesh->GetPathName(), Map, PreservedUVSetCount);
 }
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -244,11 +289,11 @@ bool FYacsRoadMaterialInspectionTest::RunTest(const FString& Parameters)
     const int32 U1 = UV->AppendElement(FVector2f(1, 0));
     const int32 U2 = UV->AppendElement(FVector2f(0, 1));
     UV->SetTriangle(0, FIndex3i(U0, U1, U2));
-    const auto Read = [&Mesh](int32 Count)
+    const auto Read = [&Mesh](int32 Count, int32 PreservedUVSetCount = -1)
     {
         TSharedPtr<FJsonObject> Report;
         const auto Reader = TJsonReaderFactory<>::Create(InspectNative(Mesh, false, Count,
-            TEXT("synthetic"), TEXT("component"), TEXT("mesh"), TEXT("map")));
+            TEXT("synthetic"), TEXT("component"), TEXT("mesh"), TEXT("map"), PreservedUVSetCount));
         FJsonSerializer::Deserialize(Reader, Report);
         return Report;
     };
@@ -266,6 +311,41 @@ bool FYacsRoadMaterialInspectionTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("Full 256-bit digest"), Summary->GetStringField(Key).Len(), 64);
         TestEqual(TEXT("Witness mode cannot change the hashed buffers"), Summary->GetStringField(Key), Same->GetStringField(Key));
     }
+    Mesh.Attributes()->SetNumUVLayers(2);
+    auto* EdgeUV = Mesh.Attributes()->GetUVLayer(1);
+    const int32 E0 = EdgeUV->AppendElement(FVector2f(0, 0));
+    const int32 E1 = EdgeUV->AppendElement(FVector2f(50, 0));
+    const int32 E2 = EdgeUV->AppendElement(FVector2f(0, 100));
+    EdgeUV->SetTriangle(0, FIndex3i(E0, E1, E2));
+    const auto Added = Read(0, 1);
+    const auto EdgeEvidence = Added->GetObjectField(TEXT("material_uv"));
+    TestEqual(TEXT("Appended material coordinates preserve the complete old corner stream"),
+        EdgeEvidence->GetStringField(TEXT("preserved_triangle_corner_normals_uv_blake3")),
+        Summary->GetStringField(TEXT("triangle_corner_normals_uv_blake3")));
+    TestNotEqual(TEXT("Full corner digest includes the explicit new UV channel"),
+        Added->GetObjectField(TEXT("summary"))->GetStringField(TEXT("triangle_corner_normals_uv_blake3")),
+        Summary->GetStringField(TEXT("triangle_corner_normals_uv_blake3")));
+    TestEqual(TEXT("The material channel has its own full digest"), EdgeEvidence->GetStringField(TEXT("uv_blake3")).Len(), 64);
+    TestEqual(TEXT("Only the actual set material triangles are witnessed"), EdgeEvidence->GetIntegerField(TEXT("set_triangle_count")), 1);
+    TestEqual(TEXT("Material witness contains triangle ID and three coordinate pairs"),
+        EdgeEvidence->GetArrayField(TEXT("triangles"))[0]->AsArray().Num(), 7);
+    EdgeUV->SetElement(E1, FVector2f(49, 0));
+    TestNotEqual(TEXT("New material UV tampering changes its own digest"),
+        Read(0, 1)->GetObjectField(TEXT("material_uv"))->GetStringField(TEXT("uv_blake3")),
+        EdgeEvidence->GetStringField(TEXT("uv_blake3")));
+    TestEqual(TEXT("New UV changes cannot be confused with the preserved source prefix"),
+        Read(0, 1)->GetObjectField(TEXT("material_uv"))->GetStringField(TEXT("preserved_triangle_corner_normals_uv_blake3")),
+        Summary->GetStringField(TEXT("triangle_corner_normals_uv_blake3")));
+    UV->SetElement(U0, FVector2f(0.5, 0));
+    TestNotEqual(TEXT("Original UV tampering still changes the preserved prefix"),
+        Read(0, 1)->GetObjectField(TEXT("material_uv"))->GetStringField(TEXT("preserved_triangle_corner_normals_uv_blake3")),
+        Summary->GetStringField(TEXT("triangle_corner_normals_uv_blake3")));
+    UV->SetElement(U0, FVector2f(0, 0));
+    TestTrue(TEXT("A prefix cannot skip two UV channels"), Read(0, 0)->HasField(TEXT("error")));
+    Mesh.Attributes()->SetNumUVLayers(1);
+    TestEqual(TEXT("Removing only the appended channel restores the exact original stream"),
+        Read(0)->GetObjectField(TEXT("summary"))->GetStringField(TEXT("triangle_corner_normals_uv_blake3")),
+        Summary->GetStringField(TEXT("triangle_corner_normals_uv_blake3")));
     Mesh.SetVertex(1, FVector3d(11, 0, 0));
     TestNotEqual(TEXT("Position change is detected"), Read(0)->GetObjectField(TEXT("summary"))->GetStringField(TEXT("positions_indices_blake3")), Summary->GetStringField(TEXT("positions_indices_blake3")));
     Mesh.SetVertex(1, FVector3d(10, 0, 0));
@@ -283,6 +363,18 @@ bool FYacsRoadMaterialInspectionTest::RunTest(const FString& Parameters)
     Mesh.Attributes()->SetNumUVLayers(0);
     TestEqual(TEXT("Existing support meshes with no UV layers are accepted"),
         Read(0)->GetObjectField(TEXT("summary"))->GetIntegerField(TEXT("uv_set_count")), 0);
+    const FString ZeroUVHash = Read(0)->GetObjectField(TEXT("summary"))->GetStringField(TEXT("triangle_corner_normals_uv_blake3"));
+    Mesh.Attributes()->SetNumUVLayers(1);
+    auto* FirstMaterialUV = Mesh.Attributes()->GetUVLayer(0);
+    FirstMaterialUV->SetTriangle(0, FIndex3i(
+        FirstMaterialUV->AppendElement(FVector2f(0, 0)),
+        FirstMaterialUV->AppendElement(FVector2f(50, 0)),
+        FirstMaterialUV->AppendElement(FVector2f(0, 100))));
+    TestEqual(TEXT("Appending the first material UV preserves the exact zero-UV normal stream"),
+        Read(0, 0)->GetObjectField(TEXT("material_uv"))->GetStringField(TEXT("preserved_triangle_corner_normals_uv_blake3")), ZeroUVHash);
+    Mesh.Attributes()->SetNumUVLayers(0);
+    TestEqual(TEXT("First-channel removal restores the complete zero-UV stream"),
+        Read(0)->GetObjectField(TEXT("summary"))->GetStringField(TEXT("triangle_corner_normals_uv_blake3")), ZeroUVHash);
     TestTrue(TEXT("A small fixture cannot impersonate the exact accepted road"),
         InspectNative(Mesh, true, 0, TEXT("road"), TEXT("component"), TEXT("mesh"), TEXT("map")).Contains(TEXT("error")));
     FDynamicMesh3 Sparse;

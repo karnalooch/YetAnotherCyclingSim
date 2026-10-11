@@ -188,7 +188,7 @@ function Assert-NetworkManifest {
         $Manifest.schema_version -ne 1 -or $Manifest.issue -ne 364 -or
         $Manifest.status -cne 'SAVED_ROAD_ASPHALT_CONSUMER_PREPARED' -or
         $Manifest.exact_sha -cne $ExactHead -or
-        $Manifest.material_changes -cne 'road_slot_zero_and_network_outer_shoulder_ids') {
+        $Manifest.material_changes -cne 'road_slot_zero_network_outer_shoulder_ids_and_edge_uv') {
         throw 'Saved material manifest is not the exact full-network schema.'
     }
     $flags = @{ map_saved = $true; landscape_1024_unchanged = $true
@@ -202,13 +202,18 @@ function Assert-NetworkManifest {
     }
     $network = $Manifest.shoulder_network
     if ($network -isnot [Collections.IDictionary] -or
-        $network.schema_version -ne 2 -or $network.status -cne 'SHOULDER_NETWORK_PREPARED' -or
+        $network.schema_version -ne 3 -or $network.status -cne 'SHOULDER_NETWORK_PREPARED' -or
         $network.support_count -ne 186 -or $network.material_target_count -ne 185 -or
         $network.excluded_parapet_count -ne 1 -or
         $network.owners -isnot [Collections.IList] -or $network.owners.Count -ne 186) {
         throw 'Saved source-owned support coverage is incomplete.'
     }
-    $flags = @{ rollback_verified = $true; source_vertices_topology_normals_uv_preserved = $true
+    if (($network.material_edge_uv_channel -isnot [long] -and $network.material_edge_uv_channel -isnot [int]) -or
+        $network.material_edge_uv_channel -ne 0) {
+        throw 'Saved material edge UV channel differs from the proved zero-UV source.'
+    }
+    $flags = @{ rollback_verified = $true; source_vertices_topology_normals_uv_prefix_preserved = $true
+        material_edge_uv_appended = $true
         original_wall_material_preserved = $true; excluded_parapet_unchanged = $true
         whole_area_admitted = $false; performance_pass = $false }
     foreach ($name in $flags.Keys) {
@@ -238,7 +243,8 @@ function Assert-FreshNetworkReceipt {
         throw 'Fresh reload differs from the exact saved network material inventory.'
     }
     $flags = @{ fresh_process = $true; shoulder_network_fresh_reload_verified = $true
-        shoulder_positions_indices_normals_uv_unchanged = $true
+        shoulder_positions_indices_normals_original_uv_prefix_unchanged = $true
+        shoulder_material_edge_uv_fresh_reload_verified = $true
         shoulder_wall_materials_unchanged = $true; road_full_buffers_unchanged = $true
         dry_asphalt_response_verified = $true; new_saved_asset_bytes_unchanged = $true
         road_material_reapplied = $false
@@ -342,6 +348,7 @@ try {
         'scripts/ue/road_shoulder_window.py',
         'scripts/ue/road_shoulder_sources.py',
         'scripts/ue/road_shoulder_network.py',
+        'scripts/ue/road_shoulder_edges.py',
         'scripts/ue/road_material_views.py',
         'scripts/ue/road_shoulder_material.py',
         'Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h',

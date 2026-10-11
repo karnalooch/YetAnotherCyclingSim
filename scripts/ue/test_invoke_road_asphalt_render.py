@@ -210,6 +210,7 @@ class RoadAsphaltGpuHostContractTests(unittest.TestCase):
             "owner_visual_status": "PENDING_FINAL_M3", "performance_status": "DEFERRED_AFTER_M3",
             "errors": [], "native_lit_frames_retained": True,
             "shoulder_network_material_ids_verified": True, "shoulder_wall_materials_unchanged": True,
+            "shoulder_material_edge_uv_verified": True,
             "road_full_buffers_unchanged": True, "dry_asphalt_response_verified": True,
             "sources_and_saved_assets_unchanged": True, "capture_readiness_verified": True,
             "residency_requests_released": True, "transient_camera_destroyed": True,
@@ -247,7 +248,7 @@ function Check($data) {
 Check $fixture.good
 foreach ($failure in @('order', 'pose', 'station', 'plan_hash', 'profile', 'priming', 'priming_total',
                        'mips', 'supports', 'selected_ids', 'walls', 'road_buffers', 'asphalt',
-                       'admission', 'sampling', 'shader', 'native_location', 'native_rotation',
+                       'admission', 'edge_uv', 'sampling', 'shader', 'native_location', 'native_rotation',
                        'native_direction', 'native_fov', 'native_error', 'native_nonfinite', 'native_missing',
                        'prime_direction', 'prime_missing')) {
     $data = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
@@ -265,6 +266,7 @@ foreach ($failure in @('order', 'pose', 'station', 'plan_hash', 'profile', 'prim
         'walls' { $data.shoulder_wall_materials_unchanged = $false }
         'road_buffers' { $data.road_full_buffers_unchanged = $false }
         'asphalt' { $data.dry_asphalt_response_verified = $false }
+        'edge_uv' { $data.shoulder_material_edge_uv_verified = $false }
         'admission' { $data.whole_area_owner_accepted = $true }
         'sampling' { $data.material_view_sampling.occupied_road_cells[0][0] += 1 }
         'shader' { $data.gpu_shader_compilation_admitted = $true }

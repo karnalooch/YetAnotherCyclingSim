@@ -21,6 +21,7 @@ $receipt = [ordered]@{
     original_map_mutated = $false; geometry_mutated = $false
     native_lit_frames_retained = $false; verified_frame_count = 0
     shoulder_network_material_ids_verified = $false
+    shoulder_material_edge_uv_verified = $false
     shoulder_support_count = 0; shoulder_material_target_count = 0
     shoulder_selected_triangle_count = 0; expected_view_plan = $null
     road_profile_diagnostic_sha256 = $null
@@ -196,7 +197,7 @@ function Assert-NetworkManifest {
         $Manifest.schema_version -ne 1 -or $Manifest.issue -ne 364 -or
         $Manifest.status -cne 'SAVED_ROAD_ASPHALT_CONSUMER_PREPARED' -or
         $Manifest.exact_sha -cne $ExactHead -or
-        $Manifest.material_changes -cne 'road_slot_zero_and_network_outer_shoulder_ids') {
+        $Manifest.material_changes -cne 'road_slot_zero_network_outer_shoulder_ids_and_edge_uv') {
         throw 'Saved material manifest is not the exact full-network schema.'
     }
     $flags = @{ map_saved = $true; landscape_1024_unchanged = $true
@@ -210,13 +211,18 @@ function Assert-NetworkManifest {
     }
     $network = $Manifest.shoulder_network
     if ($network -isnot [Collections.IDictionary] -or
-        $network.schema_version -ne 2 -or $network.status -cne 'SHOULDER_NETWORK_PREPARED' -or
+        $network.schema_version -ne 3 -or $network.status -cne 'SHOULDER_NETWORK_PREPARED' -or
         $network.support_count -ne 186 -or $network.material_target_count -ne 185 -or
         $network.excluded_parapet_count -ne 1 -or
         $network.owners -isnot [Collections.IList] -or $network.owners.Count -ne 186) {
         throw 'Saved source-owned support coverage is incomplete.'
     }
-    $flags = @{ rollback_verified = $true; source_vertices_topology_normals_uv_preserved = $true
+    if (($network.material_edge_uv_channel -isnot [long] -and $network.material_edge_uv_channel -isnot [int]) -or
+        $network.material_edge_uv_channel -ne 0) {
+        throw 'Saved material edge UV channel differs from the proved zero-UV source.'
+    }
+    $flags = @{ rollback_verified = $true; source_vertices_topology_normals_uv_prefix_preserved = $true
+        material_edge_uv_appended = $true
         original_wall_material_preserved = $true; excluded_parapet_unchanged = $true
         whole_area_admitted = $false; performance_pass = $false }
     foreach ($name in $flags.Keys) {
@@ -360,6 +366,7 @@ function Assert-GpuReviewContract {
         throw 'Native lit receipt differs from the pinned network, plan or priming inventory.'
     }
     $flags = @{ native_lit_frames_retained = $true; shoulder_network_material_ids_verified = $true
+        shoulder_material_edge_uv_verified = $true
         shoulder_wall_materials_unchanged = $true; road_full_buffers_unchanged = $true
         dry_asphalt_response_verified = $true; sources_and_saved_assets_unchanged = $true
         capture_readiness_verified = $true; residency_requests_released = $true
@@ -439,6 +446,7 @@ try {
         'scripts/ue/road_shoulder_window.py',
         'scripts/ue/road_shoulder_sources.py',
         'scripts/ue/road_shoulder_network.py',
+        'scripts/ue/road_shoulder_edges.py',
         'scripts/ue/road_material_views.py',
         'scripts/ue/road_shoulder_material.py',
         'Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h',
@@ -490,6 +498,10 @@ try {
         $reopenReceipt.value.evidence_manifest_sha256 -cne $savedManifest.identity.sha256 -or
         $reopenReceipt.value.shoulder_network_fresh_reload_verified -isnot [bool] -or
         -not $reopenReceipt.value.shoulder_network_fresh_reload_verified -or
+        $reopenReceipt.value.shoulder_positions_indices_normals_original_uv_prefix_unchanged -isnot [bool] -or
+        -not $reopenReceipt.value.shoulder_positions_indices_normals_original_uv_prefix_unchanged -or
+        $reopenReceipt.value.shoulder_material_edge_uv_fresh_reload_verified -isnot [bool] -or
+        -not $reopenReceipt.value.shoulder_material_edge_uv_fresh_reload_verified -or
         $reopenReceipt.value.shoulder_support_count -ne 186 -or
         $reopenReceipt.value.shoulder_material_target_count -ne 185 -or
         $reopenReceipt.value.shoulder_selected_triangle_count -ne $selectedTriangles -or
@@ -675,6 +687,7 @@ print(json.dumps(current_view_plan(Path(sys.argv[1])), sort_keys=True, allow_nan
     $receipt.verified_frame_ids = $expectedIds
     $receipt.material_view_sampling = $data.material_view_sampling
     $receipt.shoulder_network_material_ids_verified = $true
+    $receipt.shoulder_material_edge_uv_verified = $true
     $receipt.shoulder_support_count = 186
     $receipt.shoulder_material_target_count = 185
     $receipt.shoulder_selected_triangle_count = $selectedTriangles
@@ -722,6 +735,7 @@ finally {
             $receipt.status = 'FAILED'
             $receipt.native_lit_frames_retained = $false
             $receipt.shoulder_network_material_ids_verified = $false
+            $receipt.shoulder_material_edge_uv_verified = $false
             $receipt.error = 'GPU review process/log teardown did not complete.'
         }
         try {
@@ -734,7 +748,8 @@ finally {
     }
 }
 if ($receipt.status -cne 'ROAD_ASPHALT_GPU_LIT_REVIEW_HOST_PASS' -or
-    -not $receipt.native_lit_frames_retained -or -not $receipt.shoulder_network_material_ids_verified) {
+    -not $receipt.native_lit_frames_retained -or -not $receipt.shoulder_network_material_ids_verified -or
+    -not $receipt.shoulder_material_edge_uv_verified) {
     throw 'Road GPU technical evidence failed the independent native host gate.'
 }
 Write-Host ('ROAD_ASPHALT_GPU_LIT_REVIEW_HOST_PASS; ' + $receipt.verified_frame_count +

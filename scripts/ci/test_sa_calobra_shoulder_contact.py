@@ -97,14 +97,55 @@ class ShoulderContactTests(unittest.TestCase):
     def test_native_shutdown_is_guaranteed_when_final_readback_raises(self):
         owner = Owner.__new__(Owner)
         quit_editor = Mock()
+        keepalive = Mock()
         owner.api = SimpleNamespace(
-            SystemLibrary=SimpleNamespace(quit_editor=quit_editor)
+            SystemLibrary=SimpleNamespace(quit_editor=quit_editor),
+            EditorPythonScripting=SimpleNamespace(
+                set_keep_python_script_alive=keepalive
+            ),
         )
         with patch.object(
             owner, "_finish", side_effect=RuntimeError("final native mesh lost")
         ):
             with self.assertRaisesRegex(RuntimeError, "native mesh lost"):
                 owner.finish()
+        keepalive.assert_called_once_with(False)
+        quit_editor.assert_called_once()
+
+    def test_commandline_keepalive_wraps_async_capture_and_cleanup(self):
+        owner = Owner.__new__(Owner)
+        events = []
+        owner.api = SimpleNamespace(
+            EditorPythonScripting=SimpleNamespace(
+                set_keep_python_script_alive=lambda value: events.append(value)
+            ),
+            SystemLibrary=SimpleNamespace(quit_editor=lambda: events.append("quit")),
+        )
+        owner.capture = SimpleNamespace(start=lambda: events.append("callback"))
+        owner._start_capture()
+        self.assertEqual(events, [True, "callback"])
+        with patch.object(owner, "_finish", side_effect=lambda _error: events.append("restore")):
+            owner.finish()
+        self.assertEqual(events, [True, "callback", "restore", False, "quit"])
+
+    def test_native_quit_still_runs_when_keepalive_release_fails(self):
+        owner = Owner.__new__(Owner)
+        owner.capture = None
+        owner.report = {"status": "SHOULDER_CONTACT_CAPTURED"}
+        quit_editor = Mock()
+        owner.api = SimpleNamespace(
+            EditorPythonScripting=SimpleNamespace(
+                set_keep_python_script_alive=Mock(side_effect=RuntimeError("release lost"))
+            ),
+            SystemLibrary=SimpleNamespace(quit_editor=quit_editor),
+        )
+        with patch.object(owner, "_finish") as cleanup, patch.object(owner, "write") as write:
+            with self.assertRaisesRegex(RuntimeError, "release lost"):
+                owner.finish("capture failed")
+        cleanup.assert_called_once_with("capture failed")
+        write.assert_called_once_with()
+        self.assertEqual(owner.report["status"], "FAILED")
+        self.assertIn("release lost", owner.report["error"])
         quit_editor.assert_called_once()
 
     def test_support_identity_uses_source_interior_coordinates_and_native_face_order(

@@ -154,7 +154,7 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
     def test_network_allows_only_source_owned_outer_slots_and_preserves_parapet(self):
         original, after = deepcopy(self.old), self.new_inventory()
         assets = saved.shoulder_material.asset_paths(saved.shoulder_material.DESTINATION_ROOT)
-        receipt = {"schema_version": 2, "support_count": 186, "material_target_count": 185,
+        receipt = {"schema_version": 3, "support_count": 186, "material_target_count": 185,
                    "owners": [], "material": {"assets": assets}}
         for i in range(186):
             target = i != 181

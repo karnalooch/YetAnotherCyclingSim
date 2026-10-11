@@ -2,7 +2,9 @@
 
 One read-only C++ call hashes complete native buffers; only the first ownership
 pass returns triangle witnesses. Every later pass compares those exact hashes.
-The existing Geometry Script setter changes only source-proved outer top IDs.
+Geometry Script changes source-proved outer top IDs and appends one explicit
+material edge UV channel. Every original normal/UV byte remains independently
+hashed; the new attribute has its own complete hash and source witnesses.
 """
 
 from __future__ import annotations
@@ -17,9 +19,11 @@ from scripts.ci import official_mcp_bob_session as session
 from scripts.ue import read_road_material_baseline as baseline
 from scripts.ue import road_shoulder_sources as sources
 from scripts.ue import road_shoulder_window as legacy
+from scripts.ue import road_shoulder_edges as edges
 
 ROOT = Path(__file__).resolve().parents[2]
 HASH_FORMAT = "blake3-256-le-i32-f64-corners-v1"
+SCHEMA_VERSION = 3
 MAX_JSON_CHARS = 48 * 1024 * 1024
 MAX_SUPPORT_VERTICES = 85000
 MAX_SUPPORT_TRIANGLES = 150000
@@ -58,10 +62,13 @@ def integer(value, minimum=0, maximum=MAX_SUPPORT_TRIANGLES):
     return value
 
 
-def inspect_mesh(api, component, witness_triangle_count=0):
+def inspect_mesh(api, component, witness_triangle_count=0, preserved_uv_set_count=-1):
     """Validate a native read-only support or exact accepted-road snapshot."""
     integer(witness_triangle_count)
-    raw = api.YacsRoadMaterialInspectionLibrary.inspect_mesh(component, witness_triangle_count)
+    require(type(preserved_uv_set_count) is int and -1 <= preserved_uv_set_count <= 3,
+            "Invalid original material UV prefix")
+    raw = api.YacsRoadMaterialInspectionLibrary.inspect_mesh(
+        component, witness_triangle_count, preserved_uv_set_count)
     require(isinstance(raw, str) and 0 < len(raw) <= MAX_JSON_CHARS,
             "Native road-material inspection exceeded the serialization budget")
     value = json.loads(raw)
@@ -110,6 +117,12 @@ def inspect_mesh(api, component, witness_triangle_count=0):
         require(len(set(row[1:4])) == 3 and all(v < vertices for v in row[1:4])
                 and all(type(v) in (int, float) and math.isfinite(v) for v in row[4:]),
                 "Native source witness contains invalid indices or positions")
+    require((preserved_uv_set_count < 0 and "material_uv" not in value)
+            or (preserved_uv_set_count >= 0 and not road
+                and summary["uv_set_count"] == preserved_uv_set_count + 1
+                and isinstance(value.get("material_uv"), dict)
+                and value["material_uv"].get("preserved_uv_set_count") == preserved_uv_set_count),
+            "Native explicit material UV witness/prefix differs")
     return value
 
 
@@ -117,7 +130,8 @@ def native_api_evidence(api, component):
     evidence = legacy.native_api_evidence(api, component)
     method = api.YacsRoadMaterialInspectionLibrary.inspect_mesh
     doc = str(getattr(method, "__doc__", "") or "")
-    require(callable(method) and all(p in doc for p in ("component", "witness_triangle_count")),
+    require(callable(method) and all(p in doc for p in (
+        "component", "witness_triangle_count", "preserved_uv_set_count")),
             "Installed native inspection signature differs")
     engine = Path(api.Paths.convert_relative_path_to_full(api.Paths.engine_dir())).resolve()
     header = session._safe_path(engine, "Source/Runtime/Core/Public/Hash/Blake3.h")
@@ -131,6 +145,7 @@ def native_api_evidence(api, component):
         inspection_sources={path: session._identity(session._safe_path(ROOT, path), 1024 * 1024)
                             for path in INSPECTION_FILES},
         geometry_authoring_api_added=False,
+        material_edge_api=edges.native_api_evidence(api),
     )
     return evidence
 
@@ -199,8 +214,11 @@ def verify_slots(component, owner, instance=None):
 
 
 def verify_delta(before, after, owner, *, assigned):
-    require(all(before[field] == after["summary"][field] for field in PRESERVED_FIELDS),
+    target = assigned and owner["material_target"]
+    preserved = ("vertex_count", "triangle_count", "positions_indices_blake3") if target else PRESERVED_FIELDS
+    require(all(before[field] == after["summary"][field] for field in preserved),
             "Material assignment changed full positions, indices, normals or UV buffers")
+    edge_receipt = edges.verify_native(before, after, owner) if target else None
     selected = set(owner["selected_triangle_ids"]) if assigned and owner["material_target"] else set()
     require(len(selected) <= after["summary"]["triangle_count"]
             and all(type(tid) is int and 0 <= tid < min(owner["top_triangle_count"],
@@ -211,6 +229,7 @@ def verify_delta(before, after, owner, *, assigned):
             "Unselected wall/interior/parapet material ID changed")
     if not selected:
         require(after["summary"] == before, "Complete original mesh did not survive rollback/exclusion")
+    return edge_receipt
 
 
 def set_owner_ids(api, item, material_id):
@@ -229,10 +248,12 @@ def set_owner_ids(api, item, material_id):
 def verify_states(api, state, *, assigned):
     summaries = []
     for item in state["items"]:
-        snapshot = inspect_mesh(api, item["component"])
+        target = assigned and item["owner"]["material_target"]
+        snapshot = inspect_mesh(api, item["component"],
+                                preserved_uv_set_count=item["before_mesh"]["uv_set_count"] if target else -1)
         require(snapshot["actor_label"] == item["owner"]["support_label"], "Material owner changed during proof")
         verify_slots(item["component"], item["owner"], state["instance_path"] if assigned else None)
-        verify_delta(item["before_mesh"], snapshot, item["owner"], assigned=assigned)
+        item["edge_attribute"] = verify_delta(item["before_mesh"], snapshot, item["owner"], assigned=assigned)
         summaries.append(snapshot["summary"])
     return summaries
 
@@ -241,6 +262,10 @@ def rollback(api, state):
     """Restore every attempted owner, then prove all 186 full original buffers."""
     errors = []
     for item in reversed(state["attempted"]):
+        try:
+            edges.rollback(api, item["component"], item["before_mesh"]["uv_set_count"])
+        except Exception as exc:
+            errors.append(item["owner"]["support_label"] + " material UV: " + str(exc))
         try:
             set_owner_ids(api, item, 0)
         except Exception as exc:
@@ -265,6 +290,7 @@ def apply_all(api, state, instance):
             state["attempted"].append(item)
             item["component"].configure_material_set([item["old_material"], instance], delete_extra_slots=True)
             set_owner_ids(api, item, 1)
+            edges.apply(api, item["component"], item["edge_coordinates"], item["before_mesh"]["uv_set_count"])
 
 
 def prepare(api, actors, source_plan, instance, material_receipt):
@@ -286,12 +312,16 @@ def prepare(api, actors, source_plan, instance, material_receipt):
         snapshot = inspect_mesh(api, component, source["expected_witness_triangle_count"])
         ownership = verify_ownership(snapshot, owner, source)
         verify_delta(snapshot["summary"], snapshot, owner, assigned=False)
+        require(not owner["material_target"] or snapshot["summary"]["uv_set_count"] == edges.CHANNEL,
+                "Material edge shader requires the authenticated UV-free source")
+        edge_coordinates = edges.triangle_coordinates(owner) if owner["material_target"] else []
         total_vertices += snapshot["summary"]["vertex_count"]
         total_triangles += snapshot["summary"]["triangle_count"]
         require(total_vertices <= MAX_TOTAL_VERTICES and total_triangles <= MAX_TOTAL_TRIANGLES,
                 "Whole-support readback exceeds the admitted aggregate budget")
         state["items"].append({"owner": owner, "component": component, "old_material": old,
-                               "source": source, "ownership": ownership, "before_mesh": snapshot["summary"]})
+                               "source": source, "ownership": ownership, "before_mesh": snapshot["summary"],
+                               "edge_coordinates": edge_coordinates, "edge_attribute": None})
     # No assignment occurs until every source owner, including the parapet, has
     # completed its full geometry witness and original material check.
     try:
@@ -308,11 +338,12 @@ def prepare(api, actors, source_plan, instance, material_receipt):
     owners = [
         {**{key: item["source"][key] for key in OWNER_SUMMARY_FIELDS},
          "source": item["source"], "ownership": item["ownership"],
-         "before_mesh": item["before_mesh"], "after_mesh": summary}
+         "before_mesh": item["before_mesh"], "after_mesh": summary,
+         "edge_attribute": item["edge_attribute"]}
         for item, summary in zip(state["items"], after, strict=True)
     ]
     receipt = {
-        "schema_version": 2, "status": "SHOULDER_NETWORK_PREPARED",
+        "schema_version": SCHEMA_VERSION, "status": "SHOULDER_NETWORK_PREPARED",
         "source_identity": source_plan["source_identity"], "material": material_receipt,
         "material_api": api_receipt, "hash_format": HASH_FORMAT, "owners": owners,
         "support_count": len(owners), "material_target_count": sum(o["material_target"] for o in owners),
@@ -320,7 +351,8 @@ def prepare(api, actors, source_plan, instance, material_receipt):
         "selected_triangle_count": sum(o["selected_triangle_count"] for o in owners),
         "total_vertex_count": total_vertices, "total_triangle_count": total_triangles,
         "aggregate_after_sha256": digest(after), "rollback_verified": True,
-        "rollback_proof": rollback_proof, "source_vertices_topology_normals_uv_preserved": True,
+        "rollback_proof": rollback_proof, "source_vertices_topology_normals_uv_prefix_preserved": True,
+        "material_edge_uv_appended": True, "material_edge_uv_channel": edges.CHANNEL,
         "original_wall_material_preserved": True, "excluded_parapet_unchanged": True,
         "whole_area_admitted": False, "performance_pass": False,
     }
@@ -330,13 +362,15 @@ def prepare(api, actors, source_plan, instance, material_receipt):
 def verify_loaded(api, receipt, source_plan=None):
     """Read-only fresh load/GPU proof, inheriting source ownership by exact hashes."""
     source_plan = sources.load_sources() if source_plan is None else source_plan
-    require(receipt.get("schema_version") == 2 and receipt.get("status") == "SHOULDER_NETWORK_PREPARED"
+    require(receipt.get("schema_version") == SCHEMA_VERSION and receipt.get("status") == "SHOULDER_NETWORK_PREPARED"
             and receipt.get("hash_format") == HASH_FORMAT and receipt.get("rollback_verified") is True
             and receipt.get("source_identity") == source_plan["source_identity"]
             and receipt.get("support_count") == sources.OWNER_COUNT
             and receipt.get("material_target_count") == sources.OWNER_COUNT - 1
             and receipt.get("excluded_parapet_count") == 1
-            and receipt.get("source_vertices_topology_normals_uv_preserved") is True
+            and receipt.get("source_vertices_topology_normals_uv_prefix_preserved") is True
+            and receipt.get("material_edge_uv_appended") is True
+            and receipt.get("material_edge_uv_channel") == edges.CHANNEL
             and receipt.get("original_wall_material_preserved") is True
             and receipt.get("excluded_parapet_unchanged") is True
             and receipt.get("whole_area_admitted") is False and receipt.get("performance_pass") is False,
@@ -361,11 +395,15 @@ def verify_loaded(api, receipt, source_plan=None):
                 and type(delta) in (int, float) and math.isfinite(delta) and 0 <= delta <= 0.0001,
                 "Saved oriented source/native ownership proof is incomplete")
         verify_slots(component, owner, instance_path)
-        current = inspect_mesh(api, component)
+        current = inspect_mesh(api, component,
+                               preserved_uv_set_count=recorded["before_mesh"]["uv_set_count"]
+                               if owner["material_target"] else -1)
         require(current["actor_label"] == owner["support_label"]
                 and current["summary"] == recorded["after_mesh"],
                 "Fresh full native mesh, corner attributes or material IDs changed")
-        verify_delta(recorded["before_mesh"], current, owner, assigned=True)
+        edge_attribute = verify_delta(recorded["before_mesh"], current, owner, assigned=True)
+        require(edge_attribute == recorded.get("edge_attribute"),
+                "Fresh appended material UV/source witness differs")
         summaries.append(current["summary"])
     require(receipt.get("selected_triangle_count") == sum(r["selected_triangle_count"] for r in records)
             and receipt.get("total_vertex_count") == sum(s["vertex_count"] for s in summaries)

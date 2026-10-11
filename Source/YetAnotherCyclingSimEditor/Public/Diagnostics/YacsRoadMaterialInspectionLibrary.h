@@ -12,7 +12,8 @@ class YETANOTHERCYCLINGSIMEDITOR_API UYacsRoadMaterialInspectionLibrary : public
 {
     GENERATED_BODY()
 public:
-    /** Hash the existing mesh and optionally return an ordered support triangle prefix. Never edit or save. */
+    /** Hash the existing mesh. An explicit preserved UV prefix additionally witnesses one appended material UV channel. Never edit or save. */
     UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
-    static FString InspectMesh(UDynamicMeshComponent* Component, int32 WitnessTriangleCount = 0);
+    static FString InspectMesh(UDynamicMeshComponent* Component, int32 WitnessTriangleCount = 0,
+        int32 PreservedUVSetCount = -1);
 };

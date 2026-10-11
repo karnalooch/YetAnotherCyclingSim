@@ -1,9 +1,11 @@
 """Create the bounded #364 gravel material; never assign geometry or save assets.
 
 The caller owns whole-network triangle selection, slot assignment, rollback and
-saved/fresh-rendered proof. This helper only consumes the three immutable,
-already staged FillGravel textures. Its two new assets must be saved explicitly
-by the caller; no import, source-texture edit, world edit or displacement occurs.
+saved/fresh-rendered proof. This helper consumes the three immutable FillGravel
+textures and the same already imported asphalt PBR used by the road. Its two
+new assets must be saved explicitly by the caller; no import, source-texture
+edit, world edit or displacement occurs. An explicit source-owned material UV
+field blends the inner shoulder edge in a bounded 3–8 cm strip.
 
 Native graph operations follow import_material_forge_variant.py and the pinned
 UE 5.8.2 projection-function readback in native run 38078459124. Epic references:
@@ -16,6 +18,9 @@ from __future__ import annotations
 import hashlib
 import math
 from pathlib import Path
+
+from scripts.ue import road_shoulder_edges as edges
+from scripts.ue import road_asphalt_source_preflight as asphalt_source
 
 ROOT = Path(__file__).resolve().parents[2]
 DESTINATION_ROOT = "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork"
@@ -31,6 +36,27 @@ TEXTURES = {
     "NormalTex": "Normal_DX",
     "RoughnessTex": "Roughness",
 }
+ASPHALT_TEXTURES = {
+    "EdgeAsphaltBaseColorTex": "BaseColor",
+    "EdgeAsphaltNormalTex": "Normal_DX",
+    "EdgeAsphaltORMTex": "ORM",
+}
+ASPHALT_ROOT = "/Game/Generated/YACS/RoadAsphaltConsumer/aged_mountain_asphalt/dry_varied"
+SCALARS = {"TileSizeCm": TILE_SIZE_CM, "AsphaltTileSizeCm": 400.0}
+EDGE_TRANSITION = {
+    "material_uv_channel": edges.CHANNEL, "distance_units": "centimetres",
+    "pure_asphalt_until_cm": 3.0, "pure_gravel_from_cm": 8.0,
+    "breakup_source": "projected_gravel_base_color_red", "breakup_gain": 4.0,
+    "breakup_polarity": "bright_gravel_towards_pavement",
+    "breakup_width_cm": 4.0, "feather_width_cm": 1.0,
+    "asphalt_specular": 0.2, "gravel_specular": 0.5,
+    "outer_terrain_transition": False, "opacity_or_displacement": False,
+}
+EDGE_NODE_TYPES = (
+    "MaterialExpressionTextureCoordinate", "MaterialExpressionSubtract",
+    "MaterialExpressionMultiply", "MaterialExpressionAdd", "MaterialExpressionSaturate",
+    "MaterialExpressionLinearInterpolate",
+)
 # Package identities from authenticated baseline artifact 11679925399. Provider
 # image identities/physical dimensions are retained in the authoritative ledger.
 SOURCE_PINS = {
@@ -158,6 +184,7 @@ def _verify_texture_settings(api, texture, channel):
         "BaseColor": api.TextureCompressionSettings.TC_DEFAULT,
         "Normal_DX": api.TextureCompressionSettings.TC_NORMALMAP,
         "Roughness": api.TextureCompressionSettings.TC_MASKS,
+        "ORM": api.TextureCompressionSettings.TC_MASKS,
     }[channel]
     require(texture.get_editor_property("srgb") is (channel == "BaseColor")
             and texture.get_editor_property("compression_settings") == expected_compression
@@ -167,6 +194,39 @@ def _verify_texture_settings(api, texture, channel):
     if channel == "Normal_DX":
         require(texture.get_editor_property("flip_green_channel") is False,
                 "Pinned FillGravel normal must retain DirectX green direction")
+
+
+def asphalt_asset_paths():
+    def path(name):
+        return ASPHALT_ROOT + "/" + asphalt_source.GRAPH_SHA256[:12] + "/" + name + "." + name
+    return {"master": path("M_MaterialForge"), "instance": path("MI_MaterialForge"),
+            "textures": {channel: path("T_MF_" + channel.replace("_", ""))
+                         for channel in ("BaseColor", "Normal_DX", "ORM", "DetailMasks")}}
+
+
+def _authenticate_asphalt(api, assets):
+    """Reuse the exact road instance's PBR objects; no second texture import."""
+    require(assets == asphalt_asset_paths(), "Edge asphalt is not the current imported road PBR")
+    instance = api.load_asset(assets["instance"])
+    require(instance is not None and isinstance(instance, api.MaterialInstanceConstant)
+            and instance.get_path_name() == assets["instance"], "Imported edge asphalt instance is missing")
+    parent = instance.get_editor_property("parent")
+    require(parent is not None and isinstance(parent, api.Material)
+            and parent.get_path_name() == assets["master"], "Edge asphalt parent differs from the road")
+    lib, association = api.MaterialEditingLibrary, api.MaterialParameterAssociation.GLOBAL_PARAMETER
+    for name, expected in {"TileSizeCm": 400.0, "DrySpecular": 0.2, "DryMetallic": 0.0}.items():
+        actual = lib.get_material_instance_scalar_parameter_value(instance, name, association)
+        require(type(actual) in (int, float) and math.isfinite(actual) and abs(actual - expected) <= 0.000001,
+                "Edge asphalt metric/dry response differs from the road")
+    textures = {}
+    for parameter, channel in (("BaseColorTex", "BaseColor"), ("NormalTex", "Normal_DX"), ("ORMTex", "ORM")):
+        texture = lib.get_material_instance_texture_parameter_value(instance, parameter, association)
+        require(texture is not None and isinstance(texture, api.Texture2D)
+                and texture.get_path_name() == assets["textures"][channel],
+                "Edge asphalt texture differs from the road: " + channel)
+        _verify_texture_settings(api, texture, channel)
+        textures[channel] = texture
+    return textures
 
 
 def _api_evidence(api):
@@ -192,12 +252,32 @@ def _api_evidence(api):
         "MaterialExpressionMaterialFunctionCall", "MaterialExpressionStaticBool",
         "MaterialExpressionNormalize", "MaterialExpressionComponentMask",
         "MaterialExpressionConstant", "MaterialFactoryNew", "MaterialInstanceConstantFactoryNew",
-    ):
+    ) + EDGE_NODE_TYPES:
         require(callable(getattr(api, name, None)), "Required native material class is missing: " + name)
+    # A/B/Alpha and the TextureCoordinate channel index are documented in
+    # Epic's UE 5.8 Math / Coordinates Material Expressions references. Read
+    # the installed class sources before authoring; every link also requires
+    # the real native bool-returning connection API to succeed.
+    from scripts.ci import official_mcp_bob_session as session
+    engine = Path(api.Paths.convert_relative_path_to_full(api.Paths.engine_dir())).resolve()
+    evidence["edge_node_sources"] = {}
+    for name in EDGE_NODE_TYPES:
+        # UE 5.8 moved expression headers to Public; discover the actual
+        # defining header on this installed build, retaining its exact path.
+        candidates = ["Source/Runtime/Engine/" + directory + "/Materials/" + name + ".h"
+                      for directory in ("Public", "Classes")]
+        available = [relative for relative in candidates if session._safe_path(engine, relative).is_file()]
+        require(bool(available), "Installed edge material node header is missing: " + name)
+        relative = available[0]
+        path = session._safe_path(engine, relative)
+        identity = session._identity(path, 1024 * 1024)
+        require("U" + name in path.read_text(encoding="utf-8-sig"),
+                "Installed edge material node source differs: " + name)
+        evidence["edge_node_sources"][relative] = identity
     return evidence
 
 
-def _verify_instance(api, instance, master_path, texture_objects):
+def _verify_instance(api, instance, master_path, texture_objects, asphalt_objects):
     require(instance is not None and isinstance(instance, api.MaterialInstanceConstant),
             "Shoulder material instance is missing")
     parent = instance.get_editor_property("parent")
@@ -208,24 +288,27 @@ def _verify_instance(api, instance, master_path, texture_objects):
             "Shoulder master no longer consumes tangent-space projected normals")
     lib = api.MaterialEditingLibrary
     association = api.MaterialParameterAssociation.GLOBAL_PARAMETER
-    require({str(name) for name in lib.get_texture_parameter_names(instance)} == set(TEXTURES)
-            and {str(name) for name in lib.get_scalar_parameter_names(instance)} == {"TileSizeCm"},
+    require({str(name) for name in lib.get_texture_parameter_names(instance)} == {*TEXTURES, *ASPHALT_TEXTURES}
+            and {str(name) for name in lib.get_scalar_parameter_names(instance)} == set(SCALARS),
             "Shoulder material parameter inventory differs")
-    tile = float(lib.get_material_instance_scalar_parameter_value(instance, "TileSizeCm", association))
-    require(math.isfinite(tile) and abs(tile - TILE_SIZE_CM) <= 0.001,
-            "Shoulder texture projection is not the provider's 150 cm tile")
-    for parameter, channel in TEXTURES.items():
-        texture = lib.get_material_instance_texture_parameter_value(instance, parameter, association)
-        require(texture is not None and texture.get_path_name() == texture_objects[channel],
-                "Shoulder material texture parameter changed: " + parameter)
-        _verify_texture_settings(api, texture, channel)
+    for name, expected in SCALARS.items():
+        tile = float(lib.get_material_instance_scalar_parameter_value(instance, name, association))
+        require(math.isfinite(tile) and abs(tile - expected) <= 0.001,
+                "Shoulder provider/asphalt metric projection changed: " + name)
+    for parameters, objects in ((TEXTURES, texture_objects), (ASPHALT_TEXTURES, asphalt_objects)):
+        for parameter, channel in parameters.items():
+            texture = lib.get_material_instance_texture_parameter_value(instance, parameter, association)
+            require(texture is not None and texture.get_path_name() == objects[channel],
+                    "Shoulder material texture parameter changed: " + parameter)
+            _verify_texture_settings(api, texture, channel)
     return instance
 
 
-def create_material(api, destination_root, source_dependencies):
+def create_material(api, destination_root, source_dependencies, asphalt_assets):
     """Create two unsaved assets; return (instance, receipt), without assignment."""
     paths = asset_paths(destination_root)
     textures, sources = _authenticate_sources(api, source_dependencies)
+    asphalt = _authenticate_asphalt(api, asphalt_assets)
     evidence = _api_evidence(api)
     require(all(not api.EditorAssetLibrary.does_asset_exist(path) for path in paths.values()),
             "Shoulder material assets already exist; refuse overwrite")
@@ -253,36 +336,84 @@ def create_material(api, destination_root, source_dependencies):
         require(lib.connect_material_property(source, pin, prop),
                 "Shoulder material property connection failed: " + str(prop))
 
-    tile = node(api.MaterialExpressionScalarParameter, parameter_name="TileSizeCm",
-                group="Road Gravel", default_value=TILE_SIZE_CM)
-    projected = {}
-    for parameter, channel in TEXTURES.items():
-        normal = channel == "Normal_DX"
-        sampler = (api.MaterialSamplerType.SAMPLERTYPE_NORMAL if normal else
-                   api.MaterialSamplerType.SAMPLERTYPE_COLOR if channel == "BaseColor" else
-                   api.MaterialSamplerType.SAMPLERTYPE_MASKS)
-        texture = node(api.MaterialExpressionTextureObjectParameter,
-                       parameter_name=parameter, group="Road Gravel",
-                       texture=textures[channel], sampler_type=sampler)
-        function = api.load_asset(PROJECTION_ROOT + ("WorldAlignedNormal" if normal else "WorldAlignedTexture"))
-        require(function is not None, "Required native shoulder projection is missing")
-        projected[channel] = node(api.MaterialExpressionMaterialFunctionCall)
-        require(projected[channel].set_material_function(function),
-                "Shoulder native projection assignment failed")
-        link(texture, "", projected[channel], "TextureObject")
-        link(tile, "", projected[channel], "TextureSize")
-        if normal:
-            world_space = node(api.MaterialExpressionStaticBool, value=False)
-            link(world_space, "", projected[channel], "WorldSpace")
-    output(projected["BaseColor"], "XYZ Texture", api.MaterialProperty.MP_BASE_COLOR)
+    def projections(parameters, objects, scale):
+        tile = node(api.MaterialExpressionScalarParameter, parameter_name=scale,
+                    group="Road Shoulder", default_value=SCALARS[scale])
+        projected = {}
+        for parameter, channel_name in parameters.items():
+            normal_map = channel_name == "Normal_DX"
+            sampler = (api.MaterialSamplerType.SAMPLERTYPE_NORMAL if normal_map else
+                       api.MaterialSamplerType.SAMPLERTYPE_COLOR if channel_name == "BaseColor" else
+                       api.MaterialSamplerType.SAMPLERTYPE_MASKS)
+            texture = node(api.MaterialExpressionTextureObjectParameter,
+                           parameter_name=parameter, group="Road Shoulder",
+                           texture=objects[channel_name], sampler_type=sampler)
+            function = api.load_asset(PROJECTION_ROOT + ("WorldAlignedNormal" if normal_map else "WorldAlignedTexture"))
+            require(function is not None, "Required native shoulder projection is missing")
+            projected[channel_name] = node(api.MaterialExpressionMaterialFunctionCall)
+            require(projected[channel_name].set_material_function(function), "Shoulder native projection assignment failed")
+            link(texture, "", projected[channel_name], "TextureObject")
+            link(tile, "", projected[channel_name], "TextureSize")
+            if normal_map:
+                world_space = node(api.MaterialExpressionStaticBool, value=False)
+                link(world_space, "", projected[channel_name], "WorldSpace")
+        return projected
+
+    def constant(value):
+        return node(api.MaterialExpressionConstant, r=value)
+
+    def channel(expression, pin="", *, green=False):
+        mask = node(api.MaterialExpressionComponentMask, r=not green, g=green, b=False, a=False)
+        link(expression, pin, mask, "")
+        return mask
+
+    def binary(cls, a, b):
+        result = node(cls)
+        link(a, "", result, "A")
+        link(b, "", result, "B")
+        return result
+
+    projected = projections(TEXTURES, textures, "TileSizeCm")
+    road = projections(ASPHALT_TEXTURES, asphalt, "AsphaltTileSizeCm")
+    edge_uv = node(api.MaterialExpressionTextureCoordinate, coordinate_index=edges.CHANNEL,
+                   u_tiling=1.0, v_tiling=1.0)
+    require(edge_uv.get_editor_property("coordinate_index") == edges.CHANNEL,
+            "Edge material reads a different UV channel")
+    distance = channel(edge_uv)
+    breakup_color = channel(projected["BaseColor"], "XYZ Texture")
+    breakup = node(api.MaterialExpressionSaturate)
+    link(binary(api.MaterialExpressionMultiply, breakup_color, constant(EDGE_TRANSITION["breakup_gain"])),
+         "", breakup, "")
+    # Light mineral fragments intrude towards the road; darker interstices
+    # retain the quiet asphalt rim. This uses the scanned grain, without a
+    # procedural sawtooth, a uniform blurred ribbon, opacity or a new texture.
+    recess = binary(api.MaterialExpressionSubtract, constant(1.0), breakup)
+    threshold = binary(api.MaterialExpressionAdd, constant(EDGE_TRANSITION["pure_asphalt_until_cm"]),
+                       binary(api.MaterialExpressionMultiply, recess, constant(EDGE_TRANSITION["breakup_width_cm"])))
+    alpha = node(api.MaterialExpressionSaturate)
+    ramp = binary(api.MaterialExpressionSubtract, distance, threshold)
+    link(binary(api.MaterialExpressionMultiply, ramp, constant(1.0 / EDGE_TRANSITION["feather_width_cm"])),
+         "", alpha, "")
+
+    def blend(a, a_pin, b, b_pin):
+        result = node(api.MaterialExpressionLinearInterpolate)
+        link(a, a_pin, result, "A")
+        link(b, b_pin, result, "B")
+        link(alpha, "", result, "Alpha")
+        return result
+
+    output(blend(road["BaseColor"], "XYZ Texture", projected["BaseColor"], "XYZ Texture"),
+           "", api.MaterialProperty.MP_BASE_COLOR)
     normal = node(api.MaterialExpressionNormalize)
-    link(projected["Normal_DX"], "XYZ Texture", normal, "")
+    link(blend(road["Normal_DX"], "XYZ Texture", projected["Normal_DX"], "XYZ Texture"), "", normal, "")
     output(normal, "", api.MaterialProperty.MP_NORMAL)
-    rough = node(api.MaterialExpressionComponentMask, r=True, g=False, b=False, a=False)
-    link(projected["Roughness"], "XYZ Texture", rough, "")
-    output(rough, "", api.MaterialProperty.MP_ROUGHNESS)
-    output(node(api.MaterialExpressionConstant, r=0.0), "", api.MaterialProperty.MP_METALLIC)
-    output(node(api.MaterialExpressionConstant, r=1.0), "", api.MaterialProperty.MP_AMBIENT_OCCLUSION)
+    output(blend(channel(road["ORM"], "XYZ Texture", green=True), "",
+                 channel(projected["Roughness"], "XYZ Texture"), ""), "", api.MaterialProperty.MP_ROUGHNESS)
+    output(blend(channel(road["ORM"], "XYZ Texture"), "", constant(1.0), ""),
+           "", api.MaterialProperty.MP_AMBIENT_OCCLUSION)
+    output(blend(constant(EDGE_TRANSITION["asphalt_specular"]), "",
+                 constant(EDGE_TRANSITION["gravel_specular"]), ""), "", api.MaterialProperty.MP_SPECULAR)
+    output(constant(0.0), "", api.MaterialProperty.MP_METALLIC)
     require(not lib.recompile_material(master), "Shoulder material compilation reported errors")
     instance = tools.create_asset("MI_ShoulderNetwork", destination_root,
                                   api.MaterialInstanceConstant, api.MaterialInstanceConstantFactoryNew())
@@ -291,12 +422,16 @@ def create_material(api, destination_root, source_dependencies):
     lib.set_material_instance_parent(instance, master)
     lib.update_material_instance(instance)
     texture_objects = {channel: texture.get_path_name() for channel, texture in textures.items()}
-    _verify_instance(api, instance, paths["master"], texture_objects)
+    asphalt_objects = {channel: texture.get_path_name() for channel, texture in asphalt.items()}
+    _verify_instance(api, instance, paths["master"], texture_objects, asphalt_objects)
     _authenticate_sources(api, source_dependencies)
+    _authenticate_asphalt(api, asphalt_assets)
     receipt = {
-        "schema_version": 1, "status": "SHOULDER_MATERIAL_CREATED_REVIEW_PENDING",
+        "schema_version": 2, "status": "SHOULDER_MATERIAL_CREATED_REVIEW_PENDING",
         "engine_version": ENGINE_VERSION, "assets": paths,
         "texture_objects": texture_objects, "source_dependencies": sources,
+        "asphalt_assets": asphalt_assets, "asphalt_texture_objects": asphalt_objects,
+        "edge_transition": dict(EDGE_TRANSITION), "asphalt_tile_size_cm": SCALARS["AsphaltTileSizeCm"],
         "source_ledger": LEDGER, "source_id": "rock_ground", "license": "CC0-1.0",
         "source_url": "https://polyhaven.com/a/rock_ground",
         "source_map_sha256": dict(SOURCE_MAP_SHA256),
@@ -311,7 +446,7 @@ def create_material(api, destination_root, source_dependencies):
 
 def verify_material(api, receipt, source_dependencies):
     """Read the saved assets and immutable inputs; never reapply or repair them."""
-    require(isinstance(receipt, dict) and receipt.get("schema_version") == 1
+    require(isinstance(receipt, dict) and receipt.get("schema_version") == 2
             and receipt.get("status") == "SHOULDER_MATERIAL_CREATED_REVIEW_PENDING"
             and receipt.get("engine_version") == ENGINE_VERSION
             and receipt.get("assets") == asset_paths(DESTINATION_ROOT)
@@ -323,13 +458,20 @@ def verify_material(api, receipt, source_dependencies):
             and receipt.get("tile_size_cm") == TILE_SIZE_CM
             and receipt.get("normal_convention") == "DirectX",
             "Shoulder material receipt/source contract differs")
+    require(receipt.get("edge_transition") == EDGE_TRANSITION
+            and receipt.get("asphalt_assets") == asphalt_asset_paths()
+            and receipt.get("asphalt_tile_size_cm") == SCALARS["AsphaltTileSizeCm"],
+            "Shoulder material edge/asphalt contract differs")
     for name in ("textures_imported", "source_textures_modified", "height_connected",
                  "world_assignment", "saved", "geometry_changed", "owner_visual_pass", "performance_pass"):
         require(receipt.get(name) is False, "Shoulder helper receipt exceeds its authoring scope")
     textures, _ = _authenticate_sources(api, source_dependencies)
     expected = {channel: texture.get_path_name() for channel, texture in textures.items()}
     require(receipt.get("texture_objects") == expected, "Shoulder source texture object inventory differs")
+    asphalt = _authenticate_asphalt(api, receipt["asphalt_assets"])
+    asphalt_expected = {channel: texture.get_path_name() for channel, texture in asphalt.items()}
+    require(receipt.get("asphalt_texture_objects") == asphalt_expected, "Edge asphalt object inventory differs")
     instance = api.load_asset(receipt["assets"]["instance"])
     require(instance is not None and instance.get_path_name() == receipt["assets"]["instance"],
             "Shoulder instance object identity differs")
-    return _verify_instance(api, instance, receipt["assets"]["master"], expected)
+    return _verify_instance(api, instance, receipt["assets"]["master"], expected, asphalt_expected)

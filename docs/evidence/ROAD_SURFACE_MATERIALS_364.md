@@ -47,6 +47,60 @@ source-relative delta, rollback and native proof. Owner audit remains
 `PENDING_FINAL_M3`; performance remains `DEFERRED_AFTER_M3` and
 `performance_pass: false`.
 
+### Verified granular source and current integration
+
+Source `27f24ead669807eaf6e4f9e6f317d4506962da2a` passed
+[protected CI 38096073155](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38096073155)
+and [Material Forge source run 38096069404](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38096069404).
+The two actual Godot exports contain byte-identical graphs and all five maps.
+All three original ZIPs were independently downloaded and matched their GitHub
+sizes and SHA-256 digests:
+
+| Original artifact | Bytes | SHA-256 |
+|---|---:|---|
+| [Receipt 11685194177](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38096069404/artifacts/11685194177) | 4,026 | `52d41bc79541145359afd86eab1d388207e714ed3a1f63eaf2c066764cb690e9` |
+| [Run-a 11685209399](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38096069404/artifacts/11685209399) | 30,137,392 | `fd3414f7929553acc0848b9aea4de3b08b58b8c763b7f1c1ce75fa6223d26758` |
+| [Run-b 11684894933](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38096069404/artifacts/11684894933) | 30,137,389 | `d7da540d47bbc8967824a1f30b9ea8df1a17f7fc7d92fcc1dbba6856377f58c8` |
+
+The unchanged read-only replay checker also passes against both retained
+bundles. Its offline input mirror reproduces the host's raw CRLF catalog and
+upstreams; executable Python bytes and every original export/receipt remain
+unchanged. The resulting native-source pins are:
+
+- producer/run: `27f24ead669807eaf6e4f9e6f317d4506962da2a` / `38096069404-1`;
+- original `source-proof.json`: `0dc2d0f09cd968cf60a7cb711516d056e77c737eba63115f2e0c47fada870b3f`;
+- current source fingerprint: `5c692af95b9e5366094b34f49d61a0f2b0e1bd71d9da855cafb9667aefefb7f5`;
+- graph: `9c0a41f6e2ae5733469cb0cf87df25cb2460c9aadcf3f3c948f030661b1ba562`.
+
+Actual BaseColor coarse variance falls from d91's 25.77% to 2.09%; resolved
+grain RMS rises from 0.01592 to 0.02512. Mean roughness is 0.93296. Direct map
+review finds distinct, irregular aggregate and quieter broad colour. Normal
+XY RMS rises from 0.03019 to 0.08217, so sunlit grain response and temporal
+stability still need the real Unreal camera review. CPU previews and simple
+map downsampling are diagnostic only, not native UE pixels.
+
+The intermediate [native run 38096069322](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38096069322)
+passed the unchanged native baseline but correctly stopped the old retained
+source bridge with `ValueError: Graph surface field changed`. It did not save
+the new material consumer or render new road frames. The next integration pins
+the verified new producer instead of relaxing that gate.
+
+The pending edge integration uses a source-derived material coordinate only
+on the authenticated outer shoulder tops. Its explicit delta is one appended
+material UV channel plus the existing material assignments. Positions,
+topology, normals and the complete original UV prefix must remain unchanged;
+the new channel has its own source-distance witness, full hash, rollback and
+fresh-load checks. This is not a geometry repair or native PASS claim.
+
+The owner additionally requested sparse, individually authored crack motifs,
+subtle edge erosion and white edge lines matching the supplied reference.
+These are subsequent local appearance layers: stable source-owned placement,
+visible clean intervals, bounded material footprints and no repeated regular
+stamp. The reference supports narrow continuous off-white edge markings.
+Their source/render/placement proof is still pending. RVT remains an option
+for a justified shoulder/terrain material transition, not a substitute for
+resolving #459 contact geometry.
+
 ## Whole-network revision following owner feedback
 
 The owner requested gravel beside the entire existing road network, a drier

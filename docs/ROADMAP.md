@@ -181,28 +181,28 @@ cliff topology. #337 road construction and #459 road/shoulder/CUT contact remain
 open; the independent #338 road preview remains frozen Draft.
 
 **Current delivery:** #364 is open in Draft [PR #470](https://github.com/karnalooch/YetAnotherCyclingSim/pull/470).
-The verified asphalt baseline is
-`396861de0884135d18006e6d3f133edebef639aa`:
-[protected CI 38078462035](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38078462035)
-PASS with existing equivalent build/Automation evidence reused, and
-[native/GPU 38078459124](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38078459124)
-PASS for the isolated road canary, saved/freshly reopened consumer and four
-final same-camera window 0112 frames in both directions with full mip warmup.
-This is bounded technical evidence; whole-area visual acceptance remains open.
+The current verified native baseline is
+`f75e76ba1ecde8a3ac4458557ed51ce60492847c`:
+[protected CI 38092749669](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38092749669)
+and [native/GPU 38092747036](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38092747036)
+passed with 68 retained final frames, 186 source-owned supports, 185 gravel
+material targets and 67,760 selected top triangles. The exceptional Nudo
+supports are source-qualified; the excluded parapet remains unchanged.
+Before/after, rollback and fresh reload preserve the original mesh buffers.
+This is technical evidence. The owner rejected the remaining cloudy asphalt,
+distant repetition, sharp shoulder boundaries and unresolved contact defects.
 
-The current **shoulder candidate** assigns existing CC0 Poly Haven
-`rock_ground` / `FillGravel` at 150 cm only to 436 source-owned outer top triangle
-IDs on one window 0112 support. Slot 0 interior faces and walls keep their
-original material. At `1ef46da`, before/after, rollback and fresh-load checks
-passed for positions, indices and every rendered corner normal (the support
-has zero UV sets); only the explicit selected material IDs change. The local
-63-test suite passed with two platform-dependent skips and `py_compile` PASS.
-The complete native/GPU run now passes with four final frames, all in-editor
-checks and observed exit 0. Four before/after pairs and selected native
-receipts are retained in the
-[window 0112 comparison](experiments/sa-calobra-road-shoulder-window0112-20261010/README.md).
-No geometry, Base_DTM or road physics edit belongs to
-this material patch; the unresolved inner seam remains #459 debt. See the
+The granular source refinement at
+`27f24ead669807eaf6e4f9e6f317d4506962da2a` passed
+[protected CI 38096073155](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38096073155)
+and [two actual Material Forge/Godot renders 38096069404](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38096069404).
+All five maps, graph and original receipt were independently authenticated.
+The updated native consumer and irregular shoulder edge are in progress;
+the intermediate old-source bridge correctly rejected the new graph.
+The owner additionally requested localized nonrepeating cracks, subtle edge
+wear and narrow continuous white edge lines matching the supplied reference.
+Source-relative contact and road profile corrections remain separately scoped
+under #459. See the
 [current source and native evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md).
 
 #### Finish #364 as one complete delivery
@@ -217,17 +217,17 @@ questions separately from this material-only conservation proof.
 
 | Batch | Concrete output and completion check | Current status |
 |---|---|---|
-| Asphalt source | Pin tools, recipe and scale; render twice; authenticate graph and five maps | **Done:** current base recipe, 4 m / 400 cm; source-only proof |
-| Source-to-consumer handoff | Authenticate the retained two-run receipt and both source bundles against unchanged current inputs | **Done for the asphalt baseline:** authenticated source consumed by the native canary and saved consumer |
-| Windows cache identity | Qualify current/cache inputs using the existing cache authority before native execution | **PASS at `396861de`:** protected CI reused equivalent build/Automation evidence and native execution passed |
-| Saved-scene inventory | Fresh isolated Entry process loads the accepted derived consumer; record road/support slots, parents, projection functions and unchanged source bytes | **PASS for the asphalt baseline:** native read completed; this does not establish shoulder selection or full mesh-buffer conservation |
-| Material-only conservation | Preserve positions, vertex/triangle IDs, topology and rendered corner normals/UVs, plus transforms/collision/Landscape bindings; permit only the named material assignment delta | **PASS for support 112 at `1ef46da`:** exact before/after, rollback, fresh-load and final GPU checks, 436-ID delta; other supports/Landscape retain full inventory checks |
-| Road canary | Apply the validated asphalt to the authorized road slot without saving; verify 400 cm projection, DirectX normals and exact restoration | **PASS at `396861de`:** native reversible canary, then separate saved/freshly reopened consumer proof |
-| Shoulder canary | Verify source-owned top/side selection; apply licensed gravel to the bounded tops while preserving walls, interior material and geometry | **Complete native/save/reload/GPU PASS at `1ef46da`:** 436 outer top IDs, `FillGravel` 150 cm in slot 1, actual exit 0; no Nudo/parapet expansion |
-| Dry, varied asphalt | Improve the Material Forge source recipe and authenticate two independent renders before native consumption | **In progress:** new `dry_varied` candidate; historical `base` remains the comparison, not acceptance of the revised appearance |
-| Edges and technical appearance | Inspect both directions, bends, close/distant views and shoulder/Landscape transitions; retain real images and defect locations | **Partial:** four same-camera shoulder frames show aggregate on the bounded strips; rhythmic distant patches and sharp boundaries remain review notes, seam #459 stays visible; whole-area review pending |
-| Whole-area shoulder coverage | Source-map all supports and explicitly qualify exceptional geometry; preserve each changed mesh and capture representative views | **Next:** source-map `000`-`180`; qualify `181`-`185` separately. Matching counts/material labels are insufficient; the 0112 constants do not generalize |
-| Save, reopen and deliver | Save only derived outputs; fresh reload/render proves bindings and conservation; pass required native/asset/review/CI checks and merge #470 | **Partial:** asphalt baseline and complete window 0112 shoulder canary PASS; complete-area #364 delivery remains pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
+| Asphalt source | Pin tools, recipe and scale; render twice; authenticate graph and five maps | **PASS at `27f24ead`:** granular dry source, 4 m / 400 cm, two actual Godot exports and independent receipt/map verification |
+| Source-to-consumer handoff | Authenticate both retained bundles against current inputs before import | **Current integration:** pin verified producer `27f24ead` / `38096069404-1`; new UE consumption pending |
+| Windows cache identity | Qualify current/cache inputs using the existing authority before native execution | **PASS at f75:** required protected CI and native execution; appended-UV inspection changes require current native build/Automation proof |
+| Saved-scene inventory | Fresh isolated Entry process loads the accepted consumer and records material/mesh/source identities | **PASS at f75:** whole-network saved and fresh-reloaded material inventory; current edge revision pending |
+| Material conservation | Preserve positions/topology, normals and original UV prefix; independently witness any named appended material channel | **PASS at f75:** full original buffer conservation. New edge UV has explicit source-distance, rollback and fresh-load requirements; native execution pending |
+| Road canary | Apply the validated asphalt to the authorized slot; verify 400 cm projection, DirectX normals and exact restoration | **PASS at f75;** repeat against the newly authenticated granular source |
+| Shoulder coverage | Qualify every source owner, including Nudo; gravel on outer tops, original material on walls/interiors | **PASS at f75:** 186 owners, 185 material targets and 67,760 selected tops; `rock_ground` remains at its 150 cm provider scale |
+| Edges and appearance | Inspect both directions, bends, close/distant views and shoulder/terrain transitions | **In progress:** 68-frame f75 technical baseline; reviewed samples retain visual defects. Irregular asphalt–gravel transition and gentle edge wear are being refined |
+| Local surface details | Author restrained crack motifs and reference-matched white edge markings with stable source-owned placement | **Owner-authorized, pending:** sparse nonrepeating damage and continuous off-white edge lines; no route/physics changes |
+| Contact/profile debt | Isolate the owning surface and prove bounded source-relative corrections separately | **#459 open:** read-only paired owner-isolation capture being bridged into the existing native lane; no repair admitted |
+| Save, reopen and deliver | Save derived outputs, verify fresh reload/render, pass required checks and merge #470 | **In progress:** current native/visual proof and complete #364 delivery pending; owner audit `PENDING_FINAL_M3`, performance `DEFERRED_AFTER_M3` / `performance_pass: false` |
 
 #### Complete the remaining world foundation after #364
 

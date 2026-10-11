@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 from scripts.ue import road_shoulder_network as network
 from scripts.ue import road_shoulder_sources as sources
+from scripts.ue import road_shoulder_edges as edges
 
 
 def vector(x, y, z):
@@ -58,10 +59,13 @@ class Mesh:
             self.faces.append((a, a + 1, a + 2))
         self.ids = [0] * len(self.faces)
         self.normal = [0.0, 0.0, 1.0]
-        self.uv = [0.25, 0.5]
+        self.uv_layers = []
 
     def get_path_name(self):
         return self.component.get_path_name() + ".Mesh"
+
+    def get_num_uv_sets(self):
+        return len(self.uv_layers)
 
 
 class Actor:
@@ -129,6 +133,7 @@ class Harness:
         self.events = []
         self.fail_assignment = None
         self.fail_restore = None
+        self.fail_uv_assignment = None
         self.actors = [Actor("YACS_PERSIST_ROAD")]
         self.actors.extend(Actor(owner["support_label"], owner, self) for owner in self.plan["owners"])
         self.components = [actor.component for actor in self.actors[1:]]
@@ -137,14 +142,18 @@ class Harness:
         self.api = SimpleNamespace(
             YacsRoadMaterialInspectionLibrary=SimpleNamespace(inspect_mesh=self.read),
             GeometryScript_Materials=SimpleNamespace(set_triangle_material_id=self.setter),
+            GeometryScript_UVs=SimpleNamespace(set_num_uv_sets=self.set_num_uv_sets,
+                                               set_mesh_triangle_u_vs=self.set_triangle_uvs),
+            GeometryScriptUVTriangle=lambda **kwargs: SimpleNamespace(**kwargs),
+            Vector2D=lambda x, y: (x, y),
             EditorActorSubsystem=object(),
             get_editor_subsystem=lambda _: SimpleNamespace(get_all_level_actors=lambda: self.actors),
         )
 
     @staticmethod
-    def snapshot(component, witness_count=0):
+    def snapshot(component, witness_count=0, preserved_uv_set_count=-1):
         mesh = component.mesh
-        return {
+        value = {
             "schema_version": 2, "status": "ROAD_MATERIAL_MESH_INSPECTED", "hash_format": network.HASH_FORMAT,
             "actor_label": component.actor.label, "component_path": component.get_path_name(),
             "mesh_path": mesh.get_path_name(), "map_package": network.MAPS[1], "geometry_mutated": False,
@@ -153,16 +162,46 @@ class Harness:
             "witness_triangles": [[tid, *mesh.faces[tid], *(v for vid in mesh.faces[tid] for v in mesh.points[vid])]
                                   for tid in range(witness_count)],
             "summary": {
-                "vertex_count": len(mesh.points), "triangle_count": len(mesh.faces), "uv_set_count": 1,
+                "vertex_count": len(mesh.points), "triangle_count": len(mesh.faces), "uv_set_count": len(mesh.uv_layers),
                 "positions_indices_blake3": network.digest(["synthetic", mesh.points, mesh.faces]),
-                "triangle_corner_normals_uv_blake3": network.digest(["synthetic", mesh.normal, mesh.uv]),
+                "triangle_corner_normals_uv_blake3": network.digest(["synthetic", mesh.normal, mesh.uv_layers]),
                 "material_ids_blake3": network.digest(["synthetic", mesh.ids]),
             },
         }
+        if preserved_uv_set_count >= 0:
+            if len(mesh.uv_layers) != preserved_uv_set_count + 1:
+                return {"error": "synthetic appended channel missing"}
+            layer = mesh.uv_layers[preserved_uv_set_count]
+            value["material_uv"] = {
+                "preserved_uv_set_count": preserved_uv_set_count,
+                "preserved_triangle_corner_normals_uv_blake3": network.digest(
+                    ["synthetic", mesh.normal, mesh.uv_layers[:preserved_uv_set_count]]),
+                "hash_format": edges.HASH_FORMAT,
+                "triangles": [[tid, *(v for uv in layer[tid] for v in uv)] for tid in sorted(layer)],
+                "set_triangle_count": len(layer),
+                "uv_blake3": network.digest(["synthetic", preserved_uv_set_count, len(mesh.faces), layer]),
+            }
+        return value
 
-    def read(self, component, witness_count=0):
+    def read(self, component, witness_count=0, preserved_uv_set_count=-1):
         self.events.append(("inspect", component.actor.label, witness_count))
-        return json.dumps(self.snapshot(component, witness_count), allow_nan=False)
+        return json.dumps(self.snapshot(component, witness_count, preserved_uv_set_count), allow_nan=False)
+
+    def set_num_uv_sets(self, mesh, count):
+        self.events.append(("uv_count", mesh.component.actor.label, count))
+        mesh.uv_layers[:] = (mesh.uv_layers + [{} for _ in range(count)])[:count]
+        return mesh
+
+    def set_triangle_uvs(self, mesh, channel, tid, values, defer_change_notifications):
+        if channel != 0 or defer_change_notifications is not True:
+            raise AssertionError("Only the batched appended material channel is allowed")
+        component = mesh.component
+        self.events.append(("uv", component.actor.label, tid))
+        mesh.uv_layers[channel][tid] = (values.uv0, values.uv1, values.uv2)
+        if self.fail_uv_assignment == (component.actor.label, component.assignment_round, tid):
+            self.fail_uv_assignment = None
+            raise ValueError("synthetic partial UV assignment failure")
+        return mesh, True
 
     def setter(self, mesh, tid, value, defer_change_notifications):
         if defer_change_notifications is not True:
@@ -245,10 +284,11 @@ class NativeBoundaryTests(unittest.TestCase):
             network.verify_ownership(reversed_face, self.owner, sources.owner_identity(self.owner))
 
     def test_full_buffer_delta_catches_positions_indices_normals_and_uvs(self):
+        self.component.mesh.uv_layers = [{0: ((0.25, 0.5),) * 3}]
         before = self.h.snapshot(self.component)["summary"]
         for key, replacement in (("points", [(100, 0, 0), *self.component.mesh.points[1:]]),
                                   ("faces", [(0, 27, 1), *self.component.mesh.faces[1:]]),
-                                  ("normal", [1, 0, 0]), ("uv", [0, 0])):
+                                  ("normal", [1, 0, 0]), ("uv_layers", [{0: ((0, 0),) * 3}])):
             old = getattr(self.component.mesh, key)
             setattr(self.component.mesh, key, replacement)
             with self.subTest(buffer=key), self.assertRaisesRegex(ValueError, "full positions"):
@@ -259,11 +299,12 @@ class NativeBoundaryTests(unittest.TestCase):
         before = self.h.snapshot(self.component)["summary"]
         for tid in self.owner["selected_triangle_ids"]:
             self.component.mesh.ids[tid] = 1
-        network.verify_delta(before, self.h.snapshot(self.component), self.owner, assigned=True)
+        edges.apply(self.h.api, self.component, edges.triangle_coordinates(self.owner), 0)
+        network.verify_delta(before, self.h.snapshot(self.component, preserved_uv_set_count=0), self.owner, assigned=True)
         for tid in (2, self.owner["top_triangle_count"]):
             self.component.mesh.ids[tid] = 1
             with self.assertRaisesRegex(ValueError, "wall/interior/parapet"):
-                network.verify_delta(before, self.h.snapshot(self.component), self.owner, assigned=True)
+                network.verify_delta(before, self.h.snapshot(self.component, preserved_uv_set_count=0), self.owner, assigned=True)
             self.component.mesh.ids[tid] = 0
         parapet, owner = self.h.components[181], self.h.plan["owners"][181]
         before = self.h.snapshot(parapet)["summary"]
@@ -281,6 +322,7 @@ class NetworkTransactionTests(unittest.TestCase):
             self.assertTrue(all(value == 0 for value in component.mesh.ids))
             self.assertEqual(component.get_num_materials(), 1)
             self.assertEqual(component.get_material(0).path, owner["original_material_path"])
+            self.assertEqual(component.mesh.uv_layers, [])
 
     def test_all_186_owners_preflight_before_first_assignment_and_real_rollback_proof(self):
         receipt, state = self.h.prepare()
@@ -297,9 +339,18 @@ class NetworkTransactionTests(unittest.TestCase):
         self.assertEqual(receipt["rollback_proof"]["support_count"], 186)
         self.assertFalse(receipt["whole_area_admitted"])
         self.assertFalse(receipt["performance_pass"])
+        self.assertTrue(receipt["source_vertices_topology_normals_uv_prefix_preserved"])
+        self.assertTrue(receipt["material_edge_uv_appended"])
+        self.assertEqual(receipt["material_edge_uv_channel"], 0)
         for row in receipt["owners"]:
             self.assertNotIn("selected_triangle_ids", row)
             self.assertEqual(row["selected_triangle_count"], len(row["source"]["selected_triangle_ids"]))
+            if row["material_target"]:
+                self.assertEqual(row["edge_attribute"]["set_triangle_count"], row["selected_triangle_count"])
+                self.assertEqual(row["before_mesh"]["uv_set_count"], 0)
+                self.assertEqual(row["after_mesh"]["uv_set_count"], 1)
+            else:
+                self.assertIsNone(row["edge_attribute"])
         proof = network.rollback(self.h.api, state)
         self.assertEqual(proof["aggregate_meshes_sha256"], receipt["rollback_proof"]["aggregate_meshes_sha256"])
         self.assertEqual(state["attempted"], [])
@@ -347,6 +398,30 @@ class NetworkTransactionTests(unittest.TestCase):
         self.assertEqual(self.h.components[80].get_num_materials(), 1)
         self.assertTrue(all(all(value == 0 for value in component.mesh.ids)
                             for i, component in enumerate(self.h.components) if i != 80))
+
+    def test_partial_new_uv_failure_in_both_rounds_restores_exact_zero_uv_source(self):
+        for attempt in (1, 2):
+            self.h = Harness()
+            self.h.fail_uv_assignment = ("YACS_PERSIST_SUPPORT_080", attempt, 50)
+            with self.subTest(attempt=attempt), self.assertRaisesRegex(ValueError, "partial UV assignment"):
+                self.h.prepare()
+            self.assert_restored()
+
+    def test_existing_uv_channel_is_rejected_before_every_source_write(self):
+        self.h.components[-1].mesh.uv_layers.append({})
+        with self.assertRaisesRegex(ValueError, "authenticated UV-free source"):
+            self.h.prepare()
+        self.assertFalse(any(row[0] in ("slots", "id", "uv", "uv_count") for row in self.h.events))
+
+    def test_fresh_readback_rejects_new_uv_tampering_even_with_original_prefix_unchanged(self):
+        receipt, _ = self.h.prepare()
+        component = self.h.components[0]
+        original_normal_hash = receipt["owners"][0]["before_mesh"]["triangle_corner_normals_uv_blake3"]
+        component.mesh.uv_layers[0][0] = ((1, 0), (2, 0), (3, 0))
+        snapshot = self.h.snapshot(component, preserved_uv_set_count=0)
+        self.assertEqual(snapshot["material_uv"]["preserved_triangle_corner_normals_uv_blake3"], original_normal_hash)
+        with self.assertRaisesRegex(ValueError, "Fresh full native mesh"):
+            network.verify_loaded(self.h.api, receipt, self.h.plan)
 
     def test_fresh_load_reauthenticates_sources_and_full_buffers_without_any_setter(self):
         receipt, _ = self.h.prepare()

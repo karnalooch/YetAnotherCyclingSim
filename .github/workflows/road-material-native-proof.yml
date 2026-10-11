@@ -32,6 +32,8 @@ on:
       - 'scripts/ue/test_road_shoulder_sources.py'
       - 'scripts/ue/road_shoulder_network.py'
       - 'scripts/ue/test_road_shoulder_network.py'
+      - 'scripts/ue/road_shoulder_edges.py'
+      - 'scripts/ue/test_road_shoulder_edges.py'
       - 'scripts/ue/road_material_views.py'
       - 'scripts/ue/test_road_material_views.py'
       - 'Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h'
@@ -39,6 +41,9 @@ on:
       - 'scripts/ue/road_shoulder_material.py'
       - 'scripts/ue/test_road_shoulder_material.py'
       - 'scripts/ue/capture_sa_calobra_shoulder_contact.py'
+      - 'scripts/ue/Invoke-YacsRoadShoulderContact.ps1'
+      - 'scripts/ue/test_invoke_road_shoulder_contact.py'
+      - 'scripts/ci/test_sa_calobra_shoulder_contact.py'
       - 'scripts/proof/sa_calobra_tpp_survey.py'
       - 'worldgen/materials/sa_calobra_texture_library_v2_20261005.json'
       - 'worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.json'
@@ -153,7 +158,8 @@ jobs:
             'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1',
             'scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1',
             'scripts/ue/Invoke-YacsRoadSavedConsumer.ps1',
-            'scripts/ue/Invoke-YacsRoadAsphaltRender.ps1'
+            'scripts/ue/Invoke-YacsRoadAsphaltRender.ps1',
+            'scripts/ue/Invoke-YacsRoadShoulderContact.ps1'
           )) {
             $errors = $null
             [System.Management.Automation.Language.Parser]::ParseFile(
@@ -168,8 +174,10 @@ jobs:
             scripts.ue.test_road_asphalt_source_preflight scripts.ue.test_invoke_road_asphalt_native_canary `
             scripts.ue.test_run_road_asphalt_native_canary `
             scripts.ue.test_road_shoulder_sources scripts.ue.test_road_shoulder_network `
+            scripts.ue.test_road_shoulder_edges scripts.ue.test_road_shoulder_material `
             scripts.ue.test_road_material_views scripts.ue.test_invoke_road_saved_consumer `
-            scripts.ue.test_invoke_road_asphalt_render
+            scripts.ue.test_invoke_road_asphalt_render scripts.ue.test_invoke_road_shoulder_contact `
+            scripts.ci.test_sa_calobra_shoulder_contact
           if ($LASTEXITCODE -ne 0) { throw 'Road baseline/source/network/host contracts failed before native work.' }
           $proof = Join-Path (Get-Location).Path 'Saved/RuntimeProof/RoadMaterialBaseline/${{ github.run_id }}-${{ github.run_attempt }}'
           "YACS_ROAD_NATIVE_PROOF=$proof" >> $env:GITHUB_ENV
@@ -210,6 +218,17 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ue/Invoke-YacsRoadAsphaltRender.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
+
+      - name: Isolate the existing shoulder contact without changing geometry
+        if: ${{ contains(github.event.head_commit.message, '[shoulder-contact]') }}
+        shell: pwsh
+        working-directory: rm-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ue/Invoke-YacsRoadShoulderContact.ps1 `
             -ExpectedHead $env:GITHUB_SHA `
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
             -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG

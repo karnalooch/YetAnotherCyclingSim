@@ -49,13 +49,22 @@ session. That A/B/C result isolates the crash from Forge graph generation.
 ## Phase-A families
 
 The catalog `worldgen/materials/material_forge/families.json` defines three
-families with three deterministic variants each:
+families with deterministic variants:
 
-1. aged mountain asphalt — base, worn cracked, patched/repaired;
+1. aged mountain asphalt — base, worn cracked, patched/repaired, dry varied;
 2. regional pale limestone — weathered, fractured, karst-weathered;
 3. dry Mediterranean mineral soil — fine, stony, dry-crusted.
 
 Each variant records its seed, physical tile size and surface parameters.
+
+The road's current `dry_varied` refinement retains the 4 m tile and 2K five-map
+contract. It uses two populations of independently rotated, sized and clipped
+aggregate grains. Relief follows aggregate coverage rather than mineral
+brightness. The source QA measures both grain contrast below 31.25 mm and
+broad variation at 25 cm; it rejects a flat field and cloud-dominated mottling.
+The earlier variants retain their existing recipes. See the
+[road material evidence](../evidence/ROAD_SURFACE_MATERIALS_364.md) for exact
+source/native revisions and the still-pending final M3 visual audit.
 
 ## Output contract
 

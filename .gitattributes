@@ -58,6 +58,7 @@ worldgen/terrain/adaptive_terrain_policy.json text eol=lf
 Plugins/YacsBobInspection/Source/YacsBobInspection/YacsBobInspection.Build.cs text eol=lf
 # The fixed native-session caller participates in exact source-byte admission.
 scripts/ue/Invoke-YacsOfficialMcpBobSession.ps1 text eol=lf
+scripts/ue/Invoke-YacsRoadShoulderContact.ps1 text eol=lf
 worldgen/materials/*.json text eol=lf
 # Shoulder source ownership reads this recipe with an exact raw Git-byte guard.
 worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.json text eol=lf

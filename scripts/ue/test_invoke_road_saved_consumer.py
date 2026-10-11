@@ -206,7 +206,7 @@ class RoadSavedHostContractTests(unittest.TestCase):
         self.assertIn("'road-asphalt-saved-manifest.json') 4MB", self.host)
         self.assertIn("Assert-Identity $manifest.identity 4MB", self.host)
         self.assertIn("$raw.Length -gt 2MB", self.host)
-        self.assertIn("road_slot_zero_and_network_outer_shoulder_ids", self.host)
+        self.assertIn("road_slot_zero_network_outer_shoulder_ids_and_edge_uv", self.host)
         self.assertNotIn("window0112_selected_triangle_count", self.host)
         self.assertIn("$selectedTriangles = Assert-NetworkManifest", self.host)
 
@@ -237,14 +237,16 @@ class RoadSavedHostContractTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
     def test_actual_powershell_saved_gate_rejects_changed_ids_roles_and_false_proof(self):
         # Pure receipt validation fixture, without any native geometry or save.
-        network = {"schema_version": 2, "status": "SHOULDER_NETWORK_PREPARED",
+        network = {"schema_version": 3, "status": "SHOULDER_NETWORK_PREPARED",
             "support_count": 186, "material_target_count": 185, "excluded_parapet_count": 1,
             "owners": [{} for _ in range(186)], "rollback_verified": True,
-            "source_vertices_topology_normals_uv_preserved": True, "original_wall_material_preserved": True,
+            "source_vertices_topology_normals_uv_prefix_preserved": True,
+            "material_edge_uv_appended": True, "material_edge_uv_channel": 0,
+            "original_wall_material_preserved": True,
             "excluded_parapet_unchanged": True, "whole_area_admitted": False, "performance_pass": False,
             "selected_triangle_count": 1234, "total_triangle_count": 9999}
         manifest = {"schema_version": 1, "issue": 364, "status": "SAVED_ROAD_ASPHALT_CONSUMER_PREPARED",
-            "exact_sha": "a" * 40, "material_changes": "road_slot_zero_and_network_outer_shoulder_ids",
+            "exact_sha": "a" * 40, "material_changes": "road_slot_zero_network_outer_shoulder_ids_and_edge_uv",
             "map_saved": True, "landscape_1024_unchanged": True, "canonical_saved": False,
             "source_scene_mutated": False, "road_slot_zero_only": False, "support_186_unchanged": False,
             "fresh_reload_verified": False, "performance_pass": False, "shoulder_network": network}
@@ -254,7 +256,8 @@ class RoadSavedHostContractTests(unittest.TestCase):
             "shoulder_support_count": 186, "shoulder_material_target_count": 185,
             "shoulder_selected_triangle_count": 1234, "owner_visual_status": "PENDING_FINAL_M3",
             "fresh_process": True, "shoulder_network_fresh_reload_verified": True,
-            "shoulder_positions_indices_normals_uv_unchanged": True,
+            "shoulder_positions_indices_normals_original_uv_prefix_unchanged": True,
+            "shoulder_material_edge_uv_fresh_reload_verified": True,
             "shoulder_wall_materials_unchanged": True, "road_full_buffers_unchanged": True,
             "dry_asphalt_response_verified": True,
             "new_saved_asset_bytes_unchanged": True, "road_material_reapplied": False,
@@ -282,12 +285,14 @@ $fixture = Get-Content -LiteralPath $InputJson -Raw | ConvertFrom-Json -AsHashta
 $selected = Assert-NetworkManifest $fixture.manifest ('a' * 40)
 if ($selected -ne 1234) { throw 'Selected count did not come from the manifest.' }
 Assert-FreshNetworkReceipt $fixture.fresh ('a' * 40) ('b' * 64) $selected ('e' * 64)
-foreach ($failure in @('role', 'owners', 'geometry', 'parapet', 'rollback', 'selected_type', 'admission')) {
+foreach ($failure in @('role', 'owners', 'geometry', 'edge_uv', 'edge_channel', 'parapet', 'rollback', 'selected_type', 'admission')) {
     $manifest = $fixture.manifest | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
     switch ($failure) {
         'role' { $manifest.shoulder_network.material_target_count = 186 }
         'owners' { $manifest.shoulder_network.owners = $manifest.shoulder_network.owners[0..184] }
-        'geometry' { $manifest.shoulder_network.source_vertices_topology_normals_uv_preserved = $false }
+        'geometry' { $manifest.shoulder_network.source_vertices_topology_normals_uv_prefix_preserved = $false }
+        'edge_uv' { $manifest.shoulder_network.material_edge_uv_appended = $false }
+        'edge_channel' { $manifest.shoulder_network.material_edge_uv_channel = 1 }
         'parapet' { $manifest.shoulder_network.excluded_parapet_unchanged = $false }
         'rollback' { $manifest.shoulder_network.rollback_verified = $false }
         'selected_type' { $manifest.shoulder_network.selected_triangle_count = '1234' }
@@ -298,7 +303,7 @@ foreach ($failure in @('role', 'owners', 'geometry', 'parapet', 'rollback', 'sel
     if (-not $rejected) { throw ('Production manifest gate admitted ' + $failure) }
 }
 foreach ($failure in @('head', 'manifest', 'profile', 'selected', 'supports', 'reapply', 'reload',
-                       'buffers', 'walls', 'road_buffers', 'asphalt', 'performance')) {
+                       'buffers', 'edge_reload', 'walls', 'road_buffers', 'asphalt', 'performance')) {
     $fresh = $fixture.fresh | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
     switch ($failure) {
         'head' { $fresh.exact_sha = 'd' * 40 }
@@ -308,7 +313,8 @@ foreach ($failure in @('head', 'manifest', 'profile', 'selected', 'supports', 'r
         'supports' { $fresh.shoulder_support_count = 185 }
         'reapply' { $fresh.shoulder_material_reapplied = $true }
         'reload' { $fresh.shoulder_network_fresh_reload_verified = $false }
-        'buffers' { $fresh.shoulder_positions_indices_normals_uv_unchanged = $false }
+        'buffers' { $fresh.shoulder_positions_indices_normals_original_uv_prefix_unchanged = $false }
+        'edge_reload' { $fresh.shoulder_material_edge_uv_fresh_reload_verified = $false }
         'walls' { $fresh.shoulder_wall_materials_unchanged = $false }
         'road_buffers' { $fresh.road_full_buffers_unchanged = $false }
         'asphalt' { $fresh.dry_asphalt_response_verified = $false }

@@ -1,0 +1,306 @@
+"""Exercise the production read-only bridge against disposable file/process fixtures."""
+
+from __future__ import annotations
+
+from contextlib import redirect_stdout
+import copy
+import hashlib
+import io
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+
+from scripts.ci import official_mcp_bob_session as session
+from scripts.ci import test_sa_calobra_shoulder_contact as contact_fixtures
+from scripts.proof import sa_calobra_shoulder_contact as contact
+
+ROOT = Path(__file__).resolve().parents[2]
+WRAPPER = ROOT / "scripts/ue/Invoke-YacsRoadShoulderContact.ps1"
+HEAD = "a" * 40
+TOKEN = "123-1"
+
+
+def production_bridge():
+    source = WRAPPER.read_text(encoding="utf-8")
+    code = source.split("$bridgeCode = @'\n", 1)[1].split("\n'@", 1)[0]
+    namespace = {"__name__": "diagnostic_bridge_fixture", "session": session}
+    exec(compile(code, str(WRAPPER) + "::bridgeCode", "exec"), namespace)
+    return namespace
+
+
+def write_json(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, allow_nan=False), encoding="utf-8")
+
+
+class RoadShoulderBridgeTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.bridge = production_bridge()
+
+    def predecessors(self):
+        common = dict(schema_version=1, issue=364, exact_sha=HEAD, run_token=TOKEN,
+                      error=None, secondary_errors=[])
+        base = dict(common, status="ROAD_MATERIAL_BASELINE_READ_ONLY_COMPLETE",
+                    reader_pass=True, read_only=True, persistent_world_mutation=False,
+                    owned_editor_exit_observed=True, owned_editor_exit_code=0,
+                    owned_editor_stopped_on_failure=False)
+        gpu = dict(common, status="ROAD_ASPHALT_GPU_LIT_REVIEW_HOST_PASS",
+                   authenticated_saved_and_reloaded=True, native_lit_frames_retained=True,
+                   shoulder_network_material_ids_verified=True, original_map_mutated=False,
+                   geometry_mutated=False, editor_exit_observed=True, editor_exit_code=0,
+                   stopped_on_failure=False, verified_frame_count=68, expected_frame_count=68)
+        return base, gpu
+
+    def test_prior_pass_requires_exact_run_real_zero_exit_and_unmodified_geometry(self):
+        self.bridge["prior_contract"](*self.predecessors(), HEAD, TOKEN)
+        for index, field, bad in (
+            (0, "exact_sha", "b" * 40), (1, "run_token", "124-1"),
+            (0, "status", "STARTED"), (1, "status", "FRAMES_EXIST"),
+            (0, "owned_editor_exit_observed", False), (1, "editor_exit_observed", 1),
+            (0, "owned_editor_exit_code", False), (1, "editor_exit_code", "0"),
+            (1, "editor_exit_code", 7), (1, "stopped_on_failure", True),
+            (0, "reader_pass", "true"), (0, "read_only", False),
+            (0, "persistent_world_mutation", True), (1, "geometry_mutated", True),
+            (1, "original_map_mutated", True), (1, "native_lit_frames_retained", False),
+            (1, "verified_frame_count", 67), (1, "error", "lost process"),
+            (1, "secondary_errors", ["locked log"]),
+        ):
+            with self.subTest(field=field, value=bad):
+                values = list(self.predecessors())
+                values[index][field] = bad
+                with self.assertRaises(ValueError):
+                    self.bridge["prior_contract"](*values, HEAD, TOKEN)
+        values = list(self.predecessors())
+        del values[1]["geometry_mutated"]
+        with self.assertRaises(ValueError):
+            self.bridge["prior_contract"](*values, HEAD, TOKEN)
+
+    def test_five_installed_headers_are_read_hashed_and_symbols_version_checked(self):
+        with tempfile.TemporaryDirectory() as directory:
+            engine = Path(directory)
+            write_json(engine / "Engine/Build/Build.version", {
+                "MajorVersion": 5, "MinorVersion": 8, "PatchVersion": 2, "Changelist": 56702186,
+            })
+            entry = engine / "Engine/Content/Maps/Entry.umap"
+            entry.parent.mkdir(parents=True)
+            entry.write_bytes(b"disposable entry identity fixture")
+            for relative, symbols in self.bridge["HEADERS"].items():
+                path = engine / "Engine/Source" / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("\n".join(symbols), encoding="utf-8")
+            api, pins = self.bridge["primary_api"](engine, HEAD)
+            self.assertEqual(len(api["headers"]), 5)
+            self.assertEqual(len(pins), 7)
+            self.assertEqual(api["engine_version"], "5.8.2-56702186")
+            self.assertEqual(api["startup_map_sha256"], hashlib.sha256(entry.read_bytes()).hexdigest())
+            for relative, symbols in self.bridge["HEADERS"].items():
+                path = engine / "Engine/Source" / relative
+                original = path.read_text()
+                path.write_text(original.replace(symbols[0], "AbsentSymbol"))
+                with self.assertRaisesRegex(ValueError, "symbol missing"):
+                    self.bridge["primary_api"](engine, HEAD)
+                path.write_text(original)
+            write_json(engine / "Engine/Build/Build.version", {
+                "MajorVersion": 5, "MinorVersion": 8, "PatchVersion": 1, "Changelist": 56702186,
+            })
+            with self.assertRaisesRegex(ValueError, "version differs"):
+                self.bridge["primary_api"](engine, HEAD)
+
+    def fixture(self, directory):
+        root = Path(directory) / ("rm-" + TOKEN)
+        diagnostic = root / "Saved/RuntimeProof/RoadMaterialBaseline" / TOKEN / "shoulder-contact"
+        diagnostic.mkdir(parents=True)
+        retained = Path(directory) / "original"
+        retained.mkdir()
+        report, frames = contact_fixtures.ShoulderContactTests().evidence(retained)
+        for frame in frames:
+            relative = "readiness/" + frame["frame_id"] + "/capture-readiness.json"
+            path = retained / "capture" / relative
+            write_json(path, dict(status="NATIVE_LOADING_AND_MIPS_READY",
+                       height_edits_applied=False, saved_to_map=False,
+                       height_mip_lease_requested=True, native_loading_barrier_completed=True,
+                       textures_after=[dict(is_default_texture=False, is_compiling=False,
+                                            mips=8, resident_mips=8)]))
+            frame["native_readiness"].update(receipt=relative, sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+        source = Path(directory) / "frozen-input.json"
+        source.write_text('{"source":"unchanged"}', encoding="utf-8")
+        api = diagnostic / "native-api-evidence.json"
+        api.write_text('{"disposable_fixture":true}', encoding="utf-8")
+        api_pin = self.bridge["identity"](api)
+        report.update(source_identity={"disposable_fixture": True}, geometry_consumers_executed=False,
+                      source_scene={"lighting_modified": False}, primary_api_receipt_sha256=api_pin["sha256"])
+        report["restoration"]["height_mip_leases_released"] = True
+        write_json(retained / "shoulder-contact.json", report)
+        write_json(retained / "capture/survey.json", {"status": "CAPTURED", "frames": frames})
+        inputs = dict(exact_sha=HEAD, run_token=TOKEN, retained_root=str(retained),
+                      files=[self.bridge["identity"](source), api_pin], plan=report["plan"],
+                      source_identity=report["source_identity"], api_receipt=api_pin)
+        inputs_path = diagnostic / "source-inputs.json"
+        input_pin = self.bridge["write_once"](inputs_path, inputs)
+        return root, diagnostic, retained, source, report, input_pin
+
+    def complete(self, fixture):
+        root, diagnostic, _retained, _source, _report, input_pin = fixture
+        arguments = ["bridge", "complete", str(root), "unused-config", HEAD, TOKEN,
+                     "unused-engine", "unused-engine-identity", input_pin["sha256"]]
+        output = io.StringIO()
+        with patch.object(session, "ROOT", root), patch.object(session, "_assert_isolated_root"), \
+                patch.object(sys, "argv", arguments), redirect_stdout(output):
+            self.bridge["main"]()
+        return json.loads(output.getvalue())
+
+    def test_complete_verifies_both_original_and_artifact_copy_without_touching_sources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = self.fixture(directory)
+            before = self.bridge["identity"](fixture[3])
+            result = self.complete(fixture)
+            self.assertEqual(result["frame_count"], 12)
+            self.assertEqual(result["retained_file_count"], 26)
+            self.assertTrue(result["original_and_artifact_copy_verified"])
+            self.assertEqual(result["rendered_owner"], "PENDING_PAIRED_VISUAL_REVIEW")
+            self.assertEqual(before, self.bridge["identity"](fixture[3]))
+            for root in (fixture[1], fixture[2]):
+                self.assertEqual(contact.verify(root, HEAD)["frame_count"], 12)
+            original = fixture[1] / "shoulder-contact.json"
+            original_bytes = original.read_bytes()
+            with self.assertRaises(FileExistsError):
+                self.complete(fixture)
+            self.assertEqual(original.read_bytes(), original_bytes)
+
+    def test_mutated_source_restoration_camera_or_api_cannot_pass_but_partial_frames_survive(self):
+        for failure in ("source", "restore", "camera", "api", "readiness", "missing_frame"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as directory:
+                fixture = self.fixture(directory)
+                _root, diagnostic, retained, source, report, _input = fixture
+                if failure == "source":
+                    source.write_text('{"source":"modified!"}', encoding="utf-8")
+                elif failure == "restore":
+                    report["restoration"]["status"] = "FAILED"
+                elif failure == "camera":
+                    report["plan"]["frames"][0]["camera_location_cm"][0] += 1
+                elif failure == "api":
+                    report["primary_api_receipt_sha256"] = "f" * 64
+                elif failure == "readiness":
+                    frame = copy.deepcopy(report["plan"]["frames"][0])
+                    path = retained / "capture" / frame["native_readiness"]["receipt"]
+                    value = json.loads(path.read_text())
+                    value["textures_after"][0]["resident_mips"] = 7
+                    write_json(path, value)
+                    stamp = hashlib.sha256(path.read_bytes()).hexdigest()
+                    frame["native_readiness"]["sha256"] = stamp
+                    survey = json.loads((retained / "capture/survey.json").read_text())
+                    survey["frames"][0]["native_readiness"]["sha256"] = stamp
+                    write_json(retained / "capture/survey.json", survey)
+                else:
+                    (retained / "capture" / report["plan"]["frames"][0]["file"]).unlink()
+                write_json(retained / "shoulder-contact.json", report)
+                with self.assertRaises((ValueError, FileNotFoundError)):
+                    self.complete(fixture)
+                self.assertFalse((diagnostic / "verification.json").exists())
+                self.assertTrue((diagnostic / "retained-files.json").is_file())
+                self.assertGreaterEqual(len(list((diagnostic / "capture/frames").glob("*.png"))), 11)
+
+    def test_same_length_tamper_bounds_and_different_file_path_reject(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "source.json"
+            path.write_bytes(b"original")
+            pin = self.bridge["identity"](path)
+            path.write_bytes(b"changed!")
+            with self.assertRaisesRegex(ValueError, "pin differs"):
+                self.bridge["same_pin"](self.bridge["identity"](path), pin)
+            with self.assertRaises(ValueError):
+                self.bridge["identity"](path, 4)
+            path.write_bytes(b"original")
+            other = path.with_name("other.json")
+            other.write_bytes(path.read_bytes())
+            with self.assertRaisesRegex(ValueError, "another path"):
+                self.bridge["same_pin"](self.bridge["identity"](other), pin)
+
+    def test_retained_project_producer_is_exact_bounded_and_never_executed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            frozen = root / "frozen"
+            source = frozen / "support-consumers/network_pavement.py"
+            source.parent.mkdir(parents=True)
+            raw = b"raise RuntimeError('source is evidence, never execute')\n"
+            source.write_bytes(raw)
+            expected = {"network_pavement.py": {"sha256": hashlib.sha256(raw).hexdigest(),
+                                                "size_bytes": len(raw)}}
+            rows = self.bridge["retain_producer_sources"](frozen, root / "evidence", expected)
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(Path(rows[0]["retained"]["path"]).read_bytes(), raw)
+            self.assertEqual(source.read_bytes(), raw)
+            with self.assertRaises(FileExistsError):
+                self.bridge["retain_producer_sources"](frozen, root / "evidence", expected)
+            source.write_bytes(raw.replace(b"RuntimeError", b"RuntimeErr0r"))
+            with self.assertRaisesRegex(ValueError, "pin differs"):
+                self.bridge["retain_producer_sources"](frozen, root / "rejected", expected)
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
+    def test_actual_powershell_parser_argument_tokens_and_owned_exit_deadline(self):
+        with tempfile.TemporaryDirectory(prefix="shoulder contact ") as directory:
+            root = Path(directory)
+            child = root / "child.py"
+            child.write_text("import sys,time\nprint('fixture',flush=True)\n"
+                             "time.sleep(15 if sys.argv[1]=='timeout' else 0)\n"
+                             "sys.exit(0 if sys.argv[1]=='timeout' else int(sys.argv[1]))\n")
+            runner = root / "contracts.ps1"
+            runner.write_text(r'''
+param([string] $Wrapper, [string] $Python, [string] $Child, [string] $OutputRoot)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$tokens = $null; $errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref]$tokens, [ref]$errors)
+if ($errors.Count) { throw ($errors.Message -join '; ') }
+foreach ($name in @('Assert-PlainPath', 'Invoke-OwnedProcess')) {
+    $nodes = @($ast.FindAll({param($node)
+        $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name
+    }, $true))
+    if ($nodes.Count -ne 1) { throw 'Missing production function.' }
+    . ([scriptblock]::Create($nodes[0].Extent.Text))
+}
+$root = $OutputRoot
+$diagnostic = $OutputRoot
+$WorkspaceConfig = Join-Path $root 'workspace with spaces.json'
+$ExpectedHead = 'a' * 40
+$RunToken = '123-1'
+$engine = @{ Root = (Join-Path $root 'engine with spaces'); Identity = 'root=engine|version=5.8.2-56702186' }
+$editorLog = Join-Path $root 'owned-editor.log'
+foreach ($name in @('$common', '$arguments')) {
+    $node = @($ast.FindAll({param($item)
+        $item -is [System.Management.Automation.Language.AssignmentStatementAst] -and $item.Left.Extent.Text -ceq $name
+    }, $true))
+    if ($node.Count -ne 1) { throw 'Missing production argument array.' }
+    . ([scriptblock]::Create($node[0].Extent.Text))
+}
+if ($common.Count -ne 6 -or $common[0] -cne ('"' + $root + '"') -or
+    $common[5] -cne ('"' + $engine.Identity + '"') -or $arguments[1] -cne '/Engine/Maps/Entry' -or
+    $arguments[-1] -cne ('-AbsLog="' + $editorLog + '"')) { throw 'Process argument boundaries changed.' }
+$receipt = [ordered]@{ processes = @(); editor_pid = $null; editor_exit_observed = $false
+    editor_exit_code = $null; stopped_on_failure = $false }
+Invoke-OwnedProcess 'exit-zero' $Python @('-I', '-B', ('"' + $Child + '"'), '0') 5
+if (-not $receipt.processes[0].exit_observed -or $receipt.processes[0].exit_code -ne 0) { throw 'Actual zero exit missing.' }
+$rejected = $false
+try { Invoke-OwnedProcess 'exit-seven' $Python @('-I', '-B', ('"' + $Child + '"'), '7') 5 } catch { $rejected = $true }
+if (-not $rejected -or $receipt.processes[1].exit_code -ne 7) { throw 'Nonzero process falsely passed.' }
+$rejected = $false
+try { Invoke-OwnedProcess 'owned-editor' $Python @('-I', '-B', ('"' + $Child + '"'), 'timeout') 1 } catch { $rejected = $true }
+if (-not $rejected -or -not $receipt.stopped_on_failure -or -not $receipt.editor_exit_observed -or
+    (Get-Process -Id $receipt.editor_pid -ErrorAction SilentlyContinue)) { throw 'Owned deadline did not stop the exact process.' }
+'POWERSHELL_SHOULDER_CONTACT_CASES_PASS'
+''', encoding="utf-8")
+            result = subprocess.run(["pwsh", "-NoProfile", "-File", str(runner), str(WRAPPER),
+                                     sys.executable, str(child), str(root)], capture_output=True,
+                                    text=True, timeout=45, check=False)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("POWERSHELL_SHOULDER_CONTACT_CASES_PASS", result.stdout)
+
+
+if __name__ == "__main__":
+    unittest.main()
