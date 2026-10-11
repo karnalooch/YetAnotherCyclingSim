@@ -550,6 +550,7 @@ class MechanicalGraph:
                 self.phase = "generation2"
                 self.component.generate_local(True)
         except Exception:
+            self.receipt["status"] = "FAILED"
             self.receipt["error"] = traceback.format_exc()
             unreal.log_error(self.receipt["error"])
             self.stop()

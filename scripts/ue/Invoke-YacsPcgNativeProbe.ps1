@@ -204,6 +204,7 @@ if (-not (Test-Path -LiteralPath $Receipt -PathType Leaf)) { throw 'Probe exited
 $result = Get-Content -LiteralPath $Receipt -Raw | ConvertFrom-Json
 $expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'}[$Action]
 if ($result.status -cne $expectedStatus -or $result.code_sha -cne $ExpectedHead -or $result.placement -isnot [bool] -or $result.placement) { throw 'Native diagnostic did not complete; inspect receipt diagnostics.' }
+if ($result.PSObject.Properties.Name -contains 'error') { throw 'Native diagnostic contains an error; refusing success.' }
 if ($Action -eq 'reload') {
     foreach ($entry in $saved.files) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
 }
