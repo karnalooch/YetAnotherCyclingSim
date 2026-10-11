@@ -254,6 +254,15 @@ The failed run uploaded no artifact and produced no paint/control/contact PNG.
 The targeted local repair tests pass (57 tests, eight PowerShell-only checks
 skipped on Linux); a new exact-head Windows/native run remains required.
 
+The repair revision `2d8d1bf3c627ecc7ab7a058dea3975edc8140a37` then stopped in
+[protected CI 38103410287](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38103410287).
+Its Python 3.14 lane rejects mixing POSIX and Windows path flavours inside the
+new regression fixture, whereas local Python 3.12 had coerced the root. The
+fixture now explicitly converts its root to the same Windows flavour while
+retaining native Windows comparisons and real-file auditing. Production sorting
+and all inventory checks stay intact. Native execution was skipped at the
+protected-CI prerequisite; no additional UE result is claimed.
+
 ## Whole-network revision following owner feedback
 
 The owner requested gravel beside the entire existing road network, a drier

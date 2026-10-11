@@ -764,7 +764,14 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 # Exercise real Windows path-comparison semantics even when
                 # this contract runs on Linux. Byte/path auditing still uses
                 # the actual disposable package files through _safe_path.
-                windows_paths = [PureWindowsPath(path) for path in folder.rglob("*")]
+                class WindowsFixturePath(PureWindowsPath):
+                    def relative_to(self, other):
+                        # Python 3.14 no longer coerces a Path of another
+                        # flavour. Use a Windows root for this Windows view;
+                        # native filesystem auditing retains the real ROOT.
+                        return super().relative_to(PureWindowsPath(str(other)))
+
+                windows_paths = [WindowsFixturePath(str(path)) for path in folder.rglob("*")]
                 with patch.object(Path, "rglob", return_value=iter(windows_paths)):
                     windows_rows = saved.produced_files()
                 self.assertEqual(windows_rows, rows)
