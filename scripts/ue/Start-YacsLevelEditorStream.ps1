@@ -121,6 +121,10 @@ try {
         if ($LASTEXITCODE -ne 0 -or $changed.Count) { throw 'Launcher requires an unchanged tracked checkout.' }
         & git check-ignore --no-index --quiet -- $ReceiptPath
         if ($LASTEXITCODE -ne 0) { throw 'Review evidence must remain ignored by Git.' }
+        # Refuse noncanonical physical script bytes before starting any Editor.
+        # The client authenticates the complete native/helper source closure.
+        & python -c 'import sys; from scripts.ue.level_editor_material_client import _sources; _sources(sys.argv[1])' $ExpectedHead
+        if ($LASTEXITCODE -ne 0) { throw 'Launcher native/helper bytes differ from the exact committed SHA; no Editor was started.' }
         $cacheDiagnostic = & python -c 'import json, os; from pathlib import Path; from scripts.manage_local_workspace import load_workspace; config = load_workspace(); print(json.dumps({"configured_zen_data_path": str(Path(config["cache"]) / "Zen"), "inherited_ue_zen_data_path": os.environ.get("UE-ZenDataPath")}))'
         if ($LASTEXITCODE -ne 0) { throw 'Cannot read the existing workspace cache configuration.' }
         $receipt.cache_launch_environment = $cacheDiagnostic | ConvertFrom-Json

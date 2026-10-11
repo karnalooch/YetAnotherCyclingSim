@@ -670,3 +670,11 @@ still have its original HEAD and byte-identical native/helper closure. Keep that
 launcher checkout frozen while the upgraded host client runs in a separate
 checkout; this preserves the native script reload baseline. This does not hot-reload
 native bridge code or admit a saved-world/release proof.
+
+
+The launcher now verifies the full client/native/helper source closure before
+starting an Editor. Physical CRLF/LF drift is rejected rather than normalized
+after a process has already loaded it. The earlier `y473recover02` process had
+noncanonical physical bridge/reload/material/shoulder bytes and could not be
+admitted by the exact-source client. The owner authorized one installation
+restart to replace that session; its view-only fallback is not material proof.

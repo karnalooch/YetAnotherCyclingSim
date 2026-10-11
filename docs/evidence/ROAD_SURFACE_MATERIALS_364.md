@@ -2080,7 +2080,7 @@ remaining gates. The current live review snapshot does not include PCGEx.
 No #365 implementation or source/terrain/physics mutation is claimed.
 
 
-### Owner preview interruption during closeout — 2026-10-11
+### Owner preview interruption during closeout â€” 2026-10-11
 
 CI run `38168499513`, job `114557325505`, terminated owner Editor PID `14704`
 at `2026-10-11T19:41:23Z`. The cleanup helper matched a Python launcher path
