@@ -15,6 +15,8 @@ on:
       - 'scripts/assets/test_material_forge_road_decals.py'
       - 'scripts/assets/run_road_decals_source_proof.py'
       - 'scripts/assets/test_run_road_decals_source_proof.py'
+      - 'scripts/assets/read_sa_calobra_hairpin_lidar.py'
+      - 'scripts/assets/test_read_sa_calobra_hairpin_lidar.py'
       - 'worldgen/materials/material_forge/**'
 
 permissions:
@@ -122,6 +124,207 @@ jobs:
           if (-not (Test-Path -LiteralPath (Join-Path $env:YACS_ROAD_DECAL_PROOF 'source-proof.json') -PathType Leaf)) {
             throw 'Persistent local crack source receipt is missing.'
           }
+
+      - name: Read installed road diagnostic API symbols when requested
+        if: ${{ contains(github.event.head_commit.message, '[road-api-read]') }}
+        shell: pwsh
+        working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+          if ($state.status -cne 'IDLE') { throw 'Installed road API read yields to existing Unreal ownership.' }
+          $proof = Join-Path (Get-Location).Path 'road-api-evidence'
+          New-Item -ItemType Directory -Path $proof -ErrorAction Stop | Out-Null
+          $code = @'
+          import hashlib, json, os, re, sys
+          from pathlib import Path
+          sys.path.insert(0, sys.argv[1])
+          from scripts.ue.road_asphalt_visual_controls import _function_body
+          engine = Path('D:/yacs/engine/UE_5.8/Engine')
+          result = {'schema_version': 1, 'status': 'FAILED',
+                    'exact_sha': os.environ['GITHUB_SHA'],
+                    'run_token': os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT'],
+                    'read_only': True, 'native_call_executed': False,
+                    'engine_source_redistributed': False, 'files': {}, 'functions': {}, 'error': None}
+          wanted = {
+            'Source/Developer/FunctionalTesting/Private/AutomationBlueprintFunctionLibrary.cpp': [
+              'UAutomationBlueprintFunctionLibrary::SetEditorViewportVisualizeBuffer',
+              'UAutomationBlueprintFunctionLibrary::SetEditorViewportViewMode',
+              'UAutomationBlueprintFunctionLibrary::GetEditorActiveViewportViewMode'],
+            'Source/Runtime/Engine/Private/KismetMaterialLibrary.cpp': [
+              'UKismetMaterialLibrary::CreateDynamicMaterialInstance'],
+            'Source/Runtime/Engine/Classes/Materials/MaterialInstanceDynamic.h': [],
+            'Source/Runtime/Engine/Classes/Kismet/KismetMaterialLibrary.h': [],
+            'Source/Developer/FunctionalTesting/Public/AutomationBlueprintFunctionLibrary.h': [],
+            'Config/BaseEngine.ini': [], 'Build/Build.version': []}
+          try:
+            for relative, functions in wanted.items():
+              path = engine / relative
+              assert path.is_file() and not path.is_symlink() and path.stat().st_size <= 4*1024*1024, relative
+              raw = path.read_bytes()
+              identity = {'size_bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}
+              text = raw.decode('utf-8-sig')
+              result['files'][relative] = identity
+              for name in functions:
+                body = _function_body(text, name)
+                symbols = sorted(set(re.findall(r'\b[A-Za-z_]\w*\b', body)))
+                calls = sorted(set(re.findall(r'\b([A-Za-z_]\w*)\s*\(', body)))
+                result['functions'][name] = {
+                  'body_sha256': hashlib.sha256(body.encode()).hexdigest(),
+                  'symbols': symbols, 'calls': calls,
+                  'buffer_parameter_statements': [re.findall(r'\b[A-Za-z_]\w*\b', line)
+                    for line in body.splitlines() if 'BufferName' in line][:8]}
+              if relative.endswith('MaterialInstanceDynamic.h'):
+                result['mid_scalar_methods'] = sorted(set(re.findall(
+                  r'\b\w*(?:GetScalarParameterValue|SetScalarParameterValue)\w*\b', text)))
+              assert path.read_bytes() == raw, relative + ' changed during read'
+            result['status'] = 'INSTALLED_ROAD_API_SYMBOLS_READ'
+          except Exception as exc:
+            result['error'] = str(exc)
+            raise
+          finally:
+            Path(sys.argv[2]).write_text(json.dumps(result, indent=2)+'\n', encoding='utf-8')
+          '@
+          & $env:YACS_ROAD_FORGE_PY -I -B -c $code (Get-Location).Path (Join-Path $proof 'installed-road-api.json')
+          if ($LASTEXITCODE -ne 0) { throw 'Installed road API read did not complete; retained receipt states the cause.' }
+
+      - name: Retain the read-only installed road API outcome
+        if: ${{ always() && contains(github.event.head_commit.message, '[road-api-read]') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: road-api-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ github.workspace }}/_road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}/road-api-evidence/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Read bounded source hairpin LiDAR transects when requested
+        if: ${{ contains(github.event.head_commit.message, '[hairpin-lidar]') }}
+        shell: pwsh
+        working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          $proof = Join-Path (Get-Location).Path 'hairpin-lidar-evidence'
+          New-Item -ItemType Directory -Path $proof -ErrorAction Stop | Out-Null
+          $child = $null
+          $retained = $null
+          $timer = $null
+          $report = [ordered]@{
+            schema_version = 1; status = 'FAILED'; exact_sha = $env:GITHUB_SHA
+            run_token = ($env:GITHUB_RUN_ID + '-' + $env:GITHUB_RUN_ATTEMPT)
+            owned_pid = $null; exit_code = $null; exit_code_observed = $false
+            stopped_after_deadline = $false; deadline_seconds = 180
+            observations_available = $false; source_mutated = $false
+            interpreter = $null; files = @(); error = $null
+          }
+          function Copy-LidarEvidence {
+            if (-not $retained) { return }
+            $rows = @()
+            foreach ($name in @('source-lidar-manifest.json', 'hairpin-lidar.json',
+                                'hairpin-lidar-points.csv', 'hairpin-lidar-points.partial.csv')) {
+              $source = Join-Path $retained $name
+              if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { continue }
+              $file = Get-Item -LiteralPath $source
+              if ($file.Length -gt 32MB) { throw 'Source LiDAR evidence exceeds its byte bound.' }
+              $hash = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant()
+              $target = Join-Path $proof $name
+              if (-not (Test-Path -LiteralPath $target)) {
+                Copy-Item -LiteralPath $source -Destination $target -ErrorAction Stop
+              }
+              if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant() -cne $hash -or
+                  (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant() -cne $hash) {
+                throw 'Source LiDAR evidence changed while retaining its review copy.'
+              }
+              $rows += [ordered]@{ file = $name; size_bytes = $file.Length; sha256 = $hash }
+            }
+            $report.files = $rows
+          }
+          try {
+            $state = ./scripts/runner/Get-YacsUnrealHostState.ps1
+            if ($state.status -cne 'IDLE') { throw 'LiDAR observation reader yields to existing Unreal ownership.' }
+            # This is the existing GIS interpreter recorded by the source replay.
+            # No environment search, installation or alternative decoder is performed.
+            $python = 'D:\yacs\project\.venv\Scripts\python.exe'
+            $pythonFile = Get-Item -LiteralPath $python -ErrorAction Stop
+            $report.interpreter = [ordered]@{
+              path = $python; size_bytes = $pythonFile.Length
+              sha256 = (Get-FileHash -LiteralPath $python -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
+            & $env:YACS_ROAD_FORGE_PY -m unittest scripts.assets.test_read_sa_calobra_hairpin_lidar
+            if ($LASTEXITCODE -ne 0) { throw 'Source LiDAR observation contracts failed.' }
+            $workCode = 'import sys; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from scripts.manage_local_workspace import load_workspace; print(Path(load_workspace()["work"]))'
+            $workRows = @(& $env:YACS_ROAD_FORGE_PY -I -B -c $workCode (Get-Location).Path)
+            if ($LASTEXITCODE -ne 0 -or $workRows.Count -ne 1 -or
+                -not [IO.Path]::IsPathFullyQualified($workRows[0])) { throw 'Cannot resolve the canonical LiDAR evidence root.' }
+            $outputName = 'hairpin-lidar-' + $report.run_token
+            $retained = Join-Path $workRows[0] $outputName
+            if (Test-Path -LiteralPath $retained) { throw 'The source LiDAR evidence directory already exists.' }
+            $script = Join-Path (Get-Location).Path 'scripts/assets/read_sa_calobra_hairpin_lidar.py'
+            $arguments = @('-I', '-B', ('"' + $script + '"'),
+              '--workspace-config', 'D:\yacs\workspace.json', '--output-name', $outputName)
+            $timer = [Diagnostics.Stopwatch]::StartNew()
+            $child = Start-Process -FilePath $python -ArgumentList $arguments -PassThru -NoNewWindow `
+              -WorkingDirectory (Get-Location).Path `
+              -RedirectStandardOutput (Join-Path $proof 'reader-stdout.log') `
+              -RedirectStandardError (Join-Path $proof 'reader-stderr.log')
+            $report.owned_pid = $child.Id
+            if (-not $child.WaitForExit(180000)) {
+              $report.stopped_after_deadline = $true
+              $child.Kill()
+              if (-not $child.WaitForExit(10000)) { throw 'Owned LiDAR reader did not stop within ten seconds.' }
+              throw 'Owned LiDAR observation reader exceeded 180 seconds.'
+            }
+            if (-not $child.WaitForExit(10000)) { throw 'Owned LiDAR reader exit did not settle.' }
+            $report.exit_code = $child.ExitCode
+            $report.exit_code_observed = $true
+            $report.elapsed_seconds = $timer.Elapsed.TotalSeconds
+            Copy-LidarEvidence
+            if ((Get-FileHash -LiteralPath $python -Algorithm SHA256).Hash.ToLowerInvariant() -cne $report.interpreter.sha256) {
+              throw 'Existing LiDAR interpreter changed during the read.'
+            }
+            $native = Get-Content -LiteralPath (Join-Path $proof 'hairpin-lidar.json') -Raw | ConvertFrom-Json -AsHashtable
+            $report.reader_status = $native.status
+            if ($report.exit_code -ne 0 -or $native.status -cne 'OBSERVATIONS_EXPORTED' -or
+                $native.observations_available -isnot [bool] -or -not $native.observations_available -or
+                $native.post_read_source_status -cne 'PASS') {
+              throw 'Source LiDAR observations are unavailable or failed; retained reader evidence states the cause.'
+            }
+            $report.observations_available = $true
+            $report.status = 'HAIRPIN_LIDAR_OBSERVATIONS_RETAINED'
+          } catch {
+            $report.error = $_.Exception.Message
+            throw
+          } finally {
+            try {
+              if ($null -ne $child) {
+                if (-not $child.HasExited) {
+                  $child.Kill()
+                  if (-not $child.WaitForExit(10000)) { throw 'Owned LiDAR cleanup exceeded ten seconds.' }
+                }
+                $report.exit_code = $child.ExitCode
+                $report.exit_code_observed = $true
+                $report.elapsed_seconds = $timer.Elapsed.TotalSeconds
+              }
+              Copy-LidarEvidence
+            } catch {
+              $report.status = 'FAILED'
+              $report.observations_available = $false
+              $report.error = ([string]$report.error + '; cleanup: ' + $_.Exception.Message).TrimStart('; ')
+              throw
+            } finally {
+              if ($null -ne $child) { $child.Dispose() }
+              $report | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $proof 'host-receipt.json') -Encoding utf8NoBOM
+            }
+          }
+
+      - name: Retain source hairpin observations and actual reader outcome
+        if: ${{ always() && contains(github.event.head_commit.message, '[hairpin-lidar]') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: hairpin-lidar-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ github.workspace }}/_road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}/hairpin-lidar-evidence/**
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Retain asphalt determinism receipt and render logs
         if: ${{ always() }}

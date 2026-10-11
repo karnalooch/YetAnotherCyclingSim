@@ -12,6 +12,55 @@ remains frozen. #384 completed after protected [PR #467](https://github.com/karn
 merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its gate is satisfied.
 This work continues #364, not MCP infrastructure.
 
+## Latest native paint result and remaining diagnostic failure
+
+Revision `e4af3a74bf7f53565acd75b7d9a91a4e6d2d8691` passed
+[protected CI 38103790299](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38103790299).
+The [native run 38103787193](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38103787193)
+passed the baseline, reversible asphalt canary, save and separate fresh reload
+with **370 source-clipped white edge actors**. Prepare PID 34996 and reload
+PID 16572 both exited 0. The fresh reader rechecked every paint buffer and the
+source witness `3e25a18c76cb730c90c30d9b84263d0755b42fe7e85435dd02b50546cb11cd2e`.
+This establishes native save/reload conservation; the paint has not yet been
+reviewed in rendered images.
+
+The GPU stage failed **before its first screenshot**. The new optional buffer
+diagnostic assumed a particular lexical implementation of
+`SetEditorViewportVisualizeBuffer`; the installed engine did not satisfy that
+assumption. The real GPU Editor exited 0, but the independent host correctly
+rejected the failed receipt with zero of 68 final frames and zero diagnostic
+frames. Both subsequent contact captures were skipped. No new paint, band or
+contact image admission follows from this run.
+
+The original [artifact 11689148232](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38103787193/artifacts/11689148232)
+was independently downloaded and verified: 3,004,820 bytes,
+SHA-256 `a2f5aa4f797ca27af9ce1ae22888a9db54688198a8d516f4283dd027d033388a`,
+46 retained files and no PNGs. The fresh receipt is 2,393 bytes,
+SHA-256 `d45e53e74b3aa80129d6caed2b3cdac0c08083703016794cfcb1fcea244571f3`;
+the saved manifest is 3,116,093 bytes,
+SHA-256 `71e9bc22301070075361e84a06a1f165562f3948544abf4715fa7bd50190d13a`.
+
+The next bounded run requests the unchanged 68 Lit cameras and contact
+diagnostics. The optional eight buffer controls now require the explicit
+`[road-band-controls]` marker and remain failed/pending until their installed
+implementation and actual images are verified. This does not relax the Lit,
+save/reload, source, dirty-package or image/owner acceptance gates. A separate
+`[road-api-read]` source step retains only bounded installed function symbols,
+calls and file hashes; it neither executes native APIs nor redistributes
+engine function bodies.
+
+The independently reviewed `[hairpin-lidar]` reader adds eight narrow source
+transects through the existing hairpin using the recorded GIS interpreter.
+It authenticates all nine retained LAZ files and their real headers before
+reading bounded points, retains classification/rejection flags and source
+point identity, and rechecks hashes afterwards. It does not fit a road or
+modify heights, crossfall, route truth or terrain. Missing decoders/data,
+partial reads and deadline exits remain unavailable/failed with retained
+evidence. The host owns only its launched process, retains its observed exit
+and bounded output even after timeout, and always emits the host receipt.
+Fourteen reader contracts and independent workflow review passed locally;
+actual source point observations are still pending.
+
 ## Current refinement after the f75 visual rejection — 2026-10-11
 
 The owner requested another texture-first Material Forge refinement, followed

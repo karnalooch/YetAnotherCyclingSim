@@ -235,7 +235,8 @@ jobs:
           ./scripts/ue/Invoke-YacsRoadAsphaltRender.ps1 `
             -ExpectedHead $env:GITHUB_SHA `
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
-            -EdgeMarkings -VisualControls `
+            -EdgeMarkings `
+            -VisualControls:('${{ contains(github.event.head_commit.message, '[road-band-controls]') }}' -ceq 'true') `
             -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
 
       - name: Isolate the existing shoulder contact without changing geometry
