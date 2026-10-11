@@ -150,6 +150,13 @@ currently references `/Engine/EngineMaterials/WorldGridMaterial`. Source-model
 UV-channel query returned `[1,0,0,0]`; installed `GetNumUVChannels` inspects
 MeshDescription, so zeros on generated LODs are not proof of missing render UVs.
 Render UV/material physical scale and support geometry remain unverified.
+At identity rotation/scale, the conservative pivot-centred XY radius from native
+AABB is `hypot(abs(origin.x)+extent.x, abs(origin.y)+extent.y)/100 =
+1.2118825350159463 m`; local AABB Z is `[-0.07416046142578125,
+0.9345298004150391] m`. These are bound calculations, not measured support geometry.
+The existing CPU candidate fixture assumes radius 0.5 m: its 124 admitted probes
+cannot be reused for this Boulder. Re-evaluate eligibility with the final scaled
+footprint, material/WPO envelope and admitted support/contact contract first.
 ImportData points to the historical `D:/ExternalAssets/.../boulder_01_2k.fbx`,
 which does not prove correspondence with the newly recovered bytes. All staged
 source packages remained byte-identical. No real mesh qualification PASS.
