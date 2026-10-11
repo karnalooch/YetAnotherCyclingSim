@@ -22,8 +22,11 @@ features yield an inconclusive WorldNormal orientation comparison; retain
 the diagnostic. Captured buffer names still lack native string readback.
 
 Far line gaps, transverse asphalt bands and the sharp gravel/terrain boundary
-remain. The next existing outer blend and ten band/paint controls will test
-those named defects independently, retaining every original Lit camera.
+remain. The separate 2ec534c outer preparation failed with a D3D12 allocation
+error before save or any new capture; the ten band/paint controls did not run.
+The [failure record](../experiments/sa-calobra-road-materials-20261011/outer-2ec534c/README.md)
+does not supersede the b9fd originals. The next material diagnosis must remain
+bounded under the [explicit checkpoint cadence](../CI_VALIDATION_TIERS.md#m3-road-material-iteration-cadence).
 At 0112, hiding nominated support022 removes its shoulder/wall contribution
 but does not remove the dark narrow road-edge band. The separate support112
 and local-Landscape hides also leave that band. At 0081, support185 owns the

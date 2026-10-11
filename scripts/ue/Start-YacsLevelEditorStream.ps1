@@ -21,7 +21,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) { throw 'Level Editor review requires the Windows home host.' }
 $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
-$RuntimeSha = '1ef46dacedba5ed1fc909422529be41808d3dbe4'
+$RuntimeSha = 'b9fddea3f6023239da98bec7a5107ed1124cf52e'
 $SessionRoot = "D:\yacs\work\level-editor-review\$($RuntimeSha.Substring(0, 12))-$SessionToken"
 $EvidenceRoot = Join-Path $RepoRoot "Saved/RuntimeProof/LevelEditorStream/$SessionToken"
 $Map = '/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview'
@@ -95,7 +95,7 @@ $receipt = [ordered]@{
     status = 'BLOCKED'
     launcher_sha = $ExpectedHead
     runtime_source_sha = $RuntimeSha
-    runtime_source_run = '38084733503-1'
+    runtime_source_run = '38116299783-1'
     session_root = $SessionRoot
     stream_source = 'LevelEditorViewport'
     viewer_url = $ViewerUrl

@@ -57,15 +57,17 @@ working plugin, encoder, network connection or received browser frame.
 ## Review target and remaining proof
 
 The first target is the retained #364 saved road consumer from runtime SHA
-`1ef46dacedba5ed1fc909422529be41808d3dbe4`, native run `38084733503-1`.
+`b9fddea3f6023239da98bec7a5107ed1124cf52e`, native run `38116299783-1`.
 Its map is `/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview`,
-SHA256 `35d485005f123e5648f675d6f91209630c163bddf92d55f6c5b640d55917732d`.
-This is the last checked saved asphalt/shoulder checkpoint, not visual approval
-or a claim that later dry-asphalt changes have been natively verified.
+SHA256 `cbbf374309508fdb2c6f86c6324af4a3824a0c5ed32a4bfc29200ad3b29da183`
+(193,018,676 bytes). This is the complete dry-asphalt checkpoint with its crack
+canaries and contact controls. The later outer-blend preparation failed before
+saving; it is not the scene opened for this review. Owner visual acceptance
+remains pending.
 
 `prepare_level_editor_review.py` authenticates the retained receipts, binary
-provenance and source bytes. It copies **265 files / 743,351,566 bytes** into a
-new `D:\yacs\work\level-editor-review\1ef46dacedba-SESSION` project. Copies are
+provenance and source bytes. It copies **278 files / 758,655,493 bytes** into a
+new `D:\yacs\work\level-editor-review\b9fddea3f602-SESSION` project. Copies are
 independent regular files, with a 5 GiB free reserve. Existing destinations are
 refused. The native source project and its saved map remain unchanged.
 Runtime SHA and launcher SHA are separate fields in every session receipt.
@@ -77,10 +79,40 @@ It keeps the requested editor session alive without saving a world asset.
 
 ## Running and checking the review
 
+### Iteration cost and persistent-session boundary
+
+The [road-material cadence](../CI_VALIDATION_TIERS.md#m3-road-material-iteration-cadence)
+requires explicit full-proof intent. Ordinary material corrections no longer
+start the native 68-view bundle or the source renderer automatically. Normal CI
+and its existing compiled-binary reuse remain active.
+
+An open streamed viewport can shorten navigation and visual comparison. It
+does not itself deliver a changed material recipe into that Editor process.
+The current launcher disables MCP/Wingman and Python remote execution; the
+existing remote command bridge still admits only its bounded `smoke-cube`
+command. Installed material-tool declarations are source evidence, not proof
+of live-session refresh. A future bounded refresh must reuse the admitted
+tools, establish the actual session/map/material identity, preserve unsaved
+work and read back the changed visible consumer before claiming delivery.
+
+Use the current stream for review of its recorded saved checkpoint. Close its
+owned Editor normally before a requested native proof needs the shared host;
+automation must continue to yield to an open interactive session. Full
+save/reload and complete final coverage remain separate checkpoint evidence.
+
+### Launch and receiving-client verification
+
 The `M3 Level Editor review` workflow is restricted to the repository owner and
 the current `codex/364-road-surface-materials` branch. A scoped code push starts
 it only with the explicit `[level-editor-review]` commit marker; manual dispatch
 is also supported. Ordinary material/code pushes do not launch a live editor.
+
+The hosted waiter first requires successful protected PR CI for this exact
+launcher SHA. Only then may the review job reserve the shared Unreal host.
+This prevents the persistent Editor from starting before its own CI needs that
+host. The waiter holds no Unreal lock; pending or failed CI cannot launch the
+session. Both push and manual entry points retain the same owner and branch
+scope and require the matching PR CI result.
 
 The native entry point, from an unchanged checkout containing these scripts, is:
 

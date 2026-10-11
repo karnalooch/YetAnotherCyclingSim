@@ -1,2 +1,4 @@
 # Preserve the exact original Windows receipts and native PNG evidence.
 b9fd/** -text whitespace=cr-at-eol
+outer-2ec534c/** -text whitespace=cr-at-eol
+road-contact-source-analysis/** -text whitespace=cr-at-eol

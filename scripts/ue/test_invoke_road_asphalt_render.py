@@ -103,7 +103,7 @@ class RoadAsphaltGpuHostContractTests(unittest.TestCase):
         ):
             self.assertIn(key, self.host)
 
-    def test_gpu_wrapper_bytes_and_workflow_triggers_are_explicit(self):
+    def test_gpu_wrapper_bytes_and_full_proof_intent_are_explicit(self):
         attributes = ATTRIBUTES.read_text(encoding="utf-8")
         self.assertIn(
             "scripts/ue/Invoke-YacsRoadAsphaltRender.ps1 text eol=lf",
@@ -111,17 +111,9 @@ class RoadAsphaltGpuHostContractTests(unittest.TestCase):
         )
         self.assertNotIn(b"\r", HOST.read_bytes())
         trigger = self.workflow.split("permissions:", 1)[0]
-        for name in (
-            "scripts/ue/Invoke-YacsRoadAsphaltRender.ps1",
-            "scripts/ue/road_asphalt_gpu_review.py",
-            "scripts/ue/test_road_asphalt_gpu_review.py",
-            "scripts/ue/road_shoulder_sources.py",
-            "scripts/ue/road_shoulder_network.py",
-            "scripts/ue/road_material_views.py",
-            "Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h",
-            "Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsRoadMaterialInspectionLibrary.cpp",
-        ):
-            self.assertIn("- '" + name + "'", trigger)
+        self.assertNotIn("paths:", trigger)
+        self.assertIn("branches: [codex/364-road-surface-materials]", trigger)
+        self.assertIn("'[road-material-proof]'", self.workflow)
 
     def test_expected_ordered_plan_is_pinned_before_editor_and_rechecked_afterwards(self):
         for name in (

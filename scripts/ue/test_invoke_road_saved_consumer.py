@@ -423,7 +423,7 @@ Write-Output 'SAVED_EDITOR_RENDERING_CONTEXT_CONTRACT_PASS'
         self.assertNotIn("save_asset(", self.host)
         self.assertNotIn("clean -fd", self.host)
 
-    def test_exact_power_shell_lf_and_native_workflow_triggers(self):
+    def test_exact_power_shell_lf_source_bindings_and_explicit_workflow(self):
         attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
         self.assertIn(
             "scripts/ue/Invoke-YacsRoadSavedConsumer.ps1 text eol=lf",
@@ -431,6 +431,9 @@ Write-Output 'SAVED_EDITOR_RENDERING_CONTEXT_CONTRACT_PASS'
         )
         self.assertNotIn(b"\r", WRAPPER.read_bytes())
         triggers = self.workflow.split("permissions:", 1)[0]
+        self.assertNotIn("paths:", triggers)
+        self.assertIn("branches: [codex/364-road-surface-materials]", triggers)
+        self.assertIn("'[road-material-proof]'", self.workflow)
         for path in (
             "scripts/ue/road_asphalt_saved_consumer.py",
             "scripts/ue/test_road_asphalt_saved_consumer.py",
@@ -441,7 +444,6 @@ Write-Output 'SAVED_EDITOR_RENDERING_CONTEXT_CONTRACT_PASS'
             "Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h",
             "Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsRoadMaterialInspectionLibrary.cpp",
         ):
-            self.assertIn(f"- '{path}'", triggers)
             if not Path(path).name.startswith("test_"):
                 self.assertIn("'" + path + "'", self.host)
 

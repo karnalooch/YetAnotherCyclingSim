@@ -6,10 +6,12 @@ a server, Git mutation or network operation, and no fixture is runtime evidence.
 
 from __future__ import annotations
 
+import ast
 import copy
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
+import re
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -417,6 +419,41 @@ class LevelEditorSnapshotTests(unittest.TestCase):
             self.fixture.prepare(synthetic=False)
         self.assertEqual(tree_bytes(self.fixture.source), before)
         self.assertFalse(self.fixture.destination.exists())
+
+
+class RetainedLevelEditorCheckpointTests(unittest.TestCase):
+    def test_real_metadata_graph_matches_the_selected_saved_checkpoint(self):
+        root = preparation.ROOT / preparation.CHECKED_EVIDENCE
+        raw = {name: (root / name).read_bytes() for name in preparation.PINNED_METADATA}
+        for name, (sha, size) in preparation.PINNED_METADATA.items():
+            self.assertEqual(identity(raw[name]), {"sha256": sha, "size_bytes": size})
+        documents = {name: json.loads(value) for name, value in raw.items()}
+        preparation._validate_metadata(
+            documents, PureWindowsPath(str(preparation.SOURCE_ROOT)),
+            preparation.PINNED_METADATA, preparation.MAP_SHA256)
+        maps = [row for row in documents["road-asphalt-saved-manifest.json"]["assets"]
+                if row["path"] == preparation.MAP_FILE]
+        self.assertEqual(len(maps), 1)
+        self.assertEqual(maps[0]["sha256"], preparation.MAP_SHA256)
+        self.assertLess(maps[0]["size_bytes"], preparation.FILE_LIMIT)
+
+    def test_launcher_and_bootstrap_select_the_same_checkpoint_as_the_preparer(self):
+        scripts = preparation.ROOT / "scripts/ue"
+        bootstrap = ast.parse((scripts / "bootstrap_level_editor_stream.py").read_text())
+        fields = {"RUNTIME_SHA", "MAP_PACKAGE", "MAP_SHA256"}
+        values = {
+            target.id: ast.literal_eval(node.value)
+            for node in bootstrap.body if isinstance(node, ast.Assign)
+            for target in node.targets if isinstance(target, ast.Name) and target.id in fields
+        }
+        self.assertEqual(values, {name: getattr(preparation, name) for name in fields})
+        launcher = (scripts / "Start-YacsLevelEditorStream.ps1").read_text()
+        for pattern, expected in (
+            (r"^\$RuntimeSha = '([^']+)'$", preparation.RUNTIME_SHA),
+            (r"^\$Map = '([^']+)'$", preparation.MAP_PACKAGE),
+            (r"^    runtime_source_run = '([^']+)'$", preparation.RUN_TOKEN),
+        ):
+            self.assertEqual(re.findall(pattern, launcher, re.MULTILINE), [expected])
 
 
 if __name__ == "__main__":

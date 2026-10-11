@@ -1,40 +1,25 @@
 name: Road material source proof
 
+# Full material evidence is explicit; feature markers alone never reserve the host.
 on:
   push:
     branches: [codex/364-road-surface-materials]
-    paths:
-      - '.github/workflows/road-material-source-proof.yml'
-      - 'scripts/assets/run_road_asphalt_source_proof.py'
-      - 'scripts/assets/test_run_road_asphalt_source_proof.py'
-      - 'scripts/assets/road_material_contract.py'
-      - 'scripts/assets/test_road_material_contract.py'
-      - 'scripts/assets/material_forge.py'
-      - 'scripts/assets/test_material_forge.py'
-      - 'scripts/assets/material_forge_road_decals.py'
-      - 'scripts/assets/test_material_forge_road_decals.py'
-      - 'scripts/assets/run_road_decals_source_proof.py'
-      - 'scripts/assets/test_run_road_decals_source_proof.py'
-      - 'scripts/assets/read_sa_calobra_hairpin_lidar.py'
-      - 'scripts/assets/test_read_sa_calobra_hairpin_lidar.py'
-      - 'scripts/assets/restore_sa_calobra_lidar_decoder.py'
-      - 'scripts/assets/test_restore_sa_calobra_lidar_decoder.py'
-      - 'worldgen/materials/material_forge/**'
 
 permissions:
   contents: read
 
-concurrency:
-  group: yacs-unreal-ci-${{ github.repository }}
-  cancel-in-progress: false
-
 jobs:
   asphalt:
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
     name: Authenticate asphalt and requested local crack sources
     if: >-
+      github.event_name == 'push' &&
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
-      github.ref == 'refs/heads/codex/364-road-surface-materials'
+      github.ref == 'refs/heads/codex/364-road-surface-materials' &&
+      contains(github.event.head_commit.message, '[road-source-proof]')
     runs-on: [self-hosted, yacs-ue58]
     # The optional crack step owns sixteen bounded renders after the asphalt pair.
     timeout-minutes: 35

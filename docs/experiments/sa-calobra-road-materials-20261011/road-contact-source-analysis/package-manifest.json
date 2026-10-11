@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "scope": "#459 offline source-relative native wall comparison; preserved within #364 experiment docs only",
+  "native_sha": "b9fddea3f6023239da98bec7a5107ed1124cf52e",
+  "frozen_source_sha": "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6",
+  "lidar_reader_sha": "e81a4377cc6b8d635c0036adf01fc8427f987ff9",
+  "original_analysis_script_sha256": "c6749331b88f734d732956ba1b08c9e01ab6afc320b28d1a3fb49a43bc01ccea",
+  "original_reviewed_index_sha256": "7a2251793d5054fd69926c58e34225876b2e996e6a2b2a94c5f2a1a379a61fce",
+  "retained_original_output_count": 5,
+  "input_pins": "native-wall-source-comparison.json:inputs; README.md:Pinned inputs and retrieval",
+  "reproduction_receipt": "reproduction-check.json",
+  "independent_review": {
+    "role": "material_review",
+    "scope": "Original corrected plot, 321 native inner vertices / 0.08 m step, nine LiDAR transects, original 14-file hash index",
+    "preservation_blocker": false
+  },
+  "final_native_landscape_height_observed": false,
+  "geometry_repair_applied": false,
+  "owner_visual_pass": false,
+  "files": [
+    {
+      "file": "README.md",
+      "size_bytes": 9967,
+      "sha256": "6aa5af2d2010369fb52dfb7df4f652e4aeb31de13809273aa90dfffd52a739bf",
+      "byte_identical_to_reviewed_output": false
+    },
+    {
+      "file": "analyze_native_wall.py",
+      "size_bytes": 16928,
+      "sha256": "3cb5f7b6282661278f83752727fb66828530ca29b71cd10f2eb3dd988f59c188",
+      "byte_identical_to_reviewed_output": false
+    },
+    {
+      "file": "hypothetical-bottom-envelope.json",
+      "size_bytes": 352136,
+      "sha256": "868ef36b44316974d3a804ca5b6094c585d9ed91b53800348fa9d1128f112de9",
+      "byte_identical_to_reviewed_output": true
+    },
+    {
+      "file": "native-wall-facet-contact.png",
+      "size_bytes": 185755,
+      "sha256": "ba174345cff07f2633b856cb71574f35979b30758e8006da6fb747cfbb3fd3ce",
+      "byte_identical_to_reviewed_output": true
+    },
+    {
+      "file": "native-wall-source-comparison.json",
+      "size_bytes": 10781,
+      "sha256": "20f6162fca3f007bab7e6faff8a6652b09cc496a22a6c1b936b35c5508e220fd",
+      "byte_identical_to_reviewed_output": true
+    },
+    {
+      "file": "native-wall-source-transects.png",
+      "size_bytes": 300874,
+      "sha256": "e0fe73224c331bc23d2b4069c1849841edf4f867cd88d39b6e19f956e942b01c",
+      "byte_identical_to_reviewed_output": true
+    },
+    {
+      "file": "reproduction-check.json",
+      "size_bytes": 2496,
+      "sha256": "2ff7a86faae7d99e5e8a478875e48ee6b5cba61eb2c5e58d4957bd571bd41e9d",
+      "byte_identical_to_reviewed_output": false
+    },
+    {
+      "file": "wall-transects.csv",
+      "size_bytes": 1494,
+      "sha256": "0074a45627a2d85b8c6a6e083f1ab0682313db3e1d601eb78c4fe05fdc3ca434",
+      "byte_identical_to_reviewed_output": true
+    }
+  ],
+  "manifest_self_hash_excluded": true
+}

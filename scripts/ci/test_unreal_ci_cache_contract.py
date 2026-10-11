@@ -38,17 +38,17 @@ class UnrealCiCacheContractTests(unittest.TestCase):
         )
         self.assertIn('"scripts/ci/materialize_unreal_cache_inputs.py"', classifier)
 
-    def test_road_material_native_reruns_on_cache_reconciliation_change(self):
+    def test_road_material_native_explicit_checkpoint_has_no_path_filter(self):
         workflow = (
             ROOT / ".github" / "workflows" / "road-material-native-proof.yml"
         ).read_text(encoding="utf-8")
         triggers = workflow.split("permissions:", 1)[0]
-        for path in (
-            "scripts/ci/unreal_ci_workspace.py",
-            "scripts/ci/materialize_unreal_cache_inputs.py",
-            "scripts/ci/Resolve-YacsUnrealCiCache.ps1",
-        ):
-            self.assertIn(f"- '{path}'", triggers)
+        # The owner can request a checkpoint after cache or documentation-only
+        # followups without a dummy edit to a formerly watched source path.
+        self.assertNotIn("paths:", triggers)
+        self.assertNotIn("paths-ignore:", triggers)
+        self.assertIn("branches: [codex/364-road-surface-materials]", triggers)
+        self.assertIn("'[road-material-proof]'", workflow)
         self.assertIn("needs: await_ci", workflow)
 
     def test_road_material_native_waits_for_exact_head_ci_without_host_lock(self):

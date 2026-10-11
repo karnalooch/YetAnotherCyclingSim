@@ -374,6 +374,74 @@ These timings are evidence from that runner/revision, not a guaranteed future
 performance budget. The architectural invariant is the cache decision and
 fail-closed provenance, not a specific duration.
 
+### M3 road-material iteration cadence
+
+Owner decision, 2026-10-11: routine #364 material corrections must not launch a
+full scene preparation and render bundle after every push. Compile reuse and
+scene reuse are separate costs. The native
+[b9fd checkpoint](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38116299783)
+reused compiled binaries, but its baseline, save preparation, independent reload
+and GPU processes took 91.368, 261.167, 143.887 and 771.374 seconds respectively.
+Those four processes alone total 21.1 minutes, before the additional canary,
+contact diagnostics, host preparation and artifact upload.
+
+The existing branch-scoped road workflows now require explicit intent:
+
+| Work | Trigger on `codex/364-road-surface-materials` | Meaning |
+|---|---|---|
+| Ordinary iteration | Push without a full-proof marker | Required CI continues; both material proof workflows skip their jobs before reserving the shared host |
+| Native material checkpoint | Commit message includes `[road-material-proof]` | Wait for successful protected CI at this exact SHA, then run the existing baseline, canary, full-network save, independent reload and all 68 Lit cameras |
+| Material source checkpoint | Commit message includes `[road-source-proof]` | Run the existing authenticated source renderer and determinism comparison; use when the source producer or selected source inputs change |
+| Live viewport review | Existing `[level-editor-review]` selection | Open the authenticated saved scene through the separate [Level Editor review](tooling/LEVEL_EDITOR_STREAM.md) workflow |
+
+Feature markers such as `[road-outer-blend]`, `[road-band-controls]`,
+`[road-paint-controls]`, `[road-crack-canary]`, `[shoulder-contact]`,
+`[road-cracks-source]` and `[road-api-read]` select optional work only after the
+corresponding full-proof intent is present. They never request a heavy proof
+by themselves. The native and source intents are separate; a native request
+does not regenerate source textures automatically. Request source proof first,
+review its result, then request native proof in a separate push. Combining both
+heavy requests can keep the shared host busy long enough to exhaust the native
+CI waiter's existing deadline.
+
+The marker must be in the final HEAD commit message of the push; a PR body or
+an earlier pushed commit is not the selector. Repeat every desired feature
+marker at each checkpoint because selections do not carry over from earlier
+runs. GitHub's string matching is case-insensitive, and even a quoted marker
+inside the HEAD message counts as intent. Omit the literal full-proof markers
+from ordinary commit messages, including commits documenting this policy.
+
+Both proof workflows retain owner/repository/branch/event guards. Their push
+triggers have no path filter, so an explicit checkpoint can be requested after
+a documentation-only followup without editing a runtime file. The shared host
+lock is job-scoped and acquired only by an admitted native/source job; the
+hosted CI waiter holds no Unreal lock. This is the existing temporary #364
+branch entry point, not an additional Gumball command or proof framework.
+Rerunning an older Actions run uses that run's old workflow and SHA; it does
+not adopt this cadence or prove a later head.
+
+Ordinary CI may still use Windows because classification covers the complete
+PR diff. STATIC/RUNTIME/COMPILE fingerprint checks remain unchanged. A skipped
+material job grants no new native evidence. Record the last successful runtime
+SHA separately from the current launcher/docs SHA. Accumulate small fixes,
+inspect the affected views, then request a complete checkpoint at a useful
+review boundary and for the final material candidate. Existing source identity,
+readiness, conservation, full coverage and final admission requirements remain
+mandatory; a partial preview never substitutes for them.
+
+The prepared stream is intended for viewport review and input. Automatic material
+refresh inside a persistent Editor session is not yet runtime-proved, and the
+current native host has no standalone focused mode: optional controls still
+follow the full 68-view suite. Neither capability may be claimed from the
+cadence change. M3 owner audit remains `PENDING_FINAL_M3`; performance remains
+`DEFERRED_AFTER_M3`, `performance_pass: false`.
+
+This implements the already adopted Gumball explicit-heavy-proof invariant in
+the two temporary YACS workflows; no new upstream framework or candidate is
+needed. Actions selector and rerun semantics follow GitHub's official
+[expression reference](https://docs.github.com/en/actions/reference/workflows-and-actions/expressions)
+and [rerun contract](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs).
+
 ### Executable workflow lifecycle
 
 The set of executable GitHub Actions workflows is governed by

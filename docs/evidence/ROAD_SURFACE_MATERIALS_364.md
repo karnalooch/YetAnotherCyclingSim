@@ -39,19 +39,29 @@ normal-space correctness. The original receipt remains
 edge-erosion proof is claimed. Near white lines are continuous, while distant
 pixel gaps, asphalt bands and the hard outer gravel boundary remain open.
 
-The new 0112 `support022-hidden` view leaves the narrow dark road-edge band
-visible, as do the other independent hides. This rejects sole ownership by
-support022 rather than authorizing a guessed height change. Hairpin0081 now
+The new 0112 `support022-hidden` view removes the lower wall strip and shoulder,
+while a separate thin upper line touching the asphalt remains. Source projection
+supports attribution of that upper line to the existing 8 cm pavement slab side.
+Support022 remains the owner of the lower feature. Hairpin0081 now
 retains actual native wall/source CUT observations. Support185 owns its exposed
 wall; final native Landscape height and a contact/profile repair remain #459
 work. Materials have not repaired that geometry.
 
-The next separate attempt selects **outer terrain + band/paint controls**:
-five existing shoulder owners, 18 exact selected textures, the same 68 Lit
-cameras and ten diagnostic controls. Crack and contact families need not repeat
-in this attempt. It retains the strict frozen-texture verifier, source and full
-buffer conservation, actual save/fresh/GPU checks, and current flushed stage
-records. The earlier outer-terrain failure remains unresolved until this run.
+The separate **outer terrain + band/paint** attempt at `2ec534c0b62a18b05eb3ce066a151b0d9bb3bc08`
+passed [protected CI 38119542097](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38119542097),
+with verified binary reuse. Its [native run 38119538994](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38119538994)
+failed before save: the prepare process exited 3 after 385.443 seconds, below
+its 420-second deadline. Stage records show successful terrain authentication,
+then D3D12 `E_OUTOFMEMORY` inside the `terrain.build_surface_terms` interval.
+The [authenticated failure record](../experiments/sa-calobra-road-materials-20261011/outer-2ec534c/README.md)
+retains the original host/cache receipts and derived stage observations. There
+is no new map, reload, band/paint result or PNG, and the precise allocation cause
+remains unproved. The strict verifier and source/buffer gates stay intact.
+
+The owner requested [lighter iteration cadence](../CI_VALIDATION_TIERS.md#m3-road-material-iteration-cadence):
+ordinary pushes no longer request complete native/source proofs. The corrected
+[offline contact analysis](../experiments/sa-calobra-road-materials-20261011/road-contact-source-analysis/README.md)
+is source-relative evidence under #459, not an applied geometry repair.
 The Level Editor preparer now supports a manifest-only 4 MiB read bound because
 the successful b9fd manifest is 3,225,316 bytes; other metadata stay at 2 MiB.
 The live stream remains pending a verified current-runtime retarget and launch.

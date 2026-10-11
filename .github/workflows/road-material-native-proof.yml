@@ -1,85 +1,9 @@
 name: Road material native proof
 
+# Full material evidence is explicit; feature markers alone never reserve the host.
 on:
   push:
     branches: [codex/364-road-surface-materials]
-    paths:
-      - '.gitattributes'
-      - '.github/workflows/road-material-native-proof.yml'
-      - 'scripts/ue/Invoke-YacsRoadMaterialBaseline.ps1'
-      - 'scripts/ue/read_road_material_baseline.py'
-      - 'scripts/ue/test_read_road_material_baseline.py'
-      - 'scripts/ci/classify_changes.py'
-      - 'scripts/ci/Resolve-YacsUnrealCiCache.ps1'
-      - 'scripts/ci/unreal_ci_workspace.py'
-      - 'scripts/ci/materialize_unreal_cache_inputs.py'
-      - 'scripts/ci/test_unreal_ci_cache_contract.py'
-      - 'scripts/ci/official_mcp_bob_session.py'
-      - 'scripts/ci/test_official_mcp_bob_session.py'
-      - 'scripts/ue/road_asphalt_slot_canary.py'
-      - 'scripts/ue/test_road_asphalt_slot_canary.py'
-      - 'scripts/ue/road_asphalt_source_preflight.py'
-      - 'scripts/ue/test_road_asphalt_source_preflight.py'
-      - 'scripts/ue/run_road_asphalt_native_canary.py'
-      - 'scripts/ue/test_run_road_asphalt_native_canary.py'
-      - 'scripts/ue/Invoke-YacsRoadAsphaltNativeCanary.ps1'
-      - 'scripts/ue/test_invoke_road_asphalt_native_canary.py'
-      - 'scripts/ue/import_material_forge_variant.py'
-      - 'scripts/ue/road_asphalt_saved_consumer.py'
-      - 'scripts/ue/road_shoulder_window.py'
-      - 'scripts/ue/test_road_shoulder_window.py'
-      - 'scripts/ue/road_shoulder_sources.py'
-      - 'scripts/ue/test_road_shoulder_sources.py'
-      - 'scripts/ue/road_shoulder_network.py'
-      - 'scripts/ue/test_road_shoulder_network.py'
-      - 'scripts/ue/road_shoulder_edges.py'
-      - 'scripts/ue/test_road_shoulder_edges.py'
-      - 'scripts/ue/road_material_views.py'
-      - 'scripts/ue/test_road_material_views.py'
-      - 'Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h'
-      - 'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsRoadMaterialInspectionLibrary.cpp'
-      - 'scripts/ue/road_shoulder_material.py'
-      - 'scripts/ue/test_road_shoulder_material.py'
-      - 'scripts/ue/build_sa_calobra_whole_map_master.py'
-      - 'scripts/ue/sa_calobra_whole_map_prep.py'
-      - 'scripts/ue/road_edge_marking_geometry.py'
-      - 'scripts/ue/test_road_edge_marking_geometry.py'
-      - 'scripts/ue/road_edge_marking_material.py'
-      - 'scripts/ue/test_road_edge_marking_material.py'
-      - 'scripts/ue/road_edge_marking_consumer.py'
-      - 'scripts/ue/test_road_edge_marking_consumer.py'
-      - 'scripts/ue/road_pavement_source_bindings.py'
-      - 'scripts/ue/test_road_pavement_source_bindings.py'
-      - 'scripts/ue/road_asphalt_visual_controls.py'
-      - 'scripts/ue/test_road_asphalt_visual_controls.py'
-      - 'scripts/ue/road_crack_sources.py'
-      - 'scripts/ue/test_road_crack_sources.py'
-      - 'scripts/ue/road_crack_material.py'
-      - 'scripts/ue/test_road_crack_material.py'
-      - 'scripts/ue/road_crack_geometry.py'
-      - 'scripts/ue/test_road_crack_geometry.py'
-      - 'scripts/ue/road_crack_consumer.py'
-      - 'scripts/ue/test_road_crack_consumer.py'
-      - 'scripts/ue/road_crack_visual_controls.py'
-      - 'scripts/ue/test_road_crack_visual_controls.py'
-      - 'scripts/ue/capture_sa_calobra_shoulder_contact.py'
-      - 'scripts/ue/Invoke-YacsRoadShoulderContact.ps1'
-      - 'scripts/ue/test_invoke_road_shoulder_contact.py'
-      - 'scripts/ci/test_sa_calobra_shoulder_contact.py'
-      - 'scripts/proof/sa_calobra_tpp_survey.py'
-      - 'worldgen/materials/sa_calobra_texture_library_v2_20261005.json'
-      - 'worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.json'
-      - 'scripts/ue/test_road_asphalt_saved_consumer.py'
-      - 'scripts/ue/Invoke-YacsRoadSavedConsumer.ps1'
-      - 'scripts/ue/test_invoke_road_saved_consumer.py'
-      - 'scripts/ue/road_asphalt_gpu_review.py'
-      - 'scripts/ue/test_road_asphalt_gpu_review.py'
-      - 'scripts/ue/test_road_asphalt_gpu_readiness.py'
-      - 'scripts/ue/Invoke-YacsRoadAsphaltRender.ps1'
-      - 'scripts/ue/test_invoke_road_asphalt_render.py'
-      - 'scripts/proof/sa_calobra_shoulder_contact.py'
-      - 'docs/experiments/sa-calobra-tpp-survey-20261008/frames.csv'
-      - 'scripts/assets/road_material_contract.py'
 
 permissions:
   contents: read
@@ -89,9 +13,11 @@ jobs:
   await_ci:
     name: Await protected CI for this exact source SHA
     if: >-
+      github.event_name == 'push' &&
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
-      github.ref == 'refs/heads/codex/364-road-surface-materials'
+      github.ref == 'refs/heads/codex/364-road-surface-materials' &&
+      contains(github.event.head_commit.message, '[road-material-proof]')
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -134,11 +60,15 @@ jobs:
       group: yacs-unreal-ci-${{ github.repository }}
       cancel-in-progress: false
     if: >-
+      needs.await_ci.result == 'success' &&
+      github.event_name == 'push' &&
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
-      github.ref == 'refs/heads/codex/364-road-surface-materials'
+      github.ref == 'refs/heads/codex/364-road-surface-materials' &&
+      contains(github.event.head_commit.message, '[road-material-proof]')
     runs-on: [self-hosted, yacs-ue58]
-    # Every selection retains full-network save/reload and all 68 Lit poses.
+    # Ordinary pushes stop at admission. A requested checkpoint retains
+    # full-network save/reload and all 68 Lit poses.
     # Explicit markers select crack controls or the separate band/paint family;
     # outer terrain and contact remain independent, opt-in proof selections.
     # Host GPU deadline is 1200 s; native total is 1080 s, per-shot watchdog 180 s.

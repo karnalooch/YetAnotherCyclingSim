@@ -1,0 +1,22 @@
+{
+  "SchemaVersion": 3,
+  "Head": "2ec534c0b62a18b05eb3ce066a151b0d9bb3bc08",
+  "Mode": "static",
+  "CompileKind": "none",
+  "Reason": "verified-equivalent-proof",
+  "PurgeBuildCache": false,
+  "PreviousStateInvalidated": false,
+  "CompileFingerprint": "ed7a45799b24d88a11664bc45b2858b35e6bee53a69568d7ce0b4381dee39e98",
+  "ProofFingerprint": "f62a1358237f20b955b653d648829ece8bdbe9db02489439507a0b5474018475",
+  "EngineIdentity": "root=d:\\yacs\\engine\\ue_5.8|association=5.8|version=5.8.2-56702186|buildVersionSha256=ff99fc3dd98e7c7fd2f5700334bc792dfb7baced3828cdee32940bb69581a6a4|buildBatSha256=4f71b08ebc3fe2ba7918a5be7a0b3f22cf7ce5530049873e9eca8df946bc1cb3|editorCmdSha256=ae92f55952a3c9a7def90983fcf5aedce52d8ee8e4565fbd923985e9d9d3e05e",
+  "EngineRoot": "D:\\yacs\\engine\\UE_5.8",
+  "ToolchainIdentity": "cl=c:\\program files (x86)\\microsoft visual studio\\2022\\buildtools\\vc\\tools\\msvc\\14.44.35207\\bin\\hostx64\\x64\\cl.exe|clSha256=88c8344236a27a6e727e0a8edc49aaa2690bdc7a9464b9d18cc7abe70a9f1c0d|link=c:\\program files (x86)\\microsoft visual studio\\2022\\buildtools\\vc\\tools\\msvc\\14.44.35207\\bin\\hostx64\\x64\\link.exe|linkSha256=ca11e6c45debd34bf652dfe984c5360a531a005ed78bf72852330c9c2590cf0d|rc=c:\\program files (x86)\\windows kits\\10\\bin\\10.0.26100.0\\x64\\rc.exe|rcSha256=43da1503c262c30894c851589bf0155f8365d77e63a5f7bc13982320e3a6b42d",
+  "EnvironmentIdentity": "2cf6c58583f45fdb8d79bd1029125ae75133ffa6ad01bbb9f602dbf016280e19",
+  "PreviousProofHead": "07ebafad08bce8bc227089901cb46785079fefda",
+  "ExpectedBinaries": [
+    "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-build-37690136030-1\\Binaries\\Win64\\UnrealEditor-YetAnotherCyclingSim.dll",
+    "D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\_unreal-build-37690136030-1\\Binaries\\Win64\\UnrealEditor-YetAnotherCyclingSimEditor.dll"
+  ],
+  "BuildCachePolicy": "ubt-native-incremental-v1",
+  "TimestampUtc": "2026-10-11T07:02:05.7302855Z"
+}

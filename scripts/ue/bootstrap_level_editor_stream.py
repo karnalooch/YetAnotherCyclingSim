@@ -16,9 +16,9 @@ import traceback
 import unreal
 
 
-RUNTIME_SHA = "1ef46dacedba5ed1fc909422529be41808d3dbe4"
+RUNTIME_SHA = "b9fddea3f6023239da98bec7a5107ed1124cf52e"
 MAP_PACKAGE = "/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview"
-MAP_SHA256 = "35d485005f123e5648f675d6f91209630c163bddf92d55f6c5b640d55917732d"
+MAP_SHA256 = "cbbf374309508fdb2c6f86c6324af4a3824a0c5ed32a4bfc29200ad3b29da183"
 # Existing survey window-0112-forward-00001; no new scene/camera asset is created.
 CAMERA = (56912.43746055451, 53090.5078449409, 46766.459277036185)
 TARGET = (58088.73631673153, 52542.60698992016, 46508.19271952782)

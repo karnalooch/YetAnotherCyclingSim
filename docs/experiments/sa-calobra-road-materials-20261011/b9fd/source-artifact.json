@@ -71,6 +71,26 @@
       "file": "shoulder-contact-0081/capture/frames/window-0081-reverse-00004-baseline.png",
       "size_bytes": 830051,
       "sha256": "53c96fdaa88e64fe7e738ce0ad8e2b5db294b770123ff2939ec0802af7e0629b"
+    },
+    {
+      "file": "host-receipt.json",
+      "size_bytes": 21402,
+      "sha256": "260381cee10e24b3aa06d6d124bfbb52b05c67425afc8a4813f11dc991a63212"
+    },
+    {
+      "file": "road-asphalt-saved-manifest.json",
+      "size_bytes": 3225316,
+      "sha256": "974c86813d2ee95d4f3cc244fd3590f7f9711506973c10544f6ede954557344a"
+    },
+    {
+      "file": "road-asphalt-saved-reloaded.json",
+      "size_bytes": 3527,
+      "sha256": "3cfab0e6f9dfa76ae16bc194f0d668ec5f9c6cb0e771fbc58ce726aafec7b7ee"
+    },
+    {
+      "file": "session-preparation.json",
+      "size_bytes": 50978,
+      "sha256": "912dbfd154164decadfd7d5e2a71bf840f377359f291e726664c093687929f52"
     }
   ],
   "original_image_bytes_preserved": true,

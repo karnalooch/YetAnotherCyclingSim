@@ -1,7 +1,7 @@
 """Copy the pinned #364 saved consumer into a new, independent review project.
 
 This host utility starts no Unreal process, server, build or network operation.
-The source checkpoint is 1ef46dacedba, not the current material-authoring HEAD.
+The source checkpoint is b9fddea3f602, independent of the current launcher HEAD.
 A failed copy leaves an incomplete new directory without a readiness receipt;
 it never repairs, overwrites or removes an existing project. Synthetic fixtures
 must explicitly opt in and cannot produce a native readiness status.
@@ -24,19 +24,17 @@ from scripts.ci.official_mcp_bob_session import _identity, _read_json, _safe_pat
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RUNTIME_SHA = "1ef46dacedba5ed1fc909422529be41808d3dbe4"
-RUN_TOKEN = "38084733503-1"
+RUNTIME_SHA = "b9fddea3f6023239da98bec7a5107ed1124cf52e"
+RUN_TOKEN = "38116299783-1"
 SOURCE_ROOT = Path(
-    r"D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\rm-38084733503-1"
+    r"D:\yacs\runner\_work\YetAnotherCyclingSim\YetAnotherCyclingSim\rm-38116299783-1"
 )
 REVIEW_ROOT = Path(r"D:\yacs\work\level-editor-review")
 EVIDENCE_RELATIVE = "Saved/RuntimeProof/RoadMaterialBaseline/" + RUN_TOKEN
-CHECKED_EVIDENCE = (
-    "docs/experiments/sa-calobra-road-shoulder-window0112-20261010/candidate"
-)
+CHECKED_EVIDENCE = "docs/experiments/sa-calobra-road-materials-20261011/b9fd"
 MAP_PACKAGE = "/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview"
 MAP_FILE = "Content/" + MAP_PACKAGE.removeprefix("/Game/") + ".umap"
-MAP_SHA256 = "35d485005f123e5648f675d6f91209630c163bddf92d55f6c5b640d55917732d"
+MAP_SHA256 = "cbbf374309508fdb2c6f86c6324af4a3824a0c5ed32a4bfc29200ad3b29da183"
 NATIVE_BUILD_ID = "55116800"
 RECEIPT_NAME = "level-editor-review-preparation.json"
 FILE_LIMIT = 512 * 1024 * 1024
@@ -55,11 +53,11 @@ SESSION_NAME = re.compile(RUNTIME_SHA[:12] + r"-[A-Za-z0-9][A-Za-z0-9_-]{0,47}\Z
 # The checked-in raw evidence and fresh native evidence must both match these
 # immutable artifact bytes before any JSON document is parsed or followed.
 PINNED_METADATA = {
-    "host-receipt.json": ("41f7c1f90ef44dc0dcde840d75be019566d174958450360c12753c4add01be2c", 21402),
-    "saved-road-host-receipt.json": ("3c0b99e1af7f2066b6229f7c333530ae69d0ae73f3b69b74b54cddeeb0d7db4d", 4183),
-    "road-asphalt-saved-manifest.json": ("ccd13145400c756e5d27efd332f84fe87001a8e1e4fe00e08df00997310e5cbd", 22701),
-    "road-asphalt-saved-reloaded.json": ("5d1b146f27b71cd5d580e1dad17ed1e0a79776ec9a2ecaac8d921d140a8d904c", 1252),
-    "session-preparation.json": ("4c544a40aff62a3d847c2929780243d4436c314f579042031448a6ea6c576a4d", 50978),
+    "host-receipt.json": ("260381cee10e24b3aa06d6d124bfbb52b05c67425afc8a4813f11dc991a63212", 21402),
+    "saved-road-host-receipt.json": ("3914a7f240cd05251edc671ce04b89bf4d8986152f2bf3428bca2fb22e78a5f3", 6370),
+    "road-asphalt-saved-manifest.json": ("974c86813d2ee95d4f3cc244fd3590f7f9711506973c10544f6ede954557344a", 3225316),
+    "road-asphalt-saved-reloaded.json": ("3cfab0e6f9dfa76ae16bc194f0d668ec5f9c6cb0e771fbc58ce726aafec7b7ee", 3527),
+    "session-preparation.json": ("912dbfd154164decadfd7d5e2a71bf840f377359f291e726664c093687929f52", 50978),
 }
 
 # Exact unsmudged Git blobs at RUNTIME_SHA; verified equal to the launcher

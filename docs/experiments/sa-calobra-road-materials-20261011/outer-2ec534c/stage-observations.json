@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "runtime_sha": "2ec534c0b62a18b05eb3ce066a151b0d9bb3bc08",
+  "run_token": "38119538994-1",
+  "source_log": {
+    "artifact_member": "saved-road-prepare-editor.log",
+    "size_bytes": 478698,
+    "sha256": "b74392a1ff1726a9b2487b5c06aeed8ab664b2573d110e467fc13619e5eadf41"
+  },
+  "derived_observations": true,
+  "stages": [
+    {
+      "log_prefix": "[2026.10.11-07.05.04:557][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/RoadAsphaltConsumer/aged_mountain_asphalt/dry_varied/9c0a41f6e2ae/MI_MaterialForge.MI_MaterialForge",
+      "material_path_observed": false,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 63513186304,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 11765760000
+      },
+      "outer_terrain": true,
+      "phase": "before",
+      "schema_version": 1,
+      "stage": "saved.material_verify"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.04:579][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/RoadAsphaltConsumer/aged_mountain_asphalt/dry_varied/9c0a41f6e2ae/MI_MaterialForge.MI_MaterialForge",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 63512092672,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 11763277824
+      },
+      "outer_terrain": true,
+      "phase": "after",
+      "schema_version": 1,
+      "stage": "saved.material_verify"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.04:619][  2]LogPython: ",
+      "material_path": "/Game/Worlds/SaCalobra/CheckpointMaterials/MI_Accepted_0.MI_Accepted_0",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 63512092672,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 11763281920
+      },
+      "outer_terrain": true,
+      "phase": "before",
+      "schema_version": 1,
+      "stage": "saved.road_inspect"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.05:160][  2]LogPython: ",
+      "material_path": "/Game/Worlds/SaCalobra/CheckpointMaterials/MI_Accepted_0.MI_Accepted_0",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 63527989248,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 11780820992
+      },
+      "outer_terrain": true,
+      "phase": "after",
+      "schema_version": 1,
+      "stage": "saved.road_inspect"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.05:185][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/MI_ShoulderNetwork.MI_ShoulderNetwork",
+      "material_path_observed": false,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 63527989248,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 11780820992
+      },
+      "outer_terrain": false,
+      "phase": "before",
+      "schema_version": 1,
+      "stage": "saved.shoulder_create"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.18:106][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/M_ShoulderNetwork.M_ShoulderNetwork",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 48418553856,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 3305242624
+      },
+      "outer_terrain": false,
+      "phase": "before",
+      "schema_version": 1,
+      "stage": "shoulder.recompile_material"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.19:160][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/M_ShoulderNetwork.M_ShoulderNetwork",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 47793958912,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 2856501248
+      },
+      "outer_terrain": false,
+      "phase": "after",
+      "schema_version": 1,
+      "stage": "shoulder.recompile_material"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.19:530][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/MI_ShoulderNetwork.MI_ShoulderNetwork",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 47785168896,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 2794070016
+      },
+      "outer_terrain": false,
+      "phase": "before",
+      "schema_version": 1,
+      "stage": "shoulder.update_material_instance"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.19:835][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/MI_ShoulderNetwork.MI_ShoulderNetwork",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 47548682240,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 2721562624
+      },
+      "outer_terrain": false,
+      "phase": "after",
+      "schema_version": 1,
+      "stage": "shoulder.update_material_instance"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.19:917][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/MI_ShoulderNetwork.MI_ShoulderNetwork",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 47548964864,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 2661621760
+      },
+      "outer_terrain": false,
+      "phase": "after",
+      "schema_version": 1,
+      "stage": "saved.shoulder_create"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.19:934][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/MI_ShoulderNetwork.MI_ShoulderNetwork",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 47549030400,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 2641072128
+      },
+      "outer_terrain": false,
+      "phase": "before",
+      "schema_version": 1,
+      "stage": "saved.shoulder_verify"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.20:017][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/MI_ShoulderNetwork.MI_ShoulderNetwork",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 47546335232,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 2632863744
+      },
+      "outer_terrain": false,
+      "phase": "after",
+      "schema_version": 1,
+      "stage": "saved.shoulder_verify"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.20:044][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/TerrainBlend/MI_ShoulderNetworkTerrain.MI_ShoulderNetworkTerrain",
+      "material_path_observed": false,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 47546597376,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 2634567680
+      },
+      "outer_terrain": true,
+      "phase": "before",
+      "schema_version": 1,
+      "stage": "saved.outer_create"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.20:119][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/MI_SaCalobraWholeMapPreparation.MI_SaCalobraWholeMapPreparation",
+      "material_path_observed": false,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 47546363904,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 2637643776
+      },
+      "outer_terrain": true,
+      "phase": "before",
+      "schema_version": 1,
+      "stage": "terrain.authenticate"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.28:370][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/MI_SaCalobraWholeMapPreparation.MI_SaCalobraWholeMapPreparation",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 47613034496,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 2759581696
+      },
+      "outer_terrain": true,
+      "phase": "before",
+      "schema_version": 1,
+      "stage": "terrain.verify_instance"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.28:604][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/MI_SaCalobraWholeMapPreparation.MI_SaCalobraWholeMapPreparation",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 47621353472,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 2758819840
+      },
+      "outer_terrain": true,
+      "phase": "after",
+      "schema_version": 1,
+      "stage": "terrain.verify_instance"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.28:683][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/MI_SaCalobraWholeMapPreparation.MI_SaCalobraWholeMapPreparation",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 47621304320,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 2757959680
+      },
+      "outer_terrain": true,
+      "phase": "after",
+      "schema_version": 1,
+      "stage": "terrain.authenticate"
+    },
+    {
+      "log_prefix": "[2026.10.11-07.05.37:125][  2]LogPython: ",
+      "material_path": "/Game/Generated/YACS/RoadAsphaltConsumer/ShoulderNetwork/TerrainBlend/M_ShoulderNetworkTerrain.M_ShoulderNetworkTerrain",
+      "material_path_observed": true,
+      "material_role": "subject",
+      "memory": {
+        "error": null,
+        "process_available_commit_bytes": 47523696640,
+        "scope": "GLOBAL_MEMORY_STATUS_EX",
+        "status": "READ",
+        "system_available_physical_bytes": 2130432000
+      },
+      "outer_terrain": true,
+      "phase": "before",
+      "schema_version": 1,
+      "stage": "terrain.build_surface_terms"
+    }
+  ],
+  "failure": {
+    "stage_before_without_after": "terrain.build_surface_terms",
+    "native_error": "E_OUTOFMEMORY",
+    "fatal_message": "Out of video memory trying to allocate a rendering resource",
+    "requested_resource_width_bytes": 33554432,
+    "elapsed_seconds": 385.4429058,
+    "deadline_seconds": 420,
+    "exit_code": 3,
+    "saved": false,
+    "fresh_reload": false,
+    "gpu_review_started": false,
+    "exact_material_node_identified": false
+  },
+  "cache_observation": {
+    "ZenLocal": "OK",
+    "zen_data_drive": "C:",
+    "legacy_local_ddc_drive": "C:",
+    "shared_ddc": "disabled",
+    "engine_ddc_pak_opened_mib": 1679
+  },
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_pass": false
+}

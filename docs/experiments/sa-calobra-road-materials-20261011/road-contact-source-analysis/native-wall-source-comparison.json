@@ -1,0 +1,347 @@
+{
+  "status": "OFFLINE_NATIVE_WALL_SOURCE_COMPARISON",
+  "issue": 459,
+  "native_sha": "b9fddea3f6023239da98bec7a5107ed1124cf52e",
+  "source_sha": "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6",
+  "source_rows": [
+    1560,
+    1880
+  ],
+  "station_keys_m": [
+    195,
+    235
+  ],
+  "source_diagonal_basis": "a_d; docs/WORLD_BUILDING_BIBLE.md historical native proof and scripts/ue/ma2141_road_preview.py",
+  "inputs": [
+    {
+      "path": "/workspace/scratch/f1cae95bf6aa/evidence/native-b9fd/proof/shoulder-contact-0081/shoulder-contact.json",
+      "sha256": "2139bd0a735f4d7222bc4293db99b89dd95adacd44f8becb22e3a8767db32feb",
+      "size_bytes": 484371
+    },
+    {
+      "path": "/workspace/scratch/f1cae95bf6aa/material-forge-analysis/sparse-road-cracks-e81a/frozen-source/ma2141-cut-patch.f32",
+      "sha256": "cabf471cf108017a1a15624880dd8ca531f880ddfeaf747bd0769b05abb75642",
+      "size_bytes": 256136
+    },
+    {
+      "path": "/workspace/scratch/f1cae95bf6aa/evidence/native-b9fd/proof/shoulder-contact-0081/source-cut-manifest.json",
+      "sha256": "5ccfd9ece2c8cdf8140b47b4a771e5a530d7aa4835554771824bf9fd1d23404f",
+      "size_bytes": 1749
+    },
+    {
+      "path": "/workspace/scratch/f1cae95bf6aa/evidence/source-e81a/proof/hairpin-lidar-points.csv",
+      "sha256": "6af3704cc525bcc7282989e74beb061ba6fdec9f3c7492ee6d428ca3b603fb0d",
+      "size_bytes": 417842
+    },
+    {
+      "path": "/workspace/scratch/f1cae95bf6aa/evidence/source-e81a/proof/hairpin-lidar.json",
+      "sha256": "f7bcf44f948672f70f22f055fd4781d50622ccdfa0ae8840e35ef4136449e13d",
+      "size_bytes": 26853
+    },
+    {
+      "path": "/workspace/scratch/f1cae95bf6aa/road-geometry-analysis/full-profile-c5573b3/ma2141-profile-candidate.json",
+      "sha256": "c0ca612dd5af5a311d1917e41d66f44aa83a9d40eed5e9e784432e06e2a52253",
+      "size_bytes": 9232773
+    }
+  ],
+  "native_payload_sha256": "615f76466b70e7c48589274caba3ab955f1407a3dfec6f00e3fc9735a2f3f3b7",
+  "retained_cut_nodes_verified": 175,
+  "endpoint_count": 321,
+  "wall_height_m": {
+    "min": 0.3490924835205078,
+    "median": 1.0665655136108398,
+    "max": 1.8280506134034658
+  },
+  "endpoint_bottom_minus_source_ad_m": {
+    "min": -0.0019655582509585656,
+    "median": -0.000320094592316309,
+    "max": 0.0004423595732805552
+  },
+  "facet_crossing_count": 139,
+  "source_gap_extrema": {
+    "minimum": {
+      "source_segment_row": 1831,
+      "t": 0.4019773530787544,
+      "xy_cm": [
+        109381.3489559259,
+        56500.0
+      ],
+      "original_bottom_cm": 58879.242443052935,
+      "source_cut_ad_cm": 58881.36018181177,
+      "source_gap_m": -0.021177387588322744
+    },
+    "maximum": {
+      "source_segment_row": 1794,
+      "t": 0.7512474543744376,
+      "xy_cm": [
+        109603.00610535625,
+        56900.0
+      ],
+      "original_bottom_cm": 58820.13153511012,
+      "source_cut_ad_cm": 58817.66299322637,
+      "source_gap_m": 0.024685418837543695
+    }
+  },
+  "segments_source_gap_over_1cm": [
+    1574,
+    1601,
+    1621,
+    1713,
+    1762,
+    1776,
+    1794,
+    1803,
+    1808,
+    1826,
+    1858
+  ],
+  "segments_source_burial_over_1cm": [
+    1568,
+    1585,
+    1597,
+    1685,
+    1757,
+    1795,
+    1820,
+    1824,
+    1831
+  ],
+  "hypothetical_downward_only_envelope": {
+    "formula": "min(original line, authenticated source CUT A-D triangles)",
+    "bottom_polyline_records_with_shared_endpoints": 903,
+    "delta_m": {
+      "min": -0.024685418837543695,
+      "median": 0.0,
+      "max": 0.0
+    },
+    "source_gap_removed_analytically": true,
+    "existing_burial_preserved": true,
+    "top_xyz_unchanged": true,
+    "road_xyz_unchanged": true,
+    "candidate_applied": false,
+    "terrain_updated": false,
+    "must_be_recomputed_against_actual_final_native_surface": true
+  },
+  "final_native_landscape_height_observed": false,
+  "actual_rendered_landscape_lod": "UNKNOWN",
+  "owner_visual_pass": false,
+  "geometry_repair_applied": false,
+  "remaining_essential_measurement": "Existing Landscape-only owner-verified collision readback at endpoint/crossing XY on final composed consumer; matching render/wireframe at worst crossing. Raw source CUT is not final Landscape.",
+  "transects": [
+    {
+      "station_key_m": 195.0,
+      "row": 1560,
+      "pavement_edge0_m": 592.1446937048404,
+      "outer_top_m": 592.0059284748287,
+      "native_bottom_m": 590.9515103878231,
+      "source_cut_ad_m": 590.9517911795989,
+      "wall_height_m": 1.0544180870056152,
+      "lidar_class2_xy_ball_radius_m": 0.5,
+      "lidar_class2_xy_ball_count": 2,
+      "lidar_class2_z_range_m": [
+        590.47,
+        590.74
+      ],
+      "bottom_minus_class2_median_m": 0.3465103878230593,
+      "lidar_point_ids": [
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6836283
+        ],
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6840777
+        ]
+      ],
+      "interpretation": "raw ground observations, not a surveyed wall-foot target"
+    },
+    {
+      "station_key_m": 200.0,
+      "row": 1600,
+      "pavement_edge0_m": 591.7781176577638,
+      "outer_top_m": 591.6297682319546,
+      "native_bottom_m": 590.9242161308194,
+      "source_cut_ad_m": 590.9246892647839,
+      "wall_height_m": 0.7055521011351084,
+      "lidar_class2_xy_ball_radius_m": 0.5,
+      "lidar_class2_xy_ball_count": 2,
+      "lidar_class2_z_range_m": [
+        590.32,
+        590.97
+      ],
+      "bottom_minus_class2_median_m": 0.2792161308194636,
+      "lidar_point_ids": [
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6816692
+        ],
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6816694
+        ]
+      ],
+      "interpretation": "raw ground observations, not a surveyed wall-foot target"
+    },
+    {
+      "station_key_m": 205.0,
+      "row": 1640,
+      "pavement_edge0_m": 591.4803791863313,
+      "outer_top_m": 591.3392443895119,
+      "native_bottom_m": 590.9375090837258,
+      "source_cut_ad_m": 590.9384062039649,
+      "wall_height_m": 0.4017353057861328,
+      "lidar_class2_xy_ball_radius_m": 0.5,
+      "lidar_class2_xy_ball_count": 0,
+      "lidar_class2_z_range_m": null,
+      "bottom_minus_class2_median_m": null,
+      "lidar_point_ids": [],
+      "interpretation": "raw ground observations, not a surveyed wall-foot target"
+    },
+    {
+      "station_key_m": 210.0,
+      "row": 1680,
+      "pavement_edge0_m": 591.1547514758284,
+      "outer_top_m": 591.0215261780829,
+      "native_bottom_m": 589.9161699616521,
+      "source_cut_ad_m": 589.9166427756395,
+      "wall_height_m": 1.1053562164308095,
+      "lidar_class2_xy_ball_radius_m": 0.5,
+      "lidar_class2_xy_ball_count": 1,
+      "lidar_class2_z_range_m": [
+        588.6,
+        588.6
+      ],
+      "bottom_minus_class2_median_m": 1.3161699616521219,
+      "lidar_point_ids": [
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6796780
+        ]
+      ],
+      "interpretation": "raw ground observations, not a surveyed wall-foot target"
+    },
+    {
+      "station_key_m": 215.0,
+      "row": 1720,
+      "pavement_edge0_m": 590.759643754347,
+      "outer_top_m": 590.628188474364,
+      "native_bottom_m": 589.4871290757129,
+      "source_cut_ad_m": 589.487178751498,
+      "wall_height_m": 1.141059398651123,
+      "lidar_class2_xy_ball_radius_m": 0.5,
+      "lidar_class2_xy_ball_count": 0,
+      "lidar_class2_z_range_m": null,
+      "bottom_minus_class2_median_m": null,
+      "lidar_point_ids": [],
+      "interpretation": "raw ground observations, not a surveyed wall-foot target"
+    },
+    {
+      "station_key_m": 220.0,
+      "row": 1760,
+      "pavement_edge0_m": 590.3934506750159,
+      "outer_top_m": 590.2730531188538,
+      "native_bottom_m": 588.9502114745668,
+      "source_cut_ad_m": 588.9503332031521,
+      "wall_height_m": 1.322841644286964,
+      "lidar_class2_xy_ball_radius_m": 0.5,
+      "lidar_class2_xy_ball_count": 2,
+      "lidar_class2_z_range_m": [
+        588.8000000000001,
+        588.83
+      ],
+      "bottom_minus_class2_median_m": 0.13521147456674498,
+      "lidar_point_ids": [
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6801745
+        ],
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6801997
+        ]
+      ],
+      "interpretation": "raw ground observations, not a surveyed wall-foot target"
+    },
+    {
+      "station_key_m": 225.0,
+      "row": 1800,
+      "pavement_edge0_m": 590.09111444366,
+      "outer_top_m": 589.9927034600797,
+      "native_bottom_m": 588.3400812371794,
+      "source_cut_ad_m": 588.3405419637304,
+      "wall_height_m": 1.6526222229002452,
+      "lidar_class2_xy_ball_radius_m": 0.5,
+      "lidar_class2_xy_ball_count": 3,
+      "lidar_class2_z_range_m": [
+        587.61,
+        589.04
+      ],
+      "bottom_minus_class2_median_m": 0.22008123717944272,
+      "lidar_point_ids": [
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6811990
+        ],
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6811991
+        ],
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6816409
+        ]
+      ],
+      "interpretation": "raw ground observations, not a surveyed wall-foot target"
+    },
+    {
+      "station_key_m": 230.0,
+      "row": 1840,
+      "pavement_edge0_m": 589.7918411752314,
+      "outer_top_m": 589.7118052358821,
+      "native_bottom_m": 588.5166725034909,
+      "source_cut_ad_m": 588.5172360923306,
+      "wall_height_m": 1.195132732391212,
+      "lidar_class2_xy_ball_radius_m": 0.5,
+      "lidar_class2_xy_ball_count": 2,
+      "lidar_class2_z_range_m": [
+        588.2810000000001,
+        588.581
+      ],
+      "bottom_minus_class2_median_m": 0.08567250349085498,
+      "lidar_point_ids": [
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6830943
+        ],
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6831161
+        ]
+      ],
+      "interpretation": "raw ground observations, not a surveyed wall-foot target"
+    },
+    {
+      "station_key_m": 235.0,
+      "row": 1880,
+      "pavement_edge0_m": 589.4686443461891,
+      "outer_top_m": 589.4020646690803,
+      "native_bottom_m": 588.2350653290229,
+      "source_cut_ad_m": 588.2356849375205,
+      "wall_height_m": 1.1669993400575185,
+      "lidar_class2_xy_ball_radius_m": 0.5,
+      "lidar_class2_xy_ball_count": 1,
+      "lidar_class2_z_range_m": [
+        588.4010000000001,
+        588.4010000000001
+      ],
+      "bottom_minus_class2_median_m": -0.16593467097720804,
+      "lidar_point_ids": [
+        [
+          "PNOA_2024_BAL_484-4409_H31_NPC03.laz",
+          6845541
+        ]
+      ],
+      "interpretation": "raw ground observations, not a surveyed wall-foot target"
+    }
+  ]
+}
