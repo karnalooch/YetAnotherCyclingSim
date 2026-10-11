@@ -319,6 +319,18 @@ DOMAIN_RULES = (
     ("registration_factory", "ToolsetRegistry", ".cpp", r"UToolsetRegistry::RegisterToolsetClass\s*\(", 0, 110, 0),
     ("reflected_execution", "ToolsetRegistry", ".cpp", r"UToolsetRegistry::ExecuteTool\s*\(", 0, 110, 0),
 )
+# Exact files already inventoried on pinned UE 5.8.2. Their complete bodies are
+# needed to review generated toolset names and MCP result wrapping, not to
+# assume metadata hooks or admit any runtime operation.
+DOMAIN_PYTHON_HELPER = (
+    "Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/__init__.py"
+)
+DOMAIN_COMPLETE_FILES = (
+    ("ToolsetRegistry", "Engine/Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Private/ToolsetRegistry/FunctionLibraryToolset.cpp"),
+    ("ToolsetRegistry", "Engine/Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry/Private/ToolsetRegistry/ToolsetRegistry.cpp"),
+    ("ToolsetRegistry", DOMAIN_PYTHON_HELPER),
+    ("ModelContextProtocol", "Engine/Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocol/Private/ModelContextProtocolToolResults.cpp"),
+)
 CONTROLLER_HEADERS = {
     "IAutomationControllerModule.h": "Engine/Source/Developer/AutomationController/Public/IAutomationControllerModule.h",
     "IAutomationControllerManager.h": "Engine/Source/Developer/AutomationController/Public/IAutomationControllerManager.h",
@@ -331,6 +343,37 @@ def select_domain_extension(
     """Keep bounded contexts for one native domain extension declaration review."""
     observations = {rule[0]: [] for rule in DOMAIN_RULES}
     remaining = MAX_EXCERPT_LINES
+    source_by_path = {item["path"]: (item, data) for item, data in sources}
+    complete_paths = set()
+    complete_files = []
+    for role, relative in DOMAIN_COMPLETE_FILES:
+        observation = {"path": relative, "status": "MISSING", "selected_line_count": 0}
+        complete_files.append(observation)
+        source = source_by_path.get(relative)
+        if source is None or source[0]["role"] != role:
+            continue
+        item, data = source
+        lines = data.decode("utf-8-sig").splitlines()
+        selected_count = min(len(lines), remaining)
+        observation.update({
+            "sha256": item["sha256"], "source_line_count": len(lines),
+            "selected_line_count": selected_count,
+            "status": ("EMPTY" if not lines else "COMPLETE" if selected_count == len(lines)
+                       else "BUDGET_TRUNCATED"),
+        })
+        if selected_count:
+            item["selected_excerpts"].append({
+                "start_line": 1, "end_line": selected_count,
+                "text": "\n".join(lines[:selected_count]),
+                "selection": "domain_extension_complete_file",
+                "source_line_count": len(lines),
+                "budget_truncated": selected_count < len(lines),
+                "context_window_truncated": False,
+            })
+            remaining -= selected_count
+        if selected_count == len(lines):
+            complete_paths.add(relative)
+    receipt["domain_extension_complete_files"] = complete_files
     for topic, role, suffix, pattern, before, after, _ in DOMAIN_RULES:
         ordered_sources = sources
         if topic == "concrete_argument_conversion":
@@ -369,6 +412,8 @@ def select_domain_extension(
                             break
                     window_truncated = opened and not closed
                 observations[topic].append({"path": item["path"], "line": index + 1, "sha256": item["sha256"]})
+                if item["path"] in complete_paths:
+                    continue
                 bounded_end = min(end, start + remaining)
                 if bounded_end > start:
                     item["selected_excerpts"].append({
@@ -746,7 +791,8 @@ def collect(
         receipt["inventory"].append(item)
         if (evidence_focus == "domain_extension" and role in {
                 "ToolsetRegistry", "ModelContextProtocol", "AutomationTestToolset", "AutomationController"}
-                and path.suffix in {".h", ".cpp"} and source_priority(path, role)[0] < 100):
+                and ((path.suffix in {".h", ".cpp"} and source_priority(path, role)[0] < 100)
+                     or item["path"] == DOMAIN_PYTHON_HELPER)):
             extension_sources.append((item, data))
         if (evidence_focus == "material_declarations"
                 and role not in {"engine_build", "ModelContextProtocol", "ToolsetRegistry"}
@@ -1065,6 +1111,8 @@ def console_summary(receipt: dict[str, Any]) -> str:
 
     if receipt.get("evidence_focus") == "domain_extension":
         lines.append("EVIDENCE_FOCUS domain_extension; native wiring / argument parity: UNVERIFIED")
+        lines.append("COMPLETE_EXTENSION_FILES " + json.dumps(
+            receipt.get("domain_extension_complete_files", []), sort_keys=True))
         lines.append("MISSING_EXTENSION_CONTEXTS " + json.dumps(receipt.get("domain_extension_missing_contexts", [])))
         lines.append("CONTROLLER_DECLARATION_UNESTABLISHED " + json.dumps(receipt.get("automation_controller_unestablished", [])))
         lines.append("CONCRETE_EXECUTION_DEFINITIONS " + json.dumps(

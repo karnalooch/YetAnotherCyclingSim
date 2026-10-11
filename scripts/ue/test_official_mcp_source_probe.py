@@ -436,6 +436,100 @@ class OfficialMcpSourceProbeTests(unittest.TestCase):
         self.assertTrue(result["domain_extension_observations"]["mcp_schema_consumer"])
         self.assertLessEqual(len(output.splitlines()), 500)
 
+    def test_domain_extension_retains_complete_fixed_files_without_duplicate_contexts(self):
+        sources = (
+            ("// Full naming and schema fixture.\n"
+             "FString FFunctionLibraryToolset::GetToolsetClassName()\n{\n"
+             "    return OBSERVED_NATIVE_NAME;\n}\n"
+             "TFuture FFunctionLibraryToolset::ExecuteToolInternal()\n{\n"
+             "    UFunction* Reflected = nullptr;\n    return CONVERSION_TAIL;\n}\n"),
+            "FToolset* FToolsetRegistry::Find()\n{\n    return ACTUAL_LOOKUP;\n}\n",
+            "raise RuntimeError('SOURCE_MUST_NEVER_EXECUTE')\n"
+            "def tool_call(function):\n    return function\n# " + "x" * 700 + "\n",
+            "FString MakeTextResult()\n{\n    return RESULT_WRAPPING;\n}\n",
+        )
+        for (_, relative), source in zip(probe.DOMAIN_COMPLETE_FILES, sources, strict=True):
+            self.write(relative, source)
+        result = self.collect(evidence_focus="domain_extension")
+        self.assertEqual(result["status"], "SOURCE_EVIDENCE_COLLECTED")
+        self.assertEqual(len(result["domain_extension_complete_files"]), 4)
+        inventory = {item["path"]: item for item in result["inventory"]}
+        for observation, (_, relative), source in zip(
+                result["domain_extension_complete_files"], probe.DOMAIN_COMPLETE_FILES, sources, strict=True):
+            with self.subTest(path=relative):
+                item = inventory[relative]
+                self.assertEqual(observation["status"], "COMPLETE")
+                self.assertEqual(observation["path"], relative)
+                self.assertEqual(item["sha256"], hashlib.sha256(source.encode()).hexdigest())
+                self.assertEqual(observation["sha256"], item["sha256"])
+                self.assertEqual(observation["source_line_count"], len(source.splitlines()))
+                self.assertEqual(observation["selected_line_count"], len(source.splitlines()))
+                self.assertEqual(len(item["selected_excerpts"]), 1)
+                excerpt = item["selected_excerpts"][0]
+                self.assertEqual(excerpt["selection"], "domain_extension_complete_file")
+                self.assertEqual(excerpt["text"], source.rstrip("\n"))
+                self.assertEqual((excerpt["start_line"], excerpt["end_line"]), (1, len(source.splitlines())))
+                self.assertFalse(excerpt["budget_truncated"])
+                self.assertFalse(excerpt["context_window_truncated"])
+        # Observations still identify an existing semantic body, even though its
+        # complete file was retained once instead of copying that body twice.
+        conversion = result["domain_extension_observations"]["concrete_argument_conversion"]
+        self.assertEqual(conversion[0]["path"], probe.DOMAIN_COMPLETE_FILES[0][1])
+        self.assertEqual(conversion[0]["line"], 6)
+        self.assertNotIn("concrete_argument_conversion", result["domain_extension_missing_contexts"])
+        self.assertIn("COMPLETE_EXTENSION_FILES", probe.console_summary(result))
+
+    def test_domain_extension_complete_files_share_budget_before_other_contexts(self):
+        for index, (_, relative) in enumerate(probe.DOMAIN_COMPLETE_FILES):
+            self.write(relative, "\n".join(f"FIXED_{index}_LINE_{line}" for line in range(7)) + "\n")
+        unrelated = self.write(
+            "Engine/Plugins/Experimental/ToolsetRegistry/Source/Earlier.cpp",
+            "TFuture FEarlier::ExecuteToolInternal()\n{\n    return OTHER_CONTEXT;\n}\n",
+        )
+        with patch.object(probe, "MAX_EXCERPT_LINES", 10):
+            result = self.collect(evidence_focus="domain_extension")
+        observations = result["domain_extension_complete_files"]
+        self.assertEqual([item["status"] for item in observations],
+                         ["COMPLETE", "BUDGET_TRUNCATED", "BUDGET_TRUNCATED", "BUDGET_TRUNCATED"])
+        self.assertEqual([item["selected_line_count"] for item in observations], [7, 3, 0, 0])
+        excerpts = [excerpt for item in result["inventory"] for excerpt in item["selected_excerpts"]]
+        self.assertEqual(sum(len(excerpt["text"].splitlines()) for excerpt in excerpts), 10)
+        self.assertEqual(len(excerpts), 2)
+        self.assertTrue(result["excerpt_limit_reached"])
+        partial = next(item for item in result["inventory"]
+                       if item["path"] == probe.DOMAIN_COMPLETE_FILES[1][1])
+        self.assertEqual(partial["selected_excerpts"][0]["end_line"], 3)
+        self.assertTrue(partial["selected_excerpts"][0]["budget_truncated"])
+        self.assertEqual(partial["sha256"], hashlib.sha256((self.engine / partial["path"]).read_bytes()).hexdigest())
+        self.assertEqual(next(item["selected_excerpts"] for item in result["inventory"]
+                              if item["path"] == unrelated.relative_to(self.engine).as_posix()), [])
+        self.assertLessEqual(len(probe.console_summary(result).splitlines()), 500)
+
+    def test_domain_extension_exact_paths_do_not_substitute_names_or_collect_other_python(self):
+        helper = "Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/__init__.py"
+        self.write(helper, "raise RuntimeError('READ_ONLY_HELPER')\n")
+        wrong_paths = (
+            "Engine/Plugins/Experimental/ToolsetRegistry/Source/FunctionLibraryToolset.cpp",
+            "Engine/Plugins/Experimental/ToolsetRegistry/Source/ToolsetRegistry.cpp",
+            "Engine/Plugins/Experimental/ModelContextProtocol/Source/ModelContextProtocolToolResults.cpp",
+            "Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/unrelated/__init__.py",
+            "Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/other.py",
+        )
+        for relative in wrong_paths:
+            self.write(relative, "UNRELATED_BODY_MUST_NOT_BE_SELECTED\n")
+        with patch.object(probe, "select_domain_extension", wraps=probe.select_domain_extension) as select:
+            result = self.collect(evidence_focus="domain_extension")
+        sources = select.call_args.args[1]
+        self.assertEqual([item["path"] for item, _ in sources if item["path"].endswith(".py")], [helper])
+        self.assertEqual([item["status"] for item in result["domain_extension_complete_files"]],
+                         ["MISSING", "MISSING", "COMPLETE", "MISSING"])
+        self.assertTrue(all(item["selected_line_count"] == 0
+                            for item in result["domain_extension_complete_files"] if item["status"] == "MISSING"))
+        for item in result["inventory"]:
+            if item["path"] in wrong_paths:
+                self.assertEqual(item["selected_excerpts"], [])
+        self.assertEqual(result["domain_extension_complete_files"][2]["path"], helper)
+
     def material_fixture(self, *, source=None):
         relative = "Engine/Plugins/Experimental/Toolsets/ZMaterialFixture"
         self.plugin("ZMaterialFixture", relative)

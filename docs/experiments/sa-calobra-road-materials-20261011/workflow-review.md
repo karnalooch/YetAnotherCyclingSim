@@ -59,8 +59,10 @@ Missing access cannot default to a claim that remote execution is disabled.
 
 The owner also reported a Zen warning. The retained Editor log shows Zen using
 its existing C: data directory, reaching HTTP and ZenLocal `OK` after 34.962 s;
-it contains no Zen warning/error text. The exact UI warning is not retained
-and remains unresolved. The 30.01 GiB reported by that launch's successful CI
+it contains no Zen warning/error text. The exact UI warning was not retained.
+On 2026-10-11 the owner confirmed that the warning no longer appears and asked
+to close that follow-up. It is closed on the owner's confirmation; the original
+message and cause remain unestablished. The 30.01 GiB reported by that launch's successful CI
 measures D:, not the C: cache volume. The next launcher records free bytes on
 both volumes, the existing resolved workspace cache and inherited
 `UE-ZenDataPath`, without moving data or changing either value. The MCP failure
@@ -90,7 +92,8 @@ This third run also measured 82.2569 GiB free on C: and 28.4748 GiB on D: before
 launch. The workspace resolves `D:\yacs\cache\Zen`, but the launching process
 had no `UE-ZenDataPath`; UE used the existing C: data directory. Zen reached
 HTTP and ZenLocal `OK` in 2.352 s. The log contains no Zen warning/error text,
-so the owner's earlier UI warning remains unresolved. The authenticated
+so that run did not establish the earlier UI warning's cause. The owner later
+closed the warning follow-up as recorded above. The authenticated
 [four-file artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38126488782/artifacts/11697682730)
 is 66,467 bytes, SHA-256
 `a93e74c1e94afbcae084892f2fae1726f9c416f159ca5aaa4334e7630bd8afaa`.
@@ -191,6 +194,35 @@ from its native error through report compaction. This removes dependence on a
 are implementation requirements; the corrected census and persistent preview
 still need native qualification. No request, capture or handoff is inferred
 from the successful independent preflight checks.
+
+The [actual `5fa5d09` launch](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38131946787)
+passed the complete native cross-check, literal Python-remote and material API
+preflight, and constructed the preview manager. The next availability check
+blocked after UE logged registration of
+`PythonTypes.YacsRoadMaterialPreview_0xF5C3E262`. That name does not match either
+current exact allowlist entry. Pinned source shows that registration applies
+name filters before reporting success; an excluded handler is unavailable to
+registry lookup. Both bridge and client also require the old unqualified tool
+name, so changing only the INI would be incomplete. The exact naming, schema
+and result contracts require additional installed-source excerpts before the
+next native attempt. The existing filesystem-only `domain_extension` probe now
+retains four fixed, already inventoried files within its unchanged output cap;
+the `[mcp-domain-source]` HEAD marker selects that focus on a source-probe push.
+This read neither launches UE nor activates a tool.
+
+Exact-SHA [CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38131949269)
+and [Blender reference](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38131948773)
+passed. Windows recorded 23.77 GiB free on D: and verified-equivalent binary
+reuse with `compileKind=none`; both full material proofs skipped. The
+authenticated [four-file artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38131946787/artifacts/11700275116)
+is 67,361 bytes, SHA-256
+`6790f9d685bac909741d43b61153173450023a41a8333d0c2f465e5a5e3d316b`.
+Editor PID 26240 ended in controlled `BLOCKED`, with no engine fatal in the
+complete retained log. Zen reached HTTP and ZenLocal `OK` in 2.511 s, with no
+retained Zen warning/error. Before launch, C: had 91,470,360,576 free bytes and
+D: had 25,218,703,360. The ready receipt was not written, so no successful
+census counters or excluded identities from this run are claimed. There was
+no owned MCP listener startup, material request, PNG or owner handoff.
 
 ## Measured local cost
 

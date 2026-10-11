@@ -9,9 +9,13 @@ Blender reference passed; native readback confirmed `bRemoteExecution=False`
 and the required material/capture APIs. A complete diagnostic `ClassIterator`
 read returned 10,109 native classes and exactly the two legacy bases, but the
 production `ObjectIterator` inheritance conversion still blocked startup.
-The next correction cross-checks both complete native enumerations and admits
-their differences only by exact metaclass CDO identity. It retains the first
-production failure identity; the original bad candidate remains unidentified.
+At `5fa5d09`, protected CI and the Blender reference passed. Native flow passed
+the complete cross-check, Python-remote and material/capture preflight, then
+constructed the preview manager. UE registered the toolset as
+`PythonTypes.YacsRoadMaterialPreview_0xF5C3E262`, which the current exact allowlist
+does not admit. The following availability check ended in controlled `BLOCKED`.
+No successful census counts were retained before this later failure; the old
+ObjectIterator candidate remains unidentified.
 Live stream and same-process
 update proof remain **UNQUALIFIED**. The [workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
 records actual launch evidence and the current startup correction.
@@ -31,6 +35,14 @@ PixelStreaming2 editor/settings declarations using `level_editor_stream`.
 It preserves bounded reads and writes evidence only below the checkout's
 ignored `Saved` directory. It does not enable a plugin, start Unreal or create
 a network listener. Other existing source-inspection focuses remain available.
+For the observed MCP naming mismatch, a source-probe push whose HEAD message
+contains `[mcp-domain-source]` selects the existing `domain_extension` focus.
+It retains the complete, bounded contents of four already inventoried files:
+`FunctionLibraryToolset.cpp`, `ToolsetRegistry.cpp`, the exact registry Python
+helper and `ModelContextProtocolToolResults.cpp`. This supplies the naming,
+lookup and result-format contracts without starting another Editor. Ordinary
+automatic selection, owner/ref/path guards and all read/output caps remain.
+The probe is declaration evidence only; it cannot admit a preview session.
 
 Epic's UE 5.8 API documents
 `IPixelStreaming2EditorModule::StartStreaming` with

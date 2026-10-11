@@ -41,7 +41,7 @@ jobs:
       GIT_LFS_SKIP_SMUDGE: '1'
       TARGET_SHA: ${{ github.sha }}
       YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
-      YACS_SOURCE_EVIDENCE_FOCUS: ${{ inputs.evidence_focus || 'auto' }}
+      YACS_SOURCE_EVIDENCE_FOCUS: ${{ inputs.evidence_focus || (github.event_name == 'push' && contains(github.event.head_commit.message, '[mcp-domain-source]') && 'domain_extension') || 'auto' }}
     steps:
       - name: Isolate Git configuration and enable long paths
         shell: pwsh
