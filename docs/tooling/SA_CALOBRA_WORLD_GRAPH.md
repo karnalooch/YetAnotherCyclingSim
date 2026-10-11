@@ -89,8 +89,6 @@ Forbidden: changing canonical road/physics, `Base_DTM`, Landscape geometry,
 BOB semantics, source masks, live Editor state or streaming; installing plugins;
 inventing rock geography, species, terrain contact or placement acceptance.
 
-## Authenticated inputs
-
 ## Native preparation and mesh qualification — 2026-10-12
 
 [CI run 38179277475](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38179277475)
@@ -116,6 +114,11 @@ Its Python consumer reads Epic's installed `Skill_PCGGraphGeneration` through
 the reflected skill API before graph authoring, then inventories native APIs
 and mesh dimensions. Outputs are `LOCAL_DIAGNOSTIC_ONLY`, never a new broker
 receipt. Graph generation/save/fresh reload are still pending at this checkpoint.
+The first diagnostic attempt at `ab932af13f1e35103a2ca8cf5a02f03ca76c0750`
+stopped before Editor launch: Git's CRLF warning entered bootstrap's changed-path
+array through merged stderr/stdout and caused `clean_checkout, expected_patch_only`
+failure. The fix separates Git output streams, with a CRLF regression fixture;
+it does not change retained plugin files or weaken checkout authentication.
 
 The single Boulder source was recovered with the existing bounded downloader
 (2K, five files, 34.2 MiB, 256 MiB cap, no overwrite) into

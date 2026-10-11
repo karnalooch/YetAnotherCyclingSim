@@ -110,9 +110,12 @@ def inspect():
     if len(selected) != 1:
         raise RuntimeError("Expected one installed PCG graph skill: " + repr(selected))
     details = call_skill("GetSkills", {"SkillPaths": selected})
-    prompts = {
-        str(path): str(detail["Instructions"]) for path, detail in details.items()
-    }
+    prompts = {}
+    for path, detail in details.items():
+        keys = [key for key in detail if key.casefold() == "instructions"]
+        if len(keys) != 1 or not isinstance(detail[keys[0]], str):
+            raise RuntimeError("Malformed installed skill details")
+        prompts[str(path)] = detail[keys[0]]
     if len(prompts) != 1 or not all(prompts.values()):
         raise RuntimeError("PCG graph skill did not return instructions")
     write_new("installed-pcg-skill.json", prompts)

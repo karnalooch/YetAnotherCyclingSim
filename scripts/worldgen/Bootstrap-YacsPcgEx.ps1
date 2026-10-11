@@ -45,11 +45,29 @@ if ($ReportPath.Equals($PluginRoot, [StringComparison]::OrdinalIgnoreCase) -or
 
 function Invoke-PluginGit {
     param([Parameter(Mandatory=$true)] [string[]] $GitArguments)
-    $Output = @(& git --no-optional-locks -C $PluginRoot @GitArguments 2>&1)
-    if ($LASTEXITCODE -ne 0) {
-        throw "PCGEx git $($GitArguments -join ' ') failed: $($Output -join [Environment]::NewLine)"
+    # Git warnings belong to diagnostics, never to machine-readable path output.
+    $start = [Diagnostics.ProcessStartInfo]::new('git')
+    $start.UseShellExecute = $false
+    $start.CreateNoWindow = $true
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    foreach ($argument in @('--no-optional-locks', '-C', $PluginRoot) + $GitArguments) {
+        $start.ArgumentList.Add($argument)
     }
-    return $Output
+    $process = [Diagnostics.Process]::Start($start)
+    $stdout = $process.StandardOutput.ReadToEndAsync()
+    $stderr = $process.StandardError.ReadToEndAsync()
+    $process.WaitForExit()
+    $outputText = $stdout.GetAwaiter().GetResult()
+    $errorText = $stderr.GetAwaiter().GetResult()
+    if ($process.ExitCode -ne 0) {
+        throw "PCGEx git $($GitArguments -join ' ') failed (exit=$($process.ExitCode)): $errorText$outputText"
+    }
+    if ($errorText) { Write-Verbose $errorText.TrimEnd() }
+    if ($outputText.Length -gt 0) {
+        return $outputText.TrimEnd("`r", "`n") -split "`r?`n"
+    }
+
 }
 
 $CompatibilityPatchPath = Join-Path $RepoRoot $CompatibilityPatchRelative

@@ -28,7 +28,8 @@ class BootstrapTests(unittest.TestCase):
         )
         self.target = self.plugin / TARGET
         self.target.parent.mkdir(parents=True)
-        self.target.write_text("before\n")
+        self.target.write_bytes(b"before\n")
+        (self.plugin / ".gitattributes").write_bytes(b"*.cpp text eol=lf\n")
         (self.plugin / "LICENSE").write_text("MIT License\n")
         (self.plugin / "PCGExtendedToolkit.uplugin").write_text(
             json.dumps({"VersionName": "0.79", "EngineVersion": "5.8.0"})
@@ -36,9 +37,9 @@ class BootstrapTests(unittest.TestCase):
         self.git("add", ".")
         self.git("commit", "-m", "fixture")
         self.head = self.git("rev-parse", "HEAD").strip()
-        self.target.write_text("after\n")
+        self.target.write_bytes(b"after\n")
         patch = self.git("diff", "--no-ext-diff").replace("\r\n", "\n")
-        self.target.write_text("before\n")
+        self.target.write_bytes(b"before\n")
         patch_path = (
             self.root
             / "scripts/worldgen/patches/pcgex-0.79-triangulate-holes-flat-union.patch"
@@ -117,6 +118,23 @@ class BootstrapTests(unittest.TestCase):
         self.assertEqual(after, self.snapshot())
         report = json.loads((self.root / "report.json").read_text(encoding="utf-8-sig"))
         self.assertEqual(report["compatibility_patch_state"], "applied")
+
+    def test_patched_crlf_git_warning_is_not_a_changed_path(self):
+        self.run_script('Install')
+        self.git('config', 'core.autocrlf', 'false')
+        self.target.write_bytes(b'after\r\n')
+        warning = subprocess.run(['git', '-C', str(self.plugin), 'diff', 'HEAD', '--name-only'], capture_output=True, text=True)
+        self.assertEqual(warning.returncode, 0)
+        self.assertIn('CRLF', warning.stderr)
+        before = self.snapshot()
+        metadata = self.git_metadata()
+        self.run_script()
+        self.run_script('Install')
+        self.assertEqual(before, self.snapshot())
+        self.assertEqual(metadata, self.git_metadata())
+        report = json.loads((self.root/'report.json').read_text(encoding='utf-8-sig'))
+        self.assertEqual(report['changed_paths_before_install'], [TARGET])
+        self.assertEqual(report['compatibility_patch_state'], 'applied')
 
     def test_drift_rejected_without_changes(self):
         for mode in ["Validate", "Install"]:
