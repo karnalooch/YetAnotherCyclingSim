@@ -238,6 +238,8 @@ before both process-termination paths and log deletion. Only `IDLE` or
 unknown ownership probes fail closed. A preview launcher's script path inside the
 runner workspace does not transfer ownership of its interactive Editor to CI.
 This also protects callers whose workflow checks ownership only after cleanup.
+The current-run bootstrap is retained through final cleanup; that step never
+falls back to a potentially stale helper in the warm worktree.
 Other generated files, including old JSON/PNG receipts, remain disposable.
 Sa Calobra import/capture use per-run `-AbsLog` destinations and new evidence
 directories; upload is restricted to the exact run ID and attempt. A failed
