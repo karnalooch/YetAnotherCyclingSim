@@ -113,6 +113,7 @@ class RoadCaptureReadinessTests(unittest.TestCase):
         self.api.ComparisonTolerance = SimpleNamespace(LOW=object())
         self.api.AutomationLibrary = SimpleNamespace(
             set_editor_viewport_view_mode=Mock(),
+            get_editor_active_viewport_view_mode=Mock(return_value=self.api.ViewModeIndex.VMI_LIT),
             finish_loading_before_screenshot=Mock(),
             take_high_res_screenshot=Mock(side_effect=self.screenshot),
         )
@@ -165,6 +166,37 @@ class RoadCaptureReadinessTests(unittest.TestCase):
         self.prepare.assert_called_once()
         self.job.stop.assert_not_called()
         self.assertIsNotNone(self.job.finish_requested_at)
+
+    def test_crack_canary_requests_and_releases_all_eight_additional_maps(self):
+        from scripts.ue import road_crack_sources as source
+
+        values = {"pins_sha256": "a" * 64, "selected_motifs": list(source.CANARY_MOTIFS)}
+        assets = source.asset_paths(values)
+        self.job.context["manifest"].update(crack_canary_enabled=True, crack_canary={
+            "imports": {"sources": values, "assets": assets, "texture_count": 8}})
+        for channels in assets["textures"].values():
+            for path in channels.values():
+                self.textures[path] = SimpleNamespace(get_path_name=Mock(return_value=path),
+                    set_force_mip_levels_to_be_resident=Mock())
+        self.job.prepare_pose(self.row, object(), object())
+        self.assertEqual(self.job.pose_readiness["material_texture_count"], 15)
+        self.assertEqual(len(self.job.residency_leases), 16)
+        self.assertEqual(self.job.release_residency(), [])
+        for texture in self.textures.values():
+            self.assertEqual(texture.set_force_mip_levels_to_be_resident.call_args_list,
+                             [unittest.mock.call(gpu.HEIGHT_MIP_LEASE_SECONDS, 0), unittest.mock.call(0.0, 0)])
+
+    def test_crack_maps_cannot_hide_in_disabled_lane_or_replace_a_native_source_map(self):
+        from scripts.ue import road_crack_sources as source
+
+        with self.assertRaisesRegex(ValueError, "Disabled crack lane"):
+            gpu.crack_texture_paths({"crack_canary_enabled": False, "crack_canary": {}})
+        values = {"pins_sha256": "a" * 64, "selected_motifs": list(source.CANARY_MOTIFS)}
+        assets = source.asset_paths(values)
+        assets["textures"][source.CANARY_MOTIFS[0]]["ORM"] = self.paths["ORM"]
+        with self.assertRaisesRegex(ValueError, "exact saved source selection"):
+            gpu.crack_texture_paths({"crack_canary_enabled": True, "crack_canary": {
+                "imports": {"sources": values, "assets": assets, "texture_count": 8}}})
 
     def test_control_pose_reuses_height_and_texture_readiness_in_separate_directory(self):
         self.job.phase = "controls"

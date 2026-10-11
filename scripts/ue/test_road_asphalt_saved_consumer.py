@@ -15,6 +15,10 @@ from unittest.mock import Mock, patch
 from scripts.ue import road_asphalt_saved_consumer as saved
 from scripts.ue import road_edge_marking_consumer as markings
 from scripts.ue import road_edge_marking_material as paint
+from scripts.ue import road_crack_consumer as cracks
+from scripts.ue import road_crack_geometry as crack_geometry
+from scripts.ue import road_crack_material as crack_material
+from scripts.ue import road_crack_sources as crack_sources
 from scripts.ue import road_pavement_source_bindings as pavement_bindings
 from scripts.ue.test_road_asphalt_slot_canary import CanaryTests
 
@@ -95,6 +99,100 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
         package = saved.session.operation.MAP_PACKAGE
         world = package + "." + package.rsplit("/", 1)[-1]
         return json.loads(json.dumps(value).replace("<scene>.<world>", world).replace("<scene>", package))
+
+    def crack_receipt(self):
+        """Exact-count structural fixture; no source or native admission claim."""
+        source = {"pins": deepcopy(crack_sources.VERIFIED_PINS),
+                  "pins_sha256": crack_sources.digest(crack_sources.VERIFIED_PINS),
+                  "selected_motifs": list(crack_sources.CANARY_MOTIFS)}
+        assets, rows = crack_material.asset_paths(source), []
+        for event in crack_geometry.CANARY_EVENTS:
+            label = cracks.ACTOR_PREFIX + event.event_id
+            path = "<scene>.<world>:PersistentLevel." + label
+            rows.append({"label": label, "motif_id": event.motif_id, "actor": {
+                "path": path, "label": label, "location_cm": [0., 0., 0.],
+                "rotation_deg": [0., 0., 0.], "scale": [1., 1., 1.],
+            }, "component": path + ".DynamicMeshComponent", "material": assets[event.motif_id]["instance"]})
+        return {"schema_version": 1, "status": "LOCAL_CRACKS_CREATED_NORMAL_REVIEW_PENDING",
+                "asset_packages_saved": True, "native_no_collision": "NO_COLLISION",
+                "native_surface_correspondence_verified": True, "all_crack_buffers_verified": True,
+                "full_source_and_existing_paint_buffers_preserved": True, "world_normal_canary_required": True,
+                "original_scene_state": {"synthetic_full_white_snapshot": True},
+                "geometry": {"counts": {"source_owner_count": 186, "pavement_owner_count": 185,
+                                         "excluded_parapet_count": 1, "mesh_count": 2}},
+                "imports": {"sources": source, "assets": crack_sources.asset_paths(source), "texture_count": 8},
+                "actors": rows, "material": {"assets": assets},
+                "owned_asset_paths": list(cracks._owned_asset_paths(source)), **dict.fromkeys(cracks.FALSE_FLAGS, False)}
+
+    def with_crack_inventory(self, receipt=None):
+        receipt = receipt or self.crack_receipt()
+        package = saved.session.operation.MAP_PACKAGE
+        value = saved.normalized(self.with_marking_inventory(), package)
+        additions = saved.crack_canary_inventory(receipt)
+        for field, key in (("actors", lambda row: row[0]),
+                           ("mesh_material_collision_snapshot", lambda row: row["component"])):
+            value[field] = sorted(value[field] + additions[field], key=key)
+        world = package + "." + package.rsplit("/", 1)[-1]
+        return json.loads(json.dumps(value).replace("<scene>.<world>", world).replace("<scene>", package))
+
+    def test_crack_inventory_adds_exactly_two_rows_without_masking_original_or_white_drift(self):
+        receipt, white = self.crack_receipt(), self.marking_receipt()
+        observed = self.with_crack_inventory(receipt)
+
+        def verify(value, candidate=receipt, paint_receipt=white):
+            return saved.expected_saved_inventory(self.old, value, self.new_material,
+                observed_map_package=saved.session.operation.MAP_PACKAGE,
+                edge_marking_receipt=paint_receipt, crack_canary_receipt=candidate)
+
+        self.assertEqual(verify(observed), saved.inventory_digest(
+            saved.normalized(observed, saved.session.operation.MAP_PACKAGE)))
+        self.assertEqual(len(observed["actors"]), len(self.old["actors"]) + 370 + 2)
+        self.assertEqual(len(self.old["actors"]), 2)
+        with self.assertRaisesRegex(ValueError, "requires the complete white"):
+            verify(observed, paint_receipt=None)
+        with self.assertRaisesRegex(ValueError, "changed geometry"):
+            verify(observed, candidate=None)
+        crack_index = next(i for i, row in enumerate(observed["actors"]) if cracks.ACTOR_PREFIX in row[0])
+        white_index = next(i for i, row in enumerate(observed["actors"]) if markings.ACTOR_PREFIX in row[0])
+        crack_component = next(i for i, row in enumerate(observed["mesh_material_collision_snapshot"])
+                               if cracks.ACTOR_PREFIX in row["component"])
+        for mutate in (
+            lambda value: value["actors"].pop(crack_index),
+            lambda value: value["actors"].append(["/Game/Foreign.Actor", [0., 0., 0.]]),
+            lambda value: value["actors"][crack_index][1][0].__setitem__(2, .1),
+            lambda value: value["actors"][white_index][1][0].__setitem__(2, .1),
+            lambda value: value["mesh_material_collision_snapshot"][crack_component].update(collision="BLOCK_ALL"),
+            lambda value: value["mesh_material_collision_snapshot"][crack_component]["materials"].append("foreign"),
+            lambda value: value["road_supports"][0].update(vertices=3),
+            lambda value: value["landscape"].update(component_count=1023),
+        ):
+            changed = deepcopy(observed)
+            mutate(changed)
+            with self.subTest(mutate=mutate), self.assertRaises(ValueError):
+                verify(changed)
+
+    def test_crack_inventory_rejects_unowned_assets_transforms_motifs_and_false_normal_admission(self):
+        original = self.crack_receipt()
+        for mutate in (
+            lambda value: value.update(asset_packages_saved=False),
+            lambda value: value.update(normal_space_verified=True),
+            lambda value: value.update(world_normal_canary_required=False),
+            lambda value: value.update(collision_enabled=True),
+            lambda value: value["imports"].update(texture_count=7),
+            lambda value: value["imports"]["sources"]["pins"].update(run="999"),
+            lambda value: value["owned_asset_paths"].pop(),
+            lambda value: value["material"]["assets"][crack_sources.CANARY_MOTIFS[0]].update(master="/Game/Foreign.M"),
+            lambda value: value["geometry"]["counts"].update(mesh_count=3),
+            lambda value: value["actors"].__setitem__(0, value["actors"][1]),
+            lambda value: value["actors"][0].update(motif_id="foreign"),
+            lambda value: value["actors"][0]["actor"].update(path="/Game/Foreign.Actor"),
+            lambda value: value["actors"][0]["actor"].update(scale=[1., 2., 1.]),
+            lambda value: value["actors"][0].update(component="<scene>.<world>:PersistentLevel.Foreign.Component"),
+        ):
+            changed = deepcopy(original)
+            mutate(changed)
+            with self.subTest(mutate=mutate), self.assertRaises(ValueError):
+                saved.crack_canary_inventory(changed)
 
     def test_saved_inventory_allows_only_exact_verified_render_additions(self):
         receipt = self.marking_receipt()
@@ -258,8 +356,129 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 bind.assert_not_called()
                 prepare.assert_not_called()
 
+    def test_crack_lane_requires_explicit_boolean_and_existing_white_mode(self):
+        for white, value, expected in (("0", "0", False), ("1", "0", False), ("1", "1", True)):
+            with patch.dict("os.environ", {"YACS_ROAD_EDGE_MARKINGS": white, "YACS_ROAD_CRACK_CANARY": value}):
+                self.assertIs(saved.crack_canary_enabled(), expected)
+        for white, value in (("0", "1"), ("1", "yes"), ("1", ""), ("1", "2")):
+            with patch.dict("os.environ", {"YACS_ROAD_EDGE_MARKINGS": white, "YACS_ROAD_CRACK_CANARY": value}), \
+                 self.assertRaises(ValueError):
+                saved.crack_canary_enabled()
+        self.assertEqual(saved.verify_surface_details(None, {}, False, False),
+                         {"edge_markings": None, "crack_canary": None})
+        for manifest, white, enabled in (({}, False, True), ({}, True, "1"),
+                ({"crack_canary": {}}, False, False), ({"crack_canary_enabled": True}, True, False),
+                ({"crack_canary_enabled": True}, True, True)):
+            with self.subTest(manifest=manifest, white=white, enabled=enabled), self.assertRaises(ValueError):
+                saved.verify_surface_details(None, manifest, white, enabled)
+
+    def test_crack_plan_loader_authenticates_source_and_passes_actual_zero_ninety_uv_contracts(self):
+        source_plan, plan, producer = object(), object(), b"inert authenticated producer fixture"
+        source = {"motifs": {event.motif_id: {"extent_cm": event.extent_m * 100.,
+            "empty_border_cm": 6., "resolution": 2048} for event in crack_geometry.CANARY_EVENTS}}
+        source_root = Path("retained-crack-source")
+        with patch.object(saved, "_retained_pavement_producer_bytes", return_value=producer) as read, \
+             patch.object(crack_sources, "source_root", return_value=source_root), \
+             patch.object(crack_sources, "load_sources", return_value=source) as load, \
+             patch.object(cracks, "prepare", return_value=plan) as prepare, \
+             patch.object(cracks, "create") as create:
+            self.assertIs(saved.load_crack_plan(source_plan), plan)
+            read.assert_called_once_with()
+            load.assert_called_once_with(source_root, crack_sources.VERIFIED_PINS)
+            prepare.assert_called_once_with(source_plan, producer_bytes=producer, geometry_contracts={
+                event.motif_id: crack_material.geometry_contract(source["motifs"][event.motif_id],
+                    uv_rotation_degrees=event.rotation_deg) for event in crack_geometry.CANARY_EVENTS})
+            self.assertEqual([row["uv_rotation_degrees"] for row in prepare.call_args.kwargs["geometry_contracts"].values()],
+                             [0., 90.])
+            create.assert_not_called()
+
+    def test_crack_save_owns_all_eleven_packages_and_cleanup_preserves_existing_white(self):
+        original = self.crack_receipt()
+        original.pop("asset_packages_saved")
+        original.pop("native_no_collision")
+        snapshot = deepcopy(original)
+        actors, plan, asphalt, white_plan, white_receipt = (object(), object()), object(), object(), object(), self.marking_receipt()
+        assets = {path: object() for path in original["owned_asset_paths"]}
+        source_root = Path("retained-crack-source")
+        api = SimpleNamespace(load_asset=lambda path: assets[path],
+            EditorAssetLibrary=SimpleNamespace(save_loaded_asset=Mock(return_value=True)),
+            CollisionEnabled=SimpleNamespace(NO_COLLISION="NO_COLLISION"))
+        with patch.object(crack_sources, "source_root", return_value=source_root), \
+             patch.object(cracks, "create", return_value=(actors, original)) as create, \
+             patch.object(cracks, "_rollback") as rollback, \
+             patch.object(markings, "_world", return_value=saved.session.operation.MAP_PACKAGE):
+            actual_actors, receipt = saved.create_crack_canary(api, plan, asphalt,
+                white_plan=white_plan, white_receipt=white_receipt)
+            self.assertIs(actual_actors, actors)
+            self.assertTrue(receipt["asset_packages_saved"])
+            self.assertFalse(receipt["normal_space_verified"])
+            self.assertEqual(original, snapshot)
+            create.assert_called_once_with(api, plan, source_root, crack_sources.VERIFIED_PINS, asphalt,
+                                           white_plan=white_plan, white_receipt=white_receipt)
+            calls = api.EditorAssetLibrary.save_loaded_asset.call_args_list
+            self.assertEqual([call.args[0] for call in calls], list(assets.values()))
+            self.assertEqual(len(calls), 11)
+            self.assertTrue(all(call.kwargs == {"only_if_is_dirty": False} for call in calls))
+            rollback.assert_not_called()
+            api.EditorAssetLibrary.save_loaded_asset.reset_mock(side_effect=True)
+            api.EditorAssetLibrary.save_loaded_asset.side_effect = [True] * 10 + [False]
+            with self.assertRaisesRegex(ValueError, "crack canary asset save failed"):
+                saved.create_crack_canary(api, plan, asphalt, white_plan=white_plan, white_receipt=white_receipt)
+            rollback.assert_called_once_with(api, actors, original["owned_asset_paths"], original["original_scene_state"],
+                saved.session.operation.MAP_PACKAGE, white_plan=white_plan, white_receipt=white_receipt, asphalt_assets=asphalt)
+
+    def test_fresh_crack_aggregate_replays_white_and_cracks_with_every_package_pinned(self):
+        white, receipt = self.marking_receipt(), self.crack_receipt()
+        paths = list(white["material"]["assets"].values()) + receipt["owned_asset_paths"]
+        manifest = {"edge_markings_enabled": True, "edge_markings": white,
+                    "crack_canary_enabled": True, "crack_canary": receipt,
+                    "material_instance": "asphalt-mi", "material_master": "asphalt-m",
+                    "texture_objects": {"BaseColor": "existing-tex"},
+                    "assets": [{"path": "Content/" + path.split(".", 1)[0].removeprefix("/Game/") + ".uasset"}
+                               for path in paths]}
+        source_plan, white_plan, plan = object(), object(), object()
+        source_root = Path("retained-crack-source")
+        white_readback = {"status": "EDGE_MARKINGS_FRESH_READBACK_VERIFIED", "actor_count": 370,
+                          "read_only": True, "aggregate_owner": "local_crack_canary"}
+        readback = {"status": "LOCAL_CRACKS_FRESH_READBACK_VERIFIED_NORMAL_REVIEW_PENDING", "actor_count": 2,
+                    "read_only": True, "world_normal_canary_required": True, "normal_space_verified": False,
+                    "edge_markings": white_readback}
+        api = SimpleNamespace(CollisionEnabled=SimpleNamespace(NO_COLLISION="NO_COLLISION"))
+        before = deepcopy(manifest)
+        with patch.object(saved.shoulder_sources, "load_sources", return_value=source_plan) as load, \
+             patch.object(saved, "load_edge_marking_plan", return_value=white_plan) as white_build, \
+             patch.object(saved, "load_crack_plan", return_value=plan) as build, \
+             patch.object(crack_sources, "source_root", return_value=source_root), \
+             patch.object(cracks, "verify_loaded", return_value=readback) as verify, \
+             patch.object(markings, "verify_loaded") as old_white_verify, \
+             patch.object(cracks, "create") as create, patch.object(saved, "create_crack_canary") as save:
+            actual = saved.verify_surface_details(api, manifest, True, True)
+            self.assertIs(actual["edge_markings"], white_readback)
+            self.assertNotIn("edge_markings", actual["crack_canary"])
+            self.assertFalse(actual["crack_canary"]["normal_space_verified"])
+            load.assert_called_once_with()
+            white_build.assert_called_once_with(source_plan)
+            build.assert_called_once_with(source_plan)
+            verify.assert_called_once_with(api, plan, receipt, source_root, crack_sources.VERIFIED_PINS,
+                {"instance": "asphalt-mi", "master": "asphalt-m", "textures": {"BaseColor": "existing-tex"}},
+                white_plan=white_plan, white_receipt=white)
+            old_white_verify.assert_not_called()
+            create.assert_not_called()
+            save.assert_not_called()
+            self.assertEqual(manifest, before)
+            verify.reset_mock()
+            manifest["assets"].pop()
+            with self.assertRaisesRegex(ValueError, "retained byte identities"):
+                saved.verify_surface_details(api, manifest, True, True)
+            verify.assert_not_called()
+            manifest["assets"] = before["assets"]
+            manifest["crack_canary"]["native_no_collision"] = "BLOCK_ALL"
+            with self.assertRaisesRegex(ValueError, "collision enum"):
+                saved.verify_surface_details(api, manifest, True, True)
+
     @contextmanager
-    def saved_lane_fixture(self, *, fail_map=False, fail_paint_cleanup=False):
+    def saved_lane_fixture(self, *, crack_canary=False, fail_map=False, fail_paint_cleanup=False,
+                           fail_crack_cleanup=False, fail_crack_asset=False):
         """Exercise orchestration and real file pins with explicit native stubs.
 
         Separate tests above and in the paint consumer check full inventories
@@ -272,7 +491,8 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
             proof.mkdir()
             old_asset = SimpleNamespace(get_path_name=lambda: self.old["road_supports"][0]["slots"][0]["path"])
             new_asset = SimpleNamespace(get_path_name=lambda: self.new_material)
-            state = {"material": old_asset, "shoulder": False, "package": saved.session.operation.MAP_PACKAGE}
+            state = {"material": old_asset, "shoulder": False, "cracks": False,
+                     "package": saved.session.operation.MAP_PACKAGE}
 
             def set_material(slot, asset):
                 self.assertEqual(slot, 0)
@@ -288,6 +508,9 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
 
             def save_asset(asset, only_if_is_dirty):
                 self.assertIs(only_if_is_dirty, False)
+                if fail_crack_asset and asset.get_path_name() == native_cracks["owned_asset_paths"][-1]:
+                    events.append("crack-asset-save-failed")
+                    return False
                 relative = "Content/" + asset.get_path_name().split(".", 1)[0].removeprefix("/Game/") + ".uasset"
                 path = root / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
@@ -329,11 +552,16 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
             shoulder_receipt = {"schema_version": saved.shoulder.SCHEMA_VERSION, "rollback_verified": True,
                 "support_count": 186, "material_target_count": 185, "selected_triangle_count": 67760,
                 "material": gravel_receipt}
-            rollback_state, source_plan, marking_plan = object(), object(), object()
+            rollback_state, source_plan, marking_plan, crack_plan = object(), object(), object(), object()
             native_paint = self.marking_receipt()
             native_paint.pop("material_packages_saved")
             native_paint.pop("native_no_collision")
             paint_actors = (object(),)
+            native_cracks = self.crack_receipt()
+            native_cracks.pop("asset_packages_saved")
+            native_cracks.pop("native_no_collision")
+            crack_actors = (object(), object())
+            crack_root = Path(directory) / "crack-source-fixture"
 
             def prepare_shoulders(*_args):
                 events.append("shoulder-asphalt")
@@ -351,18 +579,57 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 self.assertEqual(before, native_paint["original_source_state"])
                 self.assertIs(state["material"], new_asset)
                 self.assertTrue(state["shoulder"])
+                self.assertFalse(state["cracks"])
                 self.assertEqual(package, saved.session.operation.MAP_PACKAGE)
                 events.append("paint-rollback")
                 if fail_paint_cleanup:
                     raise ValueError("fixture owned paint cleanup failed")
 
+            def create_cracks(_api, plan, source_root, pins, asphalt, *, white_plan, white_receipt):
+                self.assertIs(plan, crack_plan)
+                self.assertEqual(source_root, crack_root)
+                self.assertEqual(pins, crack_sources.VERIFIED_PINS)
+                self.assertIs(asphalt, asphalt_assets)
+                self.assertIs(white_plan, marking_plan)
+                self.assertTrue(white_receipt["material_packages_saved"])
+                self.assertIs(state["material"], new_asset)
+                self.assertTrue(state["shoulder"])
+                events.append("cracks-create")
+                state["cracks"] = True
+                return crack_actors, native_cracks
+
+            def cleanup_cracks(_api, actors, paths, before, package, *, white_plan, white_receipt, asphalt_assets):
+                self.assertIs(actors, crack_actors)
+                self.assertEqual(paths, native_cracks["owned_asset_paths"])
+                self.assertEqual(before, native_cracks["original_scene_state"])
+                self.assertEqual(package, saved.session.operation.MAP_PACKAGE)
+                self.assertIs(white_plan, marking_plan)
+                self.assertTrue(white_receipt["material_packages_saved"])
+                self.assertEqual(asphalt_assets, imported["assets"])
+                self.assertIs(state["material"], new_asset)
+                self.assertTrue(state["shoulder"])
+                self.assertTrue(state["cracks"])
+                events.append("cracks-rollback")
+                for path in paths:
+                    package_file = root / ("Content/" + path.split(".", 1)[0].removeprefix("/Game/") + ".uasset")
+                    package_file.unlink(missing_ok=True)
+                state["cracks"] = False
+                if fail_crack_cleanup:
+                    raise ValueError("fixture owned crack cleanup failed")
+
             readback = {"status": "EDGE_MARKINGS_FRESH_READBACK_VERIFIED", "actor_count": 370, "read_only": True}
+            aggregate_white = {**readback, "aggregate_owner": "local_crack_canary"}
+            crack_readback = {"status": "LOCAL_CRACKS_FRESH_READBACK_VERIFIED_NORMAL_REVIEW_PENDING", "actor_count": 2,
+                "read_only": True, "world_normal_canary_required": True, "normal_space_verified": False,
+                "edge_markings": aggregate_white}
+            patches = {}
             for owner, name, kwargs in (
                 (saved, "ROOT", {"new": root}),
                 (saved, "native_world", {"side_effect": lambda _api, package: state.update(package=package)}),
                 (saved, "verify_material_instance", {"return_value": new_asset}),
                 (saved, "expected_saved_inventory", {"return_value": "d" * 64}),
                 (saved, "load_edge_marking_plan", {"return_value": marking_plan}),
+                (saved, "load_crack_plan", {"return_value": crack_plan}),
                 (saved.baseline, "native_inventory", {"return_value": deepcopy(self.old)}),
                 (saved.baseline, "road_support_actors", {"return_value": [road]}),
                 (saved.baseline, "native_projection", {}), (saved.baseline, "dirty_packages", {}),
@@ -381,13 +648,18 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 (markings, "verify_loaded", {"return_value": readback}),
                 (markings, "_rollback_created", {"side_effect": cleanup_paint}),
                 (markings, "_world", {"return_value": saved.session.operation.MAP_PACKAGE}),
+                (crack_sources, "source_root", {"return_value": crack_root}),
+                (cracks, "create", {"side_effect": create_cracks}),
+                (cracks, "verify_loaded", {"return_value": crack_readback}),
+                (cracks, "_rollback", {"side_effect": cleanup_cracks}),
             ):
-                stack.enter_context(patch.object(owner, name, **kwargs))
+                patches[(owner.__name__, name)] = stack.enter_context(patch.object(owner, name, **kwargs))
             stack.enter_context(patch.dict("sys.modules", {"scripts.ue.import_material_forge_variant":
                                                           SimpleNamespace(import_variant=forge_import)}))
             yield SimpleNamespace(api=api, proof=proof, retained=retained, events=events, state=state,
                 args=(api, proof, retained, "a" * 40, "b" * 64, {"native_inventory": self.old}, []),
-                kwargs={"source_dependencies": [], "edge_markings": True}, readback=readback)
+                kwargs={"source_dependencies": [], "edge_markings": True, "crack_canary": crack_canary},
+                readback=readback, aggregate_white=aggregate_white, crack_readback=crack_readback, patches=patches)
 
     def test_enabled_saved_lane_pins_paint_packages_then_fresh_reopens_without_reapplying(self):
         with self.saved_lane_fixture() as lane:
@@ -409,6 +681,83 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
             self.assertFalse(receipt["edge_marking_geometry_reapplied"])
             self.assertEqual(receipt["edge_marking_readback"], lane.readback)
             self.assertTrue(receipt["shoulder_material_edge_uv_fresh_reload_verified"])
+
+    def test_crack_saved_lane_retains_all_packages_and_fresh_reads_explicit_white_aggregate(self):
+        with self.saved_lane_fixture(crack_canary=True) as lane:
+            saved.prepare(*lane.args, **lane.kwargs)
+            manifest = json.loads((lane.proof / saved.MANIFEST).read_text())
+            prepared = json.loads((lane.proof / saved.PREPARED).read_text())
+            self.assertTrue(manifest["crack_canary_enabled"])
+            self.assertTrue(prepared["crack_canary_enabled"])
+            self.assertEqual(len(manifest["assets"]), 22)
+            crack = manifest["crack_canary"]
+            self.assertTrue(crack["asset_packages_saved"])
+            self.assertEqual(crack["native_no_collision"], "NO_COLLISION")
+            self.assertEqual(len(crack["owned_asset_paths"]), 11)
+            self.assertEqual(len(crack["actors"]), 2)
+            self.assertEqual(crack["imports"]["texture_count"], 8)
+            self.assertFalse(crack["normal_space_verified"])
+            self.assertTrue(crack["world_normal_canary_required"])
+            expected = {"Content/" + path.split(".", 1)[0].removeprefix("/Game/") + ".uasset"
+                        for path in crack["owned_asset_paths"]}
+            self.assertEqual({row["path"] for row in manifest["assets"] if "/CrackLayer/" in row["path"]}, expected)
+            saved.verify_retained_files(lane.retained, manifest["assets"])
+            saved.verified_manifest_identity(lane.proof, lane.retained)
+            events = list(lane.events)
+            saved.reload(*lane.args, **lane.kwargs)
+            self.assertEqual(lane.events, events)
+            reloaded = json.loads((lane.proof / saved.RELOADED).read_text())
+            self.assertTrue(reloaded["crack_canary_fresh_reload_verified"])
+            self.assertTrue(reloaded["edge_markings_fresh_reload_verified"])
+            self.assertFalse(reloaded["crack_material_reapplied"])
+            self.assertFalse(reloaded["crack_geometry_reapplied"])
+            self.assertFalse(reloaded["crack_readback"]["normal_space_verified"])
+            self.assertTrue(reloaded["crack_readback"]["world_normal_canary_required"])
+            self.assertEqual(reloaded["edge_marking_readback"], lane.aggregate_white)
+            self.assertEqual(reloaded["edge_marking_readback"]["aggregate_owner"], "local_crack_canary")
+            lane.patches[(markings.__name__, "verify_loaded")].assert_not_called()
+            lane.patches[(cracks.__name__, "create")].assert_called_once()
+            lane.patches[(cracks.__name__, "verify_loaded")].assert_called_once()
+            inventory = lane.patches[(saved.__name__, "expected_saved_inventory")]
+            self.assertEqual(inventory.call_count, 3)
+            self.assertTrue(all(call.kwargs["crack_canary_receipt"] == crack for call in inventory.call_args_list))
+
+    def test_failed_crack_lane_rolls_back_cracks_then_white_then_original_materials(self):
+        for failed_cracks, failed_paint in ((False, False), (True, False), (False, True)):
+            with self.subTest(crack_cleanup_failure=failed_cracks, paint_cleanup_failure=failed_paint), \
+                 self.saved_lane_fixture(crack_canary=True, fail_map=True,
+                    fail_crack_cleanup=failed_cracks, fail_paint_cleanup=failed_paint) as lane:
+                expected = ("fixture owned paint cleanup failed" if failed_paint else
+                            "fixture owned crack cleanup failed" if failed_cracks else "map save failed")
+                with self.assertRaisesRegex(ValueError, expected):
+                    saved.prepare(*lane.args, **lane.kwargs)
+                self.assertEqual(lane.events, ["road-asphalt", "shoulder-asphalt", "cracks-create", "save-map",
+                    "cracks-rollback", "paint-rollback", "road-original", "shoulder-original"])
+                self.assertFalse(lane.state["shoulder"])
+                self.assertFalse(lane.state["cracks"])
+                self.assertFalse((lane.proof / saved.MANIFEST).exists())
+                self.assertFalse((lane.proof / saved.PREPARED).exists())
+                lane.patches[(cracks.__name__, "_rollback")].assert_called_once()
+
+    def test_failed_eleventh_crack_package_save_never_saves_map_and_cleans_once_before_white(self):
+        with self.saved_lane_fixture(crack_canary=True, fail_crack_asset=True) as lane:
+            with self.assertRaisesRegex(ValueError, "crack canary asset save failed"):
+                saved.prepare(*lane.args, **lane.kwargs)
+            self.assertEqual(lane.events, ["road-asphalt", "shoulder-asphalt", "cracks-create",
+                "crack-asset-save-failed", "cracks-rollback", "paint-rollback", "road-original", "shoulder-original"])
+            lane.patches[(cracks.__name__, "_rollback")].assert_called_once()
+            self.assertFalse((lane.proof / saved.MANIFEST).exists())
+            self.assertFalse((lane.proof / saved.PREPARED).exists())
+
+    def test_crack_fresh_mode_cannot_silently_disable_an_existing_saved_lane(self):
+        with self.saved_lane_fixture(crack_canary=True) as lane:
+            saved.prepare(*lane.args, **lane.kwargs)
+            events = list(lane.events)
+            with self.assertRaisesRegex(ValueError, "No authentic native saved-consumer preparation"):
+                saved.reload(*lane.args, **{**lane.kwargs, "crack_canary": False})
+            self.assertEqual(lane.events, events)
+            lane.patches[(cracks.__name__, "verify_loaded")].assert_not_called()
+            self.assertFalse((lane.proof / saved.RELOADED).exists())
 
     def test_outer_failed_map_save_removes_paint_before_restoring_road_and_shoulders(self):
         for failed_cleanup in (False, True):
@@ -653,9 +1002,11 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
         trial = {"result": {"graph_sha256": saved.asphalt_source.GRAPH_SHA256,
                             "source_receipt_sha256": saved.asphalt_source.SOURCE_RECEIPT_SHA256}}
         original, identity = {"native_inventory": {}}, {"sha256": "a" * 64, "size_bytes": 100}
-        for action, mode in (("prepare", "0"), ("reload", "0"), ("prepare", "1"), ("reload", "1")):
-            with self.subTest(action=action, edge_markings=mode), \
-                 patch.dict("os.environ", {"YACS_ROAD_SAVED_ACTION": action, "YACS_ROAD_EDGE_MARKINGS": mode}), \
+        for action, mode, cracks_mode in (("prepare", "0", "0"), ("reload", "0", "0"),
+                ("prepare", "1", "0"), ("reload", "1", "0"), ("prepare", "1", "1"), ("reload", "1", "1")):
+            with self.subTest(action=action, edge_markings=mode, crack_canary=cracks_mode), \
+                 patch.dict("os.environ", {"YACS_ROAD_SAVED_ACTION": action, "YACS_ROAD_EDGE_MARKINGS": mode,
+                                           "YACS_ROAD_CRACK_CANARY": cracks_mode}), \
                  patch.dict("sys.modules", {"unreal": api}), \
                  patch.object(saved.session, "_assert_isolated_root"), \
                  patch.object(saved, "proof_paths", return_value=("b" * 40, "a" * 64, "1-1", Path("proof"), Path("retained"))), \
@@ -669,6 +1020,7 @@ class RoadAsphaltSavedConsumerContractTests(unittest.TestCase):
                 saved.main()
                 self.assertIs(dispatch.call_args.kwargs["source_dependencies"], dependencies)
                 self.assertIs(dispatch.call_args.kwargs["edge_markings"], mode == "1")
+                self.assertIs(dispatch.call_args.kwargs["crack_canary"], cracks_mode == "1")
                 self.assertIs(dispatch.call_args.args[-1], rows)
                 verify_files.assert_called_once_with(saved.ROOT, rows)
 

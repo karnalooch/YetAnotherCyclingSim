@@ -12,6 +12,83 @@ remains frozen. #384 completed after protected [PR #467](https://github.com/karn
 merged as `88f6b95e007b61a122b6515fe29041e5e3a3f220`; its gate is satisfied.
 This work continues #364, not MCP infrastructure.
 
+## Current joint candidate — local cracks and native capture readback
+
+The next integrated candidate consumes the already verified `07ebafad`
+Material Forge outputs without regenerating them. It introduces two small,
+source-owned crack fragments: `drifting_interrupted` on 0112 and
+`short_oblique` on Nudo-0. The latter uses UV rotation 90 degrees. This is the
+native material canary, not completed network-wide crack distribution.
+
+The fragments are clipped against the actual ordered pavement triangles and
+their split normals. Their only positional offset is world Z +1 mm; the
+complete footprint stays at least 10 cm inside the inner white-line boundary.
+Owner/station selection cannot jump to another road level at a hairpin. Two
+actors, eight textures and eleven owned material/texture packages are added;
+collision, shadows, navigation and physics remain disabled. The saved/fresh
+reader rechecks all existing white-line buffers as well as both crack buffers.
+The original source geometry and saved checkpoint remain unchanged.
+
+The material preserves the projected base asphalt and adds the local crack
+colour, roughness and normal delta. Its diagnostic `NeutralProbe` belongs only
+to two transient MIDs; the saved MICs stay at zero. After the unchanged 68 Lit
+views, an explicitly requested `[road-crack-canary]` run captures 16 separate
+controls: both cameras, each with base/neutral BaseColor, Roughness and
+WorldNormal pairs plus the crack Lit and WorldNormal views. The fixed control
+plan SHA-256 is
+`f6f8a4fef0c10438fee2ee88827f797b9451ebf5d9e1f0b2334f754f593738d8`.
+Actual normal-space and rendered appearance remain **pending**, including the
+90-degree case. A successful source export, graph test or fresh readback cannot
+admit those images.
+
+Independent review identified two capture-reporting gaps and the candidate
+corrects both. Every final and priming screenshot now checks the actual active
+viewport enum before submission and after completion. The receipt retains
+`native_viewmode_before` and `native_viewmode_after`; the host checks them for
+all 68 Lit frames and both optional diagnostic plans. Restoration is verified
+only with a successful restore status, no cleanup errors and every applicable
+material, visibility, probe, MID-reference, package and dirty-content check.
+The existing per-shot and total deadlines, fixed cameras and source hashes
+remain binding.
+
+Revision `4258aab3527506d64769ecf974dd061d9e580687` passed
+[protected CI 38105477966](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105477966).
+Its separate white-line Lit/contact
+[native run 38105475021](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105475021)
+has passed baseline, canary, save/fresh, the 68-frame Lit capture and both
+contact stages (12 frames at 0112 and six at the hairpin). The full native
+workflow is successful. Artifact verification and direct image review are
+still pending.
+
+The bounded [installed-source read 38105475097](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38105475097)
+retained four actual function observations from two CPP files, then failed on
+an assumed `Classes/Materials/MaterialInstanceDynamic.h` path. Its partial
+receipt is 4,711 bytes, SHA-256
+`da92c72a3b98c243406675e21e9b8609bb22031e2a6e76159458ebe67dc63e9a`.
+The observations establish that the buffer wrapper forwards `BufferName` to
+`ChangeBufferVisualizationMode`; its own body does not contain the previously
+required viewmode literal. The candidate verifies that forwarding together
+with the separate real viewmode setter/getter bodies. Header discovery is
+bounded to the two documented `Public`/`Classes` layouts and retains the actual
+chosen file identity.
+
+The unrelated LiDAR step was skipped after that failed source read. It now
+requires successful source prerequisites and a non-cancelled workflow rather
+than success of the optional API step. Three isolated executions of the real
+inline header resolver passed, including the retained failure when both
+layouts are absent. The next source invocation requests `[hairpin-lidar]` and
+`[road-api-read]`, without `[road-cracks-source]`; actual LiDAR observations
+remain pending. No geometry repair or visual acceptance follows from these
+workflow changes.
+
+The integrated preflight was also run locally with Python 3.14.8 and actual
+PowerShell 7.4.13: **345 tests passed, none skipped**, using the exact 26-module
+list from the native workflow. Independent specialists reviewed the source
+adapter, clipped geometry, material graph, saved/fresh integration and GPU host.
+All 14 rendered inline PowerShell blocks parse; changed Python AST, the scoped
+Ruff checks and documentation index guards pass. These are preflight results,
+not native crack proof.
+
 ## Latest native paint result and remaining diagnostic failure
 
 Revision `e4af3a74bf7f53565acd75b7d9a91a4e6d2d8691` passed

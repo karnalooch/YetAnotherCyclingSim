@@ -234,6 +234,11 @@ def authenticate_render_context():
         and manifest.get("performance_pass") is False,
         "Cannot render without the same exact-SHA native save and fresh-reload proof",
     )
+    surface_modes, fresh_surface_readback = authenticate_surface_detail_proofs(
+        host, prepare_receipt, fresh_receipt, manifest,
+        edge_markings=saved.edge_markings_enabled(),
+        crack_canary=saved.crack_canary_enabled(),
+    )
     saved.verify_retained_files(retained, manifest["assets"])
     source = session._safe_path(ROOT, SURVEY)
     survey_identity = session._identity(source, MAX_CSV_BYTES)
@@ -248,6 +253,8 @@ def authenticate_render_context():
         "retained": retained,
         "manifest": manifest,
         "manifest_id": manifest_id,
+        "surface_modes": surface_modes,
+        "fresh_surface_readback": fresh_surface_readback,
         "profile_identity": profile_identity,
         "original": original,
         "rows": rows,
@@ -262,6 +269,56 @@ def authenticate_render_context():
             session._safe_path(proof, "saved-road-host-receipt.json")
         ),
     }
+
+
+def authenticate_surface_detail_proofs(host, prepared, fresh, manifest, *, edge_markings, crack_canary):
+    """Bind each optional lane to the preceding actual save/fresh processes."""
+    saved._surface_modes(edge_markings, crack_canary)
+    modes = {"edge_markings": edge_markings, "crack_canary": crack_canary}
+    readbacks = {}
+    for name, enabled in modes.items():
+        key = name + "_enabled"
+        require(all(row.get(key) is enabled for row in (manifest, prepared, fresh))
+                and host.get(name + "_requested") is enabled
+                and host.get(name + "_fresh_reload_verified") is enabled
+                and fresh.get(name + "_fresh_reload_verified") is enabled,
+                "Surface detail save/fresh/host modes differ: " + name)
+        singular = "edge_marking" if name == "edge_markings" else "crack"
+        require(fresh.get(singular + "_material_reapplied") is False
+                and fresh.get(singular + "_geometry_reapplied") is False,
+                "Surface detail was reapplied instead of freshly read: " + name)
+        readback = fresh.get(singular + "_readback")
+        if not enabled:
+            require(name not in manifest and readback is None,
+                    "Disabled surface detail lane contains a saved or read-back addition: " + name)
+        else:
+            require(isinstance(manifest.get(name), dict) and isinstance(readback, dict)
+                    and readback.get("read_only") is True
+                    and readback.get("owner_visual_pass") is False
+                    and readback.get("performance_pass") is False,
+                    "Surface detail has no native read-only fresh witness: " + name)
+        readbacks[name] = readback
+    if edge_markings:
+        require(readbacks["edge_markings"].get("status") == "EDGE_MARKINGS_FRESH_READBACK_VERIFIED"
+                and readbacks["edge_markings"].get("all_marking_buffers_verified") is True
+                and readbacks["edge_markings"].get("full_source_buffers_preserved") is True,
+                "Fresh white edge-marking buffers were not verified")
+    if crack_canary:
+        creation, result = manifest["crack_canary"], readbacks["crack_canary"]
+        saved.crack_canary_inventory(creation)
+        require(result.get("status") == "LOCAL_CRACKS_FRESH_READBACK_VERIFIED_NORMAL_REVIEW_PENDING"
+                and result.get("plan_sha256") == creation.get("plan_sha256")
+                and result.get("native_source_witness_sha256")
+                == creation.get("source_correspondence", {}).get("native_source_witness_sha256")
+                and result.get("actor_count") == 2
+                and all(result.get(flag) is True for flag in (
+                    "all_crack_buffers_verified", "full_source_and_existing_paint_buffers_preserved",
+                    "caller_fresh_process_and_saved_bytes_required", "world_normal_canary_required"))
+                and result.get("normal_space_verified") is False
+                and host.get("crack_normal_space_verified") is False
+                and readbacks["edge_markings"].get("aggregate_owner") == "local_crack_canary",
+                "Fresh crack canary lacks the full native surface/paint witness and pending normal review")
+    return modes, readbacks
 
 
 def audit_transient_capture_dirty_packages(api):
@@ -304,6 +361,29 @@ def audit_transient_capture_dirty_packages(api):
     }
 
 
+def crack_texture_paths(manifest):
+    """Extend residency only with the eight already authenticated canary maps."""
+    enabled = manifest.get("crack_canary_enabled", False)
+    require(type(enabled) is bool, "Crack residency requires an explicit saved lane")
+    if not enabled:
+        require("crack_canary" not in manifest, "Disabled crack lane contains unexpected assets")
+        return {}
+    from scripts.ue import road_crack_sources
+
+    receipt = manifest.get("crack_canary", {}).get("imports", {})
+    source = receipt.get("sources", {})
+    require(receipt.get("texture_count") == 8
+            and source.get("selected_motifs") == list(road_crack_sources.CANARY_MOTIFS)
+            and receipt.get("assets") == road_crack_sources.asset_paths(source),
+            "Crack residency maps differ from the exact saved source selection")
+    paths = {"Crack_" + motif + "_" + channel: path
+             for motif, channels in receipt["assets"]["textures"].items()
+             for channel, path in channels.items()}
+    require(len(paths) == len(set(paths.values())) == 8,
+            "Crack residency requires eight distinct native maps")
+    return paths
+
+
 class RoadLitCapture:
     def __init__(self, api, context, world, landscape):
         self.api = api
@@ -311,11 +391,26 @@ class RoadLitCapture:
         self.world, self.landscape = world, landscape
         self.proof = context["proof"]
         marker = os.environ.get(visual_controls.OWNED_ENV)
+        crack_marker = os.environ.get("YACS_ROAD_CRACK_CONTROLS_OWNED")
         require(marker is None or marker == context.get("run_token"),
                 "Visual control marker differs from the authenticated owned run")
-        self.controls_enabled = marker is not None
-        self.control_plan = visual_controls.control_plan() if self.controls_enabled else None
-        self.control_root = session._safe_path(self.proof, "road-asphalt-visual-controls")
+        require(crack_marker is None or crack_marker == context.get("run_token"),
+                "Crack control marker differs from the authenticated owned run")
+        require(marker is None or crack_marker is None,
+                "One owned diagnostic sequence may follow the original Lit captures")
+        self.control_module = visual_controls
+        self.control_family = "road-asphalt"
+        if crack_marker is not None:
+            require(context["manifest"].get("crack_canary_enabled") is True,
+                    "Crack controls require the explicitly saved crack canary")
+            from scripts.ue import road_crack_visual_controls
+
+            self.control_module = road_crack_visual_controls
+            self.control_family = "road-crack"
+        self.controls_enabled = marker is not None or crack_marker is not None
+        self.control_plan = self.control_module.control_plan() if self.controls_enabled else None
+        self.control_receipt_name = self.control_family + "-visual-controls.json"
+        self.control_root = session._safe_path(self.proof, self.control_family + "-visual-controls")
         require(not self.controls_enabled or not self.control_root.exists(),
                 "Visual control output already exists; no overwrite")
         self.root = session._safe_path(self.proof, "road-asphalt-lit-review")
@@ -349,6 +444,7 @@ class RoadLitCapture:
         self.completed_priming_frames = 0
         self.pending_path = None
         self.pending_camera_observation = None
+        self.pending_viewmode_before = None
         self.pose_readiness = None
         self.residency_leases = {}
         self.residency_released = False
@@ -357,6 +453,7 @@ class RoadLitCapture:
         self.finish_requested_at = None
         self.transient_dirty_audit = None
         self.edge_marking_readback = None
+        self.crack_readback = None
 
     def capture_row(self):
         if self.phase == "lit":
@@ -374,7 +471,7 @@ class RoadLitCapture:
                 "Visual controls require the completed original ordered Lit sequence")
         self.phase = "controls"
         self.index = 0
-        self.controls = visual_controls.VisualControls(self.api, self.context)
+        self.controls = self.control_module.VisualControls(self.api, self.context)
         require(self.controls.plan == self.control_plan, "Diagnostic control plan changed")
         self.control_begin = self.controls.begin()
         require(self.control_preflight is not None and all(
@@ -387,7 +484,7 @@ class RoadLitCapture:
         try:
             self.api.EditorPythonScripting.set_keep_python_script_alive(True)
             if self.controls_enabled:
-                self.control_preflight = visual_controls.preflight(
+                self.control_preflight = self.control_module.preflight(
                     self.api, self.context, self.control_plan)
             viewport = self.api.get_editor_subsystem(self.api.UnrealEditorSubsystem)
             self.viewport_before = viewport.get_level_viewport_camera_info()
@@ -426,6 +523,9 @@ class RoadLitCapture:
                 and len(set(gravel_paths.values())) == 3,
                 "Expected three authenticated shoulder textures")
         material_paths.update({"Shoulder_" + channel: path for channel, path in gravel_paths.items()})
+        material_paths.update(crack_texture_paths(self.context["manifest"]))
+        require(len(material_paths) == len(set(material_paths.values())),
+                "Distinct road, shoulder and crack channels share an unexpected asset")
         road_textures = []
         for channel, path in sorted(material_paths.items()):
             texture = self.api.load_asset(path)
@@ -498,6 +598,7 @@ class RoadLitCapture:
         row = self.capture_row()
         self.pending_camera_observation = None
         self.pending_control_observation = None
+        self.pending_viewmode_before = None
         eye = self.api.Vector(*row["camera_location_cm"])
         target = self.api.Vector(*row["target_cm"])
         rotation = self.api.MathLibrary.find_look_at_rotation(eye, target)
@@ -565,6 +666,7 @@ class RoadLitCapture:
         )
         self.pending_path = filename
         require(not filename.exists(), "Road review PNG already exists")
+        self.pending_viewmode_before = self.observe_viewmode()
         self.task = self.api.AutomationLibrary.take_high_res_screenshot(
             res_x=RESOLUTION[0],
             res_y=RESOLUTION[1],
@@ -585,6 +687,18 @@ class RoadLitCapture:
         require(self.task is not None and self.task.is_valid_task(),
                 "Unreal refused the native lit road screenshot task")
         self.submitted = time.monotonic()
+
+    def observe_viewmode(self):
+        name = (
+            "VMI_VISUALIZE_BUFFER"
+            if self.phase == "controls"
+            and self.capture_row()["control_mode"] in self.control_module.BUFFERS
+            else "VMI_LIT"
+        )
+        actual = self.api.AutomationLibrary.get_editor_active_viewport_view_mode()
+        require(actual == getattr(self.api.ViewModeIndex, name),
+                "Native viewport viewmode differs from the requested capture mode")
+        return name
 
     def tick(self, _delta):
         if self.stopped or self.busy:
@@ -630,6 +744,13 @@ class RoadLitCapture:
                 require(control_observations["native_control_observation_before"]
                         == control_observations["native_control_observation_after"],
                         "Diagnostic material/viewmode changed during the native screenshot")
+            viewmode_observations = {
+                "native_viewmode_before": self.pending_viewmode_before,
+                "native_viewmode_after": self.observe_viewmode(),
+            }
+            require(viewmode_observations["native_viewmode_before"]
+                    == viewmode_observations["native_viewmode_after"],
+                    "Native viewport viewmode changed during the screenshot")
             path = self.pending_path
             require(path is not None and path.exists(),
                     "Unreal screenshot task completed without PNG")
@@ -640,6 +761,7 @@ class RoadLitCapture:
                     **session._identity(path, MAX_FRAME_BYTES),
                     "native_camera_observation": self.pending_camera_observation,
                     "screenshot_elapsed_seconds": elapsed,
+                    **viewmode_observations,
                     **control_observations,
                 })
                 if self.phase == "lit":
@@ -655,14 +777,15 @@ class RoadLitCapture:
             info = frame_statistics(path)
             identity = session._identity(path, MAX_FRAME_BYTES)
             completed_frames = self.frames if self.phase == "lit" else self.control_frames
-            render_mode = "buffer_visualization" if row.get("control_mode") in visual_controls.BUFFERS else "lit"
+            render_mode = "buffer_visualization" if row.get("control_mode") in self.control_module.BUFFERS else "lit"
             completed_frames.append(
                 {**row, "file": path.relative_to(self.proof).as_posix(),
                  **identity, **info, "render_mode": render_mode,
                  "native_camera_observation": self.pending_camera_observation,
                  "screenshot_elapsed_seconds": elapsed,
                  "capture_readiness": self.pose_readiness,
-                 "priming_frames": list(self.prime_evidence), **control_observations}
+                 "priming_frames": list(self.prime_evidence),
+                 **viewmode_observations, **control_observations}
             )
             self.prime_index = 0
             self.prime_evidence = []
@@ -738,9 +861,12 @@ class RoadLitCapture:
                 observed_map_package=saved.MAP,
                 shoulder_receipt=context["manifest"]["shoulder_network"],
                 edge_marking_receipt=context["manifest"].get("edge_markings"),
+                crack_canary_receipt=context["manifest"].get("crack_canary"),
             )),
-            ("road edge markings", lambda: saved.verify_edge_markings(
-                self.api, context["manifest"], enabled=saved.edge_markings_enabled()
+            ("road surface details", lambda: saved.verify_surface_details(
+                self.api, context["manifest"],
+                context["manifest"].get("edge_markings_enabled", False),
+                context["manifest"].get("crack_canary_enabled", False),
             )),
             ("shoulder native mesh", lambda: saved.shoulder.verify_loaded(
                 self.api, context["manifest"]["shoulder_network"], context["source_plan"]
@@ -789,10 +915,12 @@ class RoadLitCapture:
                         result == context["manifest"]["expected_normalized_inventory_sha256"],
                         "Road/support/Landscape snapshot differs after render",
                     )
-                elif label == "road edge markings":
-                    require(result == context.get("edge_marking_readback"),
-                            "Road edge markings readback changed during render")
-                    self.edge_marking_readback = result
+                elif label == "road surface details":
+                    require(result == {"edge_markings": context.get("edge_marking_readback"),
+                                       "crack_canary": context.get("crack_readback")},
+                            "Road white/crack readback changed during render")
+                    self.edge_marking_readback = result["edge_markings"]
+                    self.crack_readback = result["crack_canary"]
             except Exception as exc:
                 errors.append(label + ": " + str(exc))
         if len(self.frames) != len(context["frames"]):
@@ -848,6 +976,10 @@ class RoadLitCapture:
             "edge_markings_enabled": context["manifest"].get("edge_markings_enabled", False),
             "edge_markings_before": context.get("edge_marking_readback"),
             "edge_markings_after": self.edge_marking_readback,
+            "crack_canary_enabled": context["manifest"].get("crack_canary_enabled", False),
+            "crack_before": context.get("crack_readback"),
+            "crack_after": self.crack_readback,
+            "crack_normal_space_verified": False,
             "exhaustive_road_pixel_visibility": False,
             "whole_area_owner_accepted": False,
             "owner_visual_status": "PENDING_FINAL_M3",
@@ -858,7 +990,7 @@ class RoadLitCapture:
             lit_identity = saved.write_once(session._safe_path(self.proof, RECEIPT), receipt)
             if self.controls_enabled:
                 control_receipt = self.visual_control_receipt(errors + control_errors, lit_identity)
-                saved.write_once(session._safe_path(self.proof, CONTROL_RECEIPT), control_receipt)
+                saved.write_once(session._safe_path(self.proof, self.control_receipt_name), control_receipt)
         finally:
             # Release the -ExecutePythonScript lifecycle after proof and cleanup.
             # The host still requires an observed zero process exit.
@@ -867,7 +999,7 @@ class RoadLitCapture:
     def visual_control_receipt(self, shared_errors, lit_identity):
         errors = list(shared_errors)
         if len(self.control_frames) != self.control_plan["frame_count"]:
-            errors.append("Incomplete eight-image road control sequence")
+            errors.append("Incomplete fixed road control sequence")
         if self.control_completed_priming_frames != self.control_plan["frame_count"] * PRIMING_FRAMES:
             errors.append("Incomplete control priming sequence")
         if [row.get("frame_id") for row in self.control_frames] != [
@@ -876,23 +1008,35 @@ class RoadLitCapture:
         if self.control_begin is None or self.control_begin.get("status") != "READY":
             errors.append("Visual control native preflight/begin did not complete")
         restoration = self.control_restore or {}
-        restored = all(restoration.get(name) is True for name in (
+        restoration_flags = (
             "original_material_restored", "owned_viewports_returned_to_lit",
-            "saved_and_staged_package_bytes_unchanged"))
-        if not restored or restoration.get("status") != "RESTORED" or restoration.get("cleanup_errors"):
+            "saved_and_staged_package_bytes_unchanged")
+        if self.control_family == "road-crack":
+            restoration_flags += (
+                "original_visibility_restored", "original_mic_probe_values_zero",
+                "transient_mids_detached", "transient_mid_refs_released")
+        restored = (
+            restoration.get("status") == "RESTORED"
+            and restoration.get("cleanup_errors") == []
+            and all(restoration.get(name) is True for name in restoration_flags)
+            and (self.control_family != "road-crack"
+                 or type(restoration.get("dirty_content_count")) is int
+                 and restoration["dirty_content_count"] == 0)
+        )
+        if not restored:
             errors.append("Visual control restoration did not complete cleanly")
         context = self.context
-        return {
+        receipt = {
             "schema_version": 1, "issue": 364,
-            "status": ("ROAD_ASPHALT_VISUAL_CONTROLS_FRAMES_RETAINED"
-                       if not errors else "ROAD_ASPHALT_VISUAL_CONTROLS_FAILED"),
+            "status": (self.control_family.upper().replace("-", "_")
+                       + ("_VISUAL_CONTROLS_FRAMES_RETAINED" if not errors else "_VISUAL_CONTROLS_FAILED")),
             "exact_sha": context["exact_sha"], "run_token": context["run_token"],
             "map_package": saved.MAP, "saved_manifest_sha256": context["manifest_id"]["sha256"],
             "camera_csv_sha256": SURVEY_SHA256,
             "view_plan_sha256": context["view_plan_identity"]["sha256"],
             "lit_review_receipt": {"file": RECEIPT, **lit_identity},
             "control_plan": self.control_plan,
-            "control_plan_sha256": visual_controls.digest(self.control_plan),
+            "control_plan_sha256": self.control_module.digest(self.control_plan),
             "preflight": self.control_preflight, "begin": self.control_begin, "restore": self.control_restore,
             "frame_count": len(self.control_frames),
             "expected_frame_count": self.control_plan["frame_count"],
@@ -913,6 +1057,10 @@ class RoadLitCapture:
             "owner_visual_status": "PENDING_FINAL_M3", "performance_status": "DEFERRED_AFTER_M3",
             "performance_pass": False,
         }
+        if self.control_family == "road-crack":
+            receipt["world_normal_canary_required"] = True
+            receipt["normal_space_verified"] = False
+        return receipt
 
 
 def main():
@@ -930,8 +1078,12 @@ def main():
     prep.assert_isolated_bootstrap(unreal)
     world = unreal.EditorLoadingAndSavingUtils.load_map(saved.MAP)
     require(world is not None, "Saved asphalt consumer did not load for lit render")
-    context["edge_marking_readback"] = saved.verify_edge_markings(
-        unreal, context["manifest"], enabled=saved.edge_markings_enabled())
+    details = saved.verify_surface_details(
+        unreal, context["manifest"], **context["surface_modes"])
+    require(details == context["fresh_surface_readback"],
+            "GPU surface details differ from the authenticated fresh-process readback")
+    context["edge_marking_readback"] = details["edge_markings"]
+    context["crack_readback"] = details["crack_canary"]
     inventories = baseline.native_inventory(unreal, prep, saved.MAP)
     digest = saved.expected_saved_inventory(
         context["original"]["native_inventory"],
@@ -940,6 +1092,7 @@ def main():
         observed_map_package=saved.MAP,
         shoulder_receipt=context["manifest"]["shoulder_network"],
         edge_marking_receipt=context["manifest"].get("edge_markings"),
+        crack_canary_receipt=context["manifest"].get("crack_canary"),
     )
     require(
         digest == context["manifest"]["expected_normalized_inventory_sha256"],

@@ -63,6 +63,7 @@ jobs:
           persist-credentials: false
 
       - name: Verify checkout and idle shared render host
+        id: source_prerequisites
         shell: pwsh
         working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
@@ -153,11 +154,16 @@ jobs:
               'UAutomationBlueprintFunctionLibrary::GetEditorActiveViewportViewMode'],
             'Source/Runtime/Engine/Private/KismetMaterialLibrary.cpp': [
               'UKismetMaterialLibrary::CreateDynamicMaterialInstance'],
-            'Source/Runtime/Engine/Classes/Materials/MaterialInstanceDynamic.h': [],
-            'Source/Runtime/Engine/Classes/Kismet/KismetMaterialLibrary.h': [],
             'Source/Developer/FunctionalTesting/Public/AutomationBlueprintFunctionLibrary.h': [],
             'Config/BaseEngine.ini': [], 'Build/Build.version': []}
           try:
+            # UE 5.8 moved public Engine headers; inspect only these two
+            # documented layouts and retain the actual selected path/hash.
+            for folder, name in [('Materials', 'MaterialInstanceDynamic'), ('Kismet', 'KismetMaterialLibrary')]:
+              candidates = ['Source/Runtime/Engine/'+base+'/'+folder+'/'+name+'.h' for base in ('Public', 'Classes')]
+              found = [relative for relative in candidates if (engine/relative).is_file()]
+              assert found, name + ' header is absent from the two documented layouts'
+              wanted[found[0]] = []
             for relative, functions in wanted.items():
               path = engine / relative
               assert path.is_file() and not path.is_symlink() and path.stat().st_size <= 4*1024*1024, relative
@@ -198,7 +204,7 @@ jobs:
           retention-days: 14
 
       - name: Read bounded source hairpin LiDAR transects when requested
-        if: ${{ contains(github.event.head_commit.message, '[hairpin-lidar]') }}
+        if: ${{ !cancelled() && steps.source_prerequisites.outcome == 'success' && contains(github.event.head_commit.message, '[hairpin-lidar]') }}
         shell: pwsh
         working-directory: _road-material-source-proof-${{ github.run_id }}-${{ github.run_attempt }}
         run: |

@@ -137,9 +137,12 @@ UMaterial* UYacsLandscapeMeshDiagnosticLibrary::CreateComponent230DetailMaterial
             (self.engine, controls.AUTOMATION_CPP, b"""
 void UAutomationBlueprintFunctionLibrary::SetEditorViewportVisualizeBuffer(FName BufferName)
 { for (auto Viewport : LevelEditor->GetViewports()) {
-    Viewport.SetViewMode(VMI_VisualizeBuffer);
     Viewport.ChangeBufferVisualizationMode(BufferName);
 } }
+void UAutomationBlueprintFunctionLibrary::SetEditorViewportViewMode(EViewModeIndex Index)
+{ for (auto Viewport : LevelEditor->GetViewports()) { Viewport.SetViewMode(Index); } }
+EViewModeIndex UAutomationBlueprintFunctionLibrary::GetEditorActiveViewportViewMode()
+{ auto Viewport = LevelEditorModule.GetFirstActiveLevelViewport(); return Viewport.GetViewMode(); }
 """),
             (self.engine, controls.AUTOMATION_HEADER, b"""
 void SetEditorViewportVisualizeBuffer(FName BufferName);
@@ -285,6 +288,24 @@ WorldNormal=(Material="/Engine/BufferVisualization/WorldNormal.WorldNormal")
                                                 "// Viewport.ChangeBufferVisualizationMode(BufferName);"))
         with self.assertRaisesRegex(ValueError, "viewport/argument path"):
             self.controller().begin()
+        self.assertEqual(self.auto.calls, [])
+
+    def test_installed_buffer_delegation_requires_real_native_viewmode_paths(self):
+        # 38105475097 observed this delegation without a VMI enum in the
+        # public wrapper. Buffer-name readback is still not claimed.
+        evidence = controls.installed_api_evidence(self.api)
+        self.assertEqual(evidence["buffer_argument_forwarding_calls"], ["ChangeBufferVisualizationMode"])
+        self.assertTrue(evidence["actual_viewmode_readback_required_per_capture"])
+        self.assertFalse(evidence["buffer_name_getter_available"])
+        path = self.engine / controls.AUTOMATION_CPP
+        source = path.read_text()
+        for before, after in (("SetViewMode(Index)", "SetViewMode(VMI_Lit)"),
+                              ("Viewport.GetViewMode()", "VMI_Lit")):
+            with self.subTest(before=before):
+                path.write_text(source.replace(before, after))
+                with self.assertRaisesRegex(ValueError, "native viewport path"):
+                    controls.installed_api_evidence(self.api)
+        path.write_text(source)
         self.assertEqual(self.auto.calls, [])
 
     def test_transient_uniform_graph_preserves_geometry_normal_and_matte_response(self):

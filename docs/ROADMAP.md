@@ -215,6 +215,21 @@ identical exports per motif. No UE crack layer has been admitted. Source-relativ
 corrections remain separately scoped under #459. See the
 [current source and native evidence record](evidence/ROAD_SURFACE_MATERIALS_364.md).
 
+The joint local crack candidate is implemented and under final independent
+review: two source-clipped actors on 0112/Nudo, eight authenticated texture
+imports, full saved/fresh buffer conservation and 16 separate native controls,
+including UV rotation 90 degrees and a neutral-material comparison. Native
+crack appearance and normal-space admission remain pending; this does not yet
+constitute distribution along the full road network. Every next-candidate
+Lit/control screenshot requires actual viewport-mode readback before and after
+capture, and restoration checks cover visibility and transient MID cleanup.
+The separate `4258aab3` white-line run has passed protected CI and the full
+native workflow: save/fresh, 68 Lit and both 0112/0081 contact capture stages.
+Artifact verification and direct image review are pending. Its partial installed-API
+probe identified the forwarding-wrapper and public-header assumptions; the
+bounded source reader is corrected, and LiDAR no longer depends on that
+unrelated optional API step succeeding. Actual LiDAR points remain pending.
+
 #### Finish #364 as one complete delivery
 
 Owner feedback, 2026-10-10: complete the current road network as one user

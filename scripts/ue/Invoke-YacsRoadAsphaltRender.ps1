@@ -6,19 +6,27 @@ param(
     [Parameter(Mandatory)][ValidatePattern('^[1-9][0-9]{0,19}-[1-9][0-9]{0,5}$')][string] $RunToken,
     [switch] $EdgeMarkings,
     [switch] $VisualControls,
+    [switch] $CrackCanary,
     [string] $WorkspaceConfig = 'D:\yacs\workspace.json',
     [string] $RepoRoot = (Join-Path $PSScriptRoot '../..')
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) { throw 'GPU asphalt review requires an owned Windows runner.' }
+if ($CrackCanary -and (-not $EdgeMarkings -or $VisualControls)) {
+    throw 'The crack canary requires white markings and its own separate diagnostic sequence.'
+}
 $PROFILE_DIAGNOSTIC = 'road-network-profile-diagnostic.json'
 $root = $null
 $proof = $null
 $renderProcess = $null
 $expectedControls = $null
+$expectedCrackControls = $null
 $edgeMarkingSetting = if ($EdgeMarkings) { '1' } else { '0' }
 $visualControlToken = if ($VisualControls) { $RunToken } else { $null }
+$crackCanarySetting = if ($CrackCanary) { '1' } else { '0' }
+$crackControlToken = if ($CrackCanary) { $RunToken } else { $null }
+$expectedMaterialTextureCount = if ($CrackCanary) { 15 } else { 7 }
 $receipt = [ordered]@{
     schema_version = 1; issue = 364; exact_sha = $ExpectedHead
     run_token = $RunToken; status = 'PREFLIGHT_PENDING'
@@ -34,6 +42,11 @@ $receipt = [ordered]@{
     visual_controls_requested = [bool]$VisualControls
     visual_controls_frames_retained = $false
     visual_control_frame_count = 0
+    crack_canary_requested = [bool]$CrackCanary
+    crack_canary_verified = $false
+    crack_control_frames_retained = $false
+    crack_control_frame_count = 0
+    crack_normal_space_verified = $false
     road_profile_diagnostic_sha256 = $null
     gpu_shader_compilation_admitted = $false
     road_pixel_visibility_admitted = $false
@@ -468,6 +481,9 @@ function Assert-VisualControlContract {
             $ready.material_texture_count -ne 7) { throw 'Visual control camera lacks native mip readiness.' }
         $captures = @($frame) + @($frame.priming_frames)
         foreach ($capture in $captures) {
+            $viewmode = if ($renderMode -ceq 'lit') { 'VMI_LIT' } else { 'VMI_VISUALIZE_BUFFER' }
+            Assert-JsonEqual $viewmode $capture.native_viewmode_before 'native visual control viewmode before'
+            Assert-JsonEqual $viewmode $capture.native_viewmode_after 'native visual control viewmode after'
             Assert-NativeCameraObservation $pose $capture.native_camera_observation
             Assert-VisualControlObservation $capture.native_control_observation_before $job.control `
                 $OriginalMaterial $Data.begin.transient_material
@@ -483,9 +499,461 @@ function Assert-VisualControlContract {
     }
 }
 
+function Assert-SurfaceDetailLanes {
+    param($HostReceipt, $Prepared, $Fresh, $Manifest, [bool] $Markings, [bool] $Cracks)
+    if ($Cracks -and -not $Markings) { throw 'Crack diagnostics require the saved white marking lane.' }
+    foreach ($lane in @(@{ name = 'edge_markings'; singular = 'edge_marking'; enabled = $Markings },
+                        @{ name = 'crack_canary'; singular = 'crack'; enabled = $Cracks })) {
+        foreach ($row in @($Manifest, $Prepared, $Fresh)) {
+            Assert-JsonEqual $lane.enabled $row[($lane.name + '_enabled')] ('saved lane ' + $lane.name)
+        }
+        Assert-JsonEqual $lane.enabled $HostReceipt[($lane.name + '_requested')] ('requested lane ' + $lane.name)
+        Assert-JsonEqual $lane.enabled $HostReceipt[($lane.name + '_fresh_reload_verified')] ('host fresh lane ' + $lane.name)
+        Assert-JsonEqual $lane.enabled $Fresh[($lane.name + '_fresh_reload_verified')] ('native fresh lane ' + $lane.name)
+        foreach ($suffix in @('_material_reapplied', '_geometry_reapplied')) {
+            Assert-JsonEqual $false $Fresh[($lane.singular + $suffix)] ('fresh mutation ' + $lane.name)
+        }
+        $readback = $Fresh[($lane.singular + '_readback')]
+        if (-not $lane.enabled) {
+            if ($Manifest.Contains($lane.name) -or $null -ne $readback) {
+                throw 'Disabled surface detail lane contains saved assets or a native readback.'
+            }
+        }
+        else {
+            if ($Manifest[$lane.name] -isnot [Collections.IDictionary] -or
+                $readback -isnot [Collections.IDictionary]) { throw 'Surface detail has no saved and fresh native witness.' }
+            Assert-JsonEqual $true $readback.read_only 'fresh read-only surface witness'
+            Assert-JsonEqual $false $readback.owner_visual_pass 'surface owner admission'
+            Assert-JsonEqual $false $readback.performance_pass 'surface performance admission'
+        }
+    }
+    Assert-JsonEqual $false $HostReceipt.crack_normal_space_verified 'host pending normal review'
+    if ($Markings) {
+        Assert-JsonEqual 'EDGE_MARKINGS_FRESH_READBACK_VERIFIED' $Fresh.edge_marking_readback.status 'fresh white status'
+        Assert-JsonEqual $true $Fresh.edge_marking_readback.all_marking_buffers_verified 'fresh white buffers'
+        Assert-JsonEqual $true $Fresh.edge_marking_readback.full_source_buffers_preserved 'fresh original buffers'
+    }
+    if ($Cracks) {
+        $created, $loaded = $Manifest.crack_canary, $Fresh.crack_readback
+        if ($created.status -cne 'LOCAL_CRACKS_CREATED_NORMAL_REVIEW_PENDING' -or
+            $created.plan_sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+            $loaded.status -cne 'LOCAL_CRACKS_FRESH_READBACK_VERIFIED_NORMAL_REVIEW_PENDING' -or
+            $loaded.plan_sha256 -cne $created.plan_sha256 -or $loaded.actor_count -ne 2 -or
+            $loaded.native_source_witness_sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+            $loaded.native_source_witness_sha256 -cne $created.source_correspondence.native_source_witness_sha256 -or
+            $Fresh.edge_marking_readback.aggregate_owner -cne 'local_crack_canary') {
+            throw 'Crack canary differs from the saved source/paint correspondence and fresh witness.'
+        }
+        foreach ($flag in @('all_crack_buffers_verified', 'full_source_and_existing_paint_buffers_preserved',
+                            'caller_fresh_process_and_saved_bytes_required', 'world_normal_canary_required')) {
+            Assert-JsonEqual $true $loaded[$flag] ('fresh crack ' + $flag)
+        }
+        Assert-JsonEqual $false $created.normal_space_verified 'saved pending normal review'
+        Assert-JsonEqual $false $loaded.normal_space_verified 'fresh pending normal review'
+    }
+}
+
+function Assert-SurfaceDetailGpuReadback {
+    param($Data, $Fresh, [bool] $Markings, [bool] $Cracks)
+    Assert-JsonEqual $Markings $Data.edge_markings_enabled 'GPU white lane'
+    Assert-JsonEqual $Cracks $Data.crack_canary_enabled 'GPU crack lane'
+    Assert-JsonEqual $false $Data.crack_normal_space_verified 'GPU pending normal review'
+    Assert-JsonEqual $Fresh.edge_marking_readback $Data.edge_markings_before 'fresh paint before GPU'
+    Assert-JsonEqual $Data.edge_markings_before $Data.edge_markings_after 'unchanged paint after GPU'
+    Assert-JsonEqual $Fresh.crack_readback $Data.crack_before 'fresh cracks before GPU'
+    Assert-JsonEqual $Data.crack_before $Data.crack_after 'unchanged cracks after GPU'
+}
+
+function Assert-CrackControlPlan {
+    param($Expected, $NetworkPlan)
+    if ($Expected.sha256 -cne 'f6f8a4fef0c10438fee2ee88827f797b9451ebf5d9e1f0b2334f754f593738d8') {
+        throw 'Crack controls do not have the pinned sixteen-condition plan identity.'
+    }
+    $jobs = @()
+    foreach ($id in @('window-0112-forward-00002', 'window-0082-forward-00002')) {
+        $poses = @($NetworkPlan.frames | Where-Object { $_.frame_id -ceq $id })
+        if ($poses.Count -ne 1) { throw 'Crack source camera is missing or repeated in the original view plan.' }
+        foreach ($mode in @('base-basecolor', 'neutral-basecolor', 'base-roughness', 'neutral-roughness',
+                            'base-worldnormal', 'neutral-worldnormal', 'cracks-lit', 'cracks-worldnormal')) {
+            $jobs += @{ job_id = $id + '--' + $mode; control = $mode; camera = $poses[0] }
+        }
+    }
+    $plan = @{ schema_version = 1
+        network_plan_sha256 = '4bfb1aa75201863bf854a15d7bbc1691fc42765e694a22621b28f64fb9e72d75'
+        survey_sha256 = $NetworkPlan.survey_sha256; resolution = @(1280, 720)
+        priming_captures_per_condition = 3; frame_count = 16; jobs = $jobs
+        owner_visual_pass = $false; performance_pass = $false }
+    Assert-JsonEqual $plan $Expected.control_plan 'exact crack source cameras and condition order'
+}
+
+function Get-CrackControlTargets {
+    param($Manifest)
+    $map = '/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview'
+    if ($Manifest.map_package -cne $map -or $Manifest.crack_canary.actors.Count -ne 2) {
+        throw 'Crack control target world or actor inventory differs.'
+    }
+    $world = $map + '.L_SaCalobraRoadAsphaltReview'
+    $targets = @()
+    $motifs = @('drifting_interrupted', 'short_oblique')
+    $labels = @('YACS_ROAD_CRACK_CANARY_ordinary_0112', 'YACS_ROAD_CRACK_CANARY_nudo_0082')
+    for ($index = 0; $index -lt 2; $index++) {
+        $motif = $motifs[$index]
+        $row = $Manifest.crack_canary.actors[$index]
+        $material = $Manifest.crack_canary.material.assets[$motif].instance
+        $rotation = @(0.0, 90.0)[$index]
+        if ($row.motif_id -cne $motif -or $row.label -cne $labels[$index] -or
+            $row.actor.path -cnotmatch '^<scene>\.<world>:PersistentLevel\.[^:/]+$' -or
+            -not $row.component.StartsWith(($row.actor.path + '.'), [StringComparison]::Ordinal) -or
+            $row.material -cne $material -or
+            $material -cnotmatch ('^/Game/Generated/YACS/RoadAsphaltConsumer/CrackLayer/[0-9a-f]{12}/MI_RoadCracks_' +
+                                  $motif + '\.MI_RoadCracks_' + $motif + '$')) {
+            throw 'Crack target is not one of the exact saved source-clipped components and MICs.'
+        }
+        Assert-JsonEqual $rotation $Manifest.crack_canary.geometry_contracts[$motif].uv_rotation_degrees 'saved crack UV frame'
+        $targets += @{ motif_id = $motif; label = $row.label; material = $material; uv_rotation_degrees = $rotation
+            actor = $row.actor.path.Replace('<scene>.<world>', $world)
+            component = $row.component.Replace('<scene>.<world>', $world) }
+    }
+    if ($targets[0].actor -ceq $targets[1].actor -or $targets[0].component -ceq $targets[1].component) {
+        throw 'Crack controls cannot share an actor or component.'
+    }
+    return ,$targets
+}
+
+function Assert-CrackVisualControlObservation {
+    param($Observed, [string] $Control, $Targets, $Mids)
+    $buffer = switch -CaseSensitive ($Control) {
+        { $_ -cin @('base-basecolor', 'neutral-basecolor') } { 'BaseColor' }
+        { $_ -cin @('base-roughness', 'neutral-roughness') } { 'Roughness' }
+        { $_ -cin @('base-worldnormal', 'neutral-worldnormal', 'cracks-worldnormal') } { 'WorldNormal' }
+        'cracks-lit' { $null }
+        default { throw 'Unsupported crack visual condition.' }
+    }
+    $neutral = $Control.StartsWith('neutral-', [StringComparison]::Ordinal)
+    $visible = -not $Control.StartsWith('base-', [StringComparison]::Ordinal)
+    $actors = @()
+    foreach ($target in $Targets) {
+        $actors += @{ motif_id = $target.motif_id; label = $target.label; actor = $target.actor; component = $target.component
+            material_readback = $(if ($neutral) { $Mids[$target.motif_id].path } else { $target.material })
+            material_kind = $(if ($neutral) { 'transient_mid' } else { 'original_mic' })
+            visible_readback = $visible; neutral_probe_readback = $(if ($neutral) { 1.0 } else { 0.0 })
+            original_mic_probe_readback = 0.0; transient_mid_parent_readback = $target.material
+            uv_rotation_degrees = $target.uv_rotation_degrees }
+    }
+    $expected = @{ control = $Control; requested_buffer = $buffer
+        active_viewmode_readback = $(if ($null -eq $buffer) { 'VMI_LIT' } else { 'VMI_VISUALIZE_BUFFER' })
+        buffer_name_readback_verified = $false; crack_actors = $actors
+        dirty_content_count = 0; normal_space_verified = $false }
+    $actual = [ordered]@{}
+    foreach ($key in $Observed.Keys) { if ($key -cne 'job_id') { $actual[$key] = $Observed[$key] } }
+    Assert-JsonEqual $expected $actual 'native crack condition, both components, probes and UV frames'
+}
+
+function Assert-CrackControlApi {
+    param($Api)
+    if ($Api.engine_version -cne '5.8.2-56702186+++UE5+Release-5.8' -or
+        $Api.mid_creation_flags_argument -cne 'MIDCreationFlags.TRANSIENT' -or
+        $Api.installed_sources.Count -ne 3 -or $Api.crack_sources.Count -ne 4 -or
+        $Api.configured_buffers.Count -ne 2 -or $Api.transient_allocator.Count -ne 1) {
+        throw 'Crack control engine/API inventory differs from the bounded native implementation.'
+    }
+    foreach ($name in @('engine_source_redistributed', 'buffer_name_getter_available',
+                         'native_object_flags_readback_verified', 'normal_space_verified')) {
+        Assert-JsonEqual $false $Api[$name] ('unclaimed native API capability ' + $name)
+    }
+    Assert-JsonEqual $true $Api.rf_transient_set_by_installed_allocator 'installed RF_Transient allocator'
+    Assert-JsonEqual @('ChangeBufferVisualizationMode') $Api.buffer_argument_forwarding_calls 'installed buffer forwarding'
+    foreach ($value in @($Api.buffer_setter_body_sha256, $Api.mid_allocator_body_sha256,
+                          $Api.mid_scalar_getter_body_sha256, $Api.roughness_buffer.entry_sha256,
+                          $Api.configured_buffers.BaseColor.entry_sha256, $Api.configured_buffers.WorldNormal.entry_sha256)) {
+        if ($value -isnot [string] -or $value -cnotmatch '^[0-9a-f]{64}$') { throw 'Unpinned installed control function/configuration.' }
+    }
+    $installed = @('Source/Developer/FunctionalTesting/Private/AutomationBlueprintFunctionLibrary.cpp',
+                   'Source/Developer/FunctionalTesting/Public/AutomationBlueprintFunctionLibrary.h', 'Config/BaseEngine.ini')
+    foreach ($relative in $installed) {
+        if (-not $Api.installed_sources.Contains($relative)) { throw 'Missing installed viewport source.' }
+    }
+    $crackSourceNames = @($Api.crack_sources.Keys)
+    foreach ($relative in @('Source/Runtime/Engine/Private/KismetMaterialLibrary.cpp',
+                            'Source/Runtime/Engine/Private/Materials/MaterialInstanceDynamic.cpp')) {
+        if ($crackSourceNames -cnotcontains $relative) { throw 'Missing installed transient MID implementation.' }
+    }
+    foreach ($stem in @('Kismet/KismetMaterialLibrary', 'Materials/MaterialInstanceDynamic')) {
+        if (@($crackSourceNames | Where-Object { $_ -cmatch ('^Source/Runtime/Engine/(Public|Classes)/' + $stem + '\.h$') }).Count -ne 1) {
+            throw 'Installed MID header is missing, ambiguous or outside the bounded source roots.'
+        }
+    }
+    Assert-JsonEqual $Api.installed_sources['Config/BaseEngine.ini'] $Api.roughness_buffer.config 'Roughness configuration bytes'
+    $allocator = 'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsComponent230Detail.cpp'
+    if (-not $Api.transient_allocator.Contains($allocator)) { throw 'Existing transient allocator identity is missing.' }
+    foreach ($inventory in @($Api.installed_sources, $Api.crack_sources, $Api.transient_allocator)) {
+        foreach ($row in $inventory.Values) {
+            if ($row.sha256 -cnotmatch '^[0-9a-f]{64}$' -or $row.size_bytes -le 0 -or $row.size_bytes -gt 4MB) {
+                throw 'Installed control source identity is unbounded or missing.'
+            }
+        }
+    }
+    $methods = @('MaterialLibrary.create_dynamic_material_instance',
+        'MaterialInstanceDynamic.get_scalar_parameter_value', 'MaterialInstanceDynamic.set_scalar_parameter_value',
+        'MaterialEditingLibrary.get_material_instance_scalar_parameter_value', 'DynamicMeshComponent.set_material',
+        'DynamicMeshComponent.get_material', 'DynamicMeshComponent.get_num_materials', 'DynamicMeshComponent.set_visibility',
+        'EditorLoadingAndSavingUtils.get_dirty_content_packages')
+    if ($Api.crack_reflected_methods.Count -ne $methods.Count) { throw 'Crack reflected method inventory differs.' }
+    foreach ($name in $methods) {
+        $row = $Api.crack_reflected_methods[$name]
+        if ($null -eq $row -or $row.signature -isnot [string] -or $row.signature.Length -eq 0 -or
+            $row.signature.Length -gt 32768 -or $row.doc_sha256 -cnotmatch '^[0-9a-f]{64}$') {
+            throw 'Crack native method signature/hash is missing.'
+        }
+    }
+}
+
+function Assert-CrackVisualControlContract {
+    param($Data, $Expected, [string] $ViewPlanSha, [string] $ManifestSha, $LitIdentity,
+          $Manifest, [long] $EditorPid, [string] $ProjectRoot, [string] $ExactHead, [string] $Token, $NetworkPlan)
+    Assert-CrackControlPlan $Expected $NetworkPlan
+    $plan = $Expected.control_plan
+    if ($Data.schema_version -ne 1 -or $Data.issue -ne 364 -or
+        $Data.status -cne 'ROAD_CRACK_VISUAL_CONTROLS_FRAMES_RETAINED' -or
+        $Data.exact_sha -cne $ExactHead -or $Data.run_token -cne $Token -or
+        $Data.map_package -cne $Manifest.map_package -or $Data.saved_manifest_sha256 -cne $ManifestSha -or
+        $Data.view_plan_sha256 -cne $ViewPlanSha -or $Data.camera_csv_sha256 -cne $plan.survey_sha256 -or
+        $Data.control_plan_sha256 -cne $Expected.sha256 -or
+        $Data.lit_review_receipt.file -cne 'road-asphalt-lit-review.json' -or
+        $Data.lit_review_receipt.sha256 -cne $LitIdentity.sha256 -or
+        $Data.lit_review_receipt.size_bytes -ne $LitIdentity.size_bytes -or
+        $Data.frame_count -ne 16 -or $Data.expected_frame_count -ne 16 -or
+        $Data.frames -isnot [Collections.IList] -or $Data.frames.Count -ne 16 -or
+        $Data.priming_frames_per_pose -ne 3 -or $Data.completed_priming_frames -ne 48 -or
+        $Data.total_deadline_seconds_shared_with_lit -ne 1080 -or $Data.frame_deadline_seconds -ne 180 -or
+        $Data.owner_visual_status -cne 'PENDING_FINAL_M3' -or $Data.performance_status -cne 'DEFERRED_AFTER_M3' -or
+        $Data.errors -isnot [Collections.IList] -or $Data.errors.Count -ne 0) {
+        throw 'Crack controls differ from the owned process, exact plan, saved consumer or original Lit receipt.'
+    }
+    Assert-JsonEqual $true $Manifest.crack_canary_enabled 'saved crack control lane'
+    Assert-JsonEqual $true $Manifest.edge_markings_enabled 'saved white control lane'
+    Assert-JsonEqual $plan $Data.control_plan 'retained exact sixteen-condition plan'
+    foreach ($flag in @('control_restoration_verified', 'capture_readiness_verified', 'native_control_observations_verified',
+                        'sources_and_saved_assets_unchanged', 'world_normal_canary_required')) {
+        Assert-JsonEqual $true $Data[$flag] ('crack control evidence ' + $flag)
+    }
+    foreach ($flag in @('native_channel_images_reviewed', 'buffer_name_readback_verified', 'geometry_or_source_texture_change',
+                        'map_saved', 'source_assets_saved', 'whole_area_visual_admitted', 'normal_space_verified', 'performance_pass')) {
+        Assert-JsonEqual $false $Data[$flag] ('crack control authority ' + $flag)
+    }
+    $begin, $restored = $Data.begin, $Data.restore
+    if ($begin.status -cne 'READY' -or $restored.status -cne 'RESTORED' -or
+        $begin.applied_jobs.Count -ne 0 -or $restored.applied_jobs.Count -ne 16 -or
+        $begin.cleanup_errors.Count -ne 0 -or $restored.cleanup_errors.Count -ne 0 -or
+        $EditorPid -le 0 -or $begin.ownership.pid -ne $EditorPid -or
+        $begin.ownership.run_token -cne $Token -or $begin.ownership.consumer_exact_sha -cne $ExactHead -or
+        $begin.ownership.map_package -cne $Manifest.map_package -or
+        -not [string]::Equals([IO.Path]::GetFullPath($begin.ownership.project), [IO.Path]::GetFullPath($ProjectRoot),
+                             [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Crack process ownership, condition inventory or restoration is incomplete.'
+    }
+    Assert-JsonEqual $true $begin.ownership.owned_process_marker_verified 'owned crack process marker'
+    Assert-JsonEqual $true $begin.ownership.host_idle_arbitration_required 'owned host arbitration'
+    Assert-JsonEqual $EditorPid $begin.ownership.pid 'owned native crack PID'
+    foreach ($key in @('ownership', 'native_api')) {
+        Assert-JsonEqual $Data.preflight[$key] $begin[$key] ('crack preflight ' + $key)
+        Assert-JsonEqual $begin[$key] $restored[$key] ('crack restoration ' + $key)
+    }
+    Assert-CrackControlApi $begin.native_api
+    foreach ($report in @($begin, $restored)) {
+        Assert-JsonEqual 1 $report.schema_version 'crack controller schema'
+        Assert-JsonEqual 'road-crack' $report.family 'crack controller family'
+        Assert-JsonEqual $Expected.sha256 $report.plan_sha256 'crack controller plan'
+        Assert-JsonEqual 0 $report.dirty_content_count 'crack zero dirty content'
+        Assert-JsonEqual 'owned_editor_establish_Lit_and_restore_Lit' $report.view_state_contract 'owned viewport contract'
+        foreach ($flag in @('whole_native_scene_audit_owned_by_host', 'world_normal_canary_required')) {
+            Assert-JsonEqual $true $report[$flag] ('crack controller requirement ' + $flag)
+        }
+        foreach ($flag in @('source_assets_saved', 'map_saved', 'saved_material_parameters_changed', 'geometry_buffers_modified',
+                            'buffer_name_getter_available', 'capture_count_verified', 'normal_space_verified',
+                            'owner_visual_pass', 'performance_pass')) {
+            Assert-JsonEqual $false $report[$flag] ('crack controller authority ' + $flag)
+        }
+    }
+    foreach ($flag in @('original_material_restored', 'original_visibility_restored', 'original_mic_probe_values_zero',
+                        'transient_mids_detached', 'transient_mid_refs_released', 'owned_viewports_returned_to_lit',
+                        'saved_and_staged_package_bytes_unchanged')) {
+        Assert-JsonEqual $true $restored[$flag] ('crack restoration ' + $flag)
+    }
+    $targets = Get-CrackControlTargets $Manifest
+    $originals, $visibility = @{}, @{}
+    if ($begin.transient_mids.Count -ne 2) { throw 'Two transient crack MIDs are required.' }
+    $midPaths = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    $calls = [Collections.Generic.List[object]]::new()
+    $calls.Add(@{ function = 'AutomationLibrary.set_editor_viewport_view_mode'; argument = 'VMI_LIT' })
+    foreach ($target in $targets) {
+        $motif = $target.motif_id
+        $originals[$motif], $visibility[$motif] = $target.material, $true
+        $mid = $begin.transient_mids[$motif]
+        if ($mid.path -isnot [string] -or $mid.path.Length -eq 0 -or $mid.path.Length -gt 2048 -or
+            $mid.path -match '[\x00\r\n]' -or $mid.path -cin @($targets.material) -or -not $midPaths.Add($mid.path) -or
+            $mid.parent -cne $target.material -or $mid.creation_flags -cne 'TRANSIENT') {
+            throw 'Transient MID paths, parents or explicit creation flags differ.'
+        }
+        Assert-JsonEqual 1.0 $mid.probe_value 'transient MID probe'
+        $calls.Add(@{ function = 'MaterialLibrary.create_dynamic_material_instance'; motif_id = $motif
+                       parent = $target.material; creation_flags = 'MIDCreationFlags.TRANSIENT' })
+        $calls.Add(@{ function = 'MaterialInstanceDynamic.set_scalar_parameter_value'; material = $mid.path
+                       parameter = 'NeutralProbe'; value = 1.0 })
+    }
+    Assert-JsonEqual $originals $begin.original_materials 'saved crack MICs'
+    Assert-JsonEqual $visibility $begin.original_visibility 'saved crack visibility'
+    foreach ($key in @('original_materials', 'original_visibility', 'transient_mids')) {
+        Assert-JsonEqual $begin[$key] $restored[$key] ('restored crack identity ' + $key)
+    }
+    Assert-JsonEqual $calls.ToArray() $begin.calls 'native crack begin calls'
+    $maximumElapsed = 0.0
+    for ($index = 0; $index -lt 16; $index++) {
+        $job, $frame = $plan.jobs[$index], $Data.frames[$index]
+        $pose = $job.camera
+        $actualPose = [ordered]@{}
+        foreach ($key in $pose.Keys) {
+            $actualPose[$key] = if ($key -ceq 'frame_id') { $frame.source_frame_id } else { $frame[$key] }
+        }
+        Assert-JsonEqual $pose $actualPose ('crack camera metadata ' + $index)
+        $renderMode = if ($job.control -ceq 'cracks-lit') { 'lit' } else { 'buffer_visualization' }
+        if ($frame.frame_id -cne $job.job_id -or $frame.control_mode -cne $job.control -or
+            $frame.file -cne ('road-crack-visual-controls/frames/' + $job.job_id + '.png') -or
+            $frame.width -ne 1280 -or $frame.height -ne 720 -or $frame.unique_sampled_rgb -lt 12 -or
+            $frame.render_mode -cne $renderMode -or $restored.applied_jobs[$index].job_id -cne $job.job_id -or
+            $frame.priming_frames -isnot [Collections.IList] -or $frame.priming_frames.Count -ne 3) {
+            throw 'Crack control frame order, content or mode differs.'
+        }
+        Assert-JsonEqual $false $frame.visual_quality_reviewed 'unreviewed crack image'
+        Assert-CrackVisualControlObservation $restored.applied_jobs[$index] $job.control $targets $begin.transient_mids
+        foreach ($capture in (@($frame) + @($frame.priming_frames))) {
+            if ($capture.sha256 -cnotmatch '^[0-9a-f]{64}$' -or $capture.size_bytes -le 0 -or $capture.size_bytes -gt 16MB -or
+                ($capture.screenshot_elapsed_seconds -isnot [double] -and $capture.screenshot_elapsed_seconds -isnot [long] -and
+                 $capture.screenshot_elapsed_seconds -isnot [int]) -or
+                -not [double]::IsFinite($capture.screenshot_elapsed_seconds) -or
+                $capture.screenshot_elapsed_seconds -lt 0 -or $capture.screenshot_elapsed_seconds -gt 180) {
+                throw 'Crack PNG identity or completed screenshot deadline is invalid.'
+            }
+            $maximumElapsed = [math]::Max($maximumElapsed, $capture.screenshot_elapsed_seconds)
+            $viewmode = if ($renderMode -ceq 'lit') { 'VMI_LIT' } else { 'VMI_VISUALIZE_BUFFER' }
+            Assert-JsonEqual $viewmode $capture.native_viewmode_before 'native crack viewmode before'
+            Assert-JsonEqual $viewmode $capture.native_viewmode_after 'native crack viewmode after'
+            Assert-NativeCameraObservation $pose $capture.native_camera_observation
+            foreach ($phase in @('before', 'after')) {
+                Assert-CrackVisualControlObservation $capture[('native_control_observation_' + $phase)] `
+                    $job.control $targets $begin.transient_mids
+            }
+        }
+        for ($prime = 0; $prime -lt 3; $prime++) {
+            if ($frame.priming_frames[$prime].file -cne ('road-crack-visual-controls/priming/' + $job.job_id + ('-{0:d2}.png' -f $prime))) {
+                throw 'Crack priming file differs from the exact sequence.'
+            }
+        }
+        $ready = $frame.capture_readiness
+        Assert-JsonEqual 'NATIVE_LOADING_AND_MIPS_READY' $ready.status 'crack loading barrier'
+        Assert-JsonEqual $true $ready.height_mip_lease_requested 'crack height residency'
+        Assert-JsonEqual $true $ready.viewport_primed_at_rider_camera 'crack rider viewport priming'
+        Assert-JsonEqual 15 $ready.material_texture_count 'crack plus base/shoulder texture residency'
+        $observed = $frame.native_control_observation_after
+        foreach ($actor in $observed.crack_actors) {
+            $calls.Add(@{ function = 'crack_component.set_material'; component = $actor.component
+                           slot = 0; material = $actor.material_readback })
+            $calls.Add(@{ function = 'crack_component.set_visibility'; component = $actor.component
+                           visible = $actor.visible_readback; propagate_to_children = $false })
+        }
+        $calls.Add(@{ function = $(if ($renderMode -ceq 'lit') { 'AutomationLibrary.set_editor_viewport_view_mode' }
+                                   else { 'AutomationLibrary.set_editor_viewport_visualize_buffer' })
+                      argument = $(if ($renderMode -ceq 'lit') { 'VMI_LIT' } else { $observed.requested_buffer }) })
+    }
+    foreach ($target in $targets) {
+        $calls.Add(@{ function = 'crack_component.set_material'; phase = 'restore'; component = $target.component
+                       slot = 0; material = $target.material })
+        $calls.Add(@{ function = 'crack_component.set_visibility'; phase = 'restore'; component = $target.component
+                       visible = $true; propagate_to_children = $false })
+    }
+    $calls.Add(@{ function = 'AutomationLibrary.set_editor_viewport_view_mode'; argument = 'VMI_LIT' })
+    Assert-JsonEqual $calls.ToArray() $restored.calls 'complete bounded native crack calls'
+    Assert-JsonEqual $maximumElapsed $Data.max_completed_screenshot_seconds 'observed crack screenshot completion bound'
+}
+
+function Assert-CrackTextureReadiness {
+    param($Data, $Manifest)
+    $paths = @{}
+    Assert-JsonEqual @('BaseColor', 'DetailMasks', 'Normal_DX', 'ORM') @($Manifest.texture_objects.Keys | Sort-Object) 'base channels'
+    foreach ($channel in $Manifest.texture_objects.Keys) { $paths[$channel] = $Manifest.texture_objects[$channel] }
+    $shoulder = $Manifest.shoulder_network.material.texture_objects
+    Assert-JsonEqual @('BaseColor', 'Normal_DX', 'Roughness') @($shoulder.Keys | Sort-Object) 'shoulder channels'
+    foreach ($channel in $shoulder.Keys) { $paths[('Shoulder_' + $channel)] = $shoulder[$channel] }
+    $cracks = $Manifest.crack_canary.imports.assets.textures
+    Assert-JsonEqual @('drifting_interrupted', 'short_oblique') @($cracks.Keys | Sort-Object) 'crack residency motifs'
+    foreach ($motif in $cracks.Keys) {
+        Assert-JsonEqual @('BaseColor', 'DetailMasks', 'Normal_DX', 'ORM') @($cracks[$motif].Keys | Sort-Object) 'crack residency channels'
+        foreach ($channel in $cracks[$motif].Keys) { $paths[('Crack_' + $motif + '_' + $channel)] = $cracks[$motif][$channel] }
+    }
+    $names = [string[]]@($paths.Keys)
+    [Array]::Sort($names, [StringComparer]::Ordinal)
+    $unique = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    if ($Data.status -cne 'ROAD_TEXTURE_MIPS_READY' -or $Data.textures -isnot [Collections.IList] -or
+        $Data.textures.Count -ne 15 -or $paths.Count -ne 15) { throw 'Crack captures require the exact fifteen material textures.' }
+    Assert-JsonEqual $false $Data.material_parameters_changed 'texture readiness parameter changes'
+    Assert-JsonEqual $false $Data.saved_to_map 'texture readiness map save'
+    for ($index = 0; $index -lt $names.Count; $index++) {
+        $row = $Data.textures[$index]
+        if ($row.channel -cne $names[$index] -or $row.asset -cne $paths[$names[$index]] -or
+            -not $unique.Add($row.asset)) { throw 'Native readiness changed, repeated or omitted a pinned crack/base texture.' }
+        $native = $row.native_readback
+        Assert-JsonEqual $false $native.is_default_texture 'native non-default texture'
+        Assert-JsonEqual $false $native.is_compiling 'native completed texture compile'
+        if (($native.mips -isnot [int] -and $native.mips -isnot [long]) -or $native.mips -le 0) {
+            throw 'Native texture mip inventory is invalid.'
+        }
+        Assert-JsonEqual $native.mips $native.resident_mips 'native full material mip residency'
+    }
+}
+
+function Get-CrackVisualControlArtifacts {
+    param($Data, [string] $Proof, $Manifest, [string] $EngineRoot, [string] $ProjectRoot)
+    $evidence = [ordered]@{}
+    foreach ($frame in $Data.frames) {
+        foreach ($capture in (@($frame) + @($frame.priming_frames))) {
+            $file = File-Identity (Join-Path $Proof $capture.file) 16MB
+            if ($file.sha256 -cne $capture.sha256 -or $file.size_bytes -ne $capture.size_bytes) {
+                throw ('Crack control PNG changed: ' + $capture.file)
+            }
+            $evidence[('crack-control-' + $capture.file)] = $file
+        }
+        $directory = Join-Path $Proof ('road-crack-visual-controls/readiness/' + $frame.frame_id)
+        $height = File-Identity (Join-Path $directory 'capture-readiness.json') 8MB
+        $material = Read-PinnedJson (Join-Path $directory 'road-texture-readiness.json')
+        if ($height.sha256 -cne $frame.capture_readiness.height_receipt.sha256 -or
+            $height.size_bytes -ne $frame.capture_readiness.height_receipt.size_bytes -or
+            $material.identity.sha256 -cne $frame.capture_readiness.material_receipt.sha256 -or
+            $material.identity.size_bytes -ne $frame.capture_readiness.material_receipt.size_bytes) {
+            throw 'Crack material/height readiness sidecar bytes changed.'
+        }
+        Assert-CrackTextureReadiness $material.value $Manifest
+        $evidence[('crack-control-' + $frame.frame_id + '-height-readiness')] = $height
+        $evidence[('crack-control-' + $frame.frame_id + '-material-readiness')] = $material.identity
+    }
+    Assert-CrackControlApi $Data.begin.native_api
+    foreach ($key in @('installed_sources', 'crack_sources', 'transient_allocator')) {
+        $sourceRoot = if ($key -ceq 'transient_allocator') { $ProjectRoot } else { $EngineRoot }
+        foreach ($relative in $Data.begin.native_api[$key].Keys) {
+            $pin = $Data.begin.native_api[$key][$relative]
+            $actual = File-Identity (Join-Path $sourceRoot $relative) 4MB
+            if ($actual.sha256 -cne $pin.sha256 -or $actual.size_bytes -ne $pin.size_bytes) {
+                throw ('Installed crack control API/configuration changed: ' + $relative)
+            }
+            $evidence[('crack-control-api-' + $relative)] = $actual
+        }
+    }
+    return $evidence
+}
+
 function Assert-GpuReviewContract {
     param($Data, $Plan, [string] $PlanSha, [string] $ManifestSha,
-          [long] $SelectedTriangles, [string] $ExactHead, [string] $Token, [string] $ProfileSha)
+          [long] $SelectedTriangles, [string] $ExactHead, [string] $Token, [string] $ProfileSha,
+          [ValidateSet(7, 15)][int] $ExpectedMaterialTextures = 7)
     Assert-ViewPlan $Plan
     if ($Data.status -cne 'ROAD_ASPHALT_LIT_REVIEW_FRAMES_RETAINED' -or
         $Data.schema_version -ne 1 -or $Data.issue -ne 364 -or
@@ -533,6 +1001,10 @@ function Assert-GpuReviewContract {
         foreach ($key in $expected.Keys) { $actualPose[$key] = $frame[$key] }
         Assert-JsonEqual $expected $actualPose ('ordered frame ' + $i)
         Assert-NativeCameraObservation $expected $frame.native_camera_observation
+        foreach ($capture in (@($frame) + @($frame.priming_frames))) {
+            Assert-JsonEqual 'VMI_LIT' $capture.native_viewmode_before 'native Lit viewmode before'
+            Assert-JsonEqual 'VMI_LIT' $capture.native_viewmode_after 'native Lit viewmode after'
+        }
         if ($frame.file -cne ('road-asphalt-lit-review/frames/' + $expected.frame_id + '.png') -or
             $frame.width -ne 1280 -or $frame.height -ne 720 -or $frame.unique_sampled_rgb -lt 12 -or
             $frame.visual_quality_reviewed -isnot [bool] -or $frame.visual_quality_reviewed -or
@@ -544,7 +1016,7 @@ function Assert-GpuReviewContract {
         if ($ready.status -cne 'NATIVE_LOADING_AND_MIPS_READY' -or
             $ready.height_mip_lease_requested -isnot [bool] -or -not $ready.height_mip_lease_requested -or
             $ready.viewport_primed_at_rider_camera -isnot [bool] -or -not $ready.viewport_primed_at_rider_camera -or
-            $ready.material_texture_count -ne 7) {
+            $ready.material_texture_count -ne $ExpectedMaterialTextures) {
             throw ('Road pose lacks native height/material mip readiness: ' + $expected.frame_id)
         }
         for ($prime = 0; $prime -lt 3; $prime++) {
@@ -593,6 +1065,11 @@ try {
         'scripts/ue/road_edge_marking_consumer.py',
         'scripts/ue/road_pavement_source_bindings.py',
         'scripts/ue/road_asphalt_visual_controls.py',
+        'scripts/ue/road_crack_sources.py',
+        'scripts/ue/road_crack_material.py',
+        'scripts/ue/road_crack_geometry.py',
+        'scripts/ue/road_crack_consumer.py',
+        'scripts/ue/road_crack_visual_controls.py',
         'Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h',
         'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsRoadMaterialInspectionLibrary.cpp',
         'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsComponent230Detail.cpp',
@@ -612,20 +1089,8 @@ try {
     # Full-network selected IDs require 4 MiB; other JSON receipts retain 2 MiB.
     $savedManifest = Read-PinnedJson (Join-Path $proof 'road-asphalt-saved-manifest.json') 4MB
     $selectedTriangles = Assert-NetworkManifest $savedManifest.value $ExpectedHead
-    foreach ($row in @($savedManifest.value, $savedReceipt.value, $reopenReceipt.value)) {
-        if ($row.edge_markings_enabled -isnot [bool] -or
-            $row.edge_markings_enabled -ne [bool]$EdgeMarkings) {
-            throw 'GPU edge marking lane differs from the authenticated saved consumer.'
-        }
-    }
-    if ($savedHost.value.edge_markings_requested -isnot [bool] -or
-        $savedHost.value.edge_markings_requested -ne [bool]$EdgeMarkings -or
-        $savedHost.value.edge_markings_fresh_reload_verified -isnot [bool] -or
-        $savedHost.value.edge_markings_fresh_reload_verified -ne [bool]$EdgeMarkings -or
-        $reopenReceipt.value.edge_markings_fresh_reload_verified -isnot [bool] -or
-        $reopenReceipt.value.edge_markings_fresh_reload_verified -ne [bool]$EdgeMarkings) {
-        throw 'GPU edge markings lack the independently requested fresh-load host proof.'
-    }
+    Assert-SurfaceDetailLanes $savedHost.value $savedReceipt.value $reopenReceipt.value `
+        $savedManifest.value ([bool]$EdgeMarkings) ([bool]$CrackCanary)
     if ($readHost.value.status -cne 'ROAD_MATERIAL_BASELINE_READ_ONLY_COMPLETE' -or
         $readHost.value.exact_sha -cne $ExpectedHead -or
         $savedHost.value.status -cne 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS' -or
@@ -760,6 +1225,27 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
         Assert-JsonEqual $controlValue $expectedControls.value 'retained visual control plan'
         $receipt.expected_visual_control_plan = $expectedControls.identity
     }
+    if ($CrackCanary) {
+        $crackControlCode = @'
+import json, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from scripts.ue.road_crack_visual_controls import control_plan, digest
+plan = control_plan(Path(sys.argv[1]))
+print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True, allow_nan=False))
+'@
+        $crackControlOutput = @(& $planPython.path -I -B -c $crackControlCode $root)
+        if ($LASTEXITCODE -ne 0 -or $crackControlOutput.Count -ne 1) {
+            throw 'Cannot derive the sixteen crack controls before starting the owned Editor.'
+        }
+        $crackControlValue = $crackControlOutput[0] | ConvertFrom-Json -AsHashtable -Depth 40
+        Assert-CrackControlPlan $crackControlValue $expectedPlan.value
+        $crackControlPlanPath = Join-Path $proof 'road-crack-expected-visual-controls.json'
+        Write-ExclusiveReceipt $crackControlPlanPath $crackControlValue
+        $expectedCrackControls = Read-PinnedJson $crackControlPlanPath
+        Assert-JsonEqual $crackControlValue $expectedCrackControls.value 'retained crack control plan'
+        $receipt.expected_crack_visual_control_plan = $expectedCrackControls.identity
+    }
     Require-IdleHost
     $script = Join-Path $root 'scripts/ue/road_asphalt_gpu_review.py'
     $arguments = @(
@@ -789,6 +1275,8 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
             YACS_ROAD_SAVED_RUN_TOKEN = $RunToken
             YACS_ROAD_EDGE_MARKINGS = $edgeMarkingSetting
             YACS_ROAD_VISUAL_CONTROLS_OWNED = $visualControlToken
+            YACS_ROAD_CRACK_CANARY = $crackCanarySetting
+            YACS_ROAD_CRACK_CONTROLS_OWNED = $crackControlToken
             YACS_ROAD_MATERIAL_EXPECTED_HEAD = $ExpectedHead
             YACS_ROAD_MATERIAL_PREPARATION_SHA256 = [string] $readHost.value.proof_files.session_preparation.sha256
             YACS_ROAD_MATERIAL_VIEW_PLAN_SHA256 = [string] $expectedPlan.identity.sha256
@@ -813,14 +1301,11 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
     $review = Read-PinnedJson (Join-Path $proof 'road-asphalt-lit-review.json')
     $data = $review.value
     Assert-GpuReviewContract $data $expectedPlan.value $expectedPlan.identity.sha256 `
-        $savedManifest.identity.sha256 $selectedTriangles $ExpectedHead $RunToken $profileCopies.proof.sha256
-    if ($data.edge_markings_enabled -isnot [bool] -or
-        $data.edge_markings_enabled -ne [bool]$EdgeMarkings) {
-        throw 'GPU receipt changed the explicitly selected paint lane.'
-    }
-    Assert-JsonEqual $reopenReceipt.value.edge_marking_readback $data.edge_markings_before 'fresh paint before GPU'
-    Assert-JsonEqual $data.edge_markings_before $data.edge_markings_after 'unchanged paint after GPU'
+        $savedManifest.identity.sha256 $selectedTriangles $ExpectedHead $RunToken $profileCopies.proof.sha256 `
+        $expectedMaterialTextureCount
+    Assert-SurfaceDetailGpuReadback $data $reopenReceipt.value ([bool]$EdgeMarkings) ([bool]$CrackCanary)
     $receipt.edge_markings_verified = [bool]$EdgeMarkings
+    $receipt.crack_canary_verified = [bool]$CrackCanary
     $expectedIds = @($expectedPlan.value.frames | ForEach-Object { $_.frame_id })
     for ($i = 0; $i -lt $expectedIds.Count; $i++) {
         $frame = $data.frames[$i]
@@ -846,7 +1331,7 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
             $materialReady.identity.sha256 -cne $frame.capture_readiness.material_receipt.sha256 -or
             $materialReady.identity.size_bytes -ne $frame.capture_readiness.material_receipt.size_bytes -or
             $materialReady.value.status -cne 'ROAD_TEXTURE_MIPS_READY' -or
-            $materialReady.value.textures.Count -ne 7 -or
+            $materialReady.value.textures.Count -ne $expectedMaterialTextureCount -or
             $materialReady.value.material_parameters_changed -isnot [bool] -or
             $materialReady.value.material_parameters_changed -or
             $materialReady.value.saved_to_map -isnot [bool] -or $materialReady.value.saved_to_map) {
@@ -860,6 +1345,7 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
                 throw ('Native material texture lacks full mip residency: ' + $expectedIds[$i])
             }
         }
+        if ($CrackCanary) { Assert-CrackTextureReadiness $materialReady.value $savedManifest.value }
         $receipt.evidence[($expectedIds[$i] + '-height-readiness')] = $heightFile
         $receipt.evidence[($expectedIds[$i] + '-material-readiness')] = $materialReady.identity
     }
@@ -932,6 +1418,21 @@ print(json.dumps({"control_plan": plan, "sha256": digest(plan)}, sort_keys=True,
         $receipt.evidence.visual_control_allocator = $allocator
         $receipt.visual_controls_frames_retained = $true
         $receipt.visual_control_frame_count = 8
+    }
+    if ($CrackCanary) {
+        $crackControlReceipt = Read-PinnedJson (Join-Path $proof 'road-crack-visual-controls.json')
+        $crackControls = $crackControlReceipt.value
+        Assert-CrackVisualControlContract $crackControls $expectedCrackControls.value `
+            $expectedPlan.identity.sha256 $savedManifest.identity.sha256 $review.identity `
+            $savedManifest.value $receipt.editor_pid $root $ExpectedHead $RunToken $expectedPlan.value
+        $engineRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $gui))
+        $crackEvidence = Get-CrackVisualControlArtifacts $crackControls $proof $savedManifest.value $engineRoot $root
+        foreach ($name in $crackEvidence.Keys) { $receipt.evidence[$name] = $crackEvidence[$name] }
+        Assert-Identity $crackControlReceipt.identity 2MB
+        Assert-Identity $expectedCrackControls.identity 2MB
+        $receipt.evidence.crack_visual_control_receipt = $crackControlReceipt.identity
+        $receipt.crack_control_frames_retained = $true
+        $receipt.crack_control_frame_count = 16
     }
     foreach ($original in @($readHost.identity, $savedHost.identity, $savedReceipt.identity,
                             $reopenReceipt.identity)) { Assert-Identity $original 2MB }
@@ -1012,6 +1513,10 @@ if ($receipt.status -cne 'ROAD_ASPHALT_GPU_LIT_REVIEW_HOST_PASS' -or
     -not $receipt.native_lit_frames_retained -or -not $receipt.shoulder_network_material_ids_verified -or
     -not $receipt.shoulder_material_edge_uv_verified) {
     throw 'Road GPU technical evidence failed the independent native host gate.'
+}
+if ($CrackCanary -and (-not $receipt.crack_canary_verified -or
+    -not $receipt.crack_control_frames_retained -or $receipt.crack_control_frame_count -ne 16)) {
+    throw 'Road crack canary lacks all sixteen independently verified control conditions.'
 }
 Write-Host ('ROAD_ASPHALT_GPU_LIT_REVIEW_HOST_PASS; ' + $receipt.verified_frame_count +
     ' pinned ordered lit road-facing frames, owner visual and FPS pending.')

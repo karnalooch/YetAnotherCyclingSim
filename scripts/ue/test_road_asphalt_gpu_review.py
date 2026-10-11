@@ -54,6 +54,96 @@ def fixture_csv(*, missing=(), duplicate=False, wrong_fov=False):
 
 
 class RoadGpuReviewContractTests(unittest.TestCase):
+    def surface_fixture(self, *, edge_markings=True, crack_canary=True):
+        manifest, prepared, fresh, host = {}, {}, {}, {"crack_normal_space_verified": False}
+        for name, enabled in (("edge_markings", edge_markings), ("crack_canary", crack_canary)):
+            for row in (manifest, prepared, fresh):
+                row[name + "_enabled"] = enabled
+            host[name + "_requested"] = enabled
+            host[name + "_fresh_reload_verified"] = enabled
+            fresh[name + "_fresh_reload_verified"] = enabled
+            singular = "edge_marking" if name == "edge_markings" else "crack"
+            fresh[singular + "_material_reapplied"] = False
+            fresh[singular + "_geometry_reapplied"] = False
+            fresh[singular + "_readback"] = None
+            if enabled:
+                manifest[name] = {"plan_sha256": "a" * 64,
+                                  "source_correspondence": {"native_source_witness_sha256": "b" * 64}}
+                fresh[singular + "_readback"] = {"read_only": True, "owner_visual_pass": False,
+                    "performance_pass": False, "plan_sha256": "a" * 64, "native_source_witness_sha256": "b" * 64}
+        if edge_markings:
+            fresh["edge_marking_readback"].update(status="EDGE_MARKINGS_FRESH_READBACK_VERIFIED",
+                all_marking_buffers_verified=True, full_source_buffers_preserved=True)
+        if crack_canary:
+            fresh["edge_marking_readback"]["aggregate_owner"] = "local_crack_canary"
+            fresh["crack_readback"].update(status="LOCAL_CRACKS_FRESH_READBACK_VERIFIED_NORMAL_REVIEW_PENDING",
+                actor_count=2, all_crack_buffers_verified=True, full_source_and_existing_paint_buffers_preserved=True,
+                caller_fresh_process_and_saved_bytes_required=True, world_normal_canary_required=True,
+                normal_space_verified=False)
+        return host, prepared, fresh, manifest
+
+    def test_gpu_binds_explicit_surface_modes_to_the_same_fresh_native_readback(self):
+        # The saved-consumer tests own validation of the full native creation
+        # receipt. This test exercises the GPU's independent cross-process link.
+        for edges, cracks in ((False, False), (True, False), (True, True)):
+            with self.subTest(edges=edges, cracks=cracks):
+                host, prepared, fresh, manifest = self.surface_fixture(edge_markings=edges, crack_canary=cracks)
+                with patch.object(gpu.saved, "crack_canary_inventory") as inventory:
+                    modes, observations = gpu.authenticate_surface_detail_proofs(
+                        host, prepared, fresh, manifest, edge_markings=edges, crack_canary=cracks)
+                self.assertEqual(modes, {"edge_markings": edges, "crack_canary": cracks})
+                self.assertEqual(observations, {"edge_markings": fresh["edge_marking_readback"],
+                                               "crack_canary": fresh["crack_readback"]})
+                self.assertEqual(inventory.call_count, int(cracks))
+
+    def test_gpu_refuses_lane_switches_reapplied_details_and_different_source_witness(self):
+        mutations = (
+            lambda h, p, f, m: h.update(crack_canary_requested=False),
+            lambda h, p, f, m: h.update(crack_canary_fresh_reload_verified="true"),
+            lambda h, p, f, m: p.update(crack_canary_enabled=False),
+            lambda h, p, f, m: f.update(edge_marking_geometry_reapplied=True),
+            lambda h, p, f, m: f.update(crack_material_reapplied=True),
+            lambda h, p, f, m: f["crack_readback"].update(native_source_witness_sha256="c" * 64),
+            lambda h, p, f, m: f["crack_readback"].update(plan_sha256="c" * 64),
+            lambda h, p, f, m: f["crack_readback"].update(actor_count=1),
+            lambda h, p, f, m: f["crack_readback"].update(all_crack_buffers_verified=False),
+            lambda h, p, f, m: f["crack_readback"].update(normal_space_verified=True),
+            lambda h, p, f, m: f["edge_marking_readback"].update(aggregate_owner="white_only"),
+            lambda h, p, f, m: m.update(crack_canary_enabled="true"),
+        )
+        for mutate in mutations:
+            with self.subTest(mutate=mutate):
+                args = self.surface_fixture()
+                mutate(*args)
+                with patch.object(gpu.saved, "crack_canary_inventory"), self.assertRaises(ValueError):
+                    gpu.authenticate_surface_detail_proofs(*args, edge_markings=True, crack_canary=True)
+        args = self.surface_fixture(edge_markings=True, crack_canary=False)
+        args[3]["crack_canary"] = {"unexpected": True}
+        with self.assertRaisesRegex(ValueError, "Disabled surface"):
+            gpu.authenticate_surface_detail_proofs(*args, edge_markings=True, crack_canary=False)
+
+    def test_crack_diagnostic_marker_cannot_take_over_a_foreign_or_dual_lane(self):
+        token = "38100000000-1"
+        for env, enabled in (({"YACS_ROAD_CRACK_CONTROLS_OWNED": "different"}, True),
+                             ({"YACS_ROAD_CRACK_CONTROLS_OWNED": token,
+                               gpu.visual_controls.OWNED_ENV: token}, True),
+                             ({"YACS_ROAD_CRACK_CONTROLS_OWNED": token}, False)):
+            with self.subTest(env=env, enabled=enabled), tempfile.TemporaryDirectory() as temp:
+                context = {"proof": Path(temp), "run_token": token, "manifest": {"crack_canary_enabled": enabled}}
+                with patch.dict("os.environ", env, clear=True), self.assertRaises(ValueError):
+                    gpu.RoadLitCapture(SimpleNamespace(), context, object(), object())
+                self.assertEqual(list(Path(temp).iterdir()), [])
+        with tempfile.TemporaryDirectory() as temp, patch.dict("os.environ", {
+                "YACS_ROAD_CRACK_CONTROLS_OWNED": token}, clear=True):
+            job = gpu.RoadLitCapture(SimpleNamespace(), {"proof": Path(temp), "run_token": token,
+                "manifest": {"crack_canary_enabled": True}}, object(), object())
+            self.assertEqual(job.phase, "lit")
+            self.assertEqual(job.control_family, "road-crack")
+            self.assertEqual(job.control_plan["frame_count"], 16)
+            self.assertEqual(job.control_module.digest(job.control_plan),
+                             "f6f8a4fef0c10438fee2ee88827f797b9451ebf5d9e1f0b2334f754f593738d8")
+            self.assertEqual(job.control_receipt_name, "road-crack-visual-controls.json")
+
     def test_four_pinned_road_poses_are_forward_and_reverse(self):
         raw = fixture_csv()
         poses = gpu.validated_road_views(raw, hashlib.sha256(raw).hexdigest())
@@ -232,10 +322,12 @@ class RoadGpuNativePoseTests(unittest.TestCase):
             ComparisonTolerance=SimpleNamespace(LOW=object()),
             AutomationLibrary=SimpleNamespace(
                 set_editor_viewport_view_mode=Mock(),
+                get_editor_active_viewport_view_mode=Mock(),
                 finish_loading_before_screenshot=Mock(),
                 take_high_res_screenshot=Mock(side_effect=self.screenshot),
             ),
         )
+        self.api.AutomationLibrary.get_editor_active_viewport_view_mode.return_value = self.api.ViewModeIndex.VMI_LIT
         self.job = gpu.RoadLitCapture(
             self.api, {"proof": self.proof, "frames": [self.row]}, object(), object()
         )
@@ -307,6 +399,28 @@ class RoadGpuNativePoseTests(unittest.TestCase):
         }] * (gpu.PRIMING_FRAMES + 1))
         self.assertEqual(self.camera.get_actor_forward_vector.call_count,
                          gpu.PRIMING_FRAMES + 1)
+        for capture in [*frame["priming_frames"], frame]:
+            self.assertEqual(capture["native_viewmode_before"], "VMI_LIT")
+            self.assertEqual(capture["native_viewmode_after"], "VMI_LIT")
+        self.assertEqual(self.api.AutomationLibrary.get_editor_active_viewport_view_mode.call_count,
+                         2 * (gpu.PRIMING_FRAMES + 1))
+
+    def test_successful_lit_setter_with_wrong_native_mode_cannot_submit(self):
+        self.api.AutomationLibrary.get_editor_active_viewport_view_mode.return_value = object()
+        with self.assertRaisesRegex(ValueError, "Native viewport viewmode differs"):
+            self.job.submit_pose()
+        self.api.AutomationLibrary.take_high_res_screenshot.assert_not_called()
+        self.assertIsNone(self.job.pending_viewmode_before)
+
+    def test_native_viewmode_drift_during_lit_task_cannot_be_retained(self):
+        self.job.submit_pose()
+        self.api.AutomationLibrary.get_editor_active_viewport_view_mode.return_value = object()
+        self.job.tick(0.05)
+        self.job.stop.assert_called_once()
+        self.assertIn("Native viewport viewmode differs", self.job.stop.call_args.args[0])
+        self.assertEqual(self.job.prime_evidence, [])
+        self.assertEqual(self.job.frames, [])
+        self.assertEqual(self.api.AutomationLibrary.take_high_res_screenshot.call_count, 1)
 
     def test_direction_is_rechecked_between_priming_captures(self):
         self.job.submit_pose()
@@ -419,10 +533,11 @@ class RoadGpuControlPhaseTests(unittest.TestCase):
         self.api = SimpleNamespace(
             Vector=self.vector, CameraComponent=object(),
             MathLibrary=SimpleNamespace(find_look_at_rotation=lambda eye, target: (eye, target)),
-            ViewModeIndex=SimpleNamespace(VMI_LIT="lit"),
+            ViewModeIndex=SimpleNamespace(VMI_LIT="lit", VMI_VISUALIZE_BUFFER="visualize"),
             ComparisonTolerance=SimpleNamespace(LOW=object()),
             AutomationLibrary=SimpleNamespace(
                 set_editor_viewport_view_mode=lambda mode: setattr(self, "mode", mode),
+                get_editor_active_viewport_view_mode=lambda: self.mode,
                 finish_loading_before_screenshot=lambda: None,
                 take_high_res_screenshot=self.screenshot,
             ),
@@ -512,6 +627,9 @@ class RoadGpuControlPhaseTests(unittest.TestCase):
             self.assertEqual(frame["target_cm"], job["camera"]["target_cm"])
             self.assertTrue(frame["file"].startswith("road-asphalt-visual-controls/frames/"))
             for capture in [*frame["priming_frames"], frame]:
+                expected_mode = "VMI_VISUALIZE_BUFFER" if job["control"] in gpu.visual_controls.BUFFERS else "VMI_LIT"
+                self.assertEqual(capture["native_viewmode_before"], expected_mode)
+                self.assertEqual(capture["native_viewmode_after"], expected_mode)
                 self.assertEqual(capture["native_control_observation_before"],
                                  capture["native_control_observation_after"])
                 self.assertFalse(capture["native_control_observation_before"]["buffer_name_readback_verified"])
@@ -557,6 +675,47 @@ class RoadGpuControlPhaseTests(unittest.TestCase):
 
 
 class RoadGpuStopLifecycleTests(unittest.TestCase):
+    def test_partial_crack_restore_cannot_report_verified_restoration(self):
+        # Exercise receipt generation directly: the native failure may preserve
+        # material bytes while failing visibility, MID cleanup or dirty state.
+        job = gpu.RoadLitCapture.__new__(gpu.RoadLitCapture)
+        job.control_family = "road-crack"
+        job.control_module = SimpleNamespace(digest=lambda _plan: "f" * 64)
+        job.control_plan = {"frame_count": 1, "jobs": [{"job_id": "synthetic"}]}
+        job.control_frames = [{"frame_id": "synthetic"}]
+        job.control_completed_priming_frames = gpu.PRIMING_FRAMES
+        job.control_begin = {"status": "READY"}
+        job.control_preflight = {}
+        job.control_max_completed_screenshot_seconds = 0.1
+        job.context = {
+            "exact_sha": "a" * 40, "run_token": "12345678-1",
+            "manifest_id": {"sha256": "b" * 64},
+            "view_plan_identity": {"sha256": "c" * 64},
+        }
+        restoration = {
+            "status": "RESTORED", "cleanup_errors": [],
+            "original_material_restored": True, "owned_viewports_returned_to_lit": True,
+            "saved_and_staged_package_bytes_unchanged": True,
+            "original_visibility_restored": True, "original_mic_probe_values_zero": True,
+            "transient_mids_detached": True, "transient_mid_refs_released": True,
+            "dirty_content_count": 0,
+        }
+        job.control_restore = deepcopy(restoration)
+        self.assertTrue(job.visual_control_receipt([], {})["control_restoration_verified"])
+        failures = [(key, False) for key, value in restoration.items() if value is True]
+        failures.extend([
+            ("status", "FAILED"), ("cleanup_errors", ["visibility failed"]),
+            ("cleanup_errors", None), ("dirty_content_count", 1),
+            ("dirty_content_count", False),
+        ])
+        for key, value in failures:
+            with self.subTest(field=key, value=value):
+                job.control_restore = {**deepcopy(restoration), key: value}
+                receipt = job.visual_control_receipt([], {})
+                self.assertEqual(receipt["status"], "ROAD_CRACK_VISUAL_CONTROLS_FAILED")
+                self.assertFalse(receipt["control_restoration_verified"])
+                self.assertFalse(receipt["normal_space_verified"])
+
     def assert_stop_lifecycle(self, error=None, *, with_controls=False, restore_error=False):
         """Exercise real stop/receipt code with synthetic native boundaries."""
         temporary = tempfile.TemporaryDirectory()
@@ -663,7 +822,7 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
             (gpu.saved.shoulder, "verify_loaded", "shoulder mesh", None),
             (gpu.saved.shoulder_material, "verify_material", "shoulder material", None),
             (gpu.saved, "verify_road_mesh", "road full buffers", None),
-            (gpu.saved, "verify_edge_markings", "edge markings", None),
+            (gpu.saved, "verify_surface_details", "surface details", {"edge_markings": None, "crack_canary": None}),
             (gpu.saved, "verify_material_instance", "dry response", None),
             (gpu.saved, "verify_retained_files", "saved packages", None),
             (gpu.session, "_verify_rows", "source assets", None),
@@ -699,7 +858,7 @@ class RoadGpuStopLifecycleTests(unittest.TestCase):
             "shoulder mesh", "shoulder material", "saved packages", "source assets",
             "stage identity", "manifest", "prior proof",
             "road full buffers", "dry response", "camera plan",
-            "profile diagnostic", "edge markings",
+            "profile diagnostic", "surface details",
         }
         expected_writes = ["receipt written"] + (["control receipt written"] if with_controls else [])
         self.assertCountEqual(events, [*cleanup, *guards, *expected_writes, "release lifecycle"])

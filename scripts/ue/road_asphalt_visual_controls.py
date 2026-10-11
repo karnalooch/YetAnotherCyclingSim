@@ -103,8 +103,18 @@ def installed_api_evidence(api):
     method = "UAutomationBlueprintFunctionLibrary::SetEditorViewportVisualizeBuffer"
     body = _function_body(source, method)
     forwarding = re.findall(r"\b(\w*[Bb]uffer\w*)\s*\(\s*BufferName\s*\)", body)
-    require("VMI_VisualizeBuffer" in body and "GetViewports" in body and forwarding,
+    # Installed 5.8.2 source read 38105475097 delegates buffer selection to
+    # FEditorViewportClient::ChangeBufferVisualizationMode. The viewmode enum
+    # is not a literal in this wrapper. Each capture separately reads the
+    # actual native mode; requested buffer names remain explicitly unverified.
+    require("GetViewports" in body and set(forwarding) == {"ChangeBufferVisualizationMode"},
             "Installed buffer setter does not expose the expected viewport/argument path")
+    mode_body = _function_body(source, "UAutomationBlueprintFunctionLibrary::SetEditorViewportViewMode")
+    getter_body = _function_body(source, "UAutomationBlueprintFunctionLibrary::GetEditorActiveViewportViewMode")
+    require("GetViewports" in mode_body and re.search(r"\bSetViewMode\s*\(\s*Index\s*\)", mode_body)
+            and "GetFirstActiveLevelViewport" in getter_body
+            and re.search(r"\bGetViewMode\s*\(\s*\)", getter_body),
+            "Installed viewmode setter/getter does not expose the native viewport path")
     require(all(name in header for name in (
         "SetEditorViewportVisualizeBuffer", "SetEditorViewportViewMode", "GetEditorActiveViewportViewMode")),
         "Installed diagnostic AutomationLibrary declarations differ")
@@ -143,6 +153,9 @@ def installed_api_evidence(api):
                 "Config/BaseEngine.ini": config_id},
             "buffer_setter_body_sha256": hashlib.sha256(body.encode()).hexdigest(),
             "buffer_argument_forwarding_calls": sorted(set(forwarding)),
+            "viewmode_setter_body_sha256": hashlib.sha256(mode_body.encode()).hexdigest(),
+            "active_viewmode_getter_body_sha256": hashlib.sha256(getter_body.encode()).hexdigest(),
+            "actual_viewmode_readback_required_per_capture": True,
             "configured_buffers": configured, "transient_allocator": {ALLOCATOR_CPP: allocator_id},
             "reflected_methods": reflected, "engine_source_redistributed": False,
             "buffer_name_getter_available": False}

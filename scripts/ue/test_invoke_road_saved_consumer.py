@@ -472,6 +472,92 @@ if ($errors.Count) { throw ($errors.Message -join "\u0060n") }
             )
             self.assertEqual(process.returncode, 0, process.stderr)
 
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell is required to execute the native host gate")
+    def test_crack_canary_host_rejects_incomplete_sources_and_false_fresh_claims(self):
+        crack = {
+            "schema_version": 1, "status": "LOCAL_CRACKS_CREATED_NORMAL_REVIEW_PENDING",
+            "plan_sha256": "a" * 64, "actors": [{}, {}],
+            "owned_asset_paths": [f"/Game/Generated/YACS/RoadAsphaltConsumer/Cracks/A{i}.A{i}" for i in range(11)],
+            "imports": {"texture_count": 8, "sources": {
+                "status": "ROAD_CRACK_SOURCE_BYTES_AUTHENTICATED", "verified_map_count": 80,
+                "verified_process_count": 16, "pins": {
+                    "exact_sha": "07ebafad08bce8bc227089901cb46785079fefda", "run": "38102423216", "attempt": "1",
+                    "source_proof": {"sha256": "bdfb2b889a8c8ed48960518909f497d822b5c34e7d4631a890368de984310afb"}}}},
+            "source_correspondence": {"native_source_witness_sha256": "b" * 64},
+            **dict.fromkeys(("asset_packages_saved", "full_source_and_existing_paint_buffers_preserved",
+                "all_crack_buffers_verified", "native_surface_correspondence_verified",
+                "render_flags_verified_before_append", "world_normal_canary_required"), True),
+            **dict.fromkeys(("source_geometry_changed", "source_materials_changed", "existing_paint_changed",
+                "collision_enabled", "cast_shadow", "affects_navigation", "physics_authored", "map_saved",
+                "normal_space_verified", "owner_visual_pass", "performance_pass"), False),
+        }
+        loaded = {"schema_version": 1, "status": "LOCAL_CRACKS_FRESH_READBACK_VERIFIED_NORMAL_REVIEW_PENDING",
+            "plan_sha256": "a" * 64, "actor_count": 2, "native_source_witness_sha256": "b" * 64,
+            **dict.fromkeys(("full_source_and_existing_paint_buffers_preserved", "all_crack_buffers_verified",
+                "read_only", "caller_fresh_process_and_saved_bytes_required", "world_normal_canary_required"), True),
+            **dict.fromkeys(("normal_space_verified", "owner_visual_pass", "performance_pass"), False)}
+        fixture = {"manifest": {"crack_canary_enabled": True, "crack_canary": crack},
+            "prepared": {"crack_canary_enabled": True}, "fresh": {
+                "crack_canary_enabled": True, "crack_readback": loaded,
+                "crack_canary_fresh_reload_verified": True, "crack_material_reapplied": False,
+                "crack_geometry_reapplied": False, "edge_marking_readback": {"aggregate_owner": "local_crack_canary"}}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "synthetic-host-fixture.json"
+            source.write_text(json.dumps(fixture), encoding="utf-8")
+            runner = root / "crack-host-contract.ps1"
+            runner.write_text(r'''
+param([string] $Wrapper, [string] $Fixture)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$tokens=$null; $errors=$null
+$ast=[System.Management.Automation.Language.Parser]::ParseFile($Wrapper,[ref]$tokens,[ref]$errors)
+if ($errors.Count) { throw ($errors.Message -join '; ') }
+$nodes=@($ast.FindAll({param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -ceq 'Assert-CrackCanaryReceipt'},$true))
+if ($nodes.Count -ne 1) { throw 'Missing unique production crack host gate.' }
+. ([scriptblock]::Create($nodes[0].Extent.Text))
+$raw=Get-Content -LiteralPath $Fixture -Raw
+$good=$raw | ConvertFrom-Json -AsHashtable
+Assert-CrackCanaryReceipt $good.manifest $good.prepared $good.fresh $true
+foreach($change in @('source','run','hash','map_count','process_count','texture_count','missing_actor','duplicate_asset',
+                     'unsaved','buffers','white','read_only','reapply','normal_pass','performance','boolean_string')) {
+    $data=$raw | ConvertFrom-Json -AsHashtable
+    $crack=$data.manifest.crack_canary; $fresh=$data.fresh
+    switch($change) {
+        'source' { $crack.imports.sources.pins.exact_sha='f'*40 }
+        'run' { $crack.imports.sources.pins.run='1' }
+        'hash' { $crack.imports.sources.pins.source_proof.sha256='f'*64 }
+        'map_count' { $crack.imports.sources.verified_map_count=79 }
+        'process_count' { $crack.imports.sources.verified_process_count=15 }
+        'texture_count' { $crack.imports.texture_count=7 }
+        'missing_actor' { $crack.actors=@(@{}) }
+        'duplicate_asset' { $crack.owned_asset_paths[1]=$crack.owned_asset_paths[0] }
+        'unsaved' { $crack.asset_packages_saved=$false }
+        'buffers' { $fresh.crack_readback.all_crack_buffers_verified=$false }
+        'white' { $fresh.edge_marking_readback.aggregate_owner='unchecked' }
+        'read_only' { $fresh.crack_readback.read_only=$false }
+        'reapply' { $fresh.crack_material_reapplied=$true }
+        'normal_pass' { $fresh.crack_readback.normal_space_verified=$true }
+        'performance' { $crack.performance_pass=$true }
+        'boolean_string' { $crack.asset_packages_saved='true' }
+    }
+    $rejected=$false
+    try { Assert-CrackCanaryReceipt $data.manifest $data.prepared $fresh $true } catch { $rejected=$true }
+    if(-not $rejected){throw ('Crack host gate accepted '+$change)}
+}
+$disabled=@{crack_canary_enabled=$false}
+$fresh=@{crack_canary_enabled=$false;crack_canary_fresh_reload_verified=$false;crack_readback=$null;
+          crack_material_reapplied=$false;crack_geometry_reapplied=$false}
+Assert-CrackCanaryReceipt $disabled $disabled $fresh $false
+$disabled.crack_canary=@{}
+$rejected=$false
+try { Assert-CrackCanaryReceipt $disabled $disabled $fresh $false } catch { $rejected=$true }
+if(-not $rejected){throw 'Disabled crack lane admitted an unexpected receipt.'}
+''', encoding="utf-8")
+            result = subprocess.run([shutil.which("pwsh"), "-NoProfile", "-File", str(runner), str(WRAPPER), str(source)],
+                                    text=True, capture_output=True, timeout=30, check=False)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_frozen_recipe_checkout_preserves_raw_bytes_with_windows_autocrlf(self):
         relative = "worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.json"
         source = (ROOT / relative).read_bytes()

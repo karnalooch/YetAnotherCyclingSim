@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -181,6 +182,7 @@ class RoadAsphaltGpuHostContractTests(unittest.TestCase):
             delta = [target - eye for target, eye in zip(pose["target_cm"], pose["camera_location_cm"], strict=True)]
             length = math.sqrt(sum(value * value for value in delta))
             frames.append({**deepcopy(pose), "file": f"road-asphalt-lit-review/frames/{name}.png",
+                "native_viewmode_before": "VMI_LIT", "native_viewmode_after": "VMI_LIT",
                 "native_camera_observation": {"rotation_setter_accepted": True,
                     "location_cm": list(pose["camera_location_cm"]),
                     "forward_unit": [value / length for value in delta],
@@ -191,6 +193,7 @@ class RoadAsphaltGpuHostContractTests(unittest.TestCase):
                     "height_mip_lease_requested": True, "viewport_primed_at_rider_camera": True,
                     "material_texture_count": 7},
                 "priming_frames": [{"file": f"road-asphalt-lit-review/priming/{name}-{i:02d}.png",
+                    "native_viewmode_before": "VMI_LIT", "native_viewmode_after": "VMI_LIT",
                     "native_camera_observation": {"rotation_setter_accepted": True,
                         "location_cm": list(pose["camera_location_cm"]),
                         "forward_unit": [value / length for value in delta],
@@ -246,11 +249,22 @@ function Check($data) {
     Assert-GpuReviewContract $data $plan ('c' * 64) ('b' * 64) 1234 ('a' * 40) '123-1' ('e' * 64)
 }
 Check $fixture.good
+$crackLit = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+foreach ($frame in $crackLit.frames) { $frame.capture_readiness.material_texture_count = 15 }
+Assert-GpuReviewContract $crackLit $plan ('c' * 64) ('b' * 64) 1234 ('a' * 40) '123-1' ('e' * 64) 15
+$rejectedDefault = $false
+try { Check $crackLit } catch { $rejectedDefault = $true }
+if (-not $rejectedDefault) { throw 'Legacy seven-texture default admitted the fifteen-texture lane.' }
+$crackLit.frames[-1].capture_readiness.material_texture_count = 7
+$rejectedPartial = $false
+try { Assert-GpuReviewContract $crackLit $plan ('c' * 64) ('b' * 64) 1234 ('a' * 40) '123-1' ('e' * 64) 15 }
+catch { $rejectedPartial = $true }
+if (-not $rejectedPartial) { throw 'Crack Lit lane omitted the last pose crack texture residency.' }
 foreach ($failure in @('order', 'pose', 'station', 'plan_hash', 'profile', 'priming', 'priming_total',
                        'mips', 'supports', 'selected_ids', 'walls', 'road_buffers', 'asphalt',
                        'admission', 'edge_uv', 'sampling', 'shader', 'native_location', 'native_rotation',
                        'native_direction', 'native_fov', 'native_error', 'native_nonfinite', 'native_missing',
-                       'prime_direction', 'prime_missing')) {
+                       'prime_direction', 'prime_missing', 'prime_viewmode', 'final_viewmode')) {
     $data = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
     switch ($failure) {
         'order' { $swap = $data.frames[0]; $data.frames[0] = $data.frames[1]; $data.frames[1] = $swap }
@@ -279,6 +293,8 @@ foreach ($failure in @('order', 'pose', 'station', 'plan_hash', 'profile', 'prim
         'native_missing' { $data.frames[0].Remove('native_camera_observation') | Out-Null }
         'prime_direction' { $data.frames[0].priming_frames[1].native_camera_observation.forward_unit[0] *= -1 }
         'prime_missing' { $data.frames[0].priming_frames[2].Remove('native_camera_observation') | Out-Null }
+        'prime_viewmode' { $data.frames[0].priming_frames[2].native_viewmode_after = 'VMI_VISUALIZE_BUFFER' }
+        'final_viewmode' { $data.frames[0].native_viewmode_before = 'VMI_UNLIT' }
     }
     $rejected = $false
     try { Check $data } catch { $rejected = $true }
@@ -311,6 +327,8 @@ foreach ($failure in @('order', 'pose', 'station', 'plan_hash', 'profile', 'prim
                 "road_material_readback": transient if mode == "uniform-lit" else original,
                 "requested_buffer": controls.BUFFERS.get(mode), "buffer_name_readback_verified": False}
             capture = {"native_camera_observation": camera,
+                "native_viewmode_before": observation["active_viewmode_readback"],
+                "native_viewmode_after": observation["active_viewmode_readback"],
                 "native_control_observation_before": observation, "native_control_observation_after": observation}
             frames.append({**deepcopy(pose), **deepcopy(capture), "frame_id": job["job_id"], "source_frame_id": pose["frame_id"],
                 "control_mode": mode, "file": "road-asphalt-visual-controls/frames/" + job["job_id"] + ".png",
@@ -388,7 +406,7 @@ foreach ($failure in @('order', 'camera', 'source_pose', 'mode', 'file', 'count'
                        'lit_receipt', 'manifest', 'prime_count', 'prime_name', 'prime_mode', 'prime_camera',
                        'material', 'buffer', 'buffer_claim', 'mips', 'restoration', 'view_restore',
                        'saved_bytes', 'owner', 'performance', 'deadline', 'token', 'transient',
-                       'preflight', 'uniform', 'normals', 'api_claim', 'station', 'render_mode', 'visual_claim')) {
+                       'preflight', 'uniform', 'normals', 'api_claim', 'station', 'render_mode', 'visual_claim', 'prime_viewmode')) {
     $data = $fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
     switch ($failure) {
         'order' { $swap = $data.frames[0]; $data.frames[0] = $data.frames[1]; $data.frames[1] = $swap }
@@ -424,6 +442,7 @@ foreach ($failure in @('order', 'camera', 'source_pose', 'mode', 'file', 'count'
         'station' { $data.frames[0].station_m += 1 }
         'render_mode' { $data.frames[1].render_mode = 'lit' }
         'visual_claim' { $data.frames[0].visual_quality_reviewed = $true }
+        'prime_viewmode' { $data.frames[2].priming_frames[1].native_viewmode_after = 'VMI_LIT' }
     }
     $rejected = $false
     try { Check $data } catch { $rejected = $true }
@@ -459,6 +478,403 @@ if ($errors.Count) { throw ($errors.Message -join "; ") }
                 timeout=30,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
+
+    def _crack_host_fixture(self, directory):
+        """Real provider reports over disposable fake UE; never native image evidence."""
+        from scripts.ue import road_crack_visual_controls as controls
+        from scripts.ue.test_road_crack_visual_controls import CrackControlTests
+
+        native = CrackControlTests()
+        native.setUp()
+        self.addCleanup(native.doCleanups)
+        manifest = native.context["manifest"]
+        manifest["edge_markings_enabled"] = True
+        # The saved native inventory uses the UE object-path colon. Keep the
+        # disposable objects and their pinned rows identical to that convention.
+        actors = native.api.get_editor_subsystem(native.api.EditorActorSubsystem).get_all_level_actors()
+        for row in manifest["crack_canary"]["actors"]:
+            actor = next(actor for actor in actors if actor.get_actor_label() == row["label"])
+            component = actor.get_dynamic_mesh_component()
+            for obj in (actor, component, component.mesh):
+                obj.path = obj.path.replace(".PersistentLevel.", ":PersistentLevel.")
+            row["actor"]["path"] = row["actor"]["path"].replace(".PersistentLevel.", ":PersistentLevel.")
+            row["component"] = row["component"].replace(".PersistentLevel.", ":PersistentLevel.")
+            row["mesh"] = row["mesh"].replace(".PersistentLevel.", ":PersistentLevel.")
+        channels = ("BaseColor", "Normal_DX", "ORM", "DetailMasks")
+        manifest["texture_objects"] = {channel: f"/Game/Fixture/Base_{channel}.Base_{channel}" for channel in channels}
+        manifest["shoulder_network"] = {"material": {"texture_objects": {
+            channel: f"/Game/Fixture/Shoulder_{channel}.Shoulder_{channel}" for channel in ("BaseColor", "Normal_DX", "Roughness")}}}
+        manifest["crack_canary"]["imports"].update(texture_count=8, assets=controls.sources.asset_paths(native.source))
+        paths = {**manifest["texture_objects"], **{
+            "Shoulder_" + channel: path for channel, path in manifest["shoulder_network"]["material"]["texture_objects"].items()}, **{
+            "Crack_" + motif + "_" + channel: path
+            for motif, channels in manifest["crack_canary"]["imports"]["assets"]["textures"].items()
+            for channel, path in channels.items()}}
+        material_ready = {"schema_version": 1, "status": "ROAD_TEXTURE_MIPS_READY", "lease_seconds": 1200,
+            "material_parameters_changed": False, "saved_to_map": False,
+            "textures": [{"channel": channel, "asset": path, "native_readback": {
+                "is_default_texture": False, "is_compiling": False, "mips": 12, "resident_mips": 12}}
+                for channel, path in sorted(paths.items())]}
+        proof = directory / "proof"
+
+        def write(relative, raw):
+            path = proof / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
+            return {"sha256": hashlib.sha256(raw).hexdigest(), "size_bytes": len(raw)}
+
+        plan = controls.control_plan()
+        preflight = controls.preflight(native.api, native.context, plan)
+        controller = native.controller()
+        begin = controller.begin()
+        frames = []
+        for job in plan["jobs"]:
+            controller.apply(job["job_id"])
+            pose = job["camera"]
+            delta = [target - eye for target, eye in zip(pose["target_cm"], pose["camera_location_cm"], strict=True)]
+            length = math.sqrt(sum(value * value for value in delta))
+            camera = {"rotation_setter_accepted": True, "location_cm": list(pose["camera_location_cm"]),
+                "forward_unit": [value / length for value in delta], "fov_deg": pose["fov_deg"], "forward_error": 0.0}
+
+            def capture(relative):
+                # Deliberately labelled byte fixtures: the host authenticates
+                # retained bytes; the separate UE decoder owns PNG validity.
+                identity = write(relative, b"synthetic host byte fixture, not a native PNG: " + relative.encode())
+                return {"file": relative, **identity, "screenshot_elapsed_seconds": 1.0,
+                    "native_viewmode_before": "VMI_VISUALIZE_BUFFER" if job["control"] in controls.BUFFERS else "VMI_LIT",
+                    "native_viewmode_after": "VMI_VISUALIZE_BUFFER" if job["control"] in controls.BUFFERS else "VMI_LIT",
+                    "native_camera_observation": deepcopy(camera),
+                    "native_control_observation_before": controller.observe(),
+                    "native_control_observation_after": controller.observe()}
+
+            priming = [capture(f"road-crack-visual-controls/priming/{job['job_id']}-{index:02d}.png") for index in range(3)]
+            final = capture("road-crack-visual-controls/frames/" + job["job_id"] + ".png")
+            readiness = "road-crack-visual-controls/readiness/" + job["job_id"] + "/"
+            height = write(readiness + "capture-readiness.json", b'{"synthetic_height_fixture":true}')
+            texture = write(readiness + "road-texture-readiness.json", json.dumps(material_ready, allow_nan=False).encode())
+            frames.append({**deepcopy(pose), **final, "frame_id": job["job_id"], "source_frame_id": pose["frame_id"],
+                "control_mode": job["control"], "width": 1280, "height": 720, "unique_sampled_rgb": 100,
+                "visual_quality_reviewed": False,
+                "render_mode": "buffer_visualization" if job["control"] in controls.BUFFERS else "lit",
+                "priming_frames": priming, "capture_readiness": {"status": "NATIVE_LOADING_AND_MIPS_READY",
+                    "height_receipt": height, "material_receipt": texture, "height_mip_lease_requested": True,
+                    "viewport_primed_at_rider_camera": True, "material_texture_count": 15}})
+        restored = controller.restore()
+        good = {"schema_version": 1, "issue": 364, "status": "ROAD_CRACK_VISUAL_CONTROLS_FRAMES_RETAINED",
+            "exact_sha": native.context["exact_sha"], "run_token": native.context["run_token"], "map_package": controls.saved.MAP,
+            "saved_manifest_sha256": "b" * 64, "view_plan_sha256": "c" * 64, "camera_csv_sha256": plan["survey_sha256"],
+            "lit_review_receipt": {"file": "road-asphalt-lit-review.json", "sha256": "d" * 64, "size_bytes": 100},
+            "control_plan": plan, "control_plan_sha256": controls.digest(plan),
+            "frame_count": 16, "expected_frame_count": 16, "frames": frames,
+            "priming_frames_per_pose": 3, "completed_priming_frames": 48, "max_completed_screenshot_seconds": 1.0,
+            "total_deadline_seconds_shared_with_lit": 1080, "frame_deadline_seconds": 180,
+            "owner_visual_status": "PENDING_FINAL_M3", "performance_status": "DEFERRED_AFTER_M3", "errors": [],
+            "preflight": preflight, "begin": begin, "restore": restored,
+            **{key: True for key in ("control_restoration_verified", "capture_readiness_verified",
+                "native_control_observations_verified", "sources_and_saved_assets_unchanged", "world_normal_canary_required")},
+            **{key: False for key in ("native_channel_images_reviewed", "buffer_name_readback_verified",
+                "geometry_or_source_texture_change", "map_saved", "source_assets_saved", "whole_area_visual_admitted",
+                "performance_pass", "normal_space_verified")}}
+        return {"good": good, "expected": {"control_plan": plan, "sha256": controls.digest(plan)},
+            "network": native.context["view_plan"], "manifest": manifest,
+            "lit": {"sha256": "d" * 64, "size_bytes": 100}, "pid": begin["ownership"]["pid"],
+            "project": str(native.root), "engine": str(native.engine), "proof": str(proof), "ready": material_ready}
+
+    def _run_crack_host_cases(self, directory, fixture, cases):
+        fixture_path = directory / "input.json"
+        fixture_path.write_text(json.dumps(fixture, allow_nan=False), encoding="utf-8")
+        runner = directory / "crack-contracts.ps1"
+        runner.write_text(r'''
+param([string] $Wrapper, [string] $InputJson)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$tokens = $null; $errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref]$tokens, [ref]$errors)
+if ($errors.Count) { throw ($errors.Message -join '; ') }
+foreach ($name in @('Assert-PlainPath', 'File-Identity', 'Assert-Identity', 'Read-PinnedJson', 'Assert-JsonEqual',
+                    'Assert-NativeCameraObservation', 'Assert-SurfaceDetailLanes', 'Assert-SurfaceDetailGpuReadback',
+                    'Assert-CrackControlPlan', 'Get-CrackControlTargets', 'Assert-CrackVisualControlObservation',
+                    'Assert-CrackControlApi', 'Assert-CrackVisualControlContract', 'Assert-CrackTextureReadiness',
+                    'Get-CrackVisualControlArtifacts')) {
+    $nodes = @($ast.FindAll({ param($node)
+        $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name
+    }, $true))
+    if ($nodes.Count -ne 1) { throw ('Missing unique production crack function: ' + $name) }
+    . ([scriptblock]::Create($nodes[0].Extent.Text))
+}
+$fixture = Get-Content -LiteralPath $InputJson -Raw | ConvertFrom-Json -AsHashtable -Depth 40
+function Check($data) {
+    Assert-CrackVisualControlContract $data $fixture.expected ('c' * 64) ('b' * 64) $fixture.lit `
+        $fixture.manifest $fixture.pid $fixture.project $fixture.good.exact_sha $fixture.good.run_token $fixture.network
+}
+function FreshData { return ($fixture.good | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40) }
+function Reject($action, $label) {
+    $rejected = $false
+    try { & $action | Out-Null } catch { $rejected = $true }
+    if (-not $rejected) { throw ('Production crack gate admitted ' + $label) }
+}
+Check $fixture.good
+''' + cases + "\n'POWERSHELL_CRACK_CASES_PASS'\n", encoding="utf-8")
+        result = subprocess.run(["pwsh", "-NoProfile", "-File", str(runner), str(HOST), str(fixture_path)],
+            capture_output=True, text=True, check=False, timeout=60)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("POWERSHELL_CRACK_CASES_PASS", result.stdout)
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
+    def test_actual_crack_gate_checks_both_native_actors_and_all_sixteen_conditions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = self._crack_host_fixture(root)
+            self._run_crack_host_cases(root, fixture, r'''
+foreach ($failure in @('order', 'count', 'source_pose', 'camera', 'station', 'plan', 'hash', 'network',
+    'mode', 'render_mode', 'prime_count', 'prime_name', 'prime_mode', 'prime_camera', 'final_file', 'png_hash',
+    'png_size', 'elapsed', 'elapsed_type', 'max_elapsed', 'deadline', 'mip_count', 'viewport_priming',
+    'missing_actor', 'actor_order', 'actor_path', 'component', 'visibility', 'probe', 'mic_probe', 'material_kind',
+    'mid_parent', 'uv_rotation', 'dirty_observation', 'buffer_claim', 'buffer_argument', 'ownership_pid',
+    'project', 'token', 'head', 'restore', 'restore_visibility', 'detach', 'refs', 'saved_bytes', 'mic_zero',
+    'cleanup', 'dirty_begin', 'dirty_restore', 'duplicate_mid', 'mid_flags', 'begin_calls', 'restore_calls',
+    'mic_setter', 'native_api_flags', 'native_api_hash', 'native_api_header', 'normal_claim', 'owner_claim',
+    'performance', 'visual_review', 'source_save', 'geometry_change', 'preflight', 'restore_api', 'lit_receipt', 'prime_viewmode')) {
+    $data = FreshData
+    switch ($failure) {
+        'order' { $swap = $data.frames[0]; $data.frames[0] = $data.frames[1]; $data.frames[1] = $swap }
+        'count' { $data.frames = $data.frames[0..14] }
+        'source_pose' { $data.frames[0].source_frame_id = 'window-0082-forward-00002' }
+        'camera' { $data.frames[0].native_camera_observation.location_cm[2] += 1 }
+        'station' { $data.frames[0].station_m += 1 }
+        'plan' { $data.control_plan.jobs[0].camera.station_m += 1 }
+        'hash' { $data.control_plan_sha256 = 'e' * 64 }
+        'network' { $data.view_plan_sha256 = 'e' * 64 }
+        'mode' { $data.frames[1].native_control_observation_after.active_viewmode_readback = 'VMI_LIT' }
+        'render_mode' { $data.frames[1].render_mode = 'lit' }
+        'prime_count' { $data.completed_priming_frames = 47 }
+        'prime_name' { $data.frames[15].priming_frames[2].file = $data.frames[15].priming_frames[1].file }
+        'prime_mode' { $data.frames[1].priming_frames[2].native_control_observation_after.requested_buffer = 'WorldNormal' }
+        'prime_camera' { $data.frames[15].priming_frames[2].native_camera_observation.fov_deg += 1 }
+        'final_file' { $data.frames[0].file = 'road-asphalt-lit-review/frames/reused.png' }
+        'png_hash' { $data.frames[0].sha256 = 'not-a-hash' }
+        'png_size' { $data.frames[15].priming_frames[2].size_bytes = 0 }
+        'elapsed' { $data.frames[15].priming_frames[2].screenshot_elapsed_seconds = 181 }
+        'elapsed_type' { $data.frames[0].screenshot_elapsed_seconds = '1' }
+        'max_elapsed' { $data.max_completed_screenshot_seconds = 0.0 }
+        'deadline' { $data.total_deadline_seconds_shared_with_lit = 2160 }
+        'mip_count' { $data.frames[0].capture_readiness.material_texture_count = 7 }
+        'viewport_priming' { $data.frames[0].capture_readiness.viewport_primed_at_rider_camera = $false }
+        'missing_actor' { $data.frames[1].native_control_observation_before.crack_actors = @($data.frames[1].native_control_observation_before.crack_actors[0]) }
+        'actor_order' { [Array]::Reverse($data.frames[1].native_control_observation_before.crack_actors) }
+        'actor_path' { $data.frames[1].native_control_observation_before.crack_actors[1].actor += '_foreign' }
+        'component' { $data.frames[1].native_control_observation_before.crack_actors[1].component += '_foreign' }
+        'visibility' { $data.frames[1].native_control_observation_before.crack_actors[1].visible_readback = $false }
+        'probe' { $data.frames[1].native_control_observation_before.crack_actors[1].neutral_probe_readback = 0.0 }
+        'mic_probe' { $data.frames[1].native_control_observation_before.crack_actors[1].original_mic_probe_readback = 1.0 }
+        'material_kind' { $data.frames[1].native_control_observation_before.crack_actors[1].material_kind = 'original_mic' }
+        'mid_parent' { $data.frames[1].native_control_observation_before.crack_actors[1].transient_mid_parent_readback += '_foreign' }
+        'uv_rotation' { $data.frames[1].native_control_observation_before.crack_actors[1].uv_rotation_degrees = 0.0 }
+        'dirty_observation' { $data.frames[0].priming_frames[0].native_control_observation_after.dirty_content_count = 1 }
+        'buffer_claim' { $data.frames[1].native_control_observation_before.buffer_name_readback_verified = $true }
+        'buffer_argument' { $data.frames[2].native_control_observation_after.requested_buffer = 'BaseColor' }
+        'ownership_pid' { $data.begin.ownership.pid += 1 }
+        'project' { $data.begin.ownership.project += '/foreign' }
+        'token' { $data.begin.ownership.run_token = '456-1' }
+        'head' { $data.exact_sha = 'e' * 40 }
+        'restore' { $data.restore.status = 'FAILED' }
+        'restore_visibility' { $data.restore.original_visibility_restored = $false }
+        'detach' { $data.restore.transient_mids_detached = $false }
+        'refs' { $data.restore.transient_mid_refs_released = $false }
+        'saved_bytes' { $data.restore.saved_and_staged_package_bytes_unchanged = $false }
+        'mic_zero' { $data.restore.original_mic_probe_values_zero = $false }
+        'cleanup' { $data.restore.cleanup_errors += 'unrestored component' }
+        'dirty_begin' { $data.begin.dirty_content_count = 1 }
+        'dirty_restore' { $data.restore.dirty_content_count = 1 }
+        'duplicate_mid' { $data.begin.transient_mids.short_oblique.path = $data.begin.transient_mids.drifting_interrupted.path }
+        'mid_flags' { $data.begin.transient_mids.short_oblique.creation_flags = 'NONE' }
+        'begin_calls' { $data.begin.calls[2].value = 0.0 }
+        'restore_calls' { $data.restore.calls[-1].argument = 'VMI_UNLIT' }
+        'mic_setter' { $data.restore.calls[2].material = $data.begin.original_materials.drifting_interrupted }
+        'native_api_flags' { foreach ($part in @('preflight', 'begin', 'restore')) { $data[$part].native_api.rf_transient_set_by_installed_allocator = $false } }
+        'native_api_hash' { foreach ($part in @('preflight', 'begin', 'restore')) { $data[$part].native_api.mid_scalar_getter_body_sha256 = 'invalid' } }
+        'native_api_header' { foreach ($part in @('preflight', 'begin', 'restore')) {
+            $keys = @($data[$part].native_api.crack_sources.Keys)
+            $key = @($keys | Where-Object { $_ -like '*/MaterialInstanceDynamic.h' })[0]
+            $value = $data[$part].native_api.crack_sources[$key]
+            $data[$part].native_api.crack_sources.Remove($key)
+            $data[$part].native_api.crack_sources['../foreign.h'] = $value
+        } }
+        'normal_claim' { $data.normal_space_verified = $true }
+        'owner_claim' { $data.whole_area_visual_admitted = $true }
+        'performance' { $data.performance_pass = $true }
+        'visual_review' { $data.frames[0].visual_quality_reviewed = $true }
+        'source_save' { $data.restore.source_assets_saved = $true }
+        'geometry_change' { $data.restore.geometry_buffers_modified = $true }
+        'preflight' { $data.preflight.ownership.pid += 1 }
+        'restore_api' { $data.restore.native_api.engine_version = 'different' }
+        'lit_receipt' { $data.lit_review_receipt.sha256 = 'e' * 64 }
+        'prime_viewmode' { $data.frames[15].priming_frames[2].native_viewmode_before = 'VMI_LIT' }
+    }
+    Reject { Check $data } $failure
+}
+''')
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
+    def test_actual_crack_byte_and_residency_gate_rechecks_all_images_sources_and_maps(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = self._crack_host_fixture(root)
+            self._run_crack_host_cases(root, fixture, r'''
+function Files($data) {
+    return Get-CrackVisualControlArtifacts $data $fixture.proof $fixture.manifest $fixture.engine $fixture.project
+}
+$all = Files $fixture.good
+if ($all.Count -ne 104) { throw 'Expected 64 PNG identities, 32 readiness sidecars and eight API/config sources.' }
+foreach ($kind in @('final', 'last_prime', 'height', 'mid_cpp', 'allocator')) {
+    $path = switch ($kind) {
+        'final' { Join-Path $fixture.proof $fixture.good.frames[0].file }
+        'last_prime' { Join-Path $fixture.proof $fixture.good.frames[15].priming_frames[2].file }
+        'height' { Join-Path $fixture.proof ('road-crack-visual-controls/readiness/' + $fixture.good.frames[0].frame_id + '/capture-readiness.json') }
+        'mid_cpp' { Join-Path $fixture.engine 'Source/Runtime/Engine/Private/Materials/MaterialInstanceDynamic.cpp' }
+        'allocator' { Join-Path $fixture.project 'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsComponent230Detail.cpp' }
+    }
+    $bytes = [IO.File]::ReadAllBytes($path)
+    try {
+        [IO.File]::WriteAllBytes($path, @($bytes) + @(1))
+        Reject { Files $fixture.good } ('changed bytes: ' + $kind)
+        [IO.File]::Delete($path)
+        Reject { Files $fixture.good } ('missing file: ' + $kind)
+    }
+    finally { [IO.File]::WriteAllBytes($path, $bytes) }
+}
+$materialPath = Join-Path $fixture.proof ('road-crack-visual-controls/readiness/' + $fixture.good.frames[0].frame_id + '/road-texture-readiness.json')
+$originalBytes = [IO.File]::ReadAllBytes($materialPath)
+foreach ($failure in @('replacement', 'duplicate', 'reorder', 'seven_only', 'mips', 'compiling', 'default', 'save', 'parameters')) {
+    $data = FreshData
+    $ready = $fixture.ready | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+    switch ($failure) {
+        'replacement' { $ready.textures[1].asset = '/Game/Unrelated.Asset' }
+        'duplicate' { $ready.textures[1].asset = $ready.textures[2].asset }
+        'reorder' { $swap = $ready.textures[1]; $ready.textures[1] = $ready.textures[2]; $ready.textures[2] = $swap }
+        'seven_only' { $ready.textures = $ready.textures[0..6] }
+        'mips' { $ready.textures[1].native_readback.resident_mips = 11 }
+        'compiling' { $ready.textures[1].native_readback.is_compiling = $true }
+        'default' { $ready.textures[1].native_readback.is_default_texture = $true }
+        'save' { $ready.saved_to_map = $true }
+        'parameters' { $ready.material_parameters_changed = $true }
+    }
+    try {
+        [IO.File]::WriteAllText($materialPath, ($ready | ConvertTo-Json -Depth 40))
+        $pin = File-Identity $materialPath 2MB
+        $data.frames[0].capture_readiness.material_receipt.sha256 = $pin.sha256
+        $data.frames[0].capture_readiness.material_receipt.size_bytes = $pin.size_bytes
+        Reject { Files $data } ('repinned incorrect texture readback: ' + $failure)
+    }
+    finally { [IO.File]::WriteAllBytes($materialPath, $originalBytes) }
+}
+Files $fixture.good | Out-Null
+''')
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 unavailable")
+    def test_actual_surface_lane_gates_bind_saved_fresh_and_gpu_without_readback_reapplication(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = self._crack_host_fixture(root)
+            self._run_crack_host_cases(root, fixture, r'''
+# Evaluate only the production lane guard/settings/environment expressions;
+# no Editor or Windows host operation is invoked by these local policy tests.
+$guard = @($ast.EndBlock.Statements | Where-Object {
+    $_ -is [System.Management.Automation.Language.IfStatementAst] -and
+    $_.Extent.Text.StartsWith('if ($CrackCanary -and (-not $EdgeMarkings')
+})
+$processes = @($ast.FindAll({ param($node)
+    $node -is [System.Management.Automation.Language.CommandAst] -and $node.GetCommandName() -ceq 'Start-Process'
+}, $true))
+if ($guard.Count -ne 1 -or $processes.Count -ne 1) { throw 'Production lane guard or owned process is not unique.' }
+$environmentExpression = $null
+for ($index = 0; $index -lt $processes[0].CommandElements.Count; $index++) {
+    $item = $processes[0].CommandElements[$index]
+    if ($item -is [System.Management.Automation.Language.CommandParameterAst] -and $item.ParameterName -ceq 'Environment') {
+        $environmentExpression = $processes[0].CommandElements[$index + 1].Extent.Text
+    }
+}
+if (-not $environmentExpression) { throw 'Owned GPU process lacks an explicit environment.' }
+$RunToken = $fixture.good.run_token; $ExpectedHead = $fixture.good.exact_sha
+$WorkspaceConfig = 'D:\yacs\workspace.json'
+$readHost = @{ value = @{ proof_files = @{ session_preparation = @{ sha256 = 'f' * 64 } } } }
+$expectedPlan = @{ identity = @{ sha256 = 'c' * 64 } }
+foreach ($mode in @(@($false, $false, $false), @($false, $true, $false),
+                    @($true, $true, $false), @($true, $false, $true))) {
+    $EdgeMarkings, $VisualControls, $CrackCanary = $mode
+    . ([scriptblock]::Create($guard[0].Extent.Text))
+    foreach ($name in @('edgeMarkingSetting', 'visualControlToken', 'crackCanarySetting', 'crackControlToken', 'expectedMaterialTextureCount')) {
+        $setting = @($ast.EndBlock.Statements | Where-Object {
+            $_ -is [System.Management.Automation.Language.AssignmentStatementAst] -and $_.Left.Extent.Text -ceq ('$' + $name)
+        })
+        if ($setting.Count -ne 1) { throw 'Production GPU lane setting is missing or ambiguous.' }
+        . ([scriptblock]::Create($setting[0].Extent.Text))
+    }
+    $environment = & ([scriptblock]::Create($environmentExpression))
+    Assert-JsonEqual $(if ($EdgeMarkings) { '1' } else { '0' }) $environment.YACS_ROAD_EDGE_MARKINGS 'edge environment'
+    Assert-JsonEqual $(if ($CrackCanary) { '1' } else { '0' }) $environment.YACS_ROAD_CRACK_CANARY 'crack environment'
+    Assert-JsonEqual $(if ($VisualControls) { $RunToken } else { $null }) $environment.YACS_ROAD_VISUAL_CONTROLS_OWNED 'inactive asphalt marker cleared'
+    Assert-JsonEqual $(if ($CrackCanary) { $RunToken } else { $null }) $environment.YACS_ROAD_CRACK_CONTROLS_OWNED 'inactive crack marker cleared'
+    Assert-JsonEqual $(if ($CrackCanary) { 15 } else { 7 }) $expectedMaterialTextureCount 'native material texture lane'
+}
+foreach ($mode in @(@($false, $false, $true), @($true, $true, $true))) {
+    $EdgeMarkings, $VisualControls, $CrackCanary = $mode
+    Reject { . ([scriptblock]::Create($guard[0].Extent.Text)) } 'incompatible diagnostic switches'
+}
+foreach ($mode in @(@($false, $false), @($true, $false), @($true, $true))) {
+    $markings, $cracks = $mode
+    $savedHost = @{ edge_markings_requested = $markings; edge_markings_fresh_reload_verified = $markings
+        crack_canary_requested = $cracks; crack_canary_fresh_reload_verified = $cracks; crack_normal_space_verified = $false }
+    $prepared = @{ edge_markings_enabled = $markings; crack_canary_enabled = $cracks }
+    $manifest = @{ edge_markings_enabled = $markings; crack_canary_enabled = $cracks }
+    $fresh = @{ edge_markings_enabled = $markings; crack_canary_enabled = $cracks
+        edge_markings_fresh_reload_verified = $markings; crack_canary_fresh_reload_verified = $cracks
+        edge_marking_material_reapplied = $false; edge_marking_geometry_reapplied = $false
+        crack_material_reapplied = $false; crack_geometry_reapplied = $false; edge_marking_readback = $null; crack_readback = $null }
+    if ($markings) {
+        $manifest.edge_markings = @{ saved = $true }
+        $fresh.edge_marking_readback = @{ status = 'EDGE_MARKINGS_FRESH_READBACK_VERIFIED'; read_only = $true
+            owner_visual_pass = $false; performance_pass = $false; all_marking_buffers_verified = $true; full_source_buffers_preserved = $true }
+    }
+    if ($cracks) {
+        $manifest.crack_canary = @{ status = 'LOCAL_CRACKS_CREATED_NORMAL_REVIEW_PENDING'; plan_sha256 = 'a' * 64
+            normal_space_verified = $false; source_correspondence = @{ native_source_witness_sha256 = 'b' * 64 } }
+        $fresh.crack_readback = @{ status = 'LOCAL_CRACKS_FRESH_READBACK_VERIFIED_NORMAL_REVIEW_PENDING'
+            plan_sha256 = 'a' * 64; actor_count = 2; native_source_witness_sha256 = 'b' * 64
+            all_crack_buffers_verified = $true; full_source_and_existing_paint_buffers_preserved = $true
+            caller_fresh_process_and_saved_bytes_required = $true; world_normal_canary_required = $true
+            normal_space_verified = $false; read_only = $true; owner_visual_pass = $false; performance_pass = $false }
+        $fresh.edge_marking_readback.aggregate_owner = 'local_crack_canary'
+    }
+    Assert-SurfaceDetailLanes $savedHost $prepared $fresh $manifest $markings $cracks
+    foreach ($part in @('host_requested', 'host_fresh', 'prepared', 'fresh_mode', 'fresh_verified', 'manifest', 'reapplied')) {
+        $rows = @{ host_row = $savedHost; prepared = $prepared; fresh = $fresh; manifest = $manifest } |
+            ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+        switch ($part) {
+            'host_requested' { $rows.host_row.crack_canary_requested = -not $cracks }
+            'host_fresh' { $rows.host_row.crack_canary_fresh_reload_verified = -not $cracks }
+            'prepared' { $rows.prepared.crack_canary_enabled = -not $cracks }
+            'fresh_mode' { $rows.fresh.crack_canary_enabled = -not $cracks }
+            'fresh_verified' { $rows.fresh.crack_canary_fresh_reload_verified = -not $cracks }
+            'manifest' { $rows.manifest.crack_canary_enabled = -not $cracks }
+            'reapplied' { $rows.fresh.crack_geometry_reapplied = $true }
+        }
+        Reject { Assert-SurfaceDetailLanes $rows.host_row $rows.prepared $rows.fresh $rows.manifest $markings $cracks } $part
+    }
+    $gpu = @{ edge_markings_enabled = $markings; crack_canary_enabled = $cracks; crack_normal_space_verified = $false
+        edge_markings_before = $fresh.edge_marking_readback; edge_markings_after = $fresh.edge_marking_readback
+        crack_before = $fresh.crack_readback; crack_after = $fresh.crack_readback }
+    Assert-SurfaceDetailGpuReadback $gpu $fresh $markings $cracks
+    foreach ($key in @('edge_markings_before', 'edge_markings_after', 'crack_before', 'crack_after')) {
+        $copy = $gpu | ConvertTo-Json -Depth 40 | ConvertFrom-Json -AsHashtable -Depth 40
+        $copy[$key] = @{ invented = $true }
+        Reject { Assert-SurfaceDetailGpuReadback $copy $fresh $markings $cracks } $key
+    }
+    $gpu.crack_normal_space_verified = $true
+    Reject { Assert-SurfaceDetailGpuReadback $gpu $fresh $markings $cracks } 'normal admission'
+}
+Reject { Assert-SurfaceDetailLanes @{} @{} @{} @{} $false $true } 'cracks without white markings'
+''')
 
 
 if __name__ == "__main__":

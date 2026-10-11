@@ -50,6 +50,16 @@ on:
       - 'scripts/ue/test_road_pavement_source_bindings.py'
       - 'scripts/ue/road_asphalt_visual_controls.py'
       - 'scripts/ue/test_road_asphalt_visual_controls.py'
+      - 'scripts/ue/road_crack_sources.py'
+      - 'scripts/ue/test_road_crack_sources.py'
+      - 'scripts/ue/road_crack_material.py'
+      - 'scripts/ue/test_road_crack_material.py'
+      - 'scripts/ue/road_crack_geometry.py'
+      - 'scripts/ue/test_road_crack_geometry.py'
+      - 'scripts/ue/road_crack_consumer.py'
+      - 'scripts/ue/test_road_crack_consumer.py'
+      - 'scripts/ue/road_crack_visual_controls.py'
+      - 'scripts/ue/test_road_crack_visual_controls.py'
       - 'scripts/ue/capture_sa_calobra_shoulder_contact.py'
       - 'scripts/ue/Invoke-YacsRoadShoulderContact.ps1'
       - 'scripts/ue/test_invoke_road_shoulder_contact.py'
@@ -188,7 +198,10 @@ jobs:
             scripts.ue.test_road_edge_marking_geometry scripts.ue.test_road_edge_marking_material `
             scripts.ue.test_road_edge_marking_consumer scripts.ue.test_road_pavement_source_bindings `
             scripts.ue.test_road_asphalt_visual_controls scripts.ue.test_road_asphalt_saved_consumer `
-            scripts.ue.test_road_asphalt_gpu_review `
+            scripts.ue.test_road_asphalt_gpu_review scripts.ue.test_road_asphalt_gpu_readiness `
+            scripts.ue.test_road_crack_sources scripts.ue.test_road_crack_material `
+            scripts.ue.test_road_crack_geometry scripts.ue.test_road_crack_consumer `
+            scripts.ue.test_road_crack_visual_controls `
             scripts.ue.test_road_material_views scripts.ue.test_invoke_road_saved_consumer `
             scripts.ue.test_invoke_road_asphalt_render scripts.ue.test_invoke_road_shoulder_contact `
             scripts.ci.test_sa_calobra_shoulder_contact
@@ -225,6 +238,7 @@ jobs:
             -ExpectedHead $env:GITHUB_SHA `
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
             -EdgeMarkings `
+            -CrackCanary:('${{ contains(github.event.head_commit.message, '[road-crack-canary]') }}' -ceq 'true') `
             -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
 
       - name: Capture native road-facing lit GPU review
@@ -237,6 +251,7 @@ jobs:
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
             -EdgeMarkings `
             -VisualControls:('${{ contains(github.event.head_commit.message, '[road-band-controls]') }}' -ceq 'true') `
+            -CrackCanary:('${{ contains(github.event.head_commit.message, '[road-crack-canary]') }}' -ceq 'true') `
             -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
 
       - name: Isolate the existing shoulder contact without changing geometry

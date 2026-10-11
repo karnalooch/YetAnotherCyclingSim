@@ -5,6 +5,7 @@ param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string] $ExpectedHead,
     [Parameter(Mandatory)][ValidatePattern('^[1-9][0-9]{0,19}-[1-9][0-9]{0,5}$')][string] $RunToken,
     [switch] $EdgeMarkings,
+    [switch] $CrackCanary,
     [string] $WorkspaceConfig = 'D:\yacs\workspace.json',
     [string] $RepoRoot = (Join-Path $PSScriptRoot '../..')
 )
@@ -12,11 +13,13 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) { throw 'Saved road asphalt requires the trusted Windows host.' }
+if ($CrackCanary -and -not $EdgeMarkings) { throw 'The local crack canary requires the authenticated white edge markings.' }
 $PROFILE_DIAGNOSTIC = 'road-network-profile-diagnostic.json'
 $root = $null
 $evidence = $null
 $editor = $null
 $edgeMarkingSetting = if ($EdgeMarkings) { '1' } else { '0' }
+$crackCanarySetting = if ($CrackCanary) { '1' } else { '0' }
 $receipt = [ordered]@{
     schema_version = 1; issue = 364; exact_sha = $ExpectedHead
     run_token = $RunToken; status = 'PENDING'
@@ -28,6 +31,9 @@ $receipt = [ordered]@{
     shoulder_selected_triangle_count = 0
     edge_markings_requested = [bool]$EdgeMarkings
     edge_markings_fresh_reload_verified = $false
+    crack_canary_requested = [bool]$CrackCanary
+    crack_canary_fresh_reload_verified = $false
+    crack_normal_space_verified = $false
     road_profile_diagnostic_sha256 = $null
     original_map_saved = $false; original_landscape_mutated = $false
     gpu_shader_verified = $false; owner_visual_status = 'PENDING_FINAL_M3'
@@ -324,6 +330,61 @@ function Assert-EdgeMarkingReceipt {
         }
     }
 }
+function Assert-CrackCanaryReceipt {
+    param($Manifest, $Prepared, $Fresh, [bool] $Requested)
+    foreach ($row in @($Manifest, $Prepared, $Fresh)) {
+        if ($row.crack_canary_enabled -isnot [bool] -or $row.crack_canary_enabled -ne $Requested) {
+            throw 'Saved crack canary differs from the explicit host request.'
+        }
+    }
+    foreach ($name in @('crack_material_reapplied', 'crack_geometry_reapplied')) {
+        if ($Fresh[$name] -isnot [bool] -or $Fresh[$name]) { throw 'Fresh crack readback modified its saved scene.' }
+    }
+    if ($Fresh.crack_canary_fresh_reload_verified -isnot [bool] -or
+        $Fresh.crack_canary_fresh_reload_verified -ne $Requested) { throw 'Fresh crack canary verification differs.' }
+    if (-not $Requested) {
+        if ($Manifest.Contains('crack_canary') -or $null -ne $Fresh.crack_readback) {
+            throw 'Disabled crack canary contains unexpected geometry or evidence.'
+        }
+        return
+    }
+    $crack = $Manifest.crack_canary
+    $loaded = $Fresh.crack_readback
+    if ($crack.schema_version -ne 1 -or $crack.status -cne 'LOCAL_CRACKS_CREATED_NORMAL_REVIEW_PENDING' -or
+        $crack.plan_sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+        $crack.actors -isnot [Collections.IList] -or $crack.actors.Count -ne 2 -or
+        $crack.owned_asset_paths -isnot [Collections.IList] -or $crack.owned_asset_paths.Count -ne 11 -or
+        @($crack.owned_asset_paths | Sort-Object -Unique).Count -ne 11 -or
+        $crack.imports.texture_count -ne 8 -or
+        $crack.imports.sources.status -cne 'ROAD_CRACK_SOURCE_BYTES_AUTHENTICATED' -or
+        $crack.imports.sources.verified_map_count -ne 80 -or $crack.imports.sources.verified_process_count -ne 16 -or
+        $crack.imports.sources.pins.exact_sha -cne '07ebafad08bce8bc227089901cb46785079fefda' -or
+        $crack.imports.sources.pins.run -cne '38102423216' -or $crack.imports.sources.pins.attempt -cne '1' -or
+        $crack.imports.sources.pins.source_proof.sha256 -cne 'bdfb2b889a8c8ed48960518909f497d822b5c34e7d4631a890368de984310afb' -or
+        $loaded.schema_version -ne 1 -or $loaded.status -cne 'LOCAL_CRACKS_FRESH_READBACK_VERIFIED_NORMAL_REVIEW_PENDING' -or
+        $loaded.plan_sha256 -cne $crack.plan_sha256 -or $loaded.actor_count -ne 2 -or
+        $loaded.native_source_witness_sha256 -cne $crack.source_correspondence.native_source_witness_sha256 -or
+        $Fresh.edge_marking_readback.aggregate_owner -cne 'local_crack_canary') {
+        throw 'Crack canary lacks the exact source, native actors, package inventory or aggregate white readback.'
+    }
+    foreach ($name in @('asset_packages_saved', 'full_source_and_existing_paint_buffers_preserved',
+                         'all_crack_buffers_verified', 'native_surface_correspondence_verified',
+                         'render_flags_verified_before_append', 'world_normal_canary_required')) {
+        if ($crack[$name] -isnot [bool] -or -not $crack[$name]) { throw ('Crack native proof failed: ' + $name) }
+    }
+    foreach ($name in @('full_source_and_existing_paint_buffers_preserved', 'all_crack_buffers_verified',
+                         'read_only', 'caller_fresh_process_and_saved_bytes_required', 'world_normal_canary_required')) {
+        if ($loaded[$name] -isnot [bool] -or -not $loaded[$name]) { throw ('Crack fresh proof failed: ' + $name) }
+    }
+    foreach ($name in @('source_geometry_changed', 'source_materials_changed', 'existing_paint_changed',
+                         'collision_enabled', 'cast_shadow', 'affects_navigation', 'physics_authored', 'map_saved',
+                         'normal_space_verified', 'owner_visual_pass', 'performance_pass')) {
+        if ($crack[$name] -isnot [bool] -or $crack[$name]) { throw ('Crack canary changed protected authority: ' + $name) }
+    }
+    foreach ($name in @('normal_space_verified', 'owner_visual_pass', 'performance_pass')) {
+        if ($loaded[$name] -isnot [bool] -or $loaded[$name]) { throw 'Crack readback cannot grant visual/normal/performance admission.' }
+    }
+}
 function Invoke-OwnedEditor {
     param([string] $Action)
     Require-IdleHost
@@ -350,6 +411,9 @@ function Invoke-OwnedEditor {
             YACS_ROAD_SAVED_ACTION = $Action
             YACS_ROAD_SAVED_RUN_TOKEN = $RunToken
             YACS_ROAD_EDGE_MARKINGS = $edgeMarkingSetting
+            YACS_ROAD_CRACK_CANARY = $crackCanarySetting
+            YACS_ROAD_CRACK_CONTROLS_OWNED = $null
+            YACS_ROAD_VISUAL_CONTROLS_OWNED = $null
             YACS_ROAD_MATERIAL_EXPECTED_HEAD = $ExpectedHead
             YACS_ROAD_MATERIAL_PREPARATION_SHA256 = [string] $baseline.value.proof_files.session_preparation.sha256
             YACS_WORKSPACE_CONFIG = $WorkspaceConfig
@@ -424,6 +488,10 @@ try {
         'scripts/ue/road_edge_marking_material.py',
         'scripts/ue/road_edge_marking_consumer.py',
         'scripts/ue/road_pavement_source_bindings.py',
+        'scripts/ue/road_crack_sources.py',
+        'scripts/ue/road_crack_material.py',
+        'scripts/ue/road_crack_geometry.py',
+        'scripts/ue/road_crack_consumer.py',
         'Source/YetAnotherCyclingSimEditor/Public/Diagnostics/YacsRoadMaterialInspectionLibrary.h',
         'Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsRoadMaterialInspectionLibrary.cpp',
         'scripts/ue/capture_sa_calobra_shoulder_contact.py',
@@ -509,6 +577,7 @@ try {
     Assert-FreshNetworkReceipt $fresh.value $ExpectedHead $manifest.identity.sha256 `
         $selectedTriangles $profileCopies.proof.sha256
     Assert-EdgeMarkingReceipt $manifest.value $saved.value $fresh.value ([bool]$EdgeMarkings)
+    Assert-CrackCanaryReceipt $manifest.value $saved.value $fresh.value ([bool]$CrackCanary)
     $receipt.proof_files.fresh_reload = $fresh.identity
     Assert-Identity $saved.identity 2MB
     Assert-Identity $manifest.identity 4MB
@@ -529,6 +598,7 @@ try {
     $receipt.shoulder_material_target_count = 185
     $receipt.shoulder_selected_triangle_count = $selectedTriangles
     $receipt.edge_markings_fresh_reload_verified = [bool]$EdgeMarkings
+    $receipt.crack_canary_fresh_reload_verified = [bool]$CrackCanary
     $receipt.road_profile_diagnostic_sha256 = $profileCopies.proof.sha256
     $receipt.status = 'ROAD_ASPHALT_SAVED_CONSUMER_FRESH_RELOAD_HOST_PASS'
 }

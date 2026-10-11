@@ -3,6 +3,8 @@
 Action prepare is the sole mutation authority: a new derived map, retained
 Material Forge asphalt and source-owned gravel across the current network.
 The explicit edge-marking lane adds source-triangle-clipped render-only paint.
+Its optional crack canary adds two source-clipped overlays with pending native
+WorldNormal review; it never grants shader-space or visual acceptance.
 Reload is read-only and never repairs or re-saves any binding. The accepted #363 map,
 Landscape, source road geometry, route and road physics are immutable.
 """
@@ -98,7 +100,8 @@ def inventory_digest(snapshot):
 
 
 def expected_saved_inventory(original, saved, material_path, *, observed_map_package,
-                             shoulder_receipt=None, edge_marking_receipt=None):
+                             shoulder_receipt=None, edge_marking_receipt=None,
+                             crack_canary_receipt=None):
     """Audit every field using the actual owning map in this Editor phase.
 
     Before SaveMap both snapshots belong to the frozen source map. Only after
@@ -148,13 +151,18 @@ def expected_saved_inventory(original, saved, material_path, *, observed_map_pac
                     "parent": assets["master"], "class": "MaterialInstanceConstant",
                     "effective_color": None})
                 bindings[0]["materials"].append(assets["instance"])
-    if edge_marking_receipt is not None:
-        additions = edge_marking_inventory(edge_marking_receipt)
+    require(crack_canary_receipt is None or edge_marking_receipt is not None,
+            "The local crack inventory requires the complete white edge-marking lane")
+    for receipt, projector, name in ((edge_marking_receipt, edge_marking_inventory, "edge marking"),
+                                      (crack_canary_receipt, crack_canary_inventory, "crack canary")):
+        if receipt is None:
+            continue
+        additions = projector(receipt)
         for field, key in (("actors", lambda row: row[0]),
                            ("mesh_material_collision_snapshot", lambda row: row["component"])):
             original_paths = {key(row) for row in old[field]}
             require(not original_paths.intersection(key(row) for row in additions[field]),
-                    "New edge marking objects overlap the accepted scene inventory")
+                    "New " + name + " objects overlap the accepted scene inventory")
             old[field] = sorted(old[field] + additions[field], key=key)
     canary._expected_live_snapshot(old, actual, road["component"], material_path)
     return inventory_digest(actual)
@@ -166,14 +174,22 @@ def edge_markings_enabled():
     return value == "1"
 
 
-def load_edge_marking_plan(source_plan):
-    """Read inert pinned producer bytes; the dedicated resolver owns addresses.
+def crack_canary_enabled():
+    value = os.environ.get("YACS_ROAD_CRACK_CANARY", "0")
+    require(value in ("0", "1"), "Explicit crack canary lane must be 0 or 1")
+    require(value == "0" or edge_markings_enabled(), "The local crack canary requires white edge markings")
+    return value == "1"
 
-    Loading source data never imports or executes the retained road producer.
-    Native placement separately verifies every addressed triangle and corner.
-    """
+
+def _surface_modes(edge_markings, crack_canary):
+    require(type(edge_markings) is bool and type(crack_canary) is bool,
+            "Surface detail modes must be explicit booleans")
+    require(not crack_canary or edge_markings, "The local crack canary requires white edge markings")
+
+
+def _retained_pavement_producer_bytes():
+    """Read inert pinned bytes without importing or executing the producer."""
     from scripts.ue import road_edge_marking_consumer as markings
-    from scripts.ue import road_pavement_source_bindings as bindings
 
     frozen_relative = str(Path(session.PROFILE_RELATIVE).parent).replace("\\", "/")
     frozen_root = session._safe_path(Path(load_workspace()["data"]), frozen_relative)
@@ -185,10 +201,33 @@ def load_edge_marking_plan(source_plan):
     require(len(producer) == identity["size_bytes"]
             and hashlib.sha256(producer).hexdigest() == identity["sha256"],
             "Pavement producer changed between authentication and preparation")
+    return producer
+
+
+def load_edge_marking_plan(source_plan):
+    """The shared resolver owns addresses; native placement verifies every face."""
+    from scripts.ue import road_edge_marking_consumer as markings
+    from scripts.ue import road_pavement_source_bindings as bindings
+
+    producer = _retained_pavement_producer_bytes()
     addresses = bindings.prepare_bindings(source_plan, producer_bytes=producer)
     require(isinstance(addresses, dict) and set(addresses) == {"quad_triangles", "triangle_bindings"},
             "Pavement binding resolver returned an unsupported contract")
     return markings.prepare(source_plan, producer_bytes=producer, **addresses)
+
+
+def load_crack_plan(source_plan):
+    """Authenticate both fixed motifs and explicit 0/90-degree geometry frames."""
+    from scripts.ue import road_crack_consumer as cracks
+    from scripts.ue import road_crack_geometry as geometry
+    from scripts.ue import road_crack_material as material
+    from scripts.ue import road_crack_sources as sources
+
+    producer = _retained_pavement_producer_bytes()
+    source = sources.load_sources(sources.source_root(), sources.VERIFIED_PINS)
+    contracts = {event.motif_id: material.geometry_contract(source["motifs"][event.motif_id],
+                    uv_rotation_degrees=event.rotation_deg) for event in geometry.CANARY_EVENTS}
+    return cracks.prepare(source_plan, producer_bytes=producer, geometry_contracts=contracts)
 
 
 def edge_marking_inventory(receipt):
@@ -257,6 +296,70 @@ def edge_marking_inventory(receipt):
             "mesh_material_collision_snapshot": sorted(components, key=lambda row: row["component"])}
 
 
+def crack_canary_inventory(receipt):
+    """Project the exact two authenticated additions, retaining every old row."""
+    from scripts.ue import road_crack_consumer as cracks
+    from scripts.ue import road_crack_geometry as geometry
+    from scripts.ue import road_crack_material as material
+    from scripts.ue import road_crack_sources as sources
+
+    require(isinstance(receipt, dict) and receipt.get("schema_version") == 1
+            and receipt.get("status") == "LOCAL_CRACKS_CREATED_NORMAL_REVIEW_PENDING"
+            and all(receipt.get(flag) is True for flag in (
+                "asset_packages_saved", "native_surface_correspondence_verified", "all_crack_buffers_verified",
+                "full_source_and_existing_paint_buffers_preserved", "world_normal_canary_required"))
+            and all(receipt.get(flag) is False for flag in cracks.FALSE_FLAGS),
+            "Crack inventory has no complete render-only native receipt with pending normal review")
+    collision = receipt.get("native_no_collision")
+    require(isinstance(collision, str) and 0 < len(collision) < 128,
+            "Missing crack native no-collision enum readback")
+    imports = receipt.get("imports", {})
+    source = imports.get("sources", {})
+    require(source.get("pins") == sources.VERIFIED_PINS
+            and source.get("pins_sha256") == sources.digest(sources.VERIFIED_PINS)
+            and isinstance(source.get("selected_motifs"), list)
+            and len(source["selected_motifs"]) == 2
+            and set(source["selected_motifs"]) == set(sources.CANARY_MOTIFS)
+            and imports.get("texture_count") == 8,
+            "Crack inventory does not own the two exact retained Forge motifs and eight maps")
+    assets = material.asset_paths(source)
+    paths = list(cracks._owned_asset_paths(source))
+    require(len(paths) == 11 and receipt.get("owned_asset_paths") == paths
+            and imports.get("assets") == sources.asset_paths(source)
+            and receipt.get("material", {}).get("assets") == assets,
+            "Crack material/texture packages escaped their bounded native ownership")
+    counts = receipt.get("geometry", {}).get("counts", {})
+    require(counts.get("source_owner_count") == shoulder_sources.OWNER_COUNT
+            and counts.get("pavement_owner_count") == shoulder_sources.OWNER_COUNT - 1
+            and counts.get("excluded_parapet_count") == 1 and counts.get("mesh_count") == 2,
+            "Crack inventory lacks the complete pavement source and exactly two clipped meshes")
+    labels = {cracks.ACTOR_PREFIX + event.event_id: event.motif_id for event in geometry.CANARY_EVENTS}
+    rows = receipt.get("actors", [])
+    require(isinstance(rows, list) and len(rows) == 2 and {row.get("label") for row in rows} == set(labels),
+            "Crack native actor receipt is missing, duplicated or foreign")
+    actors, components = [], []
+    for row in rows:
+        state = row.get("actor", {})
+        path, component = state.get("path"), row.get("component")
+        motif = labels[row["label"]]
+        require(row.get("motif_id") == motif and state.get("label") == row["label"]
+                and isinstance(path, str) and path.startswith("<scene>.<world>:PersistentLevel.")
+                and ":" not in path.removeprefix("<scene>.<world>:PersistentLevel.")
+                and isinstance(component, str) and component.startswith(path + ".")
+                and state.get("location_cm") == [0., 0., 0.]
+                and state.get("rotation_deg") == [0., 0., 0.]
+                and state.get("scale") == [1., 1., 1.]
+                and row.get("material") == assets[motif]["instance"],
+                "Crack transform, component ownership, motif or material binding differs")
+        actors.append([path, [state["location_cm"], state["rotation_deg"], state["scale"]]])
+        components.append({"component": component, "materials": [assets[motif]["instance"]], "collision": collision})
+    require(len({row[0] for row in actors}) == len(actors)
+            and len({row["component"] for row in components}) == len(components),
+            "Crack native object paths are not unique")
+    return {"actors": sorted(actors),
+            "mesh_material_collision_snapshot": sorted(components, key=lambda row: row["component"])}
+
+
 def create_edge_markings(api, plan, asphalt_assets):
     """Save only the new paint M/MI; the outer transaction owns the derived map."""
     from scripts.ue import road_edge_marking_consumer as markings
@@ -273,6 +376,29 @@ def create_edge_markings(api, plan, asphalt_assets):
         return actors, receipt
     except Exception:
         markings._rollback_created(api, actors, receipt["original_source_state"], markings._world(api))
+        raise
+
+
+def create_crack_canary(api, plan, asphalt_assets, *, white_plan, white_receipt):
+    """Save all eleven new packages after the native source/white/crack audit."""
+    from scripts.ue import road_crack_consumer as cracks
+    from scripts.ue import road_crack_sources as sources
+
+    actors, receipt = cracks.create(api, plan, sources.source_root(), sources.VERIFIED_PINS, asphalt_assets,
+                                    white_plan=white_plan, white_receipt=white_receipt)
+    try:
+        for path in receipt["owned_asset_paths"]:
+            asset = api.load_asset(path)
+            require(asset is not None and api.EditorAssetLibrary.save_loaded_asset(
+                asset, only_if_is_dirty=False), "Derived crack canary asset save failed: " + path)
+        receipt = {**receipt, "asset_packages_saved": True,
+                   "native_no_collision": str(api.CollisionEnabled.NO_COLLISION)}
+        crack_canary_inventory(receipt)
+        return actors, receipt
+    except Exception:
+        cracks._rollback(api, actors, receipt["owned_asset_paths"], receipt["original_scene_state"],
+                         cracks.edge._world(api), white_plan=white_plan, white_receipt=white_receipt,
+                         asphalt_assets=asphalt_assets)
         raise
 
 
@@ -297,6 +423,51 @@ def verify_edge_markings(api, manifest, *, enabled):
     asphalt_assets = {"instance": manifest["material_instance"], "master": manifest["material_master"],
                       "textures": manifest["texture_objects"]}
     return markings.verify_loaded(api, plan, receipt, asphalt_assets)
+
+
+def verify_surface_details(api, manifest, edge_markings, crack_canary):
+    """Shared fresh/GPU read-only audit, including the explicit +2 crack delta.
+
+    With cracks present the aggregate reader replays every white source face,
+    native buffer and material. The old white-only inventory is never invoked
+    against the expanded scene, and no observed actor is silently filtered.
+    """
+    _surface_modes(edge_markings, crack_canary)
+    receipt = manifest.get("crack_canary")
+    require((receipt is not None) == crack_canary
+            and manifest.get("crack_canary_enabled", False) is crack_canary,
+            "Saved crack mode differs from the explicitly selected native lane")
+    if not crack_canary:
+        return {"edge_markings": verify_edge_markings(api, manifest, enabled=edge_markings), "crack_canary": None}
+    from scripts.ue import road_crack_consumer as cracks
+    from scripts.ue import road_crack_sources as sources
+
+    white_receipt = manifest.get("edge_markings")
+    require(manifest.get("edge_markings_enabled") is True and isinstance(white_receipt, dict),
+            "Saved crack aggregate requires the complete existing white receipt")
+    for candidate, project in ((white_receipt, edge_marking_inventory), (receipt, crack_canary_inventory)):
+        require(candidate.get("native_no_collision") == str(api.CollisionEnabled.NO_COLLISION),
+                "Saved surface detail collision enum differs from the pinned native API")
+        project(candidate)
+    paths = list(white_receipt["material"]["assets"].values()) + receipt["owned_asset_paths"]
+    packages = {"Content/" + path.split(".", 1)[0].removeprefix("/Game/") + ".uasset" for path in paths}
+    require(packages.issubset({row["path"] for row in manifest["assets"]}),
+            "Saved white/crack packages are not covered by retained byte identities")
+    source_plan = shoulder_sources.load_sources()
+    white_plan, plan = load_edge_marking_plan(source_plan), load_crack_plan(source_plan)
+    asphalt_assets = {"instance": manifest["material_instance"], "master": manifest["material_master"],
+                      "textures": manifest["texture_objects"]}
+    result = cracks.verify_loaded(api, plan, receipt, sources.source_root(), sources.VERIFIED_PINS, asphalt_assets,
+                                  white_plan=white_plan, white_receipt=white_receipt)
+    white = result.get("edge_markings", {})
+    require(white.get("status") == "EDGE_MARKINGS_FRESH_READBACK_VERIFIED"
+            and white.get("aggregate_owner") == "local_crack_canary" and white.get("read_only") is True
+            and result.get("status") == "LOCAL_CRACKS_FRESH_READBACK_VERIFIED_NORMAL_REVIEW_PENDING"
+            and result.get("actor_count") == 2 and result.get("read_only") is True
+            and result.get("world_normal_canary_required") is True and result.get("normal_space_verified") is False,
+            "Surface aggregate omitted the actual white readback or pending crack normal review")
+    return {"edge_markings": white,
+            "crack_canary": {key: value for key, value in result.items() if key != "edge_markings"}}
 
 
 def verified_staging(exact_sha, staging_hash):
@@ -566,8 +737,8 @@ def verify_retained_files(retained, rows):
 
 
 def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, source_dependencies,
-            edge_markings=False):
-    require(type(edge_markings) is bool, "Edge marking mode is not an explicit boolean")
+            edge_markings=False, crack_canary=False):
+    _surface_modes(edge_markings, crack_canary)
     require(not (ROOT / MAP_FILE).exists(), "Existing road-only saved map cannot be overwritten")
     require(not (ROOT / PREFIX).exists(), "Existing asphalt consumer package tree")
     before = original["native_inventory"]
@@ -583,6 +754,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
     baseline.native_projection(api)
     source_plan = shoulder_sources.load_sources()
     marking_plan = load_edge_marking_plan(source_plan) if edge_markings else None
+    crack_plan = load_crack_plan(source_plan) if crack_canary else None
     source_before = asphalt_source.verify_retained_replay()
     from scripts.ue import import_material_forge_variant as forge
 
@@ -632,6 +804,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
             asset, only_if_is_dirty=False), "Derived shoulder material save failed")
     rollback_state = None
     marking_actors, marking_receipt = (), None
+    crack_actors, crack_receipt = (), None
     saved = False
     try:
         component.set_material(0, instance)
@@ -646,12 +819,16 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
                 "Road geometry, corner attributes or triangle IDs changed during material assignment")
         if edge_markings:
             marking_actors, marking_receipt = create_edge_markings(api, marking_plan, receipt["assets"])
+        if crack_canary:
+            crack_actors, crack_receipt = create_crack_canary(api, crack_plan, receipt["assets"],
+                white_plan=marking_plan, white_receipt=marking_receipt)
         live = baseline.native_inventory(api, prep, session.operation.MAP_PACKAGE)
         expected_saved_inventory(
             inventory_before, live, instance_path,
             observed_map_package=session.operation.MAP_PACKAGE,
             shoulder_receipt=shoulder_receipt,
             edge_marking_receipt=marking_receipt,
+            crack_canary_receipt=crack_receipt,
         )
         world = api.get_editor_subsystem(api.UnrealEditorSubsystem).get_editor_world()
         require(api.EditorLoadingAndSavingUtils.save_map(world, MAP),
@@ -667,17 +844,28 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
             observed_map_package=observed_map,
             shoulder_receipt=shoulder_receipt,
             edge_marking_receipt=marking_receipt,
+            crack_canary_receipt=crack_receipt,
         )
     except Exception:
         if not saved:
             try:
-                if marking_receipt is not None:
-                    from scripts.ue import road_edge_marking_consumer as markings
+                try:
+                    if crack_receipt is not None:
+                        from scripts.ue import road_crack_consumer as cracks
 
-                    # Its baseline includes the new asphalt/shoulder bindings;
-                    # remove paint before restoring those original bindings.
-                    markings._rollback_created(api, marking_actors, marking_receipt["original_source_state"],
-                                               markings._world(api))
+                        # This baseline includes the saved paint and asphalt;
+                        # verify it before either earlier layer is restored.
+                        cracks._rollback(api, crack_actors, crack_receipt["owned_asset_paths"],
+                            crack_receipt["original_scene_state"], cracks.edge._world(api),
+                            white_plan=marking_plan, white_receipt=marking_receipt, asphalt_assets=receipt["assets"])
+                finally:
+                    if marking_receipt is not None:
+                        from scripts.ue import road_edge_marking_consumer as markings
+
+                        # Its baseline includes the new asphalt/shoulder bindings;
+                        # remove paint before restoring those original bindings.
+                        markings._rollback_created(api, marking_actors, marking_receipt["original_source_state"],
+                                                   markings._world(api))
             finally:
                 component.set_material(0, old_material)
                 if rollback_state is not None:
@@ -690,6 +878,11 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
     require(asphalt_source.verify_retained_replay() == source_before,
             "Original asphalt source changed while saving consumer")
     assets = produced_files()
+    if crack_canary:
+        packages = {"Content/" + path.split(".", 1)[0].removeprefix("/Game/") + ".uasset"
+                    for path in crack_receipt["owned_asset_paths"]}
+        require(packages.issubset({row["path"] for row in assets}),
+                "All eleven native crack packages must exist before durable retention")
     delivered = retain_files(retained, assets)
     verify_retained_files(retained, delivered)
     profile_identity = write_profile_diagnostic(proof, retained, source_plan)
@@ -725,6 +918,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
         "road_profile_diagnostic": profile_identity,
         "material_changes": "road_slot_zero_network_outer_shoulder_ids_and_edge_uv",
         "edge_markings_enabled": edge_markings,
+        "crack_canary_enabled": crack_canary,
         "landscape_1024_unchanged": True,
         "road_geometry_unchanged": True,
         "physics_profile_unchanged": True,
@@ -736,6 +930,8 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
     }
     if edge_markings:
         manifest["edge_markings"] = marking_receipt
+    if crack_canary:
+        manifest["crack_canary"] = crack_receipt
     manifest_id = write_once(retained / MANIFEST, manifest)
     require(write_once(session._safe_path(proof, MANIFEST), manifest) == manifest_id,
             "Downloadable material manifest differs from retained native evidence")
@@ -751,6 +947,7 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
         "derived_map_sha256": next(x["sha256"] for x in assets if x["path"] == MAP_FILE),
         "material_saved": True,
         "edge_markings_enabled": edge_markings,
+        "crack_canary_enabled": crack_canary,
         "new_world_only": True,
         "fresh_reload_verified": False,
         "performance_pass": False,
@@ -761,8 +958,8 @@ def prepare(api, proof, retained, exact_sha, staging_sha, original, rows, *, sou
 
 
 def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, source_dependencies,
-           edge_markings=False):
-    require(type(edge_markings) is bool, "Edge marking mode is not an explicit boolean")
+           edge_markings=False, crack_canary=False):
+    _surface_modes(edge_markings, crack_canary)
     prepare_row = session._read_json(session._safe_path(proof, PREPARED), limit=JSON_LIMIT)
     require(
         prepare_row.get("status") == "ROAD_ASPHALT_SAVED_PREPARED"
@@ -770,6 +967,7 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
         and prepare_row.get("material_saved") is True
         and prepare_row.get("fresh_reload_verified") is False
         and prepare_row.get("edge_markings_enabled", False) is edge_markings
+        and prepare_row.get("crack_canary_enabled", False) is crack_canary
         and prepare_row.get("retained_root") == str(retained),
         "No authentic native saved-consumer preparation",
     )
@@ -819,7 +1017,8 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
     )
     shoulder_material.verify_material(api, manifest["shoulder_network"]["material"], source_dependencies)
     shoulder.verify_loaded(api, manifest["shoulder_network"])
-    marking_readback = verify_edge_markings(api, manifest, enabled=edge_markings)
+    details = verify_surface_details(api, manifest, edge_markings, crack_canary)
+    marking_readback, crack_readback = details["edge_markings"], details["crack_canary"]
     verify_road_mesh(api, manifest["road_mesh"])
     require(
         instance.get_path_name() == manifest["material_instance"],
@@ -831,6 +1030,7 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
         observed_map_package=MAP,
         shoulder_receipt=manifest["shoulder_network"],
         edge_marking_receipt=manifest.get("edge_markings"),
+        crack_canary_receipt=manifest.get("crack_canary"),
     )
     require(
         inventory_hash == manifest["expected_normalized_inventory_sha256"],
@@ -860,6 +1060,11 @@ def reload(api, proof, retained, exact_sha, staging_sha, original, rows, *, sour
         "edge_marking_geometry_reapplied": False,
         "edge_markings_fresh_reload_verified": marking_readback is not None,
         "edge_marking_readback": marking_readback,
+        "crack_canary_enabled": crack_canary,
+        "crack_material_reapplied": False,
+        "crack_geometry_reapplied": False,
+        "crack_canary_fresh_reload_verified": crack_readback is not None,
+        "crack_readback": crack_readback,
         "shoulder_network_fresh_reload_verified": True,
         "shoulder_positions_indices_normals_original_uv_prefix_unchanged": True,
         "shoulder_material_edge_uv_fresh_reload_verified": True,
@@ -885,6 +1090,7 @@ def main():
     action = os.environ.get("YACS_ROAD_SAVED_ACTION", "")
     require(action in ("prepare", "reload"), "Explicit saved consumer action required")
     markings = edge_markings_enabled()
+    cracks = crack_canary_enabled()
     session._assert_isolated_root()
     require(ROOT == session.ROOT == prep.ROOT, "Saved consumer modules belong to another checkout")
     exact_sha, staging_sha, token, proof, retained = proof_paths()
@@ -911,10 +1117,10 @@ def main():
     prep.assert_isolated_bootstrap(unreal)
     if action == "prepare":
         prepare(unreal, proof, retained, exact_sha, staging_sha, original, rows,
-                source_dependencies=stage["source_dependencies"], edge_markings=markings)
+                source_dependencies=stage["source_dependencies"], edge_markings=markings, crack_canary=cracks)
     else:
         reload(unreal, proof, retained, exact_sha, staging_sha, original, rows,
-               source_dependencies=stage["source_dependencies"], edge_markings=markings)
+               source_dependencies=stage["source_dependencies"], edge_markings=markings, crack_canary=cracks)
     session._verify_rows(ROOT, rows)
     require(
         session._identity(staging_path, JSON_LIMIT) == stage_identity,

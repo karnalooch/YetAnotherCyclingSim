@@ -138,6 +138,32 @@ class PavementSourceBindingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "empty or unbounded"):
             self.prepare()
 
+    def test_explicit_interior_faces_reuse_the_same_derivation_without_building_white_paint(self):
+        first = ("YACS_PERSIST_SUPPORT_000", 4, 12, 0)
+        last = ("YACS_PERSIST_SUPPORT_185", 2399, 11, 1)
+        expected = self.prepare(first, last)
+        with patch.object(bindings.geometry, "build_markings") as build:
+            actual = bindings.prepare_bindings(self.plan, producer_bytes=INERT_PRODUCER,
+                                               needed_faces=[last, list(first), first])
+            build.assert_not_called()
+        self.assertEqual(actual, expected)
+
+    def test_explicit_face_contract_rejects_empty_unbounded_and_malformed_requests(self):
+        key = ("YACS_PERSIST_SUPPORT_000", 1, 12, 0)
+        for values in ([], iter([key]), [key] * (bindings.MAX_BINDINGS + 1),
+                       [(key[0], True, 12, 0)], [(key[0], 1, 12)],
+                       [("YACS_PERSIST_SUPPORT_007", 1, 12, 0)],
+                       [(key[0], 83, 12, 0)], [(key[0], 1, 24, 0)],
+                       [(key[0], 1, 12, 2)], [None]):
+            with self.subTest(kind=type(values).__name__), patch.object(bindings.geometry, "build_markings") as build:
+                with self.assertRaises(ValueError):
+                    bindings.prepare_bindings(self.plan, producer_bytes=INERT_PRODUCER, needed_faces=values)
+                build.assert_not_called()
+        with patch.object(bindings.geometry, "build_markings") as build:
+            with self.assertRaisesRegex(ValueError, "exact retained"):
+                bindings.prepare_bindings(self.plan, producer_bytes=INERT_PRODUCER + b"\n", needed_faces=[key])
+            build.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

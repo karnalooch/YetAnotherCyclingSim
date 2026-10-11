@@ -9,7 +9,7 @@ in authenticated window order: 184 network windows, then accepted-hairpin.
 The source loader preserves that order while inserting one support-only Nudo
 parapet. Consequently support labels are identities, not road mesh offsets.
 This module counts every complete slab, excludes that parapet, and returns only
-the explicit top faces used by the clipped edge paint. Native consumers still
+the explicit top faces requested by clipped surface consumers. Native consumers still
 must compare every addressed tid, ordered vid and position against the road.
 No archived producer, native API, geometry authoring or proximity search runs.
 """
@@ -87,13 +87,16 @@ def _slab_layout(source_plan):
     return layout
 
 
-def prepare_bindings(source_plan, *, producer_bytes):
-    """Return exact topology and eight-field native addresses for clipped paint.
+def prepare_bindings(source_plan, *, producer_bytes, needed_faces=None):
+    """Return exact topology and eight-field native addresses for clipped tops.
 
     ``[owner, section, lateral_cell, slot, native_tid, vid0, vid1, vid2]``
     rows are deterministic and retain separate ownership at coincident seams.
     The caller supplies ``road_shoulder_sources.load_sources()`` unchanged.
     Any different producer bytes invalidate this closed, reviewed derivation.
+    ``None`` retains the existing complete edge-paint face selection. Other
+    consumers must supply a nonempty bounded list/tuple of four-field source
+    face keys; no proximity selection or all-road fallback is performed.
     """
     require(type(producer_bytes) is bytes
             and len(producer_bytes) == PRODUCER_IDENTITY["size_bytes"]
@@ -101,9 +104,21 @@ def prepare_bindings(source_plan, *, producer_bytes):
             "Road bindings need the exact retained pavement producer bytes")
     require(isinstance(source_plan, dict), "Road bindings require the authenticated source plan")
     layout = _slab_layout(source_plan)
-    build = geometry.build_markings(source_plan, quad_triangles=QUAD_TRIANGLES)
-    needed = {(mesh.owner_label, *fragment.source_triangle)
-              for mesh in build.meshes for fragment in mesh.fragments}
+    if needed_faces is None:
+        build = geometry.build_markings(source_plan, quad_triangles=QUAD_TRIANGLES)
+        needed = {(mesh.owner_label, *fragment.source_triangle)
+                  for mesh in build.meshes for fragment in mesh.fragments}
+    else:
+        require(isinstance(needed_faces, (list, tuple)) and 0 < len(needed_faces) <= MAX_BINDINGS,
+                "Explicit source face inventory is empty or unbounded")
+        require(all(isinstance(key, (list, tuple)) and len(key) == 4
+                    and isinstance(key[0], str) and key[0] in layout
+                    and all(type(value) is int and value >= 0 for value in key[1:])
+                    for key in needed_faces),
+                "Explicit source face lacks a bounded pavement owner/address")
+        # Multiple separate overlays may use one face. Deduplicate only exact
+        # source keys, preserving different owners even at coincident seams.
+        needed = {tuple(key) for key in needed_faces}
     require(0 < len(needed) <= MAX_BINDINGS, "Clipped source face inventory is empty or unbounded")
     rows, seen_tids = [], set()
     for key in sorted(needed):
