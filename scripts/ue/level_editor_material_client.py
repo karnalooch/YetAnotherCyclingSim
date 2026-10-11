@@ -2,7 +2,8 @@
 
 This host client starts no editor, server, build or cleanup and never saves an
 asset. It reuses the admitted JSON-only official MCP transport. The current
-client checkout must match the launcher's exact SHA; the retained scene remains
+client checkout matches the launcher SHA or an explicitly pinned descendant
+whose entire native/helper closure is byte-identical; the retained scene remains
 the separately pinned b9 checkpoint. A failed/uncertain tools/call is not retried.
 Offline tests are synthetic and cannot establish native or visual acceptance.
 """
@@ -136,13 +137,26 @@ def _sources(launcher_sha):
     head = committed_git._git_bounded(
         ROOT, ("rev-parse", "--verify", "HEAD"), 64,
         deadline=time.monotonic() + 20).decode("ascii").strip()
-    require(head == launcher_sha, "Actual client HEAD differs from the session launcher SHA")
+    upgraded = head != launcher_sha
+    if upgraded:
+        require(os.environ.get("YACS_LEVEL_EDITOR_CLIENT_SHA") == head,
+                "Actual client HEAD differs from the session launcher SHA")
+        ancestor = committed_git._git_bounded(
+            ROOT, ("merge-base", launcher_sha, head), 64,
+            deadline=time.monotonic() + 20).decode("ascii").strip()
+        require(ancestor == launcher_sha, "Client upgrade is not a descendant of the launcher")
     target = os.environ.get("TARGET_SHA")
     require(target is None or target == head, "TARGET_SHA differs from the actual client HEAD")
     paths = (*SOURCE_MODULES, CLIENT_SOURCE)
     blobs = committed_git._read_exact_blobs(
         ROOT, head, paths, blob_limit=JSON_LIMIT, total_limit=16 * JSON_LIMIT,
         timeout_seconds=30, path_validator=_path)
+    if upgraded:
+        baseline = committed_git._read_exact_blobs(
+            ROOT, launcher_sha, tuple(SOURCE_MODULES), blob_limit=JSON_LIMIT,
+            total_limit=16 * JSON_LIMIT, timeout_seconds=30, path_validator=_path)
+        require(all(blobs[path] == baseline[path] for path in SOURCE_MODULES),
+                "Host client upgrade changed the authenticated native/helper closure")
     sources = {}
     for relative in paths:
         path = _path(ROOT, relative)
@@ -280,6 +294,21 @@ def _observation(value, initial=None):
         require(identities == wanted, "Native binding targets differ from the initial scene readback")
 
 
+def _launcher_root(value, token):
+    launcher_root = _path(preparation.SOURCE_ROOT.parent, "_level-editor-review-" + token)
+    if not _same_path(value, launcher_root):
+        pinned_root = os.environ.get("YACS_LEVEL_EDITOR_LAUNCHER_ROOT")
+        require((_same_path(value, ROOT) or (pinned_root is not None and _same_path(value, Path(pinned_root))))
+                and preparation.SHA40.fullmatch(os.environ.get("YACS_LEVEL_EDITOR_CLIENT_SHA", "")),
+                "Retained launcher root differs from the fixed launch-session path")
+        # This executing checkout is authenticated by _sources below, including
+        # the explicitly pinned upgrade SHA and unchanged native/helper closure.
+        supplied = Path(value)
+        require(supplied.is_absolute(), "Pinned launcher root must be absolute")
+        launcher_root = _path(supplied.parent, supplied.name)
+    return launcher_root
+
+
 def _load_context(receipt_path):
     require(WINDOWS_HOST and receipt_path.is_absolute(), "Session receipt requires an absolute owned Windows path")
     require(receipt_path.name == SESSION_RECEIPT and preparation.SESSION_NAME.fullmatch(receipt_path.parent.name),
@@ -293,9 +322,7 @@ def _load_context(receipt_path):
     require(isinstance(token, str) and SESSION_ID.fullmatch(token)
             and root.name == preparation.RUNTIME_SHA[:12] + "-" + token,
             "Session token differs from its fixed project root")
-    launcher_root = _path(preparation.SOURCE_ROOT.parent, "_level-editor-review-" + token)
-    require(_same_path(host.get("launcher_root"), launcher_root),
-            "Retained launcher root differs from the fixed launch-session path")
+    launcher_root = _launcher_root(host.get("launcher_root"), token)
     handoff = ((host.get("status") in {"HTTP_READY_CLIENT_PENDING", "BROWSER_VIDEO_RECEIVED"}
                 and host.get("owner_handoff") is True)
                or (host.get("status") == "MATERIAL_BRIDGE_QUALIFICATION_PENDING"
@@ -315,6 +342,14 @@ def _load_context(receipt_path):
             and PureWindowsPath(host["editor_executable_path"]).name.casefold() == "unrealeditor.exe",
             "Launcher lacks a complete owned process identity")
     sources = _sources(host.get("launcher_sha"))
+    if os.environ.get("YACS_LEVEL_EDITOR_LAUNCHER_ROOT") is not None:
+        original_head = committed_git._git_bounded(
+            launcher_root, ("rev-parse", "--verify", "HEAD"), 64,
+            deadline=time.monotonic() + 20).decode("ascii").strip()
+        require(original_head == host["launcher_sha"], "Pinned original launcher HEAD changed")
+        for relative in SOURCE_MODULES:
+            require(digest(_read(_path(launcher_root, relative))) == sources[relative],
+                    "Pinned original native/helper bytes changed")
     context = {"root": root, "host": host, "sources": sources, "launcher_root": launcher_root,
                "identity": {"session_id": token, "editor_pid": host["editor_pid"],
                             "editor_start_filetime_utc": host["editor_start_filetime_utc"],

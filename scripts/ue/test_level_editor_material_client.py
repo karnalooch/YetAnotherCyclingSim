@@ -755,5 +755,45 @@ class SourceGateTests(unittest.TestCase):
                 client._sources(LAUNCHER_SHA)
 
 
+    def test_explicit_host_upgrade_preserves_native_closure_and_ancestry(self):
+        head = "b" * 40
+        paths = (*client.SOURCE_MODULES, client.CLIENT_SOURCE)
+        blobs = {path: (client.ROOT / path).read_bytes() for path in paths}
+        baseline = {path: blobs[path] for path in client.SOURCE_MODULES}
+        with mock.patch.dict(client.os.environ, {"YACS_LEVEL_EDITOR_CLIENT_SHA": head, "TARGET_SHA": head}), \
+                mock.patch.object(client.committed_git, "_git_bounded", side_effect=[head.encode(), LAUNCHER_SHA.encode()]), \
+                mock.patch.object(client.committed_git, "_read_exact_blobs", side_effect=[blobs, baseline]):
+            self.assertEqual(client.digest(blobs[client.CLIENT_SOURCE]), client._sources(LAUNCHER_SHA)[client.CLIENT_SOURCE])
+        altered = dict(baseline)
+        altered[next(iter(altered))] = b"other native bytes"
+        with mock.patch.dict(client.os.environ, {"YACS_LEVEL_EDITOR_CLIENT_SHA": head, "TARGET_SHA": head}), \
+                mock.patch.object(client.committed_git, "_git_bounded", side_effect=[head.encode(), LAUNCHER_SHA.encode()]), \
+                mock.patch.object(client.committed_git, "_read_exact_blobs", side_effect=[blobs, altered]), \
+                self.assertRaisesRegex(ValueError, "native/helper closure"):
+            client._sources(LAUNCHER_SHA)
+        with mock.patch.dict(client.os.environ, {"YACS_LEVEL_EDITOR_CLIENT_SHA": head}), \
+                mock.patch.object(client.committed_git, "_git_bounded", side_effect=[head.encode(), b"c" * 40]), \
+                self.assertRaisesRegex(ValueError, "not a descendant"):
+            client._sources(LAUNCHER_SHA)
+
+
+    def test_managed_launcher_requires_explicit_pin_and_exact_executing_root(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            managed = root / "managed"
+            managed.mkdir()
+            source = root / "runner/source"
+            source.mkdir(parents=True)
+            with mock.patch.object(client, "ROOT", managed), \
+                    mock.patch.object(client.preparation, "SOURCE_ROOT", source), \
+                    mock.patch.dict(client.os.environ, {}, clear=True):
+                with self.assertRaisesRegex(ValueError, "fixed launch-session path"):
+                    client._launcher_root(str(managed), "session")
+                with mock.patch.dict(client.os.environ, {"YACS_LEVEL_EDITOR_CLIENT_SHA": "b" * 40}):
+                    self.assertEqual(managed, client._launcher_root(str(managed), "session"))
+                    with self.assertRaisesRegex(ValueError, "fixed launch-session path"):
+                        client._launcher_root(str(root / "foreign"), "session")
+
+
 if __name__ == "__main__":
     unittest.main()

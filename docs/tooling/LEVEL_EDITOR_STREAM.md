@@ -653,3 +653,20 @@ this extension on 2026-10-11 and retained the existing correction limits. No
 new fill, wider geometry or Landscape edit is authorized by this diagnostic.
 The existing bounded correction remains active; larger steps remain unresolved.
 Global Base_DTM and canonical road remain protected.
+
+
+### Host-only client recovery
+
+An operator may pin `YACS_LEVEL_EDITOR_CLIENT_SHA` to the exact executing client
+HEAD to recover a panel without restarting its Editor. A changed client must be
+a descendant of the session launcher, its executing bytes must match Git, and
+all native/helper modules must remain byte-identical to the launcher commit.
+`TARGET_SHA`, when set, still binds the executing client. The native process,
+creation time, endpoint owner, ready receipt, source inputs and session identity
+retain their existing checks. The original fixed runner launcher path remains
+supported; additional roots are the executing authenticated checkout or the operator-pinned
+`YACS_LEVEL_EDITOR_LAUNCHER_ROOT`. An explicitly pinned original launcher must
+still have its original HEAD and byte-identical native/helper closure. Keep that
+launcher checkout frozen while the upgraded host client runs in a separate
+checkout; this preserves the native script reload baseline. This does not hot-reload
+native bridge code or admit a saved-world/release proof.
