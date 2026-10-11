@@ -36,8 +36,9 @@ ALLOWED_NAMES = (
     "/^YacsRoadMaterialPreview$/",
     "/^YacsRoadMaterialPreview[.][Pp]review$/",
 )
+LEGACY_BASE_CLASS = "/Script/ModelContextProtocolEngine.ModelContextProtocolToolLibrary"
 ABSTRACT_LEGACY_CLASSES = {
-    "/Script/ModelContextProtocolEngine.ModelContextProtocolToolLibrary",
+    LEGACY_BASE_CLASS,
     "/Script/ModelContextProtocolEditor.ModelContextProtocolEditorToolLibrary",
 }
 BRIDGE = None
@@ -294,15 +295,31 @@ def reflected_tool(schema):
 
 def legacy_census(api):
     # The isolated project admits no concrete legacy library. These two base
-    # classes are Abstract in the pinned installed headers; no guessed Python
-    # setter or unreflected DeregisterTools call is needed.
+    # classes are Abstract in the pinned installed headers. Their Python class
+    # aliases need not be exported. UE 5.8 ObjectIterator accepts a native Class;
+    # ClassIterator instead documents a Python type. Enumerate UClass objects
+    # and use native inheritance without materializing their CDOs.
+    class_path = "/Script/CoreUObject.Class"
+    classes = {}
+    for path in (class_path, *sorted(ABSTRACT_LEGACY_CLASSES)):
+        native_class = api.load_class(None, path)
+        actual = None if native_class is None else native_class.get_path_name()
+        require(
+            actual == path,
+            "Required native census class is unavailable or differs; observed="
+            + canonical({"expected": path, "actual": actual}),
+        )
+        classes[path] = native_class
     names = sorted(
-        api.get_default_object(cls).get_class().get_path_name()
-        for cls in api.ClassIterator(api.ModelContextProtocolToolLibrary)
+        cls.get_path_name()
+        for cls in api.ObjectIterator(classes[class_path])
+        if api.MathLibrary.class_is_child_of(cls, classes[LEGACY_BASE_CLASS])
     )
     require(
-        len(names) == len(set(names)) and set(names) <= ABSTRACT_LEGACY_CLASSES,
-        "A concrete legacy MCP library is loaded; preview-only startup refused",
+        len(names) == len(set(names)) and set(names) == ABSTRACT_LEGACY_CLASSES,
+        "Native legacy MCP census must contain exactly the two pinned abstract bases; "
+        "a missing base or concrete legacy library blocks preview-only startup; observed="
+        + canonical({"count": len(names), "first_names": names[:4]}),
     )
     return names
 

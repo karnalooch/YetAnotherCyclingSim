@@ -95,6 +95,29 @@ so the owner's earlier UI warning remains unresolved. The authenticated
 is 66,467 bytes, SHA-256
 `a93e74c1e94afbcae084892f2fae1726f9c416f159ca5aaa4334e7630bd8afaa`.
 
+The [following launch at `60b53b5`](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38127442726)
+passed the actual settings/allowlist check. Startup registered zero stock
+tool adapters, compared with four before the default-INI correction. The next
+step failed before calling the class iterator because `unreal` did not export
+`ModelContextProtocolToolLibrary`. That missing Python attribute does not prove
+the native base or its subclasses are absent. Legacy-library enumeration must
+resolve the pinned native class and retain its complete inheritance check.
+No own MCP listener, private Python-remote readback, preview request or owner
+handoff was reached. The controlled failure produced no engine fatal in the
+retained log; Zen again reported `OK`, with a 2.502-second initialization.
+The [artifact](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38127442726/artifacts/11697204179)
+is 66,818 bytes, SHA-256
+`a16dd0f7d177cec55f0835ffa7efef8f28f9d4bb992103b6995ed44182be49f3`.
+
+The correction resolves the core UClass type and both legacy bases by exact
+native paths. `ObjectIterator` explicitly accepts a native `Class` [E11]; native
+inheritance checks then require exactly the two source-verified abstract bases.
+No missing alias or empty enumeration can grant admission. All 26 bridge tests
+and an independent 15-case registration review passed. The actual native census,
+private Python-remote getter, generated tool schema and requests remain the
+next runtime qualification; the later material/capture API audit found no
+additional concrete mismatch in the documented UE 5.8 Python interfaces.
+
 ## Measured local cost
 
 The authenticated [b9fd native checkpoint](README.md) reused compiled C++
@@ -286,3 +309,4 @@ PASS from preview.
 - [E8 — Epic: Zenserver data location, including local DDC](https://dev.epicgames.com/documentation/unreal-engine/using-zen-storage-server-as-cooked-output-store-for-unreal-engine?lang=en-US)
 - [E9 — CPython: Windows stat/fstat timestamp inconsistency, issue 157671](https://github.com/python/cpython/issues/157671)
 - [E10 — Epic: Configuration file hierarchy and array settings](https://dev.epicgames.com/documentation/en-us/unreal-engine/configuration-files-in-unreal-engine)
+- [E11 — Epic: ObjectIterator native Class parameter, Python 5.8](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/ObjectIterator)

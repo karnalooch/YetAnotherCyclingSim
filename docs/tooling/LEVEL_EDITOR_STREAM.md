@@ -3,12 +3,13 @@
 **Scope:** owner-requested viewport review for #364 / PR #470, inside M3.
 **Status:** installed-source inspection and authenticated b9fd retarget review
 **PASS**; checkpoint cadence delivered at `c62bbc3e7dcdd9ccaad9b2facef477323413e279`
-with passing protected CI. The persistent material-preview candidate has passed
-independent code review and 93 focused local checks. Protected CI passed at
-`8caf82e`; its native startup stopped with a controlled registry-settings
-failure before opening MCP. Live stream and same-process update proof remain
-**UNQUALIFIED**. The [workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
-records the actual launch evidence and the next startup correction.
+with passing protected CI. The joined startup correction passed independent
+code review and 93 focused local checks. At `60b53b5`, protected CI and native
+registry settings passed; the next step stopped on a missing Python class
+alias before opening MCP. The native-class enumeration correction passed all
+26 bridge tests and 15 independent boundary tests. Live stream and same-process
+update proof remain **UNQUALIFIED**. The [workflow review](../experiments/sa-calobra-road-materials-20261011/workflow-review.md)
+records actual launch evidence and the current startup correction.
 
 The owner selected Epic's **Stream Level Editor** on 2026-10-10. The review
 must show the level viewport and preserve the source geometry and saved
@@ -160,6 +161,13 @@ sufficient. Epic's [configuration hierarchy](https://dev.epicgames.com/documenta
 supports array operations in the default file; command-line property overrides
 do not support arrays. Actual setting and catalog readbacks still gate startup
 and each material request. The launch receipt hashes the generated overlays.
+
+Legacy-library checks resolve the native engine/editor base classes by their
+pinned paths and enumerate native UClass objects through
+[ObjectIterator](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/ObjectIterator).
+Native inheritance checks must return exactly the two source-verified abstract
+bases. Missing or redirected classes, an empty census and any additional
+legacy descendant block startup. The same check remains active during preview.
 
 The manual definition separates `operation=open` from
 `operation=material-request`. The latter requires the existing session token and

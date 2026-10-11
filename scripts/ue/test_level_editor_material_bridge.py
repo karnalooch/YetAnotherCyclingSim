@@ -33,6 +33,53 @@ class NativeSettings:
         return self.properties[name]
 
 
+class NativeClass(NativeObject):
+    """Native UClass object, deliberately distinct from a Python type/CDO."""
+
+    def __init__(self, name, parent=None):
+        super().__init__(name)
+        self.parent = parent
+
+
+class NativeClassInventory:
+    def __init__(self):
+        self.meta = NativeClass("/Script/CoreUObject.Class")
+        self.base = NativeClass(bridge.LEGACY_BASE_CLASS)
+        self.editor = NativeClass(
+            next(iter(bridge.ABSTRACT_LEGACY_CLASSES - {bridge.LEGACY_BASE_CLASS})),
+            self.base,
+        )
+        self.classes = [self.meta, self.base, self.editor]
+        self.lookup = {cls.get_path_name(): cls for cls in self.classes}
+        self.loads, self.iterated, self.inheritance = [], [], []
+        # No ModelContextProtocolToolLibrary alias, ClassIterator or CDO getter.
+        self.api = SimpleNamespace(
+            load_class=self.load_class,
+            ObjectIterator=self.objects,
+            MathLibrary=SimpleNamespace(class_is_child_of=self.is_child),
+        )
+
+    def load_class(self, outer, path):
+        assert outer is None
+        self.loads.append(path)
+        return self.lookup.get(path)
+
+    def objects(self, native_class):
+        assert native_class is self.meta
+        self.iterated.append(native_class)
+        return iter(self.classes)
+
+    def is_child(self, candidate, parent):
+        assert isinstance(candidate, NativeClass)
+        assert parent is self.base
+        self.inheritance.append((candidate, parent))
+        while candidate is not None:
+            if candidate is parent:
+                return True
+            candidate = candidate.parent
+        return False
+
+
 class Material(NativeObject):
     def __init__(self, name, parent=None):
         super().__init__(name)
@@ -660,19 +707,59 @@ class RegistrationBoundaryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "not declared Abstract"):
                 bridge.require_abstract_base(changed, "UExample")
 
-    def test_concrete_legacy_library_is_refused(self):
-        names = list(bridge.ABSTRACT_LEGACY_CLASSES)
-        api = SimpleNamespace(
-            ClassIterator=lambda _: names,
-            ModelContextProtocolToolLibrary=object,
-            get_default_object=lambda name: SimpleNamespace(
-                get_class=lambda: NativeObject(name)
-            ),
+    def test_legacy_census_uses_native_classes_without_python_alias_or_cdo(self):
+        inventory = NativeClassInventory()
+        inventory.classes.append(NativeClass("/Script/Unrelated.OtherClass"))
+        self.assertEqual(
+            bridge.legacy_census(inventory.api), sorted(bridge.ABSTRACT_LEGACY_CLASSES)
         )
-        self.assertEqual(bridge.legacy_census(api), sorted(names))
-        names.append("/Script/ForeignPlugin.UnboundedTools")
-        with self.assertRaisesRegex(ValueError, "concrete legacy"):
-            bridge.legacy_census(api)
+        self.assertEqual(
+            inventory.loads,
+            ["/Script/CoreUObject.Class", *sorted(bridge.ABSTRACT_LEGACY_CLASSES)],
+        )
+        self.assertEqual(inventory.iterated, [inventory.meta])
+        self.assertEqual(
+            inventory.inheritance, [(cls, inventory.base) for cls in inventory.classes]
+        )
+
+    def test_census_refuses_every_missing_or_redirected_native_class_before_iteration(
+        self,
+    ):
+        for path in (
+            "/Script/CoreUObject.Class",
+            *sorted(bridge.ABSTRACT_LEGACY_CLASSES),
+        ):
+            for replacement in (None, NativeClass("/Script/Foreign.WrongClass")):
+                with self.subTest(path=path, replacement=replacement):
+                    inventory = NativeClassInventory()
+                    inventory.lookup[path] = replacement
+                    with self.assertRaisesRegex(ValueError, "unavailable or differs"):
+                        bridge.legacy_census(inventory.api)
+                    self.assertEqual(inventory.iterated, [])
+
+    def test_census_refuses_empty_missing_base_or_duplicate_native_inventory(self):
+        for selection in ([], [0], [0, 1], [0, 2], [0, 1, 2, 2]):
+            with self.subTest(selection=selection):
+                inventory = NativeClassInventory()
+                inventory.classes = [inventory.classes[index] for index in selection]
+                with self.assertRaisesRegex(ValueError, "exactly the two pinned"):
+                    bridge.legacy_census(inventory.api)
+
+    def test_concrete_legacy_library_from_either_base_is_refused_on_next_census(self):
+        for base in ("base", "editor"):
+            with self.subTest(base=base):
+                inventory = NativeClassInventory()
+                bridge.legacy_census(inventory.api)
+                inventory.classes.append(
+                    NativeClass(
+                        "/Script/ForeignPlugin.UnboundedTools", getattr(inventory, base)
+                    )
+                )
+                with self.assertRaisesRegex(ValueError, "concrete legacy") as refused:
+                    bridge.legacy_census(inventory.api)
+                self.assertIn(
+                    "/Script/ForeignPlugin.UnboundedTools", str(refused.exception)
+                )
 
     def test_only_one_required_string_preview_tool_is_admitted(self):
         tool = {
