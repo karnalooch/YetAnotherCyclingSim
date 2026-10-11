@@ -55,6 +55,7 @@ SOURCE_MODULES = {
     "scripts/ue/prepare_level_editor_review.py": preparation,
     "scripts/ue/level_editor_material_bridge.py": bridge,
     "scripts/ue/level_editor_camera_presets.py": bridge.camera_presets,
+    "scripts/ue/level_editor_surface_preview.py": bridge.surface_preview,
 }
 CLIENT_SOURCE = "scripts/ue/level_editor_material_client.py"
 
@@ -232,9 +233,13 @@ def _values(value):
 
 def _observation(value, initial=None):
     _values(value)
-    require(set(value) == OBSERVATION_KEYS and type(value.get("transient_mid")) is bool
+    require(set(value) == OBSERVATION_KEYS | ({"surface"} if "surface" in value else set()) and type(value.get("transient_mid")) is bool
             and type(value.get("binding_count")) is int and value["binding_count"] == 370,
             "Native material observation contract differs")
+    if "surface" in value:
+        bridge.surface_preview.validate_observation(value["surface"], initial.get("surface") if initial else None)
+    if initial is not None:
+        require(("surface" in value) == ("surface" in initial), "Surface observation presence changed")
     rows = value["bindings"]
     require(type(rows) is list and len(rows) == 370 and digest(canonical(rows)) == value["binding_sha256"],
             "Native binding census or digest differs")
@@ -315,6 +320,7 @@ def _load_context(receipt_path):
     require(ready.get("status") == "MATERIAL_BRIDGE_READY" and type(ready.get("sequence")) is int
             and ready["sequence"] == 0 and ready.get("endpoint") == ENDPOINT
             and ready.get("bridge_source_sha256") == sources["scripts/ue/level_editor_material_bridge.py"]
+            and ready.get("surface_source_sha256") == sources["scripts/ue/level_editor_surface_preview.py"]
             and ready.get("camera_source_sha256") == sources["scripts/ue/level_editor_camera_presets.py"],
             "Native material bridge is not ready at the exact launcher source")
     _schema(ready)
@@ -391,7 +397,7 @@ def _close_values(first, second):
 
 def _receipt(value, context, request_id):
     _identity(value, context)
-    require(value.get("request_id") == request_id and value.get("action") in {"set", "restore", "inspect", "camera"}
+    require(value.get("request_id") == request_id and value.get("action") in {"set", "restore", "inspect", "camera", "surface"}
             and type(value.get("sequence")) is int and 0 <= value["sequence"] <= HISTORY_LIMIT
             and value.get("receipt_relative_path") == bridge.REQUEST_ROOT + "/" + request_id + "/receipt.json",
             "Native request identity, action, sequence or receipt path differs")
@@ -399,10 +405,14 @@ def _receipt(value, context, request_id):
     _observation(value.get("after"), context["initial"])
     action = value["action"]
     if action == "set":
+        require(value["before"].get("surface") == value["after"].get("surface"), "Paint action changed surface state")
         require(value["after"]["transient_mid"] is True, "Set did not read back a bound transient MID")
         if value["before"]["transient_mid"]:
             require(value["after"]["bound_material"] == value["before"]["bound_material"],
                     "Set replaced the already bound preview MID")
+    elif action == "surface":
+        require("surface" in value["after"], "Surface native readback missing")
+        require({k:v for k,v in value["before"].items() if k != "surface"} == {k:v for k,v in value["after"].items() if k != "surface"}, "Surface action changed paint")
     elif action == "restore":
         require(value["after"] == context["initial"], "Restore did not read back the original bindings and values")
     else:
@@ -422,7 +432,7 @@ def _completed(value, context, request_id):
             and type(value.get("dirty_before")) is dict and value.get("dirty_after") == value["dirty_before"],
             "Native request is incomplete, blocked or changed saved/dirty state")
     captures = value.get("captures")
-    expected_count = 4 if value["action"] == "set" else 0
+    expected_count = 4 if value["action"] in ("set", "surface") else 0
     require(type(captures) is list and len(captures) == expected_count,
             "Native capture inventory differs from the fixed request")
     for index, row in enumerate(captures):
@@ -473,8 +483,8 @@ def _history(context):
 def _request(raw, context, history):
     value = _object(raw, bridge.REQUEST_LIMIT)
     action = value.get("action")
-    require(action in {"set", "restore", "inspect", "camera"}, "Unknown material preview action")
-    require(set(value) == COMMON_REQUEST | ({"paint_roughness", "paint_color"} if action == "set" else {"preset"} if action == "camera" else set()),
+    require(action in {"set", "restore", "inspect", "camera", "surface"}, "Unknown material preview action")
+    require(set(value) == COMMON_REQUEST | ({"paint_roughness", "paint_color"} if action == "set" else {"preset"} if action in ("camera", "surface") else set()),
             "Unknown or missing material request field")
     require(type(value["schema_version"]) is int and value["schema_version"] == 1
             and value["session_id"] == context["identity"]["session_id"], "Material request belongs to another schema/session")
@@ -489,6 +499,8 @@ def _request(raw, context, history):
             "The last bounded request slot is reserved for restoring the original material")
     if action == "set":
         _values(value)
+    if action == "surface":
+        require(type(value["preset"]) is str and value["preset"] in bridge.surface_preview.PRESETS, "Unknown surface preset")
     if action == "camera":
         bridge.camera_presets.preset(value["preset"])
     return value
@@ -631,11 +643,13 @@ def run(session_receipt, request_path, output):
                 and value["before"] == history["current"], "Native call did not observe the preceding material state")
         if request["action"] == "set":
             require(_close_values(value["after"], request), "Native effective paint values differ from the requested values")
+        if request["action"] == "surface":
+            require(value["after"]["surface"]["preset"] == request["preset"], "Surface preset readback differs")
         if request["action"] == "camera":
             require(value["camera_preset"]["preset"] == request["preset"],
                     "Native camera receipt belongs to another requested preset")
         require((value.get("status") == "ACCEPTED" and value.get("capture_pending") is True
-                 and request["action"] == "set")
+                 and request["action"] in ("set", "surface"))
                 or (value.get("status") == "COMPLETED" and value.get("capture_pending") is False),
                 "Native call returned an invalid completion state")
         _write(output, "tool-result.json", canonical(value) + b"\n")

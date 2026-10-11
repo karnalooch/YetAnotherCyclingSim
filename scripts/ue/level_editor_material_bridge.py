@@ -20,8 +20,10 @@ from pathlib import Path
 
 if __package__:
     from . import level_editor_camera_presets as camera_presets
+    from . import level_editor_surface_preview as surface_preview
 else:
     import level_editor_camera_presets as camera_presets
+    import level_editor_surface_preview as surface_preview
 
 RUNTIME_SHA = "b9fddea3f6023239da98bec7a5107ed1124cf52e"
 MAP_PACKAGE = "/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview"
@@ -124,12 +126,12 @@ def validate_request(raw, session_id, sequence, used):
         "expected_sequence",
     }
     action = request.get("action")
-    require(action in ("set", "restore", "inspect", "camera"), "Unknown preview action")
+    require(action in ("set", "restore", "inspect", "camera", "surface"), "Unknown preview action")
     expected = common | (
         {"paint_roughness", "paint_color"}
         if action == "set"
         else {"preset"}
-        if action == "camera"
+        if action in ("camera", "surface")
         else set()
     )
     require(set(request) == expected, "Unknown or missing preview field")
@@ -153,6 +155,8 @@ def validate_request(raw, session_id, sequence, used):
         "Request identity was already used; uncertain calls are never retried",
     )
     require(len(used) < 256, "The bounded preview session request limit was reached")
+    if action == "surface":
+        require(type(request["preset"]) is str and request["preset"] in surface_preview.PRESETS, "Unknown surface preset")
     if action == "camera":
         camera_presets.preset(request["preset"])
     if action == "set":
@@ -1090,6 +1094,7 @@ class MaterialPreview:
             "Retained paint defaults differ",
         )
         self.initial_values = dict(self.expected_values)
+        self.surface = surface_preview.SurfacePreview(api, self.world, manifest)
         self.original_bindings = self.observe()
 
     def assert_context(self):
@@ -1266,6 +1271,7 @@ class MaterialPreview:
             "bound_material": bound.get_path_name(),
             "parent_material": parent.get_path_name(),
             "transient_mid": self.mid is not None,
+            **({"surface": self.surface.observe()} if hasattr(self, "surface") else {}),
         }
 
     def restore(self):
@@ -1283,6 +1289,8 @@ class MaterialPreview:
                         str(error) + "; bounded restore cleanup: " + "; ".join(failures)
                     ) from error
                 raise
+        if hasattr(self, "surface"):
+            self.surface.restore()
         restored = self.observe()
         require(
             restored == self.original_bindings,
@@ -1370,7 +1378,7 @@ class MaterialPreview:
         require(self.pending is None, "Another owned preview capture is still pending")
         self.assert_context()
         before = self.observe()
-        if request["action"] == "set":
+        if request["action"] in ("set", "surface"):
             require(
                 self.api.AutomationLibrary.get_editor_active_viewport_view_mode()
                 == self.api.ViewModeIndex.VMI_LIT,
@@ -1405,6 +1413,9 @@ class MaterialPreview:
         try:
             if request["action"] == "set":
                 result["after"] = self.set_values(request)
+            elif request["action"] == "surface":
+                self.surface.apply(request["preset"])
+                result["after"] = self.observe()
             elif request["action"] == "restore":
                 result["after"] = self.restore()
             elif request["action"] == "camera":
@@ -1426,7 +1437,7 @@ class MaterialPreview:
             require(
                 dirty_state(self.api) == dirty, "Preview changed dirty package state"
             )
-            if request["action"] == "set":
+            if request["action"] in ("set", "surface"):
                 result.update(
                     {
                         "status": "ACCEPTED",
@@ -1826,6 +1837,7 @@ def install(api, root, preparation, session_id, launcher_sha):
         "source_world_saved": False,
         "saved_inputs_sha256": manager.saved_digest,
         "source_inputs_sha256": manager.last_source_digest,
+        "surface_source_sha256": file_identity(Path(surface_preview.__file__), 2 * 1024 * 1024)["sha256"],
         "camera_source_sha256": file_identity(
             Path(camera_presets.__file__), 2 * 1024 * 1024
         )["sha256"],

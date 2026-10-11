@@ -5,6 +5,15 @@
 **Retained integration:** `db-lyon/ue-mcp` at reviewed `v1.3.9`; unchanged until proven cutover
 **Engine baseline:** project association 5.8; home engine inspected 2026-10-05: 5.8.2, changelist 56702186. Reverify exact project/runner versions at kickoff.
 
+## Live surface candidate — #473 / #364
+
+Owner authorization on 2026-10-11 adds two fixed transient asphalt/shoulder
+presentation presets and permits one restart to load the extension. The
+[local stream contract](tooling/LEVEL_EDITOR_STREAM.md#surface-preview-extension--local-candidate)
+owns this candidate; it does not expand the admitted #384 inspector or grant
+arbitrary authoring. Native proof remains required. Raised contact geometry is
+separately owned by #459.
+
 ## Official Unreal MCP adoption
 
 ### Decision and status

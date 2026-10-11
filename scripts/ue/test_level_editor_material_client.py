@@ -112,6 +112,7 @@ class Fixture:
                       "owner_visual_status": "PENDING_FINAL_M3", "saved_inputs_sha256": self.saved_digest,
                       "source_inputs_sha256": self.source_digest,
                       "bridge_source_sha256": self.sources["scripts/ue/level_editor_material_bridge.py"],
+                      "surface_source_sha256": self.sources["scripts/ue/level_editor_surface_preview.py"],
                       "camera_source_sha256": self.sources["scripts/ue/level_editor_camera_presets.py"]}
         document(self.root / client.bridge.READY_RELATIVE, self.ready)
         self.host = {"schema_version": 1, "status": "MATERIAL_BRIDGE_QUALIFICATION_PENDING",

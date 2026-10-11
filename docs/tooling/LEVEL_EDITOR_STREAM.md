@@ -433,3 +433,62 @@ pass, record **NOT RUN** or the actual blocker and do not publish a working URL.
 
 M3 owner visual acceptance remains `PENDING_FINAL_M3`; performance remains
 `DEFERRED_AFTER_M3`, `performance_pass: false`.
+
+## Local live controls — M3 #473
+
+The local panel candidate uses the existing material client against an already
+authenticated, handed-off editor. It starts no editor, performs no build, and
+does not use browser automation or Computer Use. Start it from a checkout whose
+HEAD and client/helper bytes still match the session launcher:
+
+```powershell
+python -m scripts.ue.level_editor_live_panel --session-token TOKEN
+```
+
+Open `http://127.0.0.1:18785/`. The panel embeds the existing viewport stream
+at `http://127.0.0.1/`. The owner navigates manually; camera preset buttons are
+omitted at the owner's request. Three fixed edge-marking material presets and
+original-material restore use the existing exact-process,
+sequence, immutable-source and saved-package checks. Successful material changes
+also return the verified native PNG. Camera and restore results clear the old
+PNG so it cannot be mistaken for a new capture. HTTP availability and native PNGs
+alone do not establish received browser video frames or owner visual acceptance.
+
+Script callers can POST JSON to `/api/preview` with Content-Type
+`application/json` and Origin `http://127.0.0.1:18785`. The complete body is
+`{"action":"edge","preset":"warm"}` (or `cool` or diagnostic `magenta`),
+`{"action":"camera","preset":"road"}` (or another listed camera preset), or
+`{"action":"restore","preset":"original"}`. `/api/status` checks the
+retained session and `/api/frame.png` returns the latest material capture with
+caching disabled. The listener is loopback-only and rejects foreign Host/Origin,
+unknown actions, arbitrary paths/coordinates, extra fields and oversized bodies.
+Requests are serialized; native failures are never retried automatically because
+a failed confirmation can follow an applied edit. Original receipts remain under
+`Saved/RuntimeProof/LevelEditorLivePanel/TOKEN` in the panel checkout.
+
+Keep the client checkout HEAD pinned while this session is open. This initial
+panel does not add rock spawning, arbitrary texture replacement or persistent
+saves. The bounded surface candidate below adds named asphalt/shoulder previews. Those #473 capabilities still need their existing
+#368/#364 source, placement and native gates; #473 is not complete merely because
+the current material/camera panel works. No restart-free loading of new native
+bridge capabilities is claimed.
+
+### Surface preview extension — local candidate
+
+Owner authorization on 2026-10-11 covers one scripted editor restart to load
+bounded asphalt/shoulder previews. The already running paint-only session cannot
+load this module remotely. Subsequent named surface changes use the same native
+process and official MCP tool; no arbitrary Python or paths are exposed.
+
+The `surface` action accepts only `worn` and `strong`. It uses retained source
+textures in transient material graphs, preserves original bindings, and returns
+native parameter/binding readback plus the existing verified capture. Global
+`restore` restores asphalt, selected shoulder slots and paint together. The
+new module is authenticated against the exact launcher commit and its native
+ready receipt. Package/source byte conservation and dirty-state checks remain.
+
+These controls are material presentation, not a repair for raised support walls
+or road/contact geometry (#459). They do not save assets, move actors, change
+terrain/physics, or admit final visual/performance acceptance. Native shader and
+received-frame verification for this candidate must be recorded before claiming
+live delivery. Source-only tests do not satisfy that proof.
