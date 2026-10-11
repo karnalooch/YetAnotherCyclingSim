@@ -30,6 +30,19 @@ Independent Proof QA closed the partial-mutation recovery and separate-client
 checkout findings. These are code/contract results, not native MCP or received
 stream evidence.
 
+The first native launch at `c51801d` passed exact-SHA protected CI and the
+Blender reference, then [stopped during snapshot preparation](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38123952484),
+before any Editor process started. The path/open-handle metadata comparison
+reported `source was replaced before opening`. CPython documents different
+Windows `st_ctime_ns` meanings for `stat` and `fstat` [E9]; the first failure
+log does not record the tuple fields and does not establish an actual file
+replacement. The preparer now compares device, inode, size and modification
+time across those APIs on Windows, while retaining complete before/after
+checks within each API, pinned byte hashes and independent-copy checks.
+Its receipt records the Python version and observed cross-API timestamp
+differences so the next native launch can establish whether that case occurs
+on this host. Live material and streaming qualification remain pending.
+
 ## Measured local cost
 
 The authenticated [b9fd native checkpoint](README.md) reused compiled C++
@@ -219,3 +232,4 @@ PASS from preview.
 - [E6 — Epic: Live Coding](https://dev.epicgames.com/documentation/en-us/unreal-engine/using-live-coding-to-recompile-unreal-engine-applications-at-runtime)
 - [E7 — Epic: Stream Tuning Guide](https://dev.epicgames.com/documentation/unreal-engine/stream-tuning-guide)
 - [E8 — Epic: Zenserver data location, including local DDC](https://dev.epicgames.com/documentation/unreal-engine/using-zen-storage-server-as-cooked-output-store-for-unreal-engine?lang=en-US)
+- [E9 — CPython: Windows stat/fstat timestamp inconsistency, issue 157671](https://github.com/python/cpython/issues/157671)

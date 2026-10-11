@@ -39,6 +39,11 @@ def tree_bytes(root):
             for path in root.rglob("*") if path.is_file() and not path.is_symlink()}
 
 
+def stat_view(value, **overrides):
+    fields = ("st_mode", "st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
+    return SimpleNamespace(**({name: getattr(value, name) for name in fields} | overrides))
+
+
 class SnapshotFixture:
     """Retain the actual receipt shape while replacing large host inputs."""
 
@@ -214,6 +219,28 @@ class LevelEditorSnapshotTests(unittest.TestCase):
                 with self.subTest(relative=relative):
                     self.assertEqual(identity((root / relative).read_bytes()), {
                         "sha256": sha, "size_bytes": size})
+
+    def test_windows_path_creation_time_and_handle_change_time_allow_verified_copy(self):
+        source_before, project_before = tree_bytes(self.fixture.source), tree_bytes(self.fixture.project)
+        original_fstat = preparation.os.fstat
+
+        def handle_change_time(fd):
+            value = original_fstat(fd)
+            return stat_view(value, st_ctime_ns=value.st_ctime_ns + 1_000_000_000)
+
+        with mock.patch.object(preparation, "_WINDOWS", True), mock.patch.object(
+                preparation.os, "fstat", side_effect=handle_change_time):
+            receipt = self.fixture.prepare()
+        self.assertEqual(receipt["status"], "SYNTHETIC_SNAPSHOT_PREPARED")
+        self.assertEqual(receipt["copy_metadata_checks"]["path_handle_ctime_difference_count"],
+                         receipt["copied_file_count"])
+        self.assertTrue(receipt["copy_metadata_checks"]["windows"])
+        self.assert_source_unchanged(source_before, project_before)
+        for row in receipt["snapshot_files"]:
+            source, target = Path(row["source_path"]), Path(row["snapshot_path"])
+            self.assertEqual(target.read_bytes(), source.read_bytes())
+            self.assertFalse(source.samefile(target))
+            self.assertEqual(target.stat().st_nlink, 1)
 
     def test_native_and_checked_evidence_are_authenticated_before_any_parse(self):
         for root in (self.fixture.source / preparation.EVIDENCE_RELATIVE, self.fixture.checked):
@@ -419,6 +446,96 @@ class LevelEditorSnapshotTests(unittest.TestCase):
             self.fixture.prepare(synthetic=False)
         self.assertEqual(tree_bytes(self.fixture.source), before)
         self.assertFalse(self.fixture.destination.exists())
+
+
+class CopyMetadataTests(unittest.TestCase):
+    """Exercise real copy I/O while varying the two OS metadata views."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.base = Path(temporary.name).resolve()
+        self.source = write(self.base, "source.uasset", b"SYNTHETIC pinned bytes\n")
+        self.row = {
+            "source": self.source, "source_stamp": preparation._stamp(self.source),
+            "identity": identity(self.source.read_bytes()), "path": "Content/copy.uasset",
+            "roles": ["source_dependency"],
+        }
+
+    def test_posix_cross_api_ctime_mismatch_still_rejects_copy(self):
+        value = stat_view(self.source.stat(), st_ctime_ns=self.row["source_stamp"][-1] + 1)
+        with mock.patch.object(preparation, "_WINDOWS", False), mock.patch.object(
+                preparation.os, "fstat", return_value=value):
+            with self.assertRaisesRegex(ValueError, "source was replaced before opening"):
+                preparation._copy_verified(self.row, self.base / "destination")
+
+    def test_windows_cross_api_device_inode_size_and_mtime_must_still_match(self):
+        original = self.source.stat()
+        for field in ("st_dev", "st_ino", "st_size", "st_mtime_ns"):
+            with self.subTest(field=field):
+                value = stat_view(original, **{
+                    field: getattr(original, field) + 1,
+                    "st_ctime_ns": original.st_ctime_ns + 1_000_000_000,
+                })
+                with mock.patch.object(preparation, "_WINDOWS", True), mock.patch.object(
+                        preparation.os, "fstat", return_value=value):
+                    with self.assertRaisesRegex(ValueError, "source was replaced before opening"):
+                        preparation._copy_verified(self.row, self.base / field)
+                self.assertEqual((self.base / field / self.row["path"]).read_bytes(), b"")
+
+    def test_all_handle_fields_including_ctime_must_remain_unchanged_during_copy(self):
+        original = self.source.stat()
+        before = stat_view(original, st_ctime_ns=original.st_ctime_ns + 1_000_000_000)
+        for field in ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns"):
+            with self.subTest(field=field):
+                after = stat_view(before, **{field: getattr(before, field) + 1})
+                with mock.patch.object(preparation, "_WINDOWS", True), mock.patch.object(
+                        preparation.os, "fstat", side_effect=[before, after]):
+                    with self.assertRaisesRegex(ValueError, "opened source changed during copy"):
+                        preparation._copy_verified(self.row, self.base / field)
+                self.assertEqual((self.base / field / self.row["path"]).read_bytes(),
+                                 self.source.read_bytes())
+
+    def test_windows_path_ctime_must_still_match_after_copy(self):
+        original_stamp = preparation._stamp
+        calls = 0
+
+        def changed_path_view(path):
+            nonlocal calls
+            value = original_stamp(path)
+            if path == self.source:
+                calls += 1
+                if calls > 1:
+                    return (*value[:-1], value[-1] + 1)
+            return value
+
+        with mock.patch.object(preparation, "_WINDOWS", True), mock.patch.object(
+                preparation, "_stamp", side_effect=changed_path_view):
+            with self.assertRaisesRegex(ValueError, "source changed during copy"):
+                preparation._copy_verified(self.row, self.base / "destination")
+
+    def test_equal_bytes_and_mtime_do_not_hide_replacement_before_open(self):
+        replacement = write(self.base, "replacement.uasset", self.source.read_bytes())
+        original_stat = self.source.stat()
+        preparation.os.utime(replacement, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
+        self.assertNotEqual(replacement.stat().st_ino, original_stat.st_ino)
+        original_open = Path.open
+        replaced = False
+
+        def replace_before_open(path, *args, **kwargs):
+            nonlocal replaced
+            if path == self.source and not replaced:
+                replacement.replace(self.source)
+                replaced = True
+            return original_open(path, *args, **kwargs)
+
+        with mock.patch.object(preparation, "_WINDOWS", True), mock.patch.object(
+                Path, "open", replace_before_open):
+            with self.assertRaisesRegex(ValueError, "source was replaced before opening"):
+                preparation._copy_verified(self.row, self.base / "destination")
+        self.assertTrue(replaced)
+        self.assertEqual(identity(self.source.read_bytes()), self.row["identity"])
+        self.assertEqual(self.source.stat().st_mtime_ns, original_stat.st_mtime_ns)
 
 
 class RetainedLevelEditorCheckpointTests(unittest.TestCase):

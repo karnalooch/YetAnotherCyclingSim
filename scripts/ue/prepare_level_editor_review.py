@@ -17,6 +17,7 @@ from pathlib import Path
 import re
 import shutil
 import stat
+import sys
 import time
 
 from scripts import committed_git_blobs as committed_git
@@ -46,6 +47,7 @@ TOTAL_LIMIT = 2 * 1024 * 1024 * 1024
 FILE_COUNT_LIMIT = 384
 MIN_FREE_BYTES = 5 * 1024 * 1024 * 1024
 CHUNK_BYTES = 4 * 1024 * 1024
+_WINDOWS = os.name == "nt"
 SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 SHA40 = re.compile(r"[0-9a-f]{40}\Z")
 SESSION_NAME = re.compile(RUNTIME_SHA[:12] + r"-[A-Za-z0-9][A-Za-z0-9_-]{0,47}\Z")
@@ -106,12 +108,15 @@ def _path(root, relative):
     return _safe_path(root, relative)
 
 
-def _stamp(path):
-    _safe_path(path.parent, path.name)
-    value = path.stat()
+def _stat_stamp(value):
     _require(stat.S_ISREG(value.st_mode), "snapshot input is not a regular file")
     return (value.st_dev, value.st_ino, value.st_size,
             value.st_mtime_ns, value.st_ctime_ns)
+
+
+def _stamp(path):
+    _safe_path(path.parent, path.name)
+    return _stat_stamp(path.stat())
 
 
 def _file_identity(path, limit=FILE_LIMIT):
@@ -307,10 +312,15 @@ def _copy_verified(row, destination):
     _path(destination, row["path"])
     digest, count = hashlib.sha256(), 0
     with source.open("rb") as reader, target.open("xb") as writer:
-        opened = os.fstat(reader.fileno())
-        _require((opened.st_dev, opened.st_ino, opened.st_size,
-                  opened.st_mtime_ns, opened.st_ctime_ns) == row["source_stamp"],
+        opened = _stat_stamp(os.fstat(reader.fileno()))
+        # CPython on Windows can expose creation time through stat().st_ctime
+        # but ChangeTime through fstat().st_ctime (cpython issue #157671).
+        # Only this cross-API comparison omits ctime on Windows. Both complete
+        # views must remain unchanged within their own API before/after copying.
+        fields = 4 if _WINDOWS else 5
+        _require(opened[:fields] == row["source_stamp"][:fields],
                  "source was replaced before opening")
+        row["path_handle_ctime_equal"] = opened[-1] == row["source_stamp"][-1]
         while block := reader.read(min(CHUNK_BYTES, expected["size_bytes"] + 1 - count)):
             count += len(block)
             _require(count <= expected["size_bytes"], "source exceeded its pinned copy bound")
@@ -318,6 +328,8 @@ def _copy_verified(row, destination):
             writer.write(block)
         writer.flush()
         os.fsync(writer.fileno())
+        _require(_stat_stamp(os.fstat(reader.fileno())) == opened,
+                 "opened source changed during copy")
     _require({"sha256": digest.hexdigest(), "size_bytes": count} == expected,
              "source bytes differ from pinned copy identity: " + row["path"])
     _require(_stamp(source) == row["source_stamp"], "source changed during copy")
@@ -401,6 +413,11 @@ def prepare(destination, launcher_sha, *, source_root=SOURCE_ROOT, project_root=
         "snapshot_files": copied, "copied_file_count": len(copied), "copied_bytes": total,
         "identical_duplicate_rows_merged": duplicate_count,
         "independent_file_copies": True, "source_files_unchanged": True,
+        "copy_metadata_checks": {
+            "python_version": sys.version.split()[0], "windows": _WINDOWS,
+            "path_handle_ctime_difference_count": sum(
+                not row["path_handle_ctime_equal"] for row in rows),
+        },
         "unreal_launched": False, "stream_status": "NOT_STARTED", "stream_verified": False,
         "owner_visual_status": "PENDING_FINAL_M3", "performance_status": "DEFERRED_AFTER_M3",
         "performance_pass": False, "free_disk_reserve_bytes": MIN_FREE_BYTES,
