@@ -38,7 +38,10 @@ CHANNELS = {
 WORLD_FUNCTION_ROOT = "/Engine/Functions/Engine_MaterialFunctions01/Texturing/"
 LIB = unreal.MaterialEditingLibrary
 ROCK_RECIPE = "ROCK_APPEARANCE_V1"
-ROCK_PREFIX = "PCG365_ROCK_V1:"
+ROCK_RECIPES = {
+    "ROCK_APPEARANCE_V1": ("PCG365_ROCK_V1:", (0.82, 0.20, 0.12, 0.10, 1.35)),
+    "ROCK_APPEARANCE_V2": ("PCG365_ROCK_V2:", (0.64, 0.38, 0.22, 0.18, 0.85)),
+}
 
 
 def rock_appearance_mode():
@@ -48,20 +51,21 @@ def rock_appearance_mode():
         if path.exists()
         else None
     )
-    require(value in (None, ROCK_RECIPE), "Unknown rock appearance recipe")
+    require(
+        value is None or (type(value) is str and value in ROCK_RECIPES),
+        "Unknown rock appearance recipe",
+    )
     return value
 
 
-def rock_spec():
+def rock_spec(mode=ROCK_RECIPE):
     """Fixed rock-only response; source textures retain their physical 4 m tile."""
     spec = {}
-    for key, value in {
-        "Gain": 0.82,
-        "Fracture": 0.20,
-        "Pore": 0.12,
-        "Mineral": 0.10,
-        "NormalStrength": 1.35,
-    }.items():
+    require(mode in ROCK_RECIPES, "Unknown rock appearance recipe")
+    for key, value in zip(
+        ("Gain", "Fracture", "Pore", "Mineral", "NormalStrength"),
+        ROCK_RECIPES[mode][1],
+    ):
         spec[key] = (
             "MaterialExpressionScalarParameter",
             {"parameter_name": "Rock" + key, "default_value": value},
@@ -173,11 +177,14 @@ def rock_sources(master):
 
 def apply_rock_appearance(assets):
     master = unreal.load_asset(assets["master"])
+    mode = rock_appearance_mode()
+    require(mode in ROCK_RECIPES, "Explicit rock appearance opt-in required")
+    prefix = ROCK_RECIPES[mode][0]
     nodes = rock_sources(master)
-    for key, (class_name, properties) in rock_spec().items():
+    for key, (class_name, properties) in rock_spec(mode).items():
         node = LIB.create_material_expression(master, getattr(unreal, class_name))
         require(node is not None, "Rock material node creation failed")
-        node.set_editor_property("desc", ROCK_PREFIX + key)
+        node.set_editor_property("desc", prefix + key)
         for field, value in properties.items():
             node.set_editor_property(field, value)
         nodes[key] = node
@@ -202,19 +209,26 @@ def apply_rock_appearance(assets):
 
 def rock_readback(master, instance):
     tagged = {}
+    mode = rock_appearance_mode()
+    prefix = ROCK_RECIPES[mode][0] if mode is not None else None
     for node in LIB.get_material_expressions(master):
         description = str(node.get_editor_property("desc"))
-        if description.startswith(ROCK_PREFIX):
-            key = description.removeprefix(ROCK_PREFIX)
+        if description.startswith("PCG365_ROCK_"):
+            require(
+                prefix is not None and description.startswith(prefix),
+                "Unexpected rock material recipe prefix",
+            )
+            key = description.removeprefix(prefix)
             require(key not in tagged, "Duplicate rock material node")
             tagged[key] = node
-    mode = rock_appearance_mode()
     if mode is None:
         require(not tagged, "Unexpected opt-in rock graph")
         return {"recipe": "LEGACY_BASELINE", "physical_tile_cm": 400.0}
-    require(set(tagged) == set(rock_spec()), "Rock material graph inventory differs")
+    require(
+        set(tagged) == set(rock_spec(mode)), "Rock material graph inventory differs"
+    )
     values = {}
-    for key, (class_name, properties) in rock_spec().items():
+    for key, (class_name, properties) in rock_spec(mode).items():
         node = tagged[key]
         require(
             isinstance(node, getattr(unreal, class_name)),
@@ -631,7 +645,7 @@ def prepare_binding(variant_directory, code_sha):
     instance, imported = import_variant(
         Path(variant_directory), DESTINATION + "/MaterialForge", False
     )
-    if rock_appearance_mode() == ROCK_RECIPE:
+    if rock_appearance_mode() is not None:
         apply_rock_appearance(imported["assets"])
     mesh = unreal.EditorAssetLibrary.duplicate_asset(SOURCE_MESH, DERIVED_MESH)
     require(

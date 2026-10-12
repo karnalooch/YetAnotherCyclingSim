@@ -81,6 +81,13 @@ class RockCapture:
                     encoding="utf-8"
                 )
             )
+            self.render_transient_movable = request.get(
+                "render_transient_movable", False
+            )
+            require(
+                type(self.render_transient_movable) is bool,
+                "render_transient_movable must be boolean",
+            )
             cap_review_only = request.get("render_source_caps_only") is True
             self.review_views = request.get("review_views", 2)
             require(
@@ -202,6 +209,16 @@ class RockCapture:
         require(self.actor is not None, "Transient rock actor creation failed")
         self.actor.set_actor_scale3d(unreal.Vector(1, 1, 1))
         component = self.actor.static_mesh_component
+        mobility_before = capture.shadow_readback(component)
+        if self.render_transient_movable:
+            # SceneComponent.h:1295 BlueprintCallable SetMobility; isolated actor only.
+            component.set_mobility(unreal.ComponentMobility.MOVABLE)
+            require(
+                component.get_editor_property("mobility")
+                == unreal.ComponentMobility.MOVABLE,
+                "Transient rock mobility readback differs",
+            )
+        mobility_after = capture.shadow_readback(component)
         require(
             component.set_static_mesh(mesh), "Rock component mesh assignment failed"
         )
@@ -238,6 +255,9 @@ class RockCapture:
             "package": mesh_record["package"],
             "source": mesh_record["source"],
             "selection": label,
+            "render_transient_movable": self.render_transient_movable,
+            "shadow_readback_before": mobility_before,
+            "shadow_readback_after": mobility_after,
             "candidate_id": case["candidate_id"],
             "world_xy_cm": case["world_xy_cm"],
             "location_cm": position,

@@ -19,6 +19,33 @@ def _xyz(value):
     return [float(getattr(value, axis)) for axis in ("x", "y", "z")]
 
 
+def shadow_readback(component, light=False):
+    """Observe reflected settings; unavailable properties never imply enabled shadows."""
+    names = (
+        (
+            "mobility",
+            "cast_shadows",
+            "cast_dynamic_shadows",
+            "cast_static_shadows",
+            "contact_shadow_length",
+            "contact_shadow_length_in_ws",
+        )
+        if light
+        else ("mobility", "cast_shadow", "cast_dynamic_shadow", "cast_static_shadow")
+    )
+    result = {"component": component.get_path_name(), "properties": {}}
+    for name in names:
+        try:
+            value = component.get_editor_property(name)
+            result["properties"][name] = {
+                "status": "READ_BACK",
+                "value": str(value) if name == "mobility" else value,
+            }
+        except Exception as error:
+            result["properties"][name] = {"status": "UNAVAILABLE", "error": str(error)}
+    return result
+
+
 class BoulderCapture:
     def __init__(
         self,
@@ -73,6 +100,7 @@ class BoulderCapture:
             "frames": [],
             "warmup_frames": [],
             "lighting": [],
+            "landscape_shadow_readback": [],
             "saved_map": False,
             "visual_acceptance": "PENDING_OWNER",
             "performance_acceptance": "NOT_MEASURED",
@@ -128,6 +156,7 @@ class BoulderCapture:
                             "actor": light.get_path_name(),
                             "class": light.get_class().get_name(),
                             "created_transient": created,
+                            "shadow_readback": shadow_readback(component, light=True),
                             "intensity": float(
                                 component.get_editor_property("intensity")
                             ),
@@ -137,6 +166,20 @@ class BoulderCapture:
                             ],
                         }
                     )
+            for ground in unreal.GameplayStatics.get_all_actors_of_class(
+                self.world, unreal.LandscapeProxy
+            ):
+                self.report["landscape_shadow_readback"].append(
+                    {
+                        "actor": ground.get_path_name(),
+                        "components": [
+                            shadow_readback(component)
+                            for component in ground.get_components_by_class(
+                                unreal.PrimitiveComponent
+                            )
+                        ],
+                    }
+                )
             prefix = self.world.get_path_name().split(".", 1)[0] + "."
             leased = []
             for texture in unreal.ObjectIterator(unreal.Texture2D):

@@ -17888,5 +17888,6 @@
   "render_source_caps_only": true,
   "review_views": 4,
   "preparation_recipe_revision": 6,
-  "source_patch_refinement_grid": 129
+  "source_patch_refinement_grid": 129,
+  "render_transient_movable": true
 }
