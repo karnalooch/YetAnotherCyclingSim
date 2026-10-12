@@ -217,10 +217,12 @@ def main():
         "status": "FAILED",
     }
     try:
-        if ACTION in {"material", "material-reload", "terrain"}:
+        if ACTION in {"material", "material-reload", "terrain", "settle-render"}:
             unreal.EditorPythonScripting.set_keep_python_script_alive(True)
             if not unreal.EditorLoadingAndSavingUtils.new_blank_map(False):
-                raise RuntimeError("Transient diagnostic editor world initialization failed")
+                raise RuntimeError(
+                    "Transient diagnostic editor world initialization failed"
+                )
             root = Path(unreal.Paths.project_dir()).resolve()
             sys.path.insert(0, str(root))
             from scripts.ue import sa_calobra_pcg_material_binding as binding_helper
@@ -250,6 +252,9 @@ def main():
                         binding, actor.static_mesh_component
                     )
                     receipt["status"] = "MATERIAL_BINDING_FRESH_READBACK"
+                elif ACTION == "settle-render":
+                    start_boulder_capture(root, binding, receipt)
+                    return
                 else:
                     from scripts.ue import sa_calobra_pcg_terrain_contact
 
@@ -274,9 +279,58 @@ def main():
     finish(receipt)
 
 
+def start_boulder_capture(root, binding, receipt):
+    from scripts.ue import sa_calobra_pcg_boulder_settle as settle
+    from scripts.ue import sa_calobra_pcg_boulder_capture as capture
+
+    measured, world, actor, target = settle.prepare(root, binding)
+    receipt["boulder_fit"] = measured
+    radius = max(measured["actor_bounds_cm"]["extent"])
+    captures = {}
+
+    def complete_after(result):
+        captures["after"] = result
+        receipt["captures"] = captures
+        if result.get("error") or result.get("status") != "CAPTURE_COMPLETED":
+            receipt["error"] = "After capture failed: " + json.dumps(result)
+        else:
+            receipt["status"] = "BOULDER_FITTED_REAL_GPU_CAPTURED"
+        finish(receipt)
+
+    def complete_before(result):
+        captures["before"] = result
+        if result.get("error") or result.get("status") != "CAPTURE_COMPLETED":
+            receipt["error"] = "Before capture failed: " + json.dumps(result)
+            finish(receipt)
+            return
+        actor.set_actor_location(
+            unreal.Vector(*measured["after_location_cm"]), False, False
+        )
+        global ACTIVE
+        ACTIVE = capture.start_capture(
+            world,
+            unreal.Vector(*target),
+            OUTPUT / "after",
+            complete_after,
+            framing_radius_cm=radius,
+        )
+
+    actor.set_actor_location(
+        unreal.Vector(*measured["before_location_cm"]), False, False
+    )
+    global ACTIVE
+    ACTIVE = capture.start_capture(
+        world,
+        unreal.Vector(*target),
+        OUTPUT / "before",
+        complete_before,
+        framing_radius_cm=radius,
+    )
+
+
 def finish(receipt):
     write_new(ACTION + "-receipt.json", receipt)
-    if ACTION in {"material", "material-reload", "terrain"}:
+    if ACTION in {"material", "material-reload", "terrain", "settle-render"}:
         # Let the startup-script stack unwind before editor teardown. This is
         # lifecycle sequencing, not a substitute for clean process completion.
         global QUIT_CALLBACK

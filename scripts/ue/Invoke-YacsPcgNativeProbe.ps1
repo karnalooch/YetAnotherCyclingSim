@@ -10,7 +10,7 @@
 param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string]$ExpectedHead,
     [Parameter(Mandatory)][ValidatePattern('^[A-Za-z0-9][A-Za-z0-9-]{0,63}$')][string]$RunToken,
-    [ValidateSet('inspect','create','reload','material','material-reload','terrain')][string]$Action = 'inspect',
+    [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render')][string]$Action = 'inspect',
     [switch]$QualificationSources,
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 )
@@ -157,7 +157,7 @@ if ($Action -ne 'inspect') {
         $qualification = Get-Content -LiteralPath $qualificationPath -Raw | ConvertFrom-Json
         if ($qualification.scope -cne 'LOCAL_DIAGNOSTIC_ONLY_NOT_REGIONAL_PLACEMENT' -or $qualification.terrain.assets.Count -ne 14) { throw 'Unexpected qualification source contract.' }
         Stage-QualifiedFile $qualificationPath 'qualification-sources.json' (File-Identity $qualificationPath)
-        foreach ($scriptRelative in @('scripts/ue/sa_calobra_pcg_material_binding.py','scripts/ue/sa_calobra_pcg_terrain_contact.py','scripts/ue/import_material_forge_variant.py','scripts/assets/road_material_contract.py')) {
+        foreach ($scriptRelative in @('scripts/ue/sa_calobra_pcg_material_binding.py','scripts/ue/sa_calobra_pcg_terrain_contact.py','scripts/ue/import_material_forge_variant.py','scripts/assets/road_material_contract.py','scripts/assets/pcg_boulder_support.py','scripts/ue/sa_calobra_pcg_boulder_settle.py','scripts/ue/sa_calobra_pcg_boulder_capture.py')) {
             $source = Join-Path $RepoRoot $scriptRelative
             $committedScript = ((Read-RepoGit @('show', "${ExpectedHead}:$scriptRelative")) -join "`n") + "`n"
             if ((Hash-Lf ([IO.File]::ReadAllText($source))) -cne (Hash-Lf $committedScript)) { throw "Uncommitted qualification helper: $scriptRelative" }
@@ -202,8 +202,8 @@ if ($Action -eq 'reload') {
         Assert-SameFile (Join-Path $Root $entry.path) $entry
     }
 }
-if ($Action -in @('material','material-reload','terrain') -and -not (Test-Path -LiteralPath (Join-Path $Root 'qualification-sources.json'))) { throw 'Qualification sources were not staged.' }
-if ($Action -in @('material-reload','terrain')) {
+if ($Action -in @('material','material-reload','terrain','settle-render') -and -not (Test-Path -LiteralPath (Join-Path $Root 'qualification-sources.json'))) { throw 'Qualification sources were not staged.' }
+if ($Action -in @('material-reload','terrain','settle-render')) {
     $materialCompleted = Get-Content (Join-Path $Proof 'material/launcher-completed.json') -Raw | ConvertFrom-Json
     if ($materialCompleted.code_sha -cne $ExpectedHead -or $materialCompleted.exit_code -ne 0) { throw 'Material save process did not complete cleanly.' }
     $binding = Get-Content (Join-Path $Proof 'material/binding.json') -Raw | ConvertFrom-Json
@@ -213,7 +213,7 @@ if ($Action -in @('material-reload','terrain')) {
         Assert-SameFile (Join-Path $Root $entry.path) $entry
     }
 }
-if ($Action -eq 'terrain') {
+if ($Action -in @('terrain','settle-render')) {
     $materialReloadCompleted = Get-Content (Join-Path $Proof 'material-reload/launcher-completed.json') -Raw | ConvertFrom-Json
     if ($materialReloadCompleted.code_sha -cne $ExpectedHead -or $materialReloadCompleted.exit_code -ne 0) { throw 'Material fresh readback must complete before terrain measurement.' }
 }
@@ -234,9 +234,10 @@ $psi.WindowStyle = [Diagnostics.ProcessWindowStyle]::Hidden
 $psi.WorkingDirectory = $Root
 $psi.RedirectStandardOutput = $true
 $psi.RedirectStandardError = $true
-foreach ($argument in @($Project,'-NullRHI','-Unattended','-NoSplash','-NoSound','-NoLiveCoding','-NoP4','-NoPause',
+$renderArguments = if ($Action -eq 'settle-render') { @('-RenderOffscreen','-norhithread') } else { @('-NullRHI') }
+foreach ($argument in (@($Project) + $renderArguments + @('-Unattended','-NoSplash','-NoSound','-NoLiveCoding','-NoP4','-NoPause',
     '-DisablePlugins=ModelContextProtocol,Wingman,AndroidFileServer',
-    '-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False',"-ExecutePythonScript=$Probe", "-abslog=$(Join-Path $Proof "$Action-editor.log")")) { $psi.ArgumentList.Add($argument) }
+    '-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False',"-ExecutePythonScript=$Probe", "-abslog=$(Join-Path $Proof "$Action-editor.log")"))) { $psi.ArgumentList.Add($argument) }
 $psi.Environment.Remove('PYTHONPATH') | Out-Null
 $psi.Environment.Remove('PYTHONHOME') | Out-Null
 $psi.Environment['YACS_PCG_PROBE_ACTION'] = $Action
@@ -264,13 +265,13 @@ try {
 if ($process.ExitCode -ne 0) { throw "Owned native probe exit=$($process.ExitCode); see $Proof" }
 if (-not (Test-Path -LiteralPath $Receipt -PathType Leaf)) { throw 'Probe exited without action receipt.' }
 $result = Get-Content -LiteralPath $Receipt -Raw | ConvertFrom-Json
-$expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'}[$Action]
+$expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'; 'settle-render'='BOULDER_FITTED_REAL_GPU_CAPTURED'}[$Action]
 if ($result.status -cne $expectedStatus -or $result.code_sha -cne $ExpectedHead -or $result.placement -isnot [bool] -or $result.placement) { throw 'Native diagnostic did not complete; inspect receipt diagnostics.' }
 if ($result.PSObject.Properties.Name -contains 'error') { throw 'Native diagnostic contains an error; refusing success.' }
 if ($Action -eq 'reload') {
     foreach ($entry in $saved.files) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
 }
-if ($Action -in @('material-reload','terrain')) {
+if ($Action -in @('material-reload','terrain','settle-render')) {
     foreach ($entry in $binding.saved_packages) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
 }
 foreach ($entry in (Get-Content (Join-Path $Root 'staged-files.json') -Raw | ConvertFrom-Json).files) { Assert-SameFile (Join-Path $Root $entry.path) $entry.identity }

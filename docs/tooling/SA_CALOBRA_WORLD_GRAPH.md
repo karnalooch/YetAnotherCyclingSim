@@ -547,3 +547,43 @@ All live-editor, build/GPU/runner work remains serialized under existing ownersh
 Final whole-area owner audit: `PENDING_FINAL_M3`. Performance:
 `DEFERRED_AFTER_M3`, `performance_pass: false`. This kickoff does not close #365,
 implement later vegetation/rock stages or conceal unresolved geometry.
+
+
+### Boulder contact correction and Remote UE — 2026-10-12
+
+The owner requested a real Unreal GPU render with Material Forge and correction
+of the diagnostic Boulder's visible support gaps. The owner also explicitly
+allows bounded local terrain repair only if fitting the asset cannot solve the
+defect. This is not a global Landscape thaw: preserve `Base_DTM`, accepted map,
+spatial registration and road/physics authority; any necessary local repair must
+follow World Building Bible section 6 with AOI, delta and rollback proof.
+
+Current implementation first changes only a transient diagnostic Boulder at
+existing candidate index 3. `sa_calobra_pcg_boulder_settle.py` measures a 33 x 33
+source-AABB grid using paired native complex bottom/top collision rays and
+Landscape-only ground hits. `pcg_boulder_support.py` computes the highest vertical
+root without positive bottom gaps at those sampled rays, reports the embedding
+relative to the nonpenetrating root and rejects complete sampled submergence.
+No arbitrary burial margin is added. Identity orientation and unit scale remain
+explicit; finite samples and vertical intervals do not establish continuous
+silhouette closure or solid concavity. This is not production qualification.
+
+The new `settle-render` action uses GPU rendering, never `NullRHI`, and captures
+before/after with the same two camera poses and Material Forge binding in the
+owned isolated project. Source/staged packages and saved material packages are
+hash-checked before and after; no map or terrain is saved. Native execution and
+image inspection remain pending until their receipts are recorded below.
+
+Remote UE exists through the repository's Pixel Streaming workflow. Inspection
+on 2026-10-12 found no running local UnrealEditor process and no listening viewer
+port among 80/8888/8889 or bridge ports 18784/18785. The existing
+`Start-YacsRemoteFromGitHub.ps1` targets the superseded PR #470/#364 branch;
+`Start-YacsLevelEditorStream.ps1` pins the retained #364 road map. Neither is a
+validated #365 Boulder session, so do not publish an unchanged-tree checkpoint
+on that old branch to claim Boulder delivery. A captured GPU PNG is separate
+from a received live Remote UE frame.
+
+PR #474 source `6cf9511127afbec4286fe8a11d9c409e26d8d5cb` has Aggregate CI gate
+SUCCESS in run `38185894294`; that result predates this correction and does not
+validate the new source. Owner visual acceptance stays `PENDING_FINAL_M3` and
+performance stays `DEFERRED_AFTER_M3`, `performance_pass: false`.
