@@ -10,8 +10,10 @@
 param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string]$ExpectedHead,
     [Parameter(Mandatory)][ValidatePattern('^[A-Za-z0-9][A-Za-z0-9-]{0,63}$')][string]$RunToken,
-    [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render')][string]$Action = 'inspect',
+    [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload')][string]$Action = 'inspect',
     [switch]$QualificationSources,
+    [string]$MaskXyRequest,
+    [ValidatePattern('^[0-9a-f]{64}$')][string]$ExpectedMaskXySha,
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 )
 Set-StrictMode -Version Latest
@@ -152,6 +154,17 @@ if ($Action -ne 'inspect') {
     }
     Copy-Item -LiteralPath $ProbeSource -Destination $Probe
     $entries.Add([ordered]@{path='sa_calobra_pcg_native_probe.py';identity=(File-Identity $Probe)})
+    if ($MaskXyRequest) {
+        if (-not $ExpectedMaskXySha) { throw 'Mask XY request requires an expected SHA256.' }
+        $requestIdentity = File-Identity $MaskXyRequest
+        if ($requestIdentity.sha256 -cne $ExpectedMaskXySha) { throw 'Mask XY request SHA drift.' }
+        Stage-QualifiedFile $MaskXyRequest 'mask-xy-request.json' $requestIdentity
+        $scriptRelative = 'scripts/ue/sa_calobra_pcg_mask_xy_graph.py'
+        $source = Join-Path $RepoRoot $scriptRelative
+        $committedScript = ((Read-RepoGit @('show', "${ExpectedHead}:$scriptRelative")) -join "`n") + "`n"
+        if ((Hash-Lf ([IO.File]::ReadAllText($source))) -cne (Hash-Lf $committedScript)) { throw 'Uncommitted mask XY helper.' }
+        Stage-QualifiedFile $source $scriptRelative (File-Identity $source)
+    } elseif ($ExpectedMaskXySha) { throw 'Expected mask XY SHA requires a request path.' }
     if ($QualificationSources) {
         $qualificationPath = Join-Path $RepoRoot 'worldgen/sa_calobra/pcg365_qualification_sources_v1.json'
         $qualification = Get-Content -LiteralPath $qualificationPath -Raw | ConvertFrom-Json
@@ -193,6 +206,20 @@ if ($Action -ne 'inspect') {
 New-Item -ItemType Directory -Path $Proof -Force | Out-Null
 $Output = Join-Path $Proof $Action
 $Receipt = Join-Path $Output "$Action-receipt.json"
+if ($Action -in @('mask-xy-create','mask-xy-reload')) {
+    if (-not (Test-Path -LiteralPath (Join-Path $Root 'mask-xy-request.json'))) { throw 'Mask XY request was not staged.' }
+}
+if ($Action -eq 'mask-xy-reload') {
+    $completedCreate = Get-Content (Join-Path $Proof 'mask-xy-create/launcher-completed.json') -Raw | ConvertFrom-Json
+    if ($completedCreate.code_sha -cne $ExpectedHead -or $completedCreate.exit_code -ne 0) { throw 'Mask XY create process did not finish cleanly.' }
+    $saved = Get-Content (Join-Path $Proof 'mask-xy-create/saved-packages.json') -Raw | ConvertFrom-Json
+    if ($saved.code_sha -cne $ExpectedHead -or $saved.request_sha256 -cne (File-Identity (Join-Path $Root 'mask-xy-request.json')).sha256 -or $saved.files.Count -ne 2) { throw 'Saved mask XY package identity mismatch.' }
+    if (@($saved.files.path | Sort-Object -Unique).Count -ne 2) { throw 'Duplicate mask XY package path.' }
+    foreach ($entry in $saved.files) {
+        if ([string]$entry.path -notmatch '^Content/Generated/YACS/PCG365MaskXYDiagnostic/(PCG_MaskXY\.uasset|L_MaskXY\.umap)$') { throw 'Unexpected mask XY package path.' }
+        Assert-SameFile (Join-Path $Root $entry.path) $entry
+    }
+}
 if ($Action -eq 'reload') {
     $saved = Get-Content (Join-Path $Proof 'create/saved-packages.json') -Raw | ConvertFrom-Json
     if ($saved.code_sha -cne $ExpectedHead -or $saved.files.Count -ne 2) { throw 'Saved mechanical package identity mismatch.' }
@@ -267,10 +294,10 @@ if (-not (Test-Path -LiteralPath $Receipt -PathType Leaf)) { throw 'Probe exited
 $nativeLog = Get-Content -LiteralPath (Join-Path $Proof "$Action-editor.log") -Raw
 if ($nativeLog -match "Couldn't load edit layer object|Failed to find script package for import object|Failed to compile Material") { throw 'Native consumer lost a required class/edit layer or material shader; diagnostic rejected.' }
 $result = Get-Content -LiteralPath $Receipt -Raw | ConvertFrom-Json
-$expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'; 'settle-render'='BOULDER_FITTED_REAL_GPU_CAPTURED'}[$Action]
+$expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'; 'settle-render'='BOULDER_FITTED_REAL_GPU_CAPTURED'; 'mask-xy-create'='MASK_XY_GRAPH_SAVED'; 'mask-xy-reload'='MASK_XY_GRAPH_FRESH_RELOAD_REGENERATED'}[$Action]
 if ($result.status -cne $expectedStatus -or $result.code_sha -cne $ExpectedHead -or $result.placement -isnot [bool] -or $result.placement) { throw 'Native diagnostic did not complete; inspect receipt diagnostics.' }
 if ($result.PSObject.Properties.Name -contains 'error') { throw 'Native diagnostic contains an error; refusing success.' }
-if ($Action -eq 'reload') {
+if ($Action -in @('reload','mask-xy-reload')) {
     foreach ($entry in $saved.files) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
 }
 if ($Action -in @('material-reload','terrain','settle-render')) {

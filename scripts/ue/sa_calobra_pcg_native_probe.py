@@ -202,6 +202,7 @@ def inspect():
 
 
 def main():
+    global ACTIVE
     receipt = {
         "schema_version": 1,
         "issue": 365,
@@ -217,6 +218,16 @@ def main():
         "status": "FAILED",
     }
     try:
+        if ACTION in {"mask-xy-create", "mask-xy-reload"}:
+            unreal.EditorPythonScripting.set_keep_python_script_alive(True)
+            root = Path(unreal.Paths.project_dir()).resolve()
+            sys.path.insert(0, str(root))
+            from scripts.ue import sa_calobra_pcg_mask_xy_graph
+
+            ACTIVE = sa_calobra_pcg_mask_xy_graph.start(
+                root, OUTPUT, HEAD, ACTION, finish
+            )
+            return
         if ACTION in {"material", "material-reload", "terrain", "settle-render"}:
             unreal.EditorPythonScripting.set_keep_python_script_alive(True)
             if not unreal.EditorLoadingAndSavingUtils.new_blank_map(False):
@@ -266,7 +277,6 @@ def main():
             return
         if ACTION in {"create", "reload"}:
             unreal.EditorPythonScripting.set_keep_python_script_alive(True)
-            global ACTIVE
             ACTIVE = MechanicalGraph(receipt)
             ACTIVE.begin()
             return
@@ -331,7 +341,14 @@ def start_boulder_capture(root, binding, receipt):
 
 def finish(receipt):
     write_new(ACTION + "-receipt.json", receipt)
-    if ACTION in {"material", "material-reload", "terrain", "settle-render"}:
+    if ACTION in {
+        "material",
+        "material-reload",
+        "terrain",
+        "settle-render",
+        "mask-xy-create",
+        "mask-xy-reload",
+    }:
         # Let the startup-script stack unwind before editor teardown. This is
         # lifecycle sequencing, not a substitute for clean process completion.
         global QUIT_CALLBACK

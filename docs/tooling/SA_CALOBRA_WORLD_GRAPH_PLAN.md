@@ -95,7 +95,7 @@ reorder GitHub dependencies during #365 planning.
 | `worldgen/assets/catalog.json`, `scripts/assets/yacs_asset_library.py`, Julka | Asset discovery, provenance, hash/restore machinery | Alpine approved entries are not automatic Mediterranean palette admission |
 | `Source/YetAnotherCyclingSimEditor/Private/PCG/` | Existing PCG creation, native mesh selector and candidate-node patterns | Legacy rectangle masks, flat Z and source-region assumptions need explicit rejection/replacement |
 | `scripts/ue/yacs_scene_composer.py` and `scripts/worldgen/yacs_scene_layout.py` | Bounded generated ownership and deterministic patterns | Do not turn generic patch layout into a second biome engine |
-| `scripts/worldgen/Bootstrap-YacsPcgEx.ps1` and reviewed patch | Immutable upstream identity and exact patched-file verification | Installation currently resets an existing checkout; Validate does not accept already patched state |
+| `scripts/worldgen/Bootstrap-YacsPcgEx.ps1` and reviewed patch | Immutable upstream identity and exact patched-file verification | Safe bootstrap correction implemented; retained patched state validated read-only; exact-head native build remains unproved |
 | `scripts/ue/sa_calobra_saved_material_consumer.py` | Separate prepare/reload/render process pattern and source conservation | Material proof does not validate PCG managed resources or instance inventories |
 | `scripts/runner/Get-YacsUnrealHostState.ps1`, existing native launchers | Host ownership, exact checkout and isolated proof patterns | Do not kill or replace the owner's active Editor |
 | Existing Gumball Proof Broker / CI classification | Trusted default-branch execution, exact-SHA requests and artifact admission | A new target name in a document is not a registered executable target |
@@ -401,30 +401,27 @@ a half-generated scene as accepted.
 
 ## 8. PCGEx native preparation — explicit unfinished work
 
-PCGEx is absent from the current session. Stock-PCG progress can proceed after
-implementation is resumed, but **stock success cannot close the PCGEx portion of
+PCGEx is absent from the canonical project. Authenticated retained binaries load
+in the isolated diagnostic session; an exact-head source build remains unproved.
+Implementation has resumed, but **stock success cannot close the PCGEx portion of
 #365**. Minimum PCGEx delivery is exact source/patch authentication, compatible
 build/module load, one source-audited bounded extension canary and its actual
 generation/save/reopen evidence. If no extension is justified for the production
 graph, document that decision and obtain explicit scope resolution before claiming
 the issue complete. Never add a meaningless node solely to claim PCGEx usage.
 
-Future preparation sequence:
+Preparation sequence (consult implementation evidence for completed steps):
 
 1. Inspect the existing retained plugin source without modifying it. Authenticate
    Git origin, exact commit, complete tracked/untracked diff and expected patch.
    If Git metadata cannot be read, source excerpts remain unverified local
    evidence; do not call them exact-pin proof.
-2. Review `scripts/worldgen/Bootstrap-YacsPcgEx.ps1`: `Install` currently executes
-   `git reset --hard` on an existing checkout; `Validate` requires upstream-clean
-   plus patch-applicable and rejects the intended already-patched state. Do not
-   run this replay on the retained checkout or running project.
-3. Plan a small reviewed bootstrap correction or a fresh isolated disposable
-   staging installation using an explicitly inspected target. Preserve retained
-   bytes; no destructive reset of an existing checkout. The desired validator
-   must distinguish clean-upstream/applicable, exact-patched, missing, drifted,
-   and unexpected-dirty states, reject extra changes and make repeated validation
-   read-only. These are future implementation requirements, not changes made now.
+2. The bootstrap safety correction is implemented: existing checkouts are never
+   destructively reset, and exact-patched retained state is accepted by read-only
+   validation. Recheck the current source and receipt before a new installation.
+3. Preserve retained bytes. Install only into an explicitly inspected fresh
+   isolated target; reject unexpected changes and authenticate the exact patched
+   state again. Safe validation does not prove compilation or regional admission.
 4. Verify MIT license, descriptor, upstream pin, exact patch and patched target
    hashes. Never accept descriptor `5.8.0` as proof of a 5.8.2 build.
 5. Serialize with the existing host resource arbiter. Preserve unsaved owner work;

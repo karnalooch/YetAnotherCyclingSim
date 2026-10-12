@@ -549,7 +549,7 @@ Final whole-area owner audit: `PENDING_FINAL_M3`. Performance:
 implement later vegetation/rock stages or conceal unresolved geometry.
 
 
-### Boulder contact correction and Remote UE — 2026-10-12
+### Boulder contact correction and Remote UE â€” 2026-10-12
 
 The owner requested a real Unreal GPU render with Material Forge and correction
 of the diagnostic Boulder's visible support gaps. The owner also explicitly
@@ -623,7 +623,7 @@ The content-only project cannot supply `YacsTextureAuditLibrary` resident-mip
 telemetry; preserve that limitation instead of claiming full residency proof.
 
 
-### Reviewed native Boulder result and collision ownership — 2026-10-12
+### Reviewed native Boulder result and collision ownership â€” 2026-10-12
 
 Final local diagnostic code SHA: `51f641cea3807bd7228b55c12c917454ab014731`; token `boulderfit03`.
 All four owned processes (inspect, material, material-reload, settle-render)
@@ -656,7 +656,7 @@ or material covering was added to conceal contact. Continuous geometric support,
 render/collision parity, numeric production limits, geological/regional asset
 admission and owner whole-M3 acceptance remain unverified.
 
-| Before — nonpenetrating diagnostic | After — sampled fitted diagnostic |
+| Before â€” nonpenetrating diagnostic | After â€” sampled fitted diagnostic |
 |---|---|
 | ![Before UE contact](../assets/pcg365-boulder-contact-20261012/before-02.png) | ![After UE contact](../assets/pcg365-boulder-contact-20261012/after-02.png) |
 
@@ -687,3 +687,44 @@ by the delegated CPU specialist; both comparison moves now require readback.
 PR #474 remains Draft, #365 OPEN, native build NOT RUN in this local diagnostic,
 regional placement false, owner visual `PENDING_FINAL_M3`, performance
 `DEFERRED_AFTER_M3` / `performance_pass: false`.
+
+### Mask-derived native XY continuation â€” 2026-10-12
+
+Approved scope remains #365 / M3; #364 is closed, PR #474 remains Draft.
+Base `eb9293e35b5698a1310e9cba54f0f9ea7863b6e8` has final CI SUCCESS,
+including [Aggregate CI gate](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38188603112).
+This does not supply the skipped Unreal build or owner visual acceptance.
+
+Delegated actual work: asset/contact inventory (read-only), CPU request adapter
+and tests (one writer), and native point graph helper (one writer). The coordinator
+owns launcher/probe integration and these documents; Unreal remains serialized.
+The inventory confirms one locally acquired source rock mesh, Boulder 01;
+Material Forge duplicates are the same geometry. Historical `rock_face_01`
+approval is for a cliff role, while `mountainside` is a candidate; neither has a
+verified local imported mesh for this bounded scatter task. Texture assets are
+not additional shapes. Additional regional shapes require source/license/use
+qualification; do not count rotations, materials or duplicate packages as mesh
+diversity, or bypass the later cliff issue.
+
+The request adapter reauthenticates source rasters, producer LF hash and candidate
+file identity, rebuilds the complete CPU inventory and exports all five selected
+points from `boulder-envelope-a`. Request SHA256:
+`3cddcfcf4879895b5c850f4f7cec2111833baccbe28a3dd3f153126a6cf1b28e`.
+Z=0 is only a diagnostic carrier, never ground height. Vegetation selector bands
+are not regional rock selectors. This is CPU-authenticated point ingestion,
+not native raster sampling. No mesh spawner is included.
+
+The isolated graph is `PCG365MaskXYDiagnostic/PCG_MaskXY`: stock CreatePoints
+to Output, fixed seeds, world coordinates, culling disabled. Intended verification
+is generate/cleanup/regenerate, save exactly graph/map, then fresh process reload
+and regenerate twice with exact ID/XY/seed readback and unchanged saved hashes.
+Native execution is pending at this source commit; append its actual exact SHA,
+process exits and receipts before claiming success. Candidate IDs/source cells
+are request sidecar linkage by verified unique seed, not native metadata
+propagation. Cleanup must leave empty output before regeneration. The original mechanical
+fixture is unchanged. Numeric contact limits and production placement remain
+unqualified; `qualified_assets: []`, `placement: false`.
+
+Local verification: five request tests PASS, Ruff and PowerShell parser PASS,
+docs links/i18n/structure/freshness PASS. Legacy Windows-1252 em dashes in two
+evidence documents were normalized to UTF-8 without changing their wording.
