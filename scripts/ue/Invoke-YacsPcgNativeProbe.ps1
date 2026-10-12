@@ -10,8 +10,9 @@
 param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string]$ExpectedHead,
     [Parameter(Mandatory)][ValidatePattern('^[A-Za-z0-9][A-Za-z0-9-]{0,63}$')][string]$RunToken,
-    [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload')][string]$Action = 'inspect',
+    [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload','rock-qualify','rock-reload')][string]$Action = 'inspect',
     [switch]$QualificationSources,
+    [switch]$RockQualificationSources,
     [string]$MaskXyRequest,
     [ValidatePattern('^[0-9a-f]{64}$')][string]$ExpectedMaskXySha,
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
@@ -198,6 +199,23 @@ if ($Action -ne 'inspect') {
         }
         Stage-QualifiedFile (Join-Path $RepoRoot $qualification.contact_input.path) 'contact-request.json' $qualification.contact_input
     }
+    if ($RockQualificationSources) {
+        if (-not $QualificationSources) { throw 'Rock qualification requires authenticated terrain/Forge sources.' }
+        $requestPath = Join-Path $RepoRoot 'worldgen/sa_calobra/pcg365_rock_qualification_v1.json'
+        $request = Get-Content -LiteralPath $requestPath -Raw | ConvertFrom-Json
+        if ($request.scope -cne 'ISOLATED_ROCK_QUALIFICATION_ONLY' -or $request.assets.Count -ne 2 -or $request.placement) { throw 'Unexpected rock qualification request.' }
+        Stage-QualifiedFile $requestPath 'rock-qualification-request.json' (File-Identity $requestPath)
+        foreach ($asset in $request.assets) {
+            if ($asset.id -cnotin @('rock_07','rock_09') -or $asset.source_relative -cne "rock-source/$($asset.id).fbx") { throw 'Unexpected rock source identity.' }
+            Stage-QualifiedFile $asset.source $asset.source_relative $asset
+        }
+        foreach ($scriptRelative in @('scripts/assets/pcg_rock_contact_policy.py','scripts/ue/sa_calobra_pcg_rock_qualification.py')) {
+            $source = Join-Path $RepoRoot $scriptRelative
+            $committedScript = ((Read-RepoGit @('show', "${ExpectedHead}:$scriptRelative")) -join "`n") + "`n"
+            if ((Hash-Lf ([IO.File]::ReadAllText($source))) -cne (Hash-Lf $committedScript)) { throw "Uncommitted rock helper: $scriptRelative" }
+            Stage-QualifiedFile $source $scriptRelative (File-Identity $source)
+        }
+    }
     $plugins = @('PythonScriptPlugin','EditorScriptingUtilities','PCG','PCGToolset','PCGExtendedToolkit','LandscapePatch') | ForEach-Object { [ordered]@{Name=$_;Enabled=$true;Optional=$false} }
     [ordered]@{FileVersion=3;EngineAssociation='5.8';Category='';Description='YACS #365 owned local diagnostic';Plugins=@($plugins)} | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $Project -Encoding utf8
     $entries.Add([ordered]@{path='Pcg365Diagnostic.uproject';identity=(File-Identity $Project)})
@@ -229,8 +247,9 @@ if ($Action -eq 'reload') {
         Assert-SameFile (Join-Path $Root $entry.path) $entry
     }
 }
-if ($Action -in @('material','material-reload','terrain','settle-render') -and -not (Test-Path -LiteralPath (Join-Path $Root 'qualification-sources.json'))) { throw 'Qualification sources were not staged.' }
-if ($Action -in @('material-reload','terrain','settle-render')) {
+if ($Action -in @('rock-qualify','rock-reload') -and -not (Test-Path -LiteralPath (Join-Path $Root 'rock-qualification-request.json'))) { throw 'Rock sources were not staged.' }
+if ($Action -in @('material','material-reload','terrain','settle-render','rock-qualify','rock-reload') -and -not (Test-Path -LiteralPath (Join-Path $Root 'qualification-sources.json'))) { throw 'Qualification sources were not staged.' }
+if ($Action -in @('material-reload','terrain','settle-render','rock-qualify','rock-reload')) {
     $materialCompleted = Get-Content (Join-Path $Proof 'material/launcher-completed.json') -Raw | ConvertFrom-Json
     if ($materialCompleted.code_sha -cne $ExpectedHead -or $materialCompleted.exit_code -ne 0) { throw 'Material save process did not complete cleanly.' }
     $binding = Get-Content (Join-Path $Proof 'material/binding.json') -Raw | ConvertFrom-Json
@@ -240,9 +259,19 @@ if ($Action -in @('material-reload','terrain','settle-render')) {
         Assert-SameFile (Join-Path $Root $entry.path) $entry
     }
 }
-if ($Action -in @('terrain','settle-render')) {
+if ($Action -in @('terrain','settle-render','rock-qualify','rock-reload')) {
     $materialReloadCompleted = Get-Content (Join-Path $Proof 'material-reload/launcher-completed.json') -Raw | ConvertFrom-Json
     if ($materialReloadCompleted.code_sha -cne $ExpectedHead -or $materialReloadCompleted.exit_code -ne 0) { throw 'Material fresh readback must complete before terrain measurement.' }
+}
+if ($Action -eq 'rock-reload') {
+    $rockCompleted = Get-Content (Join-Path $Proof 'rock-qualify/launcher-completed.json') -Raw | ConvertFrom-Json
+    if ($rockCompleted.code_sha -cne $ExpectedHead -or $rockCompleted.exit_code -ne 0) { throw 'Rock qualification process must complete before fresh readback.' }
+    $rockInventory = Get-Content (Join-Path $Proof 'rock-qualify/mesh-inventory.json') -Raw | ConvertFrom-Json
+    if ($rockInventory.code_sha -cne $ExpectedHead -or $rockInventory.saved_packages.Count -ne 2) { throw 'Unexpected rock inventory.' }
+    foreach ($entry in $rockInventory.saved_packages) {
+        if ($entry.path -notmatch '^Content/Generated/YACS/PCG365Rocks/SM_rock_(07|09)_ForgeDiagnostic\.uasset$') { throw 'Unexpected rock package path.' }
+        Assert-SameFile (Join-Path $Root $entry.path) $entry
+    }
 }
 if (Test-Path -LiteralPath $Output) { throw 'Preserve existing action output.' }
 New-Item -ItemType Directory -Path $Output | Out-Null
@@ -294,13 +323,16 @@ if (-not (Test-Path -LiteralPath $Receipt -PathType Leaf)) { throw 'Probe exited
 $nativeLog = Get-Content -LiteralPath (Join-Path $Proof "$Action-editor.log") -Raw
 if ($nativeLog -match "Couldn't load edit layer object|Failed to find script package for import object|Failed to compile Material") { throw 'Native consumer lost a required class/edit layer or material shader; diagnostic rejected.' }
 $result = Get-Content -LiteralPath $Receipt -Raw | ConvertFrom-Json
-$expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'; 'settle-render'='BOULDER_FITTED_REAL_GPU_CAPTURED'; 'mask-xy-create'='MASK_XY_GRAPH_SAVED'; 'mask-xy-reload'='MASK_XY_GRAPH_FRESH_RELOAD_REGENERATED'}[$Action]
+$expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'; 'settle-render'='BOULDER_FITTED_REAL_GPU_CAPTURED'; 'mask-xy-create'='MASK_XY_GRAPH_SAVED'; 'mask-xy-reload'='MASK_XY_GRAPH_FRESH_RELOAD_REGENERATED'; 'rock-qualify'='ROCK_CONTACT_MATRIX_MEASURED'; 'rock-reload'='ROCK_MESHES_FRESH_READBACK'}[$Action]
 if ($result.status -cne $expectedStatus -or $result.code_sha -cne $ExpectedHead -or $result.placement -isnot [bool] -or $result.placement) { throw 'Native diagnostic did not complete; inspect receipt diagnostics.' }
 if ($result.PSObject.Properties.Name -contains 'error') { throw 'Native diagnostic contains an error; refusing success.' }
 if ($Action -in @('reload','mask-xy-reload')) {
     foreach ($entry in $saved.files) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
 }
-if ($Action -in @('material-reload','terrain','settle-render')) {
+if ($Action -eq 'rock-reload') {
+    foreach ($entry in $rockInventory.saved_packages) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
+}
+if ($Action -in @('material-reload','terrain','settle-render','rock-qualify','rock-reload')) {
     foreach ($entry in $binding.saved_packages) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
 }
 foreach ($entry in (Get-Content (Join-Path $Root 'staged-files.json') -Raw | ConvertFrom-Json).files) { Assert-SameFile (Join-Path $Root $entry.path) $entry.identity }

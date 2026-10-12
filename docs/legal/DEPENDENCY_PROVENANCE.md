@@ -437,3 +437,24 @@ The machine-readable counterpart is
 revision changes, the pin, licence review and deterministic material proof must
 be repeated before the new revision is admitted.
 
+### PCG365 independent rock geometry qualification — 2026-10-12
+
+The owner requested qualification of different meshes and terrain-contact limits
+for M3 issue #365. Sources [Rock 07](https://polyhaven.com/a/rock_07) and
+[Rock 09](https://polyhaven.com/a/rock_09) are **approved for bounded source
+acquisition and isolated qualification only**, not regional production placement.
+Both provider pages link [CC0-1.0](https://polyhaven.com/license); redistribution
+is allowed and attribution is optional for acquired assets. The separate
+[API terms](https://raw.githubusercontent.com/Poly-Haven/Public-API/master/ToS.md)
+were reviewed: the existing downloader identifies YACS with its User-Agent and
+prints Poly Haven credit. No upstream code or website preview render is copied.
+
+The explicit acquisition manifest is
+`worldgen/sa_calobra/pcg365_rock_acquisition_v1.json`: two geometry-only 2K FBX
+sources, no textures, no bulk library. Source bytes stay in ignored external
+storage and receive SHA256/size receipts before native import. Material Forge
+provides a separate artistic appearance trial; it does not certify geology.
+Preserve source units initially. Neither cliff production nor road/terrain repair
+is an admitted use. Acquisition/import/validation and scoped contact eligibility
+must be recorded separately; this entry does not promote lifecycle to validated.
+

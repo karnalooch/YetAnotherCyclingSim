@@ -228,7 +228,14 @@ def main():
                 root, OUTPUT, HEAD, ACTION, finish
             )
             return
-        if ACTION in {"material", "material-reload", "terrain", "settle-render"}:
+        if ACTION in {
+            "material",
+            "material-reload",
+            "terrain",
+            "settle-render",
+            "rock-qualify",
+            "rock-reload",
+        }:
             unreal.EditorPythonScripting.set_keep_python_script_alive(True)
             if not unreal.EditorLoadingAndSavingUtils.new_blank_map(False):
                 raise RuntimeError(
@@ -251,7 +258,12 @@ def main():
                 if binding["code_sha"] != HEAD:
                     raise RuntimeError("Material binding source SHA differs")
                 receipt["binding_readback"] = binding_helper.verify_binding(binding)
-                if ACTION == "material-reload":
+                if ACTION in {"rock-qualify", "rock-reload"}:
+                    from scripts.ue import sa_calobra_pcg_rock_qualification as rocks
+
+                    operation = rocks.run if ACTION == "rock-qualify" else rocks.reload
+                    receipt.update(operation(root, OUTPUT, HEAD, binding))
+                elif ACTION == "material-reload":
                     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
                     actor = actors.spawn_actor_from_class(
                         unreal.StaticMeshActor, unreal.Vector()
@@ -348,6 +360,8 @@ def finish(receipt):
         "settle-render",
         "mask-xy-create",
         "mask-xy-reload",
+        "rock-qualify",
+        "rock-reload",
     }:
         # Let the startup-script stack unwind before editor teardown. This is
         # lifecycle sequencing, not a substitute for clean process completion.

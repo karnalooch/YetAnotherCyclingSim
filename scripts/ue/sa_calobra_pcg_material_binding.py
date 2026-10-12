@@ -215,6 +215,42 @@ def material_readback(assets):
         master.get_editor_property("bEnableTessellation") is False,
         "Forge master enables Nanite tessellation",
     )
+    geometry = {
+        "status": "PENDING_EFFECTIVE_GEOMETRY_READBACK",
+        "max_displacement_world_m": None,
+    }
+    try:
+        # Installed 5.8.2 MaterialShared.cpp:635 excludes WPO/displacement from
+        # inline-constant compilation; AttributeDefinitionMap.cpp:407 sets WPO
+        # default to zero. Displacement default is 0.5, not zero. Confirm the
+        # attributes path and instance tessellation override before bounding it.
+        attributes = master.get_editor_property("bUseMaterialAttributes")
+        displacement = LIB.get_material_property_input_node(
+            master, unreal.MaterialProperty.MP_DISPLACEMENT
+        )
+        overrides = instance.get_editor_property("base_property_overrides")
+        override_tessellation = overrides.get_editor_property(
+            "bOverride_bEnableTessellation"
+        )
+        require(attributes is False, "Material Attributes path is not qualified")
+        require(displacement is None, "Forge master has connected displacement")
+        require(
+            override_tessellation is False,
+            "Forge instance tessellation override is not qualified",
+        )
+        geometry = {
+            "status": "SOURCE_AUDITED_ZERO_GEOMETRY_OFFSET_READBACK",
+            "use_material_attributes": False,
+            "wpo_default_world_m": [0.0, 0.0, 0.0],
+            "displacement_connected": False,
+            "displacement_default_scalar": 0.5,
+            "instance_tessellation_override": False,
+            "nanite_tessellation_enabled": False,
+            "max_displacement_world_m": 0.0,
+            "basis": "UE5.8.2 compiler fallback and loaded root/instance readback; not GPU parity proof",
+        }
+    except Exception as error:
+        geometry["readback_error"] = str(error)
     return {
         "instance": instance.get_path_name(),
         "parent": master.get_path_name(),
@@ -227,6 +263,7 @@ def material_readback(assets):
         "protected_constant_and_displacement_readback": "UNAVAILABLE",
         "max_displacement_world_m": None,
         "geometry_qualification": "PENDING_PROTECTED_INPUT_READBACK",
+        "source_audited_geometry_readback": geometry,
         "shader_gpu_compilation_verified": False,
     }
 

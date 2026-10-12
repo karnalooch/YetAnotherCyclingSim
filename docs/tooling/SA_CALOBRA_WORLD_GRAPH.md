@@ -770,3 +770,53 @@ Separate source IDs alone do not establish useful visual diversity. Compare
 clay/orthographic silhouettes first, then use the existing Asset Plan lifecycle
 and source authentication. Material Forge cannot convert an unsuitable shape or
 geology into an admitted regional rock. The current graph remains point-only.
+
+### Independent rock qualification packet — 2026-10-12
+
+Owner scope: qualify different meshes and terrain-contact tolerances using
+subagents and Material Forge. Base `88510d49e90c5b879c6abeda3f0abd02e8893fc9`
+has final [CI SUCCESS](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38189751214).
+#364 remains closed; #365 / M3 is open. Procedural-world owns this bounded task;
+CPU policy and native helper each have one delegated writer, parent owns staging,
+material readback and docs. No terrain/road/physics mutation or production scatter.
+
+Two independent geometry-only sources were acquired through the existing
+identified Poly Haven downloader: Rock 07 (1,160,220 bytes, SHA256
+`a49a0fce3da2a976013aac8be3899817b0fe03a1f19628ea0677820df3bdbae1`)
+and Rock 09 (890,732 bytes, SHA256
+`a04920ea816c4a3ca88c57ce8cbe2a9ba9315130df1c32b589640819d5096333`).
+Provider MD5 and sizes matched. Acquisition scope/license were recorded in
+[provenance](../legal/DEPENDENCY_PROVENANCE.md) before copying. Sources stay under
+`D:/yacs/data/assets/pcg365-rock-qualification01`; the two explicit manifests in
+`worldgen/sa_calobra/pcg365_rock_*_v1.json` bind source URLs/bytes and intended use.
+This is lifecycle acquired, not validated or regional geological admission.
+
+Before the new native baseline, trial policy
+`PCG_ROCK_SAMPLED_CONTACT_TRIAL_V1` is frozen in
+`scripts/assets/pcg_rock_contact_policy.py`: identity rotation, unit uniform scale,
+maximum local slope 10 degrees, embedding at most 20% of transformed AABB height,
+retained maximum exposed height and exposed paired-ray fraction each at least
+80%, no positive sampled bottom gap, and 100% admitted Landscape ground coverage
+under the sampled mesh footprint. Missing/ambiguous data rejects. The 33-to-65
+grid root/embedding deltas must each be at most 0.1 cm. These are conservative
+engineering trial design gates, not measured DTM accuracy or owner visual limits;
+they are not tuned to make the earlier deeply buried Boulder pass.
+
+The validator always returns full qualification/placement false. A sampled PASS
+is only one component of eventual admission; continuous/render-collision support,
+source unit/pivot authority, semantics/holdbacks, native fresh reload and visual
+review remain separate. A finite grid's convergence is not continuous proof.
+New native helper imports only two FBX into isolated PCG365Rocks, binds the same
+Forge MI, saves only meshes, measures each at five retained diagnostic XY centres
+on preserved #363 Landscape with 33/65 grids, records raw hits/rejections and
+supports fresh readback. NoData/seam/holdback/AOI fixture coverage is not inferred
+from these five contact centres. Native import/contact/reload are pending at this
+source commit. Six policy tests, Ruff and PowerShell parser pass locally.
+
+The installed UE5.8.2 compiler source was also audited: MaterialShared.cpp:635
+excludes WPO and displacement from inline-constant fallback; material attribute
+defaults at MaterialAttributeDefinitionMap.cpp:407-408 are WPO zero and displacement
+0.5. The native readback therefore attempts explicit Material Attributes path,
+displacement root connection and instance tessellation override inspection.
+Protected-field access failure remains recorded as pending, never inferred PASS.
+This source audit is not GPU/render-collision parity proof.
