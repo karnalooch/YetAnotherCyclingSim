@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "blender_version": "4.5.9 LTS",
+  "manifest": {
+    "path": "D:\\yacs\\work\\pcg365\\rock-source-inspection01\\lod0-source-report.json",
+    "sha256": "bbc4f2328f9a77dbd2dde190d5945388e82f184fbfa4b84b6b388b8f812846da",
+    "bytes": 22630
+  },
+  "native_receipt": {
+    "path": "D:\\yacs\\work\\pcg365\\03b49def16e42a8a0f16a05742a7e72808024fba\\lod0rocks01\\proof\\rock-qualify\\rock-qualify-receipt.json",
+    "sha256": "480ddaaddfe1d55806279803053df131b1f0608b16a6ca2026ba744152863078",
+    "bytes": 65546
+  },
+  "producer": {
+    "path": "C:\\Users\\akarn\\.codex\\worktrees\\2f86\\project\\scripts\\blender\\check_pcg365_scan_ray_parity.py",
+    "sha256": "062414028c0c2ef34c3a8009a52cc2ad32c4e0c6e10a0c2eff07b7a18367b909",
+    "bytes": 9621
+  },
+  "import_settings": {
+    "global_scale": 1.0,
+    "use_manual_orientation": false,
+    "bake_space_transform": false,
+    "use_anim": false,
+    "use_image_search": false,
+    "use_custom_normals": true
+  },
+  "coordinate_mapping": "UE cm = Blender world metres [x,-y,z]*100",
+  "results": [
+    {
+      "id": "rock_07",
+      "source_before": {
+        "path": "D:\\yacs\\work\\pcg365\\rock-source-inspection01\\lod0\\rock_07_lod0.fbx",
+        "sha256": "8f93bfba3e5abe10fcf51e76bd3ee3d60bb166d5fcfddb4eac6b6bf7b910b148",
+        "bytes": 514860
+      },
+      "source_after": {
+        "path": "D:\\yacs\\work\\pcg365\\rock-source-inspection01\\lod0\\rock_07_lod0.fbx",
+        "sha256": "8f93bfba3e5abe10fcf51e76bd3ee3d60bb166d5fcfddb4eac6b6bf7b910b148",
+        "bytes": 514860
+      },
+      "raw_samples": {
+        "path": "D:\\yacs\\work\\pcg365\\03b49def16e42a8a0f16a05742a7e72808024fba\\lod0rocks01\\proof\\rock-qualify\\rock_07-point3-grid65.json",
+        "sha256": "5532eda069043f38fcc3bd652741e963c8b61fb8b465fc406150c53532b38fa3",
+        "bytes": 1462470
+      },
+      "triangles": 14844,
+      "topology": {
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "inconsistent_winding_edges": 0,
+        "signed_volume_m3": 0.004008748294163951
+      },
+      "topology_consistent_closed_positive_volume": true,
+      "pair_disagreement_count": 0,
+      "status": "MEASURED_NO_ERROR_THRESHOLD_APPLIED",
+      "error_distribution_cm": {
+        "min": 3.894200517606805e-10,
+        "median": 4.441110348807342e-06,
+        "p95": 1.2616952957955618e-05,
+        "max": 2.4301857322939213e-05
+      },
+      "maximum_error_witness": {
+        "local_xy_cm": [
+          0.7415966987609863,
+          11.22760134935379
+        ],
+        "native_z_cm": [
+          0.013673307834338289,
+          7.161055104880958
+        ],
+        "source_hits": [
+          {
+            "z_cm": 0.01367950439453125,
+            "normal": [
+              0.08799396455287933,
+              -0.02604680135846138,
+              0.9957804083824158
+            ],
+            "triangle_index": 7665,
+            "distance_cm": 100.20439147949219
+          },
+          {
+            "z_cm": 7.161079406738281,
+            "normal": [
+              -0.41467639803886414,
+              -0.8898280262947083,
+              -0.19039300084114075
+            ],
+            "triangle_index": 9701,
+            "distance_cm": 107.02021789550781
+          }
+        ],
+        "absolute_errors_cm": [
+          6.196560192961442e-06,
+          2.4301857322939213e-05
+        ]
+      },
+      "bottom_extreme_witness": {
+        "local_xy_cm": [
+          -0.050037264823913574,
+          -16.296200424432755
+        ],
+        "native_z_cm": [
+          12.771931528588539,
+          13.200073089568548
+        ],
+        "source_hits": [
+          {
+            "z_cm": 12.771926879882812,
+            "normal": [
+              0.45999979972839355,
+              0.8705337643623352,
+              0.17484606802463531
+            ],
+            "triangle_index": 14274,
+            "distance_cm": 112.96263885498047
+          },
+          {
+            "z_cm": 13.200080871582031,
+            "normal": [
+              0.7085822224617004,
+              0.614966094493866,
+              -0.3460172712802887
+            ],
+            "triangle_index": 14670,
+            "distance_cm": 100.98121643066406
+          }
+        ],
+        "absolute_errors_cm": [
+          4.648705726140179e-06,
+          7.782013483392802e-06
+        ]
+      },
+      "paired_ray_count": 3353
+    },
+    {
+      "id": "rock_09",
+      "source_before": {
+        "path": "D:\\yacs\\work\\pcg365\\rock-source-inspection01\\lod0\\rock_09_lod0.fbx",
+        "sha256": "e4d60fca53f426e986700ca90676452bd8ce3c3a7be26dec8d782251a6a82297",
+        "bytes": 442236
+      },
+      "source_after": {
+        "path": "D:\\yacs\\work\\pcg365\\rock-source-inspection01\\lod0\\rock_09_lod0.fbx",
+        "sha256": "e4d60fca53f426e986700ca90676452bd8ce3c3a7be26dec8d782251a6a82297",
+        "bytes": 442236
+      },
+      "raw_samples": {
+        "path": "D:\\yacs\\work\\pcg365\\03b49def16e42a8a0f16a05742a7e72808024fba\\lod0rocks01\\proof\\rock-qualify\\rock_09-point3-grid65.json",
+        "sha256": "ea726b3412ae452ea561e2bc5f44a311af056cbb37b3bcd93d133253f6a9a8ad",
+        "bytes": 1373866
+      },
+      "triangles": 12416,
+      "topology": {
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "inconsistent_winding_edges": 0,
+        "signed_volume_m3": 0.00013537727973121934
+      },
+      "topology_consistent_closed_positive_volume": true,
+      "pair_disagreement_count": 0,
+      "status": "MEASURED_NO_ERROR_THRESHOLD_APPLIED",
+      "error_distribution_cm": {
+        "min": 1.6868995089680539e-09,
+        "median": 4.438599347622585e-06,
+        "p95": 1.2333189701507763e-05,
+        "max": 2.452204786607126e-05
+      },
+      "maximum_error_witness": {
+        "local_xy_cm": [
+          3.380785919725895,
+          -1.8127319440245628
+        ],
+        "native_z_cm": [
+          2.0126555316630714,
+          2.2668506762394003
+        ],
+        "source_hits": [
+          {
+            "z_cm": 2.0126800537109375,
+            "normal": [
+              -0.5420153141021729,
+              -0.08065016567707062,
+              0.8364896774291992
+            ],
+            "triangle_index": 11538,
+            "distance_cm": 102.0700912475586
+          },
+          {
+            "z_cm": 2.266845703125,
+            "normal": [
+              -0.4739576578140259,
+              0.04028431326150894,
+              -0.8796257376670837
+            ],
+            "triangle_index": 11469,
+            "distance_cm": 100.96268463134766
+          }
+        ],
+        "absolute_errors_cm": [
+          2.452204786607126e-05,
+          4.973114400286249e-06
+        ]
+      },
+      "bottom_extreme_witness": {
+        "local_xy_cm": [
+          3.612066738307476,
+          1.1249535083770752
+        ],
+        "native_z_cm": [
+          2.2806922402683227,
+          2.360824138649761
+        ],
+        "source_hits": [
+          {
+            "z_cm": 2.2806930541992188,
+            "normal": [
+              -0.9083482027053833,
+              0.014824185520410538,
+              0.41795188188552856
+            ],
+            "triangle_index": 4248,
+            "distance_cm": 102.33810424804688
+          },
+          {
+            "z_cm": 2.3608322143554688,
+            "normal": [
+              -0.4596630334854126,
+              -0.16127023100852966,
+              -0.8733280301094055
+            ],
+            "triangle_index": 4245,
+            "distance_cm": 100.86869812011719
+          }
+        ],
+        "absolute_errors_cm": [
+          8.139308960153357e-07,
+          8.075705707710767e-06
+        ]
+      },
+      "paired_ray_count": 3010
+    }
+  ],
+  "placement": false,
+  "qualified_assets": [],
+  "limitations": "Finite first-hit parity only; no self-intersection, continuous support, visual or production admission proof",
+  "retained_full_report": {
+    "path": "D:\\yacs\\work\\pcg365\\c9f10e9dd00c99566e62f241c92426910217c421\\ray-parity.json",
+    "bytes": 6604721,
+    "sha256": "91a550ae3e458bbfe2319fa409c505fae6ba6b7f6da60a02e49fa89596b71c46"
+  }
+}

@@ -1057,3 +1057,69 @@ a physical load/contact-force stability proof. Numeric 20% embedding, 80% exposu
 still run on the full mesh and retain their own decisions. Only complete cap
 diagnostics may receive a transient GPU review; Rock09 is omitted from that review.
 Native execution for this new request remains NOT RUN until recorded below.
+
+### Natural-source native packet and honest visual result
+
+Code `e1d821a0405253c1d4a2953a0372e18bad993927`, token `naturalbase01`, completed
+inspect -> material save -> material fresh readback -> rock measurement -> rock
+fresh readback -> real GPU render, all six process exits 0 with authenticated
+completion markers. Two mesh packages and seven Forge packages retain their
+saved identities. Native bounds match the declared source-frame conversion and
+Rock07 has the expected 11,256 triangles. Twenty raw grids retain verified SHA256
+and sizes. The [portable evidence](../assets/pcg365-natural-scan-20261012/evidence.json)
+and [full native receipts](../assets/pcg365-natural-scan-20261012/native-receipts.json)
+preserve source, DCC, negative attempts, exact code and separate decisions.
+
+Rock07 source-cap diagnostic at point 3 has:
+
+- 2509/2509 cap rays and 3345/3345 full-footprint ground rays; the 75.0075% ratio
+  describes sampled rays, not a measured surface-area/contact-force ratio.
+- Root Z 52548.36838418628 cm; full-geometry embedding 0.9242159087 cm.
+- 3319 exposed rays; 33-to-65 root delta 0 cm and embedding delta 0.0201441371 cm.
+- COM projection inside the sampled cap hull, without physical stability admission.
+- Remaining positive gap beneath a natural overhang **11.6417020181 cm**, with
+  native mesh height 12.9348125458 cm. This is not a zero-air whole-footprint result.
+
+The other four Rock07 sites reject their diagnostic limits. The unchanged Rock09
+control remains V1-rejected at all five sites. All ten V1 full-footprint decisions
+are REJECTED; none is relabelled by the alternative cap calculation. Rock09 was
+explicitly omitted from GPU cap review because its preparation rejected.
+
+Both raw 1920x1080 review images were inspected by parent and independent peer:
+the natural asymmetric silhouette improves on the rejected authored tents, but
+view02's undercut gives a strong floating impression. The Forge surface is very
+pale with insufficient readable detail at this stone scale. **REVIEW_REQUIRED;
+no visual PASS or production qualification.** A complete cap diagnostic does not
+resolve the remaining overhang/silhouette problem. Preserve these images as the
+current unsuccessful artistic trial; do not hide the undercut with material,
+foliage or invented shadows. Resolve source/pose geometry separately from Forge
+appearance, then remeasure/review from additional low perimeter views.
+
+![Natural Rock07 with Forge, real UE view 01](../assets/pcg365-natural-scan-20261012/rock_07-base-view01.png)
+
+![Natural Rock07 with Forge, real UE view 02; floating impression unresolved](../assets/pcg365-natural-scan-20261012/rock_07-base-view02.png)
+
+No Landscape/Base_DTM/road/physics change, canonical scene save, regional scatter
+or new source-provider acquisition occurred. The #363 Landscape-only consumer
+still does not establish parity with the complete latest #364 road/CUT checkpoint.
+Native build remains NOT RUN; continuous support, protected admission and final
+M3 owner audit remain open. Performance is DEFERRED_AFTER_M3 / false.
+Validation: 45 scoped PCG asset tests plus seven candidate tests, Ruff and docs
+guards PASS. The initial sandbox test invocation hit the existing temporary-folder
+WinError5; the unchanged 45-test host rerun passed. The newer delivered-head CI
+is separate from this exact native execution and must be verified after push.
+
+The source-discovery specialist also inspected official clay previews for two
+larger, visibly distinct next candidates, without downloading model payloads:
+[Namaqualand Boulder 02](https://polyhaven.com/a/namaqualand_boulder_02) and
+[Namaqualand Boulder 06](https://polyhaven.com/a/namaqualand_boulder_06).
+Their provider pages identify CC0. The files API reports 2K FBX sizes 3,095,484
+and 3,421,948 bytes, with MD5 `68c7309b72b32a7946a6d6a52d26fba7` and
+`8983d2b17c574b34162d69cb854e01d7`, respectively. These are discovery metadata,
+not acquired identities or measured physical dimensions. Boulder02 depicts
+multiple rocks: select one named geometry explicitly and keep LODs separate;
+never combine the set into a supposed single boulder. Boulder06 provides a
+different asymmetric faceted silhouette. Closed topology, units, underside,
+regional geology, source-to-collision parity and terrain contact remain UNKNOWN.
+Any next acquisition must first update the existing source/provenance manifest
+and use the existing bounded downloader; these previews admit no production use.

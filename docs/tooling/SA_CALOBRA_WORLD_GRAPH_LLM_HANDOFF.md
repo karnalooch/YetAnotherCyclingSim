@@ -19,7 +19,26 @@ Forge, source provenance and the frozen Landscape. Diagnose the full-footprint
 support objective before changing geometry or contact policy. Do not silently
 relax numeric gates or regenerate another nested-ring dome.
 
-Latest rock packet: code `8be369c2f4415a4a7f8fb25fdbea2dd238e8fd3d`,
+Latest natural-source packet: code `e1d821a0405253c1d4a2953a0372e18bad993927`,
+token `naturalbase01`, six clean process exits. A separate Rock07 planar-base
+derivative preserves its natural upper source triangles and passes only the
+source-cap diagnostic at gentle point 3 (0.9242 cm embedding, 2509/2509 cap and
+3345/3345 full-footprint ground rays). Four steep cases reject. Rock09 preparation
+rejects multiple cut loops; its original LOD0 control remains rejected by V1.
+All ten full-footprint V1 decisions remain REJECTED. Read the
+[complete natural-scan evidence](../assets/pcg365-natural-scan-20261012/evidence.json)
+and [native receipts](../assets/pcg365-natural-scan-20261012/native-receipts.json).
+Fresh saved-mesh readback and two warmed actual UE GPU images are complete.
+Parent and independent peer agree: view02 still creates a floating impression
+under a natural overhang, and Forge is too pale/low-detail at this scale.
+The largest sampled positive overhang gap is 11.6417 cm: cap support does not
+prove acceptable visual seating. Status REVIEW_REQUIRED, no visual PASS,
+no regional qualification, no scatter, no terrain change. Do not report the
+source-cap alternative as a V1/V2 PASS or physical stability proof.
+Next work must resolve actual pose/source silhouette and material detail
+separately, preserving full-footprint exclusions and all negative evidence.
+
+Earlier rejected authored-rock packet: code `8be369c2f4415a4a7f8fb25fdbea2dd238e8fd3d`,
 token `roundedrocks01`, six processes exit 0. Two original rounded forms with
 shared Forge MI pass sampled contact at gentle diagnostic point 3, with 3.13/3.39
 cm embedding; eight steep/unsuitable cases reject. Four warmed real GPU review
