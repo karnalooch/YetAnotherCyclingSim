@@ -94,7 +94,9 @@ class RockCapture:
                 patch_trials = [
                     c
                     for c in measured
-                    if c.get("source_patch_diagnostic", {}).get("fine", {}).get("status")
+                    if c.get("source_patch_diagnostic", {})
+                    .get("fine", {})
+                    .get("status")
                     == "DIAGNOSTIC_SUPPORT_PATCH_ONLY"
                 ]
                 chosen = (

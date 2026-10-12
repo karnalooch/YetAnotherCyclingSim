@@ -240,9 +240,18 @@ def prepare(asset, output):
         cap_material_id = len(original.data.materials)
         cap_faces = []
         loop_vectors = [v.co.copy() for v in loop]
-        by_coordinate = {tuple(v.co): v for v in loop}
+        # Installed 4.5 bpy_extras/mesh_utils.py:394-398 maps integer
+        # tessellation indices into the concatenated input polygon vertices.
         for triangle in tessellate_polygon([loop_vectors]):
-            verts = [by_coordinate[tuple(v)] for v in triangle]
+            require(
+                len(triangle) == 3
+                and all(
+                    type(index) is int and 0 <= index < len(loop) for index in triangle
+                )
+                and len(set(triangle)) == 3,
+                "Unexpected Blender4.5.9 tessellation index result",
+            )
+            verts = [loop[index] for index in triangle]
             if (verts[1].co - verts[0].co).cross(verts[2].co - verts[0].co).z > 0:
                 verts.reverse()
             face = bm.faces.new(verts)
