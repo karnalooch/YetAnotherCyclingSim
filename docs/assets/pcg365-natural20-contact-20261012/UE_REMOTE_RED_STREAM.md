@@ -37,3 +37,42 @@ action/SHA/proof scope, or changed staged files. The Windows workflow now
 re-tests the *actual old marker* plus valid and invalid typed fixtures before
 launching Unreal. Do not call interactive streaming PASS until the viewer and
 real browser video-frame receipt succeed on the new exact-head run.
+
+
+## Second owned live attempt — diagnosed Python fatal at startup
+
+[82ed322 / run 38292122043](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38292122043)
+passed exact-SHA protected CI, Blender Material Forge, 6 offline marker
+tests, and the historical native marker (PowerShell JSON decoded an Int64 exit
+code 0). The launched UE Editor exited status 3 before the browser received
+any frame; no interactive owner handoff occurred.
+
+The original **314,720-byte** `editor.log`, included in retained
+[artifact 11767148249](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38292122043/artifacts/11767148249),
+shows a **caught, reproducible integration issue**, not an unexplained GPU
+crash: `bootstrap_pcg365_red_stream.py:33` raised
+`RuntimeError: Live handoff requires a fresh empty session directory`.
+Unreal itself created `editor.log` via `-AbsLog` before starting
+`-ExecutePythonScript`. The bootstrap treated its own valid engine log as
+an alien previous-session file. The `-ScriptErrorsAreFatal` launch option
+then escalated the uncaught Python exception into
+`EditorPythonExecuter.cpp:97: Python script executed with errors`, creating
+the Epic Crash Reporter window. The owner-reported screenshot is consistent
+with this exact log, not evidence of corrupt terrain or modified assets.
+
+The correction keeps the immutable fresh-session boundary but allows
+**only** an ordinary non-symlink `editor.log` plus an otherwise empty new
+directory. Unknown receipts, prior session output, directories and aliases
+remain rejected. The check now runs inside a handled Python
+`try/except`, writes a bounded `red-live-error.json` on failure, and
+logs a warning rather than triggering a Python fatal; the PowerShell owner
+still rejects failed readiness and can stop only its own Editor.
+
+Offline regression tests cover the true initial `-AbsLog` order, stale
+artifacts, missing session, and bootstrap exception handling. No cache deletion,
+relaunch without CI gates, source-scene save, terrain/road material modification
+or production scatter admission is allowed.
+
+The next native attempt must independently prove that P0–P4 red markers
+and the real PixelStreaming2 viewer survive startup and that Edge/Chrome
+receives live frames. Do not claim a working UE Remote address before that.

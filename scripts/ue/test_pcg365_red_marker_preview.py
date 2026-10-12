@@ -2,6 +2,7 @@
 import ast
 import json
 from pathlib import Path
+import tempfile
 import unittest
 
 HERE = Path(__file__).resolve().parent
@@ -107,6 +108,71 @@ class RedMarkerReview(unittest.TestCase):
         self.assertIn("LIVE.start(persistent=True)", source)
         self.assertNotIn("start_capture(", source)
         self.assertNotIn("save_asset(", source)
+
+
+
+class LiveBootstrapSessionGate(unittest.TestCase):
+    """An actual UE -AbsLog exists before -ExecutePythonScript begins."""
+
+    @staticmethod
+    def gate():
+        path = HERE / "bootstrap_pcg365_red_stream.py"
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        selected = [
+            node for node in tree.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "require_fresh_live_session"
+        ]
+        self_ns = {}
+        exec(compile(ast.Module(body=selected, type_ignores=[]), str(path), "exec"),
+             self_ns)
+        return self_ns["require_fresh_live_session"]
+
+    def test_fresh_session_with_only_unreal_abslog_is_allowed(self):
+        gate = self.gate()
+        with tempfile.TemporaryDirectory(prefix="pcg365-red-session-") as temp:
+            session = Path(temp)
+            gate(session)
+            (session / "editor.log").write_text("Engine startup", encoding="utf-8")
+            gate(session)
+
+    def test_unrelated_old_artifacts_are_rejected(self):
+        gate = self.gate()
+        with tempfile.TemporaryDirectory(prefix="pcg365-red-session-") as temp:
+            session = Path(temp)
+            (session / "editor.log").write_text("Engine startup", encoding="utf-8")
+            for unwanted in ("red-live-error.json", "pcg365-stream-session.json"):
+                candidate = session / unwanted
+                candidate.write_text("old", encoding="utf-8")
+                with self.subTest(unwanted=unwanted), self.assertRaisesRegex(
+                    RuntimeError, "unexpected prior output"
+                ):
+                    gate(session)
+                candidate.unlink()
+            (session / "scene").mkdir()
+            with self.assertRaisesRegex(RuntimeError, "unexpected prior output"):
+                gate(session)
+
+    def test_missing_directory_is_rejected(self):
+        gate = self.gate()
+        with tempfile.TemporaryDirectory(prefix="pcg365-red-session-") as temp:
+            with self.assertRaisesRegex(RuntimeError, "new session"):
+                gate(Path(temp) / "not-created")
+
+    def test_bootstrap_handles_rejections_without_uncaught_python_error(self):
+        script = (HERE / "bootstrap_pcg365_red_stream.py").read_text(encoding="utf-8")
+        tree = ast.parse(script)
+        main = next(node for node in tree.body
+                    if isinstance(node, ast.FunctionDef) and node.name == "main")
+        execution = next(node for node in main.body if isinstance(node, ast.Try))
+        calls_in_try = [
+            node for node in ast.walk(execution)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+            and node.func.id == "require_fresh_live_session"
+        ]
+        self.assertEqual(len(calls_in_try), 1)
+        self.assertIn("PCG365_RED_STREAM_BOOTSTRAP_FAILED", script)
+        self.assertNotIn("unreal.log_error(error)", script)
 
 
 if __name__ == "__main__":
