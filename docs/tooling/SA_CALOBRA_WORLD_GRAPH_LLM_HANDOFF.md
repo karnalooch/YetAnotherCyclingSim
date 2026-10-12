@@ -24,6 +24,17 @@ image is explicitly a concept, never a native screenshot or geography authority.
 
 ## Copyable starting prompt
 
+Latest point-graph packet: code `f683beecd3b8e618456136a09a74141a663b26e3`,
+token `maskxy01`, all three processes exit 0. Five authenticated mask-derived XY
+carriers survive cleanup/regeneration and graph/map fresh reload with exact
+transforms/seeds and unchanged saved hashes. Read
+[the native evidence manifest](../assets/pcg365-mask-xy-20261012/evidence.json).
+Stable IDs are sidecar-linked by native seed, not propagated PCG metadata.
+No mesh spawner or terrain modification. Next work remains real asset/contact
+qualification and numeric limits; use the existing isolated fixture rather than
+repeating mechanical graph proof. Three official small-rock discovery sources
+are listed in the implementation evidence, with no acquisition or admission.
+
 ```text
 Work on YACS issue #365, M3 Route & World Foundation, step 4 of 13.
 First determine whether the owner has explicitly resumed implementation.

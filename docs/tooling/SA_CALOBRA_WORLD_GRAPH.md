@@ -728,3 +728,45 @@ unqualified; `qualified_assets: []`, `placement: false`.
 Local verification: five request tests PASS, Ruff and PowerShell parser PASS,
 docs links/i18n/structure/freshness PASS. Legacy Windows-1252 em dashes in two
 evidence documents were normalized to UTF-8 without changing their wording.
+
+#### Native execution result
+
+Code `f683beecd3b8e618456136a09a74141a663b26e3`, token `maskxy01`:
+inspect, mask-xy-create and mask-xy-reload all completed with exit 0 and clean
+launcher markers. Each graph process produced two identical five-point outputs,
+with empty output after cleanup. Fresh reload verified the saved recipe before
+explicit generation. The two saved graph/map packages and all authenticated
+staged bytes remained unchanged. The exact request, native receipts, launcher
+markers and package inventory are copied into
+[the evidence manifest](../assets/pcg365-mask-xy-20261012/evidence.json).
+Full logs remain under `D:/yacs/work/pcg365/f683beecd3b8e618456136a09a74141a663b26e3/maskxy01/proof`.
+
+Create receipt SHA256:
+`f83f3a57c875862161635a8eea984d63f7b2559151847c932a3dc0af182a4389`.
+Fresh-reload receipt SHA256:
+`31d45a4d46c0e94b01d7767449800ba9aefb1d37654260efa97fedf898d3deb8`.
+This proves bounded CPU-mask-point ingestion, deterministic native regeneration
+and saved persistence. It does not prove native raster sampling, metadata
+propagation, real surface placement or an exact-head C++/PCGEx build. Terrain,
+road, physics and canonical content were not edited. Native build NOT RUN;
+whole-area owner review remains pending; performance remains deferred/false.
+Local regression verification: 31 PCG asset tests and seven candidate tests PASS.
+
+#### Independent rock discovery, not acquisition or qualification
+
+Official provider pages reviewed on 2026-10-12 identify three separate small-rock
+sources. Their metadata and preview descriptions below are provider claims, not
+native measurements or geological evidence. Each page links CC0, consistent with
+[Poly Haven's license](https://polyhaven.com/license). No models were downloaded
+or imported, no lifecycle status was promoted, and no regional use was approved.
+
+| Discovery source | Provider metadata and reason for review | Remaining qualification |
+|---|---|---|
+| [Rock 07](https://polyhaven.com/a/rock_07) | 0.3 m wide, 28K tris, weathered erosion; clay and orthographic previews available | Compare actual silhouette with Boulder; source receipt, import, support, cost and regional rationale |
+| [Rock 09](https://polyhaven.com/a/rock_09) | 0.1 m wide, 23K tris, rust-brown stone/dirt and erosion; clay and orthographic previews available | Same; texture coloration is not geological identity |
+| [Stone 01](https://polyhaven.com/a/stone_01) | Provider describes reddish quartz with veins; separate small-stone source | Quartz description does not support limestone admission; assess whether any regional use is justified before acquisition |
+
+Separate source IDs alone do not establish useful visual diversity. Compare
+clay/orthographic silhouettes first, then use the existing Asset Plan lifecycle
+and source authentication. Material Forge cannot convert an unsuitable shape or
+geology into an admitted regional rock. The current graph remains point-only.
