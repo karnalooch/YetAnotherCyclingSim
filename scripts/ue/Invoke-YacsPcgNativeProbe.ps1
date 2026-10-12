@@ -227,6 +227,24 @@ if ($Action -cnotin @('inspect','collection-contact-prepare')) {
         $expectedTerrainAssets = if ($QualificationSet -ceq 'natural20-contact') { 202 } else { 14 }
         if ($qualification.scope -cne 'LOCAL_DIAGNOSTIC_ONLY_NOT_REGIONAL_PLACEMENT' -or $qualification.terrain.assets.Count -ne $expectedTerrainAssets) { throw 'Unexpected qualification source contract.' }
         Stage-QualifiedFile $qualificationPath 'qualification-sources.json' (File-Identity $qualificationPath)
+
+        # "Saved/" belongs to the authoring workspace, not GitHub's code-only CI
+        # checkout. Reuse the retained run04 input bytes, never a new/generated XY.
+        # The pinned qualification contract still owns the exact SHA256 and size.
+        $contactInput = $qualification.contact_input
+        if ($QualificationSet -ceq 'natural20-contact') {
+            if ($contactInput.path -cne 'Saved/RuntimeProof/WorldGraph365/real-contact-source02.json') {
+                throw 'Natural20 contact input contract path drift.'
+            }
+            $contactSource = 'D:/yacs/work/pcg365/1a02ac21a7fb1dbc84364843e862b186a2ea0a18/natural20-contact04/contact-request.json'
+        } else {
+            $contactSource = Join-Path $RepoRoot $contactInput.path
+        }
+        if (-not (Test-Path -LiteralPath $contactSource -PathType Leaf)) {
+            throw "Pinned contact input unavailable before bulk staging: $contactSource"
+        }
+        Assert-SameFile $contactSource $contactInput
+        Stage-QualifiedFile $contactSource 'contact-request.json' $contactInput
         foreach ($scriptRelative in @('scripts/ue/sa_calobra_pcg_material_binding.py','scripts/ue/sa_calobra_pcg_terrain_contact.py','scripts/ue/import_material_forge_variant.py','scripts/assets/road_material_contract.py','scripts/assets/pcg_boulder_support.py','scripts/ue/sa_calobra_pcg_boulder_settle.py','scripts/ue/sa_calobra_pcg_boulder_capture.py')) {
             $source = Join-Path $RepoRoot $scriptRelative
             $committedScript = ((Read-RepoGit @('show', "${ExpectedHead}:$scriptRelative")) -join "`n") + "`n"
@@ -253,7 +271,7 @@ if ($Action -cnotin @('inspect','collection-contact-prepare')) {
             }
             Stage-QualifiedFile $source $file.path ([ordered]@{sha256=$file.sha256;bytes=$file.size_bytes})
         }
-        Stage-QualifiedFile (Join-Path $RepoRoot $qualification.contact_input.path) 'contact-request.json' $qualification.contact_input
+
     }
     if ($RockQualificationSources) {
         if (-not $QualificationSources) { throw 'Rock qualification requires authenticated terrain/Forge sources.' }
