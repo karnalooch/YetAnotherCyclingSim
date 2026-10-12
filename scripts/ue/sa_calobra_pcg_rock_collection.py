@@ -517,9 +517,38 @@ class StudioCapture:
                     "shadow_readback": shadow_readback(floor_component),
                 }
             )
+            floor_parent = unreal.load_asset("/Engine/BasicShapes/BasicShapeMaterial")
+            require(
+                isinstance(floor_parent, unreal.MaterialInterface),
+                "Preview floor material missing",
+            )
+            self.floor_mid = unreal.MaterialLibrary.create_dynamic_material_instance(
+                self.world, floor_parent
+            )
+            require(
+                isinstance(self.floor_mid, unreal.MaterialInstanceDynamic),
+                "Preview floor MID failed",
+            )
+            self.floor_mid.set_vector_parameter_value(
+                "Color", unreal.LinearColor(0.08, 0.095, 0.11, 1)
+            )
+            floor_component.set_material(0, self.floor_mid)
+            color = self.floor_mid.get_vector_parameter_value("Color")
+            rgba = [float(getattr(color, key)) for key in ("r", "g", "b", "a")]
+            require(
+                all(abs(a - b) <= 1e-6 for a, b in zip(rgba, [0.08, 0.095, 0.11, 1]))
+                and floor_component.get_material(0) == self.floor_mid,
+                "Preview floor MID readback differs",
+            )
+            self.report["preview_floor"]["material"] = {
+                "parent": floor_parent.get_path_name(),
+                "transient_mid": self.floor_mid.get_path_name(),
+                "color_rgba": rgba,
+                "saved": False,
+            }
             for cls, comp_cls, intensity in (
-                (unreal.DirectionalLight, unreal.DirectionalLightComponent, 3.0),
-                (unreal.SkyLight, unreal.SkyLightComponent, 0.65),
+                (unreal.DirectionalLight, unreal.DirectionalLightComponent, 2.5),
+                (unreal.SkyLight, unreal.SkyLightComponent, 0.8),
             ):
                 actor = self.spawn(
                     cls, [0, 0, max_z * 4], unreal.Rotator(pitch=-45, yaw=-35)
@@ -527,20 +556,71 @@ class StudioCapture:
                 component = actor.get_component_by_class(comp_cls)
                 component.set_mobility(unreal.ComponentMobility.MOVABLE)
                 component.set_intensity(intensity)
+                sky_readback = None
                 if cls == unreal.SkyLight:
-                    component.recapture_sky()
+                    cube_path = "/Engine/MapTemplates/Sky/DaylightAmbientCubemap"
+                    cube_file = (
+                        Path(unreal.Paths.engine_content_dir())
+                        / "MapTemplates/Sky/DaylightAmbientCubemap.uasset"
+                    )
+                    cube_identity = identity(cube_file)
+                    require(
+                        cube_identity["sha256"]
+                        == "0201cbf309e0936c995cfdbc7b97c59748099a646a9f2bc67021368f7a2aa2ed",
+                        "Engine daylight cubemap bytes differ",
+                    )
+                    cube = unreal.load_asset(cube_path)
+                    require(
+                        isinstance(cube, unreal.TextureCube),
+                        "Engine daylight cubemap missing",
+                    )
+                    component.set_editor_property(
+                        "source_type", unreal.SkyLightSourceType.SLS_SPECIFIED_CUBEMAP
+                    )
+                    component.set_cubemap(cube)
+                    require(
+                        component.get_editor_property("source_type")
+                        == unreal.SkyLightSourceType.SLS_SPECIFIED_CUBEMAP
+                        and component.get_editor_property("cubemap") == cube,
+                        "Sky cubemap readback differs",
+                    )
+                    sky_readback = {
+                        "source_type": str(
+                            component.get_editor_property("source_type")
+                        ),
+                        "cubemap": component.get_editor_property(
+                            "cubemap"
+                        ).get_path_name(),
+                        "engine_source": cube_identity,
+                    }
                 self.report["lighting"].append(
                     {
                         "class": actor.get_class().get_name(),
                         "intensity": float(component.get_editor_property("intensity")),
                         "rotation_deg": rotation_values(actor),
                         "shadow_readback": shadow_readback(component, light=True),
+                        "sky_source": sky_readback,
                     }
                 )
             self.camera = self.spawn(unreal.CameraActor, [0, 0, 0])
             self.camera.get_component_by_class(
                 unreal.CameraComponent
             ).set_editor_property("field_of_view", 50.0)
+            camera_component = self.camera.get_component_by_class(
+                unreal.CameraComponent
+            )
+            settings = unreal.PostProcessSettings()
+            for key, value in {
+                "override_auto_exposure_method": True,
+                "auto_exposure_method": unreal.AutoExposureMethod.AEM_MANUAL,
+                "override_auto_exposure_apply_physical_camera_exposure": True,
+                "auto_exposure_apply_physical_camera_exposure": False,
+                "override_auto_exposure_bias": True,
+                "auto_exposure_bias": -1.0,
+            }.items():
+                settings.set_editor_property(key, value)
+            camera_component.set_editor_property("post_process_settings", settings)
+            camera_component.set_editor_property("post_process_blend_weight", 1.0)
             self.views = [
                 {
                     "name": "overview",
@@ -599,6 +679,30 @@ class StudioCapture:
             ).get_editor_property("field_of_view")
         )
         require(abs(actual_fov - 50) <= 0.0001, "Studio camera FOV differs")
+        camera_component = self.camera.get_component_by_class(unreal.CameraComponent)
+        settings = camera_component.get_editor_property("post_process_settings")
+        exposure = {}
+        for key, expected in {
+            "override_auto_exposure_method": True,
+            "auto_exposure_method": unreal.AutoExposureMethod.AEM_MANUAL,
+            "override_auto_exposure_apply_physical_camera_exposure": True,
+            "auto_exposure_apply_physical_camera_exposure": False,
+            "override_auto_exposure_bias": True,
+            "auto_exposure_bias": -1.0,
+        }.items():
+            actual = settings.get_editor_property(key)
+            require(
+                (
+                    abs(actual - expected) <= 1e-6
+                    if type(expected) is float
+                    else actual == expected
+                ),
+                "Camera exposure readback differs: " + key,
+            )
+            exposure[key] = str(actual) if key == "auto_exposure_method" else actual
+        blend = float(camera_component.get_editor_property("post_process_blend_weight"))
+        require(abs(blend - 1.0) <= 1e-6, "Camera postprocess blend differs")
+        exposure["post_process_blend_weight"] = blend
         unreal.get_editor_subsystem(
             unreal.UnrealEditorSubsystem
         ).set_level_viewport_camera_info(eye, rotation)
@@ -610,6 +714,7 @@ class StudioCapture:
             "resolution_px": [2560, 1440],
             "camera_rotation_deg": actual_rotation,
             "camera_position_readback": camera_position,
+            "manual_exposure_readback": exposure,
             "fov_deg": actual_fov,
         }
         self.task = unreal.AutomationLibrary.take_high_res_screenshot(
