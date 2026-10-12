@@ -238,6 +238,9 @@ def main():
             "rock-render",
             "rock-pack",
             "rock-pack-reload",
+            "rock-collection",
+            "rock-collection-reload",
+            "rock-collection-render",
         }:
             unreal.EditorPythonScripting.set_keep_python_script_alive(True)
             if not unreal.EditorLoadingAndSavingUtils.new_blank_map(False):
@@ -277,6 +280,24 @@ def main():
                     from scripts.ue import sa_calobra_pcg_rock_variant_pack as pack
 
                     operation = pack.build if ACTION == "rock-pack" else pack.reload
+                    receipt.update(operation(root, OUTPUT, HEAD, binding))
+                elif ACTION in {
+                    "rock-collection",
+                    "rock-collection-reload",
+                    "rock-collection-render",
+                }:
+                    from scripts.ue import sa_calobra_pcg_rock_collection as collection
+
+                    if ACTION == "rock-collection-render":
+                        ACTIVE = collection.start_capture(
+                            root, OUTPUT, HEAD, binding, finish
+                        )
+                        return
+                    operation = (
+                        collection.build
+                        if ACTION == "rock-collection"
+                        else collection.reload
+                    )
                     receipt.update(operation(root, OUTPUT, HEAD, binding))
                 elif ACTION == "material-reload":
                     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -373,6 +394,9 @@ def finish(receipt):
         "rock-render",
         "rock-pack",
         "rock-pack-reload",
+        "rock-collection",
+        "rock-collection-reload",
+        "rock-collection-render",
     }:
         # Installed AutomationBlueprintFunctionLibrary.cpp:702 flushes async
         # loading and finishes asset compilation. A receipt alone is insufficient
@@ -392,6 +416,9 @@ def finish(receipt):
         "rock-render",
         "rock-pack",
         "rock-pack-reload",
+        "rock-collection",
+        "rock-collection-reload",
+        "rock-collection-render",
     }:
         # Let the startup-script stack unwind before editor teardown. This is
         # lifecycle sequencing, not a substitute for clean process completion.
@@ -403,6 +430,9 @@ def finish(receipt):
             "rock-render",
             "rock-pack",
             "rock-pack-reload",
+            "rock-collection",
+            "rock-collection-reload",
+            "rock-collection-render",
         }
         quit_not_before = time.monotonic() + (5.0 if rock_action else 0.0)
 

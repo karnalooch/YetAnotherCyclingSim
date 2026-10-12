@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "milestone": "M3",
+  "base_sha": "9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53",
+  "owner_scope": "Autonomous local production of twenty distinct source-derived rock geometries, Material Forge V2 appearance, saved Unreal library, real GPU gallery and documentation for a later tool.",
+  "status": "PREPARATION_AND_NATIVE_EVIDENCE_PENDING",
+  "roles": {
+    "visual_dcc": "Pinned Blender source derivatives and geometry receipts",
+    "procedural_world": "Read-only envelope/contact limits and evidence handoff",
+    "unreal_runtime_parent": "Serialized import, save/reload, material readback and GPU gallery",
+    "world_data": "Unchanged terrain, road, grid and geographic authority"
+  },
+  "source_inputs": [
+    {
+      "id": "namaqualand_boulder_02",
+      "prepared_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "basis": "Explicit planar-base12, half-size, quarter-turn prepared scan",
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "namaqualand_boulder_06",
+      "prepared_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "basis": "Original-size planar-base10 prepared scan",
+      "license": "CC0-1.0"
+    }
+  ],
+  "producer": "scripts/blender/sculpt_pcg365_rock_collection.py",
+  "geometry_contract": {
+    "count": 20,
+    "recipes_per_prepared_source": 10,
+    "classification": "DECORATIVE_SOURCE_DERIVED_ART_NOT_20_INDEPENDENT_SCANS",
+    "operations": ["positive affine nonuniform XYZ scale", "explicit XZ/YZ lean"],
+    "required_receipts": ["source hashes before/after", "source-to-variant matrices", "positive determinants", "derived bounds", "topology/winding/UV inventory", "twenty unique normalized shape hashes beyond uniform scale/yaw"],
+    "base_z_cm": 0,
+    "new_primitives_or_plinths": false
+  },
+  "material_recipe": "Material Forge V2; appearance-only, effective geometry-displacement readback required",
+  "native_evidence": {
+    "import": "PENDING",
+    "saved_library_reload": "PENDING",
+    "gpu_gallery": "PENDING",
+    "actual_receipts": []
+  },
+  "owner_appearance_feedback": "Earlier natural rocks received positive feedback; new twenty-item collection is not thereby verified.",
+  "future_tool": {
+    "scope": "Requirements and source/recipe/evidence data only",
+    "application_implementation": "NOT_AUTHORIZED_BY_THIS_PACKET",
+    "data": ["source provenance", "reversible matrices", "variant recipes", "material parameters", "package identities", "gallery cameras", "exact-head proof links"]
+  },
+  "terrain_modified": false,
+  "road_modified": false,
+  "scatter": false,
+  "contact_admission": "NOT_ADMITTED_FOR_NEW_VARIANTS",
+  "historical_contact_limits": "Existing full-footprint V1/V2 gates, REJECTED history and overhang debt remain unchanged.",
+  "qualified_assets": [],
+  "full_qualification": false,
+  "performance_pass": false
+}

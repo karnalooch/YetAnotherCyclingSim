@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "milestone": "M3",
+  "base_sha": "fe3541c4405356e6b3a5c61fe614c0b21ac80fe2",
+  "source_manifest": {
+    "path": "worldgen/sa_calobra/pcg365_large_scan_base_diagnostic_v1.json",
+    "sha256": "427bc0bbc939d244d7cd728e613725c18fa8da43da9d022bba67e90f2e9cf5a3"
+  },
+  "historical_authenticated_envelope": {
+    "radius_m": 1.2118825350159463,
+    "clearance_m": 0.25,
+    "total_radius_plus_clearance_m": 1.4618825350159463,
+    "cpu_fingerprint": "8e8849465bed2d0f72e1f9b6a92e700cbd9a9dce5f51dbfd72136dcadd98b69f",
+    "contract": "Vegetation-selector XY diagnostic envelope only; not rock semantic/source admission"
+  },
+  "radius_method": "hypot(max(abs(AABBxmin),abs(AABBxmax)),max(abs(AABBymin),abs(AABBymax)))/100; pivot-centred conservative AABB corner, not exact silhouette",
+  "variants": [
+    {
+      "id": "namaqualand_boulder_02_s75",
+      "source_id": "namaqualand_boulder_02",
+      "prepared_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "relative_baked_scale": 0.75,
+      "yaw_change_deg": 0,
+      "expected_dimensions_cm": [
+        46.15742415189743,
+        93.58847737312317,
+        29.12704646587372
+      ],
+      "conservative_pivot_xy_radius_m": 0.5444112713059512,
+      "clearance_m": 0.25,
+      "total_radius_plus_clearance_m": 0.7944112713059512,
+      "envelope_radius_margin_m": 0.6674712637099951,
+      "within_original_radius_and_same_clearance": true,
+      "planting_depth_fraction": 0.05,
+      "planting_depth_cm": 1.456352323293686,
+      "total_embedding_limit_fraction": 0.2,
+      "total_embedding_limit_cm": 5.825409293174744,
+      "remaining_embedding_budget_after_declared_plant_cm": 4.369056969881058,
+      "status": "BOUNDS_ONLY_NOT_QUALIFIED"
+    },
+    {
+      "id": "namaqualand_boulder_02_s100",
+      "source_id": "namaqualand_boulder_02",
+      "prepared_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "relative_baked_scale": 1.0,
+      "yaw_change_deg": 0,
+      "expected_dimensions_cm": [
+        61.54323220252991,
+        124.78463649749756,
+        38.83606195449829
+      ],
+      "conservative_pivot_xy_radius_m": 0.7258816950746017,
+      "clearance_m": 0.25,
+      "total_radius_plus_clearance_m": 0.9758816950746017,
+      "envelope_radius_margin_m": 0.4860008399413447,
+      "within_original_radius_and_same_clearance": true,
+      "planting_depth_fraction": 0.05,
+      "planting_depth_cm": 1.9418030977249146,
+      "total_embedding_limit_fraction": 0.2,
+      "total_embedding_limit_cm": 7.767212390899658,
+      "remaining_embedding_budget_after_declared_plant_cm": 5.825409293174744,
+      "status": "BOUNDS_ONLY_NOT_QUALIFIED"
+    },
+    {
+      "id": "namaqualand_boulder_02_s125",
+      "source_id": "namaqualand_boulder_02",
+      "prepared_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "relative_baked_scale": 1.25,
+      "yaw_change_deg": 0,
+      "expected_dimensions_cm": [
+        76.92904025316238,
+        155.98079562187195,
+        48.545077443122864
+      ],
+      "conservative_pivot_xy_radius_m": 0.9073521188432521,
+      "clearance_m": 0.25,
+      "total_radius_plus_clearance_m": 1.157352118843252,
+      "envelope_radius_margin_m": 0.3045304161726943,
+      "within_original_radius_and_same_clearance": true,
+      "planting_depth_fraction": 0.05,
+      "planting_depth_cm": 2.427253872156143,
+      "total_embedding_limit_fraction": 0.2,
+      "total_embedding_limit_cm": 9.709015488624573,
+      "remaining_embedding_budget_after_declared_plant_cm": 7.28176161646843,
+      "status": "BOUNDS_ONLY_NOT_QUALIFIED"
+    },
+    {
+      "id": "namaqualand_boulder_06_s75",
+      "source_id": "namaqualand_boulder_06",
+      "prepared_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "relative_baked_scale": 0.75,
+      "yaw_change_deg": 0,
+      "expected_dimensions_cm": [
+        50.62372460961342,
+        90.89067578315735,
+        43.98512542247772
+      ],
+      "conservative_pivot_xy_radius_m": 0.5623357504504276,
+      "clearance_m": 0.25,
+      "total_radius_plus_clearance_m": 0.8123357504504276,
+      "envelope_radius_margin_m": 0.6495467845655187,
+      "within_original_radius_and_same_clearance": true,
+      "planting_depth_fraction": 0.05,
+      "planting_depth_cm": 2.199256271123886,
+      "total_embedding_limit_fraction": 0.2,
+      "total_embedding_limit_cm": 8.797025084495544,
+      "remaining_embedding_budget_after_declared_plant_cm": 6.597768813371658,
+      "status": "BOUNDS_ONLY_NOT_QUALIFIED"
+    },
+    {
+      "id": "namaqualand_boulder_06_s100",
+      "source_id": "namaqualand_boulder_06",
+      "prepared_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "relative_baked_scale": 1.0,
+      "yaw_change_deg": 0,
+      "expected_dimensions_cm": [
+        67.49829947948456,
+        121.18756771087646,
+        58.64683389663696
+      ],
+      "conservative_pivot_xy_radius_m": 0.7497810006005701,
+      "clearance_m": 0.25,
+      "total_radius_plus_clearance_m": 0.9997810006005701,
+      "envelope_radius_margin_m": 0.46210153441537627,
+      "within_original_radius_and_same_clearance": true,
+      "planting_depth_fraction": 0.05,
+      "planting_depth_cm": 2.932341694831848,
+      "total_embedding_limit_fraction": 0.2,
+      "total_embedding_limit_cm": 11.729366779327393,
+      "remaining_embedding_budget_after_declared_plant_cm": 8.797025084495544,
+      "status": "BOUNDS_ONLY_NOT_QUALIFIED"
+    },
+    {
+      "id": "namaqualand_boulder_06_s125",
+      "source_id": "namaqualand_boulder_06",
+      "prepared_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "relative_baked_scale": 1.25,
+      "yaw_change_deg": 0,
+      "expected_dimensions_cm": [
+        84.3728743493557,
+        151.48445963859558,
+        73.3085423707962
+      ],
+      "conservative_pivot_xy_radius_m": 0.9372262507507125,
+      "clearance_m": 0.25,
+      "total_radius_plus_clearance_m": 1.1872262507507125,
+      "envelope_radius_margin_m": 0.2746562842652338,
+      "within_original_radius_and_same_clearance": true,
+      "planting_depth_fraction": 0.05,
+      "planting_depth_cm": 3.66542711853981,
+      "total_embedding_limit_fraction": 0.2,
+      "total_embedding_limit_cm": 14.66170847415924,
+      "remaining_embedding_budget_after_declared_plant_cm": 10.99628135561943,
+      "status": "BOUNDS_ONLY_NOT_QUALIFIED"
+    }
+  ],
+  "owner_appearance_feedback": "POSITIVE_ROCK_APPEARANCE; does not replace geometric/contact admission",
+  "geometry_limits": "Existing V1/V2 full-footprint REJECTED history and frozen numeric gates unchanged. Source-cap fit diagnostic only; known overhang debt retained. New scales need actual native support/contact, source/derived identity and save/reload proof.",
+  "placement": false,
+  "qualified_assets": [],
+  "terrain_modified": false,
+  "native_execution": "NOT_RUN_FOR_THIS_VARIANT_PACK",
+  "limitations": "Radius containment applies only at historical authenticated centres with same mapping, yaw and clearance and zero geometry-expanding displacement; no scatter, new sites, continuous support, physical stability, performance or regional-production admission.",
+  "variant_catalog": {
+    "path": "worldgen/sa_calobra/pcg365_local_rock_variant_catalog_v1.json",
+    "sha256": "7873b26d27a128d8be082e7791896f044b9b7d2e31e3bc2c7da51fc74eafa333"
+  }
+}

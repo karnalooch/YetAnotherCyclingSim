@@ -10,11 +10,13 @@
 param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string]$ExpectedHead,
     [Parameter(Mandatory)][ValidatePattern('^[A-Za-z0-9][A-Za-z0-9-]{0,63}$')][string]$RunToken,
-    [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload')][string]$Action = 'inspect',
+    [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render')][string]$Action = 'inspect',
     [switch]$QualificationSources,
     [ValidateSet('baseline','rock-detail')][string]$QualificationSet = 'baseline',
     [switch]$RockQualificationSources,
     [ValidateSet('source','lod0','support','scan-base','large-base')][string]$RockSet = 'source',
+    [string]$RockCollectionCatalog,
+    [ValidatePattern('^[0-9a-f]{64}$')][string]$ExpectedRockCollectionSha,
     [string]$RockVariantCatalog,
     [ValidatePattern('^[0-9a-f]{64}$')][string]$ExpectedRockVariantSha,
     [string]$MaskXyRequest,
@@ -244,6 +246,23 @@ if ($Action -ne 'inspect') {
         if ((Hash-Lf ([IO.File]::ReadAllText($source))) -cne (Hash-Lf $committedScript)) { throw 'Uncommitted variant helper.' }
         Stage-QualifiedFile $source $scriptRelative (File-Identity $source)
     } elseif ($ExpectedRockVariantSha) { throw 'Expected variant SHA requires catalog path.' }
+    if ($RockCollectionCatalog) {
+        if (-not $QualificationSources -or -not $ExpectedRockCollectionSha) { throw 'Collection requires authenticated Forge sources and expected SHA.' }
+        $collectionIdentity = File-Identity $RockCollectionCatalog
+        if ($collectionIdentity.sha256 -cne $ExpectedRockCollectionSha) { throw 'Collection catalog SHA drift.' }
+        $collection = Get-Content -LiteralPath $RockCollectionCatalog -Raw | ConvertFrom-Json
+        if ($collection.schema_version -ne 1 -or $collection.scope -cne 'LOCAL_ROCK_COLLECTION20_ASSET_LIBRARY_ONLY' -or $collection.variants.Count -ne 20 -or $collection.placement -isnot [bool] -or $collection.placement -or $collection.qualified_assets.Count -ne 0) { throw 'Unexpected collection catalog contract.' }
+        Stage-QualifiedFile $RockCollectionCatalog 'rock-collection-catalog.json' $collectionIdentity
+        foreach ($variant in $collection.variants) {
+            if ($variant.id -cnotmatch '^rock(02|06)_(0[1-9]|10)$' -or $variant.source_relative -cne "rock-collection/$($variant.id).fbx") { throw 'Unexpected collection source identity.' }
+            Stage-QualifiedFile $variant.source $variant.source_relative $variant
+        }
+        $scriptRelative = 'scripts/ue/sa_calobra_pcg_rock_collection.py'
+        $source = Join-Path $RepoRoot $scriptRelative
+        $committedScript = ((Read-RepoGit @('show', "${ExpectedHead}:$scriptRelative")) -join "`n") + "`n"
+        if ((Hash-Lf ([IO.File]::ReadAllText($source))) -cne (Hash-Lf $committedScript)) { throw 'Uncommitted collection helper.' }
+        Stage-QualifiedFile $source $scriptRelative (File-Identity $source)
+    } elseif ($ExpectedRockCollectionSha) { throw 'Expected collection SHA requires catalog path.' }
     $plugins = @('PythonScriptPlugin','EditorScriptingUtilities','PCG','PCGToolset','PCGExtendedToolkit','LandscapePatch') | ForEach-Object { [ordered]@{Name=$_;Enabled=$true;Optional=$false} }
     [ordered]@{FileVersion=3;EngineAssociation='5.8';Category='';Description='YACS #365 owned local diagnostic';Plugins=@($plugins)} | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $Project -Encoding utf8
     $entries.Add([ordered]@{path='Pcg365Diagnostic.uproject';identity=(File-Identity $Project)})
@@ -276,8 +295,8 @@ if ($Action -eq 'reload') {
     }
 }
 if ($Action -in @('rock-qualify','rock-reload','rock-render') -and -not (Test-Path -LiteralPath (Join-Path $Root 'rock-qualification-request.json'))) { throw 'Rock sources were not staged.' }
-if ($Action -in @('material','material-reload','terrain','settle-render','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload') -and -not (Test-Path -LiteralPath (Join-Path $Root 'qualification-sources.json'))) { throw 'Qualification sources were not staged.' }
-if ($Action -in @('material-reload','terrain','settle-render','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload')) {
+if ($Action -in @('material','material-reload','terrain','settle-render','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render') -and -not (Test-Path -LiteralPath (Join-Path $Root 'qualification-sources.json'))) { throw 'Qualification sources were not staged.' }
+if ($Action -in @('material-reload','terrain','settle-render','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render')) {
     $materialCompleted = Get-Content (Join-Path $Proof 'material/launcher-completed.json') -Raw | ConvertFrom-Json
     if ($materialCompleted.code_sha -cne $ExpectedHead -or $materialCompleted.exit_code -ne 0) { throw 'Material save process did not complete cleanly.' }
     $binding = Get-Content (Join-Path $Proof 'material/binding.json') -Raw | ConvertFrom-Json
@@ -287,7 +306,7 @@ if ($Action -in @('material-reload','terrain','settle-render','rock-qualify','ro
         Assert-SameFile (Join-Path $Root $entry.path) $entry
     }
 }
-if ($Action -in @('terrain','settle-render','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload')) {
+if ($Action -in @('terrain','settle-render','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render')) {
     $materialReloadCompleted = Get-Content (Join-Path $Proof 'material-reload/launcher-completed.json') -Raw | ConvertFrom-Json
     if ($materialReloadCompleted.code_sha -cne $ExpectedHead -or $materialReloadCompleted.exit_code -ne 0) { throw 'Material fresh readback must complete before terrain measurement.' }
 }
@@ -316,6 +335,21 @@ if ($Action -eq 'rock-pack-reload') {
         Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package
     }
 }
+if ($Action -in @('rock-collection','rock-collection-reload','rock-collection-render') -and -not (Test-Path -LiteralPath (Join-Path $Root 'rock-collection-catalog.json'))) { throw 'Collection catalog was not staged.' }
+if ($Action -in @('rock-collection-reload','rock-collection-render')) {
+    $collectionCompleted = Get-Content (Join-Path $Proof 'rock-collection/launcher-completed.json') -Raw | ConvertFrom-Json
+    if ($collectionCompleted.code_sha -cne $ExpectedHead -or $collectionCompleted.exit_code -ne 0) { throw 'Collection save must complete cleanly before reload/render.' }
+    $collectionInventory = Get-Content (Join-Path $Proof 'rock-collection/rock-collection-inventory.json') -Raw | ConvertFrom-Json
+    if ($collectionInventory.code_sha -cne $ExpectedHead -or $collectionInventory.meshes.Count -ne 20) { throw 'Collection inventory differs.' }
+    foreach ($mesh in $collectionInventory.meshes) {
+        if ($mesh.saved_package.path -cnotmatch '^Content/Generated/YACS/PCG365RockCollection20/SM_rock(02|06)_(0[1-9]|10)\.uasset$') { throw 'Unexpected collection saved path.' }
+        Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package
+    }
+}
+if ($Action -eq 'rock-collection-render') {
+    $collectionReload = Get-Content (Join-Path $Proof 'rock-collection-reload/launcher-completed.json') -Raw | ConvertFrom-Json
+    if ($collectionReload.code_sha -cne $ExpectedHead -or $collectionReload.exit_code -ne 0) { throw 'Collection fresh reload must complete before GPU capture.' }
+}
 if (Test-Path -LiteralPath $Output) { throw 'Preserve existing action output.' }
 New-Item -ItemType Directory -Path $Output | Out-Null
 # Recheck host ownership immediately before launching the sole owned process.
@@ -333,7 +367,7 @@ $psi.WindowStyle = [Diagnostics.ProcessWindowStyle]::Hidden
 $psi.WorkingDirectory = $Root
 $psi.RedirectStandardOutput = $true
 $psi.RedirectStandardError = $true
-$renderArguments = if ($Action -in @('settle-render','rock-render')) { @('-RenderOffscreen','-norhithread') } else { @('-NullRHI') }
+$renderArguments = if ($Action -in @('settle-render','rock-render','rock-collection-render')) { @('-RenderOffscreen','-norhithread') } else { @('-NullRHI') }
 foreach ($argument in (@($Project) + $renderArguments + @('-Unattended','-NoSplash','-NoSound','-NoLiveCoding','-NoP4','-NoPause',
     '-DisablePlugins=ModelContextProtocol,Wingman,AndroidFileServer',
     '-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False',"-ExecutePythonScript=$Probe", "-abslog=$(Join-Path $Proof "$Action-editor.log")"))) { $psi.ArgumentList.Add($argument) }
@@ -366,7 +400,7 @@ if (-not (Test-Path -LiteralPath $Receipt -PathType Leaf)) { throw 'Probe exited
 $nativeLog = Get-Content -LiteralPath (Join-Path $Proof "$Action-editor.log") -Raw
 if ($nativeLog -match "Couldn't load edit layer object|Failed to find script package for import object|Failed to compile Material") { throw 'Native consumer lost a required class/edit layer or material shader; diagnostic rejected.' }
 $result = Get-Content -LiteralPath $Receipt -Raw | ConvertFrom-Json
-$expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'; 'settle-render'='BOULDER_FITTED_REAL_GPU_CAPTURED'; 'mask-xy-create'='MASK_XY_GRAPH_SAVED'; 'mask-xy-reload'='MASK_XY_GRAPH_FRESH_RELOAD_REGENERATED'; 'rock-qualify'='ROCK_CONTACT_MATRIX_MEASURED'; 'rock-reload'='ROCK_MESHES_FRESH_READBACK'; 'rock-render'='ROCKS_REAL_GPU_CAPTURED'; 'rock-pack'='ROCK_VARIANT_ASSETS_SAVED'; 'rock-pack-reload'='ROCK_VARIANT_ASSETS_FRESH_RELOAD_VERIFIED'}[$Action]
+$expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'; 'settle-render'='BOULDER_FITTED_REAL_GPU_CAPTURED'; 'mask-xy-create'='MASK_XY_GRAPH_SAVED'; 'mask-xy-reload'='MASK_XY_GRAPH_FRESH_RELOAD_REGENERATED'; 'rock-qualify'='ROCK_CONTACT_MATRIX_MEASURED'; 'rock-reload'='ROCK_MESHES_FRESH_READBACK'; 'rock-render'='ROCKS_REAL_GPU_CAPTURED'; 'rock-pack'='ROCK_VARIANT_ASSETS_SAVED'; 'rock-pack-reload'='ROCK_VARIANT_ASSETS_FRESH_RELOAD_VERIFIED'; 'rock-collection'='ROCK_COLLECTION_ASSETS_SAVED'; 'rock-collection-reload'='ROCK_COLLECTION_ASSETS_FRESH_RELOAD_VERIFIED'; 'rock-collection-render'='ROCK_COLLECTION_REAL_GPU_CAPTURED'}[$Action]
 if ($result.status -cne $expectedStatus -or $result.code_sha -cne $ExpectedHead -or $result.placement -isnot [bool] -or $result.placement) { throw 'Native diagnostic did not complete; inspect receipt diagnostics.' }
 if ($result.PSObject.Properties.Name -contains 'error') { throw 'Native diagnostic contains an error; refusing success.' }
 if ($Action -in @('rock-pack','rock-pack-reload')) {
@@ -376,13 +410,21 @@ if ($Action -in @('rock-pack','rock-pack-reload')) {
         Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package
     }
 }
+if ($Action -in @('rock-collection','rock-collection-reload')) {
+    if ($result.meshes.Count -ne 20) { throw 'Completed collection inventory count differs.' }
+    foreach ($mesh in $result.meshes) {
+        if ($mesh.saved_package.path -cnotmatch '^Content/Generated/YACS/PCG365RockCollection20/SM_rock(02|06)_(0[1-9]|10)\.uasset$') { throw 'Unexpected completed collection path.' }
+        Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package
+    }
+}
+if ($Action -eq 'rock-collection-render') { foreach ($mesh in $collectionInventory.meshes) { Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package } }
 if ($Action -in @('reload','mask-xy-reload')) {
     foreach ($entry in $saved.files) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
 }
 if ($Action -in @('rock-reload','rock-render')) {
     foreach ($entry in $rockInventory.saved_packages) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
 }
-if ($Action -in @('material-reload','terrain','settle-render','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload')) {
+if ($Action -in @('material-reload','terrain','settle-render','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render')) {
     foreach ($entry in $binding.saved_packages) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
 }
 if ($Action -eq 'rock-pack-reload') { foreach ($mesh in $packInventory.meshes) { Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package } }

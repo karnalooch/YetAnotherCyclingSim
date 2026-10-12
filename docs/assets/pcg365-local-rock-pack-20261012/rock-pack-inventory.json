@@ -1,0 +1,344 @@
+{
+  "schema_version": 1,
+  "code_sha": "9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53",
+  "status": "ROCK_VARIANT_ASSETS_SAVED",
+  "catalog": {
+    "bytes": 5943,
+    "sha256": "7873b26d27a128d8be082e7791896f044b9b7d2e31e3bc2c7da51fc74eafa333"
+  },
+  "meshes": [
+    {
+      "id": "namaqualand_boulder_02_s100",
+      "source": {
+        "id": "namaqualand_boulder_02_s100",
+        "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_02_s100.fbx",
+        "source_relative": "rock-variants/namaqualand_boulder_02_s100.fbx",
+        "sha256": "1cf2045bb157b722e743365436f6309c48fa459b1cd6a6f2528b88ae848e5621",
+        "bytes": 2934844,
+        "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+        "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+        "art_scale": 1.0,
+        "expected_native_bounds_cm": {
+          "min": [
+            -30.43469488620758,
+            -65.58430790901184,
+            0.0
+          ],
+          "max": [
+            31.108537316322327,
+            59.20032858848572,
+            38.83606195449829
+          ]
+        },
+        "expected_lod0_triangles": 82558,
+        "license": "CC0-1.0"
+      },
+      "package": "/Game/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_02_s100",
+      "saved_package": {
+        "path": "Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_02_s100.uasset",
+        "bytes": 3235390,
+        "sha256": "49b27d912da217a22a49379a1577ed2aecd8e681b173f5da6d915929eb709e69"
+      },
+      "bounds_cm": {
+        "origin": [
+          0.33692359924316406,
+          -3.191987991333008,
+          19.418031692504883
+        ],
+        "extent": [
+          30.771615982055664,
+          62.392316818237305,
+          19.418031692504883
+        ]
+      },
+      "lod0_render_triangles": 82558,
+      "slot_count": 2,
+      "material": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/MI_MaterialForge.MI_MaterialForge"
+    },
+    {
+      "id": "namaqualand_boulder_02_s125",
+      "source": {
+        "id": "namaqualand_boulder_02_s125",
+        "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_02_s125.fbx",
+        "source_relative": "rock-variants/namaqualand_boulder_02_s125.fbx",
+        "sha256": "4ef19c5377a7b503f8032a0d80d5d0292514b1b3e7a3e56c0916c11a738e4001",
+        "bytes": 2938316,
+        "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+        "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+        "art_scale": 1.25,
+        "expected_native_bounds_cm": {
+          "min": [
+            -38.043367862701416,
+            -81.98038339614868,
+            0.0
+          ],
+          "max": [
+            38.88567090034485,
+            74.00041222572327,
+            48.545077443122864
+          ]
+        },
+        "expected_lod0_triangles": 82558,
+        "license": "CC0-1.0"
+      },
+      "package": "/Game/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_02_s125",
+      "saved_package": {
+        "path": "Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_02_s125.uasset",
+        "bytes": 3234667,
+        "sha256": "ec4f972bbeedb7d46b9759667c7cc1754bb7edfc0da050b86e22c4cb6874f860"
+      },
+      "bounds_cm": {
+        "origin": [
+          0.4211540222167969,
+          -3.9899864196777344,
+          24.272539138793945
+        ],
+        "extent": [
+          38.46451950073242,
+          77.99039840698242,
+          24.272539138793945
+        ]
+      },
+      "lod0_render_triangles": 82558,
+      "slot_count": 2,
+      "material": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/MI_MaterialForge.MI_MaterialForge"
+    },
+    {
+      "id": "namaqualand_boulder_02_s75",
+      "source": {
+        "id": "namaqualand_boulder_02_s75",
+        "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_02_s75.fbx",
+        "source_relative": "rock-variants/namaqualand_boulder_02_s75.fbx",
+        "sha256": "1514a16a3d1bbced06148d66d7b478c521c7ba79dbdd018075bb5a4dbcbefe9f",
+        "bytes": 2936748,
+        "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+        "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+        "art_scale": 0.75,
+        "expected_native_bounds_cm": {
+          "min": [
+            -22.826021909713745,
+            -49.188232421875,
+            0.0
+          ],
+          "max": [
+            23.331403732299805,
+            44.40024495124817,
+            29.12704646587372
+          ]
+        },
+        "expected_lod0_triangles": 82558,
+        "license": "CC0-1.0"
+      },
+      "package": "/Game/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_02_s75",
+      "saved_package": {
+        "path": "Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_02_s75.uasset",
+        "bytes": 3233256,
+        "sha256": "4fb62fbcf136928ab567d0f16d132b08846128e7a7c4f1bc0f43ebbbda364e96"
+      },
+      "bounds_cm": {
+        "origin": [
+          0.25269317626953125,
+          -2.393993377685547,
+          14.563523292541504
+        ],
+        "extent": [
+          23.078712463378906,
+          46.79423904418945,
+          14.563523292541504
+        ]
+      },
+      "lod0_render_triangles": 82558,
+      "slot_count": 2,
+      "material": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/MI_MaterialForge.MI_MaterialForge"
+    },
+    {
+      "id": "namaqualand_boulder_06_s100",
+      "source": {
+        "id": "namaqualand_boulder_06_s100",
+        "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_06_s100.fbx",
+        "source_relative": "rock-variants/namaqualand_boulder_06_s100.fbx",
+        "sha256": "d9ebe5fd71ed003cb8cb4d7fbe9e179ee82c793a0f8c1dbf9c1b48b973dd18d0",
+        "bytes": 3658524,
+        "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+        "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+        "art_scale": 1.0,
+        "expected_native_bounds_cm": {
+          "min": [
+            -32.07271099090576,
+            -66.08133912086487,
+            0.0
+          ],
+          "max": [
+            35.42558550834656,
+            55.1062285900116,
+            58.64683389663696
+          ]
+        },
+        "expected_lod0_triangles": 103250,
+        "license": "CC0-1.0"
+      },
+      "package": "/Game/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_06_s100",
+      "saved_package": {
+        "path": "Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_06_s100.uasset",
+        "bytes": 4077685,
+        "sha256": "694403b99529b6d00a5e943060f1280db9f75e434a91ddbcd7f8ed26b17d1c94"
+      },
+      "bounds_cm": {
+        "origin": [
+          1.6764373779296875,
+          -5.487552642822266,
+          29.32341766357422
+        ],
+        "extent": [
+          33.7491455078125,
+          60.59378433227539,
+          29.32341766357422
+        ]
+      },
+      "lod0_render_triangles": 103250,
+      "slot_count": 2,
+      "material": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/MI_MaterialForge.MI_MaterialForge"
+    },
+    {
+      "id": "namaqualand_boulder_06_s125",
+      "source": {
+        "id": "namaqualand_boulder_06_s125",
+        "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_06_s125.fbx",
+        "source_relative": "rock-variants/namaqualand_boulder_06_s125.fbx",
+        "sha256": "992232870bb6b00bf6883c388e4f7b75b5e89921a240b344df0b9a099608890a",
+        "bytes": 3658012,
+        "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+        "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+        "art_scale": 1.25,
+        "expected_native_bounds_cm": {
+          "min": [
+            -40.0908887386322,
+            -82.60167241096497,
+            0.0
+          ],
+          "max": [
+            44.281983375549316,
+            68.88278722763062,
+            73.30853939056396
+          ]
+        },
+        "expected_lod0_triangles": 103250,
+        "license": "CC0-1.0"
+      },
+      "package": "/Game/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_06_s125",
+      "saved_package": {
+        "path": "Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_06_s125.uasset",
+        "bytes": 4078988,
+        "sha256": "3247c8016ba9a7547a897bab34b48d9371dfd0200ff2c9741f31dd46e22ba4f6"
+      },
+      "bounds_cm": {
+        "origin": [
+          2.095548629760742,
+          -6.859439849853516,
+          36.65427017211914
+        ],
+        "extent": [
+          42.18643379211426,
+          75.74222946166992,
+          36.65427017211914
+        ]
+      },
+      "lod0_render_triangles": 103250,
+      "slot_count": 2,
+      "material": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/MI_MaterialForge.MI_MaterialForge"
+    },
+    {
+      "id": "namaqualand_boulder_06_s75",
+      "source": {
+        "id": "namaqualand_boulder_06_s75",
+        "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\namaqualand_boulder_06_s75.fbx",
+        "source_relative": "rock-variants/namaqualand_boulder_06_s75.fbx",
+        "sha256": "0598e61b029696e000d79f6f3484502d3aa550e7b35cdb0ed0c172b70c086e71",
+        "bytes": 3656892,
+        "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+        "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+        "art_scale": 0.75,
+        "expected_native_bounds_cm": {
+          "min": [
+            -24.05453324317932,
+            -49.56100583076477,
+            0.0
+          ],
+          "max": [
+            26.5691876411438,
+            41.32966995239258,
+            43.98512542247772
+          ]
+        },
+        "expected_lod0_triangles": 103250,
+        "license": "CC0-1.0"
+      },
+      "package": "/Game/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_06_s75",
+      "saved_package": {
+        "path": "Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_06_s75.uasset",
+        "bytes": 4079707,
+        "sha256": "8471f6454503821531b25af0329fd509b2c420920d7b2fa46c21bf52d6e0c1c7"
+      },
+      "bounds_cm": {
+        "origin": [
+          1.2573280334472656,
+          -4.115667343139648,
+          21.992563247680664
+        ],
+        "extent": [
+          25.311859130859375,
+          45.44533729553223,
+          21.992563247680664
+        ]
+      },
+      "lod0_render_triangles": 103250,
+      "slot_count": 2,
+      "material": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/MI_MaterialForge.MI_MaterialForge"
+    }
+  ],
+  "binding_saved_packages": [
+    {
+      "bytes": 2625037,
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/T_MF_BaseColor.uasset",
+      "sha256": "cbf8d7ed0a82d47399a65f82353001859c7ac786a8a55ffab3daea42c55f282e"
+    },
+    {
+      "bytes": 8061242,
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/T_MF_NormalDX.uasset",
+      "sha256": "31c9a30f8cc7289ead3eff8e390380d43ca7850033ff95583efa33158ef3479a"
+    },
+    {
+      "bytes": 1570670,
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/T_MF_ORM.uasset",
+      "sha256": "e878774c58a5d445edc570469f4263efc6492876d4db0f5870dae448e1afe8aa"
+    },
+    {
+      "bytes": 3112812,
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/T_MF_DetailMasks.uasset",
+      "sha256": "f44639aabf6eef3bbef73d910389e96a634ee026e3dc5a67dd860bf857b651bf"
+    },
+    {
+      "bytes": 40084,
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/M_MaterialForge.uasset",
+      "sha256": "286a61fe763bc39e72c4dcd1cec746d64b4145e4110f504c2c67c056d1fd5290"
+    },
+    {
+      "bytes": 2817,
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/05669b651e24/MI_MaterialForge.uasset",
+      "sha256": "f88209b35edcfd8520ffbbd80ede5a4292949abbb8336973fdd983a0b34380fc"
+    },
+    {
+      "bytes": 6321345,
+      "path": "Content/Generated/YACS/PCG365Qualification/SM_Boulder_ForgeDiagnostic.uasset",
+      "sha256": "9875b6a6860441d9799f3d35e1e2c20750bb7539fcfd1c006e40845ed1664981"
+    }
+  ],
+  "placement": false,
+  "qualified_assets": [],
+  "full_qualification": false,
+  "terrain_contact": "NOT_RUN",
+  "source_art_scales_only": true,
+  "native_import_scale": 1.0,
+  "map_saved": false,
+  "visual_acceptance": "NOT_VERIFIED"
+}
