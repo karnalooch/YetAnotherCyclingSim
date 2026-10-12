@@ -142,7 +142,7 @@ if ($manifest.source_producer_sha -cne 'd361e7651d16ff424ae4e812c7d8cbe1fe81d662
 $estimated=@($tracked | ForEach-Object {(Get-Item -LiteralPath (Join-Path $RepoRoot $_)).Length} |
   Measure-Object -Sum)[0].Sum
 if ($estimated -gt 256MB) { throw 'Live Host code-only closure exceeds 256 MiB.' }
-$arguments="-NoLogo -NoProfile -File \`"$startScript\`" -InstallRoot \`"$InstallRoot\`""
+$arguments='-NoLogo -NoProfile -File "' + $startScript + '" -InstallRoot "' + $InstallRoot + '"'
 Write-Host "LIVE_HOST_PREFLIGHT PASS: source=$ExpectedHead; user=$desktopUser; scripts=$($tracked.Count); approxBytes=$estimated"
 if (-not $Apply) { Write-Host 'DRY_RUN_ONLY: no release copied, task registered or Editor launched.'; return }
 
@@ -177,6 +177,9 @@ $record=[ordered]@{
   desktop_user=$desktopUser;desktop_sid=$sid;install_root=$InstallRoot
   release_root=$release;installed_files=$count
   file_proofs=@($fileProofs)
+  # New installations use explicit documented default. Existing immutable
+  # f4a0366a sessions are upgraded through Upgrade-YacsLiveHostCodec.ps1.
+  video_codec='H264'
   task=$taskName;no_service_changes=$true
   no_runner_changes=$true;placement=$false
   installed_at_utc=[DateTime]::UtcNow.ToString('o')

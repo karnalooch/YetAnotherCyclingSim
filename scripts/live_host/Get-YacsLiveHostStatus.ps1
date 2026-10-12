@@ -25,6 +25,12 @@ Check (Test-Path -LiteralPath $installPath -PathType Leaf) 'No installed Live Ho
 $install=Get-Content -LiteralPath $installPath -Raw | ConvertFrom-Json
 Check ($install.source_sha -cmatch '^[a-f0-9]{40}$') 'Invalid installed source SHA'
 $now=[DateTime]::UtcNow
+$requestedCodec=if($null -ne $install.PSObject.Properties['video_codec']) {
+  [string]$install.video_codec
+} else { 'LEGACY_DEFAULT_NOT_PINNED' }
+if($requestedCodec -cnotin @('H264','VP9','LEGACY_DEFAULT_NOT_PINNED')) {
+  throw 'Unknown pinned Live Host encoder profile.'
+}
 $result=[ordered]@{
   schema_version=1;status='INSTALLED_UNVERIFIED';task='YACS Live Host'
   task_state=[string]$task.State;source_sha=$install.source_sha
@@ -33,6 +39,7 @@ $result=[ordered]@{
   viewer_url='http://127.0.0.1/';placement=$false;performance_pass=$false
   heartbeat_age_seconds=$null;editor_start_delta_ms=$null
   editor_process_identity_verified=$false;heartbeat_fresh=$false
+  requested_video_codec=$requestedCodec;negotiated_video_codec_verified=$false
 }
 if (Test-Path -LiteralPath $livePath -PathType Leaf) {
   $active=Get-Content -LiteralPath $livePath -Raw | ConvertFrom-Json
@@ -79,7 +86,13 @@ if (Test-Path -LiteralPath $livePath -PathType Leaf) {
       $receiptUtc=ConvertTo-YacsLiveUtc -Value $receipt.editor_started_utc
       $startReceiptMatching=[Math]::Abs(($activeUtc-$receiptUtc).TotalMilliseconds) -le 1
     } catch { $startReceiptMatching=$false }
-    $matching=($receipt.session -ceq $active.session -and
+    $requestedMatches=$true
+    if ($requestedCodec -cne 'LEGACY_DEFAULT_NOT_PINNED') {
+      $requestedMatches=($null -ne $receipt.PSObject.Properties['requested_video_codec']) -and
+        ([string]$receipt.requested_video_codec -ceq $requestedCodec)
+    }
+    $matching=($requestedMatches -and
+      $receipt.session -ceq $active.session -and
       $receipt.source_sha -ceq $active.source_sha -and
       $receipt.editor_pid -eq $active.editor_pid -and
       $startReceiptMatching -and

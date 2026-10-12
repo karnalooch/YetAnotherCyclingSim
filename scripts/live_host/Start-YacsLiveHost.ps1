@@ -23,6 +23,13 @@ $stateRoot=Join-Path $InstallRoot 'state'
 $install=Get-Content -LiteralPath (Join-Path $stateRoot 'installation.json') -Raw | ConvertFrom-Json
 $sha=[string]$install.source_sha
 if ($sha -cnotmatch '^[a-f0-9]{40}$') { throw 'Missing exact installed source SHA.' }
+# The encoder is chosen by the *desktop Task owner's* authenticated install
+# record, not by browser PreferredCodec or a GitHub Actions process.
+$videoCodec=if ($null -ne $install.PSObject.Properties['video_codec']) { [string]$install.video_codec } else { 'H264' }
+if ($videoCodec -cnotin @('H264','VP9')) { throw 'Unreviewed Pixel Streaming 2 codec; refuse auto fallback.' }
+. (Join-Path $release 'scripts/live_host/EncoderProfile.ps1')
+$encoderArgs=@(Get-YacsLiveEncoderArgs -VideoCodec $videoCodec)
+if ($encoderArgs.Count -ne 2) { throw 'Expected exact codec and FPS flags.' }
 $release=Join-Path $InstallRoot "releases\$sha"
 $root=Join-Path $InstallRoot 'runtime'
 if (-not (Test-Path -LiteralPath (Join-Path $release 'scripts/live_host/bootstrap.py') -PathType Leaf)) {
@@ -78,6 +85,7 @@ function Save-Status([string]$CurrentStatus) {
     browser_frames_received=$browserProved
     map_saved=$false;terrain_modified=$false;placement=$false
     qualified_assets=@();performance_pass=$false
+    requested_video_codec=$videoCodec
     last_seen_utc=[DateTime]::UtcNow.ToString('o')
   }
   $tmp=Join-Path $sessionRoot 'host-status.tmp'
@@ -99,12 +107,13 @@ try {
     '-ini:EditorPerProjectUserSettings:[/Script/UnrealEd.EditorLoadingSavingSettings]:bAutoSaveEnable=False',
     '-EditorPixelStreamingRes=1280x720','-RenderOffscreen',
     '-NoP4','-NoSplash','-NoSound','-NoLiveCoding','-NoVSync',
-    '-ExecCmds="t.MaxFPS 30"',
+    '-ExecCmds="t.MaxFPS 30"'
+  ) + $encoderArgs + @(
     ('-ExecutePythonScript="' + $source + '"'),
     ('-AbsLog="' + (Join-Path $sessionRoot 'editor.log') + '"')
   )
   $oldEnv=@{}
-  foreach($key in @('PYTHONHOME','PYTHONPATH','YACS_LIVE_RELEASE','YACS_LIVE_SESSION_ID','YACS_LIVE_SOURCE_SHA','YACS_LIVE_ROOT')) {
+  foreach($key in @('YACS_LIVE_CODEC','PYTHONHOME','PYTHONPATH','YACS_LIVE_RELEASE','YACS_LIVE_SESSION_ID','YACS_LIVE_SOURCE_SHA','YACS_LIVE_ROOT')) {
     $oldEnv[$key]=[Environment]::GetEnvironmentVariable($key,'Process')
   }
   try {
@@ -113,6 +122,7 @@ try {
     $env:YACS_LIVE_RELEASE=$release
     $env:YACS_LIVE_SESSION_ID=$session
     $env:YACS_LIVE_SOURCE_SHA=$sha
+    $env:YACS_LIVE_CODEC=$videoCodec
     $env:YACS_LIVE_ROOT=$root
     $editor=Start-Process -FilePath $engine -ArgumentList $args -WorkingDirectory $stage -PassThru
   } finally {
@@ -124,6 +134,7 @@ try {
     editor_pid=$editor.Id;editor_started_utc=$ownerStart
     desktop_sid=$principal.User.Value;live_host_pid=$PID
     status='STARTING_NOT_ADMITTED';map_saved=$false;placement=$false
+    requested_video_codec=$videoCodec
   }
   $active | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $stateRoot 'current-session.json') -Encoding utf8
   $deadline=[DateTime]::UtcNow.AddMinutes(4)
@@ -140,7 +151,8 @@ try {
       if ($ready.status -cne 'LIVE_SCENE_AND_COMMAND_BRIDGE_READY' -or
         $ready.code_sha -cne $sha -or $ready.editor_pid -ne $editor.Id -or
         @($ready.marker_count).Count -ne 1 -or $ready.marker_count -ne 5 -or
-        $ready.placement -ne $false) { throw 'Live scene/bridge readback differs.' }
+        $ready.placement -ne $false -or
+        $ready.requested_video_codec -cne $videoCodec) { throw 'Live scene/bridge readback differs.' }
       break
     }
     # Do not write into the fresh session until Unreal's Python bootstrap
@@ -154,6 +166,8 @@ try {
   }
   $status='HTTP_READY_BROWSER_NOT_YET_VERIFIED'
   Save-Status $status
+  # VP9 is only a requested encoder at this stage; browser playback does not
+  # establish an actually negotiated VP9 stream. Do not mark codec proven.
   # This Edge probe is *independent* of the GitHub runner and owns only its
   # temporary browser process/profile; no Editor PID or session is touched.
   $receiver=Join-Path $release 'scripts/ue/Test-YacsLevelEditorStreamClient.ps1'

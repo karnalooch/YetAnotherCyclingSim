@@ -148,6 +148,93 @@ git -C D:\\yacs\\live-host-source pull --ff-only origin codex/476-yacs-live-host
 Neither the installed immutable source release, scheduled-task action,
 runner service nor the live UE process is changed by those commands.
 
+
+## NVENC driver crash — immutable VP9 CPU codec trial
+
+**Incident 2026-10-12 23:52:54 CEST:** Windows Event 1000/1001
+confirmed the crash of UnrealEditor.exe 5.8.2 PID 35248
+(0x89B0) in C:\Windows\System32\nvEncodeAPI64.dll, version
+32.0.16.1088 (NVIDIA driver 610.88), exception 0xc0000409,
+offset 0x7fcb4. Retained editor.log had bidirectional Pixel Streaming
+2 player/streamer pings through 23:52:45. The owned AtLogOn task
+ended as its watched UE process disappeared. This does not establish
+a defect in the frozen Sa Calobra map or runner cleanup.
+
+The narrow first intervention is **VP9 software/CPU encoding**, not a
+GPU driver swap, rebuilt UE engine, or retry loop. Epic UE 5.8
+[Pixel Streaming Reference](https://dev.epicgames.com/documentation/unreal-engine/unreal-engine-pixel-streaming-reference?application_version=5.8)
+documents command flags -PixelStreamingEncoderCodec=VP9 and
+-PixelStreamingWebRTCMaxFps=30; the
+[Stream Tuning Guide](https://dev.epicgames.com/documentation/unreal-engine/stream-tuning-guide)
+notes that CPU VP8/VP9 trades lower bitrate for CPU work.
+The original resolution -EditorPixelStreamingRes=1280x720,
+application t.MaxFPS 30 and single-browser receiver are retained.
+The client-side Preferred Codec setting alone is not sufficient.
+
+### Exact old-release to VP9 upgrade
+
+The old immutable release is
+f4a0366a5685432fb139b2083bb22ee17d7f6d9e.
+Its bytes and Task Scheduler identity/AtLogOn triggers must remain intact.
+
+1. Confirm task YACS Live Host is Ready, no UnrealEditor* processes, ports
+   80/8888/18784 free, and the D: disk reserve is satisfied.
+2. Update only D:\yacs\live-host-source to reviewed HEAD and run the
+   source-only Windows codec/UTC tests.
+3. Run Upgrade-YacsLiveHostCodec.ps1 first **without -Apply**, passing
+   the new source HEAD as -ExpectedHead and the old SHA as
+   -ExpectedInstalledHead. It validates hashes of the original release,
+   user SID, Task Scheduler action and the shared Unreal host.
+4. On an owner-accepted VP9_CODEC_UPGRADE_PREFLIGHT_PASS, explicitly
+   rerun with -Apply. This copies a new exact-SHA code-only release,
+   preserves the original and installation-before-vp9 backup,
+   updates ONLY the task Action, and does NOT launch Unreal.
+
+Example read-only preflight:
+
+    git -C "D:\yacs\live-host-source" pull --ff-only origin codex/476-yacs-live-host
+    $newHead = (git -C "D:\yacs\live-host-source" rev-parse HEAD).Trim()
+    $original = "f4a0366a5685432fb139b2083bb22ee17d7f6d9e"
+    $dir = "D:\yacs\live-host-source\scripts\live_host"
+    & "$dir\Test-YacsLiveCodec.ps1"
+    & "$dir\Test-YacsLiveUtc.ps1"
+    & "$dir\Upgrade-YacsLiveHostCodec.ps1" -ExpectedHead $newHead -ExpectedInstalledHead $original
+
+Stop here to review the actual preflight result before choosing -Apply.
+
+After explicit upgrade, verify task remains Ready with Interactive/Limited
+principal, the new immutable release and installation.json.video_codec=VP9.
+Activate the AtLogOn task once in the logged-in desktop and only if the
+GPU is IDLE. A failed VP9 startup must not silently fall back to H264
+or restart in a loop.
+
+### Browser and sustained runtime admission
+
+1. Connect a single Chrome client to private LAN Pixel Streaming,
+   with preferred VP9 profile-id=0. This is a hint only.
+2. In chrome://webrtc-internals inspect the active PeerConnection's
+   inbound-rtp video codecId and its corresponding codec entry.
+   Require actual mimeType=video/VP9; otherwise the negotiated codec
+   remains CODEC_NOT_VERIFIED. Browser video frames alone do not
+   establish which encoder Unreal selected.
+3. Check the *same* scheduled-task Editor PID/start identity, heartbeats,
+   rising framesReceived counters, requested_video_codec=VP9,
+   CPU usage and dropped frames. Keep only one receiver.
+4. Observe at least 60 minutes and inspect new Windows Error Reporting
+   entries; VP9 is a trial, not a proven permanent fix.
+5. Repeat process+video verification after any controlling GitHub Actions
+   job exits. Neither a green job nor HTTP 200 grants live admission.
+
+### Returning to the preserved original H264
+
+Rollback-YacsLiveHostCodec.ps1 is dry-run by default, takes the exact
+original/trial SHAs, and only proceeds when the task is Ready,
+no Editor or viewer/MCP listener is active, and the console SID matches.
+Explicit -Apply restores the retained original task Action and
+installation record; neither release or evidence is deleted.
+It never starts Unreal. The original H264 remains a *known crash
+baseline*, not a verified stable solution.
+
 ## Known boundaries
 
 A running UE Editor is not proof of a working LAN receiver; a previously written heartbeat is not proof of present process ownership. The Live Host command loop is an internal trusted desktop filesystem queue, not a public arbitrary-input WebSocket service. Intermittent GPU failures, browser reconnection, sign-in after power failure, user-initiated Exit, source asset promotion, and PCGEx tool capabilities all require separate native/owner acceptance. Restore the last source snapshot rather than modifying the frozen world to hide a rejected contact.

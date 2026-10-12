@@ -31,6 +31,9 @@ def main():
 
     session_id = os.environ["YACS_LIVE_SESSION_ID"]
     code_sha = os.environ["YACS_LIVE_SOURCE_SHA"]
+    requested_codec = os.environ.get("YACS_LIVE_CODEC", "H264")
+    if requested_codec not in ("H264", "VP9"):
+        raise ValueError("Unreviewed Pixel Streaming 2 codec")
     live_root = Path(os.environ["YACS_LIVE_ROOT"]).resolve()
     stage = Path(unreal.Paths.project_dir()).resolve()
     session = safe_session_root(live_root, session_id)
@@ -65,6 +68,8 @@ def main():
             "owner_handoff": False,
             "post_job_alive": False,
             "browser_frames_received": False,
+            "requested_video_codec": requested_codec,
+            "negotiated_video_codec_verified": False,
         }
         (session / "live-scene-ready.json").write_text(
             json.dumps(status, indent=2, sort_keys=True) + "\n",
