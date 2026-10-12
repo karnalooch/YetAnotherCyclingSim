@@ -15,3 +15,6 @@ Native save/reload/Material Forge/render chain completed all six actions with ex
 ## Validation
 
 Five native-catalog CPU tests and eight producer/component CPU tests PASS. Documentation links, i18n, structure and freshness guards PASS before native launch. Protected CI/native build and owner visual acceptance are not claimed.
+
+
+Large native JSON receipts are retained as lossless deterministic gzip; [compressed evidence index](compressed-evidence.json) binds original byte counts/SHA256 and compressed identities. Decompression was verified byte-for-byte; this avoids repeating large JSON diffs while preserving all proof.

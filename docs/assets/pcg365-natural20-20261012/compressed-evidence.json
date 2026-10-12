@@ -1,0 +1,26 @@
+[
+  {
+    "original": "rock-collection-receipt.json",
+    "gzip": "rock-collection-receipt.json.gz",
+    "original_bytes": 1583268,
+    "original_sha256": "41acc958beec571c07a2daea057e4cef030b6dd12c795bc25c48fbbc0f110848",
+    "gzip_bytes": 333362,
+    "gzip_sha256": "1c61bc23cb39541dfc8f39fb2cd11ca249ca5ab59f1d06af4a1a379d0b5b5384"
+  },
+  {
+    "original": "rock-collection-reload-receipt.json",
+    "gzip": "rock-collection-reload-receipt.json.gz",
+    "original_bytes": 1583423,
+    "original_sha256": "68f7ebac6f5320392d29ef75cd1975a6b9efa0f2e5fc3ff8c590854fb7aa3ea5",
+    "gzip_bytes": 333452,
+    "gzip_sha256": "9254c9cca06796811d134cdf9e5e59af571ae67e07c9e90c0799a9901eb908ba"
+  },
+  {
+    "original": "rock-collection-render-receipt.json",
+    "gzip": "rock-collection-render-receipt.json.gz",
+    "original_bytes": 56562,
+    "original_sha256": "f86ea7d5cfdf712bb58461ea021d455af0f779ee139bca16a2e8eb70563f823b",
+    "gzip_bytes": 4565,
+    "gzip_sha256": "f8358ac67153e498c5a4d951a2e1768efda90b26e3ee29001b1c831931d73dfc"
+  }
+]

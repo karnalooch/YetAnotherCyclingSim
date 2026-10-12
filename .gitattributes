@@ -101,3 +101,5 @@ docs/assets/pcg365-local-rock-pack-20261012/*.json -text
 worldgen/sa_calobra/pcg365_local_rock_variant_catalog_v1.json text eol=lf
 docs/assets/pcg365-rock-collection20-20261012/*.json -text
 worldgen/sa_calobra/pcg365_rock_collection20_catalog_v1.json text eol=lf
+
+docs/assets/pcg365-natural20-20261012/*.json.gz -text -diff
