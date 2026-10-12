@@ -458,3 +458,20 @@ Preserve source units initially. Neither cliff production nor road/terrain repai
 is an admitted use. Acquisition/import/validation and scoped contact eligibility
 must be recorded separately; this entry does not promote lifecycle to validated.
 
+### PCG365 larger scanned rocks — 2026-10-12
+
+The owner explicitly requested autonomous production using the two discovered
+larger scans: [Namaqualand Boulder 02](https://polyhaven.com/a/namaqualand_boulder_02)
+and [Namaqualand Boulder 06](https://polyhaven.com/a/namaqualand_boulder_06).
+Both official pages identify CC0-1.0 under the existing Poly Haven asset licence
+and separate API terms above. They are approved for bounded geometry-only
+acquisition and isolated M3 #365 source/contact/material qualification through
+`worldgen/sa_calobra/pcg365_large_rock_acquisition_v1.json` and the existing
+downloader. Select named geometry/LOD explicitly; do not merge a multi-rock set.
+Source files remain outside Git with size/MD5/SHA256 witnesses. Derived pose or
+underside preparation preserves originals and records transforms/geometry deltas.
+Their South African source does not certify Sa Calobra geology; Material Forge
+is a separate artistic appearance consumer. Terrain and road geometry remain
+unchanged. No production placement, physical stability or regional admission
+follows from acquisition or provider previews.
+
