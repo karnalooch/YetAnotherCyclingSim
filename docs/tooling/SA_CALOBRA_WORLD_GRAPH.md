@@ -1322,3 +1322,33 @@ control, continuous support and latest #364 road-checkpoint parity remain unprov
 26 scoped CPU tests, Ruff and PowerShell parser PASS; final documentation guards
 are recorded in the handoff. New delivery CI and current-head native build are
 separate from these retained-binary diagnostics. #365 remains open.
+
+## Accepted native natural20 visuals and physical-contact continuation — 2026-10-12
+
+Owner accepted the native real-Landscape render checkpoint in ChatGPT, following
+the 40 final 1920×1080 views (two per rock) and 40 warmups produced by
+[run 38278235093](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38278235093)
+at exact source `d361e7651d16ff424ae4e812c7d8cbe1fe81d662`.
+The three required owned UE processes completed with genuine exit 0, and the
+Blender Material Forge / protected CI lanes also succeeded at this SHA.
+This supersedes earlier transfer-language saying terrain PNGs were NOT RUN,
+**for this later run only**; original run04's zero PNG/failure remains historical.
+
+The [independent post-render triage](../assets/pcg365-natural20-contact-20261012/POST_RENDER_TRIAGE.md)
+replays the protected aggregate/capture receipts and records the five diagnostic
+sites' actual slope ranges. All 100 current contact cases are still
+`REJECTED`, including on the visually accepted images. Visual acceptance here
+does not make a physical qualification, per-rock World Authority mask,
+regional placement, owner final whole-M3 audit or FPS pass.
+
+Next: derive **source-valid per-rock XY** only from authenticated World Authority
+unknowns/exclusions and owned rock masks, then separately audit Blender
+source-cap/COM (especially Boulder01/N05 and disjoint N02/Rock09 loops), and
+test a bounded source-derived pose/geometry candidate without changing existing
+V1 thresholds, terrain, roads, Base_DTM, route/physics or source provenance.
+Do not regenerate the same rejected images to report progress. No new UE
+process/restart is required for the evidence triage itself.
+
+Keep PR #474 Draft, #365 OPEN, `qualified_assets: []`,
+`placement: false`, `full_qualification: false`, `PENDING_FINAL_M3`,
+`DEFERRED_AFTER_M3`, and `performance_pass: false`.
