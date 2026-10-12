@@ -15,3 +15,25 @@ The five marked points are historical rejected vegetation-selector diagnostic XY
 ## Joint decision
 
 At every red label decide: preserve steep natural ground, exclude rocks, or separately investigate accepted rock masks and source-cap geometry. The diagnostic never auto-flattens mountains or relaxes burial/slope rules.
+
+## Native initial stream attempt — producer marker validation failure
+
+[Run 38290138808](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38290138808)
+passed protected CI and Blender reference checks but the Windows host rejected
+the authentic old launcher marker at `Start-YacsPcg365RedStream.ps1`. The
+historical marker was independently inspected from the successful exact producer
+artifact 11761550579: `action=collection-contact-review`,
+`code_sha=d361e765...`, `exit_code=0`, `staged_bytes_unchanged=true` and
+`proof_admission=LOCAL_DIAGNOSTIC_ONLY`. The new launcher erroneously required
+PowerShell `-is [int]` even though PowerShell 7 may decode the JSON integer as
+`System.Int64`. This is a **new launcher receipt-typing error**, not a source
+producer crash. The editor was **not** launched in this failed attempt.
+
+The updated strict helper
+[`Assert-YacsPcg365NativeCompletion.ps1`](../../../scripts/ue/Assert-YacsPcg365NativeCompletion.ps1)
+accepts only Int32 or Int64 exactly equal to zero; it still rejects
+strings, booleans, fractional types, nonzero/negative exit codes, mismatched
+action/SHA/proof scope, or changed staged files. The Windows workflow now
+re-tests the *actual old marker* plus valid and invalid typed fixtures before
+launching Unreal. Do not call interactive streaming PASS until the viewer and
+real browser video-frame receipt succeed on the new exact-head run.

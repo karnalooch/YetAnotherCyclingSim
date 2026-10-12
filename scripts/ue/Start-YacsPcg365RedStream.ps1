@@ -15,6 +15,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 $RepoRoot=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
+. (Join-Path $PSScriptRoot 'Assert-YacsPcg365NativeCompletion.ps1')
 $Stage='D:/yacs/work/pcg365/d361e7651d16ff424ae4e812c7d8cbe1fe81d662/38278235093-1'
 $Runtime='d361e7651d16ff424ae4e812c7d8cbe1fe81d662'
 $Session=[IO.Path]::GetFullPath("D:/yacs/work/pcg365-live-review/$ExpectedHead/$SessionToken")
@@ -52,10 +53,7 @@ function Assert-SourceIdentity {
   $expectedStage=Get-Content -LiteralPath (Join-Path $Stage 'staged-files.json') -Raw | ConvertFrom-Json
   Require ($expectedStage.expected_head -ceq $Runtime) 'Native stage producer SHA differs'
   $completed=Get-Content -LiteralPath (Join-Path $Stage 'proof/collection-contact-review/launcher-completed.json') -Raw | ConvertFrom-Json
-  Require ($completed.action -ceq 'collection-contact-review' -and
-    $completed.code_sha -ceq $Runtime -and
-    $completed.exit_code -is [int] -and $completed.exit_code -eq 0 -and
-    $completed.staged_bytes_unchanged -eq $true) 'Historical native GPU producer lacks clean exit proof'
+  Assert-YacsPcg365NativeCompletion -Receipt $completed -ExpectedHead $Runtime
   $contact=Join-Path $Stage 'proof/collection-contact-review/contact-fresh-phase.json'
   $contactFile=Get-Item -LiteralPath $contact -Force
   Require ($contactFile.Length -eq $manifest.source_contact_fresh_bytes -and

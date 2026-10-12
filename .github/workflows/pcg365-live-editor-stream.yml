@@ -83,6 +83,31 @@ jobs:
             (Join-Path (Get-Location).Path 'scripts/ue/Start-YacsPcg365RedStream.ps1'),
             [ref]$tokens,[ref]$errors) | Out-Null
           if (@($errors).Count -gt 0) { throw ($errors.Message -join '; ') }
+          # Validate the *actual* historical successful native marker using
+          # PowerShell 7's JSON integer type, before starting another Editor.
+          $tokens=$null; $errors=$null
+          [Management.Automation.Language.Parser]::ParseFile(
+            (Join-Path (Get-Location).Path 'scripts/ue/Assert-YacsPcg365NativeCompletion.ps1'),
+            [ref]$tokens,[ref]$errors) | Out-Null
+          if (@($errors).Count -gt 0) { throw ($errors.Message -join '; ') }
+          . ./scripts/ue/Assert-YacsPcg365NativeCompletion.ps1
+          $oldHead='d361e7651d16ff424ae4e812c7d8cbe1fe81d662'
+          $markerPath="D:/yacs/work/pcg365/$oldHead/38278235093-1/proof/collection-contact-review/launcher-completed.json"
+          $marker=Get-Content -LiteralPath $markerPath -Raw | ConvertFrom-Json
+          Assert-YacsPcg365NativeCompletion -Receipt $marker -ExpectedHead $oldHead
+          foreach ($integerZero in @([int]0,[long]0)) {
+            $test=$marker | ConvertTo-Json | ConvertFrom-Json
+            $test.exit_code=$integerZero
+            Assert-YacsPcg365NativeCompletion -Receipt $test -ExpectedHead $oldHead
+          }
+          foreach ($invalidExit in @('0',[bool]$false,[double]0.0,[long]1,[long]-1073741819)) {
+            $test=$marker | ConvertTo-Json | ConvertFrom-Json
+            $test.exit_code=$invalidExit
+            $rejected=$false
+            try { Assert-YacsPcg365NativeCompletion -Receipt $test -ExpectedHead $oldHead } catch { $rejected=$true }
+            if (-not $rejected) { throw 'Unsafe native exit-code shape was accepted' }
+          }
+          Write-Host "Native marker gate PASS (actual $($marker.exit_code.GetType().FullName), Int32/Int64 allowed; forged exits rejected)"
       - name: Open authenticated five-red-marker Level Editor and test browser frames
         shell: pwsh
         working-directory: stream365-${{ github.run_id }}-${{ github.run_attempt }}
