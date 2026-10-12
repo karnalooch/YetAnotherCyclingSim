@@ -81,6 +81,15 @@
           "maximum": 100000
         }
       }
+    },
+    {
+      "id": "rock_asset_audit",
+      "capability": "world_inspection",
+      "intents": [
+        "preview"
+      ],
+      "asset_scope": [],
+      "parameters": {}
     }
   ]
 }

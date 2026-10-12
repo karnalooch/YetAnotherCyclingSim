@@ -259,3 +259,37 @@ JSON-escaped, so a leading `VP9` can never be confused with a clean value.
 A passing previous CI or UTC test **does not** qualify this new fix. Run the
 separate native Windows PowerShell codec test before any installer `-Apply`.
 The original immutable installed H264 release is intentionally unchanged.
+
+## #365/#368 rock inventory from the existing VP9 Editor (2026-10-13)
+
+The owner's live Pixel Streaming 2 VP9 diagnostic scene displays actual Sa
+Calobra relief and retained P0–P4 rejection markers. This independent
+diagnostic stage is NOT the natural20 source/import/contact studio.
+[Draft PR #474](https://github.com/karnalooch/YetAnotherCyclingSim/pull/474)
+has twenty real mesh derivatives from eight licensed scan families, with
+native import/save and fresh studio inspection. All **100/100** actual-
+Landscape contact candidates at the five old diagnostic sites remain
+rejected, with no qualified mesh or production scatter admitted.
+
+The source-only **rock_asset_audit** preview recipe is the first safe
+same-process bridge step: inspect StaticMesh registry metadata in /Game,
+filter rock/limestone/boulder/scree/cliff/stone/pebble asset names and
+return at most 24 distinct package paths. It does not load meshes, copy
+studio packages, spawn actors, alter Landscape or admit placement.
+The result distinguishes zero assets (COMPLETE with zero matches) from
+an API error (API_UNAVAILABLE_NOT_PROVEN) or registry budget exceedance.
+
+The approved recipe, catalog and typed command are staged by the existing
+yacs-live-command workflow after exact-head protected CI. The active
+VP9 Unreal process is never restarted, and no authoring assets are saved.
+
+After the workflow, inspect the active-session command receipt under
+D:/yacs/live-host/runtime/sessions/<session>/commands/. Require
+COMPLETED_VISUAL_ONLY and the actual native_readback.inventory.scan_status
+plus the original Editor process identity. A successful scan means inventory
+only, not a rock gallery or qualified terrain-contact pose.
+
+If the current live diagnostic project contains no matching StaticMeshes,
+do not pretend the twenty separately imported studio rocks are here.
+Next must be a separately sourced derived consumer/gallery and contact
+qualification without modifying the accepted Landscape/road/Base_DTM.

@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "target_issue": 476,
+  "recipe": "rock_asset_audit",
+  "intent": "preview",
+  "parameters": {}
+}
