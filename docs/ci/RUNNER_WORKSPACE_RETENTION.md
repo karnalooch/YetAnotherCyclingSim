@@ -139,6 +139,13 @@ these cases. The diagnosed pair is `_official-mcp-source-probe-38044002365-1`
 and `_road-material-source-proof-38044002446-1`; their surviving object packs
 must pass the same complete archive verification before pruning.
 
+The separately reviewed `--include-reviewed-remnants` opt-in admits only
+numeric `b384` run directories ending in `-session-plugin`, `-input-boundary`
+or `-input-boundary-plugin`, plus the exact older checkout
+`_unreal-build-37639995352-1` and `_portable-powershell-bootstrap` in the
+canonical runner repository. Active pointer, main/release and shared Git
+protections still apply. Defaults and previously reviewed plans do not expand.
+
 Minimal canonical fetch preserved `main` and `v0.3.1`, both resolving to
 `4dd792219bfc2eaf7dc216bd60cbde6628bba792`; the canonical working checkout
 remained at its separate `504bâ€¦` identity. The canonical checkout and accepted source assets are not cleanup targets. Active cache `_unreal-build-37690136030-1` remains protected.
@@ -146,13 +153,35 @@ remained at its separate `504bâ€¦` identity. The canonical checkout and acce
 The shared `s384` root has a Git-file relationship to the parent
 `_official-mcp-native-probe` registry, so both are protected. These exclusions
 must remain in preview/apply reports; do not claim all stale trees were removed.
-Live preview03 is still RUNNING at this update.
+Live preview03 is still RUNNING at this update. The separate two-entry
+incomplete-clone plan has completed: both source trees were removed from
+`_work`, full archives passed CRC and per-member SHA readback, and retained
+copies were pruned. The archives contain 255,954,344 original file bytes in
+251,172,263 compressed bytes. This byte difference is not an independent
+filesystem free-space measurement.
+
+Execution evidence is under
+`D:/yacs/work/proofs/runner-retention-20261012/`:
+`unborn-plan.json` SHA256
+`856703f0b8d388f02f4ad94568161ccec0e4680fb62ceef801fc52ca6aada31e`,
+`unborn-plan-execution-attempt01.json` (aborted before data mutation),
+`unborn-plan-execution.json` (verified archives, readonly-file prune failure),
+and `unborn-plan-recovery-execution.json` (COMPLETED, listener restored).
+The recovery ran code `0d6f7b62` and restored missing entries from the verified
+archives before repeating full source verification and normal prune. Initial
+Windows `WinError 5` affected readonly Git pack index files; the fix retries
+only the exact validated failed removal after setting its writable bit.
+The recovered archive hashes are
+`638bcdb1be3118a358832de7be91c627471c05de32df192a958a7eac6b9bb0f0`
+and `3571b2fe127aedca5dbcdf2ab577aff07cbe9f8ed86836a04f32c6144a22e5de`.
 
 The completed-job hook has been copied to stable
 `D:/yacs/tools/runner-retention/Invoke-YacsJobCompleted.ps1` and runner `.env`
-configuration updated. Runner restart/activation is PENDING; copied files and
-configuration alone do not establish that the running listener loaded the hook.
-Phase2 prune and end-to-end deployment execution remain PENDING.
+configuration updated. The listener was restarted with the stable hook path
+explicitly inherited and a fresh listener PID verified after maintenance.
+A real subsequent completed CI job has not yet proven hook execution.
+The two incomplete-clone phase2 prunes passed; the main stale-tree sweep is
+still PENDING execution.
 
 ## Evidence that is not disposable cache
 

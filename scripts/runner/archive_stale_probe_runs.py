@@ -65,10 +65,25 @@ def no_links(path):
     return path
 
 
-def eligible(relative):
+def eligible(relative, include_reviewed_remnants=False):
     p = Path(relative)
     if p.is_absolute() or ".." in p.parts:
         return False
+    if include_reviewed_remnants:
+        if (
+            len(p.parts) == 2
+            and p.parts[0] == "b384"
+            and re.fullmatch(
+                r"[0-9]+-[1-9][0-9]*-(?:session-plugin|input-boundary|input-boundary-plugin)",
+                p.name,
+            )
+        ):
+            return True
+        if p.parent == REPO and p.name in {
+            "_unreal-build-37639995352-1",
+            "_portable-powershell-bootstrap",
+        }:
+            return True
     if len(p.parts) == 2 and p.parts[0] in {"s384", "b384"}:
         name = p.parts[1]
         if p.parts[0] == "b384" and name.endswith("-session-project"):
@@ -79,8 +94,11 @@ def eligible(relative):
     )
 
 
-def confined(root, relative):
-    require(eligible(relative), "Unknown/protected candidate name")
+def confined(root, relative, include_reviewed_remnants=False):
+    require(
+        eligible(relative, include_reviewed_remnants),
+        "Unknown/protected candidate name",
+    )
     root = no_links(root)
     candidate = no_links(root / relative)
     require(
@@ -308,8 +326,10 @@ def protected_commits(root):
     return commits
 
 
-def protected(root, relative, include_unborn_probes=False):
-    target = confined(root, relative)
+def protected(
+    root, relative, include_unborn_probes=False, include_reviewed_remnants=False
+):
+    target = confined(root, relative, include_reviewed_remnants)
     metadata = target / ".git"
     if metadata.is_dir():
         standalone_git(target)
@@ -396,6 +416,7 @@ def preview(
     now=None,
     progress=False,
     include_unborn_probes=False,
+    include_reviewed_remnants=False,
 ):
     require(minimum_age_hours >= 0, "Nonnegative reviewed stale age required")
     root = no_links(root)
@@ -407,7 +428,7 @@ def preview(
         no_links(parent)
         for item in sorted(parent.iterdir()):
             rel = item.relative_to(root).as_posix()
-            if not eligible(rel):
+            if not eligible(rel, include_reviewed_remnants):
                 preserved.append(
                     {
                         "relative": rel,
@@ -418,8 +439,8 @@ def preview(
             if progress:
                 print("Inspect candidate: " + rel, file=sys.stderr, flush=True)
             try:
-                candidate = confined(root, rel)
-                protected(root, rel, include_unborn_probes)
+                candidate = confined(root, rel, include_reviewed_remnants)
+                protected(root, rel, include_unborn_probes, include_reviewed_remnants)
                 if candidate.name in STATIC_CHECKOUTS:
                     require(
                         (candidate / ".git").is_dir(),
@@ -450,6 +471,7 @@ def preview(
         "root": str(root),
         "minimum_age_hours": minimum_age_hours,
         "include_unborn_probes": include_unborn_probes,
+        "include_reviewed_remnants": include_reviewed_remnants,
         "created_unix": now,
         "candidates": results,
         "blocked": blocked,
@@ -482,6 +504,8 @@ def quarantine(
         len({c["relative"] for c in plan["candidates"]}) == len(plan["candidates"]),
         "Duplicate candidate",
     )
+    include_reviewed = plan.get("include_reviewed_remnants", False)
+    require(type(include_reviewed) is bool, "Invalid reviewed-remnants opt-in")
     include_unborn = plan.get("include_unborn_probes", False)
     require(type(include_unborn) is bool, "Invalid unborn opt-in")
     receipts = []
@@ -489,8 +513,8 @@ def quarantine(
         relative = entry["relative"]
         if progress:
             print("Retain candidate: " + relative, file=sys.stderr, flush=True)
-        target = confined(root, relative)
-        protected(root, relative, include_unborn)
+        target = confined(root, relative, include_reviewed)
+        protected(root, relative, include_unborn, include_reviewed)
         if target.name in STATIC_CHECKOUTS:
             require(
                 (target / ".git").is_dir(),
@@ -529,9 +553,12 @@ def quarantine(
             stream.flush()
             os.fsync(stream.fileno())
         idle()
-        protected(root, relative, include_unborn)
+        protected(root, relative, include_unborn, include_reviewed)
         require(
-            inventory(confined(root, relative), allow_unborn=include_unborn) == rows,
+            inventory(
+                confined(root, relative, include_reviewed), allow_unborn=include_unborn
+            )
+            == rows,
             "Candidate changed before relocation",
         )
         require(
@@ -602,6 +629,7 @@ def main():
     parser.add_argument("--minimum-age-hours", type=int, default=24)
     parser.add_argument("--progress", action="store_true")
     parser.add_argument("--include-unborn-probes", action="store_true")
+    parser.add_argument("--include-reviewed-remnants", action="store_true")
     parser.add_argument("--queue-owned-run", action="store_true")
     parser.add_argument("--plan-output", type=Path)
     parser.add_argument(
@@ -634,6 +662,7 @@ def main():
             minimum_age_hours=args.minimum_age_hours,
             progress=args.progress,
             include_unborn_probes=args.include_unborn_probes,
+            include_reviewed_remnants=args.include_reviewed_remnants,
         )
         if args.plan_output:
             no_links(args.plan_output)

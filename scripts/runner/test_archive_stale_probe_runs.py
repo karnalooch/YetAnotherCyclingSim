@@ -58,7 +58,16 @@ class CleanupTests(unittest.TestCase):
     def make_git(self, path, branch, message):
         def git(*args):
             return subprocess.run(
-                ["git", "-C", str(path), *args],
+                [
+                    "git",
+                    "-C",
+                    str(path),
+                    "-c",
+                    "maintenance.auto=false",
+                    "-c",
+                    "gc.auto=0",
+                    *args,
+                ],
                 check=True,
                 capture_output=True,
                 text=True,
@@ -209,7 +218,7 @@ class CleanupTests(unittest.TestCase):
         old = time.time() - 172800
         for item in [*self.target.rglob("*"), self.target]:
             os.utime(item, (old, old))
-        result = self.apply(self.plan())
+        result = self.apply(self.plan(), idle=lambda: time.sleep(0.1))
         self.assertTrue(
             (Path(result[0]["destination"]) / "Plugins/Example/.git/HEAD").exists()
         )
@@ -297,6 +306,66 @@ class CleanupTests(unittest.TestCase):
         (self.target / ".git/worktrees/required-child").mkdir(parents=True)
         self.assertFalse(
             cleanup.preview(self.root, include_unborn_probes=True)["candidates"]
+        )
+
+    def test_reviewed_remnant_names_optin_only(self):
+        names = [
+            "b384/123-1-session-plugin",
+            "b384/123-1-input-boundary",
+            "b384/123-1-input-boundary-plugin",
+            str(cleanup.REPO / "_unreal-build-37639995352-1"),
+            str(cleanup.REPO / "_portable-powershell-bootstrap"),
+        ]
+        for name in names:
+            self.assertFalse(cleanup.eligible(name))
+            self.assertTrue(cleanup.eligible(name, include_reviewed_remnants=True))
+        self.assertFalse(
+            cleanup.eligible(str(cleanup.REPO / "_unreal-build-999-1"), True)
+        )
+
+    def test_reviewed_old_build_active_pointer_blocks(self):
+        old_build = self.root / cleanup.REPO / "_unreal-build-37639995352-1"
+        old_build.mkdir()
+        (old_build / ".git").write_text("gitdir: protected")
+        pointer = self.root / cleanup.REPO / "_yacs-unreal-ci/active.json"
+        pointer.parent.mkdir()
+        pointer.write_text(
+            json.dumps({"schema_version": 1, "worktree": old_build.name})
+        )
+        with self.assertRaisesRegex(ValueError, "Active cache is protected"):
+            cleanup.protected(
+                self.root,
+                old_build.relative_to(self.root),
+                include_reviewed_remnants=True,
+            )
+
+    def test_reviewed_remnant_shared_git_blocked(self):
+        target = self.root / "b384/123-1-session-plugin"
+        target.mkdir(parents=True)
+        (target / ".git").write_text("gitdir: D:/shared-owner")
+        plan = cleanup.preview(
+            self.root, minimum_age_hours=0, include_reviewed_remnants=True
+        )
+        self.assertTrue(
+            any(
+                r["relative"].endswith("session-plugin")
+                and "Git file/worktree" in r["reason"]
+                for r in plan["blocked"]
+            )
+        )
+
+    def test_reviewed_old_build_main_blocked(self):
+        target = self.root / cleanup.REPO / "_unreal-build-37639995352-1"
+        target.mkdir()
+        self.make_git(target, "main", "protected build")
+        plan = cleanup.preview(
+            self.root, minimum_age_hours=0, include_reviewed_remnants=True
+        )
+        self.assertTrue(
+            any(
+                r["relative"].endswith(target.name) and "protected" in r["reason"]
+                for r in plan["blocked"]
+            )
         )
 
     def test_queue_no_runner_mutation(self):
