@@ -17,54 +17,19 @@
   },
   "workflows": [
     {
-      "file": "level-editor-review.yml",
-      "state": "CURRENT",
-      "reason": "Issue #364 owner-selected Stream Level Editor and bounded material-instance preview. Owner-only fixed branch, explicit launch/manual intent, successful exact-SHA CI and the applicable Blender reference before the shared non-cancelling host lane. Verified independent saved scene, stock inspected PixelStreaming2, one restricted official MCP paint operation, exact session/process/launcher identity, native readback and small PNG response. Manual material-request reuses the owned session at its unchanged launch SHA. No build, saved source-world mutation, public tunnel, firewall change, visual acceptance or performance admission."
-    },
-    {
-      "file": "official-unreal-mcp-native-probe.yml",
-      "state": "CURRENT",
-      "reason": "Issue #384 owner-only branch-scoped opt-in BOB plugin BuildPlugin compilation. Isolated code-only checkout, canonical exact engine, idle shared host and serial host lane; no Editor/MCP launch, live project changes or native/transport/admission claims from a compile result."
-    },
-    {
-      "file": "official-unreal-mcp-source-probe.yml",
-      "state": "CURRENT",
-      "reason": "Issues #384/#364 owner-only branch-scoped read-only installed UE 5.8.2 official MCP/registry/test, material and Level Editor streaming declaration inventory. Explicit focus selection preserves existing inspections. Fresh code-only checkout, isolated long-path Git configuration and serial shared host lane; no build/editor launch/plugin activation or persistent world mutation. Source metadata is not runtime schemas, a working stream, material authoring or MCP admission."
-    },
-    {
-      "file": "road-material-source-proof.yml",
-      "state": "CURRENT",
-      "reason": "Issue #364 owner-only source checkpoint with explicit commit intent on the fixed branch. Replays selected asphalt twice through authenticated Material Forge, optionally checks crack/API sources, retains evidence and acquires the shared host lock only after admission. Ordinary pushes skip; no Unreal launch, world mutation, visual acceptance or performance admission."
-    },
-    {
-      "file": "road-material-native-proof.yml",
-      "state": "CURRENT",
-      "reason": "Issue #364 owner-only native checkpoint with explicit commit intent on the fixed branch. Requires protected exact-SHA CI before reserving the shared host, reuses verified compiled binaries and runs the existing baseline, canary, isolated full-network save/fresh reload and all 68 Lit poses plus requested controls. Ordinary pushes skip; source geometry, readiness, conservation and final admission remain enforced."
-    },
-    {
-      "file": "pcg365-natural20-contact-proof.yml",
-      "state": "CURRENT",
-      "reason": "Issue #365 owner-only fixed-branch [pcg365-native-proof] checkpoint. Requires successful exact-SHA protected CI and pinned Blender Material Forge reference before reserving the shared, non-cancelling yacs-ue58 host. Three bounded isolated Unreal sessions inspect/save twenty source-pinned Forge rocks, fresh-read and measure 100 actual Landscape cases, then fresh-read and capture forty native low-angle PNGs. Real exit-0 markers and hash-bound phase receipts are required. No accepted map/terrain/road mutation, production scatter, owner visual acceptance, benchmark, cleanup resumption or native-build claim."
-    },
-    {
-      "file": "pcg365-red-site-review.yml",
-      "state": "CURRENT",
-      "reason": "Issue #365 owner-approved visual diagnostic of five previously measured rejected terrain site anchors P0-P4. The owner-only explicit [pcg365-red-preview] branch push first requires successful exact-SHA protected CI; the one owned, serialized UE5.8.2 offscreen process loads the authenticated retained d361e765 contact stage, checks original 100 cases, draws only transient red TextRender labels and captures 10 real native PNGs. Unverified or occupied host fails closed; never changes accepted Landscape/road/physics, map saves, materials, scatter, hard exclusions or final visual/physics admission. A static offscreen review is not an interactive PixelStreaming client."
-    },
-    {
-      "file": "pcg365-live-editor-stream.yml",
-      "state": "CURRENT",
-      "reason": "Issue #365 owner-requested *interactive* red-site Pixel Streaming 2 Level Editor handoff. One explicit owner-only fixed-branch [pcg365-live-stream] request waits on exact-SHA successful CI and independent Blender reference; noncancelling shared GPU host arbitration, provenance-pinned already-saved d361e765 diagnostic project, five transient red text labels at original rejected XY, no map/asset save or geometry mutation, browser-side real video-frame proof through the existing checked receiver. Leaves authenticated Editor running only if the browser actually receives frames; otherwise stops exclusively the launched Editor process. Local/LAN only, not public link, rock/World Authority and final owner admission remain false."
-    },
-    {
-      "file": "blender-material-forge-reference.yml",
-      "state": "CURRENT",
-      "reason": "Self-hosted Issue #399 pinned-Blender ground-scale Material Forge reference proof; consumes CPU-validated deterministic outputs, refuses active local Unreal ownership and never mutates the accepted world."
+      "file": "adaptive-unreal-profile-canary.yml",
+      "state": "ONE-SHOT/DEAD",
+      "reason": "Dedicated ci/257 branch is gone and the only job was permanently disabled with if:false."
     },
     {
       "file": "asset-full.yml",
       "state": "CURRENT",
       "reason": "Explicit trusted full asset/release-oriented validation entrypoint."
+    },
+    {
+      "file": "blender-material-forge-reference.yml",
+      "state": "CURRENT",
+      "reason": "Self-hosted Issue #399 pinned-Blender ground-scale Material Forge reference proof; consumes CPU-validated deterministic outputs, refuses active local Unreal ownership and never mutates the accepted world."
     },
     {
       "file": "branch-hygiene.yml",
@@ -75,6 +40,16 @@
       "file": "ci.yml",
       "state": "CURRENT",
       "reason": "Primary caller-local PR/main CI graph, cheap-before-heavy ordering, exact-world performance admission and Aggregate CI gate."
+    },
+    {
+      "file": "drain-legacy-passo-giau-author.yml",
+      "state": "ONE-SHOT/DEAD",
+      "reason": "One-shot cancellation of historical Actions run 36638798865 on a deleted canary branch."
+    },
+    {
+      "file": "level-editor-review.yml",
+      "state": "CURRENT",
+      "reason": "Issue #364 owner-selected Stream Level Editor and bounded material-instance preview. Owner-only fixed branch, explicit launch/manual intent, successful exact-SHA CI and the applicable Blender reference before the shared non-cancelling host lane. Verified independent saved scene, stock inspected PixelStreaming2, one restricted official MCP paint operation, exact session/process/launcher identity, native readback and small PNG response. Manual material-request reuses the owned session at its unchanged launch SHA. No build, saved source-world mutation, public tunnel, firewall change, visual acceptance or performance admission."
     },
     {
       "file": "manual-unreal.yml",
@@ -107,6 +82,21 @@
       "reason": "Bounded Issue #387 Windows session/context diagnostic for Material Maker command-line export; evidence-only and non-mutating."
     },
     {
+      "file": "official-unreal-mcp-native-probe.yml",
+      "state": "CURRENT",
+      "reason": "Issue #384 owner-only branch-scoped opt-in BOB plugin BuildPlugin compilation. Isolated code-only checkout, canonical exact engine, idle shared host and serial host lane; no Editor/MCP launch, live project changes or native/transport/admission claims from a compile result."
+    },
+    {
+      "file": "official-unreal-mcp-source-probe.yml",
+      "state": "CURRENT",
+      "reason": "Issues #384/#364 owner-only branch-scoped read-only installed UE 5.8.2 official MCP/registry/test, material and Level Editor streaming declaration inventory. Explicit focus selection preserves existing inspections. Fresh code-only checkout, isolated long-path Git configuration and serial shared host lane; no build/editor launch/plugin activation or persistent world mutation. Source metadata is not runtime schemas, a working stream, material authoring or MCP admission."
+    },
+    {
+      "file": "passo-giau-cortina-2m-probe.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Cortina 2 m source investigation is superseded by the canonical MASE terrain source."
+    },
+    {
       "file": "passo-giau-embark-terrain.yml",
       "state": "BROKER-MANAGED",
       "reason": "Explicit exact-SHA PCGEx-first M3 terrain/corridor proof; pushes run hosted contracts only, Gumball m3-terrain requests the full existing evidence bundle, and non-cancelling author concurrency protects the persistent compile-cache worktree. Houdini/Gaea are not required."
@@ -132,6 +122,11 @@
       "reason": "Broker-managed World Authoring Library SP638 proof; manual dispatch remains recovery fallback."
     },
     {
+      "file": "passo-giau-r4-1-terrain-spike.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "TINITALY terrain spike is historical evidence; current World Building Bible uses MASE PST LiDAR/DTM."
+    },
+    {
       "file": "passo-giau-r4-1b3-geometry-probe.yml",
       "state": "BROKER-MANAGED",
       "reason": "Explicit broker/manual legacy geometry regression proof. Automatic geometry and syntax checks run in the central discovered hosted suite; this fixed SP638 proof cannot admit Sa Calobra."
@@ -140,6 +135,41 @@
       "file": "passo-giau-road-alignment.yml",
       "state": "CURRENT",
       "reason": "Current official SP638 GIS preparation/alignment proof using the active terrain-source path."
+    },
+    {
+      "file": "passo-giau-road-source-probe.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Raw official-road source probe is superseded by the current passo-giau-road-alignment workflow."
+    },
+    {
+      "file": "passo-giau-veneto-fast-probe.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Endpoint-discovery spike for the older Veneto source path; evidence remains in terrain research history."
+    },
+    {
+      "file": "passo-giau-veneto-lidar-probe.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "Older Veneto LiDAR source probe; current terrain source is MASE PST."
+    },
+    {
+      "file": "passo-giau-veneto-source-ab.yml",
+      "state": "HISTORICAL/RETIRED",
+      "reason": "TINITALY vs Veneto A/B established historical evidence but neither is the current MASE source workflow."
+    },
+    {
+      "file": "pcg365-live-editor-stream.yml",
+      "state": "CURRENT",
+      "reason": "Issue #365 owner-requested *interactive* red-site Pixel Streaming 2 Level Editor handoff. One explicit owner-only fixed-branch [pcg365-live-stream] request waits on exact-SHA successful CI and independent Blender reference; noncancelling shared GPU host arbitration, provenance-pinned already-saved d361e765 diagnostic project, five transient red text labels at original rejected XY, no map/asset save or geometry mutation, browser-side real video-frame proof through the existing checked receiver. Leaves authenticated Editor running only if the browser actually receives frames; otherwise stops exclusively the launched Editor process. Local/LAN only, not public link, rock/World Authority and final owner admission remain false."
+    },
+    {
+      "file": "pcg365-natural20-contact-proof.yml",
+      "state": "CURRENT",
+      "reason": "Issue #365 owner-only fixed-branch [pcg365-native-proof] checkpoint. Requires successful exact-SHA protected CI and pinned Blender Material Forge reference before reserving the shared, non-cancelling yacs-ue58 host. Three bounded isolated Unreal sessions inspect/save twenty source-pinned Forge rocks, fresh-read and measure 100 actual Landscape cases, then fresh-read and capture forty native low-angle PNGs. Real exit-0 markers and hash-bound phase receipts are required. No accepted map/terrain/road mutation, production scatter, owner visual acceptance, benchmark, cleanup resumption or native-build claim."
+    },
+    {
+      "file": "pcg365-red-site-review.yml",
+      "state": "CURRENT",
+      "reason": "Issue #365 owner-approved visual diagnostic of five previously measured rejected terrain site anchors P0-P4. The owner-only explicit [pcg365-red-preview] branch push first requires successful exact-SHA protected CI; the one owned, serialized UE5.8.2 offscreen process loads the authenticated retained d361e765 contact stage, checks original 100 cases, draws only transient red TextRender labels and captures 10 real native PNGs. Unverified or occupied host fails closed; never changes accepted Landscape/road/physics, map saves, materials, scatter, hard exclusions or final visual/physics admission. A static offscreen review is not an interactive PixelStreaming client."
     },
     {
       "file": "portable-powershell.yml",
@@ -187,6 +217,16 @@
       "reason": "Current code-only Unreal build and Automation reusable lane."
     },
     {
+      "file": "road-material-native-proof.yml",
+      "state": "CURRENT",
+      "reason": "Issue #364 owner-only native checkpoint with explicit commit intent on the fixed branch. Requires protected exact-SHA CI before reserving the shared host, reuses verified compiled binaries and runs the existing baseline, canary, isolated full-network save/fresh reload and all 68 Lit poses plus requested controls. Ordinary pushes skip; source geometry, readiness, conservation and final admission remain enforced."
+    },
+    {
+      "file": "road-material-source-proof.yml",
+      "state": "CURRENT",
+      "reason": "Issue #364 owner-only source checkpoint with explicit commit intent on the fixed branch. Replays selected asphalt twice through authenticated Material Forge, optionally checks crack/API sources, retains evidence and acquires the shared host lock only after admission. Ordinary pushes skip; no Unreal launch, world mutation, visual acceptance or performance admission."
+    },
+    {
       "file": "runner-monitor.yml",
       "state": "CURRENT",
       "reason": "Owner-only manual main-branch desktop monitor deployment. Rollout push trigger retired after verified silent installation. No Unreal or service restart."
@@ -202,14 +242,14 @@
       "reason": "Issue #445 Phase 2C exact-SHA PCGEx Component_230 cliff-topology A/B proof; pins PCGEx 0.79, proves two-run mesh determinism, real limestone material integrity, custom-vs-PCGEx Lit/Lighting-Only metrics, topology density/performance, no collision, and no canonical map/asset mutation. Explicit owner-only detail-native pushes use two fixed captured cameras and verified retained v8 inputs for a reversible mask/visibility/bounded-patch proof, with compact evidence and no full topology or survey rerun. Owner-only wholemap-material pushes prepare the pinned full 4033-by-4033 grid, require native binding of all 1024 Landscape components, reuse binaries only through the existing compile/proof resolver, and run fresh isolated master/capture processes. Forty-three bounded frames include three source-verified close Landscape probes and the original B/C survey poses. Source/readiness/rollback receipts and all generated material package members are retained; final visual/performance admission stays pending. Every older expensive lane excludes this intent."
     },
     {
-      "file": "sa-calobra-cliff-erosion-proof.yml",
-      "state": "CURRENT",
-      "reason": "Issue #429 non-destructive self-hosted frozen-grid cliff/scree selector proof; consumes pinned normalized terrain and conservative presentation exclusions, publishes diagnostic selectors only, and never mutates the canonical Landscape or source DTM."
-    },
-    {
       "file": "sa-calobra-cliff-component230-visual.yml",
       "state": "CURRENT",
       "reason": "Issue #443 bounded exact-SHA Component_230 transient DynamicMesh cliff/scree visual spike; narrow road+shoulder+0.5m mapped-water hard policy, four same-camera Lit/Lighting-Only captures, black-cavity metrics, collision off, no map or asset save."
+    },
+    {
+      "file": "sa-calobra-cliff-erosion-proof.yml",
+      "state": "CURRENT",
+      "reason": "Issue #429 non-destructive self-hosted frozen-grid cliff/scree selector proof; consumes pinned normalized terrain and conservative presentation exclusions, publishes diagnostic selectors only, and never mutates the canonical Landscape or source DTM."
     },
     {
       "file": "sa-calobra-terrain-performance.yml",
@@ -237,6 +277,11 @@
       "reason": "High-signal CI/release Slack routing."
     },
     {
+      "file": "stage3g-boulder-lod-author.yml",
+      "state": "ONE-SHOT/DEAD",
+      "reason": "Workflow declares one-shot authoring and its dedicated audit branch no longer exists."
+    },
+    {
       "file": "stage3g-environment-performance.yml",
       "state": "BROKER-MANAGED",
       "reason": "Broker-managed decision-relevant 1080p60 environment performance proof; manual dispatch remains fallback."
@@ -250,71 +295,6 @@
       "file": "stage3g-forest-target-density-performance.yml",
       "state": "CURRENT",
       "reason": "Target-density forest performance workflow paired with the live authoring branch."
-    },
-    {
-      "file": "stage3g-source-asset-audit.yml",
-      "state": "BROKER-MANAGED",
-      "reason": "Broker-managed non-mutating source-asset lifecycle/performance audit; manual dispatch remains fallback."
-    },
-    {
-      "file": "texture-material-prep-remote-proof.yml",
-      "state": "CURRENT",
-      "reason": "Scoped #382/#383 remote-only texture backup audit and disposable UE 5.8.2 Rock026 reopen proof; branch/PR-gated, no world mutation or MCP cutover."
-    },
-    {
-      "file": "windows-probe.yml",
-      "state": "CURRENT",
-      "reason": "Cheap generic manual GitHub-hosted Windows toolchain probe."
-    },
-    {
-      "file": "yacs-editor-command.yml",
-      "state": "CURRENT",
-      "reason": "Owner-only issue-comment remote-editor smoke command from trusted default-branch workflow code."
-    },
-    {
-      "file": "adaptive-unreal-profile-canary.yml",
-      "state": "ONE-SHOT/DEAD",
-      "reason": "Dedicated ci/257 branch is gone and the only job was permanently disabled with if:false."
-    },
-    {
-      "file": "drain-legacy-passo-giau-author.yml",
-      "state": "ONE-SHOT/DEAD",
-      "reason": "One-shot cancellation of historical Actions run 36638798865 on a deleted canary branch."
-    },
-    {
-      "file": "passo-giau-r4-1-terrain-spike.yml",
-      "state": "HISTORICAL/RETIRED",
-      "reason": "TINITALY terrain spike is historical evidence; current World Building Bible uses MASE PST LiDAR/DTM."
-    },
-    {
-      "file": "passo-giau-cortina-2m-probe.yml",
-      "state": "HISTORICAL/RETIRED",
-      "reason": "Cortina 2 m source investigation is superseded by the canonical MASE terrain source."
-    },
-    {
-      "file": "passo-giau-veneto-fast-probe.yml",
-      "state": "HISTORICAL/RETIRED",
-      "reason": "Endpoint-discovery spike for the older Veneto source path; evidence remains in terrain research history."
-    },
-    {
-      "file": "passo-giau-veneto-lidar-probe.yml",
-      "state": "HISTORICAL/RETIRED",
-      "reason": "Older Veneto LiDAR source probe; current terrain source is MASE PST."
-    },
-    {
-      "file": "passo-giau-veneto-source-ab.yml",
-      "state": "HISTORICAL/RETIRED",
-      "reason": "TINITALY vs Veneto A/B established historical evidence but neither is the current MASE source workflow."
-    },
-    {
-      "file": "passo-giau-road-source-probe.yml",
-      "state": "HISTORICAL/RETIRED",
-      "reason": "Raw official-road source probe is superseded by the current passo-giau-road-alignment workflow."
-    },
-    {
-      "file": "stage3g-boulder-lod-author.yml",
-      "state": "ONE-SHOT/DEAD",
-      "reason": "Workflow declares one-shot authoring and its dedicated audit branch no longer exists."
     },
     {
       "file": "stage3g-r2-conifer-author.yml",
@@ -360,6 +340,36 @@
       "file": "stage3g-r4-terrain-coherence-author.yml",
       "state": "HISTORICAL/RETIRED",
       "reason": "Dedicated R4 mutating author workflow targeted a deleted branch; reusable terrain-coherence harness remains contract-tested."
+    },
+    {
+      "file": "stage3g-source-asset-audit.yml",
+      "state": "BROKER-MANAGED",
+      "reason": "Broker-managed non-mutating source-asset lifecycle/performance audit; manual dispatch remains fallback."
+    },
+    {
+      "file": "texture-material-prep-remote-proof.yml",
+      "state": "CURRENT",
+      "reason": "Scoped #382/#383 remote-only texture backup audit and disposable UE 5.8.2 Rock026 reopen proof; branch/PR-gated, no world mutation or MCP cutover."
+    },
+    {
+      "file": "windows-probe.yml",
+      "state": "CURRENT",
+      "reason": "Cheap generic manual GitHub-hosted Windows toolchain probe."
+    },
+    {
+      "file": "yacs-editor-command.yml",
+      "state": "CURRENT",
+      "reason": "Owner-only issue-comment remote-editor smoke command from trusted default-branch workflow code."
+    },
+    {
+      "file": "yacs-live-command.yml",
+      "state": "CURRENT",
+      "reason": "Issue #476 full-unreal extensible recipe protocol: explicit owner-authored commit marker [yacs-live-command], exact-SHA protected CI, verified published code-only script from reviewed manifest/catalog, bounded single action and native readback into the ALREADY running Editor. No arbitrary browser Python/shell, no automatic editor restart, original world/road/DTM protected by project authority."
+    },
+    {
+      "file": "yacs-live-host.yml",
+      "state": "CURRENT",
+      "reason": "Issue #476 owner-only fixed-branch opt-in YACS Live Host preflight/install/activate/post-job verify. Independent limited interactive AtLogOn scheduled task owns the persistent PixelStreaming2 Unreal Editor, never a GitHub Actions child; no run gets persistent visual PASS until a separate later receiver observes current PID+SID+heartbeat and new WebRTC frames. Scoped code-only, no runner/service/scene mutations on default preflight."
     }
   ]
 }

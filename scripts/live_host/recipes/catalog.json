@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "review_issue": 476,
+  "policy": "SOURCE_REVIEWED_RECIPES_ONLY",
+  "recipes": [
+    {
+      "id": "actor_preview_transform",
+      "capability": "actor_presentation",
+      "intents": [
+        "preview"
+      ],
+      "asset_scope": [],
+      "parameters": {
+        "actor_path": {
+          "type": "string"
+        },
+        "location_cm": {
+          "type": "vec3"
+        },
+        "rotation_deg": {
+          "type": "vec3"
+        }
+      }
+    },
+    {
+      "id": "actor_preview_visibility",
+      "capability": "actor_presentation",
+      "intents": [
+        "preview"
+      ],
+      "asset_scope": [],
+      "parameters": {
+        "actor_path": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "id": "light_preview_intensity",
+      "capability": "lighting_presentation",
+      "intents": [
+        "preview"
+      ],
+      "asset_scope": [],
+      "parameters": {
+        "actor_path": {
+          "type": "string"
+        },
+        "intensity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 500000
+        }
+      }
+    },
+    {
+      "id": "material_preview_scalar",
+      "capability": "material_presentation",
+      "intents": [
+        "preview"
+      ],
+      "asset_scope": [],
+      "parameters": {
+        "actor_path": {
+          "type": "string"
+        },
+        "material_slot": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "parameter": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100000
+        }
+      }
+    }
+  ]
+}

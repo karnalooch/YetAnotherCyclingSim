@@ -2,6 +2,34 @@
 
 > Scoped policy migrated from original root AGENTS.md (blob `c4c75a9e92088195a7aad1c72c849ac9482d1462`). Read only for applicable work. Current domain SSOT and owner decisions take precedence over superseded chronology.
 
+### Owner-approved independent YACS Live Host — 2026-10-12
+
+The owner requests a **persistent, interactive Unreal Editor after Windows
+logon**, independent of the GitHub Actions service-runner job lifetime, with
+Pixel Streaming 2 for local/LAN Chrome review and broad remote authoring
+capabilities. This supersedes job-owned streaming as the preferred future
+delivery *mechanism*, but not the previously protected M3 source/physics/
+Landscape authority or per-change technical proof. See
+[Live Host contract](../../../docs/tooling/YACS_LIVE_HOST.md), issue #476.
+
+- The owner-logon scheduled task uses a limited interactive desktop identity
+  and starts one UE instance outside the GitHub runner job/process group.
+  The existing runner service is not restarted or reconfigured.
+- A GitHub job may stage only reviewed exact-SHA code and typed versioned
+  requests to the same Editor; it must not directly spawn UE for live handoff.
+  Editing scope can grow through tested actor, materials, lighting, PCGEx,
+  assets, animations and Blueprint recipes, not a public unrestricted remote
+  Python/PowerShell endpoint.
+- Native publication needs source/asset contract, rollback/checkpoint and
+  exact actor/asset readback. A preview is not permission to save a frozen
+  source/road/physics/terrain asset.
+- Do not call UE Remote durable PASS until the source, TaskScheduler user/SID,
+  Editor process identity and **new browser video** are proven again *after*
+  the controlling GitHub job exits. Failed startup does not authorize restart
+  loops or takeover of another Editor session.
+- This is a staged **Draft** implementation until the Windows machine has
+  confirmed a real login, Pixel Streaming and independent post-job survival.
+
 ### Live editor collaboration with the owner
 
 Owner checkpoint/workspace decision, 2026-10-04: the canonical home workspace is
