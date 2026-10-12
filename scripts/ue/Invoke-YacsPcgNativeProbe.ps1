@@ -12,8 +12,9 @@ param(
     [Parameter(Mandatory)][ValidatePattern('^[A-Za-z0-9][A-Za-z0-9-]{0,63}$')][string]$RunToken,
     [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload','rock-qualify','rock-reload','rock-render')][string]$Action = 'inspect',
     [switch]$QualificationSources,
+    [ValidateSet('baseline','rock-detail')][string]$QualificationSet = 'baseline',
     [switch]$RockQualificationSources,
-    [ValidateSet('source','lod0','support','scan-base')][string]$RockSet = 'source',
+    [ValidateSet('source','lod0','support','scan-base','large-base')][string]$RockSet = 'source',
     [string]$MaskXyRequest,
     [ValidatePattern('^[0-9a-f]{64}$')][string]$ExpectedMaskXySha,
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
@@ -168,7 +169,8 @@ if ($Action -ne 'inspect') {
         Stage-QualifiedFile $source $scriptRelative (File-Identity $source)
     } elseif ($ExpectedMaskXySha) { throw 'Expected mask XY SHA requires a request path.' }
     if ($QualificationSources) {
-        $qualificationPath = Join-Path $RepoRoot 'worldgen/sa_calobra/pcg365_qualification_sources_v1.json'
+        $qualificationName = @{baseline='pcg365_qualification_sources_v1.json';'rock-detail'='pcg365_rock_detail_sources_v1.json'}[$QualificationSet]
+        $qualificationPath = Join-Path $RepoRoot "worldgen/sa_calobra/$qualificationName"
         $qualification = Get-Content -LiteralPath $qualificationPath -Raw | ConvertFrom-Json
         if ($qualification.scope -cne 'LOCAL_DIAGNOSTIC_ONLY_NOT_REGIONAL_PLACEMENT' -or $qualification.terrain.assets.Count -ne 14) { throw 'Unexpected qualification source contract.' }
         Stage-QualifiedFile $qualificationPath 'qualification-sources.json' (File-Identity $qualificationPath)
@@ -202,7 +204,7 @@ if ($Action -ne 'inspect') {
     }
     if ($RockQualificationSources) {
         if (-not $QualificationSources) { throw 'Rock qualification requires authenticated terrain/Forge sources.' }
-        $rockRequestName = @{source='pcg365_rock_qualification_v1.json';lod0='pcg365_rock_lod0_qualification_v1.json';support='pcg365_support_rock_qualification_v1.json';'scan-base'='pcg365_scan_base_diagnostic_v1.json'}[$RockSet]
+        $rockRequestName = @{source='pcg365_rock_qualification_v1.json';lod0='pcg365_rock_lod0_qualification_v1.json';support='pcg365_support_rock_qualification_v1.json';'scan-base'='pcg365_scan_base_diagnostic_v1.json';'large-base'='pcg365_large_scan_base_diagnostic_v1.json'}[$RockSet]
         $requestPath = Join-Path $RepoRoot "worldgen/sa_calobra/$rockRequestName"
         $request = Get-Content -LiteralPath $requestPath -Raw | ConvertFrom-Json
         if ($request.scope -cne 'ISOLATED_ROCK_QUALIFICATION_ONLY' -or $request.assets.Count -ne 2 -or $request.placement) { throw 'Unexpected rock qualification request.' }
@@ -213,7 +215,7 @@ if ($Action -ne 'inspect') {
             Stage-QualifiedFile $request.source_inspection.path 'rock-source/source-inspection.json' $sourceInspectionIdentity
         }
         foreach ($asset in $request.assets) {
-            if ($asset.id -cnotin @('rock_07','rock_09','support_rock_a','support_rock_b') -or $asset.source_relative -cne "rock-source/$($asset.id).fbx") { throw 'Unexpected rock source identity.' }
+            if ($asset.id -cnotin @('rock_07','rock_09','support_rock_a','support_rock_b','namaqualand_boulder_02','namaqualand_boulder_06') -or $asset.source_relative -cne "rock-source/$($asset.id).fbx") { throw 'Unexpected rock source identity.' }
             Stage-QualifiedFile $asset.source $asset.source_relative $asset
         }
         foreach ($scriptRelative in @('scripts/assets/pcg_rock_contact_policy.py','scripts/assets/pcg_rock_patch_diagnostic.py','scripts/ue/sa_calobra_pcg_rock_qualification.py','scripts/ue/sa_calobra_pcg_rock_capture.py')) {
@@ -276,7 +278,7 @@ if ($Action -in @('rock-reload','rock-render')) {
     $rockInventory = Get-Content (Join-Path $Proof 'rock-qualify/mesh-inventory.json') -Raw | ConvertFrom-Json
     if ($rockInventory.code_sha -cne $ExpectedHead -or $rockInventory.saved_packages.Count -ne 2) { throw 'Unexpected rock inventory.' }
     foreach ($entry in $rockInventory.saved_packages) {
-        if ($entry.path -notmatch '^Content/Generated/YACS/PCG365Rocks/SM_(rock_(07|09)|support_rock_[ab])_ForgeDiagnostic\.uasset$') { throw 'Unexpected rock package path.' }
+        if ($entry.path -notmatch '^Content/Generated/YACS/PCG365Rocks/SM_(rock_(07|09)|support_rock_[ab]|namaqualand_boulder_(02|06))_ForgeDiagnostic\.uasset$') { throw 'Unexpected rock package path.' }
         Assert-SameFile (Join-Path $Root $entry.path) $entry
     }
 }

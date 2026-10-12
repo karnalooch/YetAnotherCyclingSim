@@ -37,6 +37,254 @@ CHANNELS = {
 }
 WORLD_FUNCTION_ROOT = "/Engine/Functions/Engine_MaterialFunctions01/Texturing/"
 LIB = unreal.MaterialEditingLibrary
+ROCK_RECIPE = "ROCK_APPEARANCE_V1"
+ROCK_PREFIX = "PCG365_ROCK_V1:"
+
+
+def rock_appearance_mode():
+    path = project_root() / "qualification-sources.json"
+    value = (
+        json.loads(path.read_text(encoding="utf-8"))["forge"].get("rock_appearance")
+        if path.exists()
+        else None
+    )
+    require(value in (None, ROCK_RECIPE), "Unknown rock appearance recipe")
+    return value
+
+
+def rock_spec():
+    """Fixed rock-only response; source textures retain their physical 4 m tile."""
+    spec = {}
+    for key, value in {
+        "Gain": 0.82,
+        "Fracture": 0.20,
+        "Pore": 0.12,
+        "Mineral": 0.10,
+        "NormalStrength": 1.35,
+    }.items():
+        spec[key] = (
+            "MaterialExpressionScalarParameter",
+            {"parameter_name": "Rock" + key, "default_value": value},
+        )
+    for key, flags in {
+        "R": (True, False, False),
+        "G": (False, True, False),
+        "B": (False, False, True),
+        "NormalXY": (True, True, False),
+        "NormalZ": (False, False, True),
+    }.items():
+        spec[key] = (
+            "MaterialExpressionComponentMask",
+            dict(zip(("r", "g", "b", "a"), (*flags, False))),
+        )
+    for key, value in {"One": 1.0, "Two": 2.0, "Zero": 0.0}.items():
+        spec[key] = ("MaterialExpressionConstant", {"r": value})
+    for key in (
+        "FractureMul",
+        "PoreMul",
+        "MineralDouble",
+        "MineralMul",
+        "ColorGain",
+        "ColorFinal",
+        "NormalMul",
+    ):
+        spec[key] = ("MaterialExpressionMultiply", {})
+    for key in ("MinusFracture", "MinusPore", "MineralCenter"):
+        spec[key] = ("MaterialExpressionSubtract", {})
+    spec.update(
+        ColorAdd=("MaterialExpressionAdd", {}),
+        ColorClamp=("MaterialExpressionClamp", {}),
+        NormalAppend=("MaterialExpressionAppendVector", {}),
+        NormalFinal=("MaterialExpressionNormalize", {}),
+    )
+    return spec
+
+
+def rock_edges():
+    return [
+        ("detail", "XYZ Texture", "R", ""),
+        ("detail", "XYZ Texture", "G", ""),
+        ("detail", "XYZ Texture", "B", ""),
+        ("R", "", "FractureMul", "A"),
+        ("Fracture", "", "FractureMul", "B"),
+        ("G", "", "PoreMul", "A"),
+        ("Pore", "", "PoreMul", "B"),
+        ("One", "", "MinusFracture", "A"),
+        ("FractureMul", "", "MinusFracture", "B"),
+        ("MinusFracture", "", "MinusPore", "A"),
+        ("PoreMul", "", "MinusPore", "B"),
+        ("B", "", "MineralDouble", "A"),
+        ("Two", "", "MineralDouble", "B"),
+        ("MineralDouble", "", "MineralCenter", "A"),
+        ("One", "", "MineralCenter", "B"),
+        ("MineralCenter", "", "MineralMul", "A"),
+        ("Mineral", "", "MineralMul", "B"),
+        ("MinusPore", "", "ColorAdd", "A"),
+        ("MineralMul", "", "ColorAdd", "B"),
+        ("ColorAdd", "", "ColorClamp", ""),
+        ("Zero", "", "ColorClamp", "Min"),
+        ("One", "", "ColorClamp", "Max"),
+        ("base", "XYZ Texture", "ColorGain", "A"),
+        ("Gain", "", "ColorGain", "B"),
+        ("ColorGain", "", "ColorFinal", "A"),
+        ("ColorClamp", "", "ColorFinal", "B"),
+        ("normal_base", "", "NormalXY", ""),
+        ("normal_base", "", "NormalZ", ""),
+        ("NormalXY", "", "NormalMul", "A"),
+        ("NormalStrength", "", "NormalMul", "B"),
+        ("NormalMul", "", "NormalAppend", "A"),
+        ("NormalZ", "", "NormalAppend", "B"),
+        ("NormalAppend", "", "NormalFinal", ""),
+    ]
+
+
+def rock_sources(master):
+    sources = {}
+    for expression in LIB.get_material_expressions(master):
+        if isinstance(expression, unreal.MaterialExpressionMaterialFunctionCall):
+            textures = [
+                item
+                for item in LIB.get_inputs_for_material_expression(master, expression)
+                if isinstance(item, unreal.MaterialExpressionTextureObjectParameter)
+            ]
+            require(len(textures) == 1, "Ambiguous rock projection texture")
+            parameter = str(textures[0].get_editor_property("parameter_name"))
+            key = {
+                "BaseColorTex": "base",
+                "DetailMasksTex": "detail",
+                "NormalTex": "normal_projection",
+                "ORMTex": "orm",
+            }.get(parameter)
+            require(
+                key is not None and key not in sources, "Unexpected rock projection"
+            )
+            sources[key] = expression
+    normals = [
+        expression
+        for expression in LIB.get_material_expressions(master)
+        if isinstance(expression, unreal.MaterialExpressionNormalize)
+        and list(LIB.get_inputs_for_material_expression(master, expression))
+        == [sources["normal_projection"]]
+    ]
+    require(len(normals) == 1, "Missing original normal normalization")
+    sources["normal_base"] = normals[0]
+    return sources
+
+
+def apply_rock_appearance(assets):
+    master = unreal.load_asset(assets["master"])
+    nodes = rock_sources(master)
+    for key, (class_name, properties) in rock_spec().items():
+        node = LIB.create_material_expression(master, getattr(unreal, class_name))
+        require(node is not None, "Rock material node creation failed")
+        node.set_editor_property("desc", ROCK_PREFIX + key)
+        for field, value in properties.items():
+            node.set_editor_property(field, value)
+        nodes[key] = node
+    for source, output, target, input_name in rock_edges():
+        require(
+            LIB.connect_material_expressions(
+                nodes[source], output, nodes[target], input_name
+            ),
+            "Rock material edge failed: " + target,
+        )
+    for node, prop in (
+        ("ColorFinal", unreal.MaterialProperty.MP_BASE_COLOR),
+        ("NormalFinal", unreal.MaterialProperty.MP_NORMAL),
+    ):
+        require(
+            LIB.connect_material_property(nodes[node], "", prop),
+            "Rock material output failed",
+        )
+    require(not LIB.recompile_material(master), "Rock material compilation failed")
+    LIB.update_material_instance(unreal.load_asset(assets["instance"]))
+
+
+def rock_readback(master, instance):
+    tagged = {}
+    for node in LIB.get_material_expressions(master):
+        description = str(node.get_editor_property("desc"))
+        if description.startswith(ROCK_PREFIX):
+            key = description.removeprefix(ROCK_PREFIX)
+            require(key not in tagged, "Duplicate rock material node")
+            tagged[key] = node
+    mode = rock_appearance_mode()
+    if mode is None:
+        require(not tagged, "Unexpected opt-in rock graph")
+        return {"recipe": "LEGACY_BASELINE", "physical_tile_cm": 400.0}
+    require(set(tagged) == set(rock_spec()), "Rock material graph inventory differs")
+    values = {}
+    for key, (class_name, properties) in rock_spec().items():
+        node = tagged[key]
+        require(
+            isinstance(node, getattr(unreal, class_name)),
+            "Rock expression class differs",
+        )
+        for field, expected in properties.items():
+            actual = node.get_editor_property(field)
+            if field == "parameter_name":
+                require(str(actual) == expected, "Rock parameter name differs")
+            elif type(expected) is float:
+                require(
+                    math.isfinite(actual) and abs(actual - expected) <= 1e-6,
+                    "Rock float32 scalar differs",
+                )
+            else:
+                require(actual == expected, "Rock expression setting differs")
+        if class_name == "MaterialExpressionScalarParameter":
+            value = LIB.get_material_instance_scalar_parameter_value(
+                instance,
+                properties["parameter_name"],
+                unreal.MaterialParameterAssociation.GLOBAL_PARAMETER,
+            )
+            require(
+                math.isfinite(value)
+                and abs(value - properties["default_value"]) <= 1e-6,
+                "Effective rock scalar differs",
+            )
+            values[properties["parameter_name"]] = float(value)
+    nodes = {**rock_sources(master), **tagged}
+    expected_inputs = {}
+    for source, _, target, input_name in rock_edges():
+        names = list(LIB.get_material_expression_input_names(nodes[target]))
+        # GetMaterialExpressionInputNames shortens native "Input" to NAME_None
+        # (MaterialGraphNode.cpp:610); its reflected input remains index zero.
+        index = names.index(input_name) if input_name not in ("", "Input") else 0
+        expected_inputs.setdefault(target, [None] * len(names))[index] = nodes[source]
+    for target, expected in expected_inputs.items():
+        require(
+            list(LIB.get_inputs_for_material_expression(master, nodes[target]))
+            == expected,
+            "Rock input topology differs: " + target,
+        )
+    for key, prop in (
+        ("ColorFinal", unreal.MaterialProperty.MP_BASE_COLOR),
+        ("NormalFinal", unreal.MaterialProperty.MP_NORMAL),
+    ):
+        require(
+            LIB.get_material_property_input_node(master, prop) == nodes[key],
+            "Rock output topology differs",
+        )
+    for prop, flags in (
+        (unreal.MaterialProperty.MP_AMBIENT_OCCLUSION, [True, False, False, False]),
+        (unreal.MaterialProperty.MP_ROUGHNESS, [False, True, False, False]),
+    ):
+        node = LIB.get_material_property_input_node(master, prop)
+        require(
+            isinstance(node, unreal.MaterialExpressionComponentMask)
+            and [node.get_editor_property(k) for k in ("r", "g", "b", "a")] == flags
+            and list(LIB.get_inputs_for_material_expression(master, node))
+            == [nodes["orm"]],
+            "Rock recipe changed original ORM response",
+        )
+    return {
+        "recipe": mode,
+        "physical_tile_cm": 400.0,
+        "effective_scalars": values,
+        "float32_readback_tolerance": 1e-6,
+        "detail_semantics": "R fractures; G pores/pits; B mineral variation; artistic contrast only",
+        "geometry_modified": False,
+    }
 
 
 def require(ok, message):
@@ -150,6 +398,7 @@ def material_readback(assets):
         instance.get_editor_property("parent") == master,
         "Forge instance parent differs",
     )
+    appearance = rock_readback(master, instance)
     association = unreal.MaterialParameterAssociation.GLOBAL_PARAMETER
     tile = LIB.get_material_instance_scalar_parameter_value(
         instance, "TileSizeCm", association
@@ -262,6 +511,7 @@ def material_readback(assets):
         "geometry_qualification": "PENDING_PROTECTED_INPUT_READBACK",
         "source_audited_geometry_readback": geometry,
         "shader_gpu_compilation_verified": False,
+        "rock_appearance": appearance,
     }
 
 
@@ -353,6 +603,8 @@ def prepare_binding(variant_directory, code_sha):
     instance, imported = import_variant(
         Path(variant_directory), DESTINATION + "/MaterialForge", False
     )
+    if rock_appearance_mode() == ROCK_RECIPE:
+        apply_rock_appearance(imported["assets"])
     mesh = unreal.EditorAssetLibrary.duplicate_asset(SOURCE_MESH, DERIVED_MESH)
     require(
         isinstance(mesh, unreal.StaticMesh) and mesh != source,

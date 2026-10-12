@@ -28,10 +28,16 @@ class BoulderCapture:
         on_complete,
         framing_radius_cm,
         warmup_captures,
+        review_views,
     ):
         self.world, self.done = world, on_complete
         self.center = _xyz(target_center)
         self.radius = float(framing_radius_cm)
+        if type(review_views) is not int or review_views not in (2, 4):
+            raise ValueError("Review view count must be two or four")
+        self.offsets = ((-3.5, -4.0, 0.7), (4.0, -3.0, 0.55))
+        if review_views == 4:
+            self.offsets += ((3.5, 4.0, 0.7), (-4.0, 3.0, 0.55))
         if (
             not all(math.isfinite(v) for v in self.center + [self.radius])
             or self.radius <= 0
@@ -62,6 +68,7 @@ class BoulderCapture:
             "scope": "LOCAL_DIAGNOSTIC_ONLY",
             "target_center_cm": self.center,
             "framing_radius_cm": self.radius,
+            "review_view_count": review_views,
             "resolution_px": list(RESOLUTION),
             "frames": [],
             "warmup_frames": [],
@@ -163,9 +170,11 @@ class BoulderCapture:
         return self
 
     def _submit(self):
-        offsets = ((-3.5, -4.0, 0.7), (4.0, -3.0, 0.55))
         eye = unreal.Vector(
-            *(c + self.radius * o for c, o in zip(self.center, offsets[self.index]))
+            *(
+                c + self.radius * o
+                for c, o in zip(self.center, self.offsets[self.index])
+            )
         )
         from scripts.ue.sa_calobra_pcg_terrain_contact import unpack
 
@@ -285,7 +294,7 @@ class BoulderCapture:
                 return
             self.report["frames"].append(frame)
             self.index += 1
-            if self.index == 2:
+            if self.index == len(self.offsets):
                 self.stop()
             else:
                 self._submit()
@@ -329,6 +338,7 @@ def start_capture(
     *,
     framing_radius_cm,
     warmup_captures=0,
+    review_views=2,
 ):
     """Return live capture state; callback receives receipt after two PNGs or failure.
 
@@ -342,6 +352,7 @@ def start_capture(
         on_complete,
         framing_radius_cm,
         warmup_captures,
+        review_views,
     )
     _ACTIVE.append(capture)
     return capture.start()

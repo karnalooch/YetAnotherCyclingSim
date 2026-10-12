@@ -69,6 +69,62 @@ class PatchTests(unittest.TestCase):
         self.assertAlmostEqual(result["full_embedding_cm"], 0.2)
         self.assertEqual(sum(r["cap_support"] for r in result["samples"]), 4)
 
+    def test_declared_plant_consumes_embedding_and_exposure(self):
+        rows, d = fixture()
+        original = self.final(rows, d)
+        d["planting_depth_fraction"] = 0.05
+        planted = self.final(rows, d)
+        self.assertEqual(planted["unplanted_root_z_cm"], original["root_z_cm"])
+        self.assertEqual(planted["planting_depth_cm"], 0.5)
+        self.assertEqual(planted["planting_depth_fraction"], 0.05)
+        self.assertEqual(planted["root_z_cm"], -0.5)
+        self.assertEqual(planted["full_embedding_cm"], 0.5)
+        self.assertEqual(planted["fit"]["exposure_max_cm"], 9.5)
+        self.assertEqual(planted["remaining_positive_overhang_gap_cm"], 7.5)
+        self.assertEqual(planted["status"], "DIAGNOSTIC_SUPPORT_PATCH_ONLY")
+        for flag in (
+            "placement",
+            "full_qualification",
+            "regional_production_qualified",
+        ):
+            self.assertFalse(planted[flag])
+        self.assertEqual(original["planting_depth_cm"], 0)
+        d["planting_depth_fraction"] = 0
+        self.assertEqual(self.final(rows, d), original)
+
+    def test_plant_has_no_extra_twenty_percent_burial_budget(self):
+        rows, d = fixture()
+        rows[0]["ground_z_cm"] = -1.75
+        unplanted = self.final(rows, d)
+        self.assertEqual(unplanted["status"], "DIAGNOSTIC_SUPPORT_PATCH_ONLY")
+        d["planting_depth_fraction"] = 0.05
+        planted = self.final(rows, d)
+        self.assertEqual(planted["full_embedding_cm"], 2.25)
+        self.assertIn("EXCESSIVE_FULL_GEOMETRY_EMBEDDING", planted["reasons"])
+        self.assertLess(
+            planted["fit"]["exposure_max_cm"], unplanted["fit"]["exposure_max_cm"]
+        )
+        self.assertEqual(planted["status"], "REJECTED_DIAGNOSTIC")
+
+    def test_invalid_plant_fraction_rejects_closed(self):
+        rows, d = fixture()
+        for value in (
+            -0.05,
+            0.01,
+            0.0500001,
+            1,
+            True,
+            None,
+            "0.05",
+            float("nan"),
+            float("inf"),
+        ):
+            with self.subTest(value=value):
+                d["planting_depth_fraction"] = value
+                result = self.final(rows, d)
+                self.assertEqual(result["status"], "REJECTED_DIAGNOSTIC")
+                self.assertFalse(result["placement"])
+
     def test_missing_ground_in_cap_or_overhang_rejects_full_coverage(self):
         for index in (0, 7):
             rows, d = fixture()

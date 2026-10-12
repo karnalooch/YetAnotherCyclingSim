@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "scope": "LOCAL_DIAGNOSTIC_ONLY_NOT_REGIONAL_PLACEMENT",
+  "forge": {
+    "root": "D:\\yacs\\material-forge-v2-final\\run-a\\regional_limestone\\base",
+    "files": [
+      {
+        "path": "validation.json",
+        "sha256": "2da21368e9dd52a0528cfcf3926fa3f6464a287913186f660c13b44f8cb629fa",
+        "bytes": 2270
+      },
+      {
+        "path": "provenance.json",
+        "sha256": "e05fc44a876959b0692d4bd3faf3c49e70ccaa4ed74d9b88a674a7e104a8cdf9",
+        "bytes": 3151
+      },
+      {
+        "path": "export/YACS_Material_BaseColor.png",
+        "sha256": "a397b418d316763afcb4fd0b8a80670bd9fad3080b8495b7e8259b6fb8303bb0",
+        "bytes": 2404720
+      },
+      {
+        "path": "export/YACS_Material_DetailMasks.png",
+        "sha256": "40bc6bf1d71bf5fcffccf457f9afad1e6f3a52da3ad9ef768c81e4d58e9df7fc",
+        "bytes": 3220663
+      },
+      {
+        "path": "export/YACS_Material_Height.exr",
+        "sha256": "13df224ee533162ae91ca7ca11504dc242bb09355928f0ebd16571de18d96c19",
+        "bytes": 6921553
+      },
+      {
+        "path": "export/YACS_Material_Normal_DX.png",
+        "sha256": "90c78d7cc53a02a6ca2e052643712b7065b7b05e9300e9dc493263786183a034",
+        "bytes": 7393805
+      },
+      {
+        "path": "export/YACS_Material_ORM.png",
+        "sha256": "99ed7cada4a03578495fe9f179fadcb7f7d7df7bea578c49b09ff0b64284d032",
+        "bytes": 1531855
+      }
+    ],
+    "rock_appearance": "ROCK_APPEARANCE_V1"
+  },
+  "terrain": {
+    "retained_root": "D:\\yacs\\work\\proofs\\sa-calobra-whole-map\\94827365ef8e83e52717bb21f9d6efa921aa2d1e\\37954100285-1\\saved-material-consumer",
+    "canonical_root": "D:/yacs/project",
+    "map_package": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview",
+    "consumer_manifest_sha256": "0eff084ad7bad97200e8947c47f5480ebb504b928769ab1bc36609de6ef777fb",
+    "reload_receipt_sha256": "2e4025d7b56f60bc5f8f13c3e16390b4ae4bcff915ba680a14c64b8fe3190aae",
+    "fresh_render_receipt_sha256": "60a5bccd95ea78f58a910c25f293db12eb124429e281b8a96d590558f45cc356",
+    "assets": [
+      {
+        "path": "Content/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview.umap",
+        "sha256": "bf2b92945865e2307990b6d3da40095dfa0774d28affb32a1e42e55f288764dd",
+        "size_bytes": 185187721,
+        "storage": {
+          "asset": "packages/L_SaCalobraMaterialReview.umap",
+          "release": "isolated saved material consumer"
+        }
+      },
+      {
+        "path": "Content/Generated/YACS/SaCalobra/WholeMapPreparation/MI_SaCalobraWholeMapPreparation.uasset",
+        "sha256": "694f58bf7c9515d451b93906f8ad1c156e93647c51f04eac58d509b11289af09",
+        "size_bytes": 8122,
+        "storage": {
+          "asset": "packages/MI_SaCalobraWholeMapPreparation.uasset",
+          "release": "isolated saved material consumer"
+        }
+      },
+      {
+        "path": "Content/Generated/YACS/SaCalobra/WholeMapPreparation/M_SaCalobraWholeMapPreparation.uasset",
+        "sha256": "2df2ef1d3b377cd951c74e6c8dfe3977fd4e45f22c8d784ec7c6ef2902781f1e",
+        "size_bytes": 111106,
+        "storage": {
+          "asset": "packages/M_SaCalobraWholeMapPreparation.uasset",
+          "release": "isolated saved material consumer"
+        }
+      },
+      {
+        "path": "Content/Generated/YACS/SaCalobra/WholeMapPreparation/T_WholeMapWeights.uasset",
+        "sha256": "29a7f8a25738353f14cb833a87328f97c0f83dcdb178567a54ad9ad183ae173b",
+        "size_bytes": 28166244,
+        "storage": {
+          "asset": "packages/T_WholeMapWeights.uasset",
+          "release": "isolated saved material consumer"
+        }
+      },
+      {
+        "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/DryGrass/T_Normal.uasset",
+        "sha256": "b54bd273e99b61a3f51ed700db015cc13d431c42739c06b9bbdfe306d4885a32",
+        "size_bytes": 6533124
+      },
+      {
+        "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/DryMineral/T_Normal.uasset",
+        "sha256": "2b5265fd3397e779613355e9978af8f8dbc61406d968bbfa190e4be6aae8f853",
+        "size_bytes": 2963121
+      },
+      {
+        "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/ExposedRock/T_Normal.uasset",
+        "sha256": "6b99c94d4679c99df5fc175a02f2da724bb802a7497035c35669ffacb860d747",
+        "size_bytes": 6166243
+      },
+      {
+        "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/ForestLitter/T_Normal.uasset",
+        "sha256": "2c0bf480850798e0b9c98af18b16cd3c4b8b4225eb0c9ccf9c0f39dfa8a75463",
+        "size_bytes": 3239923
+      },
+      {
+        "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/ProviderData/Scree/T_Normal.uasset",
+        "sha256": "05d06202ef0d127cb08e16df442f96e901e568d34db1adb87af2b3df4679ecb4",
+        "size_bytes": 2888628
+      },
+      {
+        "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_DryGrass.uasset",
+        "sha256": "13ec5f0be03f849515c1136268750a9e1c5576961d97f147dbf616e653ccaa2f",
+        "size_bytes": 1153614
+      },
+      {
+        "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_DryMineral.uasset",
+        "sha256": "fab7494f3e7d209b33f3afd031ff3dd1035404777cd8883489d19d1a0238c73a",
+        "size_bytes": 969347
+      },
+      {
+        "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_ExposedRock.uasset",
+        "sha256": "a754df8989666b2c2146346cc66cd2461bdefe74c2146f356fe0ab1de5b0ab2d",
+        "size_bytes": 1433833
+      },
+      {
+        "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_ForestLitter.uasset",
+        "sha256": "ae5276d75d1362f4df9803f41f2b0fc1626a2506c5930c2e42461dc3b4487861",
+        "size_bytes": 835692
+      },
+      {
+        "path": "Content/Generated/YACS/TextureMaterialPrep/Libraries/3d53743e48394f31beb35e4030dc8a87/Sources/T_Source_Scree.uasset",
+        "sha256": "1bc24bb30053875f8f47b0fbc6e6fdaf97629598c9670a217034ba72470d6933",
+        "size_bytes": 936623
+      }
+    ],
+    "scope": "Explicit #363 accepted Landscape diagnostic, not latest #364 road consumer"
+  },
+  "contact_input": {
+    "path": "Saved/RuntimeProof/WorldGraph365/real-contact-source02.json",
+    "bytes": 158839,
+    "sha256": "72b312c5371d38265dd1821d3a416bb658fde39a8d0a86dcf52c9d00b50bc6ae"
+  }
+}

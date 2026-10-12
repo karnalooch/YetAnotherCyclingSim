@@ -82,6 +82,11 @@ class RockCapture:
                 )
             )
             cap_review_only = request.get("render_source_caps_only") is True
+            self.review_views = request.get("review_views", 2)
+            require(
+                type(self.review_views) is int and self.review_views in (2, 4),
+                "Unsupported rock review view count",
+            )
             self.review_meshes = [
                 m
                 for m in self.meshes
@@ -243,6 +248,7 @@ class RockCapture:
             self.completed,
             framing_radius_cm=self.pending["framing_radius_cm"],
             warmup_captures=2,
+            review_views=self.review_views,
         )
 
     def completed(self, result):

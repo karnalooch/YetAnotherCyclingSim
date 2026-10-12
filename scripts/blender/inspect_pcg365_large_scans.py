@@ -41,6 +41,34 @@ def bounds(points):
     }
 
 
+def boundary_diagnostics(bm, matrix):
+    edges = [e for e in bm.edges if e.is_boundary]
+    neighbors = {}
+    for edge in edges:
+        a, b = edge.verts
+        neighbors.setdefault(a, set()).add(b)
+        neighbors.setdefault(b, set()).add(a)
+    degree_two = all(len(adjacent) == 2 for adjacent in neighbors.values())
+    remaining = set(neighbors)
+    components = 0
+    while remaining:
+        components += 1
+        pending = [remaining.pop()]
+        while pending:
+            for neighbor in neighbors[pending.pop()]:
+                if neighbor in remaining:
+                    remaining.remove(neighbor)
+                    pending.append(neighbor)
+    return {
+        "boundary_world_bounds_m": bounds([list(matrix @ v.co) for v in neighbors])
+        if neighbors
+        else None,
+        "boundary_loopcount": components if degree_two else None,
+        "boundary_degree2_cycles": degree_two,
+        "boundary_connected_components": components,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--request", type=Path, required=True)
@@ -214,6 +242,7 @@ def main():
                                 remaining.remove(other)
                                 pending.append(other)
                 topology = {
+                    **boundary_diagnostics(bm, obj.matrix_world),
                     "connected_components": components,
                     "inconsistent_winding_edges": sum(
                         e.is_manifold and not e.is_contiguous for e in bm.edges

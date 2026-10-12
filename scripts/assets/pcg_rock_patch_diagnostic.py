@@ -5,6 +5,8 @@ bottom_z_cm/top_z_cm/ground_z_cm. Declaration binds source_sha256 and
 basecut_source_sha256 (original corrected source), topology_verified, cap_z_cm=0,
 cap_tolerance_cm=.01, cap_xy_polygon, com_xy_cm (source volume COM projection),
 expected_full_ray_count, expected_cap_ray_count, height_cm (native AABB height).
+Optional planting_depth_fraction is frozen at 0 (default) or .05 before measurement;
+planting lowers the cap-fit root and consumes the same full-geometry burial budget.
 Each row supplies ground_slope_deg. Refinement supplies measured
 root_delta_cm and embedding_delta_cm. Source/topology claims are NOT authenticated
 by this pure calculator. Expected ray counts come from source geometry, not
@@ -169,12 +171,17 @@ def diagnose(rows, declaration, refinement=None):
             raise ValueError("INSUFFICIENT_NONCOLLINEAR_SUPPORT")
         if not inside(center, support_hull):
             raise ValueError("COM_OUTSIDE_SUPPORT_HULL")
-        root = min(g - b for _, b, _, g in cap)
-        nonpenetrating = max(g - b for _, b, _, g in full)
-        embedding = max(0.0, nonpenetrating - root)
         height = number(d["height_cm"])
         if height <= 0:
             raise ValueError("ZERO_SAMPLED_HEIGHT")
+        planting_fraction = number(d.get("planting_depth_fraction", 0))
+        if planting_fraction not in (0.0, 0.05):
+            raise ValueError("UNSUPPORTED_PLANTING_DEPTH_FRACTION")
+        unplanted_root = min(g - b for _, b, _, g in cap)
+        planting_depth = number(planting_fraction * height)
+        root = number(unplanted_root - planting_depth)
+        nonpenetrating = max(g - b for _, b, _, g in full)
+        embedding = max(0.0, nonpenetrating - root)
         fitted = [
             {
                 "local_xy_cm": list(p),
@@ -217,6 +224,9 @@ def diagnose(rows, declaration, refinement=None):
             },
             max_local_slope_deg=max_slope,
             root_z_cm=number(root),
+            unplanted_root_z_cm=number(unplanted_root),
+            planting_depth_cm=planting_depth,
+            planting_depth_fraction=planting_fraction,
             full_nonpenetrating_root_cm=number(nonpenetrating),
             full_embedding_cm=number(embedding),
             sampled_height_cm=number(height),
