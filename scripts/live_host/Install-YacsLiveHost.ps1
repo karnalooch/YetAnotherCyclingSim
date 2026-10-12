@@ -19,6 +19,7 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'Assert-YacsLiveTaskPrincipal.ps1')
 if (-not $IsWindows) { throw 'Windows host is required.' }
 if ($Apply -and $Uninstall -or $Verify -and ($Apply -or $Uninstall)) {
   throw 'Choose only one install/verify/uninstall operation.'
@@ -70,20 +71,18 @@ if ($task -and $task.State -eq 'Running' -and ($Apply -or $Uninstall)) {
 }
 if ($Uninstall) {
   if (-not $task) { Write-Host 'YACS Live Host not registered.'; return }
-  if ($task.Principal.UserId -ne $desktopUser -or $task.Principal.LogonType -ne 'Interactive') {
-    throw 'Cannot uninstall an unexpected task principal.'
-  }
+  # Refuse uninstall of another user's task even when the Principal is
+  # returned as a SID rather than DOMAIN\User. Never stop a running task.
+  Assert-YacsLiveTaskPrincipal -Task $task -ExpectedSid $sid | Out-Null
   Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
   Write-Host 'Task unregistered; all installed releases, evidence, engine, runner and maps retained.'
   return
 }
 if ($Verify) {
   if (-not $task) { throw 'YACS Live Host is not installed.' }
-  if ($task.Principal.UserId -ine $desktopUser -or
-      $task.Principal.LogonType -ne 'Interactive' -or
-      $task.Principal.RunLevel -ne 'Limited') {
-    throw 'Task principal is not the limited interactive console user.'
-  }
+  # Windows often reports Principal.UserId as S-1-5-21-... even when the
+  # registered identity was DOMAIN\User. Match by resolved SID instead.
+  $principalProof=Assert-YacsLiveTaskPrincipal -Task $task -ExpectedSid $sid
   $data=Get-Content -LiteralPath $installRecord -Raw | ConvertFrom-Json
   if ($data.source_sha -cnotmatch '^[a-f0-9]{40}$' -or $data.desktop_sid -cne $sid) {
     throw 'Installed source identity or desktop SID differs.'
@@ -109,6 +108,8 @@ if ($Verify) {
     status='INSTALLED_NOT_LIVE_PROOF';task=$taskName
     state=[string]$task.State;lastResult=$info.LastTaskResult
     desktop_sid=$sid;source_sha=$data.source_sha
+    principal_id=[string]$task.Principal.UserId
+    principal_validation=$principalProof.status
     root=$InstallRoot;browser_proven=$false;post_job_survival_proven=$false
   } | ConvertTo-Json -Depth 6
   return

@@ -38,6 +38,43 @@ Source: `scripts/live_host/Install-YacsLiveHost.ps1`.
 
 If the PC boots but the owner has not logged in, the interactive Unreal Editor will **not** be started. That is intentional to avoid Windows service Session 0 GPU/editor instability. Whether a locked or disconnected desktop can keep encoding requires real hardware observation.
 
+## Existing install: verify Task Scheduler principal by SID
+
+**2026-10-12 installation observation:** The owner successfully ran
+`Install-YacsLiveHost.ps1 -Apply` for source
+`f4a0366a5685432fb139b2083bb22ee17d7f6d9e`. It printed
+`Neither UE nor the GitHub Actions service was started/restarted`.
+The subsequent `-Verify` stopped at the old line 85 with
+`Task principal is not the limited interactive console user`.
+
+Windows Task Scheduler is allowed to return `Principal.UserId` as either
+`KompAdama\\akarn` or a SID like `S-1-5-21-...`; the old verifier compared
+the raw account string with the returned identity. The updated
+`Assert-YacsLiveTaskPrincipal.ps1` resolves both representations to **the same
+Windows SID** while requiring `Interactive`/`InteractiveToken` and `Limited`
+privileges; it does not relax the owner check or grant elevated permissions.
+`Test-YacsLiveTaskPrincipal.ps1` exercises both allowed identity types and
+rejects foreign SID, service/S4U/password logons and elevated tasks.
+
+**Recovery from this exact observed error is read-only.** Do not re-run
+`-Apply`, `-Uninstall`, `Start-ScheduledTask` or UE. Inspect first:
+
+```powershell
+Get-ScheduledTask -TaskName "YACS Live Host" |
+  Select-Object -ExpandProperty Principal |
+  Format-List UserId,LogonType,RunLevel
+```
+
+After pulling the fix in the **separate**
+`D:\\yacs\\live-host-source` worktree, rerun `-Verify` from that checkout
+with its **new current Git HEAD** as `-ExpectedHead` (the source checkout
+identity still requires an exact revision). The validator reads
+`installation.json.source_sha` and verifies hashes of the **original
+installed immutable release**; it never overwrites or upgrades that release.
+The existing Task Scheduler registration also remains untouched. Successful
+`-Verify` means `INSTALLED_NOT_LIVE_PROOF` only — runtime, Pixel Streaming
+and post-job survival still need independent proof.
+
 ## Expanding editor editing beyond five labels
 
 The owner authorized access to as many Unreal editing capabilities as actually supported. The [typed protocol](../../scripts/live_host/protocol.py) and [per-frame command loop](../../scripts/live_host/live_requests.py) accept only session/source/replay-authenticated requests, with bounded inputs, immutable receipts and native readback. This avoids a general Python console, remote shell or open MCP endpoint.

@@ -90,7 +90,11 @@ jobs:
               $file.FullName,[ref]$tokens,[ref]$errors) | Out-Null
             if (@($errors).Count) { throw ($errors.Message -join '; ') }
           }
-          Write-Host 'YACS Live Host Python and PowerShell offline PASS'
+          # Pure, read-only synthetic Scheduled Task principals. Cover native
+          # UserId SID vs DOMAIN\User normalization without reinstalling any
+          # existing Windows task or touching the UE process.
+          & ./scripts/live_host/Test-YacsLiveTaskPrincipal.ps1
+          Write-Host 'YACS Live Host Python, PowerShell and SID task principal contracts PASS'
 
       - name: Read-only install preflight (no restart or task mutation)
         if: ${{ env.LIVE_VERIFY != 'true' }}
