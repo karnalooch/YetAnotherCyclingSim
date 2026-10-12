@@ -489,7 +489,7 @@ def read_contact_batches(root, head, inventory, sources, contact):
                 )
         else:
             verify_all_marker(read_json(directory / "launcher-completed.json"), head)
-        path = directory / "collection-contact-all-receipt.json
+        path = directory / "collection-contact-all-receipt.json"
         receipt = read_json(path)
         require(
             receipt["code_sha"] == head
