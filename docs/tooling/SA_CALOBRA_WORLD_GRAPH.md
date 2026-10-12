@@ -1280,6 +1280,41 @@ Local validation:52 scoped asset tests plus7 candidate tests, Ruff and final
 architecture contract PASS. Documentation guards and exact delivery CI are
 recorded separately from the native execution SHA.
 
-## Current local natural rock library � 2026-10-12
+## Current local natural rock library — 2026-10-12
 
-[Twenty natural derivatives](../assets/pcg365-natural20-20261012/README.md) from eight licensed scan families have completed native import, save, fresh reload, Material Forge V2 binding and real GPU capture at exact producer `92f5184c0e5df7cf7698d2c8b28b9e5796e831d7`. [Independent QA](../assets/pcg365-natural20-20261012/VISUAL_QA.md) verified twenty package hashes and five final image hashes. The original terrain and road were not modified. This local library candidate replaces the earlier two-family preview; it does not close #365 or admit scatter. Landscape contact remains NOT_RUN for the new variants, qualified_assets empty, placement false and performance_pass false.
+[Twenty natural derivatives](../assets/pcg365-natural20-20261012/README.md) from eight licensed scan families have completed native import, save, fresh reload, Material Forge V2 binding and real GPU capture at exact producer `92f5184c0e5df7cf7698d2c8b28b9e5796e831d7`. [Independent QA](../assets/pcg365-natural20-20261012/VISUAL_QA.md) verified twenty package hashes and five final image hashes. The original terrain and road were not modified. This local library candidate replaces the earlier two-family preview; it does not close #365 or admit scatter. This studio checkpoint records Landscape contact NOT_RUN; the separate diagnostic below supplies subsequent contact evidence. qualified_assets remains empty, placement false and performance_pass false.
+
+
+## Natural20 actual Landscape contact transfer — 2026-10-12
+
+[Current result and portable evidence](../assets/pcg365-natural20-contact-20261012/README.md)
+record producer `1a02ac21a7fb1dbc84364843e862b186a2ea0a18` / `natural20-contact04`.
+Six actions completed with real exit 0, including all 100 mesh/site contact cases
+in one editor process. **Every case is REJECTED; no mesh passed any of the five
+tested sites.** Independent raw replay of all 200 grids found zero discrepancies.
+No threshold, Landscape/source bytes or actor scale/pose policy was changed.
+
+The next fresh aggregate process wrote a consistent receipt but exited
+`-1073741819` / `0xC0000005`; it has no completion marker. Terrain rendering is
+**NOT RUN**, zero new PNGs. Earlier run02 batch04 and run03 batch07 also retain
+post-log-close AV failures. No faulting module was established; fewer shutdowns
+do not establish a root-cause repair. Previous studio images remain studio-only.
+
+The owner requests the absolute minimum of restarts. Contact batch restarts are
+already removed. The [three-session continuation](../assets/pcg365-natural20-contact-20261012/RESTART_MINIMIZATION_PLAN.md)
+combines prepare, measure and review while retaining actual fresh consumers and
+clean producer exit gates; it is NOT IMPLEMENTED / UNVERIFIED. At the transfer
+request, implementation stopped and the complete code/evidence/handoff was
+prepared for the existing remote branch and Draft PR #474. Continue from
+[SESSION_HANDOFF](../assets/pcg365-natural20-contact-20261012/SESSION_HANDOFF.md).
+
+All 202 terrain packages, twenty saved meshes, seven Forge packages and raw grid
+hashes were verified. No Landscape/Base_DTM, road, grid, georeferencing, physics
+or canonical scene save occurred. The five sites still use diagnostic vegetation
+selector semantics; per-mesh rock masks/exclusions, the new consumer's negative
+control, continuous support and latest #364 road-checkpoint parity remain unproved.
+`qualified_assets: []`, `placement: false`, `PENDING_FINAL_M3`,
+`DEFERRED_AFTER_M3` and `performance_pass: false` remain. Local code validation:
+26 scoped CPU tests, Ruff and PowerShell parser PASS; final documentation guards
+are recorded in the handoff. New delivery CI and current-head native build are
+separate from these retained-binary diagnostics. #365 remains open.

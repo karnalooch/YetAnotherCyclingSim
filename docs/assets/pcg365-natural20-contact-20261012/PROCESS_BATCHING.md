@@ -1,6 +1,9 @@
 # Natural20 contact process batching — #365 / M3
 
-Status: local implementation candidate; native execution of this action is NOT RUN.
+Status: implemented at `1a02ac21a7fb1dbc84364843e862b186a2ea0a18`.
+`natural20-contact04` measured all 100 cases in one process with genuine exit 0.
+The subsequent fresh aggregate process failed; render did not run.
+See [current result](README.md) and [further restart reduction plan](RESTART_MINIMIZATION_PLAN.md).
 This changes process grouping only. It does not diagnose or claim to repair the
 intermittent post-log-close access violation, or admit failed earlier receipts.
 

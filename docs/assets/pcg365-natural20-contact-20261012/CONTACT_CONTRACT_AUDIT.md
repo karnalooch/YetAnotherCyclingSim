@@ -1,7 +1,9 @@
 # Natural20 contact contract audit — #365 / M3
 
+Historical preflight audit; subsequent execution is recorded in [README](README.md).
+
 Read-only design audit. No native contact run, placement, terrain edit or
-qualification is asserted. Authority: agent router, World Data role,
+qualification is asserted. Authority: agent router, procedural-world owner,
 World Building Bible and M3 world operations policy. Landscape and road truth
 remain frozen; diagnostics consume the authenticated terrain package.
 
@@ -88,8 +90,8 @@ source/catalog/package identities, all raw grid hashes and the complete
 mesh at a measured root and labels rejected cases. If any mesh has no usable
 measured fit, rendering rejects rather than inventing a placement.
 
-Three CPU tests pass for deterministic batch coverage, incomplete ground and
-unpaired-hit rejection, and unchanged numeric policy behavior. Ruff passes.
+Five CPU tests passed at the initial consumer checkpoint: batch coverage, marker
+identity, terrain conservation, incomplete-ground/unpaired-hit rejection and numeric gates. Ruff passes.
 No UE import, launcher execution, terrain-contact result or GPU capture has
 been performed by this implementation task; native API behavior remains to
 be verified by the serialized parent-owned consumer run.

@@ -103,3 +103,7 @@ docs/assets/pcg365-rock-collection20-20261012/*.json -text
 worldgen/sa_calobra/pcg365_rock_collection20_catalog_v1.json text eol=lf
 
 docs/assets/pcg365-natural20-20261012/*.json.gz -text -diff
+
+# Preserve the portable natural20 contact evidence bytes.
+docs/assets/pcg365-natural20-contact-20261012/**/*.json.gz -text -diff
+docs/assets/pcg365-natural20-contact-20261012/*.py.gz -text -diff
