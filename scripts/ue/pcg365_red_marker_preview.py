@@ -153,7 +153,7 @@ class RedReview:
             "Accepted map bytes differ",
         )
 
-    def start(self):
+    def start(self, *, persistent=False):
         from scripts.ue.sa_calobra_pcg_terrain_contact import unpack
 
         require(unreal.EditorLoadingAndSavingUtils.new_blank_map(False), "Blank world failed")
@@ -213,7 +213,40 @@ class RedReview:
                 "production_placement": False,
             })
         require(len(self.report["markers"]) == 5, "Five marker actors required")
-        self.next_site()
+        if persistent:
+            # One live PixelStreaming2 viewport, not a GPU screenshot job.
+            # Move only the Editor viewport camera; never change ground/rock XY.
+            marker = self.report["markers"][3]
+            x, y = marker["xy_cm"]
+            center = unreal.Vector(x, y, marker["ground_z_cm"] + 160.0)
+            eye = unreal.Vector(x - 850.0, y - 900.0, marker["ground_z_cm"] + 900.0)
+            rotation = unreal.MathLibrary.find_look_at_rotation(eye, center)
+            viewport = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
+            viewport.set_level_viewport_camera_info(eye, rotation)
+            self.report["initial_camera"] = {
+                "site_id": "P3",
+                "location_cm": [eye.x, eye.y, eye.z],
+                "target_cm": [center.x, center.y, center.z],
+            }
+            require(
+                identity(self.map_path) == self.before
+                and str(self.landscape.get_actor_transform()) == self.transform_before,
+                "Live review changed map/terrain before handoff",
+            )
+            self.output.mkdir(parents=True, exist_ok=False)
+            self.report["status"] = "RED_LIVE_SCENE_READY"
+            self.report["stream_transport"] = "PIXEL_STREAMING_2_VIEWPORT_PENDING_CLIENT"
+            self.report["persistent_editor"] = True
+            self.report["owner_handoff"] = False
+            self.report["map_file_after"] = identity(self.map_path)
+            with (self.output / "red-review-live-scene.json").open(
+                "x", encoding="utf-8"
+            ) as stream:
+                json.dump(self.report, stream, sort_keys=True, indent=2, allow_nan=False)
+                stream.write("\n")
+            unreal.EditorPythonScripting.set_keep_python_script_alive(True)
+        else:
+            self.next_site()
         return self
 
     def next_site(self):
@@ -352,4 +385,5 @@ def main():
         finish_editor()
 
 
-main()
+if __name__ == "__main__":
+    main()

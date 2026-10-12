@@ -84,5 +84,30 @@ class RedMarkerReview(unittest.TestCase):
             helpers()(self.manifest, self.readback)
 
 
+    def test_interactive_red_viewer_starts_only_with_explicit_persistent_flag(self):
+        tree = ast.parse(SOURCE.read_text(encoding="utf-8"))
+        red = next(node for node in tree.body
+                   if isinstance(node, ast.ClassDef) and node.name == "RedReview")
+        start = next(node for node in red.body
+                     if isinstance(node, ast.FunctionDef) and node.name == "start")
+        self.assertIn("persistent", [arg.arg for arg in start.args.kwonlyargs])
+        self.assertEqual(len(start.args.kw_defaults), 1)
+        self.assertIsInstance(start.args.kw_defaults[0], ast.Constant)
+        self.assertIs(start.args.kw_defaults[0].value, False)
+        source = SOURCE.read_text(encoding="utf-8")
+        self.assertIn('self.report["status"] = "RED_LIVE_SCENE_READY"', source)
+        self.assertIn("set_keep_python_script_alive(True)", source)
+        self.assertIn('if __name__ == "__main__":', source)
+
+    def test_live_stream_bootstrap_uses_only_original_rejected_site_reader(self):
+        script = HERE / "bootstrap_pcg365_red_stream.py"
+        source = script.read_text(encoding="utf-8")
+        ast.parse(source)
+        self.assertIn("RedReview(project, session / \"scene\", manifest, sha)", source)
+        self.assertIn("LIVE.start(persistent=True)", source)
+        self.assertNotIn("start_capture(", source)
+        self.assertNotIn("save_asset(", source)
+
+
 if __name__ == "__main__":
     unittest.main()

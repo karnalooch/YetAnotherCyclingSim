@@ -52,6 +52,11 @@
       "reason": "Issue #365 owner-approved visual diagnostic of five previously measured rejected terrain site anchors P0-P4. The owner-only explicit [pcg365-red-preview] branch push first requires successful exact-SHA protected CI; the one owned, serialized UE5.8.2 offscreen process loads the authenticated retained d361e765 contact stage, checks original 100 cases, draws only transient red TextRender labels and captures 10 real native PNGs. Unverified or occupied host fails closed; never changes accepted Landscape/road/physics, map saves, materials, scatter, hard exclusions or final visual/physics admission. A static offscreen review is not an interactive PixelStreaming client."
     },
     {
+      "file": "pcg365-live-editor-stream.yml",
+      "state": "CURRENT",
+      "reason": "Issue #365 owner-requested *interactive* red-site Pixel Streaming 2 Level Editor handoff. One explicit owner-only fixed-branch [pcg365-live-stream] request waits on exact-SHA successful CI and independent Blender reference; noncancelling shared GPU host arbitration, provenance-pinned already-saved d361e765 diagnostic project, five transient red text labels at original rejected XY, no map/asset save or geometry mutation, browser-side real video-frame proof through the existing checked receiver. Leaves authenticated Editor running only if the browser actually receives frames; otherwise stops exclusively the launched Editor process. Local/LAN only, not public link, rock/World Authority and final owner admission remain false."
+    },
+    {
       "file": "blender-material-forge-reference.yml",
       "state": "CURRENT",
       "reason": "Self-hosted Issue #399 pinned-Blender ground-scale Material Forge reference proof; consumes CPU-validated deterministic outputs, refuses active local Unreal ownership and never mutates the accepted world."
