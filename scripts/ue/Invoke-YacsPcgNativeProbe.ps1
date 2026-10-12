@@ -10,7 +10,7 @@
 param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string]$ExpectedHead,
     [Parameter(Mandatory)][ValidatePattern('^[A-Za-z0-9][A-Za-z0-9-]{0,63}$')][string]$RunToken,
-    [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render','collection-contact-00','collection-contact-01','collection-contact-02','collection-contact-03','collection-contact-04','collection-contact-05','collection-contact-06','collection-contact-07','collection-contact-08','collection-contact-09','collection-contact-all','collection-contact-reload','collection-contact-render')][string]$Action = 'inspect',
+    [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render','collection-contact-00','collection-contact-01','collection-contact-02','collection-contact-03','collection-contact-04','collection-contact-05','collection-contact-06','collection-contact-07','collection-contact-08','collection-contact-09','collection-contact-all','collection-contact-reload','collection-contact-render','collection-contact-prepare','collection-contact-measure','collection-contact-review')][string]$Action = 'inspect',
     [switch]$QualificationSources,
     [ValidateSet('baseline','rock-detail','natural20-contact')][string]$QualificationSet = 'baseline',
     [switch]$RockQualificationSources,
@@ -26,6 +26,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $IsCollectionContact = $Action -cmatch '^collection-contact-(0[0-9]|all|reload|render)$'
+$IsSessionContact = $Action -cin @('collection-contact-prepare','collection-contact-measure','collection-contact-review')
 $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 $Retained = 'D:/yacs/runner/_work/YetAnotherCyclingSim/YetAnotherCyclingSim/_phase2c-pcgex-cliff/Plugins/PCGExtendedToolkit'
 $Root = [IO.Path]::GetFullPath("D:/yacs/work/pcg365/$ExpectedHead/$RunToken")
@@ -50,6 +51,50 @@ function File-Identity([string]$Path) {
 function Assert-SameFile([string]$Path, $Identity) {
     $actual = File-Identity $Path
     if ($actual.bytes -ne $Identity.bytes -or $actual.sha256 -ne $Identity.sha256) { throw "Staging byte drift: $Path" }
+}
+function Assert-SessionProof([string]$Session) {
+    $folder = Join-Path $Proof $Session
+    $marker = Get-Content (Join-Path $folder 'launcher-completed.json') -Raw | ConvertFrom-Json
+    if ($marker.action -cne $Session -or $marker.code_sha -cne $ExpectedHead -or
+        $marker.exit_code -is [bool] -or $marker.exit_code -ne 0 -or
+        $marker.staged_bytes_unchanged -ne $true -or
+        $marker.proof_admission -cne 'LOCAL_DIAGNOSTIC_ONLY') {
+        throw "Three-session predecessor did not exit cleanly: $Session"
+    }
+    $receipt = Get-Content (Join-Path $folder "$Session-receipt.json") -Raw | ConvertFrom-Json
+    $expectedStatus = @{
+        'collection-contact-prepare'='COLLECTION_CONTACT_PREPARED'
+        'collection-contact-measure'='COLLECTION_CONTACT_ALL_MEASURED'
+    }[$Session]
+    if ($receipt.action -cne $Session -or $receipt.code_sha -cne $ExpectedHead -or
+        $receipt.status -cne $expectedStatus -or
+        $receipt.asset_compilation_loading_barrier_completed -ne $true -or
+        $receipt.placement -ne $false -or @($receipt.qualified_assets).Count -ne 0) {
+        throw "Three-session predecessor receipt differs: $Session"
+    }
+    $expected = if ($Session -ceq 'collection-contact-prepare') {
+        @{
+            inspect='proof/inspect/inspect-receipt.json'
+            binding='proof/material/binding.json'
+            material='proof/material/material-receipt.json'
+            inventory='proof/rock-collection/rock-collection-inventory.json'
+            collection='proof/rock-collection/rock-collection-receipt.json'
+        }
+    } else {
+        @{
+            material_readback='proof/collection-contact-measure/material-fresh-phase.json'
+            collection_readback='proof/collection-contact-measure/collection-fresh-phase.json'
+            contact='proof/collection-contact-all/collection-contact-all-receipt.json'
+        }
+    }
+    if ((@($receipt.phases.PSObject.Properties.Name | Sort-Object) -join ',') -cne
+        (@($expected.Keys | Sort-Object) -join ',')) { throw "Three-session phase set differs: $Session" }
+    foreach ($key in $expected.Keys) {
+        $row = $receipt.phases.$key
+        if ($row.path -cne $expected[$key]) { throw "Unsafe phase path: $key" }
+        Assert-SameFile (Join-Path $Root $row.path) $row
+    }
+    return $receipt
 }
 function Stage-QualifiedFile([string]$Source, [string]$Relative, $Identity) {
     if ($Relative -match '(^/|\.\.|:|\\)') { throw 'Unsafe qualification stage path.' }
@@ -87,15 +132,17 @@ $Editor = Join-Path $engine.Root 'Engine/Binaries/Win64/UnrealEditor.exe'
 $EngineModules = Get-Content (Join-Path $engine.Root 'Engine/Binaries/Win64/UnrealEditor.modules') -Raw | ConvertFrom-Json
 $PluginModules = Get-Content (Join-Path $Retained 'Binaries/Win64/UnrealEditor.modules') -Raw | ConvertFrom-Json
 if ($PluginModules.BuildId -cne $EngineModules.BuildId) { throw 'Retained plugin/engine BuildId mismatch.' }
-if ($Action -ne 'inspect') {
+if ($Action -cnotin @('inspect','collection-contact-prepare')) {
     if (-not (Test-Path -LiteralPath $Project -PathType Leaf)) { throw 'Create/reload requires an existing owned inspected diagnostic stage.' }
     $registry = Get-Content (Join-Path $Root 'staged-files.json') -Raw | ConvertFrom-Json
     if ($registry.expected_head -cne $ExpectedHead -or $registry.probe_sha256_lf -cne $ProbeHash) { throw 'Existing stage identity drift.' }
     foreach ($entry in $registry.files) { Assert-SameFile (Join-Path $Root $entry.path) $entry.identity }
-    $inspection = Get-Content (Join-Path $Proof 'inspect/inspect-receipt.json') -Raw | ConvertFrom-Json
-    if ($inspection.status -cne 'NATIVE_INSPECTION_COMPLETED') { throw 'Native inspection must complete before graph operations.' }
-    $completedInspection = Get-Content (Join-Path $Proof 'inspect/launcher-completed.json') -Raw | ConvertFrom-Json
-    if ($completedInspection.code_sha -cne $ExpectedHead -or $completedInspection.exit_code -ne 0) { throw 'Native inspection process did not finish cleanly.' }
+    if (-not $IsSessionContact) {
+        $inspection = Get-Content (Join-Path $Proof 'inspect/inspect-receipt.json') -Raw | ConvertFrom-Json
+        if ($inspection.status -cne 'NATIVE_INSPECTION_COMPLETED') { throw 'Native inspection must complete before graph operations.' }
+        $completedInspection = Get-Content (Join-Path $Proof 'inspect/launcher-completed.json') -Raw | ConvertFrom-Json
+        if ($completedInspection.code_sha -cne $ExpectedHead -or $completedInspection.exit_code -ne 0) { throw 'Native inspection process did not finish cleanly.' }
+    }
 } else {
     if (Test-Path -LiteralPath $Root) { throw 'Preserve existing stage; choose a fresh RunToken.' }
     New-Item -ItemType Directory -Path $Proof -Force | Out-Null
@@ -265,7 +312,7 @@ if ($Action -ne 'inspect') {
         $committedScript = ((Read-RepoGit @('show', "${ExpectedHead}:$scriptRelative")) -join "`n") + "`n"
         if ((Hash-Lf ([IO.File]::ReadAllText($source))) -cne (Hash-Lf $committedScript)) { throw 'Uncommitted collection helper.' }
         Stage-QualifiedFile $source $scriptRelative (File-Identity $source)
-        foreach ($scriptRelative in @('scripts/ue/sa_calobra_pcg_collection_contact.py','scripts/assets/pcg_rock_contact_policy.py','scripts/assets/pcg_rock_patch_diagnostic.py','scripts/ue/sa_calobra_pcg_rock_qualification.py','scripts/ue/sa_calobra_pcg_rock_capture.py')) {
+        foreach ($scriptRelative in @('scripts/ue/sa_calobra_pcg_collection_contact.py','scripts/ue/pcg365_three_session.py','scripts/assets/pcg_rock_contact_policy.py','scripts/assets/pcg_rock_patch_diagnostic.py','scripts/ue/sa_calobra_pcg_rock_qualification.py','scripts/ue/sa_calobra_pcg_rock_capture.py')) {
             if (@($entries | Where-Object { $_.path -ceq $scriptRelative }).Count -ne 0) { continue }
             $source = Join-Path $RepoRoot $scriptRelative
             $committedScript = ((Read-RepoGit @('show', "${ExpectedHead}:$scriptRelative")) -join "`n") + "`n"
@@ -305,7 +352,7 @@ if ($Action -eq 'reload') {
     }
 }
 if ($Action -in @('rock-qualify','rock-reload','rock-render') -and -not (Test-Path -LiteralPath (Join-Path $Root 'rock-qualification-request.json'))) { throw 'Rock sources were not staged.' }
-if (($IsCollectionContact -or $Action -in @('material','material-reload','terrain','settle-render','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render')) -and -not (Test-Path -LiteralPath (Join-Path $Root 'qualification-sources.json'))) { throw 'Qualification sources were not staged.' }
+if (($IsCollectionContact -or $IsSessionContact -or $Action -in @('material','material-reload','terrain','settle-render','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render')) -and -not (Test-Path -LiteralPath (Join-Path $Root 'qualification-sources.json'))) { throw 'Qualification sources were not staged.' }
 if (($IsCollectionContact -or $Action -in @('material-reload','terrain','settle-render','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render'))) {
     $materialCompleted = Get-Content (Join-Path $Proof 'material/launcher-completed.json') -Raw | ConvertFrom-Json
     if ($materialCompleted.code_sha -cne $ExpectedHead -or $materialCompleted.exit_code -ne 0) { throw 'Material save process did not complete cleanly.' }
@@ -360,6 +407,29 @@ if ($Action -eq 'rock-collection-render') {
     $collectionReload = Get-Content (Join-Path $Proof 'rock-collection-reload/launcher-completed.json') -Raw | ConvertFrom-Json
     if ($collectionReload.code_sha -cne $ExpectedHead -or $collectionReload.exit_code -ne 0) { throw 'Collection fresh reload must complete before GPU capture.' }
 }
+if ($IsSessionContact) {
+    if (-not (Test-Path -LiteralPath (Join-Path $Root 'contact-request.json'))) { throw 'Three-session contact request was not staged.' }
+    if (-not (Test-Path -LiteralPath (Join-Path $Root 'rock-collection-catalog.json'))) { throw 'Three-session catalog was not staged.' }
+    if ($Action -cne 'collection-contact-prepare') {
+        [void](Assert-SessionProof 'collection-contact-prepare')
+        $binding = Get-Content (Join-Path $Proof 'material/binding.json') -Raw | ConvertFrom-Json
+        if ($binding.code_sha -cne $ExpectedHead -or @($binding.saved_packages).Count -ne 7) { throw 'Three-session saved Forge binding differs.' }
+        foreach ($item in $binding.saved_packages) {
+            if ($item.path -notmatch '^Content/Generated/YACS/PCG365Qualification/[^:]+\.uasset$' -or $item.path -match '\.\.') { throw 'Unsafe session Forge package.' }
+            Assert-SameFile (Join-Path $Root $item.path) $item
+        }
+        $collectionInventory = Get-Content (Join-Path $Proof 'rock-collection/rock-collection-inventory.json') -Raw | ConvertFrom-Json
+        if ($collectionInventory.code_sha -cne $ExpectedHead -or @($collectionInventory.meshes).Count -ne 20) { throw 'Three-session saved collection differs.' }
+        foreach ($mesh in $collectionInventory.meshes) {
+            if ($mesh.saved_package.path -cnotmatch '^Content/Generated/YACS/PCG365RockCollection20/SM_(rock(02|06)_(0[1-9]|10)|(namaqualand_boulder_0[2-6]|rock_0[79]|boulder_01)_0[1-3])\.uasset$') { throw 'Unsafe session mesh path.' }
+            Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package
+        }
+    }
+    if ($Action -ceq 'collection-contact-review') {
+        [void](Assert-SessionProof 'collection-contact-measure')
+        if ((Test-Path -LiteralPath (Join-Path $Proof 'collection-contact-all/launcher-completed.json'))) { throw 'Grouped contact phase must not invent exit marker.' }
+    }
+}
 if ($IsCollectionContact) {
     if (-not (Test-Path -LiteralPath (Join-Path $Root 'contact-request.json'))) { throw 'Contact request was not staged.' }
     $collectionReload = Get-Content (Join-Path $Proof 'rock-collection-reload/launcher-completed.json') -Raw | ConvertFrom-Json
@@ -390,7 +460,7 @@ $psi.WindowStyle = [Diagnostics.ProcessWindowStyle]::Hidden
 $psi.WorkingDirectory = $Root
 $psi.RedirectStandardOutput = $true
 $psi.RedirectStandardError = $true
-$renderArguments = if ($Action -in @('settle-render','rock-render','rock-collection-render','collection-contact-render')) { @('-RenderOffscreen','-norhithread') } else { @('-NullRHI') }
+$renderArguments = if ($Action -in @('settle-render','rock-render','rock-collection-render','collection-contact-render','collection-contact-review')) { @('-RenderOffscreen','-norhithread') } else { @('-NullRHI') }
 foreach ($argument in (@($Project) + $renderArguments + @('-Unattended','-NoSplash','-NoSound','-NoLiveCoding','-NoP4','-NoPause',
     '-DisablePlugins=ModelContextProtocol,Wingman,AndroidFileServer',
     '-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False',"-ExecutePythonScript=$Probe", "-abslog=$(Join-Path $Proof "$Action-editor.log")"))) { $psi.ArgumentList.Add($argument) }
@@ -422,9 +492,10 @@ if ($process.ExitCode -ne 0) { throw "Owned native probe exit=$($process.ExitCod
 if (-not (Test-Path -LiteralPath $Receipt -PathType Leaf)) { throw 'Probe exited without action receipt.' }
 $nativeLog = Get-Content -LiteralPath (Join-Path $Proof "$Action-editor.log") -Raw
 if ($nativeLog -match "Couldn't load edit layer object|Failed to find script package for import object|Failed to compile Material") { throw 'Native consumer lost a required class/edit layer or material shader; diagnostic rejected.' }
-if (($IsCollectionContact -or $QualificationSet -ceq 'natural20-contact') -and $nativeLog -match 'LoadErrors: While trying to load package /Game/[^\r\n]*a dependent package /Game/[^\r\n]*was not available') { throw 'Native diagnostic lost a required Game package dependency; diagnostic rejected.' }
+if (($IsCollectionContact -or $IsSessionContact -or $QualificationSet -ceq 'natural20-contact') -and $nativeLog -match 'LoadErrors: While trying to load package /Game/[^\r\n]*a dependent package /Game/[^\r\n]*was not available') { throw 'Native diagnostic lost a required Game package dependency; diagnostic rejected.' }
 $result = Get-Content -LiteralPath $Receipt -Raw | ConvertFrom-Json
 $expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'; 'settle-render'='BOULDER_FITTED_REAL_GPU_CAPTURED'; 'mask-xy-create'='MASK_XY_GRAPH_SAVED'; 'mask-xy-reload'='MASK_XY_GRAPH_FRESH_RELOAD_REGENERATED'; 'rock-qualify'='ROCK_CONTACT_MATRIX_MEASURED'; 'rock-reload'='ROCK_MESHES_FRESH_READBACK'; 'rock-render'='ROCKS_REAL_GPU_CAPTURED'; 'rock-pack'='ROCK_VARIANT_ASSETS_SAVED'; 'rock-pack-reload'='ROCK_VARIANT_ASSETS_FRESH_RELOAD_VERIFIED'; 'rock-collection'='ROCK_COLLECTION_ASSETS_SAVED'; 'rock-collection-reload'='ROCK_COLLECTION_ASSETS_FRESH_RELOAD_VERIFIED'; 'rock-collection-render'='ROCK_COLLECTION_REAL_GPU_CAPTURED'}[$Action]
+if ($IsSessionContact) { $expectedStatus = @{ 'collection-contact-prepare'='COLLECTION_CONTACT_PREPARED'; 'collection-contact-measure'='COLLECTION_CONTACT_ALL_MEASURED'; 'collection-contact-review'='COLLECTION_CONTACT_REAL_GPU_CAPTURED' }[$Action] }
 if ($IsCollectionContact) { $expectedStatus = if ($Action -ceq 'collection-contact-render') { 'COLLECTION_CONTACT_REAL_GPU_CAPTURED' } elseif ($Action -ceq 'collection-contact-reload') { 'COLLECTION_CONTACT_FRESH_READBACK' } elseif ($Action -ceq 'collection-contact-all') { 'COLLECTION_CONTACT_ALL_MEASURED' } else { 'COLLECTION_CONTACT_BATCH_MEASURED' } }
 if ($result.status -cne $expectedStatus -or $result.code_sha -cne $ExpectedHead -or $result.placement -isnot [bool] -or $result.placement) { throw 'Native diagnostic did not complete; inspect receipt diagnostics.' }
 if ($result.PSObject.Properties.Name -contains 'error') { throw 'Native diagnostic contains an error; refusing success.' }
@@ -440,6 +511,59 @@ if ($Action -in @('rock-collection','rock-collection-reload')) {
     foreach ($mesh in $result.meshes) {
         if ($mesh.saved_package.path -cnotmatch '^Content/Generated/YACS/PCG365RockCollection20/SM_(rock(02|06)_(0[1-9]|10)|(namaqualand_boulder_0[2-6]|rock_0[79]|boulder_01)_0[1-3])\.uasset$') { throw 'Unexpected completed collection path.' }
         Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package
+    }
+}
+if ($IsSessionContact) {
+    $expectedPhases = @{
+        'collection-contact-prepare'=@{
+            inspect='proof/inspect/inspect-receipt.json'; binding='proof/material/binding.json';
+            material='proof/material/material-receipt.json'; inventory='proof/rock-collection/rock-collection-inventory.json';
+            collection='proof/rock-collection/rock-collection-receipt.json'
+        }
+        'collection-contact-measure'=@{
+            material_readback='proof/collection-contact-measure/material-fresh-phase.json';
+            collection_readback='proof/collection-contact-measure/collection-fresh-phase.json';
+            contact='proof/collection-contact-all/collection-contact-all-receipt.json'
+        }
+        'collection-contact-review'=@{
+            contact_readback='proof/collection-contact-review/contact-fresh-phase.json'
+        }
+    }[$Action]
+    if ((@($result.phases.PSObject.Properties.Name | Sort-Object) -join ',') -cne
+        (@($expectedPhases.Keys | Sort-Object) -join ',')) { throw 'Final session phase receipt set differs.' }
+    foreach ($key in $expectedPhases.Keys) {
+        $entry = $result.phases.$key
+        if ($entry.path -cne $expectedPhases[$key]) { throw "Unexpected phase path: $key" }
+        Assert-SameFile (Join-Path $Root $entry.path) $entry
+    }
+    if ($Action -ceq 'collection-contact-prepare') {
+        $binding = Get-Content (Join-Path $Proof 'material/binding.json') -Raw | ConvertFrom-Json
+        $collectionInventory = Get-Content (Join-Path $Proof 'rock-collection/rock-collection-inventory.json') -Raw | ConvertFrom-Json
+        if ($binding.code_sha -cne $ExpectedHead -or @($binding.saved_packages).Count -ne 7 -or
+            $collectionInventory.code_sha -cne $ExpectedHead -or @($collectionInventory.meshes).Count -ne 20) {
+            throw 'Prepared native Forge/collection inventory differs.'
+        }
+    }
+    foreach ($item in $binding.saved_packages) { Assert-SameFile (Join-Path $Root $item.path) $item }
+    foreach ($mesh in $collectionInventory.meshes) { Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package }
+    if ($Action -ceq 'collection-contact-review') {
+        if (@($result.captures).Count -ne 20) { throw 'Review requires 20 real UE capture receipts.' }
+        if ((@($result.captures.mesh_id | Sort-Object -Unique) -join ',') -cne
+            (@($collectionInventory.meshes.id | Sort-Object -Unique) -join ',')) { throw 'Incomplete rendered mesh identities.' }
+        foreach ($capture in $result.captures) {
+            if ($capture.capture.status -cne 'CAPTURE_COMPLETED' -or
+                @($capture.capture.frames).Count -ne 2 -or
+                @($capture.capture.warmup_frames).Count -ne 2) {
+                throw 'Each rock requires two native frames and two warmup frames.'
+            }
+            foreach ($frame in $capture.capture.frames) {
+                if ($frame.file -cnotmatch '^boulder-low-angle-(01|02)\.png$' -or
+                    $frame.width_px -ne 1920 -or $frame.height_px -ne 1080) {
+                    throw 'Invalid native Landscape screenshot metadata.'
+                }
+                Assert-SameFile (Join-Path $Output "$($capture.mesh_id)/$($frame.file)") ([ordered]@{bytes=$frame.size_bytes;sha256=$frame.sha256})
+            }
+        }
     }
 }
 if ($IsCollectionContact -or $Action -eq 'rock-collection-render') { foreach ($mesh in $collectionInventory.meshes) { Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package } }

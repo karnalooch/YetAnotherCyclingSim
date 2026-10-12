@@ -420,5 +420,89 @@ class AllContactReadback(unittest.TestCase):
             self.read()
 
 
+    def configure_grouped(self):
+        """Authenticate one real producer exit, never a false child marker."""
+        (self.output / "launcher-completed.json").unlink()
+        folder = self.root / "proof/collection-contact-measure"
+        folder.mkdir()
+        material = folder / "material-fresh-phase.json"
+        material.write_text('{"status":"MATERIAL_BINDING_FRESH_READBACK"}', encoding="utf-8")
+        collection = folder / "collection-fresh-phase.json"
+        collection.write_text('{"status":"ROCK_COLLECTION_ASSETS_FRESH_RELOAD_VERIFIED"}', encoding="utf-8")
+        phases = {
+            "material_readback": {
+                "path": "proof/collection-contact-measure/material-fresh-phase.json",
+                **self.h["q"].identity(material),
+            },
+            "collection_readback": {
+                "path": "proof/collection-contact-measure/collection-fresh-phase.json",
+                **self.h["q"].identity(collection),
+            },
+            "contact": {
+                "path": "proof/collection-contact-all/collection-contact-all-receipt.json",
+                **self.h["q"].identity(
+                    self.output / "collection-contact-all-receipt.json"
+                ),
+            },
+        }
+        group = {
+            "action": "collection-contact-measure",
+            "code_sha": self.head,
+            "status": "COLLECTION_CONTACT_ALL_MEASURED",
+            "contact_execution_mode": "THREE_SESSION_MEASURE",
+            "asset_compilation_loading_barrier_completed": True,
+            "phases": phases,
+        }
+        (folder / "collection-contact-measure-receipt.json").write_text(
+            json.dumps(group), encoding="utf-8"
+        )
+        (folder / "launcher-completed.json").write_text(
+            json.dumps({**self.marker, "action": "collection-contact-measure"}),
+            encoding="utf-8",
+        )
+        return folder, group
+
+    def test_three_session_single_clean_producer_exit(self):
+        folder, _ = self.configure_grouped()
+        mode, cases, receipts = self.read()
+        self.assertEqual(mode, "SINGLE_PROCESS_ALL_BATCHES")
+        self.assertEqual(len(cases), 100)
+        self.assertEqual(len(receipts), 1)
+        (folder / "launcher-completed.json").unlink()
+        with self.assertRaises(FileNotFoundError):
+            self.read()
+
+    def test_three_session_receipt_or_phase_drift_fails_closed(self):
+        folder, group = self.configure_grouped()
+        original = copy.deepcopy(group)
+        for key, value in (
+            ("code_sha", "b" * 40),
+            ("status", "FAILED"),
+            ("asset_compilation_loading_barrier_completed", False),
+        ):
+            group = {**copy.deepcopy(original), key: value}
+            (folder / "collection-contact-measure-receipt.json").write_text(
+                json.dumps(group), encoding="utf-8"
+            )
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                self.read()
+        (folder / "collection-contact-measure-receipt.json").write_text(
+            json.dumps(original), encoding="utf-8"
+        )
+        (folder / "material-fresh-phase.json").write_text(
+            "changed", encoding="utf-8"
+        )
+        with self.assertRaisesRegex(ValueError, "phase receipt hash"):
+            self.read()
+
+    def test_three_session_rejects_fake_all_phase_exit(self):
+        self.configure_grouped()
+        (self.output / "launcher-completed.json").write_text(
+            json.dumps(self.marker), encoding="utf-8"
+        )
+        with self.assertRaisesRegex(ValueError, "independent exit"):
+            self.read()
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -444,8 +444,52 @@ def read_contact_batches(root, head, inventory, sources, contact):
     cases, receipts = [], []
     if mode == "SINGLE_PROCESS_ALL_BATCHES":
         directory = root / "proof/collection-contact-all"
-        verify_all_marker(read_json(directory / "launcher-completed.json"), head)
-        path = directory / "collection-contact-all-receipt.json"
+        session_directory = root / "proof/collection-contact-measure"
+        if session_directory.exists():
+            marker = read_json(session_directory / "launcher-completed.json")
+            require(
+                marker.get("action") == "collection-contact-measure"
+                and marker.get("code_sha") == head
+                and type(marker.get("exit_code")) is int
+                and marker["exit_code"] == 0
+                and marker.get("staged_bytes_unchanged") is True
+                and marker.get("proof_admission") == "LOCAL_DIAGNOSTIC_ONLY",
+                "Three-session contact producer did not exit cleanly",
+            )
+            require(
+                not (directory / "launcher-completed.json").exists(),
+                "Grouped phase cannot claim an independent exit",
+            )
+            group = read_json(
+                session_directory / "collection-contact-measure-receipt.json"
+            )
+            require(
+                group.get("action") == "collection-contact-measure"
+                and group.get("code_sha") == head
+                and group.get("status") == "COLLECTION_CONTACT_ALL_MEASURED"
+                and group.get("contact_execution_mode") == "THREE_SESSION_MEASURE"
+                and group.get("asset_compilation_loading_barrier_completed") is True,
+                "Grouped contact producer receipt differs",
+            )
+            require(
+                set(group.get("phases", {}))
+                == {"material_readback", "collection_readback", "contact"},
+                "Grouped contact phases incomplete",
+            )
+            for key, expected in (
+                ("material_readback", "proof/collection-contact-measure/material-fresh-phase.json"),
+                ("collection_readback", "proof/collection-contact-measure/collection-fresh-phase.json"),
+                ("contact", "proof/collection-contact-all/collection-contact-all-receipt.json"),
+            ):
+                record = group["phases"][key]
+                phase_file = root / expected
+                require(
+                    record == {"path": expected, **q.identity(phase_file)},
+                    "Grouped phase receipt hash differs: " + key,
+                )
+        else:
+            verify_all_marker(read_json(directory / "launcher-completed.json"), head)
+        path = directory / "collection-contact-all-receipt.json
         receipt = read_json(path)
         require(
             receipt["code_sha"] == head
@@ -564,8 +608,11 @@ class CollectionCapture(RockCapture):
             receipt = reload(self.root, self.output, self.head, self.binding)
             self.contact_receipts = receipt["batches"]
             self.meshes = self.review_meshes = receipt["meshes"]
+            grouped = getattr(self, "grouped_review", False)
             self.receipt_path = (
-                self.root
+                self.output / "contact-fresh-phase.json"
+                if grouped
+                else self.root
                 / "proof/collection-contact-reload/collection-contact-reload-receipt.json"
             )
             saved = read_json(self.receipt_path)
@@ -580,15 +627,23 @@ class CollectionCapture(RockCapture):
                 ),
                 "Aggregate receipt differs",
             )
-            marker = read_json(self.receipt_path.parent / "launcher-completed.json")
-            require(
-                marker.get("action") == "collection-contact-reload"
-                and marker.get("code_sha") == self.head
-                and type(marker.get("exit_code")) is int
-                and marker["exit_code"] == 0
-                and marker.get("staged_bytes_unchanged") is True,
-                "Aggregate launcher failed",
-            )
+            if grouped:
+                require(
+                    saved.pop("action", None) == "collection-contact-reload",
+                    "Review aggregate phase identity differs",
+                )
+            else:
+                marker = read_json(
+                    self.receipt_path.parent / "launcher-completed.json"
+                )
+                require(
+                    marker.get("action") == "collection-contact-reload"
+                    and marker.get("code_sha") == self.head
+                    and type(marker.get("exit_code")) is int
+                    and marker["exit_code"] == 0
+                    and marker.get("staged_bytes_unchanged") is True,
+                    "Aggregate launcher failed",
+                )
             self.receipt_identity = q.identity(self.receipt_path)
             self.cases = []
             for mesh in self.meshes:
@@ -684,7 +739,8 @@ class CollectionCapture(RockCapture):
             self.stop(traceback.format_exc())
 
 
-def start(root, output, head, binding, done):
+def start(root, output, head, binding, done, grouped_review=False):
     operation = CollectionCapture(root, output, head, binding, done)
+    operation.grouped_review = grouped_review
     _ACTIVE.append(operation)
     return operation.begin()

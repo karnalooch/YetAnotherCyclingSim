@@ -1,0 +1,114 @@
+name: PCG365 natural20 Landscape contact
+on:
+  push:
+    branches: [codex/365-world-graph]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  await_ci:
+    name: Wait for protected CI and Blender at exact SHA
+    if: >-
+      github.actor == github.repository_owner &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      contains(github.event.head_commit.message, '[pcg365-native-proof]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Exact-SHA admission
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 90); do
+            payload=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${GITHUB_SHA}&event=pull_request&per_page=50")
+            complete=0
+            for workflow in "CyclingSim CI" "Blender Material Forge reference proof"; do
+              row=$(jq -r --arg sha "$GITHUB_SHA" --arg name "$workflow" '[.workflow_runs[] | select(.name == $name and .head_sha == $sha)] | sort_by(.created_at) | last | if . == null then "" else "\(.id)|\(.status)|\(.conclusion // "pending")" end' <<< "$payload")
+              if [[ -z "$row" ]]; then continue; fi
+              IFS='|' read -r run_id state conclusion <<< "$row"
+              if [[ "$state" == "completed" && "$conclusion" != "success" ]]; then
+                echo "::error::$workflow failed at $GITHUB_SHA: $run_id $conclusion"
+                exit 1
+              fi
+              if [[ "$state" == "completed" && "$conclusion" == "success" ]]; then complete=$((complete+1)); fi
+            done
+            if [[ "$complete" -eq 2 ]]; then exit 0; fi
+            sleep 20
+          done
+          echo "::error::Missing successful protected CI and Blender at exact SHA"
+          exit 1
+  native:
+    needs: await_ci
+    name: Three owned UE sessions and 40 native Landscape PNGs
+    if: ${{ needs.await_ci.result == 'success' }}
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 35
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      YACS_NATURAL20_CATALOG: 'D:\yacs\work\pcg365\natural-rock-collection03\derived\natural-rock-collection.json'
+      YACS_NATURAL20_SHA: '3160143d74ba3e2af8b7033bfeb689ca0d3c29b33abb50a4e68c512e560d15bc'
+    steps:
+      - name: Checkout exact code-only source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: pcg365-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+      - name: Source, parser, offline tests and catalog preflight
+        shell: pwsh
+        working-directory: pcg365-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          $t=$null; $e=$null
+          [System.Management.Automation.Language.Parser]::ParseFile((Join-Path (Get-Location).Path 'scripts/ue/Invoke-YacsPcgNativeProbe.ps1'),[ref]$t,[ref]$e) | Out-Null
+          if (@($e).Count) { throw ($e.Message -join [Environment]::NewLine) }
+          $py='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $py -PathType Leaf)) { throw 'Pinned host Python missing' }
+          & $py -B -m unittest scripts.ue.test_pcg365_collection_contact scripts.ue.test_pcg365_three_session scripts.ue.test_pcg365_collection_catalog scripts.assets.test_pcg_rock_contact_policy
+          if ($LASTEXITCODE -ne 0) { throw 'Offline contracts rejected; no UE launched' }
+          $actual=(Get-FileHash -LiteralPath $env:YACS_NATURAL20_CATALOG -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -cne $env:YACS_NATURAL20_SHA) { throw 'Frozen catalog drift; no UE launched' }
+      - name: Session 1 - inspect and save Forge / 20 meshes
+        shell: pwsh
+        working-directory: pcg365-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          ./scripts/ue/Invoke-YacsPcgNativeProbe.ps1 -ExpectedHead $env:GITHUB_SHA -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' -Action collection-contact-prepare -QualificationSources -QualificationSet natural20-contact -RockCollectionCatalog $env:YACS_NATURAL20_CATALOG -ExpectedRockCollectionSha $env:YACS_NATURAL20_SHA
+      - name: Session 2 - fresh readback and 100 real contacts
+        shell: pwsh
+        working-directory: pcg365-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          ./scripts/ue/Invoke-YacsPcgNativeProbe.ps1 -ExpectedHead $env:GITHUB_SHA -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' -Action collection-contact-measure
+      - name: Session 3 - fresh review and 40 real GPU renders
+        shell: pwsh
+        working-directory: pcg365-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          ./scripts/ue/Invoke-YacsPcgNativeProbe.ps1 -ExpectedHead $env:GITHUB_SHA -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' -Action collection-contact-review
+      - name: Retain session receipts and logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: pcg365-native-receipts-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/pcg365/${{ github.sha }}/${{ github.run_id }}-${{ github.run_attempt }}/proof/*-editor.log
+            D:/yacs/work/pcg365/${{ github.sha }}/${{ github.run_id }}-${{ github.run_attempt }}/proof/*-stdout.log
+            D:/yacs/work/pcg365/${{ github.sha }}/${{ github.run_id }}-${{ github.run_attempt }}/proof/*-stderr.log
+            D:/yacs/work/pcg365/${{ github.sha }}/${{ github.run_id }}-${{ github.run_attempt }}/proof/collection-contact-prepare/**
+            D:/yacs/work/pcg365/${{ github.sha }}/${{ github.run_id }}-${{ github.run_attempt }}/proof/collection-contact-measure/**
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Retain actual Landscape PNGs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: pcg365-real-landscape-renders-${{ github.sha }}-${{ github.run_attempt }}
+          path: D:/yacs/work/pcg365/${{ github.sha }}/${{ github.run_id }}-${{ github.run_attempt }}/proof/collection-contact-review/**
+          if-no-files-found: warn
+          retention-days: 14

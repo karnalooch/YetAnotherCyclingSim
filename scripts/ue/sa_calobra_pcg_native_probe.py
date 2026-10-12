@@ -24,6 +24,11 @@ CONTACT_ACTIONS = {f"collection-contact-{index:02d}" for index in range(10)} | {
     "collection-contact-reload",
     "collection-contact-render",
 }
+SESSION_ACTIONS = {
+    "collection-contact-prepare",
+    "collection-contact-measure",
+    "collection-contact-review",
+}
 PACKAGE = "/Game/Generated/YACS/PCG365Mechanical"
 GRAPH_PATH = PACKAGE + "/PCG_XYFixture"
 MAP_PATH = PACKAGE + "/L_XYFixture"
@@ -223,6 +228,16 @@ def main():
         "status": "FAILED",
     }
     try:
+        if ACTION in SESSION_ACTIONS:
+            unreal.EditorPythonScripting.set_keep_python_script_alive(True)
+            if not unreal.EditorLoadingAndSavingUtils.new_blank_map(False):
+                raise RuntimeError("Owned session blank-world initialization failed")
+            root = Path(unreal.Paths.project_dir()).resolve()
+            sys.path.insert(0, str(root))
+            from scripts.ue import pcg365_three_session as session
+
+            ACTIVE = session.run(root, OUTPUT, HEAD, ACTION, inspect, finish)
+            return
         if ACTION in {"mask-xy-create", "mask-xy-reload"}:
             unreal.EditorPythonScripting.set_keep_python_script_alive(True)
             root = Path(unreal.Paths.project_dir()).resolve()
@@ -407,7 +422,7 @@ def start_boulder_capture(root, binding, receipt):
 
 
 def finish(receipt):
-    if ACTION in CONTACT_ACTIONS | {
+    if ACTION in CONTACT_ACTIONS | SESSION_ACTIONS | {
         "rock-qualify",
         "rock-reload",
         "rock-render",
@@ -423,7 +438,7 @@ def finish(receipt):
         unreal.AutomationLibrary.finish_loading_before_screenshot()
         receipt["asset_compilation_loading_barrier_completed"] = True
     write_new(ACTION + "-receipt.json", receipt)
-    if ACTION in CONTACT_ACTIONS | {
+    if ACTION in CONTACT_ACTIONS | SESSION_ACTIONS | {
         "material",
         "material-reload",
         "terrain",
@@ -443,7 +458,7 @@ def finish(receipt):
         # lifecycle sequencing, not a substitute for clean process completion.
         global QUIT_CALLBACK
         ticks = 0
-        rock_action = ACTION in CONTACT_ACTIONS | {
+        rock_action = ACTION in CONTACT_ACTIONS | SESSION_ACTIONS | {
             "rock-qualify",
             "rock-reload",
             "rock-render",
