@@ -1,10 +1,10 @@
 # Local runner workspace retention
 
-**Status: PENDING execution evidence.** The owner authorized cleanup of stale
-local runner work while active work remains unaffected. This document defines
-the retention boundary; it does not claim any deletion, reclaimed space,
-verified archive or successful restore. The coordinator must bind the execution
-packet to its approved issue, exact code SHA and preview/apply receipts.
+**Status: STOPPED BY OWNER on 2026-10-12.** Do not resume cleanup without a new
+owner instruction. See the [stop report](RUNNER_WORKSPACE_RETENTION_STOP_20261012.md)
+for completed deletions, the interrupted retained copy, local candidates and
+the exact safe resumption boundary. This contract defines retention safeguards;
+individual results require the execution receipts cited by that report.
 
 ## Scope and protected state
 
@@ -153,7 +153,8 @@ remained at its separate `504bâ€¦` identity. The canonical checkout and acce
 The shared `s384` root has a Git-file relationship to the parent
 `_official-mcp-native-probe` registry, so both are protected. These exclusions
 must remain in preview/apply reports; do not claim all stale trees were removed.
-Live preview03 is still RUNNING at this update. The separate two-entry
+Preview03 completed with 78 candidates; its execution was stopped by the owner
+after 21 completed prunes. The separate two-entry
 incomplete-clone plan has completed: both source trees were removed from
 `_work`, full archives passed CRC and per-member SHA readback, and retained
 copies were pruned. The archives contain 255,954,344 original file bytes in
@@ -181,7 +182,8 @@ configuration updated. The listener was restarted with the stable hook path
 explicitly inherited and a fresh listener PID verified after maintenance.
 A real subsequent completed CI job has not yet proven hook execution.
 The two incomplete-clone phase2 prunes passed; the main stale-tree sweep is
-still PENDING execution.
+STOPPED BY OWNER. Candidate source changes for future compression and closed
+shared-worktree retention are not deployed; see the stop report before reuse.
 
 ## Evidence that is not disposable cache
 
