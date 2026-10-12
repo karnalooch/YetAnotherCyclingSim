@@ -4,16 +4,16 @@
   "assets": [
     {
       "id": "support_rock_a",
-      "source": "D:\\yacs\\work\\pcg365\\7df636c2e96ccaf73864b2559b291db45f4e3cd7\\support-rock-author01\\support_rock_a.fbx",
+      "source": "D:\\yacs\\work\\pcg365\\4fae51a79b9483d8da5ed313256999dc64115632\\support-rock-author02\\support_rock_a.fbx",
       "source_relative": "rock-source/support_rock_a.fbx",
-      "sha256": "b44439f3383e9f52504c4352de16f09ed95aa5cfed8c794c9f82843df325e1f1",
-      "bytes": 15996,
-      "geometry_sha256": "5d721f12ee09a82b547315cf338db4e42e371b857a8814ff5e0aedf83cee9ad2",
-      "expected_lod0_triangles": 48,
+      "sha256": "a99ff2114db4925295177311a893e9127cf5898f1be99341ea16502eca926dfd",
+      "bytes": 24748,
+      "geometry_sha256": "4ba20aa42a60885825ad3f6f63ee905d66686a024a66c9094c4f4453f57524dd",
+      "expected_lod0_triangles": 448,
       "expected_source_dimensions_cm": [
-        50.0,
-        46.00000083446503,
-        41.999998688697815
+        78.00000011920929,
+        62.00000047683716,
+        46.00000083446503
       ],
       "license": "YACS_ORIGINAL_AUTHORED_GEOMETRY",
       "source_provenance": "YACS_AUTHORED_PROCEDURAL_NOT_SCAN",
@@ -25,20 +25,21 @@
         0
       ],
       "flat_base": true,
-      "horizontal_overhang": false
+      "horizontal_overhang": false,
+      "source_recipe_revision": 2
     },
     {
       "id": "support_rock_b",
-      "source": "D:\\yacs\\work\\pcg365\\7df636c2e96ccaf73864b2559b291db45f4e3cd7\\support-rock-author01\\support_rock_b.fbx",
+      "source": "D:\\yacs\\work\\pcg365\\4fae51a79b9483d8da5ed313256999dc64115632\\support-rock-author02\\support_rock_b.fbx",
       "source_relative": "rock-source/support_rock_b.fbx",
-      "sha256": "54e36f423180739b245259c9365c1f05e5107324c658319cd23977cc4167f20c",
-      "bytes": 15676,
-      "geometry_sha256": "4f4b1326a7ce142b119a7d2cf4453b5d5ef4416a4c44d38c83b1c0c8a43d687b",
-      "expected_lod0_triangles": 36,
+      "sha256": "94a7ec863f2c3ca700a75f852227c80b98b6226a93e48a87396c6559b9e907f0",
+      "bytes": 24780,
+      "geometry_sha256": "93d8725e91b0a03c4c25b3f9b7d18a52fba6bc005bec6c4b50ca8e02e4448833",
+      "expected_lod0_triangles": 448,
       "expected_source_dimensions_cm": [
-        53.99999916553497,
-        48.9999994635582,
-        44.49999928474426
+        84.00000035762787,
+        68.00000071525574,
+        49.000000953674316
       ],
       "license": "YACS_ORIGINAL_AUTHORED_GEOMETRY",
       "source_provenance": "YACS_AUTHORED_PROCEDURAL_NOT_SCAN",
@@ -50,7 +51,8 @@
         0
       ],
       "flat_base": true,
-      "horizontal_overhang": false
+      "horizontal_overhang": false,
+      "source_recipe_revision": 2
     }
   ],
   "acquisition_manifest": null,
@@ -62,8 +64,8 @@
   "source_units_policy": "CONVERT_DECLARED_FBX_SCENE_UNITS_TO_CM_NO_RESCALE",
   "contact_points": "five diagnostic XY not rock semantic selectors",
   "source_inspection": {
-    "path": "D:\\yacs\\work\\pcg365\\7df636c2e96ccaf73864b2559b291db45f4e3cd7\\support-rock-author01\\authored-support-rocks.json",
-    "sha256": "ce968d2b080f95fd4cc98dcf9e14aeca9923a3278ae1b5ec1413a4af1c88d607"
+    "path": "D:\\yacs\\work\\pcg365\\4fae51a79b9483d8da5ed313256999dc64115632\\support-rock-author02\\authored-support-rocks.json",
+    "sha256": "a2c6fcf1040b2d905f90bc12a9cbedc01b92b7db4a32b76dd1f247cffd8073a8"
   },
   "refinement_policy_id": "PCG_ROCK_SAMPLED_CONTACT_REFINEMENT_V2"
 }
