@@ -95,6 +95,59 @@ For explicit persistence, an `author` recipe must declare the exact saved asset 
 - **Crucial post-job proof:** a separate GitHub job observes that the same Editor PID/start and owned Task Scheduler session survived the earlier GitHub job, and a new independent Edge/Chrome client can still receive increasing video frames. Test a second update without an Editor restart, then owner logoff/logon and optional workstation reboot, before production activation.
 - Keep `#365` Draft, `qualified_assets: []`, `placement: false`, `performance_pass: false`, `PENDING_FINAL_M3` and `DEFERRED_AFTER_M3`. Do not resume paused #475 cleanup or weaken frozen Landscape, physics or road contracts.
 
+
+## Active f4a0366a session — UTC serialization false negative (2026-10-12)
+
+Owner's independent scheduled task continued in **Running** state and
+`UnrealEditor.exe` PID `35248` remained alive with the original creation time.
+The live viewer displayed native P3. The old repository
+`Get-YacsLiveHostStatus.ps1 -RequireLive` returned
+`STALE_OR_DEAD_NOT_LIVE` even though `host-status.json` had
+`LIVE_RECEIVER_PROVEN_AWAITING_POST_JOB_VERIFICATION`,
+`browser_frames_received=true`, `owner_handoff=true`, and a fresh
+`last_seen_utc` updated approximately every 10 seconds.
+
+The diagnostic precisely isolated two timestamp-conversion errors:
+
+- PowerShell `ConvertFrom-Json` may already deserialize the original
+  `2026-10-12T21:51:52...` ISO UTC string as a **typed DateTime**. The
+  old verifier cast it to a localized string (`12.10.2026 21:51:52`)
+  and parsed it again. Under an en-US parser this can be interpreted as
+  December 10 instead of October 12: approximately **minus 5.09 million
+  seconds** and a spurious stale heartbeat.
+- The original process identity gate compared a formatted ISO string to
+  the typed `editor_started_utc` object with `-ceq`. The same genuine
+  PID/start time was falsely rejected.
+
+The repository correction uses
+[`Convert-YacsLiveUtc.ps1`](../../scripts/live_host/Convert-YacsLiveUtc.ps1)
+to preserve a deserialized `[DateTime]`/`[DateTimeOffset]` instant; only
+explicit timezone-aware ISO strings are parsed with invariant culture.
+The process-start identity compares **UTC instants**, with a bounded 1000 ms
+allowance to account for precision of OS process timestamps. The active and
+heartbeat records must agree within 1 ms. This **does not relax** PID,
+executable, SID, live-heartbeat freshness, task state, listener or video
+checks. A previously completed receiver is still not equivalent to a fresh
+post-job receiver test.
+
+[`Test-YacsLiveUtc.ps1`](../../scripts/live_host/Test-YacsLiveUtc.ps1)
+contains no real task, process or file mutation; tests both `pl-PL` and
+`en-US`, the typed JSON / exact ISO correspondence, wrong month/day,
+reused PID and unsupported localized or timezone-free timestamps.
+
+**No restart is needed for this verifier fix.** Update only the separate
+`D:\\yacs\\live-host-source` worktree, then invoke the repository verifier
+to read the ongoing `f4a0366a` installation:
+
+```powershell
+git -C D:\\yacs\\live-host-source pull --ff-only origin codex/476-yacs-live-host
+& D:\\yacs\\live-host-source\\scripts\\live_host\\Test-YacsLiveUtc.ps1
+& D:\\yacs\\live-host-source\\scripts\\live_host\\Get-YacsLiveHostStatus.ps1 -RequireLive
+```
+
+Neither the installed immutable source release, scheduled-task action,
+runner service nor the live UE process is changed by those commands.
+
 ## Known boundaries
 
 A running UE Editor is not proof of a working LAN receiver; a previously written heartbeat is not proof of present process ownership. The Live Host command loop is an internal trusted desktop filesystem queue, not a public arbitrary-input WebSocket service. Intermittent GPU failures, browser reconnection, sign-in after power failure, user-initiated Exit, source asset promotion, and PCGEx tool capabilities all require separate native/owner acceptance. Restore the last source snapshot rather than modifying the frozen world to hide a rejected contact.

@@ -14,6 +14,7 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'Convert-YacsLiveUtc.ps1')
 $InstallRoot=[IO.Path]::GetFullPath($InstallRoot)
 if ($InstallRoot -ine 'D:\yacs\live-host') { throw 'Unexpected installation root.' }
 function Check([bool]$Ok,[string]$Message) { if (-not $Ok) { throw $Message } }
@@ -30,6 +31,8 @@ $result=[ordered]@{
   desktop_sid=$install.desktop_sid;editor_pid=$null;session=$null
   live_editor=$false;post_job_alive=$false;browser_frames_received=$false
   viewer_url='http://127.0.0.1/';placement=$false;performance_pass=$false
+  heartbeat_age_seconds=$null;editor_start_delta_ms=$null
+  editor_process_identity_verified=$false;heartbeat_fresh=$false
 }
 if (Test-Path -LiteralPath $livePath -PathType Leaf) {
   $active=Get-Content -LiteralPath $livePath -Raw | ConvertFrom-Json
@@ -46,19 +49,40 @@ if (Test-Path -LiteralPath $livePath -PathType Leaf) {
     $receipt=Get-Content -LiteralPath $statusFile -Raw | ConvertFrom-Json
     $fresh=$false
     try {
-      $delta=($now - [DateTime]::Parse([string]$receipt.last_seen_utc).ToUniversalTime()).TotalSeconds
+      # ConvertFrom-Json has already parsed ISO8601 into a typed DateTime
+      # on PowerShell 7. Never cast this object back to localized [string].
+      $heartbeatUtc=ConvertTo-YacsLiveUtc -Value $receipt.last_seen_utc
+      $delta=($now - $heartbeatUtc).TotalSeconds
+      $result.heartbeat_age_seconds=[Math]::Round($delta,3)
       $fresh=$delta -ge -4 -and $delta -le 35
-    } catch { $fresh=$false }
+    } catch {
+      $fresh=$false
+    }
+    $result.heartbeat_fresh=$fresh
     $process=Get-Process -Id $active.editor_pid -ErrorAction SilentlyContinue
     $alive=$false
     if ($process -and -not $process.HasExited) {
-      $alive=($process.StartTime.ToUniversalTime().ToString('o') -ceq $active.editor_started_utc -and
-        $process.Path -ieq 'D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe')
+      try {
+        $startedUtc=ConvertTo-YacsLiveUtc -Value $active.editor_started_utc
+        $observedUtc=$process.StartTime.ToUniversalTime()
+        $result.editor_start_delta_ms=[Math]::Round(
+          ($observedUtc-$startedUtc).TotalMilliseconds,3)
+        $sameProcess=Test-YacsLiveStartIdentity -ExpectedUtc $active.editor_started_utc -ObservedStart $process.StartTime
+        $alive=$sameProcess -and
+          $process.Path -ieq 'D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe'
+      } catch { $alive=$false }
     }
+    $result.editor_process_identity_verified=$alive
+    $startReceiptMatching=$false
+    try {
+      $activeUtc=ConvertTo-YacsLiveUtc -Value $active.editor_started_utc
+      $receiptUtc=ConvertTo-YacsLiveUtc -Value $receipt.editor_started_utc
+      $startReceiptMatching=[Math]::Abs(($activeUtc-$receiptUtc).TotalMilliseconds) -le 1
+    } catch { $startReceiptMatching=$false }
     $matching=($receipt.session -ceq $active.session -and
       $receipt.source_sha -ceq $active.source_sha -and
       $receipt.editor_pid -eq $active.editor_pid -and
-      $receipt.editor_started_utc -ceq $active.editor_started_utc -and
+      $startReceiptMatching -and
       $receipt.desktop_sid -ceq $active.desktop_sid -and
       $receipt.placement -eq $false -and
       $receipt.map_saved -eq $false)
