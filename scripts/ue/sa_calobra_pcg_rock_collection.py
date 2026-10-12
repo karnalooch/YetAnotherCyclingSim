@@ -547,8 +547,8 @@ class StudioCapture:
                 "saved": False,
             }
             for cls, comp_cls, intensity in (
-                (unreal.DirectionalLight, unreal.DirectionalLightComponent, 2.5),
-                (unreal.SkyLight, unreal.SkyLightComponent, 0.8),
+                (unreal.DirectionalLight, unreal.DirectionalLightComponent, 6.0),
+                (unreal.SkyLight, unreal.SkyLightComponent, 1.2),
             ):
                 actor = self.spawn(
                     cls, [0, 0, max_z * 4], unreal.Rotator(pitch=-45, yaw=-35)
@@ -616,7 +616,7 @@ class StudioCapture:
                 "override_auto_exposure_apply_physical_camera_exposure": True,
                 "auto_exposure_apply_physical_camera_exposure": False,
                 "override_auto_exposure_bias": True,
-                "auto_exposure_bias": -1.0,
+                "auto_exposure_bias": 0.5,
             }.items():
                 settings.set_editor_property(key, value)
             camera_component.set_editor_property("post_process_settings", settings)
@@ -688,7 +688,7 @@ class StudioCapture:
             "override_auto_exposure_apply_physical_camera_exposure": True,
             "auto_exposure_apply_physical_camera_exposure": False,
             "override_auto_exposure_bias": True,
-            "auto_exposure_bias": -1.0,
+            "auto_exposure_bias": 0.5,
         }.items():
             actual = settings.get_editor_property(key)
             require(
