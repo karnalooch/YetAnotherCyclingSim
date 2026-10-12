@@ -1,0 +1,159 @@
+name: PCG365 transient red-site native review
+on:
+  push:
+    branches: [codex/365-world-graph]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  await_ci:
+    name: Wait for protected exact-SHA CI before taking host
+    if: >-
+      github.event_name == 'push' &&
+      github.actor == github.repository_owner &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      contains(github.event.head_commit.message, '[pcg365-red-preview]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Require successful exact-source PR CI
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 90); do
+            data=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?event=pull_request&head_sha=${GITHUB_SHA}&per_page=50")
+            row=$(jq -r --arg sha "$GITHUB_SHA" '[.workflow_runs[] | select(.name == "CyclingSim CI" and .head_sha == $sha)] | sort_by(.created_at) | last | if . == null then "" else "\(.id)|\(.status)|\(.conclusion // "pending")" end' <<< "$data")
+            if [[ -n "$row" ]]; then
+              IFS='|' read -r run status outcome <<< "$row"
+              if [[ "$status" == "completed" ]]; then
+                if [[ "$outcome" == "success" ]]; then
+                  echo "Exact-head protected CI $run PASS"
+                  exit 0
+                fi
+                echo "::error::Exact-head protected CI $run $outcome; native review blocked"
+                exit 1
+              fi
+            fi
+            sleep 20
+          done
+          echo "::error::No exact-head successful CI; fail closed"
+          exit 1
+  native_review:
+    name: Five red site labels, real Landscape, 10 owner-review PNGs
+    needs: await_ci
+    if: ${{ needs.await_ci.result == 'success' }}
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 15
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      YACS_PCG365_STAGE: 'D:/yacs/work/pcg365/d361e7651d16ff424ae4e812c7d8cbe1fe81d662/38278235093-1'
+    steps:
+      - name: Checkout exact code only, never change canonical UE workspace
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: red365-${{ github.run_id }}-${{ github.run_attempt }}
+          lfs: false
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Offline red-marker tests and owned-host preflight
+        shell: pwsh
+        working-directory: red365-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference='Stop'
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          $py='D:/yacs/tool-cache/material-forge/python/Scripts/python.exe'
+          if (-not (Test-Path -LiteralPath $py -PathType Leaf)) { throw 'Pinned offline Python unavailable' }
+          & $py -B -m unittest scripts.ue.test_pcg365_red_marker_preview
+          if ($LASTEXITCODE -ne 0) { throw 'Offline site and source review tests failed' }
+          $hostState=./scripts/runner/Get-YacsUnrealHostState.ps1
+          if ($hostState.status -cne 'IDLE') { throw "Live Unreal owner takes precedence: $($hostState.status)" }
+          if ([IO.DriveInfo]::new('D:/').AvailableFreeSpace -lt 5GB) { throw 'Preserve existing 5 GiB D reserve' }
+          if (-not (Test-Path -LiteralPath (Join-Path $env:YACS_PCG365_STAGE 'Pcg365Diagnostic.uproject') -PathType Leaf)) { throw 'Original successful isolated source stage unavailable' }
+          $source=Get-Content -LiteralPath (Join-Path $env:YACS_PCG365_STAGE 'staged-files.json') -Raw | ConvertFrom-Json
+          if ($source.expected_head -cne 'd361e7651d16ff424ae4e812c7d8cbe1fe81d662') { throw 'Historical native stage drift' }
+          $t=$null; $errors=$null
+          & $py -B -m py_compile 'scripts/ue/pcg365_red_marker_preview.py'
+          if ($LASTEXITCODE -ne 0) { throw 'Marker script does not compile' }
+      - name: One owned UE5 Editor for transient diagnostic red markers
+        shell: pwsh
+        working-directory: red365-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $head=$env:GITHUB_SHA
+          $token='${{ github.run_id }}-${{ github.run_attempt }}'
+          $output="D:/yacs/work/pcg365-red-review/$head/$token"
+          if (Test-Path -LiteralPath $output) { throw 'Never overwrite an earlier diagnostic or failed stage' }
+          New-Item -ItemType Directory -Path $output -Force | Out-Null
+          $project=Join-Path $env:YACS_PCG365_STAGE 'Pcg365Diagnostic.uproject'
+          $editor='D:/yacs/engine/UE_5.8/Engine/Binaries/Win64/UnrealEditor.exe'
+          if (-not (Test-Path -LiteralPath $editor -PathType Leaf)) { throw 'Expected UE5.8 editor missing' }
+          $manifest=(Resolve-Path 'worldgen/sa_calobra/pcg365_rejected_sites_review_v1.json').Path
+          $script=(Resolve-Path 'scripts/ue/pcg365_red_marker_preview.py').Path
+          $psi=[Diagnostics.ProcessStartInfo]::new($editor)
+          $psi.UseShellExecute=$false
+          $psi.CreateNoWindow=$true
+          $psi.RedirectStandardOutput=$true
+          $psi.RedirectStandardError=$true
+          $psi.WorkingDirectory=$env:YACS_PCG365_STAGE
+          foreach ($arg in @(
+            $project,'-RenderOffscreen','-norhithread','-Unattended','-NoSplash','-NoSound',
+            '-NoLiveCoding','-NoP4','-NoPause',
+            '-DisablePlugins=ModelContextProtocol,Wingman,AndroidFileServer',
+            '-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False',
+            "-ExecutePythonScript=$script","-abslog=$output/editor.log"
+          )) { $psi.ArgumentList.Add($arg) }
+          $psi.Environment.Remove('PYTHONHOME') | Out-Null
+          $psi.Environment.Remove('PYTHONPATH') | Out-Null
+          $psi.Environment['YACS_PCG365_RED_REVIEW_OUTPUT']=$output
+          $psi.Environment['YACS_PCG365_RED_REVIEW_MANIFEST']=$manifest
+          $psi.Environment['YACS_PCG365_RED_REVIEW_SHA']=$head
+          $hostState=./scripts/runner/Get-YacsUnrealHostState.ps1
+          if ($hostState.status -cne 'IDLE') { throw 'Shared Unreal host became occupied before one owned launch' }
+          $proc=[Diagnostics.Process]::Start($psi)
+          $stdout=$proc.StandardOutput.ReadToEndAsync()
+          $stderr=$proc.StandardError.ReadToEndAsync()
+          $sw=[Diagnostics.Stopwatch]::StartNew()
+          while (-not $proc.WaitForExit(1000)) {
+            if ($sw.Elapsed.TotalSeconds -gt 420) {
+              $proc.Kill()
+              $proc.WaitForExit()
+              throw 'Only the owned red-review Unreal process exceeded 420 sec'
+            }
+          }
+          [IO.File]::WriteAllText((Join-Path $output 'stdout.log'),$stdout.GetAwaiter().GetResult())
+          [IO.File]::WriteAllText((Join-Path $output 'stderr.log'),$stderr.GetAwaiter().GetResult())
+          if ($proc.ExitCode -ne 0) { throw "Native red review exit=$($proc.ExitCode)" }
+          $receiptPath=Join-Path $output 'red-review-receipt.json'
+          if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) { throw 'No real native red review receipt' }
+          $receipt=Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
+          if ($receipt.status -cne 'REAL_LANDSCAPE_RED_REVIEW_CAPTURED' -or
+              $receipt.review_tool_sha -cne $head -or
+              $receipt.producer_sha -cne 'd361e7651d16ff424ae4e812c7d8cbe1fe81d662' -or
+              $receipt.map_saved -ne $false -or $receipt.terrain_modified -ne $false -or
+              $receipt.placement -ne $false -or @($receipt.qualified_assets).Count -ne 0 -or
+              @($receipt.markers).Count -ne 5 -or @($receipt.captures).Count -ne 5) { throw 'Native red review phase not complete' }
+          foreach ($capture in $receipt.captures) {
+            if ($capture.capture.status -cne 'CAPTURE_COMPLETED' -or @($capture.capture.frames).Count -ne 2) { throw 'Missing real native red-review frames' }
+            foreach ($frame in $capture.capture.frames) {
+              $path=Join-Path $output "$($capture.id)/$($frame.file)"
+              $file=Get-Item -LiteralPath $path -Force
+              $hash=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
+              if ($file.Length -ne $frame.size_bytes -or $hash -cne $frame.sha256 -or $frame.width_px -ne 1920 -or $frame.height_px -ne 1080) { throw 'Red-review native PNG drift' }
+            }
+          }
+          [ordered]@{head=$head;producer=$receipt.producer_sha;action='pcg365-red-review';exit_code=0;status=$receipt.status;map_saved=$false;placement=$false} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $output 'launcher-completed.json') -Encoding utf8
+          Write-Host "Red rejected sites review PASS: $output"
+      - name: Retain red-marker real UE frame and failed diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: pcg365-red-review-${{ github.sha }}-${{ github.run_attempt }}
+          path: D:/yacs/work/pcg365-red-review/${{ github.sha }}/${{ github.run_id }}-${{ github.run_attempt }}/**
+          if-no-files-found: warn
+          retention-days: 14

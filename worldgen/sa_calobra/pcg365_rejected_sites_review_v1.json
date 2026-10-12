@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "scope": "OWNER_VISUAL_DIAGNOSTIC_NOT_PLACEMENT",
+  "source_producer_sha": "d361e7651d16ff424ae4e812c7d8cbe1fe81d662",
+  "source_run": "38278235093-1",
+  "source_contact_fresh_sha256": "1c57fd03ce552fc3b18f7e8dcbf18622e0b139b3771394b814cde1dec0b8c51b",
+  "source_contact_fresh_bytes": 2127296,
+  "source_map_sha256": "bf2b92945865e2307990b6d3da40095dfa0774d28affb32a1e42e55f288764dd",
+  "map_package": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview",
+  "color_rgba": [
+    255,
+    32,
+    32,
+    255
+  ],
+  "markers": [
+    {
+      "id": "P0",
+      "xy_cm": [
+        16800,
+        70400
+      ],
+      "slope_deg_min": 38.2,
+      "slope_deg_max": 45.64,
+      "status": "REJECTED",
+      "reason": "HISTORICAL_VEGETATION_DIAGNOSTIC_NOT_ROCK_ADMITTED"
+    },
+    {
+      "id": "P1",
+      "xy_cm": [
+        4800,
+        96800
+      ],
+      "slope_deg_min": 52.81,
+      "slope_deg_max": 53.87,
+      "status": "REJECTED",
+      "reason": "HISTORICAL_VEGETATION_DIAGNOSTIC_NOT_ROCK_ADMITTED"
+    },
+    {
+      "id": "P2",
+      "xy_cm": [
+        184800,
+        180800
+      ],
+      "slope_deg_min": 35.17,
+      "slope_deg_max": 43.69,
+      "status": "REJECTED",
+      "reason": "HISTORICAL_VEGETATION_DIAGNOSTIC_NOT_ROCK_ADMITTED"
+    },
+    {
+      "id": "P3",
+      "xy_cm": [
+        181600,
+        189600
+      ],
+      "slope_deg_min": 5.88,
+      "slope_deg_max": 18.77,
+      "status": "REJECTED",
+      "reason": "HISTORICAL_VEGETATION_DIAGNOSTIC_NOT_ROCK_ADMITTED"
+    },
+    {
+      "id": "P4",
+      "xy_cm": [
+        91200,
+        200800
+      ],
+      "slope_deg_min": 26.46,
+      "slope_deg_max": 29.92,
+      "status": "REJECTED",
+      "reason": "HISTORICAL_VEGETATION_DIAGNOSTIC_NOT_ROCK_ADMITTED"
+    }
+  ],
+  "render_policy": {
+    "transient_only": true,
+    "map_saved": false,
+    "landscape_modified": false,
+    "display_text": "REVIEW — NOT ADMITTED",
+    "actor_count": 5,
+    "expected_final_frames": 5
+  },
+  "placement": false,
+  "qualified_assets": [],
+  "full_qualification": false,
+  "performance_pass": false,
+  "owner_visual_status": "REVIEW_PENDING"
+}
