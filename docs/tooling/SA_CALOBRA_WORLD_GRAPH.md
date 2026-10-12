@@ -1279,3 +1279,7 @@ owner visual review remain open. #365 and Draft PR474 are not complete or merged
 Local validation:52 scoped asset tests plus7 candidate tests, Ruff and final
 architecture contract PASS. Documentation guards and exact delivery CI are
 recorded separately from the native execution SHA.
+
+## Current local natural rock library — 2026-10-12
+
+[Twenty natural derivatives](../assets/pcg365-natural20-20261012/README.md) from eight licensed scan families have completed native import, save, fresh reload, Material Forge V2 binding and real GPU capture at exact producer `92f5184c0e5df7cf7698d2c8b28b9e5796e831d7`. [Independent QA](../assets/pcg365-natural20-20261012/VISUAL_QA.md) verified twenty package hashes and five final image hashes. The original terrain and road were not modified. This local library candidate replaces the earlier two-family preview; it does not close #365 or admit scatter. Landscape contact remains NOT_RUN for the new variants, qualified_assets empty, placement false and performance_pass false.
