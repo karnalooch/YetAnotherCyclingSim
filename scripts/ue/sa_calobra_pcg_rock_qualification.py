@@ -329,7 +329,7 @@ def measure_grid(component, actor, bounds, size, world, ground, ignored, center)
 
 def source_patch_diagnostic(grid, mesh_receipt, refinement=None):
     """Separate source-cap experiment; never reinterpret the V1/V2 decision."""
-    from scripts.assets.pcg_rock_patch_diagnostic import diagnose, inside
+    from scripts.assets.pcg_rock_patch_diagnostic import diagnose, inside_patch
 
     source = mesh_receipt["source"]
     declaration = dict(source["support_patch"])
@@ -345,12 +345,12 @@ def source_patch_diagnostic(grid, mesh_receipt, refinement=None):
         height_cm=2 * extent[2],
         expected_full_ray_count=grid["sample_count"],
         expected_cap_ray_count=sum(
-            inside(
+            inside_patch(
                 [
                     origin[0] + extent[0] * (2 * ix / (size - 1) - 1),
                     origin[1] + extent[1] * (2 * iy / (size - 1) - 1),
                 ],
-                declaration["cap_xy_polygon"],
+                declaration,
             )
             for iy in range(size)
             for ix in range(size)

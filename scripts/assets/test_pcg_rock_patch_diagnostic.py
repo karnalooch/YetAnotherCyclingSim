@@ -3,7 +3,7 @@
 import copy
 import unittest
 
-from pcg_rock_patch_diagnostic import diagnose
+from pcg_rock_patch_diagnostic import diagnose, inside_patch
 
 
 def fixture():
@@ -43,6 +43,62 @@ def fixture():
 
 
 class PatchTests(unittest.TestCase):
+    def test_ring_patch_excludes_hole_but_com_hull_is_not_force_proof(self):
+        rows, d = fixture()
+        d["cap_xy_polygon"] = [[-3, -3], [3, -3], [3, 3], [-3, 3]]
+        hole = [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]
+        d["cap_xy_loops"] = [d["cap_xy_polygon"], hole]
+        for row in rows:
+            row["bottom_z_cm"] = 0
+        rows.append(
+            dict(
+                local_xy_cm=[0, 0],
+                bottom_z_cm=3,
+                top_z_cm=10,
+                ground_z_cm=0,
+                ground_slope_deg=0,
+            )
+        )
+        d.update(expected_full_ray_count=9, expected_cap_ray_count=8)
+        self.assertTrue(inside_patch([3, 0], d))
+        self.assertFalse(inside_patch([0, 0], d))
+        self.assertFalse(inside_patch([0.5, 0], d))
+        result = self.final(rows, d)
+        self.assertEqual(result["coverage"]["cap_valid"], 8)
+        self.assertTrue(result["com_inside_support_hull"])
+        self.assertEqual(result["status"], "DIAGNOSTIC_SUPPORT_PATCH_ONLY")
+        self.assertFalse(result["full_qualification"])
+        self.assertFalse(result["continuous_support_verified"])
+        rows[-1]["ground_z_cm"] = None
+        self.assertIn(
+            "INCOMPLETE_FULL_FOOTPRINT_GROUND", self.final(rows, d)["reasons"]
+        )
+
+    def test_ambiguous_patch_loops_reject(self):
+        rows, d = fixture()
+        cases = [
+            [[[2, 2], [3, 2], [3, 3], [2, 3]]],  # disjoint outer
+            [[[0, 0], [1, 0], [1, 0.5], [0, 0.5]]],  # touches outer
+            [[[0, 0], [2, 0], [2, 0.5], [0, 0.5]]],  # crosses outer
+            [
+                [[-0.8, -0.8], [0.8, -0.8], [0.8, 0.8], [-0.8, 0.8]],
+                [[-0.2, -0.2], [0.2, -0.2], [0.2, 0.2], [-0.2, 0.2]],
+            ],
+            [
+                [[-0.8, -0.8], [0, -0.8], [0, 0], [-0.8, 0]],
+                [[0, -0.5], [0.5, -0.5], [0.5, 0.5], [0, 0.5]],
+            ],
+        ]
+        for holes in cases:
+            with self.subTest(holes=holes):
+                altered = copy.deepcopy(d)
+                altered["cap_xy_loops"] = [altered["cap_xy_polygon"]] + holes
+                self.assertEqual(
+                    self.final(rows, altered)["status"], "REJECTED_DIAGNOSTIC"
+                )
+                with self.assertRaises(ValueError):
+                    inside_patch([0, 0], altered)
+
     def final(self, rows, d):
         return diagnose(rows, d, {"root_delta_cm": 0.1, "embedding_delta_cm": 0.1})
 

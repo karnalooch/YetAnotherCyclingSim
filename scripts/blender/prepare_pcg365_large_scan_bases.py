@@ -1,4 +1,4 @@
-"""Revision 3 diagnostic source-repair cuts of two pinned scan LOD0s."""
+"""Revision 4 diagnostic source-repair cuts of two pinned scan LOD0s."""
 
 import argparse
 from collections import Counter
@@ -19,7 +19,7 @@ PINS = {
     "namaqualand_boulder_02": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
     "namaqualand_boulder_06": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
 }
-RECIPE_REVISION = 3
+RECIPE_REVISION = 4
 CUT_FRACTIONS = {"namaqualand_boulder_02": 0.12, "namaqualand_boulder_06": 0.10}
 CUT_REASONS = {
     "namaqualand_boulder_02": "Source-only open-underside repair: retained revision1 10% cut lay below original boundary maxZ 0.04504789785m; fixed 12% cut expected at 0.0464433m clears that boundary. Chosen before native measurement, not contact-policy tuning.",
@@ -160,6 +160,140 @@ def center_of_mass(bm):
         moment += (a + b + c) * (signed / 4)
     require(volume > 0, "Invalid volume for COM")
     return list(moment / volume)
+
+
+def inside_xy(point, polygon):
+    inside = False
+    x, y = point
+    for a, b in zip(polygon, polygon[1:] + polygon[:1]):
+        if (a[1] > y) != (b[1] > y):
+            if x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]:
+                inside = not inside
+    return inside
+
+
+def polygon_area(polygon):
+    return (
+        sum(
+            a[0] * b[1] - a[1] * b[0]
+            for a, b in zip(polygon, polygon[1:] + polygon[:1])
+        )
+        / 2
+    )
+
+
+def ordered_boundary_loops(edges):
+    remaining = set(edges)
+    loops = []
+    while remaining:
+        seed = min(remaining, key=lambda e: sorted(tuple(v.co) for v in e.verts))
+        selected = {seed}
+        vertices = set(seed.verts)
+        pending = list(seed.verts)
+        while pending:
+            v = pending.pop()
+            for edge in v.link_edges:
+                if edge in remaining and edge not in selected:
+                    selected.add(edge)
+                    for other in edge.verts:
+                        if other not in vertices:
+                            vertices.add(other)
+                            pending.append(other)
+        remaining -= selected
+        loops.append(boundary_loop(list(selected)))
+    loops.sort(
+        key=lambda loop: (
+            -abs(polygon_area([tuple(v.co)[:2] for v in loop])),
+            tuple(tuple(v.co) for v in loop),
+        )
+    )
+    polygons = [[tuple(v.co)[:2] for v in loop] for loop in loops]
+    for i, a in enumerate(polygons):
+        for b in polygons[i + 1 :]:
+            for p, q in zip(a, a[1:] + a[:1]):
+                for r, t in zip(b, b[1:] + b[:1]):
+                    require(not intersect(p, q, r, t), "Cut loops intersect or touch")
+    records = []
+    for i, polygon in enumerate(polygons):
+        area = abs(polygon_area(polygon))
+        require(area > 0, "Zero-area cut loop")
+        depth = sum(
+            inside_xy(polygon[0], other) for j, other in enumerate(polygons) if i != j
+        )
+        records.append(
+            {
+                "xy_m": [list(p) for p in polygon],
+                "area_m2": area,
+                "nesting_depth": depth,
+                "role": "OUTER_OR_ISLAND" if depth % 2 == 0 else "HOLE",
+            }
+        )
+    return loops, records
+
+
+def validate_holed_cap(faces, records):
+    expected = sum(
+        r["area_m2"] * (-1 if r["nesting_depth"] % 2 else 1) for r in records
+    )
+    require(expected > 0, "Invalid parity cap area")
+    actual = sum(f.calc_area() for f in faces)
+    # Floating-point integration guard only; never a terrain/contact tolerance.
+    tolerance = max(1e-8, expected * 1e-6)
+    require(
+        abs(actual - expected) <= tolerance, "Cap area differs from loop parity area"
+    )
+    for face in faces:
+        center = face.calc_center_median()
+        require(
+            sum(inside_xy((center.x, center.y), r["xy_m"]) for r in records) % 2 == 1,
+            "Cap triangle centroid outside odd-even support region",
+        )
+        require(len(face.verts) == 3 and face.calc_area() > 0, "Invalid cap triangle")
+    triangles = [[tuple(v.co)[:2] for v in face.verts] for face in faces]
+    boxes = [
+        (
+            min(p[0] for p in t),
+            max(p[0] for p in t),
+            min(p[1] for p in t),
+            max(p[1] for p in t),
+        )
+        for t in triangles
+    ]
+
+    def strictly_inside(point, triangle):
+        signs = [
+            cross(a, b, point) for a, b in zip(triangle, triangle[1:] + triangle[:1])
+        ]
+        return all(v > 0 for v in signs) or all(v < 0 for v in signs)
+
+    for i, a in enumerate(triangles):
+        for j in range(i + 1, len(triangles)):
+            aa, bb = boxes[i], boxes[j]
+            if aa[1] <= bb[0] or bb[1] <= aa[0] or aa[3] <= bb[2] or bb[3] <= aa[2]:
+                continue
+            b = triangles[j]
+            require(
+                not any(strictly_inside(p, b) for p in a)
+                and not any(strictly_inside(p, a) for p in b),
+                "Overlapping cap triangles",
+            )
+            for p, q in zip(a, a[1:] + a[:1]):
+                for r, t in zip(b, b[1:] + b[:1]):
+                    require(
+                        not (
+                            cross(p, q, r) * cross(p, q, t) < 0
+                            and cross(r, t, p) * cross(r, t, q) < 0
+                        ),
+                        "Crossing cap triangle edges",
+                    )
+    return {
+        "nonoverlapping_triangle_interiors": True,
+        "expected_parity_area_m2": expected,
+        "actual_triangle_area_m2": actual,
+        "numeric_area_tolerance_m2": tolerance,
+        "centroids_inside_odd_even": True,
+        "method": "Blender4.5.9 stock triangle_fill HOLES|POLYS; full closed manifold/winding verification remains mandatory",
+    }
 
 
 def face_components(bm):
@@ -331,12 +465,18 @@ def prepare(asset, output):
                 "Component selection removed unexpected faces",
             )
         boundary = [edge for edge in bm.edges if edge.is_boundary]
-        try:
-            loop = boundary_loop(boundary)
-        except ValueError as exc:
-            raise ValueError(
-                f"{exc}; post-cut component facecounts={[r['facecount'] for _, r in components]}, selected boundary edges={len(boundary)}; see cut-components.json"
-            ) from exc
+        holed_cap = asset["allow_holed_cap"] and allow_open
+        if holed_cap:
+            loops, cap_loop_records = ordered_boundary_loops(boundary)
+            loop = [v for one_loop in loops for v in one_loop]
+        else:
+            try:
+                loop = boundary_loop(boundary)
+            except ValueError as exc:
+                raise ValueError(
+                    f"{exc}; post-cut component facecounts={[r['facecount'] for _, r in components]}, selected boundary edges={len(boundary)}; see cut-components.json"
+                ) from exc
+            _, cap_loop_records = ordered_boundary_loops(boundary)
         boundary_plane_error = max(abs(v.co.z - cut) for v in loop)
         require(
             boundary_plane_error < 1e-6, "Cut boundary exceeds 1um numeric plane guard"
@@ -352,23 +492,40 @@ def prepare(asset, output):
         loop_vectors = [v.co.copy() for v in loop]
         # Installed 4.5 bpy_extras/mesh_utils.py:394-398 maps integer
         # tessellation indices into the concatenated input polygon vertices.
-        for triangle in tessellate_polygon([loop_vectors]):
-            require(
-                len(triangle) == 3
-                and all(
-                    type(index) is int and 0 <= index < len(loop) for index in triangle
-                )
-                and len(set(triangle)) == 3,
-                "Unexpected Blender4.5.9 tessellation index result",
+        if holed_cap:
+            before_faces = set(bm.faces)
+            bmesh.ops.triangle_fill(
+                bm,
+                edges=boundary,
+                normal=Vector((0, 0, -1)),
+                use_beauty=False,
+                use_dissolve=False,
             )
-            verts = [loop[index] for index in triangle]
-            if (verts[1].co - verts[0].co).cross(verts[2].co - verts[0].co).z > 0:
-                verts.reverse()
-            face = bm.faces.new(verts)
-            face.material_index = cap_material_id
-            face.smooth = False
-            cap_faces.append(face)
-        require(len(cap_faces) == len(loop) - 2, "Unexpected cap triangulation")
+            cap_faces = [f for f in bm.faces if f not in before_faces]
+            require(cap_faces, "Stock holed triangle fill produced no cap")
+            for face in cap_faces:
+                face.material_index = cap_material_id
+                face.smooth = False
+        else:
+            for triangle in tessellate_polygon([loop_vectors]):
+                require(
+                    len(triangle) == 3
+                    and all(
+                        type(index) is int and 0 <= index < len(loop)
+                        for index in triangle
+                    )
+                    and len(set(triangle)) == 3,
+                    "Unexpected Blender4.5.9 tessellation index result",
+                )
+                verts = [loop[index] for index in triangle]
+                if (verts[1].co - verts[0].co).cross(verts[2].co - verts[0].co).z > 0:
+                    verts.reverse()
+                face = bm.faces.new(verts)
+                face.material_index = cap_material_id
+                face.smooth = False
+                cap_faces.append(face)
+            require(len(cap_faces) == len(loop) - 2, "Unexpected cap triangulation")
+        cap_validation = validate_holed_cap(cap_faces, cap_loop_records)
         polygons = [face for face in bm.faces if len(face.verts) > 3]
         if polygons:
             bmesh.ops.triangulate(
@@ -494,7 +651,13 @@ def prepare(asset, output):
             "cap_triangle_count": len(cap_faces),
             "cap_preassignment_plane_error_m": boundary_plane_error,
             "cap_material_id": cap_material_id,
-            "cap_xy_polygon_m": [list(v.co)[:2] for v in loop],
+            "cap_xy_polygon_m": [list(v.co)[:2] for v in loop]
+            if len(cap_loop_records) == 1
+            else None,
+            "cap_xy_loops_m": cap_loop_records,
+            "cap_loop_count": len(cap_loop_records),
+            "cap_support_classification": "ODD_EVEN_PLANAR_REGION_WITH_DECLARED_HOLES",
+            "cap_validation": cap_validation,
             "cap_area_m2": cap_area,
             "cap_centroid_m": [cap_centroid.x, cap_centroid.y, 0],
             "closed_solid_center_of_mass_m": com,
@@ -594,6 +757,7 @@ def prepare_assets(assets, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--split-source02-largest-component", action="store_true")
+    parser.add_argument("--allow-source02-holed-cap", action="store_true")
     parser.add_argument("--request", type=Path, required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
     parser.add_argument("--expected-request-sha256", required=True)
@@ -654,6 +818,11 @@ def main():
             len(matches) == 1 and inspected["mesh_count"] == 1,
             "Explicit sole inspected LOD0 required",
         )
+        require(
+            not args.allow_source02_holed_cap or args.split_source02_largest_component,
+            "Holed02 cap requires explicit largest component selection",
+        )
+        asset["allow_holed_cap"] = args.allow_source02_holed_cap
         asset["split_source02"] = (
             args.split_source02_largest_component
             and asset["id"] == "namaqualand_boulder_02"
@@ -691,6 +860,8 @@ def main():
         "blender_version": bpy.app.version_string,
         "recipe_revision": RECIPE_REVISION,
         "split_source02_largest_component": args.split_source02_largest_component,
+        "allow_source02_holed_cap": args.allow_source02_holed_cap,
+        "prior_revision3_attempt": "Retained unchanged: selected02 component rejected multiple boundary loops. Revision4 explicitly preserves holes using stock scanfill; no outer-only support claim.",
         "prior_revision2_attempt": "Retained unchanged: 02 rejected multiple cut loops; 06 prepared. Revision3 optionally selects one post-cut source component, never merges loops or changes terrain/contact gates.",
         "cut_fractions_frozen_before_execution": CUT_FRACTIONS,
         "source_repair_reasons": CUT_REASONS,

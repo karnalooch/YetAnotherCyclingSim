@@ -5,6 +5,8 @@ bottom_z_cm/top_z_cm/ground_z_cm. Declaration binds source_sha256 and
 basecut_source_sha256 (original corrected source), topology_verified, cap_z_cm=0,
 cap_tolerance_cm=.01, cap_xy_polygon, com_xy_cm (source volume COM projection),
 expected_full_ray_count, expected_cap_ray_count, height_cm (native AABB height).
+Optional cap_xy_loops contains the legacy outer polygon first, then disjoint,
+strictly interior nonnested holes. Outer boundary belongs; hole boundaries do not.
 Optional planting_depth_fraction is frozen at 0 (default) or .05 before measurement;
 planting lowers the cap-fit root and consumes the same full-geometry burial budget.
 Each row supplies ground_slope_deg. Refinement supplies measured
@@ -17,6 +19,7 @@ proof of static stability; penetration samples are not physical contact forces.
 
 import math
 import re
+from functools import lru_cache
 
 
 def number(value):
@@ -65,6 +68,81 @@ def inside(point, polygon):
     return result
 
 
+def edges_touch(a, b, c, e):
+    return (
+        cross(a, b, c) * cross(a, b, e) <= 0
+        and cross(c, e, a) * cross(c, e, b) <= 0
+        and all(
+            max(min(a[k], b[k]), min(c[k], e[k]))
+            <= min(max(a[k], b[k]), max(c[k], e[k]))
+            for k in (0, 1)
+        )
+    )
+
+
+def patch_loops(declaration):
+    outer = [xy(p) for p in declaration["cap_xy_polygon"]]
+    supplied = declaration.get("cap_xy_loops", [outer])
+    if not isinstance(supplied, (list, tuple)) or not supplied:
+        raise ValueError("INVALID_CAP_LOOPS")
+    loops = [[xy(p) for p in loop] for loop in supplied]
+    if loops[0] != outer:
+        raise ValueError("CAP_OUTER_LOOP_MISMATCH")
+    return validated_loops(tuple(tuple(loop) for loop in loops))
+
+
+@lru_cache(maxsize=16)
+def validated_loops(immutable_loops):
+    loops = [list(loop) for loop in immutable_loops]
+    outer = loops[0]
+    for loop in loops:
+        if len(loop) < 3 or len(set(loop)) != len(loop) or len(hull(loop)) < 3:
+            raise ValueError("DEGENERATE_CAP_POLYGON")
+        for i, a in enumerate(loop):
+            b = loop[(i + 1) % len(loop)]
+            # Collinear reversal makes adjacent edges overlap ambiguously.
+            c = loop[(i + 2) % len(loop)]
+            if (
+                cross(a, b, c) == 0
+                and sum((a[k] - b[k]) * (c[k] - b[k]) for k in (0, 1)) > 0
+            ):
+                raise ValueError("SELF_INTERSECTING_CAP_POLYGON")
+            for j in range(i + 1, len(loop)):
+                if j == i + 1 or (i == 0 and j == len(loop) - 1):
+                    continue
+                if edges_touch(a, b, loop[j], loop[(j + 1) % len(loop)]):
+                    raise ValueError("SELF_INTERSECTING_CAP_POLYGON")
+    for i, loop in enumerate(loops):
+        for other in loops[i + 1 :]:
+            if any(
+                edges_touch(a, b, c, e)
+                for a, b in zip(loop, loop[1:] + loop[:1])
+                for c, e in zip(other, other[1:] + other[:1])
+            ):
+                raise ValueError("CAP_LOOPS_INTERSECT_OR_TOUCH")
+    for i, hole in enumerate(loops[1:], 1):
+        if not inside(hole[0], outer):
+            raise ValueError("CAP_HOLE_OUTSIDE_OUTER")
+        if any(
+            inside(hole[0], other) or inside(other[0], hole) for other in loops[1:i]
+        ):
+            raise ValueError("NESTED_CAP_HOLES_UNSUPPORTED")
+    return immutable_loops
+
+
+def inside_patch(point, declaration):
+    """Validated outer plus disjoint holes; hole boundaries conservatively excluded.
+
+    Raises on ambiguous declarations, including touching, intersecting or nested
+    loops. This geometric selector authenticates neither source nor ground.
+    """
+    point = xy(point)
+    loops = patch_loops(declaration)
+    return inside(point, loops[0]) and not any(
+        inside(point, hole) for hole in loops[1:]
+    )
+
+
 def diagnose(rows, declaration, refinement=None):
     result = {
         "status": "REJECTED_DIAGNOSTIC",
@@ -89,30 +167,13 @@ def diagnose(rows, declaration, refinement=None):
             raise ValueError("TOPOLOGY_NOT_VERIFIED")
         if number(d["cap_z_cm"]) != 0 or number(d["cap_tolerance_cm"]) != 0.01:
             raise ValueError("UNSUPPORTED_CAP_DECLARATION")
-        polygon = [xy(p) for p in d["cap_xy_polygon"]]
-        if (
-            len(polygon) < 3
-            or len(set(polygon)) != len(polygon)
-            or len(hull(polygon)) < 3
-        ):
-            raise ValueError("DEGENERATE_CAP_POLYGON")
-        # Reject crossing edges even when the source claims verified topology.
-        for i, a in enumerate(polygon):
-            b = polygon[(i + 1) % len(polygon)]
-            for j in range(i + 1, len(polygon)):
-                if j == i + 1 or (i == 0 and j == len(polygon) - 1):
-                    continue
-                c, e = polygon[j], polygon[(j + 1) % len(polygon)]
-                if (
-                    cross(a, b, c) * cross(a, b, e) <= 0
-                    and cross(c, e, a) * cross(c, e, b) <= 0
-                    and all(
-                        max(min(a[k], b[k]), min(c[k], e[k]))
-                        <= min(max(a[k], b[k]), max(c[k], e[k]))
-                        for k in (0, 1)
-                    )
-                ):
-                    raise ValueError("SELF_INTERSECTING_CAP_POLYGON")
+        loops = patch_loops(d)
+
+        def selected(point):
+            return inside(point, loops[0]) and not any(
+                inside(point, hole) for hole in loops[1:]
+            )
+
         center = xy(d["com_xy_cm"])
         full_expected, cap_expected = (
             d["expected_full_ray_count"],
@@ -134,7 +195,7 @@ def diagnose(rows, declaration, refinement=None):
             try:
                 bottom, top = number(row["bottom_z_cm"]), number(row["top_z_cm"])
             except (KeyError, ValueError):
-                if inside(point, polygon):
+                if selected(point):
                     missing_cap_bottom += 1
                 continue
             if top < bottom:
@@ -150,7 +211,7 @@ def diagnose(rows, declaration, refinement=None):
             max_slope = max(max_slope, slope)
             entry = (point, bottom, top, ground)
             full.append(entry)
-            if inside(point, polygon) and abs(bottom) <= 0.01:
+            if selected(point) and abs(bottom) <= 0.01:
                 cap.append(entry)
         result["coverage"] = {
             "full_expected": full_expected,
@@ -187,7 +248,7 @@ def diagnose(rows, declaration, refinement=None):
                 "local_xy_cm": list(p),
                 "bottom_gap_cm": number(root - (g - b)),
                 "exposed_top_cm": max(0.0, number((t - b) + (root - (g - b)))),
-                "cap_support": inside(p, polygon) and abs(b) <= 0.01,
+                "cap_support": selected(p) and abs(b) <= 0.01,
             }
             for p, b, t, g in full
         ]

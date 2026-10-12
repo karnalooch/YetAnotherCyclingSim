@@ -425,11 +425,32 @@ def material_readback(assets):
         if isinstance(expression, unreal.MaterialExpressionMaterialFunctionCall)
     ]
     functions = []
+    normal_world_space = []
+    require(
+        master.get_editor_property("tangent_space_normal") is True,
+        "Forge master tangent-space normal setting differs",
+    )
     for call in calls:
         function = call.get_editor_property("material_function")
         require(function is not None, "Missing WorldAligned function")
         functions.append(function.get_path_name().split(".")[0])
         inputs = LIB.get_inputs_for_material_expression(master, call)
+        if (
+            function.get_path_name().split(".")[0]
+            == WORLD_FUNCTION_ROOT + "WorldAlignedNormal"
+        ):
+            names = list(LIB.get_material_expression_input_names(call))
+            require(
+                len(names) == len(inputs) and names.count("WorldSpace") == 1,
+                "WorldAlignedNormal WorldSpace input schema differs",
+            )
+            value = inputs[names.index("WorldSpace")]
+            require(
+                isinstance(value, unreal.MaterialExpressionStaticBool)
+                and value.get_editor_property("value") is False,
+                "WorldAlignedNormal must explicitly receive WorldSpace=False",
+            )
+            normal_world_space.append(False)
         scalars = [
             item
             for item in inputs
@@ -449,6 +470,7 @@ def material_readback(assets):
         ),
         "WorldAligned projection function inventory differs",
     )
+    require(normal_world_space == [False], "Expected one verified normal-space input")
     # Installed MaterialEditingLibrary.cpp:1148 reads the material input directly;
     # no active Material Editor lookup occurs in that implementation.
     require(
@@ -503,6 +525,12 @@ def material_readback(assets):
         "TileSizeCm": float(tile),
         "projection": "native_world_aligned_4m",
         "world_aligned_functions": sorted(functions),
+        "normal_space_readback": {
+            "master_tangent_space_normal": True,
+            "world_aligned_normal_world_space_input": False,
+            "function_interior_branch_semantics": "NOT_VERIFIED",
+            "function_package_identity": "BOUND_BY_SAVED_DIRECT_DEPENDENCIES",
+        },
         "wpo_connected": False,
         "displacement_connected": None,
         "nanite_tessellation_enabled": False,
