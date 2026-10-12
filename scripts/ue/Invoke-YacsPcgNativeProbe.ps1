@@ -13,7 +13,7 @@ param(
     [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload','rock-qualify','rock-reload','rock-render')][string]$Action = 'inspect',
     [switch]$QualificationSources,
     [switch]$RockQualificationSources,
-    [ValidateSet('source','lod0','support')][string]$RockSet = 'source',
+    [ValidateSet('source','lod0','support','scan-base')][string]$RockSet = 'source',
     [string]$MaskXyRequest,
     [ValidatePattern('^[0-9a-f]{64}$')][string]$ExpectedMaskXySha,
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
@@ -202,7 +202,7 @@ if ($Action -ne 'inspect') {
     }
     if ($RockQualificationSources) {
         if (-not $QualificationSources) { throw 'Rock qualification requires authenticated terrain/Forge sources.' }
-        $rockRequestName = @{source='pcg365_rock_qualification_v1.json';lod0='pcg365_rock_lod0_qualification_v1.json';support='pcg365_support_rock_qualification_v1.json'}[$RockSet]
+        $rockRequestName = @{source='pcg365_rock_qualification_v1.json';lod0='pcg365_rock_lod0_qualification_v1.json';support='pcg365_support_rock_qualification_v1.json';'scan-base'='pcg365_scan_base_diagnostic_v1.json'}[$RockSet]
         $requestPath = Join-Path $RepoRoot "worldgen/sa_calobra/$rockRequestName"
         $request = Get-Content -LiteralPath $requestPath -Raw | ConvertFrom-Json
         if ($request.scope -cne 'ISOLATED_ROCK_QUALIFICATION_ONLY' -or $request.assets.Count -ne 2 -or $request.placement) { throw 'Unexpected rock qualification request.' }
@@ -216,7 +216,7 @@ if ($Action -ne 'inspect') {
             if ($asset.id -cnotin @('rock_07','rock_09','support_rock_a','support_rock_b') -or $asset.source_relative -cne "rock-source/$($asset.id).fbx") { throw 'Unexpected rock source identity.' }
             Stage-QualifiedFile $asset.source $asset.source_relative $asset
         }
-        foreach ($scriptRelative in @('scripts/assets/pcg_rock_contact_policy.py','scripts/ue/sa_calobra_pcg_rock_qualification.py','scripts/ue/sa_calobra_pcg_rock_capture.py')) {
+        foreach ($scriptRelative in @('scripts/assets/pcg_rock_contact_policy.py','scripts/assets/pcg_rock_patch_diagnostic.py','scripts/ue/sa_calobra_pcg_rock_qualification.py','scripts/ue/sa_calobra_pcg_rock_capture.py')) {
             $source = Join-Path $RepoRoot $scriptRelative
             $committedScript = ((Read-RepoGit @('show', "${ExpectedHead}:$scriptRelative")) -join "`n") + "`n"
             if ((Hash-Lf ([IO.File]::ReadAllText($source))) -cne (Hash-Lf $committedScript)) { throw "Uncommitted rock helper: $scriptRelative" }

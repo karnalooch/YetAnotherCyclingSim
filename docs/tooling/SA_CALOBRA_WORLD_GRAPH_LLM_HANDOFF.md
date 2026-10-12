@@ -10,6 +10,15 @@ exclusive host/proof gates still apply. The complete plan is in
 [CPU evidence](SA_CALOBRA_WORLD_GRAPH.md) are part of the handoff, not optional
 chat context. Do not depend on the previous LLM conversation.
 
+**Owner correction, 2026-10-12:** both authored rounded forms were explicitly
+rejected as tent-like (`OWNER_REJECTED_FOR_APPEARANCE`). They are support-test
+fixtures only, never production rock candidates. Their sampled contact results
+remain historical technical evidence and do not override the visual rejection.
+Continue with natural, asymmetric licensed source silhouettes; preserve Material
+Forge, source provenance and the frozen Landscape. Diagnose the full-footprint
+support objective before changing geometry or contact policy. Do not silently
+relax numeric gates or regenerate another nested-ring dome.
+
 Latest rock packet: code `8be369c2f4415a4a7f8fb25fdbea2dd238e8fd3d`,
 token `roundedrocks01`, six processes exit 0. Two original rounded forms with
 shared Forge MI pass sampled contact at gentle diagnostic point 3, with 3.13/3.39

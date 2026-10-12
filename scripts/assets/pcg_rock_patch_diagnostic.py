@@ -1,0 +1,247 @@
+"""Source-declared cap fitting diagnostics; never production qualification.
+
+diagnose(rows, declaration, refinement): rows use native local_xy_cm,
+bottom_z_cm/top_z_cm/ground_z_cm. Declaration binds source_sha256 and
+basecut_source_sha256 (original corrected source), topology_verified, cap_z_cm=0,
+cap_tolerance_cm=.01, cap_xy_polygon, com_xy_cm (source volume COM projection),
+expected_full_ray_count, expected_cap_ray_count, height_cm (native AABB height).
+Each row supplies ground_slope_deg. Refinement supplies measured
+root_delta_cm and embedding_delta_cm. Source/topology claims are NOT authenticated
+by this pure calculator. Expected ray counts come from source geometry, not
+successful terrain hits. Missing ground anywhere in the full footprint rejects.
+The COM hull is the sampled cap extent, not a load-contact force polygon or
+proof of static stability; penetration samples are not physical contact forces.
+"""
+
+import math
+import re
+
+
+def number(value):
+    if type(value) not in (int, float) or not math.isfinite(value):
+        raise ValueError("NONFINITE_OR_MISSING_MEASUREMENT")
+    return float(value)
+
+
+def xy(value):
+    if not isinstance(value, (list, tuple)) or len(value) != 2:
+        raise ValueError("INVALID_XY")
+    return tuple(number(v) for v in value)
+
+
+def cross(a, b, c):
+    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+
+
+def hull(points):
+    points = sorted(set(points))
+    halves = []
+    for ordered in (points, list(reversed(points))):
+        half = []
+        for point in ordered:
+            while len(half) >= 2 and cross(half[-2], half[-1], point) <= 0:
+                half.pop()
+            half.append(point)
+        halves.append(half[:-1])
+    return halves[0] + halves[1]
+
+
+def inside(point, polygon):
+    """Boundary-inclusive ray crossing for a verified simple cap polygon."""
+    result = False
+    for a, b in zip(polygon, polygon[1:] + polygon[:1]):
+        if (
+            cross(a, b, point) == 0
+            and min(a[0], b[0]) <= point[0] <= max(a[0], b[0])
+            and min(a[1], b[1]) <= point[1] <= max(a[1], b[1])
+        ):
+            return True
+        if (a[1] > point[1]) != (b[1] > point[1]):
+            intercept = a[0] + (point[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1])
+            if point[0] < intercept:
+                result = not result
+    return result
+
+
+def diagnose(rows, declaration, refinement=None):
+    result = {
+        "status": "REJECTED_DIAGNOSTIC",
+        "placement": False,
+        "full_qualification": False,
+        "regional_production_qualified": False,
+        "continuous_support_verified": False,
+        "proof_authenticity": "NOT_VERIFIED",
+        "reasons": [],
+        "coverage": {},
+        "limits_basis": "TRIAL_DIAGNOSTIC_ONLY_NOT_CONTACT_ADMISSION",
+    }
+    try:
+        d = declaration
+        source = d["source_sha256"]
+        if any(
+            not isinstance(value, str) or not re.fullmatch("[0-9a-f]{64}", value)
+            for value in (source, d["basecut_source_sha256"])
+        ):
+            raise ValueError("SOURCE_BINDING_MISMATCH")
+        if d["topology_verified"] is not True:
+            raise ValueError("TOPOLOGY_NOT_VERIFIED")
+        if number(d["cap_z_cm"]) != 0 or number(d["cap_tolerance_cm"]) != 0.01:
+            raise ValueError("UNSUPPORTED_CAP_DECLARATION")
+        polygon = [xy(p) for p in d["cap_xy_polygon"]]
+        if (
+            len(polygon) < 3
+            or len(set(polygon)) != len(polygon)
+            or len(hull(polygon)) < 3
+        ):
+            raise ValueError("DEGENERATE_CAP_POLYGON")
+        # Reject crossing edges even when the source claims verified topology.
+        for i, a in enumerate(polygon):
+            b = polygon[(i + 1) % len(polygon)]
+            for j in range(i + 1, len(polygon)):
+                if j == i + 1 or (i == 0 and j == len(polygon) - 1):
+                    continue
+                c, e = polygon[j], polygon[(j + 1) % len(polygon)]
+                if (
+                    cross(a, b, c) * cross(a, b, e) <= 0
+                    and cross(c, e, a) * cross(c, e, b) <= 0
+                    and all(
+                        max(min(a[k], b[k]), min(c[k], e[k]))
+                        <= min(max(a[k], b[k]), max(c[k], e[k]))
+                        for k in (0, 1)
+                    )
+                ):
+                    raise ValueError("SELF_INTERSECTING_CAP_POLYGON")
+        center = xy(d["com_xy_cm"])
+        full_expected, cap_expected = (
+            d["expected_full_ray_count"],
+            d["expected_cap_ray_count"],
+        )
+        if (
+            type(full_expected) is not int
+            or type(cap_expected) is not int
+            or not 3 <= cap_expected <= full_expected
+        ):
+            raise ValueError("INVALID_EXPECTED_COVERAGE")
+        full, cap, seen = [], [], set()
+        invalid_ground, missing_cap_bottom, max_slope = 0, 0, 0.0
+        for row in rows:
+            point = xy(row["local_xy_cm"])
+            if point in seen:
+                raise ValueError("DUPLICATE_SOURCE_RAY")
+            seen.add(point)
+            try:
+                bottom, top = number(row["bottom_z_cm"]), number(row["top_z_cm"])
+            except (KeyError, ValueError):
+                if inside(point, polygon):
+                    missing_cap_bottom += 1
+                continue
+            if top < bottom:
+                raise ValueError("INVERTED_MESH_INTERVAL")
+            try:
+                ground = number(row["ground_z_cm"])
+            except (ValueError, KeyError):
+                invalid_ground += 1
+                continue
+            slope = number(row["ground_slope_deg"])
+            if not 0 <= slope <= 90:
+                raise ValueError("INVALID_LOCAL_SLOPE")
+            max_slope = max(max_slope, slope)
+            entry = (point, bottom, top, ground)
+            full.append(entry)
+            if inside(point, polygon) and abs(bottom) <= 0.01:
+                cap.append(entry)
+        result["coverage"] = {
+            "full_expected": full_expected,
+            "full_valid": len(full),
+            "invalid_ground": invalid_ground,
+            "cap_expected": cap_expected,
+            "cap_valid": len(cap),
+            "missing_cap_bottom": missing_cap_bottom,
+        }
+        if missing_cap_bottom:
+            raise ValueError("MISSING_DECLARED_CAP_BOTTOM")
+        if invalid_ground or len(full) != full_expected:
+            raise ValueError("INCOMPLETE_FULL_FOOTPRINT_GROUND")
+        if len(cap) != cap_expected:
+            raise ValueError("INCOMPLETE_DECLARED_CAP_SUPPORT")
+        support_hull = hull([r[0] for r in cap])
+        if len(support_hull) < 3:
+            raise ValueError("INSUFFICIENT_NONCOLLINEAR_SUPPORT")
+        if not inside(center, support_hull):
+            raise ValueError("COM_OUTSIDE_SUPPORT_HULL")
+        root = min(g - b for _, b, _, g in cap)
+        nonpenetrating = max(g - b for _, b, _, g in full)
+        embedding = max(0.0, nonpenetrating - root)
+        height = number(d["height_cm"])
+        if height <= 0:
+            raise ValueError("ZERO_SAMPLED_HEIGHT")
+        fitted = [
+            {
+                "local_xy_cm": list(p),
+                "bottom_gap_cm": number(root - (g - b)),
+                "exposed_top_cm": max(0.0, number((t - b) + (root - (g - b)))),
+                "cap_support": inside(p, polygon) and abs(b) <= 0.01,
+            }
+            for p, b, t, g in full
+        ]
+        exposed = sum(r["exposed_top_cm"] > 0 for r in fitted)
+        max_exposure = max(r["exposed_top_cm"] for r in fitted)
+        root_delta, embedding_delta = (
+            (0.0, 0.0)
+            if refinement is None
+            else (
+                number(refinement["root_delta_cm"]),
+                number(refinement["embedding_delta_cm"]),
+            )
+        )
+        if min(root_delta, embedding_delta) < 0:
+            raise ValueError("INVALID_REFINEMENT_DELTA")
+        for failed, reason in [
+            (max_slope > 10, "EXCESSIVE_LOCAL_SLOPE"),
+            (embedding > 0.2 * height, "EXCESSIVE_FULL_GEOMETRY_EMBEDDING"),
+            (max_exposure < 0.8 * height, "INSUFFICIENT_FULL_GEOMETRY_EXPOSURE"),
+            (exposed < 0.8 * len(full), "INSUFFICIENT_EXPOSED_RAYS"),
+            (
+                root_delta > 0.1 or embedding_delta > 0.1,
+                "SAMPLE_REFINEMENT_NOT_CONVERGED",
+            ),
+        ]:
+            if failed:
+                result["reasons"].append(reason)
+        result.update(
+            fit={
+                "root_zero_sampled_air_cm": number(root),
+                "required_embedding_cm": number(embedding),
+                "exposure_max_cm": max_exposure,
+                "exposed_count": exposed,
+            },
+            max_local_slope_deg=max_slope,
+            root_z_cm=number(root),
+            full_nonpenetrating_root_cm=number(nonpenetrating),
+            full_embedding_cm=number(embedding),
+            sampled_height_cm=number(height),
+            exposed_ray_fraction=exposed / len(full),
+            exposed_height_fraction=max_exposure / height,
+            support_hull_xy_cm=[list(p) for p in support_hull],
+            com_inside_support_hull=True,
+            remaining_positive_overhang_gap_cm=max(
+                0.0,
+                max(r["bottom_gap_cm"] for r in fitted if not r["cap_support"])
+                if any(not r["cap_support"] for r in fitted)
+                else 0.0,
+            ),
+            samples=fitted,
+        )
+        if not result["reasons"]:
+            result["status"] = (
+                "DIAGNOSTIC_AWAITING_REFINEMENT"
+                if refinement is None
+                else "DIAGNOSTIC_SUPPORT_PATCH_ONLY"
+            )
+    except (KeyError, TypeError, ValueError, OverflowError) as error:
+        result["reasons"].append(
+            str(error)
+            if isinstance(error, ValueError)
+            else "MISSING_OR_MALFORMED_INPUT"
+        )
+    return result

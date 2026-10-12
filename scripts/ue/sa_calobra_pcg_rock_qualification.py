@@ -136,6 +136,19 @@ def import_mesh(root, row, instance):
             and abs(actual_dimensions[2] - expected[2]) <= 0.01,
             "Native dimensions differ from source unit witness",
         )
+    if "support_patch" in row:
+        expected_bounds = row["expected_native_bounds_cm"]
+        require(
+            all(
+                abs(actual - expected) <= 0.01
+                for actual, expected in zip(
+                    [origin[i] - extent[i] for i in range(3)]
+                    + [origin[i] + extent[i] for i in range(3)],
+                    expected_bounds["min"] + expected_bounds["max"],
+                )
+            ),
+            "Declared patch/native source coordinate witness differs",
+        )
     triangles = mesh.get_num_triangles(0)
     require(triangles > 0, "Rock has no render LOD0 triangles")
     if "expected_lod0_triangles" in row:
@@ -312,6 +325,45 @@ def measure_grid(component, actor, bounds, size, world, ground, ignored, center)
         "rows": rows,
         "rejected_rows": rejected_rows,
     }
+
+
+def source_patch_diagnostic(grid, mesh_receipt, refinement=None):
+    """Separate source-cap experiment; never reinterpret the V1/V2 decision."""
+    from scripts.assets.pcg_rock_patch_diagnostic import diagnose, inside
+
+    source = mesh_receipt["source"]
+    declaration = dict(source["support_patch"])
+    require(
+        declaration["source_sha256"] == source["sha256"]
+        and declaration["basecut_source_sha256"] == source["original_source_sha256"],
+        "Patch/source identity differs",
+    )
+    bounds = mesh_receipt["bounds_cm"]
+    size = grid["grid_size"]
+    origin, extent = bounds["origin"], bounds["extent"]
+    declaration.update(
+        height_cm=2 * extent[2],
+        expected_full_ray_count=grid["sample_count"],
+        expected_cap_ray_count=sum(
+            inside(
+                [
+                    origin[0] + extent[0] * (2 * ix / (size - 1) - 1),
+                    origin[1] + extent[1] * (2 * iy / (size - 1) - 1),
+                ],
+                declaration["cap_xy_polygon"],
+            )
+            for iy in range(size)
+            for ix in range(size)
+        ),
+    )
+    result = diagnose(grid["rows"], declaration, refinement)
+    result.pop("samples", None)
+    result["declaration"] = declaration
+    result["native_unpaired_mesh_hits"] = grid["unpaired_mesh_hits"]
+    if grid["unpaired_mesh_hits"]:
+        result["status"] = "REJECTED_DIAGNOSTIC"
+        result["reasons"].append("UNPAIRED_NATIVE_MESH_RAYS")
+    return result
 
 
 def run(root, output, head, binding):
@@ -500,6 +552,33 @@ def run(root, output, head, binding):
                 )
                 require(control is None, "Ground exclusion negative control failed")
                 case["ground_exclusion_control"] = "PASS"
+                if "support_patch" in mesh_receipt["source"]:
+                    coarse_patch, fine_patch = [
+                        source_patch_diagnostic(g, mesh_receipt) for g in grids
+                    ]
+                    if "fit" in coarse_patch and "fit" in fine_patch:
+                        refinement = {
+                            "root_delta_cm": abs(
+                                coarse_patch["fit"]["root_zero_sampled_air_cm"]
+                                - fine_patch["fit"]["root_zero_sampled_air_cm"]
+                            ),
+                            "embedding_delta_cm": abs(
+                                coarse_patch["fit"]["required_embedding_cm"]
+                                - fine_patch["fit"]["required_embedding_cm"]
+                            ),
+                        }
+                        fine_patch = source_patch_diagnostic(
+                            grids[1], mesh_receipt, refinement
+                        )
+                        fine_patch["refinement"] = refinement
+                    case["source_patch_diagnostic"] = {
+                        "coarse": coarse_patch,
+                        "fine": fine_patch,
+                        "coarse_grid": 33,
+                        "fine_grid": 65,
+                        "full_qualification": False,
+                        "placement": False,
+                    }
                 for grid in grids:
                     grid["raw_samples"] = write_raw(
                         output,

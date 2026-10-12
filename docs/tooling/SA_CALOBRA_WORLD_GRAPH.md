@@ -991,3 +991,32 @@ passed; its separate Blender Forge reference workflow refused LOCAL_BUSY while
 our owned Editor ran (run 38194375332). Preserve that failure; run the current-head
 reference workflow only with the now-idle host. Current delivered-head CI is not
 claimed by this source evidence until its actual result is verified.
+
+## Owner rejects authored rock appearance; natural-source continuation
+
+On 2026-10-12 the owner described both rounded revision-2 forms as tent-like
+and explicitly rejected their appearance. Record `OWNER_REJECTED_FOR_APPEARANCE`:
+both are mechanical support fixtures only. The earlier sampled-contact results,
+raw native renders and failed attempts remain evidence; none grants production
+rock admission or permission to scatter the rejected forms. Material Forge
+cannot replace natural geometry. No Landscape change is needed for this decision.
+
+The resumed #365/M3 packet starts from `e15a47df8727bd6384106eeb0148b59160c0c82c`.
+Dependency #364 is completed; PR #474 remains Draft. Its aggregate CI and Forge
+reference workflows passed at that head (runs 38196733574 and 38196733224).
+Three delegated read-only audits agree that corrected source LOD0 is closed and
+that the full projected-footprint zero-air objective over-constrains rounded
+natural scans. At gentle point 3, Rock07 lower hits span about 12.96 cm while
+ground spans 1.03 cm; Rock09 lower hits span 2.34 cm while ground spans 0.49 cm.
+The existing V1/V2 rejection history and thresholds remain unchanged.
+
+The bounded next experiment preserves licensed asymmetric scan geometry above
+a declared source-relative cut, prepares a separate capped underside and records
+exact source/derived identities and upper-surface preservation. A source-defined
+base patch is measured separately from the complete clearance footprint. It is
+a diagnostic alternative, not a silently relaxed production contact policy.
+Full-footprint unknowns/exclusions remain mandatory; natural overhangs outside
+the patch do not establish whole-object floating. Any loss of silhouette,
+visible artificial plinth, ambiguous topology or unsupported placement rejects
+the variant. No terrain mutation, source overwrite, regional scatter, new asset
+provider, native-build PASS or visual acceptance is authorized by this experiment.

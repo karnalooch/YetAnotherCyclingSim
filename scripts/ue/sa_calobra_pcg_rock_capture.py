@@ -91,8 +91,16 @@ class RockCapture:
                     for c in measured
                     if c["policy_decision"]["status"] == "PASS_SAMPLED_CONTACT_ONLY"
                 ]
+                patch_trials = [
+                    c
+                    for c in measured
+                    if c.get("source_patch_diagnostic", {}).get("fine", {}).get("status")
+                    == "DIAGNOSTIC_SUPPORT_PATCH_ONLY"
+                ]
                 chosen = (
-                    passed[0]
+                    patch_trials[0]
+                    if patch_trials
+                    else passed[0]
                     if passed
                     else min(
                         measured, key=lambda c: c["measurement"]["max_local_slope_deg"]
@@ -101,7 +109,9 @@ class RockCapture:
                 self.cases.append(
                     (
                         chosen,
-                        "SAMPLED_CONTACT_PASS_NOT_FULL_QUALIFICATION"
+                        "SOURCE_CAP_DIAGNOSTIC_NOT_QUALIFIED"
+                        if patch_trials
+                        else "SAMPLED_CONTACT_PASS_NOT_FULL_QUALIFICATION"
                         if passed
                         else "DIAGNOSTIC_REJECTED",
                     )
@@ -141,6 +151,10 @@ class RockCapture:
             "Render mesh bounds differ",
         )
         root_z = case["measurement"]["fit"]["root_zero_sampled_air_cm"]
+        if label == "SOURCE_CAP_DIAGNOSTIC_NOT_QUALIFIED":
+            root_z = case["source_patch_diagnostic"]["fine"]["fit"][
+                "root_zero_sampled_air_cm"
+            ]
         position = [*case["world_xy_cm"], root_z]
         require(
             all(type(v) in (int, float) and math.isfinite(v) for v in position),
@@ -196,6 +210,7 @@ class RockCapture:
             "location_cm": position,
             "policy_decision": case["policy_decision"],
             "measurement": case["measurement"],
+            "source_patch_diagnostic": case.get("source_patch_diagnostic"),
             "camera_target_cm": vector(center),
             "framing_radius_cm": max(vector(bounds.box_extent)),
         }
