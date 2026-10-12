@@ -3,7 +3,12 @@
 import copy
 import unittest
 
-from pcg_rock_patch_diagnostic import diagnose, inside_patch
+from pcg_rock_patch_diagnostic import (
+    diagnose,
+    inside_patch,
+    inside_validated_patch,
+    patch_loops,
+)
 
 
 def fixture():
@@ -43,6 +48,60 @@ def fixture():
 
 
 class PatchTests(unittest.TestCase):
+    def test_disjoint_outer_union_fits_both_feet_and_preserves_coverage(self):
+        _, d = fixture()
+        loops = [
+            [[-3, -1], [-1, -1], [-1, 1], [-3, 1]],
+            [[1, -1], [3, -1], [3, 1], [1, 1]],
+        ]
+        d.update(
+            cap_xy_polygon=loops[0],
+            cap_xy_loops=loops,
+            cap_loop_mode="DISJOINT_OUTER_UNION_V1",
+            expected_full_ray_count=8,
+            expected_cap_ray_count=8,
+        )
+        rows = [
+            dict(
+                local_xy_cm=p,
+                bottom_z_cm=0,
+                top_z_cm=10,
+                ground_z_cm=0 if p[0] < 0 else 0.1,
+                ground_slope_deg=0,
+            )
+            for loop in loops
+            for p in loop
+        ]
+        result = self.final(rows, d)
+        self.assertEqual(result["status"], "DIAGNOSTIC_SUPPORT_PATCH_ONLY")
+        self.assertEqual(result["coverage"]["cap_valid"], 8)
+        self.assertAlmostEqual(result["full_embedding_cm"], 0.1)
+        self.assertFalse(inside_patch([0, 0], d))
+        self.assertTrue(inside_patch([2, 0], d))
+        self.assertTrue(
+            inside_validated_patch([2, 0], patch_loops(d), d["cap_loop_mode"])
+        )
+        self.assertFalse(result["placement"])
+        rows[-1]["ground_z_cm"] = None
+        self.assertIn(
+            "INCOMPLETE_FULL_FOOTPRINT_GROUND", self.final(rows, d)["reasons"]
+        )
+
+    def test_union_touching_nested_and_unknown_modes_reject(self):
+        rows, d = fixture()
+        d["cap_loop_mode"] = "DISJOINT_OUTER_UNION_V1"
+        for second in (
+            [[0, 0], [1, 0], [1, 0.5], [0, 0.5]],
+            [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]],
+        ):
+            d["cap_xy_loops"] = [d["cap_xy_polygon"], second]
+            self.assertEqual(self.final(rows, d)["status"], "REJECTED_DIAGNOSTIC")
+            with self.assertRaises(ValueError):
+                inside_patch([0, 0], d)
+        d.pop("cap_xy_loops")
+        d["cap_loop_mode"] = "GUESS"
+        self.assertIn("UNKNOWN_CAP_LOOP_MODE", self.final(rows, d)["reasons"])
+
     def test_ring_patch_excludes_hole_but_com_hull_is_not_force_proof(self):
         rows, d = fixture()
         d["cap_xy_polygon"] = [[-3, -3], [3, -3], [3, 3], [-3, 3]]
@@ -63,6 +122,12 @@ class PatchTests(unittest.TestCase):
         self.assertTrue(inside_patch([3, 0], d))
         self.assertFalse(inside_patch([0, 0], d))
         self.assertFalse(inside_patch([0.5, 0], d))
+        loops = patch_loops(d)
+        self.assertIsInstance(loops, tuple)
+        for point in ([3, 0], [0, 0], [0.5, 0], [2, 2], [4, 4]):
+            self.assertEqual(
+                inside_validated_patch(point, loops), inside_patch(point, d)
+            )
         result = self.final(rows, d)
         self.assertEqual(result["coverage"]["cap_valid"], 8)
         self.assertTrue(result["com_inside_support_hull"])

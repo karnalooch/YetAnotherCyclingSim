@@ -7,6 +7,8 @@ cap_tolerance_cm=.01, cap_xy_polygon, com_xy_cm (source volume COM projection),
 expected_full_ray_count, expected_cap_ray_count, height_cm (native AABB height).
 Optional cap_xy_loops contains the legacy outer polygon first, then disjoint,
 strictly interior nonnested holes. Outer boundary belongs; hole boundaries do not.
+Explicit cap_loop_mode=DISJOINT_OUTER_UNION_V1 instead declares separate,
+nonnested outer regions, all with inclusive boundaries; default is OUTER_WITH_HOLES_V1.
 Optional planting_depth_fraction is frozen at 0 (default) or .05 before measurement;
 planting lowers the cap-fit root and consumes the same full-geometry burial budget.
 Each row supplies ground_slope_deg. Refinement supplies measured
@@ -88,11 +90,16 @@ def patch_loops(declaration):
     loops = [[xy(p) for p in loop] for loop in supplied]
     if loops[0] != outer:
         raise ValueError("CAP_OUTER_LOOP_MISMATCH")
-    return validated_loops(tuple(tuple(loop) for loop in loops))
+    return validated_loops(
+        tuple(tuple(loop) for loop in loops),
+        declaration.get("cap_loop_mode", "OUTER_WITH_HOLES_V1"),
+    )
 
 
 @lru_cache(maxsize=16)
-def validated_loops(immutable_loops):
+def validated_loops(immutable_loops, mode="OUTER_WITH_HOLES_V1"):
+    if mode not in ("OUTER_WITH_HOLES_V1", "DISJOINT_OUTER_UNION_V1"):
+        raise ValueError("UNKNOWN_CAP_LOOP_MODE")
     loops = [list(loop) for loop in immutable_loops]
     outer = loops[0]
     for loop in loops:
@@ -120,6 +127,14 @@ def validated_loops(immutable_loops):
                 for c, e in zip(other, other[1:] + other[:1])
             ):
                 raise ValueError("CAP_LOOPS_INTERSECT_OR_TOUCH")
+    if mode == "DISJOINT_OUTER_UNION_V1":
+        for i, loop in enumerate(loops):
+            if any(
+                inside(loop[0], other) or inside(other[0], loop)
+                for other in loops[i + 1 :]
+            ):
+                raise ValueError("NESTED_UNION_LOOPS_UNSUPPORTED")
+        return immutable_loops
     for i, hole in enumerate(loops[1:], 1):
         if not inside(hole[0], outer):
             raise ValueError("CAP_HOLE_OUTSIDE_OUTER")
@@ -131,15 +146,29 @@ def validated_loops(immutable_loops):
 
 
 def inside_patch(point, declaration):
-    """Validated outer plus disjoint holes; hole boundaries conservatively excluded.
+    """Validated declared patch mode; hole boundaries conservatively excluded.
 
     Raises on ambiguous declarations, including touching, intersecting or nested
     loops. This geometric selector authenticates neither source nor ground.
     """
-    point = xy(point)
     loops = patch_loops(declaration)
-    return inside(point, loops[0]) and not any(
-        inside(point, hole) for hole in loops[1:]
+    return inside_validated_patch(
+        point, loops, declaration.get("cap_loop_mode", "OUTER_WITH_HOLES_V1")
+    )
+
+
+def inside_validated_patch(point, immutable_loops, mode="OUTER_WITH_HOLES_V1"):
+    """Select against immutable loops returned by patch_loops, without revalidation.
+
+    Caller must obtain these loops from patch_loops for the same declaration.
+    """
+    point = xy(point)
+    if mode == "DISJOINT_OUTER_UNION_V1":
+        return any(inside(point, loop) for loop in immutable_loops)
+    if mode != "OUTER_WITH_HOLES_V1":
+        raise ValueError("UNKNOWN_CAP_LOOP_MODE")
+    return inside(point, immutable_loops[0]) and not any(
+        inside(point, hole) for hole in immutable_loops[1:]
     )
 
 
@@ -168,11 +197,10 @@ def diagnose(rows, declaration, refinement=None):
         if number(d["cap_z_cm"]) != 0 or number(d["cap_tolerance_cm"]) != 0.01:
             raise ValueError("UNSUPPORTED_CAP_DECLARATION")
         loops = patch_loops(d)
+        loop_mode = d.get("cap_loop_mode", "OUTER_WITH_HOLES_V1")
 
         def selected(point):
-            return inside(point, loops[0]) and not any(
-                inside(point, hole) for hole in loops[1:]
-            )
+            return inside_validated_patch(point, loops, loop_mode)
 
         center = xy(d["com_xy_cm"])
         full_expected, cap_expected = (
@@ -288,6 +316,7 @@ def diagnose(rows, declaration, refinement=None):
             unplanted_root_z_cm=number(unplanted_root),
             planting_depth_cm=planting_depth,
             planting_depth_fraction=planting_fraction,
+            cap_loop_mode=loop_mode,
             full_nonpenetrating_root_cm=number(nonpenetrating),
             full_embedding_cm=number(embedding),
             sampled_height_cm=number(height),

@@ -97,9 +97,12 @@ For the current Sa Calobra #365 continuation, use the
 They are planning documents under the existing library/Bible authority:
 asset and ground-contact qualification precede native generation; stable
 identity/local invalidation and explicit saved/fresh-process proof follow.
-The existing CPU adapter does not prove these capabilities. PCGEx is absent
-from the recorded session and no further implementation is authorized by the
-current planning-only request.
+The CPU adapter alone does not prove these capabilities. The owner resumed #365
+implementation and authorized autonomous rock selection/preparation and Material
+Forge iteration on 2026-10-12. Isolated native point regeneration/save/readback
+and retained-PCGEx load now have bounded evidence; canonical plugin installation,
+exact-head native build and regional production graph admission remain separate.
+Rock diagnostics never authorize terrain mutation or downstream world stages.
 
 This is not a second Stage 3G asset pipeline.
 

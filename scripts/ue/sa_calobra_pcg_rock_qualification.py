@@ -329,10 +329,16 @@ def measure_grid(component, actor, bounds, size, world, ground, ignored, center)
 
 def source_patch_diagnostic(grid, mesh_receipt, refinement=None):
     """Separate source-cap experiment; never reinterpret the V1/V2 decision."""
-    from scripts.assets.pcg_rock_patch_diagnostic import diagnose, inside_patch
+    from scripts.assets.pcg_rock_patch_diagnostic import (
+        diagnose,
+        inside_validated_patch,
+        patch_loops,
+    )
 
     source = mesh_receipt["source"]
     declaration = dict(source["support_patch"])
+    loops = patch_loops(declaration)
+    loop_mode = declaration.get("cap_loop_mode", "OUTER_WITH_HOLES_V1")
     require(
         declaration["source_sha256"] == source["sha256"]
         and declaration["basecut_source_sha256"] == source["original_source_sha256"],
@@ -345,12 +351,13 @@ def source_patch_diagnostic(grid, mesh_receipt, refinement=None):
         height_cm=2 * extent[2],
         expected_full_ray_count=grid["sample_count"],
         expected_cap_ray_count=sum(
-            inside_patch(
+            inside_validated_patch(
                 [
                     origin[0] + extent[0] * (2 * ix / (size - 1) - 1),
                     origin[1] + extent[1] * (2 * iy / (size - 1) - 1),
                 ],
-                declaration,
+                loops,
+                loop_mode,
             )
             for iy in range(size)
             for ix in range(size)

@@ -1123,3 +1123,62 @@ different asymmetric faceted silhouette. Closed topology, units, underside,
 regional geology, source-to-collision parity and terrain contact remain UNKNOWN.
 Any next acquisition must first update the existing source/provenance manifest
 and use the existing bounded downloader; these previews admit no production use.
+
+## Larger scanned rocks: autonomous production packet
+
+On 2026-10-12 the owner explicitly requested both larger scans, improved seating,
+Material Forge detail and real UE renders, with subagents and documentation,
+without asking the owner to participate in intermediate rock production.
+The accepted Landscape, Base_DTM and road remain unchanged. This delegates bounded
+source/art iteration, not final whole-M3 human acceptance, protected proof or merge.
+The verified starting head is `078a56e4b9bdd4103b6a445eb9b23771c73472e6`;
+#365 is open, #364 completed, PR #474 Draft, shared host initially IDLE.
+
+The existing downloader resolved exactly two geometry-only 2K FBX files (6.2 MiB,
+32 MiB cap), verified MD5 and stored originals under
+`D:/yacs/data/assets/pcg365-large-rocks01`. The acquisition and source-identity
+manifests pin Namaqualand02 (3,095,484 bytes, SHA256
+`ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a`)
+and Namaqualand06 (3,421,948 bytes, SHA256
+`697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7`).
+Both official provider pages identify CC0. Their South African provenance does
+not establish Sa Calobra geology; Forge supplies a separately labelled appearance.
+
+Pinned Blender 4.5.9 inspection found one named LOD0 object and one connected
+component per FBX, not several objects to combine. Namaqualand02 has 97,964
+triangles, dimensions 2.532142 x 1.234263 x 0.882638 m and 396 open boundary edges.
+Its original signed-volume number is not a closed-volume/COM proof. Namaqualand06
+has 109,114 triangles, dimensions 0.674983 x 1.211876 x 0.651631 m and closed,
+consistently wound source topology. Explicit names are pinned in the selection
+manifest. Neither file is scaled or merged with another LOD.
+
+Source02's original boundary reaches Z=0.04504789785 m, above the first frozen
+10%-height cut at 0.028790560 m; that attempt correctly rejected. A separately
+recorded 12% source repair places the cut at 0.04644331709 m, above the diagnosed
+open boundary. This source-only correction precedes terrain measurement and does
+not relax any contact limit. The single-loop recipe still rejected it. A later
+derived-only component selection removes disconnected scan fragments, preserving
+the selected upper triangles and reporting excluded triangles; the largest
+component still has two separate planar outer contours. The actual Blender 4.5.9
+`triangle_fill` implementation uses HOLES/POLYS scanfill flags. Its bounded cap
+validates simple non-touching loops, nesting, planar area, triangle interiors,
+non-overlap, closed connected manifold topology and consistent outward winding.
+It does not fill a bounding hull or conceal a hole. All earlier rejections remain.
+Namaqualand06 keeps the original 10% source preparation; originals stay unchanged.
+
+The source-cap diagnostic includes a declared additional 5%-of-derived-height
+planting depth, counted within the same total 20% embedding budget. Full geometry
+exposure, known-ground coverage and convergence are recomputed after planting.
+Disjoint support contours are explicit source regions, not holes or terrain-chosen
+subsets. V1/V2 still measure their own full-footprint zero-air objective unchanged;
+the cap alternative remains diagnostic, without physical stability or admission.
+
+The optional isolated `ROCK_APPEARANCE_V1` response uses the existing validated
+Forge maps at the unchanged 4 m physical scale. Fixed gain 0.82, fracture contrast
+0.20, pore contrast 0.12, mineral variation 0.10 and normal strength 1.35 expose
+existing detail; ORM is unchanged. No texture is secretly shrunk, and no material
+height, WPO or tessellation moves geometry. The native readback checks graph
+connections, effective parameters, tangent-space flag and explicit WorldSpace=False.
+Both baseline and detail will be compared with the same geometry, seating, cameras
+and lights, using four real GPU views around each rock. Native execution remains
+NOT RUN until the following exact-head results are recorded.
