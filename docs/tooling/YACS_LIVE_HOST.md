@@ -293,3 +293,35 @@ If the current live diagnostic project contains no matching StaticMeshes,
 do not pretend the twenty separately imported studio rocks are here.
 Next must be a separately sourced derived consumer/gallery and contact
 qualification without modifying the accepted Landscape/road/Base_DTM.
+
+## Owner live palette preview: P0–P4 green (2026-10-13)
+
+The user requested changing the five visible diagnostic point labels to green
+in the already running VP9 Pixel Streaming 2 Editor. The original red
+presenter spawned five transient TextRenderActors with actor labels
+PCG365_REVIEW_RED_P0–P4. The owner wants **only a visual palette change**.
+
+An exact-head reviewed `marker_preview_palette` recipe calls native
+`TextRenderComponent.set_text_render_color` on exactly those five existing
+actors. It accepts enum `green` (32,232,88,255) or `red` (255,32,32,255),
+takes a preflight record of each original FColor, verifies native color
+readback, and restores originals on any setter/readback error.
+The `REJECTED / REVIEW` text, old actor labels/positions, Landscape, road,
+mesh/rock positions and source map bytes remain unchanged.
+
+The `worldgen/live_host/current_command.json` one-shot command requests
+`marker_preview_palette` with `palette=green`, `intent=preview`, target
+issue #476. Its stage/send is subject to exact-source protected CI and
+the existing authenticated current-session command queue, without a new UE
+process. A workflow success alone does not prove colors changed: require the
+same live Editor PID, a `COMPLETED_VISUAL_ONLY` per-command receipt with
+`native_readback.native_rgba=[32,232,88,255]` and five native readbacks,
+and visible owner confirmation in Pixel Streaming.
+
+**IMPORTANT:** Green is strictly UI paint, NOT qualified rock placement.
+The five points remain historical *vegetation-selector* diagnostic XYs,
+not the road/shoulder corridor. All 100 actual contact cases remain
+REJECTED; `qualified_assets=[]`, `placement=false`, `map_saved=false`.
+Source-qualified road-adjacent rock/limestone placement belongs to #365/#368,
+not to this cosmetic inspection command. To revert, issue another reviewed
+typed recipe request with `palette=red`; do not restart/snapshot the map.

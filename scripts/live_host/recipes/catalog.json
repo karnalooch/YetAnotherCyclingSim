@@ -90,6 +90,23 @@
       ],
       "asset_scope": [],
       "parameters": {}
+    },
+    {
+      "id": "marker_preview_palette",
+      "capability": "actor_presentation",
+      "intents": [
+        "preview"
+      ],
+      "asset_scope": [],
+      "parameters": {
+        "palette": {
+          "type": "enum",
+          "enum": [
+            "green",
+            "red"
+          ]
+        }
+      }
     }
   ]
 }
