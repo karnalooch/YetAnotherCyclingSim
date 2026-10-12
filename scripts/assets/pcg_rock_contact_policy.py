@@ -38,6 +38,17 @@ def trial_policy():
     }
 
 
+def refined_trial_policy():
+    """Same physical/numeric limits; an explicit 65-to-129 refinement stage."""
+    policy = trial_policy()
+    policy.update(
+        policy_id="PCG_ROCK_SAMPLED_CONTACT_REFINEMENT_V2",
+        coarse_grid=65,
+        fine_grid=129,
+    )
+    return policy
+
+
 def _number(value):
     if type(value) not in (int, float) or not math.isfinite(value):
         raise ValueError("NONFINITE_OR_NONNUMERIC_MEASUREMENT")
@@ -48,7 +59,12 @@ def evaluate(measurement, policy):
     """Return only a sampled decision; malformed/unknown inputs reject closed."""
     reasons = []
     metrics = {}
-    expected = trial_policy()
+    expected = (
+        refined_trial_policy()
+        if isinstance(policy, dict)
+        and policy.get("policy_id") == "PCG_ROCK_SAMPLED_CONTACT_REFINEMENT_V2"
+        else trial_policy()
+    )
     # Match types too: Python otherwise considers True equal to 1.
     if (
         not isinstance(policy, dict)

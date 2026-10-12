@@ -870,3 +870,26 @@ native import must match selected triangle counts and source dimensions within
 this is not terrain accuracy or orientation qualification). GPU capture is prepared
 for two views per mesh after fresh readback. Corrected native results are pending
 at this source commit; original rejection evidence remains intact.
+
+Corrected LOD0 packet `03b49def16e42a8a0f16a05742a7e72808024fba/lod0rocks01`
+completed all five processes exit 0, with native 14,844/12,416 triangles and source
+dimension agreement within 0.000000537 cm. All ten contact cases still reject:
+even the gentle point 3 requires excessive embedding and loses exposed geometry.
+These corrected results, unlike the combined-LOD packet, apply to selected LOD0.
+
+Authored packet `03b49def16e42a8a0f16a05742a7e72808024fba/supportrocks01`
+is **not admitted**: rock-qualify wrote measurements but exited -1073741819 during
+process teardown. There is no clean completion marker for that action. Preserve
+the receipt/logs as failed-attempt evidence, not PASS. At gentle point 3, B's
+sampled policy passed; A's physical gates passed but embedding convergence was
+0.102260601 cm, above the frozen 0.1 cm limit. Neither result overrides process
+failure or supplies full asset admission.
+
+The next baseline explicitly adds a 65-to-129 refinement stage only when the
+33-to-65 decision fails solely numerical convergence. V1 and its failure remain
+recorded. `PCG_ROCK_SAMPLED_CONTACT_REFINEMENT_V2` retains every physical limit and
+the same 0.1 cm convergence threshold; it increases sampling density, not tolerance.
+Incomplete refined coverage rejects. Before clean shutdown, the installed
+`AutomationBlueprintFunctionLibrary.cpp:702` loading/asset-compilation barrier
+is invoked, followed by 20 Slate ticks. This sequencing is a candidate teardown
+fix; only actual exit 0 and an owning launcher marker can prove clean completion.

@@ -64,5 +64,6 @@
   "source_inspection": {
     "path": "D:\\yacs\\work\\pcg365\\7df636c2e96ccaf73864b2559b291db45f4e3cd7\\support-rock-author01\\authored-support-rocks.json",
     "sha256": "ce968d2b080f95fd4cc98dcf9e14aeca9923a3278ae1b5ec1413a4af1c88d607"
-  }
+  },
+  "refinement_policy_id": "PCG_ROCK_SAMPLED_CONTACT_REFINEMENT_V2"
 }

@@ -315,7 +315,11 @@ def measure_grid(component, actor, bounds, size, world, ground, ignored, center)
 
 
 def run(root, output, head, binding):
-    from scripts.assets.pcg_rock_contact_policy import evaluate, trial_policy
+    from scripts.assets.pcg_rock_contact_policy import (
+        evaluate,
+        refined_trial_policy,
+        trial_policy,
+    )
 
     root, output = Path(root).resolve(), Path(output).resolve()
     require(
@@ -540,6 +544,75 @@ def run(root, output, head, binding):
                     }
                     case["measurement"] = measurement
                     case["policy_decision"] = evaluate(measurement, policy)
+                    reasons = case["policy_decision"]["reasons"]
+                    if (
+                        reasons
+                        and set(reasons)
+                        <= {"ROOT_NOT_CONVERGED", "EMBEDDING_NOT_CONVERGED"}
+                        and request.get("refinement_policy_id")
+                        == refined_trial_policy()["policy_id"]
+                    ):
+                        # Preserve the failed coarse decision. Refinement changes
+                        # sampling resolution, never physical or convergence limits.
+                        case["initial_measurement"] = measurement
+                        case["initial_policy_decision"] = case["policy_decision"]
+                        refined = measure_grid(
+                            component,
+                            actor,
+                            mesh_receipt["bounds_cm"],
+                            129,
+                            world,
+                            ground,
+                            ignored,
+                            center,
+                        )
+                        refined["raw_samples"] = write_raw(
+                            output,
+                            "%s-point%d-grid129.json" % (mesh_receipt["id"], index),
+                            {
+                                "support_rows": refined.pop("rows"),
+                                "rejected_rows": refined.pop("rejected_rows"),
+                            },
+                        )
+                        case["grids"].append(refined)
+                        if (
+                            refined["fit"]
+                            and refined["valid_ground_count"] == refined["sample_count"]
+                            and not refined["unpaired_mesh_hits"]
+                        ):
+                            measurement = {
+                                **measurement,
+                                "max_local_slope_deg": refined["max_local_slope_deg"],
+                                "sample_count": refined["sample_count"],
+                                "valid_ground_count": refined["valid_ground_count"],
+                                "fit": refined["fit"],
+                                "refinement": {
+                                    "coarse_grid": 65,
+                                    "fine_grid": 129,
+                                    "coarse_root_cm": fine["fit"][
+                                        "root_zero_sampled_air_cm"
+                                    ],
+                                    "fine_root_cm": refined["fit"][
+                                        "root_zero_sampled_air_cm"
+                                    ],
+                                    "coarse_embedding_cm": fine["fit"][
+                                        "required_embedding_cm"
+                                    ],
+                                    "fine_embedding_cm": refined["fit"][
+                                        "required_embedding_cm"
+                                    ],
+                                },
+                            }
+                            case["measurement"] = measurement
+                            case["policy_decision"] = evaluate(
+                                measurement, refined_trial_policy()
+                            )
+                        else:
+                            case["policy_decision"] = {
+                                "status": "REJECTED",
+                                "reasons": ["INCOMPLETE_REFINED_GROUND_OR_SUPPORT"],
+                                "full_qualification": False,
+                            }
                     case["status"] = "MEASURED"
                 else:
                     case.update(

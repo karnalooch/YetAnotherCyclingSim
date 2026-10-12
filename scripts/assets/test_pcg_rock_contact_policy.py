@@ -3,7 +3,7 @@
 import copy
 import unittest
 
-from pcg_rock_contact_policy import evaluate, trial_policy
+from pcg_rock_contact_policy import evaluate, refined_trial_policy, trial_policy
 
 
 def measurement():
@@ -36,6 +36,17 @@ def measurement():
 
 
 class ContactPolicyTests(unittest.TestCase):
+    def test_explicit_finer_grid_keeps_all_limits(self):
+        policy = refined_trial_policy()
+        m = measurement()
+        m["refinement"].update(coarse_grid=65, fine_grid=129)
+        self.assertEqual(evaluate(m, policy)["status"], "PASS_SAMPLED_CONTACT_ONLY")
+        m["fit"]["required_embedding_cm"] = 20.01
+        m["refinement"]["fine_embedding_cm"] = 20.01
+        self.assertIn("EXCESSIVE_EMBEDDING", evaluate(m, policy)["reasons"])
+        m = measurement()
+        self.assertIn("INVALID_REFINEMENT_GRIDS", evaluate(m, policy)["reasons"])
+
     def test_exact_boundaries_pass_sampled_only(self):
         result = evaluate(measurement(), trial_policy())
         self.assertEqual(result["status"], "PASS_SAMPLED_CONTACT_ONLY")
