@@ -1,4 +1,4 @@
-"""Reversible diagnostic 10%-height planar cuts of the two pinned scan LOD0s."""
+"""Revision 2 diagnostic source-repair cuts of two pinned scan LOD0s."""
 
 import argparse
 from collections import Counter
@@ -19,7 +19,12 @@ PINS = {
     "namaqualand_boulder_02": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
     "namaqualand_boulder_06": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
 }
-CUT_FRACTION = 0.10
+RECIPE_REVISION = 2
+CUT_FRACTIONS = {"namaqualand_boulder_02": 0.12, "namaqualand_boulder_06": 0.10}
+CUT_REASONS = {
+    "namaqualand_boulder_02": "Source-only open-underside repair: retained revision1 10% cut lay below original boundary maxZ 0.04504789785m; fixed 12% cut expected at 0.0464433m clears that boundary. Chosen before native measurement, not contact-policy tuning.",
+    "namaqualand_boulder_06": "Retain original fixed 10% source-relative planar underside recipe for closed source.",
+}
 API_SOURCE = "https://raw.githubusercontent.com/blender/blender/v4.5.9/source/blender/bmesh/intern/bmesh_opdefines.cc"
 
 
@@ -224,19 +229,22 @@ def prepare(asset, output):
             "LOD0 triangle identity differs",
         )
         requested_cut = (
-            original_bounds["min"][2] + CUT_FRACTION * original_bounds["dimensions"][2]
+            original_bounds["min"][2]
+            + CUT_FRACTIONS[asset["id"]] * original_bounds["dimensions"][2]
         )
         cut = Vector(
             (0, 0, requested_cut)
         ).z  # Match BMesh's native float32 plane coordinates.
         original_boundary = [e for e in bm.edges if e.is_boundary]
+        original_boundary_max_z = None
         if allow_open:
             require(original_boundary, "02 expected original open underside")
             # Single degree-2 cycle; boundary_loop also rejects XY self intersection.
             source_boundary = boundary_loop(original_boundary)
+            original_boundary_max_z = max(v.co.z for v in source_boundary)
             require(
                 all(v.co.z < cut for v in source_boundary),
-                "Frozen 10% cut does not lie above every original boundary vertex",
+                "Frozen per-asset cut does not lie above every original boundary vertex",
             )
         preserved = Counter(
             key(f) for f in bm.faces if all(v.co.z > cut for v in f.verts)
@@ -318,10 +326,15 @@ def prepare(asset, output):
         bm.normal_update()
         derived_topology, derived_bounds = topology(bm), dimensions(bm)
         com = center_of_mass(bm)
-        mesh = bpy.data.meshes.new(asset["id"] + "_PlanarBase10_Geometry")
+        mesh = bpy.data.meshes.new(
+            asset["id"]
+            + f"_PlanarBase{round(CUT_FRACTIONS[asset['id']] * 100)}_Geometry"
+        )
         bm.to_mesh(mesh)
         mesh.update()
-        obj = bpy.data.objects.new(asset["id"] + "_PlanarBase10", mesh)
+        obj = bpy.data.objects.new(
+            asset["id"] + f"_PlanarBase{round(CUT_FRACTIONS[asset['id']] * 100)}", mesh
+        )
         bpy.context.collection.objects.link(obj)
         for slot in original.data.materials:
             mesh.materials.append(slot)
@@ -332,7 +345,9 @@ def prepare(asset, output):
         bpy.ops.object.select_all(action="DESELECT")
         obj.select_set(True)
         bpy.context.view_layer.objects.active = obj
-        destination = output / (asset["id"] + "_planar_base10.fbx")
+        destination = output / (
+            asset["id"] + f"_planar_base{round(CUT_FRACTIONS[asset['id']] * 100)}.fbx"
+        )
         require(
             bpy.ops.export_scene.fbx(
                 filepath=str(destination),
@@ -369,7 +384,9 @@ def prepare(asset, output):
             "sha256": sha(destination),
             "bytes": destination.stat().st_size,
             "source_provenance": "POLY_HAVEN_LOD0_DERIVED_PLANAR_UNDERSIDE_CUT",
-            "cut_height_fraction": CUT_FRACTION,
+            "recipe_revision": RECIPE_REVISION,
+            "source_repair_reason": CUT_REASONS[asset["id"]],
+            "cut_height_fraction": CUT_FRACTIONS[asset["id"]],
             "cut_world_z_m": cut,
             "requested_cut_world_z_m": requested_cut,
             "translation_m": [0, 0, -cut],
@@ -384,6 +401,10 @@ def prepare(asset, output):
             else None,
             "source_volume_status": original_topology["volume_status"],
             "original_boundary_vertices_all_below_cut": True if allow_open else None,
+            "original_boundary_max_z_m": original_boundary_max_z,
+            "cut_above_original_boundary_margin_m": cut - original_boundary_max_z
+            if original_boundary_max_z is not None
+            else None,
             "retained_original_surface_area_fraction": retained_surface_area
             / original_area,
             "preserved_upper_triangle_count": sum(preserved.values()),
@@ -457,7 +478,10 @@ def prepare_assets(assets, output):
                 after == before and source.stat().st_size == size,
                 "Protected source changed during rejected preparation",
             )
-            partial = output / (asset["id"] + "_planar_base10.fbx")
+            partial = output / (
+                asset["id"]
+                + f"_planar_base{round(CUT_FRACTIONS[asset['id']] * 100)}.fbx"
+            )
             record = {
                 "id": asset["id"],
                 "status": "REJECTED_PREPARATION",
@@ -468,7 +492,9 @@ def prepare_assets(assets, output):
                 "source_bytes": size,
                 "original_acquired_source_sha256": asset["original_source_sha256"],
                 "license": asset["license"],
-                "cut_height_fraction": CUT_FRACTION,
+                "recipe_revision": RECIPE_REVISION,
+                "source_repair_reason": CUT_REASONS[asset["id"]],
+                "cut_height_fraction": CUT_FRACTIONS[asset["id"]],
                 "source_provenance": "POLY_HAVEN_LOD0_DERIVATION_REJECTED_ORIGINAL_UNCHANGED",
                 "partial_export": {
                     "file": partial.name,
@@ -579,7 +605,10 @@ def main():
         if any(record["status"] == "REJECTED_PREPARATION" for record in records)
         else "SCAN_PLANAR_BASE_DERIVATIVES_PREPARED_ONLY",
         "blender_version": bpy.app.version_string,
-        "cut_fraction_frozen_before_execution": CUT_FRACTION,
+        "recipe_revision": RECIPE_REVISION,
+        "cut_fractions_frozen_before_execution": CUT_FRACTIONS,
+        "source_repair_reasons": CUT_REASONS,
+        "prior_revision1_attempt": "Retained unchanged: 02 rejected original boundary above 10% plane; 06 prepared. No native contact thresholds changed.",
         "request_sha256": hashlib.sha256(raw).hexdigest(),
         "inspection_sha256": args.inspection_sha256,
         "selection_sha256": args.selection_sha256,
