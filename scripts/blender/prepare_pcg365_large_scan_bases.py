@@ -1,4 +1,4 @@
-"""Revision 5 diagnostic source-repair cuts of two pinned scan LOD0s."""
+"""Revision 6 diagnostic source-repair cuts of two pinned scan LOD0s."""
 
 import argparse
 from collections import Counter
@@ -19,7 +19,7 @@ PINS = {
     "namaqualand_boulder_02": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
     "namaqualand_boulder_06": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
 }
-RECIPE_REVISION = 5
+RECIPE_REVISION = 6
 CUT_FRACTIONS = {"namaqualand_boulder_02": 0.12, "namaqualand_boulder_06": 0.10}
 CUT_REASONS = {
     "namaqualand_boulder_02": "Source-only open-underside repair: retained revision1 10% cut lay below original boundary maxZ 0.04504789785m; fixed 12% cut expected at 0.0464433m clears that boundary. Chosen before native measurement, not contact-policy tuning.",
@@ -581,6 +581,36 @@ def prepare(asset, output):
             for v in bm.verts
             for i in range(3)
         )
+        yaw_quarter_turn = asset["yaw_quarter_turn"]
+        before_yaw = {v: tuple(v.co) for v in bm.verts}
+        if yaw_quarter_turn:
+            for vertex in bm.verts:
+                x, y = vertex.co.x, vertex.co.y
+                vertex.co.x, vertex.co.y = -y, x
+            x, y = cap_centroid.x, cap_centroid.y
+            cap_centroid.x, cap_centroid.y = -y, x
+            for one_loop in cap_loop_records:
+                one_loop["xy_m"] = [[-y, x] for x, y in one_loop["xy_m"]]
+            cap_validation = validate_holed_cap(cap_faces, cap_loop_records)
+            cap_validation["method"] = (
+                "Blender4.5.9 bmesh.ops.triangle_fill HOLES|POLYS; explicit baked ART half-scale then source Z quarter-turn"
+            )
+        yaw_quantization_delta = (
+            max(
+                max(
+                    abs(v.co.x + before_yaw[v][1]),
+                    abs(v.co.y - before_yaw[v][0]),
+                    abs(v.co.z - before_yaw[v][2]),
+                )
+                for v in bm.verts
+            )
+            if yaw_quarter_turn
+            else 0.0
+        )
+        require(
+            yaw_quantization_delta == 0.0,
+            "Quarter-turn must be exact sign/swap without quantization",
+        )
         bm.normal_update()
         derived_topology, derived_bounds = topology(bm), dimensions(bm)
         com = center_of_mass(bm)
@@ -719,16 +749,21 @@ def prepare(asset, output):
             if art_scale != 1.0
             else "Unchanged source size",
             "source_to_derived_matrix": [
-                [art_scale, 0, 0, 0],
-                [0, art_scale, 0, 0],
+                [0, -art_scale, 0, 0] if yaw_quarter_turn else [art_scale, 0, 0, 0],
+                [art_scale, 0, 0, 0] if yaw_quarter_turn else [0, art_scale, 0, 0],
                 [0, 0, art_scale, -cut * art_scale],
                 [0, 0, 0, 1],
             ],
-            "source_to_derived_matrix_basis": "Imported source WORLD metres -> base translation -> baked uniform ART scale; source object matrix_world is already applied",
+            "source_to_derived_matrix_basis": "Imported source WORLD metres -> base translation -> baked uniform ART scale -> optional exact Rz90; source object matrix_world is already applied",
             "art_scale_quantization_max_delta_m": art_quantization_delta,
             "pre_art_scale_derived_topology": pre_art_topology,
             "art_scale_volume_expected_factor": art_scale**3,
-            "yaw_modified": False,
+            "yaw_modified": yaw_quarter_turn,
+            "source_yaw_art_degrees": 90 if yaw_quarter_turn else 0,
+            "source_yaw_art_reason": "Explicit source asset pose chosen before new native measurement; no tilt, terrain or contact-limit change"
+            if yaw_quarter_turn
+            else "Unchanged source yaw",
+            "yaw_quantization_max_delta_m": yaw_quantization_delta,
             "placement": False,
             "qualified_assets": [],
             "classification": "DERIVED_ASSET_DIAGNOSTIC_ONLY",
@@ -805,6 +840,7 @@ def main():
     parser.add_argument("--split-source02-largest-component", action="store_true")
     parser.add_argument("--allow-source02-holed-cap", action="store_true")
     parser.add_argument("--source02-uniform-art-scale-half", action="store_true")
+    parser.add_argument("--source02-yaw-quarter-turn", action="store_true")
     parser.add_argument("--request", type=Path, required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
     parser.add_argument("--expected-request-sha256", required=True)
@@ -875,7 +911,16 @@ def main():
             and asset["id"] == "namaqualand_boulder_02"
             else 1.0
         )
-        asset["art_suffix"] = "Half" if asset["uniform_art_scale"] == 0.5 else ""
+        require(
+            not args.source02_yaw_quarter_turn or args.source02_uniform_art_scale_half,
+            "Quarter-turn requires explicit half-size02 variant",
+        )
+        asset["yaw_quarter_turn"] = (
+            args.source02_yaw_quarter_turn and asset["id"] == "namaqualand_boulder_02"
+        )
+        asset["art_suffix"] = ("Half" if asset["uniform_art_scale"] == 0.5 else "") + (
+            "QuarterTurn" if asset["yaw_quarter_turn"] else ""
+        )
         asset["allow_holed_cap"] = args.allow_source02_holed_cap
         asset["split_source02"] = (
             args.split_source02_largest_component
@@ -916,6 +961,8 @@ def main():
         "split_source02_largest_component": args.split_source02_largest_component,
         "allow_source02_holed_cap": args.allow_source02_holed_cap,
         "source02_uniform_art_scale_half": args.source02_uniform_art_scale_half,
+        "source02_yaw_quarter_turn": args.source02_yaw_quarter_turn,
+        "prior_revision5_attempt": "Retained half-size initial pose; revision6 optionally bakes exact Rz90 source pose before new native measurements, keeping source units, masks, radius and contact limits unchanged.",
         "art_scale_chosen_before_native_measurement": True,
         "prior_revision4_attempt": "Retained unchanged: full-size derivatives. Revision5 permits explicit baked decorative half-size02 variant, source units/native scale and contact policy unchanged.",
         "prior_revision3_attempt": "Retained unchanged: selected02 component rejected multiple boundary loops. Revision4 explicitly preserves holes using stock scanfill; no outer-only support claim.",

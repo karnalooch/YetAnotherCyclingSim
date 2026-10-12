@@ -382,15 +382,19 @@ def finish(receipt):
         # lifecycle sequencing, not a substitute for clean process completion.
         global QUIT_CALLBACK
         ticks = 0
+        rock_action = ACTION in {"rock-qualify", "rock-reload", "rock-render"}
+        quit_not_before = time.monotonic() + (5.0 if rock_action else 0.0)
 
         def quit_after_tick(delta):
+            global QUIT_CALLBACK
             nonlocal ticks
             ticks += 1
-            if ticks < (
-                20 if ACTION in {"rock-qualify", "rock-reload", "rock-render"} else 2
-            ):
+            if ticks < (20 if rock_action else 2) or time.monotonic() < quit_not_before:
                 return
             unreal.unregister_slate_post_tick_callback(QUIT_CALLBACK)
+            QUIT_CALLBACK = None
+            if rock_action:
+                unreal.AutomationLibrary.finish_loading_before_screenshot()
             unreal.SystemLibrary.quit_editor()
 
         QUIT_CALLBACK = unreal.register_slate_post_tick_callback(quit_after_tick)
