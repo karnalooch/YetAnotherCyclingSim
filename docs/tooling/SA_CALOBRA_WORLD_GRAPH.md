@@ -893,3 +893,14 @@ Incomplete refined coverage rejects. Before clean shutdown, the installed
 `AutomationBlueprintFunctionLibrary.cpp:702` loading/asset-compilation barrier
 is invoked, followed by 20 Slate ticks. This sequencing is a candidate teardown
 fix; only actual exit 0 and an owning launcher marker can prove clean completion.
+
+Refined packet `c03d71cac49fcd7ed8c061459929d074166e8663/supportrocks02`:
+rock-qualify completed exit 0 and both gentle-point decisions passed sampled
+contact. A: embedding 2.142962572 cm, exposed maximum-height fraction 0.970996327,
+65-to-129 root/embedding deltas 0.017953489/0.034541895 cm. B: embedding
+2.316429354 cm, exposed height fraction 0.966760123, 33-to-65 deltas
+0.038779537/0.074120052 cm. Steep points reject. However rock-reload exited
+-1073741819 after writing readback, so the packet remains incomplete and GPU
+capture did not run. The next candidate applies the same loading/compilation
+barrier and 20-tick shutdown sequencing to fresh readback and capture as well;
+it does not reinterpret nonzero process exit as success.

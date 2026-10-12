@@ -360,7 +360,7 @@ def start_boulder_capture(root, binding, receipt):
 
 
 def finish(receipt):
-    if ACTION == "rock-qualify":
+    if ACTION in {"rock-qualify", "rock-reload", "rock-render"}:
         # Installed AutomationBlueprintFunctionLibrary.cpp:702 flushes async
         # loading and finishes asset compilation. A receipt alone is insufficient
         # when the process later fails during teardown.
@@ -386,7 +386,9 @@ def finish(receipt):
         def quit_after_tick(delta):
             nonlocal ticks
             ticks += 1
-            if ticks < (20 if ACTION == "rock-qualify" else 2):
+            if ticks < (
+                20 if ACTION in {"rock-qualify", "rock-reload", "rock-render"} else 2
+            ):
                 return
             unreal.unregister_slate_post_tick_callback(QUIT_CALLBACK)
             unreal.SystemLibrary.quit_editor()
