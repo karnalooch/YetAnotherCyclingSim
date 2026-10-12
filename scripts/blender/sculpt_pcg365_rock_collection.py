@@ -259,8 +259,9 @@ def produce(asset, output):
                         (normal_matrix @ normal).normalized()
                         for normal in custom_normals
                     ]
-                    # mesh.cc v4.5.9 mesh_transform calls transform_custom_normal_attribute.
-                    # Independently observe resulting decoded corner normals below.
+                    # rna_mesh_api.cc v4.5.9 validates corner-count and sets custom normals.
+                    # Explicit inverse-transpose assignment; independently observe decoded values.
+                    obj.data.normals_split_custom_set(expected_normals)
                 obj.data.update()
                 normal_dot_error = None
                 if custom_normals is not None:
@@ -275,7 +276,7 @@ def produce(asset, output):
                     )
                     require(
                         normal_dot_error <= 1e-4,
-                        "Inverse-transpose custom normals readback differs; numeric decode guard only",
+                        f"Inverse-transpose custom normals readback differs: max_one_minus_dot={normal_dot_error:.17g}, guard=0.0001; numeric decode guard only",
                     )
                 require(
                     mesh_identity(obj.data) == identity,
@@ -375,14 +376,14 @@ def produce(asset, output):
                         "geometry_sha256": geometry_sha,
                         "normalized_shape_sha256": shape_sha,
                         "normalized_shape_hash_basis": "Indexed edge squared lengths divided by mean, rounded7decimals; invariant under translation, rotation, uniformscale; topology correspondence unchanged",
-                        "normal_handling": "Stock Mesh.transform custom-normal attribute transform independently witnessed against inverse-transpose; positive determinant; original sharp/smooth flags preserved"
+                        "normal_handling": "Explicit inverse-transpose custom corner normals assigned with normals_split_custom_set after Mesh.transform; independently read back with unchanged decode guard; positive determinant; original sharp/smooth flags preserved"
                         if custom_normals is not None
                         else "Stock Mesh.transform/update geometric normals; positive determinant; original sharp/smooth flags preserved",
                         "custom_normal_max_one_minus_dot": normal_dot_error,
                         "custom_normal_decode_dot_guard": 1e-4
                         if custom_normals is not None
                         else None,
-                        "normal_transform_primary_source": "https://raw.githubusercontent.com/blender/blender/v4.5.9/source/blender/blenkernel/intern/mesh.cc#mesh_transform",
+                        "normal_transform_primary_source": "https://raw.githubusercontent.com/blender/blender/v4.5.9/source/blender/makesrna/intern/rna_mesh_api.cc#rna_Mesh_normals_split_custom_set",
                         "source_self_intersection": "UNKNOWN_NOT_TESTED",
                         "new_self_intersection": "Invertible global affine map preserves source intersection relationships in exact arithmetic; float32 geometric intersections NOT independently tested",
                         "yaw_deg": 0,

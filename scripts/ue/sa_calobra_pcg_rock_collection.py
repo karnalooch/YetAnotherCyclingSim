@@ -298,6 +298,11 @@ def reload(root, output, head, binding):
     }
 
 
+def rotation_values(actor):
+    rotation = actor.get_actor_rotation()
+    return [float(getattr(rotation, axis)) for axis in ("pitch", "yaw", "roll")]
+
+
 _ACTIVE = []
 
 
@@ -412,6 +417,8 @@ class StudioCapture:
                     ),
                     "Studio effective component settings differ",
                 )
+                actual_rotation = rotation_values(actor)
+                require(actual_rotation == [0, 0, 0], "Studio rock orientation differs")
                 self.report["actors"].append(
                     {
                         "id": item["id"],
@@ -420,7 +427,7 @@ class StudioCapture:
                         "grid_col": col,
                         "location_cm": location,
                         "scale": [1, 1, 1],
-                        "rotation_deg": [0, 0, 0],
+                        "rotation_deg": actual_rotation,
                         "preview_floor_z_cm": 0.0,
                         "shadow_readback": shadow_readback(component),
                     }
@@ -434,12 +441,24 @@ class StudioCapture:
                 and floor_component.set_static_mesh(plane),
                 "Engine preview plane missing",
             )
+            plane_bounds = plane.get_bounds()
+            require(
+                vector(plane_bounds.origin) == [0, 0, 0]
+                and vector(plane_bounds.box_extent) == [50, 50, 0],
+                "Engine preview plane dimensions differ",
+            )
             floor.set_actor_scale3d(
                 unreal.Vector(self.width * 1.5 / 100, self.depth * 1.5 / 100, 1)
             )
             self.report["preview_floor"] = {
                 "mesh": plane.get_path_name(),
-                "z_cm": 0,
+                "z_cm": float(floor.get_actor_location().z),
+                "location_cm": vector(floor.get_actor_location()),
+                "rotation_deg": rotation_values(floor),
+                "native_bounds_cm": {
+                    "origin": vector(plane_bounds.origin),
+                    "extent": vector(plane_bounds.box_extent),
+                },
                 "scale": vector(floor.get_actor_scale3d()),
                 "shadow_readback": shadow_readback(floor_component),
             }
@@ -459,7 +478,7 @@ class StudioCapture:
                     {
                         "class": actor.get_class().get_name(),
                         "intensity": float(component.get_editor_property("intensity")),
-                        "rotation_deg": [-45, -35, 0],
+                        "rotation_deg": rotation_values(actor),
                         "shadow_readback": shadow_readback(component, light=True),
                     }
                 )
@@ -510,6 +529,22 @@ class StudioCapture:
             vector(self.camera.get_actor_location()) == view["eye"],
             "Studio camera differs",
         )
+        actual_rotation = rotation_values(self.camera)
+        require(
+            all(
+                abs((a - b + 180) % 360 - 180) <= 0.01
+                for a, b in zip(
+                    actual_rotation, [rotation.pitch, rotation.yaw, rotation.roll]
+                )
+            ),
+            "Studio camera orientation differs",
+        )
+        actual_fov = float(
+            self.camera.get_component_by_class(
+                unreal.CameraComponent
+            ).get_editor_property("field_of_view")
+        )
+        require(abs(actual_fov - 50) <= 0.0001, "Studio camera FOV differs")
         unreal.get_editor_subsystem(
             unreal.UnrealEditorSubsystem
         ).set_level_viewport_camera_info(eye, rotation)
@@ -519,8 +554,8 @@ class StudioCapture:
             "file": name + ".png",
             "view": view,
             "resolution_px": [2560, 1440],
-            "camera_rotation_deg": [rotation.pitch, rotation.yaw, rotation.roll],
-            "fov_deg": 50,
+            "camera_rotation_deg": actual_rotation,
+            "fov_deg": actual_fov,
         }
         self.task = unreal.AutomationLibrary.take_high_res_screenshot(
             res_x=2560,
