@@ -141,3 +141,13 @@ latest-road checkpoint parity, native compile or owner visual acceptance follows
 from these measurements. `qualified_assets: []`, `placement: false`,
 `full_qualification: false`, `PENDING_FINAL_M3`, `DEFERRED_AFTER_M3`,
 `performance_pass: false` remain. No M4–M10 implementation or historical cleanup.
+
+## First transfer CI observation
+
+Delivery `1219e8e5904560625f9da14f982c6b8338b92aaa` was pushed and verified on
+remote. [Python reference CI](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38263002029/job/114858203148)
+failed at Ruff 0.16.8 format check: `scripts/ci/test_workflow_lifecycle.py:70:24`,
+`unformatted: File would be reformatted`. The four-item tuple was expanded to
+the exact reported multiline form. AST equality confirms no behavior change.
+This formatting correction is a later delivery commit, not a new native producer.
+The corrected head needs its own remote CI result; no CI PASS is inferred.

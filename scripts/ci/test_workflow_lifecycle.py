@@ -67,7 +67,12 @@ class WorkflowLifecycleContractTests(unittest.TestCase):
         text = (WORKFLOWS / "runner-space-recovery.yml").read_text(encoding="utf-8")
         self.assertIn("archive_stale_probe_runs.py", text)
         self.assertIn("cancel-in-progress: false", text)
-        for unsafe in ("Remove-Item", "git clean", "--apply-plan", "--apply-reviewplan"):
+        for unsafe in (
+            "Remove-Item",
+            "git clean",
+            "--apply-plan",
+            "--apply-reviewplan",
+        ):
             self.assertNotIn(unsafe, text)
 
     def test_unknown_workflows_are_bounded_to_active_m3_transition(self) -> None:
