@@ -236,6 +236,8 @@ def main():
             "rock-qualify",
             "rock-reload",
             "rock-render",
+            "rock-pack",
+            "rock-pack-reload",
         }:
             unreal.EditorPythonScripting.set_keep_python_script_alive(True)
             if not unreal.EditorLoadingAndSavingUtils.new_blank_map(False):
@@ -270,6 +272,11 @@ def main():
                     from scripts.ue import sa_calobra_pcg_rock_qualification as rocks
 
                     operation = rocks.run if ACTION == "rock-qualify" else rocks.reload
+                    receipt.update(operation(root, OUTPUT, HEAD, binding))
+                elif ACTION in {"rock-pack", "rock-pack-reload"}:
+                    from scripts.ue import sa_calobra_pcg_rock_variant_pack as pack
+
+                    operation = pack.build if ACTION == "rock-pack" else pack.reload
                     receipt.update(operation(root, OUTPUT, HEAD, binding))
                 elif ACTION == "material-reload":
                     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -360,7 +367,13 @@ def start_boulder_capture(root, binding, receipt):
 
 
 def finish(receipt):
-    if ACTION in {"rock-qualify", "rock-reload", "rock-render"}:
+    if ACTION in {
+        "rock-qualify",
+        "rock-reload",
+        "rock-render",
+        "rock-pack",
+        "rock-pack-reload",
+    }:
         # Installed AutomationBlueprintFunctionLibrary.cpp:702 flushes async
         # loading and finishes asset compilation. A receipt alone is insufficient
         # when the process later fails during teardown.
@@ -377,12 +390,20 @@ def finish(receipt):
         "rock-qualify",
         "rock-reload",
         "rock-render",
+        "rock-pack",
+        "rock-pack-reload",
     }:
         # Let the startup-script stack unwind before editor teardown. This is
         # lifecycle sequencing, not a substitute for clean process completion.
         global QUIT_CALLBACK
         ticks = 0
-        rock_action = ACTION in {"rock-qualify", "rock-reload", "rock-render"}
+        rock_action = ACTION in {
+            "rock-qualify",
+            "rock-reload",
+            "rock-render",
+            "rock-pack",
+            "rock-pack-reload",
+        }
         quit_not_before = time.monotonic() + (5.0 if rock_action else 0.0)
 
         def quit_after_tick(delta):
