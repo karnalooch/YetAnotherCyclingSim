@@ -298,6 +298,29 @@ def reload(root, output, head, binding):
     }
 
 
+def position_readback(requested, actual, label):
+    """Bound Python/native vector serialization only; never a contact tolerance."""
+    native = vector(unreal.Vector(*requested))
+    actual = vector(actual)
+    limit = max(1e-6, max(abs(value) for value in requested) * 2**-22)
+    errors = [n - r for n, r in zip(native, requested)]
+    record = {
+        "requested_cm": list(requested),
+        "native_constructed_cm": native,
+        "actual_cm": actual,
+        "serialization_errors_cm": errors,
+        "serialization_guard_cm": limit,
+        "contact_tolerance": False,
+    }
+    require(
+        all(math.isfinite(value) for value in requested + native + actual)
+        and all(abs(error) <= limit for error in errors)
+        and actual == native,
+        label + " native position differs: " + repr(record),
+    )
+    return record
+
+
 def rotation_values(actor):
     rotation = actor.get_actor_rotation()
     return [float(getattr(rotation, axis)) for axis in ("pitch", "yaw", "roll")]
@@ -398,10 +421,12 @@ class StudioCapture:
                 actor.set_actor_scale3d(unreal.Vector(1, 1, 1))
                 for slot in range(item["slot_count"]):
                     component.set_material(slot, self.instance)
+                position = position_readback(
+                    location, actor.get_actor_location(), "Studio rock"
+                )
                 require(
-                    vector(actor.get_actor_location()) == location
-                    and vector(actor.get_actor_scale3d()) == [1, 1, 1],
-                    "Studio transform differs",
+                    vector(actor.get_actor_scale3d()) == [1, 1, 1],
+                    "Studio actor scale differs",
                 )
                 native_readback(
                     component.get_editor_property("static_mesh"),
@@ -425,7 +450,8 @@ class StudioCapture:
                         "package": item["package"],
                         "grid_row": row,
                         "grid_col": col,
-                        "location_cm": location,
+                        "location_cm": position["actual_cm"],
+                        "position_readback": position,
                         "scale": [1, 1, 1],
                         "rotation_deg": actual_rotation,
                         "preview_floor_z_cm": 0.0,
@@ -525,9 +551,8 @@ class StudioCapture:
         rotation = unreal.MathLibrary.find_look_at_rotation(eye, target)
         self.camera.set_actor_location(eye, False, False)
         self.camera.set_actor_rotation(rotation, False)
-        require(
-            vector(self.camera.get_actor_location()) == view["eye"],
-            "Studio camera differs",
+        camera_position = position_readback(
+            view["eye"], self.camera.get_actor_location(), "Studio camera"
         )
         actual_rotation = rotation_values(self.camera)
         require(
@@ -555,6 +580,7 @@ class StudioCapture:
             "view": view,
             "resolution_px": [2560, 1440],
             "camera_rotation_deg": actual_rotation,
+            "camera_position_readback": camera_position,
             "fov_deg": actual_fov,
         }
         self.task = unreal.AutomationLibrary.take_high_res_screenshot(
