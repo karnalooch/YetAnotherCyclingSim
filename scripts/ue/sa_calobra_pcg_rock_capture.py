@@ -103,8 +103,13 @@ class RockCapture:
                     c
                     for c in receipt["cases"]
                     if c["mesh_id"] == mesh["id"]
-                    and c.get("status") == "MEASURED"
-                    and c.get("measurement")
+                    and (
+                        (c.get("status") == "MEASURED" and c.get("measurement"))
+                        or c.get("source_patch_diagnostic", {})
+                        .get("fine", {})
+                        .get("status")
+                        == "DIAGNOSTIC_SUPPORT_PATCH_ONLY"
+                    )
                 ]
                 require(bool(measured), "No usable measured case for " + mesh["id"])
                 passed = [
@@ -177,11 +182,12 @@ class RockCapture:
             == mesh_record["bounds_cm"],
             "Render mesh bounds differ",
         )
-        root_z = case["measurement"]["fit"]["root_zero_sampled_air_cm"]
         if label == "SOURCE_CAP_DIAGNOSTIC_NOT_QUALIFIED":
             root_z = case["source_patch_diagnostic"]["fine"]["fit"][
                 "root_zero_sampled_air_cm"
             ]
+        else:
+            root_z = case["measurement"]["fit"]["root_zero_sampled_air_cm"]
         position = [*case["world_xy_cm"], root_z]
         require(
             all(type(v) in (int, float) and math.isfinite(v) for v in position),
@@ -236,7 +242,7 @@ class RockCapture:
             "world_xy_cm": case["world_xy_cm"],
             "location_cm": position,
             "policy_decision": case["policy_decision"],
-            "measurement": case["measurement"],
+            "measurement": case.get("measurement"),
             "source_patch_diagnostic": case.get("source_patch_diagnostic"),
             "camera_target_cm": vector(center),
             "framing_radius_cm": max(vector(bounds.box_extent)),
