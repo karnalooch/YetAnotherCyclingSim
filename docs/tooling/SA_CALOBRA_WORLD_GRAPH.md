@@ -621,3 +621,69 @@ loading barrier and requests a transient 120-second residency lease on the
 map-owned Landscape height textures, following the existing capture workflow.
 The content-only project cannot supply `YacsTextureAuditLibrary` resident-mip
 telemetry; preserve that limitation instead of claiming full residency proof.
+
+
+### Reviewed native Boulder result and collision ownership — 2026-10-12
+
+Final local diagnostic code SHA: `51f641cea3807bd7228b55c12c917454ab014731`; token `boulderfit03`.
+All four owned processes (inspect, material, material-reload, settle-render)
+returned exit 0, with unchanged authenticated staged/source files and seven
+saved material packages. Native receipt SHA256:
+`74dffacbe0bb0c27a25a98ec320c04c1e71c551499f5ee3933030d6945ecb4db`.
+Full receipt remains at `D:\yacs\work\pcg365\51f641cea3807bd7228b55c12c917454ab014731\boulderfit03\proof\settle-render\settle-render-receipt.json`.
+The four unedited 1920 x 1080 GPU PNGs and their hashes/camera records are
+retained in [the evidence manifest](../assets/pcg365-boulder-contact-20261012/evidence.json).
+Actual RHI: D3D12 SM5, NVIDIA RTX 2070 SUPER; this is not an AI-generated image,
+performance measurement or received Remote UE browser frame.
+
+Selected diagnostic XY: `(181600, 189600)` cm. There were 698 paired mesh
+intervals from 1089 grid locations; 391 paired misses. The nonpenetrating root
+was `52558.256157027` cm; fitted root
+`52495.789090928` cm; measured embedding
+`62.467066099` cm. Maximum sampled bottom gap is zero by
+the fitting objective. 426 intervals retain exposure, maximum
+`37.781634053` cm; 697 have bottom penetration. This is a visibly
+buried diagnostic asset, not an accepted regional embedding allowance.
+
+Both after images were inspected: the visible lower silhouette enters the
+preserved ground, with no exposed air slit in these two views. Pair 02 has a
+readable before/after support comparison at identical camera pose/FOV; pair 01
+still has visibly different first-before terrain detail and is **not** admitted
+as a like-for-like pair despite viewport priming and requested mip leases.
+Resident height-mip telemetry remains unavailable in the content-only project.
+No terrain correction was needed or applied, no map was saved, and no foliage
+or material covering was added to conceal contact. Continuous geometric support,
+render/collision parity, numeric production limits, geological/regional asset
+admission and owner whole-M3 acceptance remain unverified.
+
+| Before — nonpenetrating diagnostic | After — sampled fitted diagnostic |
+|---|---|
+| ![Before UE contact](../assets/pcg365-boulder-contact-20261012/before-02.png) | ![After UE contact](../assets/pcg365-boulder-contact-20261012/after-02.png) |
+
+Collision clarification requested by the owner: Landscape support is queried
+against its real `LandscapeHeightfieldCollisionComponent`, with native
+`QueryAndPhysics` / `BlockAll` readback from the previous five-case packet;
+non-Landscape actors are explicitly excluded. This is sufficient ground-query
+ownership for the present diagnostic, not road collision proof.
+The authenticated #364 manifest
+[road-asphalt-saved-manifest.json](../experiments/sa-calobra-road-materials-20261011/b9fd/road-asphalt-saved-manifest.json)
+SHA256 `974c86813d2ee95d4f3cc244fd3590f7f9711506973c10544f6ede954557344a`
+records `edge_markings.original_source_state.road_supports`: 187 components,
+including `YACS_PERSIST_ROAD` and 186 supports, all `NO_COLLISION`.
+This is retained snapshot evidence, not a fresh collision trace against that
+road. The current Boulder diagnostic does not enable or use road collision.
+A separately measured query-only road consumer may support later asphalt ray
+queries; physical ride/collision admission must preserve Road Physics Profile
+and route authority. Do not silently turn the presentation mesh into physics
+truth or count Landscape hits as successful asphalt hits.
+
+Validation: 26 PCG asset tests PASS using unittest discovery (includes five new
+solver tests); Ruff check/format and PowerShell parser PASS; docs links, i18n,
+structure and freshness PASS. An initial direct multi-module invocation failed
+on existing asset tests' local-module import convention and the sandbox's
+Windows temporary-directory permissions; standard discovery in the host test
+environment passed all 26 without weakening assertions. Source code was reviewed
+by the delegated CPU specialist; both comparison moves now require readback.
+PR #474 remains Draft, #365 OPEN, native build NOT RUN in this local diagnostic,
+regional placement false, owner visual `PENDING_FINAL_M3`, performance
+`DEFERRED_AFTER_M3` / `performance_pass: false`.

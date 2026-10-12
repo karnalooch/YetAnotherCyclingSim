@@ -188,10 +188,13 @@ Broader hosted-script parity, only when future tooling changes justify it:
 Dependencies/interpreter follow `.github/workflows/reusable-python.yml`.
 Local execution is not protected hosted CI; report interpreter and exact result.
 
-There is **no verified runnable #365 native author/save/reload/render command**
-at this baseline and no `/gumball proof sa-calobra-world-graph` target. The plan
-defines required behavior for future bounded implementation. Do not turn proposed
-filenames or logical graph stages into invented executable commands.
+A bounded local command now exists: `scripts/ue/Invoke-YacsPcgNativeProbe.ps1`
+with exact `ExpectedHead`, a fresh `RunToken`, and sequential `inspect`
+(`QualificationSources`), `material`, `material-reload`, `settle-render` actions.
+This is an isolated diagnostic, not a qualified regional graph or protected
+Proof Broker target. There is no `/gumball proof sa-calobra-world-graph` target.
+See the current native packet and image limitations in
+[the world graph SSOT](SA_CALOBRA_WORLD_GRAPH.md#reviewed-native-boulder-result-and-collision-ownership--2026-10-12).
 
 ## Required packet result
 
@@ -238,3 +241,21 @@ terrain/package identities, instance ownership, override/invalidation semantics,
 proof links and unresolved #459/source/contact limits. Distinguish local retention,
 remote code, remote binary backup, protected merge and playable world. Neither
 this documentation nor the existing CPU-only Draft completes #365 or M3.
+
+
+## Boulder fitting continuation — 2026-10-12
+
+Native diagnostic code SHA `51f641cea3807bd7228b55c12c917454ab014731`,
+`boulderfit03`: real GPU before/after retained in
+[the hash-bound image manifest](../assets/pcg365-boulder-contact-20261012/evidence.json).
+Only pair 02 is the reviewed comparable support pair; first-before view 01
+retains a terrain-detail readiness limitation. The sampled fit embeds 62.467 cm
+at existing diagnostic point index 3, without any saved or applied terrain edit.
+No production embedding threshold or regional asset admission is established.
+Local terrain repair is owner-authorized only if necessary, bounded and
+reversible under World Building Bible section 6; it was not needed here.
+Landscape has measurable collision. The pinned #364 source snapshot records
+`YACS_PERSIST_ROAD` plus 186 supports as `NO_COLLISION`; latest-road support
+compatibility remains NOT RUN. Do not infer asphalt hits from Landscape traces.
+Remote UE Pixel Streaming tooling exists but its current retained launcher
+points at the old #364 road checkpoint; no live #365 frame was received.
