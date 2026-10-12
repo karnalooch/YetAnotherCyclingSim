@@ -235,6 +235,7 @@ def main():
             "settle-render",
             "rock-qualify",
             "rock-reload",
+            "rock-render",
         }:
             unreal.EditorPythonScripting.set_keep_python_script_alive(True)
             if not unreal.EditorLoadingAndSavingUtils.new_blank_map(False):
@@ -258,7 +259,14 @@ def main():
                 if binding["code_sha"] != HEAD:
                     raise RuntimeError("Material binding source SHA differs")
                 receipt["binding_readback"] = binding_helper.verify_binding(binding)
-                if ACTION in {"rock-qualify", "rock-reload"}:
+                if ACTION == "rock-render":
+                    from scripts.ue import sa_calobra_pcg_rock_capture
+
+                    ACTIVE = sa_calobra_pcg_rock_capture.start(
+                        root, OUTPUT, HEAD, binding, finish
+                    )
+                    return
+                elif ACTION in {"rock-qualify", "rock-reload"}:
                     from scripts.ue import sa_calobra_pcg_rock_qualification as rocks
 
                     operation = rocks.run if ACTION == "rock-qualify" else rocks.reload
@@ -362,6 +370,7 @@ def finish(receipt):
         "mask-xy-reload",
         "rock-qualify",
         "rock-reload",
+        "rock-render",
     }:
         # Let the startup-script stack unwind before editor teardown. This is
         # lifecycle sequencing, not a substitute for clean process completion.

@@ -116,6 +116,26 @@ def import_mesh(root, row, instance):
     bounds = mesh.get_bounds()
     origin, extent = vector(bounds.origin), vector(bounds.box_extent)
     require(all(v > 0 for v in extent), "Degenerate imported rock bounds")
+    if "expected_source_dimensions_cm" in row:
+        expected = row["expected_source_dimensions_cm"]
+        require(
+            len(expected) == 3
+            and all(
+                type(v) in (int, float) and math.isfinite(v) and v > 0 for v in expected
+            ),
+            "Invalid source dimension witness",
+        )
+        actual_dimensions = [2 * v for v in extent]
+        # FBX/UE axis conversion can swap/reflection-map horizontal axes. This
+        # witnesses dimensions/units only; it does not infer support orientation.
+        require(
+            all(
+                abs(a - b) <= 0.01
+                for a, b in zip(sorted(actual_dimensions[:2]), sorted(expected[:2]))
+            )
+            and abs(actual_dimensions[2] - expected[2]) <= 0.01,
+            "Native dimensions differ from source unit witness",
+        )
     triangles = mesh.get_num_triangles(0)
     require(triangles > 0, "Rock has no render LOD0 triangles")
     if "expected_lod0_triangles" in row:

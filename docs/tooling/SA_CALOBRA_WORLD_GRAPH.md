@@ -847,3 +847,26 @@ geometry displacement by effective tessellation, while MaterialInstance.cpp:
 2526-2533 resolves the override/parent. The corrected readback checks attributes,
 WPO root, master tessellation and instance override, retaining unavailable root
 connection and separate GPU/deformer parity limitations.
+
+Corrected source preparation ran in pinned Blender 4.5.9 with committed producer
+code `7df636c2e96ccaf73864b2559b291db45f4e3cd7`, both processes exit 0.
+The original FBX declarations use unit scale factor 1 (centimetre FBX units),
+and source LOD0 has 14,844 / 12,416 triangles. Derived single-LOD0 files are
+514,860 / 442,236 bytes, SHA256
+`8f93bfba3e5abe10fcf51e76bd3ee3d60bb166d5fcfddb4eac6b6bf7b910b148`
+and `e4d60fca53f426e986700ca90676452bd8ce3c3a7be26dec8d782251a6a82297`.
+The complete selection/unit/topology receipt stays at
+`D:/yacs/work/pcg365/rock-source-inspection01/lod0-source-report.json`.
+
+Original authored forms A/B have 48/36 triangles, flat bases at local Z=0,
+zero boundary/nonmanifold/wire edges and no horizontal overhang by nested convex
+XY-ring construction. Source extents are approximately 50 x 46 x 42 cm and
+54 x 49 x 44.5 cm. This is intentionally a bounded support/shape trial, not final
+production art or geological scan. Producer recipe/vertices/faces/hashes are at
+`D:/yacs/work/pcg365/7df636c2e96ccaf73864b2559b291db45f4e3cd7/support-rock-author01/authored-support-rocks.json`.
+The new request manifests separately bind corrected scans and authored forms;
+native import must match selected triangle counts and source dimensions within
+0.01 cm serialization tolerance (horizontal axis permutation/reflection allowed;
+this is not terrain accuracy or orientation qualification). GPU capture is prepared
+for two views per mesh after fresh readback. Corrected native results are pending
+at this source commit; original rejection evidence remains intact.
