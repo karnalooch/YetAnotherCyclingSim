@@ -1,6 +1,7 @@
 """Fixture-only tests for exact-current-run quarantine; never touches the real runner."""
 
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -78,6 +79,7 @@ class RetentionTests(unittest.TestCase):
             "$blocked=$false; try {Get-RetentionInventory $fixture} catch {$blocked=$true}; if(-not $blocked){throw 'Common git owner accepted'}"
         )
 
+    @unittest.skipUnless(os.name == "nt", "Current-job retention is Windows-only")
     def test_current_run_only_retains_all_bytes(self):
         run = "123-2"
         work = self.root / "runner/_work"
