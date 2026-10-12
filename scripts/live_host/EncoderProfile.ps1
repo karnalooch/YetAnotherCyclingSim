@@ -13,8 +13,12 @@ function Get-YacsLiveEncoderArgs {
   [CmdletBinding()]
   param([Parameter(Mandatory)][string]$VideoCodec)
 
-  if ($VideoCodec -cnotin @('VP9','H264')) {
-    throw 'Only explicitly admitted VP9 and original H264 codecs are supported.'
+  # A value must match the *entire* codec token, not merely a prefix.
+  # Absolute \A/\z regex anchors reject trailing CR/LF and other invisible
+  # suffixes, including values that render as plain "VP9" in error consoles.
+  if ($VideoCodec -cnotmatch '\A(?:VP9|H264)\z' -or
+      $VideoCodec -cnotin @('VP9','H264')) {
+    throw 'Only exact VP9 and H264 tokens are accepted (no whitespace or controls).'
   }
   return @(
     "-PixelStreamingEncoderCodec=$VideoCodec"

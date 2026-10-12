@@ -238,3 +238,24 @@ baseline*, not a verified stable solution.
 ## Known boundaries
 
 A running UE Editor is not proof of a working LAN receiver; a previously written heartbeat is not proof of present process ownership. The Live Host command loop is an internal trusted desktop filesystem queue, not a public arbitrary-input WebSocket service. Intermittent GPU failures, browser reconnection, sign-in after power failure, user-initiated Exit, source asset promotion, and PCGEx tool capabilities all require separate native/owner acceptance. Restore the last source snapshot rather than modifying the frozen world to hide a rejected contact.
+
+
+### VP9 preflight: invalid codec test (2026-10-13)
+
+On the first owner-local `Test-YacsLiveCodec.ps1` attempt, a negative fixture
+reported `Unreviewed/unsafe codec accepted: VP9`; the independent UTC test
+still passed. This was an **offline test failure before -Apply**: no VP9
+upgrade, Task Scheduler alteration, Unreal startup, or GPU driver change.
+
+The regression includes a string beginning with `VP9` and embedded ASCII
+control characters, which the prior error output could display on separate
+lines. The new `EncoderProfile.ps1` uses **whole-token** case-sensitive
+`\\A(?:VP9|H264)\\z` validation in addition to the two-value membership
+check, rejecting a newline, whitespace, NUL, suffix, wrong casing and any
+unreviewed codec. The negative test now creates each control-byte string
+through explicit .NET concatenation and prints the entire invalid value
+JSON-escaped, so a leading `VP9` can never be confused with a clean value.
+
+A passing previous CI or UTC test **does not** qualify this new fix. Run the
+separate native Windows PowerShell codec test before any installer `-Apply`.
+The original immutable installed H264 release is intentionally unchanged.

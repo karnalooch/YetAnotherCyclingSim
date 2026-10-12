@@ -20,7 +20,10 @@ class CodecProfileSource(unittest.TestCase):
         self.assertIn("@('VP9','H264')", helper)
         self.assertIn('"-PixelStreamingEncoderCodec=$VideoCodec"', helper)
         self.assertIn("'-PixelStreamingWebRTCMaxFps=30'", helper)
-        self.assertIn("throw 'Only explicitly admitted VP9", helper)
+        self.assertIn("throw 'Only exact VP9 and H264 tokens", helper)
+        # \u005c\u005cA and \u005c\u005cz anchor the *entire* token, including rejecting
+        # trailing newline that looked like plain VP9 in PowerShell output.
+        self.assertIn(r"\A(?:VP9|H264)\z", helper)
         self.assertNotIn("AV1", helper.split("return @(")[-1])
 
     def test_editor_codec_is_command_line_not_browser_hint(self):
