@@ -139,6 +139,28 @@ class BoulderCapture:
         eye = unreal.Vector(
             *(c + self.radius * o for c, o in zip(self.center, offsets[self.index]))
         )
+        from scripts.ue.sa_calobra_pcg_terrain_contact import unpack
+
+        all_actors = self.actors.get_all_level_actors()
+        grounds = [a for a in all_actors if isinstance(a, unreal.LandscapeProxy)]
+        if len(grounds) != 1:
+            raise RuntimeError("Ambiguous capture ground")
+        hit = unreal.SystemLibrary.line_trace_single(
+            self.world,
+            unreal.Vector(eye.x, eye.y, 150000),
+            unreal.Vector(eye.x, eye.y, -150000),
+            unreal.TraceTypeQuery.ECC_VISIBILITY,
+            True,
+            [a for a in all_actors if a != grounds[0]],
+            unreal.DrawDebugTrace.NONE,
+            True,
+        )
+        ground = unpack(hit, grounds[0])
+        if ground is None:
+            raise RuntimeError("Camera ground measurement missed")
+        # A fixed 0.6 m near-ground diagnostic camera, identical before/after.
+        # This prevents subterranean captures without altering asset/terrain.
+        eye.z = ground["position_cm"][2] + 60.0
         rotation = unreal.MathLibrary.find_look_at_rotation(
             eye, unreal.Vector(*self.center)
         )
@@ -168,6 +190,8 @@ class BoulderCapture:
         self.pending = {
             "file": "boulder-low-angle-%02d.png" % (self.index + 1),
             "camera_location_cm": actual,
+            "camera_ground": ground,
+            "camera_ground_clearance_cm": 60.0,
             "camera_fov_deg": actual_fov,
             "camera_rotation_deg": [
                 float(getattr(actual_rotation, a)) for a in ("pitch", "yaw", "roll")

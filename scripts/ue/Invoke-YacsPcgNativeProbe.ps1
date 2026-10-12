@@ -185,7 +185,7 @@ if ($Action -ne 'inspect') {
         }
         Stage-QualifiedFile (Join-Path $RepoRoot $qualification.contact_input.path) 'contact-request.json' $qualification.contact_input
     }
-    $plugins = @('PythonScriptPlugin','EditorScriptingUtilities','PCG','PCGToolset','PCGExtendedToolkit') | ForEach-Object { [ordered]@{Name=$_;Enabled=$true;Optional=$false} }
+    $plugins = @('PythonScriptPlugin','EditorScriptingUtilities','PCG','PCGToolset','PCGExtendedToolkit','LandscapePatch') | ForEach-Object { [ordered]@{Name=$_;Enabled=$true;Optional=$false} }
     [ordered]@{FileVersion=3;EngineAssociation='5.8';Category='';Description='YACS #365 owned local diagnostic';Plugins=@($plugins)} | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $Project -Encoding utf8
     $entries.Add([ordered]@{path='Pcg365Diagnostic.uproject';identity=(File-Identity $Project)})
     [ordered]@{status='LOCAL_DIAGNOSTIC_ONLY';expected_head=$ExpectedHead;probe_sha256_lf=$ProbeHash;plugin_pin=$bootstrap.actual_commit;plugin_patch=$bootstrap.compatibility_patch_sha256;binary_provenance='retained prebuilt; not an exact-head native build';engine_build_id=$EngineModules.BuildId;files=$entries} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $Root 'staged-files.json') -Encoding utf8
@@ -264,6 +264,8 @@ try {
 }
 if ($process.ExitCode -ne 0) { throw "Owned native probe exit=$($process.ExitCode); see $Proof" }
 if (-not (Test-Path -LiteralPath $Receipt -PathType Leaf)) { throw 'Probe exited without action receipt.' }
+$nativeLog = Get-Content -LiteralPath (Join-Path $Proof "$Action-editor.log") -Raw
+if ($nativeLog -match "Couldn't load edit layer object|Failed to find script package for import object|Failed to compile Material") { throw 'Native consumer lost a required class/edit layer or material shader; diagnostic rejected.' }
 $result = Get-Content -LiteralPath $Receipt -Raw | ConvertFrom-Json
 $expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'; 'settle-render'='BOULDER_FITTED_REAL_GPU_CAPTURED'}[$Action]
 if ($result.status -cne $expectedStatus -or $result.code_sha -cne $ExpectedHead -or $result.placement -isnot [bool] -or $result.placement) { throw 'Native diagnostic did not complete; inspect receipt diagnostics.' }

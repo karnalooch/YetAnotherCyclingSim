@@ -587,3 +587,24 @@ PR #474 source `6cf9511127afbec4286fe8a11d9c409e26d8d5cb` has Aggregate CI gate
 SUCCESS in run `38185894294`; that result predates this correction and does not
 validate the new source. Owner visual acceptance stays `PENDING_FINAL_M3` and
 performance stays `DEFERRED_AFTER_M3`, `performance_pass: false`.
+
+
+First GPU attempt `fe18308fb76d4402b6246de3c30b16790235dd3d/boulderfit01`
+completed its processes and produced four real 1920 x 1080 PNGs on RTX 2070
+SUPER / D3D12 SM5. Visual review REJECTED the first after camera: the viewpoint
+was below the local ground and exposed the underside of the Landscape. Native
+log also reported missing `/Script/LandscapePatch`, deletion of an in-memory
+edit layer and obsolete edit-layer data. No map was saved and staged hashes
+remained unchanged, but the process receipt is not sufficient scene fidelity
+proof. Preserve this attempt; do not present it as corrected contact acceptance.
+The sparse earlier terrain measurements likewise do not establish edit-layer
+preservation merely from source/staged byte identity.
+
+The corrected diagnostic explicitly enables the installed Epic LandscapePatch
+plugin and rejects missing imported script classes/edit layers or failed
+material shader compilation in the native log. Each camera measures its local
+Landscape-only height and uses an explicit 0.6 m ground clearance, with identical
+poses before and after. Both asset translations require location readback.
+The first sampled fit measured 698 paired intervals and 62.47 cm embedding,
+with a maximum exposed interval of 37.78 cm; these are retained diagnostic
+numbers from the rejected capture configuration, not final validation limits.

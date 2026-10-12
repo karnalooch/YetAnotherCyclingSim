@@ -288,6 +288,11 @@ def start_boulder_capture(root, binding, receipt):
     radius = max(measured["actor_bounds_cm"]["extent"])
     captures = {}
 
+    def move_to(location):
+        actor.set_actor_location(unreal.Vector(*location), False, False)
+        if vector(actor.get_actor_location()) != [float(v) for v in location]:
+            raise RuntimeError("Boulder comparison transform readback differs")
+
     def complete_after(result):
         captures["after"] = result
         receipt["captures"] = captures
@@ -303,9 +308,7 @@ def start_boulder_capture(root, binding, receipt):
             receipt["error"] = "Before capture failed: " + json.dumps(result)
             finish(receipt)
             return
-        actor.set_actor_location(
-            unreal.Vector(*measured["after_location_cm"]), False, False
-        )
+        move_to(measured["after_location_cm"])
         global ACTIVE
         ACTIVE = capture.start_capture(
             world,
@@ -315,9 +318,7 @@ def start_boulder_capture(root, binding, receipt):
             framing_radius_cm=radius,
         )
 
-    actor.set_actor_location(
-        unreal.Vector(*measured["before_location_cm"]), False, False
-    )
+    move_to(measured["before_location_cm"])
     global ACTIVE
     ACTIVE = capture.start_capture(
         world,

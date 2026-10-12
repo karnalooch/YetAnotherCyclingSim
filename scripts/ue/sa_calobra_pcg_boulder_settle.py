@@ -45,7 +45,9 @@ def prepare(root, binding):
         and [rotation.pitch, rotation.yaw, rotation.roll] == [0.0, 0.0, 0.0],
         "Unadmitted Landscape transform",
     )
-    actor = subsystem.spawn_actor_from_class(unreal.StaticMeshActor, unreal.Vector())
+    actor = subsystem.spawn_actor_from_class(
+        unreal.StaticMeshActor, unreal.Vector(), transient=True
+    )
     require(actor is not None, "Diagnostic actor spawn failed")
     try:
         actor.set_actor_label("PCG365_Boulder_SampledSettleDiagnostic")
