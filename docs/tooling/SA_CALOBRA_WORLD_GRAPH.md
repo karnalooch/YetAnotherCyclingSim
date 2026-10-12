@@ -1303,9 +1303,13 @@ do not establish a root-cause repair. Previous studio images remain studio-only.
 The owner requests the absolute minimum of restarts. Contact batch restarts are
 already removed. The [three-session continuation](../assets/pcg365-natural20-contact-20261012/RESTART_MINIMIZATION_PLAN.md)
 combines prepare, measure and review while retaining actual fresh consumers and
-clean producer exit gates; it is NOT IMPLEMENTED / UNVERIFIED. At the transfer
-request, implementation stopped and the complete code/evidence/handoff was
-prepared for the existing remote branch and Draft PR #474. Continue from
+clean producer exit gates. At the original transfer it was NOT IMPLEMENTED.
+A later candidate was committed on Draft PR #474 at `f4d6c0ce`, with a fixed
+three-session launcher, offline tests and opt-in native workflow; this is
+implementation source only, **not verified native execution or visual evidence**.
+Original 100 REJECTED measurements and zero terrain PNGs remain the latest
+native result until the new exact-SHA stages finish with real exit-0 markers.
+The original complete code/evidence/handoff remains preserved. Continue from
 [SESSION_HANDOFF](../assets/pcg365-natural20-contact-20261012/SESSION_HANDOFF.md).
 
 All 202 terrain packages, twenty saved meshes, seven Forge packages and raw grid

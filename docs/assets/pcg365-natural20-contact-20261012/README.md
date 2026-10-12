@@ -90,8 +90,12 @@ not an RTX 2070 FPS result or an optimized LOD chain.
 The implemented [batch grouping](PROCESS_BATCHING.md) removes restarts between
 contact batches. The owner's latest instruction additionally minimizes the
 whole workflow. The [three-session plan](RESTART_MINIMIZATION_PLAN.md) preserves
-real fresh consumers and clean producer exit gates; **NOT IMPLEMENTED / UNVERIFIED**.
-At the owner's transfer request, source implementation stopped at `1a02ac21`.
+real fresh consumers and clean producer exit gates. This was **NOT IMPLEMENTED
+at the original handoff**, but a subsequent three-session code candidate was
+committed in [`f4d6c0ce`](https://github.com/karnalooch/YetAnotherCyclingSim/commit/f4d6c0ce4eeab8c2ed57280332dc97bfc7a84148),
+with source corrections continuing on Draft PR #474. Three-session native
+execution, clean exit proof and forty real Landscape frames remain **UNVERIFIED**.
+The previous native producer remains `1a02ac21`; do not relabel it as new proof.
 
 ## Validation and delivery
 
@@ -114,3 +118,15 @@ remain studio-only evidence and are not substituted for the missing terrain view
 
 Process grouping reuses existing YACS proof invariants and Gumball admission boundaries;
 no new shared-platform invariant or separate proof framework was introduced.
+
+## Implementation after this retained transfer checkpoint
+
+The [minimum-restart plan](RESTART_MINIMIZATION_PLAN.md) now has a bounded
+post-transfer implementation candidate, with three actual UE process boundaries,
+no intermediate per-batch process marker, and hash-bound grouped phase receipts.
+A separate [opt-in native workflow](../../../.github/workflows/pcg365-natural20-contact-proof.yml)
+requires successful exact-head CI and Blender proof before host acquisition and
+native execution. This document's historical run01-run04 findings remain
+unchanged. New captures must be inspected from actual PNG bytes and a clean
+native process exit; neither is recorded here yet. `qualified_assets: []`,
+`placement: false` and `performance_pass: false` remain authoritative.
