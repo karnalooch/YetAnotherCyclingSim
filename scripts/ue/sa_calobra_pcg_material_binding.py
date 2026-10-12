@@ -225,29 +225,26 @@ def material_readback(assets):
         # default to zero. Displacement default is 0.5, not zero. Confirm the
         # attributes path and instance tessellation override before bounding it.
         attributes = master.get_editor_property("bUseMaterialAttributes")
-        displacement = LIB.get_material_property_input_node(
-            master, unreal.MaterialProperty.MP_DISPLACEMENT
-        )
         overrides = instance.get_editor_property("base_property_overrides")
         override_tessellation = overrides.get_editor_property(
             "bOverride_bEnableTessellation"
         )
         require(attributes is False, "Material Attributes path is not qualified")
-        require(displacement is None, "Forge master has connected displacement")
         require(
             override_tessellation is False,
             "Forge instance tessellation override is not qualified",
         )
         geometry = {
-            "status": "SOURCE_AUDITED_ZERO_GEOMETRY_OFFSET_READBACK",
+            "status": "SOURCE_AUDITED_ZERO_WPO_TESSELLATION_DISPLACEMENT_READBACK",
             "use_material_attributes": False,
             "wpo_default_world_m": [0.0, 0.0, 0.0],
-            "displacement_connected": False,
+            "displacement_connected": None,
+            "displacement_root_readback": "UNAVAILABLE_PYTHON_ENUM",
             "displacement_default_scalar": 0.5,
             "instance_tessellation_override": False,
             "nanite_tessellation_enabled": False,
             "max_displacement_world_m": 0.0,
-            "basis": "UE5.8.2 compiler fallback and loaded root/instance readback; not GPU parity proof",
+            "basis": "UE5.8.2 WPO fallback and tessellation compiler guard with loaded master/instance readback; not GPU parity or all-deformer proof",
         }
     except Exception as error:
         geometry["readback_error"] = str(error)

@@ -13,6 +13,7 @@ param(
     [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload','rock-qualify','rock-reload')][string]$Action = 'inspect',
     [switch]$QualificationSources,
     [switch]$RockQualificationSources,
+    [ValidateSet('source','lod0','support')][string]$RockSet = 'source',
     [string]$MaskXyRequest,
     [ValidatePattern('^[0-9a-f]{64}$')][string]$ExpectedMaskXySha,
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
@@ -201,12 +202,13 @@ if ($Action -ne 'inspect') {
     }
     if ($RockQualificationSources) {
         if (-not $QualificationSources) { throw 'Rock qualification requires authenticated terrain/Forge sources.' }
-        $requestPath = Join-Path $RepoRoot 'worldgen/sa_calobra/pcg365_rock_qualification_v1.json'
+        $rockRequestName = @{source='pcg365_rock_qualification_v1.json';lod0='pcg365_rock_lod0_qualification_v1.json';support='pcg365_support_rock_qualification_v1.json'}[$RockSet]
+        $requestPath = Join-Path $RepoRoot "worldgen/sa_calobra/$rockRequestName"
         $request = Get-Content -LiteralPath $requestPath -Raw | ConvertFrom-Json
         if ($request.scope -cne 'ISOLATED_ROCK_QUALIFICATION_ONLY' -or $request.assets.Count -ne 2 -or $request.placement) { throw 'Unexpected rock qualification request.' }
         Stage-QualifiedFile $requestPath 'rock-qualification-request.json' (File-Identity $requestPath)
         foreach ($asset in $request.assets) {
-            if ($asset.id -cnotin @('rock_07','rock_09') -or $asset.source_relative -cne "rock-source/$($asset.id).fbx") { throw 'Unexpected rock source identity.' }
+            if ($asset.id -cnotin @('rock_07','rock_09','support_rock_a','support_rock_b') -or $asset.source_relative -cne "rock-source/$($asset.id).fbx") { throw 'Unexpected rock source identity.' }
             Stage-QualifiedFile $asset.source $asset.source_relative $asset
         }
         foreach ($scriptRelative in @('scripts/assets/pcg_rock_contact_policy.py','scripts/ue/sa_calobra_pcg_rock_qualification.py')) {
@@ -269,7 +271,7 @@ if ($Action -eq 'rock-reload') {
     $rockInventory = Get-Content (Join-Path $Proof 'rock-qualify/mesh-inventory.json') -Raw | ConvertFrom-Json
     if ($rockInventory.code_sha -cne $ExpectedHead -or $rockInventory.saved_packages.Count -ne 2) { throw 'Unexpected rock inventory.' }
     foreach ($entry in $rockInventory.saved_packages) {
-        if ($entry.path -notmatch '^Content/Generated/YACS/PCG365Rocks/SM_rock_(07|09)_ForgeDiagnostic\.uasset$') { throw 'Unexpected rock package path.' }
+        if ($entry.path -notmatch '^Content/Generated/YACS/PCG365Rocks/SM_(rock_(07|09)|support_rock_[ab])_ForgeDiagnostic\.uasset$') { throw 'Unexpected rock package path.' }
         Assert-SameFile (Join-Path $Root $entry.path) $entry
     }
 }

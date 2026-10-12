@@ -118,6 +118,11 @@ def import_mesh(root, row, instance):
     require(all(v > 0 for v in extent), "Degenerate imported rock bounds")
     triangles = mesh.get_num_triangles(0)
     require(triangles > 0, "Rock has no render LOD0 triangles")
+    if "expected_lod0_triangles" in row:
+        require(
+            triangles == row["expected_lod0_triangles"],
+            "Imported triangle count differs from selected source mesh",
+        )
     import_data = mesh.get_editor_property("asset_import_data")
     complexity = unreal.get_editor_subsystem(
         unreal.StaticMeshEditorSubsystem

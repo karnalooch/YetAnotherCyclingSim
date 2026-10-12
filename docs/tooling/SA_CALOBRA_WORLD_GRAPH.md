@@ -820,3 +820,30 @@ defaults at MaterialAttributeDefinitionMap.cpp:407-408 are WPO zero and displace
 displacement root connection and instance tessellation override inspection.
 Protected-field access failure remains recorded as pending, never inferred PASS.
 This source audit is not GPU/render-collision parity proof.
+
+#### First import rejected: source LODs combined
+
+Code `bce913becd2fa5000ae99eca0713f56aca266e06`, token `rocks01`, completed
+inspect/material/fresh-material/contact/fresh-mesh-readback with exit 0. All ten
+trial contact cases rejected. However, subsequent pinned Blender inspection
+found four source LOD meshes in each FBX: the native `combine_meshes` import had
+combined all LODs into one LOD0. Rock 07's native 27,830 triangles differ from the
+actual source LOD0's 14,844. This packet is rejected as a qualification baseline;
+it is evidence of the diagnosed importer defect, not rejection of correctly
+selected source LOD0. Preserve all raw measurements and original files.
+
+The source inspector now supports explicit single-LOD0 export with no geometry
+or pivot editing. Corrected imports must match selected source triangle counts.
+Separately, two original YACS-authored decorative rock recipes with convex flat
+bases and nested upper rings are prepared for qualification. These are artistic
+forms, not scans or geological claims; Material Forge supplies their appearance.
+This keeps source/terrain authority intact and tests appropriate support geometry
+without changing the frozen trial limits or modifying Landscape.
+
+The first native material readback also proved `MP_DISPLACEMENT` absent from the
+Python enum. Do not call it or claim its root is disconnected. Installed
+HLSLMaterialTranslator.cpp:1718-1720 and MaterialIRModuleBuilder.cpp:1276 guard
+geometry displacement by effective tessellation, while MaterialInstance.cpp:
+2526-2533 resolves the override/parent. The corrected readback checks attributes,
+WPO root, master tessellation and instance override, retaining unavailable root
+connection and separate GPU/deformer parity limitations.
