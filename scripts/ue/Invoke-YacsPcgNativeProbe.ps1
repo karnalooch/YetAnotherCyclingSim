@@ -251,7 +251,8 @@ if ($Action -ne 'inspect') {
         $collectionIdentity = File-Identity $RockCollectionCatalog
         if ($collectionIdentity.sha256 -cne $ExpectedRockCollectionSha) { throw 'Collection catalog SHA drift.' }
         $collection = Get-Content -LiteralPath $RockCollectionCatalog -Raw | ConvertFrom-Json
-        if ($collection.schema_version -ne 1 -or $collection.scope -cne 'LOCAL_ROCK_COLLECTION20_ASSET_LIBRARY_ONLY' -or $collection.variants.Count -ne 20 -or $collection.placement -isnot [bool] -or $collection.placement -or $collection.qualified_assets.Count -ne 0) { throw 'Unexpected collection catalog contract.' }
+        if ($collection.schema_version -ne 1 -or $collection.scope -cnotin @('LOCAL_ROCK_COLLECTION20_ASSET_LIBRARY_ONLY','LOCAL_NATURAL_ROCK_COLLECTION20_ASSET_LIBRARY_ONLY') -or $collection.variants.Count -ne 20 -or $collection.placement -isnot [bool] -or $collection.placement -or $collection.qualified_assets.Count -ne 0) { throw 'Unexpected collection catalog contract.' }
+        if ($collection.scope -ceq 'LOCAL_NATURAL_ROCK_COLLECTION20_ASSET_LIBRARY_ONLY' -and ($collection.status -cne 'NATURAL_ROCK_COLLECTION20_PREPARED_ONLY' -or $collection.variant_count -ne 20 -or $collection.source_family_count -ne 8 -or $collection.rejected_sources.Count -ne 0 -or $collection.production_admission)) { throw 'Natural collection must be complete and unadmitted.' }
         Stage-QualifiedFile $RockCollectionCatalog 'rock-collection-catalog.json' $collectionIdentity
         foreach ($variant in $collection.variants) {
             if ($variant.id -cnotmatch '^(rock(02|06)_(0[1-9]|10)|(namaqualand_boulder_0[2-6]|rock_0[79]|boulder_01)_0[1-3])$' -or $variant.source_relative -cne "rock-collection/$($variant.id).fbx") { throw 'Unexpected collection source identity.' }

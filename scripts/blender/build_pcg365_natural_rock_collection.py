@@ -162,6 +162,41 @@ def upper_witness(bm, cut):
     return Counter(values)
 
 
+def materialize_render_triangles(mesh, bpy):
+    """Copy the exact inspected Blender render triangles and indexed UV corners."""
+    mesh.calc_loop_triangles()
+    data = bpy.data.meshes.new(mesh.name + "_ExplicitRenderTriangles")
+    triangles = list(mesh.loop_triangles)
+    data.from_pydata(
+        [tuple(v.co) for v in mesh.vertices], [], [list(t.vertices) for t in triangles]
+    )
+    for material in mesh.materials:
+        data.materials.append(material)
+    for polygon, triangle in zip(data.polygons, triangles):
+        source_polygon = mesh.polygons[triangle.polygon_index]
+        polygon.material_index = source_polygon.material_index
+        polygon.use_smooth = source_polygon.use_smooth
+    for source_layer in mesh.uv_layers:
+        layer = data.uv_layers.new(name=source_layer.name)
+        for polygon, triangle in zip(data.polygons, triangles):
+            for output_loop, source_loop in zip(polygon.loop_indices, triangle.loops):
+                layer.data[output_loop].uv = source_layer.data[source_loop].uv
+    edge_flags = {
+        tuple(sorted(e.vertices)): (e.use_edge_sharp, e.use_seam) for e in mesh.edges
+    }
+    for edge in data.edges:
+        sharp, seam = edge_flags.get(tuple(sorted(edge.vertices)), (False, False))
+        edge.use_edge_sharp = sharp
+        edge.use_seam = seam
+    data.update()
+    require(
+        [list(p.vertices) for p in data.polygons]
+        == [list(t.vertices) for t in triangles],
+        "Explicit render triangle copy changed inspected vertex indices",
+    )
+    return data
+
+
 def prepare(asset, row, output, base, inspector):
     import bmesh
     import bpy
@@ -211,10 +246,8 @@ def prepare(asset, row, output, base, inspector):
         )
         mesh = original.data
         mesh.calc_loop_triangles()
-        require(
-            all(len(p.vertices) == 3 for p in mesh.polygons),
-            "Source must be explicitly triangulated; no silent triangulation",
-        )
+        source_nontri_polygon_count = sum(len(p.vertices) != 3 for p in mesh.polygons)
+        triangular_mesh = materialize_render_triangles(mesh, bpy)
         groups = inspector.face_components(
             [list(t.vertices) for t in mesh.loop_triangles]
         )
@@ -226,10 +259,9 @@ def prepare(asset, row, output, base, inspector):
             == row["component_triangles_sha256"],
             "Actual component index witness drift",
         )
-        polygons = {mesh.loop_triangles[i].polygon_index for i in indices}
-        bm.from_mesh(mesh)
+        bm.from_mesh(triangular_mesh)
         bm.faces.ensure_lookup_table()
-        chosen = {bm.faces[i] for i in polygons}
+        chosen = {bm.faces[i] for i in indices}
         keep = {v for f in chosen for v in f.verts}
         bmesh.ops.delete(
             bm, geom=[v for v in bm.verts if v not in keep], context="VERTS"
@@ -283,7 +315,7 @@ def prepare(asset, row, output, base, inspector):
         else:
             require(
                 len(components) == 1,
-                "Declared KEEP_ALL produced multiple disconnected components",
+                f"Declared KEEP_ALL produced multiple disconnected components: {component_reports}",
             )
         boundary = [e for e in bm.edges if e.is_boundary]
         require(boundary, "Missing cut boundary")
@@ -316,6 +348,15 @@ def prepare(asset, row, output, base, inspector):
         )
         bm.normal_update()
         require(all(f.normal.z < 0 for f in cap), "Cap winding must point downward")
+        clipped_polygons = [f for f in bm.faces if len(f.verts) > 3]
+        if clipped_polygons:
+            bmesh.ops.triangulate(
+                bm, faces=clipped_polygons, quad_method="FIXED", ngon_method="EAR_CLIP"
+            )
+        require(
+            upper_witness(bm, cut) == upper_before,
+            "Clipped-face triangulation changed wholly upper source triangles",
+        )
         prepared_topology = base.topology(bm)
         upper_sha = hashlib.sha256(
             repr(sorted(upper_before.items())).encode()
@@ -345,29 +386,19 @@ def prepare(asset, row, output, base, inspector):
                 )
                 require(abs(vbounds["min"][2]) <= 1e-6, "BaseZ0 changed")
                 ident = asset["id"] + "_" + str(number).zfill(2)
-                data = mesh.copy()
-                data.name = ident + "_Geometry"
+                data = bpy.data.meshes.new(ident + "_Geometry")
+                for material in mesh.materials:
+                    data.materials.append(material)
                 capmat = bpy.data.materials.get(
                     "PCG365_SourceOnly_Underside"
                 ) or bpy.data.materials.new("PCG365_SourceOnly_Underside")
                 data.materials.append(capmat)
                 variant.to_mesh(data)
-                # Zero custom normal vectors select computed geometric corner normals
-                # (Blender4.5.9 rna_Mesh_normals_split_custom_set API convention).
-                flags_before = (
-                    [p.use_smooth for p in data.polygons],
-                    [e.use_edge_sharp for e in data.edges],
-                    [e.use_seam for e in data.edges],
-                )
-                data.normals_split_custom_set([(0.0, 0.0, 0.0)] * len(data.loops))
+                # Fresh mesh has no stale imported custom normal attributes.
+                # Geometric normals honor retained BMesh smooth/sharp flags.
                 require(
-                    flags_before
-                    == (
-                        [p.use_smooth for p in data.polygons],
-                        [e.use_edge_sharp for e in data.edges],
-                        [e.use_seam for e in data.edges],
-                    ),
-                    "Normal reset changed source smoothing/sharp/seam flags",
+                    not data.has_custom_normals,
+                    "Unexpected custom normals in fresh prepared mesh",
                 )
                 readback = bmesh.new()
                 try:
@@ -472,6 +503,9 @@ def prepare(asset, row, output, base, inspector):
                         },
                         "source_provenance": "LICENSED_SCAN_REVIEWED_COMPONENT_PLANAR_UNDERSIDE_DECLARED_ART_AFFINE",
                         "source_object_matrix_world": [list(r) for r in matrix],
+                        "source_nontri_polygon_count": source_nontri_polygon_count,
+                        "source_triangulation": "Exact inspected Mesh.loop_triangles vertex/UV-loop mapping; source file unchanged",
+                        "clipped_nontri_face_count": len(clipped_polygons),
                         "source_topology": source_topology,
                         "prepared_topology": prepared_topology,
                         "derived_topology": topo,
