@@ -42,6 +42,11 @@
       "reason": "Issue #364 owner-only native checkpoint with explicit commit intent on the fixed branch. Requires protected exact-SHA CI before reserving the shared host, reuses verified compiled binaries and runs the existing baseline, canary, isolated full-network save/fresh reload and all 68 Lit poses plus requested controls. Ordinary pushes skip; source geometry, readiness, conservation and final admission remain enforced."
     },
     {
+      "file": "pcg365-natural20-contact-proof.yml",
+      "state": "CURRENT",
+      "reason": "Issue #365 owner-only fixed-branch [pcg365-native-proof] checkpoint. Requires successful exact-SHA protected CI and pinned Blender Material Forge reference before reserving the shared, non-cancelling yacs-ue58 host. Three bounded isolated Unreal sessions inspect/save twenty source-pinned Forge rocks, fresh-read and measure 100 actual Landscape cases, then fresh-read and capture forty native low-angle PNGs. Real exit-0 markers and hash-bound phase receipts are required. No accepted map/terrain/road mutation, production scatter, owner visual acceptance, benchmark, cleanup resumption or native-build claim."
+    },
+    {
       "file": "blender-material-forge-reference.yml",
       "state": "CURRENT",
       "reason": "Self-hosted Issue #399 pinned-Blender ground-scale Material Forge reference proof; consumes CPU-validated deterministic outputs, refuses active local Unreal ownership and never mutates the accepted world."
