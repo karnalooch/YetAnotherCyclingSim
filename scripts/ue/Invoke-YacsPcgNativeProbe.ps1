@@ -12,7 +12,7 @@ param(
     [Parameter(Mandatory)][ValidatePattern('^[A-Za-z0-9][A-Za-z0-9-]{0,63}$')][string]$RunToken,
     [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render','collection-contact-00','collection-contact-01','collection-contact-02','collection-contact-03','collection-contact-04','collection-contact-05','collection-contact-06','collection-contact-07','collection-contact-08','collection-contact-09','collection-contact-reload','collection-contact-render')][string]$Action = 'inspect',
     [switch]$QualificationSources,
-    [ValidateSet('baseline','rock-detail')][string]$QualificationSet = 'baseline',
+    [ValidateSet('baseline','rock-detail','natural20-contact')][string]$QualificationSet = 'baseline',
     [switch]$RockQualificationSources,
     [ValidateSet('source','lod0','support','scan-base','large-base')][string]$RockSet = 'source',
     [string]$RockCollectionCatalog,
@@ -174,10 +174,11 @@ if ($Action -ne 'inspect') {
         Stage-QualifiedFile $source $scriptRelative (File-Identity $source)
     } elseif ($ExpectedMaskXySha) { throw 'Expected mask XY SHA requires a request path.' }
     if ($QualificationSources) {
-        $qualificationName = @{baseline='pcg365_qualification_sources_v1.json';'rock-detail'='pcg365_rock_detail_sources_v1.json'}[$QualificationSet]
+        $qualificationName = @{baseline='pcg365_qualification_sources_v1.json';'rock-detail'='pcg365_rock_detail_sources_v1.json';'natural20-contact'='pcg365_natural20_contact_sources_v1.json'}[$QualificationSet]
         $qualificationPath = Join-Path $RepoRoot "worldgen/sa_calobra/$qualificationName"
         $qualification = Get-Content -LiteralPath $qualificationPath -Raw | ConvertFrom-Json
-        if ($qualification.scope -cne 'LOCAL_DIAGNOSTIC_ONLY_NOT_REGIONAL_PLACEMENT' -or $qualification.terrain.assets.Count -ne 14) { throw 'Unexpected qualification source contract.' }
+        $expectedTerrainAssets = if ($QualificationSet -ceq 'natural20-contact') { 202 } else { 14 }
+        if ($qualification.scope -cne 'LOCAL_DIAGNOSTIC_ONLY_NOT_REGIONAL_PLACEMENT' -or $qualification.terrain.assets.Count -ne $expectedTerrainAssets) { throw 'Unexpected qualification source contract.' }
         Stage-QualifiedFile $qualificationPath 'qualification-sources.json' (File-Identity $qualificationPath)
         foreach ($scriptRelative in @('scripts/ue/sa_calobra_pcg_material_binding.py','scripts/ue/sa_calobra_pcg_terrain_contact.py','scripts/ue/import_material_forge_variant.py','scripts/assets/road_material_contract.py','scripts/assets/pcg_boulder_support.py','scripts/ue/sa_calobra_pcg_boulder_settle.py','scripts/ue/sa_calobra_pcg_boulder_capture.py')) {
             $source = Join-Path $RepoRoot $scriptRelative
@@ -418,6 +419,7 @@ if ($process.ExitCode -ne 0) { throw "Owned native probe exit=$($process.ExitCod
 if (-not (Test-Path -LiteralPath $Receipt -PathType Leaf)) { throw 'Probe exited without action receipt.' }
 $nativeLog = Get-Content -LiteralPath (Join-Path $Proof "$Action-editor.log") -Raw
 if ($nativeLog -match "Couldn't load edit layer object|Failed to find script package for import object|Failed to compile Material") { throw 'Native consumer lost a required class/edit layer or material shader; diagnostic rejected.' }
+if (($IsCollectionContact -or $QualificationSet -ceq 'natural20-contact') -and $nativeLog -match 'LoadErrors: While trying to load package /Game/[^\r\n]*a dependent package /Game/[^\r\n]*was not available') { throw 'Native diagnostic lost a required Game package dependency; diagnostic rejected.' }
 $result = Get-Content -LiteralPath $Receipt -Raw | ConvertFrom-Json
 $expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'; 'settle-render'='BOULDER_FITTED_REAL_GPU_CAPTURED'; 'mask-xy-create'='MASK_XY_GRAPH_SAVED'; 'mask-xy-reload'='MASK_XY_GRAPH_FRESH_RELOAD_REGENERATED'; 'rock-qualify'='ROCK_CONTACT_MATRIX_MEASURED'; 'rock-reload'='ROCK_MESHES_FRESH_READBACK'; 'rock-render'='ROCKS_REAL_GPU_CAPTURED'; 'rock-pack'='ROCK_VARIANT_ASSETS_SAVED'; 'rock-pack-reload'='ROCK_VARIANT_ASSETS_FRESH_RELOAD_VERIFIED'; 'rock-collection'='ROCK_COLLECTION_ASSETS_SAVED'; 'rock-collection-reload'='ROCK_COLLECTION_ASSETS_FRESH_RELOAD_VERIFIED'; 'rock-collection-render'='ROCK_COLLECTION_REAL_GPU_CAPTURED'}[$Action]
 if ($IsCollectionContact) { $expectedStatus = if ($Action -ceq 'collection-contact-render') { 'COLLECTION_CONTACT_REAL_GPU_CAPTURED' } elseif ($Action -ceq 'collection-contact-reload') { 'COLLECTION_CONTACT_FRESH_READBACK' } else { 'COLLECTION_CONTACT_BATCH_MEASURED' } }

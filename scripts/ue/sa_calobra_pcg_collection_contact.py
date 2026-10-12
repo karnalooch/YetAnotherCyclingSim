@@ -303,6 +303,7 @@ def run(root, output, head, binding, batch_index):
         "terrain_file_after": map_identity(sources),
         "ground_transform": ground_record,
         "terrain_modified": False,
+        "terrain_contact": "MEASURED_SAMPLED_ONLY",
         "map_saved": False,
         "placement": False,
         "qualified_assets": [],
@@ -381,6 +382,7 @@ def reload(root, output, head, binding):
     return {
         **inventory,
         "status": "COLLECTION_CONTACT_FRESH_READBACK",
+        "terrain_contact": "MEASURED_SAMPLED_ONLY",
         "cases": cases,
         "batches": receipts,
         "best_summary": summary,
@@ -493,6 +495,7 @@ class CollectionCapture(RockCapture):
             self.ground = grounds[0]
             self.ground_before = ground_identity(self.ground)
             self.report.update(
+                terrain_contact="MEASURED_SAMPLED_ONLY",
                 source_contract=sources["terrain"],
                 terrain_file_before=self.terrain_before,
                 ground_transform_before=self.ground_before,
