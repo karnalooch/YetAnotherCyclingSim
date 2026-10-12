@@ -1020,3 +1020,40 @@ the patch do not establish whole-object floating. Any loss of silhouette,
 visible artificial plinth, ambiguous topology or unsupported placement rejects
 the variant. No terrain mutation, source overwrite, regional scatter, new asset
 provider, native-build PASS or visual acceptance is authorized by this experiment.
+
+Independent Blender first-hit comparison executed at
+`222c564fd4492856df41b3f224a46c6ec4dc6b16`: all retained corrected-LOD0 point-3
+grid-65 paired hits/misses agree in classification. Largest measured source/native
+height differences are 0.000024302 cm (Rock07) and 0.000024522 cm (Rock09).
+Both source meshes have consistent edge winding, closed manifold topology and
+positive signed volume. This finite comparison reports errors without inventing
+a new acceptance threshold; it does not prove unsampled/self-intersecting geometry.
+Receipt: `D:/yacs/work/pcg365/c9f10e9dd00c99566e62f241c92426910217c421/ray-parity.json`.
+The directory prefix is historical; the host receipt records the actual producer
+head `222c564f`, not `c9f10e9d`.
+
+The frozen 10%-height underside experiment executed at
+`8a29d61f7c90879df2137e895fee8b37bc1b90e9` in pinned Blender 4.5.9, process exit 0,
+with aggregate result `SCAN_PLANAR_BASE_DERIVATIVES_PARTIAL_REJECTION`.
+Rock07 retains 10,327 wholly upper source triangles exactly before the declared
+base-Z translation, 92.4237% of source volume and 75.8033% of original surface
+area; 90% retained height does not mean 90% surface preservation. Its derivative
+has 11,256 triangles and connected, consistently wound closed manifold topology.
+The derived FBX SHA256 is
+`4f064163b5af7ca0908f6cac6eaaadbd2e939105f360d1250f55a4c3575fc70d`.
+Rock09 rejects with `Multiple or ambiguous cut loops`; no loop merging, alternate
+cut or geometry substitution is permitted by that result. All source hashes
+remain unchanged. Two prior failed producer receipts are retained: `c9f10e9d`
+exposed the actual API's integer tessellation indices; `231cb12a` prepared Rock07
+then stopped on the correct Rock09 topology rejection. No failed attempt is PASS.
+
+The native request `worldgen/sa_calobra/pcg365_scan_base_diagnostic_v1.json`
+pins the Rock07 derivative and unchanged Rock09 control, the producer receipt,
+source-defined cap polygon, uniform-volume COM projection and expected native
+bounds. Cap fitting reports distinct full-footprint ground coverage, cap coverage,
+embedding/exposure and 33-to-65 convergence; COM inside a sampled cap hull is not
+a physical load/contact-force stability proof. Numeric 20% embedding, 80% exposure,
+10-degree slope and 1 mm convergence rejection limits remain diagnostic. V1/V2
+still run on the full mesh and retain their own decisions. Only complete cap
+diagnostics may receive a transient GPU review; Rock09 is omitted from that review.
+Native execution for this new request remains NOT RUN until recorded below.
