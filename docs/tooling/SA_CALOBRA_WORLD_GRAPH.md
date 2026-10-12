@@ -922,3 +922,72 @@ The rock capture now retains two explicit warmup captures at the first camera
 before its two review frames; original Boulder capture defaults remain unchanged.
 Warmup frames are separately labelled and are not admitted review images or
 resident-mip telemetry. New art remains pending actual inspection.
+
+#### Rounded revision 2: sampled contact and native GPU review completed
+
+Executed code `8be369c2f4415a4a7f8fb25fdbea2dd238e8fd3d`, token `roundedrocks01`:
+all six processes (inspect, material, material-reload, rock-qualify, rock-reload,
+rock-render) exited 0 with launcher completion markers. Authenticated staged
+bytes, two saved rock meshes and seven saved Forge packages remained unchanged.
+Both native LOD0 meshes have 448 triangles and source-matching dimensions.
+Source FBX identities are
+`a99ff2114db4925295177311a893e9127cf5898f1be99341ea16502eca926dfd`
+and `94a7ec863f2c3ca700a75f852227c80b98b6226a93e48a87396c6559b9e907f0`.
+These are original authored forms, not acquired scans or geological evidence.
+
+The [complete evidence manifest](../assets/pcg365-rock-qualification-20261012/evidence.json)
+copies the request, twelve native receipt/marker records, source/DCC proofs,
+selected-LOD0 rejection receipts, saved inventory and 22 raw-sample file identities.
+Raw grids and logs remain at
+`D:/yacs/work/pcg365/8be369c2f4415a4a7f8fb25fdbea2dd238e8fd3d/roundedrocks01/proof`.
+The four review PNGs are copied byte-for-byte with hashes/cameras. Four warmup
+PNGs remain separately labelled in the native capture receipt, not review frames.
+RHI was D3D12 SM5 on NVIDIA GeForce RTX 2070 SUPER; no AI image generation or live
+Remote UE browser frame is involved.
+
+At diagnostic point 3, XY `(181600,189600)` cm, maximum sampled ground slope is
+5.877836 degrees. Both forms pass V2 65-to-129 sampled contact:
+
+- A: embedding 3.134276720 cm (6.813645% of height), retained maximum exposed
+  height 96.285969%, exposed paired rays 99.421242%, valid ground coverage 100%;
+  root/embedding convergence deltas 0.049086589/0.071444874 cm.
+- B: embedding 3.387000109 cm (6.912245%), retained maximum exposed height
+  96.598552%, exposed paired rays 99.397355%, valid ground coverage 100%;
+  root/embedding deltas 0.037968837/0.062490827 cm.
+
+Both have zero positive sampled bottom gap. The other eight cases reject under
+the same slope/embedding/exposure/convergence gates. Original corrected Rock 07
+and Rock 09 remain rejected for this zero-air identity/unit-scale contact policy.
+Do not turn those ten failures into source-wide geological or visual conclusions.
+
+All four warmed review views were inspected. The new forms are rounded and their
+visible bases enter the ground without an exposed air slit in these views.
+They are a small, similar authored baseline; they do not establish a diverse
+production palette, measured regional limestone or owner final-M3 acceptance.
+The artistic Forge surface is shared; texture variation is not geometry diversity.
+
+![Rounded source A, real UE view](../assets/pcg365-rock-qualification-20261012/support_rock_a-view02.png)
+
+![Rounded source B, real UE view](../assets/pcg365-rock-qualification-20261012/support_rock_b-view02.png)
+
+Result scope is **SAMPLED_CONTACT_TRIAL_PASSED**, lifecycle **imported**, with
+`full_qualification: false`, `regional_production_qualified: false` and
+`qualified_assets: []`. This supports the next isolated sparse-placement trial,
+not whole-Landscape production scatter. Per-placement checks must retain all
+physical limits, identity rotation/unit scale, known Landscape ownership,
+complete footprint/unknown/holdback handling and convergence. Rock semantic
+selectors, latest-road mask compatibility, additional seam/NoData/holdback/AOI
+native cases, continuous/render-triangle parity and protected/native admission
+remain open. The stateless CPU validator cannot grant any of those gates.
+No Landscape, Base_DTM, road or physics change was made; no map was saved.
+Native build NOT RUN; final owner audit pending; performance remains
+`DEFERRED_AFTER_M3` / false.
+
+Local validation: 38 PCG asset tests and seven candidate tests PASS; Ruff,
+PowerShell parser, docs links/i18n/structure/freshness PASS. The first sandbox
+regression invocation hit an existing Windows temporary-directory PermissionError;
+the host invocation passed without weakening assertions. Code CI at `03b49def`
+passed; its separate Blender Forge reference workflow refused LOCAL_BUSY while
+our owned Editor ran (run 38194375332). Preserve that failure; run the current-head
+reference workflow only with the now-idle host. Current delivered-head CI is not
+claimed by this source evidence until its actual result is verified.

@@ -10,7 +10,21 @@ exclusive host/proof gates still apply. The complete plan is in
 [CPU evidence](SA_CALOBRA_WORLD_GRAPH.md) are part of the handoff, not optional
 chat context. Do not depend on the previous LLM conversation.
 
-Latest Boulder native packet: code `51f641cea3807bd7228b55c12c917454ab014731`,
+Latest rock packet: code `8be369c2f4415a4a7f8fb25fdbea2dd238e8fd3d`,
+token `roundedrocks01`, six processes exit 0. Two original rounded forms with
+shared Forge MI pass sampled contact at gentle diagnostic point 3, with 3.13/3.39
+cm embedding; eight steep/unsuitable cases reject. Four warmed real GPU review
+PNGs were inspected. Read the [complete rock evidence](../assets/pcg365-rock-qualification-20261012/evidence.json)
+and the latest implementation section before continuing. Corrected Poly Haven
+LOD0 sources reject this contact policy; first combined-LOD imports, shutdown
+failures and prismatic revision 1 remain preserved as rejected evidence.
+This is `SAMPLED_CONTACT_TRIAL_PASSED`, not regional production qualification:
+`qualified_assets: []`, placement false, native build NOT RUN. Further native
+boundary/NoData/holdback cases, rock selectors, latest-road mask compatibility
+and protected admission remain open. Do not scatter these baseline forms over
+the Landscape or call them geological scans. No terrain repair was applied.
+
+Earlier Boulder native packet: code `51f641cea3807bd7228b55c12c917454ab014731`,
 `boulderfit03`, clean inspect/material-save/fresh-readback/real-GPU capture actions.
 Material Forge is saved on an isolated Boulder duplicate. The fitted diagnostic
 uses 698 paired mesh intervals and 62.467066099 cm embedding; this is not an
