@@ -27,6 +27,16 @@ class CodecProfileSource(unittest.TestCase):
         launcher = source("Start-YacsLiveHost.ps1")
         bootstrap = source("bootstrap.py")
         self.assertIn("Get-YacsLiveEncoderArgs -VideoCodec $videoCodec", launcher)
+        # Installed immutable code module must be sourced only after the
+        # exact release path is derived from the installation record.
+        self.assertLess(
+            launcher.index('$release=Join-Path $InstallRoot "releases\\$sha"'),
+            launcher.index("$codecHelper=Join-Path $release 'scripts/live_host/EncoderProfile.ps1'"),
+        )
+        self.assertLess(
+            launcher.index("$codecHelper=Join-Path $release 'scripts/live_host/EncoderProfile.ps1'"),
+            launcher.index(". $codecHelper"),
+        )
         self.assertIn(") + $encoderArgs + @(", launcher)
         self.assertIn("'YACS_LIVE_CODEC'", launcher)
         self.assertIn("$env:YACS_LIVE_CODEC=$videoCodec", launcher)

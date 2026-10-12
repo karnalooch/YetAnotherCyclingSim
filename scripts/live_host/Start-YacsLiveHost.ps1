@@ -27,10 +27,12 @@ if ($sha -cnotmatch '^[a-f0-9]{40}$') { throw 'Missing exact installed source SH
 # record, not by browser PreferredCodec or a GitHub Actions process.
 $videoCodec=if ($null -ne $install.PSObject.Properties['video_codec']) { [string]$install.video_codec } else { 'H264' }
 if ($videoCodec -cnotin @('H264','VP9')) { throw 'Unreviewed Pixel Streaming 2 codec; refuse auto fallback.' }
-. (Join-Path $release 'scripts/live_host/EncoderProfile.ps1')
+$release=Join-Path $InstallRoot "releases\$sha"
+$codecHelper=Join-Path $release 'scripts/live_host/EncoderProfile.ps1'
+if (-not (Test-Path -LiteralPath $codecHelper -PathType Leaf)) { throw 'Expected reviewed encoder helper missing.' }
+. $codecHelper
 $encoderArgs=@(Get-YacsLiveEncoderArgs -VideoCodec $videoCodec)
 if ($encoderArgs.Count -ne 2) { throw 'Expected exact codec and FPS flags.' }
-$release=Join-Path $InstallRoot "releases\$sha"
 $root=Join-Path $InstallRoot 'runtime'
 if (-not (Test-Path -LiteralPath (Join-Path $release 'scripts/live_host/bootstrap.py') -PathType Leaf)) {
   throw 'Pinned Python bootstrap missing from independent release.'
