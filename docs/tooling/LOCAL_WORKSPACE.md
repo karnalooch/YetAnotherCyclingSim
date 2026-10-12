@@ -170,3 +170,7 @@ The public [Embark landscape workflow](https://www.sidefx.com/learn/talks/embark
 supports the producer/prepared-data/Unreal-consumer boundary. The directory
 layout and checkpoint implementation are YACS decisions, not claims about
 Embark's unpublished storage infrastructure.
+
+## Stale runner session retention
+
+See the [workspace retention contract](../ci/RUNNER_WORKSPACE_RETENTION.md) for owner-authorized local cleanup, main/v0.3.1 and active-session protections, hash-bound review plans and reversible evidence retention. The recovery workflow now previews candidates only; it never performs a global sweep from an active runner worker.

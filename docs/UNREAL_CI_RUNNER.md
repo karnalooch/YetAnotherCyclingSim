@@ -361,3 +361,7 @@ failed before compilation on `M_SC_Limestone_ExposedRock.uasset` with
 `Filename too long`. A successful checkout at the corrected revision is required
 before claiming this runner failure resolved. Material Forge render, import,
 visual acceptance and performance remain separate proof gates.
+
+## Stale runner session retention
+
+See the [workspace retention contract](ci/RUNNER_WORKSPACE_RETENTION.md) for owner-authorized local cleanup, main/v0.3.1 and active-session protections, hash-bound review plans and reversible evidence retention. The recovery workflow now previews candidates only; it never performs a global sweep from an active runner worker.
