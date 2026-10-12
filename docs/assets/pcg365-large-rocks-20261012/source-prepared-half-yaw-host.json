@@ -1,0 +1,16 @@
+{
+  "actual_blender_version": "4.5.9",
+  "blend_input": null,
+  "blend_sha256": null,
+  "blender_executable": "tools/blender-4.5.9-windows-x64/blender.exe",
+  "duration_seconds": 14.344,
+  "expected_blender_version": "4.5.9",
+  "git_head": "68a14a65c4c88f4ec65321a6e5bfbd90e0bd12ac",
+  "log": "work/pcg365/large-base-half-yaw01/host.log",
+  "process_exit_code": 0,
+  "python_exit_code": 20,
+  "schema_version": 1,
+  "script": "scripts/blender/prepare_pcg365_large_scan_bases.py",
+  "script_sha256": "c6ac6ed98e22a2d6c7fefb7741283cf17e7b5ecd27137eea494ee04426ab841f",
+  "status": "PASS"
+}

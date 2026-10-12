@@ -313,3 +313,34 @@ Landscape has measurable collision. The pinned #364 source snapshot records
 compatibility remains NOT RUN. Do not infer asphalt hits from Landscape traces.
 Remote UE Pixel Streaming tooling exists but its current retained launcher
 points at the old #364 road checkpoint; no live #365 frame was received.
+
+
+## Larger-scan autonomous production continuation — 2026-10-12
+
+Use the [current larger-scan guide](../assets/pcg365-large-rocks-20261012/README.md)
+and [exact evidence manifest](../assets/pcg365-large-rocks-20261012/evidence.json),
+plus the completed larger-scan section in SA_CALOBRA_WORLD_GRAPH.md. The owner
+explicitly authorizes autonomous intermediate rock production and forbids terrain
+changes for this packet. Do not ask for repeated intermediate art approval.
+
+Final native execution is d1903aa952da2f30c237c589e924f95a1b2d994a /
+large-dynamic-detail01: six exit0 processes, saved/reopened ForgeV2 and both scans,
+eight real GPU views, verified restoration of the isolated temporary sun lease.
+The earlier43d158e0 V1 pair and39815d33 V2 pair each have twelve clean actions;
+failed408383fe/39815d33 shutdown attempts remain explicitly failed. Code/docs
+head is a delivery identity and must not relabel native execution.
+
+Source02 is a separate half-scale, quarter-turn natural scan variant, about1.25m
+long;06 retains original source size, about1.21m long. Original source bytes remain
+unchanged. Both source-cap diagnostics pass at point3 with6.762829/5.669366cm
+total embedding and9.937148-degree max slope. Full-footprint V1 remains REJECTED;
+remaining peripheral overhang20.693365/50.458336cm is not waived. The06 lower
+edge still looks raised; no visual or production asset admission is granted.
+ForgeV2 improves contrast modestly but bright faces remain chalky. Shadow mobility
+readbacks and successful restoration do not establish ground-shadow render parity.
+
+Next permitted work is source geometry/pose qualification and renderer diagnosis
+with these retained negative controls, without terrain edits, mask/threshold
+weakening, plinths, hull fills or source overwrite. Do not scatter these variants
+as qualified assets. Native build, latest-road/continuous/render parity and final
+whole-M3 owner audit remain open; performance remains DEFERRED_AFTER_M3/false.

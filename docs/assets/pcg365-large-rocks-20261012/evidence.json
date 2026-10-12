@@ -1,0 +1,1578 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "milestone": "M3",
+  "owner_instruction": "Autonomous production of the two larger scans; improve seating and Material Forge; real UE renders; subagents; docs; do not modify terrain.",
+  "code_sha": "d1903aa952da2f30c237c589e924f95a1b2d994a",
+  "source_evidence": [
+    {
+      "source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-source-inspection01\\inspection.json",
+        "bytes": 8279,
+        "sha256": "92d5f71eec0bb53b95bb5e45e83af0d39c400daae3f5b448dbc97da4236b9d8c"
+      },
+      "repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\source-inspection01.json",
+        "bytes": 8279,
+        "sha256": "92d5f71eec0bb53b95bb5e45e83af0d39c400daae3f5b448dbc97da4236b9d8c"
+      },
+      "host_source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-source-inspection01\\host.json",
+        "bytes": 601,
+        "sha256": "f48e320937a6f2786de70858df950a513d65f1e345aa268aca2fe5379e311867"
+      },
+      "host_repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\source-inspection01-host.json",
+        "bytes": 601,
+        "sha256": "f48e320937a6f2786de70858df950a513d65f1e345aa268aca2fe5379e311867"
+      }
+    },
+    {
+      "source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-source-inspection02\\inspection.json",
+        "bytes": 8956,
+        "sha256": "49c9d8aff0b6c39cb74f8799c049bdf260a99d9590fe64ab0e811cfe5bc96a44"
+      },
+      "repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\source-inspection02.json",
+        "bytes": 8956,
+        "sha256": "49c9d8aff0b6c39cb74f8799c049bdf260a99d9590fe64ab0e811cfe5bc96a44"
+      },
+      "host_source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-source-inspection02\\host.json",
+        "bytes": 602,
+        "sha256": "22e5310632884e01ec6bf5284c42a80983c791d1f2d6cbd37f2512767e04b7e6"
+      },
+      "host_repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\source-inspection02-host.json",
+        "bytes": 602,
+        "sha256": "22e5310632884e01ec6bf5284c42a80983c791d1f2d6cbd37f2512767e04b7e6"
+      }
+    },
+    {
+      "source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-base10-01\\derived\\scan-planar-bases.json",
+        "bytes": 54394,
+        "sha256": "aad3b5814634b1c7b4abab84018b7fdb6423078b65626e495b8c5a4983174b3e"
+      },
+      "repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\base10-rejected.json",
+        "bytes": 54394,
+        "sha256": "aad3b5814634b1c7b4abab84018b7fdb6423078b65626e495b8c5a4983174b3e"
+      },
+      "host_source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-base10-01\\host.json",
+        "bytes": 597,
+        "sha256": "8c2fa5ce20803c23b7e44a1d8283564cfdf71da3e51b682775d956d0bf9a1d06"
+      },
+      "host_repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\base10-rejected-host.json",
+        "bytes": 597,
+        "sha256": "8c2fa5ce20803c23b7e44a1d8283564cfdf71da3e51b682775d956d0bf9a1d06"
+      }
+    },
+    {
+      "source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-base12-01\\derived\\scan-planar-bases.json",
+        "bytes": 55570,
+        "sha256": "e10678762f322dd6b62e7b916f636e8a4ef63b99977a0cf67ab5c82d2c3fcbe5"
+      },
+      "repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\base12-single-loop-rejected.json",
+        "bytes": 55570,
+        "sha256": "e10678762f322dd6b62e7b916f636e8a4ef63b99977a0cf67ab5c82d2c3fcbe5"
+      },
+      "host_source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-base12-01\\host.json",
+        "bytes": 597,
+        "sha256": "65f740596d7c7e418697f521a27d52815d1bef1dd7a3d3bf86473cf02b9dac25"
+      },
+      "host_repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\base12-single-loop-rejected-host.json",
+        "bytes": 597,
+        "sha256": "65f740596d7c7e418697f521a27d52815d1bef1dd7a3d3bf86473cf02b9dac25"
+      }
+    },
+    {
+      "source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-base12-02\\derived\\scan-planar-bases.json",
+        "bytes": 56962,
+        "sha256": "a431556796c91803d12f2fe0c162d4d4480d8dfa3f5786018354ccdd353cea43"
+      },
+      "repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\base12-component-rejected.json",
+        "bytes": 56962,
+        "sha256": "a431556796c91803d12f2fe0c162d4d4480d8dfa3f5786018354ccdd353cea43"
+      },
+      "host_source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-base12-02\\host.json",
+        "bytes": 596,
+        "sha256": "9f55bc263c7616dfd32a673983188b0235a91203c30e6ef4c7cde28e3ae082a1"
+      },
+      "host_repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\base12-component-rejected-host.json",
+        "bytes": 596,
+        "sha256": "9f55bc263c7616dfd32a673983188b0235a91203c30e6ef4c7cde28e3ae082a1"
+      }
+    },
+    {
+      "source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-base12-03\\derived\\scan-planar-bases.json",
+        "bytes": 293298,
+        "sha256": "012f12de85ef8a578f516f912d396d034cefe8aba80b3bf2f60ebd4b612c69aa"
+      },
+      "repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\source-prepared.json",
+        "bytes": 293298,
+        "sha256": "012f12de85ef8a578f516f912d396d034cefe8aba80b3bf2f60ebd4b612c69aa"
+      },
+      "host_source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-base12-03\\host.json",
+        "bytes": 598,
+        "sha256": "71b577e1795c5d3af8fa544361e28599558fb86edf780856320ee93c6fa9a4bc"
+      },
+      "host_repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\source-prepared-host.json",
+        "bytes": 598,
+        "sha256": "71b577e1795c5d3af8fa544361e28599558fb86edf780856320ee93c6fa9a4bc"
+      }
+    },
+    {
+      "source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-base-half01\\derived\\scan-planar-bases.json",
+        "bytes": 297214,
+        "sha256": "39110603987a798f9ed1f25efc84d6226cd60f396a929311cb098650f2677e4d"
+      },
+      "repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\source-prepared-half.json",
+        "bytes": 297214,
+        "sha256": "39110603987a798f9ed1f25efc84d6226cd60f396a929311cb098650f2677e4d"
+      },
+      "host_source": {
+        "path": "D:\\yacs\\work\\pcg365\\large-base-half01\\host.json",
+        "bytes": 600,
+        "sha256": "bc71e2bdb19ed8f525625ea94824cf89811ee5137bb9838ecef893cfd59821a1"
+      },
+      "host_repository": {
+        "path": "docs\\assets\\pcg365-large-rocks-20261012\\source-prepared-half-host.json",
+        "bytes": 600,
+        "sha256": "bc71e2bdb19ed8f525625ea94824cf89811ee5137bb9838ecef893cfd59821a1"
+      }
+    }
+  ],
+  "source_receipt_errata": [
+    {
+      "artifact": "source-prepared.json",
+      "asset": "namaqualand_boulder_06",
+      "field": "cap_validation.method",
+      "actual_method": "tessellate_polygon single-loop branch",
+      "reported_method": "stock triangle_fill",
+      "reason": "Shared producer metadata label; actual code keeps single-loop branch. Raw receipt preserved unchanged; geometry/hash checks unaffected."
+    }
+  ],
+  "native_execution": "COMPLETED_LOCAL_DIAGNOSTIC_ONLY_NOT_ADMITTED",
+  "placement": false,
+  "qualified_assets": [],
+  "regional_production_qualified": false,
+  "full_qualification": false,
+  "terrain_modified": false,
+  "performance_pass": false,
+  "native_build": "NOT_RUN_PREBUILT_DEPENDENCY",
+  "full_size_rejected_packet": {
+    "code_sha": "8fef0e99041df25d52e3aa3ad32355b76132aa1f",
+    "token": "large-baseline01",
+    "actions": [
+      {
+        "action": "inspect",
+        "receipt": {
+          "path": "D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\proof\\inspect\\inspect-receipt.json",
+          "bytes": 620,
+          "sha256": "89663a22b9e13425c15415ceee65f425bac0b4585c84ad921011cc823e938e9d"
+        },
+        "repository": {
+          "path": "docs\\assets\\pcg365-large-rocks-20261012\\full-size-inspect-receipt.json",
+          "bytes": 620,
+          "sha256": "89663a22b9e13425c15415ceee65f425bac0b4585c84ad921011cc823e938e9d"
+        },
+        "completion_marker": {
+          "path": "D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\proof\\inspect\\launcher-completed.json",
+          "bytes": 165,
+          "sha256": "439a75ed2db6502d8f86bc29e7c03303e13a15d0eb5ac621164f57acb3d0ee32"
+        },
+        "status": "NATIVE_INSPECTION_COMPLETED"
+      },
+      {
+        "action": "material",
+        "receipt": {
+          "path": "D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\proof\\material\\material-receipt.json",
+          "bytes": 18430,
+          "sha256": "c5ea3db46a0eabe8b59a72fd9dc1c60b4a12ea6052d03cad14b58f89b8bdaabb"
+        },
+        "repository": {
+          "path": "docs\\assets\\pcg365-large-rocks-20261012\\full-size-material-receipt.json",
+          "bytes": 18430,
+          "sha256": "c5ea3db46a0eabe8b59a72fd9dc1c60b4a12ea6052d03cad14b58f89b8bdaabb"
+        },
+        "completion_marker": {
+          "path": "D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\proof\\material\\launcher-completed.json",
+          "bytes": 165,
+          "sha256": "439a75ed2db6502d8f86bc29e7c03303e13a15d0eb5ac621164f57acb3d0ee32"
+        },
+        "status": "MATERIAL_BINDING_SAVED"
+      },
+      {
+        "action": "material-reload",
+        "receipt": {
+          "path": "D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\proof\\material-reload\\material-reload-receipt.json",
+          "bytes": 3013,
+          "sha256": "f201d9691206df47039ffc7c3938bc9f1627f06b61dca72a67036d971e0684da"
+        },
+        "repository": {
+          "path": "docs\\assets\\pcg365-large-rocks-20261012\\full-size-material-reload-receipt.json",
+          "bytes": 3013,
+          "sha256": "f201d9691206df47039ffc7c3938bc9f1627f06b61dca72a67036d971e0684da"
+        },
+        "completion_marker": {
+          "path": "D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\proof\\material-reload\\launcher-completed.json",
+          "bytes": 165,
+          "sha256": "439a75ed2db6502d8f86bc29e7c03303e13a15d0eb5ac621164f57acb3d0ee32"
+        },
+        "status": "MATERIAL_BINDING_FRESH_READBACK"
+      },
+      {
+        "action": "rock-qualify",
+        "receipt": {
+          "path": "D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\proof\\rock-qualify\\rock-qualify-receipt.json",
+          "bytes": 5619521,
+          "sha256": "d677f0d0820a91a084358308c9c1d11a21fd37645c310d248175e002f78c7751"
+        },
+        "repository": {
+          "path": "docs\\assets\\pcg365-large-rocks-20261012\\full-size-rock-qualify-receipt.json",
+          "bytes": 5619521,
+          "sha256": "d677f0d0820a91a084358308c9c1d11a21fd37645c310d248175e002f78c7751"
+        },
+        "completion_marker": {
+          "path": "D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\proof\\rock-qualify\\launcher-completed.json",
+          "bytes": 165,
+          "sha256": "439a75ed2db6502d8f86bc29e7c03303e13a15d0eb5ac621164f57acb3d0ee32"
+        },
+        "status": "ROCK_CONTACT_MATRIX_MEASURED"
+      },
+      {
+        "action": "rock-reload",
+        "receipt": {
+          "path": "D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\proof\\rock-reload\\rock-reload-receipt.json",
+          "bytes": 454442,
+          "sha256": "5b69f71ca34657e8563337d6def5b18361126cc43fa6e7622e0049565529f361"
+        },
+        "repository": {
+          "path": "docs\\assets\\pcg365-large-rocks-20261012\\full-size-rock-reload-receipt.json",
+          "bytes": 454442,
+          "sha256": "5b69f71ca34657e8563337d6def5b18361126cc43fa6e7622e0049565529f361"
+        },
+        "completion_marker": {
+          "path": "D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\proof\\rock-reload\\launcher-completed.json",
+          "bytes": 165,
+          "sha256": "439a75ed2db6502d8f86bc29e7c03303e13a15d0eb5ac621164f57acb3d0ee32"
+        },
+        "status": "ROCK_MESHES_FRESH_READBACK"
+      },
+      {
+        "action": "rock-render",
+        "receipt": {
+          "path": "D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\proof\\rock-render\\rock-render-receipt.json",
+          "bytes": 977,
+          "sha256": "cdd4931471398d8a4a2fc1bd3e18b2bdb80e4a1f43cb1108b4e660dac1eca08f"
+        },
+        "repository": {
+          "path": "docs\\assets\\pcg365-large-rocks-20261012\\full-size-rock-render-receipt.json",
+          "bytes": 977,
+          "sha256": "cdd4931471398d8a4a2fc1bd3e18b2bdb80e4a1f43cb1108b4e660dac1eca08f"
+        },
+        "completion_marker": null,
+        "status": "FAILED"
+      }
+    ],
+    "failure": "Rock02 has no complete diagnostic fit at these five points; GPU review correctly blocked; detail stage NOT RUN"
+  },
+  "current_variants": {
+    "namaqualand_boulder_02": {
+      "source_uniform_art_scale": 0.5,
+      "source_to_derived_scale_recorded": true,
+      "native_actor_scale": 1,
+      "source_original_unchanged": true,
+      "source_yaw_art_degrees": 90
+    },
+    "namaqualand_boulder_06": {
+      "source_uniform_art_scale": 1,
+      "native_actor_scale": 1,
+      "source_original_unchanged": true
+    }
+  },
+  "larger_cpu_envelope_search": {
+    "candidate_receipt": {
+      "path": "Saved\\RuntimeProof\\WorldGraph365\\large-envelope-a\\world-graph-candidates.json",
+      "bytes": 15325075,
+      "sha256": "06b34ed0b40be8a835b7de45178cd5a44774f9b9b42b01f08cf36e024631e600"
+    },
+    "radius_m": 1.5,
+    "clearance_m": 0.25,
+    "density_selected_count": 0,
+    "eligible_density_thinned_count": 17,
+    "used_for_production_or_native_placement": false
+  },
+  "rotated_source_preparation": [
+    {
+      "source": "D:\\yacs\\work\\pcg365\\large-base-half-yaw01\\host.json",
+      "repository": "docs/assets/pcg365-large-rocks-20261012/source-prepared-half-yaw-host.json",
+      "sha256": "aafed32d910655f713b1d4f02ce41c7a378801d1690065478b8cd6cc3c0b5c9c",
+      "bytes": 604
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\large-base-half-yaw01\\derived\\scan-planar-bases.json",
+      "repository": "docs/assets/pcg365-large-rocks-20261012/source-prepared-half-yaw.json",
+      "sha256": "099f12ed77848212e94bf128a7b261bd127497b9dee688e6b20f85acce554800",
+      "bytes": 298003
+    }
+  ],
+  "current_native_status": "COMPLETED_LOCAL_DIAGNOSTIC_ONLY",
+  "half_identity_native_attempt": {
+    "code_sha": "408383fe864dd550fe384bba85e4a6cf6d60f1a2",
+    "run_token": "large-half-baseline01",
+    "rock_reload_process_exit": -1073741819,
+    "completion_marker": false,
+    "render": "NOT_RUN",
+    "failure": "Post-log-close access violation; receipt does not count as clean completion. Rock02 point3 slope18.773911 degrees remains rejected."
+  },
+  "shutdown_mitigation": {
+    "minimum_seconds": 5,
+    "minimum_slate_ticks": 20,
+    "final_loading_barrier_after_callback_unregister": true,
+    "root_cause_verified": false,
+    "requires_actual_exit_zero": true
+  },
+  "first_rotated_native_pair": [
+    {
+      "run_token": "large-yaw-baseline01",
+      "code_sha": "43d158e0cbc43af087864ab6ecb850ed6545ba05",
+      "actions": [
+        {
+          "action": "inspect",
+          "kind": "inspect-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\inspect\\inspect-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-inspect-receipt.json",
+          "sha256": "f8b4e997383862c64625c2e2beaf3e5a913a47881efe3cf23dccfd9f35a2ab0f",
+          "bytes": 620
+        },
+        {
+          "action": "inspect",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\inspect\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-inspect-completed.json",
+          "sha256": "778dba1a4b35cc714de09341397d556bf3fac5b2de1cf98096ef147af772dd7a",
+          "bytes": 165
+        },
+        {
+          "action": "material",
+          "kind": "material-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\material\\material-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-material-receipt.json",
+          "sha256": "052bcf26f8d2f6c25c2279cb0dc30d736f1cd1cd38289a2842feb0714d1924ce",
+          "bytes": 18430
+        },
+        {
+          "action": "material",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\material\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-material-completed.json",
+          "sha256": "778dba1a4b35cc714de09341397d556bf3fac5b2de1cf98096ef147af772dd7a",
+          "bytes": 165
+        },
+        {
+          "action": "material-reload",
+          "kind": "material-reload-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\material-reload\\material-reload-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-material-reload-receipt.json",
+          "sha256": "b993d2b96a3d593f201fcc4f5d2799ad2153d6c59896eb522fe42c5fbb75420e",
+          "bytes": 3013
+        },
+        {
+          "action": "material-reload",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\material-reload\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-material-reload-completed.json",
+          "sha256": "778dba1a4b35cc714de09341397d556bf3fac5b2de1cf98096ef147af772dd7a",
+          "bytes": 165
+        },
+        {
+          "action": "rock-qualify",
+          "kind": "rock-qualify-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-qualify\\rock-qualify-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-rock-qualify-receipt.json",
+          "sha256": "2f3375c2ad09ef268d98f78973c921cf9748c5efc5bd0aae10d51fa06e7300f8",
+          "bytes": 5630951
+        },
+        {
+          "action": "rock-qualify",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-qualify\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-rock-qualify-completed.json",
+          "sha256": "778dba1a4b35cc714de09341397d556bf3fac5b2de1cf98096ef147af772dd7a",
+          "bytes": 165
+        },
+        {
+          "action": "rock-reload",
+          "kind": "rock-reload-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-reload\\rock-reload-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-rock-reload-receipt.json",
+          "sha256": "4c6fbb46c7abe0273c3301f3a1b7a9aca45b4d7f2b7f495d3777a11208b4e3ff",
+          "bytes": 456665
+        },
+        {
+          "action": "rock-reload",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-reload\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-rock-reload-completed.json",
+          "sha256": "778dba1a4b35cc714de09341397d556bf3fac5b2de1cf98096ef147af772dd7a",
+          "bytes": 165
+        },
+        {
+          "action": "rock-render",
+          "kind": "rock-render-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-render\\rock-render-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-rock-render-receipt.json",
+          "sha256": "64d6d3335ac589a6a59c98c62833d3a30233b95c5f75dcff96004039ecbaffe8",
+          "bytes": 1761750
+        },
+        {
+          "action": "rock-render",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-render\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-rock-render-completed.json",
+          "sha256": "778dba1a4b35cc714de09341397d556bf3fac5b2de1cf98096ef147af772dd7a",
+          "bytes": 165
+        }
+      ],
+      "review_images": [
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-01.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-namaqualand_boulder_02-boulder-low-angle-01.png",
+          "sha256": "93e430a95006162ca94fd13cec0ee7b600febdb67a785f00ba00a8ba9731526c",
+          "bytes": 3270836
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-02.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-namaqualand_boulder_02-boulder-low-angle-02.png",
+          "sha256": "8295d6cb61adab21da825c2d2f737e2348aff4ec6baabc25946ada8df307bd56",
+          "bytes": 3384302
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-03.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-namaqualand_boulder_02-boulder-low-angle-03.png",
+          "sha256": "721b793e3b56d9e254aab9894078677cf3e438e2fc27f2c71c34be53cad2763f",
+          "bytes": 3460921
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-04.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-namaqualand_boulder_02-boulder-low-angle-04.png",
+          "sha256": "6dc595a9d93e30c305e2d766ee491ca63de28a880e983740f4e1b0b0e03390e2",
+          "bytes": 3356084
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-01.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-namaqualand_boulder_06-boulder-low-angle-01.png",
+          "sha256": "00a91dd82d2d62ce6da39a638ae0c1c435253c0ed8ba222ce3e21c6735ffdefa",
+          "bytes": 3216114
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-02.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-namaqualand_boulder_06-boulder-low-angle-02.png",
+          "sha256": "2c6a222af220e6e2a5a6e3155624c6299b5479b85f94a894a12c7bef4a8e32be",
+          "bytes": 3272660
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-03.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-namaqualand_boulder_06-boulder-low-angle-03.png",
+          "sha256": "5164698cf0c1eade206f8c2db12b5568e29af7be4d9e8b1d5187a9f84d8b550e",
+          "bytes": 3477668
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-baseline01\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-04.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-baseline01-namaqualand_boulder_06-boulder-low-angle-04.png",
+          "sha256": "cac803e341654ac6ac8559f9d0c9eca9d6b4c05d49aca7ea3042ca31e3540d00",
+          "bytes": 3285745
+        }
+      ]
+    },
+    {
+      "run_token": "large-yaw-detail01",
+      "code_sha": "43d158e0cbc43af087864ab6ecb850ed6545ba05",
+      "actions": [
+        {
+          "action": "inspect",
+          "kind": "inspect-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\inspect\\inspect-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-inspect-receipt.json",
+          "sha256": "f8b4e997383862c64625c2e2beaf3e5a913a47881efe3cf23dccfd9f35a2ab0f",
+          "bytes": 620
+        },
+        {
+          "action": "inspect",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\inspect\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-inspect-completed.json",
+          "sha256": "778dba1a4b35cc714de09341397d556bf3fac5b2de1cf98096ef147af772dd7a",
+          "bytes": 165
+        },
+        {
+          "action": "material",
+          "kind": "material-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\material\\material-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-material-receipt.json",
+          "sha256": "8783db4f82bdaeeeab9b2556358f5e47409bac7ed32059faab501bb3fdb207db",
+          "bytes": 18906
+        },
+        {
+          "action": "material",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\material\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-material-completed.json",
+          "sha256": "778dba1a4b35cc714de09341397d556bf3fac5b2de1cf98096ef147af772dd7a",
+          "bytes": 165
+        },
+        {
+          "action": "material-reload",
+          "kind": "material-reload-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\material-reload\\material-reload-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-material-reload-receipt.json",
+          "sha256": "1b7764d60d43028d2f2bbf648aed6aa11ac8bc180fe5472422003284f138b493",
+          "bytes": 3469
+        },
+        {
+          "action": "material-reload",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\material-reload\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-material-reload-completed.json",
+          "sha256": "778dba1a4b35cc714de09341397d556bf3fac5b2de1cf98096ef147af772dd7a",
+          "bytes": 165
+        },
+        {
+          "action": "rock-qualify",
+          "kind": "rock-qualify-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-qualify\\rock-qualify-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-rock-qualify-receipt.json",
+          "sha256": "2301e69560f993ed968cd905fd26c4538c5ec2bd6b4677e2af58713ed1d86f5b",
+          "bytes": 5631843
+        },
+        {
+          "action": "rock-qualify",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-qualify\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-rock-qualify-completed.json",
+          "sha256": "778dba1a4b35cc714de09341397d556bf3fac5b2de1cf98096ef147af772dd7a",
+          "bytes": 165
+        },
+        {
+          "action": "rock-reload",
+          "kind": "rock-reload-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-reload\\rock-reload-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-rock-reload-receipt.json",
+          "sha256": "4887adf8cfb700f1819b30a9656abf5e17a8ca5b3e65cac470ca1661004abd9a",
+          "bytes": 457557
+        },
+        {
+          "action": "rock-reload",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-reload\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-rock-reload-completed.json",
+          "sha256": "778dba1a4b35cc714de09341397d556bf3fac5b2de1cf98096ef147af772dd7a",
+          "bytes": 165
+        },
+        {
+          "action": "rock-render",
+          "kind": "rock-render-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-render\\rock-render-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-rock-render-receipt.json",
+          "sha256": "c2a7ee0e6e3e585dee0bf50a410cd5cbee4de3c86d4fed36cdb2d96c31f7b8e3",
+          "bytes": 1761739
+        },
+        {
+          "action": "rock-render",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-render\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-rock-render-completed.json",
+          "sha256": "778dba1a4b35cc714de09341397d556bf3fac5b2de1cf98096ef147af772dd7a",
+          "bytes": 165
+        }
+      ],
+      "review_images": [
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-01.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-namaqualand_boulder_02-boulder-low-angle-01.png",
+          "sha256": "c079ac4865ce903c7a41d10815675abc9aa60d0f6f1e8dd7ef0c2e6f01350ad0",
+          "bytes": 3275835
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-02.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-namaqualand_boulder_02-boulder-low-angle-02.png",
+          "sha256": "b1f899f7e16e2537cb47d6cd48cd220c2800def1e1a181f58c86658eec750d0d",
+          "bytes": 3383988
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-03.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-namaqualand_boulder_02-boulder-low-angle-03.png",
+          "sha256": "979c275f3a1a3f4982d4b57a99b83a13b3d500dae1989916b09051f95de8c2ca",
+          "bytes": 3461336
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-04.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-namaqualand_boulder_02-boulder-low-angle-04.png",
+          "sha256": "0c45fe15a14ca8bd615f929686e154bdca8eaf6d3b50f56bf331c1fe24450faf",
+          "bytes": 3363721
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-01.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-namaqualand_boulder_06-boulder-low-angle-01.png",
+          "sha256": "bc746897a6d8f00ed57360bb9aa065a5b88123b3d8b4d4152bf1eb32ee0fbbde",
+          "bytes": 3225723
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-02.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-namaqualand_boulder_06-boulder-low-angle-02.png",
+          "sha256": "035f6136010cd88fde99a1e88b8133ff461fbeb064096bfd5237e5a7cbd77bbf",
+          "bytes": 3270798
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-03.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-namaqualand_boulder_06-boulder-low-angle-03.png",
+          "sha256": "9b5a1c13edbaf7a74a319dc7ede11abe8da4dd66752b5404e416ab977295bab8",
+          "bytes": 3477643
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\43d158e0cbc43af087864ab6ecb850ed6545ba05\\large-yaw-detail01\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-04.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-yaw-detail01-namaqualand_boulder_06-boulder-low-angle-04.png",
+          "sha256": "dffb46bc7ca8958fcf1633761bbf16325054cbf85e76a65ed5b16ac439074117",
+          "bytes": 3302074
+        }
+      ]
+    }
+  ],
+  "first_rotated_native_pair_status": "ALL_12_ACTIONS_CLEAN_EXIT_ZERO_WITH_MARKERS",
+  "visual_review_first_pair": "Natural scan silhouettes, baseline chalky; V1 detail too subtle;06 weak visual contact and peripheral overhang retained. Not production admission.",
+  "failed_native_evidence": [
+    {
+      "source": "D:\\yacs\\work\\pcg365\\408383fe864dd550fe384bba85e4a6cf6d60f1a2\\large-half-baseline01\\proof\\rock-qualify\\rock-qualify-receipt.json",
+      "repository": "docs/assets/pcg365-large-rocks-20261012/half-identity-rock-qualify-receipt.json",
+      "sha256": "0838cde88532446a1c396a933e0bdc7adf09a72485ad7010250d702308ed0c8e",
+      "bytes": 5627087,
+      "completion_marker_exists": true
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\408383fe864dd550fe384bba85e4a6cf6d60f1a2\\large-half-baseline01\\proof\\rock-reload\\rock-reload-receipt.json",
+      "repository": "docs/assets/pcg365-large-rocks-20261012/half-identity-rock-reload-receipt.json",
+      "sha256": "9e64c699a44e28f7d5c30527a6c8d691b01e20f86346ed63f80e34a9f0573a83",
+      "bytes": 456212,
+      "completion_marker_exists": false
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\408383fe864dd550fe384bba85e4a6cf6d60f1a2\\large-half-baseline01\\proof\\rock-reload-editor.log",
+      "sha256": "8b64cef3d2bb86af3768f600e2b31f8196b1061cfd508af6ff215a7c3838039f",
+      "bytes": 288640,
+      "retention": "HOST_ONLY_RAW_LOG; hash retained, no full host/environment log committed"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline01\\proof\\rock-qualify\\rock-qualify-receipt.json",
+      "repository": "docs/assets/pcg365-large-rocks-20261012/shadow-first-rock-qualify-receipt.json",
+      "sha256": "5e7c40e79f0411df39524a771d83bfcc2b29944096a27e83ce4d8423f86f4708",
+      "bytes": 5630951,
+      "completion_marker_exists": true
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline01\\proof\\rock-reload\\rock-reload-receipt.json",
+      "repository": "docs/assets/pcg365-large-rocks-20261012/shadow-first-rock-reload-receipt.json",
+      "sha256": "9983dac67543f793e1f5ea57cc8a4e62538e23999b99fdf4704e2f7d8e04f39c",
+      "bytes": 456665,
+      "completion_marker_exists": false
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline01\\proof\\rock-reload-editor.log",
+      "sha256": "0af028b852dfee16a7f8f8bde02e2a1b526555faeb63b9a54535ddd28b7221d6",
+      "bytes": 289452,
+      "retention": "HOST_ONLY_RAW_LOG; hash retained, no full host/environment log committed"
+    }
+  ],
+  "shadow_first_attempt": {
+    "code_sha": "39815d33190fe0fce10727e35d196081e6fc8d1a",
+    "run_token": "large-shadow-baseline01",
+    "failed_action": "rock-reload",
+    "process_exit": -1073741819,
+    "render": "NOT_RUN",
+    "completion_marker": false
+  },
+  "forge_v2_native_pair": [
+    {
+      "run_token": "large-shadow-baseline02",
+      "code_sha": "39815d33190fe0fce10727e35d196081e6fc8d1a",
+      "actions": [
+        {
+          "action": "inspect",
+          "kind": "inspect-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\inspect\\inspect-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-inspect-receipt.json",
+          "sha256": "190752bd49e26eda7a5d9e7e410050ad0c3f6b0ad44054da6c7958d95b562124",
+          "bytes": 620
+        },
+        {
+          "action": "inspect",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\inspect\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-inspect-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        },
+        {
+          "action": "material",
+          "kind": "material-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\material\\material-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-material-receipt.json",
+          "sha256": "989068de49711a75219994cd1c7b20d894e1d3d219b792a3aa204e872fa9126b",
+          "bytes": 18430
+        },
+        {
+          "action": "material",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\material\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-material-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        },
+        {
+          "action": "material-reload",
+          "kind": "material-reload-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\material-reload\\material-reload-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-material-reload-receipt.json",
+          "sha256": "9b030f041e249b56acb23d8f04472865c17c9a005c5c1502a6d36c58bbe872ff",
+          "bytes": 3013
+        },
+        {
+          "action": "material-reload",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\material-reload\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-material-reload-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        },
+        {
+          "action": "rock-qualify",
+          "kind": "rock-qualify-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\rock-qualify-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-rock-qualify-receipt.json",
+          "sha256": "8e0c0d4f1dd1f4eb323162777fe834953e0fb4bebfe9bed2032676ce75c38c82",
+          "bytes": 5630951
+        },
+        {
+          "action": "rock-qualify",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-rock-qualify-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        },
+        {
+          "action": "rock-reload",
+          "kind": "rock-reload-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-reload\\rock-reload-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-rock-reload-receipt.json",
+          "sha256": "855c6052aa1d54971cec60873ae2a331bd9273aed3bc7cdc8f81f0a2fba8c3df",
+          "bytes": 456665
+        },
+        {
+          "action": "rock-reload",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-reload\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-rock-reload-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        },
+        {
+          "action": "rock-render",
+          "kind": "rock-render-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-render\\rock-render-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-rock-render-receipt.json",
+          "sha256": "ca4b121e6d12fadb74c7b7400a71df071b0831a36f39ebbd052264124d9f23d3",
+          "bytes": 5277987
+        },
+        {
+          "action": "rock-render",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-render\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-rock-render-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        }
+      ],
+      "review_images": [
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-01.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-namaqualand_boulder_02-boulder-low-angle-01.png",
+          "sha256": "93e430a95006162ca94fd13cec0ee7b600febdb67a785f00ba00a8ba9731526c",
+          "bytes": 3270836
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-02.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-namaqualand_boulder_02-boulder-low-angle-02.png",
+          "sha256": "8295d6cb61adab21da825c2d2f737e2348aff4ec6baabc25946ada8df307bd56",
+          "bytes": 3384302
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-03.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-namaqualand_boulder_02-boulder-low-angle-03.png",
+          "sha256": "721b793e3b56d9e254aab9894078677cf3e438e2fc27f2c71c34be53cad2763f",
+          "bytes": 3460921
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-04.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-namaqualand_boulder_02-boulder-low-angle-04.png",
+          "sha256": "784e8e982f4a931bcb206d6547a3fa85d08babde4333dce724932ce27319996b",
+          "bytes": 3356073
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-01.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-namaqualand_boulder_06-boulder-low-angle-01.png",
+          "sha256": "41540567d779e6a74b87054fbafeca5a279b37808b76b6c3f72db7f510b60960",
+          "bytes": 3215709
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-02.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-namaqualand_boulder_06-boulder-low-angle-02.png",
+          "sha256": "d5745529b75454f4153cd18f1907772cce0035caf65e9222831cde068512824d",
+          "bytes": 3273321
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-03.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-namaqualand_boulder_06-boulder-low-angle-03.png",
+          "sha256": "b9c993037557c7e09f15404ca3a46cbd78616cf52f93f78d43f24333ab77c14b",
+          "bytes": 3477873
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-04.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-baseline02-namaqualand_boulder_06-boulder-low-angle-04.png",
+          "sha256": "865305e416836c59176f1872023b8672ec6a7aeac5bbf2cee5b031ca2f3e0af6",
+          "bytes": 3286396
+        }
+      ],
+      "status": "SIX_ACTIONS_CLEAN_EXIT_ZERO",
+      "retained_raw_contact": [
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\launcher-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\mesh-inventory.json",
+          "sha256": "62f482a8bbd0b8d421c62c4a7731b45792a63437c53e64bb899dc72839cbabb3",
+          "bytes": 183053
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_02-point0-grid33.json",
+          "sha256": "2fa01255d3406e320ae9dcb3ce2bcf3fd72fd116f1616aef3a618df8dd32a7ab",
+          "bytes": 316767
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_02-point0-grid65.json",
+          "sha256": "68edae9333758d569397aaa362351d0eaeb6391bff7f259121ddb9fbfc0d1aca",
+          "bytes": 1266252
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_02-point1-grid33.json",
+          "sha256": "72691c1e2277e12b3feb968f602e3e0cee87c9177d59e99cc7aca1336882be00",
+          "bytes": 316793
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_02-point1-grid65.json",
+          "sha256": "e795339a9644285ef727efaace1af8d81207b5f0aca68e95c323fc140f18b0cf",
+          "bytes": 1264085
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_02-point2-grid33.json",
+          "sha256": "7a63890335ba69fac979013cec65e61315fb2b6e92c79888f5492ef7c5bfdf9e",
+          "bytes": 317609
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_02-point2-grid65.json",
+          "sha256": "fffb60b5a3c3beb94597187b98fa6daaf5e08d6a1079451177c3c98be918da28",
+          "bytes": 1269810
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_02-point3-grid33.json",
+          "sha256": "5569ad6f603307185dad8633d6b93a1a52032144a4930f37b1fcab6616b68ac7",
+          "bytes": 316319
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_02-point3-grid65.json",
+          "sha256": "be45fec097f542aa106a5b2e8b38dead0942fe056c157674e78832bf506e70ad",
+          "bytes": 1257975
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_02-point4-grid33.json",
+          "sha256": "bb420fa7eea541e83ef5ae1ee86e1293eeafe8267b5278379c2015d8d09de58e",
+          "bytes": 315941
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_02-point4-grid65.json",
+          "sha256": "5d1bbd401ddfcd0dd9184fc60a33e25a0f56d1ef9c79e6f179a0c3de9136ff0b",
+          "bytes": 1261121
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_06-point0-grid33.json",
+          "sha256": "d6d8e585e007a9c421d2bae38d0b3b9c713af3546a63bbcbad033c0aab82c4ab",
+          "bytes": 354090
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_06-point0-grid65.json",
+          "sha256": "1a1202549969ac34f3811f7cd765b06bc57376ec33bd8f55605852df400c5752",
+          "bytes": 1409279
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_06-point1-grid33.json",
+          "sha256": "f9f8b10926e402db18c092ed60ed12c8cf3f5c1481020f46c64a0de63ea6c309",
+          "bytes": 354503
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_06-point1-grid65.json",
+          "sha256": "e14a818e76db71dc242f9922a0fe63ee0bada7f41e18438a7980833a9e78f5e1",
+          "bytes": 1410238
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_06-point2-grid33.json",
+          "sha256": "56cdbb9627c7f94af3c9f177c2d3e83e966097fc3a3ecfbb2c4921d69d4bb7dc",
+          "bytes": 355052
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_06-point2-grid65.json",
+          "sha256": "4923b62ceec438f82548ab85ace629c131fdd1154f8a64a5ffc0505fdc3ac034",
+          "bytes": 1413296
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_06-point3-grid33.json",
+          "sha256": "70067588e5592cdbb3a7879d6908cca714ddf283d6f42ef84802853994ff4723",
+          "bytes": 351500
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_06-point3-grid65.json",
+          "sha256": "1dcf47a57147124c7d158bcd2862707dada797a331b5fee731e35230c875afae",
+          "bytes": 1398387
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_06-point3-patch-grid129.json",
+          "sha256": "e49a1a037a6ade4a27a85f8231834de4d9a80e72220864dcadea2eac6338d0b8",
+          "bytes": 5570923
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_06-point4-grid33.json",
+          "sha256": "7b6a8c22b8f2df7deb728157e5f215ba3bf42d3f41c555476a7577b6a2e7a9f9",
+          "bytes": 356563
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\namaqualand_boulder_06-point4-grid65.json",
+          "sha256": "379c29390c8b252a63e7ea984b47630202e3f3bfe1a381256d2c52df340002ea",
+          "bytes": 1420036
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-baseline02\\proof\\rock-qualify\\rock-qualify-receipt.json",
+          "sha256": "8e0c0d4f1dd1f4eb323162777fe834953e0fb4bebfe9bed2032676ce75c38c82",
+          "bytes": 5630951
+        }
+      ]
+    },
+    {
+      "run_token": "large-shadow-detail03",
+      "code_sha": "39815d33190fe0fce10727e35d196081e6fc8d1a",
+      "actions": [
+        {
+          "action": "inspect",
+          "kind": "inspect-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\inspect\\inspect-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-inspect-receipt.json",
+          "sha256": "190752bd49e26eda7a5d9e7e410050ad0c3f6b0ad44054da6c7958d95b562124",
+          "bytes": 620
+        },
+        {
+          "action": "inspect",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\inspect\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-inspect-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        },
+        {
+          "action": "material",
+          "kind": "material-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\material\\material-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-material-receipt.json",
+          "sha256": "85ee11c923a3ec2917d04c6d8d7ae2d450f9684bd6c2e8cfa986ca8270330057",
+          "bytes": 18905
+        },
+        {
+          "action": "material",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\material\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-material-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        },
+        {
+          "action": "material-reload",
+          "kind": "material-reload-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\material-reload\\material-reload-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-material-reload-receipt.json",
+          "sha256": "e333f9ff0360c855db98e1871e26b149048b090755a32dbd33aa6c1a93a0411b",
+          "bytes": 3468
+        },
+        {
+          "action": "material-reload",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\material-reload\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-material-reload-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        },
+        {
+          "action": "rock-qualify",
+          "kind": "rock-qualify-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\rock-qualify-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-rock-qualify-receipt.json",
+          "sha256": "01d80c546934b85367b3249dec21b1bef20dbeb8f0793120959606aab993e009",
+          "bytes": 5631841
+        },
+        {
+          "action": "rock-qualify",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-rock-qualify-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        },
+        {
+          "action": "rock-reload",
+          "kind": "rock-reload-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-reload\\rock-reload-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-rock-reload-receipt.json",
+          "sha256": "712b4d32dd7d538f16da90fd69675281113bd71d97879c48261f632ccf906c79",
+          "bytes": 457555
+        },
+        {
+          "action": "rock-reload",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-reload\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-rock-reload-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        },
+        {
+          "action": "rock-render",
+          "kind": "rock-render-receipt.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-render\\rock-render-receipt.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-rock-render-receipt.json",
+          "sha256": "45060bd796295140910e96fbf4b60d59c156b429a890b3d77a6a6c97ce080a3a",
+          "bytes": 5277973
+        },
+        {
+          "action": "rock-render",
+          "kind": "launcher-completed.json",
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-render\\launcher-completed.json",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-rock-render-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        }
+      ],
+      "review_images": [
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-01.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-namaqualand_boulder_02-boulder-low-angle-01.png",
+          "sha256": "dadc7a97ffdb18d634462b6ad1190fc66c5bc0aad195ad1c1c58400e4204793d",
+          "bytes": 3275052
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-02.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-namaqualand_boulder_02-boulder-low-angle-02.png",
+          "sha256": "b6bab4533326da852a136319ac7d5f4aa39c5a0f216c04afa07301e500178e7c",
+          "bytes": 3374358
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-03.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-namaqualand_boulder_02-boulder-low-angle-03.png",
+          "sha256": "0a5503378dce5c42301af76116f2373593cdaf5453cf585d13d9aa5378ad6e24",
+          "bytes": 3456409
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-04.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-namaqualand_boulder_02-boulder-low-angle-04.png",
+          "sha256": "7a17a41831a2ef79e0ae912fc1fa41579a33c6e4dc6fd5014cc39e10e4ece73c",
+          "bytes": 3361572
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-01.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-namaqualand_boulder_06-boulder-low-angle-01.png",
+          "sha256": "57f2d9501a6ed351a8681dc02bda975a471482b15e322483ff41f1ca21e083b4",
+          "bytes": 3222790
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-02.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-namaqualand_boulder_06-boulder-low-angle-02.png",
+          "sha256": "4e4f6dc9fea4a29859fed3e8b5a2bd871572c0b3ef78fad78e3de40edb621f2a",
+          "bytes": 3258965
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-03.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-namaqualand_boulder_06-boulder-low-angle-03.png",
+          "sha256": "1d80e1c323f8a5050c7c1242bbd26b3b80a300e88cad714ad6449e6b008b3ddd",
+          "bytes": 3467596
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-04.png",
+          "repository": "docs/assets/pcg365-large-rocks-20261012/large-shadow-detail03-namaqualand_boulder_06-boulder-low-angle-04.png",
+          "sha256": "b86cf37307bc94bd34cee34205d4adb8e871e045960b58d6edabb39492fea173",
+          "bytes": 3299554
+        }
+      ],
+      "status": "SIX_ACTIONS_CLEAN_EXIT_ZERO",
+      "retained_raw_contact": [
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\launcher-completed.json",
+          "sha256": "7ef066c6a5b4e791d841ed91d61d660be01801e6a020119871573cb98dc0ad63",
+          "bytes": 165
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\mesh-inventory.json",
+          "sha256": "b28c61c3fa906c2a832429fee332fdc6bd6e7cd7acef8b5611dbf32968c5accc",
+          "bytes": 183053
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_02-point0-grid33.json",
+          "sha256": "2fa01255d3406e320ae9dcb3ce2bcf3fd72fd116f1616aef3a618df8dd32a7ab",
+          "bytes": 316767
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_02-point0-grid65.json",
+          "sha256": "68edae9333758d569397aaa362351d0eaeb6391bff7f259121ddb9fbfc0d1aca",
+          "bytes": 1266252
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_02-point1-grid33.json",
+          "sha256": "72691c1e2277e12b3feb968f602e3e0cee87c9177d59e99cc7aca1336882be00",
+          "bytes": 316793
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_02-point1-grid65.json",
+          "sha256": "e795339a9644285ef727efaace1af8d81207b5f0aca68e95c323fc140f18b0cf",
+          "bytes": 1264085
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_02-point2-grid33.json",
+          "sha256": "7a63890335ba69fac979013cec65e61315fb2b6e92c79888f5492ef7c5bfdf9e",
+          "bytes": 317609
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_02-point2-grid65.json",
+          "sha256": "fffb60b5a3c3beb94597187b98fa6daaf5e08d6a1079451177c3c98be918da28",
+          "bytes": 1269810
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_02-point3-grid33.json",
+          "sha256": "5569ad6f603307185dad8633d6b93a1a52032144a4930f37b1fcab6616b68ac7",
+          "bytes": 316319
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_02-point3-grid65.json",
+          "sha256": "be45fec097f542aa106a5b2e8b38dead0942fe056c157674e78832bf506e70ad",
+          "bytes": 1257975
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_02-point4-grid33.json",
+          "sha256": "bb420fa7eea541e83ef5ae1ee86e1293eeafe8267b5278379c2015d8d09de58e",
+          "bytes": 315941
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_02-point4-grid65.json",
+          "sha256": "5d1bbd401ddfcd0dd9184fc60a33e25a0f56d1ef9c79e6f179a0c3de9136ff0b",
+          "bytes": 1261121
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_06-point0-grid33.json",
+          "sha256": "d6d8e585e007a9c421d2bae38d0b3b9c713af3546a63bbcbad033c0aab82c4ab",
+          "bytes": 354090
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_06-point0-grid65.json",
+          "sha256": "1a1202549969ac34f3811f7cd765b06bc57376ec33bd8f55605852df400c5752",
+          "bytes": 1409279
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_06-point1-grid33.json",
+          "sha256": "f9f8b10926e402db18c092ed60ed12c8cf3f5c1481020f46c64a0de63ea6c309",
+          "bytes": 354503
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_06-point1-grid65.json",
+          "sha256": "e14a818e76db71dc242f9922a0fe63ee0bada7f41e18438a7980833a9e78f5e1",
+          "bytes": 1410238
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_06-point2-grid33.json",
+          "sha256": "56cdbb9627c7f94af3c9f177c2d3e83e966097fc3a3ecfbb2c4921d69d4bb7dc",
+          "bytes": 355052
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_06-point2-grid65.json",
+          "sha256": "4923b62ceec438f82548ab85ace629c131fdd1154f8a64a5ffc0505fdc3ac034",
+          "bytes": 1413296
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_06-point3-grid33.json",
+          "sha256": "70067588e5592cdbb3a7879d6908cca714ddf283d6f42ef84802853994ff4723",
+          "bytes": 351500
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_06-point3-grid65.json",
+          "sha256": "1dcf47a57147124c7d158bcd2862707dada797a331b5fee731e35230c875afae",
+          "bytes": 1398387
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_06-point3-patch-grid129.json",
+          "sha256": "e49a1a037a6ade4a27a85f8231834de4d9a80e72220864dcadea2eac6338d0b8",
+          "bytes": 5570923
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_06-point4-grid33.json",
+          "sha256": "7b6a8c22b8f2df7deb728157e5f215ba3bf42d3f41c555476a7577b6a2e7a9f9",
+          "bytes": 356563
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\namaqualand_boulder_06-point4-grid65.json",
+          "sha256": "379c29390c8b252a63e7ea984b47630202e3f3bfe1a381256d2c52df340002ea",
+          "bytes": 1420036
+        },
+        {
+          "source": "D:\\yacs\\work\\pcg365\\39815d33190fe0fce10727e35d196081e6fc8d1a\\large-shadow-detail03\\proof\\rock-qualify\\rock-qualify-receipt.json",
+          "sha256": "01d80c546934b85367b3249dec21b1bef20dbeb8f0793120959606aab993e009",
+          "bytes": 5631841
+        }
+      ]
+    }
+  ],
+  "forge_v2_recipe": {
+    "Gain": 0.64,
+    "Fracture": 0.38,
+    "Pore": 0.22,
+    "Mineral": 0.18,
+    "NormalStrength": 0.85,
+    "tile_cm": 400,
+    "ORM_changed": false,
+    "geometry_displacement": false
+  },
+  "current_code_sha": "d1903aa952da2f30c237c589e924f95a1b2d994a",
+  "final_dynamic_detail": {
+    "run_token": "large-dynamic-detail01",
+    "code_sha": "d1903aa952da2f30c237c589e924f95a1b2d994a",
+    "actions": [
+      {
+        "action": "inspect",
+        "kind": "inspect-receipt.json",
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\inspect\\inspect-receipt.json",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-inspect-receipt.json",
+        "sha256": "2feb54f6dbbc837befc7f119392e1f2817c9ab46e145a52b4fcf0a83e5b1b50a",
+        "bytes": 620
+      },
+      {
+        "action": "inspect",
+        "kind": "launcher-completed.json",
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\inspect\\launcher-completed.json",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-inspect-completed.json",
+        "sha256": "1e668d574007e21bc68a5dcdf1e9a6d6ea4b5dff9262586dfc11cbcec518e747",
+        "bytes": 165
+      },
+      {
+        "action": "material",
+        "kind": "material-receipt.json",
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\material\\material-receipt.json",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-material-receipt.json",
+        "sha256": "92033f80d2af589446b4bad88d6d7bcdb891b1302a674297f451a1770ac17a3d",
+        "bytes": 18905
+      },
+      {
+        "action": "material",
+        "kind": "launcher-completed.json",
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\material\\launcher-completed.json",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-material-completed.json",
+        "sha256": "1e668d574007e21bc68a5dcdf1e9a6d6ea4b5dff9262586dfc11cbcec518e747",
+        "bytes": 165
+      },
+      {
+        "action": "material-reload",
+        "kind": "material-reload-receipt.json",
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\material-reload\\material-reload-receipt.json",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-material-reload-receipt.json",
+        "sha256": "a35381c44466762388221631ac29657a923fc958d2d88545adfc9f061fdf5f40",
+        "bytes": 3468
+      },
+      {
+        "action": "material-reload",
+        "kind": "launcher-completed.json",
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\material-reload\\launcher-completed.json",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-material-reload-completed.json",
+        "sha256": "1e668d574007e21bc68a5dcdf1e9a6d6ea4b5dff9262586dfc11cbcec518e747",
+        "bytes": 165
+      },
+      {
+        "action": "rock-qualify",
+        "kind": "rock-qualify-receipt.json",
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\rock-qualify-receipt.json",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-rock-qualify-receipt.json",
+        "sha256": "99b20250ad0b582f1b279f8c895fae30cdf9b7509f836be4a302cb60aa539706",
+        "bytes": 5631841
+      },
+      {
+        "action": "rock-qualify",
+        "kind": "launcher-completed.json",
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\launcher-completed.json",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-rock-qualify-completed.json",
+        "sha256": "1e668d574007e21bc68a5dcdf1e9a6d6ea4b5dff9262586dfc11cbcec518e747",
+        "bytes": 165
+      },
+      {
+        "action": "rock-reload",
+        "kind": "rock-reload-receipt.json",
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-reload\\rock-reload-receipt.json",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-rock-reload-receipt.json",
+        "sha256": "e53c6604e83c65ccc7c8d77db5fba67d89bb9348c9ce2ad94460d607015b2385",
+        "bytes": 457555
+      },
+      {
+        "action": "rock-reload",
+        "kind": "launcher-completed.json",
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-reload\\launcher-completed.json",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-rock-reload-completed.json",
+        "sha256": "1e668d574007e21bc68a5dcdf1e9a6d6ea4b5dff9262586dfc11cbcec518e747",
+        "bytes": 165
+      },
+      {
+        "action": "rock-render",
+        "kind": "rock-render-receipt.json",
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-render\\rock-render-receipt.json",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-rock-render-receipt.json",
+        "sha256": "cae606a877e407dd5b755d69abab740a0029c7f851aaa65c8c3767e4eff08d66",
+        "bytes": 5281529
+      },
+      {
+        "action": "rock-render",
+        "kind": "launcher-completed.json",
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-render\\launcher-completed.json",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-rock-render-completed.json",
+        "sha256": "1e668d574007e21bc68a5dcdf1e9a6d6ea4b5dff9262586dfc11cbcec518e747",
+        "bytes": 165
+      }
+    ],
+    "review_images": [
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-01.png",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-namaqualand_boulder_02-boulder-low-angle-01.png",
+        "sha256": "26e3cb507605e4be15f32100bda3e676e055fa4333cff3d822255f95b2686125",
+        "bytes": 3274322
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-02.png",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-namaqualand_boulder_02-boulder-low-angle-02.png",
+        "sha256": "d28b5a79e478495e3d812aba82647ce4cf4b22b088be74c2b2b0c52222face61",
+        "bytes": 3374771
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-03.png",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-namaqualand_boulder_02-boulder-low-angle-03.png",
+        "sha256": "3446afa962ee4634c9ec4031ad121b4d1c5c02fa8bf0e1fc14426955d80cd076",
+        "bytes": 3454034
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-render\\namaqualand_boulder_02\\boulder-low-angle-04.png",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-namaqualand_boulder_02-boulder-low-angle-04.png",
+        "sha256": "599dc5b96a15da8a9e2de4c5db6dcbc10ad9e3b78cd2e3c3b5a7c6716d5a2bbe",
+        "bytes": 3361490
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-01.png",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-namaqualand_boulder_06-boulder-low-angle-01.png",
+        "sha256": "c98dedf29bc926aca36190802c4d60778737d5432112847390f8747202a13edd",
+        "bytes": 3223808
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-02.png",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-namaqualand_boulder_06-boulder-low-angle-02.png",
+        "sha256": "31809410b95e58fff700f531777126fc5dff5a9f30d8ce3fce824d2a20ab4402",
+        "bytes": 3258168
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-03.png",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-namaqualand_boulder_06-boulder-low-angle-03.png",
+        "sha256": "32fdd481df099308d7e05ba404b2ba32f09af94734db5937a0b0dd71256dc1f8",
+        "bytes": 3464634
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-render\\namaqualand_boulder_06\\boulder-low-angle-04.png",
+        "repository": "docs/assets/pcg365-large-rocks-20261012/large-dynamic-detail01-namaqualand_boulder_06-boulder-low-angle-04.png",
+        "sha256": "87c2aad639d767c671a3ce696099e8bd70557bc34b7ca111462bda963e058568",
+        "bytes": 3300369
+      }
+    ],
+    "status": "SIX_ACTIONS_CLEAN_EXIT_ZERO",
+    "retained_raw_contact": [
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\launcher-completed.json",
+        "sha256": "1e668d574007e21bc68a5dcdf1e9a6d6ea4b5dff9262586dfc11cbcec518e747",
+        "bytes": 165
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\mesh-inventory.json",
+        "sha256": "3de8d77b18fa8499826beea2e77465113a4f8bccc0405526dab87f7c1cd35f99",
+        "bytes": 183053
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_02-point0-grid33.json",
+        "sha256": "2fa01255d3406e320ae9dcb3ce2bcf3fd72fd116f1616aef3a618df8dd32a7ab",
+        "bytes": 316767
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_02-point0-grid65.json",
+        "sha256": "68edae9333758d569397aaa362351d0eaeb6391bff7f259121ddb9fbfc0d1aca",
+        "bytes": 1266252
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_02-point1-grid33.json",
+        "sha256": "72691c1e2277e12b3feb968f602e3e0cee87c9177d59e99cc7aca1336882be00",
+        "bytes": 316793
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_02-point1-grid65.json",
+        "sha256": "e795339a9644285ef727efaace1af8d81207b5f0aca68e95c323fc140f18b0cf",
+        "bytes": 1264085
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_02-point2-grid33.json",
+        "sha256": "7a63890335ba69fac979013cec65e61315fb2b6e92c79888f5492ef7c5bfdf9e",
+        "bytes": 317609
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_02-point2-grid65.json",
+        "sha256": "fffb60b5a3c3beb94597187b98fa6daaf5e08d6a1079451177c3c98be918da28",
+        "bytes": 1269810
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_02-point3-grid33.json",
+        "sha256": "5569ad6f603307185dad8633d6b93a1a52032144a4930f37b1fcab6616b68ac7",
+        "bytes": 316319
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_02-point3-grid65.json",
+        "sha256": "be45fec097f542aa106a5b2e8b38dead0942fe056c157674e78832bf506e70ad",
+        "bytes": 1257975
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_02-point4-grid33.json",
+        "sha256": "bb420fa7eea541e83ef5ae1ee86e1293eeafe8267b5278379c2015d8d09de58e",
+        "bytes": 315941
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_02-point4-grid65.json",
+        "sha256": "5d1bbd401ddfcd0dd9184fc60a33e25a0f56d1ef9c79e6f179a0c3de9136ff0b",
+        "bytes": 1261121
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_06-point0-grid33.json",
+        "sha256": "d6d8e585e007a9c421d2bae38d0b3b9c713af3546a63bbcbad033c0aab82c4ab",
+        "bytes": 354090
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_06-point0-grid65.json",
+        "sha256": "1a1202549969ac34f3811f7cd765b06bc57376ec33bd8f55605852df400c5752",
+        "bytes": 1409279
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_06-point1-grid33.json",
+        "sha256": "f9f8b10926e402db18c092ed60ed12c8cf3f5c1481020f46c64a0de63ea6c309",
+        "bytes": 354503
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_06-point1-grid65.json",
+        "sha256": "e14a818e76db71dc242f9922a0fe63ee0bada7f41e18438a7980833a9e78f5e1",
+        "bytes": 1410238
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_06-point2-grid33.json",
+        "sha256": "56cdbb9627c7f94af3c9f177c2d3e83e966097fc3a3ecfbb2c4921d69d4bb7dc",
+        "bytes": 355052
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_06-point2-grid65.json",
+        "sha256": "4923b62ceec438f82548ab85ace629c131fdd1154f8a64a5ffc0505fdc3ac034",
+        "bytes": 1413296
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_06-point3-grid33.json",
+        "sha256": "70067588e5592cdbb3a7879d6908cca714ddf283d6f42ef84802853994ff4723",
+        "bytes": 351500
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_06-point3-grid65.json",
+        "sha256": "1dcf47a57147124c7d158bcd2862707dada797a331b5fee731e35230c875afae",
+        "bytes": 1398387
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_06-point3-patch-grid129.json",
+        "sha256": "e49a1a037a6ade4a27a85f8231834de4d9a80e72220864dcadea2eac6338d0b8",
+        "bytes": 5570923
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_06-point4-grid33.json",
+        "sha256": "7b6a8c22b8f2df7deb728157e5f215ba3bf42d3f41c555476a7577b6a2e7a9f9",
+        "bytes": 356563
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\namaqualand_boulder_06-point4-grid65.json",
+        "sha256": "379c29390c8b252a63e7ea984b47630202e3f3bfe1a381256d2c52df340002ea",
+        "bytes": 1420036
+      },
+      {
+        "source": "D:\\yacs\\work\\pcg365\\d1903aa952da2f30c237c589e924f95a1b2d994a\\large-dynamic-detail01\\proof\\rock-qualify\\rock-qualify-receipt.json",
+        "sha256": "99b20250ad0b582f1b279f8c895fae30cdf9b7509f836be4a302cb60aa539706",
+        "bytes": 5631841
+      }
+    ],
+    "sun_restoration_verified": true
+  },
+  "review_image_count": 40,
+  "qualification": {
+    "placement": false,
+    "qualified_assets": [],
+    "full_qualification": false,
+    "regional_production_qualified": false,
+    "owner_visual_acceptance": "NOT_GRANTED",
+    "performance_pass": false,
+    "native_build": "NOT_RUN_PREBUILT_DEPENDENCY"
+  },
+  "visual_review_final": {
+    "reviewer": "parent and delegated visual audit of preceding same-geometry V2 pair",
+    "02": "Natural angular cluster and improved local source-base seating; central/rear undercuts remain. REVIEW_REQUIRED.",
+    "06": "Rounded peripheral underside still appears raised/pasted in views02/03/04; REJECTED_FOR_PRODUCTION_SCATTER.",
+    "Forge": "V2 darkens and adds contrast but bright faces remain pale/chalky; no visual PASS.",
+    "dynamic_sun": "Mobility lease and restore verified; did not establish convincing ground cast shadows in final PNGs; renderer parity remains unresolved.",
+    "terrain_modified": false,
+    "map_saved": false
+  },
+  "validation": {
+    "scoped_asset_tests": 52,
+    "candidate_tests": 7,
+    "result": "PASS",
+    "ruff": "PASS",
+    "architecture_contract": "PASS",
+    "docs_guards": "PASS links/i18n/structure/freshness"
+  }
+}

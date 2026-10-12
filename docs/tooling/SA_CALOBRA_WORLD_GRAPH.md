@@ -1179,9 +1179,9 @@ Forge maps at the unchanged 4 m physical scale. Fixed gain 0.82, fracture contra
 existing detail; ORM is unchanged. No texture is secretly shrunk, and no material
 height, WPO or tessellation moves geometry. The native readback checks graph
 connections, effective parameters, tangent-space flag and explicit WorldSpace=False.
-Both baseline and detail will be compared with the same geometry, seating, cameras
-and lights, using four real GPU views around each rock. Native execution remains
-NOT RUN until the following exact-head results are recorded.
+The completed baseline/detail comparisons and exact-head results are recorded
+below. Four real GPU views around each rock preserve geometry, seating, cameras
+and light settings within each paired run; exposure is not explicitly locked.
 
 The first native larger-rock packet (`8fef0e99041df25d52e3aa3ad32355b76132aa1f`,
 `large-baseline01`) completed inspection, material save/readback, measurement and
@@ -1209,3 +1209,73 @@ Both native actors still use identity transform and uniform scale1, with expecte
 derived-unit bounds and the same contact thresholds. Their conservative extents
 fit the earlier authenticated1.211882535m diagnostic envelope. The5% planting
 depth is computed from each final derived height and counted in total embedding.
+
+
+### Completed larger-scan native and GPU evidence
+
+The [larger-rock evidence guide](../assets/pcg365-large-rocks-20261012/README.md)
+and [hash-bound manifest](../assets/pcg365-large-rocks-20261012/evidence.json)
+retain 40 unedited 1920x1080 UE review PNGs, raw receipts, source recipes and
+failed attempts. Binary FBX, engine caches and full host logs remain outside Git.
+Original provider/source identities remain unchanged. Three delegated specialists
+actually ran bounded source, material and contact/visual audits; the coordinator
+serialized Blender, all UE processes and later CI.
+
+The unrotated half-size02 still rejected:94/2757 point3 rays crossed a steep
+strip at local X=-57.250569..-51.401289cm. Revision6 explicitly bakes Rz90 after
+ART scale0.5 into a separate source, narrowing its X footprint without changing
+its point, terrain or10-degree gate. Final native dimensions are about
+0.615432 x1.247846 x0.388361m;06 remains0.674983 x1.211876 x0.586468m after
+its separately recorded underside cut. Native actor/import scale remains1.
+
+At code43d158e0cbc43af087864ab6ecb850ed6545ba05, baseline01 and detail01
+completed all twelve owned actions with real exit0 and completion markers.
+Both point3 source-cap alternatives reached DIAGNOSTIC_SUPPORT_PATCH_ONLY;
+all unchanged V1 full-footprint decisions remain REJECTED. Source02 measured
+6.762829cm total embedding,91.569171% exposed height,98.258977% exposed rays,
+2757/2757 full rays and1953/1953 cap rays. Its33-to65 root/embedding deltas
+are0/0.066295cm. Source06 retains the initial33-to65 convergence failure;
+65-to129 refinement gives0.024237/0.048043cm deltas,5.669366cm embedding,
+94.462951% exposed height,100% exposed rays,12776/12776 full rays and
+5322/5322 cap rays. Both maximum slopes are9.937148degrees. Planting depths
+1.941803/2.932342cm are included in embedding, not an additional allowance.
+Remaining peripheral positive overhang gaps are20.693365/50.458336cm.
+
+ROCK_APPEARANCE_V2 preserves V1 as an independently selectable recipe. V2 uses
+fixed gain0.64, fracture0.38, pore0.22, mineral0.18 and normal strength0.85,
+with unchanged4m texture scale, ORM and zero audited displacement. At exact
+code39815d33190fe0fce10727e35d196081e6fc8d1a, large-shadow-baseline02 and
+large-shadow-detail03 completed twelve clean actions including effective graph/
+scalar fresh readback and sixteen GPU review PNGs. Only transient rock mobility
+changes to MOVABLE; geometry/position and saved source assets stay identical.
+The earlier large-shadow-baseline01 rock-reload failed with access violation
+-1073741819 after log close; no success marker or render is inferred. The same
+failure at408383fe is retained. The five-second/twenty-tick grace is a mitigation,
+not a verified teardown root-cause repair.
+
+Final exact native code d1903aa952da2f30c237c589e924f95a1b2d994a,
+large-dynamic-detail01, completes six clean processes and eight GPU views.
+A temporary DirectionalLight mobility-only lease switches STATIONARY to MOVABLE,
+verifies identical intensity/color/rotation/shadow flags/contact-shadow length,
+and restores all original settings before cleanup. No Landscape, road, Base_DTM,
+map, route or physics source is edited or saved. This lease is render diagnostics,
+not canonical lighting authoring. Real frames still do not establish convincing
+rock ground-cast-shadow parity; changing mobility alone did not resolve it.
+
+Parent inspection of all final views and independent review of all eight V2 pair
+views find natural silhouettes, local02 base seating improvement and slightly
+stronger Forge response. Bright faces remain pale/chalky. Source06's rounded
+lower edge still appears raised in multiple views; it is not admitted for scatter.
+Neither darker material nor shadows waive the recorded overhang. A future bounded
+source-pose investigation may inspect natural alternative support orientations;
+no artificial plinth, hull fill or terrain change has been applied.
+
+This packet produces two reproducible diagnostic mesh/material variants and real
+UE images, not finished regional assets. Placement/full qualification/regional
+admission remain false, qualified_assets is empty, native build NOT_RUN using
+prebuilt dependencies, performance DEFERRED_AFTER_M3/false. Latest-road parity,
+continuous support, renderer parity, production asset admission and final whole-M3
+owner visual review remain open. #365 and Draft PR474 are not complete or merged.
+Local validation:52 scoped asset tests plus7 candidate tests, Ruff and final
+architecture contract PASS. Documentation guards and exact delivery CI are
+recorded separately from the native execution SHA.
