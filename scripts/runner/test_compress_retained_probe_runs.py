@@ -72,6 +72,36 @@ class CompressionTests(unittest.TestCase):
             )
             self.assertEqual(archive.extractfile("binary").read(), bytes(range(256)))
 
+    def test_readonly_file_prune_and_interrupted_tree_recovery(self):
+        result = self.archive()
+        (self.source / "proof.json").unlink()
+        recovery = tool.restore_missing_verified_entries(
+            result["receipt"], result["receipt_sha256"], self.root, guard=lambda: None
+        )
+        self.assertEqual(recovery["restored_files"], ["proof.json"])
+        self.assertEqual(
+            (self.source / "proof.json").read_bytes(), b'{"evidence":true}\n'
+        )
+        (self.source / "binary").chmod(0o444)
+        tool.prune_retained(
+            result["receipt"], result["receipt_sha256"], self.root, guard=lambda: None
+        )
+        self.assertFalse(self.source.exists())
+
+    def test_partial_recovery_rejects_remaining_drift_and_extra_file(self):
+        result = self.archive()
+        (self.source / "proof.json").unlink()
+        (self.source / "unexpected").write_bytes(b"do not overwrite")
+        with self.assertRaisesRegex(ValueError, "unexpected or changed"):
+            tool.restore_missing_verified_entries(
+                result["receipt"],
+                result["receipt_sha256"],
+                self.root,
+                guard=lambda: None,
+            )
+        self.assertFalse((self.source / "proof.json").exists())
+        self.assertEqual((self.source / "unexpected").read_bytes(), b"do not overwrite")
+
     def test_host_becomes_busy_during_final_verification_prevents_prune(self):
         result = self.archive()
         calls = 0

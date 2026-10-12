@@ -389,6 +389,128 @@ def archive_retained(
     return {"receipt": str(result_path), "receipt_sha256": sha(result_path), **result}
 
 
+def restore_missing_verified_entries(receipt, expected_sha, root=RETENTION, guard=idle):
+    """Recover an interrupted prune without accepting a partial tree as verified."""
+    receipt = confined(receipt, root)
+    require(
+        receipt.parent == no_links(root)
+        and receipt.name.endswith(".compression.json")
+        and re.fullmatch("[0-9a-f]{64}", expected_sha or "")
+        and sha(receipt) == expected_sha,
+        "Exact compression receipt required for recovery",
+    )
+    result = json.loads(receipt.read_bytes())
+    require(
+        result["schema_version"] == 1
+        and result["status"] == "ARCHIVE_VERIFIED_SOURCE_RETAINED"
+        and result["source_pruned"] is False,
+        "Unknown recovery receipt",
+    )
+    source = confined(result["source"], root)
+    require(
+        source.parent == no_links(root), "Recovery source must be direct retained tree"
+    )
+    quarantine = confined(result["quarantine_receipt"], root)
+    require(
+        sha(quarantine) == result["quarantine_receipt_sha256"],
+        "Quarantine receipt drift",
+    )
+    original = json.loads(quarantine.read_bytes())
+    require(
+        original["status"] == "QUARANTINED_VERIFIED_NO_BYTES_DELETED"
+        and no_links(original["destination"]) == source,
+        "Recovery source binding differs",
+    )
+    rows = canonical(result["inventory"])
+    require(
+        rows == canonical(original["inventory"]), "Recovery inventory binding differs"
+    )
+    expected = {row["path"]: row for row in rows}
+    archive = confined(result["archive"], root)
+    require(
+        archive == source.with_name(source.name + ".tar.gz")
+        and archive.stat().st_size == result["archive_bytes"],
+        "Recovery archive identity differs",
+    )
+    verify_archive(archive, rows, result["archive_sha256"])
+    remaining = inventory(source) if source.exists() else []
+    require(
+        all(expected.get(row["path"]) == row for row in remaining),
+        "Remaining source has unexpected or changed entries",
+    )
+    require(
+        sha(receipt) == expected_sha
+        and sha(quarantine) == result["quarantine_receipt_sha256"],
+        "Recovery receipts changed",
+    )
+    guard()
+    source.mkdir(exist_ok=True)
+    restored = []
+    # Directories first, then exclusive writes of missing files. Existing bytes never overwritten.
+    for row in sorted(
+        (r for r in rows if r["directory"]),
+        key=lambda r: (r["path"].count("/"), r["path"]),
+    ):
+        target = confined(source / row["path"], source)
+        target.mkdir(exist_ok=True)
+    with tarfile.open(archive, "r:gz") as tar:
+        for item in tar:
+            name = member_path(item.name)
+            require(
+                name in expected and (item.isdir() or item.isreg()),
+                "Recovery tar member changed",
+            )
+            if item.isdir():
+                continue
+            target = confined(source / name, source)
+            if target.exists():
+                continue
+            require(target.parent.is_dir(), "Recovery parent directory absent")
+            stream = tar.extractfile(item)
+            require(stream is not None, "Recovery file stream absent")
+            with stream, target.open("xb") as output:
+                shutil.copyfileobj(stream, output, length=1024 * 1024)
+                output.flush()
+                os.fsync(output.fileno())
+            restored.append(name)
+    require(
+        inventory(source) == rows
+        and sha(archive) == result["archive_sha256"]
+        and sha(receipt) == expected_sha
+        and sha(quarantine) == result["quarantine_receipt_sha256"],
+        "Full recovery verification failed; never prune",
+    )
+    return {
+        "status": "FULL_RETAINED_TREE_RESTORED_VERIFIED",
+        "source": str(source),
+        "restored_files": restored,
+        "bytes_deleted": 0,
+        "normal_prune_still_required": True,
+    }
+
+
+def remove_retained_tree(source, root):
+    """Retry only a validated Windows readonly unlink/rmdir; never broad chmod."""
+    source = confined(source, root)
+
+    def readonly_retry(function, path, error):
+        target = no_links(path)
+        require(
+            target == source or target.is_relative_to(source),
+            "Readonly retry escaped retained source",
+        )
+        require(
+            isinstance(error, PermissionError)
+            and os.name == "nt"
+            and function in (os.unlink, os.remove, os.rmdir),
+            "Unexpected retained-tree removal failure: " + repr(error),
+        )
+        target.chmod(target.stat().st_mode | stat.S_IWRITE)
+        function(target)
+
+    shutil.rmtree(source, onexc=readonly_retry)
+
+
 def prune_retained(receipt, expected_sha, root=RETENTION, guard=idle):
     receipt = confined(receipt, root)
     require(
@@ -435,7 +557,7 @@ def prune_retained(receipt, expected_sha, root=RETENTION, guard=idle):
     require(not completed.exists(), "Prune completion receipt already exists")
     # Python filesystem end-to-end; never a path under _work, never recursive shell deletion.
     guard()  # Recheck idle admission after potentially long final verification.
-    shutil.rmtree(source)
+    remove_retained_tree(source, root)
     summary = {
         "status": "RETAINED_TREE_PRUNED_VERIFIED_ARCHIVE_KEPT",
         "source": str(source),
