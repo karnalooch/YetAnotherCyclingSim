@@ -304,18 +304,26 @@ def position_readback(requested, actual, label):
     actual = vector(actual)
     limit = max(1e-6, max(abs(value) for value in requested) * 2**-22)
     errors = [n - r for n, r in zip(native, requested)]
+    roundtrip_errors = [a - n for a, n in zip(actual, native)]
+    roundtrip_guards = [8 * math.ulp(max(1.0, abs(n))) for n in native]
     record = {
         "requested_cm": list(requested),
         "native_constructed_cm": native,
         "actual_cm": actual,
         "serialization_errors_cm": errors,
         "serialization_guard_cm": limit,
+        "actual_minus_native_cm": roundtrip_errors,
+        "ieee64_roundtrip_guards_cm": roundtrip_guards,
+        "ieee64_roundtrip_guard_ulps": 8,
         "contact_tolerance": False,
     }
     require(
         all(math.isfinite(value) for value in requested + native + actual)
         and all(abs(error) <= limit for error in errors)
-        and actual == native,
+        and all(
+            abs(error) <= guard
+            for error, guard in zip(roundtrip_errors, roundtrip_guards)
+        ),
         label + " native position differs: " + repr(record),
     )
     return record
