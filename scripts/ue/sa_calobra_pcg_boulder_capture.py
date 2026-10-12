@@ -119,6 +119,23 @@ class BoulderCapture:
                             ],
                         }
                     )
+            prefix = self.world.get_path_name().split(".", 1)[0] + "."
+            leased = []
+            for texture in unreal.ObjectIterator(unreal.Texture2D):
+                if (
+                    texture.get_path_name().startswith(prefix)
+                    and texture.get_editor_property("lod_group")
+                    == unreal.TextureGroup.TEXTUREGROUP_TERRAIN_HEIGHTMAP
+                ):
+                    texture.set_force_mip_levels_to_be_resident(120.0, 0)
+                    leased.append(texture.get_path_name())
+            if not leased:
+                raise RuntimeError("No map-owned Landscape height textures to prime")
+            self.report["height_mip_lease"] = {
+                "seconds": 120.0,
+                "textures": sorted(leased),
+                "resident_mip_telemetry": "UNAVAILABLE_CONTENT_ONLY",
+            }
             self.camera = self._spawn(
                 unreal.CameraActor, unreal.Vector(*self.center), unreal.Rotator()
             )
@@ -197,7 +214,10 @@ class BoulderCapture:
                 float(getattr(actual_rotation, a)) for a in ("pitch", "yaw", "roll")
             ],
         }
+        viewport = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
+        viewport.set_level_viewport_camera_info(eye, rotation)
         unreal.AutomationLibrary.finish_loading_before_screenshot()
+        self.pending["viewport_primed"] = True
         self.task = unreal.AutomationLibrary.take_high_res_screenshot(
             res_x=RESOLUTION[0],
             res_y=RESOLUTION[1],
@@ -207,7 +227,7 @@ class BoulderCapture:
             capture_hdr=False,
             comparison_tolerance=unreal.ComparisonTolerance.LOW,
             comparison_notes="YACS #365 Boulder contact diagnostic; owner visual review pending",
-            delay=0.0,
+            delay=1.0,
             force_game_view=True,
         )
         if not self.task or not self.task.is_valid_task():

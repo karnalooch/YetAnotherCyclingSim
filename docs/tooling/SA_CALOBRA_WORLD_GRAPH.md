@@ -608,3 +608,16 @@ poses before and after. Both asset translations require location readback.
 The first sampled fit measured 698 paired intervals and 62.47 cm embedding,
 with a maximum exposed interval of 37.78 cm; these are retained diagnostic
 numbers from the rejected capture configuration, not final validation limits.
+
+
+Second attempt `4532223a7018dac24bde962623a23021b1a2e2b8/boulderfit02`
+completed all four processes with unchanged staged/source/saved package hashes.
+LandscapePatch imports succeeded and the two corrected after views no longer
+show the subterranean camera defect. The fitted mesh visibly enters the ground
+in both views. However the first before image had visibly coarser Landscape
+rendering than the after image, so it is not admitted as a like-for-like pair.
+The next capture primes the actual level viewport at each pose before the native
+loading barrier and requests a transient 120-second residency lease on the
+map-owned Landscape height textures, following the existing capture workflow.
+The content-only project cannot supply `YacsTextureAuditLibrary` resident-mip
+telemetry; preserve that limitation instead of claiming full residency proof.
