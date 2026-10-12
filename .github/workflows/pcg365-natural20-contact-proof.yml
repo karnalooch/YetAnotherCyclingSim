@@ -79,6 +79,28 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Offline contracts rejected; no UE launched' }
           $actual=(Get-FileHash -LiteralPath $env:YACS_NATURAL20_CATALOG -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($actual -cne $env:YACS_NATURAL20_SHA) { throw 'Frozen catalog drift; no UE launched' }
+
+          # The historical generator wrote under Saved/, which is intentionally
+          # absent from a code-only Actions checkout. Authenticate the immutable
+          # retained run04 copy before PCGEx, 202 terrain packages, or Unreal.
+          $contactContract = Get-Content -LiteralPath 'worldgen/sa_calobra/pcg365_natural20_contact_sources_v1.json' -Raw | ConvertFrom-Json
+          if ($contactContract.contact_input.path -cne 'Saved/RuntimeProof/WorldGraph365/real-contact-source02.json') {
+            throw 'Natural20 contact source reference drift.'
+          }
+          $contactSource = 'D:/yacs/work/pcg365/1a02ac21a7fb1dbc84364843e862b186a2ea0a18/natural20-contact04/contact-request.json'
+          if (-not (Test-Path -LiteralPath $contactSource -PathType Leaf)) {
+            throw "The retained authenticated contact source is unavailable: $contactSource"
+          }
+          $contactFile = Get-Item -LiteralPath $contactSource -Force
+          if ($contactFile.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            throw 'Contact source is a reparse point; refusing alias.'
+          }
+          $contactHash = (Get-FileHash -LiteralPath $contactSource -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($contactFile.Length -ne $contactContract.contact_input.bytes -or
+              $contactHash -cne $contactContract.contact_input.sha256) {
+            throw "Retained real-contact source SHA256/size differs: $contactSource"
+          }
+          Write-Host "Pinned historical real-contact input PASS: $contactSource"
       - name: Session 1 - inspect and save Forge / 20 meshes
         shell: pwsh
         working-directory: pcg365-${{ github.run_id }}-${{ github.run_attempt }}
