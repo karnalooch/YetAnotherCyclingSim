@@ -328,6 +328,7 @@ def prepare(asset, output):
         require(sha(source) == before, "Protected LOD0 source changed")
         record = {
             "id": asset["id"],
+            "status": "PREPARED_DERIVATIVE_DIAGNOSTIC_ONLY",
             "source": str(source),
             "source_sha256_before": before,
             "source_sha256_after": sha(source),
@@ -394,6 +395,62 @@ def prepare(asset, output):
             bpy.data.objects.remove(obj, do_unlink=True)
 
 
+def prepare_assets(assets, output):
+    records = []
+    allowed = Path("D:/yacs/work/pcg365/rock-source-inspection01/lod0").resolve(
+        strict=True
+    )
+    for asset in assets:
+        source = Path(asset["source"]).resolve(strict=True)
+        require(
+            source.is_relative_to(allowed) and source.suffix.lower() == ".fbx",
+            "Source outside corrected LOD0 stage",
+        )
+        before = sha(source)
+        size = source.stat().st_size
+        require(
+            before == PINS[asset["id"]] == asset["sha256"] and size == asset["bytes"],
+            "Pinned source mismatch",
+        )
+        try:
+            record = prepare(asset, output)
+        except ValueError as exc:
+            # A preparation guard rejection is evidence, never permission to
+            # merge loops, change the frozen cut or silently substitute geometry.
+            after = sha(source)
+            require(
+                after == before and source.stat().st_size == size,
+                "Protected source changed during rejected preparation",
+            )
+            partial = output / (asset["id"] + "_planar_base10.fbx")
+            record = {
+                "id": asset["id"],
+                "status": "REJECTED_PREPARATION",
+                "reason": str(exc),
+                "source": str(source),
+                "source_sha256_before": before,
+                "source_sha256_after": after,
+                "source_bytes": size,
+                "original_acquired_source_sha256": asset["original_source_sha256"],
+                "license": asset["license"],
+                "cut_height_fraction": CUT_FRACTION,
+                "source_provenance": "POLY_HAVEN_LOD0_DERIVATION_REJECTED_ORIGINAL_UNCHANGED",
+                "partial_export": {
+                    "file": partial.name,
+                    "sha256": sha(partial),
+                    "bytes": partial.stat().st_size,
+                    "admitted": False,
+                }
+                if partial.is_file()
+                else None,
+                "placement": False,
+                "qualified_assets": [],
+                "classification": "DERIVED_ASSET_DIAGNOSTIC_ONLY",
+            }
+        records.append(record)
+    return records
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--request", type=Path, required=True)
@@ -423,12 +480,14 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     bpy.context.scene.unit_settings.system = "METRIC"
     bpy.context.scene.unit_settings.scale_length = 1.0
-    records = [prepare(asset, output) for asset in request["assets"]]
+    records = prepare_assets(request["assets"], output)
     require(args.request.read_bytes() == raw, "Request changed during preparation")
     receipt = {
         "schema_version": 1,
         "issue": 365,
-        "status": "SCAN_PLANAR_BASE_DERIVATIVES_PREPARED_ONLY",
+        "status": "SCAN_PLANAR_BASE_DERIVATIVES_PARTIAL_REJECTION"
+        if any(record["status"] == "REJECTED_PREPARATION" for record in records)
+        else "SCAN_PLANAR_BASE_DERIVATIVES_PREPARED_ONLY",
         "blender_version": bpy.app.version_string,
         "cut_fraction_frozen_before_execution": CUT_FRACTION,
         "request_sha256": hashlib.sha256(raw).hexdigest(),

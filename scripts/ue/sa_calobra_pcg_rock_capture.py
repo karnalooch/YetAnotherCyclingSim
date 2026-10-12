@@ -76,8 +76,24 @@ class RockCapture:
                 and receipt["saved_packages"] == readback["saved_packages"],
                 "Contact receipt mesh/package inventory differs",
             )
+            request = json.loads(
+                (self.root / "rock-qualification-request.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            cap_review_only = request.get("render_source_caps_only") is True
+            self.review_meshes = [
+                m
+                for m in self.meshes
+                if not cap_review_only or "support_patch" in m["source"]
+            ]
+            require(bool(self.review_meshes), "No declared source cap for GPU review")
+            self.report["render_source_caps_only"] = cap_review_only
+            self.report["omitted_mesh_ids"] = [
+                m["id"] for m in self.meshes if m not in self.review_meshes
+            ]
             self.cases = []
-            for mesh in self.meshes:
+            for mesh in self.review_meshes:
                 measured = [
                     c
                     for c in receipt["cases"]
@@ -99,6 +115,10 @@ class RockCapture:
                     .get("status")
                     == "DIAGNOSTIC_SUPPORT_PATCH_ONLY"
                 ]
+                require(
+                    not cap_review_only or bool(patch_trials),
+                    "Declared cap has no complete diagnostic fit for GPU review",
+                )
                 chosen = (
                     patch_trials[0]
                     if patch_trials
@@ -142,7 +162,7 @@ class RockCapture:
         return self
 
     def next_mesh(self):
-        mesh_record = self.meshes[self.index]
+        mesh_record = self.review_meshes[self.index]
         case, label = self.cases[self.index]
         mesh = unreal.load_asset(mesh_record["package"])
         require(isinstance(mesh, unreal.StaticMesh), "Missing saved rock mesh")
@@ -236,7 +256,7 @@ class RockCapture:
             self.destroy_actor()
             self.verify()
             self.index += 1
-            if self.index < len(self.meshes):
+            if self.index < len(self.review_meshes):
                 self.next_mesh()
             else:
                 require(
