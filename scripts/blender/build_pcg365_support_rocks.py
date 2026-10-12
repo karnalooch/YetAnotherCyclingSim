@@ -16,27 +16,29 @@ from mathutils import Matrix
 RECIPES = (
     {
         "id": "support_rock_a",
-        "sides": 8,
-        "width_m": 0.50,
-        "depth_m": 0.46,
-        "height_m": 0.42,
-        "radii": [1.0, 0.96, 1.02, 0.98, 1.0, 1.03, 0.97, 1.01],
-        "middle_scale": 0.77,
-        "upper_scale": 0.31,
-        "upper_height_fraction": [0.89, 0.92, 0.87, 0.91, 0.90, 0.88, 0.93, 0.89],
-        "apex_xy_fraction": [0.018, -0.013],
+        "revision": 2,
+        "sides": 32,
+        "width_m": 0.78,
+        "depth_m": 0.62,
+        "height_m": 0.46,
+        "radial_terms": [[2, 0.025, 0.4], [3, 0.012, 1.1], [5, 0.004, 0.2]],
+        "ring_heights": [0.0, 0.12, 0.30, 0.55, 0.78, 0.93, 1.0],
+        "ring_radii": [1.0, 0.99, 0.94, 0.80, 0.58, 0.25, 0.07],
+        "center_drift_fraction": [0.022, -0.016],
+        "height_weathering_fraction": 0.005,
     },
     {
         "id": "support_rock_b",
-        "sides": 6,
-        "width_m": 0.54,
-        "depth_m": 0.49,
-        "height_m": 0.445,
-        "radii": [0.98, 1.02, 0.97, 1.01, 0.99, 1.03],
-        "middle_scale": 0.71,
-        "upper_scale": 0.27,
-        "upper_height_fraction": [0.92, 0.86, 0.90, 0.94, 0.88, 0.91],
-        "apex_xy_fraction": [-0.014, 0.021],
+        "revision": 2,
+        "sides": 32,
+        "width_m": 0.84,
+        "depth_m": 0.68,
+        "height_m": 0.49,
+        "radial_terms": [[2, 0.020, 1.6], [3, 0.016, 0.3], [7, 0.003, 0.8]],
+        "ring_heights": [0.0, 0.12, 0.30, 0.55, 0.78, 0.93, 1.0],
+        "ring_radii": [1.0, 0.99, 0.94, 0.80, 0.58, 0.25, 0.07],
+        "center_drift_fraction": [-0.028, 0.019],
+        "height_weathering_fraction": 0.009,
     },
 )
 
@@ -61,11 +63,20 @@ def inside(poly, point):
 
 
 def geometry(recipe):
-    """Nested convex XY rings ensure every vertical footprint has a flat base."""
+    """Rounded nested rings, gently weathered shoulders and a flat crown disk."""
     n = recipe["sides"]
+    angles = [2 * math.pi * i / n for i in range(n)]
+    radii = [
+        1
+        + sum(
+            amplitude * math.cos(frequency * angle + phase)
+            for frequency, amplitude, phase in recipe["radial_terms"]
+        )
+        for angle in angles
+    ]
     raw = [
-        (r * math.cos(2 * math.pi * i / n), r * math.sin(2 * math.pi * i / n))
-        for i, r in enumerate(recipe["radii"])
+        (radius * math.cos(angle), radius * math.sin(angle))
+        for angle, radius in zip(angles, radii)
     ]
     sx = recipe["width_m"] / (max(p[0] for p in raw) - min(p[0] for p in raw))
     sy = recipe["depth_m"] / (max(p[1] for p in raw) - min(p[1] for p in raw))
@@ -75,41 +86,53 @@ def geometry(recipe):
         and inside(base, (0, 0)),
         "Base must be strictly convex around origin",
     )
+    rings, vertices = [], []
     h = recipe["height_m"]
-    middle = [(x * recipe["middle_scale"], y * recipe["middle_scale"]) for x, y in base]
-    upper = [(x * recipe["upper_scale"], y * recipe["upper_scale"]) for x, y in base]
-    apex_xy = (
-        recipe["apex_xy_fraction"][0] * recipe["width_m"],
-        recipe["apex_xy_fraction"][1] * recipe["depth_m"],
-    )
-    require(
-        all(inside(base, p) for p in middle)
-        and all(inside(middle, p) for p in upper)
-        and inside(upper, apex_xy),
-        "XY ring nesting failed",
-    )
-    vertices = [(x, y, 0.0) for x, y in base]
-    vertices += [(x, y, h * 0.58) for x, y in middle]
-    vertices += [
-        (x, y, h * recipe["upper_height_fraction"][i]) for i, (x, y) in enumerate(upper)
-    ]
-    apex = len(vertices)
-    vertices.append((*apex_xy, h))
+    for tier, (radius, height) in enumerate(
+        zip(recipe["ring_radii"], recipe["ring_heights"])
+    ):
+        drift = [
+            recipe["center_drift_fraction"][axis]
+            * recipe[("width_m", "depth_m")[axis]]
+            * (1 - radius)
+            for axis in range(2)
+        ]
+        ring = [(x * radius + drift[0], y * radius + drift[1]) for x, y in base]
+        require(
+            not rings or all(inside(rings[-1], point) for point in ring),
+            "XY ring nesting failed",
+        )
+        rings.append(ring)
+        for i, (x, y) in enumerate(ring):
+            weather = (
+                recipe["height_weathering_fraction"]
+                * math.sin(3 * angles[i] + tier * 0.53)
+                if tier not in (0, len(recipe["ring_radii"]) - 1)
+                else 0.0
+            )
+            vertices.append((x, y, h * (height + weather)))
+    crown_xy = tuple(sum(point[axis] for point in rings[-1]) / n for axis in range(2))
+    require(inside(rings[-1], crown_xy), "Crown center outside cap")
+    crown = len(vertices)
+    vertices.append((*crown_xy, h))
     cap = len(vertices)
     vertices.append((0.0, 0.0, 0.0))
     faces = []
     for i in range(n):
         j = (i + 1) % n
         faces.append((cap, j, i))
-        for tier in range(2):
+        for tier in range(len(rings) - 1):
             a, b, c, d = (
                 tier * n + i,
                 tier * n + j,
                 (tier + 1) * n + j,
                 (tier + 1) * n + i,
             )
-            faces += [(a, b, c), (a, c, d)]
-        faces.append((2 * n + i, 2 * n + j, apex))
+            # Alternate diagonal directions to avoid one continuous faceted seam.
+            faces += (
+                [(a, b, d), (b, c, d)] if (i + tier) % 2 else [(a, b, c), (a, c, d)]
+            )
+        faces.append(((len(rings) - 1) * n + i, (len(rings) - 1) * n + j, crown))
     return vertices, faces
 
 
@@ -190,7 +213,9 @@ def build(recipe, output, export_options):
         "Authored mesh has unexpected transform/deformation",
     )
     for polygon in mesh.polygons:
-        polygon.use_smooth = False
+        polygon.use_smooth = not all(
+            mesh.vertices[i].co.z == 0 for i in polygon.vertices
+        )
     # A material slot is required for the later single shared Forge MI binding.
     placeholder = bpy.data.materials.new(recipe["id"] + "_SlotOnly")
     mesh.materials.append(placeholder)
@@ -232,6 +257,9 @@ def build(recipe, output, export_options):
         "bytes": path.stat().st_size,
         "sha256": sha(path),
         "recipe": recipe,
+        "recipe_revision": 2,
+        "art_acceptance": "PENDING_OWNER_REVIEW",
+        "shading": "smooth_nonbase_flat_base",
         "vertices_m": actual_vertices,
         "triangle_faces": actual_faces,
         "geometry_sha256": geometry_hash,
@@ -284,6 +312,8 @@ def main():
     records = [build(recipe, output, export_options) for recipe in RECIPES]
     report = {
         "schema_version": 1,
+        "recipe_revision": 2,
+        "art_acceptance": "PENDING_OWNER_REVIEW",
         "issue": 365,
         "status": "AUTHORED_SUPPORT_ROCK_SOURCES_ONLY",
         "source_provenance": "YACS_AUTHORED_PROCEDURAL_NOT_SCAN",

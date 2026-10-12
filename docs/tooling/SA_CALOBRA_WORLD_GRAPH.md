@@ -904,3 +904,21 @@ contact. A: embedding 2.142962572 cm, exposed maximum-height fraction 0.97099632
 capture did not run. The next candidate applies the same loading/compilation
 barrier and 20-tick shutdown sequencing to fresh readback and capture as well;
 it does not reinterpret nonzero process exit as success.
+
+Packet `074176f5001c5d688095a3fe37bbc863d2178894/supportrocks03` completed all
+six owned processes with exit 0, including fresh mesh readback and four real
+1920x1080 GPU PNGs. Both gentle-point sampled decisions pass. Visual review of
+all four images nevertheless rejects revision 1 as production rock art: the
+48/36-triangle forms are excessively prismatic. Contact success does not approve
+appearance. First A/view01 also has visibly unready terrain/material detail;
+do not use it as final visual evidence. Later images are readable but do not
+remove that limitation or prove complete mip residency.
+
+Revision 2 prepares original rounded irregular forms, smooth above the flat base,
+with 32-sided nested rings and a gentle crown. These remain authored artistic
+geometry, not scans. Every new source hash requires the same native import,
+contact, fresh readback and GPU review; physical/convergence limits remain fixed.
+The rock capture now retains two explicit warmup captures at the first camera
+before its two review frames; original Boulder capture defaults remain unchanged.
+Warmup frames are separately labelled and are not admitted review images or
+resident-mip telemetry. New art remains pending actual inspection.

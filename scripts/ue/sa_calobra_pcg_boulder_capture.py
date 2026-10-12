@@ -21,7 +21,13 @@ def _xyz(value):
 
 class BoulderCapture:
     def __init__(
-        self, world, target_center, output_dir, on_complete, framing_radius_cm
+        self,
+        world,
+        target_center,
+        output_dir,
+        on_complete,
+        framing_radius_cm,
+        warmup_captures,
     ):
         self.world, self.done = world, on_complete
         self.center = _xyz(target_center)
@@ -45,6 +51,10 @@ class BoulderCapture:
         self.actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
         self.owned, self.task, self.handle = [], None, None
         self.index, self.stopped = 0, False
+        if type(warmup_captures) is not int or not 0 <= warmup_captures <= 2:
+            raise ValueError("Capture warmup count must be an integer from zero to two")
+        self.warmup_remaining = warmup_captures
+        self.warmup_total = warmup_captures
         self.started = time.monotonic()
         self.report = {
             "schema_version": 1,
@@ -54,6 +64,7 @@ class BoulderCapture:
             "framing_radius_cm": self.radius,
             "resolution_px": list(RESOLUTION),
             "frames": [],
+            "warmup_frames": [],
             "lighting": [],
             "saved_map": False,
             "visual_acceptance": "PENDING_OWNER",
@@ -214,6 +225,10 @@ class BoulderCapture:
                 float(getattr(actual_rotation, a)) for a in ("pitch", "yaw", "roll")
             ],
         }
+        if self.warmup_remaining:
+            self.pending["file"] = "warmup-%02d.png" % (
+                self.warmup_total - self.warmup_remaining + 1
+            )
         viewport = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
         viewport.set_level_viewport_camera_info(eye, rotation)
         unreal.AutomationLibrary.finish_loading_before_screenshot()
@@ -256,15 +271,19 @@ class BoulderCapture:
             width, height = struct.unpack(">II", data[16:24])
             if (width, height) != RESOLUTION:
                 raise RuntimeError("Native screenshot dimensions differ")
-            self.report["frames"].append(
-                dict(
-                    self.pending,
-                    width_px=width,
-                    height_px=height,
-                    size_bytes=len(data),
-                    sha256=hashlib.sha256(data).hexdigest(),
-                )
+            frame = dict(
+                self.pending,
+                width_px=width,
+                height_px=height,
+                size_bytes=len(data),
+                sha256=hashlib.sha256(data).hexdigest(),
             )
+            if self.warmup_remaining:
+                self.report["warmup_frames"].append(frame)
+                self.warmup_remaining -= 1
+                self._submit()
+                return
+            self.report["frames"].append(frame)
             self.index += 1
             if self.index == 2:
                 self.stop()
@@ -302,14 +321,27 @@ class BoulderCapture:
         self.done(self.report)
 
 
-def start_capture(world, target_center, output_dir, on_complete, *, framing_radius_cm):
+def start_capture(
+    world,
+    target_center,
+    output_dir,
+    on_complete,
+    *,
+    framing_radius_cm,
+    warmup_captures=0,
+):
     """Return live capture state; callback receives receipt after two PNGs or failure.
 
     Caller supplies the actual placed mesh bounds radius in cm and keeps UE ticking.
     Caller must use a real rendering RHI and owns exit, visual review and proof admission.
     """
     capture = BoulderCapture(
-        world, target_center, output_dir, on_complete, framing_radius_cm
+        world,
+        target_center,
+        output_dir,
+        on_complete,
+        framing_radius_cm,
+        warmup_captures,
     )
     _ACTIVE.append(capture)
     return capture.start()

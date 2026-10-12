@@ -205,6 +205,7 @@ class RockCapture:
             self.output / mesh_record["id"],
             self.completed,
             framing_radius_cm=self.pending["framing_radius_cm"],
+            warmup_captures=2,
         )
 
     def completed(self, result):
