@@ -1,4 +1,4 @@
-"""Revision 2 diagnostic source-repair cuts of two pinned scan LOD0s."""
+"""Revision 3 diagnostic source-repair cuts of two pinned scan LOD0s."""
 
 import argparse
 from collections import Counter
@@ -19,7 +19,7 @@ PINS = {
     "namaqualand_boulder_02": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
     "namaqualand_boulder_06": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
 }
-RECIPE_REVISION = 2
+RECIPE_REVISION = 3
 CUT_FRACTIONS = {"namaqualand_boulder_02": 0.12, "namaqualand_boulder_06": 0.10}
 CUT_REASONS = {
     "namaqualand_boulder_02": "Source-only open-underside repair: retained revision1 10% cut lay below original boundary maxZ 0.04504789785m; fixed 12% cut expected at 0.0464433m clears that boundary. Chosen before native measurement, not contact-policy tuning.",
@@ -162,6 +162,41 @@ def center_of_mass(bm):
     return list(moment / volume)
 
 
+def face_components(bm):
+    remaining = set(bm.faces)
+    components = []
+    while remaining:
+        pending = [remaining.pop()]
+        faces = set(pending)
+        while pending:
+            face = pending.pop()
+            for edge in face.edges:
+                for neighbor in edge.link_faces:
+                    if neighbor in remaining:
+                        remaining.remove(neighbor)
+                        faces.add(neighbor)
+                        pending.append(neighbor)
+        vertices = {v for f in faces for v in f.verts}
+        points = [tuple(v.co) for v in vertices]
+        low = [min(p[i] for p in points) for i in range(3)]
+        high = [max(p[i] for p in points) for i in range(3)]
+        report = {
+            "surface_area_m2": sum(sorted(f.calc_area() for f in faces)),
+            "facecount": len(faces),
+            "bounds_m": {"min": low, "max": high},
+        }
+        components.append((faces, report))
+    components.sort(
+        key=lambda pair: (
+            -pair[1]["surface_area_m2"],
+            pair[1]["bounds_m"]["min"],
+            pair[1]["bounds_m"]["max"],
+            sorted(key(f) for f in pair[0]),
+        )
+    )
+    return components
+
+
 def prepare(asset, output):
     source = Path(asset["source"]).resolve(strict=True)
     allowed = Path("D:/yacs/data/assets/pcg365-large-rocks01").resolve(strict=True)
@@ -261,8 +296,47 @@ def prepare(asset, output):
             clear_outer=False,
             clear_inner=True,
         )
+        components = face_components(bm)
+        component_report = {
+            "schema_version": 1,
+            "id": asset["id"],
+            "recipe_revision": RECIPE_REVISION,
+            "cut_world_z_m": cut,
+            "components": [r for _, r in components],
+            "selection_enabled": bool(asset["split_source02"]),
+            "selection_reason": "Largest post-cut surface area; bounds then canonical face-coordinate tie break; fixed before terrain measurements. Discard only derived-copy islands.",
+        }
+        with (output / (asset["id"] + "_cut-components.json")).open(
+            "x", encoding="utf-8"
+        ) as stream:
+            stream.write(json.dumps(component_report, indent=2, allow_nan=False) + "\n")
+        excluded_upper_count = 0
+        if asset["id"] == "namaqualand_boulder_02" and asset["split_source02"]:
+            require(components, "No surviving cut face components")
+            selected_faces = components[0][0]
+            selected_upper = Counter(
+                key(f) for f in selected_faces if all(v.co.z > cut for v in f.verts)
+            )
+            require(
+                not (selected_upper - preserved),
+                "Selected upper triangles differ from original",
+            )
+            excluded_upper_count = sum((preserved - selected_upper).values())
+            preserved = selected_upper
+            excluded_faces = [f for f in bm.faces if f not in selected_faces]
+            if excluded_faces:
+                bmesh.ops.delete(bm, geom=excluded_faces, context="FACES")
+            require(
+                len(bm.faces) == len(selected_faces),
+                "Component selection removed unexpected faces",
+            )
         boundary = [edge for edge in bm.edges if edge.is_boundary]
-        loop = boundary_loop(boundary)
+        try:
+            loop = boundary_loop(boundary)
+        except ValueError as exc:
+            raise ValueError(
+                f"{exc}; post-cut component facecounts={[r['facecount'] for _, r in components]}, selected boundary edges={len(boundary)}; see cut-components.json"
+            ) from exc
         boundary_plane_error = max(abs(v.co.z - cut) for v in loop)
         require(
             boundary_plane_error < 1e-6, "Cut boundary exceeds 1um numeric plane guard"
@@ -411,6 +485,11 @@ def prepare(asset, output):
             "preserved_upper_triangle_fraction": sum(preserved.values())
             / original_topology["triangles"],
             "preserved_upper_triangles_exact_before_translation": True,
+            "upper_preservation_scope": "SELECTED_COMPONENT_ONLY"
+            if asset["split_source02"] and allow_open
+            else "ALL_SOURCE_UPPER_TRIANGLES",
+            "excluded_upper_triangle_count": excluded_upper_count,
+            "post_cut_component_selection": component_report,
             "translation_float32_roundtrip_max_error_m": serialization_delta,
             "cap_triangle_count": len(cap_faces),
             "cap_preassignment_plane_error_m": boundary_plane_error,
@@ -514,6 +593,7 @@ def prepare_assets(assets, output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--split-source02-largest-component", action="store_true")
     parser.add_argument("--request", type=Path, required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
     parser.add_argument("--expected-request-sha256", required=True)
@@ -574,6 +654,10 @@ def main():
             len(matches) == 1 and inspected["mesh_count"] == 1,
             "Explicit sole inspected LOD0 required",
         )
+        asset["split_source02"] = (
+            args.split_source02_largest_component
+            and asset["id"] == "namaqualand_boulder_02"
+        )
         asset.update(
             source=asset["path"],
             selected_source_object=row["object_name"],
@@ -606,6 +690,8 @@ def main():
         else "SCAN_PLANAR_BASE_DERIVATIVES_PREPARED_ONLY",
         "blender_version": bpy.app.version_string,
         "recipe_revision": RECIPE_REVISION,
+        "split_source02_largest_component": args.split_source02_largest_component,
+        "prior_revision2_attempt": "Retained unchanged: 02 rejected multiple cut loops; 06 prepared. Revision3 optionally selects one post-cut source component, never merges loops or changes terrain/contact gates.",
         "cut_fractions_frozen_before_execution": CUT_FRACTIONS,
         "source_repair_reasons": CUT_REASONS,
         "prior_revision1_attempt": "Retained unchanged: 02 rejected original boundary above 10% plane; 06 prepared. No native contact thresholds changed.",

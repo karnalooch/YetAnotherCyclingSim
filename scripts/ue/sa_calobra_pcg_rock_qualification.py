@@ -579,6 +579,56 @@ def run(root, output, head, binding):
                         "full_qualification": False,
                         "placement": False,
                     }
+                    if (
+                        fine_patch.get("reasons") == ["SAMPLE_REFINEMENT_NOT_CONVERGED"]
+                        and request.get("source_patch_refinement_grid") == 129
+                    ):
+                        patch_refined = measure_grid(
+                            component,
+                            actor,
+                            mesh_receipt["bounds_cm"],
+                            129,
+                            world,
+                            ground,
+                            ignored,
+                            center,
+                        )
+                        patch_initial = source_patch_diagnostic(
+                            patch_refined, mesh_receipt
+                        )
+                        if "fit" in patch_initial:
+                            patch_delta = {
+                                "root_delta_cm": abs(
+                                    fine_patch["fit"]["root_zero_sampled_air_cm"]
+                                    - patch_initial["fit"]["root_zero_sampled_air_cm"]
+                                ),
+                                "embedding_delta_cm": abs(
+                                    fine_patch["fit"]["required_embedding_cm"]
+                                    - patch_initial["fit"]["required_embedding_cm"]
+                                ),
+                            }
+                            patch_final = source_patch_diagnostic(
+                                patch_refined, mesh_receipt, patch_delta
+                            )
+                            patch_final["refinement"] = patch_delta
+                            case["source_patch_diagnostic"].update(
+                                initial_coarse=coarse_patch,
+                                initial_fine=fine_patch,
+                                coarse=fine_patch,
+                                fine=patch_final,
+                                coarse_grid=65,
+                                fine_grid=129,
+                            )
+                        patch_refined["raw_samples"] = write_raw(
+                            output,
+                            "%s-point%d-patch-grid129.json"
+                            % (mesh_receipt["id"], index),
+                            {
+                                "support_rows": patch_refined.pop("rows"),
+                                "rejected_rows": patch_refined.pop("rejected_rows"),
+                            },
+                        )
+                        case["source_patch_refined_grid"] = patch_refined
                 for grid in grids:
                     grid["raw_samples"] = write_raw(
                         output,
