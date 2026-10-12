@@ -369,6 +369,13 @@ $result = Get-Content -LiteralPath $Receipt -Raw | ConvertFrom-Json
 $expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'; 'settle-render'='BOULDER_FITTED_REAL_GPU_CAPTURED'; 'mask-xy-create'='MASK_XY_GRAPH_SAVED'; 'mask-xy-reload'='MASK_XY_GRAPH_FRESH_RELOAD_REGENERATED'; 'rock-qualify'='ROCK_CONTACT_MATRIX_MEASURED'; 'rock-reload'='ROCK_MESHES_FRESH_READBACK'; 'rock-render'='ROCKS_REAL_GPU_CAPTURED'; 'rock-pack'='ROCK_VARIANT_ASSETS_SAVED'; 'rock-pack-reload'='ROCK_VARIANT_ASSETS_FRESH_RELOAD_VERIFIED'}[$Action]
 if ($result.status -cne $expectedStatus -or $result.code_sha -cne $ExpectedHead -or $result.placement -isnot [bool] -or $result.placement) { throw 'Native diagnostic did not complete; inspect receipt diagnostics.' }
 if ($result.PSObject.Properties.Name -contains 'error') { throw 'Native diagnostic contains an error; refusing success.' }
+if ($Action -in @('rock-pack','rock-pack-reload')) {
+    if ($result.meshes.Count -ne 6) { throw 'Completed variant inventory count differs.' }
+    foreach ($mesh in $result.meshes) {
+        if ($mesh.saved_package.path -cnotmatch '^Content/Generated/YACS/PCG365RockVariants/SM_namaqualand_boulder_(02|06)_s(75|100|125)\.uasset$') { throw 'Unexpected completed variant package path.' }
+        Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package
+    }
+}
 if ($Action -in @('reload','mask-xy-reload')) {
     foreach ($entry in $saved.files) { Assert-SameFile (Join-Path $Root $entry.path) $entry }
 }

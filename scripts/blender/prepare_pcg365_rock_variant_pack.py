@@ -150,9 +150,42 @@ def produce(asset, output):
         and original.data.shape_keys is None,
         "Deformed source is unsupported",
     )
+    imported_matrix = original.matrix_world.copy()
     require(
-        original.matrix_world == Matrix.Identity(4),
-        "Prepared source transform must be identity; no implicit pose correction",
+        all(math.isfinite(value) for row in imported_matrix for value in row),
+        "Nonfinite imported object matrix",
+    )
+    require(
+        list(imported_matrix[3]) == [0.0, 0.0, 0.0, 1.0],
+        "Non-affine imported object matrix",
+    )
+    determinant = imported_matrix.to_3x3().determinant()
+    require(
+        math.isfinite(determinant) and determinant > 0,
+        "Singular/mirrored imported source matrix",
+    )
+    before_bake_identity = mesh_identity(original.data)
+    expected_world = [
+        tuple(imported_matrix @ vertex.co) for vertex in original.data.vertices
+    ]
+    original.data.transform(imported_matrix)
+    original.matrix_world = Matrix.Identity(4)
+    original.data.update()
+    require(
+        mesh_identity(original.data) == before_bake_identity,
+        "World-space bake changed triangle/UV/material identity",
+    )
+    bake_error = max(
+        abs(vertex.co[i] - point[i])
+        for vertex, point in zip(original.data.vertices, expected_world)
+        for i in range(3)
+    )
+    bake_guard = max(
+        1e-7, max(abs(value) for point in expected_world for value in point) * 2**-22
+    )
+    require(
+        bake_error <= bake_guard,
+        "Imported world matrix bake exceeds float32 serialization guard",
     )
     original_topology, original_bounds = measure(original.data)
     require(
@@ -273,6 +306,13 @@ def produce(asset, output):
                         "uniform_art_scale_relative_prepared": scale,
                         "yaw_deg": 0,
                         "native_actor_scale": [1, 1, 1],
+                        "imported_object_matrix_world": [
+                            list(row) for row in imported_matrix
+                        ],
+                        "imported_matrix_determinant": determinant,
+                        "imported_world_bake_serialization_error_m": bake_error,
+                        "imported_world_bake_float32_guard_m": bake_guard,
+                        "source_geometry_basis": "Imported source WORLD metres; stock FBX object matrix baked without adjustment, then explicit decorative ART scale; post-bake pinned native bounds/triangles enforced",
                         "source_to_variant_matrix": [
                             [scale, 0, 0, 0],
                             [0, scale, 0, 0],
