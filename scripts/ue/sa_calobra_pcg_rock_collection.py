@@ -40,7 +40,11 @@ def catalog(root):
         name = row["id"]
         require(
             type(name) is str
-            and re.fullmatch(r"rock(?:02|06)_(?:0[1-9]|10)", name)
+            and re.fullmatch(
+                r"(?:rock(?:02|06)_(?:0[1-9]|10)|"
+                r"(?:namaqualand_boulder_0[2-6]|rock_0[79]|boulder_01)_0[1-3])",
+                name,
+            )
             and name not in ids,
             "Invalid or duplicate variant ID",
         )

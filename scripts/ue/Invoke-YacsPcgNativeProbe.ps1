@@ -254,7 +254,7 @@ if ($Action -ne 'inspect') {
         if ($collection.schema_version -ne 1 -or $collection.scope -cne 'LOCAL_ROCK_COLLECTION20_ASSET_LIBRARY_ONLY' -or $collection.variants.Count -ne 20 -or $collection.placement -isnot [bool] -or $collection.placement -or $collection.qualified_assets.Count -ne 0) { throw 'Unexpected collection catalog contract.' }
         Stage-QualifiedFile $RockCollectionCatalog 'rock-collection-catalog.json' $collectionIdentity
         foreach ($variant in $collection.variants) {
-            if ($variant.id -cnotmatch '^rock(02|06)_(0[1-9]|10)$' -or $variant.source_relative -cne "rock-collection/$($variant.id).fbx") { throw 'Unexpected collection source identity.' }
+            if ($variant.id -cnotmatch '^(rock(02|06)_(0[1-9]|10)|(namaqualand_boulder_0[2-6]|rock_0[79]|boulder_01)_0[1-3])$' -or $variant.source_relative -cne "rock-collection/$($variant.id).fbx") { throw 'Unexpected collection source identity.' }
             Stage-QualifiedFile $variant.source $variant.source_relative $variant
         }
         $scriptRelative = 'scripts/ue/sa_calobra_pcg_rock_collection.py'
@@ -342,7 +342,7 @@ if ($Action -in @('rock-collection-reload','rock-collection-render')) {
     $collectionInventory = Get-Content (Join-Path $Proof 'rock-collection/rock-collection-inventory.json') -Raw | ConvertFrom-Json
     if ($collectionInventory.code_sha -cne $ExpectedHead -or $collectionInventory.meshes.Count -ne 20) { throw 'Collection inventory differs.' }
     foreach ($mesh in $collectionInventory.meshes) {
-        if ($mesh.saved_package.path -cnotmatch '^Content/Generated/YACS/PCG365RockCollection20/SM_rock(02|06)_(0[1-9]|10)\.uasset$') { throw 'Unexpected collection saved path.' }
+        if ($mesh.saved_package.path -cnotmatch '^Content/Generated/YACS/PCG365RockCollection20/SM_(rock(02|06)_(0[1-9]|10)|(namaqualand_boulder_0[2-6]|rock_0[79]|boulder_01)_0[1-3])\.uasset$') { throw 'Unexpected collection saved path.' }
         Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package
     }
 }
@@ -413,7 +413,7 @@ if ($Action -in @('rock-pack','rock-pack-reload')) {
 if ($Action -in @('rock-collection','rock-collection-reload')) {
     if ($result.meshes.Count -ne 20) { throw 'Completed collection inventory count differs.' }
     foreach ($mesh in $result.meshes) {
-        if ($mesh.saved_package.path -cnotmatch '^Content/Generated/YACS/PCG365RockCollection20/SM_rock(02|06)_(0[1-9]|10)\.uasset$') { throw 'Unexpected completed collection path.' }
+        if ($mesh.saved_package.path -cnotmatch '^Content/Generated/YACS/PCG365RockCollection20/SM_(rock(02|06)_(0[1-9]|10)|(namaqualand_boulder_0[2-6]|rock_0[79]|boulder_01)_0[1-3])\.uasset$') { throw 'Unexpected completed collection path.' }
         Assert-SameFile (Join-Path $Root $mesh.saved_package.path) $mesh.saved_package
     }
 }

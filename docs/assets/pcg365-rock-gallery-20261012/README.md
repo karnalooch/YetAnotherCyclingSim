@@ -14,3 +14,6 @@ assets remain derivatives of two scans; this lighting pass does not qualify
 Landscape contact or demonstrate twenty independent base forms. Broader natural
 source acquisition/preparation is delegated separately. Performance is
 DEFERRED_AFTER_M3, performance_pass false; owner whole-area audit remains later.
+
+
+Beauty08 at producer `e6134bfe53933514d225701e51e42f70c153f714` completed all six native launcher actions with exit 0, including fresh reload and real GPU capture. The brighter images expose recurring two-family silhouettes. The follow-up importer allows only the eight explicit acquired source-family names and 01..03 variants alongside legacy IDs; source hashes, unique twenty-count, path restrictions, save/reload and placement prohibition remain enforced. Five CPU catalog tests reject duplicates, traversal, placement and source-byte drift. New eight-family producer remains a local candidate until its measured output is imported and rendered; Landscape contact remains NOT_RUN.
