@@ -1,4 +1,4 @@
-"""Revision 4 diagnostic source-repair cuts of two pinned scan LOD0s."""
+"""Revision 5 diagnostic source-repair cuts of two pinned scan LOD0s."""
 
 import argparse
 from collections import Counter
@@ -19,7 +19,7 @@ PINS = {
     "namaqualand_boulder_02": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
     "namaqualand_boulder_06": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
 }
-RECIPE_REVISION = 4
+RECIPE_REVISION = 5
 CUT_FRACTIONS = {"namaqualand_boulder_02": 0.12, "namaqualand_boulder_06": 0.10}
 CUT_REASONS = {
     "namaqualand_boulder_02": "Source-only open-underside repair: retained revision1 10% cut lay below original boundary maxZ 0.04504789785m; fixed 12% cut expected at 0.0464433m clears that boundary. Chosen before native measurement, not contact-policy tuning.",
@@ -526,6 +526,11 @@ def prepare(asset, output):
                 cap_faces.append(face)
             require(len(cap_faces) == len(loop) - 2, "Unexpected cap triangulation")
         cap_validation = validate_holed_cap(cap_faces, cap_loop_records)
+        cap_validation["method"] = (
+            "Blender4.5.9 bmesh.ops.triangle_fill HOLES|POLYS"
+            if holed_cap
+            else "Blender4.5.9 mathutils.geometry.tessellate_polygon single simple loop"
+        )
         polygons = [face for face in bm.faces if len(face.verts) > 3]
         if polygons:
             bmesh.ops.triangulate(
@@ -554,17 +559,41 @@ def prepare(asset, output):
         # Cut loop is declared support Z=0; exact assignment only affects new boundary.
         for vertex in loop:
             vertex.co.z = 0.0
+        pre_art_topology = topology(bm)
+        art_scale = asset["uniform_art_scale"]
+        before_art_scale = {v: tuple(v.co) for v in bm.verts}
+        if art_scale != 1.0:
+            for vertex in bm.verts:
+                vertex.co *= art_scale
+            cap_centroid *= art_scale
+            cap_area *= art_scale**2
+            for one_loop in cap_loop_records:
+                one_loop["xy_m"] = [
+                    [x * art_scale, y * art_scale] for x, y in one_loop["xy_m"]
+                ]
+                one_loop["area_m2"] *= art_scale**2
+            cap_validation = validate_holed_cap(cap_faces, cap_loop_records)
+            cap_validation["method"] = (
+                "Blender4.5.9 bmesh.ops.triangle_fill HOLES|POLYS; baked source ART scale after upper preservation verification"
+            )
+        art_quantization_delta = max(
+            abs(v.co[i] - before_art_scale[v][i] * art_scale)
+            for v in bm.verts
+            for i in range(3)
+        )
         bm.normal_update()
         derived_topology, derived_bounds = topology(bm), dimensions(bm)
         com = center_of_mass(bm)
         mesh = bpy.data.meshes.new(
             asset["id"]
-            + f"_PlanarBase{round(CUT_FRACTIONS[asset['id']] * 100)}_Geometry"
+            + f"_PlanarBase{round(CUT_FRACTIONS[asset['id']] * 100)}{asset['art_suffix']}_Geometry"
         )
         bm.to_mesh(mesh)
         mesh.update()
         obj = bpy.data.objects.new(
-            asset["id"] + f"_PlanarBase{round(CUT_FRACTIONS[asset['id']] * 100)}", mesh
+            asset["id"]
+            + f"_PlanarBase{round(CUT_FRACTIONS[asset['id']] * 100)}{asset['art_suffix']}",
+            mesh,
         )
         bpy.context.collection.objects.link(obj)
         for slot in original.data.materials:
@@ -577,7 +606,8 @@ def prepare(asset, output):
         obj.select_set(True)
         bpy.context.view_layer.objects.active = obj
         destination = output / (
-            asset["id"] + f"_planar_base{round(CUT_FRACTIONS[asset['id']] * 100)}.fbx"
+            asset["id"]
+            + f"_planar_base{round(CUT_FRACTIONS[asset['id']] * 100)}{asset['art_suffix']}.fbx"
         )
         require(
             bpy.ops.export_scene.fbx(
@@ -636,6 +666,7 @@ def prepare(asset, output):
             "cut_above_original_boundary_margin_m": cut - original_boundary_max_z
             if original_boundary_max_z is not None
             else None,
+            "retained_surface_ratio_basis": "PRE_ART_SCALE",
             "retained_original_surface_area_fraction": retained_surface_area
             / original_area,
             "preserved_upper_triangle_count": sum(preserved.values()),
@@ -681,7 +712,22 @@ def prepare(asset, output):
             "no_overhang": False,
             "overhang_assessment": "NOT_PROVEN; preserved upper silhouette may extend beyond cap",
             "smoothing_modified": False,
-            "scale_modified": False,
+            "scale_modified": art_scale != 1.0,
+            "source_unmodified": True,
+            "source_uniform_art_scale": art_scale,
+            "source_art_scale_reason": "Explicit decorative half-size variant selected before native measurement; source units unchanged, native actor/import scale1"
+            if art_scale != 1.0
+            else "Unchanged source size",
+            "source_to_derived_matrix": [
+                [art_scale, 0, 0, 0],
+                [0, art_scale, 0, 0],
+                [0, 0, art_scale, -cut * art_scale],
+                [0, 0, 0, 1],
+            ],
+            "source_to_derived_matrix_basis": "Imported source WORLD metres -> base translation -> baked uniform ART scale; source object matrix_world is already applied",
+            "art_scale_quantization_max_delta_m": art_quantization_delta,
+            "pre_art_scale_derived_topology": pre_art_topology,
+            "art_scale_volume_expected_factor": art_scale**3,
             "yaw_modified": False,
             "placement": False,
             "qualified_assets": [],
@@ -722,7 +768,7 @@ def prepare_assets(assets, output):
             )
             partial = output / (
                 asset["id"]
-                + f"_planar_base{round(CUT_FRACTIONS[asset['id']] * 100)}.fbx"
+                + f"_planar_base{round(CUT_FRACTIONS[asset['id']] * 100)}{asset['art_suffix']}.fbx"
             )
             record = {
                 "id": asset["id"],
@@ -758,6 +804,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--split-source02-largest-component", action="store_true")
     parser.add_argument("--allow-source02-holed-cap", action="store_true")
+    parser.add_argument("--source02-uniform-art-scale-half", action="store_true")
     parser.add_argument("--request", type=Path, required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
     parser.add_argument("--expected-request-sha256", required=True)
@@ -822,6 +869,13 @@ def main():
             not args.allow_source02_holed_cap or args.split_source02_largest_component,
             "Holed02 cap requires explicit largest component selection",
         )
+        asset["uniform_art_scale"] = (
+            0.5
+            if args.source02_uniform_art_scale_half
+            and asset["id"] == "namaqualand_boulder_02"
+            else 1.0
+        )
+        asset["art_suffix"] = "Half" if asset["uniform_art_scale"] == 0.5 else ""
         asset["allow_holed_cap"] = args.allow_source02_holed_cap
         asset["split_source02"] = (
             args.split_source02_largest_component
@@ -861,6 +915,9 @@ def main():
         "recipe_revision": RECIPE_REVISION,
         "split_source02_largest_component": args.split_source02_largest_component,
         "allow_source02_holed_cap": args.allow_source02_holed_cap,
+        "source02_uniform_art_scale_half": args.source02_uniform_art_scale_half,
+        "art_scale_chosen_before_native_measurement": True,
+        "prior_revision4_attempt": "Retained unchanged: full-size derivatives. Revision5 permits explicit baked decorative half-size02 variant, source units/native scale and contact policy unchanged.",
         "prior_revision3_attempt": "Retained unchanged: selected02 component rejected multiple boundary loops. Revision4 explicitly preserves holes using stock scanfill; no outer-only support claim.",
         "prior_revision2_attempt": "Retained unchanged: 02 rejected multiple cut loops; 06 prepared. Revision3 optionally selects one post-cut source component, never merges loops or changes terrain/contact gates.",
         "cut_fractions_frozen_before_execution": CUT_FRACTIONS,

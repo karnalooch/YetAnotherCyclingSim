@@ -1182,3 +1182,30 @@ connections, effective parameters, tangent-space flag and explicit WorldSpace=Fa
 Both baseline and detail will be compared with the same geometry, seating, cameras
 and lights, using four real GPU views around each rock. Native execution remains
 NOT RUN until the following exact-head results are recorded.
+
+The first native larger-rock packet (`8fef0e99041df25d52e3aa3ad32355b76132aa1f`,
+`large-baseline01`) completed inspection, material save/readback, measurement and
+mesh fresh readback. Full-size02 failed all five sites: at former gentle point 3
+its wider actual footprint reaches 18.773911 degrees and requires 24.569473 cm
+embedding against 77.672127 cm height. Source06 has one complete cap diagnostic
+at point 3 after preserved 33-to-65 failure and 65-to-129 refinement. The renderer
+correctly refused the two-asset review because02 had no complete diagnostic fit;
+no GPU images or second-stage detail PASS are inferred from that packet.
+
+A separately authenticated CPU envelope run with radius1.5m, clearance0.25m and
+the same masks/seed produced zero density-selected candidates and17 eligible
+but density-thinned controls. A preliminary source-height inspection found steep
+neighbourhoods, not a new admitted gentle placement. No mask, unknown, density or
+slope gate was relaxed. The unused alternate-contact preparer was retained only
+under ignored diagnostic work and is not a new production pipeline.
+
+The next bounded art recipe therefore creates an explicit0.5-scale source02
+derivative (about1.25m wide) after original units/topology were verified. This is
+a labelled decorative size variant, not a hidden import-unit correction. Original
+2.53m source and full-size rejection remain unchanged. The source-to-derived
+matrix, pre-art upper-triangle equality, before/after volume/area factors, exact
+dimensions and source hashes are recorded. Source06 keeps its original size.
+Both native actors still use identity transform and uniform scale1, with expected
+derived-unit bounds and the same contact thresholds. Their conservative extents
+fit the earlier authenticated1.211882535m diagnostic envelope. The5% planting
+depth is computed from each final derived height and counted in total embedding.
