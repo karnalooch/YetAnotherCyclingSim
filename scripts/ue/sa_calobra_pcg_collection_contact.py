@@ -313,61 +313,205 @@ def run(root, output, head, binding, batch_index):
     }
 
 
-def reload(root, output, head, binding):
-    root = Path(root).resolve()
+def contact_mode(root):
+    """One proof layout per stage; partial outputs never select a fallback."""
+    all_exists = (root / "proof/collection-contact-all").exists()
+    batch_exists = any(
+        (root / f"proof/collection-contact-{index:02d}").exists() for index in range(10)
+    )
+    require(not (all_exists and batch_exists), "Mixed contact process layouts")
+    return "SINGLE_PROCESS_ALL_BATCHES" if all_exists else "PER_BATCH_PROCESSES"
+
+
+def verify_all_marker(marker, head):
+    require(
+        marker.get("action") == "collection-contact-all"
+        and marker.get("code_sha") == head
+        and type(marker.get("exit_code")) is int
+        and marker["exit_code"] == 0
+        and marker.get("staged_bytes_unchanged") is True
+        and marker.get("proof_admission") == "LOCAL_DIAGNOSTIC_ONLY",
+        "All-contact launcher failed or action differs",
+    )
+
+
+def verify_batch_receipt(receipt, head, index, inventory, sources, contact, root):
+    require(
+        receipt["code_sha"] == head
+        and receipt["status"] == "COLLECTION_CONTACT_BATCH_MEASURED"
+        and type(receipt["batch_index"]) is int
+        and receipt["batch_index"] == index
+        and receipt["catalog"] == inventory["catalog"]
+        and receipt["meshes"] == batch_members(inventory["meshes"], index)
+        and receipt["source_contract"] == sources["terrain"]
+        and receipt["contact_request"] == q.identity(root / "contact-request.json")
+        and receipt["terrain_file_before"]
+        == receipt["terrain_file_after"]
+        == map_identity(sources)
+        and receipt["placement"] is False
+        and receipt["full_qualification"] is False
+        and receipt["qualified_assets"] == []
+        and receipt["terrain_modified"] is False
+        and receipt["map_saved"] is False,
+        "Batch identity/scope drift",
+    )
+    expected = {(m["id"], i) for m in receipt["meshes"] for i in range(5)}
+    require(
+        len(receipt["cases"]) == 10
+        and all(type(c["point_index"]) is int for c in receipt["cases"])
+        and {(c["mesh_id"], c["point_index"]) for c in receipt["cases"]} == expected,
+        "Incomplete matrix",
+    )
+    for case in receipt["cases"]:
+        require(
+            [g["grid_size"] for g in case["grids"]] in ([33, 65], [33, 65, 129]),
+            "Missing or unknown sampling grids",
+        )
+        point = contact["points"][case["point_index"]]
+        require(
+            case["candidate_id"] == point["candidate_id"]
+            and case["world_xy_cm"] == point["world_xy_cm"],
+            "Point drift",
+        )
+
+
+def verify_raw_samples(directory, cases):
+    directory = directory.resolve(strict=True)
+    for case in cases:
+        for grid in case["grids"]:
+            raw = grid["raw_samples"]
+            file = (directory / raw["path"]).resolve(strict=True)
+            require(
+                file.is_relative_to(directory)
+                and q.identity(file) == {k: raw[k] for k in ("bytes", "sha256")},
+                "Raw grid drift",
+            )
+
+
+def run_all(root, output, head, binding):
+    """Measure all ten batches in one process; only the launcher proves exit."""
+    root, output = Path(root).resolve(), Path(output).resolve()
+    require(contact_mode(root) == "SINGLE_PROCESS_ALL_BATCHES", "Wrong contact layout")
+    require(
+        output == root / "proof/collection-contact-all",
+        "Unexpected all-contact output",
+    )
     inventory = collection.reload(root, output, head, binding)
     sources, contact = inputs(root)
-    cases, receipts = [], []
+    before = map_identity(sources)
+    batches = []
     for index in range(10):
-        directory = root / f"proof/collection-contact-{index:02d}"
-        marker = read_json(directory / "launcher-completed.json")
-        verify_marker(marker, head, index)
-        path = directory / f"collection-contact-{index:02d}-receipt.json"
+        directory = output / f"batch-{index:02d}"
+        directory.mkdir(exist_ok=False)
+        result = run(root, directory, head, binding, index)
+        verify_batch_receipt(result, head, index, inventory, sources, contact, root)
+        verify_raw_samples(directory, result["cases"])
+        if batches:
+            require(
+                result["ground_transform"] == batches[0]["result"]["ground_transform"],
+                "Landscape transform changed between batches",
+            )
+        batches.append({"directory": directory.name, "result": result})
+    require(map_identity(sources) == before, "Terrain changed during all-contact run")
+    require(
+        collection.reload(root, output, head, binding)["meshes"] == inventory["meshes"],
+        "Package drift during all-contact run",
+    )
+    return {
+        "schema_version": 1,
+        "code_sha": head,
+        "status": "COLLECTION_CONTACT_ALL_MEASURED",
+        "contact_execution_mode": "SINGLE_PROCESS_ALL_BATCHES",
+        "catalog": inventory["catalog"],
+        "meshes": inventory["meshes"],
+        "contact_request": q.identity(root / "contact-request.json"),
+        "source_contract": sources["terrain"],
+        "terrain_file_before": before,
+        "terrain_file_after": map_identity(sources),
+        "ground_transform": batches[0]["result"]["ground_transform"],
+        "terrain_contact": "MEASURED_SAMPLED_ONLY",
+        "terrain_modified": False,
+        "map_saved": False,
+        "placement": False,
+        "qualified_assets": [],
+        "full_qualification": False,
+        "batches": batches,
+    }
+
+
+def read_contact_batches(root, head, inventory, sources, contact):
+    mode = contact_mode(root)
+    cases, receipts = [], []
+    if mode == "SINGLE_PROCESS_ALL_BATCHES":
+        directory = root / "proof/collection-contact-all"
+        verify_all_marker(read_json(directory / "launcher-completed.json"), head)
+        path = directory / "collection-contact-all-receipt.json"
         receipt = read_json(path)
         require(
             receipt["code_sha"] == head
-            and receipt["status"] == "COLLECTION_CONTACT_BATCH_MEASURED"
-            and receipt["batch_index"] == index
+            and receipt["action"] == "collection-contact-all"
+            and receipt["status"] == "COLLECTION_CONTACT_ALL_MEASURED"
+            and receipt["contact_execution_mode"] == mode
             and receipt["catalog"] == inventory["catalog"]
-            and receipt["meshes"] == batch_members(inventory["meshes"], index)
+            and receipt["meshes"] == inventory["meshes"]
             and receipt["source_contract"] == sources["terrain"]
             and receipt["contact_request"] == q.identity(root / "contact-request.json")
             and receipt["terrain_file_before"]
             == receipt["terrain_file_after"]
             == map_identity(sources)
+            and receipt["terrain_modified"] is False
+            and receipt["map_saved"] is False
             and receipt["placement"] is False
+            and receipt["qualified_assets"] == []
             and receipt["full_qualification"] is False
-            and receipt["map_saved"] is False,
-            "Batch identity/scope drift",
+            and receipt["asset_compilation_loading_barrier_completed"] is True
+            and len(receipt["batches"]) == 10,
+            "All-contact identity/scope drift",
         )
-        expected = {(m["id"], i) for m in receipt["meshes"] for i in range(5)}
-        require(
-            len(receipt["cases"]) == 10
-            and {(c["mesh_id"], c["point_index"]) for c in receipt["cases"]}
-            == expected,
-            "Incomplete matrix",
-        )
-        for case in receipt["cases"]:
+        for index, batch in enumerate(receipt["batches"]):
+            require(batch["directory"] == f"batch-{index:02d}", "Batch directory drift")
+            result = batch["result"]
+            verify_batch_receipt(result, head, index, inventory, sources, contact, root)
             require(
-                [g["grid_size"] for g in case["grids"]] in ([33, 65], [33, 65, 129]),
-                "Missing or unknown sampling grids",
+                result["ground_transform"] == receipt["ground_transform"],
+                "All-contact ground transform drift",
             )
-            point = contact["points"][case["point_index"]]
+            child = directory / batch["directory"]
             require(
-                case["candidate_id"] == point["candidate_id"]
-                and case["world_xy_cm"] == point["world_xy_cm"],
-                "Point drift",
+                not (child / "launcher-completed.json").exists(),
+                "A child batch cannot claim an independent process exit",
             )
-            for grid in case["grids"]:
-                raw = grid["raw_samples"]
-                file = (directory / raw["path"]).resolve(strict=True)
-                require(
-                    file.is_relative_to(directory)
-                    and q.identity(file) == {k: raw[k] for k in ("bytes", "sha256")},
-                    "Raw grid drift",
-                )
-        cases.extend(receipt["cases"])
+            verify_raw_samples(child, result["cases"])
+            cases.extend(result["cases"])
         receipts.append({"path": str(path.relative_to(root)), **q.identity(path)})
+    else:
+        for index in range(10):
+            directory = root / f"proof/collection-contact-{index:02d}"
+            verify_marker(read_json(directory / "launcher-completed.json"), head, index)
+            path = directory / f"collection-contact-{index:02d}-receipt.json"
+            receipt = read_json(path)
+            verify_batch_receipt(
+                receipt, head, index, inventory, sources, contact, root
+            )
+            verify_raw_samples(directory, receipt["cases"])
+            cases.extend(receipt["cases"])
+            receipts.append({"path": str(path.relative_to(root)), **q.identity(path)})
+    require(
+        len(cases) == 100
+        and {(c["mesh_id"], c["point_index"]) for c in cases}
+        == {(m["id"], i) for m in inventory["meshes"] for i in range(5)},
+        "Incomplete collection contact matrix",
+    )
+    return mode, cases, receipts
+
+
+def reload(root, output, head, binding):
+    root = Path(root).resolve()
+    inventory = collection.reload(root, output, head, binding)
+    sources, contact = inputs(root)
+    mode, cases, receipts = read_contact_batches(
+        root, head, inventory, sources, contact
+    )
     summary = [
         {
             "mesh_id": mesh["id"],
@@ -382,6 +526,7 @@ def reload(root, output, head, binding):
     return {
         **inventory,
         "status": "COLLECTION_CONTACT_FRESH_READBACK",
+        "contact_execution_mode": mode,
         "terrain_contact": "MEASURED_SAMPLED_ONLY",
         "cases": cases,
         "batches": receipts,
@@ -397,6 +542,12 @@ class CollectionCapture(RockCapture):
     def verify(self):
         current = collection.reload(self.root, self.output, self.head, self.binding)
         require(current["meshes"] == self.meshes, "Render mesh drift")
+        for receipt in self.contact_receipts:
+            require(
+                q.identity(self.root / receipt["path"])
+                == {key: receipt[key] for key in ("bytes", "sha256")},
+                "Contact source receipt changed during render",
+            )
         verify_terrain(
             self.terrain_before,
             map_identity(self.terrain_sources),
@@ -411,6 +562,7 @@ class CollectionCapture(RockCapture):
     def begin(self):
         try:
             receipt = reload(self.root, self.output, self.head, self.binding)
+            self.contact_receipts = receipt["batches"]
             self.meshes = self.review_meshes = receipt["meshes"]
             self.receipt_path = (
                 self.root

@@ -10,7 +10,7 @@
 param(
     [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string]$ExpectedHead,
     [Parameter(Mandatory)][ValidatePattern('^[A-Za-z0-9][A-Za-z0-9-]{0,63}$')][string]$RunToken,
-    [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render','collection-contact-00','collection-contact-01','collection-contact-02','collection-contact-03','collection-contact-04','collection-contact-05','collection-contact-06','collection-contact-07','collection-contact-08','collection-contact-09','collection-contact-reload','collection-contact-render')][string]$Action = 'inspect',
+    [ValidateSet('inspect','create','reload','material','material-reload','terrain','settle-render','mask-xy-create','mask-xy-reload','rock-qualify','rock-reload','rock-render','rock-pack','rock-pack-reload','rock-collection','rock-collection-reload','rock-collection-render','collection-contact-00','collection-contact-01','collection-contact-02','collection-contact-03','collection-contact-04','collection-contact-05','collection-contact-06','collection-contact-07','collection-contact-08','collection-contact-09','collection-contact-all','collection-contact-reload','collection-contact-render')][string]$Action = 'inspect',
     [switch]$QualificationSources,
     [ValidateSet('baseline','rock-detail','natural20-contact')][string]$QualificationSet = 'baseline',
     [switch]$RockQualificationSources,
@@ -25,7 +25,7 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$IsCollectionContact = $Action -cmatch '^collection-contact-(0[0-9]|reload|render)$'
+$IsCollectionContact = $Action -cmatch '^collection-contact-(0[0-9]|all|reload|render)$'
 $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 $Retained = 'D:/yacs/runner/_work/YetAnotherCyclingSim/YetAnotherCyclingSim/_phase2c-pcgex-cliff/Plugins/PCGExtendedToolkit'
 $Root = [IO.Path]::GetFullPath("D:/yacs/work/pcg365/$ExpectedHead/$RunToken")
@@ -364,7 +364,10 @@ if ($IsCollectionContact) {
     if (-not (Test-Path -LiteralPath (Join-Path $Root 'contact-request.json'))) { throw 'Contact request was not staged.' }
     $collectionReload = Get-Content (Join-Path $Proof 'rock-collection-reload/launcher-completed.json') -Raw | ConvertFrom-Json
     if ($collectionReload.code_sha -cne $ExpectedHead -or $collectionReload.exit_code -ne 0) { throw 'Collection fresh reload must complete before contact.' }
-    $priorActions = if ($Action -ceq 'collection-contact-reload') { @(0..9 | ForEach-Object { 'collection-contact-{0:00}' -f $_ }) } elseif ($Action -ceq 'collection-contact-render') { @('collection-contact-reload') } else { @() }
+    $allContactExists = Test-Path -LiteralPath (Join-Path $Proof 'collection-contact-all')
+    $batchContactExists = @(0..9 | Where-Object { Test-Path -LiteralPath (Join-Path $Proof ('collection-contact-{0:00}' -f $_)) }).Count -gt 0
+    if (($allContactExists -and $batchContactExists) -or ($Action -ceq 'collection-contact-all' -and $batchContactExists) -or ($Action -cmatch '^collection-contact-0[0-9]$' -and $allContactExists)) { throw 'Mixed contact process layouts are forbidden; preserve partial results and use a fresh stage.' }
+    $priorActions = if ($Action -ceq 'collection-contact-reload') { if ($allContactExists) { @('collection-contact-all') } else { @(0..9 | ForEach-Object { 'collection-contact-{0:00}' -f $_ }) } } elseif ($Action -ceq 'collection-contact-render') { @('collection-contact-reload') } else { @() }
     foreach ($priorAction in $priorActions) {
         $prior = Get-Content (Join-Path $Proof "$priorAction/launcher-completed.json") -Raw | ConvertFrom-Json
         if ($prior.code_sha -cne $ExpectedHead -or $prior.exit_code -ne 0 -or $prior.action -cne $priorAction) { throw "Contact prerequisite did not finish cleanly: $priorAction" }
@@ -422,7 +425,7 @@ if ($nativeLog -match "Couldn't load edit layer object|Failed to find script pac
 if (($IsCollectionContact -or $QualificationSet -ceq 'natural20-contact') -and $nativeLog -match 'LoadErrors: While trying to load package /Game/[^\r\n]*a dependent package /Game/[^\r\n]*was not available') { throw 'Native diagnostic lost a required Game package dependency; diagnostic rejected.' }
 $result = Get-Content -LiteralPath $Receipt -Raw | ConvertFrom-Json
 $expectedStatus = @{inspect='NATIVE_INSPECTION_COMPLETED'; create='MECHANICAL_GRAPH_SAVED'; reload='MECHANICAL_GRAPH_FRESH_RELOAD_REGENERATED'; material='MATERIAL_BINDING_SAVED'; 'material-reload'='MATERIAL_BINDING_FRESH_READBACK'; terrain='REAL_TERRAIN_CONTACT_MEASURED'; 'settle-render'='BOULDER_FITTED_REAL_GPU_CAPTURED'; 'mask-xy-create'='MASK_XY_GRAPH_SAVED'; 'mask-xy-reload'='MASK_XY_GRAPH_FRESH_RELOAD_REGENERATED'; 'rock-qualify'='ROCK_CONTACT_MATRIX_MEASURED'; 'rock-reload'='ROCK_MESHES_FRESH_READBACK'; 'rock-render'='ROCKS_REAL_GPU_CAPTURED'; 'rock-pack'='ROCK_VARIANT_ASSETS_SAVED'; 'rock-pack-reload'='ROCK_VARIANT_ASSETS_FRESH_RELOAD_VERIFIED'; 'rock-collection'='ROCK_COLLECTION_ASSETS_SAVED'; 'rock-collection-reload'='ROCK_COLLECTION_ASSETS_FRESH_RELOAD_VERIFIED'; 'rock-collection-render'='ROCK_COLLECTION_REAL_GPU_CAPTURED'}[$Action]
-if ($IsCollectionContact) { $expectedStatus = if ($Action -ceq 'collection-contact-render') { 'COLLECTION_CONTACT_REAL_GPU_CAPTURED' } elseif ($Action -ceq 'collection-contact-reload') { 'COLLECTION_CONTACT_FRESH_READBACK' } else { 'COLLECTION_CONTACT_BATCH_MEASURED' } }
+if ($IsCollectionContact) { $expectedStatus = if ($Action -ceq 'collection-contact-render') { 'COLLECTION_CONTACT_REAL_GPU_CAPTURED' } elseif ($Action -ceq 'collection-contact-reload') { 'COLLECTION_CONTACT_FRESH_READBACK' } elseif ($Action -ceq 'collection-contact-all') { 'COLLECTION_CONTACT_ALL_MEASURED' } else { 'COLLECTION_CONTACT_BATCH_MEASURED' } }
 if ($result.status -cne $expectedStatus -or $result.code_sha -cne $ExpectedHead -or $result.placement -isnot [bool] -or $result.placement) { throw 'Native diagnostic did not complete; inspect receipt diagnostics.' }
 if ($result.PSObject.Properties.Name -contains 'error') { throw 'Native diagnostic contains an error; refusing success.' }
 if ($Action -in @('rock-pack','rock-pack-reload')) {

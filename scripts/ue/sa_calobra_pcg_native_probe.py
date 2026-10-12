@@ -20,7 +20,9 @@ OUTPUT = Path(os.environ["YACS_PCG_PROBE_OUTPUT"])
 ACTION = os.environ["YACS_PCG_PROBE_ACTION"]
 HEAD = os.environ["YACS_PCG_PROBE_EXPECTED_HEAD"]
 CONTACT_ACTIONS = {f"collection-contact-{index:02d}" for index in range(10)} | {
-    "collection-contact-reload", "collection-contact-render"
+    "collection-contact-all",
+    "collection-contact-reload",
+    "collection-contact-render",
 }
 PACKAGE = "/Game/Generated/YACS/PCG365Mechanical"
 GRAPH_PATH = PACKAGE + "/PCG_XYFixture"
@@ -273,10 +275,14 @@ def main():
                     if ACTION == "collection-contact-render":
                         ACTIVE = contact.start(root, OUTPUT, HEAD, binding, finish)
                         return
-                    if ACTION == "collection-contact-reload":
+                    if ACTION == "collection-contact-all":
+                        receipt.update(contact.run_all(root, OUTPUT, HEAD, binding))
+                    elif ACTION == "collection-contact-reload":
                         receipt.update(contact.reload(root, OUTPUT, HEAD, binding))
                     else:
-                        receipt.update(contact.run(root, OUTPUT, HEAD, binding, int(ACTION[-2:])))
+                        receipt.update(
+                            contact.run(root, OUTPUT, HEAD, binding, int(ACTION[-2:]))
+                        )
                 elif ACTION == "rock-render":
                     from scripts.ue import sa_calobra_pcg_rock_capture
 
