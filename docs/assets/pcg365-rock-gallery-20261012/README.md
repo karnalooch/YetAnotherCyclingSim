@@ -17,3 +17,6 @@ DEFERRED_AFTER_M3, performance_pass false; owner whole-area audit remains later.
 
 
 Beauty08 at producer `e6134bfe53933514d225701e51e42f70c153f714` completed all six native launcher actions with exit 0, including fresh reload and real GPU capture. The brighter images expose recurring two-family silhouettes. The follow-up importer allows only the eight explicit acquired source-family names and 01..03 variants alongside legacy IDs; source hashes, unique twenty-count, path restrictions, save/reload and placement prohibition remain enforced. Five CPU catalog tests reject duplicates, traversal, placement and source-byte drift. New eight-family producer remains a local candidate until its measured output is imported and rendered; Landscape contact remains NOT_RUN.
+
+
+The completed [eight-source collection](../pcg365-natural20-20261012/README.md) now supersedes the two-source gallery as the current local library candidate: twenty native packages saved/reloaded, Material Forge bound, five actual GPU images verified at producer `92f5184c0e5df7cf7698d2c8b28b9e5796e831d7`. The documentation commit does not change that producer SHA. Contact and placement gates remain pending.

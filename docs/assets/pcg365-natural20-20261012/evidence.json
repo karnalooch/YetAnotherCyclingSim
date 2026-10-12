@@ -1,0 +1,40 @@
+{
+  "issue": 365,
+  "producer_sha": "92f5184c0e5df7cf7698d2c8b28b9e5796e831d7",
+  "run_root": "D:\\yacs\\work\\pcg365\\92f5184c0e5df7cf7698d2c8b28b9e5796e831d7\\natural20-forge01",
+  "status": "TWENTY_SAVED_RELOADED_REAL_GPU_CAPTURED",
+  "source_family_count": 8,
+  "asset_count": 20,
+  "images": [
+    {
+      "path": "overview.png",
+      "bytes": 1642745,
+      "sha256": "81ab27a80b20bdf213fa2c9411f50bfbe670d32da06f715a7a2ddbf05f80b134"
+    },
+    {
+      "path": "row-01.png",
+      "bytes": 1668759,
+      "sha256": "68355908e01c8e2856d77c0e72bc4bca400314b27996da66687eabf1ceb7b1f4"
+    },
+    {
+      "path": "row-02.png",
+      "bytes": 1902025,
+      "sha256": "da10fb95cbf01f9db997e89a99017b26dbecb76432a3d203b16e30797b8ad9e6"
+    },
+    {
+      "path": "row-03.png",
+      "bytes": 1859993,
+      "sha256": "b1b8de0a013a7260f816753a3ff1e7649db96ae17947c8c261cf86561af9719b"
+    },
+    {
+      "path": "row-04.png",
+      "bytes": 1457437,
+      "sha256": "7adda1234d2ee4080f94c003d2f97d0e7e313b9e6879e4d5943559542971322d"
+    }
+  ],
+  "terrain_contact": "NOT_RUN",
+  "terrain_modified": false,
+  "placement": false,
+  "qualified_assets": [],
+  "performance_pass": false
+}
