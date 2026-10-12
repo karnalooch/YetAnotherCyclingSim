@@ -130,6 +130,15 @@ or archive existence as a tested complete host restore.
 
 ## Current bounded retention observations
 
+The owner additionally authorized removal of incomplete probe clones. Explicit
+`--include-unborn-probes` is limited to dynamic official MCP source probe and
+road-material source-proof runs with standalone Git metadata, exactly unborn
+`master`, no refs files or packed refs, and no resolvable HEAD. Main/release and
+shared metadata protections remain mandatory. Default previews still block
+these cases. The diagnosed pair is `_official-mcp-source-probe-38044002365-1`
+and `_road-material-source-proof-38044002446-1`; their surviving object packs
+must pass the same complete archive verification before pruning.
+
 Minimal canonical fetch preserved `main` and `v0.3.1`, both resolving to
 `4dd792219bfc2eaf7dc216bd60cbde6628bba792`; the canonical working checkout
 remained at its separate `504bâ€¦` identity. The canonical checkout and accepted source assets are not cleanup targets. Active cache `_unreal-build-37690136030-1` remains protected.

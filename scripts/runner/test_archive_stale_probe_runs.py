@@ -264,6 +264,41 @@ class CleanupTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "File changed while hashing"):
                 cleanup.inventory(self.target, workers=4)
 
+    def make_unborn_probe(self):
+        destination = self.root / cleanup.REPO / "_official-mcp-source-probe-123-1"
+        self.target.rename(destination)
+        self.target = destination
+        subprocess.run(
+            ["git", "-C", str(destination), "init", "-b", "master"],
+            check=True,
+            capture_output=True,
+        )
+        old = time.time() - 172800
+        for item in [*destination.rglob("*"), destination]:
+            os.utime(item, (old, old))
+
+    def test_unborn_default_blocked_optin_quarantines(self):
+        self.make_unborn_probe()
+        self.assertFalse(self.plan()["candidates"])
+        plan = cleanup.preview(self.root, include_unborn_probes=True)
+        self.assertEqual(len(plan["candidates"]), 1)
+        result = self.apply(plan)
+        self.assertTrue((Path(result[0]["destination"]) / ".git/HEAD").exists())
+
+    def test_unborn_ref_present_blocks_optin(self):
+        self.make_unborn_probe()
+        (self.target / ".git/refs/heads/other").write_text("a" * 40)
+        self.assertFalse(
+            cleanup.preview(self.root, include_unborn_probes=True)["candidates"]
+        )
+
+    def test_unborn_shared_registry_blocks_optin(self):
+        self.make_unborn_probe()
+        (self.target / ".git/worktrees/required-child").mkdir(parents=True)
+        self.assertFalse(
+            cleanup.preview(self.root, include_unborn_probes=True)["candidates"]
+        )
+
     def test_queue_no_runner_mutation(self):
         with patch.dict(
             os.environ, {"GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "1"}

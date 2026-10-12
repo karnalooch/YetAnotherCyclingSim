@@ -127,7 +127,52 @@ def standalone_git(base):
     return metadata
 
 
-def inventory_row(path, base, name):
+def unborn_probe_signature(path, check_name=True):
+    if check_name:
+        require(
+            re.fullmatch(
+                r"_(?:official-mcp-source-probe|road-material-source-proof)-[0-9]+-[1-9][0-9]*",
+                path.name,
+            ),
+            "Unborn opt-in is limited to explicit dynamic source-probe clones",
+        )
+    metadata = standalone_git(path)
+    head = no_links(metadata / "HEAD")
+    require(
+        head.read_text(encoding="utf-8").strip() == "ref: refs/heads/master",
+        "Unborn probe HEAD signature differs",
+    )
+    require(not (metadata / "packed-refs").exists(), "Unborn probe has packed refs")
+    refs = no_links(metadata / "refs")
+    require(refs.is_dir(), "Unborn probe refs directory missing")
+    for directory, dirs, files in os.walk(refs, followlinks=False):
+        no_links(directory)
+        for name in dirs + files:
+            item = no_links(Path(directory) / name)
+            require(item.is_dir(), "Unborn probe contains refs files")
+    result = subprocess.run(
+        [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            str(path),
+            "rev-parse",
+            "--verify",
+            "HEAD^{commit}",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    require(
+        result.returncode != 0
+        and not result.stdout.strip()
+        and "Needed a single revision" in result.stderr,
+        "Unborn probe unexpectedly has valid/unknown HEAD",
+    )
+    return True
+
+
+def inventory_row(path, base, name, allow_unborn=False):
     item = no_links(base / name)
     if name == ".git":
         metadata = standalone_git(base)
@@ -144,7 +189,10 @@ def inventory_row(path, base, name):
             # branch is not the owning YACS project's protected main.
             if base == path:
                 require(
-                    not re.match(r"(?i)^(main|master|release(?:/|$)|v[0-9])", branch),
+                    not re.match(r"(?i)^(main|master|release(?:/|$)|v[0-9])", branch)
+                    or (
+                        allow_unborn and unborn_probe_signature(path, check_name=False)
+                    ),
                     f"Main/release branch is protected: {metadata}",
                 )
         else:
@@ -175,7 +223,7 @@ def inventory_row(path, base, name):
     return row
 
 
-def inventory(path, workers=4):
+def inventory(path, workers=4, allow_unborn=False):
     require(
         type(workers) is int and 1 <= workers <= 4, "Inventory worker count must be1..4"
     )
@@ -188,12 +236,15 @@ def inventory(path, workers=4):
         for directory, dirs, files in os.walk(path, followlinks=False):
             base = no_links(directory)
             for name in sorted(dirs):
-                records.append(inventory_row(path, base, name))
+                records.append(inventory_row(path, base, name, allow_unborn))
             names = sorted(files)
             for start in range(0, len(names), 256):
                 batch = names[start : start + 256]
                 records.extend(
-                    executor.map(lambda name: inventory_row(path, base, name), batch)
+                    executor.map(
+                        lambda name: inventory_row(path, base, name, allow_unborn),
+                        batch,
+                    )
                 )
     return sorted(records, key=lambda row: row["path"])
 
@@ -257,7 +308,7 @@ def protected_commits(root):
     return commits
 
 
-def protected(root, relative):
+def protected(root, relative, include_unborn_probes=False):
     target = confined(root, relative)
     metadata = target / ".git"
     if metadata.is_dir():
@@ -286,7 +337,15 @@ def protected(root, relative):
                 "External/worktree Git configuration is protected",
             )
         protected_ids = protected_commits(root)
-        head = git_commit(target, "HEAD")
+        try:
+            head = git_commit(target, "HEAD")
+        except ValueError:
+            require(
+                include_unborn_probes and target.parent == root / REPO,
+                "Unresolved HEAD remains protected without explicit unborn source-probe opt-in",
+            )
+            unborn_probe_signature(target)
+            head = None
         require(
             head not in protected_ids,
             "Detached/main/release commit identity is protected",
@@ -331,7 +390,13 @@ def protected(root, relative):
         )
 
 
-def preview(root=ROOT, minimum_age_hours=24, now=None, progress=False):
+def preview(
+    root=ROOT,
+    minimum_age_hours=24,
+    now=None,
+    progress=False,
+    include_unborn_probes=False,
+):
     require(minimum_age_hours >= 0, "Nonnegative reviewed stale age required")
     root = no_links(root)
     now = time.time() if now is None else now
@@ -354,13 +419,13 @@ def preview(root=ROOT, minimum_age_hours=24, now=None, progress=False):
                 print("Inspect candidate: " + rel, file=sys.stderr, flush=True)
             try:
                 candidate = confined(root, rel)
-                protected(root, rel)
+                protected(root, rel, include_unborn_probes)
                 if candidate.name in STATIC_CHECKOUTS:
                     require(
                         (candidate / ".git").is_dir(),
                         "Static candidate requires standalone root Git checkout",
                     )
-                rows = inventory(candidate)
+                rows = inventory(candidate, allow_unborn=include_unborn_probes)
                 newest = (
                     max(
                         [candidate.stat().st_mtime_ns]
@@ -384,6 +449,7 @@ def preview(root=ROOT, minimum_age_hours=24, now=None, progress=False):
         "status": "PREVIEW_ONLY",
         "root": str(root),
         "minimum_age_hours": minimum_age_hours,
+        "include_unborn_probes": include_unborn_probes,
         "created_unix": now,
         "candidates": results,
         "blocked": blocked,
@@ -416,19 +482,21 @@ def quarantine(
         len({c["relative"] for c in plan["candidates"]}) == len(plan["candidates"]),
         "Duplicate candidate",
     )
+    include_unborn = plan.get("include_unborn_probes", False)
+    require(type(include_unborn) is bool, "Invalid unborn opt-in")
     receipts = []
     for entry in plan["candidates"]:
         relative = entry["relative"]
         if progress:
             print("Retain candidate: " + relative, file=sys.stderr, flush=True)
         target = confined(root, relative)
-        protected(root, relative)
+        protected(root, relative, include_unborn)
         if target.name in STATIC_CHECKOUTS:
             require(
                 (target / ".git").is_dir(),
                 "Static candidate requires standalone root Git checkout",
             )
-        rows = inventory(target)
+        rows = inventory(target, allow_unborn=include_unborn)
         require(
             rows == entry["inventory"]
             and target.stat().st_mtime_ns == entry["root_mtime_ns"],
@@ -461,9 +529,9 @@ def quarantine(
             stream.flush()
             os.fsync(stream.fileno())
         idle()
-        protected(root, relative)
+        protected(root, relative, include_unborn)
         require(
-            inventory(confined(root, relative)) == rows,
+            inventory(confined(root, relative), allow_unborn=include_unborn) == rows,
             "Candidate changed before relocation",
         )
         require(
@@ -472,7 +540,7 @@ def quarantine(
         idle()
         target.rename(destination)
         require(
-            inventory(destination) == rows,
+            inventory(destination, allow_unborn=include_unborn) == rows,
             "Quarantine verification failed; retained data must be investigated, never deleted",
         )
         receipt["status"] = "QUARANTINED_VERIFIED_NO_BYTES_DELETED"
@@ -533,6 +601,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--minimum-age-hours", type=int, default=24)
     parser.add_argument("--progress", action="store_true")
+    parser.add_argument("--include-unborn-probes", action="store_true")
     parser.add_argument("--queue-owned-run", action="store_true")
     parser.add_argument("--plan-output", type=Path)
     parser.add_argument(
@@ -562,7 +631,9 @@ def main():
             not args.expected_plan_sha256, "Plan SHA only applies with --apply-plan"
         )
         result = preview(
-            minimum_age_hours=args.minimum_age_hours, progress=args.progress
+            minimum_age_hours=args.minimum_age_hours,
+            progress=args.progress,
+            include_unborn_probes=args.include_unborn_probes,
         )
         if args.plan_output:
             no_links(args.plan_output)
