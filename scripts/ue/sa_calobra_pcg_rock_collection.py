@@ -476,26 +476,47 @@ class StudioCapture:
                 "Engine preview plane missing",
             )
             plane_bounds = plane.get_bounds()
-            require(
-                vector(plane_bounds.origin) == [0, 0, 0]
-                and vector(plane_bounds.box_extent) == [50, 50, 0],
-                "Engine preview plane dimensions differ",
-            )
-            floor.set_actor_scale3d(
-                unreal.Vector(self.width * 1.5 / 100, self.depth * 1.5 / 100, 1)
-            )
+            actual_plane_bounds = {
+                "origin": vector(plane_bounds.origin),
+                "extent": vector(plane_bounds.box_extent),
+            }
             self.report["preview_floor"] = {
                 "mesh": plane.get_path_name(),
-                "z_cm": float(floor.get_actor_location().z),
-                "location_cm": vector(floor.get_actor_location()),
-                "rotation_deg": rotation_values(floor),
-                "native_bounds_cm": {
-                    "origin": vector(plane_bounds.origin),
-                    "extent": vector(plane_bounds.box_extent),
-                },
-                "scale": vector(floor.get_actor_scale3d()),
-                "shadow_readback": shadow_readback(floor_component),
+                "native_bounds_cm": actual_plane_bounds,
+                "vertex_planarity": "NOT_VERIFIED_BOUNDS_MAY_INCLUDE_PADDING",
+                "scope": "PRESENTATION_ONLY_NOT_CONTACT_PROOF",
             }
+            require(
+                plane.get_path_name().split(".")[0] == "/Engine/BasicShapes/Plane"
+                and all(
+                    math.isfinite(v)
+                    for values in actual_plane_bounds.values()
+                    for v in values
+                )
+                and actual_plane_bounds["extent"][0] > 0
+                and actual_plane_bounds["extent"][1] > 0,
+                "Invalid engine preview plane bounds: " + repr(actual_plane_bounds),
+            )
+            spans = [2 * v for v in actual_plane_bounds["extent"][:2]]
+            floor.set_actor_scale3d(
+                unreal.Vector(
+                    self.width * 1.5 / spans[0], self.depth * 1.5 / spans[1], 1
+                )
+            )
+            require(
+                vector(floor.get_actor_location()) == [0, 0, 0]
+                and rotation_values(floor) == [0, 0, 0],
+                "Preview floor actor transform differs",
+            )
+            self.report["preview_floor"].update(
+                {
+                    "z_cm": float(floor.get_actor_location().z),
+                    "location_cm": vector(floor.get_actor_location()),
+                    "rotation_deg": rotation_values(floor),
+                    "scale": vector(floor.get_actor_scale3d()),
+                    "shadow_readback": shadow_readback(floor_component),
+                }
+            )
             for cls, comp_cls, intensity in (
                 (unreal.DirectionalLight, unreal.DirectionalLightComponent, 3.0),
                 (unreal.SkyLight, unreal.SkyLightComponent, 0.65),
