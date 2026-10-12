@@ -89,6 +89,11 @@ class RockCapture:
                 "render_transient_movable must be boolean",
             )
             cap_review_only = request.get("render_source_caps_only") is True
+            self.review_dynamic_sun = request.get("review_dynamic_sun", False)
+            require(
+                type(self.review_dynamic_sun) is bool,
+                "review_dynamic_sun must be boolean",
+            )
             self.review_views = request.get("review_views", 2)
             require(
                 type(self.review_views) is int and self.review_views in (2, 4),
@@ -256,6 +261,7 @@ class RockCapture:
             "source": mesh_record["source"],
             "selection": label,
             "render_transient_movable": self.render_transient_movable,
+            "review_dynamic_sun": self.review_dynamic_sun,
             "shadow_readback_before": mobility_before,
             "shadow_readback_after": mobility_after,
             "candidate_id": case["candidate_id"],
@@ -275,6 +281,7 @@ class RockCapture:
             framing_radius_cm=self.pending["framing_radius_cm"],
             warmup_captures=2,
             review_views=self.review_views,
+            review_dynamic_sun=self.review_dynamic_sun,
         )
 
     def completed(self, result):

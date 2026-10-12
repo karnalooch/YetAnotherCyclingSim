@@ -56,7 +56,12 @@ class BoulderCapture:
         framing_radius_cm,
         warmup_captures,
         review_views,
+        review_dynamic_sun,
     ):
+        if type(review_dynamic_sun) is not bool:
+            raise ValueError("review_dynamic_sun must be boolean")
+        self.review_dynamic_sun = review_dynamic_sun
+        self.sun_leases = []
         self.world, self.done = world, on_complete
         self.center = _xyz(target_center)
         self.radius = float(framing_radius_cm)
@@ -100,6 +105,7 @@ class BoulderCapture:
             "frames": [],
             "warmup_frames": [],
             "lighting": [],
+            "dynamic_sun_leases": [],
             "landscape_shadow_readback": [],
             "saved_map": False,
             "visual_acceptance": "PENDING_OWNER",
@@ -123,6 +129,51 @@ class BoulderCapture:
             raise RuntimeError("Transient capture actor creation failed: " + str(cls))
         self.owned.append(actor)
         return actor
+
+    @staticmethod
+    def _sun_snapshot(light, component):
+        # Required reflected fields: exceptions fail this diagnostic closed.
+        rotation = light.get_actor_rotation()
+        return {
+            "mobility": str(component.get_editor_property("mobility")),
+            "intensity": float(component.get_editor_property("intensity")),
+            "light_color": str(component.get_editor_property("light_color")),
+            "rotation_deg": [
+                float(getattr(rotation, a)) for a in ("pitch", "yaw", "roll")
+            ],
+            "cast_shadows": component.get_editor_property("cast_shadows"),
+            "cast_dynamic_shadows": component.get_editor_property(
+                "cast_dynamic_shadows"
+            ),
+            "contact_shadow_length": float(
+                component.get_editor_property("contact_shadow_length")
+            ),
+        }
+
+    def _lease_sun(self, light, component):
+        before = self._sun_snapshot(light, component)
+        original = component.get_editor_property("mobility")
+        if original not in (
+            unreal.ComponentMobility.STATIC,
+            unreal.ComponentMobility.STATIONARY,
+            unreal.ComponentMobility.MOVABLE,
+        ):
+            raise RuntimeError("Unknown original sun mobility")
+        record = {
+            "actor": light.get_path_name(),
+            "before": before,
+            "restore": "PENDING",
+        }
+        self.sun_leases.append((light, component, original, record))
+        self.report["dynamic_sun_leases"].append(record)
+        component.set_mobility(unreal.ComponentMobility.MOVABLE)
+        after = self._sun_snapshot(light, component)
+        expected = dict(before, mobility=str(unreal.ComponentMobility.MOVABLE))
+        if after != expected:
+            raise RuntimeError(
+                "Sun mobility-only lease changed other required settings"
+            )
+        record["after"] = after
 
     def start(self):
         try:
@@ -150,6 +201,8 @@ class BoulderCapture:
                     lights = [light]
                 for light in lights:
                     component = light.get_component_by_class(component_cls)
+                    if self.review_dynamic_sun and cls == unreal.DirectionalLight:
+                        self._lease_sun(light, component)
                     rotation = light.get_actor_rotation()
                     self.report["lighting"].append(
                         {
@@ -355,6 +408,18 @@ class BoulderCapture:
             except Exception:
                 cleanup_errors.append(traceback.format_exc())
             self.handle = None
+        for light, component, original, record in reversed(self.sun_leases):
+            try:
+                component.set_mobility(original)
+                restored = self._sun_snapshot(light, component)
+                if restored != record["before"]:
+                    raise RuntimeError("Original sun settings restoration differs")
+                record["restored"] = restored
+                record["restore"] = "VERIFIED"
+            except Exception:
+                record["restore"] = "FAILED"
+                cleanup_errors.append(traceback.format_exc())
+        self.sun_leases.clear()
         for actor in reversed(self.owned):
             try:
                 if not self.actors.destroy_actor(actor):
@@ -382,6 +447,7 @@ def start_capture(
     framing_radius_cm,
     warmup_captures=0,
     review_views=2,
+    review_dynamic_sun=False,
 ):
     """Return live capture state; callback receives receipt after two PNGs or failure.
 
@@ -396,6 +462,7 @@ def start_capture(
         framing_radius_cm,
         warmup_captures,
         review_views,
+        review_dynamic_sun,
     )
     _ACTIVE.append(capture)
     return capture.start()
