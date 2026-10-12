@@ -72,6 +72,9 @@ jobs:
           if (@($e).Count) { throw ($e.Message -join [Environment]::NewLine) }
           $py='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
           if (-not (Test-Path -LiteralPath $py -PathType Leaf)) { throw 'Pinned host Python missing' }
+          # The policy's historical test imports the script by its bare module name.
+          # Add only the repository-owned policy directory for this offline test process.
+          $env:PYTHONPATH = (Get-Location).Path + [IO.Path]::PathSeparator + (Join-Path (Get-Location).Path 'scripts/assets')
           & $py -B -m unittest scripts.ue.test_pcg365_collection_contact scripts.ue.test_pcg365_three_session scripts.ue.test_pcg365_collection_catalog scripts.assets.test_pcg_rock_contact_policy
           if ($LASTEXITCODE -ne 0) { throw 'Offline contracts rejected; no UE launched' }
           $actual=(Get-FileHash -LiteralPath $env:YACS_NATURAL20_CATALOG -Algorithm SHA256).Hash.ToLowerInvariant()
