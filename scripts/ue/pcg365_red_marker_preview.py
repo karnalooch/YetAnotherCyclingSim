@@ -9,7 +9,6 @@ import os
 from pathlib import Path
 import struct
 import sys
-import time
 import traceback
 
 import unreal

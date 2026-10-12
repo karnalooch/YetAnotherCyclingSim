@@ -2,7 +2,6 @@
 import ast
 import json
 from pathlib import Path
-from types import SimpleNamespace
 import unittest
 
 HERE = Path(__file__).resolve().parent
