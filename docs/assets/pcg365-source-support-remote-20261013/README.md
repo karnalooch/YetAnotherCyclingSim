@@ -151,3 +151,31 @@ The final audit fix passed 52 focused CPU tests (27 recipe tests), Ruff and all
 four documentation guards. After accepted placement, the consumer aims the
 existing live viewport at the first accepted stone using its actual bounds and
 verifies the camera position; this creates no render or saved map change.
+
+## Native rollout and receiver fix
+
+Release `2412383830d676435dba7eb5649af3838f86e570` passed exact-head CI and
+Forge proof, then reopened v0.3.1 in session `20261013T105244Z-53685d72a80e`.
+The real publisher workflow 38385208653 passed both source admission and
+publication. Native request 000001 imported all twenty candidates with exact
+LOD0/bounds readback, Forge bindings, collision settings and actual-radius
+mask checks. Its receipt acknowledged a running diagnostic job with zero
+placements at that instant; later contact/placement status is UNVERIFIED.
+
+During native import UE pumped Slate and reentered the same queue request.
+The second attempt to create its immutable STARTED receipt raised
+`FileExistsError`; the outer import completed, but the receiver blocked. A new
+independent client still received increasing video frames after the workflow
+ended. This proves the live viewer survived, not that the contact job passed.
+The owner explicitly authorized another discard/pause for the receiver fix;
+five checkpoint package hashes were verified unchanged before stopping only
+the owned offscreen Editor. No native completion or rock qualification is claimed.
+
+The fix guards the whole queue poll and contact callback against nested entry.
+A nested Clear requests cancellation and waits until the native call yields
+or finishes before closing the generator and removing owned actors. Tests
+reproduce nested request handling, nested generator advancement and nested
+cancellation without replay or concurrent destruction. 55 focused tests PASS;
+Ruff check/format, docs guards and diff checks PASS. Formatting of the two
+legacy protocol files was independently checked for identical Python AST.
+This receiver fix still requires protected CI and a new native execution.

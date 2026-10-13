@@ -9,8 +9,9 @@ The [local source/Remote candidate](../assets/pcg365-source-support-remote-20261
 contains twenty source-envelope derivatives and an incremental preview consumer.
 Owner authorized push/CI/deployment and discarding unsaved edits. Reviewed
 release `a3dcb57829fd5b89b5a7376ef05ef872690dcc27` reopened saved v0.3.1;
-native world/material readback and independent browser frames passed. Rock
-import/contact remains pending its exact-head request receipt. No regional
+native world/material readback and independent browser frames passed. Native import of all twenty candidates passed at `24123838`. A nested Slate
+queue call blocked later status; contact/placement remains UNVERIFIED and the
+owner authorized discard/restart for the tested receiver fix. No regional
 placement or merge follows.
 
 The [source-backed spatial draft](../experiments/sa-calobra-spatial-treatment-plan-20261013/README.md)

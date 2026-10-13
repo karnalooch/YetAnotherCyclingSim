@@ -3,7 +3,7 @@
   "issue": 365,
   "source_base_sha": "0dd86495fab674a9d6aee22ba0759539d8bd7242",
   "source_uncommitted_at_cpu_execution": true,
-  "native_unreal_execution": "ROCK_IMPORT_CONTACT_NOT_RUN",
+  "native_unreal_execution": "IMPORTED20_CONTACT_STATUS_UNVERIFIED_RECEIVER_REENTRANCY",
   "placement": false,
   "qualified_assets": [],
   "entries": [
@@ -216,6 +216,46 @@
       "original_sha256": "2626587847b95b50dc313a4dbe0d3677b95dcfa7891a3c8f596ec82b42e10808",
       "compressed_bytes": 367,
       "compressed_sha256": "6dee06b0a3f795a0ad7f06d8ea4a11eb6cb5f241b5a604b5f522a51aa3e62ebb"
+    },
+    {
+      "original_path": "D:/yacs/live-host/runtime/sessions/20261013T105244Z-53685d72a80e/commands/000001-59194f8f48354f5689b5.result.json",
+      "copy": "evidence/remote-deployment/native-import20-request.json.gz",
+      "original_bytes": 4417,
+      "original_sha256": "6f5024a741cf375f5d4f4a5658e76383a0040ee4e6a68e36d431b4148be5c2d6",
+      "compressed_bytes": 1365,
+      "compressed_sha256": "c4cb72bb17cf3de97fbe1ed863f844b7aa9273845f56a5722ead581946a61e15"
+    },
+    {
+      "original_path": "D:/yacs/live-host/runtime/sessions/20261013T105244Z-53685d72a80e/queue-blocked.json",
+      "copy": "evidence/remote-deployment/native-reentrant-queue-failure.json.gz",
+      "original_bytes": 315,
+      "original_sha256": "75db76298d2bdd15fc851c3b798467342b2dad3f4c35b7a2933df37ff2ecc135",
+      "compressed_bytes": 254,
+      "compressed_sha256": "94ab0f546fa873f32650bf84bb8310feb33d82367b3f0d60c03f3224434bff20"
+    },
+    {
+      "original_path": "D:/yacs/live-host/runtime/sessions/20261013T105244Z-53685d72a80e/owner-receiver-fix-pause.json",
+      "copy": "evidence/remote-deployment/owner-receiver-fix-pause.json.gz",
+      "original_bytes": 519,
+      "original_sha256": "d9c2b52cf53053781bdffd48d3f1fe60e0e33e5bf2a941ea47b9178a7f1f1b27",
+      "compressed_bytes": 364,
+      "compressed_sha256": "14987ee9276faf6ebca8011994dd0f4d1e0956d631a3df6dbdde6f574af9418c"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-deployment-24123838/after-publisher-client01/level-editor-stream-client.json",
+      "copy": "evidence/remote-deployment/post-publisher-client.json.gz",
+      "original_bytes": 12599,
+      "original_sha256": "0dc00b63cf617ea493ece209afe10933f431e6d9124b3e66c79dc993927dfad5",
+      "compressed_bytes": 1622,
+      "compressed_sha256": "f594a37ec920a1751fabe505eef75cb94ade00e78db582f04dbb8c22247a3309"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-deployment-a3dcb578/ci-24123838.json",
+      "copy": "evidence/remote-deployment/ci-24123838.json.gz",
+      "original_bytes": 209,
+      "original_sha256": "aa86306582e3f40ae8f6558cff8c9236221a105c1d10638796402b7ecda76a10",
+      "compressed_bytes": 186,
+      "compressed_sha256": "6be139c786382370730259f20b75c689963c94d5ed25910af162bd0dcbcc8411"
     }
   ],
   "remote_world_execution": {
@@ -226,5 +266,17 @@
     "current_import_request_ci": "FAILED_LOCAL_BUSY",
     "import_request_head": "716bdf6d25ae5b6b86e03b718ca5721cad9ac46d",
     "session_closed_by_owner_authorized_second_pause": true
+  },
+  "preview_placement_status": "UNVERIFIED_DISCARDED_BY_OWNER_AUTHORIZED_RESTART",
+  "latest_native_rock_execution": {
+    "source_sha": "2412383830d676435dba7eb5649af3838f86e570",
+    "session": "20261013T105244Z-53685d72a80e",
+    "imported_candidates": 20,
+    "publisher_workflow": 38385208653,
+    "publisher_conclusion": "success",
+    "contact_readback": "UNVERIFIED",
+    "receiver_failure": "REENTRANT_STARTED_RECEIPT_FILE_EXISTS",
+    "saved_checkpoint_unchanged": true,
+    "session_stopped_by_owner_authorization": true
   }
 }

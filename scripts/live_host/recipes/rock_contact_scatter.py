@@ -1277,8 +1277,10 @@ def planting_steps(
     # No Slate yield exists between these checks and the final location setters.
     assert_native_snapshot_metadata(unreal, world, job, snapshot)
     assert_native_mesh_guards(job)
+    need(not job.get("_cancel_requested"), "Diagnostic cancellation requested")
     job["phase"] = "APPLY_VERIFIED_DIAGNOSTIC_LOCATIONS"
     for actor, expected_actor, case, location in pending_placements:
+        need(not job.get("_cancel_requested"), "Diagnostic cancellation requested")
         actor.set_actor_location(unreal.Vector(*location), False, False)
         need(
             all(
@@ -1374,16 +1376,24 @@ def start_contact_job(
     job["_generator"] = generator
 
     def tick(_delta):
-        if job.get("operation_status") != "CONTACT_JOB_RUNNING":
+        if job.get("operation_status") != "CONTACT_JOB_RUNNING" or job.get(
+            "_advancing", False
+        ):
             return
+        job["_advancing"] = True
         try:
             validate_job_world(
                 unreal, live, world, ground, meshes, materials, data, job
             )
+            need(not job.get("_cancel_requested"), "Diagnostic cancellation requested")
             deadline = time.perf_counter() + 0.008
             contact_positions = 0
             for _ in range(1024):
                 update = next(generator)
+                need(
+                    not job.get("_cancel_requested"),
+                    "Diagnostic cancellation requested",
+                )
                 if update.get("native_triangle_id"):
                     job["native_geometry_triangle_ids_read"] += 1
                 elif update.get("native_guard_binding"):
@@ -1395,6 +1405,11 @@ def start_contact_job(
                 if contact_positions >= 64 or time.perf_counter() >= deadline:
                     break
         except StopIteration:
+            if job.get("_cancel_requested"):
+                rollback_job(
+                    unreal, live, editor, job, "CONTACT_JOB_CANCELLED_ROLLED_BACK"
+                )
+                return
             stopped = stop_job_callback(unreal, job)
             guards_cleaned = cleanup_native_mesh_guards(job)
             job.pop("_generator", None)
@@ -1409,13 +1424,18 @@ def start_contact_job(
                 editor,
                 job,
                 (
-                    "FAILED_NATIVE_GUARD_NO_PLACEMENT"
+                    "CONTACT_JOB_CANCELLED_ROLLED_BACK"
+                    if job.get("_cancel_requested")
+                    else "FAILED_NATIVE_GUARD_NO_PLACEMENT"
                     if job.get("phase") == "BIND_CURRENT_NATIVE_MESH_CHANGE_GUARDS"
                     and not getattr(live, "_pcg365_remote_actors", [])
                     else "CONTACT_JOB_FAILED_ROLLED_BACK"
                 ),
                 type(exc).__name__ + ": " + str(exc),
             )
+
+        finally:
+            job["_advancing"] = False
 
     try:
         job["_tick"] = unreal.register_slate_post_tick_callback(tick)
@@ -1458,6 +1478,15 @@ def run(unreal, context, parameters):
         and job is not None
         and (job.get("operation_status") == "CONTACT_JOB_RUNNING" or "_tick" in job)
     ):
+        if job.get("_advancing"):
+            # A native call may be pumping Slate inside the generator. Its
+            # owned actor/iterator cannot be destroyed until that call returns.
+            job["_cancel_requested"] = True
+            job["cancellation_requested"] = True
+            return {
+                **public_job(live),
+                "operation_status": "CONTACT_JOB_CANCEL_REQUESTED_DEFERRED",
+            }
         rollback_job(unreal, live, editor, job, "CONTACT_JOB_CANCELLED_ROLLED_BACK")
         return public_job(live)
     if job is not None and job.get("operation_status") == "CONTACT_JOB_RUNNING":

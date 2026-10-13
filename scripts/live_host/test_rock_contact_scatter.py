@@ -285,6 +285,57 @@ class IncrementalContact(unittest.TestCase):
             callbacks["callback"](0)
             self.assertEqual(job["native_geometry_triangle_ids_read"], 1300)
 
+    def test_native_pumped_slate_cannot_reenter_contact_generator(self):
+        api, context, data, result, callbacks = self.setup_job()
+
+        def steps(*args):
+            callbacks["callback"](0)
+            yield {"grid": 65}
+
+        with (
+            patch.object(m, "planting_steps", side_effect=steps),
+            patch.object(m, "validate_job_world"),
+            patch.object(m.time, "perf_counter", return_value=0),
+        ):
+            m.start_contact_job(api, context, data, {}, {}, result, None, None)
+            callbacks["callback"](0)
+            job = context["live"]._pcg365_remote_job
+            self.assertEqual(job["sampled_positions"], 1)
+            self.assertNotIn("error", job)
+            self.assertFalse(job["_advancing"])
+
+    def test_nested_clear_waits_until_native_generator_yields(self):
+        api, context, data, result, callbacks = self.setup_job()
+        context.update(intent="preview", asset_scope=())
+        owned = object()
+        observed = []
+
+        def steps(*args):
+            context["live"]._pcg365_remote_actors.append(owned)
+            reply = m.run(
+                api, context, {"operation": "clear", "manifest_sha256": "stale"}
+            )
+            observed.append(reply["operation_status"])
+            self.assertEqual(context["live"]._pcg365_remote_actors, [owned])
+            yield {"grid": 65}
+            self.fail("Cancelled generator must not resume")
+
+        with (
+            patch.object(m, "planting_steps", side_effect=steps),
+            patch.object(m, "validate_job_world"),
+            patch.object(m.time, "perf_counter", return_value=0),
+        ):
+            m.start_contact_job(api, context, data, {}, {}, result, None, None)
+            callbacks["callback"](0)
+            job = context["live"]._pcg365_remote_job
+            self.assertEqual(observed, ["CONTACT_JOB_CANCEL_REQUESTED_DEFERRED"])
+            self.assertEqual(
+                job["operation_status"], "CONTACT_JOB_CANCELLED_ROLLED_BACK"
+            )
+            self.assertTrue(job["rollback_complete"])
+            self.assertEqual(context["live"]._pcg365_remote_actors, [])
+            self.assertFalse(job["_advancing"])
+
     def test_wall_budget_yields_early_without_dropping_positions(self):
         api, context, data, result, callbacks = self.setup_job()
 
