@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "surface_id": "window0067-landscape-v1",
+  "scope": "THREE_ROCK_DIAGNOSTIC_NOT_PRODUCTION",
+  "source_slope_sha256": "0f5721f3d68352d51da52f518f1cc876fd030d28fef17a58e8971f44ddc8c4ab",
+  "visibility_archive_sha256": "f8132be4ad7bbbea2a6dffceaeca495dfdcc83f0b2144fa9afa676957681babb",
+  "visibility_logical_sha256": {
+    "hits": "df03d785e3e988bc09cb8f582e901418cd00b6fd78c9a1b336ab74a84c3feb5f",
+    "tested": "caa3d24bcb16a424d4a47f46d385c5fe8d85b8bf70351ee457cb695405418ebf",
+    "elevated": "2b9b379bec79136d165603ef7f168e37cfa4f4142e6efdaaf8063356dd443587",
+    "pixels_per_m": "caad5b7dbd752d61ac2d68d711a4bef49113792d7f130d6b23fe1a26308b5578",
+    "nearest_m": "c09dc36a1f042684f143adcd113801f5228bc2cea42d3da2e7a4f9cbc391d860",
+    "witness": "ac077583e4b15595269eb96911a8f77dd3e67cb5fee90344de29018c35312e71",
+    "treatment": "2177e573be88a86a5562bbb43add7d9cffc9012e38956c6e474ea6cda0698058"
+  },
+  "method": "Original 0.5m grid; 7x7 max slope <=10deg; reasons=0; original full radius +50cm exclusion clearance; 4m visibility bins hits>0 and px/m>=8. Planning evidence only.",
+  "placements": [
+    {
+      "site": "W0067_R01",
+      "asset_id": "namaqualand_boulder_06_01",
+      "world_xy_cm": [
+        113000,
+        116450
+      ],
+      "source_cell": [
+        2329,
+        2260
+      ],
+      "maximum_7x7_slope_deg": 9.648094177246094,
+      "clearance_lower_bound_m": 3.1819803714752197,
+      "exclusion_reasons": 0,
+      "visibility_bin": [
+        291,
+        282
+      ],
+      "hits": 15,
+      "pixels_per_m": 40.62273406982422
+    },
+    {
+      "site": "W0067_R02",
+      "asset_id": "namaqualand_boulder_05_01",
+      "world_xy_cm": [
+        113300,
+        116350
+      ],
+      "source_cell": [
+        2327,
+        2266
+      ],
+      "maximum_7x7_slope_deg": 8.679563522338867,
+      "clearance_lower_bound_m": 1.707999348640442,
+      "exclusion_reasons": 0,
+      "visibility_bin": [
+        290,
+        283
+      ],
+      "hits": 11,
+      "pixels_per_m": 34.247554779052734
+    },
+    {
+      "site": "W0067_R03",
+      "asset_id": "namaqualand_boulder_06_01",
+      "world_xy_cm": [
+        113350,
+        116750
+      ],
+      "source_cell": [
+        2335,
+        2267
+      ],
+      "maximum_7x7_slope_deg": 7.253269195556641,
+      "clearance_lower_bound_m": 1.6464464664459229,
+      "exclusion_reasons": 0,
+      "visibility_bin": [
+        291,
+        283
+      ],
+      "hits": 11,
+      "pixels_per_m": 41.15617370605469
+    }
+  ]
+}

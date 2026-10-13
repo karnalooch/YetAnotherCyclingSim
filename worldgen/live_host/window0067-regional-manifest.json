@@ -1,0 +1,204 @@
+{
+  "schema_version": 2,
+  "scope": "WINDOW0067_THREE_ROCK_DIAGNOSTIC",
+  "map_package": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface",
+  "exclusion_sources": [
+    {
+      "path": "evidence/pcg-mask-manifest.json",
+      "bytes": 5881,
+      "sha256": "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df"
+    },
+    {
+      "path": "evidence/exclusion-distance-lower-bound.tif",
+      "bytes": 5135714,
+      "sha256": "2f7f1ad4248f7d76c22fc8aee010ee7ea575c40e6f102bcdd23704304d0c4919"
+    },
+    {
+      "path": "evidence/exclusion-distance-lower-bound.bin",
+      "bytes": 65060356,
+      "sha256": "db5f51f1e5ac145eda51f2fb7c4919a102af568e9f82221d679a2a10682fcc0c"
+    },
+    {
+      "path": "evidence/exclusion-reasons.tif",
+      "bytes": 2994730,
+      "sha256": "c74bde6ae8589304fe3d52f4e1e20801b0fe5647de6ffbc268c9b2ca65eaa941"
+    },
+    {
+      "path": "evidence/exclusion-reasons.bin",
+      "bytes": 32530178,
+      "sha256": "466af15e3a9459725f077a096fb3fc075370fc734403e46f0e96706cf38befe5"
+    },
+    {
+      "path": "evidence/rock-collection-catalog.json",
+      "bytes": 24894,
+      "sha256": "b09622a2322bbee2d80e70131285c750cdd9dcbc77197227bf862194826aa781"
+    }
+  ],
+  "protected_packages": [
+    {
+      "bytes": 2624988,
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/T_MF_BaseColor.uasset",
+      "sha256": "d54d4150c3ff7ed6b6e2667f607b8efad8c1ad5a63a0f0de51cd4082e44c0687",
+      "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/T_MF_BaseColor"
+    },
+    {
+      "bytes": 8061193,
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/T_MF_NormalDX.uasset",
+      "sha256": "70a45708e4ac88afcd2f49da8c8276598edddea7baa34e4b7deeb1096df4ad86",
+      "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/T_MF_NormalDX"
+    },
+    {
+      "bytes": 1570621,
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/T_MF_ORM.uasset",
+      "sha256": "b43ddf56760b29878da937ab464fdd1fcef8e88e92c354a24267651b2ebef040",
+      "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/T_MF_ORM"
+    },
+    {
+      "bytes": 3112763,
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/T_MF_DetailMasks.uasset",
+      "sha256": "758de3e90ca723c25c86493601e4af3557fa3fd5370d0e9cf5c0b2476d8a4bf4",
+      "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/T_MF_DetailMasks"
+    },
+    {
+      "bytes": 40084,
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/M_MaterialForge.uasset",
+      "sha256": "15d0b69692adbf920da424fa4d7720224c15720bfbfd598128420a0e01803087",
+      "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/M_MaterialForge"
+    },
+    {
+      "bytes": 2817,
+      "path": "Content/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge.uasset",
+      "sha256": "99b62bb10cbfaee40250a0b81a7ecd2269c27464708d4d1c1fd5fa83012b59cd",
+      "package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge"
+    }
+  ],
+  "assets": [
+    {
+      "id": "namaqualand_boulder_05_01",
+      "fbx": {
+        "path": "fbx/namaqualand_boulder_05_01.fbx",
+        "bytes": 62076,
+        "sha256": "7c285abc841ca78b76ce26233e20ef18f0b59699dad6538135b9c57e7005e66b"
+      },
+      "bounds_cm": {
+        "origin": [
+          4.694026708602905,
+          -2.3968860507011414,
+          24.00069236755371
+        ],
+        "extent": [
+          66.13482236862183,
+          36.26566678285599,
+          24.00069236755371
+        ]
+      },
+      "material_package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge",
+      "expected_lod0_triangles": 3168
+    },
+    {
+      "id": "namaqualand_boulder_06_01",
+      "fbx": {
+        "path": "fbx/namaqualand_boulder_06_01.fbx",
+        "bytes": 65180,
+        "sha256": "7fde6b73d9809135a65be9dd31ddd2b92089615f17c8b9b75bb42ee9c1f5202f"
+      },
+      "bounds_cm": {
+        "origin": [
+          1.676437258720398,
+          -5.487555265426636,
+          29.244983196258545
+        ],
+        "extent": [
+          32.72644579410553,
+          58.757609128952026,
+          29.244983196258545
+        ]
+      },
+      "material_package": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge",
+      "expected_lod0_triangles": 3388
+    }
+  ],
+  "placements": [
+    {
+      "site": "W0067_R01",
+      "asset_id": "namaqualand_boulder_06_01",
+      "world_xy_cm": [
+        113000,
+        116450
+      ],
+      "exclusions": {
+        "status": "PASS_SOURCE_MASK_FOOTPRINT_CURRENT_ROAD_UNVERIFIED",
+        "road_source_compatible": false,
+        "footprint_radius_cm": 72.87660468495467,
+        "unknown": false,
+        "road": false,
+        "nodata": false,
+        "holdback": false,
+        "aoi": false,
+        "source_binding_sha256": "eb7880a75cbad17224d297e28d9d76afeb12cb944cc4f39c4782edf0a77e3218"
+      }
+    },
+    {
+      "site": "W0067_R02",
+      "asset_id": "namaqualand_boulder_05_01",
+      "world_xy_cm": [
+        113300,
+        116350
+      ],
+      "exclusions": {
+        "status": "PASS_SOURCE_MASK_FOOTPRINT_CURRENT_ROAD_UNVERIFIED",
+        "road_source_compatible": false,
+        "footprint_radius_cm": 80.69398275715405,
+        "unknown": false,
+        "road": false,
+        "nodata": false,
+        "holdback": false,
+        "aoi": false,
+        "source_binding_sha256": "eb7880a75cbad17224d297e28d9d76afeb12cb944cc4f39c4782edf0a77e3218"
+      }
+    },
+    {
+      "site": "W0067_R03",
+      "asset_id": "namaqualand_boulder_06_01",
+      "world_xy_cm": [
+        113350,
+        116750
+      ],
+      "exclusions": {
+        "status": "PASS_SOURCE_MASK_FOOTPRINT_CURRENT_ROAD_UNVERIFIED",
+        "road_source_compatible": false,
+        "footprint_radius_cm": 72.87660468495467,
+        "unknown": false,
+        "road": false,
+        "nodata": false,
+        "holdback": false,
+        "aoi": false,
+        "source_binding_sha256": "eb7880a75cbad17224d297e28d9d76afeb12cb944cc4f39c4782edf0a77e3218"
+      }
+    }
+  ],
+  "surface": {
+    "surface_id": "window0067-landscape-v1",
+    "version": 1,
+    "kind": "LANDSCAPE_DIAGNOSTIC",
+    "bounds_xy_cm": [
+      112850,
+      116200,
+      113550,
+      117350
+    ],
+    "owner_actor": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.L_RoadSurface:PersistentLevel.SaCalobraLandscape",
+    "inspection_receipt": {
+      "path": "evidence/window0067-native-inspection.json",
+      "bytes": 24607,
+      "sha256": "53c9a0a6aa5cebaf904ef0b2e395fed71856150d664729319ff6d60838440649"
+    },
+    "search_manifest_sha256": "2d0079969b422374e5f9dfcd0e26da39a7087bc72bafae2133f76d09853d2e9c",
+    "plan_sha256": "99b7d4d67a14ee62ac3bb8dff392d4b9a3d330a74bc53d8e64fdd76e866ab684",
+    "source_screen": {
+      "path": "evidence/window0067-source-screen.json",
+      "bytes": 2518,
+      "sha256": "443978ed040dbdc27760abe17f7ee9bd1890c7fcd4a74cd6390c0bec1ce486ae"
+    }
+  }
+}

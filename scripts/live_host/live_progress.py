@@ -81,7 +81,8 @@ def project(receipt, request, session, revision, manifest):
         "rejected": rejected,
         "cases_total": len(cases),
         "active_site": job.get("active_site")
-        if job.get("active_site") in ("P0", "P1", "P2", "P3", "P4")
+        if job.get("active_site")
+        in ("P0", "P1", "P2", "P3", "P4", "W0067_R01", "W0067_R02", "W0067_R03")
         else None,
         "error": receipt.get("status") != "COMPLETED_VISUAL_ONLY"
         or bool(job.get("error"))

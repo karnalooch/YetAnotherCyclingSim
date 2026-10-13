@@ -60,6 +60,14 @@ class ProgressTest(unittest.TestCase):
                     self.run_projection()
                 self.request = saved
 
+    def test_fixed_regional_sites_are_public_but_unknown_labels_are_not(self):
+        job = self.receipt["readback"]["native_readback"]
+        for site in ("W0067_R01", "W0067_R02", "W0067_R03"):
+            job["active_site"] = site
+            self.assertEqual(self.run_projection()["active_site"], site)
+        job["active_site"] = "/private/unrelated/path"
+        self.assertIsNone(self.run_projection()["active_site"])
+
     def test_failure_sanitized(self):
         self.receipt["status"] = "FAILED_NO_RETRY"
         self.receipt["readback"] = {"error": "private path secret"}

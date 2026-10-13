@@ -456,3 +456,14 @@ exclusive ownership. Original camera and unsaved work are preserved.
 See the [execution handoff](SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md#first-implementation-batch--current-session-surface-inspection)
 for source/API evidence and outstanding native proof. Delivery reuses the existing
 exact-head CI, publisher and serialized queue without an Editor restart.
+
+### Bounded window-0067 rock diagnostic
+
+Issue #365's `rock_contact_scatter` accepts a separate pinned schema-2 regional
+manifest for exactly three N05/N06 previews on the inspected Landscape. The
+[implementation handoff](SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md#first-bounded-regional-consumer--implementation-candidate)
+records source and native surface identities. Full footprints plus clearance
+must stay within its bounds and remain separated from each other; all existing
+native geometry scans and contact limits still apply. This uses existing
+`plant`, `status` and `clear` operations with the independently authenticated
+regional digest. It does not add a general placement endpoint or package save.

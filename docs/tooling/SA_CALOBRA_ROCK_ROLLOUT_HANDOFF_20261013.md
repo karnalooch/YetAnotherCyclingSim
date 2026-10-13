@@ -177,3 +177,38 @@ planting footprint, qualified rocks, contact placement, saved consumer or owner
 visual acceptance. The next bounded implementation remains the typed regional
 consumer and initial three-rock diagnostic using the existing contact controls.
 Draft #474 remains unmerged; performance admission remains false.
+
+## First bounded regional consumer — implementation candidate
+
+The inspected Landscape is registered as `window0067-landscape-v1`, version 1,
+within `[112850,116200,113550,117350]` cm. Remote inspection shows bare mineral
+surface to the right of the nearby channel; the diagnostic tests a sparse small
+group there. It does not cover or repair the channel, authorize a regional rock
+budget, or change the material-first planning classification.
+
+The [typed regional manifest](../../worldgen/live_host/window0067-regional-manifest.json)
+hashes to `fc49334f9ceb77ed963d882524073c1c512a8f875569c5b7213b3673f20304e1`.
+It pins the [native inspection](../experiments/sa-calobra-spatial-treatment-plan-20261013/window0067-native-inspection.json)
+and [authenticated source screen](../experiments/sa-calobra-spatial-treatment-plan-20261013/window0067-source-screen.json).
+The historical `preview-manifest.json` is retained unchanged; the new fixed
+`regional-manifest.json` is independently hash-bound, with no caller-selected path.
+
+Stable diagnostic rows are N06 at `[113000,116450]`, N05 at `[113300,116350]`
+and N06 at `[113350,116750]` cm. Source 7x7 maxima are respectively
+9.648094177, 8.679563522 and 7.253269196 degrees; source clearance lower bounds
+are 3.181980371, 1.707999349 and 1.646446466 m. All exclusion bits are zero and
+all containing visibility bins satisfy the retained planning heuristic.
+Original archive and all seven logical arrays, source slope TIFF and original
+exclusion buffers were authenticated before preparing these rows.
+
+The consumer rechecks origin-inclusive full radii plus 50 cm inside the bounded
+surface, a 25 cm gap between same-batch radius envelopes, and the exact native
+Landscape owner. Source and imported native bounds are both checked; final
+rehash/revalidation and both complete 559-mesh/2,911,650-ID scans remain intact.
+10-degree slope, 20-percent embedding and 65/129 contact policy remain unchanged.
+Only N05/N06 are imported. The reproducible CPU producer is `scripts/assets/prepare_pcg365_regional_manifest.py --check`;
+it compares generated canonical bytes against both committed inputs and stage copies.
+All 107 live-host tests pass. Thirteen regional CPU regressions cover boundaries, native
+bounds, pairwise overlap, finite values and tampered surface/source receipts.
+Native group placement, deterministic regeneration and saved/fresh proof remain
+pending execution of this candidate. This implementation is not owner acceptance.

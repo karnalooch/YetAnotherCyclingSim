@@ -1,7 +1,7 @@
 """Issue #365: bounded live inspection and retained diagnostic contact tooling.
 
-No regional selector, source save, terrain edit or production admission. Native
-complex mesh/Landscape samples are remeasured at 65/129; frozen V2 limits apply.
+One pinned three-rock region; no source save, terrain edit or production admission.
+Native complex mesh/Landscape samples are remeasured at 65/129; frozen V2 limits apply.
 """
 
 from __future__ import annotations
@@ -88,12 +88,138 @@ def file_proof(root, proof):
     return path
 
 
+REGIONAL_MANIFEST_SHA256 = (
+    "fc49334f9ceb77ed963d882524073c1c512a8f875569c5b7213b3673f20304e1"
+)
+REGIONAL_SURFACE_ID = "window0067-landscape-v1"
+REGIONAL_BOUNDS_CM = [112850, 116200, 113550, 117350]
+REGIONAL_OWNER = (
+    "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface"
+    ".L_RoadSurface:PersistentLevel.SaCalobraLandscape"
+)
+
+
+def validate_regional_surface(surface):
+    need(
+        type(surface) is dict
+        and set(surface)
+        == {
+            "surface_id",
+            "version",
+            "kind",
+            "bounds_xy_cm",
+            "owner_actor",
+            "inspection_receipt",
+            "search_manifest_sha256",
+            "plan_sha256",
+            "source_screen",
+        },
+        "Regional surface schema differs",
+    )
+    need(
+        surface["surface_id"] == REGIONAL_SURFACE_ID
+        and type(surface["version"]) is int
+        and surface["version"] == 1
+        and surface["kind"] == "LANDSCAPE_DIAGNOSTIC"
+        and surface["bounds_xy_cm"] == REGIONAL_BOUNDS_CM
+        and surface["owner_actor"] == REGIONAL_OWNER
+        and surface["search_manifest_sha256"] == search_region_digest()
+        and surface["plan_sha256"] == SEARCH_REGION["plan_sha256"],
+        "Regional surface identity differs",
+    )
+    need(
+        surface["inspection_receipt"]["sha256"]
+        == "53c9a0a6aa5cebaf904ef0b2e395fed71856150d664729319ff6d60838440649",
+        "Unreviewed native inspection receipt",
+    )
+    receipt = json.loads(
+        file_proof(STAGE, surface["inspection_receipt"]).read_text(encoding="utf-8")
+    )
+    observed = receipt["readback"]["native_readback"]
+    need(
+        receipt["status"] == "COMPLETED_VISUAL_ONLY"
+        and observed["operation_status"] == "REGION_OBSERVED_NOT_REGISTERED"
+        and observed["region_manifest_sha256"] == search_region_digest()
+        and len(observed["samples"]) == 26
+        and all(
+            row["actor"] == REGIONAL_OWNER and row["actor_class"] == "Landscape"
+            for row in observed["samples"]
+        ),
+        "Native inspected surface owner differs",
+    )
+    screen = json.loads(
+        file_proof(STAGE, surface["source_screen"]).read_text(encoding="utf-8")
+    )
+    need(
+        screen["schema_version"] == 1
+        and screen["surface_id"] == REGIONAL_SURFACE_ID
+        and screen["scope"] == "THREE_ROCK_DIAGNOSTIC_NOT_PRODUCTION"
+        and screen["source_slope_sha256"]
+        == "0f5721f3d68352d51da52f518f1cc876fd030d28fef17a58e8971f44ddc8c4ab"
+        and screen["visibility_archive_sha256"]
+        == "f8132be4ad7bbbea2a6dffceaeca495dfdcc83f0b2144fa9afa676957681babb"
+        and len(screen["placements"]) == 3
+        and all(
+            0 <= number(row["maximum_7x7_slope_deg"]) <= 10
+            and row["exclusion_reasons"] == 0
+            and number(row["clearance_lower_bound_m"]) >= 1.23
+            and row["hits"] > 0
+            and number(row["pixels_per_m"]) >= 8
+            for row in screen["placements"]
+        ),
+        "Regional source screen differs",
+    )
+    return receipt
+
+
+def regional_footprint_checks(data, native_bounds=None):
+    if data.get("schema_version", 1) != 2:
+        return {}
+    surface = data["surface"]
+    need(
+        surface["surface_id"] == REGIONAL_SURFACE_ID
+        and surface["bounds_xy_cm"] == REGIONAL_BOUNDS_CM,
+        "Regional footprint boundary differs",
+    )
+    x0, y0, x1, y1 = [number(v) for v in surface["bounds_xy_cm"]]
+    by_id = {a["id"]: a for a in data["assets"]}
+    checked, result = [], {}
+    for row in data["placements"]:
+        x, y = [number(v) for v in row["world_xy_cm"]]
+        bounds = (native_bounds or {}).get(
+            row["asset_id"], by_id[row["asset_id"]]["bounds_cm"]
+        )
+        radius = math.hypot(
+            abs(number(bounds["origin"][0])) + number(bounds["extent"][0]),
+            abs(number(bounds["origin"][1])) + number(bounds["extent"][1]),
+        )
+        edge = min(x - x0, y - y0, x1 - x, y1 - y)
+        need(
+            radius > 0 and edge >= radius + 50,
+            "Full footprint plus clearance escapes regional surface",
+        )
+        for other_x, other_y, other_radius in checked:
+            need(
+                math.hypot(x - other_x, y - other_y) >= radius + other_radius + 25,
+                "Regional batch footprints overlap or lack 25cm separation",
+            )
+        checked.append((x, y, radius))
+        result[row["site"]] = {
+            "surface_id": surface["surface_id"],
+            "radius_cm": radius,
+            "edge_clearance_cm": edge - radius,
+            "status": "PASS_BOUNDED_REGIONAL_FOOTPRINT_ONLY",
+        }
+    return result
+
+
 def read_manifest(expected_digest, *, require_plant=False):
     need(
         type(expected_digest) is str and re.fullmatch(r"[0-9a-f]{64}", expected_digest),
         "Exact manifest digest required",
     )
-    path = STAGE / "preview-manifest.json"
+    regional = expected_digest == REGIONAL_MANIFEST_SHA256
+    path = STAGE / ("regional-manifest.json" if regional else "preview-manifest.json")
     need(
         STAGE.is_dir()
         and not STAGE.is_symlink()
@@ -110,7 +236,7 @@ def read_manifest(expected_digest, *, require_plant=False):
             "schema_version",
             "scope",
             "map_package",
-            "anchor_source",
+            ("surface" if regional else "anchor_source"),
             "protected_packages",
             "assets",
             "placements",
@@ -120,36 +246,72 @@ def read_manifest(expected_digest, *, require_plant=False):
     )
     need(
         type(data["schema_version"]) is int
-        and data["schema_version"] == 1
-        and data["scope"] == "P0_P4_DIAGNOSTIC_ONLY",
+        and data["schema_version"] == (2 if regional else 1)
+        and data["scope"]
+        == (
+            "WINDOW0067_THREE_ROCK_DIAGNOSTIC" if regional else "P0_P4_DIAGNOSTIC_ONLY"
+        ),
         "Unapproved preview scope",
     )
-    original = json.loads(
-        file_proof(STAGE, data["anchor_source"]).read_text(encoding="utf-8-sig")
-    )
-    need(
-        type(original.get("points")) is list and len(original["points"]) == 5,
-        "Five original anchors required",
-    )
-    anchors = {
-        "P" + str(i): row["world_xy_cm"] for i, row in enumerate(original["points"])
-    }
-    need(
-        list(anchors.values())
-        == [
-            [16800, 70400],
-            [4800, 96800],
-            [184800, 180800],
-            [181600, 189600],
-            [91200, 200800],
-        ],
-        "Historical owner-approved anchor identities differ",
-    )
+    if regional:
+        validate_regional_surface(data["surface"])
+        screen = json.loads(
+            file_proof(STAGE, data["surface"]["source_screen"]).read_text(
+                encoding="utf-8"
+            )
+        )
+        anchors = {row["site"]: row["world_xy_cm"] for row in screen["placements"]}
+        need(
+            data["map_package"] == SEARCH_REGION["map_package"], "Regional map differs"
+        )
+        need(
+            len(data["placements"]) == 3,
+            "Exactly three regional diagnostic placements required",
+        )
+        need(
+            [
+                (row["site"], row["asset_id"], row["world_xy_cm"])
+                for row in data["placements"]
+            ]
+            == [
+                (row["site"], row["asset_id"], row["world_xy_cm"])
+                for row in screen["placements"]
+            ],
+            "Regional placements differ from authenticated source screen",
+        )
+    else:
+        original = json.loads(
+            file_proof(STAGE, data["anchor_source"]).read_text(encoding="utf-8-sig")
+        )
+        need(
+            type(original.get("points")) is list and len(original["points"]) == 5,
+            "Five original anchors required",
+        )
+        anchors = {
+            "P" + str(i): row["world_xy_cm"] for i, row in enumerate(original["points"])
+        }
+        need(
+            list(anchors.values())
+            == [
+                [16800, 70400],
+                [4800, 96800],
+                [184800, 180800],
+                [181600, 189600],
+                [91200, 200800],
+            ],
+            "Historical owner-approved anchor identities differ",
+        )
     assets = data["assets"]
     need(
         type(assets) is list and 1 <= len(assets) <= 20,
         "Bounded imported asset set required",
     )
+    if regional:
+        need(
+            {a["id"] for a in assets}
+            == {"namaqualand_boulder_05_01", "namaqualand_boulder_06_01"},
+            "Only reviewed N05/N06 variants permitted in first region",
+        )
     ids = set()
     for asset in assets:
         need(
@@ -266,6 +428,7 @@ def read_manifest(expected_digest, *, require_plant=False):
             ),
             "Unknown/excluded/undersized footprint",
         )
+    regional_footprint_checks(data)
     return data
 
 
@@ -354,6 +517,7 @@ def footprint_clearance_sample(xy, radius, distance_m, reasons):
 
 
 def verify_footprints(data, native_bounds=None):
+    regional = regional_footprint_checks(data, native_bounds)
     distances, reasons = authenticated_exclusion_buffers(data)
     by_id = {a["id"]: a for a in data["assets"]}
     results = {}
@@ -374,6 +538,8 @@ def verify_footprints(data, native_bounds=None):
         results[row["site"]] = footprint_clearance_sample(
             [x, y], radius, distance, bits
         )
+        if regional:
+            results[row["site"]]["regional_footprint"] = regional[row["site"]]
     return results
 
 
@@ -1368,6 +1534,11 @@ def start_contact_job(
     ]
     need(len(landscapes) == 1, "Ambiguous Landscape authority")
     ground = landscapes[0]
+    if data.get("schema_version", 1) == 2:
+        need(
+            ground.get_path_name() == data["surface"]["owner_actor"],
+            "Current Landscape differs from registered regional surface",
+        )
     transform = ground.get_actor_transform()
     rotation = transform.rotation.rotator()
     need(
