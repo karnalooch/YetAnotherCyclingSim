@@ -56,8 +56,14 @@ def main():
         # Reuse the pre-existing Material Forge review lighting fallback only
         # when saved light actors are absent. Transient; no map/save mutation.
         lighting_receipt = ensure_review_lighting(unreal, LIVE)
-        world_receipt["lighting"] = lighting_receipt
-        LIVE.report["lighting"] = lighting_receipt
+        # Keep inherited GI/reflection CVar readback, and separately label
+        # temporary source-backed Sun/Sky preview actors after lighting setup.
+        world_receipt["lighting"] = {
+            "saved_scene_readback": world_receipt["lighting"],
+            "transient_review": lighting_receipt,
+            "global_lighting_visual_pass": False,
+        }
+        LIVE.report["lighting"] = world_receipt["lighting"]
         BRIDGE = live_requests.attach(
             unreal, live=LIVE, root=live_root, session=session_id,
             source_sha=code_sha,
