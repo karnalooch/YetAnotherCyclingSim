@@ -265,3 +265,35 @@ UI fix also requires no full native rebuild or UE restart. Hash-bound planning
 JSON bytes are preserved across Windows/Linux checkout through scoped attributes.
 Native execution of the corrected group remains pending; current session and
 saved parent world stay unchanged.
+
+## One-command continuation — 2026-10-13
+
+The owner requested one script consuming the PCG365 map, existing meshes and
+materials, with later manual visual cleanup. The [single entry point](PCG365_ONE_COMMAND.md)
+authenticates the full area and orchestrates the already admitted regional preview.
+It does not silently represent three diagnostic rocks as whole-area generation.
+The exact source audit finds zero of 39,332 visible scree cells within the frozen
+10-degree contact policy. The owner approved a separate slope-aligned, up-to-42-degree
+PCGEx recipe; frozen V1/V2 policies remain historical and unchanged.
+
+The existing corrected recipe delivery run 38428604484 was retried after host disk
+space recovered and completed successfully for source
+`79e632710e32e576eb5b9d7db0b60a6e43cb7942`. It submitted the corrected three-rock
+manifest in the same session `20261013T155106Z-5842c308675d` without a restart.
+The new command attaches to that exact running job instead of duplicating it.
+Native completion is recorded separately; source publication is not placement
+or saved-consumer proof. The existing parent map and source terrain stay intact.
+
+
+## PCGEx automation activation — 2026-10-13
+
+The corrected three-rock job completed with CONTACT_JOB_COMPLETED_SAMPLED_ONLY,
+preview_placed 3 and map_saved false. The owner then explicitly requested closing
+Remote, enabling PCGEx plus MCP, and composing existing nodes for the full map.
+The Editor and controller exited; the prior immutable release was retained.
+
+The PCGEx input adapter preserves 39,332 exact scree cells. All meet the approved
+42-degree source slope; 2,923 also meet the conservative footprint clearance.
+PCGEx owns projection, orientation, asset choice, road bounds filtering, pruning
+and the five-probe support screen. Native execution of this new graph is pending.
+Fourteen input/receipt tests and 107 existing Live Host CPU tests pass locally.

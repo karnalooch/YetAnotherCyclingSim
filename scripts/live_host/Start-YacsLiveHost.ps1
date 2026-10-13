@@ -68,7 +68,7 @@ $hostScript=Join-Path $release 'scripts/runner/Get-YacsUnrealHostState.ps1'
 $before=& $hostScript
 if ($before.status -cne 'IDLE') { throw "Unreal host already occupied: $($before.status)" }
 if ([IO.DriveInfo]::new('D:\').AvailableFreeSpace -lt 5GB) { throw 'Five GiB reserve not met.' }
-$busy=@(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object LocalPort -in @(80,8888,18784))
+$busy=@(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object LocalPort -in @(80,8000,8888,18784))
 if ($busy.Count) { throw 'Streaming/MCP network ports already have an owner.' }
 $engine='D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe'
 $plugin='D:\yacs\engine\UE_5.8\Engine\Plugins\Media\PixelStreaming2\PixelStreaming2.uplugin'
@@ -117,8 +117,13 @@ try {
   $args=@(
     ('"' + $project + '"'),
     $mapPackage,
-    '-EnablePlugins=PixelStreaming2',
-    '-DisablePlugins=ModelContextProtocol,Wingman,AndroidFileServer',
+    # Owner-authorized #365 PCGEx authoring through Epic's local MCP server.
+    # Graphs consume the accepted world; the original map remains protected.
+    '-EnablePlugins=PixelStreaming2,PCGExtendedToolkit,PCGExAssistant,PCGToolset,ModelContextProtocol',
+    '-DisablePlugins=Wingman,AndroidFileServer',
+    '-ini:EditorPerProjectUserSettings:[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]:bAutoStartServer=True',
+    '-ini:EditorPerProjectUserSettings:[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]:ServerPortNumber=8000',
+    '-ini:EditorPerProjectUserSettings:[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]:ServerUrlPath=/mcp',
     '-ini:Game:[/Script/PixelStreaming2Settings.PixelStreaming2PluginSettings]:EditorSource=LevelEditorViewport',
     '-ini:Game:[/Script/PixelStreaming2Settings.PixelStreaming2PluginSettings]:EditorStartOnLaunch=True',
     '-ini:Game:[/Script/PixelStreaming2Settings.PixelStreaming2PluginSettings]:EditorUseRemoteSignallingServer=False',

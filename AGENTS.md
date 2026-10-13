@@ -7,6 +7,12 @@
 - [Role registry](docs/ai/ROLE_REGISTRY.json) records task owners, not a running autonomous agent framework.
 - Historical experiments, notes and archived plans are evidence, not active authority. Report contradictions instead of guessing.
 
+## Implementation: research and reuse first
+- Before starting implementation, search the internet for current official documentation and existing working solutions: supported tools, plugins, APIs, MCP integrations and examples. Do not begin by writing replacement logic.
+- Prefer a suitable existing solution. When a tool already provides the required logic, automate that tool and adapt the input data instead of reimplementing its behavior.
+- Write custom logic only after research establishes a concrete gap that existing solutions cannot cover within the approved scope. Record the solutions checked and the reason an adapter or custom implementation is necessary.
+- Match documentation to the installed versions and verify the chosen solution with a small reproducible case. Vendor documentation is capability evidence, not proof that the YACS integration works.
+
 ## Global safety
 - Change only approved scope. Do not add speculative features, bypass predecessor issues or begin post-MVP systems early.
 - Keep physics deterministic and frame-independent, with SI units; route truth, physics inputs and geographic truth must not be overwritten by visual presentation.

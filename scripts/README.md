@@ -9,6 +9,7 @@ Use the project Python environment (`.venv\Scripts\python.exe`) and PowerShell
 
 | Task | Entry point | Effect |
 |---|---|---|
+| Audit PCG365 inputs and run the admitted regional preview | `python scripts/worldgen/build_pcg365_world.py --mode audit --output <new-directory>` | [One entry point](../docs/tooling/PCG365_ONE_COMMAND.md); full-area generation remains explicitly blocked, live preview uses the existing reviewed queue |
 | Check the saved project before opening | `python scripts/manage_local_workspace.py doctor` | Checks paths, materialized assets and checkpoint identity; does not open UE |
 | Open the accepted scene | `python scripts/manage_local_workspace.py open` or `D:\yacs\Open-YACS.cmd` | Opens the configured map; refuses a second editor |
 | Start the GitHub runner | `pwsh -File scripts/runner/Start-YacsRunner.ps1` | Reuses an existing runner identity or starts one interactive listener |
