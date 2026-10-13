@@ -2266,9 +2266,10 @@ Materials cannot fix incorrect geometry. If a silhouette is wrong, fix geometry 
 The current #365 [execution plan](tooling/SA_CALOBRA_WORLD_GRAPH_PLAN.md),
 [primary research](tooling/SA_CALOBRA_WORLD_GRAPH_RESEARCH.md) and
 [LLM handoff](tooling/SA_CALOBRA_WORLD_GRAPH_LLM_HANDOFF.md) apply this methodology
-to the existing Sa Calobra Landscape. They are planning-only supporting documents;
-they neither authorize implementation now nor admit native graph/contact,
-PCGEx availability, persistence or production vegetation.
+to the existing Sa Calobra Landscape. They are supporting documents;
+the later owner-authorized [rollout handoff](tooling/SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md)
+resumes bounded #365 implementation. Planning documents alone do not admit native
+graph/contact, PCGEx availability, persistence or production vegetation.
 
 PCG is the default for repeated **presentation content**, but it is not the default authority for real-world geography.
 

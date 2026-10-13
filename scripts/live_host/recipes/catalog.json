@@ -105,7 +105,10 @@
             "import",
             "plant",
             "clear",
-            "status"
+            "status",
+            "region_inspect",
+            "region_focus",
+            "region_restore"
           ]
         },
         "manifest_sha256": {

@@ -443,3 +443,16 @@ file therefore uses the supported `.js` transport suffix but contains **JSON
 only**: it is fetched and parsed with `response.json()`, never loaded as a script
 or evaluated. A native two-version probe served and replaced this payload with
 HTTP 200 both times. This requires no new server or execution endpoint.
+
+## Bounded search-region navigation — #365/#476
+
+The existing `rock_contact_scatter` preview recipe supports `region_inspect`,
+`region_focus`, and `region_restore` for the exact hashed window-0067 search
+manifest. These operations inspect current collision owners and unsaved package
+names; focus/restore alter only the viewport camera and verify native readback.
+They neither register a planting surface nor save/import/spawn anything.
+The current-world check rejects a switched map, and an active contact job retains
+exclusive ownership. Original camera and unsaved work are preserved.
+See the [execution handoff](SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md#first-implementation-batch--current-session-surface-inspection)
+for source/API evidence and outstanding native proof. Delivery reuses the existing
+exact-head CI, publisher and serialized queue without an Editor restart.

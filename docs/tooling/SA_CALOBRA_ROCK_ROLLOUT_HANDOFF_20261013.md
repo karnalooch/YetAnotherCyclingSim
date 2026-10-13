@@ -55,3 +55,67 @@ Preserve accepted Landscape, original Base_DTM, metric grid/CRS, canonical roads
 ## Delivery evidence
 
 This publication retains the existing local visibility candidate and its source/results; it does not execute a new visibility calculation or native scene mutation. Validation results and exact delivery SHA are reported by the publishing chat/PR. The implementation chat must distinguish local candidate, remote source, test result, native runtime proof, visible live result, saved consumer and merge.
+
+## First implementation batch — current-session surface inspection
+
+Takeover verified clean `48aaa68e6621134635cc133b0eb707c61c0ac247`,
+Draft #474 and completed #364. Current native host observation identifies
+session `20261013T132819Z-730779601501`, PID 38416, installed source
+`f0588aa2cb8a9362cc7e524b54d80b60e478ed39`, live heartbeat and map
+`/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface`.
+The supported Chrome Remote receiver now displays the current road world.
+No Editor restart, map switch or scene save was performed.
+
+The existing `rock_contact_scatter` recipe gains `region_inspect`,
+`region_focus` and `region_restore`, using an independently hashed,
+code-reviewed search manifest embedded in that single-file published recipe.
+It observes 25 collision samples plus the source witness, actual hit actor and
+component, normals, dirty map/content packages, cached import identities and
+current camera. Focus derives a bounded camera from the witness's current native
+height and retains the original camera for restoration. Wrong map/digest,
+active contact jobs, missing hits and failed camera readback fail closed.
+This is an inspection extent, **not** a planting polygon or registered surface.
+First collision hits do not prove hidden/noncolliding mesh exclusions or contact.
+No import, actor setter, package save, mask edit or geometry mutation is added.
+
+API evidence: installed UE **5.8.2-56702186** `FileHelpers.h`
+(`UEditorLoadingAndSavingUtils::GetDirtyMapPackages/GetDirtyContentPackages`),
+`UnrealEditorSubsystem.h` (current world and camera read/write), and the existing
+version-proved `SystemLibrary.line_trace_single`/18-field HitResult consumer.
+Epic's [UE 5.8 loading/saving API](https://dev.epicgames.com/documentation/unreal-engine/BlueprintAPI/EditorScripting/EditorLoadingAndSaving)
+also lists the two dirty-package queries. PCGEx is not involved in this batch.
+Native execution/readback of the new operations is pending exact-head CI and
+existing publisher delivery. CPU tests do not establish native API success.
+
+Takeover also found stale progress presentation: repeated authenticated status
+receipts report `CONTACT_JOB_CANCELLED_ROLLED_BACK`, zero previews and complete
+rollback while the HUD retains its old scan-phase label. The counter is retained
+history, not current planting. The Blender proof for the planning HEAD stopped
+at `LOCAL_BUSY`; preserve the open Editor and do not retry merely to turn it green.
+
+CPU source screening reproduced the original 137-cell connected component
+(plus one separate eligible cell in the search rectangle). Authenticated the
+visibility archive and all seven logical arrays, source slope TIFF, original
+mask manifest, TIFFs and logical exclusion buffers. The witness reproduces
+9.648094177 degrees, 3.286501408 m lower-bound clearance, zero exclusion bits,
+15 camera hits, 40.622734070 px/m, 23 m minimum sampled distance and first
+camera index 219. These are planning-bin measurements, not native contact.
+
+Local validation: all 93 `scripts/live_host/test_*.py` tests pass, including
+six new region inspection/camera rollback cases. Ruff, diff whitespace,
+agent contracts and docs links/i18n/structure/freshness pass. The verbatim plan
+still hashes to its original digest above.
+
+**Native deployment blocker:** planning-base CyclingSim CI
+[38415446073](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38415446073)
+completed with failure in Unreal workspace cleanup:
+`Unreal workspace cleanup refused: status=LOCAL_BUSY. Local/unknown Editors and their logs are preserved.`
+The aggregate gate consequently reports `unreal-code: expected success, got failure`.
+The subsequent invalid `_unreal-ci-warm` working directory is downstream of that
+refusal. Hosted Python/security checks passed; neither that fact nor a local
+camera test authorizes publishing executable recipes without aggregate CI.
+The existing publisher remains unchanged. Do not terminate the live Editor,
+forge CI admission, run a parallel native proof or bypass the queue to execute
+this candidate. Source publication remains allowed; native region inspection,
+registered footprint, N05/N06 qualification, first group and saved/fresh proof
+remain pending the required host/proof window. No broader rollout is admitted.

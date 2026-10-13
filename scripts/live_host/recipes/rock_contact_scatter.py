@@ -1,4 +1,4 @@
-"""Issue #365: authenticated, memory-only import and five-anchor diagnostic planting.
+"""Issue #365: bounded live inspection and retained diagnostic contact tooling.
 
 No regional selector, source save, terrain edit or production admission. Native
 complex mesh/Landscape samples are remeasured at 65/129; frozen V2 limits apply.
@@ -1485,6 +1485,200 @@ def start_contact_job(
     return public_job(live)
 
 
+# Source-backed SEARCH extent only. This is deliberately not a planting polygon.
+# The versioned recipe is copied alone by the existing publisher, so its small
+# inspection manifest travels with the reviewed code, with an independent digest.
+SEARCH_REGION = {
+    "schema_version": 1,
+    "surface_id": "window0067-search-v1",
+    "scope": "INSPECTION_ONLY_NOT_PLACEMENT",
+    "map_package": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface",
+    "xy_bounds_m": [1128.5, 1162.0, 1135.5, 1173.5],
+    "witness_xy_m": [1129.5, 1164.5],
+    "axis": "X east; Y south; native centimetres = metres * 100",
+    "plan_sha256": "99b7d4d67a14ee62ac3bb8dff392d4b9a3d330a74bc53d8e64fdd76e866ab684",
+    "frames_sha256": "15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3",
+    "placement_allowed": False,
+}
+
+
+def search_region_digest():
+    return hashlib.sha256(
+        json.dumps(
+            SEARCH_REGION, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode("utf-8")
+    ).hexdigest()
+
+
+def camera_record(camera):
+    need(camera is not None, "Native viewport camera unavailable")
+    where, angle = camera
+    return {
+        "location_cm": vec(where),
+        "rotation_deg": [number(angle.pitch), number(angle.yaw), number(angle.roll)],
+    }
+
+
+def dirty_packages(unreal):
+    api = unreal.EditorLoadingAndSavingUtils
+    return {
+        "maps": sorted(p.get_path_name() for p in api.get_dirty_map_packages()),
+        "content": sorted(p.get_path_name() for p in api.get_dirty_content_packages()),
+    }
+
+
+def inspect_search_region(unreal, context, operation, manifest_sha256):
+    """25 collision observations and one witness; no surface/contact admission.
+
+    UE 5.8.2 FileHelpers.h, UnrealEditorSubsystem.h, KismetSystemLibrary.h
+    own these APIs. Trace hits identify collision owners, not hidden or
+    collision-disabled geometry. No terrain, source asset or actor setter.
+    """
+    result = {
+        "status": "APPLIED_PREVIEW",
+        "map_saved": False,
+        "placement": False,
+        "production_admitted": False,
+        "qualified_assets": [],
+        "performance_pass": False,
+        "surface_registered": False,
+        "native_contact_executed": False,
+        "region_manifest_sha256": manifest_sha256,
+    }
+    live = context["live"]
+    try:
+        need(manifest_sha256 == search_region_digest(), "Search manifest differs")
+        viewport = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
+        need(viewport.get_editor_world() == live.world, "Active editor world changed")
+        need(
+            live.map_package == SEARCH_REGION["map_package"],
+            "Search targets another map",
+        )
+        job = getattr(live, "_pcg365_remote_job", None) or {}
+        need(
+            job.get("operation_status") != "CONTACT_JOB_RUNNING" and "_tick" not in job,
+            "Contact job owns the current session",
+        )
+        before = viewport.get_level_viewport_camera_info()
+        result["camera_before"] = camera_record(before)
+        result["dirty_packages_before"] = dirty_packages(unreal)
+        result["region"] = SEARCH_REGION
+        result["owned_preview_actors"] = len(getattr(live, "_pcg365_remote_actors", []))
+        result["memory_import_manifests"] = sorted(
+            getattr(live, "_pcg365_remote_imports", {})
+        )
+        result["contact_job_status"] = job.get("operation_status", "NO_CONTACT_JOB")
+        if operation == "region_restore":
+            retained = getattr(live, "_pcg365_region_camera", None)
+            need(
+                retained is not None and retained["world"] == live.world,
+                "No retained camera for this world",
+            )
+            destination = retained["camera"]
+        else:
+            x0, y0, x1, y1 = SEARCH_REGION["xy_bounds_m"]
+            points = [
+                (x0 + (x1 - x0) * i / 4, y0 + (y1 - y0) * j / 4)
+                for j in range(5)
+                for i in range(5)
+            ]
+            points.append(tuple(SEARCH_REGION["witness_xy_m"]))
+            samples = []
+            for x, y in points:
+                hit = trace_ground(unreal, live.world, [x * 100, y * 100], [])
+                sample = {"xy_m": [x, y], "status": "NO_BLOCKING_COLLISION_HIT"}
+                if hit is not None:
+                    values = hit.to_tuple()
+                    need(
+                        len(values) == 18 and values[0] is True and values[1] is False,
+                        "Malformed or penetrating native observation",
+                    )
+                    actor, component = values[9:11]
+                    need(
+                        actor is not None and component is not None, "Hit has no owner"
+                    )
+                    position, normal = vec(values[5]), vec(values[7])
+                    need(
+                        abs(position[0] - x * 100) <= 1
+                        and abs(position[1] - y * 100) <= 1,
+                        "Native hit XY drift",
+                    )
+                    length = math.sqrt(sum(v * v for v in normal))
+                    need(length > 0, "Native hit normal unavailable")
+                    sample.update(
+                        status="COLLISION_OWNER_OBSERVED",
+                        position_cm=position,
+                        normal=normal,
+                        slope_deg=math.degrees(
+                            math.acos(max(-1, min(1, normal[2] / length)))
+                        ),
+                        actor=actor.get_path_name(),
+                        label=actor.get_actor_label(),
+                        actor_class=actor.get_class().get_name(),
+                        component=component.get_path_name(),
+                    )
+                samples.append(sample)
+            result["samples"] = samples
+            result["observation_limit"] = (
+                "First blocking visibility-channel collision only; no hidden/noncolliding "
+                "mesh exclusion, continuous support or planting polygon proof"
+            )
+            if operation == "region_inspect":
+                result["operation_status"] = "REGION_OBSERVED_NOT_REGISTERED"
+                result["dirty_packages_after"] = dirty_packages(unreal)
+                need(
+                    result["dirty_packages_before"] == result["dirty_packages_after"],
+                    "Dirty package inventory changed during inspection",
+                )
+                return result
+            witness = samples[-1]
+            need(
+                witness["status"] == "COLLISION_OWNER_OBSERVED",
+                "No witness surface for camera",
+            )
+            x, y, z = witness["position_cm"]
+            eye = unreal.Vector(x + 800, y + 1000, z + 700)
+            target = unreal.Vector(x, y, z + 40)
+            destination = (eye, unreal.MathLibrary.find_look_at_rotation(eye, target))
+        try:
+            viewport.set_level_viewport_camera_info(*destination)
+            observed = camera_record(viewport.get_level_viewport_camera_info())
+            expected = camera_record(destination)
+            need(
+                all(
+                    abs(a - b) <= 1
+                    for a, b in zip(observed["location_cm"], expected["location_cm"])
+                ),
+                "Camera position drift",
+            )
+            need(
+                all(
+                    abs((a - b + 180) % 360 - 180) <= 0.1
+                    for a, b in zip(observed["rotation_deg"], expected["rotation_deg"])
+                ),
+                "Camera rotation drift",
+            )
+            result["dirty_packages_after"] = dirty_packages(unreal)
+            need(
+                result["dirty_packages_before"] == result["dirty_packages_after"],
+                "Dirty package inventory changed during camera update",
+            )
+        except Exception:
+            viewport.set_level_viewport_camera_info(*before)
+            result["camera_rollback_readback"] = camera_record(
+                viewport.get_level_viewport_camera_info()
+            )
+            raise
+        if operation == "region_focus" and not hasattr(live, "_pcg365_region_camera"):
+            live._pcg365_region_camera = {"world": live.world, "camera": before}
+        result["camera_after"] = observed
+        result["operation_status"] = "REGION_CAMERA_READBACK_NOT_VISUAL_ACCEPTANCE"
+    except Exception as exc:
+        result["operation_status"] = "REGION_INSPECTION_FAILED_NOT_ADMITTED"
+        result["reason"] = type(exc).__name__ + ": " + str(exc)[:512]
+    return result
+
+
 def run(unreal, context, parameters):
     need(
         context.get("intent") == "preview" and context.get("asset_scope") == (),
@@ -1492,7 +1686,16 @@ def run(unreal, context, parameters):
     )
     need(
         set(parameters) == {"operation", "manifest_sha256"}
-        and parameters["operation"] in ("import", "plant", "clear", "status"),
+        and parameters["operation"]
+        in (
+            "import",
+            "plant",
+            "clear",
+            "status",
+            "region_inspect",
+            "region_focus",
+            "region_restore",
+        ),
         "Unknown bounded preview operation",
     )
     live = context["live"]
@@ -1501,6 +1704,10 @@ def run(unreal, context, parameters):
         world.get_path_name().split(".")[0] == live.map_package,
         "Current world identity differs",
     )
+    if parameters["operation"].startswith("region_"):
+        return inspect_search_region(
+            unreal, context, parameters["operation"], parameters["manifest_sha256"]
+        )
     editor = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
     owned = getattr(live, "_pcg365_remote_actors", [])
     job = getattr(live, "_pcg365_remote_job", None)
