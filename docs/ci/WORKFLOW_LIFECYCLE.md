@@ -106,6 +106,13 @@ not rewrite that history.
 
 ## Active families
 
+Issue #465 bounds automatic `blender-material-forge-reference.yml` execution
+to changes in `scripts/blender/**` or the reference workflow itself. Pure
+documentation and lifecycle metadata changes do not reserve the shared host.
+Mixed source/documentation PRs still run the reference proof, and explicit
+`workflow_dispatch` remains available. Host ownership, input validation and
+reference receipts remain mandatory; this routing does not admit world assets.
+
 The surviving Actions surface is intentionally grouped:
 
 1. **Main CI:** `ci.yml` + reusable Python/Unreal and scoped legacy regression workflows. Current Sa Calobra acceptance retains its own actual-map evidence.

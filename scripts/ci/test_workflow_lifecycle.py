@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fnmatch
 import json
 import re
 import unittest
@@ -15,6 +16,31 @@ ALL_STATES = ACTIVE_STATES | RETIRED_STATES
 
 
 class WorkflowLifecycleContractTests(unittest.TestCase):
+    def test_blender_reference_routes_source_but_not_documentation(self) -> None:
+        text = (WORKFLOWS / "blender-material-forge-reference.yml").read_text(
+            encoding="utf-8"
+        )
+        trigger = text.split("  pull_request:", 1)[1].split("  workflow_dispatch:", 1)[
+            0
+        ]
+        patterns = re.findall(r"^      - '([^']+)'$", trigger, re.MULTILINE)
+
+        def selected(paths: list[str]) -> bool:
+            return any(
+                fnmatch.fnmatchcase(p, pattern) for p in paths for pattern in patterns
+            )
+
+        docs = ["docs/tooling/BLENDER_HEADLESS.md", "docs/tooling/MATERIAL_FORGE.md"]
+        self.assertFalse(selected(docs))
+        self.assertFalse(selected([".gumball/workflow-lifecycle.json"]))
+        self.assertTrue(selected(["scripts/blender/material_forge_reference.py"]))
+        self.assertTrue(selected(docs + ["scripts/blender/run_headless.py"]))
+        self.assertTrue(
+            selected([".github/workflows/blender-material-forge-reference.yml"])
+        )
+        self.assertIn("  workflow_dispatch:", text)
+        self.assertIn("cancel-in-progress: false", text)
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.policy = json.loads(POLICY.read_text(encoding="utf-8"))

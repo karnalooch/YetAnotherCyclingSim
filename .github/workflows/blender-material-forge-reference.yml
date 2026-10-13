@@ -5,10 +5,9 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/blender-material-forge-reference.yml'
-      - '.gumball/workflow-lifecycle.json'
       - 'scripts/blender/**'
-      - 'docs/tooling/BLENDER_HEADLESS.md'
-      - 'docs/tooling/MATERIAL_FORGE.md'
+      # Documentation/lifecycle metadata do not change render inputs (#465).
+      # Mixed PRs still run when a producer or this workflow changes.
   workflow_dispatch:
 
 permissions:
