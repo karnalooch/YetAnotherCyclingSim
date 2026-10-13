@@ -32,6 +32,7 @@ POLICY = {
 }
 MAP = "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface"
 LABEL = "PCG365_PCGEx_V3_Preview"
+RECIPE_REVISION = "native-mcp-v3-20cm-static-collection"
 
 
 def require(value, message):
@@ -156,7 +157,7 @@ class Author:
         (self.root / "schemas").mkdir(exist_ok=True)
         self.client = Client()
         self.state = {"nodes": {}, "input_sha256": expected_sha256}
-        self.folder = "/Game/Generated/YACS/PCG365Ex/R" + expected_sha256[:16]
+        self.folder = "/Game/Generated/YACS/PCG365Ex/R" + expected_sha256[:16] + "_s1"
         self.graph_path = self.folder + "/PCG365_Rocks"
         self.collection_path = self.folder + "/DA_Rocks"
 
@@ -607,6 +608,36 @@ def build(a):
     a.edge("spawn", "output", target="Out")
 
 
+def finalize_collection(a):
+    """Keep collection construction out of the persisted generation graph.
+
+    PCGEx 0.79 BuildAssetCollection asserted in OutputPath after loading a saved
+    world. Use that installed node only to prepare the saved input asset, then
+    let normal Asset Staging consume it directly on subsequent generations.
+    """
+    if "build_collection" not in a.state["nodes"]:
+        return
+    require(
+        a.call(ASSET, "exists", {"path": a.collection_path}),
+        "Native collection preparation did not create its saved asset",
+    )
+    temporary = ["build_collection", "attach_collection", "merge_assets"] + [
+        key
+        for key in a.state["nodes"]
+        if key.startswith("asset_") and key != "asset_choice"
+    ]
+    for key in temporary:
+        node = a.state["nodes"][key]
+        require(
+            a.call(PCG, "RemoveNode", {"graph": a.state["graph"], "node": node}),
+            "Could not detach collection preparation node",
+        )
+        del a.state["nodes"][key]
+    a.edge("native_slope", "stage_assets", source="Inside")
+    a.state["collection_prepared_once"] = True
+    a.save()
+
+
 def recipe(collection_path, radius_cm):
     """Human-readable orchestration manifest; the native author below owns wiring."""
     return {
@@ -768,7 +799,7 @@ def build_preview(input_path, expected_sha256, output_directory, stage, save_map
         tags = a.call(ASSET, "get_metadata_tags", {"asset_path": a.graph_path})
         require(
             tags.get("YACS.PCG365.InputSHA256") == expected_sha256
-            and tags.get("YACS.PCG365.Recipe") == "native-mcp-v3-20cm",
+            and tags.get("YACS.PCG365.Recipe") == RECIPE_REVISION,
             "Existing graph is not an authenticated completed build",
         )
         a.state["graph"] = a.call(ASSET, "load_asset", {"asset_path": a.graph_path})
@@ -806,6 +837,12 @@ def build_preview(input_path, expected_sha256, output_directory, stage, save_map
         not messages,
         "Native graph reports generation messages; inspect before admission",
     )
+    finalize_collection(a)
+    messages = a.call(
+        PCG, "ExecuteGraphInstance", {"pCGVolume": a.state["instance"]["actor"]}
+    )
+    (a.root / "generation-messages.json").write_text(json.dumps(messages, indent=2))
+    require(not messages, "Final graph reports generation messages")
     proof = inspect_instances(a, a.state["instance"]["actor"])
     count = sum(len(item["PerInstanceSMData"]) for item in proof)
     require(count > 0, "Native graph produced no mesh instances")
@@ -817,7 +854,7 @@ def build_preview(input_path, expected_sha256, output_directory, stage, save_map
             "asset_path": a.graph_path,
             "set_tags": {
                 "YACS.PCG365.InputSHA256": expected_sha256,
-                "YACS.PCG365.Recipe": "native-mcp-v3-20cm",
+                "YACS.PCG365.Recipe": RECIPE_REVISION,
             },
             "remove_tags": [],
         },
@@ -847,6 +884,8 @@ def build_preview(input_path, expected_sha256, output_directory, stage, save_map
         "input_sha256": expected_sha256,
         "recipe_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "policy": POLICY,
+        "recipe_revision": RECIPE_REVISION,
+        "fresh_reload_verified": False,
         "graph": a.state["graph"],
         "actor": a.state["instance"]["actor"],
         "native_instances": count,
