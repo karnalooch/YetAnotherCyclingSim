@@ -1,9 +1,7 @@
 {
   "schema_version": 1,
   "target_issue": 476,
-  "recipe": "marker_preview_palette",
+  "recipe": "rock_asset_audit",
   "intent": "preview",
-  "parameters": {
-    "palette": "green"
-  }
+  "parameters": {}
 }

@@ -2,7 +2,7 @@ name: YACS Live Host owner logon deployment
 
 on:
   push:
-    branches: [codex/476-yacs-live-host]
+    branches: [codex/365-world-graph, codex/476-yacs-live-host]
 
 permissions:
   contents: read
