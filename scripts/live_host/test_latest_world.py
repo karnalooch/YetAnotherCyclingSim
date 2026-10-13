@@ -230,6 +230,12 @@ class LatestWorldContract(unittest.TestCase):
         self.assertIn("Resolve-YacsLiveWorld.ps1", launcher)
         self.assertIn("LATEST_VERIFIED_WORLD_BLOCKED", launcher)
         self.assertNotIn("Pcg365Diagnostic.uproject", launcher)
+        self.assertIn("    $mapPackage,", launcher)
+        self.assertNotIn(
+            "    '/Game/Generated/YACS/SaCalobra/WholeMapPreparation/"
+            "L_SaCalobraMaterialReview',",
+            launcher,
+        )
         self.assertIn("LATEST_VERIFIED_FAIL_CLOSED", resolver)
         self.assertIn("LATEST_VERIFIED_WORLD_PREFLIGHT_PASS", resolver)
         self.assertIn("Get-FileHash", resolver)

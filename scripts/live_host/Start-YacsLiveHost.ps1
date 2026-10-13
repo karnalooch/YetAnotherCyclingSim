@@ -116,7 +116,7 @@ function Save-Status([string]$CurrentStatus) {
 try {
   $args=@(
     ('"' + $project + '"'),
-    '/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview',
+    $mapPackage,
     '-EnablePlugins=PixelStreaming2',
     '-DisablePlugins=ModelContextProtocol,Wingman,AndroidFileServer',
     '-ini:Game:[/Script/PixelStreaming2Settings.PixelStreaming2PluginSettings]:EditorSource=LevelEditorViewport',
