@@ -363,14 +363,15 @@ def main():
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--stage", type=Path, default=STAGE)
     parser.add_argument("--output", type=Path, required=True, help="New output directory; never overwrites previous work")
-    parser.add_argument("--mode", choices=("audit", "prepare-pcgex", "regional-preview", "whole-area"), default="audit")
+    parser.add_argument("--mode", choices=("audit", "prepare-pcgex", "build-pcgex", "regional-preview", "whole-area"), default="audit")
     parser.add_argument("--recipe-revision", help="Existing CI-admitted recipe SHA; this command never publishes code")
     parser.add_argument("--timeout-seconds", type=int, default=3600)
+    parser.add_argument("--save-preview-map", action="store_true", help="Save a new map copy; the source map is never saved")
     args = parser.parse_args()
     require(60 <= args.timeout_seconds <= 7200, "Timeout must be 60..7200 seconds")
     root = args.root.resolve()
     require(not args.output.exists(), "Output already exists; preserve earlier results")
-    report = audit(root, args.stage.resolve(), prepare_pcgex=args.mode in ("prepare-pcgex", "whole-area"))
+    report = audit(root, args.stage.resolve(), prepare_pcgex=args.mode in ("prepare-pcgex", "build-pcgex", "whole-area"))
     prepared = report.pop("pcgex_input")
     args.output.mkdir(parents=True, exist_ok=False)
     if prepared is not None:
@@ -388,6 +389,10 @@ def main():
         }
     write_new(args.output / "world-input-audit.json", report)
     print(json.dumps({"status": report["status"], **report["exact_source_cell_counts"]}), flush=True)
+    if args.mode == "build-pcgex":
+        native = graph.build_preview(input_path, sha(input_path), args.output, args.stage, args.save_preview_map)
+        print(json.dumps(native), flush=True)
+        return 0
     if args.mode == "whole-area":
         print("Whole-area execution is blocked; see world-input-audit.json. No scene mutation.", file=sys.stderr)
         return 2

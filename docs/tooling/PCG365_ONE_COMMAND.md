@@ -1,54 +1,59 @@
 # PCG365 single entry point
 
-Issue #365, M3. On 2026-10-13 the owner approved slope-aligned rocks up to 42 degrees and requested existing PCGEx nodes, MCP orchestration and input adaptation. Frozen V1/V2 contact results remain historical; the new recipe is `PCG365_PCGEX_SLOPE_ALIGNED_PREVIEW_V3`.
+Issue #365, M3. The owner approved slope alignment up to 42 degrees, existing PCGEx nodes, MCP orchestration and input adaptation on 2026-10-13. The current visual recipe is `PCG365_PCGEX_SLOPE_ALIGNED_PREVIEW_V3`. Historical V1/V2 contact thresholds and rejected results remain unchanged.
 
-## Input adapter and graph
+## Run
 
-Run from the active source checkout, with a new output directory:
+Keep the authenticated Sa Calobra road checkpoint open in the existing Live Host, with PCGEx Assistant, Epic PCG Toolset and Epic Editor Toolset exposed on localhost port 8000. From the source checkout:
 
 ```powershell
-python -B scripts/worldgen/build_pcg365_world.py --mode prepare-pcgex --output D:/yacs/project/Saved/PCG365/pcgex-input-next
+python -B scripts/worldgen/build_pcg365_world.py --mode build-pcgex --save-preview-map --output D:/yacs/project/Saved/PCG365/native-next
 ```
 
-The entry point authenticates the 2016.5 m square, original 0.5 m selectors, all technical exclusion bits, slope, supplied meshes and Forge limestone material closure. It writes `world-input-audit.json`, `pcgex-input.json` and `pcgex-node-plan.json`. Python converts data; existing nodes decide placement.
+The output directory must be new. `--save-preview-map` creates a separate level asset; it never saves the accepted original level. Omit this flag when regenerating an existing saved graph. A different existing PCG365 preview is preserved and stops the command, rather than doubling the rocks. Unknown outcomes from timed-out mutations are not retried automatically.
 
-The prepared input contains 39,332 visible scree cells, all within 42 degrees. Of these, 2,923 meet the conservative source clearance: a 93.891702454 cm pivot-centred enclosing sphere plus 50 cm. These are input counts, not spawned instances. Native terrain/road checks, support screening and overlap pruning still apply.
+`--mode prepare-pcgex` performs input preparation without touching Unreal. `--mode regional-preview` retains the earlier admitted contact recipe. `--mode whole-area` still reports incomplete cliff and other treatment lanes; scree output is not completion of the entire world graph.
 
-`pcg365_pcgex_graph.py` composes the existing operations:
+## Native recipe
 
-1. PCG Create Points carries exact positions, source slope and clearance.
+The input adapter authenticates the 2016.5 m square, original 0.5 m selectors, technical exclusions, slope, supplied N05/N06 meshes and Forge limestone material closure. Python converts records and calls official tools. All placement decisions run in installed PCG/PCGEx nodes:
+
+1. PCG Create Points carries exact cells, deterministic point seeds, slope and clearance.
 2. PCGEx Numeric Compare / Uber Filter applies the source limits.
-3. PCGEx Sample Line Trace projects onto the selected Landscape and aligns Z to the normal. A native normal filter repeats the 42-degree limit.
-4. PCGEx Asset Staging / Classic Selector selects the supplied rocks and writes real asset bounds while retaining scale 1. The supplied Forge limestone material is reused.
-5. PCGEx Bounds Filter protects current road/CUT bounds. Self Pruning operates on one dataset across the area.
-6. Existing Transform, Line Trace and Filter nodes screen four surrounding probes. This is a five-probe support screen, not historical V2 contact qualification.
-7. PCG Static Mesh Spawner uses PCGEx Mesh Selector Staged and the collection map. Decorative preview collision is disabled.
+3. PCGEx Sample Line Trace projects onto Landscape and aligns Z to the actual normal; another native filter enforces 42 degrees.
+4. PCGEx Build Asset Collection, Asset Staging and Classic Selector choose supplied rocks and real mesh bounds at scale 1.
+5. PCGEx Sample Line Trace uses a sphere sweep against current road/CUT primitives. This replaces the rejected whole-road AABB approach, whose large boxes excluded unrelated terrain.
+6. PCGEx Self Pruning operates on one dataset across the area. Four ordinary Transform / Trace / Filter branches screen surrounding support, followed by 5 cm embedding along the point normal.
+7. PCG Static Mesh Spawner uses PCGEx Mesh Selector Staged and its collection map. Epic Object Tools sets and reads back `bForceDisableCollisions`; component readback must report `NoCollision`.
+8. Epic Asset Tools saves the graph, collection and meshes. Optional level duplication saves a separate preview map.
 
-The graph is a candidate until executed and read back in the target Editor. Input preparation is not native generation or persistence proof. Cliff mesh/surface treatment, simplified/raised-form regions and final M3 review remain distinct work; scree output cannot claim their completion. Existing whole-map material bindings are retained, not relabelled as newly generated materials. Source Landscape and roads are unchanged.
+The working support tolerance is **±20 cm**. The initial ±4 cm setting eliminated every point in the native trial; the wider preview setting follows the owner's acceptance of minor manually repaired visual artifacts. This five-probe screen is not continuous-contact qualification or historical V2 admission.
 
-## Versions and MCP
+The collection is a saved asset reference. PCGEx 0.79 rejected the transient collection-subobject path as a per-point asset source. The saved collection and native dependency retain the existing PCGEx staging logic. Selector properties use the installed MCP DSL strings and real pin names (`Sources`, `ActorReferences`, `Map`, `Overrides`).
 
-UE 5.8.2: changelist 56702186, compatible binary BuildId 55116800. PCGEx 0.79: `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66`, with the existing `yacs-pcgex-0.79-horizontal-boundary-v2` patch. The retained source passed the repository bootstrap validator before 2,313 authenticated files were staged into the Remote project. Staging is not proof of module loading.
+## Current evidence and limits
 
-The owner explicitly requested PCGEx/MCP activation and authorized closing Remote. `Start-YacsLiveHost.ps1` enables PCGEx, PCGEx Assistant, Epic PCG Toolset, Epic Editor Toolset and Epic MCP on local port 8000. Preserve the immutable release updater, task owner, map hash checks and single Editor ownership. Never edit an installed immutable release in place.
+The authenticated input has 39,332 visible scree cells. Source slope and conservative clearance leave 2,923. The exercised native prototype produced 20 actual mesh instances (12 N06, 8 N05), bound to the supplied Forge limestone material with `NoCollision`. A repeat native execution also produced 20 output points. Graph, collection, both meshes and a separate 193,291,461-byte preview level were saved. One close native viewport capture confirms visible rock geometry; it is not whole-area visual acceptance.
 
-PCGEx Assistant 0.3.2 is installed in the target project from its acquired FAB manifest. The 45 files were downloaded from the manifest's Epic CDN with Legendary 0.20.34, verified against every manifest SHA-1 and copied with SHA-256 verification. No engine updater was used for this installation. Its binary BuildId is 55116800. The installed source confirms `GetNodeSchema`, `CreateNode` and `AddSubnodes`, in addition to knowledge/introspection. Use Assistant to create PCGEx nodes and Epic PCG Toolset to update/connect them; live MCP and generation proof remain pending.
+The repository entry point now packages that sequence. Its new end-to-end execution, fresh reload and exact-head delivery results are recorded in the rollout handoff as they complete. Existing whole-map material bindings are retained, not relabelled as newly generated materials. Cliff treatment, simplified/raised-form regions and final M3 review remain open.
 
-[Kweave](https://pcgex.gitbook.io/pcgex/kweave) generates HLSL for GPU nodes. Bridge adds mesh sampling, scene queries and live editing. It is an optional GPU authoring tool, not proof of this graph or an installed prerequisite.
+## Installation and access
 
-## Validation and retained evidence
+UE 5.8.2 uses changelist 56702186 and binary BuildId 55116800. PCGEx 0.79 is pinned to `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66`, retaining `yacs-pcgex-0.79-horizontal-boundary-v2`. PCGEx Assistant 0.3.2 was installed independently from its acquired FAB manifest: 45 files verified by manifest SHA-1 and copy SHA-256. Live MCP confirms its knowledge, schema, creation and subnode tools.
 
-Fourteen CPU tests cover exact-cell conversion, exclusions, unknowns, clipped grid edges, rotation-safe bounds, clearance, receipt identity and create-only output. The existing 107 Live Host CPU checks also pass locally.
+The interrupted Launcher engine update was canceled. The 5.8.2 restoration receipt covers 5,907 affected files: 1,378 already matched, 4,529 restored, zero verification errors. No further UE download is needed for Assistant.
+
+The owner explicitly authorized **broad editor MCP access**. The project allowlist includes `PCGExAssistant.PCGExToolset`, `PCGToolset.*`, `EditorToolset.*` and `editor_toolset.toolsets.*`. The last prefix is the actual name of Epic's Python toolsets, not `PythonTypes`. MCP remains local. Access does not grant terrain/source changes, performance acceptance or owner visual signoff.
+
+`Start-YacsLiveHost.ps1` enables installed plugins through the command line. Preserve the original project descriptor and all five protected packages; changing the descriptor causes the existing latest-world preflight to reject startup. Keep the immutable release updater and single-editor ownership. Never edit an installed release in place.
+
+[Kweave](https://pcgex.gitbook.io/pcgex/kweave) is an optional GPU graph authoring tool; its Bridge is not required by this CPU-node recipe.
+
+## Validation
 
 ```powershell
 python -B -m unittest scripts.worldgen.test_build_pcg365_world -v
 python -B -m unittest discover -s scripts/live_host -p 'test_*.py' -q
 ```
 
-The older `--mode regional-preview` remains available for admitted recipe `79e632710e32e576eb5b9d7db0b60a6e43cb7942`. Its corrected three-rock run completed as `CONTACT_JOB_COMPLETED_SAMPLED_ONLY`, with `preview_placed: 3` and `map_saved: false`, before the owner-requested shutdown. It does not prove the new graph.
-
-Follow the [rollout handoff](SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md) and [world-graph contract](SA_CALOBRA_WORLD_GRAPH.md). Owner acceptance remains `PENDING_FINAL_M3`; performance remains `DEFERRED_AFTER_M3`, `performance_pass: false`.
-
-The Launcher engine update to 5.8.3 was canceled after IS-UP-MF02-5 (Core.dll relocation failed). The installed engine still reports 5.8.2; cancellation alone is not a complete binary integrity proof.
-
-The owner explicitly authorized broad editor MCP access on 2026-10-13. Load the installed EditorToolset through the starter command line: modifying the authenticated project descriptor causes the existing latest-world preflight to reject startup. Keep the original descriptor and all five protected packages intact. The tool registry remains the access boundary; enabling the plugin does not itself grant every tool. Native object/asset/material tools extend orchestration, not geographic authority or owner visual acceptance.
+The 14 input/receipt tests and 107 Live Host tests pass locally. They do not replace native instance readback, fresh reload, visual review or CI. Follow the [rollout handoff](SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md) and [world-graph contract](SA_CALOBRA_WORLD_GRAPH.md). PR #474 remains Draft; owner acceptance is `PENDING_FINAL_M3`, performance is `DEFERRED_AFTER_M3`, and `performance_pass` is false.

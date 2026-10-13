@@ -1397,3 +1397,9 @@ process/restart is required for the evidence triage itself.
 Keep PR #474 Draft, #365 OPEN, `qualified_assets: []`,
 `placement: false`, `full_qualification: false`, `PENDING_FINAL_M3`,
 `DEFERRED_AFTER_M3`, and `performance_pass: false`.
+
+## PCGEx MCP authoring continuation — 2026-10-13
+
+The owner approved slope alignment up to 42 degrees and minor visual artifacts for manual correction, then explicitly authorized broad local MCP access. The [single entry point](PCG365_ONE_COMMAND.md) replaces the unexecuted direct-Python candidate with official Assistant/PCG/Editor Toolset calls. Source-cell conversion remains an adapter; native PCGEx nodes own projection, filters, staging, spacing and the five-probe screen. The native prototype produced 20 real N05/N06 instances, supplied Forge material bindings and `NoCollision`, and saved its graph/assets plus a separate preview level. The working screen uses ±20 cm after ±4 cm produced no output.
+
+This is visual scree preview evidence, not historical V2 qualification or a full-world claim. The original Landscape, road checkpoint and project descriptor remain protected. Cliff/surface and simplified/raised-form lanes, fresh-result verification and final whole-M3 owner review remain open. Exact entry-point execution and delivery evidence follow in the rollout handoff. PR #474 remains Draft and #365 stays open.
