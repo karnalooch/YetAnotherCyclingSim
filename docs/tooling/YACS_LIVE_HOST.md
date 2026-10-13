@@ -400,3 +400,35 @@ REJECTED; `qualified_assets=[]`, `placement=false`, `map_saved=false`.
 Source-qualified road-adjacent rock/limestone placement belongs to #365/#368,
 not to this cosmetic inspection command. To revert, issue another reviewed
 typed recipe request with `palette=red`; do not restart/snapshot the map.
+
+
+## Live progress overlay — owner request 2026-10-13
+
+Issue #476 adds a read-only progress card to the existing Remote page. The
+repository-owned `scripts/live_host/remote-progress.js` polls a sanitized
+same-origin `yacs-progress.json`; it never sends browser commands to Unreal.
+`Install-YacsLiveProgress.ps1 -ExpectedHead <sha> -Apply` requires a clean
+commit and successful exact-head CyclingSim CI. It preserves the original
+Pixel Streaming `player.html` by SHA256, installs a versioned additive script
+and records a reversible deployment under Live Host state. `-Rollback` with
+the installed overlay SHA restores the original page after hash checks.
+No server port, Unreal plugin/binary, scene package or engine C++ is changed.
+The current browser tab must be reloaded once after installation.
+
+Start `Watch-YacsLiveProgress.ps1 -Session <current-session> -RecipeRevision
+<published-recipe-sha> -Manifest <staged-manifest-sha256>` as a hidden independent
+owner process, outside a GitHub runner. It uses only the existing serialized
+`rock_contact_scatter/status` command and matches its request/receipt identity.
+It polls at ten-second intervals after command completion, writes only bounded
+counters and stops on session replacement or lost native heartbeat. Start a
+new observer explicitly for each new Editor session. No raw receipts, paths,
+exception messages or arbitrary command endpoint are exposed to the viewer.
+
+The card displays phase, processed triangles, sampling positions, placed,
+contact-accepted and rejected counts. The first geometry pass is indeterminate
+until its true total is known; the second subtracts the completed first pass.
+Sampling denominator is a maximum budget, not a guaranteed count after spatial
+rejections. Missing updates older than 35 seconds hide the moving bar and show
+stale data. The display never equates diagnostic completion with production
+qualification, performance or owner visual acceptance. Host CI and native
+ownership rules still apply; adding the web overlay itself requires no UE restart.

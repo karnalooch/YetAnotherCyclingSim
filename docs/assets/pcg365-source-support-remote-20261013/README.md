@@ -220,3 +220,20 @@ the first triangle query, with a regression test of this ordering. 57 focused
 CPU tests, Ruff, docs guards and diff check PASS. Native proof remains pending.
 Owner-authorized continuation retained/discarded only the owned zero-placement
 preview session after rechecking the five saved checkpoint package hashes.
+
+
+## Native diagnostic completed — f0588aa2
+
+The explicit Geometry Script library passed in session
+`20261013T122444Z-7815ee9e71d4`: 559 mesh-change guards,
+2,911,650 triangle IDs per scan (two unchanged snapshots), and 104,330
+contact sampling positions. The final status receipt reports one transient
+`rock_09_02` at P3 and verified review camera coordinates. P3 sampled maximum
+local slope is 5.877836 degrees and embedding fraction is 0.169753; unchanged
+V2 limits passed. P0/P1/P2/P4 were rejected for slope, embedding and exposure.
+The saved map was not changed. Source `f0588aa2cb8a9362cc7e524b54d80b60e478ed39`
+passed protected CI 38394970294 and recipe publisher 38394962138. Independent
+post-job receiver confirmed fresh increasing video frames and cleanup.
+Portable exact native receipts are indexed under `native-f0588aa2-completed`.
+This is sampled diagnostic placement only: `qualified_assets=[]`, production
+`placement=false`, `performance_pass=false`; owner visual acceptance remains open.

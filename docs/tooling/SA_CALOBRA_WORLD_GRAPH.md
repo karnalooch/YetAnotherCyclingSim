@@ -13,8 +13,12 @@ native world/material readback and independent browser frames passed. Native imp
 `a5e2730c`. Contact rolled back before sampling because UE struct allocation
 addresses were compared as transform values. The numeric-value guard passed in native UE. A missing instance query API
 then rejected the job with zero actors; the tested explicit Geometry Script
-library correction awaits native rollout. No regional
-placement or merge follows.
+library correction passed in native UE at `f0588aa2`: all 559 guards bound,
+2,911,650 triangle IDs scanned twice, 104,330 contact positions measured,
+one diagnostic `rock_09_02` placed at P3 with camera readback. P0/P1/P2/P4
+were rejected for slope/embedding/exposure. Fresh independent post-job
+browser frames passed. This sampled preview does not admit regional
+placement, continuous support, owner visual acceptance or merge.
 
 The [source-backed spatial draft](../experiments/sa-calobra-spatial-treatment-plan-20261013/README.md)
 reuses the [surface atlas](SA_CALOBRA_SURFACE_DETAIL_ATLAS.md) and existing

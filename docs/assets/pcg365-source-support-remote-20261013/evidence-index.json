@@ -3,7 +3,7 @@
   "issue": 365,
   "source_base_sha": "0dd86495fab674a9d6aee22ba0759539d8bd7242",
   "source_uncommitted_at_cpu_execution": true,
-  "native_unreal_execution": "IMPORTED20_NUMERIC_TRANSFORM_GUARD_PASSED_NATIVE_QUERY_INSTANCE_API_MISSING",
+  "native_unreal_execution": "F0588AA2_DIAGNOSTIC_P3_PLACED_CAMERA_READBACK_POST_JOB_FRAMES",
   "placement": false,
   "qualified_assets": [],
   "entries": [
@@ -328,6 +328,30 @@
       "original_sha256": "ecd6e02fb5b3973767aaf60993f05c336be153ac431ba1a36cfb030bcb51303d",
       "compressed_bytes": 187,
       "compressed_sha256": "26cf72cd617df10d4c9f1f219829852e66ddc904be1b8971041e66be58df4ec8"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T122444Z-7815ee9e71d4\\commands\\000006-78be86d3bd97457491cd.result.json",
+      "copy": "evidence/native-f0588aa2-completed/000006-78be86d3bd97457491cd.result.json.gz",
+      "original_bytes": 19480,
+      "original_sha256": "c2a113dcc410be4aef556c6a63694409a3eb39d5cc39cdbdd02e59573093af01",
+      "compressed_bytes": 3422,
+      "compressed_sha256": "2e45badcec89ca8526efbbf66eefed3f6e5075dd74fe47f8c7a3e0f90d8a0ef0"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T122444Z-7815ee9e71d4\\commands\\000006-78be86d3bd97457491cd.started.json",
+      "copy": "evidence/native-f0588aa2-completed/000006-78be86d3bd97457491cd.started.json.gz",
+      "original_bytes": 813,
+      "original_sha256": "50f2fbceaa555d394a4173adf814af34c1366912fa48d8efa8aff642e259b09a",
+      "compressed_bytes": 470,
+      "compressed_sha256": "3088dfd81064d6f2f145e9151623bab3dc33ee8a3336d1cad567be32e1feb2e5"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\remote-deployment-f0588aa2\\post-job-receiver\\level-editor-stream-client.json",
+      "copy": "evidence/native-f0588aa2-completed/level-editor-stream-client.json.gz",
+      "original_bytes": 14980,
+      "original_sha256": "557f75cd4a570293ff29e90a1ad182f6c92da0b69071266577ef7f28257b47c3",
+      "compressed_bytes": 1697,
+      "compressed_sha256": "4e614f75e9f8b9a5ffb62815dbd3892b0dbbfe000ca4ac2c1a1fb38a0e6fcf4d"
     }
   ],
   "remote_world_execution": {
@@ -354,5 +378,6 @@
     "rollback_complete": true,
     "saved_checkpoint_unchanged": true,
     "session_stopped_for_authorized_deployment_continuation": true
-  }
+  },
+  "diagnostic_preview_placed": 1
 }
