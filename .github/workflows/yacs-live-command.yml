@@ -65,6 +65,8 @@ jobs:
           PY
       - name: Run Live Host CPU contract tests
         run: python -m unittest discover -s scripts/live_host -p 'test_*.py' -q
+      - name: Run read-only progress HUD CPU checks
+        run: node scripts/live_host/test_remote_progress.cjs
 
   request:
     name: Stage one versioned trusted code recipe in the already open Editor

@@ -107,3 +107,7 @@ docs/assets/pcg365-natural20-20261012/*.json.gz -text -diff
 # Preserve the portable natural20 contact evidence bytes.
 docs/assets/pcg365-natural20-contact-20261012/**/*.json.gz -text -diff
 docs/assets/pcg365-natural20-contact-20261012/*.py.gz -text -diff
+
+# Preserve hash-bound planning/inspection JSON bytes across all host platforms.
+docs/experiments/sa-calobra-spatial-treatment-plan-20261013/*.json -text whitespace=cr-at-eol
+worldgen/live_host/window0067-regional-manifest.json text eol=lf

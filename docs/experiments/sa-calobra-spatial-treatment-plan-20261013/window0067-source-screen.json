@@ -40,22 +40,22 @@
       "site": "W0067_R02",
       "asset_id": "namaqualand_boulder_05_01",
       "world_xy_cm": [
-        113300,
-        116350
+        113375,
+        117062.5
       ],
       "source_cell": [
-        2327,
-        2266
+        2341,
+        2268
       ],
-      "maximum_7x7_slope_deg": 8.679563522338867,
-      "clearance_lower_bound_m": 1.707999348640442,
+      "maximum_7x7_slope_deg": 7.1411285400390625,
+      "clearance_lower_bound_m": 1.6030059795886493,
       "exclusion_reasons": 0,
       "visibility_bin": [
-        290,
+        292,
         283
       ],
       "hits": 11,
-      "pixels_per_m": 34.247554779052734
+      "pixels_per_m": 72.92487335205078
     },
     {
       "site": "W0067_R03",

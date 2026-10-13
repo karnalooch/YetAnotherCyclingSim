@@ -43,5 +43,23 @@ async function draw(data) {
   assert.equal(ui.elements.bar.value,undefined);
   ui=await draw({...row,operation_status:'CONTACT_JOB_COMPLETED_CALLBACK_CLEANUP_REQUIRED'});
   assert.equal(ui.elements.state.textContent,'Zatrzymano');
-  console.log('Remote progress HUD: 8 scenarios PASS');
+  for (const phase of ['READ_CURRENT_NATIVE_GEOMETRY','MEASURE_LANDSCAPE_CONTACT','VERIFY_CURRENT_NATIVE_GEOMETRY']) {
+    for (const [status,label,state] of [
+      ['CONTACT_JOB_CANCELLED_ROLLED_BACK','Próba zatrzymana','Przerwano'],
+      ['CONTACT_JOB_CLEARED','Grupa usunięta','Gotowe']
+    ]) {
+      ui=await draw({...row,phase,operation_status:status,placed:0,accepted:2,rejected:1});
+      assert.equal(ui.elements.phase.textContent,label,'terminal status must override retained phase');
+      assert.equal(ui.elements.state.textContent,state,'normal stop must not become a failure');
+      assert.equal(ui.elements.bar.hidden,true);
+      assert.equal(ui.elements.bar.value,undefined);
+      assert.equal(ui.elements.detail.textContent,'','inactive attempt must not retain triangle or contact detail');
+      assert.match(ui.elements.counts.textContent,/Posadzone: 0/);
+      assert.match(ui.elements.counts.textContent,/Historia kontaktu — OK: 2 · Odrzucone: 1/);
+    }
+  }
+  ui=await draw({...row,operation_status:'CONTACT_JOB_CANCELLED_ROLLED_BACK',observed_utc:'2000-01-01T00:00:00Z'});
+  assert.equal(ui.elements.state.textContent,'Brak świeżych danych','terminal status must preserve freshness warning');
+  assert.equal(ui.elements.phase.textContent,'Próba zatrzymana');
+  console.log('Remote progress HUD: 15 scenarios PASS');
 })().catch(error=>{console.error(error);process.exitCode=1;});

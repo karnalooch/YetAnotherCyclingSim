@@ -5,6 +5,6 @@
   "intent": "preview",
   "parameters": {
     "operation": "plant",
-    "manifest_sha256": "fc49334f9ceb77ed963d882524073c1c512a8f875569c5b7213b3673f20304e1"
+    "manifest_sha256": "f3acaeb8a89a3600a26b7d1d6738266b4cb72855b68eab550f758039903ca5eb"
   }
 }

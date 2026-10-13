@@ -142,8 +142,8 @@
       "site": "W0067_R02",
       "asset_id": "namaqualand_boulder_05_01",
       "world_xy_cm": [
-        113300,
-        116350
+        113375,
+        117062.5
       ],
       "exclusions": {
         "status": "PASS_SOURCE_MASK_FOOTPRINT_CURRENT_ROAD_UNVERIFIED",
@@ -197,8 +197,8 @@
     "plan_sha256": "99b7d4d67a14ee62ac3bb8dff392d4b9a3d330a74bc53d8e64fdd76e866ab684",
     "source_screen": {
       "path": "evidence/window0067-source-screen.json",
-      "bytes": 2518,
-      "sha256": "443978ed040dbdc27760abe17f7ee9bd1890c7fcd4a74cd6390c0bec1ce486ae"
+      "bytes": 2521,
+      "sha256": "7ae41ece9bcbd718bcd109ab686eb2306816661f68b150967cd4d15d0a1abaa0"
     }
   }
 }

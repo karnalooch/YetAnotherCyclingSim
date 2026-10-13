@@ -30,7 +30,7 @@ PLAN_SHA = "99b7d4d67a14ee62ac3bb8dff392d4b9a3d330a74bc53d8e64fdd76e866ab684"
 SEARCH_SHA = "2d0079969b422374e5f9dfcd0e26da39a7087bc72bafae2133f76d09853d2e9c"
 ROWS = (
     ("W0067_R01", "namaqualand_boulder_06_01", [113000, 116450]),
-    ("W0067_R02", "namaqualand_boulder_05_01", [113300, 116350]),
+    ("W0067_R02", "namaqualand_boulder_05_01", [113375, 117062.5]),
     ("W0067_R03", "namaqualand_boulder_06_01", [113350, 116750]),
 )
 
@@ -138,7 +138,7 @@ def build(stage: Path = STAGE, root: Path = ROOT) -> tuple[dict, dict]:
         )
         col, row = (math.floor(v / 50 + 0.5) for v in xy)
         distance, reason = float(distances[row, col]), int(reasons[row, col])
-        contact.footprint_clearance_sample(xy, radius, distance, reason)
+        footprint = contact.footprint_clearance_sample(xy, radius, distance, reason)
         maximum = float(np.max(slope[row - 3 : row + 4, col - 3 : col + 4]))
         br, bc = row // 8, col // 8
         hits, pixels = (
@@ -173,7 +173,7 @@ def build(stage: Path = STAGE, root: Path = ROOT) -> tuple[dict, dict]:
                 "world_xy_cm": xy,
                 "source_cell": [row, col],
                 "maximum_7x7_slope_deg": maximum,
-                "clearance_lower_bound_m": distance,
+                "clearance_lower_bound_m": footprint["clearance_lower_bound_cm"] / 100,
                 "exclusion_reasons": reason,
                 "visibility_bin": [br, bc],
                 "hits": hits,

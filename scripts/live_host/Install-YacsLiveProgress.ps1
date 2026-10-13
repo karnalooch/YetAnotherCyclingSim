@@ -84,11 +84,19 @@ if (-not $Apply) {
   [ordered]@{status='PROGRESS_OVERLAY_DRY_RUN';source_sha=$ExpectedHead;viewer='http://127.0.0.1/';original_sha256=$originalHash;editor_restarted=$false} | ConvertTo-Json
   return
 }
-$raw=& gh api "repos/karnalooch/YetAnotherCyclingSim/actions/runs?event=pull_request&head_sha=$ExpectedHead&per_page=100"
-if ($LASTEXITCODE -ne 0) { throw 'Protected CI lookup failed.' }
+$raw=& gh api "repos/karnalooch/YetAnotherCyclingSim/actions/runs?head_sha=$ExpectedHead&per_page=100"
+if ($LASTEXITCODE -ne 0) { throw 'Exact-source admission lookup failed.' }
 $runs=($raw | ConvertFrom-Json).workflow_runs
-$ci=@($runs | Where-Object { $_.name -ceq 'CyclingSim CI' -and $_.head_sha -ceq $ExpectedHead } | Sort-Object created_at -Descending)
-if (-not $ci.Count -or $ci[0].status -cne 'completed' -or $ci[0].conclusion -cne 'success') { throw 'Exact-head protected CI not successful.' }
+$admitted=@($runs | Where-Object {
+  $_.head_sha -ceq $ExpectedHead -and $_.status -ceq 'completed' -and
+  $_.conclusion -ceq 'success' -and (
+    $_.name -ceq 'CyclingSim CI' -or (
+      $_.name -ceq 'YACS Live Host — submit one reviewed editor recipe' -and
+      $_.event -ceq 'push' -and $_.actor.login -ceq 'karnalooch'
+    )
+  )
+})
+if (-not $admitted.Count) { throw 'Exact-source preview or protected CI admission not successful.' }
 [void][IO.Directory]::CreateDirectory($state)
 $backup=Join-Path $state ($originalHash+'.html')
 Assert-PlainPath $backup

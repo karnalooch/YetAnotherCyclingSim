@@ -36,12 +36,17 @@
     const age = (Date.now() - Date.parse(last.observed_utc)) / 1000;
     const fresh = Number.isFinite(age) && age >= -5 && age <= 35 && last.observer_alive !== false;
     root.querySelector('section').classList.toggle('stale', !fresh);
-    const failed = last.error === true || /FAILED|ROLLBACK_INCOMPLETE|CLEANUP_REQUIRED/.test(last.operation_status || '');
+    const cancelled = last.operation_status === 'CONTACT_JOB_CANCELLED_ROLLED_BACK';
+    const cleared = last.operation_status === 'CONTACT_JOB_CLEARED';
+    const inactive = cancelled || cleared;
+    const failed = !inactive && (last.error === true || /FAILED|ROLLBACK_INCOMPLETE|CLEANUP_REQUIRED/.test(last.operation_status || ''));
     const done = /COMPLETED/.test(last.operation_status || '');
-    el('state').textContent = !fresh ? 'Brak świeżych danych' : failed ? 'Zatrzymano' : done ? 'Gotowe' : 'Na żywo';
-    el('phase').textContent = failed ? 'Zasiew zatrzymany — sprawdź wynik w czacie' : labels[last.phase] || labels[last.operation_status] || 'Oczekiwanie na kolejny etap';
+    el('state').textContent = !fresh ? 'Brak świeżych danych' : failed ? 'Zatrzymano' : cancelled ? 'Przerwano' : cleared || done ? 'Gotowe' : 'Na żywo';
+    el('phase').textContent = failed ? 'Zasiew zatrzymany — sprawdź wynik w czacie' : cancelled ? 'Próba zatrzymana' : cleared ? 'Grupa usunięta' : labels[last.phase] || labels[last.operation_status] || 'Oczekiwanie na kolejny etap';
     let numerator = null, denominator = null, detail = '';
-    if (last.phase === 'VERIFY_CURRENT_NATIVE_GEOMETRY' && Number.isSafeInteger(last.triangles_read) && Number.isSafeInteger(last.triangles_per_scan) && last.triangles_per_scan > 0) {
+    if (inactive) {
+      // Retained scan/contact counters describe the stopped attempt.
+    } else if (last.phase === 'VERIFY_CURRENT_NATIVE_GEOMETRY' && Number.isSafeInteger(last.triangles_read) && Number.isSafeInteger(last.triangles_per_scan) && last.triangles_per_scan > 0) {
       numerator = last.triangles_read - last.triangles_per_scan; denominator = last.triangles_per_scan;
       detail = `${fmt(numerator)} / ${fmt(denominator)} trójkątów`;
     } else if (last.phase === 'MEASURE_LANDSCAPE_CONTACT') {
@@ -54,9 +59,10 @@
     }
     const percent = Number.isFinite(numerator) && denominator > 0 ? Math.max(0, Math.min(100, 100*numerator/denominator)) : null;
     if (percent !== null && !failed) el('bar').value = percent; else el('bar').removeAttribute('value');
-    el('bar').hidden = !fresh || failed;
+    el('bar').hidden = !fresh || failed || inactive;
     el('detail').textContent = detail;
-    el('counts').textContent = `Posadzone: ${fmt(last.placed)} · Kontakt OK: ${fmt(last.accepted)} · Odrzucone: ${fmt(last.rejected)}`;
+    const contactLabel = inactive ? 'Historia kontaktu — OK' : 'Kontakt OK';
+    el('counts').textContent = `Posadzone: ${fmt(last.placed)} · ${contactLabel}: ${fmt(last.accepted)} · Odrzucone: ${fmt(last.rejected)}`;
     el('age').textContent = Number.isFinite(age) ? `Odczyt ${Math.max(0,Math.floor(age))} s temu · odświeżanie co 10 s` : 'Czas odczytu niedostępny';
   }
   async function poll() {

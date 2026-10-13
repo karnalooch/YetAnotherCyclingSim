@@ -235,3 +235,33 @@ under `D:/yacs/work/pcg365/regional-authoring-candidate-20261013` and removed
 from the active change. It needs a receiver upgrade; current work stays on live
 preview and deterministic same-session regeneration. Saved/fresh consumer proof
 is not claimed by that result and must not cause another normal-iteration reset.
+
+## Live contact correction — window 0067, second bounded candidate
+
+The first native contact attempt completed its initial 2,911,650-ID geometry
+scan and all 62,598 grid positions. R01 N06 passed with 8.935469531 cm embedding
+(15.2769%) and 8.28285619 degrees maximum slope; R03 N06 passed with
+6.102962411 cm (10.4342%) and 5.580431717 degrees. R02 N05 rejected with
+`EXCESSIVE_LOCAL_SLOPE` and `EXCESSIVE_EMBEDDING`: 11.98948715 degrees and
+10.88898539 cm (22.6847%). Source screening is not native facet truth.
+The [retained first-attempt receipt](../experiments/sa-calobra-spatial-treatment-plan-20261013/window0067-first-contact-attempt.json)
+records cancellation and complete rollback during the second geometry scan:
+zero final rocks placed, native mesh dirty false. Limits were not changed.
+
+The replacement N05 center is `[113375,117062.5]` cm, a previously sampled
+Landscape point with native slope 2.928801494 degrees. Source 7x7 maximum is
+7.141128540 degrees, zero exclusion bits, and full-footprint source clearance
+lower bound after subcell offset is 1.603005980 m. Visibility has 11 hits and
+72.924873353 px/m; pairwise and boundary clearances pass. R01/R03 stay fixed.
+The current typed manifest and reproducible source-screen file supersede the
+first candidate and hash to
+`f3acaeb8a89a3600a26b7d1d6738266b4cb72855b68eab550f758039903ca5eb`.
+Original stage inputs and the first manifest remain retained separately.
+
+The read-only HUD now gives cancelled/cleared status priority over retained
+scan phases and labels previous contact counts as history. Its installer accepts
+the exact-source focused preview workflow (including HUD CPU checks), so the
+UI fix also requires no full native rebuild or UE restart. Hash-bound planning
+JSON bytes are preserved across Windows/Linux checkout through scoped attributes.
+Native execution of the corrected group remains pending; current session and
+saved parent world stay unchanged.
