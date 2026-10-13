@@ -15,7 +15,7 @@ Owner authorization, 2026-10-13: "niech to trafi do remote 1:1 i do docsów, zac
 
 **Latest owner instructions take precedence over the verbatim plan where necessary:**
 
-- "ograniczaj restarty ue!" — minimize Unreal restarts. Use the existing owned Editor and verified supported live recipe/material/content update paths. Batch changes and proofs. An occupied runner is not permission to stop the Editor. If a restart is technically unavoidable, explain the concrete reason beforehand, preserve unsaved work and follow existing ownership/approval rules; no restart loops.
+- "ograniczaj restarty ue!" — minimize Unreal restarts. Use the existing owned Editor and verified supported live recipe/material/content update paths. Batch changes and proofs. An occupied runner is not permission to stop the Editor. Later owner authorization below permits technically necessary restarts and forced closure, including loss of unsaved state, without repeated confirmation. Explain the concrete reason and preserve saved state; minimize restarts.
 - "i pamietaj ze teraz upgejdujemy otwarta sesje remote, nie cofamy sie juz do starych landscapów" — upgrade the **currently open Remote session in place**. Inspect its actual process/session, map, scene changes, loaded recipe and asset identities first. Do not restore an older Landscape, reload an older map, discard current work or reopen v0.3.1 as a normal deployment step. Historical accepted checkpoints are references and rollback evidence only; rollback must preserve the current pre-change state.
 - Gray simplified-object review is deliberately deferred to a joint owner session. It blocks only decisions depending on those regions, not unrelated CPU work, the first reviewed area or other qualified surfaces.
 - Review through Remote. Do not create separate review renders. Do not bypass a browser-policy rejection using alternate CDP/helper access. Missing visual access must remain explicit.
@@ -50,7 +50,7 @@ Owner authorization, 2026-10-13: "niech to trafi do remote 1:1 i do docsów, zac
 
 Native mesh guards currently cover 559 meshes and 2,911,650 triangle IDs per scan, twice for a completed placement. Batch one region's work before optimizing this control. Any localized verification must prove equivalent coverage and change detection; no weaker check or another proof framework.
 
-Preserve accepted Landscape, original Base_DTM, metric grid/CRS, canonical roads/physics and source masks. A local repair requires its own authorized issue, delta and rollback evidence. Runtime updates must preserve the current session's unsaved work. Current whole-area owner acceptance remains `PENDING_FINAL_M3`; performance remains `DEFERRED_AFTER_M3`, `performance_pass: false`.
+Preserve accepted Landscape, original Base_DTM, metric grid/CRS, canonical roads/physics and source masks. A local repair requires its own authorized issue, delta and rollback evidence. Prefer live updates that preserve unsaved work. Necessary restarts and forced closure are covered by the later explicit owner risk acceptance below; do not request the same approval again. Current whole-area owner acceptance remains `PENDING_FINAL_M3`; performance remains `DEFERRED_AFTER_M3`, `performance_pass: false`.
 
 ## Delivery evidence
 
@@ -106,7 +106,7 @@ six new region inspection/camera rollback cases. Ruff, diff whitespace,
 agent contracts and docs links/i18n/structure/freshness pass. The verbatim plan
 still hashes to its original digest above.
 
-**Native deployment blocker:** planning-base CyclingSim CI
+**Historical native deployment blocker (resolved below):** planning-base CyclingSim CI
 [38415446073](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38415446073)
 completed with failure in Unreal workspace cleanup:
 `Unreal workspace cleanup refused: status=LOCAL_BUSY. Local/unknown Editors and their logs are preserved.`
@@ -119,3 +119,61 @@ forge CI admission, run a parallel native proof or bypass the queue to execute
 this candidate. Source publication remains allowed; native region inspection,
 registered footprint, N05/N06 qualification, first group and saved/fresh proof
 remain pending the required host/proof window. No broader rollout is admitted.
+
+## Later owner restart authorization — 2026-10-13
+
+After source publication `8f5ec42d4a525cc986e53ce2f047ec6a61c0497f`, the owner
+explicitly authorized necessary restarts without repeated confirmation and then
+accepted possible loss of unsaved state for force-closing PID 38416. This
+supersedes the earlier no-stop instruction for necessary restarts within this
+approved implementation, including required CI windows. The owner subsequently
+reiterated that repeated undo/confirmation gates waste time. Do not re-request
+restart or unsaved-state-loss approval already granted. Minimize restarts and
+preserve the current saved world; this does not authorize historical terrain
+rollback or changes beyond approved scope.
+The offscreen Editor had no main window; `CloseMainWindow()` returned false.
+After explicit risk acceptance, its identity was rechecked and PID 38416 stopped.
+The current saved map was copied to
+`D:/yacs/work/pcg365/restart-20261013-8f5ec42d/L_RoadSurface.umap` and verified
+against `cf806999d73e6762ba6d91fab8b4e29d6c475a828ad9afcd525462054602ed1a`.
+This backs up saved state, not unsaved memory. CyclingSim CI run 38417151123
+was retried for the same source SHA. Blender was not retried. Restart must use
+the same current world package; no historical Landscape rollback is authorized.
+
+## Native inspection delivered — 2026-10-13
+
+CyclingSim CI [38417151123](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38417151123)
+completed successfully for exact source `8f5ec42d4a525cc986e53ce2f047ec6a61c0497f`.
+The same saved world restarted as session `20261013T152150Z-1f1c70ebd985`,
+PID 37932. Independent host status reports `LIVE_VIDEO_VERIFIED`, fresh
+heartbeat, verified process identity, native world and received browser frames.
+The installed host remains `f0588aa2cb8a9362cc7e524b54d80b60e478ed39`;
+the separately admitted recipe revision is `8f5ec42d4a525cc986e53ce2f047ec6a61c0497f`.
+
+Publisher run 38417135614 staged the CI-admitted immutable recipe, but its
+post-job verification failed during startup. Its workflow conclusion remains
+failure. After host readiness, the existing serialized sender delivered the
+staged recipe successfully; no alternate execution endpoint was introduced.
+
+Native session receipts under `runtime/sessions/20261013T152150Z-1f1c70ebd985/commands`
+at `D:/yacs/live-host`:
+
+- `000001-bdcbdb82cdd740c28fcf.result.json`, SHA-256
+  `53c9a0a6aa5cebaf904ef0b2e395fed71856150d664729319ff6d60838440649`:
+  `COMPLETED_VISUAL_ONLY`, `REGION_OBSERVED_NOT_REGISTERED`.
+- `000002-298e605ba7cf4e838778.result.json`, SHA-256
+  `b267c3c027fcb525755d0b506e30d633db8d3c26efb98acca0aab99081a23334`:
+  `COMPLETED_VISUAL_ONLY`, `REGION_CAMERA_READBACK_NOT_VISUAL_ACCEPTANCE`.
+
+All 26 samples hit the current Landscape, with native slopes from
+1.861075647 to 9.244494142 degrees. The witness hit is
+`[112950, 116450, 69153.74513427293]` cm, slope 5.877306200 degrees.
+Camera focus read back at `[113750, 117450, 69853.74513427293]` cm.
+Dirty package inventories stayed unchanged; no imported content or preview
+actors were present. The existing progress observer now follows this session.
+
+These receipts establish live inspection and camera placement, not a registered
+planting footprint, qualified rocks, contact placement, saved consumer or owner
+visual acceptance. The next bounded implementation remains the typed regional
+consumer and initial three-rock diagnostic using the existing contact controls.
+Draft #474 remains unmerged; performance admission remains false.
