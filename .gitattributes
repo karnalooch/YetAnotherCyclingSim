@@ -113,4 +113,4 @@ docs/experiments/sa-calobra-spatial-treatment-plan-20261013/*.json -text whitesp
 worldgen/live_host/window0067-regional-manifest.json text eol=lf
 
 # Preserve native MCP receipts for deterministic saved/fresh comparison.
-docs/experiments/sa-calobra-pcgex-mcp-20261013/*.json -text
+docs/experiments/sa-calobra-pcgex-mcp-20261013/*.json -text whitespace=cr-at-eol
