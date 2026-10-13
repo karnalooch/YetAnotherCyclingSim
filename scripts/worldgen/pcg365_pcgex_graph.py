@@ -744,7 +744,14 @@ def build_preview(input_path, expected_sha256, output_directory, stage, save_map
     roads = a.call(
         SCENE,
         "find_actors",
-        {"actor_type": ref("/Script/GeometryFramework.DynamicMeshActor")},
+        {
+            "root": None,
+            "name": "",
+            "actor_type": ref("/Script/GeometryFramework.DynamicMeshActor"),
+            "tag": "",
+            "bounds": None,
+            "collision_channels": [],
+        },
     )
     require(len(roads) == 559, "Expected current road/CUT inventory")
     all_instances = a.call(PCG, "ListGraphInstances", {})
