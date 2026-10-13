@@ -212,3 +212,26 @@ All 107 live-host tests pass. Thirteen regional CPU regressions cover boundaries
 bounds, pairwise overlap, finite values and tampered surface/source receipts.
 Native group placement, deterministic regeneration and saved/fresh proof remain
 pending execution of this candidate. This implementation is not owner acceptance.
+
+## Later owner correction — live iteration, not repeated native validation
+
+The owner explicitly requires changes in the already open Editor and rejects
+restarts/full native validation for each recipe iteration. Full CyclingSim CI
+run 38424708274 and the waiting publisher run 38424694288 were cancelled.
+Blender 38424707444 had already completed successfully; it was not rerun.
+The same saved world is starting in session `20261013T155106Z-5842c308675d`,
+PID 20060, with the installed host source unchanged. Do not repeat the native
+CI/restart cycle merely to publish another bounded preview recipe.
+
+The dedicated existing publisher now uses exact-source lightweight admission
+for memory-only rock recipes: strict typed request/catalog/empty asset scope,
+CPU contracts and immutable source digests, followed by native readback in the
+same live process. Full protected CI and final merge remain separate. This
+supersedes the earlier aggregate-CI-before-every-recipe instruction for this
+narrow path. No authoring or generic execution capability is added.
+
+An unpublished create-only derived-sublevel authoring candidate was retained
+under `D:/yacs/work/pcg365/regional-authoring-candidate-20261013` and removed
+from the active change. It needs a receiver upgrade; current work stays on live
+preview and deterministic same-session regeneration. Saved/fresh consumer proof
+is not claimed by that result and must not cause another normal-iteration reset.

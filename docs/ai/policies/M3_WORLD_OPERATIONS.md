@@ -2,6 +2,21 @@
 
 > Scoped policy migrated from original root AGENTS.md (blob `c4c75a9e92088195a7aad1c72c849ac9482d1462`). Read only for applicable work. Current domain SSOT and owner decisions take precedence over superseded chronology.
 
+### Later owner live-iteration decision — 2026-10-13
+
+The owner explicitly rejects restarting Unreal and repeating full native CI for
+ordinary recipe iteration. Update the already open Remote Editor in place.
+The existing typed `preview` publication path uses exact-source lightweight CPU
+admission for `rock_contact_scatter` and `rock_asset_audit`, with empty disk asset
+scope, immutable source hashes and native readback in the current session. It
+must not wait for a full native rebuild or stop UE to obtain that proof window.
+Full protected delivery/merge proof remains separate; a live preview never
+establishes saved/fresh acceptance or production admission. Authoring, receiver
+upgrades and native C++ changes are outside this narrow live-preview path.
+This later decision supersedes earlier full-CI-before-every-recipe wording and
+restart-window interpretation below. Necessary-restart authorization persists,
+but it is not a request to restart during normal live iteration.
+
 ### Current Remote in-place upgrade and restart restraint — 2026-10-13
 
 The owner explicitly requires upgrading the **currently open Remote session** and minimizing Unreal restarts. Inspect current process/session, loaded map, recipe/assets and unsaved scene state before changing anything. Use verified supported live-update mechanisms and batch work. Do not discard unsaved work, switch to an older Landscape, reopen a historical checkpoint or stop the Editor to obtain runner access. Historical accepted checkpoints remain source/rollback evidence, not the default deployment destination. A genuinely necessary restart must be explained beforehand and preserve the current pre-change state under existing ownership/approval rules. No automatic restart loops.

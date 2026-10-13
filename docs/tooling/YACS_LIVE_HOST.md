@@ -156,7 +156,7 @@ and post-job survival still need independent proof.
 
 The owner authorized access to as many Unreal editing capabilities as actually supported. The [typed protocol](../../scripts/live_host/protocol.py) and [per-frame command loop](../../scripts/live_host/live_requests.py) accept only session/source/replay-authenticated requests, with bounded inputs, immutable receipts and native readback. This avoids a general Python console, remote shell or open MCP endpoint.
 
-The **extensible** `run_recipe` operation loads only source-hashed and exact-commit-pinned Python recipes staged from the owner-controlled GitHub repository **after protected CI**. The [publisher](../../scripts/live_host/Publish-YacsLiveRecipe.ps1) binds trusted source blob, reviewed catalog, capabilities, parameters, asset scope and intended preview/author status; the [sender](../../scripts/live_host/Send-YacsLiveHostCommand.ps1) submits one serialized request. [Dedicated owner workflow](../../.github/workflows/yacs-live-command.yml) consumes only the code-reviewed typed request in `worldgen/live_host/current_command.json`, never a browser-provided code string.
+The **extensible** `run_recipe` operation loads only source-hashed and exact-commit-pinned Python recipes staged from the owner-controlled GitHub repository after exact-source admission. The later 2026-10-13 owner decision uses focused CPU admission for the two bounded, memory-only rock preview recipes; ordinary live iterations do not wait for native rebuilds or restart the Editor. Full protected delivery and merge proof remain separate. The [publisher](../../scripts/live_host/Publish-YacsLiveRecipe.ps1) binds trusted source blob, reviewed catalog, capabilities, parameters, asset scope and intended preview/author status; the [sender](../../scripts/live_host/Send-YacsLiveHostCommand.ps1) submits one serialized request. [Dedicated owner workflow](../../.github/workflows/yacs-live-command.yml) consumes only the code-reviewed typed request in `worldgen/live_host/current_command.json`, never a browser-provided code string.
 
 Initial implemented recipe source categories are actor transforms, actor visibility, light intensity and material scalar previews. They run in memory, request native readback and **do not save** accepted map/source packages. These are candidates until tested inside a real native Editor.
 
@@ -467,3 +467,15 @@ must stay within its bounds and remain separated from each other; all existing
 native geometry scans and contact limits still apply. This uses existing
 `plant`, `status` and `clear` operations with the independently authenticated
 regional digest. It does not add a general placement endpoint or package save.
+
+### Owner-requested live iteration without native rebuilds — 2026-10-13
+
+The dedicated recipe workflow admits only the exact pushed source, typed
+`preview` request, two existing rock recipe IDs and an empty saved-asset scope.
+It runs the Live Host CPU contract suite and keeps immutable recipe publication,
+source/catalog digests, serialized queue and current-session native readback.
+It no longer waits for aggregate CyclingSim CI before a memory-only preview.
+The publisher's `ci_admitted` receipt refers to this focused exact-source job;
+it does not claim aggregate/native CI success. `author` requests are rejected
+by this path. Host installation, native code and final protected merge still
+have their existing proof requirements. No per-recipe restart is required.

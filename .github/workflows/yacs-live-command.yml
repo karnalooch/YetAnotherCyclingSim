@@ -10,39 +10,61 @@ permissions:
 
 jobs:
   await_ci:
-    name: Check exact GitHub source before any live Unreal modification
+    name: Admit exact-source live preview without native rebuild
     if: >-
       github.event_name == 'push' &&
       github.actor == github.repository_owner &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       contains(github.event.head_commit.message, '[yacs-live-command]')
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 10
     steps:
-      - name: Wait for protected CI of this exact source
+      - name: Checkout exact live-preview source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Validate bounded preview request and exact source
         shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          for attempt in $(seq 1 90); do
-            all=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?event=pull_request&head_sha=${GITHUB_SHA}&per_page=50")
-            row=$(jq -r --arg sha "$GITHUB_SHA" '
-              [.workflow_runs[] | select(.name == "CyclingSim CI" and .head_sha == $sha)]
-              | sort_by(.created_at) | last
-              | if . == null then "" else "\(.id)|\(.status)|\(.conclusion // "pending")" end
-            ' <<< "$all")
-            if [[ -n "$row" ]]; then
-              IFS='|' read -r id state result <<< "$row"
-              if [[ "$state" == completed ]]; then
-                if [[ "$result" == success ]]; then exit 0; fi
-                echo "::error::Exact-head CI $id failed ($result), code not admitted"
-                exit 1
-              fi
-            fi
-            sleep 20
-          done
-          echo "::error::No protected CI for recipe source"; exit 1
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.live_host.editor_recipes import verify_parameters
+
+          path = Path("worldgen/live_host/current_command.json")
+          if path.is_symlink() or not 0 < path.stat().st_size <= 4096:
+              raise ValueError("Unsafe typed request file")
+          request = json.loads(path.read_text(encoding="utf-8"))
+          if set(request) != {"schema_version", "target_issue", "recipe", "intent", "parameters"}:
+              raise ValueError("Typed request schema differs")
+          if (type(request["schema_version"]) is not int or request["schema_version"] != 1
+                  or type(request["target_issue"]) is not int or request["target_issue"] != 476
+                  or request["intent"] != "preview"
+                  or request["recipe"] not in {"rock_contact_scatter", "rock_asset_audit"}):
+              raise ValueError("Focused admission allows only bounded live previews; authoring requires separate full proof")
+          catalog = json.loads(Path("scripts/live_host/recipes/catalog.json").read_text(encoding="utf-8"))
+          if catalog["schema_version"] != 1 or catalog["review_issue"] != 476 or catalog["policy"] != "SOURCE_REVIEWED_RECIPES_ONLY":
+              raise ValueError("Reviewed recipe catalog differs")
+          rows = [row for row in catalog["recipes"] if row["id"] == request["recipe"]]
+          if len(rows) != 1 or rows[0]["intents"] != ["preview"] or rows[0]["asset_scope"] != []:
+              raise ValueError("Live preview must have no saved asset scope")
+          verify_parameters(rows[0]["parameters"], request["parameters"])
+          source = Path("scripts/live_host/recipes") / (request["recipe"] + ".py")
+          if source.is_symlink() or not 0 < source.stat().st_size <= 512 * 1024:
+              raise ValueError("Unsafe reviewed recipe source")
+          print("Exact-source bounded preview admitted; native runtime readback remains required")
+          PY
+      - name: Run Live Host CPU contract tests
+        run: python -m unittest discover -s scripts/live_host -p 'test_*.py' -q
 
   request:
     name: Stage one versioned trusted code recipe in the already open Editor
