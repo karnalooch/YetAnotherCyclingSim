@@ -406,7 +406,7 @@ typed recipe request with `palette=red`; do not restart/snapshot the map.
 
 Issue #476 adds a read-only progress card to the existing Remote page. The
 repository-owned `scripts/live_host/remote-progress.js` polls a sanitized
-same-origin `yacs-progress.json`; it never sends browser commands to Unreal.
+same-origin `yacs-progress.data.js`; it never sends browser commands to Unreal.
 `Install-YacsLiveProgress.ps1 -ExpectedHead <sha> -Apply` requires a clean
 commit and successful exact-head CyclingSim CI. It preserves the original
 Pixel Streaming `player.html` by SHA256, installs a versioned additive script
@@ -432,3 +432,12 @@ rejections. Missing updates older than 35 seconds hide the moving bar and show
 stale data. The display never equates diagnostic completion with production
 qualification, performance or owner visual acceptance. Host CI and native
 ownership rules still apply; adding the web overlay itself requires no UE restart.
+
+
+The installed UE 5.8 WebSocketNetworking server uses libwebsockets file mounts,
+not the Node signalling server. Native HTTP testing found `.json` returns 404
+and retains a file handle, preventing atomic replacement on Windows. The data
+file therefore uses the supported `.js` transport suffix but contains **JSON
+only**: it is fetched and parsed with `response.json()`, never loaded as a script
+or evaluated. A native two-version probe served and replaced this payload with
+HTTP 200 both times. This requires no new server or execution endpoint.

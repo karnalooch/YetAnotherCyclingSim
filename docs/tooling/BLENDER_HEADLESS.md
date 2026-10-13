@@ -128,3 +128,13 @@ accepted-map state and Unreal assets were not changed.
 The workflow refuses to run while a local Unreal Editor owns the shared host.
 A PASS is evidence for human material review, not Unreal integration or
 performance admission.
+
+
+### Bounded coarse rock envelopes
+
+For #365 source-derived rocks, `build_pcg365_source_envelope.py` accepts
+`--grid 33`, `--grid 49` or the unchanged default `--grid 129`. Lower grids
+reduce generated geometry; they preserve source hashes, topology checks,
+recorded grid and sampled source-error measurements. They do not preserve
+source UVs/overhangs or qualify native contact. See the
+[source/support continuation](../assets/pcg365-source-support-remote-20261013/README.md).

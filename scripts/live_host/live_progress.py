@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 OUTPUT = Path(
-    r"D:\yacs\engine\UE_5.8\Engine\Plugins\Media\PixelStreaming2\Resources\WebServers\SignallingWebServer\www\yacs-progress.json"
+    r"D:\yacs\engine\UE_5.8\Engine\Plugins\Media\PixelStreaming2\Resources\WebServers\SignallingWebServer\www\yacs-progress.data.js"
 )
 
 
@@ -92,7 +92,7 @@ def project(receipt, request, session, revision, manifest):
 def atomic_write(data):
     if any(p.is_symlink() or p.is_junction() for p in (OUTPUT, *OUTPUT.parents)):
         raise ValueError("Unexpected linked output")
-    temp = OUTPUT.with_name("yacs-progress.json.tmp")
+    temp = OUTPUT.with_name("yacs-progress.data.js.tmp")
     if temp.is_symlink():
         raise ValueError("Unexpected linked temporary output")
     temp.write_text(json.dumps(data, ensure_ascii=True), encoding="utf-8")

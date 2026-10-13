@@ -352,6 +352,62 @@
       "original_sha256": "557f75cd4a570293ff29e90a1ad182f6c92da0b69071266577ef7f28257b47c3",
       "compressed_bytes": 1697,
       "compressed_sha256": "4e614f75e9f8b9a5ffb62815dbd3892b0dbbfe000ca4ac2c1a1fb38a0e6fcf4d"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\coarse-rocks33-01\\host-receipt.json",
+      "copy": "evidence/coarse-source-candidates/coarse-rocks33-01/host-receipt.json.gz",
+      "original_bytes": 604,
+      "original_sha256": "9aecebb30bb69139648b21c92cc16393a85d3f6e49a6648fcece2e212844689b",
+      "compressed_bytes": 362,
+      "compressed_sha256": "e95b12afef5a4202ccb73d12f4f7bf5923a76e9b1585b9e2cb40822fc950b211"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\coarse-rocks33-01\\output\\rock-collection-catalog.json",
+      "copy": "evidence/coarse-source-candidates/coarse-rocks33-01/output/rock-collection-catalog.json.gz",
+      "original_bytes": 12446,
+      "original_sha256": "020cb69e84981fba7ba729d422c04f1aadb0a3621ce6e93eda2856d273071e32",
+      "compressed_bytes": 2781,
+      "compressed_sha256": "b53911ed315f7d414c9f9041aaf57df7538dd3f3624201211743c11a24693961"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\coarse-rocks49-01\\host-receipt.json",
+      "copy": "evidence/coarse-source-candidates/coarse-rocks49-01/host-receipt.json.gz",
+      "original_bytes": 604,
+      "original_sha256": "7d0428a17f62e6aac8dc723b7d982474e775635bc6f0c06e1d5edb28a8f92a3c",
+      "compressed_bytes": 363,
+      "compressed_sha256": "84c73a0bb593136196ae451f457e6a1e9837bd8ca4aaf79d38d78f96167b93a1"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\coarse-rocks49-01\\output\\rock-collection-catalog.json",
+      "copy": "evidence/coarse-source-candidates/coarse-rocks49-01/output/rock-collection-catalog.json.gz",
+      "original_bytes": 12465,
+      "original_sha256": "6f5a58eb53b8127e0c1c498ee6c192b2f769a7650b51824a0589cfcb3fb66526",
+      "compressed_bytes": 2802,
+      "compressed_sha256": "595c4f3537443e0fd4435eebffcb7947830f9b49f81fd848cb8e7343cef6de30"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\coarse-rocks4-catalog.json",
+      "copy": "evidence/coarse-source-candidates/coarse-rocks4-catalog.json.gz",
+      "original_bytes": 24894,
+      "original_sha256": "b09622a2322bbee2d80e70131285c750cdd9dcbc77197227bf862194826aa781",
+      "compressed_bytes": 4142,
+      "compressed_sha256": "e90220cce99e7db3adb940c15038659b3b53b3f957419fb0d5e4800d39800d05"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\remote-rock-coarse4-preview01\\preview-manifest.json",
+      "copy": "evidence/coarse-source-candidates/remote-rock-coarse4-preview01/preview-manifest.json.gz",
+      "original_bytes": 9504,
+      "original_sha256": "2981ce1f35f60a4cd1bf9d8abd424b52b2e82241731eedd2946d482aba13bb4f",
+      "compressed_bytes": 2091,
+      "compressed_sha256": "70439fec6102eca63d7c73b46fcfb7d331604fbd94d35d2ac639110c3aa6cef6"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\remote-rock-coarse4-preview01\\preparation-receipt.json",
+      "copy": "evidence/coarse-source-candidates/remote-rock-coarse4-preview01/preparation-receipt.json.gz",
+      "original_bytes": 15955,
+      "original_sha256": "5a17daf9a06d95ff8017b0b67dc3dcd5fb31328d046bb89f5bf8f09a442a99e6",
+      "compressed_bytes": 1165,
+      "compressed_sha256": "6e4b34862ce6bdeaab18998a74400200100fd976782897f655b9432bdcf96ff5"
     }
   ],
   "remote_world_execution": {

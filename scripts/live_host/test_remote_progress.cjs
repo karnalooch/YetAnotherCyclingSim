@@ -11,7 +11,7 @@ async function draw(data) {
   let fetches=0;
   const context = {
     document:{getElementById:()=>null,createElement:()=>host,body:{appendChild(){}}},
-    fetch:async(url, options)=>{assert.equal(url,'/yacs-progress.json');assert.equal(options.cache,'no-store');fetches++;return {ok:true,json:async()=>data};},
+    fetch:async(url, options)=>{assert.equal(url,'/yacs-progress.data.js');assert.equal(options.cache,'no-store');fetches++;return {ok:true,json:async()=>data};},
     AbortSignal, Date, setTimeout(){},setInterval(){}
   };
   vm.runInNewContext(script,context);

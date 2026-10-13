@@ -329,15 +329,21 @@ def produce(row, output, grid, repair, base, natural):
         repair.require(repair.sha(source) == row["sha256"], "Source changed")
 
 
-def main():
-    import bpy
-
+def parse_arguments(argv):
+    """Parse bounded source sampling options without loading Blender."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--catalog", type=Path, required=True)
     parser.add_argument("--expected-catalog-sha256", required=True)
     parser.add_argument("--output-directory", type=Path, required=True)
     parser.add_argument("--asset", action="append")
-    args = parser.parse_args(sys.argv[sys.argv.index("--") + 1 :])
+    parser.add_argument("--grid", type=int, choices=(33, 49, 129), default=129)
+    return parser.parse_args(argv)
+
+
+def main():
+    import bpy
+
+    args = parse_arguments(sys.argv[sys.argv.index("--") + 1 :])
     repair = module("repair_pcg365_natural_rock_support")
     repair.require(
         bpy.app.background and bpy.app.version == (4, 5, 9),
@@ -371,7 +377,7 @@ def main():
     results, rejected = [], []
     for row in rows:
         try:
-            result = produce(row, derived, 129, repair, base, natural)
+            result = produce(row, derived, args.grid, repair, base, natural)
             results.append(result)
             print(
                 json.dumps(
@@ -394,6 +400,7 @@ def main():
         "variants": results,
         "rejected": rejected,
         "requested_assets": len(rows),
+        "requested_grid": args.grid,
         "placement": False,
         "qualified_assets": [],
         "parent_catalog_sha256": args.expected_catalog_sha256,

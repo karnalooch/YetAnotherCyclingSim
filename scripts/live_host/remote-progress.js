@@ -61,7 +61,7 @@
   }
   async function poll() {
     try {
-      const response = await fetch('/yacs-progress.json', {cache:'no-store', signal:AbortSignal.timeout(4000)});
+      const response = await fetch('/yacs-progress.data.js', {cache:'no-store', signal:AbortSignal.timeout(4000)});
       if (!response.ok) throw new Error('Unavailable');
       const data = await response.json();
       if (data.schema_version !== 1 || typeof data.observed_utc !== 'string') throw new Error('Invalid progress');
