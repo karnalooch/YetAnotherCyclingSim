@@ -25,6 +25,25 @@ class Hit:
         return tuple(self.fields)
 
 
+class FakeMeshDelegate:
+    def __init__(self):
+        self.callbacks = []
+
+    def add_callable(self, callback):
+        self.callbacks.append(callback)
+
+    def remove_callable(self, callback):
+        if callback in self.callbacks:
+            self.callbacks.remove(callback)
+
+    def contains_callable(self, callback):
+        return callback in self.callbacks
+
+    def emit(self, mesh):
+        for callback in list(self.callbacks):
+            callback(mesh)
+
+
 class RockRemoteGuards(unittest.TestCase):
     def test_full_radius_with_fixed_clearance(self):
         xy = [181600, 189600]
@@ -357,6 +376,39 @@ class IncrementalContact(unittest.TestCase):
             self.assertTrue(status["rollback_complete"])
             self.assertTrue(callbacks["unregistered"])
 
+    def test_synchronous_native_guard_failure_returns_status_and_preserves_clear(self):
+        api, context, data, result, callbacks = self.setup_job()
+        context.update(intent="preview", asset_scope=())
+        with (
+            patch.object(m, "read_manifest", return_value=data),
+            patch.object(m, "verify_footprints", return_value={}),
+            patch.object(m, "load_helpers", return_value=(None, None)),
+            patch.object(m, "load_materials", return_value={}),
+            patch.object(
+                m,
+                "start_contact_job",
+                side_effect=AttributeError("native guard API unavailable"),
+            ),
+        ):
+            failed = m.run(
+                api, context, {"operation": "plant", "manifest_sha256": "a" * 64}
+            )
+        self.assertEqual(failed["operation_status"], "FAILED_NATIVE_GUARD_NO_PLACEMENT")
+        self.assertFalse(failed["native_contact_executed"])
+        self.assertEqual(failed["preview_placed"], 0)
+        self.assertEqual(
+            m.run(api, context, {"operation": "status", "manifest_sha256": "stale"})[
+                "operation_status"
+            ],
+            "FAILED_NATIVE_GUARD_NO_PLACEMENT",
+        )
+        self.assertEqual(
+            m.run(api, context, {"operation": "clear", "manifest_sha256": "stale"})[
+                "preview_placed"
+            ],
+            0,
+        )
+
     def test_preflight_rejection_returns_without_poisoning_receiver(self):
         api, context, data, result, callbacks = self.setup_job()
         context.update(intent="preview", asset_scope=())
@@ -403,6 +455,13 @@ class NativeRoadExclusion(unittest.TestCase):
 
         class Mesh:
             positions = [(1000, 1000, 0), (1010, 1000, 0), (1000, 1010, 0)]
+
+            def get_editor_property(self, name):
+                if name != "mesh_modified_bp_event":
+                    raise AttributeError(name)
+                if not hasattr(self, "delegate"):
+                    self.delegate = FakeMeshDelegate()
+                return self.delegate
 
             def get_triangle_count(self):
                 return 1
@@ -592,6 +651,100 @@ class NativeRoadExclusion(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "actor class"):
             m.native_geometry_inventory(api, None, data["_expected_labels"])
+
+    def guarded_job(self, api, data):
+        job = {
+            "_expected_native_labels": data["_expected_labels"],
+            "operation_status": "CONTACT_JOB_RUNNING",
+        }
+        self.consume(m.bind_native_mesh_guards_steps(api, None, job))
+        self.addCleanup(m.cleanup_native_mesh_guards, job)
+        return job
+
+    def test_late_transform_change_after_earlier_final_scan_actor_rejects(self):
+        api, actors, data, bounds = self.fixture()
+        job = self.guarded_job(api, data)
+        _, (snapshot, _) = self.consume(
+            m.native_road_exclusion_steps(api, None, data, bounds, job)
+        )
+        final = m.native_road_exclusion_steps(
+            api, None, data, bounds, job, previous=snapshot
+        )
+        next(final)
+        next(final)
+        earlier = next(a for a in actors if a.label == "CONTEXT_000")
+        earlier.component.transform.offset = (-1000, -1000, 0)
+        with self.assertRaisesRegex(ValueError, "Previously scanned"):
+            self.consume(final)
+
+    def test_late_same_count_vertex_edit_event_rejects_final_scan(self):
+        api, actors, data, bounds = self.fixture()
+        job = self.guarded_job(api, data)
+        _, (snapshot, _) = self.consume(
+            m.native_road_exclusion_steps(api, None, data, bounds, job)
+        )
+        final = m.native_road_exclusion_steps(
+            api, None, data, bounds, job, previous=snapshot
+        )
+        next(final)
+        next(final)
+        earlier = next(a for a in actors if a.label == "CONTEXT_000")
+        mesh = earlier.component.mesh
+        mesh.positions = [(-100, 0, 0), (100, 0, 0), (100, 1, 0)]
+        mesh.get_editor_property("mesh_modified_bp_event").emit(mesh)
+        self.assertTrue(job["native_mesh_dirty"])
+        with self.assertRaisesRegex(ValueError, "modified"):
+            self.consume(final)
+
+    def test_binding_rejected_schema_cleans_partial_native_subscriptions(self):
+        api, actors, data, bounds = self.fixture()
+        ordered = sorted(actors, key=lambda a: a.label)
+        ordered[1].component.mesh.get_editor_property = lambda name: object()
+        job = {
+            "_expected_native_labels": data["_expected_labels"],
+            "operation_status": "CONTACT_JOB_RUNNING",
+        }
+        with self.assertRaisesRegex(ValueError, "delegate schema"):
+            self.consume(m.bind_native_mesh_guards_steps(api, None, job))
+        first = ordered[0].component.mesh.get_editor_property("mesh_modified_bp_event")
+        self.assertEqual(len(first.callbacks), 1)
+        self.assertTrue(m.cleanup_native_mesh_guards(job))
+        self.assertEqual(first.callbacks, [])
+
+    def test_guard_cleanup_removes_only_owned_callable_and_can_retry_failure(self):
+        api, actors, data, bounds = self.fixture()
+        job = self.guarded_job(api, data)
+        delegate = actors[0].component.mesh.get_editor_property(
+            "mesh_modified_bp_event"
+        )
+
+        def foreign(mesh):
+            return None
+
+        delegate.add_callable(foreign)
+        self.assertTrue(m.cleanup_native_mesh_guards(job))
+        self.assertEqual(delegate.callbacks, [foreign])
+        job = self.guarded_job(api, data)
+        delegate = actors[0].component.mesh.get_editor_property(
+            "mesh_modified_bp_event"
+        )
+        original = delegate.remove_callable
+        delegate.remove_callable = lambda cb: (_ for _ in ()).throw(
+            RuntimeError("native remove unavailable")
+        )
+        self.assertFalse(m.cleanup_native_mesh_guards(job))
+        self.assertEqual(len(job["_mesh_edit_bindings"]), 1)
+        delegate.remove_callable = original
+        self.assertTrue(m.cleanup_native_mesh_guards(job))
+        self.assertEqual(delegate.callbacks, [foreign])
+
+    def test_disconnected_guard_is_not_silently_accepted(self):
+        api, actors, data, bounds = self.fixture()
+        job = self.guarded_job(api, data)
+        mesh, delegate, callback, path = job["_mesh_edit_bindings"][0]
+        delegate.remove_callable(callback)
+        with self.assertRaisesRegex(ValueError, "disconnected"):
+            m.assert_native_mesh_guards(job)
 
     def test_actual_native_radius_consumes_mask_clearance(self):
         data = {

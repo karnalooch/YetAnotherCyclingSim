@@ -698,6 +698,116 @@ def stop_job_callback(unreal, job):
         return False
 
 
+def cleanup_native_mesh_guards(job):
+    failed = []
+    for mesh, delegate, callback, path in job.get("_mesh_edit_bindings", []):
+        try:
+            delegate.remove_callable(callback)
+            need(
+                delegate.contains_callable(callback) is False,
+                "Native mesh delegate remains bound",
+            )
+        except Exception as exc:
+            failed.append((mesh, delegate, callback, path))
+            job["mesh_edit_guard_cleanup_error"] = (
+                type(exc).__name__ + ": " + str(exc)[:256]
+            )
+    job["_mesh_edit_bindings"] = failed
+    job["mesh_edit_guard_cleanup_complete"] = not failed
+    return not failed
+
+
+def bind_native_mesh_guards_steps(unreal, world, job):
+    job["phase"] = "BIND_CURRENT_NATIVE_MESH_CHANGE_GUARDS"
+    job["native_mesh_dirty"] = False
+    job["native_mesh_dirty_owners"] = []
+    job["_mesh_edit_bindings"] = []
+    job["mesh_edit_guard_bound_meshes"] = 0
+    for actor in native_geometry_inventory(
+        unreal, world, job["_expected_native_labels"]
+    ):
+        mesh = actor.get_dynamic_mesh_component().get_dynamic_mesh()
+        need(mesh is not None, "Native mesh absent before mutation guard binding")
+        delegate = mesh.get_editor_property("mesh_modified_bp_event")
+        need(
+            all(
+                callable(getattr(delegate, name, None))
+                for name in ("add_callable", "remove_callable", "contains_callable")
+            ),
+            "Native MeshModifiedBPEvent delegate schema unavailable",
+        )
+        path = actor.get_path_name()
+
+        def make_callback(expected_mesh, owner):
+            def modified(modified_mesh):
+                if job.get("operation_status") == "CONTACT_JOB_RUNNING":
+                    job["native_mesh_dirty"] = True
+                    if len(job["native_mesh_dirty_owners"]) < 20:
+                        job["native_mesh_dirty_owners"].append(
+                            owner
+                            if modified_mesh == expected_mesh
+                            else owner + ":unexpected_event_owner"
+                        )
+
+            return modified
+
+        callback = make_callback(mesh, path)
+        # Retain exact callable identity even if native add partially fails.
+        job["_mesh_edit_bindings"].append((mesh, delegate, callback, path))
+        delegate.add_callable(callback)
+        need(
+            delegate.contains_callable(callback) is True,
+            "Native mesh modification callback not actually bound",
+        )
+        job["mesh_edit_guard_bound_meshes"] += 1
+        yield {"grid": None, "native_guard_binding": True}
+    need(
+        job["mesh_edit_guard_bound_meshes"] == 559,
+        "Not all559native mesh change guards bound",
+    )
+
+
+def assert_native_mesh_guards(job):
+    need(
+        job.get("native_mesh_dirty") is not True,
+        "Native geometry emitted MeshModified during qualification",
+    )
+    bindings = job.get("_mesh_edit_bindings")
+    need(
+        bindings is not None and len(bindings) == 559,
+        "Complete native geometry mutation guard missing",
+    )
+    for mesh, delegate, callback, path in bindings:
+        need(
+            delegate.contains_callable(callback) is True,
+            "Native mesh modification guard disconnected",
+        )
+    need(
+        job.get("native_mesh_dirty") is not True,
+        "Native geometry emitted MeshModified during guard verification",
+    )
+
+
+def assert_native_snapshot_metadata(unreal, world, job, snapshot):
+    """Synchronous full collective metadata check, no Slate yield before commit."""
+    need(
+        job.get("native_mesh_dirty") is not True,
+        "Native geometry changed during qualification",
+    )
+    actors = native_geometry_inventory(unreal, world, job["_expected_native_labels"])
+    need(len(snapshot) == len(actors), "Native snapshot owner count changed")
+    for actor, expected in zip(actors, snapshot):
+        metadata, mesh = native_component_snapshot(unreal, actor)
+        need(
+            metadata == expected["metadata"],
+            "Previously scanned native metadata/transform changed",
+        )
+    need(
+        job.get("native_mesh_dirty") is not True,
+        "Native geometry changed during final metadata verification",
+    )
+
+
 def rollback_job(unreal, live, editor, job, status, reason=None):
     # Make an unregister failure inert before attempting any native cleanup.
     job["operation_status"] = status
@@ -718,7 +828,8 @@ def rollback_job(unreal, live, editor, job, status, reason=None):
         except Exception:
             failed.append(actor)
     live._pcg365_remote_actors = failed
-    complete = not failed and callback_stopped and generator_closed
+    guards_cleaned = cleanup_native_mesh_guards(job)
+    complete = not failed and callback_stopped and generator_closed and guards_cleaned
     job["operation_status"] = status if complete else "CONTACT_JOB_ROLLBACK_INCOMPLETE"
     job["preview_placed"] = len(failed)
     job["rollback_complete"] = complete
@@ -727,6 +838,10 @@ def rollback_job(unreal, live, editor, job, status, reason=None):
 
 
 def validate_job_world(unreal, live, world, ground, meshes, materials, data, job):
+    need(
+        job.get("native_mesh_dirty") is not True,
+        "Native mesh modification observed; qualification cancelled",
+    )
     current = unreal.get_editor_subsystem(
         unreal.UnrealEditorSubsystem
     ).get_editor_world()
@@ -930,6 +1045,10 @@ def native_road_exclusion_steps(unreal, world, data, native_bounds, job, previou
     docs say it misses triangles crossing a box without any vertices inside.
     Native triangle IDs/world coordinates are streamed and hashed, not retained.
     """
+    need(
+        job.get("native_mesh_dirty") is not True,
+        "Native mesh modified before triangle scan",
+    )
     actors = native_geometry_inventory(unreal, world, job["_expected_native_labels"])
     squares = {}
     for row in data["placements"]:
@@ -1012,6 +1131,10 @@ def native_road_exclusion_steps(unreal, world, data, native_bounds, job, previou
                             witness_triangle_id=tid,
                             witness_world_triangle_cm=triangle,
                         )
+            need(
+                job.get("native_mesh_dirty") is not True,
+                "Native mesh modified during triangle scan",
+            )
             yield {"grid": None, "phase": job["phase"], "native_triangle_id": True}
         need(
             valid == metadata["triangle_count"],
@@ -1042,6 +1165,7 @@ def native_road_exclusion_steps(unreal, world, data, native_bounds, job, previou
         == [a.get_path_name() for a in actors],
         "Native geometry inventory changed during snapshot",
     )
+    assert_native_snapshot_metadata(unreal, world, job, snapshots)
     if previous is not None:
         need(
             snapshots == previous,
@@ -1149,6 +1273,10 @@ def planting_steps(
         "Exclusion bytes changed during contact job",
     )
     load_materials(unreal, context, data)
+    # Last synchronous collective check follows all long hashes/native reads.
+    # No Slate yield exists between these checks and the final location setters.
+    assert_native_snapshot_metadata(unreal, world, job, snapshot)
+    assert_native_mesh_guards(job)
     job["phase"] = "APPLY_VERIFIED_DIAGNOSTIC_LOCATIONS"
     for actor, expected_actor, case, location in pending_placements:
         actor.set_actor_location(unreal.Vector(*location), False, False)
@@ -1162,6 +1290,34 @@ def planting_steps(
         expected_actor[1] = vec(actor.get_actor_location())
         case["location_cm"] = location
         job["preview_placed"] += 1
+    if pending_placements:
+        _, expected_actor, _, location = pending_placements[0]
+        asset_id = expected_actor[2]
+        bounds = job["_native_bounds"][asset_id]
+        center = [location[i] + bounds["origin"][i] for i in range(3)]
+        radius = max(
+            20.0,
+            math.hypot(
+                abs(bounds["origin"][0]) + bounds["extent"][0],
+                abs(bounds["origin"][1]) + bounds["extent"][1],
+            ),
+        )
+        eye = unreal.Vector(
+            center[0] - 4 * radius, center[1] - 4 * radius, center[2] + 3 * radius
+        )
+        angle = unreal.MathLibrary.find_look_at_rotation(eye, unreal.Vector(*center))
+        viewport = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
+        viewport.set_level_viewport_camera_info(eye, angle)
+        observed = viewport.get_level_viewport_camera_info()
+        need(
+            observed is not None and (observed[0] - eye).length() <= 1.0,
+            "Native diagnostic review camera readback differs",
+        )
+        job["review_camera"] = {
+            "location_cm": vec(observed[0]),
+            "target_cm": center,
+            "map_saved": False,
+        }
     job["phase"] = "COMPLETED"
     job["operation_status"] = "CONTACT_JOB_COMPLETED_SAMPLED_ONLY"
     job["active_site"] = None
@@ -1204,6 +1360,11 @@ def start_contact_job(
         "_expected_native_labels": expected_native_labels,
         "phase": "STARTED_PENDING_CURRENT_NATIVE_EXCLUSIONS",
         "native_geometry_triangle_ids_read": 0,
+        "native_guard_bindings_processed": 0,
+        "native_mesh_dirty": False,
+        "_mesh_edit_bindings": [],
+        "atomic_native_geometry_guarantee": False,
+        "mutation_guard_scope": "MeshModifiedBPEvent plus synchronous final owner/transform metadata; direct/deferred/realtime native bypass not proven observable; exclusive quiescent Editor required",
     }
     live._pcg365_remote_actors = []
     live._pcg365_remote_job = job
@@ -1225,6 +1386,8 @@ def start_contact_job(
                 update = next(generator)
                 if update.get("native_triangle_id"):
                     job["native_geometry_triangle_ids_read"] += 1
+                elif update.get("native_guard_binding"):
+                    job["native_guard_bindings_processed"] += 1
                 else:
                     job["sampled_positions"] += 1
                     contact_positions += 1
@@ -1233,8 +1396,9 @@ def start_contact_job(
                     break
         except StopIteration:
             stopped = stop_job_callback(unreal, job)
+            guards_cleaned = cleanup_native_mesh_guards(job)
             job.pop("_generator", None)
-            if not stopped:
+            if not stopped or not guards_cleaned:
                 job["operation_status"] = (
                     "CONTACT_JOB_COMPLETED_CALLBACK_CLEANUP_REQUIRED"
                 )
@@ -1244,7 +1408,12 @@ def start_contact_job(
                 live,
                 editor,
                 job,
-                "CONTACT_JOB_FAILED_ROLLED_BACK",
+                (
+                    "FAILED_NATIVE_GUARD_NO_PLACEMENT"
+                    if job.get("phase") == "BIND_CURRENT_NATIVE_MESH_CHANGE_GUARDS"
+                    and not getattr(live, "_pcg365_remote_actors", [])
+                    else "CONTACT_JOB_FAILED_ROLLED_BACK"
+                ),
                 type(exc).__name__ + ": " + str(exc),
             )
 
@@ -1409,13 +1578,39 @@ def run(unreal, context, parameters):
         read_manifest(parameters["manifest_sha256"])
         load_materials(unreal, context, data)
         return {k: v for k, v in result.items() if not k.startswith("_")}
-    return start_contact_job(
-        unreal,
-        {**context, "_pcg365_manifest_sha256": parameters["manifest_sha256"]},
-        data,
-        meshes,
-        materials,
-        result,
-        policy,
-        support,
-    )
+    try:
+        return start_contact_job(
+            unreal,
+            {**context, "_pcg365_manifest_sha256": parameters["manifest_sha256"]},
+            data,
+            meshes,
+            materials,
+            result,
+            policy,
+            support,
+        )
+    except Exception as exc:
+        job = getattr(live, "_pcg365_remote_job", None)
+        if job is not None and (
+            job.get("operation_status") == "CONTACT_JOB_RUNNING"
+            or job.get("_mesh_edit_bindings")
+            or "_tick" in job
+        ):
+            rollback_job(
+                unreal,
+                live,
+                editor,
+                job,
+                "FAILED_NATIVE_GUARD_NO_PLACEMENT",
+                type(exc).__name__ + ": " + str(exc),
+            )
+            return public_job(live)
+        failed = {k: v for k, v in result.items() if not k.startswith("_")}
+        failed.update(
+            operation_status="FAILED_NATIVE_GUARD_NO_PLACEMENT",
+            reason=type(exc).__name__ + ": " + str(exc)[:512],
+            native_contact_executed=False,
+            preview_placed=0,
+        )
+        live._pcg365_remote_job = failed
+        return public_job(live)

@@ -152,20 +152,22 @@
       "compressed_sha256": "5fb564d96e989b12a8fd539e015b1a3ec4ffcada54eada1b20c06bbf2f0b0a66"
     },
     {
-      "original_path": "D:\\yacs\\work\\pcg365\\remote-rock-preview\\preview-manifest.json",
+      "original_path": "D:/yacs/work/pcg365/remote-rock-preview-importonly-dd6f-retained/preview-manifest.json",
       "copy": "evidence/remote-rock-preview/preview-manifest.json.gz",
       "original_bytes": 17730,
       "original_sha256": "dd6fcb0b514d66bba6f241c114ad30a0e2e107245c5411e47285e3e8ac8ef885",
       "compressed_bytes": 3784,
-      "compressed_sha256": "fe2198bfad529a80251d0e989bcd17916d84c81825a9123999172da3d1b5a3ca"
+      "compressed_sha256": "fe2198bfad529a80251d0e989bcd17916d84c81825a9123999172da3d1b5a3ca",
+      "original_execution_path": "D:\\yacs\\work\\pcg365\\remote-rock-preview\\preview-manifest.json"
     },
     {
-      "original_path": "D:\\yacs\\work\\pcg365\\remote-rock-preview\\preparation-receipt.json",
+      "original_path": "D:/yacs/work/pcg365/remote-rock-preview-importonly-dd6f-retained/preparation-receipt.json",
       "copy": "evidence/remote-rock-preview/preparation-receipt.json.gz",
       "original_bytes": 77629,
       "original_sha256": "7eed96b05541055df915ab54917f17ae37e036ea965a0c40add7e84c80272209",
       "compressed_bytes": 2489,
-      "compressed_sha256": "5b6f7ed91482ca7d753cd5e404f53ff932c991d87a3b39bb592202e87d0327ee"
+      "compressed_sha256": "5b6f7ed91482ca7d753cd5e404f53ff932c991d87a3b39bb592202e87d0327ee",
+      "original_execution_path": "D:\\yacs\\work\\pcg365\\remote-rock-preview\\preparation-receipt.json"
     },
     {
       "original_path": "D:/yacs/live-host/runtime/sessions/20261013T074338Z-f4ce5f39df0a/owner-rollout-discard.json",

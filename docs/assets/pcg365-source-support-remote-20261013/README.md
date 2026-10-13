@@ -133,3 +133,21 @@ nonidentity transforms, changed geometry, exact actor labels, actual native
 footprint radius and separate incremental work budgets. Ruff check/format and
 documentation links/i18n/structure/freshness PASS. Native rock execution remains
 NOT RUN until the protected publisher and receiver complete.
+
+Final audit follow-up: moving an earlier road actor during the final sequential
+scan could previously evade its transform check. The consumer now requires a
+synchronous final check of all 559 owner/transform metadata records immediately
+before placement, and subscribes to native Blueprint mesh-modified events for
+the complete job with explicit cleanup on completion/cancel/failure. Event or
+metadata changes reject the job and roll back owned preview actors.
+
+This does not make native geometry reads atomic. Installed UE source exposes
+separate non-reflected realtime/direct/deferred C++ mutation paths which can
+bypass the Blueprint event. Exclusive quiescent geometry ownership remains a
+requirement throughout the diagnostic; concurrent mesh-edit tools are not
+admitted. Camera observation through Remote is compatible with this requirement.
+
+The final audit fix passed 52 focused CPU tests (27 recipe tests), Ruff and all
+four documentation guards. After accepted placement, the consumer aims the
+existing live viewport at the first accepted stone using its actual bounds and
+verifies the camera position; this creates no render or saved map change.
