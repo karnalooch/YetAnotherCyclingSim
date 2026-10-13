@@ -92,6 +92,28 @@
       "parameters": {}
     },
     {
+      "id": "rock_contact_scatter",
+      "capability": "actor_presentation",
+      "intents": [
+        "preview"
+      ],
+      "asset_scope": [],
+      "parameters": {
+        "operation": {
+          "type": "enum",
+          "enum": [
+            "import",
+            "plant",
+            "clear",
+            "status"
+          ]
+        },
+        "manifest_sha256": {
+          "type": "string"
+        }
+      }
+    },
+    {
       "id": "marker_preview_palette",
       "capability": "actor_presentation",
       "intents": [

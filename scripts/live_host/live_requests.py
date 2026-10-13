@@ -132,7 +132,7 @@ def execute_visual_request(live, request: dict, unreal, *, live_root=None, sessi
         if getattr(live, "profile_id", None) == "sa_calobra_road_v0_3_1":
             need(
                 request.get("intent") == "preview"
-                and request.get("recipe") == "rock_asset_audit",
+                and request.get("recipe") in {"rock_asset_audit", "rock_contact_scatter"},
                 "Latest accepted road forbids unqualified actor/material edits",
             )
         need(live_root is not None and session_root is not None,

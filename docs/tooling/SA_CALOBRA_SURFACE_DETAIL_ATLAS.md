@@ -1,5 +1,12 @@
 # Sa Calobra surface detail atlas and PCGEx handoff plan
 
+**2026-10-13 continuation:** the owner reaffirmed spatial planning before rock
+placement. The [source-backed spatial draft](../experiments/sa-calobra-spatial-treatment-plan-20261013/README.md)
+adds registered full-grid cliff/scree candidates and protected/unknown layers to
+the existing observation map. Physical A/B/C footprints remain unresolved;
+the remainder is not automatically texture-only. This map admits no world,
+Landscape, material or production placement change.
+
 **Owner direction:** 2026-10-08  
 **Historical work item:** [#445](https://github.com/karnalooch/YetAnotherCyclingSim/issues/445), [PR #446](https://github.com/karnalooch/YetAnotherCyclingSim/pull/446)
 **Status:** surface-detail plan with a tested Component 230 source-face pilot and native mask/visibility/bounded-patch proof, a [complete captured-survey prestudy](../experiments/sa-calobra-roadside-visibility-prestudy-20261008/README.md) and [six original-PNG proposal cards](../experiments/sa-calobra-surface-detail-review-20261008/README.md); owner review and wider physical registration remain pending

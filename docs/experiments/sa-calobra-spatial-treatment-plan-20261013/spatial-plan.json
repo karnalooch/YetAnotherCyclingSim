@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "status": "SOURCE_BACKED_SPATIAL_DRAFT_NOT_PLACEMENT",
+  "selector_fingerprint": "b0699b6004237ca0fe719ed69941734bbd6208350153641297fe417fc54063e7",
+  "selector_products": [
+    {
+      "path": "cliff-candidate.tif",
+      "size_bytes": 718340,
+      "sha256": "93b6e2b54c6bd8cda25c0f4f24df0226b012bd20472d43b7370349d3a70596c6",
+      "logical_sha256": "b5d5409a0a479bd1e4793b6f0d051d6c8465354025262831e17bba95e218e0d3",
+      "dtype": "uint8",
+      "bands": 1,
+      "nodata": 255,
+      "semantics": "1=steep rough presentation candidate;0=not selected/protected;255=invalid terrain neighborhood"
+    },
+    {
+      "path": "scree-candidate.tif",
+      "size_bytes": 682650,
+      "sha256": "c0a8ea0ef429cacd4bc4a8bc4868998e446ae1e03d1b97892c69a86c19484f0b",
+      "logical_sha256": "76259fdc918fbe678b2ab9d70a3cd355a44e17f598aacc7fdf0e5021e14a2edf",
+      "dtype": "uint8",
+      "bands": 1,
+      "nodata": 255,
+      "semantics": "1=moderate rough slope within bounded distance of admitted cliff candidate;0=not selected/protected;255=invalid terrain neighborhood"
+    }
+  ],
+  "sources": [
+    {
+      "path": "D:\\yacs\\work\\pcg365\\spatial-plan-20261013\\selectors\\cliff-erosion-manifest.json",
+      "sha256": "30fa592b60604a8ab211085f2ece0ce6fa93c744eb066bdda7f9969a1d488bbd"
+    },
+    {
+      "path": "docs\\experiments\\sa-calobra-detail-planning-map-20261008\\planning-data.json",
+      "sha256": "87e45ad4b3c15b95f5f0a3c1ee4f5077e50374a4f1974242853f4f23fd4581db"
+    },
+    {
+      "path": "D:\\yacs\\data\\world-data\\sa-calobra-working-v1\\pcg-masks-v1-2026-10-04\\exclusion-reasons.tif",
+      "sha256": "c74bde6ae8589304fe3d52f4e1e20801b0fe5647de6ffbc268c9b2ca65eaa941"
+    },
+    {
+      "path": "D:\\yacs\\data\\world-data\\sa-calobra-working-v1\\normalized-context-v1a-2026-10-04\\manifest.json",
+      "sha256": "6bbc62c160b292929506cb8aa75b15906706a089fb4b0319add05ad961c4b464"
+    },
+    {
+      "path": "D:\\yacs\\data\\world-data\\sa-calobra-working-v1\\pcg-masks-v1-2026-10-04\\pcg-mask-manifest.json",
+      "sha256": "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df"
+    }
+  ],
+  "grid": {
+    "anchor": "AOI upper-left; matches accepted native Base_DTM grid",
+    "crs": "EPSG:25831",
+    "height": 4033,
+    "pixel_rule": "center for SIOSE IDs; all_touched for conservative building candidates",
+    "pixel_size_m": 0.5,
+    "transform": [
+      0.5,
+      0.0,
+      483000.0,
+      0.0,
+      -0.5,
+      4409516.5
+    ],
+    "width": 4033
+  },
+  "world_mapping": {
+    "origin_epsg_m": [
+      483000.25,
+      4409516.25
+    ],
+    "world_unit": "centimetres",
+    "axis": "X east;Y south",
+    "uv": "(UE_XY_cm/50+0.5)/4033",
+    "footprint_world_bounds_cm": [
+      -25,
+      -25,
+      201625,
+      201625
+    ]
+  },
+  "layers": {
+    "maintained": {
+      "cells": 13002979,
+      "area_m2": 3250744.75,
+      "label": "Current material maintained; treatment unresolved"
+    },
+    "cliff": {
+      "cells": 1472939,
+      "area_m2": 368234.75,
+      "label": "Cliff mesh investigation candidate"
+    },
+    "scree": {
+      "cells": 508659,
+      "area_m2": 127164.75,
+      "label": "Loose rock / scree investigation candidate"
+    },
+    "protected": {
+      "cells": 169739,
+      "area_m2": 42434.75,
+      "label": "Protected: road carriageway only"
+    },
+    "other_exclusions": {
+      "cells": 1095080,
+      "area_m2": 273770.0,
+      "label": "Other exclusions: shoulder, BOB, buildings, water, infrastructure"
+    },
+    "unknown": {
+      "cells": 16128,
+      "area_m2": 4032.0,
+      "label": "Unknown terrain neighborhood: no placement"
+    }
+  },
+  "protected_unknown_overlap_cells": 435,
+  "display_policy": "Protected shows pavement bit1 only; other hard presentation exclusions are a separate default-hidden layer. Candidate validation still uses all original protected bits.",
+  "observation_stations": 669,
+  "disconnected_windows": 185,
+  "physical_ABC_mapping": "UNRESOLVED",
+  "texture_only_assignment": "NOT_ESTABLISHED",
+  "qualified_assets": [],
+  "placement": false,
+  "geometry_mutation": false,
+  "performance_pass": false
+}

@@ -1,5 +1,23 @@
 # Sa Calobra PCG world graph — #365 kickoff
 
+## Local continuation — 2026-10-13
+
+The owner requests repaired contact and Remote import/planting, with spatial
+treatment planning **before placement**. P0–P4 are accepted diagnostic anchors;
+live Remote replaces separate new review renders for this continuation.
+The [local source/Remote candidate](../assets/pcg365-source-support-remote-20261013/README.md)
+contains twenty source-envelope derivatives and an incremental preview consumer.
+Native integration and actual-Landscape contact are NOT RUN. The installed
+receiver has not changed; no placement, push or merge follows.
+
+The [source-backed spatial draft](../experiments/sa-calobra-spatial-treatment-plan-20261013/README.md)
+reuses the [surface atlas](SA_CALOBRA_SURFACE_DETAIL_ATLAS.md) and existing
+cliff/scree selectors. Candidate counts were reproduced. Physical treatment
+boundaries, native review and asset-specific eligibility still control rollout.
+The remainder keeps its current material with treatment unresolved; it is not
+automatically texture-only. Scree's 24–42-degree selector cannot override the
+rock trial's 10-degree limit. Performance remains deferred and false.
+
 **Status:** M3, CPU candidates, native mesh inspection and saved/reloaded mechanical graph; regional placement pending.
 **Owner:** procedural-world. **Base:** `4dd792219bfc2eaf7dc216bd60cbde6628bba792`.
 **Current owner instruction (2026-10-12):** implementation resumed for #365,

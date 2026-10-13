@@ -1,0 +1,1099 @@
+"""Issue #365: authenticated, memory-only import and five-anchor diagnostic planting.
+
+No regional selector, source save, terrain edit or production admission. Native
+complex mesh/Landscape samples are remeasured at 65/129; frozen V2 limits apply.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import importlib.util
+import json
+import math
+from pathlib import Path
+import re
+import struct
+import sys
+import time
+
+STAGE = Path("D:/yacs/work/pcg365/remote-rock-preview")
+DESTINATION = "/Game/Generated/YACS/PCG365RemotePreview"
+HELPERS = {
+    "scripts/assets/pcg_rock_contact_policy.py": "4bfd12aca172a64940b49163bb0ecf221fac593e889028cdc8c88cd8a7b1bd5f",
+    "scripts/assets/pcg_boulder_support.py": "2ee74a9c3349babf5b6d4c39f768215cacc0137b6ffb1f64046b83ee0798fee2",
+}
+
+
+def need(value, message):
+    if not value:
+        raise ValueError(message)
+
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def number(value):
+    need(
+        type(value) in (int, float) and math.isfinite(value), "Nonfinite numeric input"
+    )
+    return float(value)
+
+
+def vec(value):
+    return [number(value.x), number(value.y), number(value.z)]
+
+
+def file_proof(root, proof):
+    need(
+        type(proof) is dict and set(proof) == {"path", "sha256", "bytes"},
+        "File proof schema differs",
+    )
+    name = proof["path"]
+    need(
+        type(name) is str
+        and "\\" not in name
+        and ":" not in name
+        and all(p not in ("", ".", "..") for p in name.split("/")),
+        "Unsafe relative proof path",
+    )
+    path = root / name
+    cursor = path
+    while cursor != root:
+        need(not cursor.is_symlink(), "Aliased proof path")
+        cursor = cursor.parent
+    need(
+        path.is_file() and path.resolve().is_relative_to(root.resolve()),
+        "Missing bounded source",
+    )
+    need(
+        type(proof["bytes"]) is int
+        and 0 < proof["bytes"] <= 256 * 1024 * 1024
+        and path.stat().st_size == proof["bytes"]
+        and digest(path) == proof["sha256"],
+        "Source byte identity differs",
+    )
+    return path
+
+
+def read_manifest(expected_digest, *, require_plant=False):
+    need(
+        type(expected_digest) is str and re.fullmatch(r"[0-9a-f]{64}", expected_digest),
+        "Exact manifest digest required",
+    )
+    path = STAGE / "preview-manifest.json"
+    need(
+        STAGE.is_dir()
+        and not STAGE.is_symlink()
+        and not path.is_symlink()
+        and path.is_file()
+        and 0 < path.stat().st_size <= 128 * 1024,
+        "Missing bounded preview manifest",
+    )
+    need(digest(path) == expected_digest, "Preview manifest changed")
+    data = json.loads(path.read_text(encoding="utf-8-sig"))
+    need(
+        set(data)
+        == {
+            "schema_version",
+            "scope",
+            "map_package",
+            "anchor_source",
+            "protected_packages",
+            "assets",
+            "placements",
+            "exclusion_sources",
+        },
+        "Preview schema differs",
+    )
+    need(
+        type(data["schema_version"]) is int
+        and data["schema_version"] == 1
+        and data["scope"] == "P0_P4_DIAGNOSTIC_ONLY",
+        "Unapproved preview scope",
+    )
+    original = json.loads(
+        file_proof(STAGE, data["anchor_source"]).read_text(encoding="utf-8-sig")
+    )
+    need(
+        type(original.get("points")) is list and len(original["points"]) == 5,
+        "Five original anchors required",
+    )
+    anchors = {
+        "P" + str(i): row["world_xy_cm"] for i, row in enumerate(original["points"])
+    }
+    need(
+        list(anchors.values())
+        == [
+            [16800, 70400],
+            [4800, 96800],
+            [184800, 180800],
+            [181600, 189600],
+            [91200, 200800],
+        ],
+        "Historical owner-approved anchor identities differ",
+    )
+    assets = data["assets"]
+    need(
+        type(assets) is list and 1 <= len(assets) <= 20,
+        "Bounded imported asset set required",
+    )
+    ids = set()
+    for asset in assets:
+        need(
+            set(asset)
+            == {
+                "id",
+                "fbx",
+                "bounds_cm",
+                "material_package",
+                "expected_lod0_triangles",
+            },
+            "Asset schema differs",
+        )
+        name = asset["id"]
+        need(
+            type(name) is str
+            and re.fullmatch(r"[a-z][a-z0-9_]{2,63}", name)
+            and name not in ids,
+            "Invalid duplicate asset",
+        )
+        ids.add(name)
+        need(
+            type(asset["expected_lod0_triangles"]) is int
+            and 0 < asset["expected_lod0_triangles"] <= 500000,
+            "Invalid source triangle witness",
+        )
+        need(
+            file_proof(STAGE, asset["fbx"]).suffix.lower() == ".fbx",
+            "FBX source required",
+        )
+        bounds = asset["bounds_cm"]
+        need(
+            set(bounds) == {"origin", "extent"}
+            and all(type(v) is list and len(v) == 3 for v in bounds.values()),
+            "Invalid mesh bounds",
+        )
+        for v in bounds["origin"]:
+            number(v)
+        need(
+            all(0 < number(v) <= 2000 for v in bounds["extent"]),
+            "Mesh extent outside preview budget",
+        )
+    sources = data["exclusion_sources"]
+    need(
+        type(sources) is list and 1 <= len(sources) <= 16,
+        "Authenticated exclusion sources required",
+    )
+    for proof in sources:
+        file_proof(STAGE, proof)
+    need(
+        any(
+            p["sha256"]
+            == "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df"
+            for p in sources
+        ),
+        "Frozen World Authority manifest missing",
+    )
+    if require_plant:
+        parity = [
+            json.loads((STAGE / p["path"]).read_text(encoding="utf-8-sig"))
+            for p in sources
+            if p["path"].endswith("road-parity.json")
+        ]
+        need(
+            len(parity) == 1
+            and parity[0].get("status") == "PASS_NATIVE_ROAD_MASK_PARITY"
+            and parity[0].get("map_package") == data["map_package"]
+            and parity[0].get("all_native_road_triangles_equal") is True
+            and parity[0].get("source_geometry_sha")
+            == "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6"
+            and parity[0].get("mask_manifest_sha256")
+            == "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df",
+            "Current native road/mask parity missing",
+        )
+    binding = hashlib.sha256(
+        json.dumps(sources, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    placements = data["placements"]
+    need(
+        type(placements) is list and 0 <= len(placements) <= 5,
+        "At most five anchor placements",
+    )
+    sites = set()
+    by_id = {a["id"]: a for a in assets}
+    for row in placements:
+        need(
+            set(row) == {"site", "asset_id", "world_xy_cm", "exclusions"},
+            "Placement schema differs",
+        )
+        site = row["site"]
+        need(
+            site in anchors and site not in sites and row["asset_id"] in by_id,
+            "Unknown or duplicate anchor/asset",
+        )
+        sites.add(site)
+        need(
+            row["world_xy_cm"] == anchors[site] and len(row["world_xy_cm"]) == 2,
+            "Placement moved from approved anchor",
+        )
+        for value in row["world_xy_cm"]:
+            need(abs(number(value)) <= 250000, "Anchor outside bounded Landscape")
+        e = row["exclusions"]
+        need(
+            set(e)
+            == {
+                "status",
+                "road_source_compatible",
+                "footprint_radius_cm",
+                "unknown",
+                "road",
+                "nodata",
+                "holdback",
+                "aoi",
+                "source_binding_sha256",
+            },
+            "Exclusion evidence schema differs",
+        )
+        bounds = by_id[row["asset_id"]]["bounds_cm"]
+        radius = math.hypot(
+            abs(bounds["origin"][0]) + bounds["extent"][0],
+            abs(bounds["origin"][1]) + bounds["extent"][1],
+        )
+        need(
+            e["status"] == "PASS_AUTHENTICATED_FOOTPRINT"
+            and e["road_source_compatible"] is True
+            and e["source_binding_sha256"] == binding
+            and number(e["footprint_radius_cm"]) >= radius
+            and all(
+                e[k] is False for k in ("unknown", "road", "nodata", "holdback", "aoi")
+            ),
+            "Unknown/excluded/undersized footprint",
+        )
+    return data
+
+
+def authenticated_exclusion_buffers(data):
+    """Read lossless logical arrays authenticated by original raster manifest.
+
+    These are original row-major ds.read().tobytes buffers, not resampled masks.
+    Their exact SHA equals the pinned TIFF logical_sha256. Use stdlib only in UE.
+    """
+    sources = data["exclusion_sources"]
+    masks = [
+        p
+        for p in sources
+        if p["sha256"]
+        == "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df"
+    ]
+    need(len(masks) == 1, "Unique pinned mask manifest required")
+    authority = json.loads(file_proof(STAGE, masks[0]).read_text(encoding="utf-8-sig"))
+    need(
+        authority.get("geometry_mutation") is False
+        and authority.get("fingerprint")
+        == "c9191f8dadf21d1820bebc80dd92e91641f4f4b74eb9d90342d7459611473864",
+        "World Authority fingerprint or geometry boundary differs",
+    )
+    grid = authority["grid"]
+    need(
+        grid["width"] == grid["height"] == 4033
+        and grid["crs"] == "EPSG:25831"
+        and grid["transform"] == [0.5, 0.0, 483000.0, 0.0, -0.5, 4409516.5]
+        and sys.byteorder == "little",
+        "Original logical mask grid/endian differs",
+    )
+    selected = []
+    for stem, item_size in (
+        ("exclusion-distance-lower-bound", 4),
+        ("exclusion-reasons", 2),
+    ):
+        outputs = [r for r in authority["outputs"] if r["path"] == stem + ".tif"]
+        tiffs = [r for r in sources if Path(r["path"]).name == stem + ".tif"]
+        buffers = [r for r in sources if Path(r["path"]).name == stem + ".bin"]
+        need(
+            len(outputs) == len(tiffs) == len(buffers) == 1,
+            "Original mask/buffer missing or ambiguous",
+        )
+        need(
+            tiffs[0]["sha256"] == outputs[0]["sha256"]
+            and tiffs[0]["bytes"] == outputs[0]["size_bytes"],
+            "Exclusion TIFF differs from pinned authority",
+        )
+        file_proof(STAGE, tiffs[0])
+        need(
+            buffers[0]["sha256"] == outputs[0]["logical_sha256"]
+            and buffers[0]["bytes"] == 4033 * 4033 * item_size,
+            "Logical buffer differs from original authenticated raster",
+        )
+        selected.append(file_proof(STAGE, buffers[0]).read_bytes())
+    return selected
+
+
+def footprint_clearance_sample(xy, radius, distance_m, reasons):
+    x, y = [number(v) for v in xy]
+    radius = number(radius)
+    need(
+        radius > 0 and min(x + 25, y + 25, 201625 - x, 201625 - y) >= radius + 50,
+        "Full footprint plus clearance escapes AOI",
+    )
+    col, row = math.floor(x / 50 + 0.5), math.floor(y / 50 + 0.5)
+    need(
+        0 <= row < 4033 and 0 <= col < 4033 and type(reasons) is int and reasons == 0,
+        "Excluded or unknown source footprint",
+    )
+    distance = number(distance_m)
+    lower_cm = max(0.0, distance * 100 - math.hypot(x - col * 50, y - row * 50))
+    need(
+        distance >= 0 and lower_cm >= radius + 50,
+        "Insufficient full-footprint exclusion clearance",
+    )
+    return {
+        "source_cell": [row, col],
+        "radius_cm": radius,
+        "clearance_cm": 50,
+        "clearance_lower_bound_cm": lower_cm,
+        "status": "PASS_AUTHENTICATED_FULL_RADIUS_EXCLUSIONS_ONLY",
+        "regional_rock_domain_admitted": False,
+    }
+
+
+def verify_footprints(data):
+    distances, reasons = authenticated_exclusion_buffers(data)
+    by_id = {a["id"]: a for a in data["assets"]}
+    results = {}
+    for row in data["placements"]:
+        x, y = row["world_xy_cm"]
+        col, r = math.floor(x / 50 + 0.5), math.floor(y / 50 + 0.5)
+        need(0 <= r < 4033 and 0 <= col < 4033, "Anchor outside exclusion grid")
+        offset = r * 4033 + col
+        distance = struct.unpack_from("<f", distances, offset * 4)[0]
+        bits = struct.unpack_from("<H", reasons, offset * 2)[0]
+        bounds = by_id[row["asset_id"]]["bounds_cm"]
+        radius = math.hypot(
+            abs(bounds["origin"][0]) + bounds["extent"][0],
+            abs(bounds["origin"][1]) + bounds["extent"][1],
+        )
+        results[row["site"]] = footprint_clearance_sample(
+            [x, y], radius, distance, bits
+        )
+    return results
+
+
+def load_helpers():
+    # Resolve the actual installed protocol, never a user-controlled source path.
+    from scripts.live_host import protocol
+
+    root = Path(protocol.__file__).resolve().parents[2]
+    modules = []
+    for relative, expected in HELPERS.items():
+        path = root / relative
+        need(
+            path.is_file() and not path.is_symlink() and digest(path) == expected,
+            "Installed contact helper source differs",
+        )
+        spec = importlib.util.spec_from_file_location("_pcg365_" + path.stem, path)
+        need(
+            spec is not None and spec.loader is not None,
+            "Contact helper loader missing",
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        modules.append(module)
+    return modules
+
+
+def load_materials(unreal, context, data):
+    project = Path(context["project"]).resolve()
+    packages = data["protected_packages"]
+    need(
+        type(packages) is list and 1 <= len(packages) <= 24,
+        "Exact Forge package closure required",
+    )
+    paths, known = [], set()
+    for row in packages:
+        need(
+            set(row) == {"package", "path", "sha256", "bytes"},
+            "Forge package schema differs",
+        )
+        package = row["package"]
+        need(
+            type(package) is str
+            and package.startswith("/Game/Generated/YACS/")
+            and package not in known
+            and row["path"] == "Content/" + package[6:] + ".uasset",
+            "Unowned Forge dependency path",
+        )
+        known.add(package)
+        paths.append(
+            str(file_proof(project, {k: row[k] for k in ("path", "sha256", "bytes")}))
+        )
+    unreal.AssetRegistryHelpers.get_asset_registry().scan_files_synchronous(
+        paths, False
+    )
+    result = {}
+    for asset in data["assets"]:
+        package = asset["material_package"]
+        need(package in known, "Unpinned Forge material")
+        instance = unreal.load_asset(package)
+        need(
+            isinstance(instance, unreal.MaterialInstanceConstant),
+            "Missing Forge material instance",
+        )
+        result[asset["id"]] = instance
+    return result
+
+
+def import_mesh(unreal, asset, material, destination):
+    package = destination + "/SM_" + asset["id"]
+    need(
+        not unreal.EditorAssetLibrary.does_asset_exist(package),
+        "Preserve existing mesh package; clear cannot delete packages",
+    )
+    options = unreal.FbxImportUI()
+    for key, value in {
+        "import_mesh": True,
+        "import_as_skeletal": False,
+        "import_materials": False,
+        "import_textures": False,
+        "automated_import_should_detect_type": False,
+        "mesh_type_to_import": unreal.FBXImportType.FBXIT_STATIC_MESH,
+    }.items():
+        options.set_editor_property(key, value)
+    mesh_data = options.get_editor_property("static_mesh_import_data")
+    for key, value in {
+        "combine_meshes": True,
+        "convert_scene": True,
+        "convert_scene_unit": True,
+        "import_uniform_scale": 1.0,
+        "import_translation": unreal.Vector(),
+        "import_rotation": unreal.Rotator(),
+        "transform_vertex_to_absolute": True,
+        "bake_pivot_in_vertex": False,
+        "build_nanite": False,
+        "auto_generate_collision": False,
+    }.items():
+        mesh_data.set_editor_property(key, value)
+    task = unreal.AssetImportTask()
+    for key, value in {
+        "filename": str(file_proof(STAGE, asset["fbx"])),
+        "destination_path": destination,
+        "destination_name": "SM_" + asset["id"],
+        "automated": True,
+        "replace_existing": False,
+        "save": False,
+        "options": options,
+    }.items():
+        task.set_editor_property(key, value)
+    unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+    imported = list(task.get_editor_property("imported_object_paths") or [])
+    need(
+        len(imported) == 1 and str(imported[0]).split(".")[0] == package,
+        "Unexpected imported objects",
+    )
+    mesh = unreal.load_asset(package)
+    need(isinstance(mesh, unreal.StaticMesh), "Import lacks native StaticMesh")
+    need(
+        mesh.get_num_triangles(0) == asset["expected_lod0_triangles"],
+        "Imported LOD0 triangles differ",
+    )
+    actual = mesh.get_bounds()
+    need(
+        all(
+            abs(a - b) <= 0.01
+            for a, b in zip(
+                vec(actual.origin) + vec(actual.box_extent),
+                asset["bounds_cm"]["origin"] + asset["bounds_cm"]["extent"],
+            )
+        ),
+        "Imported bounds differ",
+    )
+    need(len(mesh.static_materials) > 0, "Mesh lacks material slots")
+    for i in range(len(mesh.static_materials)):
+        mesh.set_material(i, material)
+        need(mesh.get_material(i) == material, "Native Forge material binding differs")
+    body = mesh.get_editor_property("body_setup")
+    need(body is not None, "Mesh has no collision body")
+    body.set_editor_property(
+        "collision_trace_flag", unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE
+    )
+    body.set_editor_property("double_sided_geometry", True)
+    need(
+        body.get_editor_property("collision_trace_flag")
+        == unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE
+        and body.get_editor_property("double_sided_geometry") is True,
+        "Native complex collision settings differ",
+    )
+    return mesh
+
+
+def unpack(hit, actor, component=None):
+    if hit is None:
+        return None
+    values = hit.to_tuple()
+    need(
+        len(values) == 18
+        and values[1] is False
+        and values[9] == actor
+        and (component is None or values[10] == component),
+        "Wrong native contact owner/shape",
+    )
+    need(component is not None or values[0] is True, "Nonblocking Landscape hit")
+    need(
+        type(values[2]) in (int, float)
+        and math.isfinite(values[2])
+        and 0 <= values[2] <= 1
+        and type(values[3]) in (int, float)
+        and math.isfinite(values[3])
+        and values[3] >= 0,
+        "Invalid native hit time/distance",
+    )
+    return {
+        "position": vec(values[5]),
+        "normal": vec(values[7]),
+        "component": values[10],
+        "distance_cm": values[3],
+    }
+
+
+def trace_ground(unreal, world, xy, ignored):
+    return unreal.SystemLibrary.line_trace_single(
+        world,
+        unreal.Vector(*xy, 150000),
+        unreal.Vector(*xy, -150000),
+        unreal.TraceTypeQuery.ECC_VISIBILITY,
+        True,
+        ignored,
+        unreal.DrawDebugTrace.NONE,
+        True,
+    )
+
+
+def measure_grid_steps(
+    unreal, world, ground, ignored, actor, bounds, xy, size, support
+):
+    origin, extent = bounds["origin"], bounds["extent"]
+    low, high = origin[2] - extent[2] - 100, origin[2] + extent[2] + 100
+    component, rows, count, max_slope = actor.static_mesh_component, [], 0, 0.0
+
+    def ray(x, y, z0, z1):
+        result = component.line_trace_component(
+            unreal.Vector(x, y, z0), unreal.Vector(x, y, z1), True, False, False
+        )
+        if result is None:
+            return None
+        need(isinstance(result, tuple), "Unexpected complex ray shape")
+        hits = [v for v in result if isinstance(v, unreal.HitResult)]
+        need(len(hits) == 1, "Ambiguous complex ray")
+        hit = unpack(hits[0], actor, component)
+        need(
+            low <= hit["position"][2] <= high and hit["distance_cm"] <= high - low,
+            "Complex hit outside source bounds",
+        )
+        return hit
+
+    for iy in range(size):
+        for ix in range(size):
+            x, y = (
+                origin[0] + extent[0] * (2 * ix / (size - 1) - 1),
+                origin[1] + extent[1] * (2 * iy / (size - 1) - 1),
+            )
+            bottom, top = ray(x, y, low, high), ray(x, y, high, low)
+            if bottom is None and top is None:
+                yield {"grid": size}
+                continue
+            count += 1
+            need(
+                bottom is not None
+                and top is not None
+                and bottom["position"][2] <= top["position"][2],
+                "Unpaired/inverted complex mesh rays",
+            )
+            hit = unpack(
+                trace_ground(unreal, world, [xy[0] + x, xy[1] + y], ignored), ground
+            )
+            need(
+                hit is not None
+                and hit["component"].get_class().get_name()
+                == "LandscapeHeightfieldCollisionComponent",
+                "Missing authorized Landscape footprint",
+            )
+            normal = hit["normal"]
+            length = math.sqrt(sum(v * v for v in normal))
+            need(length > 0, "Zero ground normal")
+            max_slope = max(
+                max_slope,
+                math.degrees(math.acos(max(-1.0, min(1.0, normal[2] / length)))),
+            )
+            rows.append(
+                {
+                    "bottom_z_cm": bottom["position"][2],
+                    "top_z_cm": top["position"][2],
+                    "ground_z_cm": hit["position"][2],
+                }
+            )
+            yield {"grid": size}
+    need(count > 0 and len(rows) == count, "Incomplete sampled footprint")
+    fit = support.solve_support(rows)
+    fit["max_positive_bottom_gap_cm"] = max(
+        0.0, max(p["bottom_gap_cm"] for p in fit.pop("samples"))
+    )
+    return {"fit": fit, "sample_count": count, "max_local_slope_deg": max_slope}
+
+
+def native_measure_steps(
+    unreal, world, ground, actor, bounds, xy, editor, policy, support
+):
+    actors = editor.get_all_level_actors()
+    ignored = [a for a in actors if a != ground]
+    need(
+        trace_ground(unreal, world, xy, actors) is None,
+        "Ground exclusion negative control failed",
+    )
+    coarse = yield from measure_grid_steps(
+        unreal, world, ground, ignored, actor, bounds, xy, 65, support
+    )
+    fine = yield from measure_grid_steps(
+        unreal, world, ground, ignored, actor, bounds, xy, 129, support
+    )
+    measurement = {
+        "height_cm": 2 * bounds["extent"][2],
+        "uniform_scale": 1.0,
+        "yaw_deg": 0.0,
+        "tilt_deg": 0.0,
+        "max_local_slope_deg": fine["max_local_slope_deg"],
+        "ground_class": "LandscapeHeightfieldCollisionComponent",
+        "sample_count": fine["sample_count"],
+        "valid_ground_count": fine["sample_count"],
+        "coverage_status": "COMPLETE_SAMPLED_MESH_FOOTPRINT",
+        "fit": fine["fit"],
+        "refinement": {
+            "coarse_grid": 65,
+            "fine_grid": 129,
+            "coarse_root_cm": coarse["fit"]["root_zero_sampled_air_cm"],
+            "fine_root_cm": fine["fit"]["root_zero_sampled_air_cm"],
+            "coarse_embedding_cm": coarse["fit"]["required_embedding_cm"],
+            "fine_embedding_cm": fine["fit"]["required_embedding_cm"],
+        },
+    }
+    return measurement, policy.evaluate(measurement, policy.refined_trial_policy())
+
+
+def public_job(live):
+    job = getattr(live, "_pcg365_remote_job", None)
+    if job is None:
+        return {
+            "status": "APPLIED_PREVIEW",
+            "map_saved": False,
+            "operation_status": "NO_CONTACT_JOB",
+            "preview_placed": len(getattr(live, "_pcg365_remote_actors", [])),
+            "production_admitted": False,
+            "qualified_assets": [],
+            "performance_pass": False,
+        }
+    return {
+        "status": "APPLIED_PREVIEW",
+        "map_saved": False,
+        **{k: v for k, v in job.items() if not k.startswith("_")},
+    }
+
+
+def stop_job_callback(unreal, job):
+    handle = job.pop("_tick", None)
+    if handle is None:
+        return True
+    try:
+        unreal.unregister_slate_post_tick_callback(handle)
+        job["tick_unregistered"] = True
+        return True
+    except Exception as exc:
+        job["_tick"] = handle
+        job["tick_unregistered"] = False
+        job["tick_unregister_error"] = type(exc).__name__ + ": " + str(exc)[:256]
+        return False
+
+
+def rollback_job(unreal, live, editor, job, status, reason=None):
+    # Make an unregister failure inert before attempting any native cleanup.
+    job["operation_status"] = status
+    callback_stopped = stop_job_callback(unreal, job)
+    generator = job.pop("_generator", None)
+    generator_closed = True
+    if generator is not None:
+        try:
+            generator.close()
+        except Exception as exc:
+            generator_closed = False
+            job["generator_close_error"] = type(exc).__name__ + ": " + str(exc)[:256]
+    failed = []
+    for actor in getattr(live, "_pcg365_remote_actors", []):
+        try:
+            if not editor.destroy_actor(actor):
+                failed.append(actor)
+        except Exception:
+            failed.append(actor)
+    live._pcg365_remote_actors = failed
+    complete = not failed and callback_stopped and generator_closed
+    job["operation_status"] = status if complete else "CONTACT_JOB_ROLLBACK_INCOMPLETE"
+    job["preview_placed"] = len(failed)
+    job["rollback_complete"] = complete
+    if reason:
+        job["error"] = reason[:512]
+
+
+def validate_job_world(unreal, live, world, ground, meshes, materials, data, job):
+    current = unreal.get_editor_subsystem(
+        unreal.UnrealEditorSubsystem
+    ).get_editor_world()
+    need(
+        current == world
+        and live.world == world
+        and world.get_path_name().split(".")[0] == data["map_package"],
+        "Editor world changed during contact job",
+    )
+    need(
+        str(ground.get_actor_transform()) == job["_ground_transform"],
+        "Landscape transform changed during contact job",
+    )
+    for asset in data["assets"]:
+        mesh = meshes[asset["id"]]
+        bounds = mesh.get_bounds()
+        need(
+            mesh.get_num_triangles(0) == asset["expected_lod0_triangles"]
+            and all(
+                abs(a - b) <= 0.01
+                for a, b in zip(
+                    vec(bounds.origin) + vec(bounds.box_extent),
+                    asset["bounds_cm"]["origin"] + asset["bounds_cm"]["extent"],
+                )
+            )
+            and len(mesh.static_materials) > 0
+            and all(
+                mesh.get_material(i) == materials[asset["id"]]
+                for i in range(len(mesh.static_materials))
+            ),
+            "Imported geometry/material changed during contact job",
+        )
+    for actor, location, asset_id in job["_expected_actors"]:
+        component = actor.static_mesh_component
+        need(
+            component.static_mesh == meshes[asset_id]
+            and component.get_collision_enabled() == unreal.CollisionEnabled.QUERY_ONLY,
+            "Owned preview mesh/collision binding changed during contact job",
+        )
+        angle = actor.get_actor_rotation()
+        need(
+            vec(actor.get_actor_location()) == location
+            and vec(actor.get_actor_scale3d()) == [1.0, 1.0, 1.0]
+            and [angle.pitch, angle.yaw, angle.roll] == [0.0, 0.0, 0.0],
+            "Owned preview transform changed during contact job",
+        )
+
+
+def planting_steps(
+    unreal, context, data, meshes, result, policy, support, editor, ground, job
+):
+    live, world = context["live"], context["live"].world
+    by_id = {a["id"]: a for a in data["assets"]}
+    for row in sorted(data["placements"], key=lambda r: r["site"]):
+        job["active_site"] = row["site"]
+        actor = editor.spawn_actor_from_class(
+            unreal.StaticMeshActor, unreal.Vector(), transient=True
+        )
+        need(actor is not None, "Native rock spawn failed")
+        live._pcg365_remote_actors.append(actor)
+        expected_actor = [actor, [0.0, 0.0, 0.0], row["asset_id"]]
+        job["_expected_actors"].append(expected_actor)
+        actor.set_actor_label("PCG365_RemotePreview_" + row["site"])
+        actor.set_actor_scale3d(unreal.Vector(1, 1, 1))
+        actor.set_actor_rotation(unreal.Rotator(), False)
+        component = actor.static_mesh_component
+        need(
+            component.set_static_mesh(meshes[row["asset_id"]]),
+            "Native mesh binding failed",
+        )
+        component.set_collision_enabled(unreal.CollisionEnabled.QUERY_ONLY)
+        component.set_collision_response_to_all_channels(
+            unreal.CollisionResponseType.ECR_BLOCK
+        )
+        need(
+            vec(actor.get_actor_location()) == [0.0, 0.0, 0.0],
+            "Initial measurement actor moved",
+        )
+        measurement, decision = yield from native_measure_steps(
+            unreal,
+            world,
+            ground,
+            actor,
+            by_id[row["asset_id"]]["bounds_cm"],
+            row["world_xy_cm"],
+            editor,
+            policy,
+            support,
+        )
+        case = {
+            "site": row["site"],
+            "asset_id": row["asset_id"],
+            "measurement": measurement,
+            "decision": decision,
+            "ground_exclusion_control": "PASS",
+        }
+        job["cases"].append(case)
+        if decision["status"] != "PASS_SAMPLED_CONTACT_ONLY":
+            need(editor.destroy_actor(actor), "Rejected actor rollback failed")
+            live._pcg365_remote_actors.remove(actor)
+            job["_expected_actors"].remove(expected_actor)
+            continue
+        location = row["world_xy_cm"] + [measurement["fit"]["root_zero_sampled_air_cm"]]
+        actor.set_actor_location(unreal.Vector(*location), False, False)
+        need(
+            all(
+                abs(a - b) <= 1e-6
+                for a, b in zip(vec(actor.get_actor_location()), location)
+            ),
+            "Planted native location differs",
+        )
+        expected_actor[1] = vec(actor.get_actor_location())
+        case["location_cm"] = location
+        job["preview_placed"] += 1
+    # Completion alone performs the expensive proof rehash, never every tick.
+    read_manifest(job["manifest_sha256"], require_plant=True)
+    need(
+        verify_footprints(data) == result["footprint_exclusions"],
+        "Exclusion bytes changed during contact job",
+    )
+    load_materials(unreal, context, data)
+    job["operation_status"] = "CONTACT_JOB_COMPLETED_SAMPLED_ONLY"
+    job["active_site"] = None
+
+
+def start_contact_job(
+    unreal, context, data, meshes, materials, result, policy, support
+):
+    live, world = context["live"], context["live"].world
+    editor = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    landscapes = [
+        a for a in editor.get_all_level_actors() if isinstance(a, unreal.LandscapeProxy)
+    ]
+    need(len(landscapes) == 1, "Ambiguous Landscape authority")
+    ground = landscapes[0]
+    transform = ground.get_actor_transform()
+    rotation = transform.rotation.rotator()
+    need(
+        vec(transform.scale3d)[:2] == [50.0, 50.0]
+        and [rotation.pitch, rotation.yaw, rotation.roll] == [0.0, 0.0, 0.0],
+        "Landscape grid transform differs",
+    )
+    job = {
+        **result,
+        "operation_status": "CONTACT_JOB_RUNNING",
+        "request_id": context.get("request_id"),
+        "manifest_sha256": context["_pcg365_manifest_sha256"],
+        "sampled_positions": 0,
+        "maximum_grid_positions": len(data["placements"]) * (65 * 65 + 129 * 129),
+        "active_site": None,
+        "current_grid": None,
+        "tick_position_budget": 64,
+        "tick_wall_budget_ms": 8,
+        "wall_budget_semantics": "BEST_EFFORT_SINGLE_NATIVE_CALL_CANNOT_BE_PREEMPTED",
+        "_ground_transform": str(transform),
+        "_expected_actors": [],
+    }
+    live._pcg365_remote_actors = []
+    live._pcg365_remote_job = job
+    generator = planting_steps(
+        unreal, context, data, meshes, result, policy, support, editor, ground, job
+    )
+    job["_generator"] = generator
+
+    def tick(_delta):
+        if job.get("operation_status") != "CONTACT_JOB_RUNNING":
+            return
+        try:
+            validate_job_world(
+                unreal, live, world, ground, meshes, materials, data, job
+            )
+            deadline = time.perf_counter() + 0.008
+            for _ in range(64):
+                update = next(generator)
+                job["sampled_positions"] += 1
+                job["current_grid"] = update["grid"]
+                if time.perf_counter() >= deadline:
+                    break
+        except StopIteration:
+            stopped = stop_job_callback(unreal, job)
+            job.pop("_generator", None)
+            if not stopped:
+                job["operation_status"] = (
+                    "CONTACT_JOB_COMPLETED_CALLBACK_CLEANUP_REQUIRED"
+                )
+        except Exception as exc:
+            rollback_job(
+                unreal,
+                live,
+                editor,
+                job,
+                "CONTACT_JOB_FAILED_ROLLED_BACK",
+                type(exc).__name__ + ": " + str(exc),
+            )
+
+    try:
+        job["_tick"] = unreal.register_slate_post_tick_callback(tick)
+    except Exception:
+        rollback_job(
+            unreal,
+            live,
+            editor,
+            job,
+            "CONTACT_JOB_FAILED_ROLLED_BACK",
+            "Tick registration failed",
+        )
+        raise
+    return public_job(live)
+
+
+def run(unreal, context, parameters):
+    need(
+        context.get("intent") == "preview" and context.get("asset_scope") == (),
+        "Memory-only preview required",
+    )
+    need(
+        set(parameters) == {"operation", "manifest_sha256"}
+        and parameters["operation"] in ("import", "plant", "clear", "status"),
+        "Unknown bounded preview operation",
+    )
+    live = context["live"]
+    world = live.world
+    need(
+        world.get_path_name().split(".")[0] == live.map_package,
+        "Current world identity differs",
+    )
+    editor = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    owned = getattr(live, "_pcg365_remote_actors", [])
+    job = getattr(live, "_pcg365_remote_job", None)
+    if parameters["operation"] == "status":
+        return public_job(live)
+    if (
+        parameters["operation"] == "clear"
+        and job is not None
+        and (job.get("operation_status") == "CONTACT_JOB_RUNNING" or "_tick" in job)
+    ):
+        rollback_job(unreal, live, editor, job, "CONTACT_JOB_CANCELLED_ROLLED_BACK")
+        return public_job(live)
+    if job is not None and job.get("operation_status") == "CONTACT_JOB_RUNNING":
+        return {
+            **public_job(live),
+            "request_rejected": "CONTACT_JOB_RUNNING_USE_STATUS_OR_CLEAR",
+        }
+    if parameters["operation"] == "clear":
+        failures = []
+        for actor in owned:
+            try:
+                if not editor.destroy_actor(actor):
+                    failures.append(actor)
+            except Exception:
+                failures.append(actor)
+        live._pcg365_remote_actors = failures
+        need(not failures, "Owned actor rollback incomplete; retained failed ownership")
+        if job is not None:
+            job["operation_status"] = "CONTACT_JOB_CLEARED"
+            job["preview_placed"] = 0
+            job["rollback_complete"] = True
+        return {
+            "status": "APPLIED_PREVIEW",
+            "map_saved": False,
+            "preview_placed": 0,
+            "production_admitted": False,
+            "cleared": len(owned),
+        }
+    if owned:
+        return {**public_job(live), "request_rejected": "CLEAR_EXISTING_PREVIEW_FIRST"}
+    try:
+        data = read_manifest(
+            parameters["manifest_sha256"],
+            require_plant=parameters["operation"] == "plant",
+        )
+        need(data["map_package"] == live.map_package, "Manifest targets another map")
+        footprint_evidence = {}
+        if parameters["operation"] == "plant":
+            need(
+                data["placements"],
+                "No approved exclusion-valid anchor placement supplied",
+            )
+            footprint_evidence = verify_footprints(data)
+    except (ValueError, OSError, KeyError, TypeError) as exc:
+        # A rejected preflight has not imported/spawned anything. Keep status and
+        # cleanup available; no native command is replayed or declared passing.
+        return {
+            "status": "APPLIED_PREVIEW",
+            "map_saved": False,
+            "operation_status": "REJECTED_PRECHECK_NO_SCENE_MUTATION",
+            "reason": type(exc).__name__ + ": " + str(exc)[:512],
+            "preview_placed": 0,
+            "native_contact_executed": False,
+            "production_admitted": False,
+            "qualified_assets": [],
+            "performance_pass": False,
+        }
+    policy, support = load_helpers()
+    materials = load_materials(unreal, context, data)
+    cache = getattr(live, "_pcg365_remote_imports", {})
+    key = parameters["manifest_sha256"]
+    meshes = cache.get(key)
+    if meshes is None:
+        meshes = {}
+        # Cache each success immediately; a partial failed import never grants
+        # contact but remains explicitly owned memory for a later safe retry.
+        cache[key] = meshes
+        live._pcg365_remote_imports = cache
+    for asset in data["assets"]:
+        if asset["id"] not in meshes:
+            meshes[asset["id"]] = import_mesh(
+                unreal, asset, materials[asset["id"]], DESTINATION + "/R" + key[:16]
+            )
+        mesh = meshes[asset["id"]]
+        actual = mesh.get_bounds()
+        need(
+            mesh.get_num_triangles(0) == asset["expected_lod0_triangles"]
+            and all(
+                abs(a - b) <= 0.01
+                for a, b in zip(
+                    vec(actual.origin) + vec(actual.box_extent),
+                    asset["bounds_cm"]["origin"] + asset["bounds_cm"]["extent"],
+                )
+            ),
+            "Cached native geometry changed",
+        )
+        need(
+            all(
+                mesh.get_material(i) == materials[asset["id"]]
+                for i in range(len(mesh.static_materials))
+            ),
+            "Cached Forge binding changed",
+        )
+    result = {
+        "status": "APPLIED_PREVIEW",
+        "map_saved": False,
+        "preview_placed": 0,
+        "production_admitted": False,
+        "qualified_assets": [],
+        "performance_pass": False,
+        "memory_imports": sorted(meshes),
+        "cases": [],
+        "footprint_exclusions": footprint_evidence,
+        "full_qualification": False,
+        "continuous_support_verified": False,
+    }
+    if parameters["operation"] == "import":
+        read_manifest(parameters["manifest_sha256"])
+        load_materials(unreal, context, data)
+        return result
+    return start_contact_job(
+        unreal,
+        {**context, "_pcg365_manifest_sha256": parameters["manifest_sha256"]},
+        data,
+        meshes,
+        materials,
+        result,
+        policy,
+        support,
+    )
