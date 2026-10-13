@@ -119,7 +119,7 @@ try {
     $mapPackage,
     # Owner-authorized #365 PCGEx authoring through Epic's local MCP server.
     # Graphs consume the accepted world; the original map remains protected.
-    '-EnablePlugins=PixelStreaming2,PCGExtendedToolkit,PCGExAssistant,PCGToolset,ModelContextProtocol',
+    '-EnablePlugins=PixelStreaming2,PCGExtendedToolkit,PCGExAssistant,PCGToolset,EditorToolset,ModelContextProtocol',
     '-DisablePlugins=Wingman,AndroidFileServer',
     '-ini:EditorPerProjectUserSettings:[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]:bAutoStartServer=True',
     '-ini:EditorPerProjectUserSettings:[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]:ServerPortNumber=8000',

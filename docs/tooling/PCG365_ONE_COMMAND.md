@@ -30,7 +30,7 @@ The graph is a candidate until executed and read back in the target Editor. Inpu
 
 UE 5.8.2: changelist 56702186, compatible binary BuildId 55116800. PCGEx 0.79: `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66`, with the existing `yacs-pcgex-0.79-horizontal-boundary-v2` patch. The retained source passed the repository bootstrap validator before 2,313 authenticated files were staged into the Remote project. Staging is not proof of module loading.
 
-The owner explicitly requested PCGEx/MCP activation and authorized closing Remote. `Start-YacsLiveHost.ps1` enables PCGEx, PCGEx Assistant, Epic PCG Toolset and Epic MCP on local port 8000. Preserve the immutable release updater, task owner, map hash checks and single Editor ownership. Never edit an installed immutable release in place.
+The owner explicitly requested PCGEx/MCP activation and authorized closing Remote. `Start-YacsLiveHost.ps1` enables PCGEx, PCGEx Assistant, Epic PCG Toolset, Epic Editor Toolset and Epic MCP on local port 8000. Preserve the immutable release updater, task owner, map hash checks and single Editor ownership. Never edit an installed immutable release in place.
 
 PCGEx Assistant 0.3.2 is installed in the target project from its acquired FAB manifest. The 45 files were downloaded from the manifest's Epic CDN with Legendary 0.20.34, verified against every manifest SHA-1 and copied with SHA-256 verification. No engine updater was used for this installation. Its binary BuildId is 55116800. The installed source confirms `GetNodeSchema`, `CreateNode` and `AddSubnodes`, in addition to knowledge/introspection. Use Assistant to create PCGEx nodes and Epic PCG Toolset to update/connect them; live MCP and generation proof remain pending.
 
@@ -50,3 +50,5 @@ The older `--mode regional-preview` remains available for admitted recipe `79e63
 Follow the [rollout handoff](SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md) and [world-graph contract](SA_CALOBRA_WORLD_GRAPH.md). Owner acceptance remains `PENDING_FINAL_M3`; performance remains `DEFERRED_AFTER_M3`, `performance_pass: false`.
 
 The Launcher engine update to 5.8.3 was canceled after IS-UP-MF02-5 (Core.dll relocation failed). The installed engine still reports 5.8.2; cancellation alone is not a complete binary integrity proof.
+
+The owner explicitly authorized broad editor MCP access on 2026-10-13. Load the installed EditorToolset through the starter command line: modifying the authenticated project descriptor causes the existing latest-world preflight to reject startup. Keep the original descriptor and all five protected packages intact. The tool registry remains the access boundary; enabling the plugin does not itself grant every tool. Native object/asset/material tools extend orchestration, not geographic authority or owner visual acceptance.
