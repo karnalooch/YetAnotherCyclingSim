@@ -11,8 +11,9 @@ Owner authorized push/CI/deployment and discarding unsaved edits. Reviewed
 release `a3dcb57829fd5b89b5a7376ef05ef872690dcc27` reopened saved v0.3.1;
 native world/material readback and independent browser frames passed. Native import of all twenty candidates and three receiver requests passed at
 `a5e2730c`. Contact rolled back before sampling because UE struct allocation
-addresses were compared as transform values. The tested numeric-value fix is
-awaiting owner-authorized rollout; zero actors were placed. No regional
+addresses were compared as transform values. The numeric-value guard passed in native UE. A missing instance query API
+then rejected the job with zero actors; the tested explicit Geometry Script
+library correction awaits native rollout. No regional
 placement or merge follows.
 
 The [source-backed spatial draft](../experiments/sa-calobra-spatial-treatment-plan-20261013/README.md)

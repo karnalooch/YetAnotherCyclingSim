@@ -367,6 +367,43 @@ class IncrementalContact(unittest.TestCase):
             self.assertEqual(context["live"]._pcg365_remote_actors, [])
             self.assertFalse(job["_advancing"])
 
+    def test_all_change_guards_bind_before_first_native_triangle_query(self):
+        api, context, data, result, callbacks = self.setup_job()
+        events = []
+
+        def guards(*args):
+            events.append("guard_binding")
+            yield {"grid": None, "native_guard_binding": True}
+            events.append("guards_complete")
+
+        def geometry(*args):
+            events.append("native_geometry")
+            raise RuntimeError("stop after verified ordering")
+
+        with (
+            patch.object(m, "bind_native_mesh_guards_steps", side_effect=guards),
+            patch.object(m, "native_road_exclusion_steps", side_effect=geometry),
+        ):
+            generator = m.planting_steps(
+                api,
+                context,
+                data,
+                {},
+                result,
+                None,
+                None,
+                None,
+                None,
+                {"_native_bounds": {}},
+            )
+            self.assertTrue(next(generator)["native_guard_binding"])
+            self.assertEqual(events, ["guard_binding"])
+            with self.assertRaisesRegex(RuntimeError, "verified ordering"):
+                next(generator)
+            self.assertEqual(
+                events, ["guard_binding", "guards_complete", "native_geometry"]
+            )
+
     def test_wall_budget_yields_early_without_dropping_positions(self):
         api, context, data, result, callbacks = self.setup_job()
 
@@ -554,14 +591,8 @@ class NativeRoadExclusion(unittest.TestCase):
             def get_triangle_count(self):
                 return 1
 
-            def get_num_triangle_ids(self):
-                return 1
-
             def get_path_name(self):
                 return "/Game/Test.Mesh"
-
-            def get_triangle_positions(self, tid):
-                return (True, *(vector(*p) for p in self.positions))
 
         class Component:
             def __init__(self, label):
@@ -610,6 +641,13 @@ class NativeRoadExclusion(unittest.TestCase):
             Vector=vector,
             GameplayStatics=SimpleNamespace(get_all_actors_of_class=lambda *_: actors),
             MathLibrary=SimpleNamespace(transform_location=transform_location),
+            GeometryScript_MeshQueries=SimpleNamespace(
+                get_num_triangle_i_ds=lambda mesh: 1,
+                get_triangle_positions=lambda mesh, tid: (
+                    True,
+                    *(vector(*p) for p in mesh.positions),
+                ),
+            ),
         )
         data = {
             "assets": [{"id": "rock"}],

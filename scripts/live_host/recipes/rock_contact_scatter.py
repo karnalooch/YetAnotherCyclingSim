@@ -991,12 +991,31 @@ def native_geometry_inventory(unreal, world, expected_labels):
     return sorted(actors, key=lambda a: a.get_actor_label())
 
 
+def native_mesh_query(unreal, normalized_name):
+    """Resolve the installed reflected library spelling (IDs may become i_ds)."""
+    library = getattr(unreal, "GeometryScript_MeshQueries", None)
+    need(library is not None, "Installed GeometryScript_MeshQueries library missing")
+    names = [
+        name
+        for name in dir(library)
+        if name.replace("_", "").lower() == normalized_name
+    ]
+    need(
+        len(names) == 1 and callable(getattr(library, names[0])),
+        "Ambiguous/missing reflected mesh query: " + normalized_name,
+    )
+    return getattr(library, names[0])
+
+
 def native_component_snapshot(unreal, actor):
     component = actor.get_dynamic_mesh_component()
     need(component is not None, "Current native road/CUT/support component missing")
     mesh = component.get_dynamic_mesh()
     need(mesh is not None, "Current native road/CUT/support mesh missing")
-    count, ids = mesh.get_triangle_count(), mesh.get_num_triangle_ids()
+    count, ids = (
+        mesh.get_triangle_count(),
+        native_mesh_query(unreal, "getnumtriangleids")(mesh),
+    )
     need(
         type(count) is int and type(ids) is int and 0 < count <= ids <= 4000000,
         "Unsupported native mesh triangle-ID inventory",
@@ -1062,6 +1081,7 @@ def native_road_exclusion_steps(unreal, world, data, native_bounds, job, previou
         "Native mesh modified before triangle scan",
     )
     actors = native_geometry_inventory(unreal, world, job["_expected_native_labels"])
+    triangle_positions = native_mesh_query(unreal, "gettrianglepositions")
     squares = {}
     for row in data["placements"]:
         bounds = native_bounds[row["asset_id"]]
@@ -1103,7 +1123,7 @@ def native_road_exclusion_steps(unreal, world, data, native_bounds, job, previou
         digestor = hashlib.sha256()
         valid = 0
         for tid in range(metadata["triangle_ids"]):
-            result = mesh.get_triangle_positions(tid)
+            result = triangle_positions(mesh, tid)
             need(
                 isinstance(result, tuple)
                 and len(result) == 4
@@ -1197,6 +1217,7 @@ def planting_steps(
     unreal, context, data, meshes, result, policy, support, editor, ground, job
 ):
     live, world = context["live"], context["live"].world
+    yield from bind_native_mesh_guards_steps(unreal, world, job)
     snapshot, native_exclusions = yield from native_road_exclusion_steps(
         unreal, world, data, job["_native_bounds"], job
     )

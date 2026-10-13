@@ -3,7 +3,7 @@
   "issue": 365,
   "source_base_sha": "0dd86495fab674a9d6aee22ba0759539d8bd7242",
   "source_uncommitted_at_cpu_execution": true,
-  "native_unreal_execution": "IMPORTED20_RECEIVER_3_REQUESTS_PASSED_CONTACT_GUARD_FALSE_POSITIVE_NO_PLACEMENT",
+  "native_unreal_execution": "IMPORTED20_NUMERIC_TRANSFORM_GUARD_PASSED_NATIVE_QUERY_INSTANCE_API_MISSING",
   "placement": false,
   "qualified_assets": [],
   "entries": [
@@ -296,6 +296,38 @@
       "original_sha256": "20aa0f2918fb3317d37a1c08529b1308c8e54d6619c84850cc3ef41e85f2903a",
       "compressed_bytes": 188,
       "compressed_sha256": "b3e7d90e0dd1a0061c41e839de06968273c3de59cfadb3d79e31ed62779706f2"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T115240Z-cb1ba00e930b\\commands\\000001-0244ec41fdbf4088a453.result.json",
+      "copy": "evidence/remote-deployment/native-query-api-000001-0244ec41fdbf4088a453.result.json.gz",
+      "original_bytes": 4417,
+      "original_sha256": "436e7bd23bd266e8e048d4c123c91a85bc0650a910e0d3bb8646740559e93d87",
+      "compressed_bytes": 1364,
+      "compressed_sha256": "81fd98e5671def1372c3c63352f387720c100ceb81cc678b6d6c04fbcdc332b8"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T115240Z-cb1ba00e930b\\commands\\000002-5aa94c873eb846f7ba93.result.json",
+      "copy": "evidence/remote-deployment/native-query-api-000002-5aa94c873eb846f7ba93.result.json.gz",
+      "original_bytes": 4624,
+      "original_sha256": "0dfbcc9744d9d97cdeee91e55210221764bd2bd01026aabcdab61b35fe1d407c",
+      "compressed_bytes": 1486,
+      "compressed_sha256": "47dc3270ff05896c77202c6822de1eed31b37422846b597f30bb18de4a5a37e3"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T115240Z-cb1ba00e930b\\owner-native-query-fix-pause.json",
+      "copy": "evidence/remote-deployment/owner-native-query-fix-pause.json.gz",
+      "original_bytes": 684,
+      "original_sha256": "27755cc3569fe22c843da76070e84843e7f0842f9061b463aff5036b4e24540c",
+      "compressed_bytes": 471,
+      "compressed_sha256": "103b8901828b8026d75b7ee68c56852ecbc9b518121479e21c70b8420e10d7ed"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-deployment-2b7c3bfc/ci.json",
+      "copy": "evidence/remote-deployment/ci-2b7c3bfc.json.gz",
+      "original_bytes": 209,
+      "original_sha256": "ecd6e02fb5b3973767aaf60993f05c336be153ac431ba1a36cfb030bcb51303d",
+      "compressed_bytes": 187,
+      "compressed_sha256": "26cf72cd617df10d4c9f1f219829852e66ddc904be1b8971041e66be58df4ec8"
     }
   ],
   "remote_world_execution": {
@@ -309,24 +341,18 @@
   },
   "preview_placement_status": "ZERO_CONTACT_JOB_ROLLED_BACK",
   "latest_native_rock_execution": {
-    "source_sha": "a5e2730c8954efa1d8c2387c0632431516bc785c",
-    "session": "20261013T111647Z-35e67509f1d3",
+    "source_sha": "2b7c3bfcf6d910e36199595f3fa0aa7ddb596603",
+    "session": "20261013T115240Z-cb1ba00e930b",
     "imported_candidates": 20,
-    "publisher_workflow": 38387960838,
+    "publisher_workflow": 38391772939,
     "publisher_conclusion": "success",
-    "completed_request_sequences": [
-      1,
-      2,
-      3
-    ],
-    "receiver_reentry_failure_reproduced": false,
     "contact_status": "CONTACT_JOB_FAILED_ROLLED_BACK",
-    "contact_error": "Landscape transform changed during contact job",
+    "phase": "READ_CURRENT_NATIVE_GEOMETRY",
+    "contact_error": "DynamicMesh object has no attribute get_num_triangle_ids",
     "sampled_positions": 0,
     "preview_placed": 0,
     "rollback_complete": true,
-    "diagnosis": "UE_STRUCT_STR_CONTAINS_ALLOCATION_ADDRESS",
     "saved_checkpoint_unchanged": true,
-    "session_stopped_by_owner_authorization": true
+    "session_stopped_for_authorized_deployment_continuation": true
   }
 }

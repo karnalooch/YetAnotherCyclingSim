@@ -200,3 +200,23 @@ of every transform field and reject nonfinite values. 56 focused CPU tests,
 Ruff and docs guards PASS. This fix remains pending exact-head/native rollout.
 The owner explicitly authorized another discard/pause; saved v0.3.1 hashes
 were verified unchanged before stopping only the owned session.
+
+## Reflected Geometry Script query correction
+
+Release `2b7c3bfcf6d910e36199595f3fa0aa7ddb596603` passed exact-head CI and
+Forge proof, reopened v0.3.1 and imported twenty candidates. The numeric
+Landscape transform guard passed. The next native read rejected a missing
+`DynamicMesh.get_num_triangle_ids` method; no triangle/contact samples or
+placements occurred and rollback completed. Source `ScriptMethod` metadata
+did not establish an instance method in this installed Python runtime.
+
+The correction calls the installed `GeometryScript_MeshQueries` function
+library explicitly. Reflected names are resolved unambiguously by a fixed
+normalized token, covering the generated `IDs` / `i_ds` spelling without
+inventing a method or accepting arbitrary request code. Test meshes deliberately
+lack the unsupported instance methods. Review also found that the binding
+generator was defined but not invoked; it is now explicitly completed before
+the first triangle query, with a regression test of this ordering. 57 focused
+CPU tests, Ruff, docs guards and diff check PASS. Native proof remains pending.
+Owner-authorized continuation retained/discarded only the owned zero-placement
+preview session after rechecking the five saved checkpoint package hashes.
