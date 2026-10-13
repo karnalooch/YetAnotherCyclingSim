@@ -29,12 +29,19 @@ $recordPath=Join-Path $state 'installation.json'
 $trial=Get-Content -LiteralPath $recordPath -Raw | ConvertFrom-Json
 if ($trial.source_sha -cne $ExpectedTrialHead -or
     $trial.previous_source_sha -cne $ExpectedOriginalHead -or
+    $trial.world_profile_id -cne 'latest_verified' -or
     $trial.video_codec -cne 'VP9' -or $trial.vp9_trial -ne $true) {
   throw 'VP9 test identity changed; refuse rollback to wrong release.'
 }
-$backup=@(Get-ChildItem -LiteralPath $state -File -Filter 'installation-before-vp9-*.json')
+# A historical f4 -> 8f VP9 backup may still exist. Roll back only the
+# *immediately preceding* world-profile upgrade with matching exact source SHA.
+$backup=@(Get-ChildItem -LiteralPath $state -File -Filter 'installation-before-latest-world-*.json' |
+  Where-Object {
+    $candidate=Get-Content -LiteralPath $_.FullName -Raw | ConvertFrom-Json
+    $candidate.source_sha -ceq $ExpectedOriginalHead
+  })
 if ($backup.Count -ne 1) {
-  throw 'Exactly one original metadata backup is required for rollback.'
+  throw 'Exactly one backup of the pinned previous world release is required.'
 }
 $original=Get-Content -LiteralPath $backup[0].FullName -Raw | ConvertFrom-Json
 if ($original.source_sha -cne $ExpectedOriginalHead -or
@@ -89,7 +96,8 @@ $preview=[ordered]@{
   status='ROLLBACK_TO_ORIGINAL_READY_FOR_OWNER_CONFIRMATION'
   current_source_sha=$ExpectedTrialHead
   original_source_sha=$ExpectedOriginalHead
-  original_video_codec='H264'
+  original_video_codec=$original.video_codec
+  restoring_previous_world=$true
   trial_release_preserved=$true
   running_editor_stopped=$false
 }
@@ -124,7 +132,7 @@ try {
   throw "ROLLBACK_CANCELLED_TRIAL_RESTORED: $failure"
 }
 [pscustomobject]@{
-  status='H264_ORIGINAL_TASK_RESTORED_NO_START'
+  status='PREVIOUS_WORLD_TASK_RESTORED_NO_START'
   source_sha=$ExpectedOriginalHead
   trial_release_preserved=$true
   original_media_failure_not_fixed=$true

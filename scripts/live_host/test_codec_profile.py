@@ -79,7 +79,7 @@ class CodecProfileSource(unittest.TestCase):
     def test_rollback_is_explicit_and_no_automatic_restart(self):
         rollback = source("Rollback-YacsLiveHostCodec.ps1")
         self.assertIn("original_source_sha=$ExpectedOriginalHead", rollback)
-        self.assertIn("H264_ORIGINAL_TASK_RESTORED_NO_START", rollback)
+        self.assertIn("PREVIOUS_WORLD_TASK_RESTORED_NO_START", rollback)
         self.assertIn("trial_release_preserved=$true", rollback)
         self.assertIn("Assert-YacsLiveTaskPrincipal", rollback)
         self.assertLess(rollback.index("if (-not $Apply)"), rollback.index("Copy-Item -LiteralPath $recordPath -Destination $trialBackup"))
@@ -91,7 +91,7 @@ class CodecProfileSource(unittest.TestCase):
     def test_fresh_install_uses_correct_powershell_quotes(self):
         installer = source("Install-YacsLiveHost.ps1")
         self.assertIn("$arguments='-NoLogo -NoProfile -File \"' + $startScript", installer)
-        self.assertIn("video_codec='H264'", installer)
+        self.assertIn("video_codec='VP9'", installer)
 
     def test_no_world_or_runner_mutation_in_codec_scripts(self):
         for name in (

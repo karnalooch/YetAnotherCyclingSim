@@ -2,6 +2,18 @@
 
 > Scoped policy migrated from original root AGENTS.md (blob `c4c75a9e92088195a7aad1c72c849ac9482d1462`). Read only for applicable work. Current domain SSOT and owner decisions take precedence over superseded chronology.
 
+### Owner live-world source selection — 2026-10-13
+
+Always open the latest saved and technically verified Sa Calobra consumer in
+the independent YACS Live Host, not historical diagnostic P0–P4 scenes.
+Currently selected v0.3.1 L_RoadSurface includes the retained accepted
+road/asphalt/shoulder bindings. Refuse startup when its local project, original
+map, package hashes or native material readback differ. Lighting must be
+observed in native UE before claiming global illumination; user visual
+acceptance remains separate. New world-profile releases retain VP9 and are
+installed only with an idle owned Editor. Previous unsaved user edits in the
+live session must be reviewed before any deliberate one-time restart.
+
 ### Owner-approved independent YACS Live Host — 2026-10-12
 
 The owner requests a **persistent, interactive Unreal Editor after Windows

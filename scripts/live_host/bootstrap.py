@@ -22,32 +22,36 @@ def main():
     unreal.EditorPythonScripting.set_keep_python_script_alive(True)
     release = Path(os.environ["YACS_LIVE_RELEASE"]).resolve()
     sys.path.insert(0, str(release))
-    from scripts.live_host.protocol import (
-        Rejected, need, load_bounded_json, validate_red_manifest,
-        existing_abslog_only, safe_session_root, STAGE,
-    )
+    from scripts.live_host.protocol import need, existing_abslog_only, safe_session_root
     from scripts.live_host import live_requests
-    from scripts.ue.pcg365_red_marker_preview import RedReview
+    from scripts.live_host.live_world_road import VerifiedRoadWorld
 
     session_id = os.environ["YACS_LIVE_SESSION_ID"]
     code_sha = os.environ["YACS_LIVE_SOURCE_SHA"]
     requested_codec = os.environ.get("YACS_LIVE_CODEC", "H264")
     if requested_codec not in ("H264", "VP9"):
         raise ValueError("Unreviewed Pixel Streaming 2 codec")
+    world_profile = os.environ.get("YACS_LIVE_WORLD_PROFILE")
+    if world_profile != "latest_verified":
+        raise ValueError("No reviewed latest-world profile; reject old diagnostics")
     live_root = Path(os.environ["YACS_LIVE_ROOT"]).resolve()
     stage = Path(unreal.Paths.project_dir()).resolve()
     session = safe_session_root(live_root, session_id)
     try:
-        need(stage == STAGE.resolve(), "Editor did not load pinned diagnostic stage")
         need(session.parent.parent == live_root, "Session path escaped dedicated live host")
         existing_abslog_only(session)
-        manifest = load_bounded_json(
-            release / "worldgen/sa_calobra/pcg365_rejected_sites_review_v1.json",
-            size=8192,
+        registry_path = release / "scripts/live_host/verified_worlds.json"
+        need(registry_path.is_file() and registry_path.stat().st_size <= 8192,
+             "No bounded admitted latest-world registry")
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        LIVE = VerifiedRoadWorld(
+            project=stage,
+            session=session,
+            registry=registry,
+            profile_id=registry["selected_world_id"],
+            release=release,
         )
-        validate_red_manifest(manifest)
-        LIVE = RedReview(stage, session / "scene", manifest, code_sha)
-        LIVE.start(persistent=True)
+        world_receipt = LIVE.start(unreal)
         BRIDGE = live_requests.attach(
             unreal, live=LIVE, root=live_root, session=session_id,
             source_sha=code_sha,
@@ -59,8 +63,13 @@ def main():
             "session": session_id,
             "code_sha": code_sha,
             "editor_pid": os.getpid(),
-            "marker_count": len(LIVE.owned),
+            "world_profile_id": "latest_verified",
+            "world_id": LIVE.profile_id,
             "world_package": LIVE.map_package,
+            "road_native_actor_count": world_receipt["road_native_actor_count"],
+            "material_binding_count": world_receipt["material_bindings_verified"],
+            "lighting": world_receipt["lighting"],
+            "global_lighting_visual_pass": False,
             "map_saved": False,
             "terrain_modified": False,
             "placement": False,

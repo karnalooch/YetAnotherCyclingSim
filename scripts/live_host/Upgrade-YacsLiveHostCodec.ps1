@@ -63,6 +63,14 @@ if (@($bound).Count -ne 0) { throw 'Streaming/MCP listeners are still occupied.'
 if ([IO.DriveInfo]::new('D:\').AvailableFreeSpace -lt 5GB) {
   throw 'D: free space below five GiB reserve.'
 }
+# The selected latest verified map must really exist on this PC, with original
+# package hashes. A missing project/map blocks upgrade, not a silent P3 fallback.
+$world=& (Join-Path $RepoRoot 'scripts/live_host/Resolve-YacsLiveWorld.ps1') -SourceRoot $RepoRoot
+if ($world.status -cne 'LATEST_VERIFIED_WORLD_PREFLIGHT_PASS' -or
+    $world.profile_id -cne 'sa_calobra_road_v0_3_1' -or
+    $world.validated_packages -ne 5 -or $world.fallback_used -ne $false) {
+  throw 'No admitted latest saved road, asphalt, shoulder and lighting consumer.'
+}
 function Assert-NoReparse([string]$Path) {
   $cursor=[IO.Path]::GetFullPath($Path)
   while ($cursor) {
@@ -144,6 +152,11 @@ $preview=[ordered]@{
   current_source_sha=$ExpectedInstalledHead
   next_source_sha=$ExpectedHead
   requested_codec=$VideoCodec
+  next_world_profile='latest_verified'
+  world_version=$world.version
+  world_package=$world.map_package
+  world_packages_verified=$world.validated_packages
+  global_lighting_visual_pass=$false
   console_sid=$install.desktop_sid
   task_state=[string]$task.State
   source_files=$relFiles.Count
@@ -170,7 +183,7 @@ foreach($proof in @($proofs)) {
 }
 Move-Item -LiteralPath $incomplete -Destination $newRelease -ErrorAction Stop
 $upgradeToken=[DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ')
-$oldBackup=Join-Path $stateRoot "installation-before-vp9-$upgradeToken.json"
+$oldBackup=Join-Path $stateRoot "installation-before-latest-world-$upgradeToken.json"
 if (Test-Path -LiteralPath $oldBackup) { throw 'Previous receipt already exists.' }
 Copy-Item -LiteralPath $installedFile -Destination $oldBackup -ErrorAction Stop
 if ((Get-FileHash -LiteralPath $oldBackup -Algorithm SHA256).Hash -cne
@@ -186,6 +199,9 @@ $updated.installed_at_utc=[DateTime]::UtcNow.ToString('o')
 $updated | Add-Member -NotePropertyName 'previous_source_sha' -NotePropertyValue $ExpectedInstalledHead -Force
 $updated | Add-Member -NotePropertyName 'video_codec' -NotePropertyValue $VideoCodec -Force
 $updated | Add-Member -NotePropertyName 'vp9_trial' -NotePropertyValue $true -Force
+$updated | Add-Member -NotePropertyName 'world_profile_id' -NotePropertyValue 'latest_verified' -Force
+$updated | Add-Member -NotePropertyName 'world_version' -NotePropertyValue $world.version -Force
+$updated | Add-Member -NotePropertyName 'map_package' -NotePropertyValue $world.map_package -Force
 $nextRecord=Join-Path $stateRoot "installation-pending-vp9-$upgradeToken.json"
 $updated | ConvertTo-Json -Depth 18 | Set-Content -LiteralPath $nextRecord -Encoding utf8
 $nextAction=New-ScheduledTaskAction -Execute $pwsh -Argument $newArgs -WorkingDirectory $newRelease
@@ -199,7 +215,9 @@ try {
     $observed.Actions.Count -ne 1 -or
     $observed.Actions[0].Arguments -cne $newArgs -or
     $record.source_sha -cne $ExpectedHead -or
-    $record.video_codec -cne $VideoCodec) {
+    $record.video_codec -cne $VideoCodec -or
+    $record.world_profile_id -cne 'latest_verified' -or
+    $record.map_package -cne $world.map_package) {
     throw 'Task or installation readback changed during one-shot upgrade.'
   }
 } catch {
@@ -216,6 +234,9 @@ try {
   status='VP9_IMMUTABLE_RELEASE_INSTALLED_NOT_STARTED'
   source_sha=$ExpectedHead;previous_source_sha=$ExpectedInstalledHead
   requested_video_codec=$VideoCodec;task_state='Ready'
+  world_profile_id='latest_verified';world_version=$world.version
+  map_package=$world.map_package;world_packages_verified=5
+  global_lighting_visual_pass=$false
   source_bytes=$total;old_release_unchanged=$true
   editor_started=$false;codec_negotiated_verified=$false
   metadata_backup=$oldBackup

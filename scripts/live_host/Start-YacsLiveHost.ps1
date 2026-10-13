@@ -27,6 +27,11 @@ if ($sha -cnotmatch '^[a-f0-9]{40}$') { throw 'Missing exact installed source SH
 # record, not by browser PreferredCodec or a GitHub Actions process.
 $videoCodec=if ($null -ne $install.PSObject.Properties['video_codec']) { [string]$install.video_codec } else { 'H264' }
 if ($videoCodec -cnotin @('H264','VP9')) { throw 'Unreviewed Pixel Streaming 2 codec; refuse auto fallback.' }
+# An old installation without an explicit world target MUST NOT show stale P3.
+if ($null -eq $install.PSObject.Properties['world_profile_id'] -or
+    $install.world_profile_id -cne 'latest_verified') {
+  throw 'LATEST_VERIFIED_WORLD_BLOCKED: update the owner installation before starting UE; no historical-map fallback.'
+}
 $release=Join-Path $InstallRoot "releases\$sha"
 $codecHelper=Join-Path $release 'scripts/live_host/EncoderProfile.ps1'
 if (-not (Test-Path -LiteralPath $codecHelper -PathType Leaf)) { throw 'Expected reviewed encoder helper missing.' }
@@ -44,13 +49,20 @@ if ($proc.SessionId -le 0) { throw 'Live Host must start inside interactive desk
 $consoleUser=(Get-CimInstance Win32_ComputerSystem -ErrorAction Stop).UserName
 if (-not $consoleUser -or $consoleUser -ine $principal.Name) { throw 'Active console login is not the expected owner.' }
 
-$stage='D:\yacs\work\pcg365\d361e7651d16ff424ae4e812c7d8cbe1fe81d662\38278235093-1'
-$project=Join-Path $stage 'Pcg365Diagnostic.uproject'
-$map=Join-Path $stage 'Content/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview.umap'
-$expectedMapSha='bf2b92945865e2307990b6d3da40095dfa0774d28affb32a1e42e55f288764dd'
-if (-not (Test-Path -LiteralPath $project -PathType Leaf) -or
-    (Get-FileHash -LiteralPath $map -Algorithm SHA256).Hash.ToLowerInvariant() -cne $expectedMapSha) {
-  throw 'Historical original Landscape stage/map authority differs.'
+# Read-only source-backed latest-world selection. Missing/dirty inputs STOP;
+# never fall back to the prior red-site P0-P4 diagnostic map.
+$world=& (Join-Path $release 'scripts/live_host/Resolve-YacsLiveWorld.ps1') -SourceRoot $release
+if ($world.status -cne 'LATEST_VERIFIED_WORLD_PREFLIGHT_PASS' -or
+    $world.fallback_used -ne $false -or $world.validated_packages -ne 5) {
+  throw 'Latest saved road map is not authenticated.'
+}
+$stage=[string]$world.project_root
+$project=[string]$world.project_file
+$map=[string]$world.map_file
+$mapPackage=[string]$world.map_package
+$expectedMapSha=[string]$world.map_sha256
+if ((Get-FileHash -LiteralPath $map -Algorithm SHA256).Hash.ToLowerInvariant() -cne $expectedMapSha) {
+  throw 'Latest-world map changed after preflight; refuse old map fallback.'
 }
 $hostScript=Join-Path $release 'scripts/runner/Get-YacsUnrealHostState.ps1'
 $before=& $hostScript
@@ -76,6 +88,9 @@ $editor=$null
 $status='STARTING'
 $browserProved=$false
 $ownerStart=$null
+$worldReady=$false
+$verifiedBindings=0
+$lightingObserved=$null
 
 function Save-Status([string]$CurrentStatus) {
   $heartbeat=[ordered]@{
@@ -88,6 +103,9 @@ function Save-Status([string]$CurrentStatus) {
     map_saved=$false;terrain_modified=$false;placement=$false
     qualified_assets=@();performance_pass=$false
     requested_video_codec=$videoCodec
+    world_profile_id='latest_verified';map_package=$mapPackage
+    world_native_verified=$worldReady;material_binding_count=$verifiedBindings
+    lighting_observed=$lightingObserved;global_lighting_visual_pass=$false
     last_seen_utc=[DateTime]::UtcNow.ToString('o')
   }
   $tmp=Join-Path $sessionRoot 'host-status.tmp'
@@ -115,7 +133,7 @@ try {
     ('-AbsLog="' + (Join-Path $sessionRoot 'editor.log') + '"')
   )
   $oldEnv=@{}
-  foreach($key in @('YACS_LIVE_CODEC','PYTHONHOME','PYTHONPATH','YACS_LIVE_RELEASE','YACS_LIVE_SESSION_ID','YACS_LIVE_SOURCE_SHA','YACS_LIVE_ROOT')) {
+  foreach($key in @('YACS_LIVE_WORLD_PROFILE','YACS_LIVE_CODEC','PYTHONHOME','PYTHONPATH','YACS_LIVE_RELEASE','YACS_LIVE_SESSION_ID','YACS_LIVE_SOURCE_SHA','YACS_LIVE_ROOT')) {
     $oldEnv[$key]=[Environment]::GetEnvironmentVariable($key,'Process')
   }
   try {
@@ -125,6 +143,7 @@ try {
     $env:YACS_LIVE_SESSION_ID=$session
     $env:YACS_LIVE_SOURCE_SHA=$sha
     $env:YACS_LIVE_CODEC=$videoCodec
+    $env:YACS_LIVE_WORLD_PROFILE='latest_verified'
     $env:YACS_LIVE_ROOT=$root
     $editor=Start-Process -FilePath $engine -ArgumentList $args -WorkingDirectory $stage -PassThru
   } finally {
@@ -137,6 +156,7 @@ try {
     desktop_sid=$principal.User.Value;live_host_pid=$PID
     status='STARTING_NOT_ADMITTED';map_saved=$false;placement=$false
     requested_video_codec=$videoCodec
+    world_profile_id='latest_verified';map_package=$mapPackage
   }
   $active | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $stateRoot 'current-session.json') -Encoding utf8
   $deadline=[DateTime]::UtcNow.AddMinutes(4)
@@ -152,9 +172,16 @@ try {
       $ready=Get-Content -LiteralPath $readback -Raw | ConvertFrom-Json
       if ($ready.status -cne 'LIVE_SCENE_AND_COMMAND_BRIDGE_READY' -or
         $ready.code_sha -cne $sha -or $ready.editor_pid -ne $editor.Id -or
-        @($ready.marker_count).Count -ne 1 -or $ready.marker_count -ne 5 -or
+        $ready.world_profile_id -cne 'latest_verified' -or
+        $ready.world_package -cne $mapPackage -or
+        $ready.road_native_actor_count -ne 559 -or
+        $ready.material_binding_count -ne 186 -or
+        $ready.map_saved -ne $false -or
         $ready.placement -ne $false -or
-        $ready.requested_video_codec -cne $videoCodec) { throw 'Live scene/bridge readback differs.' }
+        $ready.requested_video_codec -cne $videoCodec) { throw 'Latest road scene/bridge readback differs.' }
+      $worldReady=$true
+      $verifiedBindings=186
+      $lightingObserved=$ready.lighting
       break
     }
     # Do not write into the fresh session until Unreal's Python bootstrap

@@ -111,6 +111,7 @@ if ($Verify) {
     principal_id=[string]$task.Principal.UserId
     principal_validation=$principalProof.status
     root=$InstallRoot;browser_proven=$false;post_job_survival_proven=$false
+    world_profile_id=if($null -ne $data.PSObject.Properties['world_profile_id']) { $data.world_profile_id } else { 'DIAGNOSTIC_LEGACY_NOT_LATEST' }
   } | ConvertTo-Json -Depth 6
   return
 }
@@ -121,6 +122,13 @@ if($LASTEXITCODE -ne 0 -or $tracked.Count -lt 50 -or $tracked.Count -gt 2500) {
 }
 if ([IO.DriveInfo]::new('D:\').AvailableFreeSpace -lt 5GB) {
   throw 'D: reserve below five GiB.'
+}
+# New Live Host installs must point to the latest saved accepted map; validate
+# road/shoulder package hashes rather than falling back to red-site diagnostics.
+$world=& (Join-Path $RepoRoot 'scripts/live_host/Resolve-YacsLiveWorld.ps1') -SourceRoot $RepoRoot
+if ($world.status -cne 'LATEST_VERIFIED_WORLD_PREFLIGHT_PASS' -or
+    $world.profile_id -cne 'sa_calobra_road_v0_3_1') {
+  throw 'No admitted latest verified world; no historical fallback.'
 }
 foreach($relative in $tracked) {
   if($relative -cnotmatch '^scripts/[a-zA-Z0-9_./-]+$' -or $relative -match '\.\.') {
@@ -179,7 +187,9 @@ $record=[ordered]@{
   file_proofs=@($fileProofs)
   # New installations use explicit documented default. Existing immutable
   # f4a0366a sessions are upgraded through Upgrade-YacsLiveHostCodec.ps1.
-  video_codec='H264'
+  video_codec='VP9'
+  world_profile_id='latest_verified';world_version=$world.version
+  map_package=$world.map_package
   task=$taskName;no_service_changes=$true
   no_runner_changes=$true;placement=$false
   installed_at_utc=[DateTime]::UtcNow.ToString('o')

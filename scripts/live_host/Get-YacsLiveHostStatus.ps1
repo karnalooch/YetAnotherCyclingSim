@@ -31,6 +31,9 @@ $requestedCodec=if($null -ne $install.PSObject.Properties['video_codec']) {
 if($requestedCodec -cnotin @('H264','VP9','LEGACY_DEFAULT_NOT_PINNED')) {
   throw 'Unknown pinned Live Host encoder profile.'
 }
+$worldProfile=if($null -ne $install.PSObject.Properties['world_profile_id']) {
+  [string]$install.world_profile_id
+} else { 'DIAGNOSTIC_LEGACY_NOT_LATEST' }
 $result=[ordered]@{
   schema_version=1;status='INSTALLED_UNVERIFIED';task='YACS Live Host'
   task_state=[string]$task.State;source_sha=$install.source_sha
@@ -40,6 +43,9 @@ $result=[ordered]@{
   heartbeat_age_seconds=$null;editor_start_delta_ms=$null
   editor_process_identity_verified=$false;heartbeat_fresh=$false
   requested_video_codec=$requestedCodec;negotiated_video_codec_verified=$false
+  world_profile_id=$worldProfile;world_native_verified=$false
+  map_package=$null;material_binding_count=0;lighting_observed=$null
+  global_lighting_visual_pass=$false
 }
 if (Test-Path -LiteralPath $livePath -PathType Leaf) {
   $active=Get-Content -LiteralPath $livePath -Raw | ConvertFrom-Json
@@ -91,7 +97,21 @@ if (Test-Path -LiteralPath $livePath -PathType Leaf) {
       $requestedMatches=($null -ne $receipt.PSObject.Properties['requested_video_codec']) -and
         ([string]$receipt.requested_video_codec -ceq $requestedCodec)
     }
-    $matching=($requestedMatches -and
+    $worldMatches=($worldProfile -ceq 'latest_verified' -and
+      $active.world_profile_id -ceq 'latest_verified' -and
+      $receipt.world_profile_id -ceq 'latest_verified' -and
+      $active.map_package -ceq '/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface' -and
+      $receipt.map_package -ceq $active.map_package -and
+      $receipt.world_native_verified -eq $true -and
+      $receipt.material_binding_count -eq 186 -and
+      $receipt.global_lighting_visual_pass -eq $false)
+    if ($worldMatches) {
+      $result.world_native_verified=$true
+      $result.map_package=[string]$active.map_package
+      $result.material_binding_count=[int]$receipt.material_binding_count
+      $result.lighting_observed=$receipt.lighting_observed
+    }
+    $matching=($worldMatches -and $requestedMatches -and
       $receipt.session -ceq $active.session -and
       $receipt.source_sha -ceq $active.source_sha -and
       $receipt.editor_pid -eq $active.editor_pid -and

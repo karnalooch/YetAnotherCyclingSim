@@ -8,7 +8,7 @@
 #>
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory)][ValidateSet('inspect','focus_site','set_markers_visible','run_recipe')][string]$Action,
+  [Parameter(Mandatory)][ValidateSet('inspect','focus_site','focus_road','set_markers_visible','run_recipe')][string]$Action,
   [ValidateSet('P0','P1','P2','P3','P4')][string]$Site,
   [Nullable[bool]]$Visible,
   [ValidatePattern('^[a-z][a-z0-9_]{2,47}$')][string]$Recipe,

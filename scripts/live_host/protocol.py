@@ -81,6 +81,7 @@ def validate_request(value: dict, *, session: str, source_sha: str, last_sequenc
     action = value.get("action")
     allowed = {
         "focus_site": {"site"},
+        "focus_road": set(),
         "set_markers_visible": {"visible"},
         "inspect": set(),
         "run_recipe": {"recipe", "recipe_revision", "recipe_sha256", "intent", "parameters"},

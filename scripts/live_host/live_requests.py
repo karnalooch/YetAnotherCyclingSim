@@ -70,24 +70,71 @@ def focus_site(live, site_id: str, unreal):
     }
 
 
+def focus_latest_road(live, unreal):
+    """Restore the fixed saved v0.3.1 road camera, never transform road actors."""
+    need(getattr(live, "profile_id", None) == "sa_calobra_road_v0_3_1",
+         "Focus road is restricted to the pinned saved v0.3.1 profile")
+    eye = unreal.Vector(*live.camera_cm)
+    target = unreal.Vector(*live.target_cm)
+    rotation = unreal.MathLibrary.find_look_at_rotation(eye, target)
+    editor = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
+    editor.set_level_viewport_camera_info(eye, rotation)
+    observed = editor.get_level_viewport_camera_info()
+    need(observed is not None and (observed[0] - eye).length() <= 1.0,
+         "Current UE native road-camera readback differs")
+    return {
+        "action": "focus_road",
+        "map_package": live.map_package,
+        "camera_location_cm": [eye.x, eye.y, eye.z],
+        "map_saved": False,
+        "road_transformed": False,
+    }
+
+
 def execute_visual_request(live, request: dict, unreal, *, live_root=None, session_root=None) -> dict:
     action = request["action"]
+    if action == "focus_road":
+        return focus_latest_road(live, unreal)
     if action == "focus_site":
+        if getattr(live, "profile_id", None) == "sa_calobra_road_v0_3_1":
+            return {
+                "action": action, "not_applicable": "OLD_DIAGNOSTIC_SITES",
+                "map_saved": False, "placement": False,
+            }
         return {"action": action, **focus_site(live, request["site"], unreal)}
     if action == "set_markers_visible":
+        if getattr(live, "profile_id", None) == "sa_calobra_road_v0_3_1":
+            return {
+                "action": action, "not_applicable": "NO_OLD_P0_P4_MARKERS",
+                "map_saved": False, "placement": False,
+            }
         for marker in live.owned:
             component = marker.get_component_by_class(unreal.TextRenderComponent)
             need(component is not None, "Owned temporary marker disappeared")
             component.set_visibility(request["visible"])
         return {"action": action, "visible": request["visible"], "count": len(live.owned)}
     if action == "inspect":
+        report = live.report
         return {
             "action": action,
-            "marker_ids": [m["id"] for m in live.report["markers"]],
+            "world_profile_id": getattr(live, "profile_id", "legacy_diagnostic"),
+            "map_package": live.map_package,
+            "marker_ids": [m["id"] for m in report.get("markers", [])],
+            "road_native_actor_count": report.get("road_native_actor_count", 0),
+            "material_bindings_verified": report.get(
+                "material_bindings_verified", 0
+            ),
+            "lighting": report.get("lighting", {}),
             "map_saved": False,
             "placement": False,
         }
     if action == "run_recipe":
+        if getattr(live, "profile_id", None) == "sa_calobra_road_v0_3_1":
+            need(
+                request.get("intent") == "preview"
+                and request.get("recipe") == "rock_asset_audit",
+                "Latest accepted road forbids unqualified actor/material edits",
+            )
         need(live_root is not None and session_root is not None,
              "Native editor recipe requires the owned Live Host session")
         from scripts.live_host import editor_recipes

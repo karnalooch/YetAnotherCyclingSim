@@ -3,6 +3,75 @@
 **Issue:** [#476](https://github.com/karnalooch/YetAnotherCyclingSim/issues/476) · **First delivery:** stacked Draft PR on `codex/365-world-graph`.
 **State:** implementation candidate. Windows post-logon native proof, durable video and reboot proof **NOT RUN** until a real host rollout completes. A green GitHub job is not a durable Editor handoff.
 
+## Current target: Latest Verified World v0.3.1 — road, shoulders and lighting
+
+**Owner decision 2026-10-13:** YACS Remote must open the latest *saved and
+technically verified* Sa Calobra world, not the historical PCG365 P0–P4
+diagnostic snapshot. This overrides the original initial red-marker default.
+The merged #477 Live Host infrastructure belongs to Draft PR #474; main
+still holds the accepted #470 v0.3.1 road checkpoint.
+
+### Source-backed world selection
+
+New code-only releases contain `scripts/live_host/verified_worlds.json`
+and the read-only `Resolve-YacsLiveWorld.ps1`. The selected identity is
+`sa_calobra_road_v0_3_1`, map:
+
+`/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface`
+
+from `D:/yacs/work/level-editor-review/b9fddea3f602-y473save01/`.
+Receipt revision `2a00f7ebba403cf7cda663bc6fa303c7d72e891b`,
+native fresh reader `fde7a363d484c3693b65efe13eba76fb71bab6e1`
+(v031-reopen02) and original saved-map SHA256
+`cf806999d73e6762ba6d91fab8b4e29d6c475a828ad9afcd525462054602ed1a`
+are pinned. The resolver hashes five saved map/material packages and the
+pinned original source map/project. It validates saved receipt, 559 mesh
+actors and 186 material bindings. If missing or inconsistent, it blocks
+startup instead of falling back to the old diagnostic scene. The complete
+Material Forge/source dependency closure remains subject to native readback.
+
+The new Live Host bootstrap starts the actual saved `L_RoadSurface` map,
+inspects the 559 real road/support DynamicMesh actors and all 186 material
+bindings, and positions the viewport at the retained v0.3.1 road camera.
+It **observes** native DirectionalLight, SkyLight, SkyAtmosphere/fog/cloud
+actors and UE global-illumination/reflection CVars. A nonzero light count
+is not owner visual approval: `global_lighting_visual_pass=false` until
+the owner reviews the actual scene. No unsaved or PR-only lighting change
+is silently substituted for the saved v0.3.1 package.
+
+Controls: `inspect` reads current world and lighting counts; the new
+`focus_road` action restores the fixed road camera, without moving an
+actor. The five P0–P4 markers are excluded from the latest-world profile.
+No save, rebuild, geometry/physics/Landscape edit, PCG scatter or package
+overwrite is executed by this profile.
+
+### Safe rollout — active VP9 UE must NOT be disrupted
+
+**IMPORTANT:** The owner previously moved a road object accidentally in
+the streamed Editor. Its unsaved map state is UNKNOWN. Do not stop, kill,
+switch, or restart the current editor until the owner has reviewed undo
+and explicitly decided what to preserve or discard. Never issue automatic
+GitHub Actions `-activate` while old PID is alive.
+
+Once the existing editor has been *normally closed by the owner* and the
+GPU is idle, use `Upgrade-YacsLiveHostCodec.ps1` with the current verified
+branch HEAD and the installed source SHA. The script is dry-run by default;
+it now checks the selected v0.3.1 local project/map and package hashes,
+retains the previous immutable release and profile, and only on explicit
+`-Apply` updates the owner Task Scheduler Action and installation metadata
+with `world_profile_id=latest_verified` and codec VP9. **No Unreal process
+is launched by the upgrade.** A timestamped rollback manifest targets the
+immediately previous installed source SHA, not the old H264 release.
+
+Run one subsequent owner-controlled Scheduled Task activation after
+checking current GPU ownership. Native proof requires a fresh
+`LATEST_VERIFIED_WORLD_NATIVE_ROAD_READY` UE receipt, true current
+process PID/heartbeat/stream frames and actual material-binding readback.
+Check lighting in the native result before claiming the requested global
+illumination. Post-job survival and negotiated codec VP9 are separate
+checks. Keep M3 final visual audit and performance deferred.
+
+
 ## Goal
 
 On owner logon, a limited interactive Windows Scheduled Task owns the Unreal Editor and Pixel Streaming 2 session. The GitHub Actions runner can remain a Windows service. No job owns the Editor's PID, job object or console session, and the Editor is not killed automatically when Actions prints `Cleaning up orphan processes`.
