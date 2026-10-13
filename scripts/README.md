@@ -16,6 +16,7 @@ Use the project Python environment (`.venv\Scripts\python.exe`) and PowerShell
 | Bootstrap pinned PowerShell | `powershell -File scripts/runner/Install-YacsPortablePowerShell.ps1` | Installs/verifies PowerShell 7.6.6 under `D:\yacs\tools` without MSI/system PATH mutation |
 | Verify pinned Blender headless lane | `python scripts/blender/run_headless.py smoke` | Runs the Blender 4.5.9 bpy smoke job and emits workspace proof receipts |
 | Inspect disposable runner outputs | `pwsh -File scripts/runner/Clear-YacsRunnerWorkspace.ps1` | Preview only; applying requires the exact inspected plan and an idle worker |
+| Install bounded Git pack retention | `pwsh -File scripts/runner/Install-YacsGitPackMaintenance.ps1 -WorkspaceConfig <config>` | Preview the immutable pre-job bundle; `-Apply` requires a stopped Listener/Worker; preserves the completed-job hook and open Editor |
 | Install/update the runner tray monitor | `pwsh -File scripts/runner/Install-YacsRunnerMonitor.ps1 -Verify` | Installs the per-user task and verifies fresh monitor health |
 
 Everyday scene changes update the existing UE session through Live Coding or

@@ -67,6 +67,10 @@ foreach ($listener in $listeners) {
 if (Get-Process Runner.Worker -ErrorAction SilentlyContinue) { throw 'A runner worker is active.' }
 $env:YACS_WORKSPACE_CONFIG = $WorkspaceConfig
 $env:ACTIONS_RUNNER_HOOK_JOB_STARTED = Join-Path $PSScriptRoot 'Invoke-YacsJobStarted.ps1'
+$stableHook = Join-Path $root 'tools/runner-git-maintenance/Invoke-YacsJobStarted.ps1'
+if (Test-Path -LiteralPath $stableHook -PathType Leaf) {
+    $env:ACTIONS_RUNNER_HOOK_JOB_STARTED = $stableHook
+}
 [Environment]::SetEnvironmentVariable('UE-ZenDataPath', $zenDataPath, 'Process')
 $env:TEMP = Join-Path $root 'work/runner-temp'
 $env:TMP = $env:TEMP

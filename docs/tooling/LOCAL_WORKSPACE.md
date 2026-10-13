@@ -37,6 +37,9 @@ process PATH, while `portable-powershell.yml` can bootstrap the tool even when
 only Windows PowerShell 5.1 is initially available. An already-running runner
 keeps its inherited process environment until restarted; a workflow that
 bootstraps the tool may use `GITHUB_PATH` for later steps in that same job.
+The bootstrap job enables `core.longpaths` through Git's process environment
+before checkout, including its initial clean/reset. This prevents Windows path
+limits from forcing clone recreation, without changing user/system Git config.
 
 The runner is started by `scripts/runner/Start-YacsRunner.ps1` in the logged-in
 desktop session, with one listener only. It reads `workspace.json`, sets scoped
@@ -56,6 +59,50 @@ an idle worker and unchanged inventory. Source assets, shared caches and active
 build cache remain protected. The owner explicitly approved reducing this admission floor from 50 GiB to 5 GiB on 2026-10-09; never silently lower it further simply to turn CI green. The installed hook at the live runner's configured path must be updated separately while the runner is idle: checkout of a PR does not update a pre-job hook. Five GiB is not a guarantee of sufficient Unreal shader, frame, build or rollback scratch space. See [#454](https://github.com/karnalooch/YetAnotherCyclingSim/issues/454) for deployment and verification.
 The hook uses GitHub's supported
 [pre-job script mechanism](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/run-scripts).
+
+### Automatic Git pack maintenance (#465 / #475)
+
+The same pre-job hook bounds object-pack growth in exactly two persistent CI
+helper checkouts: `_bootstrap-cleanup` and `_blender-mf-reference` under
+`runner/_work/YetAnotherCyclingSim/YetAnotherCyclingSim`. It does not sweep old
+trees or alter the separate completed-job evidence-retention hook.
+With at least two packs, maintenance is due at eight packs or 1 GiB of pack
+bytes. A backlog over 4 GiB requires reviewed manual recovery. Each admitted
+store must have at most 2 GiB of unique uncompressed objects and free space for
+those bytes above the unchanged 5 GiB reserve. These are admission limits, not
+a disk quota; a single large fetch can exceed them and will block the next job.
+
+`maintain_git_packs.py` uses Git's `repack -a -d --keep-unreachable`, retaining
+reachable and unreachable objects. Full integrity checks run before and after;
+object inventories, HEAD, refs, reflogs, index, config, shallow boundary and
+working-tree status must match. There is no `gc`, history expiry, asset removal
+or editor operation. Git mapping is capped at 128 MiB, the delta window at
+16 MiB and one packing thread; each Git command has a 120-second timeout with
+owned-child cleanup. A lock and current-Worker ancestry check prevent concurrent
+maintenance. Another Git process or target-owned process defers maintenance
+without failing CI while the reserve and backlog admission limits still hold.
+Unknown native ownership, shared Git stores, reparse points, locks and partial
+clones fail closed. Before mutation, a durable `PENDING.json` records metadata
+and a saved object inventory; only successful verification clears it. A crash,
+timeout or failed conservation check leaves the target blocked on every later
+job, including below-threshold jobs, until reviewed manual recovery resolves it.
+An unrelated open Editor stays running. Per-job receipts are retained in
+`work/runner-git-maintenance`; below-threshold stores avoid integrity/repack work.
+
+Deploy with `Install-YacsGitPackMaintenance.ps1 -WorkspaceConfig <config>` to
+preview, then `-Apply` while the Listener and Worker are stopped. Stop only an
+idle Listener, never an active Worker or Editor. The installer publishes a
+hash-verified immutable bundle under `tools/runner-git-maintenance`, records
+the prior pre-job hook, updates only its `.env` entry and preserves the existing
+completion hook. Restart the Listener with `Start-YacsRunner.ps1`. A deployment
+receipt is not runtime proof: verify the next real job's `Set up runner` log
+and matching maintenance receipt. Rollback while idle restores the recorded
+prior hook line (and previous stable entrypoint if present), then restarts the
+Listener; no Git object restoration is needed because objects are conserved.
+
+The 2026-10-13 manual recovery preserved 11,690 objects and reclaimed 36.266 GiB
+in these two stores. It did not resume the remaining historical-tree cleanup
+in #475. Automatic rollout and PR merge require their separate current proofs.
 
 The engine resolver reads the configured engine for canonical/runner work and
 uses the canonical engine root before legacy discovery on other hosts. Older
