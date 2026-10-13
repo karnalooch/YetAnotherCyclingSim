@@ -1,0 +1,599 @@
+{
+  "status": "LIVE_REVIEW_QUEUE_NOT_VISUAL_INSPECTION",
+  "regions": [
+    {
+      "region_id": "GRAY-01",
+      "planning_bins": 36199,
+      "representative_xy_m": [
+        1765.75,
+        641.75
+      ],
+      "bounds_xy_m": [
+        1279.75,
+        3.75,
+        2015.75,
+        1843.75
+      ],
+      "approach_frames": [
+        {
+          "frame_id": "window-0178-forward-00005",
+          "distance_m": 412.8050036131242,
+          "camera_cm": [
+            135750.11100193136,
+            70291.22010523573,
+            70660.30051618002
+          ],
+          "target_cm": [
+            135556.1087549457,
+            69010.95101893932,
+            70365.08682411906
+          ]
+        },
+        {
+          "frame_id": "window-0178-reverse-00001",
+          "distance_m": 412.94186939856905,
+          "camera_cm": [
+            135600.87850425005,
+            69306.39773116156,
+            70571.67459921006
+          ],
+          "target_cm": [
+            135794.88075123573,
+            70586.66681745797,
+            70506.888291271
+          ]
+        },
+        {
+          "frame_id": "window-0179-forward-00000",
+          "distance_m": 412.96432226203126,
+          "camera_cm": [
+            135520.63145605853,
+            68639.76629529666,
+            70510.29728548008
+          ],
+          "target_cm": [
+            135149.69434438634,
+            67399.15531395662,
+            70215.01479694521
+          ]
+        },
+        {
+          "frame_id": "window-0178-forward-00006",
+          "distance_m": 412.99894234881475,
+          "camera_cm": [
+            135517.25735246192,
+            68640.76225306814,
+            70510.2963715014
+          ],
+          "target_cm": [
+            135155.092910141,
+            67397.5617815223,
+            70215.01625931109
+          ]
+        }
+      ],
+      "decision": "PENDING_LIVE_REVIEW",
+      "note": "Nearest recorded cameras are approach candidates; they do not prove visibility of the region."
+    },
+    {
+      "region_id": "GRAY-02",
+      "planning_bins": 15264,
+      "representative_xy_m": [
+        201.75,
+        1709.75
+      ],
+      "bounds_xy_m": [
+        3.75,
+        1107.75,
+        579.75,
+        2015.75
+      ],
+      "approach_frames": [
+        {
+          "frame_id": "window-0056-forward-00004",
+          "distance_m": 904.1085671362368,
+          "camera_cm": [
+            110377.34578396103,
+            164838.23971772398,
+            65018.44097174186
+          ],
+          "target_cm": [
+            110572.60458403298,
+            163556.8493907212,
+            64938.00417206334
+          ]
+        },
+        {
+          "frame_id": "window-0056-reverse-00001",
+          "distance_m": 906.3283945541734,
+          "camera_cm": [
+            110527.54486093945,
+            163852.55485079877,
+            65095.02804891223
+          ],
+          "target_cm": [
+            110332.2860608675,
+            165133.94517780154,
+            64815.46484859074
+          ]
+        },
+        {
+          "frame_id": "window-0056-reverse-00002",
+          "distance_m": 907.0478072508288,
+          "camera_cm": [
+            110732.37251824522,
+            165805.9063679274,
+            64948.972829097875
+          ],
+          "target_cm": [
+            111939.02190092747,
+            166273.40143359982,
+            64644.692376714906
+          ]
+        },
+        {
+          "frame_id": "window-0056-forward-00005",
+          "distance_m": 909.3158735766868,
+          "camera_cm": [
+            110747.2275384425,
+            162898.78937186944,
+            65154.641037276306
+          ],
+          "target_cm": [
+            111011.51905683921,
+            161630.82316176163,
+            65086.048771874935
+          ]
+        }
+      ],
+      "decision": "PENDING_LIVE_REVIEW",
+      "note": "Nearest recorded cameras are approach candidates; they do not prove visibility of the region."
+    },
+    {
+      "region_id": "GRAY-03",
+      "planning_bins": 13310,
+      "representative_xy_m": [
+        561.75,
+        1101.75
+      ],
+      "bounds_xy_m": [
+        43.75,
+        647.75,
+        883.75,
+        1387.75
+      ],
+      "approach_frames": [
+        {
+          "frame_id": "window-0025-forward-00001",
+          "distance_m": 540.2315003007834,
+          "camera_cm": [
+            32620.565090793225,
+            61557.21174014294,
+            43484.77792435782
+          ],
+          "target_cm": [
+            31441.04438280276,
+            62099.21527108852,
+            43234.32885151655
+          ]
+        },
+        {
+          "frame_id": "window-0025-reverse-00001",
+          "distance_m": 540.5275916141209,
+          "camera_cm": [
+            31713.241469262102,
+            61974.137533178,
+            43430.586329864534
+          ],
+          "target_cm": [
+            32892.76217725257,
+            61432.13400223242,
+            43321.035402705806
+          ]
+        },
+        {
+          "frame_id": "window-0025-forward-00002",
+          "distance_m": 540.8592628097562,
+          "camera_cm": [
+            31165.877032417815,
+            62218.44476441743,
+            43400.44256500674
+          ],
+          "target_cm": [
+            29982.592266997726,
+            62752.531245535145,
+            43152.701922759865
+          ]
+        },
+        {
+          "frame_id": "window-0119-forward-00000",
+          "distance_m": 540.8592655015133,
+          "camera_cm": [
+            31165.872691855788,
+            62218.4467244215,
+            43400.53367885876
+          ],
+          "target_cm": [
+            29982.599211896966,
+            62752.528109528634,
+            43152.55614059662
+          ]
+        }
+      ],
+      "decision": "PENDING_LIVE_REVIEW",
+      "note": "Nearest recorded cameras are approach candidates; they do not prove visibility of the region."
+    },
+    {
+      "region_id": "GRAY-04",
+      "planning_bins": 3020,
+      "representative_xy_m": [
+        1501.75,
+        1365.75
+      ],
+      "bounds_xy_m": [
+        1335.75,
+        1119.75,
+        1671.75,
+        1659.75
+      ],
+      "approach_frames": [
+        {
+          "frame_id": "window-0065-forward-00001",
+          "distance_m": 261.67258602562856,
+          "camera_cm": [
+            124028.82326458671,
+            135524.82625535937,
+            67740.09562130585
+          ],
+          "target_cm": [
+            123821.55585814564,
+            134245.05270587257,
+            67656.1158497012
+          ]
+        },
+        {
+          "frame_id": "window-0162-forward-00000",
+          "distance_m": 261.67261233769165,
+          "camera_cm": [
+            124028.82115463706,
+            135524.81322489097,
+            67739.91782490489
+          ],
+          "target_cm": [
+            123821.5592340651,
+            134245.07355462198,
+            67656.40032394275
+          ]
+        },
+        {
+          "frame_id": "window-0160-reverse-00000",
+          "distance_m": 261.79881189740826,
+          "camera_cm": [
+            123996.43746846823,
+            136312.23985913716,
+            67681.41173298811
+          ],
+          "target_cm": [
+            123710.4912814805,
+            137577.15734422143,
+            67410.75560205797
+          ]
+        },
+        {
+          "frame_id": "window-0065-reverse-00001",
+          "distance_m": 261.806164276551,
+          "camera_cm": [
+            123995.70350461436,
+            136312.1092647256,
+            67681.8933222467
+          ],
+          "target_cm": [
+            123711.66562364672,
+            137577.36629527994,
+            67409.98505924422
+          ]
+        }
+      ],
+      "decision": "PENDING_LIVE_REVIEW",
+      "note": "Nearest recorded cameras are approach candidates; they do not prove visibility of the region."
+    },
+    {
+      "region_id": "GRAY-05",
+      "planning_bins": 1334,
+      "representative_xy_m": [
+        973.75,
+        849.75
+      ],
+      "bounds_xy_m": [
+        875.75,
+        743.75,
+        1107.75,
+        947.75
+      ],
+      "approach_frames": [
+        {
+          "frame_id": "window-0003-reverse-00001",
+          "distance_m": 212.95718654953066,
+          "camera_cm": [
+            111624.24737609972,
+            69148.86395086814,
+            63205.28837146374
+          ],
+          "target_cm": [
+            112829.8318730105,
+            69611.88978657454,
+            63174.19470536811
+          ]
+        },
+        {
+          "frame_id": "window-0003-forward-00004",
+          "distance_m": 214.0907774688464,
+          "camera_cm": [
+            111157.3698585925,
+            68592.23799070768,
+            63126.90448268346
+          ],
+          "target_cm": [
+            110399.64518068368,
+            67544.02728537536,
+            62816.10834468752
+          ]
+        },
+        {
+          "frame_id": "window-0088-forward-00000",
+          "distance_m": 214.09083221841482,
+          "camera_cm": [
+            111157.35665863076,
+            68592.21973125347,
+            63127.12678883565
+          ],
+          "target_cm": [
+            110399.66630062247,
+            67544.05650050209,
+            62815.75265484401
+          ]
+        },
+        {
+          "frame_id": "window-0003-forward-00003",
+          "distance_m": 216.71398918860874,
+          "camera_cm": [
+            112551.62006603109,
+            69505.03767064228,
+            63319.83170523634
+          ],
+          "target_cm": [
+            111346.03556912031,
+            69042.0118349359,
+            62990.92537133197
+          ]
+        }
+      ],
+      "decision": "PENDING_LIVE_REVIEW",
+      "note": "Nearest recorded cameras are approach candidates; they do not prove visibility of the region."
+    },
+    {
+      "region_id": "GRAY-06",
+      "planning_bins": 1315,
+      "representative_xy_m": [
+        1225.75,
+        977.75
+      ],
+      "bounds_xy_m": [
+        1031.75,
+        863.75,
+        1415.75,
+        1067.75
+      ],
+      "approach_frames": [
+        {
+          "frame_id": "window-0075-reverse-00000",
+          "distance_m": 146.70989694801958,
+          "camera_cm": [
+            137103.7983560805,
+            99812.635137442,
+            71688.86742282282
+          ],
+          "target_cm": [
+            137034.94621115483,
+            101107.79008917738,
+            71420.36299844463
+          ]
+        },
+        {
+          "frame_id": "window-0175-reverse-00001",
+          "distance_m": 146.7099040874578,
+          "camera_cm": [
+            137103.7979161033,
+            99812.64341496321,
+            71688.98867961341
+          ],
+          "target_cm": [
+            137034.94691511834,
+            101107.77684514345,
+            71420.16898757967
+          ]
+        },
+        {
+          "frame_id": "window-0076-forward-00000",
+          "distance_m": 147.0382997718501,
+          "camera_cm": [
+            137185.93140505927,
+            99425.24224725256,
+            71715.67213661976
+          ],
+          "target_cm": [
+            137695.86301435687,
+            98232.55182760682,
+            71622.03947260066
+          ]
+        },
+        {
+          "frame_id": "window-0175-forward-00001",
+          "distance_m": 147.042371618939,
+          "camera_cm": [
+            137186.32041554074,
+            99425.42607457102,
+            71715.91759193505
+          ],
+          "target_cm": [
+            137695.2405975865,
+            98232.25770389728,
+            71621.64674409617
+          ]
+        }
+      ],
+      "decision": "PENDING_LIVE_REVIEW",
+      "note": "Nearest recorded cameras are approach candidates; they do not prove visibility of the region."
+    },
+    {
+      "region_id": "GRAY-07",
+      "planning_bins": 1068,
+      "representative_xy_m": [
+        1737.75,
+        1549.75
+      ],
+      "bounds_xy_m": [
+        1639.75,
+        1415.75,
+        1847.75,
+        1663.75
+      ],
+      "approach_frames": [
+        {
+          "frame_id": "window-0144-reverse-00000",
+          "distance_m": 462.2154364540694,
+          "camera_cm": [
+            163685.8507280408,
+            200081.98575533932,
+            56974.40591178678
+          ],
+          "target_cm": [
+            164951.02328976453,
+            200376.67722496382,
+            56744.45266572634
+          ]
+        },
+        {
+          "frame_id": "window-0150-forward-00000",
+          "distance_m": 462.2439447811864,
+          "camera_cm": [
+            164173.2855918675,
+            200191.16663642979,
+            56956.43846623461
+          ],
+          "target_cm": [
+            162894.71366080287,
+            199960.33347984691,
+            56820.821694099206
+          ]
+        },
+        {
+          "frame_id": "window-0046-forward-00001",
+          "distance_m": 462.24394721985084,
+          "camera_cm": [
+            164173.2778125094,
+            200191.165233776,
+            56956.20861620347
+          ],
+          "target_cm": [
+            162894.7261077758,
+            199960.335724093,
+            56821.18945414903
+          ]
+        },
+        {
+          "frame_id": "window-0046-reverse-00001",
+          "distance_m": 462.2868816624273,
+          "camera_cm": [
+            163684.27826316046,
+            200088.95509597208,
+            56974.36599606634
+          ],
+          "target_cm": [
+            164953.5392335731,
+            200365.52627995142,
+            56744.51653087904
+          ]
+        }
+      ],
+      "decision": "PENDING_LIVE_REVIEW",
+      "note": "Nearest recorded cameras are approach candidates; they do not prove visibility of the region."
+    },
+    {
+      "region_id": "GRAY-08",
+      "planning_bins": 987,
+      "representative_xy_m": [
+        277.75,
+        941.75
+      ],
+      "bounds_xy_m": [
+        195.75,
+        819.75,
+        351.75,
+        1055.75
+      ],
+      "approach_frames": [
+        {
+          "frame_id": "window-0122-forward-00002",
+          "distance_m": 277.3239589494029,
+          "camera_cm": [
+            16492.912261879006,
+            68841.22258045514,
+            42700.97284178891
+          ],
+          "target_cm": [
+            15308.600043441787,
+            69375.7728120269,
+            42480.22214625028
+          ]
+        },
+        {
+          "frame_id": "window-0027-forward-00000",
+          "distance_m": 277.32395935175055,
+          "camera_cm": [
+            16492.919730813155,
+            68841.21921021384,
+            42700.7093504204
+          ],
+          "target_cm": [
+            15308.588093147146,
+            69375.77820441297,
+            42480.643732439894
+          ]
+        },
+        {
+          "frame_id": "window-0122-reverse-00000",
+          "distance_m": 277.4539344772114,
+          "camera_cm": [
+            15581.902863081146,
+            69252.41506627957,
+            42669.626152913035
+          ],
+          "target_cm": [
+            16766.215081518363,
+            68717.86483470781,
+            42530.37684845167
+          ]
+        },
+        {
+          "frame_id": "window-0027-reverse-00003",
+          "distance_m": 277.45393702694923,
+          "camera_cm": [
+            15581.895394146994,
+            69252.41843652088,
+            42669.889644281546
+          ],
+          "target_cm": [
+            16766.227031813007,
+            68717.85944232174,
+            42529.955262262054
+          ]
+        }
+      ],
+      "decision": "PENDING_LIVE_REVIEW",
+      "note": "Nearest recorded cameras are approach candidates; they do not prove visibility of the region."
+    }
+  ],
+  "material_or_mesh_decision": "NOT_ESTABLISHED",
+  "planting": false
+}

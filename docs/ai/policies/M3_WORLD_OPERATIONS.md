@@ -2,6 +2,12 @@
 
 > Scoped policy migrated from original root AGENTS.md (blob `c4c75a9e92088195a7aad1c72c849ac9482d1462`). Read only for applicable work. Current domain SSOT and owner decisions take precedence over superseded chronology.
 
+### Current Remote in-place upgrade and restart restraint — 2026-10-13
+
+The owner explicitly requires upgrading the **currently open Remote session** and minimizing Unreal restarts. Inspect current process/session, loaded map, recipe/assets and unsaved scene state before changing anything. Use verified supported live-update mechanisms and batch work. Do not discard unsaved work, switch to an older Landscape, reopen a historical checkpoint or stop the Editor to obtain runner access. Historical accepted checkpoints remain source/rollback evidence, not the default deployment destination. A genuinely necessary restart must be explained beforehand and preserve the current pre-change state under existing ownership/approval rules. No automatic restart loops.
+
+This later instruction supersedes any reading of the startup source-selection policy below that would roll the active owner session back. It does not waive source, geometry, contact or native proof. See the [authorized rock rollout handoff](../../../docs/tooling/SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md). P0–P4 are retired from continuation; gray-region review is explicitly deferred to a joint owner session and does not block independent work.
+
 ### Owner live-world source selection — 2026-10-13
 
 Always open the latest saved and technically verified Sa Calobra consumer in

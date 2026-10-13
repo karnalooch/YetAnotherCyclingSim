@@ -1,5 +1,7 @@
 # YACS Live Host — independent interactive UE editor and Pixel Streaming 2
 
+**Latest owner operating decision — 2026-10-13:** upgrade the **currently open Remote session in place**, preserving its actual world and unsaved work. Minimize UE restarts; prefer verified supported live updates and batched changes. Do not reopen v0.3.1 or restore an older Landscape as a normal rollout step, and do not close the Editor merely to free the runner. Inspect current identities first; historical checkpoint/source entries below are references, not a command to revert the current session. See the [authorized implementation handoff](SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md).
+
 **Issue:** [#476](https://github.com/karnalooch/YetAnotherCyclingSim/issues/476) · **First delivery:** stacked Draft PR on `codex/365-world-graph`.
 **State:** implementation candidate. Windows post-logon native proof, durable video and reboot proof **NOT RUN** until a real host rollout completes. A green GitHub job is not a durable Editor handoff.
 

@@ -1,5 +1,7 @@
 # Sa Calobra source-backed spatial treatment draft — 2026-10-13
 
+**Execution handoff — 2026-10-13:** the owner requested [the complete plan preserved 1:1](../../tooling/SA_CALOBRA_ROCK_ROLLOUT_PLAN_20261013.md), remote publication and [implementation in a new chat](../../tooling/SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md). P0–P4 are retired; gray-region live review is deferred to a joint session. Update the currently open Remote session in place and minimize restarts. The analysis remains a treatment proposal, not native qualification or a whole-bin planting mask.
+
 Issue #365 / M3. This planning derivative precedes placement. It reuses the
 existing [observation map](../sa-calobra-detail-planning-map-20261008/README.md)
 and the [cliff/scree selector contract](../../tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md).
@@ -75,3 +77,132 @@ Validation: six focused CPU tests pass; PNG visually inspected. UE/GPU, asset
 placement and new render capture NOT RUN. `qualified_assets: []`, `placement:
 false`, `performance_pass: false`, `DEFERRED_AFTER_M3` remain. This is a local
 candidate, without push or merge.
+
+## Sampled route visibility and proposed treatment — owner continuation
+
+The owner requested visibility analysis before further planting. The active coarse-rock
+trial was cancelled through the published typed Remote recipe. Native readback in
+session `20261013T132819Z-730779601501`, sequence 13, reported
+`CONTACT_JOB_CANCELLED_ROLLED_BACK`, `preview_placed: 0`, `rollback_complete: true`.
+Remote remains available; no further planting was submitted.
+
+The existing [interactive map](spatial-plan.html) now contains separately switchable
+visibility/treatment layers, with the exact original pavement display retained on top.
+Shift-click a 4 m planning bin to inspect its class, number of computed camera hits,
+nominal projected feature size and first witnessing camera. The witness links to its
+captured window and displays the existing visual prestudy's near/B/C notes. Those
+notes describe the whole view; they are not silently assigned to a world surface.
+The original source-only HTML is retained losslessly in `spatial-plan-source.html.gz`.
+The original PNG and `spatial-plan.json` still describe the original 0.5 m selectors.
+
+Inputs: all **1,338 captured camera poses/FOVs**, **669 paired stations**, **185
+disconnected construction windows**, the existing complete visual prestudy, authenticated
+Base_DTM elevation, cliff/scree selectors and all hard exclusion bits. There were no
+cameras without a sampled visible-ground hit. This is not a continuous rider traversal.
+
+The calculation samples radial terrain profiles every 1 m and 0.25 degrees, tests
+running terrain horizons and the recorded 3D camera frustum, then aggregates hits
+into 4 m planning bins. The 2 m raised-form probe separately records potential forms
+emerging over occluded ground. A nominal transverse 1 m feature at eight pixels is
+an explicit planning heuristic for a near scree trial, not an accepted LOD or cost limit.
+Every original candidate/exclusion in an 8x8 source block contributes conservatively
+to that bin. A visible hit elsewhere in the bin does not prove the candidate pixel itself
+visible. **Never fill whole planning bins with geometry.** Exact 0.5 m source masks,
+physical ownership and complete asset footprints remain binding.
+
+Proposed decisions:
+
+- Visible steep/rough candidate: inspect existing cliff geometry first; retain readable
+  major forms and investigate a bounded mesh treatment where needed. No duplicate
+  mesh over an accepted surface is prescribed.
+- Visible scree candidate with sufficient projected scale: investigate sparse coarse
+  rock trials. The existing 10-degree contact limit still blocks automatic use on the
+  24–42-degree scree selector; no limit was relaxed.
+- Other visible terrain: material-first review proposal, preserving macro shape and
+  any existing owned geometry. This is not confirmed texture-only eligibility.
+- Raised-form possibility: inspect the original views and native scene before deciding.
+- No sampled visible-ground hit: unresolved; retain baseline. No hidden D assigned.
+- Hard exclusions or unknown neighborhoods: no placement.
+
+[Analysis/provenance and exact counts](visibility-plan.json),
+[array archive](visibility-arrays.npz) and [per-frame coverage](frame-coverage.json)
+retain the results. Counts are **planning bins**, not mesh footprints or qualified area.
+`witness` indexes the source CSV row; `hits` counts distinct cameras per bin;
+`pixels_per_m` is the maximum nominal projected scale; `nearest_m` is the minimum
+sampled horizontal distance. `tested` and `elevated` count distinct camera tests/hits.
+
+Limits: terrain occlusion uses immutable Base_DTM, not the accepted v8 presentation
+mesh, earthworks, buildings or vegetation. Radial sampling can miss narrow occluders;
+TPP poses differ from rider cameras and do not cover arbitrary look-around. Shadows,
+reflections, tall forms outside the ground frustum and all closer approaches remain
+unverified. Original-PNG correspondence, stable surface/owner registration and live
+native checks are required before regional planting. Visibility alone cannot establish
+geology or a geometry defect. No scene geometry, source terrain or route was changed.
+
+Producer: `scripts/assets/build_sa_calobra_route_visibility.py`. Reproduce into a new
+output directory with `--root <worktree> --output <new-directory>`; use `--render-only`
+only with the preserved result arrays to rebuild the presentation. The compute run
+used the retained uncommitted producer in `visibility-producer-executed.py.gz`; its exact
+hash and the final renderer hash are recorded separately, alongside logical array hashes.
+The numerical kernel was unchanged by subsequent formatting/presentation additions.
+
+Validation: five synthetic occlusion tests PASS; Ruff PASS; all 1,338 witness links,
+array hashes, layer IDs/toggles and registered origin checked; both embedded scripts
+pass Node syntax checks. No new renders, native world-occlusion proof, visual acceptance,
+GPU benchmark, hosted CI or merge is claimed for this analysis. `placement: false`,
+`qualified_assets: []`, `performance_pass: false` remain. This is a local candidate.
+
+## Owner display and treatment corrections — 2026-10-13
+
+The Hard exclusions display now uses only original source bits 1 (pavement) and
+16 (water holdback), at exact 0.5 m resolution and extent 2016.5 m. It does not
+aggregate the display into 4 m blocks or display BOB patch rectangles. Water retains
+the existing 5 m decorative holdback, not surveyed river width. The complete technical
+consumer holdbacks remain recorded separately; this display does not relax placement
+checks.
+
+The owner assigned the previously unresolved/no-observed-ground-hit category to
+**Simplified objects**: simple major forms with limited geometric detail. This supersedes
+the earlier treatment label in this document. Visibility remains unverified, not hidden D;
+source macro shapes, needed silhouettes, exclusions and physical ownership remain binding.
+It is a planning prescription, not an instruction to fill every cell or start planting.
+
+Owner follow-up: the combined Hard exclusions road/water layer is now the only
+exclusion display in the interactive map. The legacy Protected and Other exclusions
+controls and raster images, plus the duplicate road overlay, were removed from the
+visibility-map renderer. Archived source data and consumer checks remain available.
+
+## Former holdback areas analysed — 2026-10-13
+
+The owner requested actual treatment assignments in the areas exposed by the display
+correction. The planner now reuses the existing cliff/scree classifier with authenticated
+slope, roughness and Base_DTM elevation, using only road/water pixels as exclusions
+for this diagnostic. New terrain hypotheses are consumed only inside the former
+technical holdbacks outside those exact road/water pixels. Original selector rasters
+and live consumer masks are unchanged. Existing 1,338-camera visibility, projected
+scale and witnesses then assign the treatment. This supersedes the earlier unfilled
+technical-holdback display: every former holdback bin now has a treatment or explicit
+unknown-terrain state, with the exact road/water exclusion drawn independently on top.
+
+The reanalysed source footprint is 645,368 source cells, **161,342 m²**. Within that
+footprint the terrain criteria identify 70,384 cliff-candidate source cells and 21,518
+scree-candidate source cells before the viewing-demand classification. These are
+terrain hypotheses, not instructions to cover that area with meshes.
+
+The footprint touches **13,934 planning bins**. Their assigned treatments are:
+
+- Simplified objects — obiekty uproszczone: 63 bins.
+- Material-first proposal: visible terrain; no selected cliff/near scree requirement: 5,825 bins.
+- Cliff mesh review: visible steep/rough source candidate; preserve major forms: 1,027 bins.
+- Rock trial review: visible scree candidate; 1 m feature projects to >=8 px: 6,998 bins.
+- Raised-form review: 2 m form may emerge above occluded ground: 21 bins.
+
+Bins may contain multiple source meanings and partial road/water coverage; counts are
+not physical treatment areas. Original scene ownership, structures and especially BOB
+surfaces may differ from Base_DTM. The map identifies review work; native contact and
+geometry checks still precede placement. No further planting was submitted.
+
+Validation: all six cached visibility/witness arrays are unchanged. A before/after
+comparison confirms treatment changes occur only in former holdback bins, and none
+retain the former blank technical-holdback class. Nine existing terrain-classifier
+tests PASS. Source hashes and exact-grid checks passed during regeneration.

@@ -1,5 +1,7 @@
 # YetAnotherCyclingSim — MVP roadmap
 
+**Latest #365/#476 owner continuation — 2026-10-13:** publish the [full verbatim rock rollout plan](tooling/SA_CALOBRA_ROCK_ROLLOUT_PLAN_20261013.md) and start its [bounded implementation](tooling/SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md) in a new chat. P0–P4 are retired; gray simplified-object review is deferred without globally blocking other work. Upgrade the currently open Remote session in place, minimize UE restarts and do not restore an older Landscape as routine delivery. This supersedes the prior planning hold without changing downstream issue gates, source authority or proof/acceptance requirements.
+
 **Status:** authoritative delivery plan  
 **Current milestone:** **M3 — Route & World Foundation**  
 **Scope authority:** `PRODUCT_REQUIREMENTS.md`  

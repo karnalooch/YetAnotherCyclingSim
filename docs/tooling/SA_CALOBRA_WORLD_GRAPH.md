@@ -1,5 +1,22 @@
 # Sa Calobra PCG world graph — #365 kickoff
 
+**Current owner execution decision — 2026-10-13:** [complete verbatim plan](SA_CALOBRA_ROCK_ROLLOUT_PLAN_20261013.md) and [implementation handoff](SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md). The owner resumed implementation in a new chat, retired P0–P4, deferred gray-region review to a joint session and requires upgrading the currently open Remote world in place with minimal restarts. Do not reload an older Landscape/checkpoint as routine deployment. This supersedes the planning-only hold below; source, contact, native, issue-dependency and protected CI gates remain unchanged.
+
+Owner continuation, 2026-10-13: former technical-holdback map gaps now have terrain/visibility treatment proposals over 161,342 m²; see the [reanalysis](../experiments/sa-calobra-spatial-treatment-plan-20261013/README.md#former-holdback-areas-analysed--2026-10-13). Road/water pixels remain the exact display exclusion. Native BOB/structure ownership and consumer gates remain separate.
+
+## Visibility planning hold — 2026-10-13
+
+At the owner's request, further planting is held pending the
+[sampled visibility/treatment map](../experiments/sa-calobra-spatial-treatment-plan-20261013/README.md#sampled-route-visibility-and-proposed-treatment--owner-continuation).
+All 1,338 recorded TPP cameras were processed against authenticated Base_DTM and
+source selectors; the existing 669-pair visual prestudy supplies per-view context.
+Separate map layers propose cliff-geometry review, sparse rock trials, material-first
+review and unresolved/raised-form investigations. They are 4 m planning bins, not
+production masks. Native scene occluders and physical ownership remain unproved.
+Remote session `20261013T132819Z-730779601501`, clear sequence 13, confirmed
+`CONTACT_JOB_CANCELLED_ROLLED_BACK`, zero placed actors and complete rollback.
+No regional planting, accepted hidden D or performance claim follows.
+
 ## Local continuation — 2026-10-13
 
 The owner requests repaired contact and Remote import/planting, with spatial
