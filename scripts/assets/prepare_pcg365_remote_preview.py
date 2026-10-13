@@ -1,8 +1,9 @@
 """Stage hash-bound repaired rocks for a bounded P0-P4 live preview.
 
 This producer never writes the live project, starts UE or admits production
-scatter. Existing World Authority exclusions remain binding. Road parity must
-be supplied by an independent native reader, never inferred from materials.
+scatter. Existing World Authority exclusions remain binding. Optional diagnostic
+placements are requests only; the live consumer must exclude actual native road
+geometry independently before measuring contact or spawning any asset.
 """
 
 from __future__ import annotations
@@ -78,7 +79,14 @@ def staged_proof(path, destination, output):
 
 
 def build(
-    *, repaired, masks, anchors, road_parity, output, forge_binding, forge_project
+    *,
+    repaired,
+    masks,
+    anchors,
+    output,
+    forge_binding,
+    forge_project,
+    diagnostic_placements=False,
 ):
     import rasterio
     from prepare_sa_calobra_pcg_masks import verified_manifest
@@ -112,29 +120,6 @@ def build(
     points = json.loads(anchors.read_text(encoding="utf-8"))["points"]
     require(len(points) == 5, "Exactly five owner-reviewed anchors required")
     map_package = "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface"
-    if road_parity is not None:
-        parity = json.loads(road_parity.read_text(encoding="utf-8"))
-        require(
-            parity.get("status") == "PASS_NATIVE_ROAD_MASK_PARITY",
-            "Current native road/mask geometry parity required",
-        )
-        require(
-            parity.get("mask_manifest_sha256") == pins["sha256"],
-            "Road parity uses different masks",
-        )
-        require(
-            parity.get("source_geometry_sha")
-            == "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6",
-            "Road source lineage differs",
-        )
-        require(
-            parity.get("map_package") == map_package,
-            "Road parity uses different live world",
-        )
-        require(
-            parity.get("all_native_road_triangles_equal") is True,
-            "Native road parity incomplete",
-        )
     forge = json.loads(forge_binding.read_text(encoding="utf-8"))
     forge_files = [p for p in forge["saved_packages"] if "/MaterialForge/" in p["path"]]
     require(len(forge_files) == 6, "Exact six-package Forge material closure required")
@@ -181,10 +166,6 @@ def build(
         item = proof(target)
         item["path"] = target.relative_to(output).as_posix()
         source_proofs.append(item)
-    if road_parity is not None:
-        source_proofs.append(
-            staged_proof(road_parity, output / "evidence/road-parity.json", output)
-        )
     source_proofs.append(
         staged_proof(repaired, output / "evidence/rock-collection-catalog.json", output)
     )
@@ -241,10 +222,8 @@ def build(
             }
             if result["eligible"]:
                 entry["exclusions"] = {
-                    "status": "PASS_AUTHENTICATED_FOOTPRINT"
-                    if road_parity is not None
-                    else "PASS_SOURCE_MASK_FOOTPRINT_CURRENT_ROAD_UNVERIFIED",
-                    "road_source_compatible": road_parity is not None,
+                    "status": "PASS_SOURCE_MASK_FOOTPRINT_CURRENT_ROAD_UNVERIFIED",
+                    "road_source_compatible": False,
                     "footprint_radius_cm": radius,
                     "unknown": False,
                     "road": False,
@@ -257,7 +236,7 @@ def build(
             else:
                 rejected.append(entry)
     placements = []
-    if road_parity is not None:
+    if diagnostic_placements:
         for site in (f"P{i}" for i in range(5)):
             choices = [r for r in candidates if r["site"] == site]
             if choices:
@@ -278,9 +257,8 @@ def build(
         "production_admitted": False,
         "placement": False,
         "native_contact": "NOT_RUN",
-        "road_parity": "NOT_PROVIDED_IMPORT_ONLY"
-        if road_parity is None
-        else proof(road_parity),
+        "current_native_road_clearance": "NOT_RUN_REQUIRED_PER_FOOTPRINT",
+        "diagnostic_placements_requested": diagnostic_placements,
         "material_installation": "NOT_RUN",
         "parent_catalog": proof(repaired),
     }
@@ -315,6 +293,6 @@ if __name__ == "__main__":
         "forge-project",
     ):
         parser.add_argument("--" + key, type=Path, required=True)
-    parser.add_argument("--road-parity", type=Path)
+    parser.add_argument("--diagnostic-placements", action="store_true")
     arguments = parser.parse_args()
     print(json.dumps(build(**vars(arguments)), indent=2))

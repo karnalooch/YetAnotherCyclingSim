@@ -7,8 +7,11 @@ treatment planning **before placement**. P0–P4 are accepted diagnostic anchors
 live Remote replaces separate new review renders for this continuation.
 The [local source/Remote candidate](../assets/pcg365-source-support-remote-20261013/README.md)
 contains twenty source-envelope derivatives and an incremental preview consumer.
-Native integration and actual-Landscape contact are NOT RUN. The installed
-receiver has not changed; no placement, push or merge follows.
+Owner authorized push/CI/deployment and discarding unsaved edits. Reviewed
+release `a3dcb57829fd5b89b5a7376ef05ef872690dcc27` reopened saved v0.3.1;
+native world/material readback and independent browser frames passed. Rock
+import/contact remains pending its exact-head request receipt. No regional
+placement or merge follows.
 
 The [source-backed spatial draft](../experiments/sa-calobra-spatial-treatment-plan-20261013/README.md)
 reuses the [surface atlas](SA_CALOBRA_SURFACE_DETAIL_ATLAS.md) and existing

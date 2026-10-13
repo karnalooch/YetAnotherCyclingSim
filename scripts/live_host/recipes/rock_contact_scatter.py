@@ -195,29 +195,13 @@ def read_manifest(expected_digest, *, require_plant=False):
         ),
         "Frozen World Authority manifest missing",
     )
-    if require_plant:
-        parity = [
-            json.loads((STAGE / p["path"]).read_text(encoding="utf-8-sig"))
-            for p in sources
-            if p["path"].endswith("road-parity.json")
-        ]
-        need(
-            len(parity) == 1
-            and parity[0].get("status") == "PASS_NATIVE_ROAD_MASK_PARITY"
-            and parity[0].get("map_package") == data["map_package"]
-            and parity[0].get("all_native_road_triangles_equal") is True
-            and parity[0].get("source_geometry_sha")
-            == "c5573b3cf545c51ce83ad1fb0a5ca3111f5ad7f6"
-            and parity[0].get("mask_manifest_sha256")
-            == "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df",
-            "Current native road/mask parity missing",
-        )
     binding = hashlib.sha256(
         json.dumps(sources, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
     placements = data["placements"]
     need(
-        type(placements) is list and 0 <= len(placements) <= 5,
+        type(placements) is list
+        and (1 if require_plant else 0) <= len(placements) <= 5,
         "At most five anchor placements",
     )
     sites = set()
@@ -261,8 +245,8 @@ def read_manifest(expected_digest, *, require_plant=False):
             abs(bounds["origin"][1]) + bounds["extent"][1],
         )
         need(
-            e["status"] == "PASS_AUTHENTICATED_FOOTPRINT"
-            and e["road_source_compatible"] is True
+            e["status"] == "PASS_SOURCE_MASK_FOOTPRINT_CURRENT_ROAD_UNVERIFIED"
+            and e["road_source_compatible"] is False
             and e["source_binding_sha256"] == binding
             and number(e["footprint_radius_cm"]) >= radius
             and all(
@@ -357,7 +341,7 @@ def footprint_clearance_sample(xy, radius, distance_m, reasons):
     }
 
 
-def verify_footprints(data):
+def verify_footprints(data, native_bounds=None):
     distances, reasons = authenticated_exclusion_buffers(data)
     by_id = {a["id"]: a for a in data["assets"]}
     results = {}
@@ -368,7 +352,9 @@ def verify_footprints(data):
         offset = r * 4033 + col
         distance = struct.unpack_from("<f", distances, offset * 4)[0]
         bits = struct.unpack_from("<H", reasons, offset * 2)[0]
-        bounds = by_id[row["asset_id"]]["bounds_cm"]
+        bounds = (native_bounds or {}).get(
+            row["asset_id"], by_id[row["asset_id"]]["bounds_cm"]
+        )
         radius = math.hypot(
             abs(bounds["origin"][0]) + bounds["extent"][0],
             abs(bounds["origin"][1]) + bounds["extent"][1],
@@ -789,13 +775,313 @@ def validate_job_world(unreal, live, world, ground, meshes, materials, data, job
         )
 
 
+def triangle_square_overlap(triangle, center, half_extent):
+    """Conservative inclusive XY SAT; handles edge crossing and vertical faces.
+
+    XY projection discards height deliberately: road, shoulders, cuts and support
+    geometry exclude the complete vertical column, including bridge structures.
+    """
+    need(len(triangle) == 3 and len(center) == 2, "Invalid triangle/square schema")
+    cx, cy = [number(v) for v in center]
+    half = number(half_extent)
+    need(half > 0, "Invalid native exclusion square")
+    points = []
+    for vertex in triangle:
+        need(len(vertex) == 3, "Invalid native triangle position")
+        xyz = [number(v) for v in vertex]
+        points.append((xyz[0] - cx, xyz[1] - cy))
+    axes = [(1.0, 0.0), (0.0, 1.0)]
+    for i in range(3):
+        a, b = points[i], points[(i + 1) % 3]
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        if dx or dy:
+            axes.append((-dy, dx))
+    for ax, ay in axes:
+        projections = [x * ax + y * ay for x, y in points]
+        square_radius = half * (abs(ax) + abs(ay))
+        if max(projections) < -square_radius or min(projections) > square_radius:
+            return False
+    return True
+
+
+def native_expected_geometry_labels(unreal, context):
+    """Same read-only source-World inventory used by the accepted native reader.
+
+    Only actor labels/class identity are inherited; current support112 geometry
+    remains independently read, never incorrectly compared to its old version.
+    """
+    project = Path(context["project"]).resolve()
+    proof = {
+        "path": "Content/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview.umap",
+        "bytes": 193018676,
+        "sha256": "cbbf374309508fdb2c6f86c6324af4a3824a0c5ed32a4bfc29200ad3b29da183",
+    }
+    file_proof(project, proof)
+    original_path = "/Game/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview.L_SaCalobraRoadAsphaltReview"
+    source = unreal.load_asset(original_path)
+    need(
+        isinstance(source, unreal.World) and source.get_path_name() == original_path,
+        "Pinned source World missing; active World must not be switched",
+    )
+    originals = list(
+        unreal.GameplayStatics.get_all_actors_of_class(source, unreal.DynamicMeshActor)
+    )
+    labels = [a.get_actor_label() for a in originals]
+    need(
+        len(labels) == len(set(labels)) == 559,
+        "Pinned source World mesh-label inventory differs",
+    )
+    return frozenset(labels)
+
+
+def native_geometry_inventory(unreal, world, expected_labels):
+    need(len(expected_labels) == 559, "Exact pinned559label set required")
+    actors = list(
+        unreal.GameplayStatics.get_all_actors_of_class(world, unreal.DynamicMeshActor)
+    )
+    need(
+        len(actors) == 559,
+        "Current native road/CUT/support inventory must contain559 meshes",
+    )
+    labels = [a.get_actor_label() for a in actors]
+    need(
+        len(set(labels)) == 559
+        and set(labels) == set(expected_labels)
+        and "YACS_PERSIST_ROAD" in labels
+        and {"YACS_PERSIST_SUPPORT_" + str(i).zfill(3) for i in range(186)}
+        <= set(labels),
+        "Missing/unknown/duplicate current native road/CUT/support owner",
+    )
+    owners = {a.get_actor_label(): a for a in actors}
+    all_actors = unreal.GameplayStatics.get_all_actors_of_class(world, unreal.Actor)
+    for actor in all_actors:
+        label = actor.get_actor_label()
+        if label in expected_labels:
+            need(
+                isinstance(actor, unreal.DynamicMeshActor) and actor == owners[label],
+                "Unsupported actor class or duplicate expected native owner",
+            )
+    return sorted(actors, key=lambda a: a.get_actor_label())
+
+
+def native_component_snapshot(unreal, actor):
+    component = actor.get_dynamic_mesh_component()
+    need(component is not None, "Current native road/CUT/support component missing")
+    mesh = component.get_dynamic_mesh()
+    need(mesh is not None, "Current native road/CUT/support mesh missing")
+    count, ids = mesh.get_triangle_count(), mesh.get_num_triangle_ids()
+    need(
+        type(count) is int and type(ids) is int and 0 < count <= ids <= 4000000,
+        "Unsupported native mesh triangle-ID inventory",
+    )
+    transform = component.get_world_transform()
+    # Exact reflected FTransform operation; four calls produce its affine basis.
+    basis = [
+        vec(unreal.MathLibrary.transform_location(transform, unreal.Vector(*point)))
+        for point in ((0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1))
+    ]
+    origin = basis[0]
+    columns = [[basis[i + 1][j] - origin[j] for j in range(3)] for i in range(3)]
+    determinant = (
+        columns[0][0] * (columns[1][1] * columns[2][2] - columns[1][2] * columns[2][1])
+        - columns[1][0]
+        * (columns[0][1] * columns[2][2] - columns[0][2] * columns[2][1])
+        + columns[2][0]
+        * (columns[0][1] * columns[1][2] - columns[0][2] * columns[1][1])
+    )
+    need(
+        math.isfinite(determinant) and determinant != 0,
+        "Degenerate native component world transform",
+    )
+    return {
+        "actor": actor.get_path_name(),
+        "label": actor.get_actor_label(),
+        "component": component.get_path_name(),
+        "mesh": mesh.get_path_name(),
+        "triangle_count": count,
+        "triangle_ids": ids,
+        "component_transform": str(transform),
+        "actor_transform": str(actor.get_actor_transform()),
+        "basis": basis,
+    }, mesh
+
+
+def world_triangle(local, basis, unreal=None, transform=None):
+    # Identity components retain exact native doubles without cancellation from
+    # affine-basis reconstruction. Nonidentity transforms use the native method
+    # for every vertex; no guessed local/world mapping or XY rounding margin.
+    identity = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+    if basis == identity:
+        return [vec(vertex) for vertex in local]
+    need(
+        unreal is not None and transform is not None,
+        "Native nonidentity transform unavailable",
+    )
+    return [
+        vec(unreal.MathLibrary.transform_location(transform, vertex))
+        for vertex in local
+    ]
+
+
+def native_road_exclusion_steps(unreal, world, data, native_bounds, job, previous=None):
+    """Complete current-geometry positional snapshot, incrementally read only.
+
+    We deliberately do not use GeometryScript box selection: installed Epic
+    docs say it misses triangles crossing a box without any vertices inside.
+    Native triangle IDs/world coordinates are streamed and hashed, not retained.
+    """
+    actors = native_geometry_inventory(unreal, world, job["_expected_native_labels"])
+    squares = {}
+    for row in data["placements"]:
+        bounds = native_bounds[row["asset_id"]]
+        radius = math.hypot(
+            abs(bounds["origin"][0]) + bounds["extent"][0],
+            abs(bounds["origin"][1]) + bounds["extent"][1],
+        )
+        squares[row["site"]] = (row["world_xy_cm"], radius + 50.0)
+    decisions = {
+        site: {
+            "status": "PASS_CURRENT_NATIVE_TRIANGLE_EXCLUSION",
+            "half_extent_cm": half,
+            "clearance_cm": 50.0,
+            "method": "ALL559_NATIVE_MESHES_WORLD_XY_TRIANGLE_SQUARE_SAT",
+            "production_domain_admitted": False,
+        }
+        for site, (_, half) in squares.items()
+    }
+    snapshots = []
+    total_ids = 0
+    job["phase"] = (
+        "VERIFY_CURRENT_NATIVE_GEOMETRY"
+        if previous is not None
+        else "READ_CURRENT_NATIVE_GEOMETRY"
+    )
+    for index, actor in enumerate(actors):
+        metadata, mesh = native_component_snapshot(unreal, actor)
+        transform = actor.get_dynamic_mesh_component().get_world_transform()
+        total_ids += metadata["triangle_ids"]
+        need(
+            total_ids <= 32000000,
+            "Current native geometry exceeds bounded32million triangle-ID budget",
+        )
+        if previous is not None:
+            need(
+                index < len(previous) and metadata == previous[index]["metadata"],
+                "Current road/CUT/support owner, transform or triangle inventory changed",
+            )
+        digestor = hashlib.sha256()
+        valid = 0
+        for tid in range(metadata["triangle_ids"]):
+            result = mesh.get_triangle_positions(tid)
+            need(
+                isinstance(result, tuple)
+                and len(result) == 4
+                and type(result[0]) is bool,
+                "Unsupported native triangle-position return schema",
+            )
+            digestor.update(struct.pack("<q?", tid, result[0]))
+            if result[0]:
+                valid += 1
+                triangle = world_triangle(
+                    result[1:], metadata["basis"], unreal, transform
+                )
+                digestor.update(
+                    struct.pack("<9d", *(v for point in triangle for v in point))
+                )
+                x_min = min(p[0] for p in triangle)
+                x_max = max(p[0] for p in triangle)
+                y_min = min(p[1] for p in triangle)
+                y_max = max(p[1] for p in triangle)
+                for site, (center, half) in squares.items():
+                    if (
+                        x_max < center[0] - half
+                        or x_min > center[0] + half
+                        or y_max < center[1] - half
+                        or y_min > center[1] + half
+                    ):
+                        continue
+                    if (
+                        decisions[site]["status"]
+                        == "PASS_CURRENT_NATIVE_TRIANGLE_EXCLUSION"
+                        and triangle_square_overlap(triangle, center, half)
+                    ):
+                        decisions[site].update(
+                            status="REJECTED_CURRENT_NATIVE_TRIANGLE_OVERLAP",
+                            witness_actor=metadata["actor"],
+                            witness_label=metadata["label"],
+                            witness_triangle_id=tid,
+                            witness_world_triangle_cm=triangle,
+                        )
+            yield {"grid": None, "phase": job["phase"], "native_triangle_id": True}
+        need(
+            valid == metadata["triangle_count"],
+            "Native mesh valid triangle-ID count differs",
+        )
+        after, _ = native_component_snapshot(unreal, actor)
+        need(
+            after == metadata,
+            "Native owner or transform changed during triangle snapshot",
+        )
+        snapshot = {
+            "metadata": metadata,
+            "world_triangle_positions_sha256": digestor.hexdigest(),
+        }
+        if previous is not None:
+            need(
+                snapshot == previous[index],
+                "Current road/CUT/support world triangle positions changed",
+            )
+        snapshots.append(snapshot)
+    need(
+        [
+            a.get_path_name()
+            for a in native_geometry_inventory(
+                unreal, world, job["_expected_native_labels"]
+            )
+        ]
+        == [a.get_path_name() for a in actors],
+        "Native geometry inventory changed during snapshot",
+    )
+    if previous is not None:
+        need(
+            snapshots == previous,
+            "Current native geometry snapshot changed before final placement",
+        )
+    job["native_geometry_snapshot_sha256"] = hashlib.sha256(
+        json.dumps(
+            snapshots, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode()
+    ).hexdigest()
+    job["native_geometry_actor_count"] = len(actors)
+    job["native_geometry_triangle_ids_per_scan"] = total_ids
+    return snapshots, decisions
+
+
 def planting_steps(
     unreal, context, data, meshes, result, policy, support, editor, ground, job
 ):
     live, world = context["live"], context["live"].world
-    by_id = {a["id"]: a for a in data["assets"]}
+    snapshot, native_exclusions = yield from native_road_exclusion_steps(
+        unreal, world, data, job["_native_bounds"], job
+    )
+    job["current_native_road_exclusions"] = native_exclusions
+    pending_placements = []
+    job["phase"] = "MEASURE_LANDSCAPE_CONTACT"
     for row in sorted(data["placements"], key=lambda r: r["site"]):
         job["active_site"] = row["site"]
+        if (
+            native_exclusions[row["site"]]["status"]
+            != "PASS_CURRENT_NATIVE_TRIANGLE_EXCLUSION"
+        ):
+            job["cases"].append(
+                {
+                    "site": row["site"],
+                    "asset_id": row["asset_id"],
+                    "status": "REJECTED_NATIVE_SPATIAL_EXCLUSION",
+                    "native_exclusion": native_exclusions[row["site"]],
+                }
+            )
+            continue
         actor = editor.spawn_actor_from_class(
             unreal.StaticMeshActor, unreal.Vector(), transient=True
         )
@@ -824,7 +1110,7 @@ def planting_steps(
             world,
             ground,
             actor,
-            by_id[row["asset_id"]]["bounds_cm"],
+            job["_native_bounds"][row["asset_id"]],
             row["world_xy_cm"],
             editor,
             policy,
@@ -844,6 +1130,27 @@ def planting_steps(
             job["_expected_actors"].remove(expected_actor)
             continue
         location = row["world_xy_cm"] + [measurement["fit"]["root_zero_sampled_air_cm"]]
+        pending_placements.append((actor, expected_actor, case, location))
+    # No final XY placement is exposed before the complete current-geometry
+    # snapshot has been read again and proved unchanged.
+    if pending_placements:
+        _, final_exclusions = yield from native_road_exclusion_steps(
+            unreal, world, data, job["_native_bounds"], job, previous=snapshot
+        )
+        need(
+            final_exclusions == native_exclusions,
+            "Current native per-footprint exclusion changed",
+        )
+    # Completion alone performs the expensive proof rehash, never every tick.
+    read_manifest(job["manifest_sha256"], require_plant=True)
+    need(
+        verify_footprints(data, job["_native_bounds"])
+        == result["footprint_exclusions"],
+        "Exclusion bytes changed during contact job",
+    )
+    load_materials(unreal, context, data)
+    job["phase"] = "APPLY_VERIFIED_DIAGNOSTIC_LOCATIONS"
+    for actor, expected_actor, case, location in pending_placements:
         actor.set_actor_location(unreal.Vector(*location), False, False)
         need(
             all(
@@ -855,13 +1162,7 @@ def planting_steps(
         expected_actor[1] = vec(actor.get_actor_location())
         case["location_cm"] = location
         job["preview_placed"] += 1
-    # Completion alone performs the expensive proof rehash, never every tick.
-    read_manifest(job["manifest_sha256"], require_plant=True)
-    need(
-        verify_footprints(data) == result["footprint_exclusions"],
-        "Exclusion bytes changed during contact job",
-    )
-    load_materials(unreal, context, data)
+    job["phase"] = "COMPLETED"
     job["operation_status"] = "CONTACT_JOB_COMPLETED_SAMPLED_ONLY"
     job["active_site"] = None
 
@@ -883,6 +1184,7 @@ def start_contact_job(
         and [rotation.pitch, rotation.yaw, rotation.roll] == [0.0, 0.0, 0.0],
         "Landscape grid transform differs",
     )
+    expected_native_labels = native_expected_geometry_labels(unreal, context)
     job = {
         **result,
         "operation_status": "CONTACT_JOB_RUNNING",
@@ -893,10 +1195,15 @@ def start_contact_job(
         "active_site": None,
         "current_grid": None,
         "tick_position_budget": 64,
+        "tick_native_geometry_budget": 1024,
         "tick_wall_budget_ms": 8,
         "wall_budget_semantics": "BEST_EFFORT_SINGLE_NATIVE_CALL_CANNOT_BE_PREEMPTED",
         "_ground_transform": str(transform),
         "_expected_actors": [],
+        "_native_bounds": result["_native_bounds"],
+        "_expected_native_labels": expected_native_labels,
+        "phase": "STARTED_PENDING_CURRENT_NATIVE_EXCLUSIONS",
+        "native_geometry_triangle_ids_read": 0,
     }
     live._pcg365_remote_actors = []
     live._pcg365_remote_job = job
@@ -913,11 +1220,16 @@ def start_contact_job(
                 unreal, live, world, ground, meshes, materials, data, job
             )
             deadline = time.perf_counter() + 0.008
-            for _ in range(64):
+            contact_positions = 0
+            for _ in range(1024):
                 update = next(generator)
-                job["sampled_positions"] += 1
+                if update.get("native_triangle_id"):
+                    job["native_geometry_triangle_ids_read"] += 1
+                else:
+                    job["sampled_positions"] += 1
+                    contact_positions += 1
                 job["current_grid"] = update["grid"]
-                if time.perf_counter() >= deadline:
+                if contact_positions >= 64 or time.perf_counter() >= deadline:
                     break
         except StopIteration:
             stopped = stop_job_callback(unreal, job)
@@ -1070,6 +1382,15 @@ def run(unreal, context, parameters):
             ),
             "Cached Forge binding changed",
         )
+    native_bounds = {}
+    for asset in data["assets"]:
+        actual = meshes[asset["id"]].get_bounds()
+        native_bounds[asset["id"]] = {
+            "origin": vec(actual.origin),
+            "extent": vec(actual.box_extent),
+        }
+    if parameters["operation"] == "plant":
+        footprint_evidence = verify_footprints(data, native_bounds)
     result = {
         "status": "APPLIED_PREVIEW",
         "map_saved": False,
@@ -1078,6 +1399,7 @@ def run(unreal, context, parameters):
         "qualified_assets": [],
         "performance_pass": False,
         "memory_imports": sorted(meshes),
+        "_native_bounds": native_bounds,
         "cases": [],
         "footprint_exclusions": footprint_evidence,
         "full_qualification": False,
@@ -1086,7 +1408,7 @@ def run(unreal, context, parameters):
     if parameters["operation"] == "import":
         read_manifest(parameters["manifest_sha256"])
         load_materials(unreal, context, data)
-        return result
+        return {k: v for k, v in result.items() if not k.startswith("_")}
     return start_contact_job(
         unreal,
         {**context, "_pcg365_manifest_sha256": parameters["manifest_sha256"]},

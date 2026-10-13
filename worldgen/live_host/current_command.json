@@ -4,7 +4,7 @@
   "recipe": "rock_contact_scatter",
   "intent": "preview",
   "parameters": {
-    "operation": "import",
-    "manifest_sha256": "dd6fcb0b514d66bba6f241c114ad30a0e2e107245c5411e47285e3e8ac8ef885"
+    "operation": "plant",
+    "manifest_sha256": "9dfe907aaf438adfaa4d117c1813ec01a954447522d95ced90fe48d9bf90bf18"
   }
 }

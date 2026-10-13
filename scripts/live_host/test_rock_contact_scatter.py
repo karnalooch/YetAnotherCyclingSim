@@ -208,6 +208,12 @@ class IncrementalContact(unittest.TestCase):
             "qualified_assets": [],
             "performance_pass": False,
         }
+        result["_native_bounds"] = {}
+        expected = patch.object(
+            m, "native_expected_geometry_labels", return_value=frozenset()
+        )
+        expected.start()
+        self.addCleanup(expected.stop)
         return api, context, data, result, callbacks
 
     def test_initial_ack_has_no_contact_pass_and_each_tick_is_bounded(self):
@@ -239,6 +245,26 @@ class IncrementalContact(unittest.TestCase):
                 "CONTACT_JOB_COMPLETED_SAMPLED_ONLY",
             )
             self.assertTrue(callbacks["unregistered"])
+
+    def test_native_geometry_has_separate_bounded_budget(self):
+        api, context, data, result, callbacks = self.setup_job()
+
+        def steps(*args):
+            for _ in range(1300):
+                yield {"grid": None, "native_triangle_id": True}
+
+        with (
+            patch.object(m, "planting_steps", side_effect=steps),
+            patch.object(m, "validate_job_world"),
+            patch.object(m.time, "perf_counter", return_value=0),
+        ):
+            m.start_contact_job(api, context, data, {}, {}, result, None, None)
+            callbacks["callback"](0)
+            job = context["live"]._pcg365_remote_job
+            self.assertEqual(job["native_geometry_triangle_ids_read"], 1024)
+            self.assertEqual(job["sampled_positions"], 0)
+            callbacks["callback"](0)
+            self.assertEqual(job["native_geometry_triangle_ids_read"], 1300)
 
     def test_wall_budget_yields_early_without_dropping_positions(self):
         api, context, data, result, callbacks = self.setup_job()
@@ -350,6 +376,244 @@ class IncrementalContact(unittest.TestCase):
         )
         self.assertFalse(status["native_contact_executed"])
         self.assertFalse(status["map_saved"])
+
+
+class NativeRoadExclusion(unittest.TestCase):
+    def test_triangle_square_crossing_containment_edges_and_vertical_faces(self):
+        overlap = m.triangle_square_overlap
+        center = [0, 0]
+        self.assertTrue(
+            overlap([[-10, -0.5, 0], [10, -0.5, 0], [10, 0.5, 0]], center, 1)
+        )
+        self.assertTrue(overlap([[-10, -10, 0], [10, -10, 0], [0, 20, 0]], center, 1))
+        self.assertTrue(overlap([[1, -10, 0], [1, 10, 0], [1, 10, 50]], center, 1))
+        self.assertTrue(overlap([[0, 0, 0], [0, 0, 1], [0, 0, 2]], center, 1))
+        self.assertFalse(overlap([[2, -10, 0], [2, 10, 0], [2, 10, 50]], center, 1))
+        self.assertFalse(overlap([[2, 0, 0], [0, 2, 0], [2, 2, 0]], center, 0.9))
+        with self.assertRaises(ValueError):
+            overlap([[float("nan"), 0, 0], [1, 0, 0], [1, 1, 0]], center, 1)
+
+    def fixture(self):
+        class Transform:
+            def __init__(self, offset=(0, 0, 0)):
+                self.offset = offset
+
+            def __str__(self):
+                return "Transform" + str(self.offset)
+
+        class Mesh:
+            positions = [(1000, 1000, 0), (1010, 1000, 0), (1000, 1010, 0)]
+
+            def get_triangle_count(self):
+                return 1
+
+            def get_num_triangle_ids(self):
+                return 1
+
+            def get_path_name(self):
+                return "/Game/Test.Mesh"
+
+            def get_triangle_positions(self, tid):
+                return (True, *(vector(*p) for p in self.positions))
+
+        class Component:
+            def __init__(self, label):
+                self.label = label
+                self.mesh = Mesh()
+                self.transform = Transform()
+
+            def get_dynamic_mesh(self):
+                return self.mesh
+
+            def get_path_name(self):
+                return "/Game/Test." + self.label + ".Component"
+
+            def get_world_transform(self):
+                return self.transform
+
+        class Actor:
+            def __init__(self, label):
+                self.label = label
+                self.component = Component(label)
+
+            def get_actor_label(self):
+                return self.label
+
+            def get_path_name(self):
+                return "/Game/Test." + self.label
+
+            def get_actor_transform(self):
+                return self.component.transform
+
+            def get_dynamic_mesh_component(self):
+                return self.component
+
+        labels = ["YACS_PERSIST_ROAD"] + [
+            f"YACS_PERSIST_SUPPORT_{i:03d}" for i in range(186)
+        ]
+        labels += [f"CONTEXT_{i:03d}" for i in range(372)]
+        actors = [Actor(label) for label in labels]
+
+        def transform_location(t, p):
+            return vector(p.x + t.offset[0], p.y + t.offset[1], p.z + t.offset[2])
+
+        api = SimpleNamespace(
+            DynamicMeshActor=Actor,
+            Actor=object,
+            Vector=vector,
+            GameplayStatics=SimpleNamespace(get_all_actors_of_class=lambda *_: actors),
+            MathLibrary=SimpleNamespace(transform_location=transform_location),
+        )
+        data = {
+            "assets": [{"id": "rock"}],
+            "placements": [{"site": "P0", "asset_id": "rock", "world_xy_cm": [0, 0]}],
+            "_expected_labels": frozenset(labels),
+        }
+        bounds = {"rock": {"origin": [0, 0, 1], "extent": [1, 1, 1]}}
+        return api, actors, data, bounds
+
+    def consume(self, generator):
+        updates = []
+        while True:
+            try:
+                updates.append(next(generator))
+            except StopIteration as done:
+                return updates, done.value
+
+    def test_complete_native_inventory_snapshot_recheck_and_crossing_rejection(self):
+        api, actors, data, bounds = self.fixture()
+        updates, (snapshot, decisions) = self.consume(
+            m.native_road_exclusion_steps(
+                api,
+                None,
+                data,
+                bounds,
+                {"_expected_native_labels": data["_expected_labels"]},
+            )
+        )
+        self.assertEqual(len(updates), 559)
+        self.assertEqual(len(snapshot), 559)
+        self.assertEqual(
+            decisions["P0"]["status"], "PASS_CURRENT_NATIVE_TRIANGLE_EXCLUSION"
+        )
+        self.consume(
+            m.native_road_exclusion_steps(
+                api,
+                None,
+                data,
+                bounds,
+                {"_expected_native_labels": data["_expected_labels"]},
+                previous=snapshot,
+            )
+        )
+        actors[0].component.mesh.positions = [(-100, 0, 0), (100, 0, 0), (100, 1, 0)]
+        with self.assertRaisesRegex(ValueError, "positions changed"):
+            self.consume(
+                m.native_road_exclusion_steps(
+                    api,
+                    None,
+                    data,
+                    bounds,
+                    {"_expected_native_labels": data["_expected_labels"]},
+                    previous=snapshot,
+                )
+            )
+        _, (_, decisions) = self.consume(
+            m.native_road_exclusion_steps(
+                api,
+                None,
+                data,
+                bounds,
+                {"_expected_native_labels": data["_expected_labels"]},
+            )
+        )
+        self.assertEqual(
+            decisions["P0"]["status"], "REJECTED_CURRENT_NATIVE_TRIANGLE_OVERLAP"
+        )
+
+    def test_nonidentity_component_transforms_geometry_to_world(self):
+        api, actors, data, bounds = self.fixture()
+        actors[0].component.transform.offset = (-1000, -1000, 0)
+        _, (_, decisions) = self.consume(
+            m.native_road_exclusion_steps(
+                api,
+                None,
+                data,
+                bounds,
+                {"_expected_native_labels": data["_expected_labels"]},
+            )
+        )
+        self.assertEqual(
+            decisions["P0"]["status"], "REJECTED_CURRENT_NATIVE_TRIANGLE_OVERLAP"
+        )
+        self.assertEqual(decisions["P0"]["witness_world_triangle_cm"][0], [0, 0, 0])
+
+    def test_missing_duplicate_and_changed_transform_fail_closed(self):
+        api, actors, data, bounds = self.fixture()
+        actors.pop()
+        with self.assertRaises(ValueError):
+            m.native_geometry_inventory(api, None, data["_expected_labels"])
+        api, actors, data, bounds = self.fixture()
+        actors[-1].label = actors[0].label
+        with self.assertRaises(ValueError):
+            m.native_geometry_inventory(api, None, data["_expected_labels"])
+        api, actors, data, bounds = self.fixture()
+        _, (snapshot, _) = self.consume(
+            m.native_road_exclusion_steps(
+                api,
+                None,
+                data,
+                bounds,
+                {"_expected_native_labels": data["_expected_labels"]},
+            )
+        )
+        actors[0].component.transform.offset = (0, 1, 0)
+        with self.assertRaisesRegex(ValueError, "inventory changed"):
+            self.consume(
+                m.native_road_exclusion_steps(
+                    api,
+                    None,
+                    data,
+                    bounds,
+                    {"_expected_native_labels": data["_expected_labels"]},
+                    previous=snapshot,
+                )
+            )
+
+    def test_unknown_context_label_and_foreign_actor_class_reject(self):
+        api, actors, data, bounds = self.fixture()
+        actors[-1].label = "UNKNOWN_REPLACEMENT"
+        with self.assertRaisesRegex(ValueError, "unknown"):
+            m.native_geometry_inventory(api, None, data["_expected_labels"])
+        api, actors, data, bounds = self.fixture()
+        foreign = SimpleNamespace(get_actor_label=lambda: "YACS_PERSIST_ROAD")
+        api.GameplayStatics.get_all_actors_of_class = lambda world, cls: (
+            actors if cls is api.DynamicMeshActor else actors + [foreign]
+        )
+        with self.assertRaisesRegex(ValueError, "actor class"):
+            m.native_geometry_inventory(api, None, data["_expected_labels"])
+
+    def test_actual_native_radius_consumes_mask_clearance(self):
+        data = {
+            "assets": [
+                {"id": "rock", "bounds_cm": {"origin": [0, 0, 1], "extent": [1, 1, 1]}}
+            ],
+            "placements": [
+                {"site": "P0", "asset_id": "rock", "world_xy_cm": [100, 100]}
+            ],
+        }
+        offset = 2 * 4033 + 2
+        distances = bytearray((offset + 1) * 4)
+        reasons = bytearray((offset + 1) * 2)
+        struct.pack_into("<f", distances, offset * 4, 0.515)
+        with patch.object(
+            m, "authenticated_exclusion_buffers", return_value=[distances, reasons]
+        ):
+            self.assertIn("P0", m.verify_footprints(data))
+            with self.assertRaises(ValueError):
+                m.verify_footprints(
+                    data, {"rock": {"origin": [0, 0, 1], "extent": [1.1, 1.1, 1]}}
+                )
 
 
 if __name__ == "__main__":

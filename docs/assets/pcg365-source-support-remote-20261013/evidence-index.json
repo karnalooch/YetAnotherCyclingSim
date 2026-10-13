@@ -3,7 +3,7 @@
   "issue": 365,
   "source_base_sha": "0dd86495fab674a9d6aee22ba0759539d8bd7242",
   "source_uncommitted_at_cpu_execution": true,
-  "native_unreal_execution": "NOT_RUN",
+  "native_unreal_execution": "ROCK_IMPORT_CONTACT_NOT_RUN",
   "placement": false,
   "qualified_assets": [],
   "entries": [
@@ -166,6 +166,63 @@
       "original_sha256": "7eed96b05541055df915ab54917f17ae37e036ea965a0c40add7e84c80272209",
       "compressed_bytes": 2489,
       "compressed_sha256": "5b6f7ed91482ca7d753cd5e404f53ff932c991d87a3b39bb592202e87d0327ee"
+    },
+    {
+      "original_path": "D:/yacs/live-host/runtime/sessions/20261013T074338Z-f4ce5f39df0a/owner-rollout-discard.json",
+      "copy": "evidence/remote-deployment/owner-rollout-discard.json.gz",
+      "original_bytes": 534,
+      "original_sha256": "51784a25697c06d4b8a81ce4ce548384998469bb17ed0f319ea5fd7475a014bc",
+      "compressed_bytes": 378,
+      "compressed_sha256": "1645d27daaa8f759f474666d38130900db5b2f5cc4acc0cd8e28239054aafac0"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-deployment-a3dcb578/material-install.json",
+      "copy": "evidence/remote-deployment/material-install.json.gz",
+      "original_bytes": 3873,
+      "original_sha256": "2ee026a8cb42c1baded97e628d29c7ebc7fa3a9a1b63456d20c26f456fd38c66",
+      "compressed_bytes": 970,
+      "compressed_sha256": "17a85a6f2c26265eda6f0d51a1427a35095ba448deabce38e797b8141894e28f"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-deployment-a3dcb578/independent-client01/level-editor-stream-client.json",
+      "copy": "evidence/remote-deployment/independent-client.json.gz",
+      "original_bytes": 12584,
+      "original_sha256": "a9a259b9a740d7283a35a59c621dad9baf5138d36a4525db871eae8d01a31af4",
+      "compressed_bytes": 1608,
+      "compressed_sha256": "15c630fb49a008689f0b806c8a11b01f950bb3eaa8a051e0a18b9b61480d2d52"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-rock-diagnostic-placements01/preview-manifest.json",
+      "copy": "evidence/remote-deployment/diagnostic-manifest.json.gz",
+      "original_bytes": 20542,
+      "original_sha256": "9dfe907aaf438adfaa4d117c1813ec01a954447522d95ced90fe48d9bf90bf18",
+      "compressed_bytes": 4120,
+      "compressed_sha256": "931dbb1f20917b0112d20a9f04c96f7eba555bfb8f5c17049140951a38be9e6e"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-rock-diagnostic-placements01/preparation-receipt.json",
+      "copy": "evidence/remote-deployment/diagnostic-preparation.json.gz",
+      "original_bytes": 77697,
+      "original_sha256": "d6de725517586907bb8b09bf549d450e7eed88ed470960649eac4037fafb1c26",
+      "compressed_bytes": 2512,
+      "compressed_sha256": "3e3fd1b5332bdab18eff3e9382b02c0606f8b6365dbef3e3fa847f37f73c8498"
+    },
+    {
+      "original_path": "D:/yacs/live-host/runtime/sessions/20261013T100623Z-98043255276f/owner-second-pause.json",
+      "copy": "evidence/remote-deployment/owner-second-pause.json.gz",
+      "original_bytes": 517,
+      "original_sha256": "2626587847b95b50dc313a4dbe0d3677b95dcfa7891a3c8f596ec82b42e10808",
+      "compressed_bytes": 367,
+      "compressed_sha256": "6dee06b0a3f795a0ad7f06d8ea4a11eb6cb5f241b5a604b5f522a51aa3e62ebb"
     }
-  ]
+  ],
+  "remote_world_execution": {
+    "installed_source_sha": "a3dcb57829fd5b89b5a7376ef05ef872690dcc27",
+    "session": "20261013T100623Z-98043255276f",
+    "world_native_verified": true,
+    "independent_browser_frames_received": true,
+    "current_import_request_ci": "FAILED_LOCAL_BUSY",
+    "import_request_head": "716bdf6d25ae5b6b86e03b718ca5721cad9ac46d",
+    "session_closed_by_owner_authorized_second_pause": true
+  }
 }
