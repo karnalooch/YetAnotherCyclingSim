@@ -378,7 +378,7 @@ def main():
         from scripts.worldgen import pcg365_pcgex_graph as graph
         input_path = args.output / "pcgex-input.json"
         write_new(input_path, prepared)
-        write_new(args.output / "pcgex-node-plan.json", graph.recipe("/Engine/Transient.PCG365Collection", prepared["radius_cm"]))
+        write_new(args.output / "pcgex-node-plan.json", graph.recipe("/Game/Generated/YACS/PCG365Ex/R" + sha(input_path)[:16] + "_s2/DA_Rocks", prepared["radius_cm"]))
         report["pcgex_preparation"] = {
             "status": "INPUT_READY_NATIVE_NOT_RUN", "policy": graph.POLICY,
             "input_sha256": sha(input_path), "radius_cm": prepared["radius_cm"],

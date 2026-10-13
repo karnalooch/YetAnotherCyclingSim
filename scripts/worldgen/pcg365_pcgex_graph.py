@@ -32,7 +32,7 @@ POLICY = {
 }
 MAP = "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface"
 LABEL = "PCG365_PCGEx_V3_Preview"
-RECIPE_REVISION = "native-mcp-v3-20cm-static-collection"
+RECIPE_REVISION = "native-mcp-v3-20cm-manual-generation"
 
 
 def require(value, message):
@@ -157,7 +157,7 @@ class Author:
         (self.root / "schemas").mkdir(exist_ok=True)
         self.client = Client()
         self.state = {"nodes": {}, "input_sha256": expected_sha256}
-        self.folder = "/Game/Generated/YACS/PCG365Ex/R" + expected_sha256[:16] + "_s1"
+        self.folder = "/Game/Generated/YACS/PCG365Ex/R" + expected_sha256[:16] + "_s2"
         self.graph_path = self.folder + "/PCG365_Rocks"
         self.collection_path = self.folder + "/DA_Rocks"
 
@@ -836,6 +836,38 @@ def build_preview(input_path, expected_sha256, output_directory, stage, save_map
     require(
         not messages,
         "Native graph reports generation messages; inspect before admission",
+    )
+    components = a.call(
+        ACTOR,
+        "get_components",
+        {
+            "actor": a.state["instance"]["actor"],
+            "component_type": ref("/Script/PCG.PCGComponent"),
+        },
+    )
+    require(len(components) == 1, "Expected one PCG component")
+    require(
+        a.call(
+            OBJECT,
+            "set_properties",
+            {
+                "instance": components[0],
+                "values": json.dumps({"bRegenerateInEditor": False}),
+            },
+        ),
+        "Could not select explicit editor generation",
+    )
+    require(
+        a.call(
+            OBJECT,
+            "get_properties",
+            {
+                "instance": components[0],
+                "properties": ["bRegenerateInEditor"],
+            },
+        )["bRegenerateInEditor"]
+        is False,
+        "PCG still regenerates while editing",
     )
     finalize_collection(a)
     messages = a.call(
