@@ -1,0 +1,15 @@
+{
+  "id": "bounded-lossless-git-pack-maintenance",
+  "source": "karnalooch/YetAnotherCyclingSim",
+  "category": "ci",
+  "problem": "Persistent shallow CI helper checkouts accumulate duplicate packs until disk admission fails.",
+  "invariant": "Bound maintenance by explicit storage ownership, memory, time and disk reserve; conserve all objects and metadata, including unreachable history.",
+  "evidence": [
+    "Issue #465; scoped owner resumption from #475",
+    "scripts/runner/test_git_pack_maintenance.py",
+    "docs/tooling/LOCAL_WORKSPACE.md"
+  ],
+  "do_not_copy": ["YACS helper paths", "YACS host capacity limits"],
+  "failure_behavior": "Busy maintenance defers while admission limits hold; integrity or ownership failures block. A durable pre-mutation latch survives failed verification and prevents below-threshold bypass.",
+  "status": "candidate"
+}
