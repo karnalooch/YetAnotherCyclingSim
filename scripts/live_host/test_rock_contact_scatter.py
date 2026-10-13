@@ -45,6 +45,32 @@ class FakeMeshDelegate:
 
 
 class RockRemoteGuards(unittest.TestCase):
+    def test_transform_snapshot_ignores_struct_address_but_detects_all_values(self):
+        def native_copy():
+            return SimpleNamespace(
+                translation=vector(10, 20, 30),
+                rotation=SimpleNamespace(x=0, y=0, z=0, w=1),
+                scale3d=vector(1, 2, 3),
+            )
+
+        class AddressedStruct:
+            def __init__(self):
+                self.__dict__.update(native_copy().__dict__)
+
+        first, second = AddressedStruct(), AddressedStruct()
+        self.assertNotEqual(str(first), str(second))
+        baseline = m.transform_snapshot(first)
+        self.assertEqual(baseline, m.transform_snapshot(second))
+        for part, key in (("translation", "z"), ("rotation", "w"), ("scale3d", "x")):
+            altered = native_copy()
+            target = getattr(altered, part)
+            setattr(target, key, getattr(target, key) + 0.125)
+            self.assertNotEqual(baseline, m.transform_snapshot(altered))
+        invalid = native_copy()
+        invalid.rotation.w = float("nan")
+        with self.assertRaises(ValueError):
+            m.transform_snapshot(invalid)
+
     def test_full_radius_with_fixed_clearance(self):
         xy = [181600, 189600]
         result = m.footprint_clearance_sample(xy, 100, 1.5, 0)
@@ -184,9 +210,14 @@ class IncrementalContact(unittest.TestCase):
         class Landscape:
             def get_actor_transform(self):
                 return SimpleNamespace(
+                    translation=vector(),
                     scale3d=vector(50, 50, 1),
                     rotation=SimpleNamespace(
-                        rotator=lambda: SimpleNamespace(pitch=0, yaw=0, roll=0)
+                        x=0,
+                        y=0,
+                        z=0,
+                        w=1,
+                        rotator=lambda: SimpleNamespace(pitch=0, yaw=0, roll=0),
                     ),
                 )
 
@@ -500,9 +531,15 @@ class NativeRoadExclusion(unittest.TestCase):
         class Transform:
             def __init__(self, offset=(0, 0, 0)):
                 self.offset = offset
+                self.rotation = SimpleNamespace(x=0, y=0, z=0, w=1)
+                self.scale3d = vector(1, 1, 1)
+
+            @property
+            def translation(self):
+                return vector(*self.offset)
 
             def __str__(self):
-                return "Transform" + str(self.offset)
+                return "Transform" + str(id(self)) + str(self.offset)
 
         class Mesh:
             positions = [(1000, 1000, 0), (1010, 1000, 0), (1000, 1010, 0)]

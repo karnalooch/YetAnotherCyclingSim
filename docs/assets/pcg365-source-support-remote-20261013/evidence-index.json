@@ -3,7 +3,7 @@
   "issue": 365,
   "source_base_sha": "0dd86495fab674a9d6aee22ba0759539d8bd7242",
   "source_uncommitted_at_cpu_execution": true,
-  "native_unreal_execution": "IMPORTED20_CONTACT_STATUS_UNVERIFIED_RECEIVER_REENTRANCY",
+  "native_unreal_execution": "IMPORTED20_RECEIVER_3_REQUESTS_PASSED_CONTACT_GUARD_FALSE_POSITIVE_NO_PLACEMENT",
   "placement": false,
   "qualified_assets": [],
   "entries": [
@@ -256,6 +256,46 @@
       "original_sha256": "aa86306582e3f40ae8f6558cff8c9236221a105c1d10638796402b7ecda76a10",
       "compressed_bytes": 186,
       "compressed_sha256": "6be139c786382370730259f20b75c689963c94d5ed25910af162bd0dcbcc8411"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T111647Z-35e67509f1d3\\commands\\000001-97a2665276574d8a8540.result.json",
+      "copy": "evidence/remote-deployment/receiver-fixed-000001-97a2665276574d8a8540.result.json.gz",
+      "original_bytes": 4417,
+      "original_sha256": "66d15c23f0d52b4b663b0f6a32ff2f9c1229157dc53dab18899eea2ecdaac10a",
+      "compressed_bytes": 1362,
+      "compressed_sha256": "4abbd9124678a2ccff3692d7fb3f05368024be7a700a54c1a9e3d0bd8e5606b3"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T111647Z-35e67509f1d3\\commands\\000002-421bc28b5c9c43f78c94.result.json",
+      "copy": "evidence/remote-deployment/receiver-fixed-000002-421bc28b5c9c43f78c94.result.json.gz",
+      "original_bytes": 4619,
+      "original_sha256": "cbfd10a06db9e7b06f3c527cdc1b671f55d414df916f5377b8e33c6daf681738",
+      "compressed_bytes": 1471,
+      "compressed_sha256": "1ff5d460b0f4419204b6e748100098988c8a6c032d0ff20028edb409adb38ce6"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T111647Z-35e67509f1d3\\commands\\000003-1cb1b30ce8d147e0badf.result.json",
+      "copy": "evidence/remote-deployment/receiver-fixed-000003-1cb1b30ce8d147e0badf.result.json.gz",
+      "original_bytes": 4619,
+      "original_sha256": "123255478500f337711907bbf601e70ed2d5b9d73d953ffced54d62635f7c823",
+      "compressed_bytes": 1468,
+      "compressed_sha256": "7c286cabd3f2d433084eec045157be543208bb5b362f16bffee02be90390346a"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T111647Z-35e67509f1d3\\owner-transform-fix-pause.json",
+      "copy": "evidence/remote-deployment/owner-transform-fix-pause.json.gz",
+      "original_bytes": 516,
+      "original_sha256": "30fe9d4a2b5da1738bbc3220673d6dd205a484aff38cdfab453f5364a97b642c",
+      "compressed_bytes": 366,
+      "compressed_sha256": "c8a5e1367d8db95019180c9dbd5c6d6a477d72c4766baa3b6b2e1cbc9a216c4a"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-deployment-a5e2730c/ci.json",
+      "copy": "evidence/remote-deployment/ci-a5e2730c.json.gz",
+      "original_bytes": 209,
+      "original_sha256": "20aa0f2918fb3317d37a1c08529b1308c8e54d6619c84850cc3ef41e85f2903a",
+      "compressed_bytes": 188,
+      "compressed_sha256": "b3e7d90e0dd1a0061c41e839de06968273c3de59cfadb3d79e31ed62779706f2"
     }
   ],
   "remote_world_execution": {
@@ -267,15 +307,25 @@
     "import_request_head": "716bdf6d25ae5b6b86e03b718ca5721cad9ac46d",
     "session_closed_by_owner_authorized_second_pause": true
   },
-  "preview_placement_status": "UNVERIFIED_DISCARDED_BY_OWNER_AUTHORIZED_RESTART",
+  "preview_placement_status": "ZERO_CONTACT_JOB_ROLLED_BACK",
   "latest_native_rock_execution": {
-    "source_sha": "2412383830d676435dba7eb5649af3838f86e570",
-    "session": "20261013T105244Z-53685d72a80e",
+    "source_sha": "a5e2730c8954efa1d8c2387c0632431516bc785c",
+    "session": "20261013T111647Z-35e67509f1d3",
     "imported_candidates": 20,
-    "publisher_workflow": 38385208653,
+    "publisher_workflow": 38387960838,
     "publisher_conclusion": "success",
-    "contact_readback": "UNVERIFIED",
-    "receiver_failure": "REENTRANT_STARTED_RECEIPT_FILE_EXISTS",
+    "completed_request_sequences": [
+      1,
+      2,
+      3
+    ],
+    "receiver_reentry_failure_reproduced": false,
+    "contact_status": "CONTACT_JOB_FAILED_ROLLED_BACK",
+    "contact_error": "Landscape transform changed during contact job",
+    "sampled_positions": 0,
+    "preview_placed": 0,
+    "rollback_complete": true,
+    "diagnosis": "UE_STRUCT_STR_CONTAINS_ALLOCATION_ADDRESS",
     "saved_checkpoint_unchanged": true,
     "session_stopped_by_owner_authorization": true
   }

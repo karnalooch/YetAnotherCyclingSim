@@ -44,6 +44,18 @@ def vec(value):
     return [number(value.x), number(value.y), number(value.z)]
 
 
+def transform_snapshot(transform):
+    """Exact native values; UE's str(Struct) also includes its allocation address."""
+    quaternion = transform.rotation
+    rotation = [number(getattr(quaternion, key)) for key in ("x", "y", "z", "w")]
+    need(sum(v * v for v in rotation) > 0, "Invalid native rotation quaternion")
+    return {
+        "translation_cm": vec(transform.translation),
+        "rotation_xyzw": rotation,
+        "scale3d": vec(transform.scale3d),
+    }
+
+
 def file_proof(root, proof):
     need(
         type(proof) is dict and set(proof) == {"path", "sha256", "bytes"},
@@ -852,7 +864,7 @@ def validate_job_world(unreal, live, world, ground, meshes, materials, data, job
         "Editor world changed during contact job",
     )
     need(
-        str(ground.get_actor_transform()) == job["_ground_transform"],
+        transform_snapshot(ground.get_actor_transform()) == job["_ground_transform"],
         "Landscape transform changed during contact job",
     )
     for asset in data["assets"]:
@@ -1015,8 +1027,8 @@ def native_component_snapshot(unreal, actor):
         "mesh": mesh.get_path_name(),
         "triangle_count": count,
         "triangle_ids": ids,
-        "component_transform": str(transform),
-        "actor_transform": str(actor.get_actor_transform()),
+        "component_transform": transform_snapshot(transform),
+        "actor_transform": transform_snapshot(actor.get_actor_transform()),
         "basis": basis,
     }, mesh
 
@@ -1356,7 +1368,7 @@ def start_contact_job(
         "tick_native_geometry_budget": 1024,
         "tick_wall_budget_ms": 8,
         "wall_budget_semantics": "BEST_EFFORT_SINGLE_NATIVE_CALL_CANNOT_BE_PREEMPTED",
-        "_ground_transform": str(transform),
+        "_ground_transform": transform_snapshot(transform),
         "_expected_actors": [],
         "_native_bounds": result["_native_bounds"],
         "_expected_native_labels": expected_native_labels,

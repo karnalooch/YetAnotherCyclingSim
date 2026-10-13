@@ -179,3 +179,24 @@ cancellation without replay or concurrent destruction. 55 focused tests PASS;
 Ruff check/format, docs guards and diff checks PASS. Formatting of the two
 legacy protocol files was independently checked for identical Python AST.
 This receiver fix still requires protected CI and a new native execution.
+
+## Native receiver success and transform value fix
+
+Release `a5e2730c8954efa1d8c2387c0632431516bc785c` passed exact-head CI and
+Forge proof and reopened v0.3.1 in session `20261013T111647Z-35e67509f1d3`.
+Publisher 38387960838 passed. All twenty meshes imported again; the receiver
+then completed request sequences 1, 2 and 3 without a blocked queue. This is
+native evidence for the reentrancy fix. The contact job returned a rollback
+with zero sampled positions and zero placed actors: its Landscape transform
+guard compared `str(Transform)` and falsely reported a change.
+
+Installed `PyWrapperStruct.cpp:807` formats structs as
+`<Struct '%s' (%p) %s>` and assigns this formatter to both str and repr. Thus
+fresh copies include different allocation addresses even with identical
+values. The new guard stores exact numeric translation (cm), quaternion XYZW
+and scale for Landscape, component and actor snapshots. It does not loosen
+any tolerance. Tests distinguish new identical-value copies from real changes
+of every transform field and reject nonfinite values. 56 focused CPU tests,
+Ruff and docs guards PASS. This fix remains pending exact-head/native rollout.
+The owner explicitly authorized another discard/pause; saved v0.3.1 hashes
+were verified unchanged before stopping only the owned session.
