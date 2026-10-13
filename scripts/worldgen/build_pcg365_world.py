@@ -1,9 +1,4 @@
-"""One entry point for PCG365 input audit and the admitted live rock preview.
-
-The whole-area map is a treatment proposal. This command never turns it into
-placement authority, installs plugins, edits terrain, or bypasses the live queue.
-Exit 2 means that the requested whole-area build is not yet executable.
-"""
+"""PCG365 input audit and native PCGEx authoring, including in-place whole-area updates."""
 
 from __future__ import annotations
 
@@ -116,14 +111,21 @@ def classify_cells(cliff, scree, reasons, slope, treatment, maximum_slope):
     }
 
 
-def pcgex_records(cliff, scree, reasons, slope, treatment, clearance_m):
+def pcgex_records(cliff, scree, reasons, slope, treatment, clearance_m, *, kind="scree", stride=1):
     """Translate exact source cells to PCG records; native nodes decide placement."""
     classify_cells(cliff, scree, reasons, slope, treatment, 42.0)
     require(clearance_m.shape == slope.shape, "Clearance grid mismatch")
     height, width = slope.shape
     fine = np.repeat(np.repeat(treatment, 8, axis=0), 8, axis=1)[:height, :width]
-    mask = ((scree == 1) & (cliff != 255) & (reasons == 0) & (fine == 3)
+    require(kind in ("scree", "cliff") and type(stride) is int and 1 <= stride <= 16,
+            "Unknown input layer or resolution")
+    selected, other, treatment_class = (scree, cliff, 3) if kind == "scree" else (cliff, scree, 2)
+    mask = ((selected == 1) & (other != 255) & (reasons == 0) & (fine == treatment_class)
             & np.isfinite(slope) & (slope >= 0) & (slope <= 90))
+    # Resolution adaptation only: native nodes still own slope, fitting and spacing.
+    lattice = np.zeros_like(mask)
+    lattice[::stride, ::stride] = True
+    mask &= lattice
     rows, cols = np.nonzero(mask)
     records = []
     for row, col in zip(rows.tolist(), cols.tolist()):
@@ -151,7 +153,7 @@ def rock_radius(assets):
     return max(radii)
 
 
-def audit(root, stage, prepare_pcgex=False):
+def audit(root, stage, prepare_pcgex=False, whole_area=False):
     """Reuse the existing source and regional validator; all reads, no UE."""
     sys.path.insert(0, str(root))
     regional = importlib.import_module("scripts.assets.prepare_pcg365_regional_manifest")
@@ -226,6 +228,12 @@ def audit(root, stage, prepare_pcgex=False):
                                     reasons, slope, treatment, clearance),
         }
         graph.verify_input(prepared)
+        if whole_area:
+            prepared["whole_area_layers"] = {
+                "scree": prepared["points"],
+                "cliffs": pcgex_records(masks["cliff-candidate.tif"], masks["scree-candidate.tif"],
+                    reasons, slope, treatment, clearance, kind="cliff", stride=4),
+            }
     dependencies = [Path(regional.__file__), Path(contact.__file__), Path(policy_module.__file__)]
     blockers = [
         "Cliff treatment requires its own admitted mesh/surface consumer; map colours are proposals.",
@@ -233,9 +241,12 @@ def audit(root, stage, prepare_pcgex=False):
         "The existing saved material baseline is retained; no whole-area material replacement is admitted.",
         "Simplified/raised-form regions retain their unresolved review state.",
     ]
+    if whole_area:
+        blockers = ["Owner visual review and performance acceptance remain outstanding.",
+                    "Grey simplified/raised-form areas retain the existing Landscape."]
     return {
         "schema_version": 1, "issue": 365, "milestone": "M3",
-        "status": "WHOLE_AREA_BUILD_BLOCKED_REGIONAL_PREVIEW_AVAILABLE",
+        "status": "WHOLE_AREA_NATIVE_INPUT_READY" if whole_area else "WHOLE_AREA_BUILD_BLOCKED_REGIONAL_PREVIEW_AVAILABLE",
         "source_head": subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip(),
         "entrypoint_sha256": sha(__file__),
         "dependencies": [{"path": p.relative_to(root).as_posix(), "sha256": sha(p)} for p in dependencies],
@@ -364,6 +375,7 @@ def main():
     parser.add_argument("--stage", type=Path, default=STAGE)
     parser.add_argument("--output", type=Path, required=True, help="New output directory; never overwrites previous work")
     parser.add_argument("--mode", choices=("audit", "prepare-pcgex", "build-pcgex", "regional-preview", "whole-area"), default="audit")
+    parser.add_argument("--whole-area-assets", type=Path, default=ROOT / "worldgen/sa_calobra/pcg365_whole_area_assets_v4.json", help="Hash-bound local catalog for the whole-area native inputs")
     parser.add_argument("--recipe-revision", help="Existing CI-admitted recipe SHA; this command never publishes code")
     parser.add_argument("--timeout-seconds", type=int, default=3600)
     parser.add_argument("--save-preview-map", action="store_true", help="Save a new map copy; the source map is never saved")
@@ -371,7 +383,7 @@ def main():
     require(60 <= args.timeout_seconds <= 7200, "Timeout must be 60..7200 seconds")
     root = args.root.resolve()
     require(not args.output.exists(), "Output already exists; preserve earlier results")
-    report = audit(root, args.stage.resolve(), prepare_pcgex=args.mode in ("prepare-pcgex", "build-pcgex", "whole-area"))
+    report = audit(root, args.stage.resolve(), prepare_pcgex=args.mode in ("prepare-pcgex", "build-pcgex", "whole-area"), whole_area=args.mode == "whole-area")
     prepared = report.pop("pcgex_input")
     args.output.mkdir(parents=True, exist_ok=False)
     if prepared is not None:
@@ -394,8 +406,12 @@ def main():
         print(json.dumps(native), flush=True)
         return 0
     if args.mode == "whole-area":
-        print("Whole-area execution is blocked; see world-input-audit.json. No scene mutation.", file=sys.stderr)
-        return 2
+        require(args.whole_area_assets is not None, "Whole-area asset catalog is required")
+        require(not args.save_preview_map, "Whole-area updates the current map in place; no copy")
+        from scripts.worldgen.pcg365_whole_area import update_world
+        native = update_world(input_path, sha(input_path), args.output, args.whole_area_assets)
+        print(json.dumps(native), flush=True)
+        return 0
     if args.mode == "regional-preview":
         native = run_preview(root, report, args.recipe_revision, args.output, args.timeout_seconds)
         return 0 if (native["operation_status"] == "CONTACT_JOB_COMPLETED_SAMPLED_ONLY"

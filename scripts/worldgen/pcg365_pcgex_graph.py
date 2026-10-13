@@ -275,7 +275,7 @@ class Author:
             self.save()
         return name
 
-    def trace(self, name, previous, apply, distance):
+    def trace(self, name, previous, apply, distance, rotation="Z", cross=None, normal_name="GroundNormal"):
         self.create(
             name,
             "PCGExSampleSurfaceGuidedSettings",
@@ -287,13 +287,13 @@ class Author:
                 "distance": const(distance),
                 "bPruneFailedSamples": True,
                 "bWriteNormal": True,
-                "normalAttributeName": "GroundNormal",
+                "normalAttributeName": normal_name,
                 "bWriteDistance": True,
                 "distanceAttributeName": "GroundDistance",
                 "bWriteSuccess": True,
                 "successAttributeName": "GroundHit",
-                "rotationConstruction": "Z",
-                "crossAxis": const(v(1, 0, 0)),
+                "rotationConstruction": rotation,
+                "crossAxis": const(cross or v(1, 0, 0)),
                 "collisionSettings": {"bTraceComplex": True},
                 "applySampling": {
                     "bApplyTransform": apply,
@@ -307,7 +307,18 @@ class Author:
         self.edge("ground", name, target="ActorReferences")
         return name
 
+    def ex_move(self, name, previous, xyz, absolute=False, source="Out", scaling=None, attribute=None):
+        offset = {"input": "Attribute", "attribute": attribute} if attribute else const(v(*xyz))
+        props = {"offsetMin": offset, "offsetMax": offset, "absoluteOffset": const(absolute)}
+        if scaling:
+            props["offsetScaling"] = scaling
+        self.create(name, "PCGExTransformPointsSettings", props)
+        self.edge(previous, name, source)
+        return name
+
     def move(self, name, previous, xyz, absolute, source="Out"):
+        if getattr(self, "pcgex_transforms", False):
+            return self.ex_move(name, previous, xyz, absolute, source)
         self.create(
             name,
             "PCGTransformPointsSettings",
@@ -327,7 +338,20 @@ def build(a):
     require(hashlib.sha256(raw).hexdigest() == a.expected_sha256, "Input hash changed")
     d = json.loads(raw)
     verify_input(d)
+    build_nodes(a, d, POLICY)
+
+
+def available_extent_cm(clearance_cm, policy):
+    """Encode a clearance sphere as an inscribed box; PCGEx chooses the mesh scale."""
+    return max(0.0, clearance_cm - policy["source_clearance_cm"]
+               - policy["embed_along_normal_cm"]) / math.sqrt(3)
+
+
+def build_nodes(a, d, policy):
+    """Wire reusable native nodes; callers authenticate their own input contract."""
     radius = d["radius_cm"]
+    auto_fit = policy.get("native_best_fit", False)
+    a.pcgex_transforms = auto_fit
     if "graph" not in a.state:
         a.state["graph"] = a.call(
             PCG, "CreateGraph", {"name": "PCG365_Rocks", "path": a.folder}
@@ -339,13 +363,14 @@ def build(a):
             {
                 "transform": {
                     "location": v(col * 50, row * 50, 1000000),
-                    "scale": v(1, 1, 1),
+                    "scale": v(*([policy["uniform_scale"]] * 3)),
                 },
                 "density": 1,
-                "boundsMin": v(-radius, -radius, -radius),
-                "boundsMax": v(radius, radius, radius),
-                "color": dict(x=slope, y=clearance, z=0, w=1),
-                "seed": (row * 4033 + col) ^ POLICY["seed"],
+                "boundsMin": v(*([-available_extent_cm(clearance, policy) if auto_fit else -radius] * 3)),
+                "boundsMax": v(*([available_extent_cm(clearance, policy) if auto_fit else radius] * 3)),
+                "color": dict(x=slope, y=clearance,
+                              z=available_extent_cm(clearance, policy) if auto_fit else 0, w=1),
+                "seed": (row * 4033 + col) ^ policy["seed"],
                 "steepness": 1,
                 "metadataEntry": -1,
             }
@@ -383,8 +408,9 @@ def build(a):
         "source_masks",
         "input",
         [
-            ("$Color.X", "EqualOrSmaller", POLICY["maximum_slope_degrees"]),
-            ("$Color.Y", "EqualOrGreater", radius + POLICY["source_clearance_cm"]),
+            ("$Color.X", "EqualOrSmaller", policy["maximum_slope_degrees"]),
+            ("$Color.Y", "StrictlyGreater" if auto_fit else "EqualOrGreater",
+             policy["source_clearance_cm"] + (policy["embed_along_normal_cm"] if auto_fit else radius)),
         ],
     )
     a.create(
@@ -396,7 +422,8 @@ def build(a):
         },
     )
     a.edge(source, "direction", "Inside")
-    projected = a.trace("project_and_align", "direction", True, 2000000)
+    projected = a.trace("project_and_align", "direction", True, 2000000,
+                        policy.get("rotation_axis", "Z"), policy.get("cross_axis"))
     slope = a.filters(
         "native_slope",
         projected,
@@ -404,16 +431,13 @@ def build(a):
             (
                 "GroundNormal.Z",
                 "EqualOrGreater",
-                math.cos(math.radians(POLICY["maximum_slope_degrees"])),
+                math.cos(math.radians(policy["maximum_slope_degrees"])),
             )
         ],
     )
     a.create("merge_assets", "PCGMergeAttributesSettings")
     for i, asset in enumerate(d["assets"]):
-        path = (
-            "/Game/Generated/YACS/PCG365RemotePreview/Rf3acaeb8a89a3600/SM_"
-            + asset["id"]
-        )
+        path = asset.get("mesh_package", mesh_path(asset))
         a.create(
             f"asset_{i}",
             "PCGCreateAttributeSetSettings",
@@ -421,7 +445,7 @@ def build(a):
                 "outputTarget": "AssetPath",
                 "attributeTypes": {
                     "type": "SoftObjectPath",
-                    "softObjectPathValue": ref(path + ".SM_" + asset["id"]),
+                    "softObjectPathValue": ref(path + "." + path.rsplit("/", 1)[1]),
                 },
             },
         )
@@ -445,7 +469,8 @@ def build(a):
         "PCGAddAttributeSettings",
         {"inputSource": "Collection", "outputTarget": "Collection"},
     )
-    a.edge(slope, "attach_collection", "Inside")
+    if not auto_fit:
+        a.edge(slope, "attach_collection", "Inside")
     a.edge("build_collection", "attach_collection", target="Attributes")
     a.create(
         "stage_assets",
@@ -455,21 +480,22 @@ def build(a):
             "outputMode": "CollectionMap",
             "selectorMode": "External",
             "bApplyFitting": True,
-            "scaleToFit": {"scaleToFitMode": "None"},
+            "scaleToFit": {"scaleToFitMode": "Uniform", "scaleToFit": "Min"} if auto_fit else {"scaleToFitMode": "None"},
             "justification": {
-                "bDoJustifyX": False,
-                "bDoJustifyY": False,
-                "bDoJustifyZ": False,
+                "bDoJustifyX": auto_fit,
+                "bDoJustifyY": auto_fit,
+                "bDoJustifyZ": auto_fit,
             },
             "bConsiderEntryScaleToFit": False,
             "bConsiderEntryJustification": False,
         },
     )
-    a.edge("attach_collection", "stage_assets")
+    if not auto_fit:
+        a.edge("attach_collection", "stage_assets")
     a.create(
         "asset_choice",
-        "PCGExSelectorClassicFactoryProviderSettings",
-        {"config": {"mode": "WeightedRandom"}},
+        "PCGExSelectorBestFitFactoryProviderSettings" if auto_fit else "PCGExSelectorClassicFactoryProviderSettings",
+        {} if auto_fit else {"config": {"mode": "WeightedRandom"}},
     )
     a.edge("asset_choice", "stage_assets", "Selector", "Selector")
     a.create(
@@ -490,7 +516,8 @@ def build(a):
             "bComponentsMustOverlapSelf": False,
         },
     )
-    a.move("road_check_above", "stage_assets", (0, 0, 1000), True)
+    a.move("road_check_above", slope if auto_fit else "stage_assets", (0, 0, 1000), True,
+           "Inside" if auto_fit else "Out")
     a.create(
         "road_geometry_clearance",
         "PCGExSampleSurfaceGuidedSettings",
@@ -507,7 +534,7 @@ def build(a):
             "applySampling": {"bApplyTransform": False},
             "collisionSettings": {
                 "traceMode": "Sphere",
-                "sphereRadius": const(radius + POLICY["source_clearance_cm"]),
+                "sphereRadius": {"input": "Attribute", "attribute": "$Color.Y"} if auto_fit else const(radius + policy["source_clearance_cm"]),
                 "bTraceComplex": True,
             },
         },
@@ -531,12 +558,23 @@ def build(a):
             "bOutputDiscard": True,
         },
     )
-    a.edge("protect_current_road", "rock_spacing", "Inside")
-    previous = "rock_spacing"
-    for i, (x, y) in enumerate(((radius, 0), (-radius, 0), (0, radius), (0, -radius))):
-        previous = a.move(f"probe{i}_offset", previous, (x, y, 0), False)
+    if not auto_fit:
+        a.edge("protect_current_road", "rock_spacing", "Inside")
+    previous = "protect_current_road" if auto_fit else "rock_spacing"
+    previous_pin = "Inside" if auto_fit else "Out"
+    probes = ((radius, 0), (-radius, 0), (0, radius), (0, -radius)) if policy.get("five_probe", True) else ()
+    for i, (x, y) in enumerate(probes):
+        if auto_fit:
+            direction = (1 if x > 0 else -1 if x < 0 else 0,
+                         1 if y > 0 else -1 if y < 0 else 0, 0)
+            previous = a.ex_move(f"probe{i}_offset", previous, direction, source=previous_pin,
+                                 scaling={"input": "Attribute", "attribute": "$Color.Z"})
+        else:
+            previous = a.move(f"probe{i}_offset", previous, (x, y, 0), False)
+        previous_pin = "Out"
         previous = a.move(f"probe{i}_above", previous, (0, 0, 1000), True)
-        previous = a.trace(f"probe{i}_trace", previous, False, 2000)
+        normal_name = "SupportNormal" if auto_fit else "GroundNormal"
+        previous = a.trace(f"probe{i}_trace", previous, False, 2000, normal_name=normal_name)
         previous = a.filters(
             f"probe{i}_support",
             previous,
@@ -544,25 +582,48 @@ def build(a):
                 (
                     "GroundDistance",
                     "EqualOrGreater",
-                    1000 - POLICY["support_plane_tolerance_cm"],
+                    1000 - policy["support_plane_tolerance_cm"],
                 ),
                 (
                     "GroundDistance",
                     "EqualOrSmaller",
-                    1000 + POLICY["support_plane_tolerance_cm"],
+                    1000 + policy["support_plane_tolerance_cm"],
                 ),
                 (
-                    "GroundNormal.Z",
+                    normal_name + ".Z",
                     "EqualOrGreater",
-                    math.cos(math.radians(POLICY["maximum_slope_degrees"])),
+                    math.cos(math.radians(policy.get("support_maximum_slope_degrees", policy["maximum_slope_degrees"]))),
                 ),
             ],
         )
         previous = a.move(
             f"probe{i}_restore_z", previous, (0, 0, -1000), True, "Inside"
         )
-        previous = a.move(f"probe{i}_restore_xy", previous, (-x, -y, 0), False)
-    a.move("seat_rock", previous, (0, 0, -POLICY["embed_along_normal_cm"]), False)
+        if auto_fit:
+            previous = a.ex_move(f"probe{i}_restore_xy", previous, tuple(-v for v in direction),
+                                 scaling={"input": "Attribute", "attribute": "$Color.Z"})
+        else:
+            previous = a.move(f"probe{i}_restore_xy", previous, (-x, -y, 0), False)
+    # Correct the supplied scan's axes before PCGEx solves its fitted bounds/pivot.
+    if policy.get("model_rotation"):
+        a.create("fit_scan_axes", "PCGExTransformPointsSettings", {
+            "rotationMin": const(policy["model_rotation"]),
+            "rotationMax": const(policy["model_rotation"]),
+        })
+        a.edge(previous, "fit_scan_axes", previous_pin)
+        previous, previous_pin = "fit_scan_axes", "Out"
+    if auto_fit:
+        a.edge(previous, "attach_collection", previous_pin)
+        a.edge("attach_collection", "stage_assets")
+        a.state["staging_input"] = [previous, previous_pin]
+        a.save()
+        a.edge("stage_assets", "rock_spacing")
+        # Native justification seats the variable-sized mesh; only the declared
+        # visual embedding remains, applied along the measured center normal.
+        a.ex_move("seat_rock", "rock_spacing", (0, 0, 0), absolute=True,
+                  attribute="GroundNormal", scaling=const(v(*([-policy["embed_along_normal_cm"]] * 3))))
+    else:
+        a.move("seat_rock", previous, (0, 0, -policy["embed_along_normal_cm"]), False)
     a.create(
         "spawn",
         "PCGStaticMeshSpawnerSettings",
@@ -633,7 +694,8 @@ def finalize_collection(a):
             "Could not detach collection preparation node",
         )
         del a.state["nodes"][key]
-    a.edge("native_slope", "stage_assets", source="Inside")
+    previous, pin = a.state.get("staging_input", ["native_slope", "Inside"])
+    a.edge(previous, "stage_assets", source=pin)
     a.state["collection_prepared_once"] = True
     a.save()
 
