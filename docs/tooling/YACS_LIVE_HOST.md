@@ -34,10 +34,16 @@ The new Live Host bootstrap starts the actual saved `L_RoadSurface` map,
 inspects the 559 real road/support DynamicMesh actors and all 186 material
 bindings, and positions the viewport at the retained v0.3.1 road camera.
 It **observes** native DirectionalLight, SkyLight, SkyAtmosphere/fog/cloud
-actors and UE global-illumination/reflection CVars. A nonzero light count
-is not owner visual approval: `global_lighting_visual_pass=false` until
-the owner reviews the actual scene. No unsaved or PR-only lighting change
-is silently substituted for the saved v0.3.1 package.
+actors and UE global-illumination/reflection CVars. The established
+`capture_material_forge_landscape.py` source has a bounded **transient**
+lighting fallback; `live_world_lighting.py` reuses it **only when each
+corresponding saved scene actor is absent**, adding temporary DirectionalLight
+(6.0), SkyLight (1.15, open lower hemisphere) and SkyAtmosphere as required.
+It preserves existing light settings, recaptures SkyLights and never saves
+those fallback actors. A clean v0.3.1 saved map remains the source of truth.
+The native receipt distinguishes inherited vs temporary light counts.
+This is a visual-preview lighting layer, **not an accepted saved change**:
+`global_lighting_visual_pass=false` until the owner reviews the actual scene.
 
 Controls: `inspect` reads current world and lighting counts; the new
 `focus_road` action restores the fixed road camera, without moving an

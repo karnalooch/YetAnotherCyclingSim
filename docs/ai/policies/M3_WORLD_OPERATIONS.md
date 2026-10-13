@@ -9,8 +9,9 @@ the independent YACS Live Host, not historical diagnostic P0–P4 scenes.
 Currently selected v0.3.1 L_RoadSurface includes the retained accepted
 road/asphalt/shoulder bindings. Refuse startup when its local project, original
 map, package hashes or native material readback differ. Lighting must be
-observed in native UE before claiming global illumination; user visual
-acceptance remains separate. New world-profile releases retain VP9 and are
+observed in native UE; a missing light may receive only the source-backed
+transient review fallback from existing Material Forge proofs, with native
+readback and no package save. User visual acceptance remains separate. New world-profile releases retain VP9 and are
 installed only with an idle owned Editor. Previous unsaved user edits in the
 live session must be reviewed before any deliberate one-time restart.
 

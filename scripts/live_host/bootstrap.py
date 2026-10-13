@@ -25,6 +25,7 @@ def main():
     from scripts.live_host.protocol import need, existing_abslog_only, safe_session_root
     from scripts.live_host import live_requests
     from scripts.live_host.live_world_road import VerifiedRoadWorld
+    from scripts.live_host.live_world_lighting import ensure_review_lighting
 
     session_id = os.environ["YACS_LIVE_SESSION_ID"]
     code_sha = os.environ["YACS_LIVE_SOURCE_SHA"]
@@ -52,6 +53,11 @@ def main():
             release=release,
         )
         world_receipt = LIVE.start(unreal)
+        # Reuse the pre-existing Material Forge review lighting fallback only
+        # when saved light actors are absent. Transient; no map/save mutation.
+        lighting_receipt = ensure_review_lighting(unreal, LIVE)
+        world_receipt["lighting"] = lighting_receipt
+        LIVE.report["lighting"] = lighting_receipt
         BRIDGE = live_requests.attach(
             unreal, live=LIVE, root=live_root, session=session_id,
             source_sha=code_sha,

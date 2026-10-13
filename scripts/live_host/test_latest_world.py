@@ -241,6 +241,7 @@ class LatestWorldContract(unittest.TestCase):
         self.assertIn("Get-FileHash", resolver)
         self.assertIn("source_map_relative", resolver)
         self.assertIn("VerifiedRoadWorld", bootstrap)
+        self.assertIn("ensure_review_lighting(unreal, LIVE)", bootstrap)
         self.assertNotIn("RedReview(stage", bootstrap)
 
     def test_persisted_install_and_upgrade_require_latest_world(self):
