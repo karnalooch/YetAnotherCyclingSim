@@ -7,6 +7,7 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'Convert-YacsLiveUtc.ps1')
 $runtime='D:\yacs\live-host\runtime'
 $sessionRoot=Join-Path $runtime "sessions/$Session"
 $helper=Join-Path $PSScriptRoot 'live_progress.py'
@@ -16,7 +17,7 @@ function Test-Identity {
  $current=Get-Content -LiteralPath 'D:\yacs\live-host\state\current-session.json' -Raw | ConvertFrom-Json
  if ($current.session -cne $Session) { return $false }
  $beat=Get-Content -LiteralPath (Join-Path $sessionRoot 'live-heartbeat.json') -Raw | ConvertFrom-Json
- $age=((Get-Date).ToUniversalTime() - [DateTime]::Parse($beat.updated_utc).ToUniversalTime()).TotalSeconds
+ $age=([DateTime]::UtcNow - (ConvertTo-YacsLiveUtc -Value $beat.updated_utc)).TotalSeconds
  return ($beat.session -ceq $Session -and $beat.source_sha -ceq $current.source_sha -and $beat.status -ceq 'EDITOR_TICK_ALIVE' -and $age -ge -5 -and $age -lt 30)
 }
 try {
@@ -49,6 +50,3 @@ try {
  if ($lock) { & $python $helper --session $Session --revision $RecipeRevision --manifest $Manifest --unavailable }
  if ($lock) { $lock.Dispose(); Remove-Item -LiteralPath (Join-Path $sessionRoot 'progress-observer.lock') }
 }
-
-
-
