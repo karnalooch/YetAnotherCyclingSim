@@ -1,7 +1,10 @@
 {
   "schema_version": 1,
   "target_issue": 476,
-  "recipe": "rock_asset_audit",
+  "recipe": "rock_contact_scatter",
   "intent": "preview",
-  "parameters": {}
+  "parameters": {
+    "operation": "import",
+    "manifest_sha256": "dd6fcb0b514d66bba6f241c114ad30a0e2e107245c5411e47285e3e8ac8ef885"
+  }
 }
