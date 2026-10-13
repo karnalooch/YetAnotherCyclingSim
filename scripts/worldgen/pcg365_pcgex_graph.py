@@ -343,8 +343,17 @@ def build(a):
 
 def available_extent_cm(clearance_cm, policy):
     """Encode a clearance sphere as an inscribed box; PCGEx chooses the mesh scale."""
-    return max(0.0, clearance_cm - policy["source_clearance_cm"]
-               - policy["embed_along_normal_cm"]) / math.sqrt(3)
+    extent = max(0.0, clearance_cm - policy["source_clearance_cm"]
+                 - policy["embed_along_normal_cm"]) / math.sqrt(3)
+    return min(extent, policy.get("fit_extent_cap_cm", math.inf))
+
+
+def input_clearance_cm(clearance_cm, policy):
+    """Trace the complete admitted input envelope, capped by its mesh-sized box."""
+    if "fit_extent_cap_cm" not in policy:
+        return clearance_cm
+    return min(clearance_cm, math.sqrt(3) * policy["fit_extent_cap_cm"]
+               + policy["source_clearance_cm"] + policy["embed_along_normal_cm"])
 
 
 def build_nodes(a, d, policy):
@@ -368,7 +377,7 @@ def build_nodes(a, d, policy):
                 "density": 1,
                 "boundsMin": v(*([-available_extent_cm(clearance, policy) if auto_fit else -radius] * 3)),
                 "boundsMax": v(*([available_extent_cm(clearance, policy) if auto_fit else radius] * 3)),
-                "color": dict(x=slope, y=clearance,
+                "color": dict(x=slope, y=input_clearance_cm(clearance, policy),
                               z=available_extent_cm(clearance, policy) if auto_fit else 0, w=1),
                 "seed": (row * 4033 + col) ^ policy["seed"],
                 "steepness": 1,
@@ -435,6 +444,19 @@ def build_nodes(a, d, policy):
             )
         ],
     )
+    slope_pin = "Inside"
+    if policy.get("fuse_footprint_cm"):
+        a.create("cliff_fragments", "PCGExFusePointsSettings", {
+            "mode": "MostCentral", "bPreserveOrder": True, "fusedBoundsMode": "None",
+            "pointPointIntersectionDetails": {"fuseDetails": {
+                "fuseMethod": "Voxel", "toleranceInput": "Constant",
+                "tolerance": policy["fuse_footprint_cm"],
+                "sourceDistance": "Center", "targetDistance": "Center",
+                "bComponentWiseTolerance": False,
+            }},
+        })
+        a.edge(slope, "cliff_fragments", slope_pin)
+        slope, slope_pin = "cliff_fragments", "Out"
     a.create("merge_assets", "PCGMergeAttributesSettings")
     for i, asset in enumerate(d["assets"]):
         path = asset.get("mesh_package", mesh_path(asset))
@@ -517,7 +539,7 @@ def build_nodes(a, d, policy):
         },
     )
     a.move("road_check_above", slope if auto_fit else "stage_assets", (0, 0, 1000), True,
-           "Inside" if auto_fit else "Out")
+           slope_pin if auto_fit else "Out")
     a.create(
         "road_geometry_clearance",
         "PCGExSampleSurfaceGuidedSettings",

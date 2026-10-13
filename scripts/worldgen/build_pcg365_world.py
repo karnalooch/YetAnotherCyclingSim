@@ -111,7 +111,7 @@ def classify_cells(cliff, scree, reasons, slope, treatment, maximum_slope):
     }
 
 
-def pcgex_records(cliff, scree, reasons, slope, treatment, clearance_m, *, kind="scree", stride=1):
+def pcgex_records(cliff, scree, reasons, slope, treatment, clearance_m, *, kind="scree", stride=1, protected_bits=255):
     """Translate exact source cells to PCG records; native nodes decide placement."""
     classify_cells(cliff, scree, reasons, slope, treatment, 42.0)
     require(clearance_m.shape == slope.shape, "Clearance grid mismatch")
@@ -119,8 +119,11 @@ def pcgex_records(cliff, scree, reasons, slope, treatment, clearance_m, *, kind=
     fine = np.repeat(np.repeat(treatment, 8, axis=0), 8, axis=1)[:height, :width]
     require(kind in ("scree", "cliff") and type(stride) is int and 1 <= stride <= 16,
             "Unknown input layer or resolution")
+    require(protected_bits == 255 or (kind == "cliff" and protected_bits == 63),
+            "Unsupported consumer exclusion contract")
     selected, other, treatment_class = (scree, cliff, 3) if kind == "scree" else (cliff, scree, 2)
-    mask = ((selected == 1) & (other != 255) & (reasons == 0) & (fine == treatment_class)
+    excluded = reasons != 0 if protected_bits == 255 else (((reasons & 63) != 0) | (reasons > 255) | (reasons < 0))
+    mask = ((selected == 1) & (other != 255) & ~excluded & (fine == treatment_class)
             & np.isfinite(slope) & (slope >= 0) & (slope <= 90))
     # Resolution adaptation only: native nodes still own slope, fitting and spacing.
     lattice = np.zeros_like(mask)
@@ -137,6 +140,17 @@ def pcgex_records(cliff, scree, reasons, slope, treatment, clearance_m, *, kind=
                    (height - row - .5) * 50, (width - col - .5) * 50)
         records.append([row, col, float(slope[row, col]), min(clearance, edge)])
     return records
+
+
+def cliff_clearance(cliff, scree, reasons, slope, protected_bits):
+    """Adapt the existing DTM cliff contract, not the LiDAR vegetation contract."""
+    from scripts.assets.prepare_sa_calobra_road_masks import distance_lower_bound
+    require(protected_bits == 63, "Authenticated cliff exclusion contract changed")
+    require(cliff.shape == scree.shape == reasons.shape == slope.shape, "Grid mismatch")
+    unknown = ((cliff == 255) | (scree == 255) | ~np.isfinite(slope)
+               | (slope < 0) | (slope > 90))
+    excluded = ((reasons & protected_bits) != 0) | unknown
+    return distance_lower_bound(excluded, 0.5)
 
 
 def rock_radius(assets):
@@ -229,10 +243,24 @@ def audit(root, stage, prepare_pcgex=False, whole_area=False):
         }
         graph.verify_input(prepared)
         if whole_area:
+            selector_manifest = read_json(selector["path"])
+            protected_bits = selector_manifest["protected_reason_bits"]["mask"]
+            cliff_distance = cliff_clearance(masks["cliff-candidate.tif"], masks["scree-candidate.tif"],
+                                            reasons, slope, protected_bits)
+            prepared["cliff_input_contract"] = {
+                "selector_manifest_sha256": selector["sha256"],
+                "protected_reason_bits": protected_bits,
+                "unknown_terrain_excluded": True,
+                "vegetation_only_reason_bits": [64, 128],
+                "clearance_logical_sha256": hashlib.sha256(cliff_distance.tobytes()).hexdigest(),
+                "clearance_producer": "scripts/assets/prepare_sa_calobra_road_masks.py:distance_lower_bound",
+                "clearance_producer_sha256": sha(root / "scripts/assets/prepare_sa_calobra_road_masks.py"),
+                "source_rasters_modified": False,
+            }
             prepared["whole_area_layers"] = {
                 "scree": prepared["points"],
                 "cliffs": pcgex_records(masks["cliff-candidate.tif"], masks["scree-candidate.tif"],
-                    reasons, slope, treatment, clearance, kind="cliff", stride=4),
+                    reasons, slope, treatment, cliff_distance, kind="cliff", stride=4, protected_bits=protected_bits),
             }
     dependencies = [Path(regional.__file__), Path(contact.__file__), Path(policy_module.__file__)]
     blockers = [
@@ -390,7 +418,15 @@ def main():
         from scripts.worldgen import pcg365_pcgex_graph as graph
         input_path = args.output / "pcgex-input.json"
         write_new(input_path, prepared)
-        write_new(args.output / "pcgex-node-plan.json", graph.recipe("/Game/Generated/YACS/PCG365Ex/R" + sha(input_path)[:16] + "_s2/DA_Rocks", prepared["radius_cm"]))
+        if args.mode == "whole-area":
+            from scripts.worldgen.pcg365_whole_area import POLICIES, REVISION
+            node_plan = {"recipe_revision": REVISION, "policies": POLICIES,
+                         "input_contract": prepared["cliff_input_contract"],
+                         "graph_state": "See each lane graph-state.json for the authored native graph",
+                         "fragment_footprint": "Derived from the authenticated cliff mesh bounds"}
+        else:
+            node_plan = graph.recipe("/Game/Generated/YACS/PCG365Ex/R" + sha(input_path)[:16] + "_s2/DA_Rocks", prepared["radius_cm"])
+        write_new(args.output / "pcgex-node-plan.json", node_plan)
         report["pcgex_preparation"] = {
             "status": "INPUT_READY_NATIVE_NOT_RUN", "policy": graph.POLICY,
             "input_sha256": sha(input_path), "radius_cm": prepared["radius_cm"],

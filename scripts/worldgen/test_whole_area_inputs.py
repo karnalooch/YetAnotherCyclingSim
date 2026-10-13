@@ -2,9 +2,9 @@
 import math
 import unittest
 import numpy as np
-from scripts.worldgen.build_pcg365_world import pcgex_records
+from scripts.worldgen.build_pcg365_world import pcgex_records, cliff_clearance
 from scripts.worldgen.pcg365_whole_area import input_radius
-from scripts.worldgen.pcg365_pcgex_graph import available_extent_cm
+from scripts.worldgen.pcg365_pcgex_graph import available_extent_cm, input_clearance_cm
 
 class WholeAreaInputs(unittest.TestCase):
     def test_cliff_resolution_never_expands_or_fills_the_source_mask(self):
@@ -38,6 +38,40 @@ class WholeAreaInputs(unittest.TestCase):
             extent = available_extent_cm(distance, policy)
             self.assertAlmostEqual(math.sqrt(3 * extent ** 2) + 5 + 50, distance)
         self.assertEqual(available_extent_cm(54., policy), 0.)
+
+    def test_cliff_consumer_keeps_all_six_holdbacks_and_unknown_terrain(self):
+        cliff = np.ones((8, 8), dtype=np.uint8)
+        scree = np.zeros_like(cliff)
+        reasons = np.zeros_like(cliff)
+        slope = np.full(cliff.shape, 65.)
+        reasons[0, :] = [1, 2, 4, 8, 16, 32, 64, 128]
+        cliff[1, 0] = 255
+        scree[1, 1] = 255
+        slope[1, 2] = np.nan
+        distance = cliff_clearance(cliff, scree, reasons, slope, 63)
+        records = pcgex_records(cliff, scree, reasons, slope, np.array([[2]], dtype=np.uint8),
+                                distance, kind="cliff", protected_bits=63)
+        cells = {(r, c) for r, c, _, _ in records}
+        self.assertEqual(len(cells), 64 - 6 - 3)
+        self.assertIn((0, 6), cells)
+        self.assertIn((0, 7), cells)
+        self.assertTrue(np.all(distance[0, :6] == 0))
+        self.assertTrue(np.all(distance[1, :3] == 0))
+        self.assertGreater(distance[0, 7], 0)
+        self.assertEqual(reasons[0, 7], 128)
+        with self.assertRaisesRegex(ValueError, "Unsupported consumer"):
+            pcgex_records(cliff, scree, reasons, slope, np.array([[2]], dtype=np.uint8),
+                          distance, kind="scree", protected_bits=63)
+
+    def test_mesh_footprint_caps_fit_without_expanding_exclusion_clearance(self):
+        policy = {"source_clearance_cm": 50., "embed_along_normal_cm": 5., "fit_extent_cap_cm": 350.}
+        for distance in [54., 100., 660., 9000.]:
+            extent = available_extent_cm(distance, policy)
+            trace = input_clearance_cm(distance, policy)
+            self.assertLessEqual(extent, 350.)
+            self.assertLessEqual(trace, distance)
+            if distance >= 55.:
+                self.assertAlmostEqual(math.sqrt(3) * extent + 55., trace)
 
     def test_final_exclusion_envelope_includes_seating_offset(self):
         assets = [{"expected_native_bounds_cm": {"min": [-3, -4, -2], "max": [1, 1, 12]}}]

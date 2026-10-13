@@ -14,11 +14,11 @@ import time
 from scripts.worldgen import pcg365_pcgex_graph as g
 
 MAP = "/Game/Generated/YACS/PCG365Ex/Ra1e9cbdd48ad0c85_s2/L_PCG365_Rocks"
-REVISION = "whole-area-v5-native-best-fit"
+REVISION = "whole-area-v6-native-cliff-fragments"
 POLICIES = {
     "rocks": dict(g.POLICY, id="PCG365_ROCKS_V5", native_best_fit=True,
                   support_plane_tolerance_cm=60.0, support_maximum_slope_degrees=89.0),
-    "cliffs": dict(g.POLICY, id="PCG365_CLIFFS_V5", native_best_fit=True,
+    "cliffs": dict(g.POLICY, id="PCG365_CLIFFS_V6", native_best_fit=True, group_by_mesh_footprint=True,
                    maximum_slope_degrees=88.0, five_probe=False,
                    rotation_axis="YZ", cross_axis=g.v(0, 0, -1),
                    model_rotation={"pitch": 0, "yaw": 0, "roll": 46.411836835744694},
@@ -132,15 +132,23 @@ def update_world(input_path, input_sha, output, asset_catalog):
                            for x in landscapes]
     native_assets = prepare_assets(a, catalog)
     lane_results = []
-    for lane, policy in POLICIES.items():
+    for lane, base_policy in POLICIES.items():
+        policy = dict(base_policy)
         lane_dir = output / lane
         lane_dir.mkdir()
         assets = [x for x in catalog["assets"] if (x["lane"] == "cliffs") == (lane == "cliffs")]
+        if policy.get("group_by_mesh_footprint"):
+            # Source dimensions define the available fragment box; PCGEx owns
+            # grouping, the representative source point and the final mesh fit.
+            width = max(max(hi - lo for lo, hi in zip(asset["expected_native_bounds_cm"]["min"],
+                                                      asset["expected_native_bounds_cm"]["max"]))
+                        for asset in assets)
+            policy.update(fuse_footprint_cm=width, fit_extent_cap_cm=width / 2)
         points = data["whole_area_layers"]["cliffs" if lane == "cliffs" else "scree"]
         lane_data = dict(points=points, assets=assets, radius_cm=input_radius(assets, policy))
         save(lane_dir / "lane-input.json", lane_data)
         a = g.Author(input_path, input_sha, lane_dir)
-        a.folder = "/Game/Generated/YACS/PCG365Ex/WholeAreaV5/R" + identity[:16] + "/" + lane
+        a.folder = "/Game/Generated/YACS/PCG365Ex/WholeAreaV6/R" + identity[:16] + "/" + lane
         a.graph_path = a.folder + "/PCG365_Rocks"
         a.collection_path = a.folder + "/DA_Rocks"
         if a.call(g.ASSET, "exists", {"path": a.graph_path}):
