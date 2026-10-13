@@ -24,6 +24,11 @@ jobs:
     timeout-minutes: 10
     env:
       GIT_LFS_SKIP_SMUDGE: "1"
+      # Apply before checkout's clean/reset as well as fetch/checkout. Keep the
+      # setting job-local; long tracked paths must not force clone recreation.
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: core.longpaths
+      GIT_CONFIG_VALUE_0: "true"
 
     steps:
       - name: Checkout exact toolchain definition

@@ -37,6 +37,9 @@ process PATH, while `portable-powershell.yml` can bootstrap the tool even when
 only Windows PowerShell 5.1 is initially available. An already-running runner
 keeps its inherited process environment until restarted; a workflow that
 bootstraps the tool may use `GITHUB_PATH` for later steps in that same job.
+The bootstrap job enables `core.longpaths` through Git's process environment
+before checkout, including its initial clean/reset. This prevents Windows path
+limits from forcing clone recreation, without changing user/system Git config.
 
 The runner is started by `scripts/runner/Start-YacsRunner.ps1` in the logged-in
 desktop session, with one listener only. It reads `workspace.json`, sets scoped
