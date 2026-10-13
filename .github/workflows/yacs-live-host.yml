@@ -1,0 +1,154 @@
+name: YACS Live Host owner logon deployment
+
+on:
+  push:
+    branches: [codex/476-yacs-live-host]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  await_ci:
+    name: Admit exact-head CI before owner-host change
+    if: >-
+      github.event_name == 'push' &&
+      github.actor == github.repository_owner &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      (contains(github.event.head_commit.message, '[yacs-live-preflight]') ||
+       contains(github.event.head_commit.message, '[yacs-live-install]') ||
+       contains(github.event.head_commit.message, '[yacs-live-activate]') ||
+       contains(github.event.head_commit.message, '[yacs-live-verify]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Await protected CI for this exact commit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for poll in $(seq 1 90); do
+            response=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?event=pull_request&head_sha=${GITHUB_SHA}&per_page=50")
+            row=$(jq -r --arg sha "$GITHUB_SHA" '
+              [.workflow_runs[] | select(.name == "CyclingSim CI" and .head_sha == $sha)]
+              | sort_by(.created_at) | last
+              | if . == null then "" else "\(.id)|\(.status)|\(.conclusion // "pending")" end
+            ' <<< "$response")
+            if [[ -n "$row" ]]; then
+              IFS='|' read -r id state conclusion <<< "$row"
+              if [[ "$state" == completed ]]; then
+                if [[ "$conclusion" == success ]]; then
+                  echo "Exact-head CI $id PASS"; exit 0
+                fi
+                echo "::error::CI $id ended with $conclusion; host cannot change"; exit 1
+              fi
+            fi
+            sleep 20
+          done
+          echo "::error::Exact-head protected CI timed out"; exit 1
+
+  host:
+    name: Owned Windows desktop task install, activation or post-job verification
+    needs: await_ci
+    if: ${{ needs.await_ci.result == 'success' }}
+    concurrency:
+      group: yacs-live-host-management-${{ github.repository }}
+      cancel-in-progress: false
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 14
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      LIVE_INSTALL: ${{ contains(github.event.head_commit.message, '[yacs-live-install]') }}
+      LIVE_ACTIVATE: ${{ contains(github.event.head_commit.message, '[yacs-live-activate]') }}
+      LIVE_VERIFY: ${{ contains(github.event.head_commit.message, '[yacs-live-verify]') }}
+    steps:
+      - name: Checkout code-only source, not the UE authoring project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: livehost-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Validate source and portable policy before touching the host
+        shell: pwsh
+        working-directory: livehost-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference='Stop'
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          $py='D:/yacs/tool-cache/material-forge/python/Scripts/python.exe'
+          if (-not (Test-Path -LiteralPath $py -PathType Leaf)) { throw 'Pinned Python unavailable' }
+          & $py -B -m unittest scripts.live_host.test_protocol
+          if ($LASTEXITCODE -ne 0) { throw 'YACS Live Host offline contract tests failed' }
+          & $py -B -m compileall -q scripts/live_host
+          if ($LASTEXITCODE -ne 0) { throw 'Live Host source Python invalid' }
+          foreach ($file in @(Get-ChildItem scripts/live_host -File -Filter '*.ps1')) {
+            $tokens=$null;$errors=$null
+            [Management.Automation.Language.Parser]::ParseFile(
+              $file.FullName,[ref]$tokens,[ref]$errors) | Out-Null
+            if (@($errors).Count) { throw ($errors.Message -join '; ') }
+          }
+          # Pure, read-only synthetic Scheduled Task principals. Cover native
+          # UserId SID vs DOMAIN\User normalization without reinstalling any
+          # existing Windows task or touching the UE process.
+          & ./scripts/live_host/Test-YacsLiveTaskPrincipal.ps1
+          & ./scripts/live_host/Test-YacsLiveUtc.ps1
+          & ./scripts/live_host/Test-YacsLiveCodec.ps1
+          Write-Host 'YACS Live Host Python, PowerShell and SID task principal contracts PASS'
+
+      - name: Read-only install preflight (no restart or task mutation)
+        if: ${{ env.LIVE_VERIFY != 'true' }}
+        shell: pwsh
+        working-directory: livehost-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          ./scripts/live_host/Install-YacsLiveHost.ps1 -ExpectedHead $env:GITHUB_SHA
+
+      - name: Explicit install of independent limited interactive AtLogOn task
+        if: ${{ env.LIVE_INSTALL == 'true' }}
+        shell: pwsh
+        working-directory: livehost-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          ./scripts/live_host/Install-YacsLiveHost.ps1 -ExpectedHead $env:GITHUB_SHA -Apply
+          ./scripts/live_host/Install-YacsLiveHost.ps1 -ExpectedHead $env:GITHUB_SHA -Verify
+
+      - name: Ask Task Scheduler to start, not an Actions-owned Editor
+        if: ${{ env.LIVE_ACTIVATE == 'true' }}
+        shell: pwsh
+        working-directory: livehost-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          ./scripts/live_host/Install-YacsLiveHost.ps1 -ExpectedHead $env:GITHUB_SHA -Verify
+          $owner=./scripts/runner/Get-YacsUnrealHostState.ps1
+          if ($owner.status -cne 'IDLE') { throw 'GPU already owned; leave other Editor alone' }
+          $task=Get-ScheduledTask -TaskName 'YACS Live Host' -ErrorAction Stop
+          if ($task.State -ne 'Ready') { throw 'Independent desktop task not ready' }
+          Start-ScheduledTask -TaskName 'YACS Live Host'
+          Write-Host 'Scheduled Task activated; no live video or post-job PASS yet'
+
+      - name: Independently prove the Editor survived earlier job exit
+        if: ${{ env.LIVE_VERIFY == 'true' }}
+        shell: pwsh
+        working-directory: livehost-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $before=./scripts/live_host/Get-YacsLiveHostStatus.ps1 -RequireLive | ConvertFrom-Json
+          if ($before.post_job_alive -ne $true) { throw 'Post-job PID heartbeat not proven' }
+          $output=Join-Path 'D:/yacs/work/live-host-postjob' $env:GITHUB_RUN_ID
+          if (Test-Path -LiteralPath $output) { throw 'Never overwrite receiver evidence' }
+          & ./scripts/ue/Test-YacsLevelEditorStreamClient.ps1 -ViewerUrl $before.viewer_url -OutputRoot $output
+          if ($LASTEXITCODE -ne 0) { throw 'No new actual browser video frames' }
+          $client=Get-Content -LiteralPath (Join-Path $output 'level-editor-stream-client.json') -Raw | ConvertFrom-Json
+          if ($client.received_browser_frame -ne $true -or $client.cleanup_complete -ne $true) { throw 'Browser client evidence incomplete' }
+          $after=./scripts/live_host/Get-YacsLiveHostStatus.ps1 -RequireLive | ConvertFrom-Json
+          if ($after.editor_pid -ne $before.editor_pid -or $after.session -cne $before.session) { throw 'Native process changed during independent video proof' }
+          Write-Host "YACS_LIVE_POST_JOB_RECEIVER_PASS editor=$($after.editor_pid) session=$($after.session)"
+
+      - name: Retain only current-job client proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: yacs-live-host-${{ github.sha }}-${{ github.run_attempt }}
+          path: D:/yacs/work/live-host-postjob/${{ github.run_id }}/**
+          if-no-files-found: warn
+          retention-days: 7
