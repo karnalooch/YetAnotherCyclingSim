@@ -297,3 +297,20 @@ The PCGEx input adapter preserves 39,332 exact scree cells. All meet the approve
 PCGEx owns projection, orientation, asset choice, road bounds filtering, pruning
 and the five-probe support screen. Native execution of this new graph is pending.
 Fourteen input/receipt tests and 107 existing Live Host CPU tests pass locally.
+
+
+## Broad MCP and durable PCGEx preview — 2026-10-13
+
+The owner's explicit "DAWAJ SZEROKI!" authorizes broad **local** Assistant, PCG and Editor Toolset access. This later decision supersedes the narrow MCP interface in the original #476 issue for this workflow, without changing world/source or acceptance authority. Installed host release is `5a3517ee74b7477832af66f1727c4e4510c8f80b`; the project descriptor remains unchanged. PCGEx 0.79 and Assistant 0.3.2 are loaded. Kweave Bridge is not installed or required by this CPU-node graph.
+
+The [single command](PCG365_ONE_COMMAND.md) completed at producer `e3da98f4023b48c61b7c408dcfaec8ffab342e06`. It adapts authenticated source cells and supplied meshes/materials, then composes stock PCG/PCGEx nodes through official MCP. No new placement, pruning or surface-sampling algorithm is implemented. The approved V3 preview uses 42-degree alignment, 20 cm support screening and 5 cm normal embedding; historical V1/V2 qualification is unchanged.
+
+The result has 20 actual instances: N06 x12 and N05 x8, with Forge limestone and `NoCollision`. Input SHA-256 is `a1e9cbdd48ad0c856975f7262bb94b03314a0247a0ab81cf7550964cc42f2f36`. Graph, saved collection and separate level are under `/Game/Generated/YACS/PCG365Ex/Ra1e9cbdd48ad0c85_s2/`. Saved level size is 193,290,890 bytes. The original map and all five protected packages still match their source preflight; no original level save or terrain modification is claimed.
+
+The first fresh-load attempt exposed `PCGExBuildAssetCollection.cpp:98`, an assertion while rebuilding the collection. The final recipe prepares that collection once, removes its construction branch before saving, and directly references the saved collection. A second attempt exposed competing automatic/manual generation; native `bRegenerateInEditor=false` serializes the authored changes with explicit generation. Both failures are preserved in the [evidence manifest](../experiments/sa-calobra-pcgex-mcp-20261013/manifest.json).
+
+Fresh session `20261013T203714Z-90a9943bcfd6`, PID 37152, reopened the saved result. All 20 transforms, mesh identities, material bindings and collision settings matched before any generation request. An explicit fresh native regeneration matched again, with no generation messages. [View 0](../experiments/sa-calobra-pcgex-mcp-20261013/fresh-rock-0.png) and [view 12](../experiments/sa-calobra-pcgex-mcp-20261013/fresh-rock-12.png) were inspected: visible coarse stepped side faces and pale material remain visual cleanup items. This is sampled preview persistence proof, not whole-map visual acceptance or historical V2 contact qualification.
+
+Fourteen worldgen input/receipt tests, Ruff, docs links/i18n/structure/freshness and agent contracts pass locally after the code fix. The retained 107 Live Host tests passed for the host change. Earlier exact-head CI at `92d097bd39032af0c8d6452cd865d48f6cfd9405` passed CPU/security/policy/asset lanes but native CyclingSim CI [38462413860](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38462413860) and Blender [38462413055](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38462413055) failed host arbitration with `LOCAL_BUSY`; the active owner Editor was preserved. Do not report aggregate CI/native build PASS or restart the Editor merely to obtain runner access. The latest published head requires its own CI evidence.
+
+PR #474 stays Draft and #365 stays open. Cliff/surface treatment and simplified/raised-form lanes remain incomplete. Qualified production assets remain empty, owner review is `PENDING_FINAL_M3`, and performance is `DEFERRED_AFTER_M3` / `performance_pass=false`.

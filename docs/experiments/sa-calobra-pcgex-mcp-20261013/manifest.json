@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "milestone": "M3",
+  "producer_sha": "e3da98f4023b48c61b7c408dcfaec8ffab342e06",
+  "live_host_sha": "5a3517ee74b7477832af66f1727c4e4510c8f80b",
+  "status": "NATIVE_SAVED_RELOADED_REGENERATED_PREVIEW",
+  "command": "python -B scripts/worldgen/build_pcg365_world.py --mode build-pcgex --save-preview-map --output D:/yacs/project/Saved/PCG365/native-mcp-20261013-run04",
+  "input_sha256": "a1e9cbdd48ad0c856975f7262bb94b03314a0247a0ab81cf7550964cc42f2f36",
+  "recipe_source_sha256": "e65ee1eba99202dc170617d4704d35fffe8a18f225f87df07c150f989da7adc7",
+  "fresh_reload_verified": true,
+  "fresh_regeneration_identical": true,
+  "native_instances": 20,
+  "protected_original_packages": 5,
+  "source_map_saved": false,
+  "terrain_modified": false,
+  "whole_area_complete": false,
+  "qualified_assets": [],
+  "owner_visual": "PENDING_FINAL_M3",
+  "performance": "DEFERRED_AFTER_M3",
+  "performance_pass": false,
+  "packages": [
+    {
+      "package": "/Game/Generated/YACS/PCG365RemotePreview/Rf3acaeb8a89a3600/SM_namaqualand_boulder_05_01",
+      "relative_file": "Content/Generated/YACS/PCG365RemotePreview/Rf3acaeb8a89a3600/SM_namaqualand_boulder_05_01.uasset",
+      "bytes": 128478,
+      "sha256": "f84c8ad0b79a4ae61a5eff48327a53aeee657cd4fc1d4ffb48c964a379ada0dc"
+    },
+    {
+      "package": "/Game/Generated/YACS/PCG365RemotePreview/Rf3acaeb8a89a3600/SM_namaqualand_boulder_06_01",
+      "relative_file": "Content/Generated/YACS/PCG365RemotePreview/Rf3acaeb8a89a3600/SM_namaqualand_boulder_06_01.uasset",
+      "bytes": 122617,
+      "sha256": "e88eebe2971262ede2aae9d916bad361f2b0176025a1adc1fcce88bea37c58e2"
+    },
+    {
+      "package": "/Game/Generated/YACS/PCG365Ex/Ra1e9cbdd48ad0c85_s2/PCG365_Rocks",
+      "relative_file": "Content/Generated/YACS/PCG365Ex/Ra1e9cbdd48ad0c85_s2/PCG365_Rocks.uasset",
+      "bytes": 8320879,
+      "sha256": "ded75cfe9cbbb367cea60a9ea967750c735d89dadab38a525c29b6be82822057"
+    },
+    {
+      "package": "/Game/Generated/YACS/PCG365Ex/Ra1e9cbdd48ad0c85_s2/DA_Rocks",
+      "relative_file": "Content/Generated/YACS/PCG365Ex/Ra1e9cbdd48ad0c85_s2/DA_Rocks.uasset",
+      "bytes": 9024,
+      "sha256": "aa957f93e79fe5282e9cc02609a732bfa2db86a13c937875e9b955135c9691ca"
+    },
+    {
+      "package": "/Game/Generated/YACS/PCG365Ex/Ra1e9cbdd48ad0c85_s2/L_PCG365_Rocks",
+      "relative_file": "Content/Generated/YACS/PCG365Ex/Ra1e9cbdd48ad0c85_s2/L_PCG365_Rocks.umap",
+      "bytes": 193290890,
+      "sha256": "bb9d747ddeb2d79befc93fc7866f426c0bc51b54439ce7fc553c36cc98029200"
+    }
+  ],
+  "prior_failures": [
+    {
+      "run": "run02",
+      "producer_sha": "92d097bd39032af0c8d6452cd865d48f6cfd9405",
+      "session": "20261013T202342Z-10886dde5f01",
+      "error": "Assertion failed: OutData && OutData->Metadata; PCGExBuildAssetCollection.cpp:98 during automatic regeneration after fresh map load",
+      "resolution": "Detach one-time collection builder before persisting the graph; reference the native saved collection directly."
+    },
+    {
+      "run": "run03",
+      "producer_sha": "89a30247e07a8eae05135f6eae8a44b4cb939847",
+      "error": "ExecuteGraphInstance rejected immediately after graph edits while automatic generation was active",
+      "resolution": "Use native bRegenerateInEditor=false and explicit MCP generation."
+    }
+  ],
+  "visual_findings": [
+    "Supplied coarse source-envelope rock geometry has exposed angular/stepped side faces, particularly view 12.",
+    "Forge limestone is visibly paler than surrounding ground.",
+    "The screenshots are local evidence only, not whole-Landscape or owner acceptance."
+  ],
+  "evidence_files": [
+    {
+      "path": "native-result.json",
+      "bytes": 1691,
+      "sha256": "e89ce6a347e8e296977ef8fe20ab27a6b495520f5817866e23abd962f7037b34"
+    },
+    {
+      "path": "native-instances.json",
+      "bytes": 20986,
+      "sha256": "5ff4715eac801a8ef2d5a530f3df1de2844939f7c98c473d614afcdd6c97404e"
+    },
+    {
+      "path": "fresh-proof.json",
+      "bytes": 1576,
+      "sha256": "808c2b315aa261f772f18fb053b4da735763b234eb7891931376cc6e1ef6f1f3"
+    },
+    {
+      "path": "fresh-instances.json",
+      "bytes": 20990,
+      "sha256": "ba95bf83bc53f1ba1c068a48a7060cb187ece2c048cb8c13983169d3b436c61a"
+    },
+    {
+      "path": "fresh-regeneration.json",
+      "bytes": 160,
+      "sha256": "36a8483d3c2d734cb752efd3c5152b8cb90900a4b6546c6f5dedd325d6cb2e81"
+    },
+    {
+      "path": "generation-messages.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "pcgex-node-plan.json",
+      "bytes": 1252,
+      "sha256": "4b23951cb61b6ed5f9b80d93cc527770c7f5d1230be10440f5944997e5d6cb4f"
+    },
+    {
+      "path": "protected-after-fresh.json",
+      "bytes": 1520,
+      "sha256": "dd96a8cf18051a000b6679188c54e0a087e31037f1f620e02992140b4611f0b9"
+    },
+    {
+      "path": "fresh-rock-0.png",
+      "bytes": 1271334,
+      "sha256": "bfb70c35535ac3485b7cfa95011d2c8570be5eeb400bd036752949f89d6e0ea9"
+    },
+    {
+      "path": "fresh-rock-12.png",
+      "bytes": 1367726,
+      "sha256": "2e9f0df5da780771d418f3bdc44ac6dc6020c9f80278b804c2f132188f3bfd2f"
+    },
+    {
+      "path": "fresh-rock-0.json",
+      "bytes": 347,
+      "sha256": "771fc208c0798c2460bd3ed92fd4ebabfd12b2eb95c55326ddb343d7560fb6cc"
+    },
+    {
+      "path": "fresh-rock-12.json",
+      "bytes": 349,
+      "sha256": "5a51795aaebd357ee78cb41e3d68d633355e7b08c4200e890ab1592ad07ae7aa"
+    }
+  ]
+}

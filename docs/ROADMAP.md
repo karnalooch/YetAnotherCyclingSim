@@ -1,5 +1,7 @@
 # YetAnotherCyclingSim — MVP roadmap
 
+**Current #365 technical checkpoint � 2026-10-13:** the [single-command PCGEx preview](tooling/PCG365_ONE_COMMAND.md) is executed through broad local MCP: 20 supplied rock instances with Forge materials were saved, reloaded in a fresh process and regenerated identically. [Evidence](experiments/sa-calobra-pcgex-mcp-20261013/manifest.json) pins producer `e3da98f4` and the resolved collection-builder failure. This is a bounded scree preview; whole-area coverage, visual cleanup and production admission remain open. Existing later-stage gates are unchanged.
+
 **Latest #365/#476 owner continuation — 2026-10-13:** publish the [full verbatim rock rollout plan](tooling/SA_CALOBRA_ROCK_ROLLOUT_PLAN_20261013.md) and start its [bounded implementation](tooling/SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md) in a new chat. P0–P4 are retired; gray simplified-object review is deferred without globally blocking other work. Upgrade the currently open Remote session in place, minimize UE restarts and do not restore an older Landscape as routine delivery. This supersedes the prior planning hold without changing downstream issue gates, source authority or proof/acceptance requirements.
 
 **Status:** authoritative delivery plan  

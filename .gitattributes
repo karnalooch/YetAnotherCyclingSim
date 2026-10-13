@@ -111,3 +111,6 @@ docs/assets/pcg365-natural20-contact-20261012/*.py.gz -text -diff
 # Preserve hash-bound planning/inspection JSON bytes across all host platforms.
 docs/experiments/sa-calobra-spatial-treatment-plan-20261013/*.json -text whitespace=cr-at-eol
 worldgen/live_host/window0067-regional-manifest.json text eol=lf
+
+# Preserve native MCP receipts for deterministic saved/fresh comparison.
+docs/experiments/sa-calobra-pcgex-mcp-20261013/*.json -text
