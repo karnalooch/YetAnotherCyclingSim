@@ -108,7 +108,10 @@ class NativeReductionWitnessTests(unittest.TestCase):
         self.assertEqual(witness.native_point_count, 256)
         self.assertEqual(witness.tagged_data_count, 2)
         self.assertEqual(witness.reduction_node_path, REDUCE)
-        self.assertEqual(witness.status, "NATIVE_IN_PROCESS_OUTPUT_COUNTED")
+        self.assertEqual(witness.status, "NATIVE_LOCAL_INSPECTION_ONLY")
+        from scripts.ue.pcg365_native_reduction_witness import verify_witness_authenticity
+
+        self.assertFalse(verify_witness_authenticity(witness))
 
     def test_native_data_wrapper_is_supported_without_serializing_rows(self):
         self.component.collection.tagged_data = [Obj(pin="Out", data=Obj(data=Data(3)))]
@@ -195,6 +198,19 @@ class NativeReductionWitnessTests(unittest.TestCase):
 
 
 class LiveWitnessProxyTests(unittest.TestCase):
+    def test_cpp_witness_requires_exact_uobject_paths(self):
+        from pathlib import Path
+
+        cpp = (
+            Path(__file__).resolve().parents[2]
+            / "Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPcgWitnessToolset.cpp"
+        ).read_text(encoding="utf-8")
+        self.assertIn("ActualPath == InSourceNodePath", cpp)
+        self.assertIn("ActualPath == InReductionNodePath", cpp)
+        self.assertNotIn("NodeMatchesPath", cpp)
+        self.assertNotIn("GetAuthoredTitleName()", cpp)
+        self.assertNotIn("FindObject<UPCGNode>", cpp)
+
     def test_proxy_alias_and_attribute_resolution(self):
         from scripts.ue.pcg365_native_reduction_witness import LiveUObjectProxy
 
@@ -301,8 +317,8 @@ class LiveWitnessProxyTests(unittest.TestCase):
             generation_token=gen_token,
             auth_token=valid_auth,
         )
-        # Authentic for session 1111
-        self.assertTrue(
+        # A caller-created signed value was never issued by the native reader.
+        self.assertFalse(
             verify_witness_authenticity(witness_session_1111, expected_pid=1111)
         )
         # REJECTED for session 2222
@@ -310,39 +326,47 @@ class LiveWitnessProxyTests(unittest.TestCase):
             verify_witness_authenticity(witness_session_1111, expected_pid=2222)
         )
 
-    def test_attest_live_reduced_node_with_deployed_reader(self):
-        import json
+    def test_reader_receipt_parser_checks_exact_native_schema(self):
         from scripts.ue.pcg365_native_reduction_witness import (
-            attest_live_reduced_node,
-            verify_witness_authenticity,
+            _validate_native_reader_receipt,
         )
 
-        def mock_native_reader(**kwargs):
-            return json.dumps(
-                {
-                    "status": "NATIVE_IN_PROCESS_OUTPUT_COUNTED",
-                    "session_pid": 45868,
-                    "actor_path": kwargs["actor_path"],
-                    "graph_path": kwargs["graph_path"],
-                    "reduction_node_path": kwargs["reduction_node_path"],
-                    "native_point_count": 42,
-                    "tagged_data_count": 1,
-                    "generation_token": "gen_test_token_42",
-                }
-            )
-
-        witness = attest_live_reduced_node(
+        result = _validate_native_reader_receipt(
+            self._receipt(),
             actor_path=ACTOR,
             graph_path=GRAPH,
-            source_node_path=GRAPH + ":SourceGrid",
+            source_node_path=SOURCE,
             reduction_node_path=REDUCE,
             reduction_class=SETTINGS,
             output_pin="Out",
-            native_reader_fn=mock_native_reader,
+            expected_pid=45868,
         )
-        self.assertEqual(witness.native_point_count, 42)
-        self.assertEqual(witness.session_pid, 45868)
-        self.assertTrue(verify_witness_authenticity(witness, expected_pid=45868))
+        self.assertEqual(result["native_point_count"], 42)
+
+    def test_production_refuses_injected_reader_before_dispatch(self):
+        from scripts.ue.pcg365_native_reduction_witness import (
+            NativeProbeWitnessBlockedError,
+            attest_live_reduced_node,
+        )
+
+        called = []
+
+        def injected_reader(**kwargs):
+            called.append(kwargs)
+            return self._receipt()
+
+        with self.assertRaisesRegex(
+            NativeProbeWitnessBlockedError, "NATIVE_READER_INJECTION_PROHIBITED"
+        ):
+            attest_live_reduced_node(
+                actor_path=ACTOR,
+                graph_path=GRAPH,
+                source_node_path=SOURCE,
+                reduction_node_path=REDUCE,
+                reduction_class=SETTINGS,
+                native_reader_fn=injected_reader,
+            )
+        self.assertEqual(called, [])
 
     def test_create_live_pcg_reduction_verifier_propagates_blocked(self):
         from scripts.ue.pcg365_native_reduction_witness import (
@@ -360,129 +384,68 @@ class LiveWitnessProxyTests(unittest.TestCase):
         ):
             verifier({"refPath": ACTOR}, {"refPath": REDUCE}, proof)
 
-    def test_attest_live_reduced_node_rejects_reader_error(self):
-        import json
+    @staticmethod
+    def _receipt(**changes):
+        receipt = {
+            "status": "NATIVE_IN_PROCESS_OUTPUT_COUNTED",
+            "session_pid": 45868,
+            "actor_path": ACTOR,
+            "graph_path": GRAPH,
+            "source_node_path": SOURCE,
+            "reduction_node_path": REDUCE,
+            "reduction_class": SETTINGS,
+            "output_pin": "Out",
+            "native_point_count": 42,
+            "tagged_data_count": 1,
+            "generation_token": "test_generation_token",
+        }
+        receipt.update(changes)
+        return receipt
+
+    def _parse_receipt(self, receipt):
         from scripts.ue.pcg365_native_reduction_witness import (
-            NativeProbeWitnessError,
-            attest_live_reduced_node,
+            _validate_native_reader_receipt,
         )
 
-        def mock_error_reader(**kwargs):
-            return json.dumps(
-                {
-                    "status": "ERROR",
-                    "error_code": "OUTPUT_BYPASS_DETECTED",
-                    "message": "Output node is fed by a non-reduction node",
-                }
-            )
+        return _validate_native_reader_receipt(
+            receipt,
+            actor_path=ACTOR,
+            graph_path=GRAPH,
+            source_node_path=SOURCE,
+            reduction_node_path=REDUCE,
+            reduction_class=SETTINGS,
+            output_pin="Out",
+            expected_pid=45868,
+        )
 
+    def test_reader_error_is_rejected(self):
         with self.assertRaisesRegex(NativeProbeWitnessError, "OUTPUT_BYPASS_DETECTED"):
-            attest_live_reduced_node(
-                actor_path=ACTOR,
-                graph_path=GRAPH,
-                source_node_path=GRAPH + ":SourceGrid",
-                reduction_node_path=REDUCE,
-                reduction_class=SETTINGS,
-                output_pin="Out",
-                native_reader_fn=mock_error_reader,
+            self._parse_receipt(
+                {"status": "ERROR", "error_code": "OUTPUT_BYPASS_DETECTED"}
             )
 
-    def test_attest_live_reduced_node_rejects_mismatched_actor(self):
-        import json
-        from scripts.ue.pcg365_native_reduction_witness import (
-            NativeProbeWitnessError,
-            attest_live_reduced_node,
-        )
+    def test_reader_mismatched_actor_is_rejected(self):
+        with self.assertRaisesRegex(NativeProbeWitnessError, "actor_path"):
+            self._parse_receipt(self._receipt(actor_path="/Game/OtherActor"))
 
-        def mock_mismatch_reader(**kwargs):
-            return json.dumps(
-                {
-                    "status": "NATIVE_IN_PROCESS_OUTPUT_COUNTED",
-                    "actor_path": "/Game/OtherActor",
-                    "graph_path": kwargs["graph_path"],
-                    "reduction_node_path": kwargs["reduction_node_path"],
-                    "reduction_class": kwargs["reduction_class"],
-                    "output_pin": kwargs["output_pin"],
-                    "native_point_count": 10,
-                    "generation_token": "valid_token",
-                }
-            )
+    def test_reader_missing_identity_is_rejected(self):
+        receipt = self._receipt()
+        receipt.pop("source_node_path")
+        with self.assertRaisesRegex(NativeProbeWitnessError, "source_node_path"):
+            self._parse_receipt(receipt)
 
-        with self.assertRaisesRegex(NativeProbeWitnessError, "mismatched actor_path"):
-            attest_live_reduced_node(
-                actor_path=ACTOR,
-                graph_path=GRAPH,
-                source_node_path=GRAPH + ":SourceGrid",
-                reduction_node_path=REDUCE,
-                reduction_class=SETTINGS,
-                output_pin="Out",
-                native_reader_fn=mock_mismatch_reader,
-            )
+    def test_reader_missing_token_is_rejected(self):
+        with self.assertRaisesRegex(NativeProbeWitnessError, "generation token"):
+            self._parse_receipt(self._receipt(generation_token=""))
 
-    def test_attest_live_reduced_node_rejects_missing_token(self):
-        import json
-        from scripts.ue.pcg365_native_reduction_witness import (
-            NativeProbeWitnessError,
-            attest_live_reduced_node,
-        )
+    def test_reader_overflow_is_rejected(self):
+        with self.assertRaisesRegex(NativeProbeWitnessError, "point count 500 out of bounds"):
+            self._parse_receipt(self._receipt(native_point_count=500))
 
-        def mock_no_token_reader(**kwargs):
-            return json.dumps(
-                {
-                    "status": "NATIVE_IN_PROCESS_OUTPUT_COUNTED",
-                    "actor_path": kwargs["actor_path"],
-                    "graph_path": kwargs["graph_path"],
-                    "reduction_node_path": kwargs["reduction_node_path"],
-                    "reduction_class": kwargs["reduction_class"],
-                    "output_pin": kwargs["output_pin"],
-                    "native_point_count": 10,
-                    "generation_token": "",
-                }
-            )
+    def test_reader_other_pid_is_rejected(self):
+        with self.assertRaisesRegex(NativeProbeWitnessError, "session_pid"):
+            self._parse_receipt(self._receipt(session_pid=1234))
 
-        with self.assertRaisesRegex(
-            NativeProbeWitnessError, "missing valid generation token"
-        ):
-            attest_live_reduced_node(
-                actor_path=ACTOR,
-                graph_path=GRAPH,
-                source_node_path=GRAPH + ":SourceGrid",
-                reduction_node_path=REDUCE,
-                reduction_class=SETTINGS,
-                output_pin="Out",
-                native_reader_fn=mock_no_token_reader,
-            )
-
-    def test_attest_live_reduced_node_rejects_out_of_bounds_count(self):
-        import json
-        from scripts.ue.pcg365_native_reduction_witness import (
-            NativeProbeWitnessError,
-            attest_live_reduced_node,
-        )
-
-        def mock_overflow_reader(**kwargs):
-            return json.dumps(
-                {
-                    "status": "NATIVE_IN_PROCESS_OUTPUT_COUNTED",
-                    "actor_path": kwargs["actor_path"],
-                    "graph_path": kwargs["graph_path"],
-                    "reduction_node_path": kwargs["reduction_node_path"],
-                    "reduction_class": kwargs["reduction_class"],
-                    "output_pin": kwargs["output_pin"],
-                    "native_point_count": 500,
-                    "generation_token": "token500",
-                }
-            )
-
-        with self.assertRaisesRegex(
-            NativeProbeWitnessError, "point count 500 out of bounds"
-        ):
-            attest_live_reduced_node(
-                actor_path=ACTOR,
-                graph_path=GRAPH,
-                source_node_path=GRAPH + ":SourceGrid",
-                reduction_node_path=REDUCE,
-                reduction_class=SETTINGS,
-                output_pin="Out",
-                native_reader_fn=mock_overflow_reader,
-            )
+    def test_reader_requires_positive_dataset_count(self):
+        with self.assertRaisesRegex(NativeProbeWitnessError, "tagged data count"):
+            self._parse_receipt(self._receipt(tagged_data_count=0))

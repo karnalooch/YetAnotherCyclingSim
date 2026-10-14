@@ -19,6 +19,7 @@ import json
 import os
 from typing import Any
 import uuid
+import weakref
 
 from scripts.worldgen.pcg365_mcp_adapter import UnsafeMcpReadError
 
@@ -48,6 +49,13 @@ class NativeProbeWitness:
     generation_token: str = ""
     status: str = "NATIVE_IN_PROCESS_OUTPUT_COUNTED"
     auth_token: str = ""
+
+
+# Process-local issuance is required in addition to HMAC integrity. Anyone
+# with arbitrary Python execution could compute the MAC; it is not provenance.
+_ISSUED_WITNESSES: weakref.WeakValueDictionary[int, NativeProbeWitness] = (
+    weakref.WeakValueDictionary()
+)
 
 
 def get_live_editor_pid() -> int | None:
@@ -85,11 +93,11 @@ def verify_witness_authenticity(
     """Cryptographically verify that witness was produced by in-process attestation."""
     if not isinstance(witness, NativeProbeWitness):
         return False
-    if (
-        expected_pid is not None
-        and witness.session_pid != 0
-        and witness.session_pid != expected_pid
-    ):
+    if _ISSUED_WITNESSES.get(id(witness)) is not witness:
+        return False
+    if type(witness.session_pid) is not int or witness.session_pid <= 0:
+        return False
+    if expected_pid is not None and witness.session_pid != expected_pid:
         return False
     if not witness.auth_token or not witness.generation_token:
         return False
@@ -301,11 +309,8 @@ def attest_reduced_graph_output(
 
     _require(total > 0, "Native reduced probe output is empty")
 
-    pid = session_pid or get_live_editor_pid() or os.getpid()
-    gen_token = uuid.uuid4().hex
-    auth = compute_witness_token(
-        actor_path, graph_path, reduction_node_path, total, pid, gen_token
-    )
+    # Diagnostic native-object inspection alone must not mint transport
+    # admission credentials. Only the deployed C++ reader may do that.
     return NativeProbeWitness(
         actor_path=actor_path,
         graph_path=graph_path,
@@ -315,9 +320,7 @@ def attest_reduced_graph_output(
         output_pin=output_pin,
         native_point_count=total,
         tagged_data_count=len(tagged),
-        session_pid=pid,
-        generation_token=gen_token,
-        auth_token=auth,
+        status="NATIVE_LOCAL_INSPECTION_ONLY",
     )
 
 
@@ -365,6 +368,62 @@ class LiveUObjectProxy:
         raise AttributeError(f"LiveUObjectProxy property {name!r} not found")
 
 
+def _validate_native_reader_receipt(
+    raw_result: Any,
+    *,
+    actor_path: str,
+    graph_path: str,
+    source_node_path: str,
+    reduction_node_path: str,
+    reduction_class: str,
+    output_pin: str,
+    expected_pid: int,
+) -> dict[str, Any]:
+    """Validate a C++ receipt's structure; parsing does not confer provenance."""
+    try:
+        data = json.loads(raw_result) if isinstance(raw_result, str) else raw_result
+    except (TypeError, ValueError) as exc:
+        raise NativeProbeWitnessError("Native reader returned malformed JSON") from exc
+    _require(isinstance(data, dict), "Native reader returned a non-object receipt")
+    if data.get("status") != "NATIVE_IN_PROCESS_OUTPUT_COUNTED":
+        raise NativeProbeWitnessError(
+            f"Native reader error: {data.get('error_code')} - {data.get('message')}"
+        )
+    for field, expected in (
+        ("actor_path", actor_path),
+        ("graph_path", graph_path),
+        ("source_node_path", source_node_path),
+        ("reduction_node_path", reduction_node_path),
+        ("reduction_class", reduction_class),
+        ("output_pin", output_pin),
+    ):
+        _require(
+            data.get(field) == expected,
+            f"Native reader returned missing or mismatched {field}",
+        )
+    count = data.get("native_point_count")
+    _require(
+        type(count) is int and 0 < count <= MAX_PROBE_POINTS,
+        f"Native reader point count {count!r} out of bounds",
+    )
+    datasets = data.get("tagged_data_count")
+    _require(
+        type(datasets) is int and 0 < datasets <= MAX_PROBE_POINTS,
+        "Native reader tagged data count is invalid",
+    )
+    pid = data.get("session_pid")
+    _require(
+        type(pid) is int and pid > 0 and pid == expected_pid,
+        "Native reader returned missing or mismatched session_pid",
+    )
+    token = data.get("generation_token")
+    _require(
+        isinstance(token, str) and bool(token),
+        "Native reader receipt missing valid generation token",
+    )
+    return data
+
+
 def attest_live_reduced_node(
     *,
     actor_path: str,
@@ -388,78 +447,12 @@ def attest_live_reduced_node(
     """
     live_pid = get_live_editor_pid()
 
-    # If an authentic native reader function is provided (e.g. from deployed C++ toolset or unit test)
+    # A caller-supplied Python callback is not an authentic engine reader.
+    # Offline unit tests exercise receipt parsing, never this admission path.
     if native_reader_fn is not None:
-        raw_result = native_reader_fn(
-            actor_path=actor_path,
-            graph_path=graph_path,
-            source_node_path=source_node_path,
-            reduction_node_path=reduction_node_path,
-            reduction_class=reduction_class,
-            output_pin=output_pin,
-        )
-        if isinstance(raw_result, str):
-            res_data = json.loads(raw_result)
-        elif isinstance(raw_result, dict):
-            res_data = raw_result
-        else:
-            raise NativeProbeWitnessError(
-                f"Native reader returned unexpected type: {type(raw_result)}"
-            )
-
-        if not isinstance(res_data, dict):
-            raise NativeProbeWitnessError(
-                "Native reader did not return a valid dictionary/JSON object"
-            )
-
-        if res_data.get("status") != "NATIVE_IN_PROCESS_OUTPUT_COUNTED":
-            raise NativeProbeWitnessError(
-                f"Native reader error: {res_data.get('error_code')} - {res_data.get('message')}"
-            )
-
-        # Strictly verify object identity provenance from reader output
-        for field, expected in (
-            ("actor_path", actor_path),
-            ("graph_path", graph_path),
-            ("reduction_class", reduction_class),
-            ("output_pin", output_pin),
-        ):
-            actual = res_data.get(field)
-            if actual is not None and actual != expected:
-                raise NativeProbeWitnessError(
-                    f"Native reader returned mismatched {field}: expected {expected!r}, got {actual!r}"
-                )
-
-        count = res_data.get("native_point_count")
-        _require(
-            type(count) is int and 0 < count <= MAX_PROBE_POINTS,
-            f"Native reader point count {count!r} out of bounds",
-        )
-
-        gen_token = res_data.get("generation_token")
-        _require(
-            isinstance(gen_token, str) and len(gen_token) > 0,
-            "Native reader receipt missing valid generation token",
-        )
-
-        pid = res_data.get("session_pid") or live_pid or os.getpid()
-        auth = compute_witness_token(
-            actor_path, graph_path, reduction_node_path, count, pid, gen_token
-        )
-        return NativeProbeWitness(
-            actor_path=actor_path,
-            graph_path=graph_path,
-            source_node_path=res_data.get("source_node_path", source_node_path),
-            reduction_node_path=res_data.get(
-                "reduction_node_path", reduction_node_path
-            ),
-            reduction_class=reduction_class,
-            output_pin=output_pin,
-            native_point_count=count,
-            tagged_data_count=res_data.get("tagged_data_count", 1),
-            session_pid=pid,
-            generation_token=gen_token,
-            auth_token=auth,
+        raise NativeProbeWitnessBlockedError(
+            "NATIVE_READER_INJECTION_PROHIBITED: caller-supplied callbacks "
+            "cannot stand in for a native GameThread buffer reader"
         )
 
     # In-engine lookup: check if authentic UYacsPcgWitnessInspectionLibrary is available
@@ -482,36 +475,37 @@ def attest_live_reduced_node(
             output_pin,
             MAX_PROBE_POINTS,
         )
-        res_data = json.loads(raw_result)
-        if res_data.get("status") != "NATIVE_IN_PROCESS_OUTPUT_COUNTED":
-            raise NativeProbeWitnessError(
-                f"Native reader error: {res_data.get('error_code')} - {res_data.get('message')}"
-            )
-        count = res_data["native_point_count"]
-        _require(
-            type(count) is int and 0 < count <= MAX_PROBE_POINTS,
-            f"Native reader point count {count} out of bounds",
+        res_data = _validate_native_reader_receipt(
+            raw_result,
+            actor_path=actor_path,
+            graph_path=graph_path,
+            source_node_path=source_node_path,
+            reduction_node_path=reduction_node_path,
+            reduction_class=reduction_class,
+            output_pin=output_pin,
+            expected_pid=os.getpid(),
         )
-        pid = res_data.get("session_pid") or live_pid or os.getpid()
-        gen_token = res_data.get("generation_token") or uuid.uuid4().hex
+        count = res_data["native_point_count"]
+        pid = res_data["session_pid"]
+        gen_token = res_data["generation_token"]
         auth = compute_witness_token(
             actor_path, graph_path, reduction_node_path, count, pid, gen_token
         )
-        return NativeProbeWitness(
+        witness = NativeProbeWitness(
             actor_path=actor_path,
             graph_path=graph_path,
-            source_node_path=res_data.get("source_node_path", source_node_path),
-            reduction_node_path=res_data.get(
-                "reduction_node_path", reduction_node_path
-            ),
+            source_node_path=source_node_path,
+            reduction_node_path=reduction_node_path,
             reduction_class=reduction_class,
             output_pin=output_pin,
             native_point_count=count,
-            tagged_data_count=res_data.get("tagged_data_count", 1),
+            tagged_data_count=res_data["tagged_data_count"],
             session_pid=pid,
             generation_token=gen_token,
             auth_token=auth,
         )
+        _ISSUED_WITNESSES[id(witness)] = witness
+        return witness
 
     # In production without deployed native buffer reader C++ toolset:
     # Strictly fail closed. Hot-reload and editor restart are prohibited.

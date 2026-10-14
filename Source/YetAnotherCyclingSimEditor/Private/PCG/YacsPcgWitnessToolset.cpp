@@ -100,42 +100,22 @@ FString UYacsPcgWitnessInspectionLibrary::InspectReducedNodeOutput(
         );
     }
 
-    // 6. Find SourceNode and ReductionNode in Graph
-    auto NodeMatchesPath = [](const UPCGNode* Node, const FString& TargetPath) -> bool
-    {
-        if (!Node)
-        {
-            return false;
-        }
-        if (Node->GetPathName() == TargetPath || Node->GetName() == TargetPath)
-        {
-            return true;
-        }
-        if (Node->GetPathName().EndsWith(TEXT(":") + TargetPath))
-        {
-            return true;
-        }
-        if (Node->GetAuthoredTitleName().ToString() == TargetPath)
-        {
-            return true;
-        }
-        return false;
-    };
-
+    // 6. Resolve exact UObject paths within this graph only.
+    // Authored labels, short names and suffix matches are not proof of identity.
     UPCGNode* SourceNode = nullptr;
     UPCGNode* ReductionNode = nullptr;
-
     for (UPCGNode* Node : Graph->GetNodes())
     {
         if (!Node)
         {
             continue;
         }
-        if (!SourceNode && NodeMatchesPath(Node, InSourceNodePath))
+        const FString ActualPath = Node->GetPathName();
+        if (ActualPath == InSourceNodePath)
         {
             SourceNode = Node;
         }
-        if (!ReductionNode && NodeMatchesPath(Node, InReductionNodePath))
+        if (ActualPath == InReductionNodePath)
         {
             ReductionNode = Node;
         }
@@ -157,6 +137,11 @@ FString UYacsPcgWitnessInspectionLibrary::InspectReducedNodeOutput(
     if (!ReductionNode)
     {
         return MakeErrorJson(TEXT("REDUCTION_NODE_NOT_FOUND"), FString::Printf(TEXT("Reduction node not found in graph: %s"), *InReductionNodePath));
+    }
+
+    if (SourceNode == ReductionNode)
+    {
+        return MakeErrorJson(TEXT("IDENTICAL_SOURCE_REDUCTION"), TEXT("Source and reduction must be distinct graph nodes"));
     }
 
     if (SourceNode->GetGraph() != Graph || ReductionNode->GetGraph() != Graph)

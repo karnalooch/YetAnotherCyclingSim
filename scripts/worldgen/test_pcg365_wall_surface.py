@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import base64
 from copy import deepcopy
+import hashlib
+import os
 import json
 from pathlib import Path
 import tempfile
@@ -428,6 +430,9 @@ class WallProofTests(unittest.TestCase):
                     "scripts.worldgen.pcg365_wall_surface.require_native_wall_admission"
                 ),
                 patch(
+                    "scripts.worldgen.pcg365_wall_surface.verify_canonical_checkpoint_integrity"
+                ),
+                patch(
                     "scripts.worldgen.pcg365_wall_surface.SafeMcpAdapter"
                 ) as bounded_adapter,
             ):
@@ -477,8 +482,27 @@ class WallAdmissionGateTests(unittest.TestCase):
             get_live_editor_pid,
         )
         from scripts.worldgen.pcg365_bounded_transport import BoundedPcgMcpClient
+        from scripts.worldgen.pcg365_wall_surface import CANONICAL_CHECKPOINTS
 
-        self.pid = get_live_editor_pid() or 0
+        # Synthetic local checkpoint fixture for portable CPU tests only.
+        # Never loosen the real production checksum gate for GitHub CI.
+        tmp_checkpoint = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp_checkpoint.cleanup)
+        checkpoint_dir = Path(tmp_checkpoint.name)
+        fixture_hashes = {}
+        for filename in CANONICAL_CHECKPOINTS:
+            data = ("PCG365 test-only checkpoint: " + filename).encode("utf-8")
+            (checkpoint_dir / filename).write_bytes(data)
+            fixture_hashes[filename] = hashlib.sha256(data).hexdigest()
+        for variable, value in (
+            ("CANONICAL_CHECKPOINT_DIR", checkpoint_dir),
+            ("CANONICAL_CHECKPOINTS", fixture_hashes),
+        ):
+            p = patch(f"scripts.worldgen.pcg365_wall_surface.{variable}", value)
+            p.start()
+            self.addCleanup(p.stop)
+
+        self.pid = get_live_editor_pid() or os.getpid()
         self.gen_token = "valid_generation_token"
         self.actor_path = ROLLOUT_MAP + ".PCGVolume"
         self.graph_path = "/Game/PCG/Graph.Graph"
@@ -506,6 +530,32 @@ class WallAdmissionGateTests(unittest.TestCase):
             auth_token=auth,
         )
         self.client = BoundedPcgMcpClient()
+        self._issue_test_witness(self.witness)
+
+    def _issue_test_witness(self, witness):
+        # Isolated positive-path fixture: a caller-computed MAC alone is not
+        # authorized in production without a native-issuance capability.
+        from scripts.ue import pcg365_native_reduction_witness as native
+
+        native._ISSUED_WITNESSES[id(witness)] = witness
+        self.addCleanup(native._ISSUED_WITNESSES.pop, id(witness), None)
+
+    def test_checkpoint_integrity_accepts_complete_fixture(self):
+        from scripts.worldgen.pcg365_wall_surface import verify_canonical_checkpoint_integrity
+
+        self.assertTrue(verify_canonical_checkpoint_integrity())
+
+    def test_signed_but_unissued_witness_is_rejected(self):
+        from dataclasses import replace
+
+        unsigned_origin = replace(self.witness)
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_FORGED_WITNESS"):
+            require_native_wall_admission(
+                witness=unsigned_origin,
+                bounded_client=self.client,
+                target_map_package=ROLLOUT_MAP,
+                actor_path=self.actor_path,
+            )
 
     def test_admission_passes_with_authentic_witness_and_client(self):
         self.assertTrue(
@@ -589,6 +639,7 @@ class WallAdmissionGateTests(unittest.TestCase):
         bad_witness = replace(
             self.witness, status="UNVERIFIED_ESTIMATE", auth_token=auth
         )
+        self._issue_test_witness(bad_witness)
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_UNCONFIRMED_STATUS"):
             require_native_wall_admission(
                 witness=bad_witness,
@@ -610,6 +661,7 @@ class WallAdmissionGateTests(unittest.TestCase):
             self.gen_token,
         )
         bad_witness = replace(self.witness, native_point_count=257, auth_token=auth)
+        self._issue_test_witness(bad_witness)
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_UNSAFE_COUNT"):
             require_native_wall_admission(
                 witness=bad_witness,
@@ -633,6 +685,7 @@ class WallAdmissionGateTests(unittest.TestCase):
         bad_witness = replace(
             self.witness, reduction_class="PCGExCustomNode", auth_token=auth
         )
+        self._issue_test_witness(bad_witness)
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_INVALID_SETTINGS"):
             require_native_wall_admission(
                 witness=bad_witness,
