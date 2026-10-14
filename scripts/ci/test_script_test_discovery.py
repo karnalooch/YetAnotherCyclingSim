@@ -49,7 +49,6 @@ class ScriptDiscoveryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             run_module(Path(__file__).resolve().parents[2], "../test_escape.py")
 
-
     def test_plan_rejects_skipping_discovered_full_suite(self):
         from scripts.ci.run_script_tests import validate_plan
         import json
@@ -96,12 +95,16 @@ class ScriptDiscoveryTests(unittest.TestCase):
             folder = output / relative.removesuffix(".py")
             folder.mkdir(parents=True)
             with patch("scripts.ci.run_script_tests.subprocess.run") as run:
+
                 def fake_run(arguments, **kwargs):
-                    Path(arguments[arguments.index("--output") + 1], "result.json").write_text(
+                    Path(
+                        arguments[arguments.index("--output") + 1], "result.json"
+                    ).write_text(
                         json.dumps({"tests": 4, "skipped": 0, "passed": True}),
                         encoding="utf-8",
                     )
                     return Mock(returncode=0)
+
                 run.side_effect = fake_run
                 result = run_isolated(relative, output)
             self.assertTrue(result["passed"])

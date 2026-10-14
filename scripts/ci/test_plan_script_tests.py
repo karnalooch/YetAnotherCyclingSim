@@ -82,11 +82,10 @@ class ScopeChoiceTests(unittest.TestCase):
                 self.assertEqual(paths, ALL)
 
     def test_missing_guard_and_whole_domain_force_full(self):
-        mode, _, selected = p.decide_scope(
-            ["scripts/worldgen/a.py"], ALL[1:]
-        )
+        missing_guard = [x for x in ALL if x != p.SCOPED_GUARDS[0]]
+        mode, _, selected = p.decide_scope(["scripts/worldgen/a.py"], missing_guard)
         self.assertEqual(mode, "FULL")
-        self.assertEqual(selected, ALL[1:])
+        self.assertEqual(selected, missing_guard)
 
     def test_mixed_docs_plus_domain_remains_scoped(self):
         mode, _, selected = p.decide_scope(
@@ -114,15 +113,25 @@ class GitHistoryTests(unittest.TestCase):
             "import unittest\n", encoding="utf-8"
         )
         subprocess.run(["git", "init", "-q"], cwd=root, check=True)
-        subprocess.run(["git", "config", "user.email", "tests@example.invalid"], cwd=root, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "tests@example.invalid"],
+            cwd=root,
+            check=True,
+        )
         subprocess.run(["git", "config", "user.name", "CI Test"], cwd=root, check=True)
         subprocess.run(["git", "add", "."], cwd=root, check=True)
         subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
-        before = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
-        (root / "scripts/worldgen/example.py").write_text("VALUE = 1\n", encoding="utf-8")
+        before = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=root, text=True
+        ).strip()
+        (root / "scripts/worldgen/example.py").write_text(
+            "VALUE = 1\n", encoding="utf-8"
+        )
         subprocess.run(["git", "add", "."], cwd=root, check=True)
         subprocess.run(["git", "commit", "-qm", "change"], cwd=root, check=True)
-        after = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        after = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=root, text=True
+        ).strip()
         return before, after
 
     def test_single_commit_draft_is_scoped_but_ready_is_full(self):
@@ -143,7 +152,9 @@ class GitHistoryTests(unittest.TestCase):
             before, after = self._fixture(root)
             for prev in ("", "wrong", after, "a" * 40):
                 with self.subTest(prev=prev):
-                    result = p.build_plan(root, draft_incremental=True, previous_sha=prev)
+                    result = p.build_plan(
+                        root, draft_incremental=True, previous_sha=prev
+                    )
                     self.assertEqual(result["mode"], "FULL")
             self.assertNotEqual(before, after)
 

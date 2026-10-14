@@ -13,7 +13,11 @@ from pathlib import Path
 import re
 import subprocess
 
-from scripts.ci.run_script_tests import MIN_MODULES, discover
+# The planner works both as a directly invoked script and an imported module.
+if __package__:
+    from .run_script_tests import MIN_MODULES, discover
+else:
+    from run_script_tests import MIN_MODULES, discover
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -74,7 +78,9 @@ def decide_scope(
             | {
                 path
                 for path in full
-                if any(path.startswith(f"scripts/{domain}/") for domain in selected_domains)
+                if any(
+                    path.startswith(f"scripts/{domain}/") for domain in selected_domains
+                )
             }
         )
         if len(selected) == len(full):
@@ -85,7 +91,11 @@ def decide_scope(
             selected,
         )
 
-    return "DRAFT_SCOPED", "single-commit Draft documentation-only change", sorted(guard_paths)
+    return (
+        "DRAFT_SCOPED",
+        "single-commit Draft documentation-only change",
+        sorted(guard_paths),
+    )
 
 
 def _git(root: Path, *arguments: str) -> str:
@@ -94,9 +104,7 @@ def _git(root: Path, *arguments: str) -> str:
     ).strip()
 
 
-def build_plan(
-    root: Path, *, draft_incremental: bool, previous_sha: str
-) -> dict:
+def build_plan(root: Path, *, draft_incremental: bool, previous_sha: str) -> dict:
     root = Path(root)
     all_tests = discover(root)
     if len(all_tests) < MIN_MODULES:
@@ -117,19 +125,28 @@ def build_plan(
                 # Exact single-commit synchronization only. Multiple commits,
                 # merges, rebases and shallow-history uncertainty run FULL.
                 if parent != previous_sha or head == previous_sha:
-                    reason = "PR synchronization was not one verifiable fast-forward commit"
+                    reason = (
+                        "PR synchronization was not one verifiable fast-forward commit"
+                    )
                 else:
                     raw = subprocess.check_output(
                         [
-                            "git", "diff", "--no-renames", "--name-only", "-z",
-                            "--diff-filter=ACMRTD", previous_sha, head,
+                            "git",
+                            "diff",
+                            "--no-renames",
+                            "--name-only",
+                            "-z",
+                            "--diff-filter=ACMRTD",
+                            previous_sha,
+                            head,
                         ],
                         cwd=root,
                         stderr=subprocess.DEVNULL,
                     )
                     changed = [
                         name.decode("utf-8", errors="strict")
-                        for name in raw.split(b"\0") if name
+                        for name in raw.split(b"\0")
+                        if name
                     ]
                     mode, reason, modules = decide_scope(changed, all_tests)
             except (OSError, subprocess.CalledProcessError, UnicodeError):
