@@ -103,9 +103,12 @@ def attest_reduced_graph_output(
              "Missing native PCGComponent owner")
     _require(_path(component.get_owner()) == actor_path,
              "PCGComponent owner is not the requested actor")
-    _require(callable(getattr(component, "get_graph", None)),
-             "Missing native PCGComponent graph accessor")
-    graph = component.get_graph()
+    # UE 5.8 exposes PCGComponent.graph_instance, not PCGComponent.get_graph().
+    # PCGGraphInterface.get_const_pcg_graph() resolves the actual graph asset.
+    graph_instance = _property(component, "graph_instance")
+    _require(callable(getattr(graph_instance, "get_const_pcg_graph", None)),
+             "Missing native PCGGraphInterface readonly graph accessor")
+    graph = graph_instance.get_const_pcg_graph()
     _require(_path(graph) == graph_path, "Component graph is not the expected probe graph")
     _require(_path(source_node) == source_node_path and
              _path(reduction_node) == reduction_node_path,
