@@ -17,6 +17,10 @@ import time
 from unittest.mock import MagicMock
 import unittest
 
+from scripts.worldgen.pcg365_bounded_transport import (
+    BoundedMcpTransportError,
+    BoundedPcgMcpClient,
+)
 from scripts.worldgen.pcg365_mcp_adapter import (
     McpCircuitBreakerError,
     McpTimeoutError,
@@ -39,7 +43,10 @@ def make_proof(node: str = "probe_node", count: int = 64, method: str = "BOUNDED
 
 class SafeMcpAdapterTests(unittest.TestCase):
     def setUp(self):
-        self.mock_client = MagicMock()
+        # Patch only the single bounded I/O entry of the concrete transport.
+        # A generic MagicMock client cannot bypass the production type guard.
+        self.mock_client = BoundedPcgMcpClient()
+        self.mock_client.call_bounded = MagicMock()
         self.adapter = SafeMcpAdapter(
             client=self.mock_client, max_points=256, timeout=2.0,
             # Test-only fake verifier; there is deliberately no production verifier.
@@ -67,6 +74,34 @@ class SafeMcpAdapterTests(unittest.TestCase):
                 author_or_client=LegacyOnly(), actor="actor", node="node",
                 node_name="node", reduction_proof=make_proof("node", 3),
             )
+
+    def test_untrusted_generic_client_cannot_dispatch_even_with_test_witness(self):
+        receiver = MagicMock()
+        with self.assertRaisesRegex(UnsafeMcpReadError, "UNTRUSTED_MCP_TRANSPORT"):
+            self.adapter.safe_get_node_data_view(
+                author_or_client=receiver, actor="actor", node="node",
+                node_name="node", reduction_proof=make_proof("node", 3),
+            )
+        receiver.call_bounded.assert_not_called()
+
+    def test_independent_node_count_mismatch_blocks_dispatch(self):
+        self.adapter._trusted_native_reduction_verifier = lambda actor, node, receipt: 4
+        with self.assertRaisesRegex(UnsafeMcpReadError, "ATTESTATION_MISMATCH"):
+            self.adapter.safe_get_node_data_view(
+                author_or_client=self.mock_client, actor="actor", node="node",
+                node_name="node", reduction_proof=make_proof("node", 3),
+            )
+        self.mock_client.call_bounded.assert_not_called()
+
+    def test_bounded_transport_protocol_error_trips_breaker_and_fails_closed(self):
+        self.mock_client.call_bounded.side_effect = BoundedMcpTransportError("wire framing changed")
+        with self.assertRaisesRegex(UnsafeMcpReadError, "BOUNDED_MCP_TRANSPORT_FAILED"):
+            self.adapter.safe_get_node_data_view(
+                author_or_client=self.mock_client, actor="actor", node="node",
+                node_name="node", reduction_proof=make_proof("node", 3),
+            )
+        self.assertTrue(self.adapter.is_circuit_breaker_tripped)
+        self.assertEqual(self.mock_client.call_bounded.call_count, 1)
 
     def test_unbounded_end_index_minus_one_is_rejected_before_dispatch(self):
         proof = make_proof("test_node", 64)
