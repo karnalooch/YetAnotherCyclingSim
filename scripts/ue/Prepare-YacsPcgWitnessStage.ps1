@@ -22,6 +22,11 @@ $EngineRoot = 'D:\yacs\engine\UE_5.8'
 $StageRoot = 'D:\yacs\work\pcg365-native-witness-stage'
 $CanonicalRoot = 'D:\yacs\work\level-editor-review\b9fddea3f602-y473save01\Content\Generated\YACS\LiveCheckpoints\R2a00f7ebba40'
 $ProjectFile = Join-Path $ProjectRoot 'YetAnotherCyclingSim.uproject'
+# Opt-in only for PCG365 builds; the historical launcher remains byte-pinned.
+$BuildTarget = 'YetAnotherCyclingSimPcg365Editor'
+$BuildTargetFile = Join-Path $ProjectRoot 'Source/YetAnotherCyclingSimPcg365Editor.Target.cs'
+$PinnedProjectSha256 = '09fbd6cd85fbdd299a3e37cfb65658e1210183878516599c90b783acc1d8099b'
+$PinnedProjectBytes = 1152
 $CandidateDll = Join-Path $ProjectRoot 'Binaries/Win64/UnrealEditor-YetAnotherCyclingSimEditor.dll'
 $CandidateModules = Join-Path $ProjectRoot 'Binaries/Win64/UnrealEditor.modules'
 $EngineModules = Join-Path $EngineRoot 'Engine/Binaries/Win64/UnrealEditor.modules'
@@ -52,7 +57,12 @@ function Check-HeadAndWorkspace {
     if ($ProjectRoot.TrimEnd('\') -ine $PinnedProjectRoot) {
         throw "Expected the dedicated D: source worktree, got: $ProjectRoot"
     }
-    [void](Require-File $ProjectFile)
+    $projectIdentity = File-Identity $ProjectFile
+    if ($projectIdentity.sha256 -cne $PinnedProjectSha256 -or
+        $projectIdentity.bytes -ne $PinnedProjectBytes) {
+        throw 'PINNED_LAUNCHER_PROJECT_CHANGED: original .uproject must retain historical SHA256 and 1152 bytes.'
+    }
+    [void](Require-File $BuildTargetFile)
     [void](Require-File (Join-Path $ProjectRoot 'scripts/ci/Assert-YacsBuildIsolation.ps1'))
     [void](Require-File (Join-Path $ProjectRoot 'Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPcgWitnessToolset.cpp'))
     [void](Require-File (Join-Path $ProjectRoot 'Source/YetAnotherCyclingSimEditor/Public/PCG/YacsPcgWitnessToolset.h'))
@@ -161,7 +171,7 @@ if ($drive.AvailableFreeSpace -lt 5GB) {
 $buildStartedUtc = [DateTime]::UtcNow
 $log = Join-Path $env:TEMP ("yacs-pcg365-native-" + $ExpectedHead + "-" + [Guid]::NewGuid().ToString('N') + ".log")
 $arguments = @(
-    'YetAnotherCyclingSimEditor',
+    $BuildTarget,
     'Win64',
     'Development',
     "-Project=$ProjectFile",
@@ -217,6 +227,8 @@ $manifest = [ordered]@{
     source_branch = 'codex/365-world-graph'
     created_at_utc = [DateTime]::UtcNow.ToString('o')
     build_exit_code = [int]$buildExit
+    build_target = $BuildTarget
+    original_project_sha256 = $PinnedProjectSha256
     engine_build_id = $engineBuildId
     source_project = $ProjectFile
     stage_dir = $StagePath

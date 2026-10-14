@@ -72,20 +72,6 @@
 			"TargetAllowList": [
 				"Editor"
 			]
-		},
-		{
-			"Name": "ToolsetRegistry",
-			"Enabled": true,
-			"TargetAllowList": [
-				"Editor"
-			]
-		},
-		{
-			"Name": "ModelContextProtocol",
-			"Enabled": true,
-			"TargetAllowList": [
-				"Editor"
-			]
 		}
 	]
 }

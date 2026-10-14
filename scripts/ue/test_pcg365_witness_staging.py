@@ -3,11 +3,15 @@
 These offline checks intentionally do not run PowerShell, Unreal, MCP or UBT.
 """
 from pathlib import Path
+import hashlib
+import json
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/ue/Prepare-YacsPcgWitnessStage.ps1"
 DOCS = ROOT / "docs/tooling/PCG365_NATIVE_WITNESS_DEPLOYMENT.md"
+PINNED_PROJECT = ROOT / "YetAnotherCyclingSim.uproject"
+NATIVE_TARGET = ROOT / "Source/YetAnotherCyclingSimPcg365Editor.Target.cs"
 
 
 class NativeWitnessStageContractTests(unittest.TestCase):
@@ -20,6 +24,26 @@ class NativeWitnessStageContractTests(unittest.TestCase):
         self.assertIn("[ValidateSet('Inspect', 'BuildStage')]", self.script)
         self.assertIn("$Action = 'Inspect'", self.script)
         self.assertIn("if ($Action -ceq 'Inspect')", self.script)
+
+    def test_historical_uproject_byte_pin_is_preserved(self):
+        raw = PINNED_PROJECT.read_bytes()
+        self.assertEqual(len(raw), 1152)
+        self.assertEqual(
+            hashlib.sha256(raw).hexdigest(),
+            "09fbd6cd85fbdd299a3e37cfb65658e1210183878516599c90b783acc1d8099b",
+        )
+        plugins = {item["Name"] for item in json.loads(raw)["Plugins"]}
+        self.assertNotIn("ToolsetRegistry", plugins)
+        self.assertNotIn("ModelContextProtocol", plugins)
+
+    def test_pcg365_mcp_plugins_only_on_opt_in_editor_target(self):
+        target = NATIVE_TARGET.read_text(encoding="utf-8")
+        self.assertIn("class YetAnotherCyclingSimPcg365EditorTarget", target)
+        self.assertIn('EnablePlugins.Add("ToolsetRegistry")', target)
+        self.assertIn('EnablePlugins.Add("ModelContextProtocol")', target)
+        self.assertIn("$BuildTarget = 'YetAnotherCyclingSimPcg365Editor'", self.script)
+        self.assertIn("PINNED_LAUNCHER_PROJECT_CHANGED", self.script)
+        self.assertIn("build_target = $BuildTarget", self.script)
 
     def test_exact_source_and_worktree_guards(self):
         self.assertIn("git -C $ProjectRoot rev-parse HEAD", self.script)
