@@ -59,6 +59,59 @@ pwsh -NoProfile -File D:\yacs\project\scripts\ue\Prepare-YacsPcgWitnessStage.ps1
 2. **Emergency rollback:** In case of editor load failure or witness discrepancy, restore `UnrealEditor-YetAnotherCyclingSimEditor.dll` and `UnrealEditor.modules` from `backup-706edb198abecb81\`.
 3. **Audit receipt:** Verify running editor module hash equals `706edb198abecb81b339498b0fb8847205cd4b66d4ef34829026ec593a4d97d5`.
 
+## Native registration startup race observed after controlled deployment (2026-10-14)
+
+The owner Windows audit reports a new running **derived-map** Unreal Editor process
+(PID `45048` at observation time) with the staged `2b8b3784` DLL actually
+loaded (SHA256 `02cea22e336213b8ceb7f009817b2c428cfceaa07b8cedd9c5823c0741c388e7`),
+MCP HTTP port 8000 responding and Pixel Streaming signalling port 8888 active.
+These are **owner-agent observations**, not fresh runtime measurements from a
+GitHub code-review session. The independent `YACS Live Host` scheduled task
+was reportedly stopped, and the self-hosted GitHub Actions runner service was
+also stopped during maintenance; restoring approved task/runner ownership
+requires a separate, non-disruptive operational audit.
+
+The new C++ UClass exists in Unreal reflection but its toolset was **absent**
+from MCP `list_toolsets`. The editor startup log records:
+`LogToolsetRegistry: Warning: IsAvailable: Editor is not available`.
+The existing module called `RegisterToolsetClass` only in `StartupModule()`
+when `IsAvailable()` was true, then silently abandoned registration when
+the editor subsystem was not yet ready.
+
+UE 5.8's `FCoreDelegates::OnPostEngineInit` may **already have fired** before
+a `PostEngineInit` module is loaded. Merely installing an `OnPostEngineInit`
+listener in `StartupModule` is therefore not sufficient. The Editor module now
+tries once and schedules a bounded **game-thread core ticker** to retry when
+`UToolsetRegistry::IsAvailable()` eventually becomes true. It checks
+`IsToolsetClassRegistered`, registers at most once, tracks ownership so
+`ShutdownModule` never unregisters somebody else's toolset, and removes its
+ticker on shutdown. A 120-second readiness timeout remains **blocked**, never
+an automatic editor restart.
+
+**Epic UE 5.8 MCP caches Tool definitions at startup.** After the class
+reports `PCG365_WITNESS_TOOLSET_REGISTERED` in the editor log, execute the
+documented editor-console command `ModelContextProtocol.RefreshTools`
+through a supported authorized editor control and open a **new MCP session**.
+Read-only verify `list_toolsets` and `describe_toolset` report the
+**exact native toolset class and `InspectReducedNodeOutput` tool**.
+Source code, UClass reflection, a compiling DLL and an open port alone
+do not count as `NATIVE_WITNESS_PASS`.
+
+**Important:** The previously deployed/staged DLL with SHA256
+`02cea22e336213b8ceb7f009817b2c428cfceaa07b8cedd9c5823c0741c388e7`
+is built from `2b8b3784` and **does not contain** the deferred-registration
+source fix. Any later Git commit changing `YetAnotherCyclingSimEditor.cpp`
+needs its own isolated exact-HEAD UHT/UBT build, fresh `staging-manifest.json`,
+hash verification, and a newly authorized maintenance transaction.
+**Do not overwrite that DLL while PID 45048 is active**, do not perform
+hot-reload, do not kill the editor, and do not claim that repository code has
+already modified the running process.
+
+No `GetNodeDataView`, 65x65 m wall authoring or 63-batch rollout until the
+native probe is genuinely registered, MCP discovery is refreshed and the
+native graph/point-count/session safeguards have succeeded. The map
+`L_RoadSurface` and five canonical package hashes must remain unchanged.
+
 ## Controlled deployment (separate, owner-approved maintenance window)
 
 1. Verify latest exact-HEAD UBT, full GitHub CI and byte-pinned `.uproject`; inspect the staged manifest, DLL hash, module BuildId, current Editor command line, session identity and loaded-module path. The PCG365 opt-in target is distinct from the ordinary Editor target.
