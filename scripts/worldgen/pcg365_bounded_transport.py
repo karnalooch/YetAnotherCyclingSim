@@ -215,7 +215,7 @@ class BoundedPcgMcpClient:
         start, end = arguments["startIndex"], arguments["endIndex"]
         if (type(start) is not int or type(end) is not int
                 or start < 0 or end <= start or end > 256
-                or end - start + 1 > 256):
+                or end - start > 256):
             raise ValueError("MCP probe indices exceed native reduced-data safety cap")
         if (not isinstance(arguments["pinLabel"], str)
                 or not 1 <= len(arguments["pinLabel"]) <= 64
