@@ -15,6 +15,7 @@ from pathlib import Path
 
 from scripts.worldgen import pcg365_pcgex_graph as g
 from scripts.worldgen import pcg365_whole_area as w
+from scripts.worldgen.pcg365_mcp_adapter import SafeMcpAdapter
 from scripts.worldgen.pcg365_wall_nodes import configure_blend, configure_material
 
 FOLDER = "/Game/Generated/YACS/PCG365Ex/WallSurface/Pilot01"
@@ -40,7 +41,10 @@ def rows(data):
 
 def check_normal_transfer(before, encoded, mesh):
     original, points, vertices = rows(before), rows(encoded), rows(mesh)
-    positions = lambda data: [p["@Points.$Transform"]["translation"] for p in data]
+
+    def positions(data):
+        return [p["@Points.$Transform"]["translation"] for p in data]
+
     g.require(len(original) == len(points) == len(vertices) > 0, "Vertex count changed")
     g.require(positions(original) == positions(points), "Normal projection moved points")
     g.require([p["@Points.PCGEx/VData"] for p in original]
@@ -78,7 +82,9 @@ def validate_surface(path):
 def check_continuous_surface(source, flat, ground, encoded, mesh, edges, edge_probes):
     """Validate native topology and clearance; does not generate geometry."""
     flat, ground, encoded, mesh = map(rows, (flat, ground, encoded, mesh))
-    position = lambda p: p["@Points.$Transform"]["translation"]
+
+    def position(p):
+        return p["@Points.$Transform"]["translation"]
     g.require(len(flat) == len(ground) == len(encoded) == len(mesh) > 0, "Native sample count changed")
     admitted = {(r, c): clearance for r, c, _, clearance in source["records"]}
     ground_z = {tuple(position(p)[:2]): position(p)[2] for p in ground}
@@ -172,8 +178,22 @@ def replay(state_path, source_path, surface_path, adapter_path, material_path, c
         raw = g.unpack(a.client.call("call_tool", dict(toolset_name=APP, tool_name="CaptureViewport", arguments=dict(captureTransform=capture_camera, annotations=None, bShowUI=False))))
         (output / (name + ".png")).write_bytes(base64.b64decode(raw["returnValue"]["image"]["data"]))
 
-    def inspect(name, pin):
-        data = a.call(g.PCG, "GetNodeDataView", dict(pCGVolume=state["instance"]["actor"], node=state["nodes"][name], pinLabel=pin, attributeName="", startIndex=0, endIndex=-1))
+    adapter = SafeMcpAdapter(client=a, max_points=256)
+
+    def inspect(name, pin, max_points=256, verified_point_count=None):
+        count = verified_point_count if verified_point_count is not None else min(max_points, 256)
+        data = adapter.safe_get_node_data_view(
+            author_or_client=a,
+            actor=state["instance"]["actor"],
+            node=state["nodes"][name],
+            pin_label=pin,
+            attribute_name="",
+            start_index=0,
+            end_index=count - 1,
+            verified_point_count=count,
+            reduction_type="BOUNDED_PROBE_NODE",
+            node_name=name,
+        )
         (output / (name + "-" + pin + ".json.gz")).write_bytes(gzip.compress(json.dumps(data).encode(), mtime=0))
         return data
 
