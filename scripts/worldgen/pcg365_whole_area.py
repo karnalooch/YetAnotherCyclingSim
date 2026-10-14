@@ -14,15 +14,11 @@ import time
 from scripts.worldgen import pcg365_pcgex_graph as g
 
 MAP = "/Game/Generated/YACS/PCG365Ex/Ra1e9cbdd48ad0c85_s2/L_PCG365_Rocks"
-REVISION = "whole-area-v6-native-cliff-fragments"
+REVISION = "whole-area-v7-rocks-cliff-stamps-retired"
 POLICIES = {
     "rocks": dict(g.POLICY, id="PCG365_ROCKS_V5", native_best_fit=True,
                   support_plane_tolerance_cm=60.0, support_maximum_slope_degrees=89.0),
-    "cliffs": dict(g.POLICY, id="PCG365_CLIFFS_V6", native_best_fit=True, group_by_mesh_footprint=True,
-                   maximum_slope_degrees=88.0, five_probe=False,
-                   rotation_axis="YZ", cross_axis=g.v(0, 0, -1),
-                   model_rotation={"pitch": 0, "yaw": 0, "roll": 46.411836835744694},
-                   support_status="NATIVE_CENTRE_HIT_AND_FITTING_VISUAL_CLIFF_NOT_CONTACT_QUALIFIED"),
+    # The owner removed the V6 cliff stamps. Do not recreate that rejected lane.
 }
 
 
@@ -130,7 +126,8 @@ def update_world(input_path, input_sha, output, asset_catalog):
     landscapes = find(a, "/Script/Landscape.Landscape")
     landscape_materials = [a.call(g.OBJECT, "get_properties", dict(instance=x, properties=["LandscapeMaterial"]))
                            for x in landscapes]
-    native_assets = prepare_assets(a, catalog)
+    native_assets = prepare_assets(a, dict(catalog, assets=[
+        asset for asset in catalog["assets"] if asset["lane"] != "cliffs"]))
     lane_results = []
     for lane, base_policy in POLICIES.items():
         policy = dict(base_policy)
@@ -148,7 +145,7 @@ def update_world(input_path, input_sha, output, asset_catalog):
         lane_data = dict(points=points, assets=assets, radius_cm=input_radius(assets, policy))
         save(lane_dir / "lane-input.json", lane_data)
         a = g.Author(input_path, input_sha, lane_dir)
-        a.folder = "/Game/Generated/YACS/PCG365Ex/WholeAreaV6/R" + identity[:16] + "/" + lane
+        a.folder = "/Game/Generated/YACS/PCG365Ex/WholeAreaV7/R" + identity[:16] + "/" + lane
         a.graph_path = a.folder + "/PCG365_Rocks"
         a.collection_path = a.folder + "/DA_Rocks"
         if a.call(g.ASSET, "exists", {"path": a.graph_path}):
@@ -207,6 +204,7 @@ def update_world(input_path, input_sha, output, asset_catalog):
         ground_material_behavior="EXISTING_WHOLE_AREA_MATERIAL_RETAINED",
         placement_logic="NATIVE_PCG_PCGEX_NODES_ONLY", owner_visual="PENDING",
         whole_area_visual_acceptance=False, fresh_reload_verified=False,
+        cliff_status="RETIRED_STAMPS_NATIVE_SURFACE_PILOT_ONLY",
         performance="DEFERRED_AFTER_M3", performance_pass=False)
     save(output / "native-result.json", result)
     return result

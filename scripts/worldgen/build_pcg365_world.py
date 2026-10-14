@@ -423,7 +423,7 @@ def main():
             node_plan = {"recipe_revision": REVISION, "policies": POLICIES,
                          "input_contract": prepared["cliff_input_contract"],
                          "graph_state": "See each lane graph-state.json for the authored native graph",
-                         "fragment_footprint": "Derived from the authenticated cliff mesh bounds"}
+                         "cliff_status": "Retired stamps; bounded surface pilot requires separate visual review"}
         else:
             node_plan = graph.recipe("/Game/Generated/YACS/PCG365Ex/R" + sha(input_path)[:16] + "_s2/DA_Rocks", prepared["radius_cm"])
         write_new(args.output / "pcgex-node-plan.json", node_plan)

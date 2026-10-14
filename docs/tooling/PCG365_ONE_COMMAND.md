@@ -2,7 +2,154 @@
 
 Issue #365, M3. The owner approved slope alignment up to 42 degrees, existing PCGEx nodes, MCP orchestration and input adaptation on 2026-10-13. The current visual recipe is `PCG365_PCGEX_SLOPE_ALIGNED_PREVIEW_V3`. Historical V1/V2 contact thresholds and rejected results remain unchanged.
 
-## Run
+## Whole-area continuation and inspection failure - 2026-10-14
+
+The owner authorized the complete 2,016.5 m square, continuous native PCGEx
+walls and the existing gray material, preserving exclusions and the running
+editor. Base remains `34a20aee62ae71c5af614f24512c4fc315b1c3d3`;
+all new work is an uncommitted local candidate for M3 / #365.
+
+The current editor graph contains a whole-area input/region branch. Native
+Connect Points and Partition Vtx initially found 934 connected groups from
+55,174 source seeds with at least 125 cm exclusion clearance. A single convex
+envelope was unsuitable for large sparse groups. The subsequent native
+Partition by Values, Convex Hull 2D and Clipper2 Offset pass uses 32 m processing
+bins and joins their outlines by 100.001 cm. The output contains 1,064 outlines;
+these are **not 1,064 completed wall meshes**. The implementation still needs
+hole handling, contact, final connected-component and whole-area visual proof.
+
+The input adapter rasterized native outlines with existing Rasterio/GDAL, then
+reapplied the unchanged known-terrain and protected-bit-63 inputs. Its 3,146,810
+eligible samples are candidates, not inferred new cliff classification. Epic
+Get Texture Data and To Point preserve exact 50 cm positions in a two-pixel
+native test. PCGEx Get Texture Data was inspected first: the installed regular
+Texture2D branch does not call its local ApplySettings helper, so custom texel
+size/filter/channel cannot be assumed to apply. The Epic sampler supplies only
+the input conversion; native PCGEx still owns the spatial processing.
+
+The whole-area Sample Nearest Point branch executed, but its output count is
+**unverified**. At 06:58:31 UTC an official `GetNodeDataView` call requesting
+100,000 position rows timed out after 180 seconds. A later fresh MCP initialize
+also timed out. The live editor log stopped at that data-view dispatch; the
+Unreal process remains present with its original start time. Pixel Streaming
+could not reconnect. No restart, map reload, SaveAll, source edit or full-wall
+material rollout was attempted. The gray pilot was the last verified visible
+consumer; its current frame cannot be freshly verified during this blockage.
+
+Do **not** rerun the pilot replay while these additional live branches remain
+attached. Do not retry dense GetNodeDataView calls. After MCP recovers, first
+detach the diagnostic sinks and reduce actual output with native statistics
+and <=256-point sample nodes; a start/end range alone is not a reliable bound.
+The live additions have not received a named graph save or a fresh-load proof.
+
+[`pcg365_wall_batches.py`](../../scripts/worldgen/pcg365_wall_batches.py) prepares
+63 non-empty bounded input textures, each at most 513 x 513 vertices. Adjacent
+batches share their boundary vertices and no complete grid cells. It authenticates
+sources and preserves the original texture coordinates and exclusions. It does
+not execute, spawn or claim completed meshes:
+
+```powershell
+python -B -m scripts.worldgen.pcg365_wall_batches `
+  --input-dir D:/yacs/project/Saved/PCG365/full-walls-20261014 `
+  --output D:/yacs/project/Saved/PCG365/full-walls-next-bounded-inputs
+```
+
+Local evidence is retained under `Saved/PCG365/full-walls-20261014`: node state,
+official schemas, native outline readbacks, execution warnings, immutable input
+manifest and `bounded-inputs/batch-manifest.json`. The pre-pass reported native
+warnings about forwarded `IsClosed` cleanup and undersized hull inputs; these
+are recorded, not relabelled as a clean execution. Thirty-three relevant local
+unit tests pass. Full wall deployment, production surface ownership, material
+application, owner acceptance and performance remain **not complete**.
+
+References: [Partition Vtx](https://pcgex.gitbook.io/pcgex/node-library/clusters/analyze/cluster-partition-vtx),
+[PCGEx topology](https://pcgex.gitbook.io/pcgex/working-with-pcgex/additional-systems/topology),
+[Rasterio rasterization](https://rasterio.readthedocs.io/en/stable/topics/features.html).
+
+## Current live continuation — 2026-10-14
+
+The owner removed the rejected V6 cliff stamps. `--mode whole-area` now builds
+the natural-rock lane only; it neither prepares nor regenerates those stamps.
+Do not run that command merely to inspect the continuous-wall pilot.
+
+The same pilot actor now has **one connected surface**, rather than a merged
+collection of isolated patches. The owner authorized continuous derived walls;
+source classification, unknown terrain and protected exclusion bits **63** stay
+unchanged. The 129×129 review window remains bounded at rows 1300–1428 and
+columns 508–636 of the original 0.5 m grid, approximately 65×65 m.
+
+PCGEx Assistant 0.3.2 automates PCGEx 0.79 and Epic UE 5.8.2 nodes:
+
+1. Native Convex Hull 2D builds the local envelope from 5,194 cliff seeds.
+   Sample Nearest Path selects from 13,309 authenticated known, eligible surface
+   samples. These geometry samples do not rewrite the cliff classification.
+2. Direction probes and Cluster Surface produce grid faces. Native traces fit
+   the current Landscape. The 3 cm world-Z diagnostic separation is explicit.
+3. PCG Projection obtains Landscape normals without moving points. Existing
+   Geometry Script nodes transfer normals and compute tangents; native Merge
+   Dynamic Meshes and PCGEx Spawn Dynamic Mesh produce one visible component.
+4. PCGEx Attribute Remap and Uber Blend compute a material transition using
+   distance to the native envelope and the existing exclusion-clearance input.
+   Vertex alpha carries that weight. A derived copy of the existing five-role
+   material uses native Lerp to select ExposedRock in the interior and restore
+   the original terrain weights at the boundary. Existing rock textures are reused.
+
+Python configures these nodes, adapts authenticated inputs and validates native
+output. It implements no hull, triangulation, placement or material-weight
+algorithm. Exclusion rasters are neither smoothed nor recolored. The global
+Landscape material and all 559 road/CUT actors remain unchanged.
+
+Replay in the current editor session, using a new evidence directory:
+
+```powershell
+python -B -m scripts.worldgen.pcg365_wall_surface `
+  --state D:/yacs/project/Saved/PCG365/wall-continuous-replay02/graph-state.json `
+  --source D:/yacs/project/Saved/PCG365/wall-surface-20261014-pilot01/input.json `
+  --surface D:/yacs/project/Saved/PCG365/wall-continuous-20261014/surface-input.json `
+  --adapter D:/yacs/project/Saved/PCG365/wall-surface-20261014-resume/normal-adapter-state.json `
+  --material D:/yacs/project/Saved/PCG365/wall-continuous-20261014/blend-material-state.json `
+  --camera D:/yacs/project/Saved/PCG365/wall-surface-20261014-pilot01/close-camera.json `
+  --output D:/yacs/project/Saved/PCG365/wall-continuous-replay-next
+```
+
+This configures and replays the existing bounded graph and material, not a
+clean-install or full-area builder. It verifies both input hashes and original
+source files, actor/graph ownership, connected geometry, normals, material
+weights, collision and unchanged scene inventory. Success leaves the pilot
+visible; `--hide-after` hides it. Failures during generation hide the pilot.
+The camera is restored. Only the named graph, normal Blueprint and derived
+material assets are saved; no map save, reload, new map or editor restart occurs.
+
+Native evidence in `Saved/PCG365/wall-continuous-replay02/native-proof.json`:
+12,619 vertices, 37,350 edges, one connected region and one `NoCollision`
+component. Maximum XY edge is 70.711 cm, below the minimum authenticated
+clearance of 144.922 cm; the conservative remaining clearance is 74.212 cm.
+Normal-vector error is at most `1.49e-7`. All 37,350 edge-midpoint probes remain
+above Landscape by 3.000–3.093 cm. Material alpha spans 0–1 with 3,497 intermediate
+vertices. This is sampled native evidence, not a continuous whole-face contact
+guarantee. Material-only changes preserve every read-back vertex transform.
+
+**Whole-area cliff rollout and owner visual acceptance remain pending.** The
+pilot is visible for review, and the prior mask-patch failure is superseded for
+this local surface. Do not apply one global convex hull across unrelated walls.
+The entire 2×2 km area, global material balance and green vegetation still need
+their own work and review. The original Landscape's geometric artifacts remain
+visible; this material pass does not repair them. Performance is
+`DEFERRED_AFTER_M3`, with `performance_pass: false`; PR #474 remains Draft.
+
+Primary capability sources: [PCGEx topology](https://pcgex.gitbook.io/pcgex/working-with-pcgex/additional-systems/topology),
+[Sample Nearest Path](https://pcgex.gitbook.io/pcgex/node-library/sampling/nearest/sample-nearest-path),
+[Attribute Remap](https://pcgex.gitbook.io/pcgex/node-library/metadata/modify/attribute-remap),
+[Uber Blend](https://pcgex.gitbook.io/pcgex/node-library/metadata/blending/uber-blend),
+[Epic per-vertex normals](https://dev.epicgames.com/documentation/en-us/unreal-engine/BlueprintAPI/GeometryScript/Normals/SetMeshToPerVertexNormals_FromLi-)
+and [material instances](https://dev.epicgames.com/documentation/en-us/unreal-engine/instanced-materials-in-unreal-engine).
+Installed Assistant knowledge and schemas resolved version differences,
+including the actual `Sources` pin. Session `20261013T203714Z-90a9943bcfd6`
+was retained. The source is a local candidate on base
+`34a20aee62ae71c5af614f24512c4fc315b1c3d3`; native receipts hash the actual dirty
+producer files. This is not a claim of remote exact-SHA or fresh-load proof.
+
+## Historical V3 run
 
 Keep the authenticated Sa Calobra road checkpoint open in the existing Live Host, with PCGEx Assistant, Epic PCG Toolset and Epic Editor Toolset exposed on localhost port 8000. From the source checkout:
 
