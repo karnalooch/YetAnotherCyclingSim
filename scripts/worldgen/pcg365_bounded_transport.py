@@ -56,10 +56,13 @@ class BoundedPcgMcpClient:
             raise BoundedMcpTransportError("MCP request exceeds 1 MiB")
         conn = http.client.HTTPConnection(HOST, PORT, timeout=remaining)
         expired = threading.Event()
+        active_socket: socket.socket | None = None
 
         def abort_socket() -> None:
             expired.set()
-            sock = conn.sock
+            # HTTPConnection.getresponse() drops conn.sock when the peer sets
+            # Connection: close; retain our own handle to interrupt its body read.
+            sock = active_socket if active_socket is not None else conn.sock
             if sock is not None:
                 try:
                     sock.shutdown(socket.SHUT_RDWR)
@@ -81,6 +84,7 @@ class BoundedPcgMcpClient:
                 headers["Mcp-Session-Id"] = self._session_id
                 headers["Mcp-Protocol-Version"] = PROTOCOL
             conn.request("POST", PATH, body=raw_request, headers=headers)
+            active_socket = conn.sock
             response = conn.getresponse()
             received: dict[str, str] = {}
             guarded = {
