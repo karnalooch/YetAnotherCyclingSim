@@ -217,7 +217,7 @@ def replay(state_path, source_path, surface_path, adapter_path, material_path,
             pin_label=pin,
             attribute_name="",
             start_index=0,
-            end_index=count - 1,
+            end_index=count,  # Epic GetNodeDataView uses an EXCLUSIVE end index.
         )
         (output / (name + "-" + pin + ".json.gz")).write_bytes(gzip.compress(json.dumps(data).encode(), mtime=0))
         return data
