@@ -4,6 +4,7 @@
 #include "Engine/World.h"
 #include "Modules/ModuleManager.h"
 #include "PCG/YacsPcgWitnessToolset.h"
+#include "ToolsetRegistry/ToolsetRegistrySubsystem.h"
 #include "ToolsetRegistry/UToolsetRegistry.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogYacsPcg365Witness, Log, All);
@@ -66,6 +67,21 @@ private:
 
 		UClass* ToolsetClass = UYacsPcgWitnessToolset::StaticClass();
 		const FString ToolsetName = TEXT("YetAnotherCyclingSimEditor.YacsPcgWitnessToolset");
+		const FString WitnessPattern = TEXT("/^YetAnotherCyclingSimEditor[.]YacsPcgWitnessToolset([.].*)?$/");
+
+		TValueOrError<TObjectPtr<UToolsetRegistrySubsystem>, FString> SubsystemResult = UToolsetRegistrySubsystem::Get();
+		if (SubsystemResult.HasValue())
+		{
+			UToolsetRegistrySubsystem* Subsystem = SubsystemResult.GetValue();
+			if (Subsystem && Subsystem->ToolsetRegistry.GetAllowedNames().Num() > 0)
+			{
+				if (!Subsystem->ToolsetRegistry.GetAllowedNames().Contains(WitnessPattern))
+				{
+					Subsystem->ToolsetRegistry.AddAllowedName(WitnessPattern);
+				}
+			}
+		}
+
 		const bool bPreviouslyRegistered = UToolsetRegistry::IsToolsetRegistered(ToolsetName) ||
 			UToolsetRegistry::IsToolsetClassRegistered(ToolsetClass);
 		if (!bPreviouslyRegistered)
