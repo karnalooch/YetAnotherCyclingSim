@@ -12,6 +12,11 @@ import threading
 import time
 from typing import Any, Callable, Dict, Optional
 
+from scripts.worldgen.pcg365_bounded_transport import (
+    BoundedMcpTransportError,
+    BoundedPcgMcpClient,
+)
+
 MAX_SAFE_PROBE_POINTS = 256
 MAX_SAFE_RESPONSE_BYTES = 1024 * 1024  # 1 MB maximum response payload
 DEFAULT_MCP_TIMEOUT_SECONDS = 10.0
@@ -257,18 +262,17 @@ class SafeMcpAdapter:
                 "NATIVE_PROBE_ATTESTATION_MISSING: a self-declared point count is not "
                 "evidence that the Unreal node is actually reduced; no MCP dispatch"
             )
-        independent_count = self._trusted_native_reduction_verifier(actor, node, reduction_proof)
-        if type(independent_count) is not int or independent_count != certified_count:
-            raise UnsafeMcpReadError(
-                "NATIVE_PROBE_ATTESTATION_MISMATCH: independent native count does not match receipt"
-            )
-
         with self._lock:
-            # Re-check circuit breaker inside the lock for queued concurrent callers
+            # A queued caller must not inspect an actor while another is reading it.
             if self._circuit_breaker_tripped:
                 raise McpCircuitBreakerError(
                     f"MCP circuit breaker is TRIPPED: {self._circuit_breaker_reason}. "
                     "Queued request aborted fail-closed without dispatch."
+                )
+            independent_count = self._trusted_native_reduction_verifier(actor, node, reduction_proof)
+            if type(independent_count) is not int or independent_count != certified_count:
+                raise UnsafeMcpReadError(
+                    "NATIVE_PROBE_ATTESTATION_MISMATCH: independent native count does not match receipt"
                 )
 
             self._request_counter += 1
@@ -295,6 +299,11 @@ class SafeMcpAdapter:
                     raise UnsafeMcpReadError(
                         "BOUNDED_MCP_TRANSPORT_MISSING: refusing legacy unbounded client"
                     )
+                if not isinstance(author_or_client, BoundedPcgMcpClient):
+                    raise UnsafeMcpReadError(
+                        "UNTRUSTED_MCP_TRANSPORT: only verified BoundedPcgMcpClient "
+                        "is permitted for native GetNodeDataView"
+                    )
                 raw = bounded_call(
                     toolset, "GetNodeDataView", arguments,
                     timeout_seconds=self.timeout,
@@ -306,6 +315,11 @@ class SafeMcpAdapter:
                     self.trip_circuit_breaker(f"GetNodeDataView took {elapsed:.2f}s, exceeding timeout {self.timeout}s")
                     raise McpTimeoutError(f"GetNodeDataView timeout after {elapsed:.2f}s; circuit breaker tripped")
 
+            except BoundedMcpTransportError as exc:
+                self.trip_circuit_breaker("Terminal bounded MCP framing/protocol error")
+                raise UnsafeMcpReadError(
+                    "BOUNDED_MCP_TRANSPORT_FAILED: response untrusted; circuit breaker tripped"
+                ) from exc
             except TimeoutError as exc:
                 self.trip_circuit_breaker(f"Client TimeoutError: {exc}")
                 raise McpTimeoutError(f"MCP operation timed out: {exc}. Circuit breaker tripped; no automatic retry.") from exc
@@ -316,10 +330,12 @@ class SafeMcpAdapter:
                 raise
 
             # Post-dispatch payload size enforcement
-            if isinstance(raw, (str, bytes)):
+            if isinstance(raw, str):
+                raw_bytes_len = len(raw.encode("utf-8"))
+            elif isinstance(raw, bytes):
                 raw_bytes_len = len(raw)
             else:
-                raw_bytes_len = len(json.dumps(raw))
+                raw_bytes_len = len(json.dumps(raw).encode("utf-8"))
 
             if raw_bytes_len > self.max_response_bytes:
                 self.trip_circuit_breaker(
