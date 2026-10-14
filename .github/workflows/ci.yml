@@ -130,6 +130,11 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/reusable-python.yml
+    with:
+      # Only the latest single verified Draft commit can use scoped tests.
+      # Ready-for-review and all other events force the full discovered suite.
+      draft_incremental: ${{ github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.event.pull_request.draft == true && github.event.pull_request.head.repo.full_name == github.repository }}
+      previous_sha: ${{ github.event.before || '' }}
 
   security-base:
     name: Security baseline

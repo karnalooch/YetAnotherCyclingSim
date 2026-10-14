@@ -2,6 +2,17 @@ name: Reusable Python checks
 
 on:
   workflow_call:
+    inputs:
+      draft_incremental:
+        description: Scope tests only for a verified one-commit Draft synchronization.
+        type: boolean
+        required: false
+        default: false
+      previous_sha:
+        description: Previous PR head, verified against HEAD first parent.
+        type: string
+        required: false
+        default: ''
 
 permissions: {}
 
@@ -17,6 +28,8 @@ jobs:
         with:
           persist-credentials: false
           lfs: false
+          fetch-depth: 2
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Python 3.14
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -46,8 +59,22 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 rasterio==1.5.2 pyproj==3.8.0 Pillow==12.3.0 shapely==2.1.2 scipy==1.18.1
 
-      - name: Run every discovered script test
-        run: python scripts/ci/run_script_tests.py --output "${{ runner.temp }}/yacs-script-tests"
+      - name: Plan exact-head script test coverage
+        env:
+          DRAFT_INCREMENTAL: ${{ inputs.draft_incremental }}
+          PREVIOUS_SHA: ${{ inputs.previous_sha }}
+        run: |
+          python scripts/ci/plan_script_tests.py \
+            --draft-incremental "$DRAFT_INCREMENTAL" \
+            --previous-sha "$PREVIOUS_SHA" \
+            --output "${{ runner.temp }}/yacs-script-tests/plan.json"
+
+      - name: Run planned script tests (parallel)
+        run: |
+          python scripts/ci/run_script_tests.py \
+            --plan "${{ runner.temp }}/yacs-script-tests/plan.json" \
+            --workers 4 \
+            --output "${{ runner.temp }}/yacs-script-tests"
 
       - name: Retain hosted test inventory and per-module diagnostics
         if: ${{ always() }}

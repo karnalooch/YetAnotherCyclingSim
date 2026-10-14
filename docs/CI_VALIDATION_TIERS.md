@@ -86,6 +86,35 @@ Runs for draft and ready PRs as applicable:
 
 Draft PRs are the normal iteration mode for world-building work.
 
+### Script-test batching: 4 isolated workers and a Draft-only scoped tier
+
+Hosted Python tests are still discovered dynamically under `scripts/**/test_*.py`,
+run once each in independent subprocesses, and retain per-module stdout and
+receipts plus the machine-readable `plan.json` and `summary.json`. The runner
+uses up to **four concurrent isolated subprocesses**. No suites are silenced,
+tests are never marked PASS without a non-empty test execution, and any module
+failure rejects the workflow.
+
+On **the `synchronize` event of an existing same-repository Draft PR only**,
+`scripts/ci/plan_script_tests.py` may narrow the hosted suite if the GitHub
+webhook's previous PR SHA exactly matches the checkout's first parent (one
+verified commit), the diff is nonempty/small and every changed path maps to a
+conservative tested integration domain or ordinary documentation. Each scoped
+run includes the required architecture, governance/aggregate and test-discovery
+checks. CI/workflow/security/unknown paths, changed data inputs, multiple commits,
+rebases, missing history or missing SHA all **fall back to FULL**, without any
+operator bypass. Draft scope is labelled `DRAFT_SCOPED`, has
+`full_suite_passed=false`, and cannot serve as full-suite evidence.
+
+Opening/reopening a PR, converting to Draft, `ready_for_review`, a ready PR
+`synchronize`, push to main, scheduled and manually dispatched workflows all
+run the **entire discovered suite**. The existing `python-reference` and
+caller-local `Aggregate CI gate` statuses remain required, and the ready event
+revalidates the exact requested commit before any merge. This scheduling
+optimization does not replace Gumball Proof Broker evidence, native UE tests,
+source/asset checks or whole-M3 visual acceptance.
+
+
 ### Gumball CI Cost Governor routing
 
 The classifier emits a machine-readable `ci_cost_class`:
