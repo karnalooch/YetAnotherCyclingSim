@@ -29,7 +29,7 @@ class NativeWitnessStageContractTests(unittest.TestCase):
 
     def test_accepted_world_hash_is_checked_on_both_sides(self):
         self.assertIn("CANONICAL_CHECKPOINT_MUTATED", self.script)
-        self.assertIn("CANONICAL_CHECKPOINT_MISSING", self.docs)
+        self.assertIn("five immutable checkpoint package hashes", self.docs)
         self.assertIn("$checkpoint = @(Check-CanonicalCheckpoint)", self.script)
         self.assertIn("$checkpointAfter = @(Check-CanonicalCheckpoint)", self.script)
 
