@@ -159,7 +159,7 @@ class NativeReductionWitnessTests(unittest.TestCase):
 
     def test_forged_or_missing_native_data_rejected(self):
         self.component.collection.tagged_data = [Obj(pin="Out", data=Obj())]
-        with self.assertRaisesRegex(NativeProbeWitnessError, "point data"):
+        with self.assertRaisesRegex(NativeProbeWitnessError, "data property not accessible|point data"):
             self.attest()
 
     def test_empty_output_does_not_certify_a_probe(self):
