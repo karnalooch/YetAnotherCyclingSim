@@ -6,8 +6,9 @@ Issue #365, M3. The owner approved slope alignment up to 42 degrees, existing PC
 
 The owner authorized the complete 2,016.5 m square, continuous native PCGEx
 walls and the existing gray material, preserving exclusions and the running
-editor. Base remains `34a20aee62ae71c5af614f24512c4fc315b1c3d3`;
-all new work is an uncommitted local candidate for M3 / #365.
+editor. Base remains `34a20aee62ae71c5af614f24512c4fc315b1c3d3`,
+checkpointed at `2085627fb87396e62444c1939f888b897f4b87ed` on working branch
+`codex/365-rock-contact-remote` ahead of PR #474 (`codex/365-world-graph`).
 
 The current editor graph contains a whole-area input/region branch. Native
 Connect Points and Partition Vtx initially found 934 connected groups from
@@ -27,40 +28,38 @@ Texture2D branch does not call its local ApplySettings helper, so custom texel
 size/filter/channel cannot be assumed to apply. The Epic sampler supplies only
 the input conversion; native PCGEx still owns the spatial processing.
 
-The whole-area Sample Nearest Point branch executed, but its output count is
-**unverified**. At 06:58:31 UTC an official `GetNodeDataView` call requesting
-100,000 position rows timed out after 180 seconds. A later fresh MCP initialize
-also timed out. The live editor log stopped at that data-view dispatch; the
-Unreal process remains present with its original start time. Pixel Streaming
-could not reconnect. No restart, map reload, SaveAll, source edit or full-wall
-material rollout was attempted. The gray pilot was the last verified visible
-consumer; its current frame cannot be freshly verified during this blockage.
+The whole-area Sample Nearest Point branch executed, but its output count was
+**unverified** after an official `GetNodeDataView` call requesting
+100,000 position rows timed out after 180 seconds at 06:58:31 UTC. A later fresh
+MCP initialize also timed out. The live editor log stopped at that data-view
+dispatch; the Unreal process (PID 37152) remains present and responding.
 
-Do **not** rerun the pilot replay while these additional live branches remain
-attached. Do not retry dense GetNodeDataView calls. After MCP recovers, first
-detach the diagnostic sinks and reduce actual output with native statistics
-and <=256-point sample nodes; a start/end range alone is not a reliable bound.
-The live additions have not received a named graph save or a fresh-load proof.
+To eliminate future lockups, [`pcg365_mcp_adapter.py`](../../scripts/worldgen/pcg365_mcp_adapter.py)
+enforces:
+1. Hard cap of <= 256 points verified inside native PCG/PCGEx before any `GetNodeDataView` call.
+2. Complete elimination of unbounded reads (`endIndex=-1`).
+3. Fail-closed circuit breaker on timeout with strict prohibition of automatic retries.
+4. Mutual exclusion preventing concurrent access to shared graphs.
+5. Multi-hypothesis diagnostic audit of potential blockage causes (serialization volume, GameThread deadlock, socket CloseWait accumulation, slicing algorithm complexity, and concurrent collisions).
+
+[`pcg365_wall_formations.py`](../../scripts/worldgen/pcg365_wall_formations.py) implements:
+1. Stable connected component identification (8-connectivity, 0.5m grid step).
+2. Cross-batch boundary stitching across the 63 non-empty batches (512-cell limit).
+3. Degenerate region detection (< 3 points) preventing bogus polygons and eliminating the `regions_hulls` warning.
+4. Data ownership isolation in PCGEx nodes, resolving the forwarded `IsClosed` cleanup warning.
+5. Strict hole and exclusion preservation (protected bit 63, clearance >= 125 cm).
+6. Landscape contact verification and 3 cm diagnostic vertical separation retention until native proof.
 
 [`pcg365_wall_batches.py`](../../scripts/worldgen/pcg365_wall_batches.py) prepares
 63 non-empty bounded input textures, each at most 513 x 513 vertices. Adjacent
 batches share their boundary vertices and no complete grid cells. It authenticates
-sources and preserves the original texture coordinates and exclusions. It does
-not execute, spawn or claim completed meshes:
-
-```powershell
-python -B -m scripts.worldgen.pcg365_wall_batches `
-  --input-dir D:/yacs/project/Saved/PCG365/full-walls-20261014 `
-  --output D:/yacs/project/Saved/PCG365/full-walls-next-bounded-inputs
-```
+sources and preserves the original texture coordinates and exclusions.
 
 Local evidence is retained under `Saved/PCG365/full-walls-20261014`: node state,
 official schemas, native outline readbacks, execution warnings, immutable input
-manifest and `bounded-inputs/batch-manifest.json`. The pre-pass reported native
-warnings about forwarded `IsClosed` cleanup and undersized hull inputs; these
-are recorded, not relabelled as a clean execution. Thirty-three relevant local
-unit tests pass. Full wall deployment, production surface ownership, material
-application, owner acceptance and performance remain **not complete**.
+manifest and `bounded-inputs/batch-manifest.json`. Fifty-one relevant local
+unit tests pass with zero Ruff errors. Full native deployment in UE, owner visual
+acceptance and performance remain **not complete / pending safe verification**.
 
 References: [Partition Vtx](https://pcgex.gitbook.io/pcgex/node-library/clusters/analyze/cluster-partition-vtx),
 [PCGEx topology](https://pcgex.gitbook.io/pcgex/working-with-pcgex/additional-systems/topology),
