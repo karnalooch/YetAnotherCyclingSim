@@ -123,15 +123,6 @@ FString UYacsPcgWitnessInspectionLibrary::InspectReducedNodeOutput(
 
     if (!SourceNode)
     {
-        SourceNode = FindObject<UPCGNode>(nullptr, *InSourceNodePath);
-    }
-    if (!ReductionNode)
-    {
-        ReductionNode = FindObject<UPCGNode>(nullptr, *InReductionNodePath);
-    }
-
-    if (!SourceNode)
-    {
         return MakeErrorJson(TEXT("SOURCE_NODE_NOT_FOUND"), FString::Printf(TEXT("Source node not found in graph: %s"), *InSourceNodePath));
     }
     if (!ReductionNode)
