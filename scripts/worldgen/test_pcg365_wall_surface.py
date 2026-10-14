@@ -9,14 +9,15 @@ from unittest.mock import MagicMock, patch
 import unittest
 
 from scripts.worldgen import pcg365_pcgex_graph as g
-from scripts.worldgen import pcg365_whole_area as w
 from scripts.worldgen.pcg365_wall_surface import (
     FOLDER,
     INPUT_SHA,
+    ROLLOUT_MAP,
     SURFACE_SHA,
     check_continuous_surface,
     check_normal_transfer,
     replay,
+    require_native_wall_admission,
 )
 
 
@@ -154,7 +155,7 @@ class WallProofTests(unittest.TestCase):
                 "normal_transfer_wired": True,
                 "merged_mesh_wired": True,
                 "nodes": state_nodes,
-                "instance": {"actor": {"refPath": "/Game/Generated/YACS/PCG365Ex/WallSurface/Pilot01.Actor"}},
+                "instance": {"actor": {"refPath": ROLLOUT_MAP + ".PCG365_WallSurface_Pilot"}},
             }
             state_path = tmp_dir / "state.json"
             state_path.write_text(json.dumps(state))
@@ -201,7 +202,7 @@ class WallProofTests(unittest.TestCase):
 
             def mock_author_call(author_self, group, name, args):
                 if name == "get_current_level":
-                    return w.MAP
+                    return ROLLOUT_MAP
                 if name == "find_actors":
                     actor_type = args.get("actor_type", {}).get("refPath", "")
                     if "PCGVolume" in actor_type:
@@ -318,96 +319,157 @@ class WallProofTests(unittest.TestCase):
 
 class WallAdmissionGateTests(unittest.TestCase):
     def setUp(self):
-        from scripts.ue.pcg365_native_reduction_witness import NativeProbeWitness
+        from scripts.ue.pcg365_native_reduction_witness import (
+            NativeProbeWitness,
+            compute_witness_token,
+            get_live_editor_pid,
+        )
         from scripts.worldgen.pcg365_bounded_transport import BoundedPcgMcpClient
+        self.pid = get_live_editor_pid() or 0
+        self.gen_token = "valid_generation_token"
+        self.actor_path = ROLLOUT_MAP + ".PCGVolume"
+        self.graph_path = "/Game/PCG/Graph.Graph"
+        self.reduction_node_path = "/Game/PCG/Graph.Graph:Reduce"
+        auth = compute_witness_token(
+            self.actor_path,
+            self.graph_path,
+            self.reduction_node_path,
+            1,
+            self.pid,
+            self.gen_token,
+        )
         self.witness = NativeProbeWitness(
-            actor_path="/Game/PCG/Actor.Actor",
-            graph_path="/Game/PCG/Graph.Graph",
+            actor_path=self.actor_path,
+            graph_path=self.graph_path,
             source_node_path="/Game/PCG/Graph.Graph:Source",
-            reduction_node_path="/Game/PCG/Graph.Graph:Reduce",
+            reduction_node_path=self.reduction_node_path,
             reduction_class="PCGExPointsToBoundsSettings",
             output_pin="Out",
             native_point_count=1,
             tagged_data_count=1,
+            session_pid=self.pid,
+            generation_token=self.gen_token,
             status="NATIVE_IN_PROCESS_OUTPUT_COUNTED",
+            auth_token=auth,
         )
         self.client = BoundedPcgMcpClient()
 
     def test_admission_passes_with_authentic_witness_and_client(self):
-        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
         self.assertTrue(require_native_wall_admission(
             witness=self.witness,
             bounded_client=self.client,
-            target_map_package="/Game/Generated/YACS/PCG365Ex/WholeArea/L_PCG365_Rollout",
+            target_map_package=ROLLOUT_MAP,
+            actor_path=self.actor_path,
         ))
 
     def test_admission_rejects_none(self):
-        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_MCP_UNVERIFIED"):
             require_native_wall_admission()
 
+    def test_admission_rejects_target_map_none(self):
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_TARGET_MAP_REQUIRED"):
+            require_native_wall_admission(
+                witness=self.witness,
+                bounded_client=self.client,
+                target_map_package=None,
+            )
+
     def test_admission_rejects_dict_witness(self):
-        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_INVALID_WITNESS"):
             require_native_wall_admission(
                 witness={"native_point_count": 1},
                 bounded_client=self.client,
+                target_map_package=ROLLOUT_MAP,
+            )
+
+    def test_admission_rejects_forged_witness(self):
+        from dataclasses import replace
+        bad_witness = replace(self.witness, auth_token="forged_signature_value")
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_FORGED_WITNESS"):
+            require_native_wall_admission(
+                witness=bad_witness,
+                bounded_client=self.client,
+                target_map_package=ROLLOUT_MAP,
+            )
+
+    def test_admission_rejects_wrong_session_pid(self):
+        from dataclasses import replace
+        bad_witness = replace(self.witness, session_pid=999999)
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_FORGED_WITNESS|NATIVE_BLOCKED_SESSION_MISMATCH"):
+            require_native_wall_admission(
+                witness=bad_witness,
+                bounded_client=self.client,
+                target_map_package=ROLLOUT_MAP,
             )
 
     def test_admission_rejects_uncounted_status(self):
         from dataclasses import replace
-        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
-        bad_witness = replace(self.witness, status="UNVERIFIED_ESTIMATE")
+        from scripts.ue.pcg365_native_reduction_witness import compute_witness_token
+        auth = compute_witness_token(self.actor_path, self.graph_path, self.reduction_node_path, 1, self.pid, self.gen_token)
+        bad_witness = replace(self.witness, status="UNVERIFIED_ESTIMATE", auth_token=auth)
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_UNCONFIRMED_STATUS"):
             require_native_wall_admission(
                 witness=bad_witness,
                 bounded_client=self.client,
+                target_map_package=ROLLOUT_MAP,
             )
 
     def test_admission_rejects_unsafe_point_count(self):
         from dataclasses import replace
-        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
-        bad_witness = replace(self.witness, native_point_count=257)
+        from scripts.ue.pcg365_native_reduction_witness import compute_witness_token
+        auth = compute_witness_token(self.actor_path, self.graph_path, self.reduction_node_path, 257, self.pid, self.gen_token)
+        bad_witness = replace(self.witness, native_point_count=257, auth_token=auth)
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_UNSAFE_COUNT"):
             require_native_wall_admission(
                 witness=bad_witness,
                 bounded_client=self.client,
+                target_map_package=ROLLOUT_MAP,
             )
 
     def test_admission_rejects_non_settings_class(self):
         from dataclasses import replace
-        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
-        bad_witness = replace(self.witness, reduction_class="PCGExCustomNode")
+        from scripts.ue.pcg365_native_reduction_witness import compute_witness_token
+        auth = compute_witness_token(self.actor_path, self.graph_path, self.reduction_node_path, 1, self.pid, self.gen_token)
+        bad_witness = replace(self.witness, reduction_class="PCGExCustomNode", auth_token=auth)
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_INVALID_SETTINGS"):
             require_native_wall_admission(
                 witness=bad_witness,
                 bounded_client=self.client,
+                target_map_package=ROLLOUT_MAP,
             )
 
     def test_admission_rejects_untrusted_transport(self):
-        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_UNTRUSTED_TRANSPORT"):
             require_native_wall_admission(
                 witness=self.witness,
                 bounded_client=object(),
+                target_map_package=ROLLOUT_MAP,
             )
 
     def test_admission_rejects_poisoned_transport(self):
-        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
         self.client._poisoned = True
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_POISONED_TRANSPORT"):
             require_native_wall_admission(
                 witness=self.witness,
                 bounded_client=self.client,
+                target_map_package=ROLLOUT_MAP,
             )
 
     def test_admission_rejects_canonical_source_map_mutation(self):
-        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_PROTECTED_SOURCE_MAP"):
             require_native_wall_admission(
                 witness=self.witness,
                 bounded_client=self.client,
                 target_map_package="/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface",
+            )
+
+    def test_admission_rejects_actor_assigned_to_wrong_level(self):
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_ACTOR_LEVEL_MISMATCH"):
+            require_native_wall_admission(
+                witness=self.witness,
+                bounded_client=self.client,
+                target_map_package=ROLLOUT_MAP,
+                actor_path="/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.ForeignActor",
             )
 
 

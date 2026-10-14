@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import base64
 import gzip
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -129,12 +130,39 @@ def check_continuous_surface(source, flat, ground, encoded, mesh, edges, edge_pr
 
 
 ROLLOUT_MAP = "/Game/Generated/YACS/PCG365Ex/WholeArea/L_PCG365_Rollout"
+CANONICAL_CHECKPOINT_DIR = Path("D:/yacs/work/level-editor-review/b9fddea3f602-y473save01/Content/Generated/YACS/LiveCheckpoints/R2a00f7ebba40")
+CANONICAL_CHECKPOINTS = {
+    "L_RoadSurface.umap": "cf806999d73e6762ba6d91fab8b4e29d6c475a828ad9afcd525462054602ed1a",
+    "M_Road.uasset": "d5bf7fdc7d34e70c30b29ec37d2f4c04afa01cd3dc9a9c12cec707be48078842",
+    "M_Shoulder.uasset": "94c40717a34d2b18f6d706abc7714cb6cbfb4ed0d631dda8bd1c624c38e7ae65",
+    "MI_Road.uasset": "7d96a2396bb8ef9e5d4d19d65b6c7e9d00e7b0e80ebd5ff5733dbab1a61e9a92",
+    "MI_Shoulder.uasset": "76425a2289c3907a8f3c831ad24fb1ba1f219e79204507efdce222c831c76cdf",
+}
+
+
+def verify_canonical_checkpoint_integrity(checkpoint_dir: Path | None = None) -> bool:
+    target_dir = checkpoint_dir or CANONICAL_CHECKPOINT_DIR
+    if not target_dir.is_dir():
+        return True
+    for filename, expected_hash in CANONICAL_CHECKPOINTS.items():
+        file_path = target_dir / filename
+        if not file_path.is_file():
+            raise RuntimeError(f"CANONICAL_CHECKPOINT_MISSING: {file_path}")
+        with file_path.open("rb") as stream:
+            actual_hash = hashlib.file_digest(stream, "sha256").hexdigest()
+        if actual_hash != expected_hash:
+            raise RuntimeError(
+                f"CANONICAL_CHECKPOINT_MUTATED: {filename} sha256 mismatch (expected {expected_hash}, got {actual_hash})"
+            )
+    return True
 
 
 def require_native_wall_admission(
     witness: Any = None,
     bounded_client: Any = None,
     target_map_package: str | None = None,
+    actor_path: str | None = None,
+    checkpoint_dir: Path | None = None,
 ) -> bool:
     """Fail before creating an MCP client or modifying the running owner scene.
 
@@ -144,7 +172,11 @@ def require_native_wall_admission(
     3. Witness point count must be bounded: 1 <= native_point_count <= 256.
     4. Reduction settings class must be a valid PCG/PCGEx reduction class.
     5. A valid, unpoisoned BoundedPcgMcpClient must be provided.
-    6. Protected source map L_RoadSurface must NEVER be targeted for writing or mutation.
+    6. Target map package is MANDATORY. None is unconditionally rejected.
+    7. Protected source map L_RoadSurface must NEVER be targeted for writing or mutation.
+    8. Target map package must EXACTLY match canonical rollout map L_PCG365_Rollout.
+    9. Actor must strictly belong to target map package (no foreign or source actors).
+    10. 5 canonical checkpoint packages must pass SHA256 integrity verification.
     """
     if witness is None or bounded_client is None:
         raise RuntimeError(
@@ -152,12 +184,50 @@ def require_native_wall_admission(
             "bounded-probe evidence, transport and graph provenance are independently proved"
         )
 
-    from scripts.ue.pcg365_native_reduction_witness import NativeProbeWitness
+    if target_map_package is None:
+        raise RuntimeError(
+            "NATIVE_BLOCKED_TARGET_MAP_REQUIRED: target_map_package is mandatory; None is prohibited"
+        )
+
+    if "L_RoadSurface" in target_map_package and "Rollout" not in target_map_package:
+        raise RuntimeError(
+            f"NATIVE_BLOCKED_PROTECTED_SOURCE_MAP: cannot target canonical source map {target_map_package!r} for mutation"
+        )
+
+    if target_map_package != ROLLOUT_MAP:
+        raise RuntimeError(
+            f"NATIVE_BLOCKED_INVALID_TARGET_MAP: target map must be exact rollout map {ROLLOUT_MAP!r}, got {target_map_package!r}"
+        )
+
+    if actor_path is not None:
+        if not (actor_path.startswith(ROLLOUT_MAP + ".") or actor_path.startswith(ROLLOUT_MAP + ":")):
+            raise RuntimeError(
+                f"NATIVE_BLOCKED_ACTOR_LEVEL_MISMATCH: actor {actor_path!r} does not belong to target map {ROLLOUT_MAP!r}"
+            )
+
+    verify_canonical_checkpoint_integrity(checkpoint_dir)
+
+    from scripts.ue.pcg365_native_reduction_witness import (
+        NativeProbeWitness,
+        get_live_editor_pid,
+        verify_witness_authenticity,
+    )
     from scripts.worldgen.pcg365_bounded_transport import BoundedPcgMcpClient
 
     if not isinstance(witness, NativeProbeWitness):
         raise RuntimeError(
             "NATIVE_BLOCKED_INVALID_WITNESS: witness must be an authentic NativeProbeWitness instance"
+        )
+
+    active_pid = get_live_editor_pid()
+    if not verify_witness_authenticity(witness, expected_pid=witness.session_pid):
+        raise RuntimeError(
+            "NATIVE_BLOCKED_FORGED_WITNESS: witness failed cryptographic authenticity verification"
+        )
+
+    if active_pid is not None and witness.session_pid != 0 and witness.session_pid != active_pid:
+        raise RuntimeError(
+            f"NATIVE_BLOCKED_SESSION_MISMATCH: witness session PID {witness.session_pid} does not match active editor PID {active_pid}"
         )
 
     if witness.status != "NATIVE_IN_PROCESS_OUTPUT_COUNTED":
@@ -185,27 +255,32 @@ def require_native_wall_admission(
             "NATIVE_BLOCKED_POISONED_TRANSPORT: bounded client is in poisoned state"
         )
 
-    if target_map_package is not None and "L_RoadSurface" in target_map_package and "Rollout" not in target_map_package:
-        raise RuntimeError(
-            f"NATIVE_BLOCKED_PROTECTED_SOURCE_MAP: cannot target canonical source map {target_map_package!r} for mutation"
-        )
-
     return True
 
 
 def replay(state_path, source_path, surface_path, adapter_path, material_path,
            camera_path, output, hide_after=False, native_probe_receipts=None,
-           witness=None, bounded_client=None, target_map=None):
-    # Must run BEFORE any disk output, Client.initialize, graph execution or save.
+           witness=None, bounded_client=None, target_map=ROLLOUT_MAP):
+    if target_map is None:
+        raise RuntimeError("NATIVE_BLOCKED_TARGET_MAP_REQUIRED: target_map cannot be None")
+
+    # Must run BEFORE any disk output, Client.initialize, graph execution or file loading.
     require_native_wall_admission(
         witness=witness,
         bounded_client=bounded_client,
         target_map_package=target_map,
+        actor_path=None,
     )
+    state = json.loads(state_path.read_text())
+    actor_ref = state.get("instance", {}).get("actor")
+    actor_path = actor_ref["refPath"] if isinstance(actor_ref, dict) else str(actor_ref) if actor_ref else None
+    if actor_path is not None and not (actor_path.startswith(target_map + ".") or actor_path.startswith(target_map + ":")):
+        raise RuntimeError(
+            f"NATIVE_BLOCKED_ACTOR_LEVEL_MISMATCH: actor {actor_path!r} does not belong to target map {target_map!r}"
+        )
     g.require(not output.exists(), "Preserve earlier evidence; output must be new")
     g.require(w.digest(source_path) == INPUT_SHA, "Pilot source input changed")
     surface = validate_surface(surface_path)
-    state = json.loads(state_path.read_text())
     adapter = json.loads(adapter_path.read_text())
     material = json.loads(material_path.read_text())
     g.require(state["input_sha256"] == INPUT_SHA, "Graph input identity differs")
@@ -231,7 +306,7 @@ def replay(state_path, source_path, surface_path, adapter_path, material_path,
     a.state["wall_recipe_revision"] = REVISION
     a.save()
     (output / "schemas").mkdir()
-    expected_map = target_map if target_map is not None else w.MAP
+    expected_map = target_map
     g.require(a.call(g.SCENE, "get_current_level", {}) == expected_map, "Owner's current map changed")
     actors = w.find(a, "/Script/PCG.PCGVolume")
     g.require(state["instance"]["actor"] in actors, "Existing pilot actor is missing")
@@ -336,6 +411,7 @@ def replay(state_path, source_path, surface_path, adapter_path, material_path,
     g.require(len(final_components) == 1 and a.call(g.OBJECT, "get_properties", dict(instance=final_components[0], properties=["bVisible"]))["bVisible"] == (not hide_after), "Pilot visibility differs")
     proof.update(native_recipe_sha256=w.digest(Path(__file__).with_name("pcg365_wall_nodes.py")), source_input_sha256=INPUT_SHA, surface_input_sha256=SURFACE_SHA, recipe_revision=REVISION, producer_sha256=w.digest(__file__), road_actor_count=len(roads), graph_saved=True)
     g.require(a.call(g.ASSET, "save_assets", dict(asset_paths=[FOLDER+"/PCG365_WallSurface", adapter["path"], material["path"], material["instance_path"]])), "Owned graph/adapter/material save failed")
+    verify_canonical_checkpoint_integrity()
     w.save(output / "native-proof.json", proof)
     print(json.dumps(proof), flush=True)
     return proof

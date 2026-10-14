@@ -12,13 +12,25 @@ established and bound to a bounded MCP connection.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import hmac
+import json
+import os
 from typing import Any
+import uuid
+
+from scripts.worldgen.pcg365_mcp_adapter import UnsafeMcpReadError
 
 MAX_PROBE_POINTS = 256
+_WITNESS_SECRET = os.urandom(32)
 
 
-class NativeProbeWitnessError(ValueError):
+class NativeProbeWitnessError(UnsafeMcpReadError, ValueError):
     """Native PCG graph, generation status or output ownership is unproved."""
+
+
+class NativeProbeWitnessBlockedError(NativeProbeWitnessError):
+    """Native buffer reader toolset is not deployed in running editor process."""
 
 
 @dataclass(frozen=True)
@@ -31,7 +43,57 @@ class NativeProbeWitness:
     output_pin: str
     native_point_count: int
     tagged_data_count: int
+    session_pid: int = 0
+    generation_token: str = ""
     status: str = "NATIVE_IN_PROCESS_OUTPUT_COUNTED"
+    auth_token: str = ""
+
+
+def get_live_editor_pid() -> int | None:
+    """Return the PID of the active UnrealEditor process, if running."""
+    try:
+        import psutil
+        for p in psutil.process_iter(["name", "pid"]):
+            if p.info["name"] and "UnrealEditor" in p.info["name"]:
+                return p.info["pid"]
+    except Exception:
+        pass
+    return None
+
+
+def compute_witness_token(
+    actor_path: str,
+    graph_path: str,
+    reduction_node_path: str,
+    count: int,
+    session_pid: int,
+    generation_token: str,
+) -> str:
+    """Compute HMAC token binding witness to session, object identity, and generation."""
+    msg = f"{actor_path}:{graph_path}:{reduction_node_path}:{count}:{session_pid}:{generation_token}".encode("utf-8")
+    return hmac.new(_WITNESS_SECRET, msg, hashlib.sha256).hexdigest()
+
+
+def verify_witness_authenticity(
+    witness: NativeProbeWitness,
+    expected_pid: int | None = None,
+) -> bool:
+    """Cryptographically verify that witness was produced by in-process attestation."""
+    if not isinstance(witness, NativeProbeWitness):
+        return False
+    if expected_pid is not None and witness.session_pid != 0 and witness.session_pid != expected_pid:
+        return False
+    if not witness.auth_token or not witness.generation_token:
+        return False
+    expected = compute_witness_token(
+        witness.actor_path,
+        witness.graph_path,
+        witness.reduction_node_path,
+        witness.native_point_count,
+        witness.session_pid,
+        witness.generation_token,
+    )
+    return hmac.compare_digest(witness.auth_token, expected)
 
 
 def _require(condition: bool, reason: str) -> None:
@@ -83,6 +145,7 @@ def attest_reduced_graph_output(
     reduction_node_path: str,
     reduction_class: str,
     output_pin: str = "Out",
+    session_pid: int | None = None,
 ) -> NativeProbeWitness:
     """Read the native count on a dedicated reduction graph's *output*, not a receipt.
 
@@ -91,6 +154,13 @@ def attest_reduced_graph_output(
     Require a single source -> reduction -> graph output chain; no bypasses,
     merged full-resolution output or opaque non-point dataset can be certified.
     """
+    # Strict safety check: prohibit synthetic proxy objects masquerading as native buffers
+    for obj, label in ((component, "Component"), (source_node, "SourceNode"), (reduction_node, "ReductionNode")):
+        if getattr(obj, "_is_synthetic_proxy", False) or type(obj).__name__ == "LiveUObjectProxy":
+            raise NativeProbeWitnessError(
+                f"SYNTHETIC_PROXY_PROHIBITED: LiveUObjectProxy cannot masquerade as native buffer for {label}"
+            )
+
     _require(all(isinstance(value, str) and value.startswith("/") for value in (
         actor_path, graph_path, source_node_path, reduction_node_path)),
         "Expected native object paths are missing")
@@ -162,17 +232,34 @@ def attest_reduced_graph_output(
         _require(total <= MAX_PROBE_POINTS, "Aggregated native output exceeds 256 points")
 
     _require(total > 0, "Native reduced probe output is empty")
+
+    pid = session_pid or get_live_editor_pid() or os.getpid()
+    gen_token = uuid.uuid4().hex
+    auth = compute_witness_token(
+        actor_path, graph_path, reduction_node_path, total, pid, gen_token
+    )
     return NativeProbeWitness(
-        actor_path=actor_path, graph_path=graph_path,
+        actor_path=actor_path,
+        graph_path=graph_path,
         source_node_path=source_node_path,
-        reduction_node_path=reduction_node_path, reduction_class=reduction_class,
-        output_pin=output_pin, native_point_count=total,
+        reduction_node_path=reduction_node_path,
+        reduction_class=reduction_class,
+        output_pin=output_pin,
+        native_point_count=total,
         tagged_data_count=len(tagged),
+        session_pid=pid,
+        generation_token=gen_token,
+        auth_token=auth,
     )
 
 
 class LiveUObjectProxy:
-    """Read-only reflection proxy for a live Unreal UObject queried via MCP."""
+    """Read-only reflection proxy for an Unreal UObject.
+
+    Marked with _is_synthetic_proxy = True to strictly prohibit masquerading
+    as a native GameThread buffer reader.
+    """
+    _is_synthetic_proxy = True
 
     def __init__(self, path: str | None = None, **kwargs: Any) -> None:
         self._path = path
@@ -219,150 +306,77 @@ def attest_live_reduced_node(
     output_pin: str = "Out",
     mcp_call_fn: Any = None,
     bounded_client: Any = None,
+    native_reader_fn: Any = None,
 ) -> NativeProbeWitness:
-    """Attest live reduction node by reading authentic properties from Unreal Engine."""
-    import json
+    """Attest live reduction node against authentic Unreal Engine process.
 
-    if mcp_call_fn is None:
-        from scripts.worldgen import pcg365_pcgex_graph as g
-        client = g.Client()
+    STRICT SAFETY GUARANTEE:
+    Never calls GetNodeDataView to synthesize a point count.
+    Never wraps MCP totalElements in a synthetic LiveUObjectProxy.
+    If native C++ GameThread buffer reader (UYacsPcgWitnessInspectionLibrary / toolset)
+    is not deployed in the running editor, this function FAILS CLOSED with
+    NativeProbeWitnessBlockedError("BLOCKED_PENDING_NATIVE_DEPLOYMENT").
+    """
+    live_pid = get_live_editor_pid()
 
-        def _default_call(toolset: str, name: str, args: dict[str, Any]) -> Any:
-            res = client.call("call_tool", {"toolset_name": toolset, "tool_name": name, "arguments": args})
-            return g.unpack(res)
-        mcp_call_fn = _default_call
+    # If an authentic native reader function is provided (e.g. from deployed C++ toolset or unit test)
+    if native_reader_fn is not None:
+        raw_result = native_reader_fn(
+            actor_path=actor_path,
+            graph_path=graph_path,
+            source_node_path=source_node_path,
+            reduction_node_path=reduction_node_path,
+            reduction_class=reduction_class,
+            output_pin=output_pin,
+        )
+        if isinstance(raw_result, str):
+            res_data = json.loads(raw_result)
+        else:
+            res_data = raw_result
 
-    if bounded_client is None:
-        from scripts.worldgen.pcg365_bounded_transport import BoundedPcgMcpClient
-        bounded_client = BoundedPcgMcpClient()
+        if res_data.get("status") != "NATIVE_IN_PROCESS_OUTPUT_COUNTED":
+            raise NativeProbeWitnessError(f"Native reader error: {res_data.get('error_code')} - {res_data.get('message')}")
 
-    # 1. Fetch graph structure
-    struct_res = mcp_call_fn("PCGToolset.PCGToolset", "GetGraphStructure", {"graph": {"refPath": graph_path}})
-    if not isinstance(struct_res, dict) or "returnValue" not in struct_res:
-        raise NativeProbeWitnessError(f"Failed to query structure for graph {graph_path!r}")
-    struct = struct_res["returnValue"]
+        count = res_data["native_point_count"]
+        _require(type(count) is int and 0 < count <= MAX_PROBE_POINTS,
+                 f"Native reader point count {count} out of bounds")
+        pid = res_data.get("session_pid") or live_pid or os.getpid()
+        gen_token = res_data.get("generation_token", uuid.uuid4().hex)
+        auth = compute_witness_token(actor_path, graph_path, reduction_node_path, count, pid, gen_token)
+        return NativeProbeWitness(
+            actor_path=actor_path,
+            graph_path=graph_path,
+            source_node_path=source_node_path,
+            reduction_node_path=reduction_node_path,
+            reduction_class=reduction_class,
+            output_pin=output_pin,
+            native_point_count=count,
+            tagged_data_count=res_data.get("tagged_data_count", 1),
+            session_pid=pid,
+            generation_token=gen_token,
+            auth_token=auth,
+        )
 
-    graph_proxy = LiveUObjectProxy(graph_path)
-
-    reduction_short_name = reduction_node_path.rsplit(":", 1)[-1]
-    source_short_name = source_node_path.rsplit(":", 1)[-1]
-
-    nodes_by_name: dict[str, LiveUObjectProxy] = {}
-    for node_info in struct.get("nodes", []):
-        name = node_info["name"]
-        path = node_info["path"]
-        settings_proxy = None
-        path_suffix = path.rsplit(":", 1)[-1]
-        if name == reduction_short_name or path_suffix == reduction_short_name:
-            s_raw = mcp_call_fn("editor_toolset.toolsets.object.ObjectTools", "get_properties", {
-                "instance": {"refPath": path},
-                "properties": ["settingsInterface"],
-            })
-            if not isinstance(s_raw, dict) or "returnValue" not in s_raw:
-                raise NativeProbeWitnessError(f"Failed to query settingsInterface for {path!r}")
-            s_obj = json.loads(s_raw["returnValue"]).get("settingsInterface")
-            if not s_obj or "refPath" not in s_obj:
-                raise NativeProbeWitnessError(f"settingsInterface missing refPath on {path!r}")
-            cls_raw = mcp_call_fn("editor_toolset.toolsets.object.ObjectTools", "get_class", {"instance": s_obj})
-            if not isinstance(cls_raw, dict) or "returnValue" not in cls_raw:
-                raise NativeProbeWitnessError(f"Failed to query settings class for {path!r}")
-            cls_name = cls_raw["returnValue"]["refPath"].rsplit(".", 1)[-1]
-            settings_proxy = LiveUObjectProxy(
-                s_obj["refPath"],
-                get_class=lambda c=cls_name: LiveUObjectProxy(get_name=lambda: c),
-            )
-
-        np = LiveUObjectProxy(path, get_graph=lambda: graph_proxy, get_settings=lambda sp=settings_proxy: sp)
-        nodes_by_name[name] = np
-        path_suffix = path.rsplit(":", 1)[-1]
-        nodes_by_name[path_suffix] = np
-
-    _require(source_short_name in nodes_by_name, f"Source node {source_short_name!r} not found in graph")
-    _require(reduction_short_name in nodes_by_name, f"Reduction node {reduction_short_name!r} not found in graph")
-
-    for dest_name, np in nodes_by_name.items():
-        incoming = []
-        for edge in struct.get("edges", []):
-            if edge.get("destNode") == dest_name:
-                src_n = nodes_by_name.get(edge.get("srcNode"))
-                if src_n is not None:
-                    incoming.append(LiveUObjectProxy(get_input_node=lambda s=src_n: s))
-        pin_proxy = LiveUObjectProxy(edges=incoming)
-        np._props["input_pins"] = [pin_proxy]
-
-    output_node_info = next((n for n in struct.get("nodes", []) if n.get("nodeType") == "Output Node" or n.get("name") == "DefaultOutputNode"), None)
-    _require(output_node_info is not None, "Graph output node missing from graph structure")
-    output_proxy = nodes_by_name[output_node_info["name"]]
-    graph_proxy._props["get_output_node"] = lambda: output_proxy
-
-    # 2. Fetch component state
-    comp_path = actor_path + ".PCG Component"
-    comp_props_res = mcp_call_fn("editor_toolset.toolsets.object.ObjectTools", "get_properties", {
-        "instance": {"refPath": comp_path},
-        "properties": ["bGenerated", "bGenerationInProgress", "bDirtyGenerated"],
-    })
-    if not isinstance(comp_props_res, dict) or "returnValue" not in comp_props_res:
-        raise NativeProbeWitnessError(f"Failed to read properties of component {comp_path!r}")
-    comp_props = json.loads(comp_props_res["returnValue"])
-
-    # 3. Read native point count via bounded client
-    view = bounded_client.call_bounded(
-        "PCGToolset.PCGToolset",
-        "GetNodeDataView",
-        {
-            "pCGVolume": {"refPath": actor_path},
-            "node": {"refPath": reduction_node_path},
-            "pinLabel": output_pin,
-            "attributeName": "",
-            "startIndex": 0,
-            "endIndex": 1,
-        },
-        timeout_seconds=10.0,
-        max_response_bytes=1048576,
-    )
-    if not isinstance(view, dict) or "totalElements" not in view:
-        raise NativeProbeWitnessError("Bounded GetNodeDataView did not return totalElements")
-    point_count = view["totalElements"]
-
-    data_proxy = LiveUObjectProxy(get_num_points=lambda: point_count)
-    tagged_entry = LiveUObjectProxy(pin=output_pin, data=LiveUObjectProxy(data=data_proxy))
-    collection_proxy = LiveUObjectProxy(tagged_data=[tagged_entry])
-
-    actor_proxy = LiveUObjectProxy(actor_path)
-    gi_proxy = LiveUObjectProxy(get_const_pcg_graph=lambda: graph_proxy)
-    comp_proxy = LiveUObjectProxy(
-        comp_path,
-        get_owner=lambda: actor_proxy,
-        graph_instance=gi_proxy,
-        bGenerated=comp_props.get("bGenerated", False),
-        bGenerationInProgress=comp_props.get("bGenerationInProgress", True),
-        bDirtyGenerated=comp_props.get("bDirtyGenerated", True),
-        get_generated_graph_output=lambda: collection_proxy,
-    )
-
-    return attest_reduced_graph_output(
-        comp_proxy,
-        nodes_by_name[source_short_name],
-        nodes_by_name[reduction_short_name],
-        actor_path=actor_path,
-        graph_path=graph_path,
-        source_node_path=source_node_path,
-        reduction_node_path=reduction_node_path,
-        reduction_class=reduction_class,
-        output_pin=output_pin,
+    # In production without deployed native buffer reader C++ toolset:
+    # Strictly fail closed. Hot-reload and editor restart are prohibited.
+    raise NativeProbeWitnessBlockedError(
+        f"BLOCKED_PENDING_NATIVE_DEPLOYMENT: authentic native buffer reader "
+        f"(UYacsPcgWitnessInspectionLibrary / YacsPcgWitnessToolset) is not deployed in "
+        f"running editor PID {live_pid or 'unknown'}; hot-reload and editor restart are prohibited"
     )
 
 
 def create_live_pcg_reduction_verifier(
     mcp_call_fn: Any = None,
     bounded_client: Any = None,
+    native_reader_fn: Any = None,
 ) -> Any:
     """Factory returning an authenticated reduction verifier for SafeMcpAdapter."""
     def _verifier(actor: Any, node: Any, reduction_proof: dict[str, Any]) -> int:
         act_path = actor["refPath"] if isinstance(actor, dict) else str(actor)
         nd_path = node["refPath"] if isinstance(node, dict) else str(node)
         graph_path = nd_path.split(":", 1)[0]
-        source_name = reduction_proof["source_node"]
+        source_name = reduction_proof.get("source_node", "")
         source_node_path = f"{graph_path}:{source_name}"
         reduction_class = reduction_proof.get("reduction_class", "PCGExPointsToBoundsSettings")
         witness = attest_live_reduced_node(
@@ -374,7 +388,7 @@ def create_live_pcg_reduction_verifier(
             output_pin="Out",
             mcp_call_fn=mcp_call_fn,
             bounded_client=bounded_client,
+            native_reader_fn=native_reader_fn,
         )
         return witness.native_point_count
     return _verifier
-

@@ -203,41 +203,104 @@ class LiveWitnessProxyTests(unittest.TestCase):
         with self.assertRaises(AttributeError):
             proxy.get_editor_property("unknown_prop")
 
-    def test_attest_live_reduced_node_success(self):
+    def test_reject_synthetic_proxy_as_native_buffer(self):
+        from scripts.ue.pcg365_native_reduction_witness import (
+            LiveUObjectProxy,
+            NativeProbeWitnessError,
+            attest_reduced_graph_output,
+        )
+        proxy_comp = LiveUObjectProxy("/Game/PCG.Component")
+        proxy_source = LiveUObjectProxy(SOURCE)
+        proxy_reduction = LiveUObjectProxy(REDUCE)
+        with self.assertRaisesRegex(NativeProbeWitnessError, "SYNTHETIC_PROXY_PROHIBITED"):
+            attest_reduced_graph_output(
+                proxy_comp, proxy_source, proxy_reduction,
+                actor_path=ACTOR, graph_path=GRAPH,
+                source_node_path=SOURCE, reduction_node_path=REDUCE,
+                reduction_class=SETTINGS,
+            )
+
+    def test_reject_mcp_total_elements_as_independent_proof(self):
+        """Attesting a live node without deployed native GameThread reader FAILS CLOSED."""
+        from scripts.ue.pcg365_native_reduction_witness import (
+            NativeProbeWitnessBlockedError,
+            attest_live_reduced_node,
+        )
+
+        with self.assertRaisesRegex(NativeProbeWitnessBlockedError, "BLOCKED_PENDING_NATIVE_DEPLOYMENT"):
+            attest_live_reduced_node(
+                actor_path=ACTOR,
+                graph_path=GRAPH,
+                source_node_path=GRAPH + ":SourceGrid",
+                reduction_node_path=REDUCE,
+                reduction_class=SETTINGS,
+                output_pin="Out",
+            )
+
+    def test_reject_manually_constructed_witness(self):
+        from scripts.ue.pcg365_native_reduction_witness import (
+            NativeProbeWitness,
+            verify_witness_authenticity,
+        )
+        fake_witness = NativeProbeWitness(
+            actor_path=ACTOR,
+            graph_path=GRAPH,
+            source_node_path=SOURCE,
+            reduction_node_path=REDUCE,
+            reduction_class=SETTINGS,
+            output_pin="Out",
+            native_point_count=1,
+            tagged_data_count=1,
+            session_pid=1234,
+            generation_token="fake_token",
+            auth_token="forged_token_attempt",
+        )
+        self.assertFalse(verify_witness_authenticity(fake_witness))
+
+    def test_reject_different_or_previous_session(self):
+        from scripts.ue.pcg365_native_reduction_witness import (
+            NativeProbeWitness,
+            compute_witness_token,
+            verify_witness_authenticity,
+        )
+        gen_token = "token123"
+        valid_auth = compute_witness_token(ACTOR, GRAPH, REDUCE, 10, 1111, gen_token)
+        witness_session_1111 = NativeProbeWitness(
+            actor_path=ACTOR,
+            graph_path=GRAPH,
+            source_node_path=SOURCE,
+            reduction_node_path=REDUCE,
+            reduction_class=SETTINGS,
+            output_pin="Out",
+            native_point_count=10,
+            tagged_data_count=1,
+            session_pid=1111,
+            generation_token=gen_token,
+            auth_token=valid_auth,
+        )
+        # Authentic for session 1111
+        self.assertTrue(verify_witness_authenticity(witness_session_1111, expected_pid=1111))
+        # REJECTED for session 2222
+        self.assertFalse(verify_witness_authenticity(witness_session_1111, expected_pid=2222))
+
+    def test_attest_live_reduced_node_with_deployed_reader(self):
         import json
         from scripts.ue.pcg365_native_reduction_witness import (
             attest_live_reduced_node,
-            create_live_pcg_reduction_verifier,
+            verify_witness_authenticity,
         )
 
-        def mock_call(toolset, name, args):
-            if name == "GetGraphStructure":
-                return {
-                    "returnValue": {
-                        "nodes": [
-                            {"name": "SourceGrid", "path": GRAPH + ":SourceGrid"},
-                            {"name": "ReducedNode", "path": REDUCE},
-                            {"name": "DefaultOutputNode", "path": GRAPH + ":DefaultOutputNode", "nodeType": "Output Node"},
-                        ],
-                        "edges": [
-                            {"srcNode": "SourceGrid", "destNode": "ReducedNode"},
-                            {"srcNode": "ReducedNode", "destNode": "DefaultOutputNode"},
-                        ],
-                    }
-                }
-            if name == "get_properties":
-                instance_path = args["instance"]["refPath"]
-                if "ReducedNode" in instance_path or "ReduceToBounds" in instance_path:
-                    return {"returnValue": json.dumps({"settingsInterface": {"refPath": REDUCE + ".Settings"}})}
-                if "PCG Component" in instance_path:
-                    return {"returnValue": json.dumps({"bGenerated": True, "bGenerationInProgress": False, "bDirtyGenerated": False})}
-            if name == "get_class":
-                return {"returnValue": {"refPath": "/Script/PCGExElementsSpatial." + SETTINGS}}
-            raise ValueError(f"Unexpected mock call: {toolset}.{name}")
-
-        class MockBoundedClient:
-            def call_bounded(self, toolset, name, args, **kwargs):
-                return {"totalElements": 42}
+        def mock_native_reader(**kwargs):
+            return json.dumps({
+                "status": "NATIVE_IN_PROCESS_OUTPUT_COUNTED",
+                "session_pid": 45868,
+                "actor_path": kwargs["actor_path"],
+                "graph_path": kwargs["graph_path"],
+                "reduction_node_path": kwargs["reduction_node_path"],
+                "native_point_count": 42,
+                "tagged_data_count": 1,
+                "generation_token": "gen_test_token_42",
+            })
 
         witness = attest_live_reduced_node(
             actor_path=ACTOR,
@@ -246,71 +309,22 @@ class LiveWitnessProxyTests(unittest.TestCase):
             reduction_node_path=REDUCE,
             reduction_class=SETTINGS,
             output_pin="Out",
-            mcp_call_fn=mock_call,
-            bounded_client=MockBoundedClient(),
+            native_reader_fn=mock_native_reader,
         )
         self.assertEqual(witness.native_point_count, 42)
-        self.assertEqual(witness.actor_path, ACTOR)
-        self.assertEqual(witness.reduction_node_path, REDUCE)
+        self.assertEqual(witness.session_pid, 45868)
+        self.assertTrue(verify_witness_authenticity(witness, expected_pid=45868))
 
-        # Verify through verifier factory
-        verifier = create_live_pcg_reduction_verifier(
-            mcp_call_fn=mock_call,
-            bounded_client=MockBoundedClient(),
+    def test_create_live_pcg_reduction_verifier_propagates_blocked(self):
+        from scripts.ue.pcg365_native_reduction_witness import (
+            NativeProbeWitnessBlockedError,
+            create_live_pcg_reduction_verifier,
         )
+        verifier = create_live_pcg_reduction_verifier()
         proof = {
             "source_node": "SourceGrid",
             "reduction_class": SETTINGS,
         }
-        count = verifier({"refPath": ACTOR}, {"refPath": REDUCE}, proof)
-        self.assertEqual(count, 42)
-
-    def test_attest_live_reduced_node_rejects_unstable_component(self):
-        import json
-        from scripts.ue.pcg365_native_reduction_witness import (
-            NativeProbeWitnessError,
-            attest_live_reduced_node,
-        )
-
-        def mock_call(toolset, name, args):
-            if name == "GetGraphStructure":
-                return {
-                    "returnValue": {
-                        "nodes": [
-                            {"name": "SourceGrid", "path": GRAPH + ":SourceGrid"},
-                            {"name": "ReducedNode", "path": REDUCE},
-                            {"name": "DefaultOutputNode", "path": GRAPH + ":DefaultOutputNode", "nodeType": "Output Node"},
-                        ],
-                        "edges": [
-                            {"srcNode": "SourceGrid", "destNode": "ReducedNode"},
-                            {"srcNode": "ReducedNode", "destNode": "DefaultOutputNode"},
-                        ],
-                    }
-                }
-            if name == "get_properties":
-                instance_path = args["instance"]["refPath"]
-                if "ReducedNode" in instance_path or "ReduceToBounds" in instance_path:
-                    return {"returnValue": json.dumps({"settingsInterface": {"refPath": REDUCE + ".Settings"}})}
-                if "PCG Component" in instance_path:
-                    # In progress!
-                    return {"returnValue": json.dumps({"bGenerated": True, "bGenerationInProgress": True, "bDirtyGenerated": False})}
-            if name == "get_class":
-                return {"returnValue": {"refPath": "/Script/PCGExElementsSpatial." + SETTINGS}}
-            raise ValueError(f"Unexpected mock call: {toolset}.{name}")
-
-        class MockBoundedClient:
-            def call_bounded(self, toolset, name, args, **kwargs):
-                return {"totalElements": 10}
-
-        with self.assertRaisesRegex(NativeProbeWitnessError, "stable, generated"):
-            attest_live_reduced_node(
-                actor_path=ACTOR,
-                graph_path=GRAPH,
-                source_node_path=GRAPH + ":SourceGrid",
-                reduction_node_path=REDUCE,
-                reduction_class=SETTINGS,
-                output_pin="Out",
-                mcp_call_fn=mock_call,
-                bounded_client=MockBoundedClient(),
-            )
+        with self.assertRaisesRegex(NativeProbeWitnessBlockedError, "BLOCKED_PENDING_NATIVE_DEPLOYMENT"):
+            verifier({"refPath": ACTOR}, {"refPath": REDUCE}, proof)
 

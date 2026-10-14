@@ -248,6 +248,34 @@ class SafeMcpAdapterTests(unittest.TestCase):
         # Total call count should still be 1 (no automatic retry!)
         self.assertEqual(self.mock_client.call_bounded.call_count, 1)
 
+    def test_reject_retries_after_timeout_or_poisoning(self):
+        proof = make_proof("probe_node", 64)
+        # 1. Transport poisoning causes immediate rejection and trips circuit breaker
+        self.mock_client._poisoned = True
+        with self.assertRaisesRegex(UnsafeMcpReadError, "POISONED_MCP_TRANSPORT"):
+            self.adapter.safe_get_node_data_view(
+                author_or_client=self.mock_client,
+                actor="test_actor",
+                node="probe_node",
+                node_name="probe_node",
+                reduction_proof=proof,
+                start_index=0,
+                end_index=64,
+            )
+        self.assertTrue(self.adapter.is_circuit_breaker_tripped)
+        # 2. Subsequent retry attempts are blocked fail-closed without dispatch
+        with self.assertRaises(McpCircuitBreakerError):
+            self.adapter.safe_get_node_data_view(
+                author_or_client=self.mock_client,
+                actor="test_actor",
+                node="probe_node",
+                node_name="probe_node",
+                reduction_proof=proof,
+                start_index=0,
+                end_index=64,
+            )
+        self.assertEqual(self.mock_client.call_bounded.call_count, 0)
+
     def test_concurrent_queued_caller_aborts_when_breaker_tripped_inside_lock(self):
         """When Thread 1 times out in lock, Thread 2 queued for lock must abort fail-closed."""
         first_call_started = threading.Event()

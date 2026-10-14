@@ -304,6 +304,11 @@ class SafeMcpAdapter:
                         "UNTRUSTED_MCP_TRANSPORT: only verified BoundedPcgMcpClient "
                         "is permitted for native GetNodeDataView"
                     )
+                if author_or_client.is_poisoned:
+                    self.trip_circuit_breaker("BoundedPcgMcpClient is in poisoned state")
+                    raise UnsafeMcpReadError(
+                        "POISONED_MCP_TRANSPORT: refusing dispatch on poisoned client"
+                    )
                 raw = bounded_call(
                     toolset, "GetNodeDataView", arguments,
                     timeout_seconds=self.timeout,
