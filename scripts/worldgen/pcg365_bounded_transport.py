@@ -214,7 +214,7 @@ class BoundedPcgMcpClient:
             raise ValueError("MCP probe actor/node requires native object references")
         start, end = arguments["startIndex"], arguments["endIndex"]
         if (type(start) is not int or type(end) is not int
-                or start < 0 or end < start or end >= 256
+                or start < 0 or end <= start or end > 256
                 or end - start + 1 > 256):
             raise ValueError("MCP probe indices exceed native reduced-data safety cap")
         if (not isinstance(arguments["pinLabel"], str)
