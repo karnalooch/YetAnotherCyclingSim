@@ -1,4 +1,7 @@
 #include "Containers/Ticker.h"
+#include "Editor.h"
+#include "Engine/Engine.h"
+#include "Engine/World.h"
 #include "Modules/ModuleManager.h"
 #include "PCG/YacsPcgWitnessToolset.h"
 #include "ToolsetRegistry/UToolsetRegistry.h"
@@ -38,7 +41,8 @@ public:
 		if (bOwnsRegistration && IsInGameThread() && UToolsetRegistry::IsAvailable())
 		{
 			UClass* ToolsetClass = UYacsPcgWitnessToolset::StaticClass();
-			if (UToolsetRegistry::IsToolsetClassRegistered(ToolsetClass))
+			const FString ToolsetName = TEXT("YetAnotherCyclingSimEditor.YacsPcgWitnessToolset");
+			if (UToolsetRegistry::IsToolsetRegistered(ToolsetName) || UToolsetRegistry::IsToolsetClassRegistered(ToolsetClass))
 			{
 				UToolsetRegistry::UnregisterToolsetClass(ToolsetClass);
 				UE_LOG(LogYacsPcg365Witness, Display, TEXT("PCG365_WITNESS_TOOLSET_UNREGISTERED"));
@@ -61,12 +65,15 @@ private:
 		}
 
 		UClass* ToolsetClass = UYacsPcgWitnessToolset::StaticClass();
-		const bool bPreviouslyRegistered = UToolsetRegistry::IsToolsetClassRegistered(ToolsetClass);
+		const FString ToolsetName = TEXT("YetAnotherCyclingSimEditor.YacsPcgWitnessToolset");
+		const bool bPreviouslyRegistered = UToolsetRegistry::IsToolsetRegistered(ToolsetName) ||
+			UToolsetRegistry::IsToolsetClassRegistered(ToolsetClass);
 		if (!bPreviouslyRegistered)
 		{
 			UToolsetRegistry::RegisterToolsetClass(ToolsetClass);
 		}
-		if (!UToolsetRegistry::IsToolsetClassRegistered(ToolsetClass))
+		if (!UToolsetRegistry::IsToolsetRegistered(ToolsetName) &&
+			!UToolsetRegistry::IsToolsetClassRegistered(ToolsetClass))
 		{
 			UE_LOG(LogYacsPcg365Witness, Error,
 				TEXT("PCG365_WITNESS_REGISTRATION_FAILED: class was not registered after RegisterToolsetClass"));
@@ -78,6 +85,14 @@ private:
 		UE_LOG(LogYacsPcg365Witness, Display,
 			TEXT("PCG365_WITNESS_TOOLSET_REGISTERED: class=%s; refresh MCP tool catalog with ModelContextProtocol.RefreshTools"),
 			*ToolsetClass->GetPathName());
+
+		// Refresh ModelContextProtocol so the newly registered toolset is cataloged and discoverable
+		if (GEngine)
+		{
+			UWorld* ExecWorld = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+			GEngine->Exec(ExecWorld, TEXT("ModelContextProtocol.RefreshTools"));
+		}
+
 		return true;
 	}
 
