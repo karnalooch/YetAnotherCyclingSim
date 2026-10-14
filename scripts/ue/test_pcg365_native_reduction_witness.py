@@ -64,9 +64,6 @@ class Component(Obj):
     def get_owner(self):
         return Obj(ACTOR)
 
-    def get_graph(self):
-        return self.graph
-
     def get_generated_graph_output(self):
         return self.collection
 
@@ -78,7 +75,8 @@ class NativeReductionWitnessTests(unittest.TestCase):
         self.reduction = Node(REDUCE, self.graph, [self.source])
         self.graph.output = Node(GRAPH + ":OutputNode", self.graph, [self.reduction])
         self.component = Component(
-            graph=self.graph, generated=True, generation_in_progress=False,
+            graph_instance=Obj(get_const_pcg_graph=lambda: self.graph),
+            generated=True, generation_in_progress=False,
             dirty_generated=False, collection=Obj(
                 tagged_data=[Obj(pin="Out", data=Data(160)), Obj(pin="Out", data=Data(96))]
             )
@@ -135,6 +133,18 @@ class NativeReductionWitnessTests(unittest.TestCase):
     def test_node_path_drift_rejected(self):
         self.reduction.path = REDUCE + "_Other"
         with self.assertRaisesRegex(NativeProbeWitnessError, "identity differs"):
+            self.attest()
+
+    def test_missing_graph_instance_rejected_before_count(self):
+        del self.component.graph_instance
+        with self.assertRaisesRegex(NativeProbeWitnessError, "graph_instance property"):
+            self.attest()
+
+    def test_graph_instance_resolves_wrong_asset_rejected(self):
+        self.component.graph_instance = Obj(
+            get_const_pcg_graph=lambda: Graph("/Game/Unrelated/PCG")
+        )
+        with self.assertRaisesRegex(NativeProbeWitnessError, "expected probe graph"):
             self.attest()
 
     def test_unrelated_graph_rejected(self):
