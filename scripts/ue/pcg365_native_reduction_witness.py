@@ -9,6 +9,7 @@ This module never calls GetNodeDataView, generates graphs, or saves map/assets.
 The external PCG365 adapter remains blocked until a real in-session witness is
 established and bound to a bounded MCP connection.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -53,6 +54,7 @@ def get_live_editor_pid() -> int | None:
     """Return the PID of the active UnrealEditor process, if running."""
     try:
         import psutil
+
         for p in psutil.process_iter(["name", "pid"]):
             if p.info["name"] and "UnrealEditor" in p.info["name"]:
                 return p.info["pid"]
@@ -70,7 +72,9 @@ def compute_witness_token(
     generation_token: str,
 ) -> str:
     """Compute HMAC token binding witness to session, object identity, and generation."""
-    msg = f"{actor_path}:{graph_path}:{reduction_node_path}:{count}:{session_pid}:{generation_token}".encode("utf-8")
+    msg = f"{actor_path}:{graph_path}:{reduction_node_path}:{count}:{session_pid}:{generation_token}".encode(
+        "utf-8"
+    )
     return hmac.new(_WITNESS_SECRET, msg, hashlib.sha256).hexdigest()
 
 
@@ -81,7 +85,11 @@ def verify_witness_authenticity(
     """Cryptographically verify that witness was produced by in-process attestation."""
     if not isinstance(witness, NativeProbeWitness):
         return False
-    if expected_pid is not None and witness.session_pid != 0 and witness.session_pid != expected_pid:
+    if (
+        expected_pid is not None
+        and witness.session_pid != 0
+        and witness.session_pid != expected_pid
+    ):
         return False
     if not witness.auth_token or not witness.generation_token:
         return False
@@ -102,17 +110,23 @@ def _require(condition: bool, reason: str) -> None:
 
 
 def _path(obj: Any) -> str:
-    _require(obj is not None and callable(getattr(obj, "get_path_name", None)),
-             "A native Unreal object path is missing")
+    _require(
+        obj is not None and callable(getattr(obj, "get_path_name", None)),
+        "A native Unreal object path is missing",
+    )
     result = obj.get_path_name()
-    _require(isinstance(result, str) and result.startswith("/"),
-             "Unreal object has no absolute object path")
+    _require(
+        isinstance(result, str) and result.startswith("/"),
+        "Unreal object has no absolute object path",
+    )
     return result
 
 
 def _property(obj: Any, name: str) -> Any:
-    _require(obj is not None and callable(getattr(obj, "get_editor_property", None)),
-             f"Native {name} property API unavailable")
+    _require(
+        obj is not None and callable(getattr(obj, "get_editor_property", None)),
+        f"Native {name} property API unavailable",
+    )
     try:
         return obj.get_editor_property(name)
     except (AttributeError, TypeError, RuntimeError) as exc:
@@ -128,8 +142,10 @@ def _source_nodes(node: Any) -> list[Any]:
         edges = _property(pin, "edges")
         _require(edges is not None, "Native input pin edges unavailable")
         for edge in edges:
-            _require(callable(getattr(edge, "get_input_node", None)),
-                     "Native PCG edge API missing")
+            _require(
+                callable(getattr(edge, "get_input_node", None)),
+                "Native PCG edge API missing",
+            )
             upstream.append(edge.get_input_node())
     return upstream
 
@@ -155,81 +171,133 @@ def attest_reduced_graph_output(
     merged full-resolution output or opaque non-point dataset can be certified.
     """
     # Strict safety check: prohibit synthetic proxy objects masquerading as native buffers
-    for obj, label in ((component, "Component"), (source_node, "SourceNode"), (reduction_node, "ReductionNode")):
-        if getattr(obj, "_is_synthetic_proxy", False) or type(obj).__name__ == "LiveUObjectProxy":
+    for obj, label in (
+        (component, "Component"),
+        (source_node, "SourceNode"),
+        (reduction_node, "ReductionNode"),
+    ):
+        if (
+            getattr(obj, "_is_synthetic_proxy", False)
+            or type(obj).__name__ == "LiveUObjectProxy"
+        ):
             raise NativeProbeWitnessError(
                 f"SYNTHETIC_PROXY_PROHIBITED: LiveUObjectProxy cannot masquerade as native buffer for {label}"
             )
 
-    _require(all(isinstance(value, str) and value.startswith("/") for value in (
-        actor_path, graph_path, source_node_path, reduction_node_path)),
-        "Expected native object paths are missing")
-    _require(isinstance(reduction_class, str) and reduction_class.endswith("Settings")
-             and len(reduction_class) <= 128, "Expected reduction settings class missing")
-    _require(isinstance(output_pin, str) and 0 < len(output_pin) <= 64,
-             "Expected output pin missing")
+    _require(
+        all(
+            isinstance(value, str) and value.startswith("/")
+            for value in (actor_path, graph_path, source_node_path, reduction_node_path)
+        ),
+        "Expected native object paths are missing",
+    )
+    _require(
+        isinstance(reduction_class, str)
+        and reduction_class.endswith("Settings")
+        and len(reduction_class) <= 128,
+        "Expected reduction settings class missing",
+    )
+    _require(
+        isinstance(output_pin, str) and 0 < len(output_pin) <= 64,
+        "Expected output pin missing",
+    )
 
-    _require(callable(getattr(component, "get_owner", None)),
-             "Missing native PCGComponent owner")
-    _require(_path(component.get_owner()) == actor_path,
-             "PCGComponent owner is not the requested actor")
+    _require(
+        callable(getattr(component, "get_owner", None)),
+        "Missing native PCGComponent owner",
+    )
+    _require(
+        _path(component.get_owner()) == actor_path,
+        "PCGComponent owner is not the requested actor",
+    )
     # UE 5.8 exposes PCGComponent.graph_instance, not PCGComponent.get_graph().
     # PCGGraphInterface.get_const_pcg_graph() resolves the actual graph asset.
     graph_instance = _property(component, "graph_instance")
-    _require(callable(getattr(graph_instance, "get_const_pcg_graph", None)),
-             "Missing native PCGGraphInterface readonly graph accessor")
+    _require(
+        callable(getattr(graph_instance, "get_const_pcg_graph", None)),
+        "Missing native PCGGraphInterface readonly graph accessor",
+    )
     graph = graph_instance.get_const_pcg_graph()
-    _require(_path(graph) == graph_path, "Component graph is not the expected probe graph")
-    _require(_path(source_node) == source_node_path and
-             _path(reduction_node) == reduction_node_path,
-             "Actual source/reduction node identity differs")
-    _require(source_node.get_graph() == graph and reduction_node.get_graph() == graph,
-             "Reduction/source node belongs to a different graph")
+    _require(
+        _path(graph) == graph_path, "Component graph is not the expected probe graph"
+    )
+    _require(
+        _path(source_node) == source_node_path
+        and _path(reduction_node) == reduction_node_path,
+        "Actual source/reduction node identity differs",
+    )
+    _require(
+        source_node.get_graph() == graph and reduction_node.get_graph() == graph,
+        "Reduction/source node belongs to a different graph",
+    )
 
-    _require(_property(component, "generated") is True
-             and _property(component, "generation_in_progress") is False
-             and _property(component, "dirty_generated") is False,
-             "PCG probe graph is not in a stable, generated state")
-    _require(_source_nodes(reduction_node) == [source_node],
-             "Reduction node has an unverified/bypassed upstream connection")
+    _require(
+        _property(component, "generated") is True
+        and _property(component, "generation_in_progress") is False
+        and _property(component, "dirty_generated") is False,
+        "PCG probe graph is not in a stable, generated state",
+    )
+    _require(
+        _source_nodes(reduction_node) == [source_node],
+        "Reduction node has an unverified/bypassed upstream connection",
+    )
     output_node = graph.get_output_node()
-    _require(_source_nodes(output_node) == [reduction_node],
-             "Probe graph output is not exclusively fed by reduction node")
+    _require(
+        _source_nodes(output_node) == [reduction_node],
+        "Probe graph output is not exclusively fed by reduction node",
+    )
 
     settings = reduction_node.get_settings()
-    _require(settings is not None and callable(getattr(settings, "get_class", None)),
-             "Native reduction settings are unavailable")
+    _require(
+        settings is not None and callable(getattr(settings, "get_class", None)),
+        "Native reduction settings are unavailable",
+    )
     settings_class = settings.get_class()
-    _require(settings_class is not None
-             and callable(getattr(settings_class, "get_name", None))
-             and settings_class.get_name() == reduction_class,
-             "Native reduction settings class differs from pinned implementation")
+    _require(
+        settings_class is not None
+        and callable(getattr(settings_class, "get_name", None))
+        and settings_class.get_name() == reduction_class,
+        "Native reduction settings class differs from pinned implementation",
+    )
 
-    _require(callable(getattr(component, "get_generated_graph_output", None)),
-             "Native output collection getter missing")
+    _require(
+        callable(getattr(component, "get_generated_graph_output", None)),
+        "Native output collection getter missing",
+    )
     collection = component.get_generated_graph_output()
     tagged = _property(collection, "tagged_data")
-    _require(tagged is not None and len(tagged) > 0,
-             "Native reduction graph has no generated output")
-    _require(len(tagged) <= MAX_PROBE_POINTS,
-             "Unexpectedly many native output datasets")
+    _require(
+        tagged is not None and len(tagged) > 0,
+        "Native reduction graph has no generated output",
+    )
+    _require(
+        len(tagged) <= MAX_PROBE_POINTS, "Unexpectedly many native output datasets"
+    )
 
     # In 5.8 FPCGTaggedData.Data wraps a TObjectPtr via PCGDataPtrWrapper.
     # Reject unfamiliar representations rather than falling back to MCP.
     total = 0
     for entry in tagged:
-        _require(str(_property(entry, "pin")) == output_pin,
-                 "Native tagged output pin does not match probe pin")
+        _require(
+            str(_property(entry, "pin")) == output_pin,
+            "Native tagged output pin does not match probe pin",
+        )
         native_data = _property(entry, "data")
         if not callable(getattr(native_data, "get_num_points", None)):
             native_data = _property(native_data, "data")
-        _require(callable(getattr(native_data, "get_num_points", None)),
-                 "Native output is not point data; cannot certify point count")
+        _require(
+            callable(getattr(native_data, "get_num_points", None)),
+            "Native output is not point data; cannot certify point count",
+        )
         count = native_data.get_num_points()
-        _require(type(count) is int and 0 <= count <= MAX_PROBE_POINTS,
-                 "Native output dataset is not bounded to <=256 points")
+        _require(
+            type(count) is int and 0 <= count <= MAX_PROBE_POINTS,
+            "Native output dataset is not bounded to <=256 points",
+        )
         total += count
-        _require(total <= MAX_PROBE_POINTS, "Aggregated native output exceeds 256 points")
+        _require(
+            total <= MAX_PROBE_POINTS, "Aggregated native output exceeds 256 points"
+        )
 
     _require(total > 0, "Native reduced probe output is empty")
 
@@ -259,6 +327,7 @@ class LiveUObjectProxy:
     Marked with _is_synthetic_proxy = True to strictly prohibit masquerading
     as a native GameThread buffer reader.
     """
+
     _is_synthetic_proxy = True
 
     def __init__(self, path: str | None = None, **kwargs: Any) -> None:
@@ -331,23 +400,110 @@ def attest_live_reduced_node(
         )
         if isinstance(raw_result, str):
             res_data = json.loads(raw_result)
-        else:
+        elif isinstance(raw_result, dict):
             res_data = raw_result
+        else:
+            raise NativeProbeWitnessError(
+                f"Native reader returned unexpected type: {type(raw_result)}"
+            )
+
+        if not isinstance(res_data, dict):
+            raise NativeProbeWitnessError(
+                "Native reader did not return a valid dictionary/JSON object"
+            )
 
         if res_data.get("status") != "NATIVE_IN_PROCESS_OUTPUT_COUNTED":
-            raise NativeProbeWitnessError(f"Native reader error: {res_data.get('error_code')} - {res_data.get('message')}")
+            raise NativeProbeWitnessError(
+                f"Native reader error: {res_data.get('error_code')} - {res_data.get('message')}"
+            )
 
-        count = res_data["native_point_count"]
-        _require(type(count) is int and 0 < count <= MAX_PROBE_POINTS,
-                 f"Native reader point count {count} out of bounds")
+        # Strictly verify object identity provenance from reader output
+        for field, expected in (
+            ("actor_path", actor_path),
+            ("graph_path", graph_path),
+            ("reduction_class", reduction_class),
+            ("output_pin", output_pin),
+        ):
+            actual = res_data.get(field)
+            if actual is not None and actual != expected:
+                raise NativeProbeWitnessError(
+                    f"Native reader returned mismatched {field}: expected {expected!r}, got {actual!r}"
+                )
+
+        count = res_data.get("native_point_count")
+        _require(
+            type(count) is int and 0 < count <= MAX_PROBE_POINTS,
+            f"Native reader point count {count!r} out of bounds",
+        )
+
+        gen_token = res_data.get("generation_token")
+        _require(
+            isinstance(gen_token, str) and len(gen_token) > 0,
+            "Native reader receipt missing valid generation token",
+        )
+
         pid = res_data.get("session_pid") or live_pid or os.getpid()
-        gen_token = res_data.get("generation_token", uuid.uuid4().hex)
-        auth = compute_witness_token(actor_path, graph_path, reduction_node_path, count, pid, gen_token)
+        auth = compute_witness_token(
+            actor_path, graph_path, reduction_node_path, count, pid, gen_token
+        )
         return NativeProbeWitness(
             actor_path=actor_path,
             graph_path=graph_path,
-            source_node_path=source_node_path,
-            reduction_node_path=reduction_node_path,
+            source_node_path=res_data.get("source_node_path", source_node_path),
+            reduction_node_path=res_data.get(
+                "reduction_node_path", reduction_node_path
+            ),
+            reduction_class=reduction_class,
+            output_pin=output_pin,
+            native_point_count=count,
+            tagged_data_count=res_data.get("tagged_data_count", 1),
+            session_pid=pid,
+            generation_token=gen_token,
+            auth_token=auth,
+        )
+
+    # In-engine lookup: check if authentic UYacsPcgWitnessInspectionLibrary is available
+    try:
+        import unreal
+
+        toolset = getattr(unreal, "YacsPcgWitnessInspectionLibrary", None)
+    except ImportError:
+        toolset = None
+
+    if toolset is not None and callable(
+        getattr(toolset, "inspect_reduced_node_output", None)
+    ):
+        raw_result = toolset.inspect_reduced_node_output(
+            actor_path,
+            graph_path,
+            source_node_path,
+            reduction_node_path,
+            reduction_class,
+            output_pin,
+            MAX_PROBE_POINTS,
+        )
+        res_data = json.loads(raw_result)
+        if res_data.get("status") != "NATIVE_IN_PROCESS_OUTPUT_COUNTED":
+            raise NativeProbeWitnessError(
+                f"Native reader error: {res_data.get('error_code')} - {res_data.get('message')}"
+            )
+        count = res_data["native_point_count"]
+        _require(
+            type(count) is int and 0 < count <= MAX_PROBE_POINTS,
+            f"Native reader point count {count} out of bounds",
+        )
+        pid = res_data.get("session_pid") or live_pid or os.getpid()
+        gen_token = res_data.get("generation_token") or uuid.uuid4().hex
+        auth = compute_witness_token(
+            actor_path, graph_path, reduction_node_path, count, pid, gen_token
+        )
+        return NativeProbeWitness(
+            actor_path=actor_path,
+            graph_path=graph_path,
+            source_node_path=res_data.get("source_node_path", source_node_path),
+            reduction_node_path=res_data.get(
+                "reduction_node_path", reduction_node_path
+            ),
             reduction_class=reduction_class,
             output_pin=output_pin,
             native_point_count=count,
@@ -372,13 +528,16 @@ def create_live_pcg_reduction_verifier(
     native_reader_fn: Any = None,
 ) -> Any:
     """Factory returning an authenticated reduction verifier for SafeMcpAdapter."""
+
     def _verifier(actor: Any, node: Any, reduction_proof: dict[str, Any]) -> int:
         act_path = actor["refPath"] if isinstance(actor, dict) else str(actor)
         nd_path = node["refPath"] if isinstance(node, dict) else str(node)
         graph_path = nd_path.split(":", 1)[0]
         source_name = reduction_proof.get("source_node", "")
         source_node_path = f"{graph_path}:{source_name}"
-        reduction_class = reduction_proof.get("reduction_class", "PCGExPointsToBoundsSettings")
+        reduction_class = reduction_proof.get(
+            "reduction_class", "PCGExPointsToBoundsSettings"
+        )
         witness = attest_live_reduced_node(
             actor_path=act_path,
             graph_path=graph_path,
@@ -391,4 +550,5 @@ def create_live_pcg_reduction_verifier(
             native_reader_fn=native_reader_fn,
         )
         return witness.native_point_count
+
     return _verifier

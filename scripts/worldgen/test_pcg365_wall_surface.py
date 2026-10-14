@@ -24,11 +24,21 @@ from scripts.worldgen.pcg365_wall_surface import (
 class WallProofTests(unittest.TestCase):
     def setUp(self):
         def point(index, x, y, z, alpha):
-            return {"@Points.$Transform": {"translation": [x, y, z], "rotation": [0, 0, 0, 1]},
-                    "@Points.$Color": [0, 0, 1, alpha], "@Points.$Density": 1,
-                    "@Points.PCGEx/VData": str(((index+1) << 32) | 2), "@Points.GroundHit": "true"}
-        self.mesh = {"element_"+str(i): point(i, x, y, 3, a)
-                     for i, (x, y, a) in enumerate([(0, 0, 0), (50, 0, .5), (50, 50, 1)])}
+            return {
+                "@Points.$Transform": {
+                    "translation": [x, y, z],
+                    "rotation": [0, 0, 0, 1],
+                },
+                "@Points.$Color": [0, 0, 1, alpha],
+                "@Points.$Density": 1,
+                "@Points.PCGEx/VData": str(((index + 1) << 32) | 2),
+                "@Points.GroundHit": "true",
+            }
+
+        self.mesh = {
+            "element_" + str(i): point(i, x, y, 3, a)
+            for i, (x, y, a) in enumerate([(0, 0, 0), (50, 0, 0.5), (50, 50, 1)])
+        }
         self.encoded = deepcopy(self.mesh)
         self.ground, self.flat = deepcopy(self.mesh), deepcopy(self.mesh)
         for p in self.ground.values():
@@ -36,17 +46,34 @@ class WallProofTests(unittest.TestCase):
         for p in self.flat.values():
             p["@Points.$Transform"]["translation"][2] = 1000000
         self.source = {"records": [[0, 0, 1, 150], [0, 1, 1, 150], [1, 1, 1, 150]]}
-        self.edges = {"element_"+str(i): {"@Points.PCGEx/EData": str((a << 32) | b)}
-                      for i, (a, b) in enumerate([(1, 2), (2, 3), (1, 3)])}
-        self.probes = {"element_"+str(i): {"@Points.GroundHit": "true", "@Points.GroundDistance": 1003} for i in range(3)}
+        self.edges = {
+            "element_" + str(i): {"@Points.PCGEx/EData": str((a << 32) | b)}
+            for i, (a, b) in enumerate([(1, 2), (2, 3), (1, 3)])
+        }
+        self.probes = {
+            "element_" + str(i): {
+                "@Points.GroundHit": "true",
+                "@Points.GroundDistance": 1003,
+            }
+            for i in range(3)
+        }
 
     def verify(self):
-        return check_continuous_surface(self.source, self.flat, self.ground,
-                                        self.encoded, self.mesh, self.edges, self.probes)
+        return check_continuous_surface(
+            self.source,
+            self.flat,
+            self.ground,
+            self.encoded,
+            self.mesh,
+            self.edges,
+            self.probes,
+        )
 
     def test_valid_native_triangle(self):
         self.assertEqual(self.verify()["connected_surface_regions"], 1)
-        self.assertEqual(check_normal_transfer(self.encoded, self.encoded, self.mesh)["vertices"], 3)
+        self.assertEqual(
+            check_normal_transfer(self.encoded, self.encoded, self.mesh)["vertices"], 3
+        )
 
     def test_merged_but_disconnected_mesh_is_rejected(self):
         self.edges = [self.edges, deepcopy(self.edges)]
@@ -84,7 +111,9 @@ class WallProofTests(unittest.TestCase):
             check_normal_transfer(self.encoded, self.encoded, self.mesh)
 
     def test_check_normal_transfer_distinguishes_native_total_from_bounded_probe(self):
-        result = check_normal_transfer(self.encoded, self.encoded, self.mesh, source_record_count=12619)
+        result = check_normal_transfer(
+            self.encoded, self.encoded, self.mesh, source_record_count=12619
+        )
         self.assertEqual(result["vertices"], 3)
         self.assertIsNone(result["native_vertices"])
         self.assertFalse(result["native_vertex_count_verified"])
@@ -96,9 +125,18 @@ class WallProofTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             output = Path(root) / "must-not-exist"
             with patch.object(g, "Client") as client:
-                with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_MCP_UNVERIFIED"):
-                    replay(Path("missing"), Path("missing"), Path("missing"),
-                           Path("missing"), Path("missing"), Path("missing"), output)
+                with self.assertRaisesRegex(
+                    RuntimeError, "NATIVE_BLOCKED_MCP_UNVERIFIED"
+                ):
+                    replay(
+                        Path("missing"),
+                        Path("missing"),
+                        Path("missing"),
+                        Path("missing"),
+                        Path("missing"),
+                        Path("missing"),
+                        output,
+                    )
                 client.assert_not_called()
             self.assertFalse(output.exists())
 
@@ -115,36 +153,79 @@ class WallProofTests(unittest.TestCase):
             surface_path = tmp_dir / "surface.json"
             surface_path.write_text("{}")
             camera_path = tmp_dir / "camera.json"
-            camera_path.write_text(json.dumps({"translation": [0, 0, 0], "rotation": [0, 0, 0, 1]}))
+            camera_path.write_text(
+                json.dumps({"translation": [0, 0, 0], "rotation": [0, 0, 0, 1]})
+            )
             output_path = tmp_dir / "output_pilot"
 
             # Mock digests
-            mock_digest.side_effect = lambda p: INPUT_SHA if p == source_path else "dummy_sha"
+            mock_digest.side_effect = lambda p: (
+                INPUT_SHA if p == source_path else "dummy_sha"
+            )
 
             # Mock surface with 12619 records
-            records = [[0, 0, 1, 150], [0, 1, 1, 150], [1, 1, 1, 150]] + [[0, 0, 1, 150]] * 12616
+            records = [[0, 0, 1, 150], [0, 1, 1, 150], [1, 1, 1, 150]] + [
+                [0, 0, 1, 150]
+            ] * 12616
             self.assertEqual(len(records), 12619)
             mock_validate_surface.return_value = {"records": records}
 
             # State JSON
             state_nodes = {
-                "spawn_wall": {"refPath": FOLDER + "/PCG365_WallSurface.PCG365_WallSurface:Node_spawn_wall"},
-                "wall_envelope": {"refPath": FOLDER + "/PCG365_WallSurface.PCG365_WallSurface:Node_wall_envelope"},
-                "inside_wall": {"refPath": FOLDER + "/PCG365_WallSurface.PCG365_WallSurface:Node_inside_wall"},
-                "connected_cells": {"refPath": FOLDER + "/PCG365_WallSurface.PCG365_WallSurface:Node_connected_cells"},
-                "landscape_surface": {"refPath": FOLDER + "/PCG365_WallSurface.PCG365_WallSurface:Node_landscape_surface"},
-                "project_normals": {"refPath": FOLDER + "/PCG365_WallSurface.PCG365_WallSurface:Node_project_normals"},
-                "encode_normals": {"refPath": FOLDER + "/PCG365_WallSurface.PCG365_WallSurface:Node_encode_normals"},
-                "read_mesh": {"refPath": FOLDER + "/PCG365_WallSurface.PCG365_WallSurface:Node_read_mesh"},
-                "wall_surface": {"refPath": FOLDER + "/PCG365_WallSurface.PCG365_WallSurface:Node_wall_surface"},
-                "surface_separation": {"refPath": FOLDER + "/PCG365_WallSurface.PCG365_WallSurface:Node_surface_separation"},
-                "restore_wall_blend": {"refPath": FOLDER + "/PCG365_WallSurface.PCG365_WallSurface:Node_restore_wall_blend"},
-                "edge_probe": {"refPath": FOLDER + "/PCG365_WallSurface.PCG365_WallSurface:Node_edge_probe"},
+                "spawn_wall": {
+                    "refPath": FOLDER
+                    + "/PCG365_WallSurface.PCG365_WallSurface:Node_spawn_wall"
+                },
+                "wall_envelope": {
+                    "refPath": FOLDER
+                    + "/PCG365_WallSurface.PCG365_WallSurface:Node_wall_envelope"
+                },
+                "inside_wall": {
+                    "refPath": FOLDER
+                    + "/PCG365_WallSurface.PCG365_WallSurface:Node_inside_wall"
+                },
+                "connected_cells": {
+                    "refPath": FOLDER
+                    + "/PCG365_WallSurface.PCG365_WallSurface:Node_connected_cells"
+                },
+                "landscape_surface": {
+                    "refPath": FOLDER
+                    + "/PCG365_WallSurface.PCG365_WallSurface:Node_landscape_surface"
+                },
+                "project_normals": {
+                    "refPath": FOLDER
+                    + "/PCG365_WallSurface.PCG365_WallSurface:Node_project_normals"
+                },
+                "encode_normals": {
+                    "refPath": FOLDER
+                    + "/PCG365_WallSurface.PCG365_WallSurface:Node_encode_normals"
+                },
+                "read_mesh": {
+                    "refPath": FOLDER
+                    + "/PCG365_WallSurface.PCG365_WallSurface:Node_read_mesh"
+                },
+                "wall_surface": {
+                    "refPath": FOLDER
+                    + "/PCG365_WallSurface.PCG365_WallSurface:Node_wall_surface"
+                },
+                "surface_separation": {
+                    "refPath": FOLDER
+                    + "/PCG365_WallSurface.PCG365_WallSurface:Node_surface_separation"
+                },
+                "restore_wall_blend": {
+                    "refPath": FOLDER
+                    + "/PCG365_WallSurface.PCG365_WallSurface:Node_restore_wall_blend"
+                },
+                "edge_probe": {
+                    "refPath": FOLDER
+                    + "/PCG365_WallSurface.PCG365_WallSurface:Node_edge_probe"
+                },
             }
             # Add chunk nodes
             for chunk in range(4):
                 state_nodes[f"surface_grid_{chunk}"] = {
-                    "refPath": FOLDER + f"/PCG365_WallSurface.PCG365_WallSurface:Node_surface_grid_{chunk}"
+                    "refPath": FOLDER
+                    + f"/PCG365_WallSurface.PCG365_WallSurface:Node_surface_grid_{chunk}"
                 }
             state = {
                 "input_sha256": INPUT_SHA,
@@ -155,7 +236,9 @@ class WallProofTests(unittest.TestCase):
                 "normal_transfer_wired": True,
                 "merged_mesh_wired": True,
                 "nodes": state_nodes,
-                "instance": {"actor": {"refPath": ROLLOUT_MAP + ".PCG365_WallSurface_Pilot"}},
+                "instance": {
+                    "actor": {"refPath": ROLLOUT_MAP + ".PCG365_WallSurface_Pilot"}
+                },
             }
             state_path = tmp_dir / "state.json"
             state_path.write_text(json.dumps(state))
@@ -163,7 +246,10 @@ class WallProofTests(unittest.TestCase):
             # Adapter JSON
             adapter_data = {
                 "path": FOLDER + "/BP_PCG365_VertexNormals",
-                "graph": {"refPath": FOLDER + "/BP_PCG365_VertexNormals.BP_PCG365_VertexNormals:ProcessDynamicMesh"},
+                "graph": {
+                    "refPath": FOLDER
+                    + "/BP_PCG365_VertexNormals.BP_PCG365_VertexNormals:ProcessDynamicMesh"
+                },
             }
             adapter_path = tmp_dir / "adapter.json"
             adapter_path.write_text(json.dumps(adapter_data))
@@ -172,18 +258,43 @@ class WallProofTests(unittest.TestCase):
             material_data = {
                 "path": FOLDER + "/M_Cliff_BoundaryBlend",
                 "instance_path": FOLDER + "/MI_Cliff_BoundaryBlend",
-                "material": {"refPath": FOLDER + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend"},
-                "instance": {"refPath": FOLDER + "/MI_Cliff_BoundaryBlend.MI_Cliff_BoundaryBlend"},
+                "material": {
+                    "refPath": FOLDER + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend"
+                },
+                "instance": {
+                    "refPath": FOLDER + "/MI_Cliff_BoundaryBlend.MI_Cliff_BoundaryBlend"
+                },
                 "targets": [
-                    {"refPath": FOLDER + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:T0"},
-                    {"refPath": FOLDER + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:T1"},
-                    {"refPath": FOLDER + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:T2"},
-                    {"refPath": FOLDER + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:T3"},
+                    {
+                        "refPath": FOLDER
+                        + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:T0"
+                    },
+                    {
+                        "refPath": FOLDER
+                        + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:T1"
+                    },
+                    {
+                        "refPath": FOLDER
+                        + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:T2"
+                    },
+                    {
+                        "refPath": FOLDER
+                        + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:T3"
+                    },
                 ],
                 "nodes": {
-                    "rock": {"refPath": FOLDER + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:rock"},
-                    "weights": {"refPath": FOLDER + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:weights"},
-                    "vertex": {"refPath": FOLDER + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:vertex"},
+                    "rock": {
+                        "refPath": FOLDER
+                        + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:rock"
+                    },
+                    "weights": {
+                        "refPath": FOLDER
+                        + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:weights"
+                    },
+                    "vertex": {
+                        "refPath": FOLDER
+                        + "/M_Cliff_BoundaryBlend.M_Cliff_BoundaryBlend:vertex"
+                    },
                 },
             }
             material_path = tmp_dir / "material.json"
@@ -193,7 +304,9 @@ class WallProofTests(unittest.TestCase):
             mock_client = MagicMock()
             mock_client_cls.return_value = mock_client
             mock_client.call.return_value = {
-                "returnValue": {"image": {"data": base64.b64encode(b"PNG_DATA").decode()}}
+                "returnValue": {
+                    "image": {"data": base64.b64encode(b"PNG_DATA").decode()}
+                }
             }
 
             dsl_graph_written = []
@@ -213,7 +326,9 @@ class WallProofTests(unittest.TestCase):
                         return ["landscape_0"]
                     return []
                 if name == "ListGraphInstances":
-                    return [{"actor": state["instance"]["actor"], "graph": state["graph"]}]
+                    return [
+                        {"actor": state["instance"]["actor"], "graph": state["graph"]}
+                    ]
                 if name == "get_properties":
                     instance = args.get("instance")
                     if instance == "landscape_0":
@@ -229,9 +344,22 @@ class WallProofTests(unittest.TestCase):
                 if name == "SetCameraTransform":
                     return True
                 if name == "GetNodeSchema":
-                    return {"properties": ["bCopyAllAttributes", "inputSource", "outputTarget", "attributes", "baseRemap", "outputClampDetails", "config"]}
+                    return {
+                        "properties": [
+                            "bCopyAllAttributes",
+                            "inputSource",
+                            "outputTarget",
+                            "attributes",
+                            "baseRemap",
+                            "outputClampDetails",
+                            "config",
+                        ]
+                    }
                 if name == "CreateNode":
-                    return {"refPath": FOLDER + f"/PCG365_WallSurface.PCG365_WallSurface:Node_{args.get('nodeName')}"}
+                    return {
+                        "refPath": FOLDER
+                        + f"/PCG365_WallSurface.PCG365_WallSurface:Node_{args.get('nodeName')}"
+                    }
                 if name == "ConnectNodePins":
                     return []
                 if name == "connect_expressions":
@@ -239,7 +367,12 @@ class WallProofTests(unittest.TestCase):
                     last_link["pin"] = args.get("to_input_name", "None") or "None"
                     return True
                 if name == "get_expression_inputs":
-                    return [{"expression": last_link.get("source"), "input_name": last_link.get("pin", "None")}]
+                    return [
+                        {
+                            "expression": last_link.get("source"),
+                            "input_name": last_link.get("pin", "None"),
+                        }
+                    ]
                 if name in ("UpdateNode", "set_properties", "recompile"):
                     return True
                 if name == "ExecuteGraphInstance":
@@ -272,20 +405,39 @@ class WallProofTests(unittest.TestCase):
 
             # Synthetic replay is allowed only inside this isolated mocked unit
             # test. Production must remain blocked before Client.initialize.
-            receipt_names = ("surface_separation", "restore_wall_blend", "read_mesh",
-                             "connected_cells", "landscape_surface", "edge_probe")
-            receipts = {name: {
-                "reduction_node": name, "reduction_method": "BOUNDED_PROBE_NODE",
-                "certified_point_count": 3, "source_node": name,
-            } for name in receipt_names}
+            receipt_names = (
+                "surface_separation",
+                "restore_wall_blend",
+                "read_mesh",
+                "connected_cells",
+                "landscape_surface",
+                "edge_probe",
+            )
+            receipts = {
+                name: {
+                    "reduction_node": name,
+                    "reduction_method": "BOUNDED_PROBE_NODE",
+                    "certified_point_count": 3,
+                    "source_node": name,
+                }
+                for name in receipt_names
+            }
             with (
                 patch.object(g.Author, "call", new=mock_author_call),
-                patch("scripts.worldgen.pcg365_wall_surface.require_native_wall_admission"),
-                patch("scripts.worldgen.pcg365_wall_surface.SafeMcpAdapter") as bounded_adapter,
+                patch(
+                    "scripts.worldgen.pcg365_wall_surface.require_native_wall_admission"
+                ),
+                patch(
+                    "scripts.worldgen.pcg365_wall_surface.SafeMcpAdapter"
+                ) as bounded_adapter,
             ):
                 bounded_adapter.return_value.safe_get_node_data_view.side_effect = (
-                    lambda **kw: mock_author_call(None, "", "GetNodeDataView",
-                                                  {"node": kw["node"], "pinLabel": kw["pin_label"]})
+                    lambda **kw: mock_author_call(
+                        None,
+                        "",
+                        "GetNodeDataView",
+                        {"node": kw["node"], "pinLabel": kw["pin_label"]},
+                    )
                 )
                 proof = replay(
                     state_path=state_path,
@@ -325,6 +477,7 @@ class WallAdmissionGateTests(unittest.TestCase):
             get_live_editor_pid,
         )
         from scripts.worldgen.pcg365_bounded_transport import BoundedPcgMcpClient
+
         self.pid = get_live_editor_pid() or 0
         self.gen_token = "valid_generation_token"
         self.actor_path = ROLLOUT_MAP + ".PCGVolume"
@@ -355,12 +508,14 @@ class WallAdmissionGateTests(unittest.TestCase):
         self.client = BoundedPcgMcpClient()
 
     def test_admission_passes_with_authentic_witness_and_client(self):
-        self.assertTrue(require_native_wall_admission(
-            witness=self.witness,
-            bounded_client=self.client,
-            target_map_package=ROLLOUT_MAP,
-            actor_path=self.actor_path,
-        ))
+        self.assertTrue(
+            require_native_wall_admission(
+                witness=self.witness,
+                bounded_client=self.client,
+                target_map_package=ROLLOUT_MAP,
+                actor_path=self.actor_path,
+            )
+        )
 
     def test_admission_rejects_none(self):
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_MCP_UNVERIFIED"):
@@ -380,62 +535,110 @@ class WallAdmissionGateTests(unittest.TestCase):
                 witness={"native_point_count": 1},
                 bounded_client=self.client,
                 target_map_package=ROLLOUT_MAP,
+                actor_path=self.actor_path,
+            )
+
+    def test_admission_rejects_missing_actor_path(self):
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_ACTOR_PATH_REQUIRED"):
+            require_native_wall_admission(
+                witness=self.witness,
+                bounded_client=self.client,
+                target_map_package=ROLLOUT_MAP,
+                actor_path=None,
             )
 
     def test_admission_rejects_forged_witness(self):
         from dataclasses import replace
+
         bad_witness = replace(self.witness, auth_token="forged_signature_value")
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_FORGED_WITNESS"):
             require_native_wall_admission(
                 witness=bad_witness,
                 bounded_client=self.client,
                 target_map_package=ROLLOUT_MAP,
+                actor_path=self.actor_path,
             )
 
     def test_admission_rejects_wrong_session_pid(self):
         from dataclasses import replace
+
         bad_witness = replace(self.witness, session_pid=999999)
-        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_FORGED_WITNESS|NATIVE_BLOCKED_SESSION_MISMATCH"):
+        with self.assertRaisesRegex(
+            RuntimeError,
+            "NATIVE_BLOCKED_FORGED_WITNESS|NATIVE_BLOCKED_SESSION_MISMATCH",
+        ):
             require_native_wall_admission(
                 witness=bad_witness,
                 bounded_client=self.client,
                 target_map_package=ROLLOUT_MAP,
+                actor_path=self.actor_path,
             )
 
     def test_admission_rejects_uncounted_status(self):
         from dataclasses import replace
         from scripts.ue.pcg365_native_reduction_witness import compute_witness_token
-        auth = compute_witness_token(self.actor_path, self.graph_path, self.reduction_node_path, 1, self.pid, self.gen_token)
-        bad_witness = replace(self.witness, status="UNVERIFIED_ESTIMATE", auth_token=auth)
+
+        auth = compute_witness_token(
+            self.actor_path,
+            self.graph_path,
+            self.reduction_node_path,
+            1,
+            self.pid,
+            self.gen_token,
+        )
+        bad_witness = replace(
+            self.witness, status="UNVERIFIED_ESTIMATE", auth_token=auth
+        )
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_UNCONFIRMED_STATUS"):
             require_native_wall_admission(
                 witness=bad_witness,
                 bounded_client=self.client,
                 target_map_package=ROLLOUT_MAP,
+                actor_path=self.actor_path,
             )
 
     def test_admission_rejects_unsafe_point_count(self):
         from dataclasses import replace
         from scripts.ue.pcg365_native_reduction_witness import compute_witness_token
-        auth = compute_witness_token(self.actor_path, self.graph_path, self.reduction_node_path, 257, self.pid, self.gen_token)
+
+        auth = compute_witness_token(
+            self.actor_path,
+            self.graph_path,
+            self.reduction_node_path,
+            257,
+            self.pid,
+            self.gen_token,
+        )
         bad_witness = replace(self.witness, native_point_count=257, auth_token=auth)
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_UNSAFE_COUNT"):
             require_native_wall_admission(
                 witness=bad_witness,
                 bounded_client=self.client,
                 target_map_package=ROLLOUT_MAP,
+                actor_path=self.actor_path,
             )
 
     def test_admission_rejects_non_settings_class(self):
         from dataclasses import replace
         from scripts.ue.pcg365_native_reduction_witness import compute_witness_token
-        auth = compute_witness_token(self.actor_path, self.graph_path, self.reduction_node_path, 1, self.pid, self.gen_token)
-        bad_witness = replace(self.witness, reduction_class="PCGExCustomNode", auth_token=auth)
+
+        auth = compute_witness_token(
+            self.actor_path,
+            self.graph_path,
+            self.reduction_node_path,
+            1,
+            self.pid,
+            self.gen_token,
+        )
+        bad_witness = replace(
+            self.witness, reduction_class="PCGExCustomNode", auth_token=auth
+        )
         with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_INVALID_SETTINGS"):
             require_native_wall_admission(
                 witness=bad_witness,
                 bounded_client=self.client,
                 target_map_package=ROLLOUT_MAP,
+                actor_path=self.actor_path,
             )
 
     def test_admission_rejects_untrusted_transport(self):
@@ -444,6 +647,7 @@ class WallAdmissionGateTests(unittest.TestCase):
                 witness=self.witness,
                 bounded_client=object(),
                 target_map_package=ROLLOUT_MAP,
+                actor_path=self.actor_path,
             )
 
     def test_admission_rejects_poisoned_transport(self):
@@ -453,18 +657,24 @@ class WallAdmissionGateTests(unittest.TestCase):
                 witness=self.witness,
                 bounded_client=self.client,
                 target_map_package=ROLLOUT_MAP,
+                actor_path=self.actor_path,
             )
 
     def test_admission_rejects_canonical_source_map_mutation(self):
-        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_PROTECTED_SOURCE_MAP"):
+        with self.assertRaisesRegex(
+            RuntimeError, "NATIVE_BLOCKED_PROTECTED_SOURCE_MAP"
+        ):
             require_native_wall_admission(
                 witness=self.witness,
                 bounded_client=self.client,
                 target_map_package="/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface",
+                actor_path=self.actor_path,
             )
 
     def test_admission_rejects_actor_assigned_to_wrong_level(self):
-        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_ACTOR_LEVEL_MISMATCH"):
+        with self.assertRaisesRegex(
+            RuntimeError, "NATIVE_BLOCKED_ACTOR_LEVEL_MISMATCH"
+        ):
             require_native_wall_admission(
                 witness=self.witness,
                 bounded_client=self.client,
@@ -472,7 +682,42 @@ class WallAdmissionGateTests(unittest.TestCase):
                 actor_path="/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.ForeignActor",
             )
 
+    def test_checkpoint_integrity_rejects_missing_directory(self):
+        from scripts.worldgen.pcg365_wall_surface import (
+            verify_canonical_checkpoint_integrity,
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "CANONICAL_CHECKPOINT_MISSING"):
+            verify_canonical_checkpoint_integrity(
+                Path("/nonexistent/checkpoint/directory/path")
+            )
+
+    def test_checkpoint_integrity_rejects_missing_package_file(self):
+        import tempfile
+        from scripts.worldgen.pcg365_wall_surface import (
+            verify_canonical_checkpoint_integrity,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+            # Empty directory has all canonical packages missing
+            with self.assertRaisesRegex(RuntimeError, "CANONICAL_CHECKPOINT_MISSING"):
+                verify_canonical_checkpoint_integrity(tmppath)
+
+    def test_checkpoint_integrity_rejects_mutated_package_hash(self):
+        import tempfile
+        from scripts.worldgen.pcg365_wall_surface import (
+            CANONICAL_CHECKPOINTS,
+            verify_canonical_checkpoint_integrity,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmppath = Path(tmpdir)
+            for fname in CANONICAL_CHECKPOINTS.keys():
+                (tmppath / fname).write_bytes(b"corrupted_content")
+            with self.assertRaisesRegex(RuntimeError, "CANONICAL_CHECKPOINT_MUTATED"):
+                verify_canonical_checkpoint_integrity(tmppath)
+
 
 if __name__ == "__main__":
     unittest.main()
-
