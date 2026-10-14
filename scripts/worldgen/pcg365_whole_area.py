@@ -13,7 +13,7 @@ import time
 
 from scripts.worldgen import pcg365_pcgex_graph as g
 
-MAP = "/Game/Generated/YACS/PCG365Ex/Ra1e9cbdd48ad0c85_s2/L_PCG365_Rocks"
+MAP = g.MAP  # Canonical accepted Live Host consumer: /Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface
 REVISION = "whole-area-v7-rocks-cliff-stamps-retired"
 POLICIES = {
     "rocks": dict(g.POLICY, id="PCG365_ROCKS_V5", native_best_fit=True,

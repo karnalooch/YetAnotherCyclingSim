@@ -19,24 +19,37 @@ class WallBatchTests(unittest.TestCase):
                 self.assertEqual(transform['location'][axis]+transform['scale'][axis]-25,hi*50)
 
     def test_dense_readback_is_refused_before_a_tool_call(self):
-        for count in [257,100000,-1,1.5,True]:
-            with self.assertRaises(ValueError):wall.require_small_native_probe(count)
+        for count in [257, 100000, -1, 1.5, True]:
+            with self.assertRaises(ValueError):
+                wall.require_small_native_probe(count)
         wall.require_small_native_probe(256)
 
     def test_protected_and_unknown_samples_are_rejected(self):
-        rgba=np.zeros((3,3,4),dtype=np.uint8);rgba[1,1]=[13,255,0,255]
-        selected=rgba[:,:,3]>0;clearance=np.full((3,3),135.0);reasons=np.zeros((3,3),dtype=np.uint8)
-        with patch.object(wall,'GRID_SIZE',3):
-            wall.validate_pixels(rgba,selected,clearance,reasons)
-            reasons[1,1]=1
-            with self.assertRaisesRegex(ValueError,'Protected'):wall.validate_pixels(rgba,selected,clearance,reasons)
-            reasons[1,1]=0;clearance[1,1]=np.nan
-            with self.assertRaisesRegex(ValueError,'Unknown'):wall.validate_pixels(rgba,selected,clearance,reasons)
+        rgba = np.zeros((3, 3, 4), dtype=np.uint8)
+        rgba[1, 1] = [13, 255, 0, 255]
+        selected = rgba[:, :, 3] > 0
+        clearance = np.full((3, 3), 135.0)
+        reasons = np.zeros((3, 3), dtype=np.uint8)
+        with patch.object(wall, 'GRID_SIZE', 3):
+            wall.validate_pixels(rgba, selected, clearance, reasons)
+            reasons[1, 1] = 1
+            with self.assertRaisesRegex(ValueError, 'Protected'):
+                wall.validate_pixels(rgba, selected, clearance, reasons)
+            reasons[1, 1] = 0
+            clearance[1, 1] = np.nan
+            with self.assertRaisesRegex(ValueError, 'Unknown'):
+                wall.validate_pixels(rgba, selected, clearance, reasons)
 
     def test_vegetation_bits_do_not_widen_protected_mask(self):
-        rgba=np.zeros((3,3,4),dtype=np.uint8);rgba[1,1]=[13,255,0,255]
-        selected=rgba[:,:,3]>0;clearance=np.full((3,3),135.0);reasons=np.full((3,3),192,dtype=np.uint8)
-        with patch.object(wall,'GRID_SIZE',3):wall.validate_pixels(rgba,selected,clearance,reasons)
+        rgba = np.zeros((3, 3, 4), dtype=np.uint8)
+        rgba[1, 1] = [13, 255, 0, 255]
+        selected = rgba[:, :, 3] > 0
+        clearance = np.full((3, 3), 135.0)
+        reasons = np.full((3, 3), 192, dtype=np.uint8)
+        with patch.object(wall, 'GRID_SIZE', 3):
+            wall.validate_pixels(rgba, selected, clearance, reasons)
 
 
-if __name__=='__main__':unittest.main()
+if __name__ == '__main__':
+    unittest.main()
+
