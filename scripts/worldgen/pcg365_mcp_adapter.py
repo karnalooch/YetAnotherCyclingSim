@@ -158,7 +158,7 @@ class SafeMcpAdapter:
         end_index: int,
         reduction_proof: Dict[str, Any],
     ) -> int:
-        """Perform pre-dispatch safety verification.
+        """Perform pre-dispatch safety verification (endIndex is exclusive).
 
         Raises UnsafeMcpReadError or McpCircuitBreakerError BEFORE any network
         or tool dispatch if unsafe. Returns certified point count.
@@ -188,7 +188,9 @@ class SafeMcpAdapter:
                 f"end_index ({end_index}) cannot be less than start_index ({start_index})"
             )
 
-        requested_span = end_index - start_index + 1
+        requested_span = end_index - start_index
+        if requested_span == 0:
+            raise UnsafeMcpReadError("Empty GetNodeDataView range is not a valid native probe")
         if requested_span > self.max_points:
             raise UnsafeMcpReadError(
                 f"Requested row count ({requested_span}) exceeds MAX_SAFE_PROBE_POINTS ({self.max_points}). "
@@ -201,9 +203,9 @@ class SafeMcpAdapter:
             reduction_proof=reduction_proof,
         )
 
-        if end_index >= certified_count:
+        if end_index > certified_count:
             raise UnsafeMcpReadError(
-                f"Requested end_index ({end_index}) exceeds certified point count ({certified_count}) "
+                f"Requested exclusive end_index ({end_index}) exceeds certified point count ({certified_count}) "
                 f"for reduction node {node_name!r}"
             )
 
@@ -240,7 +242,7 @@ class SafeMcpAdapter:
         if end_index is None:
             if certified_count == 0:
                 raise UnsafeMcpReadError(f"Cannot inspect node {node_name!r}: certified point count is 0")
-            end_index = certified_count - 1
+            end_index = certified_count
 
         # Reject forbidden ranges and tripped circuits before even consulting
         # a trusted verifier (which may otherwise need to inspect live state).
