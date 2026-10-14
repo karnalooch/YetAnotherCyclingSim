@@ -51,7 +51,10 @@ def _path(obj: Any) -> str:
 def _property(obj: Any, name: str) -> Any:
     _require(obj is not None and callable(getattr(obj, "get_editor_property", None)),
              f"Native {name} property API unavailable")
-    return obj.get_editor_property(name)
+    try:
+        return obj.get_editor_property(name)
+    except (AttributeError, TypeError, RuntimeError) as exc:
+        raise NativeProbeWitnessError(f"Native {name} property not accessible") from exc
 
 
 def _source_nodes(node: Any) -> list[Any]:
