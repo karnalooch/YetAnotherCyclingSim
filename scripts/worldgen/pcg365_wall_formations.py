@@ -242,25 +242,35 @@ def verify_landscape_contact(
             f"Diagnostic vertical offset is not uniform: [{min_offset:.4f}, {max_offset:.4f}] cm"
         )
 
-    # Check edge midpoint clearance if probes are available
-    edge_midpoint_min_gap = None
-    if edge_probes:
-        gaps = [
-            float(p["@Points.GroundDistance"]) - 1000.0
-            for p in edge_probes
-            if "@Points.GroundDistance" in p
-        ]
-        if gaps:
-            edge_midpoint_min_gap = min(gaps)
-            if edge_midpoint_min_gap <= 0:
-                raise FormationTopologyError(
-                    f"Wall edge midpoint penetrates Landscape: gap = {edge_midpoint_min_gap} cm"
-                )
+    # Edge probes are strictly required to verify contact coverage without terrain penetration
+    if not edge_probes:
+        raise FormationTopologyError("Complete edge probes are strictly required for landscape contact verification")
+
+    # Enforce diagnostic vertical offset matches expected value within tolerance
+    if abs(min_offset - diagnostic_offset_cm) > 0.01:
+        raise FormationTopologyError(
+            f"Diagnostic vertical offset {min_offset:.4f} cm does not match expected {diagnostic_offset_cm:.4f} cm"
+        )
+
+    # Check edge midpoint clearance across all probes
+    gaps: List[float] = []
+    for i, p in enumerate(edge_probes):
+        if "@Points.GroundDistance" not in p:
+            raise FormationTopologyError(f"Edge probe at index {i} missing @Points.GroundDistance")
+        gaps.append(float(p["@Points.GroundDistance"]) - 1000.0)
+
+    if not gaps:
+        raise FormationTopologyError("Edge probes list contains no valid distance samples")
+
+    edge_midpoint_min_gap = min(gaps)
+    if edge_midpoint_min_gap <= 0:
+        raise FormationTopologyError(
+            f"Wall edge midpoint penetrates Landscape: gap = {edge_midpoint_min_gap:.4f} cm <= 0"
+        )
 
     # Evaluate offset reduction policy
     can_reduce_offset = (
-        edge_midpoint_min_gap is not None
-        and edge_midpoint_min_gap >= diagnostic_offset_cm
+        edge_midpoint_min_gap >= diagnostic_offset_cm
         and min_offset >= diagnostic_offset_cm
     )
 
@@ -272,6 +282,7 @@ def verify_landscape_contact(
         "diagnostic_vertical_offset_cm": min_offset,
         "vertical_offset_range_cm": [min_offset, max_offset],
         "edge_midpoint_min_gap_cm": edge_midpoint_min_gap,
+        "edge_probe_count": len(edge_probes),
         "can_safely_reduce_offset": can_reduce_offset,
         "offset_reduction_recommendation": (
             "KEEP_DIAGNOSTIC_OFFSET_3CM_UNTIL_NATIVE_PROOF"
@@ -281,27 +292,102 @@ def verify_landscape_contact(
     }
 
 
+def build_pcgex_formation_pipeline_spec() -> Dict[str, Any]:
+    """Define native PCGEx node pipeline specification for formation generation.
+
+    Documents the concrete wiring from 8-connected formation components to native
+    PCGEx mesh generation, data ownership, boundary stitching, and material assignment.
+    """
+    return {
+        "pipeline_name": "PCG365_PCGEx_ContinuousWallFormations",
+        "formation_attribute": "FormationId",
+        "boundary_tolerance_cm": 0.01,
+        "min_points_threshold": 3,
+        "material_instance": "/Game/Generated/YACS/PCG365Ex/WallSurface/Pilot01/MI_Cliff_BoundaryBlend.MI_Cliff_BoundaryBlend",
+        "nodes": {
+            "formation_tagger": {
+                "class": "UPCGMetadataOperationSettings",
+                "purpose": "Attach FormationId attribute (int32) to points based on 8-connectivity clustering",
+                "output_attribute": "FormationId",
+            },
+            "regions_duplicate": {
+                "class": "UPCGExDuplicatePointsSettings",
+                "purpose": "Isolate data ownership before partition, preventing DeleteAttribute warning on forwarded input",
+                "upstream": "formation_tagger",
+            },
+            "regions_partition": {
+                "class": "UPCGExPartitionByValuesSettings",
+                "purpose": "Partition point collection by FormationId into independent physical cliff formations",
+                "upstream": "regions_duplicate",
+                "settings": {
+                    "partitionByAttribute": "FormationId",
+                    "bCleanupConsumableAttributes": False,
+                    "protectedAttributes": ["IsClosed"],
+                    "commaSeparatedProtectedAttributesName": "IsClosed",
+                    "bQuietMissingClusterPairElement": True,
+                },
+            },
+            "regions_hulls": {
+                "class": "UPCGExConvexHull2DSettings",
+                "purpose": "Generate boundary contours per partition; rejects degenerate clusters (< 3 points)",
+                "upstream": "regions_partition",
+                "min_points": 3,
+            },
+            "boundary_stitch": {
+                "class": "UPCGExConnectPointsSettings",
+                "purpose": "Stitch shared boundary vertices across the 63 batch borders for multi-batch formations",
+                "upstream": "regions_hulls",
+                "tolerance_cm": 0.01,
+                "match_attributes": ["FormationId"],
+            },
+            "wall_material": {
+                "class": "UPCGSetMaterialSettings",
+                "purpose": "Assign limestone boundary blend material with vertex alpha weighting",
+                "upstream": "boundary_stitch",
+                "material": "/Game/Generated/YACS/PCG365Ex/WallSurface/Pilot01/MI_Cliff_BoundaryBlend.MI_Cliff_BoundaryBlend",
+            },
+        },
+        "data_ownership_policy": "EXPLICIT_DUPLICATE_BEFORE_PARTITION",
+        "boundary_stitching_policy": "DISTANCE_WELD_ON_IDENTICAL_FORMATION_ID",
+        "degenerate_pruning_policy": "EXCLUDE_CLUSTERS_UNDER_3_POINTS",
+    }
+
+
 def configure_pcgex_data_ownership(
     author: Any,
     connect_node_name: str = "regions_connect",
     partition_node_name: str = "regions_partition",
+    duplicate_node_name: str = "regions_duplicate",
 ) -> None:
     """Fix DeleteAttribute('IsClosed') skipped on forwarded input.
 
     Uses native PCGEx Duplicate before partition to ensure regions_partition
     owns its data rather than mutating a shared forwarded input from connect.
     """
-    # Configure partition node properties:
-    # Set stealData to Disabled and protect IsClosed attribute
-    if hasattr(author, "call"):
-        update_args = {
-            "node": author.state["nodes"][partition_node_name],
-            "nodeTitle": "",
-            "jsonParams": json.dumps({
-                "bCleanupConsumableAttributes": False,
-                "commaSeparatedProtectedAttributesName": "IsClosed",
-                "protectedAttributes": ["IsClosed"],
-                "bQuietMissingClusterPairElement": True,
-            }),
-        }
-        author.call("PCGToolset.PCGToolset", "UpdateNode", update_args)
+    if hasattr(author, "call") and hasattr(author, "state") and "nodes" in author.state:
+        # Configure duplicate node if present
+        if duplicate_node_name in author.state["nodes"]:
+            author.call(
+                "PCGToolset.PCGToolset",
+                "UpdateNode",
+                {
+                    "node": author.state["nodes"][duplicate_node_name],
+                    "nodeTitle": "",
+                    "jsonParams": json.dumps({"bCopyAllAttributes": True}),
+                },
+            )
+
+        # Configure partition node properties:
+        # Set bCleanupConsumableAttributes to False and protect IsClosed attribute
+        if partition_node_name in author.state["nodes"]:
+            update_args = {
+                "node": author.state["nodes"][partition_node_name],
+                "nodeTitle": "",
+                "jsonParams": json.dumps({
+                    "bCleanupConsumableAttributes": False,
+                    "commaSeparatedProtectedAttributesName": "IsClosed",
+                    "protectedAttributes": ["IsClosed"],
+                    "bQuietMissingClusterPairElement": True,
+                }),
+            }
+            author.call("PCGToolset.PCGToolset", "UpdateNode", update_args)

@@ -16,6 +16,7 @@ import numpy as np
 
 from scripts.worldgen.pcg365_wall_formations import (
     FormationTopologyError,
+    build_pcgex_formation_pipeline_spec,
     configure_pcgex_data_ownership,
     identify_formations,
     map_formations_across_batches,
@@ -122,6 +123,54 @@ class WallFormationTests(unittest.TestCase):
         self.assertEqual(contact["status"], "LANDSCAPE_CONTACT_VERIFIED")
         self.assertEqual(contact["diagnostic_vertical_offset_cm"], 3.0)
         self.assertEqual(contact["max_xy_grid_deviation_cm"], 0.0)
+        self.assertEqual(contact["edge_probe_count"], 2)
+
+    def test_landscape_contact_rejects_missing_or_empty_edge_probes(self):
+        mesh_vertices = [{"@Points.$Transform": {"translation": [0.0, 0.0, 103.0]}}]
+        ground_points = [{"@Points.$Transform": {"translation": [0.0, 0.0, 100.0]}}]
+        # Missing edge probes (None)
+        with self.assertRaises(FormationTopologyError) as ctx:
+            verify_landscape_contact(mesh_vertices, ground_points, edge_probes=None)
+        self.assertIn("Complete edge probes are strictly required", str(ctx.exception))
+
+        # Empty edge probes list
+        with self.assertRaises(FormationTopologyError) as ctx:
+            verify_landscape_contact(mesh_vertices, ground_points, edge_probes=[])
+        self.assertIn("Complete edge probes are strictly required", str(ctx.exception))
+
+    def test_landscape_contact_rejects_missing_ground_distance_on_probe(self):
+        mesh_vertices = [{"@Points.$Transform": {"translation": [0.0, 0.0, 103.0]}}]
+        ground_points = [{"@Points.$Transform": {"translation": [0.0, 0.0, 100.0]}}]
+        invalid_probes = [{"@Points.OtherAttribute": 100.0}]
+        with self.assertRaises(FormationTopologyError) as ctx:
+            verify_landscape_contact(mesh_vertices, ground_points, edge_probes=invalid_probes)
+        self.assertIn("missing @Points.GroundDistance", str(ctx.exception))
+
+    def test_landscape_contact_rejects_wrong_or_non_uniform_vertical_offset(self):
+        mesh_vertices = [{"@Points.$Transform": {"translation": [0.0, 0.0, 105.0]}}]
+        ground_points = [{"@Points.$Transform": {"translation": [0.0, 0.0, 100.0]}}]
+        edge_probes = [{"@Points.GroundDistance": 1005.0}]
+        # Offset is 5.0 cm, but expected diagnostic is 3.0 cm!
+        with self.assertRaises(FormationTopologyError) as ctx:
+            verify_landscape_contact(
+                mesh_vertices, ground_points, edge_probes=edge_probes, diagnostic_offset_cm=3.0
+            )
+        self.assertIn("does not match expected", str(ctx.exception))
+
+        # Non-uniform offset across vertices
+        mesh_non_uniform = [
+            {"@Points.$Transform": {"translation": [0.0, 0.0, 103.0]}},
+            {"@Points.$Transform": {"translation": [50.0, 0.0, 114.0]}},  # 4 cm offset here
+        ]
+        ground_non_uniform = [
+            {"@Points.$Transform": {"translation": [0.0, 0.0, 100.0]}},
+            {"@Points.$Transform": {"translation": [50.0, 0.0, 110.0]}},
+        ]
+        with self.assertRaises(FormationTopologyError) as ctx:
+            verify_landscape_contact(
+                mesh_non_uniform, ground_non_uniform, edge_probes=edge_probes, diagnostic_offset_cm=3.0
+            )
+        self.assertIn("offset is not uniform", str(ctx.exception))
 
     def test_landscape_contact_rejects_grid_motion(self):
         # Vertex moved away from 50 cm grid step
@@ -131,8 +180,9 @@ class WallFormationTests(unittest.TestCase):
         ground_points = [
             {"@Points.$Transform": {"translation": [12.5, 0.0, 100.0]}},
         ]
+        edge_probes = [{"@Points.GroundDistance": 1003.0}]
         with self.assertRaises(FormationTopologyError) as ctx:
-            verify_landscape_contact(mesh_vertices, ground_points)
+            verify_landscape_contact(mesh_vertices, ground_points, edge_probes=edge_probes)
         self.assertIn("Source-grid XY coordinates moved", str(ctx.exception))
 
     def test_landscape_contact_rejects_edge_penetration(self):
@@ -148,18 +198,56 @@ class WallFormationTests(unittest.TestCase):
             verify_landscape_contact(mesh_vertices, ground_points, edge_probes=edge_probes)
         self.assertIn("penetrates Landscape", str(ctx.exception))
 
-    def test_configure_pcgex_data_ownership_updates_node_settings(self):
+    def test_build_pcgex_formation_pipeline_spec_contains_all_native_nodes(self):
+        spec = build_pcgex_formation_pipeline_spec()
+        self.assertEqual(spec["formation_attribute"], "FormationId")
+        self.assertEqual(spec["boundary_tolerance_cm"], 0.01)
+        self.assertEqual(spec["min_points_threshold"], 3)
+        self.assertIn("MI_Cliff_BoundaryBlend", spec["material_instance"])
+
+        nodes = spec["nodes"]
+        self.assertIn("formation_tagger", nodes)
+        self.assertIn("regions_duplicate", nodes)
+        self.assertIn("regions_partition", nodes)
+        self.assertIn("regions_hulls", nodes)
+        self.assertIn("boundary_stitch", nodes)
+        self.assertIn("wall_material", nodes)
+
+        # Verify partition node protects IsClosed and sets bCleanupConsumableAttributes=False
+        partition_settings = nodes["regions_partition"]["settings"]
+        self.assertFalse(partition_settings["bCleanupConsumableAttributes"])
+        self.assertIn("IsClosed", partition_settings["protectedAttributes"])
+
+    def test_configure_pcgex_data_ownership_updates_duplicate_and_partition(self):
         mock_author = MagicMock()
-        mock_author.state = {"nodes": {"regions_partition": "/Path/To/Node"}}
-        configure_pcgex_data_ownership(mock_author, partition_node_name="regions_partition")
-        mock_author.call.assert_called_once()
-        call_args = mock_author.call.call_args[0]
-        self.assertEqual(call_args[0], "PCGToolset.PCGToolset")
-        self.assertEqual(call_args[1], "UpdateNode")
+        mock_author.state = {
+            "nodes": {
+                "regions_duplicate": "/Path/To/DuplicateNode",
+                "regions_partition": "/Path/To/PartitionNode",
+            }
+        }
+        configure_pcgex_data_ownership(
+            mock_author,
+            partition_node_name="regions_partition",
+            duplicate_node_name="regions_duplicate",
+        )
+        self.assertEqual(mock_author.call.call_count, 2)
         import json
-        params = json.loads(call_args[2]["jsonParams"])
-        self.assertFalse(params["bCleanupConsumableAttributes"])
-        self.assertIn("IsClosed", params["protectedAttributes"])
+
+        # Check duplicate node update
+        dup_call = mock_author.call.call_args_list[0][0]
+        self.assertEqual(dup_call[0], "PCGToolset.PCGToolset")
+        self.assertEqual(dup_call[1], "UpdateNode")
+        dup_params = json.loads(dup_call[2]["jsonParams"])
+        self.assertTrue(dup_params["bCopyAllAttributes"])
+
+        # Check partition node update
+        part_call = mock_author.call.call_args_list[1][0]
+        self.assertEqual(part_call[0], "PCGToolset.PCGToolset")
+        self.assertEqual(part_call[1], "UpdateNode")
+        part_params = json.loads(part_call[2]["jsonParams"])
+        self.assertFalse(part_params["bCleanupConsumableAttributes"])
+        self.assertIn("IsClosed", part_params["protectedAttributes"])
 
 
 if __name__ == "__main__":

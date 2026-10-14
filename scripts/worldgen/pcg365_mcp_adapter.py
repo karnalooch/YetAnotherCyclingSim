@@ -1,8 +1,9 @@
 """Safe MCP adapter for PCG/PCGEx inspection in Unreal Engine.
 
 Eliminates unbounded GetNodeDataView calls, enforces upstream native PCG/PCGEx
-reduction to <= 256 points before dispatch, provides circuit-breaker protection
-against timeout loops, and prevents concurrent access to shared graphs.
+reduction to <= 256 points via authenticated reduction proof before dispatch,
+provides circuit-breaker protection against timeout loops, and prevents concurrent
+access to shared graphs.
 """
 from __future__ import annotations
 
@@ -14,6 +15,15 @@ from typing import Any, Dict, Optional
 MAX_SAFE_PROBE_POINTS = 256
 MAX_SAFE_RESPONSE_BYTES = 1024 * 1024  # 1 MB maximum response payload
 DEFAULT_MCP_TIMEOUT_SECONDS = 10.0
+
+VALID_REDUCTION_METHODS = {
+    "PCG_SAMPLE_NODE",
+    "PCGEX_DOWNSAMPLE",
+    "PCGEX_COLLAPSE",
+    "BOUNDED_PROBE_NODE",
+    "REDUCED_STATISTICS",
+    "DOWNSAMPLED_CONTOUR",
+}
 
 
 class UnsafeMcpReadError(ValueError):
@@ -43,39 +53,50 @@ def require_small_native_probe(point_count: Any) -> None:
 
 def require_native_reduction_proof(
     node_name: str,
-    point_count: Any,
-    reduction_type: str = "BOUNDED_PROBE_NODE",
-    proof: Optional[Dict[str, Any]] = None,
-) -> None:
+    reduction_proof: Dict[str, Any],
+) -> int:
     """Validate that data has been explicitly reduced inside native PCG/PCGEx.
 
     Must be verified BEFORE any tool call or network transmission.
+    Extracts and returns the certified point count from the proof.
+    Does NOT trust caller-asserted point counts without authenticated proof.
     """
     if not node_name:
         raise UnsafeMcpReadError("Node name must be specified for native reduction check")
 
-    valid_reduction_types = {
-        "PCG_SAMPLE_NODE",
-        "PCGEX_DOWNSAMPLE",
-        "PCGEX_COLLAPSE",
-        "BOUNDED_PROBE_NODE",
-        "REDUCED_STATISTICS",
-        "DOWNSAMPLED_CONTOUR",
-    }
-    if reduction_type not in valid_reduction_types:
+    if not isinstance(reduction_proof, dict):
         raise UnsafeMcpReadError(
-            f"Unrecognized reduction type {reduction_type!r}. "
-            f"Must be one of: {sorted(valid_reduction_types)}"
+            f"Reduction proof must be an authenticated dictionary for node {node_name!r}"
         )
 
-    try:
-        require_small_native_probe(point_count)
-    except ValueError as exc:
+    required_keys = {"reduction_node", "reduction_method", "certified_point_count", "source_node"}
+    missing = required_keys - set(reduction_proof.keys())
+    if missing:
         raise UnsafeMcpReadError(
-            f"Cannot inspect node {node_name!r}: upstream point count "
-            f"{point_count!r} exceeds safe limit of {MAX_SAFE_PROBE_POINTS}. "
-            f"Native PCG reduction must occur before MCP readback."
-        ) from exc
+            f"Incomplete reduction proof for node {node_name!r}; missing required keys: {sorted(missing)}"
+        )
+
+    if reduction_proof["reduction_node"] != node_name:
+        raise UnsafeMcpReadError(
+            f"Reduction proof mismatch: proof is for node {reduction_proof['reduction_node']!r}, "
+            f"but requested node is {node_name!r}"
+        )
+
+    method = reduction_proof.get("reduction_method")
+    if method not in VALID_REDUCTION_METHODS:
+        raise UnsafeMcpReadError(
+            f"Unrecognized reduction method {method!r} in proof. "
+            f"Must be one of: {sorted(VALID_REDUCTION_METHODS)}"
+        )
+
+    certified_count = reduction_proof.get("certified_point_count")
+    if type(certified_count) is not int or not 0 <= certified_count <= MAX_SAFE_PROBE_POINTS:
+        raise UnsafeMcpReadError(
+            f"Cannot inspect node {node_name!r}: certified point count {certified_count!r} "
+            f"exceeds safe limit of {MAX_SAFE_PROBE_POINTS}. Native PCG reduction must occur before MCP readback."
+        )
+
+    return certified_count
 
 
 class SafeMcpAdapter:
@@ -86,10 +107,12 @@ class SafeMcpAdapter:
         client: Any = None,
         max_points: int = MAX_SAFE_PROBE_POINTS,
         timeout: float = DEFAULT_MCP_TIMEOUT_SECONDS,
+        max_response_bytes: int = MAX_SAFE_RESPONSE_BYTES,
     ):
         self.client = client
         self.max_points = max_points
         self.timeout = timeout
+        self.max_response_bytes = max_response_bytes
         self._lock = threading.Lock()
         self._circuit_breaker_tripped = False
         self._circuit_breaker_reason: Optional[str] = None
@@ -120,12 +143,12 @@ class SafeMcpAdapter:
         node_name: str,
         start_index: int,
         end_index: int,
-        verified_point_count: Any,
-        reduction_type: str = "BOUNDED_PROBE_NODE",
-    ) -> None:
+        reduction_proof: Dict[str, Any],
+    ) -> int:
         """Perform pre-dispatch safety verification.
 
-        Raises UnsafeMcpReadError BEFORE any network or tool dispatch if unsafe.
+        Raises UnsafeMcpReadError or McpCircuitBreakerError BEFORE any network
+        or tool dispatch if unsafe. Returns certified point count.
         """
         if self._circuit_breaker_tripped:
             raise McpCircuitBreakerError(
@@ -159,45 +182,69 @@ class SafeMcpAdapter:
                 "Reduce data inside native PCG/PCGEx before requesting data view."
             )
 
-        # Enforce upstream reduction proof
-        require_native_reduction_proof(
+        # Enforce upstream reduction proof without trusting unverified inputs
+        certified_count = require_native_reduction_proof(
             node_name=node_name,
-            point_count=verified_point_count,
-            reduction_type=reduction_type,
+            reduction_proof=reduction_proof,
         )
+
+        if end_index >= certified_count:
+            raise UnsafeMcpReadError(
+                f"Requested end_index ({end_index}) exceeds certified point count ({certified_count}) "
+                f"for reduction node {node_name!r}"
+            )
+
+        return certified_count
 
     def safe_get_node_data_view(
         self,
         author_or_client: Any,
         actor: Any,
         node: Any,
+        node_name: str,
+        reduction_proof: Dict[str, Any],
         pin_label: str = "Out",
         attribute_name: str = "",
         start_index: int = 0,
-        end_index: int = 64,
-        verified_point_count: Any = 64,
-        reduction_type: str = "BOUNDED_PROBE_NODE",
-        node_name: str = "unknown_node",
+        end_index: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Safely fetch node data view with pre-dispatch reduction enforcement.
 
         Guarantees:
-        1. No request is sent if verified_point_count > 256 or unreduced.
+        1. No request is sent without authenticated reduction proof certifying <= 256 points.
         2. No request is sent if endIndex is -1 or span > 256.
         3. Mutual exclusion: prevents concurrent access to shared graph.
-        4. No automatic retries on timeout: trips circuit breaker fail-closed.
-        5. Enforces maximum payload size limit.
+        4. Re-checks circuit breaker inside lock to block concurrent callers after timeout.
+        5. No automatic retries on timeout: trips circuit breaker fail-closed.
+        6. Enforces maximum payload size limit.
         """
+        # Require authenticated reduction proof and extract certified count
+        certified_count = require_native_reduction_proof(
+            node_name=node_name,
+            reduction_proof=reduction_proof,
+        )
+
+        if end_index is None:
+            if certified_count == 0:
+                raise UnsafeMcpReadError(f"Cannot inspect node {node_name!r}: certified point count is 0")
+            end_index = certified_count - 1
+
         # Pre-dispatch validation: raises before taking lock or touching network
         self.validate_data_view_arguments(
             node_name=node_name,
             start_index=start_index,
             end_index=end_index,
-            verified_point_count=verified_point_count,
-            reduction_type=reduction_type,
+            reduction_proof=reduction_proof,
         )
 
         with self._lock:
+            # Re-check circuit breaker inside the lock for queued concurrent callers
+            if self._circuit_breaker_tripped:
+                raise McpCircuitBreakerError(
+                    f"MCP circuit breaker is TRIPPED: {self._circuit_breaker_reason}. "
+                    "Queued request aborted fail-closed without dispatch."
+                )
+
             self._request_counter += 1
             request_id = self._request_counter
             self._last_request_id = request_id
@@ -242,8 +289,20 @@ class SafeMcpAdapter:
                     raise McpTimeoutError(f"MCP timeout encountered: {exc}. Circuit breaker tripped.") from exc
                 raise
 
-            # Post-dispatch verification
-            # Verify response is valid dict/data
+            # Post-dispatch payload size enforcement
+            if isinstance(raw, (str, bytes)):
+                raw_bytes_len = len(raw)
+            else:
+                raw_bytes_len = len(json.dumps(raw))
+
+            if raw_bytes_len > self.max_response_bytes:
+                self.trip_circuit_breaker(
+                    f"Response size ({raw_bytes_len} bytes) exceeded MAX_SAFE_RESPONSE_BYTES ({self.max_response_bytes})"
+                )
+                raise UnsafeMcpReadError(
+                    f"MCP response exceeded {self.max_response_bytes} bytes; circuit breaker tripped fail-closed."
+                )
+
             if isinstance(raw, str):
                 try:
                     data = json.loads(raw)
@@ -258,6 +317,7 @@ class SafeMcpAdapter:
                 "elapsed_seconds": time.time() - start_time,
                 "start_index": start_index,
                 "end_index": end_index,
+                "response_bytes": raw_bytes_len,
             }
             return data
 
@@ -335,10 +395,11 @@ def audit_mcp_blockage_hypotheses(
         "timeout_seconds": timeout_seconds,
         "hypotheses": hypotheses,
         "primary_safeguards": [
-            "Upstream PCG node reduction to <= 256 points strictly required before GetNodeDataView dispatch",
+            "Authenticated upstream reduction proof certifying <= 256 points strictly required before dispatch",
             "Prohibition of endIndex=-1 and ranges > 256",
-            "Fail-closed circuit breaker: no automatic retries after timeout",
-            "Mutual exclusion on MCP graph operations",
+            "Fail-closed circuit breaker on timeout with strict prohibition of automatic retries",
+            "Post-dispatch payload size enforcement (max 1 MB)",
+            "Mutual exclusion with in-lock circuit breaker re-check for concurrent callers",
             "Zero network traffic when pre-flight validation fails",
         ],
     }

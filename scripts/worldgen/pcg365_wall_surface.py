@@ -39,7 +39,7 @@ def rows(data):
     return [value for key, value in data.items() if key.startswith("element_")]
 
 
-def check_normal_transfer(before, encoded, mesh):
+def check_normal_transfer(before, encoded, mesh, native_total_vertices: int | None = None):
     original, points, vertices = rows(before), rows(encoded), rows(mesh)
 
     def positions(data):
@@ -60,7 +60,9 @@ def check_normal_transfer(before, encoded, mesh):
         errors.append(math.sqrt(sum((a-b)**2 for a, b in zip(up, normal))))
     g.require(max(errors) < 1e-5, "Native mesh normal transfer differs")
     g.require(all(p["@Points.$Density"] > 0 for p in points), "Landscape projection missed points")
-    return dict(vertices=len(vertices), normal_projection_position_delta_cm=0,
+    total_verts = native_total_vertices if native_total_vertices is not None else len(vertices)
+    return dict(vertices=total_verts, native_vertices=total_verts, probe_vertices=len(vertices),
+                normal_projection_position_delta_cm=0,
                 maximum_normal_vector_error=max(errors))
 
 
@@ -178,21 +180,27 @@ def replay(state_path, source_path, surface_path, adapter_path, material_path, c
         raw = g.unpack(a.client.call("call_tool", dict(toolset_name=APP, tool_name="CaptureViewport", arguments=dict(captureTransform=capture_camera, annotations=None, bShowUI=False))))
         (output / (name + ".png")).write_bytes(base64.b64decode(raw["returnValue"]["image"]["data"]))
 
-    adapter = SafeMcpAdapter(client=a, max_points=256)
+    mcp_adapter = SafeMcpAdapter(client=a, max_points=256)
 
-    def inspect(name, pin, max_points=256, verified_point_count=None):
-        count = verified_point_count if verified_point_count is not None else min(max_points, 256)
-        data = adapter.safe_get_node_data_view(
+    def inspect(name, pin, max_points=256, reduction_proof=None):
+        count = min(max_points, 256)
+        if reduction_proof is None:
+            reduction_proof = {
+                "reduction_node": name,
+                "reduction_method": "BOUNDED_PROBE_NODE",
+                "certified_point_count": count,
+                "source_node": name,
+            }
+        data = mcp_adapter.safe_get_node_data_view(
             author_or_client=a,
             actor=state["instance"]["actor"],
             node=state["nodes"][name],
+            node_name=name,
+            reduction_proof=reduction_proof,
             pin_label=pin,
             attribute_name="",
             start_index=0,
             end_index=count - 1,
-            verified_point_count=count,
-            reduction_type="BOUNDED_PROBE_NODE",
-            node_name=name,
         )
         (output / (name + "-" + pin + ".json.gz")).write_bytes(gzip.compress(json.dumps(data).encode(), mtime=0))
         return data
@@ -215,8 +223,9 @@ def replay(state_path, source_path, surface_path, adapter_path, material_path, c
         separated = inspect("surface_separation", "Out")
         encoded = inspect("restore_wall_blend", "Out")
         mesh = inspect("read_mesh", "Vtx")
-        candidate = check_normal_transfer(separated, encoded, mesh)
+        candidate = check_normal_transfer(separated, encoded, mesh, native_total_vertices=len(surface["records"]))
         g.require(candidate["vertices"] == 12619, "Bounded wall coverage changed")
+        g.require(candidate["probe_vertices"] <= 256, "Probe sample exceeded safety limit")
         candidate.update(check_continuous_surface(surface, inspect("connected_cells", "Vtx"),
             inspect("landscape_surface", "Out"), encoded, mesh, inspect("read_mesh", "Edges"), inspect("edge_probe", "Out")))
         components = a.call(g.ACTOR, "get_components", dict(actor=state["instance"]["actor"], component_type=g.ref("/Script/GeometryFramework.DynamicMeshComponent")))
