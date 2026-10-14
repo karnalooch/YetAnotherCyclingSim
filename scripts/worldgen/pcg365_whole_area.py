@@ -108,7 +108,19 @@ def set_manual_generation(a, actor):
               values=json.dumps({"bRegenerateInEditor": False}))), "Cannot select manual generation")
 
 
+def require_derived_world_for_authoring(map_package=MAP):
+    """Reject saving or changing the accepted Live Host source world in place."""
+    if map_package == g.MAP:
+        raise ValueError(
+            "WHOLE_AREA_NATIVE_BLOCKED_SOURCE_MAP: L_RoadSurface is the accepted "
+            "source world; create and verify an owned derived consumer before "
+            "PCG authoring, actor removal or map save"
+        )
+
+
 def update_world(input_path, input_sha, output, asset_catalog):
+    # Fail before output creation, MCP initialization and any scene mutation.
+    require_derived_world_for_authoring()
     output = Path(output)
     g.require(digest(input_path) == input_sha, "Source input changed")
     data = json.loads(Path(input_path).read_text())

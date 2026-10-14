@@ -2,6 +2,27 @@
 
 Issue #365, M3. The owner approved slope alignment up to 42 degrees, existing PCGEx nodes, MCP orchestration and input adaptation on 2026-10-13. The current visual recipe is `PCG365_PCGEX_SLOPE_ALIGNED_PREVIEW_V3`. Historical V1/V2 contact thresholds and rejected results remain unchanged.
 
+## Native authoring safety hold — 2026-10-14
+
+The current head deliberately **fails closed** before contacting Unreal in
+`pcg365_wall_surface.replay` and `pcg365_whole_area.update_world`.
+The recorded 100k-row MCP request has an unknown native outcome, so the old
+wall replay cannot run and `--mode whole-area` cannot edit or save the
+accepted `L_RoadSurface` map. Both guards are intentional until an owned,
+independently verified derived consumer and true native bounded-probe evidence
+are available. Preview inputs can still be prepared offline. There is **no
+native acceptance** from these changes and no request to restart UE.
+
+A caller-created `certified_point_count` dictionary is only a claimed value:
+it does **not** prove that native graph data was reduced. `SafeMcpAdapter`
+requires a separately installed trusted native verifier and a genuinely bounded
+transport; neither is present in the current wall replay. It must reject rather
+than fall back to the legacy 180-second / 32 MiB client. The source input count
+(12,619 pilot records) is not a verified native mesh vertex count, and the
+formation-node plan is a **specification, not installed graph wiring**.
+Do not unlock a native rollout by fabricating a probe receipt or mocking a
+verifier outside offline tests. Maintain the 3 cm diagnostic offset.
+
 ## Whole-area continuation and inspection failure - 2026-10-14
 
 The owner authorized the complete 2,016.5 m square, continuous native PCGEx
@@ -36,7 +57,7 @@ dispatch; the Unreal process (PID 37152) remains present and responding.
 
 To eliminate future lockups, [`pcg365_mcp_adapter.py`](../../scripts/worldgen/pcg365_mcp_adapter.py)
 enforces:
-1. Hard cap of <= 256 points verified inside native PCG/PCGEx before any `GetNodeDataView` call.
+1. A <=256-point *claimed* receipt is rejected unless an independent native verifier authenticates the actual reduced node; currently no production verifier is installed.
 2. Complete elimination of unbounded reads (`endIndex=-1`).
 3. Fail-closed circuit breaker on timeout with strict prohibition of automatic retries.
 4. Mutual exclusion preventing concurrent access to shared graphs.

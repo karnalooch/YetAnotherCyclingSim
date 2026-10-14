@@ -40,7 +40,33 @@ def make_proof(node: str = "probe_node", count: int = 64, method: str = "BOUNDED
 class SafeMcpAdapterTests(unittest.TestCase):
     def setUp(self):
         self.mock_client = MagicMock()
-        self.adapter = SafeMcpAdapter(client=self.mock_client, max_points=256, timeout=2.0)
+        self.adapter = SafeMcpAdapter(
+            client=self.mock_client, max_points=256, timeout=2.0,
+            # Test-only fake verifier; there is deliberately no production verifier.
+            trusted_native_reduction_verifier=lambda actor, node, receipt: receipt["certified_point_count"],
+        )
+
+    def test_missing_native_attestor_fails_before_any_transport_call(self):
+        untrusted = SafeMcpAdapter()
+        receiver = MagicMock()
+        with self.assertRaisesRegex(UnsafeMcpReadError, "NATIVE_PROBE_ATTESTATION_MISSING"):
+            untrusted.safe_get_node_data_view(
+                author_or_client=receiver, actor="actor", node="node",
+                node_name="node", reduction_proof=make_proof("node", 3),
+            )
+        receiver.call_bounded.assert_not_called()
+        receiver.call.assert_not_called()
+
+    def test_bounded_transport_is_required_even_with_test_attestor(self):
+        class LegacyOnly:
+            def call(self, *args, **kwargs):
+                raise AssertionError("legacy transport must not be called")
+
+        with self.assertRaisesRegex(UnsafeMcpReadError, "BOUNDED_MCP_TRANSPORT_MISSING"):
+            self.adapter.safe_get_node_data_view(
+                author_or_client=LegacyOnly(), actor="actor", node="node",
+                node_name="node", reduction_proof=make_proof("node", 3),
+            )
 
     def test_unbounded_end_index_minus_one_is_rejected_before_dispatch(self):
         proof = make_proof("test_node", 64)
@@ -56,7 +82,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
             )
         self.assertIn("endIndex=-1", str(ctx.exception))
         # Ensure ZERO network calls dispatched
-        self.assertEqual(self.mock_client.call.call_count, 0)
+        self.assertEqual(self.mock_client.call_bounded.call_count, 0)
 
     def test_excessive_point_span_is_rejected_before_dispatch(self):
         for span in [257, 1000, 100000]:
@@ -79,7 +105,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
                         end_index=span - 1,
                     )
                 self.assertIn("exceeds MAX_SAFE_PROBE_POINTS", str(ctx.exception))
-        self.assertEqual(self.mock_client.call.call_count, 0)
+        self.assertEqual(self.mock_client.call_bounded.call_count, 0)
 
     def test_unreduced_upstream_data_is_rejected_even_if_request_span_is_small(self):
         """A small requested range alone is not a guard if the upstream dataset is dense."""
@@ -101,7 +127,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
                 end_index=32,
             )
         self.assertIn("exceeds safe limit", str(ctx.exception))
-        self.assertEqual(self.mock_client.call.call_count, 0)
+        self.assertEqual(self.mock_client.call_bounded.call_count, 0)
 
     def test_missing_reduction_proof_or_invalid_fields_rejected_with_zero_dispatch(self):
         # Empty node name
@@ -130,7 +156,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
         with self.assertRaises(UnsafeMcpReadError):
             require_native_reduction_proof("test_node", make_proof("test_node", 257))
 
-        self.assertEqual(self.mock_client.call.call_count, 0)
+        self.assertEqual(self.mock_client.call_bounded.call_count, 0)
 
     def test_require_small_native_probe_validates_counts(self):
         for invalid in [-1, 257, 100000, "64", None, 1.5]:
@@ -142,7 +168,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
         require_small_native_probe(256)
 
     def test_successful_bounded_call_dispatches_cleanly(self):
-        self.mock_client.call.return_value = {"returnValue": {"points": [{"x": 1}]}}
+        self.mock_client.call_bounded.return_value = {"returnValue": {"points": [{"x": 1}]}}
         proof = make_proof("probe_node", 64)
         result = self.adapter.safe_get_node_data_view(
             author_or_client=self.mock_client,
@@ -154,11 +180,11 @@ class SafeMcpAdapterTests(unittest.TestCase):
             start_index=0,
             end_index=63,
         )
-        self.assertEqual(self.mock_client.call.call_count, 1)
+        self.assertEqual(self.mock_client.call_bounded.call_count, 1)
         self.assertIn("points", result["returnValue"])
 
     def test_timeout_trips_circuit_breaker_and_prevents_retry(self):
-        self.mock_client.call.side_effect = TimeoutError("Simulated client timeout after 180s")
+        self.mock_client.call_bounded.side_effect = TimeoutError("Simulated client timeout after 180s")
         proof = make_proof("probe_node", 64)
         with self.assertRaises(McpTimeoutError):
             self.adapter.safe_get_node_data_view(
@@ -185,7 +211,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
             )
         self.assertIn("TRIPPED", str(ctx.exception))
         # Total call count should still be 1 (no automatic retry!)
-        self.assertEqual(self.mock_client.call.call_count, 1)
+        self.assertEqual(self.mock_client.call_bounded.call_count, 1)
 
     def test_concurrent_queued_caller_aborts_when_breaker_tripped_inside_lock(self):
         """When Thread 1 times out in lock, Thread 2 queued for lock must abort fail-closed."""
@@ -197,7 +223,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
             time.sleep(0.05)
             raise TimeoutError("Simulated 180s timeout")
 
-        self.mock_client.call.side_effect = slow_timeout_call
+        self.mock_client.call_bounded.side_effect = slow_timeout_call
 
         results = {}
 
@@ -247,12 +273,12 @@ class SafeMcpAdapterTests(unittest.TestCase):
         self.assertIsInstance(results.get("t2"), McpCircuitBreakerError)
 
         # Client was called exactly ONCE (by thread 1, never by thread 2!)
-        self.assertEqual(self.mock_client.call.call_count, 1)
+        self.assertEqual(self.mock_client.call_bounded.call_count, 1)
 
     def test_response_payload_size_limit_trips_circuit_breaker(self):
         # 2 MB response payload
         huge_payload = json.dumps({"points": [{"large_data": "x" * 1000} for _ in range(2000)]})
-        self.mock_client.call.return_value = huge_payload
+        self.mock_client.call_bounded.return_value = huge_payload
         proof = make_proof("probe_node", 64)
 
         with self.assertRaises(UnsafeMcpReadError) as ctx:
@@ -280,7 +306,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
                 end_index=63,
             )
         # Call count is 1
-        self.assertEqual(self.mock_client.call.call_count, 1)
+        self.assertEqual(self.mock_client.call_bounded.call_count, 1)
 
     def test_audit_mcp_blockage_hypotheses_generates_all_five_diagnostics(self):
         receipt = {

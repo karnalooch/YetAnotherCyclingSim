@@ -39,7 +39,7 @@ def rows(data):
     return [value for key, value in data.items() if key.startswith("element_")]
 
 
-def check_normal_transfer(before, encoded, mesh, native_total_vertices: int | None = None):
+def check_normal_transfer(before, encoded, mesh, source_record_count: int | None = None):
     original, points, vertices = rows(before), rows(encoded), rows(mesh)
 
     def positions(data):
@@ -60,9 +60,12 @@ def check_normal_transfer(before, encoded, mesh, native_total_vertices: int | No
         errors.append(math.sqrt(sum((a-b)**2 for a, b in zip(up, normal))))
     g.require(max(errors) < 1e-5, "Native mesh normal transfer differs")
     g.require(all(p["@Points.$Density"] > 0 for p in points), "Landscape projection missed points")
-    total_verts = native_total_vertices if native_total_vertices is not None else len(vertices)
-    return dict(vertices=total_verts, native_vertices=total_verts, probe_vertices=len(vertices),
-                normal_projection_position_delta_cm=0,
+    if source_record_count is not None:
+        g.require(type(source_record_count) is int and source_record_count >= len(vertices),
+                  "Source count cannot establish native mesh vertices")
+    return dict(vertices=len(vertices), native_vertices=None,
+                native_vertex_count_verified=False, source_record_count=source_record_count,
+                probe_vertices=len(vertices), normal_projection_position_delta_cm=0,
                 maximum_normal_vector_error=max(errors))
 
 
@@ -124,7 +127,22 @@ def check_continuous_surface(source, flat, ground, encoded, mesh, edges, edge_pr
                 blended_vertices=sum(0 < x < 1 for x in alpha.values()))
 
 
-def replay(state_path, source_path, surface_path, adapter_path, material_path, camera_path, output, hide_after=False):
+def require_native_wall_admission():
+    """Fail before creating an MCP client or modifying the running owner scene.
+
+    No trusted in-engine reduction-node witness or bounded MCP transport has yet
+    been qualified after the 100k-row hang. A mock receipt cannot unlock UE.
+    """
+    raise RuntimeError(
+        "NATIVE_BLOCKED_MCP_UNVERIFIED: live wall replay disabled until native "
+        "bounded-probe evidence, transport and graph provenance are independently proved"
+    )
+
+
+def replay(state_path, source_path, surface_path, adapter_path, material_path,
+           camera_path, output, hide_after=False, native_probe_receipts=None):
+    # Must run BEFORE any disk output, Client.initialize, graph execution or save.
+    require_native_wall_admission()
     g.require(not output.exists(), "Preserve earlier evidence; output must be new")
     g.require(w.digest(source_path) == INPUT_SHA, "Pilot source input changed")
     surface = validate_surface(surface_path)
@@ -183,14 +201,13 @@ def replay(state_path, source_path, surface_path, adapter_path, material_path, c
     mcp_adapter = SafeMcpAdapter(client=a, max_points=256)
 
     def inspect(name, pin, max_points=256, reduction_proof=None):
-        count = min(max_points, 256)
         if reduction_proof is None:
-            reduction_proof = {
-                "reduction_node": name,
-                "reduction_method": "BOUNDED_PROBE_NODE",
-                "certified_point_count": count,
-                "source_node": name,
-            }
+            if native_probe_receipts is None or name not in native_probe_receipts:
+                raise RuntimeError("No independently verified native reduction receipt for " + name)
+            reduction_proof = native_probe_receipts[name]
+        count = reduction_proof.get("certified_point_count")
+        g.require(type(count) is int and 0 < count <= min(max_points, 256),
+                  "Native reduction receipt has an unsafe point count")
         data = mcp_adapter.safe_get_node_data_view(
             author_or_client=a,
             actor=state["instance"]["actor"],
@@ -223,8 +240,10 @@ def replay(state_path, source_path, surface_path, adapter_path, material_path, c
         separated = inspect("surface_separation", "Out")
         encoded = inspect("restore_wall_blend", "Out")
         mesh = inspect("read_mesh", "Vtx")
-        candidate = check_normal_transfer(separated, encoded, mesh, native_total_vertices=len(surface["records"]))
-        g.require(candidate["vertices"] == 12619, "Bounded wall coverage changed")
+        candidate = check_normal_transfer(separated, encoded, mesh,
+                                          source_record_count=len(surface["records"]))
+        g.require(candidate["source_record_count"] == 12619,
+                  "Source input record count changed (not a native mesh count)")
         g.require(candidate["probe_vertices"] <= 256, "Probe sample exceeded safety limit")
         candidate.update(check_continuous_surface(surface, inspect("connected_cells", "Vtx"),
             inspect("landscape_surface", "Out"), encoded, mesh, inspect("read_mesh", "Edges"), inspect("edge_probe", "Out")))

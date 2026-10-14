@@ -1,12 +1,22 @@
 """Source-mask and exclusion-envelope boundaries for the whole-area adapter."""
 import math
 import unittest
+from unittest.mock import patch
 import numpy as np
 from scripts.worldgen.build_pcg365_world import pcgex_records, cliff_clearance
-from scripts.worldgen.pcg365_whole_area import input_radius
+from scripts.worldgen.pcg365_whole_area import input_radius, update_world
 from scripts.worldgen.pcg365_pcgex_graph import available_extent_cm, input_clearance_cm
 
 class WholeAreaInputs(unittest.TestCase):
+    def test_source_world_is_blocked_before_mcp_or_disk_mutation(self):
+        with patch("scripts.worldgen.pcg365_whole_area.g.Author") as author:
+            with patch("scripts.worldgen.pcg365_whole_area.save") as save:
+                with self.assertRaisesRegex(ValueError, "WHOLE_AREA_NATIVE_BLOCKED_SOURCE_MAP"):
+                    update_world("not-read", "not-read", "not-created", "not-read")
+                author.assert_not_called()
+                save.assert_not_called()
+
+
     def test_cliff_resolution_never_expands_or_fills_the_source_mask(self):
         cliff = np.zeros((17, 17), dtype=np.uint8)
         scree = cliff.copy()

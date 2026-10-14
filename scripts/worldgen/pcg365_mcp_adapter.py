@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 MAX_SAFE_PROBE_POINTS = 256
 MAX_SAFE_RESPONSE_BYTES = 1024 * 1024  # 1 MB maximum response payload
@@ -58,8 +58,9 @@ def require_native_reduction_proof(
     """Validate that data has been explicitly reduced inside native PCG/PCGEx.
 
     Must be verified BEFORE any tool call or network transmission.
-    Extracts and returns the certified point count from the proof.
-    Does NOT trust caller-asserted point counts without authenticated proof.
+    Checks the shape of a claimed count, NOT its provenance. The caller's
+    dictionary alone is not native attestation. Independent verification is
+    mandatory at dispatch and unavailable by default.
     """
     if not node_name:
         raise UnsafeMcpReadError("Node name must be specified for native reduction check")
@@ -100,7 +101,7 @@ def require_native_reduction_proof(
 
 
 class SafeMcpAdapter:
-    """Thread-safe, circuit-breaking adapter for Unreal PCG MCP calls."""
+    """Circuit-breaking adapter; serializes calls only on this instance."""
 
     def __init__(
         self,
@@ -108,11 +109,23 @@ class SafeMcpAdapter:
         max_points: int = MAX_SAFE_PROBE_POINTS,
         timeout: float = DEFAULT_MCP_TIMEOUT_SECONDS,
         max_response_bytes: int = MAX_SAFE_RESPONSE_BYTES,
+        trusted_native_reduction_verifier: Optional[
+            Callable[[Any, Any, Dict[str, Any]], int]
+        ] = None,
     ):
+        if type(max_points) is not int or not 0 < max_points <= MAX_SAFE_PROBE_POINTS:
+            raise ValueError("Unsafe point cap: must be 1..256")
+        if type(timeout) not in (int, float) or not 0 < timeout <= DEFAULT_MCP_TIMEOUT_SECONDS:
+            raise ValueError("Unsafe MCP timeout: must be >0 and <=10 seconds")
+        if type(max_response_bytes) is not int or not 0 < max_response_bytes <= MAX_SAFE_RESPONSE_BYTES:
+            raise ValueError("Unsafe MCP response limit: must be 1..1048576 bytes")
         self.client = client
         self.max_points = max_points
         self.timeout = timeout
         self.max_response_bytes = max_response_bytes
+        # No production witness verifier is installed until a native reduced
+        # graph and exact session/asset readback have been independently proved.
+        self._trusted_native_reduction_verifier = trusted_native_reduction_verifier
         self._lock = threading.Lock()
         self._circuit_breaker_tripped = False
         self._circuit_breaker_reason: Optional[str] = None
@@ -211,12 +224,12 @@ class SafeMcpAdapter:
         """Safely fetch node data view with pre-dispatch reduction enforcement.
 
         Guarantees:
-        1. No request is sent without authenticated reduction proof certifying <= 256 points.
+        1. No request is sent without an independent trusted native verifier (not installed by default).
         2. No request is sent if endIndex is -1 or span > 256.
         3. Mutual exclusion: prevents concurrent access to shared graph.
         4. Re-checks circuit breaker inside lock to block concurrent callers after timeout.
         5. No automatic retries on timeout: trips circuit breaker fail-closed.
-        6. Enforces maximum payload size limit.
+        6. Requires a bounded transport and checks output size again after dispatch.
         """
         # Require authenticated reduction proof and extract certified count
         certified_count = require_native_reduction_proof(
@@ -229,13 +242,24 @@ class SafeMcpAdapter:
                 raise UnsafeMcpReadError(f"Cannot inspect node {node_name!r}: certified point count is 0")
             end_index = certified_count - 1
 
-        # Pre-dispatch validation: raises before taking lock or touching network
+        # Reject forbidden ranges and tripped circuits before even consulting
+        # a trusted verifier (which may otherwise need to inspect live state).
         self.validate_data_view_arguments(
             node_name=node_name,
             start_index=start_index,
             end_index=end_index,
             reduction_proof=reduction_proof,
         )
+        if self._trusted_native_reduction_verifier is None:
+            raise UnsafeMcpReadError(
+                "NATIVE_PROBE_ATTESTATION_MISSING: a self-declared point count is not "
+                "evidence that the Unreal node is actually reduced; no MCP dispatch"
+            )
+        independent_count = self._trusted_native_reduction_verifier(actor, node, reduction_proof)
+        if type(independent_count) is not int or independent_count != certified_count:
+            raise UnsafeMcpReadError(
+                "NATIVE_PROBE_ATTESTATION_MISMATCH: independent native count does not match receipt"
+            )
 
         with self._lock:
             # Re-check circuit breaker inside the lock for queued concurrent callers
@@ -261,19 +285,19 @@ class SafeMcpAdapter:
 
             start_time = time.time()
             try:
-                if hasattr(author_or_client, "call"):
-                    raw = author_or_client.call(toolset, "GetNodeDataView", arguments)
-                elif hasattr(author_or_client, "client") and hasattr(author_or_client.client, "call"):
-                    raw = author_or_client.client.call(
-                        "call_tool",
-                        {
-                            "toolset_name": toolset,
-                            "tool_name": "GetNodeDataView",
-                            "arguments": arguments,
-                        },
+                # Never silently fall back to Author.call/Client.call: the legacy
+                # transport has a 180-second timeout and materializes up to 32 MiB.
+                # A native verified caller must supply a truly bounded transport.
+                bounded_call = getattr(author_or_client, "call_bounded", None)
+                if not callable(bounded_call):
+                    raise UnsafeMcpReadError(
+                        "BOUNDED_MCP_TRANSPORT_MISSING: refusing legacy unbounded client"
                     )
-                else:
-                    raise UnsafeMcpReadError("Invalid author/client passed to safe_get_node_data_view")
+                raw = bounded_call(
+                    toolset, "GetNodeDataView", arguments,
+                    timeout_seconds=self.timeout,
+                    max_response_bytes=self.max_response_bytes,
+                )
 
                 elapsed = time.time() - start_time
                 if elapsed > self.timeout:

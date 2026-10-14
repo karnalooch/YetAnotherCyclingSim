@@ -83,11 +83,23 @@ class WallProofTests(unittest.TestCase):
             check_normal_transfer(self.encoded, self.encoded, self.mesh)
 
     def test_check_normal_transfer_distinguishes_native_total_from_bounded_probe(self):
-        result = check_normal_transfer(self.encoded, self.encoded, self.mesh, native_total_vertices=12619)
-        self.assertEqual(result["vertices"], 12619)
-        self.assertEqual(result["native_vertices"], 12619)
+        result = check_normal_transfer(self.encoded, self.encoded, self.mesh, source_record_count=12619)
+        self.assertEqual(result["vertices"], 3)
+        self.assertIsNone(result["native_vertices"])
+        self.assertFalse(result["native_vertex_count_verified"])
+        self.assertEqual(result["source_record_count"], 12619)
         self.assertEqual(result["probe_vertices"], 3)
         self.assertLess(result["maximum_normal_vector_error"], 1e-5)
+
+    def test_replay_refuses_unverified_native_work_before_client_or_files(self):
+        with tempfile.TemporaryDirectory() as root:
+            output = Path(root) / "must-not-exist"
+            with patch.object(g, "Client") as client:
+                with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_MCP_UNVERIFIED"):
+                    replay(Path("missing"), Path("missing"), Path("missing"),
+                           Path("missing"), Path("missing"), Path("missing"), output)
+                client.assert_not_called()
+            self.assertFalse(output.exists())
 
     @patch("scripts.worldgen.pcg365_wall_surface.validate_surface")
     @patch("scripts.worldgen.pcg365_whole_area.digest")
@@ -257,7 +269,23 @@ class WallProofTests(unittest.TestCase):
                     return True
                 return True
 
-            with patch.object(g.Author, "call", new=mock_author_call):
+            # Synthetic replay is allowed only inside this isolated mocked unit
+            # test. Production must remain blocked before Client.initialize.
+            receipt_names = ("surface_separation", "restore_wall_blend", "read_mesh",
+                             "connected_cells", "landscape_surface", "edge_probe")
+            receipts = {name: {
+                "reduction_node": name, "reduction_method": "BOUNDED_PROBE_NODE",
+                "certified_point_count": 3, "source_node": name,
+            } for name in receipt_names}
+            with (
+                patch.object(g.Author, "call", new=mock_author_call),
+                patch("scripts.worldgen.pcg365_wall_surface.require_native_wall_admission"),
+                patch("scripts.worldgen.pcg365_wall_surface.SafeMcpAdapter") as bounded_adapter,
+            ):
+                bounded_adapter.return_value.safe_get_node_data_view.side_effect = (
+                    lambda **kw: mock_author_call(None, "", "GetNodeDataView",
+                                                  {"node": kw["node"], "pinLabel": kw["pin_label"]})
+                )
                 proof = replay(
                     state_path=state_path,
                     source_path=source_path,
@@ -267,12 +295,15 @@ class WallProofTests(unittest.TestCase):
                     camera_path=camera_path,
                     output=output_path,
                     hide_after=False,
+                    native_probe_receipts=receipts,
                 )
 
             # Assert proof properties
             self.assertIsNotNone(proof)
-            self.assertEqual(proof["vertices"], 12619)
-            self.assertEqual(proof["native_vertices"], 12619)
+            self.assertEqual(proof["vertices"], 3)
+            self.assertIsNone(proof["native_vertices"])
+            self.assertFalse(proof["native_vertex_count_verified"])
+            self.assertEqual(proof["source_record_count"], 12619)
             self.assertLessEqual(proof["probe_vertices"], 256)
             self.assertEqual(proof["component_count"], 1)
 
