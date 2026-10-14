@@ -109,7 +109,9 @@ class NativeReductionWitnessTests(unittest.TestCase):
         self.assertEqual(witness.tagged_data_count, 2)
         self.assertEqual(witness.reduction_node_path, REDUCE)
         self.assertEqual(witness.status, "NATIVE_LOCAL_INSPECTION_ONLY")
-        from scripts.ue.pcg365_native_reduction_witness import verify_witness_authenticity
+        from scripts.ue.pcg365_native_reduction_witness import (
+            verify_witness_authenticity,
+        )
 
         self.assertFalse(verify_witness_authenticity(witness))
 
@@ -439,7 +441,9 @@ class LiveWitnessProxyTests(unittest.TestCase):
             self._parse_receipt(self._receipt(generation_token=""))
 
     def test_reader_overflow_is_rejected(self):
-        with self.assertRaisesRegex(NativeProbeWitnessError, "point count 500 out of bounds"):
+        with self.assertRaisesRegex(
+            NativeProbeWitnessError, "point count 500 out of bounds"
+        ):
             self._parse_receipt(self._receipt(native_point_count=500))
 
     def test_reader_other_pid_is_rejected(self):
@@ -449,3 +453,67 @@ class LiveWitnessProxyTests(unittest.TestCase):
     def test_reader_requires_positive_dataset_count(self):
         with self.assertRaisesRegex(NativeProbeWitnessError, "tagged data count"):
             self._parse_receipt(self._receipt(tagged_data_count=0))
+
+    def test_attest_live_reduced_node_via_bounded_mcp_client(self):
+        from unittest.mock import patch, MagicMock
+        from scripts.worldgen.pcg365_bounded_transport import BoundedPcgMcpClient
+        from scripts.ue.pcg365_native_reduction_witness import (
+            attest_live_reduced_node,
+            verify_witness_authenticity,
+        )
+
+        fake_client = MagicMock(spec=BoundedPcgMcpClient)
+        fake_client.is_poisoned = False
+        fake_receipt = self._receipt(session_pid=45868)
+        fake_client.call_bounded.return_value = fake_receipt
+
+        with patch(
+            "scripts.ue.pcg365_native_reduction_witness.get_live_editor_pid",
+            return_value=45868,
+        ):
+            witness = attest_live_reduced_node(
+                actor_path=ACTOR,
+                graph_path=GRAPH,
+                source_node_path=SOURCE,
+                reduction_node_path=REDUCE,
+                reduction_class=SETTINGS,
+                output_pin="Out",
+                bounded_client=fake_client,
+            )
+            self.assertEqual(witness.native_point_count, 42)
+            self.assertEqual(witness.session_pid, 45868)
+            self.assertTrue(verify_witness_authenticity(witness, expected_pid=45868))
+
+    def test_attest_live_reduced_node_via_failing_bounded_mcp_client(self):
+        from unittest.mock import patch, MagicMock
+        from scripts.worldgen.pcg365_bounded_transport import (
+            BoundedPcgMcpClient,
+            BoundedMcpTransportError,
+        )
+        from scripts.ue.pcg365_native_reduction_witness import (
+            attest_live_reduced_node,
+            NativeProbeWitnessBlockedError,
+        )
+
+        fake_client = MagicMock(spec=BoundedPcgMcpClient)
+        fake_client.is_poisoned = False
+        fake_client.call_bounded.side_effect = BoundedMcpTransportError(
+            "Tool not found"
+        )
+
+        with patch(
+            "scripts.ue.pcg365_native_reduction_witness.get_live_editor_pid",
+            return_value=45868,
+        ):
+            with self.assertRaisesRegex(
+                NativeProbeWitnessBlockedError, "BLOCKED_PENDING_NATIVE_DEPLOYMENT"
+            ):
+                attest_live_reduced_node(
+                    actor_path=ACTOR,
+                    graph_path=GRAPH,
+                    source_node_path=SOURCE,
+                    reduction_node_path=REDUCE,
+                    reduction_class=SETTINGS,
+                    output_pin="Out",
+                    bounded_client=fake_client,
+                )

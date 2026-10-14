@@ -10,8 +10,8 @@
 
 #include "GameFramework/Actor.h"
 #include "HAL/PlatformProcess.h"
-#include "Misc/Guid.h"
 #include "Misc/DateTime.h"
+#include "Misc/SecureHash.h"
 #include "Serialization/JsonWriter.h"
 #include "Serialization/JsonSerializer.h"
 #include "Dom/JsonObject.h"
@@ -32,7 +32,7 @@ FString MakeErrorJson(const FString& InErrorCode, const FString& InMessage)
 }
 }
 
-FString UYacsPcgWitnessInspectionLibrary::InspectReducedNodeOutput(
+FString UYacsPcgWitnessToolset::InspectReducedNodeOutput(
     const FString& InActorPath,
     const FString& InGraphPath,
     const FString& InSourceNodePath,
@@ -245,6 +245,7 @@ FString UYacsPcgWitnessInspectionLibrary::InspectReducedNodeOutput(
 
     int32 TotalPointCount = 0;
     int32 MatchingTaggedDataCount = 0;
+    uint32 CombinedDataCrc = 0;
     const FName ExpectedPinName(*InOutputPin);
 
     for (const FPCGTaggedData& TaggedData : OutputCollection.TaggedData)
@@ -288,6 +289,16 @@ FString UYacsPcgWitnessInspectionLibrary::InspectReducedNodeOutput(
             );
         }
         MatchingTaggedDataCount++;
+
+        const FPCGCrc DataCrc = Data->GetOrComputeCrc(/*bFullDataCrc=*/true);
+        if (DataCrc.IsValid())
+        {
+            CombinedDataCrc = HashCombineFast(CombinedDataCrc, DataCrc.GetValue());
+        }
+        else
+        {
+            CombinedDataCrc = HashCombineFast(CombinedDataCrc, static_cast<uint32>(PointsInDataset));
+        }
     }
 
     if (MatchingTaggedDataCount == 0 || TotalPointCount == 0)
@@ -295,9 +306,19 @@ FString UYacsPcgWitnessInspectionLibrary::InspectReducedNodeOutput(
         return MakeErrorJson(TEXT("NO_MATCHING_POINTS"), FString::Printf(TEXT("No points found on pin %s"), *InOutputPin));
     }
 
-    // 10. Format authentic witness receipt bound to engine PID, session, and node identities
+    // 10. Format authentic witness receipt bound to engine PID, session, and deterministic generation state
     const uint32 SessionPid = FPlatformProcess::GetCurrentProcessId();
-    const FString GenerationToken = FGuid::NewGuid().ToString();
+    const FString StateFingerprint = FString::Printf(
+        TEXT("%s|%s|%s|%s|%d|%d|%u"),
+        *InActorPath,
+        *InGraphPath,
+        *ReductionNode->GetPathName(),
+        *InOutputPin,
+        TotalPointCount,
+        MatchingTaggedDataCount,
+        CombinedDataCrc
+    );
+    const FString GenerationToken = FMD5::HashAnsiString(*StateFingerprint);
     const FString TimestampIso = FDateTime::UtcNow().ToIso8601();
 
     TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();
@@ -318,4 +339,25 @@ FString UYacsPcgWitnessInspectionLibrary::InspectReducedNodeOutput(
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
     FJsonSerializer::Serialize(Root, Writer);
     return OutputString;
+}
+
+FString UYacsPcgWitnessInspectionLibrary::InspectReducedNodeOutput(
+    const FString& InActorPath,
+    const FString& InGraphPath,
+    const FString& InSourceNodePath,
+    const FString& InReductionNodePath,
+    const FString& InReductionClass,
+    const FString& InOutputPin,
+    int32 MaxAllowedPoints
+)
+{
+    return UYacsPcgWitnessToolset::InspectReducedNodeOutput(
+        InActorPath,
+        InGraphPath,
+        InSourceNodePath,
+        InReductionNodePath,
+        InReductionClass,
+        InOutputPin,
+        MaxAllowedPoints
+    );
 }

@@ -1,4 +1,5 @@
 """Offline, no-UE regression tests of the strict PCG365 HTTP/MCP wire contract."""
+
 from __future__ import annotations
 
 import json
@@ -37,7 +38,9 @@ class FakeSocket:
 
 
 class FakeResponse:
-    def __init__(self, status: int, body: bytes, headers: list[tuple[str, str]]) -> None:
+    def __init__(
+        self, status: int, body: bytes, headers: list[tuple[str, str]]
+    ) -> None:
         self.status = status
         self.body = body
         self.headers = headers
@@ -75,8 +78,15 @@ class FakeWire:
                 assert host == "127.0.0.1" and port == 8000
                 assert method == "POST" and path == "/mcp"
                 self.body = json.loads(body)
-                wire.calls.append({"method": method, "path": path, "body": self.body,
-                                   "headers": headers, "timeout": timeout})
+                wire.calls.append(
+                    {
+                        "method": method,
+                        "path": path,
+                        "body": self.body,
+                        "headers": headers,
+                        "timeout": timeout,
+                    }
+                )
 
             def getresponse(self):
                 if wire.block_until_shutdown:
@@ -89,20 +99,39 @@ class FakeWire:
                     payload = b""
                 elif method == "initialize":
                     status = 200
-                    payload = json.dumps({
-                        "jsonrpc": "2.0", "id": body["id"],
-                        "result": {"protocolVersion": "2025-06-18", "capabilities": {"tools": {}}},
-                    }).encode()
+                    payload = json.dumps(
+                        {
+                            "jsonrpc": "2.0",
+                            "id": body["id"],
+                            "result": {
+                                "protocolVersion": "2025-06-18",
+                                "capabilities": {"tools": {}},
+                            },
+                        }
+                    ).encode()
                 else:
                     status = 200
-                    payload = json.dumps({
-                        "jsonrpc": "2.0",
-                        "id": body["id"] + (1 if wire.bad_request_id else 0),
-                        "result": {"isError": False, "content": [{
-                            "type": "text",
-                            "text": json.dumps({"returnValue": {"element_0": {"count": 42}}}),
-                        }]},
-                    }).encode()
+                    payload = json.dumps(
+                        {
+                            "jsonrpc": "2.0",
+                            "id": body["id"] + (1 if wire.bad_request_id else 0),
+                            "result": {
+                                "isError": False,
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": json.dumps(
+                                            {
+                                                "returnValue": {
+                                                    "element_0": {"count": 42}
+                                                }
+                                            }
+                                        ),
+                                    }
+                                ],
+                            },
+                        }
+                    ).encode()
                 headers = [
                     ("Content-Type", "application/json"),
                     ("Mcp-Session-Id", "a" * 32),
@@ -139,7 +168,8 @@ class BoundedTransportTests(unittest.TestCase):
 
     def call(self, **kw):
         return self.client.call_bounded(
-            "PCGToolset.PCGToolset", "GetNodeDataView",
+            "PCGToolset.PCGToolset",
+            "GetNodeDataView",
             kw.pop("arguments", ARGS.copy()),
             timeout_seconds=kw.pop("timeout_seconds", 0.5),
             max_response_bytes=kw.pop("max_response_bytes", MAX_RESPONSE_BYTES),
@@ -154,24 +184,37 @@ class BoundedTransportTests(unittest.TestCase):
         )
         call = self.wire.calls[-1]
         self.assertEqual(call["body"]["params"]["name"], "call_tool")
-        self.assertEqual(call["body"]["params"]["arguments"]["tool_name"], "GetNodeDataView")
-        self.assertEqual(call["body"]["params"]["arguments"]["arguments"]["endIndex"], 256)
+        self.assertEqual(
+            call["body"]["params"]["arguments"]["tool_name"], "GetNodeDataView"
+        )
+        self.assertEqual(
+            call["body"]["params"]["arguments"]["arguments"]["endIndex"], 256
+        )
         self.assertEqual(call["headers"]["Mcp-Session-Id"], "a" * 32)
         self.assertTrue(all(x["timeout"] <= 0.5 for x in self.wire.calls))
         self.assertEqual(self.wire.responses[-1].read_args, [MAX_RESPONSE_BYTES + 1])
         self.assertEqual(self.call(), {"element_0": {"count": 42}})
-        self.assertEqual(len(self.wire.calls), 4)  # Same session, new bounded connection.
+        self.assertEqual(
+            len(self.wire.calls), 4
+        )  # Same session, new bounded connection.
 
     def test_invalid_ranges_and_toolnames_do_not_initialize_or_send(self):
-        bad = [dict(ARGS, endIndex=-1), dict(ARGS, endIndex=257),
-               dict(ARGS, startIndex=255, endIndex=255), dict(ARGS, startIndex=0.0)]
+        bad = [
+            dict(ARGS, endIndex=-1),
+            dict(ARGS, endIndex=257),
+            dict(ARGS, startIndex=255, endIndex=255),
+            dict(ARGS, startIndex=0.0),
+        ]
         for args in bad:
             with self.subTest(args=args), self.assertRaises(ValueError):
                 self.call(arguments=args)
         with self.assertRaises(ValueError):
             self.client.call_bounded(
-                "EditorToolset.EditorAppToolset", "GetNodeDataView", ARGS,
-                timeout_seconds=0.5, max_response_bytes=1000,
+                "EditorToolset.EditorAppToolset",
+                "GetNodeDataView",
+                ARGS,
+                timeout_seconds=0.5,
+                max_response_bytes=1000,
             )
         with self.assertRaises(ValueError):
             self.call(timeout_seconds=180)
@@ -222,3 +265,42 @@ class BoundedTransportTests(unittest.TestCase):
             self.call(timeout_seconds=0.04)
         self.assertTrue(self.client.is_poisoned)
         self.assertEqual(len(self.wire.calls), 1)
+
+    def test_witness_toolset_call_bounded_and_validation(self):
+        witness_args = {
+            "inActorPath": "/Game/PCG365/Test.Test:Actor",
+            "inGraphPath": "/Game/PCG365/Test.Test",
+            "inSourceNodePath": "/Game/PCG365/Test.Test:Source",
+            "inReductionNodePath": "/Game/PCG365/Test.Test:Reduce",
+            "inReductionClass": "PCGExDownsampleSettings",
+            "inOutputPin": "Out",
+            "maxAllowedPoints": 128,
+        }
+        res = self.client.call_bounded(
+            "YetAnotherCyclingSimEditor.YacsPcgWitnessToolset",
+            "InspectReducedNodeOutput",
+            witness_args,
+            timeout_seconds=0.5,
+            max_response_bytes=MAX_RESPONSE_BYTES,
+        )
+        self.assertEqual(res, {"element_0": {"count": 42}})
+        self.assertFalse(self.client.is_poisoned)
+        call = self.wire.calls[-1]
+        self.assertEqual(call["body"]["params"]["name"], "call_tool")
+        self.assertEqual(
+            call["body"]["params"]["arguments"]["toolset_name"],
+            "YetAnotherCyclingSimEditor.YacsPcgWitnessToolset",
+        )
+        self.assertEqual(
+            call["body"]["params"]["arguments"]["tool_name"], "InspectReducedNodeOutput"
+        )
+
+        bad_args = dict(witness_args, inActorPath="RelativePath")
+        with self.assertRaises(ValueError):
+            self.client.call_bounded(
+                "YetAnotherCyclingSimEditor.YacsPcgWitnessToolset",
+                "InspectReducedNodeOutput",
+                bad_args,
+                timeout_seconds=0.5,
+                max_response_bytes=MAX_RESPONSE_BYTES,
+            )

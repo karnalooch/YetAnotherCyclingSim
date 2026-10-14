@@ -18,7 +18,6 @@ import hmac
 import json
 import os
 from typing import Any
-import uuid
 import weakref
 
 from scripts.worldgen.pcg365_mcp_adapter import UnsafeMcpReadError
@@ -484,6 +483,83 @@ def attest_live_reduced_node(
             reduction_class=reduction_class,
             output_pin=output_pin,
             expected_pid=os.getpid(),
+        )
+        count = res_data["native_point_count"]
+        pid = res_data["session_pid"]
+        gen_token = res_data["generation_token"]
+        auth = compute_witness_token(
+            actor_path, graph_path, reduction_node_path, count, pid, gen_token
+        )
+        witness = NativeProbeWitness(
+            actor_path=actor_path,
+            graph_path=graph_path,
+            source_node_path=source_node_path,
+            reduction_node_path=reduction_node_path,
+            reduction_class=reduction_class,
+            output_pin=output_pin,
+            native_point_count=count,
+            tagged_data_count=res_data["tagged_data_count"],
+            session_pid=pid,
+            generation_token=gen_token,
+            auth_token=auth,
+        )
+        _ISSUED_WITNESSES[id(witness)] = witness
+        return witness
+
+    # External client bridge via bounded MCP client to authentic deployed toolset
+    if bounded_client is not None:
+        from scripts.worldgen.pcg365_bounded_transport import (
+            BoundedMcpTransportError,
+            BoundedPcgMcpClient,
+        )
+
+        if not isinstance(bounded_client, BoundedPcgMcpClient):
+            raise NativeProbeWitnessBlockedError(
+                "UNTRUSTED_TRANSPORT: bounded_client must be an authentic BoundedPcgMcpClient"
+            )
+        if bounded_client.is_poisoned:
+            raise NativeProbeWitnessBlockedError(
+                "POISONED_TRANSPORT: BoundedPcgMcpClient is poisoned"
+            )
+        if live_pid is None or live_pid <= 0:
+            raise NativeProbeWitnessBlockedError(
+                "NO_LIVE_EDITOR: No active UnrealEditor process found for native witness attestation"
+            )
+
+        toolset_name = "YetAnotherCyclingSimEditor.YacsPcgWitnessToolset"
+        tool_name = "InspectReducedNodeOutput"
+        call_args = {
+            "inActorPath": actor_path,
+            "inGraphPath": graph_path,
+            "inSourceNodePath": source_node_path,
+            "inReductionNodePath": reduction_node_path,
+            "inReductionClass": reduction_class,
+            "inOutputPin": output_pin,
+            "maxAllowedPoints": MAX_PROBE_POINTS,
+        }
+        try:
+            raw_result = bounded_client.call_bounded(
+                toolset_name,
+                tool_name,
+                call_args,
+                timeout_seconds=5.0,
+                max_response_bytes=1024 * 1024,
+            )
+        except (BoundedMcpTransportError, ValueError, TimeoutError) as exc:
+            raise NativeProbeWitnessBlockedError(
+                f"BLOCKED_PENDING_NATIVE_DEPLOYMENT: native buffer reader {toolset_name} "
+                f"call failed on live editor PID {live_pid}: {exc}"
+            ) from exc
+
+        res_data = _validate_native_reader_receipt(
+            raw_result,
+            actor_path=actor_path,
+            graph_path=graph_path,
+            source_node_path=source_node_path,
+            reduction_node_path=reduction_node_path,
+            reduction_class=reduction_class,
+            output_pin=output_pin,
+            expected_pid=live_pid,
         )
         count = res_data["native_point_count"]
         pid = res_data["session_pid"]

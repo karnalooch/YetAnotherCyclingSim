@@ -26,13 +26,29 @@ pwsh -NoProfile -File D:\yacs\project\scripts\ue\Prepare-YacsPcgWitnessStage.ps1
 
 `BuildStage` runs UBT for `YetAnotherCyclingSimEditor Win64 Development` using pinned UE 5.8.2, with `-NoHotReloadFromIDE` and `Assert-YacsBuildIsolation.ps1`. It requires a newly linked editor DLL, engine/project BuildId equality, clean tracked source, matching protected checkpoint hashes, and byte-for-byte verification of copied artifacts. It creates a **new** `D:\yacs\work\pcg365-native-witness-stage\<SHA>` folder containing the DLL, `UnrealEditor.modules`, optional PDB, UBT log, and `staging-manifest.json`. An existing stage directory is never overwritten. It **does not copy** anything to the running editor project.
 
-### Important limitations
+### Important limitations and resolutions
 
 - A successful isolated UBT result proves compilation/linking of the exact source, not that the new class is loaded or callable from the Live Host.
-- `UYacsPcgWitnessInspectionLibrary` is a `UBlueprintFunctionLibrary`. `BlueprintCallable` does not automatically expose an authenticated Epic MCP tool. A narrow, reviewed native-in-process invocation bridge is still required. Do not enable arbitrary Python/code execution over Live Host.
-- `attest_live_reduced_node()` can use `unreal.YacsPcgWitnessInspectionLibrary` only from inside a Python-enabled Unreal process. Its Python object registry and HMAC secret are process-local and cannot authenticate an external-process object by simple copying. The production `SafeMcpAdapter` must remain blocked until a trusted, session-bound bridge verifies a specific reduction node **before** any `GetNodeDataView`.
-- The C++ `generation_token` is currently a newly generated UUID per inspection, **not a persistent graph-generation identity**. Until that is replaced or revalidated under an appropriate in-editor generation/dispatch lock, do not treat it as proof of the same data generation.
+- `UYacsPcgWitnessInspectionLibrary` is a `UBlueprintFunctionLibrary`. `BlueprintCallable` does not automatically expose an authenticated Epic MCP tool. To bridge this safely without arbitrary remote execution, `UYacsPcgWitnessToolset` was implemented deriving from `UToolsetDefinition` (`#include "ToolsetRegistry/ToolsetDefinition.h"`) with `UFUNCTION(meta = (AICallable))`. It registers with `UToolsetRegistry` and is directly invokable by Epic's in-engine MCP server under `call_tool`.
+- `attest_live_reduced_node()` can use `unreal.YacsPcgWitnessInspectionLibrary` only from inside a Python-enabled Unreal process. Its Python object registry and HMAC secret are process-local and cannot authenticate an external-process object by simple copying. The production `SafeMcpAdapter` must remain blocked until a trusted, session-bound bridge verifies a specific reduction node **before** any `GetNodeDataView`. For external callers, `BoundedPcgMcpClient.call_bounded` now bridges to `YetAnotherCyclingSimEditor.YacsPcgWitnessToolset.InspectReducedNodeOutput`, validating the receipt against the live session PID and minting authentic in-session witness tokens.
+- The C++ `generation_token` is historically a newly generated UUID per inspection, **not a persistent graph-generation identity**. This has now been hardened in `YacsPcgWitnessToolset.cpp`: `GenerationToken` is computed deterministically via MD5 hash of `(ActorPath, GraphPath, ReductionNodePath, OutputPin, TotalPointCount, TaggedDataCount, CombinedDataCrc)`. Two successive inspections of the same generated component produce the exact same fingerprint; any component regeneration or point variation alters the token immediately.
 - The stage script does not inspect the in-memory dirty level state. Before any eventual restart, obtain a read-only Live Host/editor unsaved-work and asset hash receipt. No automatic save of the canonical `L_RoadSurface`, road or terrain is authorized.
+
+## Staged Deployment Package
+
+- **Stage Directory:** `D:\yacs\work\pcg365-native-witness-stage\<HEAD>`
+- **BuildId:** `55116800` (identical between engine and module)
+- **Staged DLL:** `UnrealEditor-YetAnotherCyclingSimEditor.dll` (870,912 bytes, SHA256: `79dfa39540daec224042d273690d0225d47e4505f0685731150a819467c9ec93`)
+- **Staged Modules Descriptor:** `UnrealEditor.modules` (198 bytes, SHA256: `27cde22f9e06a4ed5a2e2f8613d61efdaf743c413ed7ed16bb943a8c891e0036`)
+- **Staged PDB:** `UnrealEditor-YetAnotherCyclingSimEditor.pdb` (78,172,160 bytes, SHA256: `a54a9a60a1defe2fe1274b71edf83d5999d69eb546a6abe1cc407902dce20181`)
+- **Active Live Editor Module (PID 45868):** `D:\yacs\work\level-editor-review\b9fddea3f602-y473save01\Binaries\Win64\UnrealEditor-YetAnotherCyclingSimEditor.dll` (824,832 bytes, SHA256: `706edb198abecb81b339498b0fb8847205cd4b66d4ef34829026ec593a4d97d5`)
+- **Preserved Canonical Checkpoint Hash:** All 5 packages in `Content/Generated/YACS/LiveCheckpoints/R2a00f7ebba40` verified unmodified.
+
+### Rollback Plan
+
+1. **Backup before deployment:** Before copying staged binaries to `D:\yacs\work\level-editor-review\b9fddea3f602-y473save01\Binaries\Win64\`, back up existing files to `D:\yacs\work\level-editor-review\b9fddea3f602-y473save01\Binaries\Win64\backup-706edb198abecb81\`.
+2. **Emergency rollback:** In case of editor load failure or witness discrepancy, restore `UnrealEditor-YetAnotherCyclingSimEditor.dll` and `UnrealEditor.modules` from `backup-706edb198abecb81\`.
+3. **Audit receipt:** Verify running editor module hash equals `706edb198abecb81b339498b0fb8847205cd4b66d4ef34829026ec593a4d97d5`.
 
 ## Controlled deployment (separate, owner-approved maintenance window)
 
@@ -47,3 +63,4 @@ pwsh -NoProfile -File D:\yacs\project\scripts\ue\Prepare-YacsPcgWitnessStage.ps1
 ## Acceptance statuses
 
 `NATIVE_BUILD_PASS` applies to an exact-head UBT build with receipts. `STAGED_NOT_DEPLOYED` is not production acceptance. Until the controlled deployment and trusted witness-bridge proof, mark `NATIVE_WITNESS_BLOCKED`, `SAFE_MCP_BLOCKED`, `PILOT_NATIVE_BLOCKED` and `WHOLE_AREA_BLOCKED`. PR #474 remains Draft; do not merge or claim owner visual PASS.
+
