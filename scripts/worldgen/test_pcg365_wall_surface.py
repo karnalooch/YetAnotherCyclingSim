@@ -316,5 +316,101 @@ class WallProofTests(unittest.TestCase):
             self.assertTrue((output_path / "native-proof.json").exists())
 
 
+class WallAdmissionGateTests(unittest.TestCase):
+    def setUp(self):
+        from scripts.ue.pcg365_native_reduction_witness import NativeProbeWitness
+        from scripts.worldgen.pcg365_bounded_transport import BoundedPcgMcpClient
+        self.witness = NativeProbeWitness(
+            actor_path="/Game/PCG/Actor.Actor",
+            graph_path="/Game/PCG/Graph.Graph",
+            source_node_path="/Game/PCG/Graph.Graph:Source",
+            reduction_node_path="/Game/PCG/Graph.Graph:Reduce",
+            reduction_class="PCGExPointsToBoundsSettings",
+            output_pin="Out",
+            native_point_count=1,
+            tagged_data_count=1,
+            status="NATIVE_IN_PROCESS_OUTPUT_COUNTED",
+        )
+        self.client = BoundedPcgMcpClient()
+
+    def test_admission_passes_with_authentic_witness_and_client(self):
+        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
+        self.assertTrue(require_native_wall_admission(
+            witness=self.witness,
+            bounded_client=self.client,
+            target_map_package="/Game/Generated/YACS/PCG365Ex/WholeArea/L_PCG365_Rollout",
+        ))
+
+    def test_admission_rejects_none(self):
+        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_MCP_UNVERIFIED"):
+            require_native_wall_admission()
+
+    def test_admission_rejects_dict_witness(self):
+        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_INVALID_WITNESS"):
+            require_native_wall_admission(
+                witness={"native_point_count": 1},
+                bounded_client=self.client,
+            )
+
+    def test_admission_rejects_uncounted_status(self):
+        from dataclasses import replace
+        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
+        bad_witness = replace(self.witness, status="UNVERIFIED_ESTIMATE")
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_UNCONFIRMED_STATUS"):
+            require_native_wall_admission(
+                witness=bad_witness,
+                bounded_client=self.client,
+            )
+
+    def test_admission_rejects_unsafe_point_count(self):
+        from dataclasses import replace
+        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
+        bad_witness = replace(self.witness, native_point_count=257)
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_UNSAFE_COUNT"):
+            require_native_wall_admission(
+                witness=bad_witness,
+                bounded_client=self.client,
+            )
+
+    def test_admission_rejects_non_settings_class(self):
+        from dataclasses import replace
+        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
+        bad_witness = replace(self.witness, reduction_class="PCGExCustomNode")
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_INVALID_SETTINGS"):
+            require_native_wall_admission(
+                witness=bad_witness,
+                bounded_client=self.client,
+            )
+
+    def test_admission_rejects_untrusted_transport(self):
+        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_UNTRUSTED_TRANSPORT"):
+            require_native_wall_admission(
+                witness=self.witness,
+                bounded_client=object(),
+            )
+
+    def test_admission_rejects_poisoned_transport(self):
+        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
+        self.client._poisoned = True
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_POISONED_TRANSPORT"):
+            require_native_wall_admission(
+                witness=self.witness,
+                bounded_client=self.client,
+            )
+
+    def test_admission_rejects_canonical_source_map_mutation(self):
+        from scripts.worldgen.pcg365_wall_surface import require_native_wall_admission
+        with self.assertRaisesRegex(RuntimeError, "NATIVE_BLOCKED_PROTECTED_SOURCE_MAP"):
+            require_native_wall_admission(
+                witness=self.witness,
+                bounded_client=self.client,
+                target_map_package="/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
+

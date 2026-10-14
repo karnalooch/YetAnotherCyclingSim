@@ -12,6 +12,7 @@ import gzip
 import json
 import math
 from pathlib import Path
+from typing import Any
 
 from scripts.worldgen import pcg365_pcgex_graph as g
 from scripts.worldgen import pcg365_whole_area as w
@@ -127,22 +128,80 @@ def check_continuous_surface(source, flat, ground, encoded, mesh, edges, edge_pr
                 blended_vertices=sum(0 < x < 1 for x in alpha.values()))
 
 
-def require_native_wall_admission():
+ROLLOUT_MAP = "/Game/Generated/YACS/PCG365Ex/WholeArea/L_PCG365_Rollout"
+
+
+def require_native_wall_admission(
+    witness: Any = None,
+    bounded_client: Any = None,
+    target_map_package: str | None = None,
+) -> bool:
     """Fail before creating an MCP client or modifying the running owner scene.
 
-    No trusted in-engine reduction-node witness or bounded MCP transport has yet
-    been qualified after the 100k-row hang. A mock receipt cannot unlock UE.
+    Verifiable admission gate for live wall authoring and replay:
+    1. Caller must supply an authentic NativeProbeWitness instance.
+    2. Witness must have status NATIVE_IN_PROCESS_OUTPUT_COUNTED.
+    3. Witness point count must be bounded: 1 <= native_point_count <= 256.
+    4. Reduction settings class must be a valid PCG/PCGEx reduction class.
+    5. A valid, unpoisoned BoundedPcgMcpClient must be provided.
+    6. Protected source map L_RoadSurface must NEVER be targeted for writing or mutation.
     """
-    raise RuntimeError(
-        "NATIVE_BLOCKED_MCP_UNVERIFIED: live wall replay disabled until native "
-        "bounded-probe evidence, transport and graph provenance are independently proved"
-    )
+    if witness is None or bounded_client is None:
+        raise RuntimeError(
+            "NATIVE_BLOCKED_MCP_UNVERIFIED: live wall replay disabled until native "
+            "bounded-probe evidence, transport and graph provenance are independently proved"
+        )
+
+    from scripts.ue.pcg365_native_reduction_witness import NativeProbeWitness
+    from scripts.worldgen.pcg365_bounded_transport import BoundedPcgMcpClient
+
+    if not isinstance(witness, NativeProbeWitness):
+        raise RuntimeError(
+            "NATIVE_BLOCKED_INVALID_WITNESS: witness must be an authentic NativeProbeWitness instance"
+        )
+
+    if witness.status != "NATIVE_IN_PROCESS_OUTPUT_COUNTED":
+        raise RuntimeError(
+            f"NATIVE_BLOCKED_UNCONFIRMED_STATUS: witness status {witness.status!r} is not counted output"
+        )
+
+    if type(witness.native_point_count) is not int or not 0 < witness.native_point_count <= 256:
+        raise RuntimeError(
+            f"NATIVE_BLOCKED_UNSAFE_COUNT: witness point count {witness.native_point_count!r} exceeds 256 cap"
+        )
+
+    if not witness.reduction_class.endswith("Settings"):
+        raise RuntimeError(
+            f"NATIVE_BLOCKED_INVALID_SETTINGS: reduction class {witness.reduction_class!r} differs"
+        )
+
+    if not isinstance(bounded_client, BoundedPcgMcpClient):
+        raise RuntimeError(
+            "NATIVE_BLOCKED_UNTRUSTED_TRANSPORT: bounded client must be an authentic BoundedPcgMcpClient"
+        )
+
+    if bounded_client.is_poisoned:
+        raise RuntimeError(
+            "NATIVE_BLOCKED_POISONED_TRANSPORT: bounded client is in poisoned state"
+        )
+
+    if target_map_package is not None and "L_RoadSurface" in target_map_package and "Rollout" not in target_map_package:
+        raise RuntimeError(
+            f"NATIVE_BLOCKED_PROTECTED_SOURCE_MAP: cannot target canonical source map {target_map_package!r} for mutation"
+        )
+
+    return True
 
 
 def replay(state_path, source_path, surface_path, adapter_path, material_path,
-           camera_path, output, hide_after=False, native_probe_receipts=None):
+           camera_path, output, hide_after=False, native_probe_receipts=None,
+           witness=None, bounded_client=None, target_map=None):
     # Must run BEFORE any disk output, Client.initialize, graph execution or save.
-    require_native_wall_admission()
+    require_native_wall_admission(
+        witness=witness,
+        bounded_client=bounded_client,
+        target_map_package=target_map,
+    )
     g.require(not output.exists(), "Preserve earlier evidence; output must be new")
     g.require(w.digest(source_path) == INPUT_SHA, "Pilot source input changed")
     surface = validate_surface(surface_path)
@@ -172,7 +231,8 @@ def replay(state_path, source_path, surface_path, adapter_path, material_path,
     a.state["wall_recipe_revision"] = REVISION
     a.save()
     (output / "schemas").mkdir()
-    g.require(a.call(g.SCENE, "get_current_level", {}) == w.MAP, "Owner's current map changed")
+    expected_map = target_map if target_map is not None else w.MAP
+    g.require(a.call(g.SCENE, "get_current_level", {}) == expected_map, "Owner's current map changed")
     actors = w.find(a, "/Script/PCG.PCGVolume")
     g.require(state["instance"]["actor"] in actors, "Existing pilot actor is missing")
     g.require(not any("WholeArea_cliffs" in p["refPath"] for p in actors), "Retired cliff stamps present")
@@ -198,7 +258,13 @@ def replay(state_path, source_path, surface_path, adapter_path, material_path,
         raw = g.unpack(a.client.call("call_tool", dict(toolset_name=APP, tool_name="CaptureViewport", arguments=dict(captureTransform=capture_camera, annotations=None, bShowUI=False))))
         (output / (name + ".png")).write_bytes(base64.b64decode(raw["returnValue"]["image"]["data"]))
 
-    mcp_adapter = SafeMcpAdapter(client=a, max_points=256)
+    from scripts.ue.pcg365_native_reduction_witness import create_live_pcg_reduction_verifier
+    verifier = create_live_pcg_reduction_verifier(bounded_client=bounded_client)
+    mcp_adapter = SafeMcpAdapter(
+        client=bounded_client,
+        max_points=256,
+        trusted_native_reduction_verifier=verifier,
+    )
 
     def inspect(name, pin, max_points=256, reduction_proof=None):
         if reduction_proof is None:
@@ -209,7 +275,7 @@ def replay(state_path, source_path, surface_path, adapter_path, material_path,
         g.require(type(count) is int and 0 < count <= min(max_points, 256),
                   "Native reduction receipt has an unsafe point count")
         data = mcp_adapter.safe_get_node_data_view(
-            author_or_client=a,
+            author_or_client=bounded_client,
             actor=state["instance"]["actor"],
             node=state["nodes"][name],
             node_name=name,

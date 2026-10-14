@@ -360,6 +360,62 @@ class SafeMcpAdapterTests(unittest.TestCase):
         self.assertIn("H5_CONCURRENT_GRAPH_COLLISION", hypotheses)
         self.assertGreaterEqual(len(matrix["primary_safeguards"]), 4)
 
+    def test_verifier_count_mismatch_raises_attestation_mismatch(self):
+        # Verifier returns 10, but proof says 64
+        mismatch_adapter = SafeMcpAdapter(
+            client=self.mock_client,
+            trusted_native_reduction_verifier=lambda a, n, p: 10,
+        )
+        proof = make_proof("probe_node", 64)
+        with self.assertRaisesRegex(UnsafeMcpReadError, "NATIVE_PROBE_ATTESTATION_MISMATCH"):
+            mismatch_adapter.safe_get_node_data_view(
+                author_or_client=self.mock_client,
+                actor="test_actor",
+                node="probe_node",
+                node_name="probe_node",
+                reduction_proof=proof,
+                start_index=0,
+                end_index=64,
+            )
+        self.assertEqual(self.mock_client.call_bounded.call_count, 0)
+
+    def test_missing_verifier_raises_attestation_missing(self):
+        no_verifier_adapter = SafeMcpAdapter(client=self.mock_client)
+        proof = make_proof("probe_node", 64)
+        with self.assertRaisesRegex(UnsafeMcpReadError, "NATIVE_PROBE_ATTESTATION_MISSING"):
+            no_verifier_adapter.safe_get_node_data_view(
+                author_or_client=self.mock_client,
+                actor="test_actor",
+                node="probe_node",
+                node_name="probe_node",
+                reduction_proof=proof,
+                start_index=0,
+                end_index=64,
+            )
+        self.assertEqual(self.mock_client.call_bounded.call_count, 0)
+
+    def test_untrusted_transport_client_rejected(self):
+        # Object without BoundedPcgMcpClient
+        class FakeClient:
+            def call_bounded(self, *a, **k):
+                return {}
+
+        adapter = SafeMcpAdapter(
+            client=self.mock_client,
+            trusted_native_reduction_verifier=lambda a, n, p: 64,
+        )
+        proof = make_proof("probe_node", 64)
+        with self.assertRaisesRegex(UnsafeMcpReadError, "UNTRUSTED_MCP_TRANSPORT"):
+            adapter.safe_get_node_data_view(
+                author_or_client=FakeClient(),
+                actor="test_actor",
+                node="probe_node",
+                node_name="probe_node",
+                reduction_proof=proof,
+                start_index=0,
+                end_index=64,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
