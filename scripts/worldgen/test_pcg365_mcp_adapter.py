@@ -102,7 +102,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
                         node_name="full_near_cliff",
                         reduction_proof=proof,
                         start_index=0,
-                        end_index=span - 1,
+                        end_index=span,
                     )
                 self.assertIn("exceeds MAX_SAFE_PROBE_POINTS", str(ctx.exception))
         self.assertEqual(self.mock_client.call_bounded.call_count, 0)
@@ -178,7 +178,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
             reduction_proof=proof,
             pin_label="Out",
             start_index=0,
-            end_index=63,
+            end_index=64,
         )
         self.assertEqual(self.mock_client.call_bounded.call_count, 1)
         self.assertIn("points", result["returnValue"])
@@ -194,7 +194,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
                 node_name="probe_node",
                 reduction_proof=proof,
                 start_index=0,
-                end_index=63,
+                end_index=64,
             )
         self.assertTrue(self.adapter.is_circuit_breaker_tripped)
 
@@ -207,7 +207,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
                 node_name="probe_node",
                 reduction_proof=proof,
                 start_index=0,
-                end_index=63,
+                end_index=64,
             )
         self.assertIn("TRIPPED", str(ctx.exception))
         # Total call count should still be 1 (no automatic retry!)
@@ -236,7 +236,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
                     node_name="probe_node",
                     reduction_proof=proof,
                     start_index=0,
-                    end_index=63,
+                    end_index=64,
                 )
             except Exception as exc:
                 results["t1"] = exc
@@ -252,7 +252,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
                     node_name="probe_node",
                     reduction_proof=proof,
                     start_index=0,
-                    end_index=63,
+                    end_index=64,
                 )
             except Exception as exc:
                 results["t2"] = exc
@@ -289,7 +289,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
                 node_name="probe_node",
                 reduction_proof=proof,
                 start_index=0,
-                end_index=63,
+                end_index=64,
             )
         self.assertIn("exceeded", str(ctx.exception))
         self.assertTrue(self.adapter.is_circuit_breaker_tripped)
@@ -303,7 +303,7 @@ class SafeMcpAdapterTests(unittest.TestCase):
                 node_name="probe_node",
                 reduction_proof=proof,
                 start_index=0,
-                end_index=63,
+                end_index=64,
             )
         # Call count is 1
         self.assertEqual(self.mock_client.call_bounded.call_count, 1)
