@@ -6,17 +6,19 @@ on:
     paths: [.github/workflows/pr474-evidence-cleanup.yml]
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: pr474-evidence-cleanup
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  audit:
-    if: github.repository == 'karnalooch/YetAnotherCyclingSim'
+  archive-candidate:
+    if: github.repository == 'karnalooch/YetAnotherCyclingSim' && github.ref == 'refs/heads/codex/365-world-graph'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
     steps:
       - name: Checkout exact cleanup head without LFS assets
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -25,55 +27,187 @@ jobs:
           persist-credentials: false
           lfs: false
           fetch-depth: 1
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            /scripts/
-            /docs/
-            /worldgen/sa_calobra/
-            /.github/
-            !*.png
-            !*.jpg
-            !*.jpeg
-            !*.webp
-            !*.zip
-            !*.gz
-            !*.npz
-            !*.html
-      - name: Audit sizes and runtime consumers without changing files
+
+      - name: Verify architecture and negative tests before preparing changes
+        run: |
+          python scripts/ci/test_final_architecture_contract.py
+          python scripts/ci/test_evidence_storage.py
+
+      - name: Prepare byte-identical archives in the isolated checkout
         shell: bash
         run: |
           python - <<'PY'
+          import gzip
+          import hashlib
+          import io
+          import json
           import pathlib
           import subprocess
+          import sys
+          sys.path.insert(0, 'scripts/ci')
+          import check_evidence_storage as storage
+          root = pathlib.Path.cwd()
           def git(*args):
-              return subprocess.check_output(['git', *args], text=True)
-          print('AUDIT_HEAD', git('rev-parse', 'HEAD').strip(), flush=True)
-          large = []
-          for record in git('ls-tree', '-r', 'HEAD', '--', 'docs').splitlines():
-              meta, raw = record.split('\t', 1)
-              mode, kind, sha = meta.split()
-              path = pathlib.Path(raw)
-              if kind == 'blob' and raw.endswith('.json') and path.is_file():
-                  size = path.stat().st_size
-                  if size > 1048576:
-                      large.append((size, raw, sha))
-          for size, path, sha in sorted(large, reverse=True):
-              print('LARGE_JSON', size, sha, path, flush=True)
-          print('LARGE_JSON_TOTAL', len(large), sum(item[0] for item in large), flush=True)
-          needles = ('pcg365-large-rocks-20261012', 'pcg365-local-rock-pack-20261012')
-          for raw in git('ls-files', '-z', '--', 'scripts', 'worldgen').split('\0'):
-              if not raw:
+              return subprocess.check_output(['git', *args])
+          head = git('rev-parse', 'HEAD').decode().strip()
+          targets = storage.ARCHIVED_BLOBS
+          # Inspect executable/config consumers, not immutable historical receipts.
+          consumer_hits = []
+          for name in git('ls-files', '-z').decode().split('\0'):
+              path = pathlib.Path(name)
+              if (not name or name.startswith('docs/') or name in {
+                  '.github/workflows/pr474-evidence-cleanup.yml',
+                  'scripts/ci/check_evidence_storage.py',
+              } or path.suffix not in {'.py', '.ps1', '.cs', '.cpp', '.h', '.js', '.cjs', '.yml', '.yaml', '.json'}):
                   continue
-              path = pathlib.Path(raw)
-              if path.suffix not in {'.py', '.ps1', '.md', '.yml', '.yaml', '.json'} or not path.is_file():
-                  continue
-              if path.stat().st_size > 1048576:
+              if not path.is_file() or path.stat().st_size > 10 * 1024 * 1024:
                   continue
               text = path.read_text(encoding='utf-8', errors='replace')
-              if any(needle in text for needle in needles):
-                  print('CONSUMER_BEGIN', raw, flush=True)
-                  print(text[:30000], flush=True)
-                  print('CONSUMER_END', raw, flush=True)
-          print('EVIDENCE_TOOLS', git('ls-files', 'scripts/evidence'), flush=True)
-          print('AUDIT_COMPLETE_NO_REPOSITORY_MUTATION', flush=True)
+              for target in targets:
+                  basename = pathlib.Path(target).name
+                  if target in text or (basename != 'producer-receipt.json' and basename in text):
+                      consumer_hits.append((name, target))
+          if consumer_hits:
+              raise SystemExit('UNREVIEWED_RUNTIME_CONSUMERS ' + repr(consumer_hits))
+          changes = []
+          originals = {}
+          by_directory = {}
+          for relative, expected in targets.items():
+              path = pathlib.Path(relative)
+              raw = git('show', f'HEAD:{relative}')
+              if storage.git_blob(raw) != expected:
+                  raise SystemExit('SOURCE_BLOB_CHANGED ' + relative)
+              json.loads(raw)
+              archive = pathlib.Path(relative + '.gz')
+              if archive.exists():
+                  raise SystemExit('ARCHIVE_ALREADY_EXISTS ' + str(archive))
+              buffer = io.BytesIO()
+              with gzip.GzipFile(filename='', mode='wb', fileobj=buffer, mtime=0, compresslevel=9) as stream:
+                  stream.write(raw)
+              packed = buffer.getvalue()
+              if gzip.decompress(packed) != raw:
+                  raise SystemExit('ROUNDTRIP_FAILED ' + relative)
+              entry = {
+                  'original': path.name, 'gzip': archive.name,
+                  'original_bytes': len(raw), 'original_sha256': hashlib.sha256(raw).hexdigest(),
+                  'gzip_bytes': len(packed), 'gzip_sha256': hashlib.sha256(packed).hexdigest(),
+                  'original_git_blob_sha1': expected,
+              }
+              archive.write_bytes(packed)
+              storage.verify_entry(path.parent, entry, expected)
+              originals[relative] = raw
+              by_directory.setdefault(path.parent, []).append(entry)
+              changes.extend((relative, str(archive)))
+              print('ARCHIVED', relative, len(raw), len(packed), flush=True)
+          # No original is removed until every archive has been verified.
+          for relative in originals:
+              pathlib.Path(relative).unlink()
+          note = ('\n\n## Receipt storage, 2026-10-16\n\n'
+                  'Oversized run receipts are stored as byte-preserving `.json.gz` files.\n'
+                  'The [storage index](compressed-evidence.json) authenticates both the compressed\n'
+                  'file and its exact decompressed original. Paths and hashes in `evidence.json`\n'
+                  'describe the original captured bytes and remain unchanged. Read gzip before\n'
+                  'checking those hashes; do not hash the compressed file as an original receipt.\n'
+                  'No measured value, rejection, native status or producer identity was changed.\n'
+                  'See [repository storage rules](../../evidence/JSON_STORAGE.md).\n')
+          for directory, entries in by_directory.items():
+              index = directory / 'compressed-evidence.json'
+              previous = json.loads(index.read_bytes()) if index.exists() else []
+              if {e['original'] for e in previous} & {e['original'] for e in entries}:
+                  raise SystemExit('DUPLICATE_ARCHIVE_INDEX')
+              index.write_text(json.dumps(previous + entries, indent=2) + '\n', encoding='utf-8')
+              readme = directory / 'README.md'
+              readme.write_bytes(readme.read_bytes() + note.encode())
+              attributes = directory / '.gitattributes'
+              prior = attributes.read_bytes() if attributes.exists() else b''
+              attributes.write_bytes(prior + b'\n# Retained receipt archives are ordinary Git binary blobs, not LFS.\n*.json.gz -text -diff -filter -merge\n')
+              changes.extend((str(index), str(readme), str(attributes)))
+          ci = pathlib.Path('.github/workflows/ci.yml')
+          anchor = '      - name: Verify final architecture/tooling contract\n        run: python scripts/ci/test_final_architecture_contract.py\n'
+          text = ci.read_text()
+          if text.count(anchor) != 1:
+              raise SystemExit('CI_INSERTION_ANCHOR_CHANGED')
+          text = text.replace(anchor, anchor + '\n      - name: Verify evidence storage integrity and JSON budget\n        run: |\n          python scripts/ci/check_evidence_storage.py\n          python scripts/ci/test_evidence_storage.py\n')
+          ci.write_text(text, encoding='utf-8')
+          changes.append(str(ci))
+          policy = pathlib.Path('docs/evidence/JSON_STORAGE.md')
+          policy.write_text('# Evidence JSON storage\n\nCurrent storage rule for #365 / PR #474. World methodology remains in the\n[World Building Bible](../WORLD_BUILDING_BIBLE.md); CI authority remains in\n[CI validation tiers](../CI_VALIDATION_TIERS.md).\n\n## Reviewed cleanup\n\nFourteen oversized historical rock run receipts were converted to `.json.gz`\nusing Python\'s standard gzip implementation, extending the existing natural20\n`compressed-evidence.json` convention. Decompression preserves every original\nbyte, including CRLF, failure status and original producer SHA. SHA256 and the\noriginal Git blob identity are checked. Historical `evidence.json` manifests\nremain unchanged: their paths name captured originals and their hashes apply to\ndecompressed bytes. This is storage maintenance, not new runtime or visual proof.\n\nIndexes: [large rocks](../assets/pcg365-large-rocks-20261012/compressed-evidence.json)\nand [natural20](../assets/pcg365-natural20-20261012/compressed-evidence.json).\nFrom the repository root, run `python scripts/ci/check_evidence_storage.py`.\nTo read an archive, use `gzip.open(path, "rb").read()`; to restore an original for\na historical external tool, decompress into an isolated temporary directory,\nverify the index\'s original SHA256 and use that explicit path. Do not recommit it.\n\n## Prevent recurrence\n\nOrdinary CI verifies archive integrity and rejects new raw JSON above 1 MiB in\n`docs/`. Four exact-byte exceptions preserve source/replay data pending a separate\nconsumer-aware migration, rather than deleting them merely because they are large:\n\n- `docs/experiments/sa-calobra-road-materials-20261011/b9fd/road-asphalt-saved-manifest.json`\n- `docs/experiments/sa-calobra-tpp-survey-20261008/manifest.json`\n- `docs/experiments/sa-calobra-roadside-visibility-prestudy-20261008/observations.json`\n- `docs/assets/pcg365-local-rock-pack-20261012/source-variant-pack.json`\n\nExceptions are pinned by original Git blob, not wildcard paths or extensible size\nbudgets. Schemas, recipes, source responses, geographic data and current Houdini\nreports were not blanket-deleted or globally reformatted. Root Git attributes,\nUnreal assets, source terrain, Live Host and physics inputs were not changed.\nExisting Git history still retains the original blobs; no force push or history\nrewrite is part of this cleanup. This reduces current checkout/review payload,\nnot the size of a complete historical clone.\n\nThe temporary PR474 audit/migration workflow is retired in the migration commit;\npermanent checks live in the existing primary CI rather than another workflow.\nThe reusable large-file policy already belongs to Gumball; YACS-specific receipt\npins and historical paths stay downstream and are not a new proof framework.\n\n## Implementation references\n\n- Python gzip: https://docs.python.org/3/library/gzip.html\n- Existing repository convention: natural20 `compressed-evidence.json`.\n- Source audit revision: `b2b3f490aa228058b5cb4e6a09ec39e1254c0856`.\n', encoding='utf-8')
+          changes.append(str(policy))
+          index = pathlib.Path('docs/README.md')
+          index.write_bytes(index.read_bytes() + b'\n## Evidence storage\n\nSee [JSON storage and byte-preserving receipt archives](evidence/JSON_STORAGE.md)\nfor the current raw JSON budget, exact source/replay exceptions and integrity checks.\n')
+          changes.append(str(index))
+          lifecycle = pathlib.Path('.gumball/workflow-lifecycle.json')
+          state = json.loads(lifecycle.read_bytes())
+          entry = next((e for e in state['workflows'] if e['file'] == 'pr474-evidence-cleanup.yml'), None)
+          if entry is None:
+              entry = {'file': 'pr474-evidence-cleanup.yml'}
+              state['workflows'].append(entry)
+          entry.update(state='ONE-SHOT/DEAD', reason='Owner-requested PR474 JSON audit and byte-preserving migration completed; permanent integrity/budget checks now run in primary CI. No native execution or branch-ref write in this retired workflow.')
+          lifecycle.write_text(json.dumps(state, indent=2) + '\n', encoding='utf-8')
+          changes.append(str(lifecycle))
+          workflow = pathlib.Path('.github/workflows/pr474-evidence-cleanup.yml')
+          workflow.unlink()
+          changes.append(str(workflow))
+          subprocess.run(['git', 'add', '--', *changes], check=True)
+          print('PREPARED_PARENT', head, flush=True)
+          PY
+
+      - name: Verify complete candidate before publishing any Git objects
+        run: |
+          python scripts/ci/check_evidence_storage.py
+          python scripts/ci/test_evidence_storage.py
+          python scripts/ci/test_final_architecture_contract.py
+          python scripts/ci/check_docs_index.py
+          python scripts/ci/test_workflow_lifecycle.py
+          python scripts/ci/test_script_test_discovery.py
+          git diff --cached --check
+          git diff --cached --stat
+
+      - name: Publish detached candidate objects only, never update a branch ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64
+          import json
+          import os
+          import pathlib
+          import subprocess
+          import urllib.request
+          repo = os.environ['GITHUB_REPOSITORY']
+          if repo != 'karnalooch/YetAnotherCyclingSim':
+              raise SystemExit('WRONG_REPOSITORY')
+          parent = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          if parent != os.environ['GITHUB_SHA']:
+              raise SystemExit('HEAD_CHANGED')
+          def api(kind, data):
+              request = urllib.request.Request(
+                  f'https://api.github.com/repos/{repo}/git/{kind}',
+                  data=json.dumps(data).encode(), method='POST',
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                           'Accept': 'application/vnd.github+json',
+                           'Content-Type': 'application/json',
+                           'X-GitHub-Api-Version': '2022-11-28'},
+              )
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  return json.load(response)
+          changed = subprocess.check_output(['git', 'diff', '--cached', '--name-only', '-z']).decode().split('\0')
+          entries = []
+          for relative in filter(None, changed):
+              if not relative.startswith(('docs/', '.github/', '.gumball/')):
+                  raise SystemExit('OUT_OF_SCOPE_CANDIDATE_PATH ' + relative)
+              path = pathlib.Path(relative)
+              blob = api('blobs', {'encoding': 'base64', 'content': base64.b64encode(path.read_bytes()).decode()})['sha'] if path.is_file() else None
+              entries.append({'path': relative, 'mode': '100644', 'type': 'blob', 'sha': blob})
+          base = subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip()
+          tree = api('trees', {'base_tree': base, 'tree': entries})['sha']
+          staged = subprocess.check_output(['git', 'write-tree'], text=True).strip()
+          if tree != staged:
+              raise SystemExit('PUBLISHED_TREE_DIFFERS_FROM_TESTED_TREE')
+          commit = api('commits', {'message': 'chore(evidence): archive oversized PR474 receipts without changing proof bytes', 'tree': tree, 'parents': [parent]})['sha']
+          print('VERIFIED_CANDIDATE_PARENT', parent, flush=True)
+          print('VERIFIED_CANDIDATE_TREE', tree, flush=True)
+          print('VERIFIED_CANDIDATE_COMMIT', commit, flush=True)
+          print('BRANCH_REF_NOT_CHANGED', flush=True)
           PY

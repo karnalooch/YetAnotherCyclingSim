@@ -23,12 +23,37 @@ def require(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
+def verify_world_authority(bible: str, agents: str) -> None:
+    """Check the current decision, not a matching phrase in historical evidence."""
+    heading = "## Current executor decision — Houdini / SideFX, 2026-10-16"
+    require(heading in bible, "World Bible lost the current Houdini decision")
+    current = bible.split(heading, 1)[1].split("\n## ", 1)[0]
+    for marker in (
+        "**Houdini is the primary procedural world-authoring executor.**",
+        "original supplied SideFX HIP/HDA and exact tutorial steps",
+        "Real relief/elevations and route geometry take precedence",
+        "separate reversible Houdini layer",
+        "source/physics authority and proof requirements",
+        "tooling/sidefx/README.md",
+    ):
+        require(marker in current, f"Current Houdini authority lost: {marker}")
+    require(
+        "HOUDINI_SIDEFX_PRIMARY_20261016" in agents,
+        "AGENTS lost the owner Houdini decision identifier",
+    )
+    require(
+        "Unreal is the consumer/runtime; PCG/PCGEx and Blender are supporting" in agents,
+        "AGENTS lost the supporting-tool/consumer boundary",
+    )
+    require(
+        "Embark production-pattern review first" not in current,
+        "Current authority reverted to superseded Embark-first admission",
+    )
+
+
 def main() -> int:
     bible = read("docs/WORLD_BUILDING_BIBLE.md")
-    require(
-        "Embark production-pattern review first" in bible,
-        "World Bible lost Embark-first admission",
-    )
+    verify_world_authority(bible, read("AGENTS.md"))
     require(
         "1. **Unreal Engine native first**" not in bible,
         "World Bible reverted to native-first order",
