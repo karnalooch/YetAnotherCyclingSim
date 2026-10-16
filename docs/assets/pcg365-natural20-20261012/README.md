@@ -1,10 +1,10 @@
-# Twenty natural rock derivatives — #365 / M3
+# Twenty natural rock derivatives â€” #365 / M3
 
 Owner-authorized local production on 2026-10-12; no push or terrain/road change.
 
 ## Prepared sources
 
-Pinned Blender4.5.9 produced twenty saved FBX derivatives from eight licensed CC0 scan families. [Producer receipt](producer-receipt.json), [Blender host receipt](blender-host.json) and [actual source inspection](source-inspection.json) bind source/output bytes. The collection has eight source families, with two or three variants per family, not twenty independent scans. Mild declared affine ART transforms preserve the natural scanned upper surface; planar undersides and rejected/excluded source components are recorded. Source-only underside preparation does not grant Landscape contact.
+Pinned Blender4.5.9 produced twenty saved FBX derivatives from eight licensed CC0 scan families. [Producer receipt](producer-receipt.json.gz), [Blender host receipt](blender-host.json) and [actual source inspection](source-inspection.json) bind source/output bytes. The collection has eight source families, with two or three variants per family, not twenty independent scans. Mild declared affine ART transforms preserve the natural scanned upper surface; planar undersides and rejected/excluded source components are recorded. Source-only underside preparation does not grant Landscape contact.
 
 The first two stages were retained after partial rejection: post-bisect nontriangles required explicit triangulation; one source required explicit largest-component selection; stale imported custom normals were avoided through fresh mesh data. Guard failures were fixed without relaxing topology, source-preservation or contact limits. Final stage natural-rock-collection03 has twenty prepared outputs and zero rejected sources.
 
