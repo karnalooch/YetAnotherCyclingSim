@@ -1,6 +1,6 @@
 # SideFX-to-YACS recipe record template
 
-Copy this record into the bounded recipe's durable documentation and fill it from actual evidence. Unfilled fields mean `NOT ESTABLISHED`, never an implied PASS. [Workflow authority](README.md) · [Source concordance](catalog/README.md).
+Copy this record into the bounded recipe's durable documentation and fill it from actual evidence. Unfilled fields mean `NOT ESTABLISHED`, never an implied PASS. [Workflow authority](README.md) · [Source concordance](catalog/README.md) · [Unreal configuration boundary](UNREAL_CONFIGURATION.md).
 
 ## Identity and scope
 
@@ -44,7 +44,7 @@ List added, removed, bypassed and retained nodes explicitly. Record random seeds
 - Cache invalidation keys and explicit cache hit/miss behavior:
 - Output filenames, dimensions, voxel spacing, origin/bounds, layer names, hashes:
 - Immutable source retained; source-relative displacement/delta and rollback:
-- Consumer import/export settings and allowed destination:
+- Consumer import/export settings and allowed destination; optional [Engine profile](UNREAL_CONFIGURATION.md) and effective settings readback:
 
 ## Proof and gaps
 
