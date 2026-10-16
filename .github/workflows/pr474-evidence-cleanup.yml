@@ -1,0 +1,75 @@
+name: PR474 evidence cleanup
+
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths: [.github/workflows/pr474-evidence-cleanup.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr474-evidence-cleanup
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    if: github.repository == 'karnalooch/YetAnotherCyclingSim'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact cleanup head without LFS assets
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          lfs: false
+          fetch-depth: 1
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/
+            /docs/
+            /worldgen/sa_calobra/
+            /.github/
+            !*.png
+            !*.jpg
+            !*.jpeg
+            !*.webp
+            !*.zip
+            !*.gz
+            !*.npz
+            !*.html
+      - name: Audit sizes and runtime consumers without changing files
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pathlib
+          import subprocess
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True)
+          print('AUDIT_HEAD', git('rev-parse', 'HEAD').strip())
+          large = []
+          for record in git('ls-tree', '-r', '-l', 'HEAD', '--', 'docs').splitlines():
+              meta, path = record.split('\t', 1)
+              mode, kind, sha, size = meta.split()
+              if kind == 'blob' and path.endswith('.json') and int(size) > 1048576:
+                  large.append((int(size), path, sha))
+          for size, path, sha in sorted(large, reverse=True):
+              print('LARGE_JSON', size, sha, path)
+          print('LARGE_JSON_TOTAL', len(large), sum(item[0] for item in large))
+          needles = ('pcg365-large-rocks-20261012', 'pcg365-local-rock-pack-20261012')
+          for raw in git('ls-files', '-z', '--', 'scripts', 'worldgen', '.github').split('\0'):
+              if not raw:
+                  continue
+              path = pathlib.Path(raw)
+              if path.suffix not in {'.py', '.ps1', '.md', '.yml', '.yaml', '.json'} or not path.is_file():
+                  continue
+              if path.stat().st_size > 1048576:
+                  continue
+              text = path.read_text(encoding='utf-8', errors='replace')
+              if any(needle in text for needle in needles):
+                  print('CONSUMER_BEGIN', raw)
+                  print(text[:30000])
+                  print('CONSUMER_END', raw)
+          print('AUDIT_COMPLETE_NO_REPOSITORY_MUTATION')
+          PY
