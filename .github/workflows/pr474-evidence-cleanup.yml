@@ -10,7 +10,7 @@ permissions:
 
 concurrency:
   group: pr474-evidence-cleanup
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   audit:
@@ -47,18 +47,21 @@ jobs:
           import subprocess
           def git(*args):
               return subprocess.check_output(['git', *args], text=True)
-          print('AUDIT_HEAD', git('rev-parse', 'HEAD').strip())
+          print('AUDIT_HEAD', git('rev-parse', 'HEAD').strip(), flush=True)
           large = []
-          for record in git('ls-tree', '-r', '-l', 'HEAD', '--', 'docs').splitlines():
-              meta, path = record.split('\t', 1)
-              mode, kind, sha, size = meta.split()
-              if kind == 'blob' and path.endswith('.json') and int(size) > 1048576:
-                  large.append((int(size), path, sha))
+          for record in git('ls-tree', '-r', 'HEAD', '--', 'docs').splitlines():
+              meta, raw = record.split('\t', 1)
+              mode, kind, sha = meta.split()
+              path = pathlib.Path(raw)
+              if kind == 'blob' and raw.endswith('.json') and path.is_file():
+                  size = path.stat().st_size
+                  if size > 1048576:
+                      large.append((size, raw, sha))
           for size, path, sha in sorted(large, reverse=True):
-              print('LARGE_JSON', size, sha, path)
-          print('LARGE_JSON_TOTAL', len(large), sum(item[0] for item in large))
+              print('LARGE_JSON', size, sha, path, flush=True)
+          print('LARGE_JSON_TOTAL', len(large), sum(item[0] for item in large), flush=True)
           needles = ('pcg365-large-rocks-20261012', 'pcg365-local-rock-pack-20261012')
-          for raw in git('ls-files', '-z', '--', 'scripts', 'worldgen', '.github').split('\0'):
+          for raw in git('ls-files', '-z', '--', 'scripts', 'worldgen').split('\0'):
               if not raw:
                   continue
               path = pathlib.Path(raw)
@@ -68,8 +71,9 @@ jobs:
                   continue
               text = path.read_text(encoding='utf-8', errors='replace')
               if any(needle in text for needle in needles):
-                  print('CONSUMER_BEGIN', raw)
-                  print(text[:30000])
-                  print('CONSUMER_END', raw)
-          print('AUDIT_COMPLETE_NO_REPOSITORY_MUTATION')
+                  print('CONSUMER_BEGIN', raw, flush=True)
+                  print(text[:30000], flush=True)
+                  print('CONSUMER_END', raw, flush=True)
+          print('EVIDENCE_TOOLS', git('ls-files', 'scripts/evidence'), flush=True)
+          print('AUDIT_COMPLETE_NO_REPOSITORY_MUTATION', flush=True)
           PY
