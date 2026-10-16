@@ -1,0 +1,152 @@
+{
+  "scope": "report evidence; not an exact-SHA runtime admission",
+  "files": [
+    {
+      "file": "recipe.json",
+      "original_sha256": "d116114777f900772fd119b6a0162dd93c36602972ac0b50a8aef9e9b919a7a5",
+      "published_sha256": "9c057bc5babc632b4fbfe5c9fda015b94ca739796c90cd1411b9af834cfed335",
+      "bytes": 11350,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "source_preflight.json",
+      "original_sha256": "92010ba2eb0586610d48afe39ebbf3dd6ef89df72c7df6d6480c23ef911abd0b",
+      "published_sha256": "b71415b84f7569a37c8951dd2fe0c159d5a81c845c641f1f84678be91cd89f52",
+      "bytes": 1390,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "geographic_verification.json",
+      "original_sha256": "8877741ca492dbe7d6a65cad61acce4665d95475a23fb32d6ce2ab7a7cfcbd71",
+      "published_sha256": "6c908cfb4481b0a110d615f37005b78d34becc2c3ffdd7d754ef31f9ed422c72",
+      "bytes": 602,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "gentle_detail_verification.json",
+      "original_sha256": "a8d47bda2f7cd8d65ad28b4aceb86cfd513f8e681fc6db71277342b9264c6c0e",
+      "published_sha256": "0972f5a850e65171c2bd7b6ce82b88196df0d1e385888da09991fbd6b9ebc49e",
+      "bytes": 648,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "fresh_readback.json",
+      "original_sha256": "8f2d632066c2448bced41a812092fd1fa807ca090f96e51cf672a86e01380b43",
+      "published_sha256": "8af300af3b41d7c477818ca45fedba948812386db58a3960efd25702f3d221ec",
+      "bytes": 1260,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "preview_and_switch_verification.json",
+      "original_sha256": "19dc5cccaba95f91e0311446a7fa3c525a518ce6a4ba00f59b2f1cf785da808c",
+      "published_sha256": "47b283aa45e890d0f4daf44cecf80341abe6bd9b8443683951dd738d5f917776",
+      "bytes": 267,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "houdini_manifest.json",
+      "original_sha256": "3a091391cbf715868a7ba040ba869d9860727f8e4474220f54a53791285c985c",
+      "published_sha256": "6b4d153311dc0b0989862eb8c59a3338515e662382edf3c074ce185fe95997cc",
+      "bytes": 7043,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "houdini_texture_manifest.json",
+      "original_sha256": "0686c2ce4e667b8b1e47af67c48cd9ddfc077e0f48f009b69448a100679d1cfc",
+      "published_sha256": "05b0544c427527824fe7490ef8200e56544c4744f85cb5349c3ee7076a7857c3",
+      "bytes": 1692,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "houdini_texture_orientation.json",
+      "original_sha256": "734f0cc9a52e692ca2dbddc37c71aa200de10efa5eb935a4b5c8c0ea0248af06",
+      "published_sha256": "024a1ac9199b9fc7b269be1999f2372c9456f825e94aa59bb579d83dcd94a7ba",
+      "bytes": 1399,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "corridor_mask_display.json",
+      "original_sha256": "29cc9baca1cf066677900b152d0bd878bfb0de2c3c6aada6756c846c9da06957",
+      "published_sha256": "a63b6671c7ef75922f6eac81bcb626d8a8e24b56e360f8c2208f2daa0d996781",
+      "bytes": 2158,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "corridor_native_verification.json",
+      "original_sha256": "64a5d2fedf56ffcfe9a7abbc01c7844a55a85afe054ecb7c2388d31fe097a1ea",
+      "published_sha256": "c838d97a8f98a3cb592f220299690df3138a3ed5304bd9854d0374a6969ecce2",
+      "bytes": 15744,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "context_visibility_import.json",
+      "original_sha256": "050185cd402fe0b44dbc85e335fd0ec6985d12929b607a7e6debf6e3dc07ac6c",
+      "published_sha256": "bb76882f545e1caf2e866353df5c65098ebc578e4f35cb54cccbd8a2f586b600",
+      "bytes": 837,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "landscape_transforms.json",
+      "original_sha256": "75938cae8ea12b0fcf4eaebab7920b53fbf81850839ee4743cc398d7a4d0d811",
+      "published_sha256": "f655f29806f4df8ccc081c29fb80cad5fb8a02ec67373b19a5b1fb05be0b56c6",
+      "bytes": 1458,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "corridor_scene_inventory.json",
+      "original_sha256": "2932d1bc3bf31c0846f42d7b30c3a9fab25c703453f80f2e15d7315ec8dd7bec",
+      "published_sha256": "8e5d6e87e4275a3f884b3b0d1c8d9016500aaf6e8d692858f2c162460484a924",
+      "bytes": 636,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "corridor_completion.json",
+      "original_sha256": "1a8965ce5ffd82986e1ddb15094421c6a866efcf7618e36808a4956f60b451d9",
+      "published_sha256": "572866464726b9a5bcd3659202c3fdd07f7200dec12f2fa6068a433bf8964b52",
+      "bytes": 808,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "final_map_saved.json",
+      "original_sha256": "4cfd96e9b7bd7bef2fb06dc40a645d740dc070941f13b2b04a43ccf20222afff",
+      "published_sha256": "953449840969eafff2b7640bf81a71ae52e778a0a87e4999e6869f4fe8bfdbea",
+      "bytes": 128,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "temporary_queue_disabled.json",
+      "original_sha256": "c61ead747595e6b83f2110cce5afb0f108af0f0291a18fa0a61ee4e1a69b7947",
+      "published_sha256": "0991156f66b8efb686490cc3bb56b00624daa99d69821fee9c35faf4500418c4",
+      "bytes": 72,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "cliff_camera_focus.json",
+      "original_sha256": "a9d623318703a748415279511878257eaf353dd858bba1f09648392e0823e03c",
+      "published_sha256": "4e9c63fa77c887faba473e8dcf8d7df696787b931ab2a39a77dea446a37cd217",
+      "bytes": 768,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    },
+    {
+      "file": "corridor-overview.png",
+      "original_sha256": "66bf25de26e17b71cc9c345ad16d563e74390ea463f8124d2f4bb393bc3715b4",
+      "published_sha256": "66bf25de26e17b71cc9c345ad16d563e74390ea463f8124d2f4bb393bc3715b4",
+      "bytes": 1855836,
+      "normalization": "none"
+    },
+    {
+      "file": "terrain-cliff-before-masks.png",
+      "original_sha256": "eb462010c840ff1f815a4fe30c03c87d5be33892acdcfb031de8442f76333e53",
+      "published_sha256": "eb462010c840ff1f815a4fe30c03c87d5be33892acdcfb031de8442f76333e53",
+      "bytes": 2318177,
+      "normalization": "none"
+    },
+    {
+      "file": "texture_gpu_probe_after.json",
+      "original_sha256": "aa8a5302f7f0caf91646642338744fb81c677603c15d4fe76719c1a3b4845b5f",
+      "published_sha256": "92bb389529bbcb3cb5cdc4485b812d66cfee7031f1f628f45c9a36e755bc593f",
+      "bytes": 85,
+      "normalization": "UTF-8 JSON formatting; task home path replaced with ${TASK}"
+    }
+  ]
+}

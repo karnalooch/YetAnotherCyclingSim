@@ -1,0 +1,26 @@
+{
+  "timestamp_utc": "2026-10-16T14:02:06.010803+00:00",
+  "scope": "documentation and evidence consistency; not UE or production admission",
+  "report_links": {
+    "result": "PASS",
+    "count": 24
+  },
+  "json_parse": "PASS",
+  "published_evidence_sha256": "PASS",
+  "claim_to_receipt_checks": "PASS",
+  "documentation_index": {
+    "command": "python scripts/ci/check_docs_index.py",
+    "i18n": "PASS",
+    "structure": "PASS",
+    "links": "PASS",
+    "freshness": "PASS"
+  },
+  "experiment_journal": {
+    "command": "python scripts/evidence/render_experiment_journal.py --check",
+    "result": "PASS"
+  },
+  "ue_runtime_ci_for_report_commit": "NOT_RUN_DOCUMENTATION_ONLY",
+  "fresh_masked_map_reopen": "NOT_RUN",
+  "context_collision": "UNRESOLVED_33_OF_80",
+  "performance_pass": false
+}
