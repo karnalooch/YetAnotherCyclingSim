@@ -21,15 +21,15 @@ jobs:
       GIT_LFS_SKIP_SMUDGE: '1'
       PYTHONPATH: ${{ github.workspace }}
     steps:
-      - name: Checkout exact cleanup head and reviewed migration parent
+      - name: Checkout exact cleanup head and immutable migration source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
           lfs: false
-          fetch-depth: 2
+          fetch-depth: 3
 
-      - name: Extract the two unchanged migration scripts from their immutable reviewed commit
+      - name: Extract reviewed preparation script without changing its logic
         shell: bash
         run: |
           python - <<'PY'
@@ -45,11 +45,30 @@ jobs:
           blocks = re.findall(r"          python - <<'PY'\n(.*?)          PY\n", source, re.S)
           if len(blocks) != 2:
               raise SystemExit('PINNED_MIGRATION_BLOCK_COUNT_MISMATCH')
-          for name, block in zip(('pr474-prepare.py', 'pr474-publish.py'), blocks):
-              code = textwrap.dedent(block)
-              compile(code, name, 'exec')
-              pathlib.Path(os.environ['RUNNER_TEMP'], name).write_text(code, encoding='utf-8')
-          print('Reviewed migration scripts extracted; no branch refs or repository files changed.')
+          code = textwrap.dedent(blocks[0])
+          compile(code, 'pr474-prepare.py', 'exec')
+          pathlib.Path(os.environ['RUNNER_TEMP'], 'pr474-prepare.py').write_text(code, encoding='utf-8')
+          PY
+
+      - name: Format only the three changed helpers with the existing CI pin
+        run: |
+          python -m pip install --disable-pip-version-check ruff==0.16.8
+          python - <<'PY'
+          import ast
+          import pathlib
+          import subprocess
+          paths = [
+              'scripts/ci/check_evidence_storage.py',
+              'scripts/ci/test_evidence_storage.py',
+              'scripts/ci/test_final_architecture_contract.py',
+          ]
+          before = {path: ast.dump(ast.parse(pathlib.Path(path).read_bytes())) for path in paths}
+          subprocess.run(['ruff', 'format', *paths], check=True)
+          for path in paths:
+              if before[path] != ast.dump(ast.parse(pathlib.Path(path).read_bytes())):
+                  raise SystemExit('FORMATTER_CHANGED_SEMANTICS ' + path)
+          subprocess.run(['ruff', 'check', '--select', 'E9,F63,F7,F82', *paths], check=True)
+          subprocess.run(['git', 'add', '--', *paths], check=True)
           PY
 
       - name: Verify architecture and negative tests before preparing changes
@@ -60,8 +79,9 @@ jobs:
       - name: Prepare byte-identical archives in the isolated checkout
         run: python "$RUNNER_TEMP/pr474-prepare.py"
 
-      - name: Verify complete candidate before publishing any Git objects
+      - name: Verify complete candidate before publishing blobs
         run: |
+          ruff format --check scripts/ci tools/julka
           python scripts/ci/check_evidence_storage.py
           python scripts/ci/test_evidence_storage.py
           python scripts/ci/test_final_architecture_contract.py
@@ -71,7 +91,59 @@ jobs:
           git diff --cached --check
           git diff --cached --stat
 
-      - name: Publish detached candidate objects only, never update a branch ref
+      - name: Publish verified blobs for authorized connector delivery, never trees or refs
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python "$RUNNER_TEMP/pr474-publish.py"
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import subprocess
+          import urllib.request
+          repo = os.environ['GITHUB_REPOSITORY']
+          if repo != 'karnalooch/YetAnotherCyclingSim':
+              raise SystemExit('WRONG_REPOSITORY')
+          parent = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          if parent != os.environ['GITHUB_SHA']:
+              raise SystemExit('HEAD_CHANGED')
+          helpers = {
+              'scripts/ci/check_evidence_storage.py',
+              'scripts/ci/test_evidence_storage.py',
+              'scripts/ci/test_final_architecture_contract.py',
+          }
+          entries = []
+          changed = subprocess.check_output(['git', 'diff', '--cached', '--name-only', '-z']).decode().split('\0')
+          for relative in filter(None, changed):
+              if not relative.startswith(('docs/', '.github/', '.gumball/')) and relative not in helpers:
+                  raise SystemExit('OUT_OF_SCOPE_CANDIDATE_PATH ' + relative)
+              path = pathlib.Path(relative)
+              sha = None
+              if path.is_file():
+                  data = path.read_bytes()
+                  expected = hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest()
+                  request = urllib.request.Request(
+                      f'https://api.github.com/repos/{repo}/git/blobs',
+                      data=json.dumps({'encoding': 'base64', 'content': base64.b64encode(data).decode()}).encode(),
+                      method='POST',
+                      headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                               'Accept': 'application/vnd.github+json',
+                               'Content-Type': 'application/json',
+                               'X-GitHub-Api-Version': '2022-11-28'},
+                  )
+                  with urllib.request.urlopen(request, timeout=60) as response:
+                      sha = json.load(response)['sha']
+                  if sha != expected:
+                      raise SystemExit('PUBLISHED_BLOB_MISMATCH ' + relative)
+              entry = {'path': relative, 'mode': '100644', 'type': 'blob', 'sha': sha}
+              entries.append(entry)
+              print('VERIFIED_TREE_ENTRY', json.dumps(entry), flush=True)
+          print('VERIFIED_CANDIDATE_PARENT', parent, flush=True)
+          print('VERIFIED_CANDIDATE_BASE_TREE', subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip(), flush=True)
+          print('VERIFIED_CANDIDATE_TREE', subprocess.check_output(['git', 'write-tree'], text=True).strip(), flush=True)
+          print('VERIFIED_CANDIDATE_ENTRIES', len(entries), flush=True)
+          print('TREES_COMMITS_AND_BRANCH_REFS_NOT_CHANGED', flush=True)
+          PY
