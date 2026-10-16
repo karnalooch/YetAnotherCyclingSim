@@ -1,0 +1,43 @@
+{
+  "houdini": "22.0.466",
+  "license": "licenseCategoryType.Indie",
+  "fresh_reopen": "PASS",
+  "cache_files": [
+    {
+      "node": "/obj/PEGASUS_DETAIL_SOURCE/PEGASUS_CANDIDATE_CACHE",
+      "file": "cache/pegasus_candidate.bgeo.sc",
+      "bytes": 58579322
+    },
+    {
+      "node": "/obj/SA_CALOBRA/SOURCE_CACHE",
+      "file": "cache/source_working_05m.bgeo.sc",
+      "bytes": 167141702
+    },
+    {
+      "node": "/obj/SA_CALOBRA/PROCEDURAL_CACHE",
+      "file": "cache/procedural_working_05m.bgeo.sc",
+      "bytes": 183380370
+    },
+    {
+      "node": "/obj/SA_CALOBRA/CONTEXT_PREVIEW_CACHE",
+      "file": "cache/context_preview.bgeo.sc",
+      "bytes": 9849166
+    },
+    {
+      "node": "/obj/SA_CALOBRA/CONTEXT_SOURCE_CACHE",
+      "file": "cache/context_source.bgeo.sc",
+      "bytes": 9849536
+    }
+  ],
+  "working_source_hash": "01efaed54b68b8931550ebd89957af51928519e47a4c53ec92eceb38ec6c7757",
+  "working_final_hash": "44aadb58f7a5027bc0573027e459bccce4f0440182a124251db619a02c6e18d7",
+  "cached_toggle_source_detail": "PASS",
+  "default_preview_resolution": [
+    2048,
+    2048
+  ],
+  "render_file": "evidence/SaCalobra_Pegasus.png",
+  "render_exists": true,
+  "unreal_import": "NOT_PERFORMED",
+  "production_admission": "NOT_CLAIMED"
+}

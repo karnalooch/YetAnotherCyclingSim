@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Context_Visibility_Update",
+    "orientation": "flip_y",
+    "errors": {
+      "same": 0.22489601894064065,
+      "flip_y": 0.0,
+      "flip_x": 0.22580155932874976,
+      "flip_xy": 0.04536305065839718
+    },
+    "width": 2017,
+    "height": 2017
+  },
+  {
+    "name": "SaCalobra_Detail_0_0",
+    "orientation": "flip_y",
+    "errors": {
+      "same": 0.15086814985292535,
+      "flip_y": 4.3270252235173375e-08,
+      "flip_x": 0.36316527483502614,
+      "flip_xy": 0.3619183016385364
+    },
+    "width": 3811,
+    "height": 5081
+  },
+  {
+    "name": "SaCalobra_Detail_0_1",
+    "orientation": "flip_y",
+    "errors": {
+      "same": 0.31203948309082846,
+      "flip_y": 3.2477882272772915e-08,
+      "flip_x": 0.31858875743920334,
+      "flip_xy": 0.301145802200922
+    },
+    "width": 3811,
+    "height": 5081
+  },
+  {
+    "name": "SaCalobra_Detail_1_0",
+    "orientation": "flip_y",
+    "errors": {
+      "same": 0.277942866974418,
+      "flip_y": 3.30706215087771e-08,
+      "flip_x": 0.31365723069361157,
+      "flip_xy": 0.27766193409539325
+    },
+    "width": 3811,
+    "height": 5081
+  },
+  {
+    "name": "SaCalobra_Detail_1_1",
+    "orientation": "flip_y",
+    "errors": {
+      "same": 0.43119630204660225,
+      "flip_y": 7.47127136140301e-08,
+      "flip_x": 0.3866791923290472,
+      "flip_xy": 0.49351821294139014
+    },
+    "width": 3811,
+    "height": 5081
+  }
+]

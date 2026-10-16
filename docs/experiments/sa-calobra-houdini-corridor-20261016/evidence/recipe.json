@@ -1,0 +1,300 @@
+{
+  "name": "Sa Calobra real DTM with gentle Pegasus detail",
+  "scope": "Terrain only; whole supplied Ma-2141 reference plus a 500 m corridor and lighter surrounding context.",
+  "owner_requirement": "Original Sa Calobra macro relief using Pegasus methods; delicate reversible deformations are allowed.",
+  "houdini": "22.0.466 Indie",
+  "project": "SaCalobra_Pegasus.hiplc",
+  "source": {
+    "original_dtm": "D:\\yacs\\project\\worldgen\\terrain\\benchmarks\\sa_calobra\\sa_calobra_8x8km_mdt50cm_epsg25831.tif",
+    "original_dtm_sha256": "6092a48a949b7b7e8ccf120cb46d59cfd7fdd3522085e8a55162fd52fe5a139a",
+    "valid_source_cells": 249818980,
+    "height_preparation": "All valid float32 heights unchanged. NoData stored as 0 and excluded using validity/Alpha.",
+    "crs": "EPSG:25831",
+    "origin_easting_m": 483650.0,
+    "origin_northing_m": 4409899.5,
+    "axes": "Houdini X=easting-origin_easting, Y=elevation, Z=origin_northing-northing. Metres.",
+    "files": {
+      "inputs/dtm_height_float32.tif": {
+        "bytes": 390992141,
+        "sha256": "2ba280dd59da8df89620deb3b1e0ca6b8d0e7eafc0e13a7a96e35df6a6e5a0dd"
+      },
+      "inputs/dtm_validity.tif": {
+        "bytes": 80730,
+        "sha256": "96acc1b90fdf926ee4ada618a66c82406d312f613b84f5453a363fa08b10f35c"
+      },
+      "inputs/route_and_buffer.geojson": {
+        "bytes": 45679,
+        "sha256": "fcf78af2f59a371a04a5baf3c23ccd9cb5128ace19f62590727301fe235079b7"
+      },
+      "original_sidefx/ProjectFiles_LandscapeCreation_DigitalAsset.hip": {
+        "bytes": 609530,
+        "sha256": "35194d7f7c2784c17f9b539cfc46b76df89d01cbb602618aab43dd803283f645"
+      },
+      "original_sidefx/hdas/sop_pe_landscape.1.0.hda": {
+        "bytes": 89701,
+        "sha256": "23dcea9051f5d4d980b548eec95005d2616dc0093717aa6df0cbdce4a8faee27"
+      }
+    }
+  },
+  "grid": {
+    "resolution": [
+      7154,
+      9829,
+      1
+    ],
+    "index0": [
+      -1771.25,
+      0.0,
+      3144.25
+    ],
+    "index_x": [
+      -1770.75,
+      0.0,
+      3144.25
+    ],
+    "index_y": [
+      -1771.25,
+      0.0,
+      3143.75
+    ],
+    "bounds_min": [
+      -1771.25,
+      -0.6600000262260437,
+      -1769.75
+    ],
+    "bounds_max": [
+      1805.25,
+      1413.280029296875,
+      3144.25
+    ],
+    "spacing_m": 0.5
+  },
+  "workflow_sources": [
+    {
+      "title": "Pegasus Landscape Workflow / Pipeline Overview",
+      "page": "https://www.sidefx.com/tutorials/project-pegasus-landscape-workflow/",
+      "video": "https://vimeo.com/888567622",
+      "times": [
+        "00:01:40 SOURCE / MANUAL / PROCEDURAL separation",
+        "00:02:43 caching"
+      ],
+      "application": "Separate real-source, empty-manual and procedural stages and native File Cache nodes."
+    },
+    {
+      "title": "Pegasus Landscape Creation / Building the Landscape",
+      "page": "https://www.sidefx.com/tutorials/project-pegasus-landscape-creation/",
+      "video": "https://vimeo.com/888565929",
+      "times": [
+        "00:00:59 shaping curve",
+        "00:07:49 geometry mask",
+        "00:08:14 mask shrink",
+        "00:08:31 mask blur"
+      ],
+      "application": "Reuse original native masking/noise/distortion/erosion chain; geographic boundary substitutes island outline."
+    },
+    {
+      "title": "Pegasus Landscape Creation / HeightField Erode Introduction",
+      "video": "https://vimeo.com/888565731",
+      "times": [
+        "00:04:44 progressive resampling and erosion"
+      ],
+      "application": "Original candidate uses 512 -> 1024 -> 2048 samples; final geographic working grid remains native 0.5 m."
+    }
+  ],
+  "official_additional_operations": [
+    {
+      "url": "https://www.sidefx.com/docs/houdini/heightfields/maps.html",
+      "node": "heightfield_file",
+      "purpose": "Real DTM import in metre units."
+    },
+    {
+      "url": "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_crop.html",
+      "node": "heightfield_crop",
+      "purpose": "Crop to boundary geometry bounds without resampling source heights."
+    },
+    {
+      "url": "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_maskbyobject.html",
+      "node": "heightfield_maskbyobject",
+      "purpose": "Working-area mask and strict geometric constraint on deformation."
+    },
+    {
+      "url": "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_layer.html",
+      "node": "heightfield_layer",
+      "purpose": "Masked blend of real source and candidate; subtraction/addition transfers only the detail delta to context."
+    },
+    {
+      "url": "https://www.sidefx.com/docs/houdini/nodes/sop/filecache.html",
+      "node": "filecache::2.0",
+      "purpose": "Separate source, procedural and preview caches."
+    }
+  ],
+  "adaptations": {
+    "massing": "Real DTM replaces fictional island massing; original island height remaps are bypassed.",
+    "boundary": "Source-derived 500 m buffer around all six supplied Ma-2141 reference sections.",
+    "native_working_resolution_m": 0.5,
+    "context_resolution_m": 3.90625,
+    "original_candidate_resolution": "Original 512 -> 1024 -> 2048 sample chain over 8 km.",
+    "mask_shrink_m": 100,
+    "mask_blur_m": 25,
+    "strict_outer_constraint": "Native geometry-mask multiply; zero displacement outside corridor.",
+    "height_blend": 0.001,
+    "manual_height_edits": "None",
+    "display": "Native neutral HeightField visualization, no UE materials or road/world meshes.",
+    "tuning_limit_m": 0.5,
+    "tuning_limit_authority": "Conservative first-variant parameter selected by the assistant; not a user numeric requirement or SideFX standard.",
+    "source_node_reuse": "36 original nodes retained. The original 15-node/874-parameter comparison applies to the raw candidate source, not the adapted final composition.",
+    "custom_terrain_solver": "None. Python orchestrates native Houdini nodes and measures arrays; it does not synthesize terrain."
+  },
+  "verification": {
+    "geography": {
+      "source_grid_vs_input_max_absolute_difference_m": 0.0,
+      "source_grid_vs_input_mean_absolute_difference_m": 0.0,
+      "checked_valid_cells": 70316666,
+      "alpha_mismatched_cells": 0,
+      "grid_shape": [
+        9829,
+        7154
+      ],
+      "grid_bounds": [
+        481878.5,
+        4406755.0,
+        485455.5,
+        4411669.5
+      ],
+      "spacing_m": 0.5,
+      "crs": "EPSG:25831",
+      "result": "PASS: native source matches imported real DTM to less than 1 mm.",
+      "working_mask_mismatched_cells": 64,
+      "working_mask_iou": 0.9999979991289959,
+      "route_parts_covered": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    "gentle_detail": {
+      "max_absolute_delta_m": 0.17791748046875,
+      "mean_absolute_delta_in_corridor_m": 0.02350447326898575,
+      "p95_absolute_delta_in_corridor_m": 0.072998046875,
+      "max_absolute_delta_outside_corridor_m": 0.0,
+      "blend": 0.001,
+      "working_cells": 31986070,
+      "working_area_m2": 7996517.5,
+      "source_height_sha256": "01efaed54b68b8931550ebd89957af51928519e47a4c53ec92eceb38ec6c7757",
+      "final_height_sha256": "44aadb58f7a5027bc0573027e459bccce4f0440182a124251db619a02c6e18d7",
+      "target_delta_m": 0.5,
+      "target_origin": "Assistant-selected conservative first-variant parameter, not a SideFX recommendation or a user-specified numeric requirement."
+    },
+    "preview_switch": {
+      "context_preview_max_delta_m": 0.177001953125,
+      "source_switch_sha256": "01efaed54b68b8931550ebd89957af51928519e47a4c53ec92eceb38ec6c7757",
+      "detail_switch_sha256": "44aadb58f7a5027bc0573027e459bccce4f0440182a124251db619a02c6e18d7",
+      "switch_verified": true
+    },
+    "fresh_readback": {
+      "houdini": "22.0.466",
+      "license": "licenseCategoryType.Indie",
+      "fresh_reopen": "PASS",
+      "cache_files": [
+        {
+          "node": "/obj/PEGASUS_DETAIL_SOURCE/PEGASUS_CANDIDATE_CACHE",
+          "file": "cache/pegasus_candidate.bgeo.sc",
+          "bytes": 58579322
+        },
+        {
+          "node": "/obj/SA_CALOBRA/SOURCE_CACHE",
+          "file": "cache/source_working_05m.bgeo.sc",
+          "bytes": 167141702
+        },
+        {
+          "node": "/obj/SA_CALOBRA/PROCEDURAL_CACHE",
+          "file": "cache/procedural_working_05m.bgeo.sc",
+          "bytes": 183380370
+        },
+        {
+          "node": "/obj/SA_CALOBRA/CONTEXT_PREVIEW_CACHE",
+          "file": "cache/context_preview.bgeo.sc",
+          "bytes": 9849166
+        },
+        {
+          "node": "/obj/SA_CALOBRA/CONTEXT_SOURCE_CACHE",
+          "file": "cache/context_source.bgeo.sc",
+          "bytes": 9849536
+        }
+      ],
+      "working_source_hash": "01efaed54b68b8931550ebd89957af51928519e47a4c53ec92eceb38ec6c7757",
+      "working_final_hash": "44aadb58f7a5027bc0573027e459bccce4f0440182a124251db619a02c6e18d7",
+      "cached_toggle_source_detail": "PASS",
+      "default_preview_resolution": [
+        2048,
+        2048
+      ],
+      "render_file": "evidence/SaCalobra_Pegasus.png",
+      "render_exists": true,
+      "unreal_import": "NOT_PERFORMED",
+      "production_admission": "NOT_CLAIMED"
+    },
+    "full_regeneration": {
+      "time": 1792151721.0842595,
+      "max_absolute_delta_m": 0.17791748046875,
+      "mean_absolute_delta_in_corridor_m": 0.02350447326898575,
+      "max_absolute_delta_outside_corridor_m": 0.0,
+      "blend": 0.001,
+      "limit_m": 0.5,
+      "within_current_limit": true
+    },
+    "regeneration_readback": {
+      "houdini": "22.0.466",
+      "license": "licenseCategoryType.Indie",
+      "fresh_reopen": "PASS",
+      "cache_files": [
+        {
+          "node": "/obj/PEGASUS_DETAIL_SOURCE/PEGASUS_CANDIDATE_CACHE",
+          "file": "cache/pegasus_candidate.bgeo.sc",
+          "bytes": 58579057
+        },
+        {
+          "node": "/obj/SA_CALOBRA/SOURCE_CACHE",
+          "file": "cache/source_working_05m.bgeo.sc",
+          "bytes": 167141707
+        },
+        {
+          "node": "/obj/SA_CALOBRA/PROCEDURAL_CACHE",
+          "file": "cache/procedural_working_05m.bgeo.sc",
+          "bytes": 183380375
+        },
+        {
+          "node": "/obj/SA_CALOBRA/CONTEXT_PREVIEW_CACHE",
+          "file": "cache/context_preview.bgeo.sc",
+          "bytes": 9849168
+        },
+        {
+          "node": "/obj/SA_CALOBRA/CONTEXT_SOURCE_CACHE",
+          "file": "cache/context_source.bgeo.sc",
+          "bytes": 9849546
+        }
+      ],
+      "working_source_hash": "01efaed54b68b8931550ebd89957af51928519e47a4c53ec92eceb38ec6c7757",
+      "working_final_hash": "44aadb58f7a5027bc0573027e459bccce4f0440182a124251db619a02c6e18d7",
+      "cached_toggle_source_detail": "PASS",
+      "default_preview_resolution": [
+        2048,
+        2048
+      ],
+      "render_file": "evidence/SaCalobra_Pegasus.png",
+      "render_exists": true,
+      "unreal_import": "NOT_PERFORMED",
+      "production_admission": "NOT_CLAIMED"
+    }
+  },
+  "limits": [
+    "Background footprint is conservative 8 km, not a visibility-optimized crop.",
+    "No UE import, road generation, physics admission or production acceptance.",
+    "500 m boundary uses the supplied CartoCiudad reference; it does not change canonical route authority.",
+    "NoData and ocean-surface representation do not provide bathymetry.",
+    "Detail amplitude edits require recaching and renewed delta verification."
+  ]
+}

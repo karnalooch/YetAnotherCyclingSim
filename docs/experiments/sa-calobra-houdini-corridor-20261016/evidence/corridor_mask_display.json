@@ -1,0 +1,69 @@
+{
+  "bindings": [
+    {
+      "actor": "SaCalobra_Detail_0_0",
+      "material": "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/MI_Masks_SaCalobra_Detail_0_0.MI_Masks_SaCalobra_Detail_0_0",
+      "texture": "/Game/Worlds/SaCalobra_Houdini_20261016/Masks/T_SaCalobra_Detail_0_0.T_SaCalobra_Detail_0_0",
+      "origin_cm": [
+        -190050.0,
+        -180050.0,
+        0
+      ],
+      "inverse_size_cm": [
+        5.2479664130149565e-06,
+        3.93623302499508e-06,
+        0
+      ]
+    },
+    {
+      "actor": "SaCalobra_Detail_1_0",
+      "material": "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/MI_Masks_SaCalobra_Detail_1_0.MI_Masks_SaCalobra_Detail_1_0",
+      "texture": "/Game/Worlds/SaCalobra_Houdini_20261016/Masks/T_SaCalobra_Detail_1_0.T_SaCalobra_Detail_1_0",
+      "origin_cm": [
+        450.0,
+        -180050.0,
+        0
+      ],
+      "inverse_size_cm": [
+        5.2479664130149565e-06,
+        3.93623302499508e-06,
+        0
+      ]
+    },
+    {
+      "actor": "SaCalobra_Detail_0_1",
+      "material": "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/MI_Masks_SaCalobra_Detail_0_1.MI_Masks_SaCalobra_Detail_0_1",
+      "texture": "/Game/Worlds/SaCalobra_Houdini_20261016/Masks/T_SaCalobra_Detail_0_1.T_SaCalobra_Detail_0_1",
+      "origin_cm": [
+        -190050.0,
+        73950.0,
+        0
+      ],
+      "inverse_size_cm": [
+        5.2479664130149565e-06,
+        3.93623302499508e-06,
+        0
+      ]
+    },
+    {
+      "actor": "SaCalobra_Detail_1_1",
+      "material": "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/MI_Masks_SaCalobra_Detail_1_1.MI_Masks_SaCalobra_Detail_1_1",
+      "texture": "/Game/Worlds/SaCalobra_Houdini_20261016/Masks/T_SaCalobra_Detail_1_1.T_SaCalobra_Detail_1_1",
+      "origin_cm": [
+        450.0,
+        73950.0,
+        0
+      ],
+      "inverse_size_cm": [
+        5.2479664130149565e-06,
+        3.93623302499508e-06,
+        0
+      ]
+    }
+  ],
+  "height_modified": false,
+  "native_ue_paint_layers_imported": false,
+  "method": "Native Houdini HeightField Output RGB masks, UE material world-coordinate display",
+  "camera_preserved": true,
+  "time": 1792157823.7711535
+}

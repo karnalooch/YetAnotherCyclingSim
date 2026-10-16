@@ -1,0 +1,122 @@
+[
+  {
+    "name": "SaCalobra_Detail_0_0",
+    "file": "SaCalobra_Detail_0_0.png",
+    "resolution": [
+      3811,
+      5081,
+      1
+    ],
+    "index0": [
+      -1900.25,
+      0.0,
+      739.75
+    ],
+    "index_x": [
+      -1899.75,
+      0.0,
+      739.75
+    ],
+    "index_y": [
+      -1900.25,
+      0.0,
+      739.25
+    ]
+  },
+  {
+    "name": "SaCalobra_Detail_1_0",
+    "file": "SaCalobra_Detail_1_0.png",
+    "resolution": [
+      3811,
+      5081,
+      1
+    ],
+    "index0": [
+      4.75,
+      0.0,
+      739.75
+    ],
+    "index_x": [
+      5.25,
+      0.0,
+      739.75
+    ],
+    "index_y": [
+      4.75,
+      0.0,
+      739.25
+    ]
+  },
+  {
+    "name": "SaCalobra_Detail_0_1",
+    "file": "SaCalobra_Detail_0_1.png",
+    "resolution": [
+      3811,
+      5081,
+      1
+    ],
+    "index0": [
+      -1900.25,
+      0.0,
+      3279.75
+    ],
+    "index_x": [
+      -1899.75,
+      0.0,
+      3279.75
+    ],
+    "index_y": [
+      -1900.25,
+      0.0,
+      3279.25
+    ]
+  },
+  {
+    "name": "SaCalobra_Detail_1_1",
+    "file": "SaCalobra_Detail_1_1.png",
+    "resolution": [
+      3811,
+      5081,
+      1
+    ],
+    "index0": [
+      4.75,
+      0.0,
+      3279.75
+    ],
+    "index_x": [
+      5.25,
+      0.0,
+      3279.75
+    ],
+    "index_y": [
+      4.75,
+      0.0,
+      3279.25
+    ]
+  },
+  {
+    "name": "Context_Visibility_Update",
+    "file": "Context_Visibility_Update.png",
+    "resolution": [
+      2017,
+      2017,
+      1
+    ],
+    "index0": [
+      -3935.546875,
+      0.0,
+      3939.453125
+    ],
+    "index_x": [
+      -3931.640625,
+      0.0,
+      3939.453125
+    ],
+    "index_y": [
+      -3935.546875,
+      0.0,
+      3935.546875
+    ]
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "map": "/Game/Worlds/SaCalobra_Houdini_20261016/L_SaCalobra_LandscapeOnly",
+  "landscapes": 5,
+  "road_actors": 0,
+  "other_world_assets": 0,
+  "review_lights_atmosphere_exposure": 4,
+  "empty_hda_removed": true,
+  "save_confirmed": {
+    "map": "/Game/Worlds/SaCalobra_Houdini_20261016/L_SaCalobra_LandscapeOnly",
+    "saved": true,
+    "time": 1792158655.9571025
+  },
+  "mask_display": "VERIFIED_NATIVE_AND_REMOTE",
+  "native_paint_layers": "NOT_IMPORTED_RGB_DISPLAY_ONLY",
+  "context_visual_overlap": "CORRECTED_BY_NATIVE_VISIBILITY_WEIGHTMAP",
+  "context_collision": "UNRESOLVED_33_OF_80_TRACES_HIT_CONTEXT",
+  "camera_wheel_zoom": "UNRESOLVED_MANUAL_CAMERA_NAVIGATION_WORKS",
+  "fresh_reopen_with_masks": "NOT_RUN_KEEP_OWNER_SESSION_OPEN",
+  "performance_pass": false,
+  "time": 1792158920.288617
+}
