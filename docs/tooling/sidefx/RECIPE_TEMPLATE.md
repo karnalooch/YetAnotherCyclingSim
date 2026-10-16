@@ -2,6 +2,8 @@
 
 Copy this record into the bounded recipe's durable documentation and fill it from actual evidence. Unfilled fields mean `NOT ESTABLISHED`, never an implied PASS. [Workflow authority](README.md) · [Source concordance](catalog/README.md) · [Unreal configuration boundary](UNREAL_CONFIGURATION.md).
 
+Read the [Sa Calobra build guide](SA_CALOBRA_BUILD_GUIDE.md) and [Labs package review](SIDEFX_LABS_22_0_466.md) before filling the relevant recipe. Later-stage tool entries do not activate their scope.
+
 ## Identity and scope
 
 - Recipe ID and version:
@@ -40,8 +42,11 @@ List added, removed, bypassed and retained nodes explicitly. Record random seeds
 
 - Exact Houdini version/license category; Houdini Engine/Unreal version if used:
 - Original assets loaded vs embedded; package/environment configuration:
+- Resolved Labs package path/version/hash and actual selected HDA definition/type/version; source help or official reference:
+- Deprecated/beta node and third-party dependency review; demonstrated replacement or exact missing capability:
 - Regeneration command or reproducible UI steps; working directory:
 - Cache invalidation keys and explicit cache hit/miss behavior:
+- Existing HIP/cache resumed, unchanged branches reused and exact branch/layer recooked:
 - Output filenames, dimensions, voxel spacing, origin/bounds, layer names, hashes:
 - Immutable source retained; source-relative displacement/delta and rollback:
 - Consumer import/export settings and allowed destination; optional [Engine profile](UNREAL_CONFIGURATION.md) and effective settings readback:
