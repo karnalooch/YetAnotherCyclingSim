@@ -5,9 +5,10 @@
 **Owned domain:** `procedural-world`
 
 ## Mission
-PCG/PCGEx consumers, biome and foliage domains and exclusions.
+Houdini-first procedural world execution from original SideFX recipes; HeightFields, masks, later biome/foliage/scatter outputs and explicit consumer boundaries. Current fresh-Landscape task is terrain only.
 
 ## Read only the required authority
+- [`docs/tooling/sidefx/README.md`](../../../docs/tooling/sidefx/README.md)
 - [`docs/WORLD_BUILDING_BIBLE.md`](../../../docs/WORLD_BUILDING_BIBLE.md)
 - [`docs/YACS_WORLD_AUTHORING_LIBRARY.md`](../../../docs/YACS_WORLD_AUTHORING_LIBRARY.md)
 - [`docs/ai/policies/M3_WORLD_OPERATIONS.md`](../../../docs/ai/policies/M3_WORLD_OPERATIONS.md)

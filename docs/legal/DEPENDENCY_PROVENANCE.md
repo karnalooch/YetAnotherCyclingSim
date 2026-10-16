@@ -475,3 +475,8 @@ is a separate artistic appearance consumer. Terrain and road geometry remain
 unchanged. No production placement, physical stability or regional admission
 follows from acquisition or provider previews.
 
+
+### Houdini Engine native terrain handoff — 2026-10-16
+
+Owner-authorized terrain-only Unreal import. Local official SideFX Houdini 22.0.466 distribution, Unreal 5.8 plugin 3.0, build ID 55116800. Source: https://www.sidefx.com/docs/houdini/unreal/install_houdiniengine.html . LICENSE.md inspected: Side Effects Software copyright and permissive two-condition redistribution licence retained with plugin. Local editor dependency; no redistribution of Houdini runtime or licence files. Native imported terrain derives from the existing documented Sa Calobra DTM and verified gentle Pegasus variant. No production or performance admission.
+

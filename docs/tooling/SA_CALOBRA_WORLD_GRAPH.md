@@ -1,5 +1,7 @@
 # Sa Calobra PCG world graph — #365 kickoff
 
+**2026-10-16 supersession:** the native PCG/PCGEx generation continuation below is retained implementation history. New world generation follows the [Houdini/SideFX workflow](sidefx/README.md), currently terrain only. Existing graph outputs, checkpoints and proof are preserved; this document does not authorize continuing a competing producer or replacing the active scene.
+
 **Whole-area continuation - 2026-10-14:** native region/input preparation ran over the full 2x2 area, but a large official MCP data-view request timed out and subsequent MCP initialization also stopped responding. Full mesh/material rollout is not complete. Source exclusions and the original map remain unchanged, and UE was not restarted. See [execution details and bounded input preparation](PCG365_ONE_COMMAND.md#whole-area-continuation-and-inspection-failure---2026-10-14).
 
 **Live continuation — 2026-10-14:** owner-deleted V6 cliff stamps remain retired. The existing 65×65 m pilot now has one connected native PCGEx wall (12,619 vertices), Landscape normals and a gray ExposedRock material with native boundary blending. It is visible for review, with unchanged source exclusions, global Landscape material and road/CUT inventory. Whole-area rollout and owner acceptance remain pending. See [current replay and evidence limits](PCG365_ONE_COMMAND.md#current-live-continuation--2026-10-14).

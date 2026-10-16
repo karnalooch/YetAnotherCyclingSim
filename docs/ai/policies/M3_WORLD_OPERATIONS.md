@@ -2,6 +2,14 @@
 
 > Scoped policy migrated from original root AGENTS.md (blob `c4c75a9e92088195a7aad1c72c849ac9482d1462`). Read only for applicable work. Current domain SSOT and owner decisions take precedence over superseded chronology.
 
+### Houdini-first rebuild and SideFX source fidelity — 2026-10-16
+
+The owner explicitly selected Houdini as the primary terrain/road/world authoring executor and requested traceable use of the original SideFX tutorials, transcripts and supplied HIP/HDA materials. Follow the [Houdini/SideFX workflow](../../../docs/tooling/sidefx/README.md) and its complete source concordance. Do not substitute a custom generator; research an official SideFX solution for a missing stage, then stop the dependent work if the gap remains unresolved.
+
+The current authorized output is a separate fresh Landscape for all Ma-2141 with 500 m on either side and surrounding background, without a road or other world assets. The owner's latest clarification is original Sa Calobra terrain using Pegasus methods. Preserve real relief, elevations and metric route geometry; adopt documented nodes/masks/layers/cache methods, not fictional-island amplitudes. The earlier deformed Pegasus trial is rejected as real Sa Calobra and must not be the default terrain. Record every adaptation and source-relative height delta; unresolved fidelity constraints do not authorize arbitrary noise/erosion parameters. The latest owner clarification allows delicate deformation in a separate adjustable and disableable Houdini layer, preserving the source baseline and macro relief. Any proposed numeric limit must be labelled as a candidate tuning value and proven against measured output, not attributed to the owner or SideFX.
+
+This supersedes native-UE/PCG/Blender-first generator choices and the freeze only where they would block this independent fresh Houdini candidate. It does not delete or overwrite the active Unreal scene, source datasets or accepted checkpoints, change route/physics truth, admit an experiment into production, or waive native/visual/delivery proof. The 8 km source extent is available context, not a full-detail generation requirement. Visibility-based trimming needs actual evidence. Historical decisions below retain their original bounded meaning; they do not override this later executor decision.
+
 ### Later owner live-iteration decision — 2026-10-13
 
 The owner explicitly rejects restarting Unreal and repeating full native CI for

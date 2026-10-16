@@ -1,5 +1,7 @@
 # Blender headless producer
 
+**2026-10-16 producer boundary:** retained supporting tool and historical proof. [Houdini/SideFX](sidefx/README.md) is now the primary world-authoring executor. Do not use this launcher as a replacement terrain, road or environment generator for the new workflow.
+
 **Status:** active supporting tooling for Issue #391.  
 **Pinned toolchain:** Blender 4.5.9 portable Windows x64.  
 **Authority:** DCC producer only; this document does not replace the World Building Bible, BOB, World Authority, route/physics contracts, Unreal consumers or proof gates.

@@ -5,9 +5,10 @@
 **Owned domain:** `visual-dcc`
 
 ## Mission
-PBR, materials, assets, Blender and cliff presentation.
+Houdini/SideFX asset and cliff recipes, PBR and material evidence; Blender and Material Forge are supporting tools only where the selected workflow explicitly needs them.
 
 ## Read only the required authority
+- [`docs/tooling/sidefx/README.md`](../../../docs/tooling/sidefx/README.md)
 - [`docs/WORLD_BUILDING_BIBLE.md`](../../../docs/WORLD_BUILDING_BIBLE.md)
 - [`docs/ASSET_PLAN.md`](../../../docs/ASSET_PLAN.md)
 - [`docs/tooling/BLENDER_HEADLESS.md`](../../../docs/tooling/BLENDER_HEADLESS.md)

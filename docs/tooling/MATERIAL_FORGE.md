@@ -1,5 +1,7 @@
 # YACS Material Forge
 
+**2026-10-16 boundary update:** [Houdini/SideFX](sidefx/README.md) is the primary world-authoring executor. Material Forge remains retained supporting surface tooling; its historical PCG-first placement ownership is superseded. No material/world expansion is part of the current terrain-only candidate.
+
 **Status:** exact-SHA render proof in progress  
 **Issue:** #387  
 **Scope:** offline procedural PBR authoring, material-local masks, deterministic validation and bounded UE import
@@ -15,12 +17,12 @@ It is deliberately not another world generator.
 | Subsystem | Owns |
 |---|---|
 | BOB | road/terrain geometry, cut/fill and earthworks |
-| PCG/PCGEx | world semantics, classification, placement and authoritative spatial masks |
+| World/domain authorities + Houdini | admitted source semantics and boundaries; Houdini executes procedural classification/placement; PCG/PCGEx are consumers where selected |
 | Material Forge | surface appearance, procedural PBR and material-local detail masks |
 
 The non-negotiable rule is:
 
-> **PCG/PCGEx owns WHO / WHAT / WHERE. Material Forge owns HOW IT LOOKS.**
+> **World/domain authorities own source meaning and location; Houdini executes the selected authoring recipe. Material Forge supplies supporting surface appearance.**
 
 ## Runtime/tool boundary
 

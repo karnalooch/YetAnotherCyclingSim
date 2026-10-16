@@ -4,6 +4,10 @@
 
 Read [root AGENTS](../../AGENTS.md), then [documentation SSOT router](../README.md). Use [ROLE_REGISTRY.json](ROLE_REGISTRY.json) to map a bounded task domain to one specialist and read only the corresponding role card and listed authority sources.
 
+## World-authoring executor
+
+Houdini is the primary executor for new world generation under the owner's 2026-10-16 decision. Read [the SideFX workflow and complete concordance](../tooling/sidefx/README.md) before terrain, road or environment authoring. Domain roles still own source/proof boundaries; the tool is not geography or physics authority. The current fresh-Landscape task excludes road/world-asset construction. Indexing all sources is not a claim that every recipe has been implemented.
+
 ## Context routing
 1. Verify the real issue, dependency gates and milestone in the current [roadmap](../ROADMAP.md).
 2. Identify which data authority owns the proposed edit (not simply which tool the agent likes).

@@ -5,9 +5,10 @@
 **Owned domain:** `unreal-integration`
 
 ## Mission
-UE C++ editor integration, bounded MCP and plugin capabilities.
+Unreal consumer/runtime integration for Houdini-produced outputs, bounded Houdini Engine/MCP capabilities and native proof; no competing replacement world generator.
 
 ## Read only the required authority
+- [`docs/tooling/sidefx/README.md`](../../../docs/tooling/sidefx/README.md)
 - [`docs/UE_MCP_WORLD_GENERATION.md`](../../../docs/UE_MCP_WORLD_GENERATION.md)
 - [`docs/UNREAL_CI_RUNNER.md`](../../../docs/UNREAL_CI_RUNNER.md)
 - [`docs/ai/policies/CODE_PHYSICS_UNREAL.md`](../../../docs/ai/policies/CODE_PHYSICS_UNREAL.md)

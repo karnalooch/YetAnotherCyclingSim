@@ -1,6 +1,8 @@
 # YetAnotherCyclingSim — MVP roadmap
 
-**Current #365 technical checkpoint � 2026-10-13:** the [single-command PCGEx preview](tooling/PCG365_ONE_COMMAND.md) is executed through broad local MCP: 20 supplied rock instances with Forge materials were saved, reloaded in a fresh process and regenerated identically. [Evidence](experiments/sa-calobra-pcgex-mcp-20261013/manifest.json) pins producer `e3da98f4` and the resolved collection-builder failure. This is a bounded scree preview; whole-area coverage, visual cleanup and production admission remain open. Existing later-stage gates are unchanged.
+**Active execution decision — 2026-10-16:** rebuild the world-authoring workflow around [Houdini and original SideFX methods](tooling/sidefx/README.md). The immediate deliverable is a separate fresh **real Sa Calobra Landscape**, covering all Ma-2141 with 500 m on either side and surrounding background; no road or other world assets yet. Real macro relief takes precedence over fictional-island noise/erosion values. The latest owner clarification permits delicate, reversible deformation in a separate Houdini layer with measured source-relative deltas. The deformed Pegasus trial is rejected as real Sa Calobra and retained only as negative evidence. This supersedes the native-PCG/Blender-first continuation and blanket freeze only for the independent candidate; existing source data, checkpoints, live scenes, issue history and proof gates remain preserved. No GitHub issue state/dependency changes are claimed by this local documentation update.
+
+**Current #365 technical checkpoint — 2026-10-13:** the [single-command PCGEx preview](tooling/PCG365_ONE_COMMAND.md) is executed through broad local MCP: 20 supplied rock instances with Forge materials were saved, reloaded in a fresh process and regenerated identically. [Evidence](experiments/sa-calobra-pcgex-mcp-20261013/manifest.json) pins producer `e3da98f4` and the resolved collection-builder failure. This is a bounded scree preview; whole-area coverage, visual cleanup and production admission remain open. Existing later-stage gates are unchanged.
 
 **Latest #365/#476 owner continuation — 2026-10-13:** publish the [full verbatim rock rollout plan](tooling/SA_CALOBRA_ROCK_ROLLOUT_PLAN_20261013.md) and start its [bounded implementation](tooling/SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md) in a new chat. P0–P4 are retired; gray simplified-object review is deferred without globally blocking other work. Upgrade the currently open Remote session in place, minimize UE restarts and do not restore an older Landscape as routine delivery. This supersedes the prior planning hold without changing downstream issue gates, source authority or proof/acceptance requirements.
 
@@ -94,10 +96,10 @@ Produce a believable, deterministic Sa Calobra route/world foundation that can s
 | Workstream | Purpose | Current state |
 |---|---|---|
 | **Route truth** | canonical route XY, distance, grade, curvature and road-physics profile | established; remains authoritative |
-| **Terrain** | real DTM -> metric deterministic Landscape foundation | active / proven source path; architecture being consolidated |
+| **Terrain** | real DTM -> source-faithful Houdini HeightField -> verified consumer | active fresh Ma-2141 corridor/background candidate; SideFX methods, source fidelity and explicit sampling proof |
 | **Road & Earthworks** | real Ma-2141 alignment, road mesh, non-destructive cut/fill, shoulder tie-in | remaining road/CUT/contact debt; separate #337/#459 scopes |
 | **Materials** | coherent terrain/road surface foundation | #363 accepted/frozen; #364 completed through #470 squash and owner manual closeout; #459 geometry debt retained |
-| **Biomes** | valley / forest / exposed limestone-upland PCG and route exclusion | baseline systems exist; preserve the tooling and retune presentation for Mallorca |
+| **Biomes** | later Houdini/SideFX recipes consuming source domains and route exclusions | excluded from the current terrain-only work; retained PCG systems are integration/history, not the new generator preference |
 | **Proof** | rider-camera visual acceptance, exact-SHA technical evidence, performance | active |
 | **Tooling** | reproducible authoring, remote editor, CI/proof orchestration | active support work |
 

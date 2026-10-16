@@ -255,3 +255,8 @@ retain IGN attribution; SIOSE retains IGN-SITIBSA-GOIB attribution; Catastro
 mapped-footprint derivatives retain INSPIRE transformed-data terms. Receipts
 pin these local candidates without redistributing original source geometry.
 
+
+## SideFX Houdini Engine for Unreal 22.0.466
+
+Local editor plugin from the official installed Houdini distribution. Copyright (c) 2021 Side Effects Software Inc. All rights reserved. Complete copyright, redistribution conditions and disclaimer are retained in Plugins/Runtime/HoudiniEngine/LICENSE.md. Houdini runtime remains separately installed and licensed.
+

@@ -1,5 +1,7 @@
 # Production world-generation architecture references
 
+**2026-10-16 authority update:** this is retained production-pattern evidence. Its older native-first selection, optional-Houdini wording and historical YACS mappings are superseded for new world generation by the [Houdini/SideFX workflow](tooling/sidefx/README.md). [Authentic transcripts and availability](tooling/sidefx/catalog/SUPPORTING.md) are now catalogued. Public talks do not expose proprietary Embark/Ubisoft project graphs; do not claim exact implementation of unseen internals.
+
 **Status:** evidence dossier / architecture reference  
 **Authority:** informative evidence only; `WORLD_BUILDING_BIBLE.md` remains the world-building methodology SSOT  
 **Diagram language:** [`DIAGRAM_STYLE.md`](DIAGRAM_STYLE.md)

@@ -1,0 +1,29 @@
+{
+  "source_grid_vs_input_max_absolute_difference_m": 0.0,
+  "source_grid_vs_input_mean_absolute_difference_m": 0.0,
+  "checked_valid_cells": 70316666,
+  "alpha_mismatched_cells": 0,
+  "grid_shape": [
+    9829,
+    7154
+  ],
+  "grid_bounds": [
+    481878.5,
+    4406755.0,
+    485455.5,
+    4411669.5
+  ],
+  "spacing_m": 0.5,
+  "crs": "EPSG:25831",
+  "result": "PASS: native source matches imported real DTM to less than 1 mm.",
+  "working_mask_mismatched_cells": 64,
+  "working_mask_iou": 0.9999979991289959,
+  "route_parts_covered": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ]
+}

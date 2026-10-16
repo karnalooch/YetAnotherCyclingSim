@@ -7,6 +7,12 @@
 - [Role registry](docs/ai/ROLE_REGISTRY.json) records task owners, not a running autonomous agent framework.
 - Historical experiments, notes and archived plans are evidence, not active authority. Report contradictions instead of guessing.
 
+## Houdini is the primary world-authoring executor
+- Owner decision `HOUDINI_SIDEFX_PRIMARY_20261016`: use Houdini and original SideFX tutorial HIP/HDA workflows for new terrain, roads, cliffs and environment generation. Unreal is the consumer/runtime; PCG/PCGEx and Blender are supporting or retained integration tools, not default replacement generators.
+- Read the [SideFX workflow and complete source concordance](docs/tooling/sidefx/README.md). Map every implemented step to an exact lesson/time range, original project/node/parameter or a verified official SideFX solution. Record all adaptations and missing dependencies; indexing a transcript is not implementation proof.
+- Do not invent replacement terrain, erosion, road or world-generation algorithms. Research official SideFX solutions for a missing step; if unresolved, stop that dependent stage and report the exact gap.
+- Current owner scope is an independent, fresh Houdini Landscape for the entire Ma-2141 with 500 m on each side and surrounding background. Latest clarification: original Sa Calobra relief/elevations, using Pegasus methods; do not copy fictional-island noise/erosion settings that change real macro terrain. The latest owner clarification permits delicate deformation in a separate reversible Houdini layer, while retaining real macro relief. Record and measure the actual delta; never treat an assistant-proposed tuning value as an owner or SideFX standard. No road or other world assets are included yet.
+
 ## Implementation: research and reuse first
 - Before starting implementation, search the internet for current official documentation and existing working solutions: supported tools, plugins, APIs, MCP integrations and examples. Do not begin by writing replacement logic.
 - Prefer a suitable existing solution. When a tool already provides the required logic, automate that tool and adapt the input data instead of reimplementing its behavior.
@@ -17,7 +23,7 @@
 - Change only approved scope. Do not add speculative features, bypass predecessor issues or begin post-MVP systems early.
 - Keep physics deterministic and frame-independent, with SI units; route truth, physics inputs and geographic truth must not be overwritten by visual presentation.
 - Treat terrain, roads and generated assets as sourced, reproducible and non-destructive; never conceal geometry defects with materials or foliage.
-- **Project-wide Landscape freeze:** keep the accepted global Landscape, original `Base_DTM`, grid/georeferencing and macro terrain. A scoped issue may authorize **bounded local repair or simplification** for a diagnosed defect or justified complexity need, using reversible Edit Layers/derived geometry plus before/after delta and rollback proof. Never infer a global terrain thaw or bypass route/physics, source, native/visual or dependency gates; follow [World Building Bible section 6](docs/WORLD_BUILDING_BIBLE.md#6-landscape-edit-layers-contract).
+- **Source retention and scoped fresh rebuild:** preserve original `Base_DTM`, geographic metadata, accepted checkpoints and the active Unreal scene. The 2026-10-16 owner decision authorizes a separate fresh Houdini Landscape and supersedes the freeze for that candidate only. Record source-relative deltas; a procedural experiment is not measured geography or an admitted replacement. Existing consumer repairs remain bounded and reversible; follow [World Building Bible section 6](docs/WORLD_BUILDING_BIBLE.md#6-landscape-edit-layers-contract).
 - Never commit credentials, secrets, personal data, generated UE caches or unlicensed third-party material; follow [AI policy](docs/legal/AI_ASSISTED_DEVELOPMENT.md) and [provenance requirements](docs/legal/DEPENDENCY_PROVENANCE.md).
 - No destructive Git operations, shared-history rewrites, new major dependencies or architecture/scope expansion without the required authorization.
 - Never weaken tests, CI, exact-SHA evidence, hardware proof or human visual acceptance. Unverified is not PASS.
@@ -32,7 +38,7 @@
 ## M3 and authority boundaries
 - M0–M2 complete; M3 Route & World Foundation is current. Do not implement M4–M10 early.
 - #363 accepted; #384 official UE MCP bounded spike precedes #364 asphalt/shoulder. Reverify issue dependencies and the actual stage gate before implementation.
-- Preserve canonical real-road alignment, licensed DTM and World Authority spatial evidence. Road Physics Profile owns physics; BOB owns its bounded earthworks; MCP, PCG/PCGEx and Blender are tools/consumers, never source truth.
+- Preserve canonical real-road alignment, licensed DTM and World Authority spatial evidence. Road Physics Profile owns physics; BOB owns its bounded earthworks constraints; Houdini executes the selected SideFX authoring recipe. MCP, PCG/PCGEx and Blender are interfaces/supporting tools, never source truth.
 - M3 benchmark decision: `DEFERRED_AFTER_M3`, `performance_pass: false`. Native proof, whole-area visual review and protected CI remain mandatory as scoped.
 - Read [M3 world/host policy](docs/ai/policies/M3_WORLD_OPERATIONS.md) for UE/terrain/road/material/world tasks.
 
