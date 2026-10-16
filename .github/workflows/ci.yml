@@ -94,6 +94,11 @@ jobs:
       - name: Verify final architecture/tooling contract
         run: python scripts/ci/test_final_architecture_contract.py
 
+      - name: Verify evidence storage integrity and JSON budget
+        run: |
+          python scripts/ci/check_evidence_storage.py
+          python scripts/ci/test_evidence_storage.py
+
       - name: Verify locked UE-MCP install plan
         run: npm ci --prefix tools/ue-mcp --ignore-scripts --dry-run
 

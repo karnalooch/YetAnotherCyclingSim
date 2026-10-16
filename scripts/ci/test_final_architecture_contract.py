@@ -42,7 +42,8 @@ def verify_world_authority(bible: str, agents: str) -> None:
         "AGENTS lost the owner Houdini decision identifier",
     )
     require(
-        "Unreal is the consumer/runtime; PCG/PCGEx and Blender are supporting" in agents,
+        "Unreal is the consumer/runtime; PCG/PCGEx and Blender are supporting"
+        in agents,
         "AGENTS lost the supporting-tool/consumer boundary",
     )
     require(

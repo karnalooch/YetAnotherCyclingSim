@@ -18,3 +18,14 @@ Five native-catalog CPU tests and eight producer/component CPU tests PASS. Docum
 
 
 Large native JSON receipts are retained as lossless deterministic gzip; [compressed evidence index](compressed-evidence.json) binds original byte counts/SHA256 and compressed identities. Decompression was verified byte-for-byte; this avoids repeating large JSON diffs while preserving all proof.
+
+
+## Receipt storage, 2026-10-16
+
+Oversized run receipts are stored as byte-preserving `.json.gz` files.
+The [storage index](compressed-evidence.json) authenticates both the compressed
+file and its exact decompressed original. Paths and hashes in `evidence.json`
+describe the original captured bytes and remain unchanged. Read gzip before
+checking those hashes; do not hash the compressed file as an original receipt.
+No measured value, rejection, native status or producer identity was changed.
+See [repository storage rules](../../evidence/JSON_STORAGE.md).

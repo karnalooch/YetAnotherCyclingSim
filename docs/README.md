@@ -289,3 +289,8 @@ reverse turns on either final pavement edge. The current 183a30e visual result
 is rejected against that requirement. The native convex-cubic implementation
 below that contract is retained historical evidence; new road execution follows the Houdini/SideFX recipe, and fresh exact-SHA proof and owner visual
 acceptance are required before admitting it.
+
+## Evidence storage
+
+See [JSON storage and byte-preserving receipt archives](evidence/JSON_STORAGE.md)
+for the current raw JSON budget, exact source/replay exceptions and integrity checks.

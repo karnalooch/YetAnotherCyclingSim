@@ -88,3 +88,14 @@ whole-M3 owner audit remain open; #365 and Draft PR474 remain open.
 Local validation: 52 asset tests plus 7 candidate tests, Ruff and architecture
 contract PASS. Docs guards and delivery CI are recorded separately from native
 execution; do not relabel a documentation delivery head as a native run.
+
+
+## Receipt storage, 2026-10-16
+
+Oversized run receipts are stored as byte-preserving `.json.gz` files.
+The [storage index](compressed-evidence.json) authenticates both the compressed
+file and its exact decompressed original. Paths and hashes in `evidence.json`
+describe the original captured bytes and remain unchanged. Read gzip before
+checking those hashes; do not hash the compressed file as an original receipt.
+No measured value, rejection, native status or producer identity was changed.
+See [repository storage rules](../../evidence/JSON_STORAGE.md).

@@ -1,4 +1,5 @@
 """Validate byte-preserving receipt archives and bounded raw JSON exceptions."""
+
 from __future__ import annotations
 
 import gzip
@@ -47,13 +48,18 @@ def require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
-def verify_entry(directory: Path, entry: dict, expected_blob: str | None = None) -> bytes:
+def verify_entry(
+    directory: Path, entry: dict, expected_blob: str | None = None
+) -> bytes:
     """Verify stored bytes AND decompressed original; never trust JSON equality."""
     original, compressed = entry["original"], entry["gzip"]
     for name in (original, compressed):
         require(
-            isinstance(name, str) and name not in {"", ".", ".."}
-            and "/" not in name and "\\" not in name and ":" not in name,
+            isinstance(name, str)
+            and name not in {"", ".", ".."}
+            and "/" not in name
+            and "\\" not in name
+            and ":" not in name,
             f"unsafe archive basename: {name!r}",
         )
     require(original.endswith(".json"), "original must be JSON")
@@ -61,15 +67,23 @@ def verify_entry(directory: Path, entry: dict, expected_blob: str | None = None)
     path = directory / compressed
     require(not path.is_symlink(), f"archive must not be a symlink: {path}")
     size = entry["original_bytes"]
-    require(type(size) is int and 0 <= size <= MAX_RECEIPT_BYTES, "invalid original size")
+    require(
+        type(size) is int and 0 <= size <= MAX_RECEIPT_BYTES, "invalid original size"
+    )
     require(path.stat().st_size <= MAX_RECEIPT_BYTES, "oversized compressed receipt")
     packed = path.read_bytes()
     require(len(packed) == entry["gzip_bytes"], f"compressed size mismatch: {path}")
-    require(hashlib.sha256(packed).hexdigest() == entry["gzip_sha256"], f"compressed hash mismatch: {path}")
+    require(
+        hashlib.sha256(packed).hexdigest() == entry["gzip_sha256"],
+        f"compressed hash mismatch: {path}",
+    )
     with gzip.open(path, "rb") as stream:
         data = stream.read(size + 1)
     require(len(data) == size, f"original size mismatch: {path}")
-    require(hashlib.sha256(data).hexdigest() == entry["original_sha256"], f"original hash mismatch: {path}")
+    require(
+        hashlib.sha256(data).hexdigest() == entry["original_sha256"],
+        f"original hash mismatch: {path}",
+    )
     if expected_blob is not None:
         require(git_blob(data) == expected_blob, f"original Git blob mismatch: {path}")
     json.loads(data)
@@ -85,9 +99,11 @@ def verify_raw(path: str, data: bytes) -> None:
 
 
 def main() -> int:
-    tracked = subprocess.check_output(
-        ["git", "ls-files", "-z", "--", "docs"], cwd=ROOT
-    ).decode().split("\0")
+    tracked = (
+        subprocess.check_output(["git", "ls-files", "-z", "--", "docs"], cwd=ROOT)
+        .decode()
+        .split("\0")
+    )
     oversized = 0
     for relative in tracked:
         if not relative.endswith(".json"):
@@ -100,7 +116,9 @@ def main() -> int:
     found = set()
     raw_bytes = compressed_bytes = 0
     for directory in (LARGE, NATURAL):
-        entries = json.loads((ROOT / directory / "compressed-evidence.json").read_bytes())
+        entries = json.loads(
+            (ROOT / directory / "compressed-evidence.json").read_bytes()
+        )
         require(isinstance(entries, list), "archive index must be a list")
         seen = set()
         for entry in entries:
@@ -109,12 +127,20 @@ def main() -> int:
             relative = f"{directory}/{entry['original']}"
             verify_entry(ROOT / directory, entry, ARCHIVED_BLOBS.get(relative))
             if relative in ARCHIVED_BLOBS:
-                require(not (ROOT / relative).exists(), f"raw archived receipt returned: {relative}")
+                require(
+                    not (ROOT / relative).exists(),
+                    f"raw archived receipt returned: {relative}",
+                )
                 found.add(relative)
                 raw_bytes += entry["original_bytes"]
                 compressed_bytes += entry["gzip_bytes"]
-    require(found == set(ARCHIVED_BLOBS), f"missing archive entries: {set(ARCHIVED_BLOBS) - found}")
-    print(f"evidence-storage: PASS; {len(found)} migrated receipts; {raw_bytes} -> {compressed_bytes} bytes; {oversized} exact raw exceptions")
+    require(
+        found == set(ARCHIVED_BLOBS),
+        f"missing archive entries: {set(ARCHIVED_BLOBS) - found}",
+    )
+    print(
+        f"evidence-storage: PASS; {len(found)} migrated receipts; {raw_bytes} -> {compressed_bytes} bytes; {oversized} exact raw exceptions"
+    )
     return 0
 
 

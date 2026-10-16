@@ -22,5 +22,14 @@
     "original_sha256": "f86ea7d5cfdf712bb58461ea021d455af0f779ee139bca16a2e8eb70563f823b",
     "gzip_bytes": 4565,
     "gzip_sha256": "f8358ac67153e498c5a4d951a2e1768efda90b26e3ee29001b1c831931d73dfc"
+  },
+  {
+    "original": "producer-receipt.json",
+    "gzip": "producer-receipt.json.gz",
+    "original_bytes": 1445368,
+    "original_sha256": "40d37994db8ff9b9d5814036331e1d69989f761969a590ee2bc973ab2ccf7985",
+    "gzip_bytes": 322666,
+    "gzip_sha256": "1c42a563e7a5cdcadd24cce3098a5567180f931bdc45634cf2abc4178f9cd9f8",
+    "original_git_blob_sha1": "d655905fff816205727b14e3c852d74f6644c16e"
   }
 ]

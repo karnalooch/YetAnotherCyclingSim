@@ -370,6 +370,11 @@
       "file": "yacs-live-host.yml",
       "state": "CURRENT",
       "reason": "Issue #476 owner-only fixed-branch opt-in YACS Live Host preflight/install/activate/post-job verify. Independent limited interactive AtLogOn scheduled task owns the persistent PixelStreaming2 Unreal Editor, never a GitHub Actions child; no run gets persistent visual PASS until a separate later receiver observes current PID+SID+heartbeat and new WebRTC frames. Scoped code-only, no runner/service/scene mutations on default preflight."
+    },
+    {
+      "file": "pr474-evidence-cleanup.yml",
+      "state": "ONE-SHOT/DEAD",
+      "reason": "Owner-requested PR474 JSON audit and byte-preserving migration completed; permanent integrity/budget checks now run in primary CI. No native execution or branch-ref write in this retired workflow."
     }
   ]
 }
