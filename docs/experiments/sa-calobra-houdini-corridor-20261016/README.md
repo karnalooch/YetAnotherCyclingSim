@@ -166,3 +166,31 @@ Evidence JSON is reformatted as UTF-8 and task-home paths are normalized to `${T
 The next bounded actions are: repair and re-test context collision without replacing the source terrain; verify the final saved map in a deliberate reopen window; finish Remote movement diagnostics; decide whether native UE paint layers are required for the next authoring stage; and only then proceed under the owner's next scope decision. Keep the terrain-only scope until explicitly expanded.
 
 Documentation verification is recorded in [report-validation.json](evidence/report-validation.json). The existing documentation index and experiment-journal guards are used; report-local links, JSON and evidence hashes are checked separately. No new terrain benchmark, heavy UE job or production acceptance is inferred from documentation checks.
+
+## 10. Follow-on Milestone: Pegasus Base Checkpoint & First Terrain Detail (Lessons 2–4)
+
+**Executed:** 2026-10-17. **Focus:** Project Pegasus Landscape Workflow (Source / Manual Edits / Procedural Detail).
+
+### Summary of verified delivery
+1. **Base Verification (Pass 1):** Verified source HeightField grid against input DTM over 70,316,666 valid cells (exact 0.0 m delta, SHA-256 `01efaed54b68b8931550ebd89957af51928519e47a4c53ec92eceb38ec6c7757`). Cached in `cache/source_working_05m.bgeo.sc`.
+2. **Procedural Detail (Pass 3, Lessons 3–4):**
+   - Representative subregion: 300 m × 300 m (601 × 601 cells at 0.5 m spacing) on steep limestone slope and transition to gentler ground.
+   - Material 1 (`wepoeaw_4K_Displacement.exr`, limestone crags/scree, 20 m scale, 0.35 m amplitude, slope 28°–90°).
+   - Material 2 (`tlonbisya_4K_Displacement.exr`, ground transition, 12 m scale, 0.15 m amplitude, slope 0°–32°, `use_heightblend = 1`).
+   - Boundary protection: radial edge falloff 135 m to 148 m (`lerp` base vs candidate).
+   - Candidate HIP: `SaCalobra_Pegasus_Detail_v001.hiplc`.
+   - Subregion cache: `cache/first_detail_subregion_05m.bgeo.sc`.
+   - Full working cache: `cache/first_detail_working_05m.bgeo.sc`.
+3. **Measurements:**
+   - Subregion max absolute delta: **0.4833 m** (within <0.5 m bound).
+   - Subregion mean absolute delta in active mask: **0.0473 m** (~4.7 cm micro-relief).
+   - 95th percentile in mask: **0.1574 m** (~15.7 cm).
+   - Delta outside permitted subregion: **0.0000 m** (0 modified cells outside the 300 m crop).
+4. **Reversibility:** Setting detail switch to `0` restores the exact bit-level source DTM hash (`01efaed54b68b8931550ebd89957af51928519e47a4c53ec92eceb38ec6c7757`).
+5. **Fresh Reopen Verification:** Passed via `tools/verify_first_detail.py` in an independent process (`evidence/first_detail_fresh_readback.json`).
+
+| View | Base (DTM) | Detail (Pegasus Materials) |
+|---|---|---|
+| Medium Overview | ![Medium Base](evidence/SaCalobra_Slope_Medium_Base.png) | ![Medium Detail](evidence/SaCalobra_Slope_Medium_Detail.png) |
+| Slope Closeup | ![Close Base](evidence/SaCalobra_Slope_Close_Base.png) | ![Close Detail](evidence/SaCalobra_Slope_Close_Detail.png) |
+

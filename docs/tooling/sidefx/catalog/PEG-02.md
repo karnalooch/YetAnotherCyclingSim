@@ -45,12 +45,12 @@ All listed TXT/VTT files were read and the original VTT hashes checked. `INDEXED
 - Original VTT SHA-256: `7f55f991af4cc25989c179d13a9ef2407260a67bcf0700bb65b3eeaf69d982c3`
 - Source lesson objective: Get an overview of the landscape pipeline and how the Pegasus team collaborated on building the landscape, layering procedural detail and manual edits.
 - Materials: shared `PEG-02` bundle listed below. Per-lesson dependency mapping has not been established.
-- Verification: `INDEXED`; implementation: `NO_PER_LESSON_YACS_IMPLEMENTATION_RECEIPT_REGISTERED`.
-
+- Verification: `INDEXED`; implementation: `IMPLEMENTED_LOCAL_STAGE_CHECKPOINT`. Local graph: `SaCalobra_Pegasus_Detail_v001.hiplc` under `D:/yacs/work/sa-calobra-houdini-unreal-20261016`. Receipts: [sa-calobra-pegasus-first-detail-verification.json](sa-calobra-pegasus-first-detail-verification.json) and [sa-calobra-pegasus-first-detail-readback.json](sa-calobra-pegasus-first-detail-readback.json). Strict layer separation: `SOURCE_CACHE` (Layer 1 DTM) -> `MANUAL_EDITS_NONE` (Layer 2 neutral) -> `PROCEDURAL_DETAIL` (Layer 3 Pegasus materials), reversible to exact 0.0 m delta.
+ 
 ### PEG-02-03: 3 | Pegasus Heightfield Materials [9:47]
-
+ 
 [Original video](https://player.vimeo.com/video/888568015) · [Caption resource](https://captions.vimeo.com/captions/120806878.vtt)
-
+ 
 - Language: `en`; source track: `en-x-autogen`; automatic: `true`.
 - Text coverage: `00:00:01.555` → `00:09:26.225`; 186 nonempty cues; original timestamps retained.
 - TXT: `P1_02_Landscape_Workflow/Czesci/03_3_Pegasus_Heightfield_Materials/Transkrypcja.en.txt`
@@ -58,12 +58,12 @@ All listed TXT/VTT files were read and the original VTT hashes checked. `INDEXED
 - Original VTT SHA-256: `2500bef6f0ba343b177ba8bd4fa66acf01ea20b81c53d095f6f20dd17d2bf99c`
 - Source lesson objective: Learn how heightmaps from the Quixel Megascans were used to add a fine level of detail to the landscape.
 - Materials: shared `PEG-02` bundle listed below. Per-lesson dependency mapping has not been established.
-- Verification: `INDEXED`; implementation: `NO_PER_LESSON_YACS_IMPLEMENTATION_RECEIPT_REGISTERED`.
-
+- Verification: `INDEXED`; implementation: `IMPLEMENTED_LOCAL_STAGE_CHECKPOINT`. HDA: `sop_PE_heightfield_material.1.0.hda`. Material 1 (Rock slope): 4K float displacement EXR `inputs/textures/wepoeaw_4K_Displacement.exr`, physical size 20.0 m, height scale 0.35 m, mask by slope 28° to 90°.
+ 
 ### PEG-02-04: 4 | Heightfield Materials Workflow [16:27]
-
+ 
 [Original video](https://player.vimeo.com/video/888568278) · [Caption resource](https://captions.vimeo.com/captions/120807236.vtt)
-
+ 
 - Language: `en`; source track: `en-x-autogen`; automatic: `true`.
 - Text coverage: `00:00:00.615` → `00:16:26.255`; 311 nonempty cues; original timestamps retained.
 - TXT: `P1_02_Landscape_Workflow/Czesci/04_4_Heightfield_Materials_Workflow/Transkrypcja.en.txt`
@@ -71,7 +71,7 @@ All listed TXT/VTT files were read and the original VTT hashes checked. `INDEXED
 - Original VTT SHA-256: `0a1b906617532bc3b9dc9daefca9cc6a12bf9632e515474de4684730a38c9ed6`
 - Source lesson objective: Now that you have an understanding of the Heightfield Material workflow take a closer look at how you can build a detailed landscape by layering multiple Megascan textures using masks.
 - Materials: shared `PEG-02` bundle listed below. Per-lesson dependency mapping has not been established.
-- Verification: `INDEXED`; implementation: `NO_PER_LESSON_YACS_IMPLEMENTATION_RECEIPT_REGISTERED`.
+- Verification: `INDEXED`; implementation: `IMPLEMENTED_LOCAL_STAGE_CHECKPOINT`. Material 2 (Ground transition): 4K float displacement EXR `inputs/textures/tlonbisya_4K_Displacement.exr`, physical size 12.0 m, height scale 0.15 m, mask by slope 0° to 32°, `use_heightblend = 1`. Subregion 300m x 300m verified with max delta 0.4833 m, mean delta 0.0473 m, 0.0 m outside boundary.
 
 ### PEG-02-05: 5 | Scree Slopes [17:19]
 
