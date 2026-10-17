@@ -62,6 +62,8 @@ def main():
     for n in hou.node("/obj").children():
         n.setDisplayFlag(False)
 
+    cam_focal = 50.0
+
     if args.shot == "00_working_pano":
         out_filename = "04_working_landscape_panorama.png"
         geo = hou.node("/obj").createNode("geo", "RENDER_WORKING_PANO")
@@ -88,8 +90,10 @@ def main():
         nrm_pano.setInput(0, w_pano)
         nrm_pano.setDisplayFlag(True)
         nrm_pano.setRenderFlag(True)
-        cam_pos = (-1200, 1800, -2400)
-        tgt_pos = (0, 350, 400)
+        # Positioned to fit the full Working domain bounds (3577m x 4914m) with small margin
+        cam_pos = (-5983.0, 4706.0, -2776.8)
+        tgt_pos = (17.0, 350.0, 687.3)
+        cam_focal = 35.0
 
     elif args.shot == "01_pano":
         out_filename = "04_context_background_panorama.png"
@@ -113,8 +117,10 @@ def main():
         nrm_pano.setInput(0, w_pano)
         nrm_pano.setDisplayFlag(True)
         nrm_pano.setRenderFlag(True)
-        cam_pos = (-2200, 2400, -3200)
-        tgt_pos = (0, 300, 500)
+        # Positioned to fit the full Context domain bounds (8000m x 8000m) with small margin
+        cam_pos = (-11773.3, 7056.7, -6797.3)
+        tgt_pos = (0.0, 300.0, 0.0)
+        cam_focal = 35.0
 
     elif args.shot == "02a_crags":
         out_filename = "04_closeup_crags.png"
@@ -128,12 +134,22 @@ def main():
         cam_pos = (-324.5 - 80.0, 362.4 + 50.0, 545.5 - 80.0)
         tgt_pos = (-324.5, 362.4, 545.5)
 
-    elif args.shot == "02c_coastal":
+    elif args.shot == "02c_sand_before_tint":
+        out_filename = "04_closeup_coastal_sand_before_tint.png"
+        # Focused on active sand beach cove surface at Sa Calobra (X = -47.75, Z = -1431.75, Y = 0.65m, mask = 1.000)
+        # Rendered directly from WORKING_SAND_MATERIAL (before Tint)
+        geo = build_mesh("SAND_BEFORE", -47.75, -1431.75, 70, 70, source_node="/obj/SA_CALOBRA/WORKING_SAND_MATERIAL")
+        cam_pos = (-47.75 - 15.0, 4.0, -1431.75 - 18.0)
+        tgt_pos = (-47.75, 0.65, -1431.75)
+        cam_focal = 35.0
+
+    elif args.shot in ("02c_coastal", "02c_sand_final"):
         out_filename = "04_closeup_coastal_sand.png"
-        # Real sea-level coastal beach cove at Sa Calobra (X ≈ 18.0, Z ≈ -1368.0, Y ≈ 0-15m)
-        geo = build_mesh("COASTAL", 18.0, -1368.0, 180, 180)
-        cam_pos = (18.0 - 65.0, 45.0, -1368.0 - 65.0)
-        tgt_pos = (18.0, 15.0, -1368.0)
+        # Identical camera, focused on active sand beach cove surface in Final Material result
+        geo = build_mesh("SAND_FINAL", -47.75, -1431.75, 70, 70, source_node="/obj/SA_CALOBRA/WORKING_MATERIAL_CACHE")
+        cam_pos = (-47.75 - 15.0, 4.0, -1431.75 - 18.0)
+        tgt_pos = (-47.75, 0.65, -1431.75)
+        cam_focal = 35.0
 
     elif args.shot == "03a_tint_before":
         out_filename = "04_tint_comparison_before.png"
@@ -165,6 +181,8 @@ def main():
     cam.parm("tx").set(cam_pos[0])
     cam.parm("ty").set(cam_pos[1])
     cam.parm("tz").set(cam_pos[2])
+    cam.parm("focal").set(cam_focal)
+    cam.parm("far").set(50000.0)
 
     tgt = hou.node("/obj").createNode("null", "render_target")
     tgt.parm("tx").set(tgt_pos[0])
@@ -186,6 +204,9 @@ def main():
 
     art_path = f"{artifact_dir}/{out_filename}"
     shutil.copy2(out_path, art_path)
+    if out_filename == "04_closeup_coastal_sand.png":
+        shutil.copy2(out_path, f"{evidence_dir}/04_closeup_coastal_sand_final.png")
+        shutil.copy2(out_path, f"{artifact_dir}/04_closeup_coastal_sand_final.png")
     print(f"SUCCESS: Rendered {out_filename}: {os.path.getsize(out_path)} bytes -> copied to {art_path}")
 
 

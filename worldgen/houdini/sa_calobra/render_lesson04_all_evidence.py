@@ -20,7 +20,8 @@ def main():
         "01_pano",
         "02a_crags",
         "02b_canyon",
-        "02c_coastal",
+        "02c_sand_before_tint",
+        "02c_sand_final",
         "03a_tint_before",
         "03b_tint_after",
         "04_cliff_trans"
