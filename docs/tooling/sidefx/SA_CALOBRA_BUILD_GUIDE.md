@@ -1,6 +1,6 @@
 # Sa Calobra: Houdini / Pegasus / SideFX Labs build guide
 
-**Status:** current agent execution guide, adopted by owner request on 2026-10-17.
+**Status:** current agent execution guide, adopted by owner request on 2026-10-17; clarified the same day: base first, details afterwards, following the Pegasus workflow itself.
 **Authority:** subordinate to the [World Building Bible](../../WORLD_BUILDING_BIBLE.md), [SideFX execution workflow](README.md), [Roadmap](../../ROADMAP.md) and geographic/physics contracts. This guide makes the selected direction actionable; it does not create a competing roadmap or grant production acceptance.
 **Source supplement:** [reviewed SideFX Labs 22.0.466 package](SIDEFX_LABS_22_0_466.md).
 **Delivery at adoption:** #365 / M3, existing Draft PR #474, `codex/365-world-graph`; inspected base `11d93a9dcb7a52386e961456c33620ae7c7fec96`. Recheck current issue/PR state when resuming.
@@ -17,23 +17,36 @@ Python/HOM may orchestrate nodes, imports, paths, cooking, cache checks and meas
 
 BOB keeps road/earthworks constraints; route geometry and Road Physics Profile keep physical truth. PCG/PCGEx may support an explicitly selected consumer/integration recipe, not silently resume primary generation. Blender remains supporting preparation/inspection. Material Forge remains the existing surface-material toolchain unless a separately justified recipe needs another supported operation.
 
+### Owner clarification: base first, details afterwards
+
+The owner explicitly wants **the Pegasus workflow, not merely a landscape made with Houdini**. First establish and inspect the base terrain, then develop it through separate detail passes. An imported DTM, a diagnostic corridor overlay or a low-amplitude noise preview is a base/test result, not the finished Landscape. The detail passes are part of the intended terrain workflow, not an optional afterthought.
+
+Keep the Pegasus **Source / Manual Edits / Procedural Detail** separation. In Sa Calobra the geographic DTM supplies the source stage; manual corrections remain separately recorded and can be empty when unnecessary. Surface detail is a downstream stage, not a rewrite of Source. These are workflow responsibilities, not a claim that three identically named native UE layers already exist or that every operation is simple addition.
+
+Use [PEG-01 Landscape Creation](catalog/PEG-01.md) for base construction and handoff, and [PEG-02 Landscape Workflow](catalog/PEG-02.md) for the actual follow-on process: lesson 2 for pipeline organization; lessons 3-4 for material-heightmap detail and layered masks; lesson 5 for scree masks; lessons 6-7 for IDMap and Unreal material setup. Consult the [original series](https://www.sidefx.com/tutorials/project-pegasus-landscape-workflow/) and the corresponding retained HIP/HDA before implementation. Global colour and near-surface material detail must remain distinct outputs where the selected recipe uses both. Reuse licensed inputs and record any material-source substitution; the owner is adopting the method, not granting new asset licenses.
+
+The execution order below is our explicit Sa Calobra application of those references, not a claim that every Pegasus team member or asset was produced in one strictly linear chronology. For later cliffs, the [original cliff workflow](https://www.sidefx.com/tutorials/project-pegasus-cliff-generation/) derives mesh sections from terrain and adds subdivision/displacement; it is downstream geometry, not a replacement base generator.
+
+A historical detail blend of `0.001`, a measured approximately `0.178 m` displacement and the earlier assistant-proposed `0.5 m` bound describe prior experiments. They are **not permanent specifications for all later detail** and must not become a reason to omit the material-heightmap workflow. Choose and record operation-appropriate scale, masks and displacement while retaining the existing macro-geography and physics boundaries. This clarification does not authorize arbitrary macro deformation.
+
 ## 2. Active scope versus later direction
 
-The active task remains **terrain, masks, boundaries and separately controlled subtle detail only**: the complete supplied Ma-2141 reference, a 500 m horizontal working buffer on each side, and surrounding terrain context. No road mesh, road earthworks, cliff dressing, vegetation or buildings are authorized by this documentation update.
+The active terrain workflow is **base first, then masks, separately controlled surface detail and terrain surfacing**: the complete supplied Ma-2141 reference, a 500 m horizontal working buffer on each side, and surrounding terrain context. The immediate local pass is to reopen, inspect and checkpoint the existing base before adding more detail. No base or detail PASS is conferred by this document. Road geometry, road earthworks, cliff meshes, vegetation and buildings remain later workstreams under the existing roadmap.
 
-The following is an execution sequence within the existing roadmap, not simultaneous authorization for every row:
+Complete one pass with its appropriate evidence, retain its cache, and then move downstream. Do not demand finished materials or cliff meshes before a base checkpoint can be useful; equally, do not call that checkpoint the final world. The following ordering replaces the earlier table that grouped all materials with later vegetation:
 
-| Stage | Direction | Exit evidence before expanding |
+| Ordered pass | Direction | Output / check |
 |---|---|---|
-| Current: source and terrain | Resume the existing real-DTM Houdini project; verify geographic registration and source validity | Source identity, units/axes/origin, grid/extent, all route parts covered; source-relative height comparison |
-| Current: masks and subtle detail | Build/inspect named layers using the selected Pegasus method, native HeightField nodes and suitable Labs mask helpers | Mask meaning and range, hard boundaries preserved, disableable detail, measured displacement inside/outside corridor |
-| Current: cache and terrain handoff | Cache separate stages; consume an explicitly versioned terrain candidate in an isolated Unreal destination when the applicable gates permit | Fresh HIP/cache reopen; tile edges, effective import settings, saved/fresh-reopened Unreal data and actual collision target |
-| Later, separately activated: road and earthworks | Adapt the source-aligned Pegasus road recipe; consider Labs Road Generator or Unreal Spline only where demonstrated suitable | Canonical XY retained, width/profile/banking and hairpin continuity, cut/fill/support and road/terrain contact |
-| Later, separately activated: cliffs and rocks | Adapt original Pegasus cliff methods and suitable native/Labs mesh preparation | Region and source provenance, actual mesh quality/contact, no floating bases or cosmetic concealment of terrain defects |
-| Later, separately activated: materials and vegetation | Reuse Material Forge; evaluate current SideFX baking and Labs Biome tools for named gaps | Material scale/roughness/normal checks; sourced vegetation domains, species choices, exclusions and deterministic placement |
-| Later, separately activated: structures and assembled-world closeout | Source-led reconstruction, engine consumption and whole-area review | Actual saved world, owner review, then the existing M3 performance protocol |
+| 1. Base / Source | Resume the existing real-DTM HeightField; establish scale, origin, coverage and macro relief without final surface dressing | Viewable base and reusable cache; source identity, grid, validity and route coverage checked |
+| 2. Manual Edits and control masks | Keep any necessary bounded correction separate; derive the masks needed by the next operation | Recorded corrections or explicit no-op; named masks with checked registration and exclusions |
+| 3. Procedural terrain detail | Follow PEG-02 material-heightmap layering and scree-mask methods; use erosion/noise only where the selected recipe and required effect justify them | Independently controlled surface-detail result, measured height delta and before/after views at useful scales |
+| 4. Terrain appearance | Follow the selected Pegasus IDMap/material workflow, including global colour versus close-range surface detail; reuse suitable Material Forge inputs with recorded adapters | Material selection and physical scale checked; coherent overview and near views; no diagnostic mask confused with final surfacing |
+| 5. Terrain consumer check | Inspect the corresponding versioned base/detail outputs in an isolated Unreal destination as needed during iteration | Fresh HIP/cache reopen, shared edges, effective import settings, save/reopen and correct collision targets |
+| Later: cliffs and rocks | Derive and detail cliff sections using the original Pegasus workflow | Sourced regions, mesh quality/contact and no concealed terrain defects |
+| Later: road and earthworks | Adapt the source-aligned Pegasus road recipe within its domain constraints | Canonical XY, width/profile/banking, hairpin continuity and cut/fill/contact checked |
+| Later: vegetation and structures | Use the relevant source-led Pegasus methods and suitable tools when those workstreams are active | Coherent ground/vegetation relationships, sourced placement, then assembled-world review |
 
-The 8 km source coverage is available context, not an instruction to regenerate or render every cell at full detail. Background simplification is a representation choice, not permission to move ridges or valleys. Any visibility-based trimming needs actual route-camera evidence.
+The base-to-detail order is mandatory; consumer checks may happen between passes and are not a one-way prohibition on returning to a specific defect. The later rows do not reorder issue dependencies or activate every world system at once. A base repair invalidates its actual dependants, not unrelated caches. The 8 km source coverage is available context, not an instruction to regenerate or render every cell at full detail. Background simplification is a representation choice, not permission to move ridges or valleys. Any visibility-based trimming needs actual route-camera evidence.
 
 ## 3. Resume an existing project before building another one
 
@@ -43,7 +56,7 @@ For each bounded work session:
 
 1. Read root `AGENTS.md`, this guide and the selected recipe/source portion. Confirm the approved issue, active stage, exact checkout SHA, existing HIP/output identities and host ownership.
 2. Locate the retained Pegasus corpus and [Labs package](SIDEFX_LABS_22_0_466.md). Verify the package actually loaded in the process and the selected node definition; a file on disk is not a successful installation.
-3. Reopen and inspect the existing output. State one concrete defect or deliverable and which graph branch/layer may change.
+3. Reopen and inspect the existing output. State the current base/detail pass, one concrete defect or deliverable and which graph branch/layer may change. At the base pass, show the base without final detail; at a detail pass, show its difference from the cached base.
 4. Exercise the smallest representative case, including a relevant difficult boundary, then extend to the authorized area after checking the result. A local pass is not whole-area acceptance.
 5. Save an independent versioned candidate, check fresh-process reopen and present real before/after views plus relevant measurements. Do not mark visual acceptance on behalf of the owner.
 6. Commit only the scoped source/docs/compact receipts on the canonical delivery branch and report the remaining gap. Do not create a parallel implementation PR, new proof framework or generic orchestration layer to avoid finishing the terrain.
@@ -67,6 +80,7 @@ The [package review](SIDEFX_LABS_22_0_466.md) records the actual bundled help pa
 | Need | Candidate implementation | YACS constraint |
 |---|---|---|
 | Real terrain import and reversible layers | Original Pegasus import/layer/cache method; native HeightField File, Mask by Geometry, Layer, Crop and Output as appropriate | Verify the existing source baseline; no replacement macro terrain |
+| Material-driven terrain detail and appearance | Original PEG-02 Heightfield Materials, Materials Workflow, Scree Slopes and IDMap/Material Setup recipes | Required downstream terrain passes; verify original HDA, licensed maps, metric texture/displacement scale and independent base/detail control |
 | Combine/copy named terrain masks | Labs HF Combine Masks and HF Insert Mask | Register grids first; preserve layer meaning, validity and hard exclusions |
 | Slope/cost/avoidance diagnostics | Native analysis or Labs Terrain Analysis for an identified need | Derived diagnostics only; never authority to relocate the real road |
 | Optional terrain mesh or tiled map output | Labs Terrain Mesh ROP / Terrain Texture ROP, only if the consumer needs that representation | Check lattice, shared edges and fidelity; heightfield conversion alone does not author overhangs or cliffs |
