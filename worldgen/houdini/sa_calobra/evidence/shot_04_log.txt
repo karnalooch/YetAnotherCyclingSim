@@ -1,0 +1,6 @@
+=== CAPTURING SHOT 04 (PROCEDURAL UPDATE) ===
+Target Landscape: SaCalobra_Detail_0_0
+Current layers: [Name("Houdini_Source_Pegasus_Gentle"), Name("Layer2_Procedural"), Name("Layer1_Manual")]
+Taking screenshot to D:/yacs/project/worldgen/houdini/sa_calobra/evidence/04_unreal_procedural_update.png...
+Shot 04 verified on disk! Size: 2542847 bytes in 6.00s
+Quitting editor...

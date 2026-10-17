@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "project": "SaCalobra_Pegasus_Lesson03.hiplc",
+  "hda_loaded": "PE_heightfield_material::1.0",
+  "hda_file": "D:/yacs/project/worldgen/houdini/sa_calobra/otls/sop_PE_heightfield_material.1.0.hda",
+  "colour_texture_resolved": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/SaCalobra_PaleLimestone_BaseColor.png",
+  "height_texture_resolved": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/wepoeaw_4K_Displacement.exr",
+  "working_landscape_resolution": [
+    7154,
+    9829,
+    1
+  ],
+  "context_background_resolution": [
+    2048,
+    2048,
+    1
+  ],
+  "volumes_present": [
+    "height",
+    "mask",
+    "Alpha",
+    "r",
+    "g",
+    "b",
+    "roughness"
+  ],
+  "layer3_procedural_delta_max_m": 0.340179443359375,
+  "reversibility_delta_when_disabled_m": 0.0,
+  "source_and_manual_preserved": true
+}
