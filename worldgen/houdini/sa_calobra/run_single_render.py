@@ -61,7 +61,36 @@ def main():
     for n in hou.node("/obj").children():
         n.setDisplayFlag(False)
 
-    if args.shot == "02a_crags":
+    if args.shot == "01_pano":
+        out_filename = "lesson03_01_full_panorama_color.png"
+        geo = hou.node("/obj").createNode("geo", "RENDER_PANO")
+        m_pano = geo.createNode("object_merge")
+        m_pano.parm("objpath1").set("/obj/SA_CALOBRA/CONTEXT_MATERIAL_CACHE")
+        conv_pano = geo.createNode("convert")
+        conv_pano.setInput(0, m_pano)
+        w_pano = geo.createNode("attribwrangle")
+        w_pano.setInput(0, conv_pano)
+        w_pano.setInput(1, m_pano)
+        w_pano.parm("snippet").set("""
+        vector p = @P;
+        p.y = 0;
+        float r = volumesample(1, 'r', p);
+        float g = volumesample(1, 'g', p);
+        float b = volumesample(1, 'b', p);
+        if (r > 0.05 || g > 0.05 || b > 0.05) {
+            @Cd = set(r, g, b);
+        } else {
+            @Cd = set(0.26, 0.30, 0.22);
+        }
+        """)
+        nrm_pano = geo.createNode("normal")
+        nrm_pano.setInput(0, w_pano)
+        nrm_pano.setDisplayFlag(True)
+        nrm_pano.setRenderFlag(True)
+        cam_pos = (-2200, 2400, -3200)
+        tgt_pos = (0, 300, 500)
+
+    elif args.shot == "02a_crags":
         out_filename = "lesson03_02a_closeup_crags_color.png"
         geo = build_mesh("CRAGS", 224.0, -711.0, 160, 160)
         cam_pos = (224.0 - 75.0, 357.2 + 45.0, -711.0 - 75.0)
@@ -81,7 +110,7 @@ def main():
 
     elif args.shot == "03a_before":
         out_filename = "lesson03_03a_fixed_cam_before_base.png"
-        geo = build_mesh("BEFORE", 224.0, -711.0, 120, 120, source_node="/obj/SA_CALOBRA/SOURCE_CACHE")
+        geo = build_mesh("BEFORE", 224.0, -711.0, 120, 120, source_node="/obj/SA_CALOBRA/COMPOSE_SOURCE_AND_MANUAL")
         cam_pos = (224.0 - 55.0, 357.2 + 25.0, -711.0 - 55.0)
         tgt_pos = (224.0, 357.2, -711.0)
 

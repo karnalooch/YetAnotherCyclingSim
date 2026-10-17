@@ -1,5 +1,12 @@
 {
   "candidate_project": "SaCalobra_Pegasus_Lesson03.hiplc",
+  "base_composition": {
+    "source_node": "SOURCE_CACHE",
+    "manual_node": "MANUAL_EDITS_CACHE",
+    "compose_node": "COMPOSE_SOURCE_AND_MANUAL",
+    "layer_operation": "add",
+    "base_vs_pure_source_delta_m": 0.0
+  },
   "hda": {
     "type": "PE_heightfield_material::1.0",
     "library_file": "D:/yacs/project/worldgen/houdini/sa_calobra/otls/sop_PE_heightfield_material.1.0.hda"

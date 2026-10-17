@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "description": "Non-zero manual sculpt verification in Base B = Source + Manual",
+  "baseline_neutral_delta_m": 0.0,
+  "sculpt_injection": {
+    "sculpt_file": "Pegasus_Landscape_Layer_2_Manual_Edits.SCULPT.bgeo.sc",
+    "sculpt_file_size_bytes": 3653712,
+    "max_sculpt_delta_in_base_B_m": 4.520545959472656,
+    "sculpt_cells_count": 70316666,
+    "procedural_delta_max_m": 0.340179443359375,
+    "conservation_B_plus_D_equals_M_max_err_m": 1.4901161193847656e-08,
+    "detail_off_vs_sculpted_base_delta_m": 0.0,
+    "detail_off_sculpt_height_preserved_m": 4.520545959472656,
+    "houdini_load_landscape_delta_vs_source_m": 4.722724914550781
+  }
+}

@@ -169,8 +169,8 @@ print("--- Building Shot 03a & 03b: Fixed-Camera Before / After ---")
 fixed_cam_pos = (224.0 - 55.0, 357.2 + 25.0, -711.0 - 55.0)
 fixed_tgt_pos = (224.0, 357.2, -711.0)
 
-# 3a. Before: Base Terrain (Source + Manual, Material detail disabled)
-geo_before, _ = build_closeup_mesh("BEFORE", 224.0, -711.0, 120, 120, source_node="/obj/SA_CALOBRA/SOURCE_CACHE")
+# 3a. Before: Base Terrain (Source + Manual Base B, Material detail disabled)
+geo_before, _ = build_closeup_mesh("BEFORE", 224.0, -711.0, 120, 120, source_node="/obj/SA_CALOBRA/COMPOSE_SOURCE_AND_MANUAL")
 render_view(geo_before, fixed_cam_pos, fixed_tgt_pos, "lesson03_03a_fixed_cam_before_base.png")
 geo_before.destroy()
 

@@ -1,30 +1,86 @@
 {
   "status": "PASS",
+  "timestamp_utc": 0.0,
   "project": "SaCalobra_Pegasus_Lesson03.hiplc",
-  "hda_loaded": "PE_heightfield_material::1.0",
-  "hda_file": "D:/yacs/project/worldgen/houdini/sa_calobra/otls/sop_PE_heightfield_material.1.0.hda",
-  "colour_texture_resolved": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/SaCalobra_PaleLimestone_BaseColor.png",
-  "height_texture_resolved": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/wepoeaw_4K_Displacement.exr",
-  "working_landscape_resolution": [
-    7154,
-    9829,
-    1
-  ],
-  "context_background_resolution": [
-    2048,
-    2048,
-    1
-  ],
-  "volumes_present": [
-    "height",
-    "mask",
-    "Alpha",
-    "r",
-    "g",
-    "b",
-    "roughness"
-  ],
-  "layer3_procedural_delta_max_m": 0.340179443359375,
-  "reversibility_delta_when_disabled_m": 0.0,
-  "source_and_manual_preserved": true
+  "graph_architecture": {
+    "base_composition_node": "COMPOSE_SOURCE_AND_MANUAL",
+    "source_node": "SOURCE_CACHE",
+    "manual_node": "MANUAL_EDITS_CACHE",
+    "mask_node": "MASK_ROCK_SLOPE",
+    "material_node": "ROCK_SLOPE_MATERIAL",
+    "delta_node": "MATERIAL_PROCEDURAL_DELTA",
+    "working_switch_node": "WORKING_SOURCE_OR_DETAIL",
+    "switch_input0": "COMPOSE_SOURCE_AND_MANUAL",
+    "switch_input1": "WORKING_MATERIAL_CACHE",
+    "delta_input0": "WORKING_MATERIAL_CACHE",
+    "delta_input1": "COMPOSE_SOURCE_AND_MANUAL"
+  },
+  "hda_verification": {
+    "operator_type": "PE_heightfield_material::1.0",
+    "library_file_path": "D:/yacs/project/worldgen/houdini/sa_calobra/otls/sop_PE_heightfield_material.1.0.hda",
+    "library_file_size_bytes": 45649
+  },
+  "parameters": {
+    "rock_material_scale_m": 20.0,
+    "rock_material_heightscale_m": 0.35,
+    "use_mask": 1,
+    "slope_mask_angle_min_deg": 28.0,
+    "slope_mask_angle_max_deg": 90.0
+  },
+  "textures": {
+    "colour_map": {
+      "path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/SaCalobra_PaleLimestone_BaseColor.png",
+      "size_bytes": 1273397
+    },
+    "roughness_map": {
+      "path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/SaCalobra_PaleLimestone_Roughness.png",
+      "size_bytes": 957684
+    },
+    "displacement_map": {
+      "path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/wepoeaw_4K_Displacement.exr",
+      "size_bytes": 49909184
+    }
+  },
+  "grids": {
+    "working_resolution": [
+      7154,
+      9829,
+      1
+    ],
+    "working_bounding_box": [
+      -1771.25,
+      -0.831384539604187,
+      -1769.75,
+      1805.25,
+      1413.280029296875,
+      3144.25
+    ],
+    "working_volumes": [
+      "height",
+      "mask",
+      "Alpha",
+      "r",
+      "g",
+      "b",
+      "roughness"
+    ],
+    "context_resolution": [
+      2048,
+      2048,
+      1
+    ],
+    "context_bounding_box": [
+      -3998.046875,
+      -0.8825892806053162,
+      -3998.046875,
+      3998.046875,
+      1436.796142578125,
+      3998.046875
+    ]
+  },
+  "measurements": {
+    "base_vs_pure_source_delta_m": 0.0,
+    "layer3_procedural_delta_max_m": 0.340179443359375,
+    "measured_reversibility_delta_when_detail_disabled_m": 0.0
+  }
 }

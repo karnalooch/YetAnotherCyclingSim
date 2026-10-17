@@ -71,7 +71,7 @@ worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.
 # Retain exact rendered graph bytes and recognize their Windows line endings.
 worldgen/materials/material_maker/**/*.ptex -text whitespace=cr-at-eol
 worldgen/materials/material_maker/**/export/*.png filter=lfs diff=lfs merge=lfs -text
-
+worldgen/materials/visual_fill/*.png filter=lfs diff=lfs merge=lfs -text
 worldgen/houdini/**/*.png filter=lfs diff=lfs merge=lfs -text
 worldgen/houdini/**/*.jpg filter=lfs diff=lfs merge=lfs -text
 worldgen/houdini/**/*.jpeg filter=lfs diff=lfs merge=lfs -text

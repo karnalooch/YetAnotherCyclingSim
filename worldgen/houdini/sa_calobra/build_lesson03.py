@@ -52,21 +52,38 @@ def main():
     assert (tex_dir / "SaCalobra_PaleLimestone_BaseColor.png").exists(), "BaseColor texture missing"
     assert (tex_dir / "wepoeaw_4K_Displacement.exr").exists(), "Displacement texture missing"
 
-    # 1. Slope mask for full working landscape (7154 x 9829 cells)
+    # Ensure Manual Edits node exists in /obj/SA_CALOBRA
+    man_cache = geo.node("MANUAL_EDITS_CACHE")
+    if not man_cache:
+        man_cache = geo.createNode("file", "MANUAL_EDITS_CACHE")
+    man_cache.parm("file").set("$HIP/Pegasus/Landscape/Landscape Heightfield Layers/Pegasus_Landscape_Layer_2_Manual_Edits.bgeo.sc")
+    man_cache.setPosition(sc.position() + hou.Vector2(2.5, 0.0))
+
+    # Base B = Source + Manual
+    compose_base = geo.node("COMPOSE_SOURCE_AND_MANUAL")
+    if not compose_base:
+        compose_base = geo.createNode("heightfield_layer", "COMPOSE_SOURCE_AND_MANUAL")
+    compose_base.setInput(0, sc)
+    compose_base.setInput(1, man_cache)
+    compose_base.parm("mode").set("add")
+    compose_base.parm("layer").set("height")
+    compose_base.setPosition(sc.position() + hou.Vector2(1.2, -1.5))
+
+    # 1. Slope mask for full working landscape (7154 x 9829 cells), input from Base B
     mask_rock = geo.node("MASK_ROCK_SLOPE")
     if not mask_rock:
         mask_rock = geo.createNode("heightfield_maskbyfeature", "MASK_ROCK_SLOPE")
-    mask_rock.setInput(0, sc)
+    mask_rock.setInput(0, compose_base)
     mask_rock.parm("maskbyslope").set(1)
     mask_rock.parm("min_slopeangle").set(28.0)
     mask_rock.parm("max_slopeangle").set(90.0)
-    mask_rock.setPosition(sc.position() + hou.Vector2(3.0, -1.5))
+    mask_rock.setPosition(compose_base.position() + hou.Vector2(3.0, -1.5))
 
-    # 2. Material node for working landscape
+    # 2. Material node for working landscape, input 0 from Base B
     mat_rock = geo.node("ROCK_SLOPE_MATERIAL")
     if not mat_rock:
         mat_rock = geo.createNode("PE_heightfield_material::1.0", "ROCK_SLOPE_MATERIAL")
-    mat_rock.setInput(0, sc)
+    mat_rock.setInput(0, compose_base)
     mat_rock.setInput(1, mask_rock)
     mat_rock.parm("filename1").set(col_path)
     mat_rock.parm("filename2").set(rough_path)
@@ -88,12 +105,12 @@ def main():
     working_mat_cache.parm("loadfromdisk").set(0)
     working_mat_cache.setPosition(mat_rock.position() + hou.Vector2(0, -1.5))
 
-    # 4. Procedural Delta computation: Working Material Height - Source Base Height
+    # 4. Procedural Delta computation: Working Material Height M - Base Height B (Source + Manual)
     delta_proc = geo.node("MATERIAL_PROCEDURAL_DELTA")
     if not delta_proc:
         delta_proc = geo.createNode("heightfield_layer", "MATERIAL_PROCEDURAL_DELTA")
     delta_proc.setInput(0, working_mat_cache)
-    delta_proc.setInput(1, sc)
+    delta_proc.setInput(1, compose_base)
     delta_proc.parm("mode").set("subtract")
     delta_proc.parm("layer").set("height")
     delta_proc.setPosition(working_mat_cache.position() + hou.Vector2(3.0, -1.5))
@@ -144,7 +161,7 @@ def main():
 
     # 6. Update existing switches in /obj/SA_CALOBRA
     sw_working = geo.node("WORKING_SOURCE_OR_DETAIL")
-    sw_working.setInput(0, sc)
+    sw_working.setInput(0, compose_base)
     sw_working.setInput(1, working_mat_cache)
 
     sw_ctx = geo.node("CONTEXT_SOURCE_OR_DETAIL")
@@ -245,16 +262,17 @@ def main():
         h_load.cook(force=True)
         print("Houdini_Load_Landscape successfully cooked with updated Layer 3!")
 
-    # 10. Measure deltas and verify reversibility
-    p_src = next(p for p in sc.geometry().prims() if p.attribValue("name") == "height")
+    # 10. Measure deltas and verify reversibility against Base B (Source + Manual)
+    compose_base.cook(force=True)
+    p_base = next(p for p in compose_base.geometry().prims() if p.attribValue("name") == "height")
     p_mat = next(p for p in working_mat_cache.geometry().prims() if p.attribValue("name") == "height")
     p_mask = next(p for p in mask_rock.geometry().prims() if p.attribValue("name") == "mask")
 
-    h_src = np.frombuffer(p_src.allVoxelsAsString(), dtype=np.float32)
+    h_base = np.frombuffer(p_base.allVoxelsAsString(), dtype=np.float32)
     h_mat = np.frombuffer(p_mat.allVoxelsAsString(), dtype=np.float32)
     m_arr = np.frombuffer(p_mask.allVoxelsAsString(), dtype=np.float32)
 
-    diff = np.abs(h_mat - h_src)
+    diff = np.abs(h_mat - h_base)
     max_d = float(diff.max())
     mean_d = float(diff.mean())
     active_m = m_arr > 0.01
@@ -264,14 +282,20 @@ def main():
     max_d_outside = float(diff[inactive_m].max(initial=0.0))
     modified_cells = int(np.count_nonzero(diff > 0.001))
 
-    # Verify reversibility: switch enable_detail = 0
+    # Also check base B vs pure source
+    p_src = next(p for p in sc.geometry().prims() if p.attribValue("name") == "height")
+    h_src = np.frombuffer(p_src.allVoxelsAsString(), dtype=np.float32)
+    base_manual_delta = float(np.abs(h_base - h_src).max())
+    print(f"Base B vs pure Source delta: {base_manual_delta:.4f} m (neutral baseline is 0.0 m)")
+
+    # Verify reversibility: switch enable_detail = 0 returns Base B (Source + Manual)
     geo.parm("enable_detail").set(0)
     sw_working.cook(force=True)
     p_rev = next(p for p in sw_working.geometry().prims() if p.attribValue("name") == "height")
     h_rev = np.frombuffer(p_rev.allVoxelsAsString(), dtype=np.float32)
-    reversibility_delta = float(np.abs(h_rev - h_src).max())
+    reversibility_delta = float(np.abs(h_rev - h_base).max())
     assert reversibility_delta == 0.0, f"Reversibility failed: delta={reversibility_delta}"
-    print(f"Reversibility confirmed: delta = {reversibility_delta} m everywhere when detail disabled!")
+    print(f"Reversibility confirmed: delta = {reversibility_delta} m everywhere vs Base B (Source+Manual) when detail disabled!")
 
     # Restore enable_detail = 1
     geo.parm("enable_detail").set(1)
@@ -282,6 +306,13 @@ def main():
 
     metrics = {
         "candidate_project": target_hip.name,
+        "base_composition": {
+            "source_node": sc.name(),
+            "manual_node": man_cache.name(),
+            "compose_node": compose_base.name(),
+            "layer_operation": "add",
+            "base_vs_pure_source_delta_m": base_manual_delta
+        },
         "hda": {
             "type": defs[0].nodeTypeName(),
             "library_file": hda_path.as_posix(),
