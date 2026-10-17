@@ -1,0 +1,98 @@
+{
+  "milestone": "Project Pegasus Lesson 2 - Pipeline Overview (Full Landscape)",
+  "date_utc": "2026-10-17T07:45:00Z",
+  "project_hip": "SaCalobra_Pegasus_Lesson02.hiplc",
+  "workspace": "D:/yacs/work/sa-calobra-houdini-unreal-20261016",
+  "spatial_scope": {
+    "route": "Ma-2141 (all 6 parts, 12.643 km)",
+    "working_buffer_m": 500.0,
+    "grid_dimensions": [
+      7154,
+      9829,
+      1
+    ],
+    "grid_spacing_m": 0.5,
+    "total_cells": 70316666,
+    "bounds_x_m": [
+      -1771.25,
+      1805.25
+    ],
+    "bounds_z_m": [
+      -1769.75,
+      3144.25
+    ],
+    "elevation_range_m": [
+      -0.66,
+      1413.28
+    ],
+    "background_context_resolution": [
+      2048,
+      2048,
+      1
+    ],
+    "background_context_spacing_m": 3.90625,
+    "background_context_size_m": [
+      8000.0,
+      8000.0
+    ]
+  },
+  "pegasus_tools": {
+    "loader_hda": "PE_Load_Landscape::2",
+    "cacher_hda": "PE_Cache_Landscape",
+    "sidefx_labs_version": "SideFXLabs 22.0.466",
+    "dependency_resolution": "D:/yacs/tools/sidefx_packages/SideFXLabs22.0/otls/SideFX_Labs.hda (labspbrshader resolved, 0 errors, 0 warnings)"
+  },
+  "layers": {
+    "source_layer_1": {
+      "file": "Pegasus/Landscape/Landscape Heightfield Layers/Pegasus_Landscape_Later_1_Source.bgeo.sc",
+      "bytes": 167141698,
+      "sha256": "01efaed54b68b8931550ebd89957af51928519e47a4c53ec92eceb38ec6c7757",
+      "elevation_min_m": -0.6600000262260437,
+      "elevation_max_m": 1413.280029296875,
+      "elevation_avg_m": 507.0673188320241,
+      "delta_to_raw_dtm_m": 0.0
+    },
+    "manual_layer_2_neutral": {
+      "file": "Pegasus/Landscape/Landscape Heightfield Layers/Pegasus_Landscape_Layer_2_Manual_Edits.bgeo.sc",
+      "bytes": 2811,
+      "delta_min_m": 0.0,
+      "delta_max_m": 0.0,
+      "delta_avg_m": 0.0
+    },
+    "procedural_layer_3": {
+      "file": "Pegasus/Landscape/Landscape Heightfield Layers/Pegasus_Landscape_Layer_3_Procedural_Detail.bgeo.sc",
+      "bytes": 41629472,
+      "delta_min_m": -0.17791748046875,
+      "delta_max_m": 0.1743316650390625,
+      "delta_avg_in_corridor_m": 0.006218568238850646,
+      "delta_outside_corridor_m": 0.0
+    }
+  },
+  "unreal_integration": {
+    "project": "YetAnotherCyclingSim.uproject",
+    "map": "/Game/Worlds/SaCalobra_Houdini_20261016/L_SaCalobra_LandscapeOnly",
+    "native_landscapes_count": 5,
+    "edit_layers_enabled": true,
+    "layer_mapping": {
+      "source": "Layer (locked)",
+      "manual": "Layer1_Manual (unlocked for artistic sculpting)",
+      "procedural": "Layer2_Procedural (locked)"
+    }
+  },
+  "roundtrip_verification": {
+    "test_sculpt_location_m": [
+      250.0,
+      500.0
+    ],
+    "test_sculpt_radius_m": 40.0,
+    "test_sculpt_amplitude_m": 3.5,
+    "baseline_height_at_center_m": 613.9425,
+    "sculpted_height_at_center_m": 617.4418,
+    "observed_center_delta_m": 3.4993,
+    "observed_outside_delta_m": 0.0,
+    "manual_toggle_off_delta_to_dtm_m": 0.0,
+    "procedural_stacking_verified": true,
+    "revert_to_neutral_delta_to_dtm_m": 0.0,
+    "bit_level_accuracy_verified": true
+  }
+}
