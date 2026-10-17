@@ -7,6 +7,8 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "Landscape.h"
+#include "LandscapeInfo.h"
+#include "LandscapeEdit.h"
 #include "LandscapePatchEditLayer.h"
 #include "LandscapeTexturePatch.h"
 #include "Misc/FileHelper.h"
@@ -364,6 +366,119 @@ bool UCyclingLandscapeEarthworksLibrary::FinishRoadEarthworksBatch(ALandscape* L
 	}
 	Landscape->ForceLayersFullUpdate();
 	Landscape->PostEditChange();
+	return true;
+}
+
+bool UCyclingLandscapeEarthworksLibrary::ApplyManualSculptMound(
+	ALandscape* Landscape,
+	FName LayerName,
+	FVector CenterLocation,
+	float RadiusCm,
+	float HeightDeltaCm)
+{
+	if (!IsValid(Landscape))
+	{
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("ApplyManualSculptMound: Invalid Landscape."));
+		return false;
+	}
+
+	ULandscapeInfo* LandscapeInfo = Landscape->GetLandscapeInfo();
+	if (!LandscapeInfo)
+	{
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("ApplyManualSculptMound: LandscapeInfo is null."));
+		return false;
+	}
+
+	ULandscapeEditLayerBase* EditLayer = Landscape->GetEditLayer(LayerName);
+	if (!EditLayer)
+	{
+		UE_LOG(LogCyclingLandscapeEarthworks, Error, TEXT("ApplyManualSculptMound: EditLayer '%s' not found."), *LayerName.ToString());
+		return false;
+	}
+
+	const FGuid LayerGuid = EditLayer->GetGuid();
+	FScopedSetLandscapeEditingLayer Scope(Landscape, LayerGuid, [&] { Landscape->ForceUpdateLayersContent(); });
+
+	// Transform CenterLocation to Landscape Actor local coordinate space (quads)
+	const FTransform WorldToLandscape = Landscape->LandscapeActorToWorld().Inverse();
+	const FVector LocalCenter = WorldToLandscape.TransformPosition(CenterLocation);
+
+	const int32 CenterQuadX = FMath::RoundToInt32(LocalCenter.X);
+	const int32 CenterQuadY = FMath::RoundToInt32(LocalCenter.Y);
+	const float ScaleXY = FMath::Max(1.0f, Landscape->GetActorScale3D().X);
+	const int32 RadiusQuads = FMath::Max(1, FMath::CeilToInt32(RadiusCm / ScaleXY));
+
+	const int32 MinX = CenterQuadX - RadiusQuads;
+	const int32 MaxX = CenterQuadX + RadiusQuads;
+	const int32 MinY = CenterQuadY - RadiusQuads;
+	const int32 MaxY = CenterQuadY + RadiusQuads;
+
+	const int32 Width = MaxX - MinX + 1;
+	const int32 Height = MaxY - MinY + 1;
+
+	TArray<uint16> HeightData;
+	HeightData.SetNumUninitialized(Width * Height);
+
+	FLandscapeEditDataInterface LandscapeEdit(LandscapeInfo);
+	FHeightmapAccessor<false> HeightmapAccessor(LandscapeInfo);
+	HeightmapAccessor.SetEditLayer(LayerGuid);
+
+	int32 ReadMinX = MinX;
+	int32 ReadMinY = MinY;
+	int32 ReadMaxX = MaxX;
+	int32 ReadMaxY = MaxY;
+	HeightmapAccessor.GetData(ReadMinX, ReadMinY, ReadMaxX, ReadMaxY, HeightData.GetData());
+
+	// 1 Unreal height unit = ScaleZ / 128.0 cm.
+	const float ScaleZ = FMath::Max(0.001f, Landscape->GetActorScale3D().Z);
+	const float HeightDeltaUnits = (HeightDeltaCm * 128.0f) / ScaleZ;
+
+	for (int32 Y = MinY; Y <= MaxY; ++Y)
+	{
+		for (int32 X = MinX; X <= MaxX; ++X)
+		{
+			const int32 Index = (Y - MinY) * Width + (X - MinX);
+			const float DistQuads = FMath::Sqrt(FMath::Square<float>(X - CenterQuadX) + FMath::Square<float>(Y - CenterQuadY));
+			if (DistQuads <= RadiusQuads)
+			{
+				const float Fraction = DistQuads / static_cast<float>(RadiusQuads);
+				// Smooth cosine bump from 1 down to 0:
+				const float Alpha = 0.5f * (1.0f + FMath::Cos(Fraction * UE_PI));
+				const float AddedUnits = HeightDeltaUnits * Alpha;
+				int32 NewVal = static_cast<int32>(HeightData[Index]) + FMath::RoundToInt32(AddedUnits);
+				HeightData[Index] = static_cast<uint16>(FMath::Clamp(NewVal, 0, 65535));
+			}
+		}
+	}
+
+	HeightmapAccessor.SetData(MinX, MinY, MaxX, MaxY, HeightData.GetData());
+	Landscape->ForceLayersFullUpdate();
+	Landscape->PostEditChange();
+	UE_LOG(LogCyclingLandscapeEarthworks, Display, TEXT("Applied manual sculpt mound at (%d, %d) r=%d quads delta=%.1f cm to layer '%s'."),
+		CenterQuadX, CenterQuadY, RadiusQuads, HeightDeltaCm, *LayerName.ToString());
+	return true;
+}
+
+bool UCyclingLandscapeEarthworksLibrary::ClearManualLayer(
+	ALandscape* Landscape,
+	FName LayerName)
+{
+	if (!IsValid(Landscape))
+	{
+		return false;
+	}
+
+	ULandscapeEditLayerBase* EditLayer = Landscape->GetEditLayer(LayerName);
+	if (!EditLayer)
+	{
+		return false;
+	}
+
+	const FGuid LayerGuid = EditLayer->GetGuid();
+	Landscape->ClearEditLayer(LayerGuid, nullptr, ELandscapeToolTargetTypeFlags::Heightmap);
+	Landscape->ForceLayersFullUpdate();
+	Landscape->PostEditChange();
+	UE_LOG(LogCyclingLandscapeEarthworks, Display, TEXT("Cleared layer '%s' back to neutral."), *LayerName.ToString());
 	return true;
 }
 

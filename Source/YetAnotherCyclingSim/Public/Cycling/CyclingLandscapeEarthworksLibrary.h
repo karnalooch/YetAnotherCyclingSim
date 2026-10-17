@@ -31,6 +31,21 @@ public:
 	/** Flush fixed patches once before collision verification and explicit save. */
 	UFUNCTION(BlueprintCallable, Category = "Cycling|Editor")
 	static bool FinishRoadEarthworksBatch(ALandscape* Landscape);
+
+	/** Apply a smooth cosine mound sculpt to a native Landscape Edit Layer. */
+	UFUNCTION(BlueprintCallable, Category = "Cycling|Editor")
+	static bool ApplyManualSculptMound(
+		ALandscape* Landscape,
+		FName LayerName,
+		FVector CenterLocation,
+		float RadiusCm,
+		float HeightDeltaCm);
+
+	/** Clear a native Landscape Edit Layer heightmap back to neutral zero. */
+	UFUNCTION(BlueprintCallable, Category = "Cycling|Editor")
+	static bool ClearManualLayer(
+		ALandscape* Landscape,
+		FName LayerName);
 };
 
 #endif // WITH_EDITOR
