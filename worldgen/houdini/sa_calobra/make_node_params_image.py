@@ -66,11 +66,11 @@ def main():
             "node": "WORKING_SAND_MATERIAL",
             "details": [
                 "Mask: Height [-50.0m - 25.0m], Slope [0.0 - 18.0 deg]",
+                "Beach Cove: Sa Calobra Bay (X ≈ 18m, Z ≈ -1368m, Y ≈ 0-15m)",
                 "Size: 8.0m | Height Scale: 0.08m (gentle ripple)",
                 "Albedo: coast_sand_01_diff_2k.jpg",
                 "Roughness: coast_sand_01_rough_2k.jpg",
-                "Displacement: coast_sand_01_disp_2k.png",
-                "Distortion: Disabled (pristine coastal wash)"
+                "Displacement: coast_sand_01_disp_2k.png"
             ]
         },
         {
@@ -79,10 +79,11 @@ def main():
             "color": (124, 77, 255),
             "node": "WORKING_HEIGHTFIELD_TINT",
             "details": [
-                "Ramp Layer: Height [0-1000m] + Slope [0-90 deg] + Occlusion",
-                "Ramp: Green (0.42, 0.56, 0.22) -> Warm Olive -> Golden Dry",
+                "Ramp Layer: Height [0-1440m, slope=0] + Slope [0-90°] - Occlusion [slope=0]",
+                "Ramps: Linear continuous gradients (no plateau) matching author spec",
+                "Color Ramp: Lush Green (0.42, 0.56, 0.22) -> Warm Olive -> Golden Dry",
                 "Action Mask: Global (ramp_mask='') | Strength: 0.85",
-                "Height Delta: STRICTLY 0.0000 m (Guaranteed by VEX)",
+                "Height Invariance: STRICTLY 0.0000 m (Guaranteed by VEX)",
                 "Reversibility: 100% Height Neutral"
             ]
         },
@@ -92,12 +93,12 @@ def main():
             "color": (230, 81, 0),
             "node": "WORKING_CLIFF_MATERIAL",
             "details": [
-                "Mask: Slope [28.0 - 90.0 deg], Smooth Radius: 2.5m",
+                "Mask: Slope [28.0 - 90.0 deg], Smooth Radius: 6.0 voxels (Working 3.0m) / 0.768 voxels (Context 3.0m)",
+                "Target Physical Radius: R = 3.0m computed per-grid spacing",
                 "Size: 20.0m | Height Scale: 0.35m",
                 "Albedo: SaCalobra_PaleLimestone_BaseColor.png",
-                "Roughness: SaCalobra_PaleLimestone_Roughness.png",
                 "Displacement: wepoeaw_4K_Displacement.exr",
-                "Transition: Silky smooth blending, no seams"
+                "Transition: Silky smooth blending, strictly continuous transitions"
             ]
         }
     ]
@@ -121,8 +122,9 @@ def main():
     bot_y = card_y + 5 * (card_h + 15) + 5
     draw.rectangle([(20, bot_y), (w - 20, h - 20)], fill=(22, 28, 36), outline=(70, 90, 120), width=1)
     draw.text((40, bot_y + 12), "PIPELINE CONTRACTS & VERIFICATION METRICS", fill=(100, 200, 255), font=font_header)
-    draw.text((40, bot_y + 40), "Working Grid: 7,154 x 9,829 cells (0.5m spacing) | 70.3M voxels | Volumes: height, mask, r, g, b", fill=(190, 200, 210), font=font_body)
-    draw.text((40, bot_y + 65), "Context Grid: 2,048 x 2,048 cells (8000m x 8000m) | Base B Invariance: delta = 0.0000m when detail disabled", fill=(190, 200, 210), font=font_body)
+    draw.text((40, bot_y + 36), "Working Grid: 7,154 x 9,829 cells (0.5m spacing) | 70.3M voxels | Volumes: height, mask, r, g, b | Base B Reversibility: 0.0000m", fill=(190, 200, 210), font=font_body)
+    draw.text((40, bot_y + 58), "Signed Cell-by-Cell Equality: Layer4[i] == MaterialHeight[i] - BaseB[i] everywhere (|error| < 1e-4m) | Tint Invariance: 0.0000m", fill=(190, 200, 210), font=font_body)
+    draw.text((40, bot_y + 80), "Delta Versioning: Lesson 4 delta -> cache/lesson04_procedural_delta.bgeo.sc | Lesson 3 Checkpoint intact (598MB)", fill=(190, 200, 210), font=font_body)
 
     out_file = evidence_dir / "04_node_parameters_diagram.png"
     img.save(out_file)

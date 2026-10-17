@@ -92,12 +92,14 @@
     "total_cells": 4194304
   },
   "measurements": {
-    "max_absolute_displacement_m": 0.5089111328125,
-    "mean_displacement_over_full_landscape_m": 0.03813330829143524,
-    "mean_displacement_in_cliff_mask_m": 0.07163970917463303,
-    "p95_displacement_in_cliff_mask_m": 0.187255859375,
-    "modified_cells_count": 38267756,
+    "max_absolute_displacement_m": 0.5093994140625,
+    "mean_displacement_over_full_landscape_m": 0.037332188338041306,
+    "mean_displacement_in_cliff_mask_m": 0.0704895630478859,
+    "p95_displacement_in_cliff_mask_m": 0.1865081787109375,
+    "modified_cells_count": 37993636,
     "tint_height_delta_m": 0.0,
-    "reversibility_max_delta_when_disabled_m": 0.0
+    "reversibility_max_delta_when_disabled_m": 0.0,
+    "cell_signed_equality_max_error_m": 0.0,
+    "cell_signed_equality_mean_error_m": 0.0
   }
 }

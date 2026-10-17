@@ -62,7 +62,36 @@ def main():
     for n in hou.node("/obj").children():
         n.setDisplayFlag(False)
 
-    if args.shot == "01_pano":
+    if args.shot == "00_working_pano":
+        out_filename = "04_working_landscape_panorama.png"
+        geo = hou.node("/obj").createNode("geo", "RENDER_WORKING_PANO")
+        m_pano = geo.createNode("object_merge")
+        m_pano.parm("objpath1").set("/obj/SA_CALOBRA/WORKING_MATERIAL_CACHE")
+        resample = geo.createNode("heightfield_resample")
+        resample.setInput(0, m_pano)
+        resample.parm("divisionmode").set(1)
+        resample.parm("gridspacing").set(2.0)
+        conv_pano = geo.createNode("convert")
+        conv_pano.setInput(0, resample)
+        w_pano = geo.createNode("attribwrangle")
+        w_pano.setInput(0, conv_pano)
+        w_pano.setInput(1, m_pano)
+        w_pano.parm("snippet").set("""
+        vector p = @P;
+        p.y = 0;
+        float r = volumesample(1, 'r', p);
+        float g = volumesample(1, 'g', p);
+        float b = volumesample(1, 'b', p);
+        @Cd = set(r, g, b);
+        """)
+        nrm_pano = geo.createNode("normal")
+        nrm_pano.setInput(0, w_pano)
+        nrm_pano.setDisplayFlag(True)
+        nrm_pano.setRenderFlag(True)
+        cam_pos = (-1200, 1800, -2400)
+        tgt_pos = (0, 350, 400)
+
+    elif args.shot == "01_pano":
         out_filename = "04_context_background_panorama.png"
         geo = hou.node("/obj").createNode("geo", "RENDER_PANO")
         m_pano = geo.createNode("object_merge")
@@ -101,29 +130,31 @@ def main():
 
     elif args.shot == "02c_coastal":
         out_filename = "04_closeup_coastal_sand.png"
-        geo = build_mesh("COASTAL", -479.0, 2213.0, 180, 180)
-        cam_pos = (-479.0 - 80.0, 911.6 + 45.0, 2213.0 - 80.0)
-        tgt_pos = (-479.0, 911.6, 2213.0)
+        # Real sea-level coastal beach cove at Sa Calobra (X ≈ 18.0, Z ≈ -1368.0, Y ≈ 0-15m)
+        geo = build_mesh("COASTAL", 18.0, -1368.0, 180, 180)
+        cam_pos = (18.0 - 65.0, 45.0, -1368.0 - 65.0)
+        tgt_pos = (18.0, 15.0, -1368.0)
 
     elif args.shot == "03a_tint_before":
         out_filename = "04_tint_comparison_before.png"
-        # Fixed camera framing Before Tint (Sand & Grass material without tinting)
-        geo = build_mesh("BEFORE_TINT", 224.0, -711.0, 150, 150, source_node="/obj/SA_CALOBRA/WORKING_SAND_MATERIAL")
-        cam_pos = (224.0 - 55.0, 357.2 + 25.0, -711.0 - 55.0)
-        tgt_pos = (224.0, 357.2, -711.0)
+        # Fixed camera framing Before Tint in active vegetation valley (Sand & Grass material without tinting)
+        geo = build_mesh("BEFORE_TINT", 0.0, -500.0, 180, 180, source_node="/obj/SA_CALOBRA/WORKING_SAND_MATERIAL")
+        cam_pos = (-55.0, 415.0 + 35.0, -555.0)
+        tgt_pos = (0.0, 415.0, -500.0)
 
     elif args.shot == "03b_tint_after":
         out_filename = "04_tint_comparison_after.png"
-        # Fixed camera framing After Tint (Heightfield Tint gradient & occlusion applied)
-        geo = build_mesh("AFTER_TINT", 224.0, -711.0, 150, 150, source_node="/obj/SA_CALOBRA/WORKING_HEIGHTFIELD_TINT")
-        cam_pos = (224.0 - 55.0, 357.2 + 25.0, -711.0 - 55.0)
-        tgt_pos = (224.0, 357.2, -711.0)
+        # Fixed camera framing After Tint in active vegetation valley (Heightfield Tint gradient & occlusion applied)
+        geo = build_mesh("AFTER_TINT", 0.0, -500.0, 180, 180, source_node="/obj/SA_CALOBRA/WORKING_HEIGHTFIELD_TINT")
+        cam_pos = (-55.0, 415.0 + 35.0, -555.0)
+        tgt_pos = (0.0, 415.0, -500.0)
 
     elif args.shot == "04_cliff_trans":
         out_filename = "04_cliff_smooth_transition.png"
-        geo = build_mesh("CLIFF_TRANS", 180.0, -650.0, 150, 150)
-        cam_pos = (180.0 - 50.0, 330.0 + 30.0, -650.0 - 50.0)
-        tgt_pos = (180.0, 330.0, -650.0)
+        # Clean cliff to grass transition boundary (slope transition ~28-35 deg with smooth_radius=6.0 voxels)
+        geo = build_mesh("CLIFF_TRANS", 80.0, -520.0, 160, 160)
+        cam_pos = (80.0 - 45.0, 430.0 + 30.0, -520.0 - 45.0)
+        tgt_pos = (80.0, 430.0, -520.0)
 
     else:
         raise ValueError(f"Unknown shot: {args.shot}")

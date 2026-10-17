@@ -88,6 +88,7 @@ def main():
         mask_grass.parm("maskbyheight").set(1)
         mask_grass.parm("minheight").set(8.0)  # cut off near beach / sea level
         mask_grass.parm("maxheight").set(1500.0)
+        mask_grass.parm("maskbyocclusion").set(0)
         mask_grass.setPosition(base_node.position() + hou.Vector2(2.5, -1.2))
 
         mat_grass = geo.node(f"{prefix}_GRASS_MATERIAL")
@@ -123,6 +124,7 @@ def main():
         mask_sand.parm("maskbyslope").set(1)
         mask_sand.parm("min_slopeangle").set(0.0)
         mask_sand.parm("max_slopeangle").set(18.0)  # Gentle slope only
+        mask_sand.parm("maskbyocclusion").set(0)
         mask_sand.setPosition(mat_grass.position() + hou.Vector2(2.5, -1.2))
 
         mat_sand = geo.node(f"{prefix}_SAND_MATERIAL")
@@ -143,13 +145,19 @@ def main():
 
         # 3. PE HEIGHTFIELD TINT
         # Ramp control layer: Height gradient + Slope gradient + Occlusion micro-variation
+        # Linear ramp definition (continuous gradient without trapezoidal plateau)
+        lin_ramp = hou.Ramp([hou.rampBasis.Linear, hou.rampBasis.Linear], [0.0, 1.0], [0.0, 1.0])
+
         tint_ramp_height = geo.node(f"{prefix}_TINT_RAMP_HEIGHT")
         if not tint_ramp_height:
             tint_ramp_height = geo.createNode("heightfield_maskbyfeature", f"{prefix}_TINT_RAMP_HEIGHT")
         tint_ramp_height.setInput(0, base_node)
         tint_ramp_height.parm("maskbyheight").set(1)
         tint_ramp_height.parm("minheight").set(0.0)
-        tint_ramp_height.parm("maxheight").set(1000.0)
+        tint_ramp_height.parm("maxheight").set(1440.0)
+        tint_ramp_height.parm("maskbyslope").set(0)  # Review fix 1: explicitly disable default slope mask
+        tint_ramp_height.parm("maskbyocclusion").set(0)
+        tint_ramp_height.parm("heightramp").set(lin_ramp)
         tint_ramp_height.setPosition(mat_sand.position() + hou.Vector2(2.5, -1.2))
 
         tint_ramp_slope = geo.node(f"{prefix}_TINT_RAMP_SLOPE")
@@ -159,7 +167,10 @@ def main():
         tint_ramp_slope.parm("maskbyslope").set(1)
         tint_ramp_slope.parm("min_slopeangle").set(0.0)
         tint_ramp_slope.parm("max_slopeangle").set(90.0)
+        tint_ramp_slope.parm("maskbyheight").set(0)
+        tint_ramp_slope.parm("maskbyocclusion").set(0)
         tint_ramp_slope.parm("combine").set("add")
+        tint_ramp_slope.parm("sloperamp").set(lin_ramp)
         tint_ramp_slope.setPosition(tint_ramp_height.position() + hou.Vector2(0, -1.2))
 
         tint_ramp_occlusion = geo.node(f"{prefix}_TINT_RAMP_OCCLUSION")
@@ -167,6 +178,8 @@ def main():
             tint_ramp_occlusion = geo.createNode("heightfield_maskbyfeature", f"{prefix}_TINT_RAMP_OCCLUSION")
         tint_ramp_occlusion.setInput(0, tint_ramp_slope)
         tint_ramp_occlusion.parm("maskbyocclusion").set(1)
+        tint_ramp_occlusion.parm("maskbyslope").set(0)  # Review fix 1: explicitly disable default slope mask
+        tint_ramp_occlusion.parm("maskbyheight").set(0)
         tint_ramp_occlusion.parm("viewdistance").set(25.0)
         tint_ramp_occlusion.parm("combine").set("subtract")
         tint_ramp_occlusion.parm("invertmask").set(1)
@@ -205,6 +218,10 @@ def main():
         tint_node.setPosition(tint_copy_ramp.position() + hou.Vector2(0, -1.5))
 
         # 4. CLIFF MASK & MATERIAL
+        # Review fix 2: smooth_radius in voxels. Target physical smooth radius = 3.0m
+        # Working: spacing 0.5m => 3.0 / 0.5 = 6.0 voxels
+        # Context: spacing 8000/2048 = 3.90625m => 3.0 / 3.90625 = 0.768 voxels
+        cliff_smooth_voxels = 0.768 if is_context else 6.0
         mask_cliff = geo.node(f"{prefix}_MASK_CLIFF")
         if not mask_cliff:
             mask_cliff = geo.createNode("heightfield_maskbyfeature", f"{prefix}_MASK_CLIFF")
@@ -212,7 +229,9 @@ def main():
         mask_cliff.parm("maskbyslope").set(1)
         mask_cliff.parm("min_slopeangle").set(28.0)
         mask_cliff.parm("max_slopeangle").set(90.0)
-        mask_cliff.parm("smooth_radius").set(2.5)  # Smooth transition to surrounding grass/scree
+        mask_cliff.parm("maskbyheight").set(0)
+        mask_cliff.parm("maskbyocclusion").set(0)
+        mask_cliff.parm("smooth_radius").set(cliff_smooth_voxels)
         mask_cliff.setPosition(tint_node.position() + hou.Vector2(2.5, -1.2))
 
         mat_cliff = geo.node(f"{prefix}_CLIFF_MATERIAL")
@@ -271,13 +290,13 @@ def main():
     delta_proc.parm("mode").set("subtract")
     delta_proc.parm("layer").set("height")
 
-    # Layer 3 Procedural cache
+    # Layer 4 Procedural Delta cache (Dedicated versioned path so Lesson 3 checkpoint remains untouched!)
     layer3_cache = geo.node("LAYER3_PROCEDURAL_CACHE")
     if not layer3_cache:
         layer3_cache = geo.createNode("filecache::2.0", "LAYER3_PROCEDURAL_CACHE")
     layer3_cache.setInput(0, delta_proc)
     layer3_cache.parm("filemethod").set(1)
-    layer3_cache.parm("file").set("$HIP/Pegasus/Landscape/Landscape Heightfield Layers/Pegasus_Landscape_Layer_3_Procedural_Detail.bgeo.sc")
+    layer3_cache.parm("file").set("$HIP/cache/lesson04_procedural_delta.bgeo.sc")
     layer3_cache.parm("loadfromdisk").set(0)
 
     # Context Material Cache
@@ -325,52 +344,37 @@ def main():
     hou.hipFile.save(target_hip.as_posix())
     print(f"Saved initial target HIP: {target_hip.name}")
 
-    # Check & Cache Working Material
+    # Review fix 3: Force recook and cache Working Material
     working_mat_dest = proj_dir / "cache/lesson04_working_material_05m.bgeo.sc"
-    if working_mat_dest.exists() and working_mat_dest.stat().st_size > 100_000_000:
-        print(f"Working material cache already exists on disk ({working_mat_dest.stat().st_size} bytes). Using disk cache.")
-        working_mat_cache.parm("loadfromdisk").set(1)
-        working_mat_cache.parm("reload").pressButton()
-    else:
-        print("--- Cooking Working Material Cache (7154 x 9829 cells) ---")
-        t0 = time.time()
-        working_chain["final_mat"].cook(force=True)
-        working_mat_dest.parent.mkdir(parents=True, exist_ok=True)
-        working_chain["final_mat"].geometry().saveToFile(working_mat_dest.as_posix())
-        working_mat_cache.parm("loadfromdisk").set(1)
-        working_mat_cache.parm("reload").pressButton()
-        t1 = time.time()
-        print(f"Working material cached in {t1 - t0:.2f}s ({working_mat_dest.stat().st_size} bytes)")
+    print("--- Cooking Working Material Cache (7154 x 9829 cells) ---")
+    t0 = time.time()
+    working_chain["final_mat"].cook(force=True)
+    working_mat_dest.parent.mkdir(parents=True, exist_ok=True)
+    working_chain["final_mat"].geometry().saveToFile(working_mat_dest.as_posix())
+    working_mat_cache.parm("loadfromdisk").set(1)
+    working_mat_cache.parm("reload").pressButton()
+    t1 = time.time()
+    print(f"Working material cached in {t1 - t0:.2f}s ({working_mat_dest.stat().st_size} bytes)")
 
-    # Check & Cache Layer 3 Procedural Delta
-    layer3_dest = proj_dir / "Pegasus/Landscape/Landscape Heightfield Layers/Pegasus_Landscape_Layer_3_Procedural_Detail.bgeo.sc"
-    if layer3_dest.exists() and layer3_dest.stat().st_size > 100_000_000:
-        print(f"Layer 3 cache already exists on disk ({layer3_dest.stat().st_size} bytes). Using disk cache.")
-        layer3_cache.parm("loadfromdisk").set(1)
-        layer3_cache.parm("reload").pressButton()
-    else:
-        print("--- Cooking Layer 3 Procedural Delta Cache ---")
-        delta_proc.cook(force=True)
-        layer3_dest.parent.mkdir(parents=True, exist_ok=True)
-        delta_proc.geometry().saveToFile(layer3_dest.as_posix())
-        layer3_cache.parm("loadfromdisk").set(1)
-        layer3_cache.parm("reload").pressButton()
-        print(f"Layer 3 Procedural delta cached ({layer3_dest.stat().st_size} bytes)")
+    # Force cook and Cache Lesson 04 Procedural Delta (Dedicated versioned path!)
+    layer4_proc_dest = proj_dir / "cache/lesson04_procedural_delta.bgeo.sc"
+    print("--- Cooking Lesson 04 Procedural Delta Cache ---")
+    delta_proc.cook(force=True)
+    layer4_proc_dest.parent.mkdir(parents=True, exist_ok=True)
+    delta_proc.geometry().saveToFile(layer4_proc_dest.as_posix())
+    layer3_cache.parm("loadfromdisk").set(1)
+    layer3_cache.parm("reload").pressButton()
+    print(f"Lesson 04 Procedural delta cached ({layer4_proc_dest.stat().st_size} bytes)")
 
-    # Check & Cache Context Material
+    # Force cook and Cache Context Material
     ctx_mat_dest = proj_dir / "cache/lesson04_context_material.bgeo.sc"
-    if ctx_mat_dest.exists() and ctx_mat_dest.stat().st_size > 10_000_000:
-        print(f"Context cache already exists on disk ({ctx_mat_dest.stat().st_size} bytes). Using disk cache.")
-        ctx_mat_cache.parm("loadfromdisk").set(1)
-        ctx_mat_cache.parm("reload").pressButton()
-    else:
-        print("--- Cooking Context Background Material Cache (2048 x 2048 cells) ---")
-        context_chain["final_mat"].cook(force=True)
-        ctx_mat_dest.parent.mkdir(parents=True, exist_ok=True)
-        context_chain["final_mat"].geometry().saveToFile(ctx_mat_dest.as_posix())
-        ctx_mat_cache.parm("loadfromdisk").set(1)
-        ctx_mat_cache.parm("reload").pressButton()
-        print(f"Context material cached ({ctx_mat_dest.stat().st_size} bytes)")
+    print("--- Cooking Context Background Material Cache (2048 x 2048 cells) ---")
+    context_chain["final_mat"].cook(force=True)
+    ctx_mat_dest.parent.mkdir(parents=True, exist_ok=True)
+    context_chain["final_mat"].geometry().saveToFile(ctx_mat_dest.as_posix())
+    ctx_mat_cache.parm("loadfromdisk").set(1)
+    ctx_mat_cache.parm("reload").pressButton()
+    print(f"Context material cached ({ctx_mat_dest.stat().st_size} bytes)")
 
     # Reload PEGASUS_PIPELINE_OVERVIEW
     h_load = hou.node("/obj/PEGASUS_PIPELINE_OVERVIEW/Houdini_Load_Landscape")
@@ -423,11 +427,31 @@ def main():
     print(f"Reversibility confirmed: delta = {reversibility_delta} m everywhere vs Base B when detail disabled!")
     geo.parm("enable_detail").set(1)
 
-    # C. Delta measurements on Working Landscape
+    # C. Cell-by-cell signed equality verification:
+    # Review fix 4: Layer3 == MaterialHeight - (Source + Manual) for all corresponding cells
     p_final = next(p for p in working_mat_cache.geometry().prims() if p.attribValue("name") == "height")
     h_final = np.frombuffer(p_final.allVoxelsAsString(), dtype=np.float32)
-    diff = np.abs(h_final - h_base)
-    del h_final, h_base
+    signed_delta = h_final - h_base
+    del h_final
+
+    p_delta_geom = next(p for p in delta_proc.geometry().prims() if p.attribValue("name") == "height")
+    h_delta_proc = np.frombuffer(p_delta_geom.allVoxelsAsString(), dtype=np.float32)
+
+    diff_cell = np.abs(h_delta_proc - signed_delta)
+    del h_delta_proc
+    gc.collect()
+
+    max_signed_error = float(diff_cell.max())
+    mean_signed_error = float(diff_cell.mean())
+    del diff_cell
+    gc.collect()
+
+    print(f"Cell-by-cell signed equality: max error = {max_signed_error:.8f} m, mean error = {mean_signed_error:.8f} m")
+    assert max_signed_error < 1e-4, f"FAIL: Procedural delta does not match MaterialHeight - BaseB: {max_signed_error}"
+
+    # Delta measurements on Working Landscape
+    diff = np.abs(signed_delta)
+    del signed_delta, h_base
     gc.collect()
     max_d = float(diff.max())
     mean_d = float(diff.mean())
@@ -550,7 +574,9 @@ def main():
             "p95_displacement_in_cliff_mask_m": p95_d_cliff,
             "modified_cells_count": modified_cells,
             "tint_height_delta_m": tint_height_delta,
-            "reversibility_max_delta_when_disabled_m": reversibility_delta
+            "reversibility_max_delta_when_disabled_m": reversibility_delta,
+            "cell_signed_equality_max_error_m": max_signed_error,
+            "cell_signed_equality_mean_error_m": mean_signed_error
         }
     }
 

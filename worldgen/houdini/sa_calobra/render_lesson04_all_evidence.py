@@ -16,6 +16,7 @@ def main():
     script = proj_dir / "run_single_render.py"
 
     shots = [
+        "00_working_pano",
         "01_pano",
         "02a_crags",
         "02b_canyon",
