@@ -23,6 +23,7 @@ public class YetAnotherCyclingSimEditor : ModuleRules
             "GeometryCore",
             "GeometryFramework",
             "DynamicMesh",
+            "ToolsetRegistry",
 			"YetAnotherCyclingSim"
 		});
 

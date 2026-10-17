@@ -1,0 +1,1 @@
+-ini:Engine:[/Script/HoudiniEngineRuntime.HoudiniRuntimeSettings]:bUseCustomHoudiniLocation=True,[/Script/HoudiniEngineRuntime.HoudiniRuntimeSettings]:CustomHoudiniLocation=(Path="D:/yacs/tools/houdini-22.0.466/bin"),[/Script/HoudiniEngineRuntime.HoudiniRuntimeSettings]:MarshallingLandscapesUseFullResolution=True

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "session": "20261013T203714Z-90a9943bcfd6",
+  "editor_pid": 37152,
+  "host_sha": "5a3517ee74b7477832af66f1727c4e4510c8f80b",
+  "loaded_level": "/Game/Generated/YACS/PCG365Ex/Ra1e9cbdd48ad0c85_s2/L_PCG365_Rocks",
+  "instance_count": 20,
+  "saved_transforms_materials_collision_match": true,
+  "generation_requested": false,
+  "mesh_counts": {
+    "/Game/Generated/YACS/PCG365RemotePreview/Rf3acaeb8a89a3600/SM_namaqualand_boulder_05_01.SM_namaqualand_boulder_05_01": 8,
+    "/Game/Generated/YACS/PCG365RemotePreview/Rf3acaeb8a89a3600/SM_namaqualand_boulder_06_01.SM_namaqualand_boulder_06_01": 12
+  },
+  "owner_visual_acceptance": false,
+  "performance_pass": false,
+  "native_material_bindings": [
+    {
+      "mesh": {
+        "refPath": "/Game/Generated/YACS/PCG365RemotePreview/Rf3acaeb8a89a3600/SM_namaqualand_boulder_05_01.SM_namaqualand_boulder_05_01"
+      },
+      "slot": "PCG365_SourceEnvelope_ForgeConsumer",
+      "material": {
+        "refPath": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge.MI_MaterialForge"
+      }
+    },
+    {
+      "mesh": {
+        "refPath": "/Game/Generated/YACS/PCG365RemotePreview/Rf3acaeb8a89a3600/SM_namaqualand_boulder_06_01.SM_namaqualand_boulder_06_01"
+      },
+      "slot": "PCG365_SourceEnvelope_ForgeConsumer_001",
+      "material": {
+        "refPath": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/cd263e648ce7/MI_MaterialForge.MI_MaterialForge"
+      }
+    }
+  ]
+}

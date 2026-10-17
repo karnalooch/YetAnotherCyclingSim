@@ -1,5 +1,7 @@
 # Blender headless producer
 
+**2026-10-16 producer boundary:** retained supporting tool and historical proof. [Houdini/SideFX](sidefx/README.md) is now the primary world-authoring executor. Do not use this launcher as a replacement terrain, road or environment generator for the new workflow.
+
 **Status:** active supporting tooling for Issue #391.  
 **Pinned toolchain:** Blender 4.5.9 portable Windows x64.  
 **Authority:** DCC producer only; this document does not replace the World Building Bible, BOB, World Authority, route/physics contracts, Unreal consumers or proof gates.
@@ -128,3 +130,13 @@ accepted-map state and Unreal assets were not changed.
 The workflow refuses to run while a local Unreal Editor owns the shared host.
 A PASS is evidence for human material review, not Unreal integration or
 performance admission.
+
+
+### Bounded coarse rock envelopes
+
+For #365 source-derived rocks, `build_pcg365_source_envelope.py` accepts
+`--grid 33`, `--grid 49` or the unchanged default `--grid 129`. Lower grids
+reduce generated geometry; they preserve source hashes, topology checks,
+recorded grid and sampled source-error measurements. They do not preserve
+source UVs/overhangs or qualify native contact. See the
+[source/support continuation](../assets/pcg365-source-support-remote-20261013/README.md).

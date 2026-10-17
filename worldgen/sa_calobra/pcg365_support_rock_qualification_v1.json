@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "scope": "ISOLATED_ROCK_QUALIFICATION_ONLY",
+  "assets": [
+    {
+      "id": "support_rock_a",
+      "source": "D:\\yacs\\work\\pcg365\\4fae51a79b9483d8da5ed313256999dc64115632\\support-rock-author02\\support_rock_a.fbx",
+      "source_relative": "rock-source/support_rock_a.fbx",
+      "sha256": "a99ff2114db4925295177311a893e9127cf5898f1be99341ea16502eca926dfd",
+      "bytes": 24748,
+      "geometry_sha256": "4ba20aa42a60885825ad3f6f63ee905d66686a024a66c9094c4f4453f57524dd",
+      "expected_lod0_triangles": 448,
+      "expected_source_dimensions_cm": [
+        78.00000011920929,
+        62.00000047683716,
+        46.00000083446503
+      ],
+      "license": "YACS_ORIGINAL_AUTHORED_GEOMETRY",
+      "source_provenance": "YACS_AUTHORED_PROCEDURAL_NOT_SCAN",
+      "lifecycle_status": "acquired",
+      "qualification_status": "pending",
+      "support_anchor_local_m": [
+        0,
+        0,
+        0
+      ],
+      "flat_base": true,
+      "horizontal_overhang": false,
+      "source_recipe_revision": 2
+    },
+    {
+      "id": "support_rock_b",
+      "source": "D:\\yacs\\work\\pcg365\\4fae51a79b9483d8da5ed313256999dc64115632\\support-rock-author02\\support_rock_b.fbx",
+      "source_relative": "rock-source/support_rock_b.fbx",
+      "sha256": "94a7ec863f2c3ca700a75f852227c80b98b6226a93e48a87396c6559b9e907f0",
+      "bytes": 24780,
+      "geometry_sha256": "93d8725e91b0a03c4c25b3f9b7d18a52fba6bc005bec6c4b50ca8e02e4448833",
+      "expected_lod0_triangles": 448,
+      "expected_source_dimensions_cm": [
+        84.00000035762787,
+        68.00000071525574,
+        49.000000953674316
+      ],
+      "license": "YACS_ORIGINAL_AUTHORED_GEOMETRY",
+      "source_provenance": "YACS_AUTHORED_PROCEDURAL_NOT_SCAN",
+      "lifecycle_status": "acquired",
+      "qualification_status": "pending",
+      "support_anchor_local_m": [
+        0,
+        0,
+        0
+      ],
+      "flat_base": true,
+      "horizontal_overhang": false,
+      "source_recipe_revision": 2
+    }
+  ],
+  "acquisition_manifest": null,
+  "download_index_sha256": null,
+  "policy_id": "PCG_ROCK_SAMPLED_CONTACT_TRIAL_V1",
+  "placement": false,
+  "qualified_assets": [],
+  "geology": "UNKNOWN_NOT_INFERRED_FROM_MATERIAL",
+  "source_units_policy": "CONVERT_DECLARED_FBX_SCENE_UNITS_TO_CM_NO_RESCALE",
+  "contact_points": "five diagnostic XY not rock semantic selectors",
+  "source_inspection": {
+    "path": "D:\\yacs\\work\\pcg365\\4fae51a79b9483d8da5ed313256999dc64115632\\support-rock-author02\\authored-support-rocks.json",
+    "sha256": "a2c6fcf1040b2d905f90bc12a9cbedc01b92b7db4a32b76dd1f247cffd8073a8"
+  },
+  "refinement_policy_id": "PCG_ROCK_SAMPLED_CONTACT_REFINEMENT_V2"
+}

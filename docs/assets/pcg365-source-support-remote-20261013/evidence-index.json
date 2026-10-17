@@ -1,0 +1,439 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "source_base_sha": "0dd86495fab674a9d6aee22ba0759539d8bd7242",
+  "source_uncommitted_at_cpu_execution": true,
+  "native_unreal_execution": "F0588AA2_DIAGNOSTIC_P3_PLACED_CAMERA_READBACK_POST_JOB_FRAMES",
+  "placement": false,
+  "qualified_assets": [],
+  "entries": [
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-recut-support01\\host-receipt.json",
+      "copy": "evidence/source-recut-support01/host-receipt.json.gz",
+      "original_bytes": 616,
+      "original_sha256": "4a4fd7212da1e83e18375788916545076d27e57675a46c2315d04c5e554eb720",
+      "compressed_bytes": 366,
+      "compressed_sha256": "ca5d0b749c81ac2e4999ff8100ce80bcbf67f46265ccbd4e785e54feea825e8a"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-recut-support01\\host-receipt.log",
+      "copy": "evidence/source-recut-support01/host-receipt.log.gz",
+      "original_bytes": 183,
+      "original_sha256": "6a705c6f6b6ca41302846c2717a207fa4a56599c7f761cbe444f3c57d6fecfc3",
+      "compressed_bytes": 186,
+      "compressed_sha256": "51232f9df6a9f977cc9dc6ac793635f79572a8078653987ea14d1a98279acc4f"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-recut-support01\\output\\rock-collection-catalog.json",
+      "copy": "evidence/source-recut-support01/output/rock-collection-catalog.json.gz",
+      "original_bytes": 257440,
+      "original_sha256": "dca97b92b55d3e27d1c713cdac0c2878fecd1b613660e1d6d67136aaeea202f3",
+      "compressed_bytes": 47210,
+      "compressed_sha256": "a8f775f04ea8c4ce8ee98c9e3ec5cc4fa32a6f64eedfe9b7ad9a743ed7b5f88f"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-recut-support02\\host-receipt.json",
+      "copy": "evidence/source-recut-support02/host-receipt.json.gz",
+      "original_bytes": 616,
+      "original_sha256": "f85a662e9d4f9794f3317c1cc9c3b878f0346ea2ca2ba09940dbb5264a0e9226",
+      "compressed_bytes": 368,
+      "compressed_sha256": "369634d0b4d8dd736276cfd69c6db660f0eea9a29168f756af7e111b933437d1"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-recut-support02\\host-receipt.log",
+      "copy": "evidence/source-recut-support02/host-receipt.log.gz",
+      "original_bytes": 183,
+      "original_sha256": "6a705c6f6b6ca41302846c2717a207fa4a56599c7f761cbe444f3c57d6fecfc3",
+      "compressed_bytes": 186,
+      "compressed_sha256": "51232f9df6a9f977cc9dc6ac793635f79572a8078653987ea14d1a98279acc4f"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-recut-support02\\output\\rock-collection-catalog.json",
+      "copy": "evidence/source-recut-support02/output/rock-collection-catalog.json.gz",
+      "original_bytes": 335651,
+      "original_sha256": "4dbfe6dee776a4258117a8ff36292bb19033f3b512747fa5fd7be55ffb9e00d3",
+      "compressed_bytes": 61245,
+      "compressed_sha256": "d67120bcccb596392d94f3f86ac54fdb89d69a7ee6acc96f437151967db39a9e"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-recut-support03\\host-receipt.json",
+      "copy": "evidence/source-recut-support03/host-receipt.json.gz",
+      "original_bytes": 626,
+      "original_sha256": "66c974b5801d58e74d6b871f7cd87544f55b2137a5cfd87a2250c8ad3260e367",
+      "compressed_bytes": 377,
+      "compressed_sha256": "ed8c4f831da83961d4387cb4773ebb5b9eaaf18a6e4b82723ab477866da41080"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-recut-support03\\host-receipt.log",
+      "copy": "evidence/source-recut-support03/host-receipt.log.gz",
+      "original_bytes": 0,
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compressed_bytes": 20,
+      "compressed_sha256": "46b50c321b39e89a491b6727a01628c34245605a30beb3e7414c5e01cff90e6e"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-envelope01\\host-receipt.json",
+      "copy": "evidence/source-envelope01/host-receipt.json.gz",
+      "original_bytes": 605,
+      "original_sha256": "ead7ecb8822ba8ccbbddd9aec2415e557167c19d6c561ea0d077d5cb222d1c95",
+      "compressed_bytes": 359,
+      "compressed_sha256": "74ba42c2d8c23ca259d91286cf34c887201949b269cbc1337a37c909206e8d03"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-envelope01\\host-receipt.log",
+      "copy": "evidence/source-envelope01/host-receipt.log.gz",
+      "original_bytes": 1075,
+      "original_sha256": "52bd48c29af2b639345b915b96bf4e8db4d619fffe76e875f512a5127c85e1bc",
+      "compressed_bytes": 452,
+      "compressed_sha256": "b4f708f6b8aae10b3f3d11a0ca2215fb542872d6b49f7a3385e02dbb4cf8979a"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-envelope02\\host-receipt.json",
+      "copy": "evidence/source-envelope02/host-receipt.json.gz",
+      "original_bytes": 605,
+      "original_sha256": "4665e3b5f50d468befc3ff25d73d0d4752c8f6cd724ef7005896b3100fdcfa40",
+      "compressed_bytes": 358,
+      "compressed_sha256": "59612e0f1a84d71e71785c50fe747bd473e780d0a0c7a524cb1513d4cae5f76c"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-envelope02\\host-receipt.log",
+      "copy": "evidence/source-envelope02/host-receipt.log.gz",
+      "original_bytes": 1156,
+      "original_sha256": "d6fbba8bd7f3657249562e0a6cefcc91e8315f3d323d72fde994684aa380069d",
+      "compressed_bytes": 454,
+      "compressed_sha256": "7bd60722dc1c7a22db302f555e3f7686ce2738a7c2dd5eb2f363fe85e8bca3d6"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-envelope03\\host-receipt.json",
+      "copy": "evidence/source-envelope03/host-receipt.json.gz",
+      "original_bytes": 604,
+      "original_sha256": "ff2daf49c9baeafef83e87c23634a152c5f48898a8ad8f67e9353a9b3dd59c5a",
+      "compressed_bytes": 359,
+      "compressed_sha256": "1b67fced4b1dbee3887dd97f06e052049ee9398b4ab876fff66bec0427a46111"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-envelope03\\host-receipt.log",
+      "copy": "evidence/source-envelope03/host-receipt.log.gz",
+      "original_bytes": 358,
+      "original_sha256": "35dcef8bf1fe581857da27acace04bdd072e3ec0fdb3a3df0066d86287abcdd5",
+      "compressed_bytes": 296,
+      "compressed_sha256": "8ce36c705f312420a68f6a28ef5ced4b21ba06aa29e18519b8a9223b1abd920d"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-envelope03\\output\\rock-collection-catalog.json",
+      "copy": "evidence/source-envelope03/output/rock-collection-catalog.json.gz",
+      "original_bytes": 6459,
+      "original_sha256": "c749d58ff7d89883a9e9248223fb614b3a1108bbdef98c9e12cc711eaff06275",
+      "compressed_bytes": 2185,
+      "compressed_sha256": "c1109df1d6fafce89e04f133ea95801ac73a15d26e48be1d9e64086183e91a13"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-envelope20-01\\host-receipt.json",
+      "copy": "evidence/source-envelope20-01/host-receipt.json.gz",
+      "original_bytes": 608,
+      "original_sha256": "f3050ab405a522ef7a9486e268b0bcce627fd1b7e3961e8d572bd414a13f7d27",
+      "compressed_bytes": 360,
+      "compressed_sha256": "bd11fef6a2097e0fb7e5d38cf56585c345bd418c2107ac585a5e8742f296ceec"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-envelope20-01\\host-receipt.log",
+      "copy": "evidence/source-envelope20-01/host-receipt.log.gz",
+      "original_bytes": 5222,
+      "original_sha256": "4d86bacbdf74759f23cbcc9c94422c698fa9b8b24c6981df1adb7eb0c771be24",
+      "compressed_bytes": 526,
+      "compressed_sha256": "1beeffca6647177758f71562ee9eecf989205867ffc6fea24a71f30e8d4f931f"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\source-envelope20-01\\output\\rock-collection-catalog.json",
+      "copy": "evidence/source-envelope20-01/output/rock-collection-catalog.json.gz",
+      "original_bytes": 120777,
+      "original_sha256": "0c98e1abfa6f35bba249e38c9af870a9565dc02e268d6fec979f73f3b11e4a76",
+      "compressed_bytes": 11869,
+      "compressed_sha256": "5fb564d96e989b12a8fd539e015b1a3ec4ffcada54eada1b20c06bbf2f0b0a66"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-rock-preview-importonly-dd6f-retained/preview-manifest.json",
+      "copy": "evidence/remote-rock-preview/preview-manifest.json.gz",
+      "original_bytes": 17730,
+      "original_sha256": "dd6fcb0b514d66bba6f241c114ad30a0e2e107245c5411e47285e3e8ac8ef885",
+      "compressed_bytes": 3784,
+      "compressed_sha256": "fe2198bfad529a80251d0e989bcd17916d84c81825a9123999172da3d1b5a3ca",
+      "original_execution_path": "D:\\yacs\\work\\pcg365\\remote-rock-preview\\preview-manifest.json"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-rock-preview-importonly-dd6f-retained/preparation-receipt.json",
+      "copy": "evidence/remote-rock-preview/preparation-receipt.json.gz",
+      "original_bytes": 77629,
+      "original_sha256": "7eed96b05541055df915ab54917f17ae37e036ea965a0c40add7e84c80272209",
+      "compressed_bytes": 2489,
+      "compressed_sha256": "5b6f7ed91482ca7d753cd5e404f53ff932c991d87a3b39bb592202e87d0327ee",
+      "original_execution_path": "D:\\yacs\\work\\pcg365\\remote-rock-preview\\preparation-receipt.json"
+    },
+    {
+      "original_path": "D:/yacs/live-host/runtime/sessions/20261013T074338Z-f4ce5f39df0a/owner-rollout-discard.json",
+      "copy": "evidence/remote-deployment/owner-rollout-discard.json.gz",
+      "original_bytes": 534,
+      "original_sha256": "51784a25697c06d4b8a81ce4ce548384998469bb17ed0f319ea5fd7475a014bc",
+      "compressed_bytes": 378,
+      "compressed_sha256": "1645d27daaa8f759f474666d38130900db5b2f5cc4acc0cd8e28239054aafac0"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-deployment-a3dcb578/material-install.json",
+      "copy": "evidence/remote-deployment/material-install.json.gz",
+      "original_bytes": 3873,
+      "original_sha256": "2ee026a8cb42c1baded97e628d29c7ebc7fa3a9a1b63456d20c26f456fd38c66",
+      "compressed_bytes": 970,
+      "compressed_sha256": "17a85a6f2c26265eda6f0d51a1427a35095ba448deabce38e797b8141894e28f"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-deployment-a3dcb578/independent-client01/level-editor-stream-client.json",
+      "copy": "evidence/remote-deployment/independent-client.json.gz",
+      "original_bytes": 12584,
+      "original_sha256": "a9a259b9a740d7283a35a59c621dad9baf5138d36a4525db871eae8d01a31af4",
+      "compressed_bytes": 1608,
+      "compressed_sha256": "15c630fb49a008689f0b806c8a11b01f950bb3eaa8a051e0a18b9b61480d2d52"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-rock-diagnostic-placements01/preview-manifest.json",
+      "copy": "evidence/remote-deployment/diagnostic-manifest.json.gz",
+      "original_bytes": 20542,
+      "original_sha256": "9dfe907aaf438adfaa4d117c1813ec01a954447522d95ced90fe48d9bf90bf18",
+      "compressed_bytes": 4120,
+      "compressed_sha256": "931dbb1f20917b0112d20a9f04c96f7eba555bfb8f5c17049140951a38be9e6e"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-rock-diagnostic-placements01/preparation-receipt.json",
+      "copy": "evidence/remote-deployment/diagnostic-preparation.json.gz",
+      "original_bytes": 77697,
+      "original_sha256": "d6de725517586907bb8b09bf549d450e7eed88ed470960649eac4037fafb1c26",
+      "compressed_bytes": 2512,
+      "compressed_sha256": "3e3fd1b5332bdab18eff3e9382b02c0606f8b6365dbef3e3fa847f37f73c8498"
+    },
+    {
+      "original_path": "D:/yacs/live-host/runtime/sessions/20261013T100623Z-98043255276f/owner-second-pause.json",
+      "copy": "evidence/remote-deployment/owner-second-pause.json.gz",
+      "original_bytes": 517,
+      "original_sha256": "2626587847b95b50dc313a4dbe0d3677b95dcfa7891a3c8f596ec82b42e10808",
+      "compressed_bytes": 367,
+      "compressed_sha256": "6dee06b0a3f795a0ad7f06d8ea4a11eb6cb5f241b5a604b5f522a51aa3e62ebb"
+    },
+    {
+      "original_path": "D:/yacs/live-host/runtime/sessions/20261013T105244Z-53685d72a80e/commands/000001-59194f8f48354f5689b5.result.json",
+      "copy": "evidence/remote-deployment/native-import20-request.json.gz",
+      "original_bytes": 4417,
+      "original_sha256": "6f5024a741cf375f5d4f4a5658e76383a0040ee4e6a68e36d431b4148be5c2d6",
+      "compressed_bytes": 1365,
+      "compressed_sha256": "c4cb72bb17cf3de97fbe1ed863f844b7aa9273845f56a5722ead581946a61e15"
+    },
+    {
+      "original_path": "D:/yacs/live-host/runtime/sessions/20261013T105244Z-53685d72a80e/queue-blocked.json",
+      "copy": "evidence/remote-deployment/native-reentrant-queue-failure.json.gz",
+      "original_bytes": 315,
+      "original_sha256": "75db76298d2bdd15fc851c3b798467342b2dad3f4c35b7a2933df37ff2ecc135",
+      "compressed_bytes": 254,
+      "compressed_sha256": "94ab0f546fa873f32650bf84bb8310feb33d82367b3f0d60c03f3224434bff20"
+    },
+    {
+      "original_path": "D:/yacs/live-host/runtime/sessions/20261013T105244Z-53685d72a80e/owner-receiver-fix-pause.json",
+      "copy": "evidence/remote-deployment/owner-receiver-fix-pause.json.gz",
+      "original_bytes": 519,
+      "original_sha256": "d9c2b52cf53053781bdffd48d3f1fe60e0e33e5bf2a941ea47b9178a7f1f1b27",
+      "compressed_bytes": 364,
+      "compressed_sha256": "14987ee9276faf6ebca8011994dd0f4d1e0956d631a3df6dbdde6f574af9418c"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-deployment-24123838/after-publisher-client01/level-editor-stream-client.json",
+      "copy": "evidence/remote-deployment/post-publisher-client.json.gz",
+      "original_bytes": 12599,
+      "original_sha256": "0dc00b63cf617ea493ece209afe10933f431e6d9124b3e66c79dc993927dfad5",
+      "compressed_bytes": 1622,
+      "compressed_sha256": "f594a37ec920a1751fabe505eef75cb94ade00e78db582f04dbb8c22247a3309"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-deployment-a3dcb578/ci-24123838.json",
+      "copy": "evidence/remote-deployment/ci-24123838.json.gz",
+      "original_bytes": 209,
+      "original_sha256": "aa86306582e3f40ae8f6558cff8c9236221a105c1d10638796402b7ecda76a10",
+      "compressed_bytes": 186,
+      "compressed_sha256": "6be139c786382370730259f20b75c689963c94d5ed25910af162bd0dcbcc8411"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T111647Z-35e67509f1d3\\commands\\000001-97a2665276574d8a8540.result.json",
+      "copy": "evidence/remote-deployment/receiver-fixed-000001-97a2665276574d8a8540.result.json.gz",
+      "original_bytes": 4417,
+      "original_sha256": "66d15c23f0d52b4b663b0f6a32ff2f9c1229157dc53dab18899eea2ecdaac10a",
+      "compressed_bytes": 1362,
+      "compressed_sha256": "4abbd9124678a2ccff3692d7fb3f05368024be7a700a54c1a9e3d0bd8e5606b3"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T111647Z-35e67509f1d3\\commands\\000002-421bc28b5c9c43f78c94.result.json",
+      "copy": "evidence/remote-deployment/receiver-fixed-000002-421bc28b5c9c43f78c94.result.json.gz",
+      "original_bytes": 4619,
+      "original_sha256": "cbfd10a06db9e7b06f3c527cdc1b671f55d414df916f5377b8e33c6daf681738",
+      "compressed_bytes": 1471,
+      "compressed_sha256": "1ff5d460b0f4419204b6e748100098988c8a6c032d0ff20028edb409adb38ce6"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T111647Z-35e67509f1d3\\commands\\000003-1cb1b30ce8d147e0badf.result.json",
+      "copy": "evidence/remote-deployment/receiver-fixed-000003-1cb1b30ce8d147e0badf.result.json.gz",
+      "original_bytes": 4619,
+      "original_sha256": "123255478500f337711907bbf601e70ed2d5b9d73d953ffced54d62635f7c823",
+      "compressed_bytes": 1468,
+      "compressed_sha256": "7c286cabd3f2d433084eec045157be543208bb5b362f16bffee02be90390346a"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T111647Z-35e67509f1d3\\owner-transform-fix-pause.json",
+      "copy": "evidence/remote-deployment/owner-transform-fix-pause.json.gz",
+      "original_bytes": 516,
+      "original_sha256": "30fe9d4a2b5da1738bbc3220673d6dd205a484aff38cdfab453f5364a97b642c",
+      "compressed_bytes": 366,
+      "compressed_sha256": "c8a5e1367d8db95019180c9dbd5c6d6a477d72c4766baa3b6b2e1cbc9a216c4a"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-deployment-a5e2730c/ci.json",
+      "copy": "evidence/remote-deployment/ci-a5e2730c.json.gz",
+      "original_bytes": 209,
+      "original_sha256": "20aa0f2918fb3317d37a1c08529b1308c8e54d6619c84850cc3ef41e85f2903a",
+      "compressed_bytes": 188,
+      "compressed_sha256": "b3e7d90e0dd1a0061c41e839de06968273c3de59cfadb3d79e31ed62779706f2"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T115240Z-cb1ba00e930b\\commands\\000001-0244ec41fdbf4088a453.result.json",
+      "copy": "evidence/remote-deployment/native-query-api-000001-0244ec41fdbf4088a453.result.json.gz",
+      "original_bytes": 4417,
+      "original_sha256": "436e7bd23bd266e8e048d4c123c91a85bc0650a910e0d3bb8646740559e93d87",
+      "compressed_bytes": 1364,
+      "compressed_sha256": "81fd98e5671def1372c3c63352f387720c100ceb81cc678b6d6c04fbcdc332b8"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T115240Z-cb1ba00e930b\\commands\\000002-5aa94c873eb846f7ba93.result.json",
+      "copy": "evidence/remote-deployment/native-query-api-000002-5aa94c873eb846f7ba93.result.json.gz",
+      "original_bytes": 4624,
+      "original_sha256": "0dfbcc9744d9d97cdeee91e55210221764bd2bd01026aabcdab61b35fe1d407c",
+      "compressed_bytes": 1486,
+      "compressed_sha256": "47dc3270ff05896c77202c6822de1eed31b37422846b597f30bb18de4a5a37e3"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T115240Z-cb1ba00e930b\\owner-native-query-fix-pause.json",
+      "copy": "evidence/remote-deployment/owner-native-query-fix-pause.json.gz",
+      "original_bytes": 684,
+      "original_sha256": "27755cc3569fe22c843da76070e84843e7f0842f9061b463aff5036b4e24540c",
+      "compressed_bytes": 471,
+      "compressed_sha256": "103b8901828b8026d75b7ee68c56852ecbc9b518121479e21c70b8420e10d7ed"
+    },
+    {
+      "original_path": "D:/yacs/work/pcg365/remote-deployment-2b7c3bfc/ci.json",
+      "copy": "evidence/remote-deployment/ci-2b7c3bfc.json.gz",
+      "original_bytes": 209,
+      "original_sha256": "ecd6e02fb5b3973767aaf60993f05c336be153ac431ba1a36cfb030bcb51303d",
+      "compressed_bytes": 187,
+      "compressed_sha256": "26cf72cd617df10d4c9f1f219829852e66ddc904be1b8971041e66be58df4ec8"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T122444Z-7815ee9e71d4\\commands\\000006-78be86d3bd97457491cd.result.json",
+      "copy": "evidence/native-f0588aa2-completed/000006-78be86d3bd97457491cd.result.json.gz",
+      "original_bytes": 19480,
+      "original_sha256": "c2a113dcc410be4aef556c6a63694409a3eb39d5cc39cdbdd02e59573093af01",
+      "compressed_bytes": 3422,
+      "compressed_sha256": "2e45badcec89ca8526efbbf66eefed3f6e5075dd74fe47f8c7a3e0f90d8a0ef0"
+    },
+    {
+      "original_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T122444Z-7815ee9e71d4\\commands\\000006-78be86d3bd97457491cd.started.json",
+      "copy": "evidence/native-f0588aa2-completed/000006-78be86d3bd97457491cd.started.json.gz",
+      "original_bytes": 813,
+      "original_sha256": "50f2fbceaa555d394a4173adf814af34c1366912fa48d8efa8aff642e259b09a",
+      "compressed_bytes": 470,
+      "compressed_sha256": "3088dfd81064d6f2f145e9151623bab3dc33ee8a3336d1cad567be32e1feb2e5"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\remote-deployment-f0588aa2\\post-job-receiver\\level-editor-stream-client.json",
+      "copy": "evidence/native-f0588aa2-completed/level-editor-stream-client.json.gz",
+      "original_bytes": 14980,
+      "original_sha256": "557f75cd4a570293ff29e90a1ad182f6c92da0b69071266577ef7f28257b47c3",
+      "compressed_bytes": 1697,
+      "compressed_sha256": "4e614f75e9f8b9a5ffb62815dbd3892b0dbbfe000ca4ac2c1a1fb38a0e6fcf4d"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\coarse-rocks33-01\\host-receipt.json",
+      "copy": "evidence/coarse-source-candidates/coarse-rocks33-01/host-receipt.json.gz",
+      "original_bytes": 604,
+      "original_sha256": "9aecebb30bb69139648b21c92cc16393a85d3f6e49a6648fcece2e212844689b",
+      "compressed_bytes": 362,
+      "compressed_sha256": "e95b12afef5a4202ccb73d12f4f7bf5923a76e9b1585b9e2cb40822fc950b211"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\coarse-rocks33-01\\output\\rock-collection-catalog.json",
+      "copy": "evidence/coarse-source-candidates/coarse-rocks33-01/output/rock-collection-catalog.json.gz",
+      "original_bytes": 12446,
+      "original_sha256": "020cb69e84981fba7ba729d422c04f1aadb0a3621ce6e93eda2856d273071e32",
+      "compressed_bytes": 2781,
+      "compressed_sha256": "b53911ed315f7d414c9f9041aaf57df7538dd3f3624201211743c11a24693961"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\coarse-rocks49-01\\host-receipt.json",
+      "copy": "evidence/coarse-source-candidates/coarse-rocks49-01/host-receipt.json.gz",
+      "original_bytes": 604,
+      "original_sha256": "7d0428a17f62e6aac8dc723b7d982474e775635bc6f0c06e1d5edb28a8f92a3c",
+      "compressed_bytes": 363,
+      "compressed_sha256": "84c73a0bb593136196ae451f457e6a1e9837bd8ca4aaf79d38d78f96167b93a1"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\coarse-rocks49-01\\output\\rock-collection-catalog.json",
+      "copy": "evidence/coarse-source-candidates/coarse-rocks49-01/output/rock-collection-catalog.json.gz",
+      "original_bytes": 12465,
+      "original_sha256": "6f5a58eb53b8127e0c1c498ee6c192b2f769a7650b51824a0589cfcb3fb66526",
+      "compressed_bytes": 2802,
+      "compressed_sha256": "595c4f3537443e0fd4435eebffcb7947830f9b49f81fd848cb8e7343cef6de30"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\coarse-rocks4-catalog.json",
+      "copy": "evidence/coarse-source-candidates/coarse-rocks4-catalog.json.gz",
+      "original_bytes": 24894,
+      "original_sha256": "b09622a2322bbee2d80e70131285c750cdd9dcbc77197227bf862194826aa781",
+      "compressed_bytes": 4142,
+      "compressed_sha256": "e90220cce99e7db3adb940c15038659b3b53b3f957419fb0d5e4800d39800d05"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\remote-rock-coarse4-preview01\\preview-manifest.json",
+      "copy": "evidence/coarse-source-candidates/remote-rock-coarse4-preview01/preview-manifest.json.gz",
+      "original_bytes": 9504,
+      "original_sha256": "2981ce1f35f60a4cd1bf9d8abd424b52b2e82241731eedd2946d482aba13bb4f",
+      "compressed_bytes": 2091,
+      "compressed_sha256": "70439fec6102eca63d7c73b46fcfb7d331604fbd94d35d2ac639110c3aa6cef6"
+    },
+    {
+      "original_path": "D:\\yacs\\work\\pcg365\\remote-rock-coarse4-preview01\\preparation-receipt.json",
+      "copy": "evidence/coarse-source-candidates/remote-rock-coarse4-preview01/preparation-receipt.json.gz",
+      "original_bytes": 15955,
+      "original_sha256": "5a17daf9a06d95ff8017b0b67dc3dcd5fb31328d046bb89f5bf8f09a442a99e6",
+      "compressed_bytes": 1165,
+      "compressed_sha256": "6e4b34862ce6bdeaab18998a74400200100fd976782897f655b9432bdcf96ff5"
+    }
+  ],
+  "remote_world_execution": {
+    "installed_source_sha": "a3dcb57829fd5b89b5a7376ef05ef872690dcc27",
+    "session": "20261013T100623Z-98043255276f",
+    "world_native_verified": true,
+    "independent_browser_frames_received": true,
+    "current_import_request_ci": "FAILED_LOCAL_BUSY",
+    "import_request_head": "716bdf6d25ae5b6b86e03b718ca5721cad9ac46d",
+    "session_closed_by_owner_authorized_second_pause": true
+  },
+  "preview_placement_status": "ZERO_CONTACT_JOB_ROLLED_BACK",
+  "latest_native_rock_execution": {
+    "source_sha": "2b7c3bfcf6d910e36199595f3fa0aa7ddb596603",
+    "session": "20261013T115240Z-cb1ba00e930b",
+    "imported_candidates": 20,
+    "publisher_workflow": 38391772939,
+    "publisher_conclusion": "success",
+    "contact_status": "CONTACT_JOB_FAILED_ROLLED_BACK",
+    "phase": "READ_CURRENT_NATIVE_GEOMETRY",
+    "contact_error": "DynamicMesh object has no attribute get_num_triangle_ids",
+    "sampled_positions": 0,
+    "preview_placed": 0,
+    "rollback_complete": true,
+    "saved_checkpoint_unchanged": true,
+    "session_stopped_for_authorized_deployment_continuation": true
+  },
+  "diagnostic_preview_placed": 1
+}

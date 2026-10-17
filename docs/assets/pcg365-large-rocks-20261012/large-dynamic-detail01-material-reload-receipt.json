@@ -1,0 +1,79 @@
+{
+  "action": "material-reload",
+  "binding_readback": {
+    "component_checked": true,
+    "derived_mesh": "/Game/Generated/YACS/PCG365Qualification/SM_Boulder_ForgeDiagnostic.SM_Boulder_ForgeDiagnostic",
+    "material": {
+      "TileSizeCm": 400.0,
+      "displacement_connected": null,
+      "geometry_qualification": "PENDING_PROTECTED_INPUT_READBACK",
+      "instance": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/19a2805c9df1/MI_MaterialForge.MI_MaterialForge",
+      "max_displacement_world_m": null,
+      "nanite_tessellation_enabled": false,
+      "normal_space_readback": {
+        "function_interior_branch_semantics": "NOT_VERIFIED",
+        "function_package_identity": "BOUND_BY_SAVED_DIRECT_DEPENDENCIES",
+        "master_tangent_space_normal": true,
+        "world_aligned_normal_world_space_input": false
+      },
+      "parent": "/Game/Generated/YACS/PCG365Qualification/MaterialForge/regional_limestone/base/19a2805c9df1/M_MaterialForge.M_MaterialForge",
+      "projection": "native_world_aligned_4m",
+      "protected_constant_and_displacement_readback": "UNAVAILABLE",
+      "rock_appearance": {
+        "detail_semantics": "R fractures; G pores/pits; B mineral variation; artistic contrast only",
+        "effective_scalars": {
+          "RockFracture": 0.3799999952316284,
+          "RockGain": 0.6399999856948853,
+          "RockMineral": 0.18000000715255737,
+          "RockNormalStrength": 0.8500000238418579,
+          "RockPore": 0.2199999988079071
+        },
+        "float32_readback_tolerance": 1e-06,
+        "geometry_modified": false,
+        "physical_tile_cm": 400.0,
+        "recipe": "ROCK_APPEARANCE_V2"
+      },
+      "shader_gpu_compilation_verified": false,
+      "source_audited_geometry_readback": {
+        "basis": "UE5.8.2 WPO fallback and tessellation compiler guard with loaded master/instance readback; not GPU parity or all-deformer proof",
+        "displacement_connected": null,
+        "displacement_default_scalar": 0.5,
+        "displacement_root_readback": "UNAVAILABLE_PYTHON_ENUM",
+        "instance_tessellation_override": false,
+        "max_displacement_world_m": 0.0,
+        "nanite_tessellation_enabled": false,
+        "status": "SOURCE_AUDITED_ZERO_WPO_TESSELLATION_DISPLACEMENT_READBACK",
+        "use_material_attributes": false,
+        "wpo_default_world_m": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "world_aligned_functions": [
+        "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedNormal",
+        "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture",
+        "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture",
+        "/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture"
+      ],
+      "wpo_connected": false
+    },
+    "performance_pass": false,
+    "placement": false,
+    "qualification_status": "PENDING",
+    "status": "ISOLATED_NATIVE_MATERIAL_BINDING_READBACK",
+    "terrain_contact": "NOT_RUN",
+    "visual_accepted": false
+  },
+  "code_sha": "d1903aa952da2f30c237c589e924f95a1b2d994a",
+  "issue": 365,
+  "native_build": "NOT_RUN_PREBUILT_DEPENDENCY",
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_pass": false,
+  "placement": false,
+  "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+  "qualified_assets": [],
+  "schema_version": 1,
+  "status": "MATERIAL_BINDING_FRESH_READBACK",
+  "terrain_contact": "NOT_RUN"
+}

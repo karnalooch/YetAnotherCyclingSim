@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "selections": [
+    {
+      "id": "namaqualand_boulder_02",
+      "object_name": "namaqualand_boulder_02_LOD0"
+    },
+    {
+      "id": "namaqualand_boulder_06",
+      "object_name": "namaqualand_boulder_06_LOD0"
+    }
+  ]
+}

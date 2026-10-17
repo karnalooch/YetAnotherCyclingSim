@@ -1,0 +1,56 @@
+{
+  "route_file": "D:\\yacs\\project\\worldgen\\terrain\\benchmarks\\sa_calobra\\ma2141_cartociudad_source_2026-10-02.json",
+  "route_sha256": "6520b92486b5d1c63353b8253d388ab21d380c78fda119849311be8344d8ae36",
+  "route_length_m": 12643.476205049112,
+  "route_parts": 6,
+  "route_bounds": [
+    482379.3100290596,
+    4407256.066033722,
+    484954.33576057263,
+    4411168.667931667
+  ],
+  "buffer_m": 500,
+  "buffer_bounds": [
+    481879.36907297984,
+    4406756.072070223,
+    485454.26114796463,
+    4411668.534689688
+  ],
+  "buffer_area_m2": 7996503.912180085,
+  "buffer_geometry": "Polygon",
+  "buffer_is_valid": true,
+  "buffer_holes": 0,
+  "dtm_file": "D:\\yacs\\project\\worldgen\\terrain\\benchmarks\\sa_calobra\\sa_calobra_8x8km_mdt50cm_epsg25831.tif",
+  "dtm_bounds": [
+    479650.0,
+    4405899.5,
+    487650.0,
+    4413899.5
+  ],
+  "dtm_shape": [
+    16000,
+    16000
+  ],
+  "dtm_crs": "EPSG:25831",
+  "nodata": -32767.0,
+  "corridor_valid_cells": 31986002,
+  "corridor_missing_cells": 0,
+  "corridor_missing_area_m2": 0.0,
+  "missing_chunks_bounds": [],
+  "sample": {
+    "file": "${TASK}\\work\\landscape\\sample.tif",
+    "bounds": [
+      483650.0,
+      4410367.5,
+      483682.0,
+      4410399.5
+    ],
+    "corners": [
+      401.3999938964844,
+      408.32000732421875,
+      398.5899963378906,
+      407.5899963378906
+    ],
+    "center_value": 402.1600036621094
+  }
+}

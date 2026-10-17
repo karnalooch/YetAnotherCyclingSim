@@ -1,0 +1,757 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "scope": "LOCAL_ROCK_COLLECTION20_ASSET_LIBRARY_ONLY",
+  "variants": [
+    {
+      "id": "rock02_01",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock02_01.fbx",
+      "source_relative": "rock-collection/rock02_01.fbx",
+      "sha256": "a9fefa925f16aeedb1d701470985eba43f53adfed4c53e222b8a0dfaedd4bd9a",
+      "bytes": 2940524,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "geometry_sha256": "cbfe5774446799801f8065cd4f9104d6a6b739c412e387172e66a9f93fa92506",
+      "normalized_shape_sha256": "fa89e72c453f977c23b42e70158db4f0ee8e6faebeb8bd46f1e86b0e62dfaa7c",
+      "recipe": {
+        "id": "rock02_01",
+        "seed": 365201,
+        "scale_xyz": [
+          1.18,
+          0.84,
+          0.88
+        ],
+        "lean_x_per_z": 0.06,
+        "lean_y_per_z": -0.03,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -35.66265106201172,
+          -55.06187677383423,
+          0.0
+        ],
+        "max": [
+          37.54686415195465,
+          49.94745850563049,
+          34.17573571205139
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock02_02",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock02_02.fbx",
+      "source_relative": "rock-collection/rock02_02.fbx",
+      "sha256": "22c0d4fddabd4681e4254278437946faedfe9228998581647b07a9c602faee45",
+      "bytes": 2938444,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "geometry_sha256": "8ad3f7d5d3b5b26a7c14810d75e671304f6c6512322faf7adf778568fe9690bd",
+      "normalized_shape_sha256": "4f04360a2daa74d947f0ec5e1a027656a8abd2c6787986b67907b9748cb315f1",
+      "recipe": {
+        "id": "rock02_02",
+        "seed": 365202,
+        "scale_xyz": [
+          0.82,
+          1.16,
+          0.96
+        ],
+        "lean_x_per_z": -0.05,
+        "lean_y_per_z": 0.04,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -25.37478506565094,
+          -76.12630724906921,
+          0.0
+        ],
+        "max": [
+          24.859175086021423,
+          68.38012933731079,
+          37.28261888027191
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock02_03",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock02_03.fbx",
+      "source_relative": "rock-collection/rock02_03.fbx",
+      "sha256": "9f66a28454b985e73017b64bcf5a9f5f13366a87bd9f76df0caaccbece333aa6",
+      "bytes": 2938876,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "geometry_sha256": "7c9404bdb27e05bdcd877f777823858c496a8046360b828a1dd0a5bf0381cc0a",
+      "normalized_shape_sha256": "baec59074f4db0ab3750ba2d7201ca94e3827d9fe2986fe88c4715d2ab27d81d",
+      "recipe": {
+        "id": "rock02_03",
+        "seed": 365203,
+        "scale_xyz": [
+          1.1,
+          0.94,
+          1.18
+        ],
+        "lean_x_per_z": 0.08,
+        "lean_y_per_z": 0.02,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -33.24272036552429,
+          -61.66854500770569,
+          0.0
+        ],
+        "max": [
+          35.33778488636017,
+          55.502188205718994,
+          45.82655131816864
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock02_04",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock02_04.fbx",
+      "source_relative": "rock-collection/rock02_04.fbx",
+      "sha256": "478172f6e5d1f8bda492e1930dbf827e74683ffae8d0c0f8b17e67caaea26c8a",
+      "bytes": 2937900,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "geometry_sha256": "3dbcab59bced97e241aba4243e33dd066574fba5fbf4a5fc56871ab498fb69c5",
+      "normalized_shape_sha256": "084d91cc9e0fc6d59a008a23b779d1aecb243a499bcaafedb7819f3d053a4b8d",
+      "recipe": {
+        "id": "rock02_04",
+        "seed": 365204,
+        "scale_xyz": [
+          0.94,
+          1.08,
+          0.8
+        ],
+        "lean_x_per_z": -0.07,
+        "lean_y_per_z": -0.04,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -29.194283485412598,
+          -70.79246640205383,
+          0.0
+        ],
+        "max": [
+          28.360971808433533,
+          64.22935724258423,
+          31.068849563598633
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock02_05",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock02_05.fbx",
+      "source_relative": "rock-collection/rock02_05.fbx",
+      "sha256": "9c2bd175b42f7ad1bc84f39b21ab18ffb3813cb64fa2c567e465bc86342d8868",
+      "bytes": 2939628,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "geometry_sha256": "dce4b342bf42ff46c24407b91b600df791caf4efdf7f55615a56df55702eec16",
+      "normalized_shape_sha256": "4c90f42ba772dcb1b724e1a6f43de056c1bf87c33c61d78c0e52042000f68f7e",
+      "recipe": {
+        "id": "rock02_05",
+        "seed": 365205,
+        "scale_xyz": [
+          1.22,
+          1.02,
+          0.84
+        ],
+        "lean_x_per_z": 0.03,
+        "lean_y_per_z": 0.08,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -36.901625990867615,
+          -67.02837347984314,
+          0.0
+        ],
+        "max": [
+          38.37181329727173,
+          59.79984402656555,
+          32.62228965759277
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock02_06",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock02_06.fbx",
+      "source_relative": "rock-collection/rock02_06.fbx",
+      "sha256": "76e1dea27d1f8731c4a54d55ab7da37170679850572da4a39b90ac48aa773035",
+      "bytes": 2937356,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "geometry_sha256": "5bb4c76f436741a7c9d741c81bdbe078b4b2c1669cbb5a368f68d4bd0b431e2d",
+      "normalized_shape_sha256": "e335fa455b2350249da7543234f0640ad8413732d803f18b62e00f4843415799",
+      "recipe": {
+        "id": "rock02_06",
+        "seed": 365206,
+        "scale_xyz": [
+          0.88,
+          0.8,
+          1.2
+        ],
+        "lean_x_per_z": -0.04,
+        "lean_y_per_z": 0.07,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -27.117198705673218,
+          -52.585798501968384,
+          0.0
+        ],
+        "max": [
+          26.824739575386047,
+          46.8488335609436,
+          46.60327732563019
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock02_07",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock02_07.fbx",
+      "source_relative": "rock-collection/rock02_07.fbx",
+      "sha256": "16d0e87c09ecaf466f496408c36cc185643c69280aa1ee1ae8ebe700c8182c71",
+      "bytes": 2939452,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "geometry_sha256": "fa7d9481b857f134d91f4c0dea8adc46ecad146a9ff2ac5456934c08ac8e9a21",
+      "normalized_shape_sha256": "5f00e440787c606c37e358df2a59c0f91dd8403bc5e3c924b4f593d2092cfa98",
+      "recipe": {
+        "id": "rock02_07",
+        "seed": 365207,
+        "scale_xyz": [
+          1.04,
+          1.2,
+          1.06
+        ],
+        "lean_x_per_z": 0.09,
+        "lean_y_per_z": -0.05,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -31.429478526115417,
+          -78.65294218063354,
+          0.0
+        ],
+        "max": [
+          33.61106514930725,
+          71.41063809394836,
+          41.1662220954895
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock02_08",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock02_08.fbx",
+      "source_relative": "rock-collection/rock02_08.fbx",
+      "sha256": "18f95b0e8fcfeab1308f37cdd49e545434661f0cef4f81d1307162168a575c36",
+      "bytes": 2938348,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "geometry_sha256": "3fb4e04c3e3ce0eb3b98ffe759a2fa8a440e851caa8469c6ce05cf1eef4da34b",
+      "normalized_shape_sha256": "c4138730a063585c57ea218e77eac25728c4529dc05e24736bda68a36a3a0b9b",
+      "recipe": {
+        "id": "rock02_08",
+        "seed": 365208,
+        "scale_xyz": [
+          0.8,
+          0.98,
+          0.9
+        ],
+        "lean_x_per_z": -0.09,
+        "lean_y_per_z": 0.03,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -25.168031454086304,
+          -64.30601477622986,
+          0.0
+        ],
+        "max": [
+          23.82153570652008,
+          57.79713988304138,
+          34.95245575904846
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock02_09",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock02_09.fbx",
+      "source_relative": "rock-collection/rock02_09.fbx",
+      "sha256": "195965711a8a90be474c665ba53d6b1fa23894906857af678bc783f026030d16",
+      "bytes": 2939292,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "geometry_sha256": "f4e3c5baed9912b05e8a84ddaa92ff32adc9be3ff9a0e132421598243c4a0644",
+      "normalized_shape_sha256": "ea838c5a786d7f37248ddfba225bf5d15222d0e38dd13a1c9cd1c7471810dd90",
+      "recipe": {
+        "id": "rock02_09",
+        "seed": 365209,
+        "scale_xyz": [
+          1.14,
+          0.88,
+          1.08
+        ],
+        "lean_x_per_z": 0.02,
+        "lean_y_per_z": -0.09,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -34.54103767871857,
+          -57.656919956207275,
+          0.0
+        ],
+        "max": [
+          35.74332892894745,
+          52.79681086540222,
+          41.94294810295105
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock02_10",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock02_10.fbx",
+      "source_relative": "rock-collection/rock02_10.fbx",
+      "sha256": "0034a1d9a671ddec9418810ebbefb20cc898ec2e693990295c5616609b514f03",
+      "bytes": 2938492,
+      "base_source_sha256": "4573694aec533421f25b6d854a1fec24431a7a1034ddde1cee4e8837dee0503b",
+      "original_source_sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "geometry_sha256": "1fd340b6ad05c83f13bcc508790e340aa4e798f9950c740e1eaab604cf5414b4",
+      "normalized_shape_sha256": "678cfd2233ac92d5cc7f581869cc6c269ab807ee22679e978316e11132c0695a",
+      "recipe": {
+        "id": "rock02_10",
+        "seed": 365210,
+        "scale_xyz": [
+          0.96,
+          1.14,
+          1.22
+        ],
+        "lean_x_per_z": -0.06,
+        "lean_y_per_z": -0.08,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -29.719308018684387,
+          -74.69191551208496,
+          0.0
+        ],
+        "max": [
+          29.087713360786438,
+          68.10153722763062,
+          47.37999737262726
+        ]
+      },
+      "expected_lod0_triangles": 82558,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock06_01",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock06_01.fbx",
+      "source_relative": "rock-collection/rock06_01.fbx",
+      "sha256": "3b535e61bbbb3e68759e89e92e105f884507b63a0cc84d5409fadd79c8eba368",
+      "bytes": 3661436,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "geometry_sha256": "04d307b40eafa7a24b1e31d70c7313c56e4daa7c64ae2398832dd1e8b70ffb35",
+      "normalized_shape_sha256": "514dfca6003692b8a7611a138b2a63b2d7c22e043d5f1cb24d3c598422ba72f1",
+      "recipe": {
+        "id": "rock06_01",
+        "seed": 365601,
+        "scale_xyz": [
+          1.18,
+          0.84,
+          0.88
+        ],
+        "lean_x_per_z": 0.06,
+        "lean_y_per_z": -0.03,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -35.532599687576294,
+          -54.46509122848511,
+          0.0
+        ],
+        "max": [
+          43.83992254734039,
+          46.92421555519104,
+          51.609212160110474
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock06_02",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock06_02.fbx",
+      "source_relative": "rock-collection/rock06_02.fbx",
+      "sha256": "64df24d0d4388b3fab74a74b3999231f1ba7214230c130cba7001136feb5cdd8",
+      "bytes": 3658300,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "geometry_sha256": "2011002291222bd6ab22b16080761ae0fd006b62d65f387c622a994f1775e1d8",
+      "normalized_shape_sha256": "0eafa2446df9bfc6d3667bef8c2290229cd9227b0e549dd993ee62e80502a328",
+      "recipe": {
+        "id": "rock06_02",
+        "seed": 365602,
+        "scale_xyz": [
+          0.82,
+          1.16,
+          0.96
+        ],
+        "lean_x_per_z": -0.05,
+        "lean_y_per_z": 0.04,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -28.232014179229736,
+          -78.14047336578369,
+          0.0
+        ],
+        "max": [
+          27.36363112926483,
+          63.076573610305786,
+          56.30096197128296
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock06_03",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock06_03.fbx",
+      "source_relative": "rock-collection/rock06_03.fbx",
+      "sha256": "635fe6c1efd3f15e48ad499c9184c922a05adadde1470ab4b751f5d008a2a138",
+      "bytes": 3657996,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "geometry_sha256": "7761dd5a2462702e14a73841c690ce8ba92e8660ed30135bc84229d01473a970",
+      "normalized_shape_sha256": "ac4cadb477d7963fcae80a9c5499870e9256d03137c815ca2c6378738c995832",
+      "recipe": {
+        "id": "rock06_03",
+        "seed": 365603,
+        "scale_xyz": [
+          1.1,
+          0.94,
+          1.18
+        ],
+        "lean_x_per_z": 0.08,
+        "lean_y_per_z": 0.02,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -32.19572305679321,
+          -62.840843200683594,
+          0.0
+        ],
+        "max": [
+          41.688454151153564,
+          51.37653350830078,
+          69.20326352119446
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock06_04",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock06_04.fbx",
+      "source_relative": "rock-collection/rock06_04.fbx",
+      "sha256": "c7e33aa84b4c137d0df139a0ea0757d967d308251c45f4911eacc0c89ce950df",
+      "bytes": 3658172,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "geometry_sha256": "e66acb69c031711f015184d9a5a6b40b89e68d203b135f93d9d5c7fc55e476f5",
+      "normalized_shape_sha256": "64c29bd829738c557ebe51253b4d09f2116cbde43f52e66297bd2599ccf708a2",
+      "recipe": {
+        "id": "rock06_04",
+        "seed": 365604,
+        "scale_xyz": [
+          0.94,
+          1.08,
+          0.8
+        ],
+        "lean_x_per_z": -0.07,
+        "lean_y_per_z": -0.04,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -32.85517692565918,
+          -69.97932195663452,
+          0.0
+        ],
+        "max": [
+          31.011962890625,
+          60.36137938499451,
+          46.917468309402466
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock06_05",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock06_05.fbx",
+      "source_relative": "rock-collection/rock06_05.fbx",
+      "sha256": "03ac49f371cdea59d6507dae408d804e6e3cd0f21442e4f9258c7837dd60cde4",
+      "bytes": 3660060,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "geometry_sha256": "612026b2bfc528e374057138823a96df84e0d2b7c503cd13132fc57c837bcfdd",
+      "normalized_shape_sha256": "ae496dc84d04eeef973351ae76bccdd7fb1c71f7ee790bd34c687143fd00d3ca",
+      "recipe": {
+        "id": "rock06_05",
+        "seed": 365605,
+        "scale_xyz": [
+          1.22,
+          1.02,
+          0.84
+        ],
+        "lean_x_per_z": 0.03,
+        "lean_y_per_z": 0.08,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -37.97211050987244,
+          -70.5044150352478,
+          0.0
+        ],
+        "max": [
+          44.23808157444,
+          54.51505184173584,
+          49.26334023475647
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock06_06",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock06_06.fbx",
+      "source_relative": "rock-collection/rock06_06.fbx",
+      "sha256": "b737e08f2587dbe23161b40e842639a1f8cbe8a89c2aa8590366bea0174c843b",
+      "bytes": 3657436,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "geometry_sha256": "707eada49a3e0adcf95aa9497d26109af7111d8272698066744e245d6090102d",
+      "normalized_shape_sha256": "da50fe93b1042f6e8ce477c3ae576f49e01c2319c131cdb9a64c92a8ff4968a2",
+      "recipe": {
+        "id": "rock06_06",
+        "seed": 365606,
+        "scale_xyz": [
+          0.88,
+          0.8,
+          1.2
+        ],
+        "lean_x_per_z": -0.04,
+        "lean_y_per_z": 0.07,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -29.769575595855713,
+          -55.58803081512451,
+          0.0
+        ],
+        "max": [
+          29.819709062576294,
+          42.60334670543671,
+          70.37620544433594
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock06_07",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock06_07.fbx",
+      "source_relative": "rock-collection/rock06_07.fbx",
+      "sha256": "52341d961d79c93aec88480b76ad889a2ad7cf84a78b2d6130a0941de8e5eee0",
+      "bytes": 3657052,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "geometry_sha256": "67310fc09665d7827b1b2d7027f0564e9f545867b7cbc04f607ed8c763b05309",
+      "normalized_shape_sha256": "b901e95fc8a6e0a6c098f8aadad9e2a42e1c57111552f75c59cc39d1df68b4e9",
+      "recipe": {
+        "id": "rock06_07",
+        "seed": 365607,
+        "scale_xyz": [
+          1.04,
+          1.2,
+          1.06
+        ],
+        "lean_x_per_z": 0.09,
+        "lean_y_per_z": -0.05,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -29.885825514793396,
+          -77.57116556167603,
+          0.0
+        ],
+        "max": [
+          39.91270363330841,
+          67.18578934669495,
+          62.16564178466797
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock06_08",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock06_08.fbx",
+      "source_relative": "rock-collection/rock06_08.fbx",
+      "sha256": "c65279bf6de7e08a91747d670e1b9ccfdf49451fa8c0e988bacbb1ab46a8e2d9",
+      "bytes": 3659132,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "geometry_sha256": "182db9e85d15c4ee88220c17ecb75bda5179efc050ba7df9db852696d9a32272",
+      "normalized_shape_sha256": "b2f6121ca8b8373ff7de054db604f089e365793edfbe95d873760ca8d31b4165",
+      "recipe": {
+        "id": "rock06_08",
+        "seed": 365608,
+        "scale_xyz": [
+          0.8,
+          0.98,
+          0.9
+        ],
+        "lean_x_per_z": -0.09,
+        "lean_y_per_z": 0.03,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -29.149743914604187,
+          -65.86337685585022,
+          0.0
+        ],
+        "max": [
+          25.973713397979736,
+          53.36911678314209,
+          52.782148122787476
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock06_09",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock06_09.fbx",
+      "source_relative": "rock-collection/rock06_09.fbx",
+      "sha256": "85132000d4f72538a557e32bb717a5d7aa0bf04621173fc5345f6a731c29fcac",
+      "bytes": 3660460,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "geometry_sha256": "fed732f8bc1c3b193650caa0d3d6fb1e894535b7ed371c65ded08a57c944c245",
+      "normalized_shape_sha256": "566155f523e31c31e09e78222dcfcfb9329c56a144e874710243e39fd6ffa78f",
+      "recipe": {
+        "id": "rock06_09",
+        "seed": 365609,
+        "scale_xyz": [
+          1.14,
+          0.88,
+          1.08
+        ],
+        "lean_x_per_z": 0.02,
+        "lean_y_per_z": -0.09,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -35.79182326793671,
+          -55.1225483417511,
+          0.0
+        ],
+        "max": [
+          41.06441140174866,
+          50.57661533355713,
+          63.33858370780945
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "rock06_10",
+      "source": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock06_10.fbx",
+      "source_relative": "rock-collection/rock06_10.fbx",
+      "sha256": "e11fe75ae95080f67af181e6e8f75f0f6656b3a2f8078de62e5bab5c32707b24",
+      "bytes": 3657084,
+      "base_source_sha256": "d95cde17e6e6318e83ca0e60e4e5febee9438c0192978da6b7461ce8264b51b8",
+      "original_source_sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "geometry_sha256": "212e6a052bfdb773db1dae1cc2bd943cd830153092b1e3f4602c7205c6d9e6bc",
+      "normalized_shape_sha256": "998087c8681eb13586e96958a500feeab019509312a690350f97c0e8366a911a",
+      "recipe": {
+        "id": "rock06_10",
+        "seed": 365610,
+        "scale_xyz": [
+          0.96,
+          1.14,
+          1.22
+        ],
+        "lean_x_per_z": -0.06,
+        "lean_y_per_z": -0.08,
+        "twist": false
+      },
+      "expected_native_bounds_cm": {
+        "min": [
+          -33.10870826244354,
+          -72.61829376220703,
+          0.0
+        ],
+        "max": [
+          31.986841559410095,
+          64.57738280296326,
+          71.54914140701294
+        ]
+      },
+      "expected_lod0_triangles": 103250,
+      "license": "CC0-1.0"
+    }
+  ],
+  "preparation_receipt": {
+    "path": "D:\\yacs\\work\\pcg365\\rock-collection20-02\\derived\\rock-collection.json",
+    "sha256": "61e85de644db49a51b8103b806d464fe19e075f4c06cb22e7284dce3c92a6af7"
+  },
+  "placement": false,
+  "qualified_assets": [],
+  "full_qualification": false,
+  "terrain_modified": false,
+  "material_recipe": "ROCK_APPEARANCE_V2",
+  "classification": "20 source-derived ART geometries from 2 CC0 scans; not 20 independent scans"
+}

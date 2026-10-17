@@ -1,0 +1,6 @@
+=== CAPTURING SHOTS 04 AND 05 ===
+Target Landscape: SaCalobra_Detail_0_0
+Current layers on SaCalobra_Detail_0_0: [Name("Houdini_Source_Pegasus_Gentle"), Name("Layer2_Procedural"), Name("Layer1_Manual")]
+
+--- Scheduling 05_reverted_clean_baseline.png ---
+Shot 5 captured and verified on disk! Size: 2989436 bytes in 4.52s

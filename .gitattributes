@@ -45,6 +45,8 @@ scripts/ue/Invoke-YacsRoadAsphaltRender.ps1 text eol=lf
 *.hiplc filter=lfs diff=lfs merge=lfs -text
 *.hda filter=lfs diff=lfs merge=lfs -text
 *.hdalc filter=lfs diff=lfs merge=lfs -text
+*.bgeo filter=lfs diff=lfs merge=lfs -text
+*.bgeo.sc filter=lfs diff=lfs merge=lfs -text
 *.terrain filter=lfs diff=lfs merge=lfs -text
 *.tif filter=lfs diff=lfs merge=lfs -text
 
@@ -69,9 +71,10 @@ worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.
 # Retain exact rendered graph bytes and recognize their Windows line endings.
 worldgen/materials/material_maker/**/*.ptex -text whitespace=cr-at-eol
 worldgen/materials/material_maker/**/export/*.png filter=lfs diff=lfs merge=lfs -text
-
 worldgen/materials/visual_fill/*.png filter=lfs diff=lfs merge=lfs -text
-
+worldgen/houdini/**/*.png filter=lfs diff=lfs merge=lfs -text
+worldgen/houdini/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+worldgen/houdini/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
 # Retained material-repair evidence and CC0 source images
 worldgen/materials/scanned_refinement/source/*.png filter=lfs diff=lfs merge=lfs -text
 docs/experiments/sa-calobra-material-repair-20261006/evidence/**/*.png filter=lfs diff=lfs merge=lfs -text
@@ -95,3 +98,22 @@ docs/experiments/sa-calobra-material-repair-20261006/evidence/native-projection.
 docs/experiments/sa-calobra-component230-detail-native-20261008/evidence/** -text whitespace=cr-at-eol
 .gumball/candidates/scoped-agent-role-authority-routing.json text eol=lf
 docs/ai/ROLE_REGISTRY.json text eol=lf
+# Preserve raw #365 source/native receipts exactly across Windows checkouts.
+docs/assets/pcg365-large-rocks-20261012/*.json -text
+docs/assets/pcg365-local-rock-pack-20261012/*.json -text
+worldgen/sa_calobra/pcg365_local_rock_variant_catalog_v1.json text eol=lf
+docs/assets/pcg365-rock-collection20-20261012/*.json -text
+worldgen/sa_calobra/pcg365_rock_collection20_catalog_v1.json text eol=lf
+
+docs/assets/pcg365-natural20-20261012/*.json.gz -text -diff
+
+# Preserve the portable natural20 contact evidence bytes.
+docs/assets/pcg365-natural20-contact-20261012/**/*.json.gz -text -diff
+docs/assets/pcg365-natural20-contact-20261012/*.py.gz -text -diff
+
+# Preserve hash-bound planning/inspection JSON bytes across all host platforms.
+docs/experiments/sa-calobra-spatial-treatment-plan-20261013/*.json -text whitespace=cr-at-eol
+worldgen/live_host/window0067-regional-manifest.json text eol=lf
+
+# Preserve native MCP receipts for deterministic saved/fresh comparison.
+docs/experiments/sa-calobra-pcgex-mcp-20261013/*.json -text whitespace=cr-at-eol

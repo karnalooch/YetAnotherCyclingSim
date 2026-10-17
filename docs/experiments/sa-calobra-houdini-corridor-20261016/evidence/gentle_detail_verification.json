@@ -1,0 +1,13 @@
+{
+  "max_absolute_delta_m": 0.17791748046875,
+  "mean_absolute_delta_in_corridor_m": 0.02350447326898575,
+  "p95_absolute_delta_in_corridor_m": 0.072998046875,
+  "max_absolute_delta_outside_corridor_m": 0.0,
+  "blend": 0.001,
+  "working_cells": 31986070,
+  "working_area_m2": 7996517.5,
+  "source_height_sha256": "01efaed54b68b8931550ebd89957af51928519e47a4c53ec92eceb38ec6c7757",
+  "final_height_sha256": "44aadb58f7a5027bc0573027e459bccce4f0440182a124251db619a02c6e18d7",
+  "target_delta_m": 0.5,
+  "target_origin": "Assistant-selected conservative first-variant parameter, not a SideFX recommendation or a user-specified numeric requirement."
+}

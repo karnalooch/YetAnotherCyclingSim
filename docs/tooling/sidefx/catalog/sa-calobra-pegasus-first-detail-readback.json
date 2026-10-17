@@ -1,0 +1,66 @@
+{
+  "houdini_version": "22.0.466",
+  "license_category": "licenseCategoryType.Indie",
+  "fresh_reopen_status": "PASS",
+  "candidate_project": "SaCalobra_Pegasus_Detail_v001.hiplc",
+  "cache_files": [
+    {
+      "node": "/obj/SA_CALOBRA/SOURCE_CACHE",
+      "relative_file": "cache/source_working_05m.bgeo.sc",
+      "bytes": 167141702
+    },
+    {
+      "node": "/obj/SA_CALOBRA/FIRST_DETAIL_SUBREGION_CACHE",
+      "relative_file": "cache/first_detail_subregion_05m.bgeo.sc",
+      "bytes": 862747
+    },
+    {
+      "node": "/obj/SA_CALOBRA/FIRST_DETAIL_WORKING_CACHE",
+      "relative_file": "cache/first_detail_working_05m.bgeo.sc",
+      "bytes": 167142795
+    },
+    {
+      "node": "/obj/SA_CALOBRA/PROCEDURAL_CACHE",
+      "relative_file": "cache/procedural_working_05m.bgeo.sc",
+      "bytes": 183380370
+    }
+  ],
+  "base_source_height_sha256": "01efaed54b68b8931550ebd89957af51928519e47a4c53ec92eceb38ec6c7757",
+  "subregion_detail_height_sha256": "69ec4d8859b2649f54c93ad78663c87bb4489df536400bc404ea5b20d3645807",
+  "full_working_detail_height_sha256": "b39214453a70c943a22f34039ea629b480be6a1aba03c9ebfa6104a43868f64e",
+  "interactive_switch_toggle_test": "PASS",
+  "zero_delta_on_base_toggle": "VERIFIED_BIT_EXACT",
+  "evidence_renders": {
+    "SaCalobra_Slope_Medium_Base.png": {
+      "exists": true,
+      "bytes": 335412
+    },
+    "SaCalobra_Slope_Medium_Detail.png": {
+      "exists": true,
+      "bytes": 339773
+    },
+    "SaCalobra_Slope_Close_Base.png": {
+      "exists": true,
+      "bytes": 429113
+    },
+    "SaCalobra_Slope_Close_Detail.png": {
+      "exists": true,
+      "bytes": 441772
+    },
+    "SaCalobra_First_Detail_Analysis.png": {
+      "exists": true,
+      "bytes": 4473353
+    },
+    "first_terrain_detail_verification.json": {
+      "exists": true,
+      "bytes": 2147
+    }
+  },
+  "measurements_summary": {
+    "max_micro_delta_m": 0.483306884765625,
+    "mean_micro_delta_m": 0.047252196818590164,
+    "p95_micro_delta_m": 0.15740966796875,
+    "outside_permitted_subregion_delta_m": 0.0,
+    "outside_permitted_modified_cells": 0
+  }
+}

@@ -61,19 +61,21 @@ flowchart TB
 
 ## Current focus
 
+**Owner update, 2026-10-16:** the [Houdini/SideFX workflow](tooling/sidefx/README.md) supersedes earlier native-UE/PCG/Blender-first generation plans. Current implementation is a separate fresh Landscape only; the earlier rollout rows below retain issue/proof history, not permission to resume the superseded generator.
+
 | Area | Current state |
 |---|---|
 | Delivery | **M3 — Route & World Foundation** |
 | World method | **World Building Bible is authoritative** |
 | Geographic fidelity | **1:1 real-world scale; no route compression, relocation or invented macro terrain** |
-| Architecture policy | **Embark-first + tools-first + version-matched Epic/PCGEx API evidence + local proof** |
+| Architecture policy | **Houdini is the primary world-authoring executor; original SideFX recipes, explicit adaptations, version-matched capability evidence and local proof** |
 | Existing material tools | **Material Maker + Godot through [Material Forge](tooling/MATERIAL_FORGE.md): offline procedural PBR for pale limestone, dry mineral soil and aged asphalt; consult before proposing additional material tools** |
 | MCP adoption | **[#384](https://github.com/karnalooch/YetAnotherCyclingSim/issues/384): fixed native inspection/test session, separate [InputBoundary](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38039426402) and authenticated [source-only receipt readback](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/38040872136) passed; [protected delivery gate](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption) controls #364** |
 | Diagram language | **Gumball Blueprint Mermaid style** |
-| Current priority | **#363 material foundation accepted/frozen; #384 protected handoff → #364 asphalt/shoulder. Start #364 only after protected [#467](https://github.com/karnalooch/YetAnotherCyclingSim/pull/467) merge and completed #384; stop MCP infrastructure work. #337/#349 road and source-inventory work remains separately scoped; #338 stays frozen Draft** |
+| Current priority | **#364 completed through [#470](https://github.com/karnalooch/YetAnotherCyclingSim/pull/470) squash / v0.3.1 with explicit owner manual closeout. [#365 world graph](tooling/SA_CALOBRA_WORLD_GRAPH.md) now has a one-command native PCGEx scree preview with 20 saved, freshly reloaded and deterministically regenerated instances; whole-area production admission remains open. Natural rock/contact qualification continues after owner rejection of authored tent-like forms; sampled support is not visual acceptance or scatter admission. #337/#349/#459 geometry/source work stays separate; #338 stays frozen Draft** |
 | M3 acceptance debt | **M3 remains in progress; material acceptance does not admit unresolved road/CUT/cliff/contact geometry or production PCGEx. Performance is `DEFERRED_AFTER_M3`, `performance_pass: false`** |
 | Route reference | **sea-level Sa Calobra → Coll dels Reis → Ma-10 → Menut/Binifaldó → Coll des Pedregaret; ~29–30 km planning estimate, exact chainage pending** |
-| Terrain source | **CNIG/IGN MDT50cm Sa Calobra 8 km × 8 km benchmark; bounded native UE import PASS, terrain visual accepted; performance pending** |
+| Terrain source | **Original CNIG/IGN MDT50cm retained. Fresh full-Ma-2141 Houdini candidate: 500 m each side plus background; source 8 km extent is not mandatory full-detail output. Historical UE evidence does not admit the new procedural variation.** |
 | Road authority | **verified Ma-2141 alignment; smooth presentation ribbon is evaluated against Landscape, never snapped/bent to native DTM facets; terrain-fit residuals drive cut/fill/structure review** |
 | Acceptance | **exact-SHA terrain-fit + CUT/support geometry proof, mandatory Geometry Inspection, rider-camera human review and performance evidence; transient geometry does not grant durable road admission** |
 | Next product milestone | **M4 Cornering**, after M3 closes |
@@ -86,6 +88,8 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 |---|---|---|
 | Product scope and MVP boundaries | [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) | **Authoritative** |
 | Delivery order and current milestone | [`ROADMAP.md`](ROADMAP.md) | **Authoritative** |
+| Houdini executor, SideFX fidelity and current terrain scope | [`tooling/sidefx/README.md`](tooling/sidefx/README.md) | **Authoritative execution workflow under the Bible** |
+| All SideFX lessons, captions, source materials and gaps | [`tooling/sidefx/catalog/README.md`](tooling/sidefx/catalog/README.md) | **Complete source concordance; indexing is not implementation proof** |
 | How to build terrain/roads/worlds | [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) | **Authoritative** |
 | Official MCP decision, authority boundary and bounded spike | [`UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption`](UE_MCP_WORLD_GENERATION.md#official-unreal-mcp-adoption) | **Fixed session, separate InputBoundary and authenticated source-only receipt readback passed; protected merge gates #364 and stock material authoring requires separate proof** |
 | First full-route visual/data reference | [`SA_CALOBRA_MENUT_ROUTE_REFERENCE.md`](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md) | **Evidence / candidate** |
@@ -100,10 +104,16 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 | Resume texture work remotely | [`tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md`](tooling/TEXTURE_MATERIAL_PREP_REMOTE_HANDOFF.md) | **2026-10-05 evidence and recovery procedure** |
 | Persistent local project and checkpoints | [`tooling/LOCAL_WORKSPACE.md`](tooling/LOCAL_WORKSPACE.md) | **Authoritative host workflow** |
 | M3 viewport streaming review | [`tooling/LEVEL_EDITOR_STREAM.md`](tooling/LEVEL_EDITOR_STREAM.md) | **Owner-selected Stream Level Editor; installed-source inspection and runtime verification required** |
+| Persistent YACS Live Host | [`tooling/YACS_LIVE_HOST.md`](tooling/YACS_LIVE_HOST.md) | **#476 owner-logon independent Unreal Editor + Pixel Streaming 2; staged Draft implementation, post-job native/browser proof pending; extensible reviewed in-Editor recipes** |
 | Blender headless producer contract | [`tooling/BLENDER_HEADLESS.md`](tooling/BLENDER_HEADLESS.md) | **Active supporting tool** |
 | Sa Calobra material foundation | [`tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md`](tooling/SA_CALOBRA_MATERIAL_FOUNDATION.md) | **Reusable workflow / retained candidate history; current acceptance in whole-map handoff** |
 | Sa Calobra whole-map surface preparation | [`tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md`](tooling/SA_CALOBRA_WHOLE_MAP_SURFACE_PREPARATION.md) | **#363 accepted/frozen and #446 merged; full-grid saved/fresh-reloaded/fresh-rendered material consumer admitted; performance deferred after M3** |
-| Road asphalt and shoulder evidence | [`evidence/ROAD_SURFACE_MATERIALS_364.md`](evidence/ROAD_SURFACE_MATERIALS_364.md) | **#364 in progress: b9fd save/fresh/GPU passed with 68 Lit, 16 crack and 22 contact views; outer blend, remaining appearance defects and complete delivery pending** |
+| Road asphalt and shoulder evidence | [`evidence/ROAD_SURFACE_MATERIALS_364.md`](evidence/ROAD_SURFACE_MATERIALS_364.md) | **#364 completed through #470; earlier checkpoint fresh-rendered, latest saved checkpoint/remaining route gate manually accepted by owner; no automated whole-area PASS, #459 geometry debt retained** |
+| PCG / PCGEx world graph | [`tooling/SA_CALOBRA_WORLD_GRAPH.md`](tooling/SA_CALOBRA_WORLD_GRAPH.md) | **#365 CPU inputs and bounded native diagnostics; twenty eight-source derivatives with Material Forge; all 100 Landscape contact cases rejected, fresh aggregate crashed, terrain renders and production placement pending** |
+| Current rock rollout / Remote handoff | [`tooling/SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md`](tooling/SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md) · [verbatim plan](tooling/SA_CALOBRA_ROCK_ROLLOUT_PLAN_20261013.md) | **Owner-authorized 2026-10-13: retire P0–P4, defer gray review, register first bounded surface, upgrade current Remote in place with minimal restarts; native/production gates remain open** |
+| Detailed #365 continuation | [`tooling/SA_CALOBRA_WORLD_GRAPH_PLAN.md`](tooling/SA_CALOBRA_WORLD_GRAPH_PLAN.md) | **Researched continuation: owner resumed implementation on 2026-10-12; asset/contact, production graph and saved regeneration gates remain explicit** |
+| #365 primary research and tutorials | [`tooling/SA_CALOBRA_WORLD_GRAPH_RESEARCH.md`](tooling/SA_CALOBRA_WORLD_GRAPH_RESEARCH.md) | **Epic/PCGEx sources, installed API findings and explicit retrieval/version limits** |
+| Continue #365 with another LLM | [`tooling/SA_CALOBRA_WORLD_GRAPH_LLM_HANDOFF.md`](tooling/SA_CALOBRA_WORLD_GRAPH_LLM_HANDOFF.md) | **Complete prompt, role packets, existing commands, stop gates and exact-SHA return contract** |
 | Sa Calobra material repair sequence | [`tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md`](tooling/SA_CALOBRA_MATERIAL_REPAIR_PLAN.md) | **Historical recovery plan; #381 closed superseded by merged #446** |
 | Sa Calobra cliff / erosion presentation pass | [`tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md`](tooling/SA_CALOBRA_CLIFF_EROSION_PASS.md) | **Active #429 non-destructive selector foundation; production dressing pending** |
 | CI cost / proof cadence | [`CI_VALIDATION_TIERS.md`](CI_VALIDATION_TIERS.md) | **Authoritative** |
@@ -129,6 +139,10 @@ The old Stage 3G / R4.1 / B.x vocabulary is historical. Existing workflow names 
 The `STAGE_*` filenames above are retained identifiers for established technical contracts. They are not permission to create new nested roadmap stages.
 
 ### World, terrain and authoring
+
+- [`tooling/sidefx/README.md`](tooling/sidefx/README.md) — active Houdini-first execution, original SideFX recipe fidelity, adaptation and proof boundaries.
+- [`tooling/sidefx/catalog/README.md`](tooling/sidefx/catalog/README.md) — all 130 Pegasus parts, 304 materials, supplementary videos and Embark/Far Cry source availability.
+- [`tooling/sidefx/RECIPE_TEMPLATE.md`](tooling/sidefx/RECIPE_TEMPLATE.md) — exact lesson/time/node/parameter/input/output mapping for an implemented recipe.
 
 - [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md) — **authoritative methodology**: source terrain, tools-first/evidence-led architecture, Landscape Edit Layers, roads, earthworks, cliffs, materials, PCG, RVT, streaming and world acceptance.
 - [`SA_CALOBRA_MENUT_ROUTE_REFERENCE.md`](SA_CALOBRA_MENUT_ROUTE_REFERENCE.md) — evidence dossier for the candidate 1:1 sea-to-forest route, visual identity, source acquisition and asset references; not route/physics authority.
@@ -273,5 +287,10 @@ Owner acceptance now also requires the
 constant matching entry/exit widths, justified main-bend widening only, and no
 reverse turns on either final pavement edge. The current 183a30e visual result
 is rejected against that requirement. The native convex-cubic implementation
-below that contract owns the replacement; fresh exact-SHA proof and owner visual
+below that contract is retained historical evidence; new road execution follows the Houdini/SideFX recipe, and fresh exact-SHA proof and owner visual
 acceptance are required before admitting it.
+
+## Evidence storage
+
+See [JSON storage and byte-preserving receipt archives](evidence/JSON_STORAGE.md)
+for the current raw JSON budget, exact source/replay exceptions and integrity checks.

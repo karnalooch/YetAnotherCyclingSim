@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "issue": 365,
+  "milestone": "M3",
+  "delivery_mode": "LOCAL_ONLY_NO_PUSH",
+  "native_code_sha": "9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53",
+  "native_stage": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01",
+  "native_actions": [
+    "inspect",
+    "material",
+    "material-reload",
+    "rock-pack",
+    "rock-pack-reload"
+  ],
+  "native_actions_clean_exit_zero": 5,
+  "original_source_unchanged": true,
+  "terrain_modified": false,
+  "map_saved": false,
+  "material_recipe": "ROCK_APPEARANCE_V2",
+  "physical_tile_cm": 400,
+  "variant_count": 6,
+  "distinct_scan_shapes": 2,
+  "relative_art_scales": [
+    0.75,
+    1,
+    1.25
+  ],
+  "bundle_path": "D:/yacs/work/pcg365/local-rock-pack02/library",
+  "bundle_native_assets": 12,
+  "bundle_source_fbx": 6,
+  "bundle_bytes": 57135691,
+  "bundle_proof": "Byte-identical copy; native fresh readback verified in source stage, bundle not opened as separate project",
+  "records": [
+    {
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack01\\host.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/first-rejected-host.json",
+      "bytes": 601,
+      "sha256": "2faeaabc47a095e5adfd4ea0f9f68f6ea9dcd056d50882f79352511e93fd9709"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\host.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/prepared-host.json",
+      "bytes": 600,
+      "sha256": "b92eff2521c73a3be0d3964b0680dc821cd17b17d89291f4ec1305ed40952bd9"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\derived\\rock-variant-pack.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/source-variant-pack.json",
+      "bytes": 1422283,
+      "sha256": "39e7422fe8dbf241001c73ad5dac50777585d3d352bf2200ef017eb6a5451d78"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\local-rock-pack02\\library\\asset-bundle.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/asset-bundle.json",
+      "bytes": 8279,
+      "sha256": "a41c2ddc66a40b258cf657d35e66e8ad047e54613f5ed4c61cae2d2a1525810e"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\proof\\inspect\\inspect-receipt.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/inspect-receipt.json",
+      "bytes": 620,
+      "sha256": "95fa53ed7886a25a56de7918c23d2050a8808180204e30da2b2698ea75dcc1c0"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\proof\\inspect\\launcher-completed.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/inspect-completed.json",
+      "bytes": 165,
+      "sha256": "2723917b9b99cb80ba797801baca05aeb235c7fd5ca97e5c025cecca368ebd56"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\proof\\material\\material-receipt.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/material-receipt.json",
+      "bytes": 18905,
+      "sha256": "ffaf3b87b2d8fa9047044b3666470730b1a0c813e832d49734e72b04b2ff7eb2"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\proof\\material\\launcher-completed.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/material-completed.json",
+      "bytes": 165,
+      "sha256": "2723917b9b99cb80ba797801baca05aeb235c7fd5ca97e5c025cecca368ebd56"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\proof\\material-reload\\material-reload-receipt.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/material-reload-receipt.json",
+      "bytes": 3468,
+      "sha256": "516ae79f30f586af7aa1056b0d0aa0f10a096b07b6144be45de63ac8a7fd527f"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\proof\\material-reload\\launcher-completed.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/material-reload-completed.json",
+      "bytes": 165,
+      "sha256": "2723917b9b99cb80ba797801baca05aeb235c7fd5ca97e5c025cecca368ebd56"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\proof\\rock-pack\\rock-pack-receipt.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/rock-pack-receipt.json",
+      "bytes": 16437,
+      "sha256": "3221340c9ca3be1261d1263482979b97e9c13fea3b52f6d95e50ee8f82e4c2cf"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\proof\\rock-pack\\launcher-completed.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/rock-pack-completed.json",
+      "bytes": 165,
+      "sha256": "2723917b9b99cb80ba797801baca05aeb235c7fd5ca97e5c025cecca368ebd56"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\proof\\rock-pack-reload\\rock-pack-reload-receipt.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/rock-pack-reload-receipt.json",
+      "bytes": 16590,
+      "sha256": "476aa3cdac2b86fd03d48d61c8397c7a6e62bfdd30ca1cf3c606d68ac742d6d6"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\proof\\rock-pack-reload\\launcher-completed.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/rock-pack-reload-completed.json",
+      "bytes": 165,
+      "sha256": "2723917b9b99cb80ba797801baca05aeb235c7fd5ca97e5c025cecca368ebd56"
+    },
+    {
+      "source": "D:\\yacs\\work\\pcg365\\9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53\\local-rock-library01\\proof\\rock-pack\\rock-pack-inventory.json",
+      "repository": "docs/assets/pcg365-local-rock-pack-20261012/rock-pack-inventory.json",
+      "bytes": 13472,
+      "sha256": "b06d21248d37fe0fa48c56f9e7a300ad414c871865e465d36bb5353db5f1ea9a"
+    }
+  ],
+  "owner_feedback": {
+    "quote": "produkuj lokalnie, rozdzielaj subagentów na prac rownoległą, skały są super!",
+    "appearance": "POSITIVE_FEEDBACK_FOR_PRIOR_BASE_ROCK_RENDERS",
+    "whole_M3_acceptance": false,
+    "contact_gate_waived": false
+  },
+  "earlier_rejected_attempt": {
+    "host_receipt": "first-rejected-host.json",
+    "reason": "Prepared FBX object transform was not identity; fail20 retained. Corrected source WORLD bake records actual FBX matrix and enforces pinned bounds/triangles, no hidden correction."
+  },
+  "qualified_assets": [],
+  "placement": false,
+  "full_qualification": false,
+  "terrain_contact": "NOT_RUN_FOR_SIX_VARIANTS",
+  "new_gpu_render": "NOT_RUN_FOR_SIX_VARIANTS",
+  "native_build": "NOT_RUN_PREBUILT_DEPENDENCY",
+  "performance_pass": false,
+  "known_limits": "Inherited source undercuts; numerical/contact proof does not transfer between ART scales; historical cap diagnostics and full-footprint V1 rejections remain unchanged."
+}

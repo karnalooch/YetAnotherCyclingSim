@@ -1,0 +1,19 @@
+{
+  "action": "inspect",
+  "code_sha": "9e6a89cd4f4f96df67009fd64ff4fe190c7f8f53",
+  "issue": 365,
+  "mesh_count": 2,
+  "native_build": "NOT_RUN_PREBUILT_DEPENDENCY",
+  "owner_visual_status": "PENDING_FINAL_M3",
+  "performance_pass": false,
+  "placement": false,
+  "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+  "qualified_assets": [],
+  "schema_version": 1,
+  "skill_paths": [
+    "/PCGToolset/Skills/Skill_PCGGraphGeneration.Skill_PCGGraphGeneration_C"
+  ],
+  "skill_sha256": "fc1113b6d72c9a629af6bda19293104968d991671d0b9d32e922fcdaa8aa7d50",
+  "status": "NATIVE_INSPECTION_COMPLETED",
+  "terrain_contact": "NOT_RUN"
+}

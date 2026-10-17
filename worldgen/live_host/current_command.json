@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "target_issue": 476,
+  "recipe": "rock_contact_scatter",
+  "intent": "preview",
+  "parameters": {
+    "operation": "plant",
+    "manifest_sha256": "f3acaeb8a89a3600a26b7d1d6738266b4cb72855b68eab550f758039903ca5eb"
+  }
+}

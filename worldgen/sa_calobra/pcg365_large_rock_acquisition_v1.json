@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "provider": {
+    "name": "Poly Haven",
+    "api_base": "https://api.polyhaven.com",
+    "asset_license": "CC0-1.0",
+    "license_url": "https://polyhaven.com/license",
+    "api_terms_url": "https://raw.githubusercontent.com/Poly-Haven/Public-API/master/ToS.md",
+    "api_credit": "Source assets are downloaded from Poly Haven via its public API.",
+    "user_agent": "YACS-PCG365RockQualification/1.0 (+https://github.com/karnalooch/YetAnotherCyclingSim)"
+  },
+  "defaults": {
+    "resolution": "2k",
+    "model_format": "fbx"
+  },
+  "assets": [
+    {
+      "id": "namaqualand_boulder_02",
+      "name": "Namaqualand Boulder 02",
+      "kind": "model",
+      "role": "M3 issue365 isolated decorative geometry/contact qualification",
+      "stage": "M3",
+      "enabled": true,
+      "maps": [],
+      "web_url": "https://polyhaven.com/a/namaqualand_boulder_02",
+      "notes": "Owner explicitly requests these two larger scans and autonomous rock production, 2026-10-12. Geometry-only bounded acquisition/qualification; select individual LOD geometry. Terrain unchanged, no regional geology or production scatter admission. Material Forge supplies separate artistic surface."
+    },
+    {
+      "id": "namaqualand_boulder_06",
+      "name": "Namaqualand Boulder 06",
+      "kind": "model",
+      "role": "M3 issue365 isolated decorative geometry/contact qualification",
+      "stage": "M3",
+      "enabled": true,
+      "maps": [],
+      "web_url": "https://polyhaven.com/a/namaqualand_boulder_06",
+      "notes": "Owner explicitly requests these two larger scans and autonomous rock production, 2026-10-12. Geometry-only bounded acquisition/qualification; select individual LOD geometry. Terrain unchanged, no regional geology or production scatter admission. Material Forge supplies separate artistic surface."
+    }
+  ]
+}

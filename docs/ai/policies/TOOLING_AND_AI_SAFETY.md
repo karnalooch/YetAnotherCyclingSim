@@ -2,6 +2,10 @@
 
 > Scoped policy migrated from original root AGENTS.md (blob `c4c75a9e92088195a7aad1c72c849ac9482d1462`). Read only for applicable work. Current domain SSOT and owner decisions take precedence over superseded chronology.
 
+## World-authoring override — 2026-10-16
+
+For new terrain/road/world generation, the owner's [Houdini/SideFX workflow](../../../docs/tooling/sidefx/README.md) takes precedence over the general tool-selection order below: original SideFX projects/HDAs first, official SideFX solution for any demonstrated gap, then stop if unresolved. Do not substitute Epic-native, PCGEx, Blender or a custom generator without a new scoped owner decision. General non-world tooling research and all source/proof boundaries remain applicable.
+
 ## External tooling architecture policy
 
 YACS uses an **Embark-first tooling review** because proven production tooling

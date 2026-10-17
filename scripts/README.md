@@ -9,6 +9,7 @@ Use the project Python environment (`.venv\Scripts\python.exe`) and PowerShell
 
 | Task | Entry point | Effect |
 |---|---|---|
+| Build the PCG365 rock preview through official PCGEx MCP | `python scripts/worldgen/build_pcg365_world.py --mode build-pcgex --save-preview-map --output <new-directory>` | [One entry point](../docs/tooling/PCG365_ONE_COMMAND.md); native nodes own placement, saved output is a separate map, other whole-area lanes remain open |
 | Check the saved project before opening | `python scripts/manage_local_workspace.py doctor` | Checks paths, materialized assets and checkpoint identity; does not open UE |
 | Open the accepted scene | `python scripts/manage_local_workspace.py open` or `D:\yacs\Open-YACS.cmd` | Opens the configured map; refuses a second editor |
 | Start the GitHub runner | `pwsh -File scripts/runner/Start-YacsRunner.ps1` | Reuses an existing runner identity or starts one interactive listener |
@@ -30,6 +31,9 @@ the appropriate data/material consumer. Opening a map is not rebuilding roads.
 | `assets/restore_workspace_data.py` | Checks or restores the hash-verified external-data snapshot; preview by default, `--apply` restores missing files without overwriting existing files |
 | `assets/Restore-YacsSaCalobraWorldData.ps1` | Restores the separately pinned CNIG source bundle; CI must pass its destination explicitly |
 | `ue/sa_calobra_saved_material_consumer.py` | In separate isolated UE processes, save the verified current whole-map material to a generated review map, freshly reload without reapplying, then capture hash-bound rendered evidence for the existing performance consumer; owner acceptance remains pending |
+| `assets/sa_calobra_world_graph_candidates.py` | Produce deterministic XY probes from authenticated #365 masks; no mesh/contact or placement admission |
+| `assets/sa_calobra_pcg_qualification.py` | Structurally check mesh/material/terrain/contact evidence bindings; always keeps proof authenticity unverified and placement disabled |
+| `ue/Invoke-YacsPcgNativeProbe.ps1` | Stage authenticated retained PCGEx and exact-head scripts in an isolated content-only project; inspect APIs/mesh, then optionally create and freshly reload a synthetic mechanical graph; local diagnostics only, no canonical scene mutation or native build admission |
 
 Read the workspace guide's restore procedure before running a checkpoint tool.
 One-off migration scripts and old experiments belong in the local

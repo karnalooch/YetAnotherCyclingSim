@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "id": "namaqualand_boulder_02",
+      "path": "D:\\yacs\\data\\assets\\pcg365-large-rocks01\\namaqualand_boulder_02\\namaqualand_boulder_02_2k.fbx",
+      "sha256": "ee43e9e5b274337c62b83b921ed472f5456f3441c393ec144c658fdd47cc430a",
+      "bytes": 3095484
+    },
+    {
+      "id": "namaqualand_boulder_06",
+      "path": "D:\\yacs\\data\\assets\\pcg365-large-rocks01\\namaqualand_boulder_06\\namaqualand_boulder_06_2k.fbx",
+      "sha256": "697f69814e3c2f33873dd4aa424505ee82ec6e4c940a6c1540afb0a4ef3897c7",
+      "bytes": 3421948
+    }
+  ]
+}

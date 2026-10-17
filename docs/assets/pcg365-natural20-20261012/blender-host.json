@@ -1,0 +1,16 @@
+{
+  "actual_blender_version": "4.5.9",
+  "blend_input": null,
+  "blend_sha256": null,
+  "blender_executable": "tools/blender-4.5.9-windows-x64/blender.exe",
+  "duration_seconds": 127.984,
+  "expected_blender_version": "4.5.9",
+  "git_head": "59b55497c71c6c74860aca64ff944fe30e9095d6",
+  "log": "work/pcg365/natural-rock-collection03/host.log",
+  "process_exit_code": 0,
+  "python_exit_code": 20,
+  "schema_version": 1,
+  "script": "scripts/blender/build_pcg365_natural_rock_collection.py",
+  "script_sha256": "87ad5772bb3e95e202e970bf1fa8b8c74d481453636762bc3f5ea4819c135546",
+  "status": "PASS"
+}

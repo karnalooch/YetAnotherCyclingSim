@@ -1,0 +1,18 @@
+{
+  "asset_compilation_loading_barrier_completed": true,
+  "assets_saved": false,
+  "captures": [],
+  "code_sha": "8fef0e99041df25d52e3aa3ad32355b76132aa1f",
+  "error": "Traceback (most recent call last):\n  File \"D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\scripts\\ue\\sa_calobra_pcg_rock_capture.py\", line 123, in begin\n    require(\n  File \"D:\\yacs\\work\\pcg365\\8fef0e99041df25d52e3aa3ad32355b76132aa1f\\large-baseline01\\scripts\\ue\\sa_calobra_pcg_terrain_contact.py\", line 14, in require\n    raise RuntimeError(message)\nRuntimeError: Declared cap has no complete diagnostic fit for GPU review\n",
+  "full_qualification": false,
+  "omitted_mesh_ids": [],
+  "performance_pass": false,
+  "placement": false,
+  "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+  "qualified_assets": [],
+  "render_source_caps_only": true,
+  "scene_saved": false,
+  "schema_version": 1,
+  "status": "FAILED",
+  "visual_acceptance": "NOT_VERIFIED"
+}

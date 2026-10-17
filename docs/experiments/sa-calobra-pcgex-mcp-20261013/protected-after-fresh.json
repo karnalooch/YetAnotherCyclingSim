@@ -1,0 +1,32 @@
+{
+  "status": "LATEST_VERIFIED_WORLD_PREFLIGHT_PASS",
+  "profile_id": "sa_calobra_road_v0_3_1",
+  "version": "0.3.1",
+  "source_issue": 364,
+  "evidence_status": "SAVED_CHECKPOINT_REOPENED_RENDERED",
+  "project_root": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01",
+  "project_file": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01\\YetAnotherCyclingSim.uproject",
+  "map_package": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface",
+  "map_file": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01\\Content\\Generated\\YACS\\LiveCheckpoints\\R2a00f7ebba40\\L_RoadSurface.umap",
+  "map_sha256": "cf806999d73e6762ba6d91fab8b4e29d6c475a828ad9afcd525462054602ed1a",
+  "source_map_file": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01\\Content\\Generated\\YACS\\RoadAsphaltConsumer\\L_SaCalobraRoadAsphaltReview.umap",
+  "validated_packages": 5,
+  "native_expected_actors": 559,
+  "native_expected_bindings": 186,
+  "checkpoint_receipt_file": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01\\Content\\Generated\\YACS\\LiveCheckpoints\\R2a00f7ebba40\\checkpoint-receipt.json",
+  "camera_cm": [
+    56912.43746055451,
+    53090.5078449409,
+    46766.459277036185
+  ],
+  "target_cm": [
+    58088.73631673153,
+    52542.60698992016,
+    46508.19271952782
+  ],
+  "terrain_modified": false,
+  "map_saved": false,
+  "editor_started": false,
+  "fallback_used": false,
+  "owner_visual_status": "PENDING_FINAL_M3"
+}

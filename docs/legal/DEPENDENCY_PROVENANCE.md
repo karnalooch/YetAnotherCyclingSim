@@ -189,7 +189,7 @@ remeasured from the horizontal-only LAZ CRS headers.
 | Strava Global Heatmap | **reference; copying and derived-data inclusion blocked** | live Global Heatmap inspected locally on 2026-10-01; no tile, screenshot, sampled intensity, ranked geometry or derivative artifact is committed | Strava Terms of Service and API Policy reserve platform/data rights, prohibit automated collection and restrict copying, derivative works and distribution | local planning reference only; it must not enter YACS source data, deterministic builds, route authority or acceptance evidence without a separate approved data agreement | official terms reviewed 2026-10-01: `https://www.strava.com/legal/terms`, `https://www.strava.com/legal/api_policy` |
 | db-lyon ue-mcp | **approved / pinned development dependency** | `db-lyon/ue-mcp` tag `v1.3.9` @ `d79a34bb6e7a5883457efe8f33c9f85b1ba3e136`; npm dependency `ue-mcp@1.3.9` | upstream root `LICENSE`: MIT License; package metadata also declares MIT | local development-time Unreal orchestration only; dependency graph committed in `tools/ue-mcp/package-lock.json`; setup uses `npm ci --ignore-scripts`; deployed bridge remains gitignored; write access stays behind YACS guards/flows/proof; YACS overrides transitive `fast-uri` from upstream-resolved `3.1.6` to patched `3.1.8`; 3.1.7 fixed the prior HIGH advisories but remains affected by GHSA-hrr3-gc8f-f4qj | tag, exact commit, package metadata and root license reviewed 2026-09-30; security override reviewed against GHSA-58mr-gqgx-xq4g / GHSA-qw65-cvwx-89v3; updated for GHSA-hrr3-gc8f-f4qj on 2026-10-03 |
 | fast-uri transitive security override | **approved / pinned development dependency** | npm `fast-uri@3.1.8`, upstream `ead3ab7bb134c989e972c8174632d0670023f269`; exact npm integrity recorded in lockfile | upstream LICENSE and npm metadata: BSD-3-Clause | existing ue-mcp development graph only; no vendored source or shipping dependency added; upstream package retains its license | publisher advisory GHSA-hrr3-gc8f-f4qj, exact-revision license and npm metadata reviewed 2026-10-03 |
-| PCGEx / PCG Extended Toolkit | **approved pinned authoring dependency** | `PCGEx/PCGExtendedToolkit` stable branch `5.8` @ `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66`; descriptor VersionName `0.79`, EngineVersion `5.8.0` | upstream root `LICENSE`: MIT License, copyright 2025 Timothé Lapetite; permits commercial use, modification and redistribution with the license notice retained | **authoring-time only** implementation of the YACS Passo Giau procedural path/corridor pipeline: canonical SP638 presentation input -> resample/smooth/offset/sampling/topology; it is not route/physics authority and is not claimed to be an Embark dependency. Source is fetched exact-SHA on the authoring runner; shipping-runtime dependency is forbidden until separately approved | stable 5.8 revision, root license and plugin descriptor reviewed 2026-09-30; bounded YACS runtime/editor proof pending |
+| PCGEx / PCG Extended Toolkit | **approved pinned authoring dependency** | `PCGEx/PCGExtendedToolkit` stable branch `5.8` @ `39a8f1bdc65b2c4613a1e87b71d93b4576db0a66`; descriptor VersionName `0.79`, EngineVersion `5.8.0` | upstream root `LICENSE`: MIT License, copyright 2025 Timothé Lapetite; permits commercial use, modification and redistribution with the license notice retained | **authoring-time only** Passo Giau path/corridor tooling and owner-resumed #365 Sa Calobra world-graph preparation; canonical geographic/physics truth remains external. It is not claimed to be an Embark dependency. Source is fetched exact-SHA or authenticated from the retained reviewed checkout; shipping-runtime dependency is forbidden until separately approved | stable 5.8 revision/license/descriptor reviewed 2026-09-30 and reverified for #365 on 2026-10-12; isolated retained-prebuilt module load observed, not an exact-head native build or world-placement PASS |
 | SideFX Houdini Indie + Houdini Engine Indie / Unreal plug-in | **reference / optional escalation** | Houdini Indie current product line | official SideFX Indie and Houdini Engine licensing pages; commercial use is subject to SideFX Indie eligibility/terms | retained as production-pipeline evidence and a possible later DCC escalation only; **not required by #287/#288** while the PCGEx-first bounded proof is active | licensing/product capability reviewed 2026-09-30; no YACS acquisition required for the current path |
 | SideFX Labs / Gaea2Houdini | **reference / optional escalation** | `sideeffects/SideFXLabs` Development @ `56651134bb99f67bdc6e2423fa8a622a06d3c766` | upstream `LICENSE.md`: permissive BSD-style terms; Gaea2Houdini additionally requires an eligible Gaea installation | architecture/reference evidence only for the current PCGEx-first proof; **not required by #287/#288** | exact upstream revision/license reviewed 2026-09-30 |
 | QuadSpinner Gaea Professional | **reference / optional escalation** | Gaea 2.x production line | official QuadSpinner pricing/download/EULA; edition/revenue terms apply | optional future terrain-shaping escalation only; **not required by #287/#288** and no Community/non-commercial output may enter YACS production | product/license boundary reviewed 2026-09-30 |
@@ -436,4 +436,47 @@ The machine-readable counterpart is
 `worldgen/materials/material_forge/upstreams.json`. If any external source
 revision changes, the pin, licence review and deterministic material proof must
 be repeated before the new revision is admitted.
+
+### PCG365 independent rock geometry qualification — 2026-10-12
+
+The owner requested qualification of different meshes and terrain-contact limits
+for M3 issue #365. Sources [Rock 07](https://polyhaven.com/a/rock_07) and
+[Rock 09](https://polyhaven.com/a/rock_09) are **approved for bounded source
+acquisition and isolated qualification only**, not regional production placement.
+Both provider pages link [CC0-1.0](https://polyhaven.com/license); redistribution
+is allowed and attribution is optional for acquired assets. The separate
+[API terms](https://raw.githubusercontent.com/Poly-Haven/Public-API/master/ToS.md)
+were reviewed: the existing downloader identifies YACS with its User-Agent and
+prints Poly Haven credit. No upstream code or website preview render is copied.
+
+The explicit acquisition manifest is
+`worldgen/sa_calobra/pcg365_rock_acquisition_v1.json`: two geometry-only 2K FBX
+sources, no textures, no bulk library. Source bytes stay in ignored external
+storage and receive SHA256/size receipts before native import. Material Forge
+provides a separate artistic appearance trial; it does not certify geology.
+Preserve source units initially. Neither cliff production nor road/terrain repair
+is an admitted use. Acquisition/import/validation and scoped contact eligibility
+must be recorded separately; this entry does not promote lifecycle to validated.
+
+### PCG365 larger scanned rocks — 2026-10-12
+
+The owner explicitly requested autonomous production using the two discovered
+larger scans: [Namaqualand Boulder 02](https://polyhaven.com/a/namaqualand_boulder_02)
+and [Namaqualand Boulder 06](https://polyhaven.com/a/namaqualand_boulder_06).
+Both official pages identify CC0-1.0 under the existing Poly Haven asset licence
+and separate API terms above. They are approved for bounded geometry-only
+acquisition and isolated M3 #365 source/contact/material qualification through
+`worldgen/sa_calobra/pcg365_large_rock_acquisition_v1.json` and the existing
+downloader. Select named geometry/LOD explicitly; do not merge a multi-rock set.
+Source files remain outside Git with size/MD5/SHA256 witnesses. Derived pose or
+underside preparation preserves originals and records transforms/geometry deltas.
+Their South African source does not certify Sa Calobra geology; Material Forge
+is a separate artistic appearance consumer. Terrain and road geometry remain
+unchanged. No production placement, physical stability or regional admission
+follows from acquisition or provider previews.
+
+
+### Houdini Engine native terrain handoff — 2026-10-16
+
+Owner-authorized terrain-only Unreal import. Local official SideFX Houdini 22.0.466 distribution, Unreal 5.8 plugin 3.0, build ID 55116800. Source: https://www.sidefx.com/docs/houdini/unreal/install_houdiniengine.html . LICENSE.md inspected: Side Effects Software copyright and permissive two-condition redistribution licence retained with plugin. Local editor dependency; no redistribution of Houdini runtime or licence files. Native imported terrain derives from the existing documented Sa Calobra DTM and verified gentle Pegasus variant. No production or performance admission.
 

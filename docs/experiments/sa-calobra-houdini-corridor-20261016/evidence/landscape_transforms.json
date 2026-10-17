@@ -1,0 +1,22 @@
+[
+  {
+    "name": "SaCalobra_Detail_0_0",
+    "transform": "<Struct 'Transform' (0x0000014F0DDE3F60) {rotation: {x: -0.000000, y: 0.000000, z: -0.707107, w: 0.707107}, translation: {x: -190025.000000, y: 73975.000000, z: 0.000000}, scale3d: {x: 50.000000, y: 50.000000, z: 225.144531}}>"
+  },
+  {
+    "name": "SaCalobra_Detail_1_0",
+    "transform": "<Struct 'Transform' (0x0000014F0DDE3F60) {rotation: {x: -0.000000, y: 0.000000, z: -0.707107, w: 0.707107}, translation: {x: 475.000000, y: 73975.000000, z: 0.000000}, scale3d: {x: 50.000000, y: 50.000000, z: 293.605530}}>"
+  },
+  {
+    "name": "SaCalobra_Detail_0_1",
+    "transform": "<Struct 'Transform' (0x0000014F0DDE3F60) {rotation: {x: -0.000000, y: 0.000000, z: -0.707107, w: 0.707107}, translation: {x: -190025.000000, y: 327975.000000, z: 0.000000}, scale3d: {x: 50.000000, y: 50.000000, z: 552.718750}}>"
+  },
+  {
+    "name": "SaCalobra_Detail_1_1",
+    "transform": "<Struct 'Transform' (0x0000014F0DDE3F60) {rotation: {x: -0.000000, y: 0.000000, z: -0.707107, w: 0.707107}, translation: {x: 475.000000, y: 327975.000000, z: 0.000000}, scale3d: {x: 50.000000, y: 50.000000, z: 353.972656}}>"
+  },
+  {
+    "name": "SaCalobra_Context_Valid",
+    "transform": "<Struct 'Transform' (0x0000014F0DDE3F60) {rotation: {x: -0.000000, y: 0.000000, z: -0.707107, w: 0.707107}, translation: {x: -393554.687500, y: 393945.312500, z: 0.000000}, scale3d: {x: 390.625000, y: 390.625000, z: 561.248474}}>"
+  }
+]

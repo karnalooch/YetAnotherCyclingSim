@@ -1,5 +1,7 @@
 # YACS World Authoring Library
 
+**Current executor decision — 2026-10-16:** [Houdini/SideFX workflow](tooling/sidefx/README.md) is the active authoring path. Use the complete source concordance and recipe records; Houdini is the primary generator, Unreal/PCG are consumers or retained integration. The legacy Scene Composer/PCG examples below describe earlier implementation, not a competing producer selection. Current output is terrain only.
+
 > **Role after the 2026-09-29 documentation reset:** this document is the reusable **implementation library/catalog** for world authoring. The authoritative methodology for how YACS builds terrain, roads, earthworks, materials, PCG and world streaming is [`WORLD_BUILDING_BIBLE.md`](WORLD_BUILDING_BIBLE.md), including its **tools-first authoring policy**. This library implements bounded YACS integration; it must not become a parallel custom world-generation framework. Legacy Stage 3G/R4.x labels in this file are historical traceability, not new roadmap hierarchy.
 
 
@@ -62,13 +64,13 @@ content or an approved mature authoring tool.
 
 Before adding a new generator/backend here:
 
-1. follow the Embark-first tools audit in `WORLD_BUILDING_BIBLE.md`;
-2. use the closest public Embark pattern to shape boundaries and data flow, without treating it as an automatic dependency;
-3. prefer an existing qualified Epic-native UE/PCG/Landscape path when it satisfies the contract;
-4. evaluate proven OSS/DCC tooling before implementing a new backend;
-5. use this library to translate YACS semantic intent, provenance and deterministic configuration into the chosen backend;
-6. add custom layout/generation logic only for a demonstrated YACS-specific gap;
-7. preserve the ability to replace a backend without changing canonical route, physics or source-data authority.
+1. follow the current Houdini/SideFX workflow in the World Building Bible;
+2. locate the exact original tutorial, HIP/HDA and time-range evidence;
+3. use Houdini as the executor and record input/parameter/version adaptations;
+4. research official SideFX solutions for missing stages and stop if unresolved;
+5. use this library for semantic intent, provenance, deterministic configuration and consumer integration;
+6. do not introduce replacement terrain/road/world algorithms;
+7. preserve route, physics and source-data authority independently of the executor.
 
 In particular:
 
@@ -90,6 +92,19 @@ In particular:
   behavior.
 
 ## 2. Existing systems reused
+
+For the current Sa Calobra #365 continuation, use the
+[detailed plan](tooling/SA_CALOBRA_WORLD_GRAPH_PLAN.md) and
+[API/tutorial audit](tooling/SA_CALOBRA_WORLD_GRAPH_RESEARCH.md).
+They are planning documents under the existing library/Bible authority:
+asset and ground-contact qualification precede native generation; stable
+identity/local invalidation and explicit saved/fresh-process proof follow.
+The CPU adapter alone does not prove these capabilities. The owner resumed #365
+implementation and authorized autonomous rock selection/preparation and Material
+Forge iteration on 2026-10-12. Isolated native point regeneration/save/readback
+and retained-PCGEx load now have bounded evidence; canonical plugin installation,
+exact-head native build and regional production graph admission remain separate.
+Rock diagnostics never authorize terrain mutation or downstream world stages.
 
 This is not a second Stage 3G asset pipeline.
 

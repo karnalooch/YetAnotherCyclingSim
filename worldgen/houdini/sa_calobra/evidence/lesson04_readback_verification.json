@@ -1,0 +1,169 @@
+{
+  "verified_hip": "SaCalobra_Pegasus_Lesson04.hiplc",
+  "status": "PASS",
+  "hda_resolution": {
+    "PE_heightfield_material": "PE_heightfield_material::1.0",
+    "PE_heightfield_tint": "PE_heightfield_tint::1.0"
+  },
+  "working_landscape": {
+    "resolution": [
+      7154,
+      9829,
+      1
+    ],
+    "spacing_m": 0.5,
+    "height_range_m": [
+      -0.7467375993728638,
+      1413.280029296875
+    ],
+    "volume_layers": [
+      "height",
+      "mask",
+      "Alpha",
+      "r",
+      "g",
+      "b",
+      "roughness",
+      "ramp"
+    ],
+    "r_range": [
+      0.0,
+      0.764706015586853
+    ],
+    "g_range": [
+      0.0,
+      0.764706015586853
+    ],
+    "b_range": [
+      0.0,
+      0.764706015586853
+    ]
+  },
+  "context_landscape": {
+    "resolution": [
+      2048,
+      2048,
+      1
+    ],
+    "size_m": [
+      8000.0,
+      8000.0
+    ],
+    "volume_layers": [
+      "height",
+      "mask",
+      "Alpha",
+      "r",
+      "g",
+      "b",
+      "roughness",
+      "ramp"
+    ]
+  },
+  "base_b_integrity": {
+    "composition_node": "COMPOSE_SOURCE_AND_MANUAL",
+    "operation": "add",
+    "reversibility_delta_when_detail_disabled_m": 0.0
+  },
+  "tint_invariance": {
+    "tint_height_delta_m": 0.0
+  },
+  "cell_by_cell_signed_equality": {
+    "formula": "Layer3[i] == MaterialHeight[i] - BaseB[i]",
+    "max_signed_error_m": 0.0,
+    "mean_signed_error_m": 0.0,
+    "status": "PASS"
+  },
+  "tint_control_validation": {
+    "height_node_maskbyslope": 0,
+    "occlusion_node_maskbyslope": 0,
+    "heightramp_type": "Linear (0.0 to 1.0 continuous gradient)",
+    "sloperamp_type": "Linear (0.0 to 1.0 continuous gradient)",
+    "status": "PASS"
+  },
+  "cliff_smoothing_validation": {
+    "working_smooth_radius_voxels": 6.0,
+    "working_physical_radius_m": 3.0,
+    "context_smooth_radius_voxels": 0.768,
+    "context_physical_radius_m": 3.0,
+    "status": "PASS"
+  },
+  "lesson3_checkpoint_preservation": {
+    "lesson3_layer3_file": "D:/yacs/project/worldgen/houdini/sa_calobra/Pegasus/Landscape/Landscape Heightfield Layers/Pegasus_Landscape_Layer_3_Procedural_Detail.bgeo.sc",
+    "lesson3_layer3_bytes": 598229880,
+    "lesson4_procedural_delta_cache": "$HIP/cache/lesson04_procedural_delta.bgeo.sc",
+    "status": "PRESERVED_INTACT"
+  },
+  "procedural_detail_measurements": {
+    "max_absolute_displacement_m": 0.5093994140625,
+    "mean_displacement_over_full_landscape_m": 0.037332188338041306,
+    "cliff_zone_mean_displacement_m": 0.0704895630478859,
+    "cliff_zone_p95_displacement_m": 0.1865081787109375,
+    "modified_cells_count": 37993636
+  },
+  "textures_verified": [
+    {
+      "node": "WORKING_GRASS_MATERIAL",
+      "parameter": "filename1",
+      "raw_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/SaCalobra_Grass_BaseColor.png",
+      "expanded_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/SaCalobra_Grass_BaseColor.png",
+      "exists": true
+    },
+    {
+      "node": "WORKING_GRASS_MATERIAL",
+      "parameter": "filename2",
+      "raw_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/SaCalobra_Grass_Roughness.png",
+      "expanded_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/SaCalobra_Grass_Roughness.png",
+      "exists": true
+    },
+    {
+      "node": "WORKING_GRASS_MATERIAL",
+      "parameter": "filename3",
+      "raw_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/tlonbisya_4K_Displacement.exr",
+      "expanded_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/tlonbisya_4K_Displacement.exr",
+      "exists": true
+    },
+    {
+      "node": "WORKING_SAND_MATERIAL",
+      "parameter": "filename1",
+      "raw_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/coast_sand_01_diff_2k.jpg",
+      "expanded_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/coast_sand_01_diff_2k.jpg",
+      "exists": true
+    },
+    {
+      "node": "WORKING_SAND_MATERIAL",
+      "parameter": "filename2",
+      "raw_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/coast_sand_01_rough_2k.jpg",
+      "expanded_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/coast_sand_01_rough_2k.jpg",
+      "exists": true
+    },
+    {
+      "node": "WORKING_SAND_MATERIAL",
+      "parameter": "filename3",
+      "raw_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/coast_sand_01_disp_2k.png",
+      "expanded_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/coast_sand_01_disp_2k.png",
+      "exists": true
+    },
+    {
+      "node": "WORKING_CLIFF_MATERIAL",
+      "parameter": "filename1",
+      "raw_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/SaCalobra_PaleLimestone_BaseColor.png",
+      "expanded_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/SaCalobra_PaleLimestone_BaseColor.png",
+      "exists": true
+    },
+    {
+      "node": "WORKING_CLIFF_MATERIAL",
+      "parameter": "filename2",
+      "raw_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/SaCalobra_PaleLimestone_Roughness.png",
+      "expanded_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/SaCalobra_PaleLimestone_Roughness.png",
+      "exists": true
+    },
+    {
+      "node": "WORKING_CLIFF_MATERIAL",
+      "parameter": "filename3",
+      "raw_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/wepoeaw_4K_Displacement.exr",
+      "expanded_path": "D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures/wepoeaw_4K_Displacement.exr",
+      "exists": true
+    }
+  ]
+}

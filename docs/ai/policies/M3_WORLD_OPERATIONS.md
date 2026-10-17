@@ -2,6 +2,76 @@
 
 > Scoped policy migrated from original root AGENTS.md (blob `c4c75a9e92088195a7aad1c72c849ac9482d1462`). Read only for applicable work. Current domain SSOT and owner decisions take precedence over superseded chronology.
 
+### Houdini-first rebuild and SideFX source fidelity — 2026-10-16
+
+The owner explicitly selected Houdini as the primary terrain/road/world authoring executor and requested traceable use of the original SideFX tutorials, transcripts and supplied HIP/HDA materials. Follow the [Houdini/SideFX workflow](../../../docs/tooling/sidefx/README.md) and its complete source concordance. Do not substitute a custom generator; research an official SideFX solution for a missing stage, then stop the dependent work if the gap remains unresolved.
+
+The current authorized output is a separate fresh Landscape for all Ma-2141 with 500 m on either side and surrounding background, without a road or other world assets. The owner's latest clarification is original Sa Calobra terrain using Pegasus methods. Preserve real relief, elevations and metric route geometry; adopt documented nodes/masks/layers/cache methods, not fictional-island amplitudes. The earlier deformed Pegasus trial is rejected as real Sa Calobra and must not be the default terrain. Record every adaptation and source-relative height delta; unresolved fidelity constraints do not authorize arbitrary noise/erosion parameters. The latest owner clarification allows delicate deformation in a separate adjustable and disableable Houdini layer, preserving the source baseline and macro relief. Any proposed numeric limit must be labelled as a candidate tuning value and proven against measured output, not attributed to the owner or SideFX.
+
+This supersedes native-UE/PCG/Blender-first generator choices and the freeze only where they would block this independent fresh Houdini candidate. It does not delete or overwrite the active Unreal scene, source datasets or accepted checkpoints, change route/physics truth, admit an experiment into production, or waive native/visual/delivery proof. The 8 km source extent is available context, not a full-detail generation requirement. Visibility-based trimming needs actual evidence. Historical decisions below retain their original bounded meaning; they do not override this later executor decision.
+
+### Later owner live-iteration decision — 2026-10-13
+
+The owner explicitly rejects restarting Unreal and repeating full native CI for
+ordinary recipe iteration. Update the already open Remote Editor in place.
+The existing typed `preview` publication path uses exact-source lightweight CPU
+admission for `rock_contact_scatter` and `rock_asset_audit`, with empty disk asset
+scope, immutable source hashes and native readback in the current session. It
+must not wait for a full native rebuild or stop UE to obtain that proof window.
+Full protected delivery/merge proof remains separate; a live preview never
+establishes saved/fresh acceptance or production admission. Authoring, receiver
+upgrades and native C++ changes are outside this narrow live-preview path.
+This later decision supersedes earlier full-CI-before-every-recipe wording and
+restart-window interpretation below. Necessary-restart authorization persists,
+but it is not a request to restart during normal live iteration.
+
+### Current Remote in-place upgrade and restart restraint — 2026-10-13
+
+The owner explicitly requires upgrading the **currently open Remote session** and minimizing Unreal restarts. Inspect current process/session, loaded map, recipe/assets and unsaved scene state before changing anything. Use verified supported live-update mechanisms and batch work. Do not discard unsaved work, switch to an older Landscape, reopen a historical checkpoint or stop the Editor to obtain runner access. Historical accepted checkpoints remain source/rollback evidence, not the default deployment destination. A genuinely necessary restart must be explained beforehand and preserve the current pre-change state under existing ownership/approval rules. No automatic restart loops.
+
+This later instruction supersedes any reading of the startup source-selection policy below that would roll the active owner session back. It does not waive source, geometry, contact or native proof. See the [authorized rock rollout handoff](../../../docs/tooling/SA_CALOBRA_ROCK_ROLLOUT_HANDOFF_20261013.md). P0–P4 are retired from continuation; gray-region review is explicitly deferred to a joint owner session and does not block independent work.
+
+### Owner live-world source selection — 2026-10-13
+
+Always open the latest saved and technically verified Sa Calobra consumer in
+the independent YACS Live Host, not historical diagnostic P0–P4 scenes.
+Currently selected v0.3.1 L_RoadSurface includes the retained accepted
+road/asphalt/shoulder bindings. Refuse startup when its local project, original
+map, package hashes or native material readback differ. Lighting must be
+observed in native UE; a missing light may receive only the source-backed
+transient review fallback from existing Material Forge proofs, with native
+readback and no package save. User visual acceptance remains separate. New world-profile releases retain VP9 and are
+installed only with an idle owned Editor. Previous unsaved user edits in the
+live session must be reviewed before any deliberate one-time restart.
+
+### Owner-approved independent YACS Live Host — 2026-10-12
+
+The owner requests a **persistent, interactive Unreal Editor after Windows
+logon**, independent of the GitHub Actions service-runner job lifetime, with
+Pixel Streaming 2 for local/LAN Chrome review and broad remote authoring
+capabilities. This supersedes job-owned streaming as the preferred future
+delivery *mechanism*, but not the previously protected M3 source/physics/
+Landscape authority or per-change technical proof. See
+[Live Host contract](../../../docs/tooling/YACS_LIVE_HOST.md), issue #476.
+
+- The owner-logon scheduled task uses a limited interactive desktop identity
+  and starts one UE instance outside the GitHub runner job/process group.
+  The existing runner service is not restarted or reconfigured.
+- A GitHub job may stage only reviewed exact-SHA code and typed versioned
+  requests to the same Editor; it must not directly spawn UE for live handoff.
+  Editing scope can grow through tested actor, materials, lighting, PCGEx,
+  assets, animations and Blueprint recipes, not a public unrestricted remote
+  Python/PowerShell endpoint.
+- Native publication needs source/asset contract, rollback/checkpoint and
+  exact actor/asset readback. A preview is not permission to save a frozen
+  source/road/physics/terrain asset.
+- Do not call UE Remote durable PASS until the source, TaskScheduler user/SID,
+  Editor process identity and **new browser video** are proven again *after*
+  the controlling GitHub job exits. Failed startup does not authorize restart
+  loops or takeover of another Editor session.
+- This is a staged **Draft** implementation until the Windows machine has
+  confirmed a real login, Pixel Streaming and independent post-job survival.
+
 ### Live editor collaboration with the owner
 
 Owner checkpoint/workspace decision, 2026-10-04: the canonical home workspace is

@@ -1,0 +1,653 @@
+{
+  "top_hits": {
+    "SaCalobra_Context_Valid": 33,
+    "SaCalobra_Detail_0_0": 11,
+    "SaCalobra_Detail_1_0": 9,
+    "SaCalobra_Detail_0_1": 12,
+    "SaCalobra_Detail_1_1": 15
+  },
+  "detail_checks": [
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -165025.0,
+      "y_cm": 48975.0,
+      "height_cm": 46214.00146484375,
+      "hit": true,
+      "error_cm": -3.148269478304428
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -115025.0,
+      "y_cm": 48975.0,
+      "height_cm": 46201.0009765625,
+      "hit": true,
+      "error_cm": -2.435718592176272
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -65025.0,
+      "y_cm": 48975.0,
+      "height_cm": 32507.003784179688,
+      "hit": true,
+      "error_cm": -1.7868862690593232
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -25025.0,
+      "y_cm": 48975.0,
+      "height_cm": 32707.3486328125,
+      "hit": true,
+      "error_cm": -1.623279433180869
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -165025.0,
+      "y_cm": -1025.0,
+      "height_cm": 39010.00061035156,
+      "hit": true,
+      "error_cm": -1.954034812762984
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -115025.0,
+      "y_cm": -1025.0,
+      "height_cm": 16655.813598632812,
+      "hit": true,
+      "error_cm": -2.163041935149522
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -65025.0,
+      "y_cm": -1025.0,
+      "height_cm": 32523.907470703125,
+      "hit": true,
+      "error_cm": -3.0271119779026776
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -25025.0,
+      "y_cm": -1025.0,
+      "height_cm": 30070.452880859375,
+      "hit": true,
+      "error_cm": -1.3703425109997625
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -165025.0,
+      "y_cm": -51025.0,
+      "height_cm": 16322.029113769531,
+      "hit": true,
+      "error_cm": -2.615305625513429
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -115025.0,
+      "y_cm": -51025.0,
+      "height_cm": 8218.856048583984,
+      "hit": true,
+      "error_cm": -1.0884165694897092
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -65025.0,
+      "y_cm": -51025.0,
+      "height_cm": 23825.274658203125,
+      "hit": true,
+      "error_cm": -2.235655085900362
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -25025.0,
+      "y_cm": -51025.0,
+      "height_cm": 28859.979248046875,
+      "hit": true,
+      "error_cm": -2.859434526981204
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -165025.0,
+      "y_cm": -101025.0,
+      "height_cm": 28923.001098632812,
+      "hit": true,
+      "error_cm": -2.494625753399305
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -115025.0,
+      "y_cm": -101025.0,
+      "height_cm": 16308.444213867188,
+      "hit": true,
+      "error_cm": -1.374927506167296
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -65025.0,
+      "y_cm": -101025.0,
+      "height_cm": 16066.336059570312,
+      "hit": true,
+      "error_cm": -1.9854856602833024
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -25025.0,
+      "y_cm": -101025.0,
+      "height_cm": 27046.710205078125,
+      "hit": true,
+      "error_cm": -3.038224548294238
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -165025.0,
+      "y_cm": -151025.0,
+      "height_cm": 7695.999908447266,
+      "hit": true,
+      "error_cm": -2.4935534261539942
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -115025.0,
+      "y_cm": -151025.0,
+      "height_cm": 23671.00067138672,
+      "hit": true,
+      "error_cm": -2.7885566693075816
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -65025.0,
+      "y_cm": -151025.0,
+      "height_cm": -30.607634782791138,
+      "hit": true,
+      "error_cm": -1.0867415908465041
+    },
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "x_cm": -25025.0,
+      "y_cm": -151025.0,
+      "height_cm": 5952.000045776367,
+      "hit": true,
+      "error_cm": -1.6070678935775504
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 25475.0,
+      "y_cm": 48975.0,
+      "height_cm": 62275.84228515625,
+      "hit": true,
+      "error_cm": -4.043779620405985
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 75475.0,
+      "y_cm": 48975.0,
+      "height_cm": 63425.15869140625,
+      "hit": true,
+      "error_cm": -4.136250599513005
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 125475.0,
+      "y_cm": 48975.0,
+      "height_cm": 51884.002685546875,
+      "hit": true,
+      "error_cm": -3.0496604822328663
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 165475.0,
+      "y_cm": 48975.0,
+      "height_cm": 49542.00134277344,
+      "hit": true,
+      "error_cm": -2.9771535183826927
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 25475.0,
+      "y_cm": -1025.0,
+      "height_cm": 54584.002685546875,
+      "hit": true,
+      "error_cm": -3.2838062375449226
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 75475.0,
+      "y_cm": -1025.0,
+      "height_cm": 53086.99951171875,
+      "hit": true,
+      "error_cm": -4.086672883335268
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 125475.0,
+      "y_cm": -1025.0,
+      "height_cm": 33285.99853515625,
+      "hit": true,
+      "error_cm": -3.1117788601040957
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 165475.0,
+      "y_cm": -1025.0,
+      "height_cm": 9716.000366210938,
+      "hit": true,
+      "error_cm": -1.9399371563558816
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 25475.0,
+      "y_cm": -51025.0,
+      "height_cm": 45541.00036621094,
+      "hit": true,
+      "error_cm": -2.340686796043883
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 75475.0,
+      "y_cm": -51025.0,
+      "height_cm": 40679.00085449219,
+      "hit": true,
+      "error_cm": -3.2247608655961812
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 125475.0,
+      "y_cm": -51025.0,
+      "height_cm": 31700.0,
+      "hit": true,
+      "error_cm": -2.1271440767886816
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 165475.0,
+      "y_cm": -51025.0,
+      "height_cm": 28344.000244140625,
+      "hit": true,
+      "error_cm": -1.992774139609537
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 25475.0,
+      "y_cm": -101025.0,
+      "height_cm": 9297.000122070312,
+      "hit": true,
+      "error_cm": -2.6242263269141404
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 75475.0,
+      "y_cm": -101025.0,
+      "height_cm": 2375.0,
+      "hit": true,
+      "error_cm": -3.37604610258677
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 125475.0,
+      "y_cm": -101025.0,
+      "height_cm": 31513.00048828125,
+      "hit": true,
+      "error_cm": -3.2117541307670763
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 165475.0,
+      "y_cm": -101025.0,
+      "height_cm": 42495.99914550781,
+      "hit": true,
+      "error_cm": -3.5515367953121313
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 25475.0,
+      "y_cm": -151025.0,
+      "height_cm": 16163.00048828125,
+      "hit": true,
+      "error_cm": -3.2841266823561455
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 75475.0,
+      "y_cm": -151025.0,
+      "height_cm": 38414.99938964844,
+      "hit": true,
+      "error_cm": -3.148926377951284
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 125475.0,
+      "y_cm": -151025.0,
+      "height_cm": 28735.99853515625,
+      "hit": true,
+      "error_cm": -1.6711107096234628
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "x_cm": 165475.0,
+      "y_cm": -151025.0,
+      "height_cm": 29542.999267578125,
+      "hit": true,
+      "error_cm": -3.6351410084898816
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -165025.0,
+      "y_cm": 302975.0,
+      "height_cm": 101429.99877929688,
+      "hit": true,
+      "error_cm": -6.283249681437155
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -115025.0,
+      "y_cm": 302975.0,
+      "height_cm": 118838.00048828125,
+      "hit": true,
+      "error_cm": -8.005000423203455
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -65025.0,
+      "y_cm": 302975.0,
+      "height_cm": 128935.99853515625,
+      "hit": true,
+      "error_cm": -5.825826606655028
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -25025.0,
+      "y_cm": 302975.0,
+      "height_cm": 88659.00268554688,
+      "hit": true,
+      "error_cm": -3.8706078453105874
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -165025.0,
+      "y_cm": 252975.0,
+      "height_cm": 85758.00170898438,
+      "hit": true,
+      "error_cm": -4.665858206702978
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -115025.0,
+      "y_cm": 252975.0,
+      "height_cm": 112258.99658203125,
+      "hit": true,
+      "error_cm": -5.349041297857184
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -65025.0,
+      "y_cm": 252975.0,
+      "height_cm": 96495.00122070312,
+      "hit": true,
+      "error_cm": -6.781458367986488
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -25025.0,
+      "y_cm": 252975.0,
+      "height_cm": 104506.005859375,
+      "hit": true,
+      "error_cm": -7.648444973747246
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -165025.0,
+      "y_cm": 202975.0,
+      "height_cm": 70146.9970703125,
+      "hit": true,
+      "error_cm": -3.5676914075156674
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -115025.0,
+      "y_cm": 202975.0,
+      "height_cm": 72976.0009765625,
+      "hit": true,
+      "error_cm": -4.2474373888544505
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -65025.0,
+      "y_cm": 202975.0,
+      "height_cm": 78992.99926757812,
+      "hit": true,
+      "error_cm": -6.041233671508962
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -25025.0,
+      "y_cm": 202975.0,
+      "height_cm": 98048.9990234375,
+      "hit": true,
+      "error_cm": -6.210814768463024
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -165025.0,
+      "y_cm": 152975.0,
+      "height_cm": 52341.998291015625,
+      "hit": true,
+      "error_cm": -6.447887385882495
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -115025.0,
+      "y_cm": 152975.0,
+      "height_cm": 54886.99951171875,
+      "hit": true,
+      "error_cm": -3.8583337912568823
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -65025.0,
+      "y_cm": 152975.0,
+      "height_cm": 71576.0009765625,
+      "hit": true,
+      "error_cm": -7.602903563645668
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -25025.0,
+      "y_cm": 152975.0,
+      "height_cm": 72219.00024414062,
+      "hit": true,
+      "error_cm": -7.218388067936758
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -165025.0,
+      "y_cm": 102975.0,
+      "height_cm": 48632.99865722656,
+      "hit": true,
+      "error_cm": -6.745617818945902
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -115025.0,
+      "y_cm": 102975.0,
+      "height_cm": 60038.00048828125,
+      "hit": true,
+      "error_cm": -3.2942861702176742
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -65025.0,
+      "y_cm": 102975.0,
+      "height_cm": 46548.53210449219,
+      "hit": true,
+      "error_cm": -3.61856631108094
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "x_cm": -25025.0,
+      "y_cm": 102975.0,
+      "height_cm": 53492.889404296875,
+      "hit": true,
+      "error_cm": -4.418551021255553
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 25475.0,
+      "y_cm": 302975.0,
+      "height_cm": 75572.998046875,
+      "hit": true,
+      "error_cm": -2.714001636893954
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 75475.0,
+      "y_cm": 302975.0,
+      "height_cm": 65070.001220703125,
+      "hit": true,
+      "error_cm": -2.7326182871402125
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 125475.0,
+      "y_cm": 302975.0,
+      "height_cm": 63520.0439453125,
+      "hit": true,
+      "error_cm": -4.182764427023358
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 165475.0,
+      "y_cm": 302975.0,
+      "height_cm": 76819.00024414062,
+      "hit": true,
+      "error_cm": -4.2957238677481655
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 25475.0,
+      "y_cm": 252975.0,
+      "height_cm": 73447.99194335938,
+      "hit": true,
+      "error_cm": -4.268506618478568
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 75475.0,
+      "y_cm": 252975.0,
+      "height_cm": 63094.82421875,
+      "hit": true,
+      "error_cm": -4.7590604393262765
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 125475.0,
+      "y_cm": 252975.0,
+      "height_cm": 55736.614990234375,
+      "hit": true,
+      "error_cm": -2.5734488033267553
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 165475.0,
+      "y_cm": 252975.0,
+      "height_cm": 52401.81884765625,
+      "hit": true,
+      "error_cm": -2.8961971266253386
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 25475.0,
+      "y_cm": 202975.0,
+      "height_cm": 72399.90234375,
+      "hit": true,
+      "error_cm": -4.236307725659572
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 75475.0,
+      "y_cm": 202975.0,
+      "height_cm": 57511.97509765625,
+      "hit": true,
+      "error_cm": -2.4961667336174287
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 125475.0,
+      "y_cm": 202975.0,
+      "height_cm": 50439.99938964844,
+      "hit": true,
+      "error_cm": -4.454212764416297
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 165475.0,
+      "y_cm": 202975.0,
+      "height_cm": 53261.99951171875,
+      "hit": true,
+      "error_cm": -2.9689124211436138
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 25475.0,
+      "y_cm": 152975.0,
+      "height_cm": 76395.40405273438,
+      "hit": true,
+      "error_cm": -3.7030874265910825
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 75475.0,
+      "y_cm": 152975.0,
+      "height_cm": 67435.302734375,
+      "hit": true,
+      "error_cm": -3.5889134586323053
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 125475.0,
+      "y_cm": 152975.0,
+      "height_cm": 61232.000732421875,
+      "hit": true,
+      "error_cm": -3.102608855428116
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 165475.0,
+      "y_cm": 152975.0,
+      "height_cm": 52872.998046875,
+      "hit": true,
+      "error_cm": -3.8972297766886186
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 25475.0,
+      "y_cm": 102975.0,
+      "height_cm": 65740.2099609375,
+      "hit": true,
+      "error_cm": -3.6888487436517607
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 75475.0,
+      "y_cm": 102975.0,
+      "height_cm": 73505.65795898438,
+      "hit": true,
+      "error_cm": -3.8555337600409985
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 125475.0,
+      "y_cm": 102975.0,
+      "height_cm": 71184.00268554688,
+      "hit": true,
+      "error_cm": -5.162957195294439
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "x_cm": 165475.0,
+      "y_cm": 102975.0,
+      "height_cm": 53727.001953125,
+      "hit": true,
+      "error_cm": -3.5349926697381306
+    }
+  ],
+  "max_height_error_cm": 8.005000423203455,
+  "time": 1792158627.7066967
+}

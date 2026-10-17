@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "graph_version": "sa-calobra-world-graph-inputs-v1",
+  "seed": 36501,
+  "grid": {
+    "crs": "EPSG:25831",
+    "width": 4033,
+    "height": 4033,
+    "pixel_size_m": 0.5,
+    "transform": [
+      0.5,
+      0.0,
+      483000.0,
+      0.0,
+      -0.5,
+      4409516.5
+    ]
+  },
+  "world_mapping": {
+    "origin_epsg_m": [
+      483000.25,
+      4409516.25
+    ],
+    "world_unit": "centimetres",
+    "axis": "X east;Y south",
+    "uv": "(UE_XY_cm/50+0.5)/4033",
+    "footprint_world_bounds_cm": [
+      -25,
+      -25,
+      201625,
+      201625
+    ]
+  },
+  "sources": {
+    "pcg": {
+      "path": "pcg-masks-v1-2026-10-04/pcg-mask-manifest.json",
+      "sha256": "465788e5d74cf3eccf59bdddc1480fa4d7dac50d6f22255ca69ac3b9f174b5df",
+      "fingerprint": "c9191f8dadf21d1820bebc80dd92e91641f4f4b74eb9d90342d7459611473864"
+    },
+    "transitions": {
+      "path": "mask-transitions-v1a-2026-10-04/transition-manifest.json",
+      "sha256": "2cb28c018f2ed3562762d8c47976307b64397f06417c5c8efc4221bd92182950",
+      "fingerprint": "b18f6fac303a0e83c1f676ab6b0a12ba959bdf0843ff466c15a1d4bde4eb576c"
+    }
+  }
+}

@@ -1,0 +1,191 @@
+[
+  {
+    "run_token": "natural20-contact04",
+    "root": "D:\\yacs\\work\\pcg365\\1a02ac21a7fb1dbc84364843e862b186a2ea0a18\\natural20-contact04",
+    "audit_reader": {
+      "script_path": "C:\\Users\\akarn\\.codex\\visualizations\\2026\\10\\12\\01a13055-5b6c-7b13-b047-1c191b41ac3d\\contact_readback_audit.py",
+      "script_sha256": "b23eb25b7c490746b9bb9a4f22a939741e4be5f357ab9e03ddf5fed9dc123316",
+      "script_git_sha": null,
+      "function_source_root": "D:\\yacs\\work\\pcg365\\1a02ac21a7fb1dbc84364843e862b186a2ea0a18\\natural20-contact04",
+      "function_source_kind": "FROZEN_STAGED_PRODUCER_FILES",
+      "python_version": "3.11.8 (tags/v3.11.8:db85d51, Feb  6 2024, 22:03:32) [MSC v.1937 64 bit (AMD64)]",
+      "python_executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\ThirdParty\\Python3\\Win64\\python.exe",
+      "bytecode_writes": false
+    },
+    "runtime_producer": {
+      "expected_sha": "1a02ac21a7fb1dbc84364843e862b186a2ea0a18",
+      "staged_manifest_sha": "1a02ac21a7fb1dbc84364843e862b186a2ea0a18",
+      "native_binary_provenance": "retained prebuilt; not an exact-head native build",
+      "identity_basis": "STAGED_MANIFEST_AND_EACH_RECEIPT_AND_EXISTING_COMPLETION_MARKER"
+    },
+    "contact_execution_mode": "SINGLE_PROCESS_ALL_BATCHES",
+    "aggregate_readback": {
+      "receipt_present": true,
+      "completion_marker_present": false,
+      "completion_status": "BLOCKED_MISSING_COMPLETION",
+      "receipt_sha256": "65d0779d46a00383b2a5ae2b37e266e6798230d1ebc954b2068cd04ab06af1fa",
+      "receipt_bytes": 2130523
+    },
+    "render_evidence": {
+      "receipt_present": false,
+      "completion_marker_present": false,
+      "png_count": 0
+    },
+    "completion_validation": {
+      "status": "PASS",
+      "actual_process_markers": [
+        {
+          "path": "proof\\collection-contact-all\\launcher-completed.json",
+          "action": "collection-contact-all",
+          "exit_code": 0,
+          "code_sha": "1a02ac21a7fb1dbc84364843e862b186a2ea0a18",
+          "sha256": "c46c0f4a2015d4fcb0d749b93ca79d251ee7964fcec4bd238fc53f7620ed6db6"
+        }
+      ],
+      "missing_process_completion": [],
+      "child_batch_markers_expected": false
+    },
+    "missing_completion_batches": [],
+    "counts": {
+      "batch_receipts": 10,
+      "completed_batches": 10,
+      "raw_grids": 200,
+      "support_rows": 361350,
+      "rejected_rows": 170050,
+      "cases": 100,
+      "completed_cases": 100
+    },
+    "decisions": {
+      "REJECTED": 100
+    },
+    "reasons": {
+      "EXCESSIVE_LOCAL_SLOPE": 94,
+      "EXCESSIVE_EMBEDDING": 100,
+      "INSUFFICIENT_EXPOSED_HEIGHT": 100,
+      "INSUFFICIENT_EXPOSED_RAYS": 99,
+      "ROOT_NOT_CONVERGED": 77,
+      "EMBEDDING_NOT_CONVERGED": 93
+    },
+    "asset_decisions": {
+      "boulder_01_01": {
+        "REJECTED": 5
+      },
+      "boulder_01_02": {
+        "REJECTED": 5
+      },
+      "boulder_01_03": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_02_01": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_02_02": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_03_01": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_03_02": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_03_03": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_04_01": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_04_02": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_04_03": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_05_01": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_05_02": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_05_03": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_06_01": {
+        "REJECTED": 5
+      },
+      "namaqualand_boulder_06_02": {
+        "REJECTED": 5
+      },
+      "rock_07_01": {
+        "REJECTED": 5
+      },
+      "rock_07_02": {
+        "REJECTED": 5
+      },
+      "rock_09_01": {
+        "REJECTED": 5
+      },
+      "rock_09_02": {
+        "REJECTED": 5
+      }
+    },
+    "metric_ranges": {
+      "slope_deg": [
+        5.877836180076455,
+        53.8692453088667
+      ],
+      "embedding_fraction": [
+        0.5989543262056582,
+        4.553849185138385
+      ],
+      "exposed_height_fraction": [
+        0.03391395047064237,
+        0.5973476274824321
+      ],
+      "exposed_ray_fraction": [
+        0.0037652965171007216,
+        0.8001336898395722
+      ],
+      "root_delta_cm": [
+        0.0,
+        35.05779580332455
+      ],
+      "embedding_delta_cm": [
+        0.0,
+        35.05779580332455
+      ],
+      "height_cm": [
+        2.6624224185943604,
+        188.145751953125
+      ],
+      "root_zero_cm": [
+        43387.61398558038,
+        71913.46512767141
+      ],
+      "root_nonpenetrating_cm": [
+        43569.855344853335,
+        71965.90198920084
+      ]
+    },
+    "error_types": {},
+    "error_count": 0,
+    "first_errors": [],
+    "source_hashes": {
+      "scripts/assets/pcg_boulder_support.py": {
+        "sha256": "2ee74a9c3349babf5b6d4c39f768215cacc0137b6ffb1f64046b83ee0798fee2",
+        "reader_bytes_equal": true
+      },
+      "scripts/assets/pcg_rock_contact_policy.py": {
+        "sha256": "4bfd12aca172a64940b49163bb0ecf221fac593e889028cdc8c88cd8a7b1bd5f",
+        "reader_bytes_equal": true
+      },
+      "scripts/ue/sa_calobra_pcg_collection_contact.py": {
+        "sha256": "8d4344e727abe0d4f851d6b8c00aad41407c98ea7f5d66494d9a8b7d1da84551",
+        "reader_bytes_equal": true
+      },
+      "scripts/ue/sa_calobra_pcg_rock_qualification.py": {
+        "sha256": "219f5f7da59f695e2c5e1257a8e0b79f998919a2177950adae9a9e4e53d5bd5a",
+        "reader_bytes_equal": true
+      }
+    }
+  }
+]

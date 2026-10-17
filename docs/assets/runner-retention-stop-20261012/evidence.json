@@ -1,0 +1,33 @@
+{
+  "status": "STOPPED_BY_OWNER",
+  "created_unix": 1791806435.7562213,
+  "code_head": "0d6f7b6298ae869da1a91d861c9fc636ea473e0d",
+  "main_plan_sha256": "a88965e62b154b6a1943632ec65095cd0b64ebc0d6637d638f8aec555796b8d8",
+  "main_plan_candidates": 78,
+  "completed_main_candidates": 21,
+  "completed_incomplete_clones": 2,
+  "completed_main_source_bytes": 4140328880,
+  "completed_main_archive_bytes": 3624237307,
+  "interruption": {
+    "relative": "YetAnotherCyclingSim/YetAnotherCyclingSim/_official-mcp-source-probe-38088310628-1",
+    "original_exists": false,
+    "retained_source": "D:\\yacs\\work\\runner-retention\\_official-mcp-source-probe-38088310628-1-6363f70c46a7ca65",
+    "retained_source_exists": true,
+    "compression_receipt": "D:\\yacs\\work\\runner-retention\\_official-mcp-source-probe-38088310628-1-6363f70c46a7ca65.compression.json",
+    "compression_receipt_exists": true,
+    "pruned_receipt_exists": false,
+    "archive": "D:\\yacs\\work\\runner-retention\\_official-mcp-source-probe-38088310628-1-6363f70c46a7ca65.tar.gz",
+    "archive_sha256": "219335de0c12a5f132a9fbbec8b09feb6fdee91daf0b36352e0a0235c8ec5b3b",
+    "archive_verified_after_stop": true,
+    "remaining_entries": 3672,
+    "expected_entries": 3672,
+    "remaining_entries_match": true,
+    "source_complete": true
+  },
+  "runner_listener_pid": 23260,
+  "disk_free_bytes_after_stop": 41260892160,
+  "additional_plan": "remnants-plan.json",
+  "additional_candidates": 15,
+  "shared_cohort_members": 19,
+  "cleanup_resumption_authorized": false
+}

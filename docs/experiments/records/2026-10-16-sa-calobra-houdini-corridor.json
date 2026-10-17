@@ -1,0 +1,49 @@
+{
+  "id": "2026-10-16-sa-calobra-houdini-corridor",
+  "date": "2026-10-16",
+  "area": "terrain-masks",
+  "stage": "M3",
+  "title": "Sa Calobra Houdini terrain and 500 m corridor masks",
+  "status": "IN_PROGRESS",
+  "hypothesis": "Real Sa Calobra DTM and the complete Ma-2141 reference can retain macro relief while original Pegasus methods provide subtle detail and source-backed corridor masks.",
+  "technical": [
+    "Houdini source height equality verified; maximum procedural delta 0.17791748046875 m.",
+    "Native mask build leaves full height arrays unchanged.",
+    "Five native UE Landscapes; RGB mask preview verified in UE Remote; saved locally.",
+    "Context visual overlap corrected, but 33/80 unfiltered traces still hit background collision."
+  ],
+  "visual": [
+    "Corrected native overview and live in-app Remote frame inspected.",
+    "Owner final visual acceptance remains pending."
+  ],
+  "keep": [
+    "Original DTM and complete route reference.",
+    "Houdini native mask and export nodes; separate source/procedural caches."
+  ],
+  "reject": [
+    "Fictional-island shape as a substitute for real Sa Calobra.",
+    "Treating screenshots or successful setters as collision or exact-SHA acceptance."
+  ],
+  "learnings": [
+    "UE Landscape local yaw is -90 degrees; native visibility RT import requires orientation adaptation.",
+    "Texture resources require verified GPU readback."
+  ],
+  "next": [
+    "Resolve context collision; verify a fresh reopen of the final masked map.",
+    "Diagnose Remote wheel zoom.",
+    "Keep road/world generation outside the current stage."
+  ],
+  "evidence": [
+    {
+      "label": "Detailed report",
+      "url": "../sa-calobra-houdini-corridor-20261016/README.md"
+    },
+    {
+      "label": "Reporting issue #479",
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/issues/479"
+    }
+  ],
+  "commit": "b41b3fdc6a4ddfdf28a4852cb47967367d667d36",
+  "implementation_workspace_dirty": true,
+  "performance_pass": false
+}

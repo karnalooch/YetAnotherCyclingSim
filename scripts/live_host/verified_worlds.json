@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "policy": "LATEST_VERIFIED_FAIL_CLOSED",
+  "selected_world_id": "sa_calobra_road_v0_3_1",
+  "worlds": [
+    {
+      "id": "sa_calobra_road_v0_3_1",
+      "version": "0.3.1",
+      "milestone": "M3",
+      "evidence_status": "SAVED_CHECKPOINT_REOPENED_RENDERED",
+      "evidence_reader_sha": "fde7a363d484c3693b65efe13eba76fb71bab6e1",
+      "evidence_token": "v031-reopen02",
+      "source_issue": 364,
+      "owner_visual_status": "PENDING_FINAL_M3",
+      "performance_pass": false,
+      "project_root": "D:\\yacs\\work\\level-editor-review\\b9fddea3f602-y473save01",
+      "project_file": "YetAnotherCyclingSim.uproject",
+      "project_file_sha256": "09fbd6cd85fbdd299a3e37cfb65658e1210183878516599c90b783acc1d8099b",
+      "project_file_bytes": 1152,
+      "map_package": "/Game/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface",
+      "map_relative": "Content/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.umap",
+      "source_map_relative": "Content/Generated/YACS/RoadAsphaltConsumer/L_SaCalobraRoadAsphaltReview.umap",
+      "source_map_sha256": "cbbf374309508fdb2c6f86c6324af4a3824a0c5ed32a4bfc29200ad3b29da183",
+      "source_map_bytes": 193018676,
+      "receipt_relative": "Content/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/checkpoint-receipt.json",
+      "handler_revision": "2a00f7ebba403cf7cda663bc6fa303c7d72e891b",
+      "native_actor_count": 559,
+      "native_binding_count": 186,
+      "camera_cm": [
+        56912.43746055451,
+        53090.5078449409,
+        46766.459277036185
+      ],
+      "target_cm": [
+        58088.73631673153,
+        52542.60698992016,
+        46508.19271952782
+      ],
+      "files": [
+        {
+          "path": "Content/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/L_RoadSurface.umap",
+          "bytes": 193245865,
+          "sha256": "cf806999d73e6762ba6d91fab8b4e29d6c475a828ad9afcd525462054602ed1a"
+        },
+        {
+          "path": "Content/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/M_Road.uasset",
+          "bytes": 44025,
+          "sha256": "d5bf7fdc7d34e70c30b29ec37d2f4c04afa01cd3dc9a9c12cec707be48078842"
+        },
+        {
+          "path": "Content/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/M_Shoulder.uasset",
+          "bytes": 66132,
+          "sha256": "94c40717a34d2b18f6d706abc7714cb6cbfb4ed0d631dda8bd1c624c38e7ae65"
+        },
+        {
+          "path": "Content/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/MI_Road.uasset",
+          "bytes": 10022,
+          "sha256": "7d96a2396bb8ef9e5d4d19d65b6c7e9d00e7b0e80ebd5ff5733dbab1a61e9a92"
+        },
+        {
+          "path": "Content/Generated/YACS/LiveCheckpoints/R2a00f7ebba40/MI_Shoulder.uasset",
+          "bytes": 11428,
+          "sha256": "76425a2289c3907a8f3c831ad24fb1ba1f219e79204507efdce222c831c76cdf"
+        }
+      ]
+    }
+  ]
+}

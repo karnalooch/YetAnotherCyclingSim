@@ -1,0 +1,225 @@
+{
+  "code_sha": "51f641cea3807bd7228b55c12c917454ab014731",
+  "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+  "native_receipt": "D:\\yacs\\work\\pcg365\\51f641cea3807bd7228b55c12c917454ab014731\\boulderfit03\\proof\\settle-render\\settle-render-receipt.json",
+  "native_receipt_sha256": "74dffacbe0bb0c27a25a98ec320c04c1e71c551499f5ee3933030d6945ecb4db",
+  "fit": {
+    "continuous_support_verified": false,
+    "exposed_count": 426,
+    "exposure_max_cm": 37.78163405294406,
+    "exposure_mean_cm": 11.349047978345443,
+    "exposure_min_cm": 0.0,
+    "max_penetration_cm": 62.46706609901594,
+    "penetrating_count": 697,
+    "placement": false,
+    "required_embedding_cm": 62.46706609901594,
+    "root_nonpenetrating_cm": 52558.25615702741,
+    "root_zero_sampled_air_cm": 52495.789090928396,
+    "sample_count": 698,
+    "status": "SAMPLED_VERTICAL_FIT_DIAGNOSTIC_ONLY"
+  },
+  "frames": [
+    {
+      "camera_fov_deg": 50.0,
+      "camera_ground": {
+        "actor": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview.L_SaCalobraMaterialReview:PersistentLevel.SaCalobraLandscape",
+        "blocking_hit": true,
+        "component": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview.L_SaCalobraMaterialReview:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_988",
+        "component_class": "LandscapeHeightfieldCollisionComponent",
+        "distance_cm": 97376.9609375,
+        "initial_overlap": false,
+        "normal": [
+          0.38851548521097495,
+          0.2452855916594653,
+          0.8881951904145545
+        ],
+        "position_cm": [
+          181279.6215724945,
+          189233.853225708,
+          52623.04270262022
+        ],
+        "time": 0.32458987832069397
+      },
+      "camera_ground_clearance_cm": 60.0,
+      "camera_location_cm": [
+        181279.6215724945,
+        189233.853225708,
+        52683.04270262022
+      ],
+      "camera_rotation_deg": [
+        -16.533371008587142,
+        48.81407483429036,
+        1.076063639303305e-07
+      ],
+      "file": "boulder-low-angle-01.png",
+      "height_px": 1080,
+      "sha256": "e4ee0f7b4fd2181a671da46cab3bb29811d53769794a686599f22f71d9489247",
+      "size_bytes": 1983058,
+      "viewport_primed": true,
+      "width_px": 1920,
+      "phase": "before",
+      "exported_file": "before-01.png"
+    },
+    {
+      "camera_fov_deg": 50.0,
+      "camera_ground": {
+        "actor": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview.L_SaCalobraMaterialReview:PersistentLevel.SaCalobraLandscape",
+        "blocking_hit": true,
+        "component": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview.L_SaCalobraMaterialReview:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_988",
+        "component_class": "LandscapeHeightfieldCollisionComponent",
+        "distance_cm": 97481.3671875,
+        "initial_overlap": false,
+        "normal": [
+          0.11407672284473025,
+          -0.06852457189816133,
+          0.9911058895754683
+        ],
+        "position_cm": [
+          181966.146774292,
+          189325.389919281,
+          52518.635240075935
+        ],
+        "time": 0.3249378800392151
+      },
+      "camera_ground_clearance_cm": 60.0,
+      "camera_location_cm": [
+        181966.146774292,
+        189325.389919281,
+        52578.635240075935
+      ],
+      "camera_rotation_deg": [
+        -4.996737688564112,
+        143.13010235415598,
+        9.657001647838695e-08
+      ],
+      "file": "boulder-low-angle-02.png",
+      "height_px": 1080,
+      "sha256": "8ba27ce7ff246c1c91d7c5b26ea8f5fa09f95c6e0fa4b4661d21c853c7d8ff97",
+      "size_bytes": 3153957,
+      "viewport_primed": true,
+      "width_px": 1920,
+      "phase": "before",
+      "exported_file": "before-02.png"
+    },
+    {
+      "camera_fov_deg": 50.0,
+      "camera_ground": {
+        "actor": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview.L_SaCalobraMaterialReview:PersistentLevel.SaCalobraLandscape",
+        "blocking_hit": true,
+        "component": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview.L_SaCalobraMaterialReview:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_988",
+        "component_class": "LandscapeHeightfieldCollisionComponent",
+        "distance_cm": 97376.9609375,
+        "initial_overlap": false,
+        "normal": [
+          0.38851548521097495,
+          0.2452855916594653,
+          0.8881951904145545
+        ],
+        "position_cm": [
+          181279.6215724945,
+          189233.853225708,
+          52623.04270262022
+        ],
+        "time": 0.32458987832069397
+      },
+      "camera_ground_clearance_cm": 60.0,
+      "camera_location_cm": [
+        181279.6215724945,
+        189233.853225708,
+        52683.04270262022
+      ],
+      "camera_rotation_deg": [
+        -16.533371008587142,
+        48.81407483429036,
+        1.076063639303305e-07
+      ],
+      "file": "boulder-low-angle-01.png",
+      "height_px": 1080,
+      "sha256": "f16201f3627226db2f4830d05625432d0ed163399d0296fa65dee800413bfa01",
+      "size_bytes": 3200676,
+      "viewport_primed": true,
+      "width_px": 1920,
+      "phase": "after",
+      "exported_file": "after-01.png"
+    },
+    {
+      "camera_fov_deg": 50.0,
+      "camera_ground": {
+        "actor": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview.L_SaCalobraMaterialReview:PersistentLevel.SaCalobraLandscape",
+        "blocking_hit": true,
+        "component": "/Game/Generated/YACS/SaCalobra/WholeMapPreparation/L_SaCalobraMaterialReview.L_SaCalobraMaterialReview:PersistentLevel.SaCalobraLandscape.LandscapeHeightfieldCollisionComponent_988",
+        "component_class": "LandscapeHeightfieldCollisionComponent",
+        "distance_cm": 97481.3671875,
+        "initial_overlap": false,
+        "normal": [
+          0.11407672284473025,
+          -0.06852457189816133,
+          0.9911058895754683
+        ],
+        "position_cm": [
+          181966.146774292,
+          189325.389919281,
+          52518.635240075935
+        ],
+        "time": 0.3249378800392151
+      },
+      "camera_ground_clearance_cm": 60.0,
+      "camera_location_cm": [
+        181966.146774292,
+        189325.389919281,
+        52578.635240075935
+      ],
+      "camera_rotation_deg": [
+        -4.996737688564112,
+        143.13010235415598,
+        9.657001647838695e-08
+      ],
+      "file": "boulder-low-angle-02.png",
+      "height_px": 1080,
+      "sha256": "8b16c3b4a4856a068e8c64f3585e0c90092dfe5895166c71878e5b5c6d430dd7",
+      "size_bytes": 3133769,
+      "viewport_primed": true,
+      "width_px": 1920,
+      "phase": "after",
+      "exported_file": "after-02.png"
+    }
+  ],
+  "review": {
+    "pair_01": "FIRST_BEFORE_TERRAIN_DETAIL_UNSTABLE_NOT_LIKE_FOR_LIKE",
+    "pair_02": "SAMPLED_CONTACT_CORRECTION_VISIBLE_BOTH_CAMERAS_NO_OWNER_ACCEPTANCE",
+    "continuous_support_verified": false,
+    "regional_placement": false,
+    "terrain_saved": false,
+    "remote_ue_received_frame": false
+  },
+  "launcher_markers": {
+    "inspect": {
+      "code_sha": "51f641cea3807bd7228b55c12c917454ab014731",
+      "exit_code": 0,
+      "staged_bytes_unchanged": true,
+      "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+      "sha256": "cdbe46a9d267a2d9ad8170042d2dfa81a6a877f62cc60e569c814a016dbcbb17"
+    },
+    "material": {
+      "code_sha": "51f641cea3807bd7228b55c12c917454ab014731",
+      "exit_code": 0,
+      "staged_bytes_unchanged": true,
+      "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+      "sha256": "cdbe46a9d267a2d9ad8170042d2dfa81a6a877f62cc60e569c814a016dbcbb17"
+    },
+    "material-reload": {
+      "code_sha": "51f641cea3807bd7228b55c12c917454ab014731",
+      "exit_code": 0,
+      "staged_bytes_unchanged": true,
+      "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+      "sha256": "cdbe46a9d267a2d9ad8170042d2dfa81a6a877f62cc60e569c814a016dbcbb17"
+    },
+    "settle-render": {
+      "code_sha": "51f641cea3807bd7228b55c12c917454ab014731",
+      "exit_code": 0,
+      "staged_bytes_unchanged": true,
+      "proof_admission": "LOCAL_DIAGNOSTIC_ONLY",
+      "sha256": "cdbe46a9d267a2d9ad8170042d2dfa81a6a877f62cc60e569c814a016dbcbb17"
+    }
+  }
+}

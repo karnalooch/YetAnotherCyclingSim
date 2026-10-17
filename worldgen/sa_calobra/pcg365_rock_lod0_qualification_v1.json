@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "scope": "ISOLATED_ROCK_QUALIFICATION_ONLY",
+  "assets": [
+    {
+      "id": "rock_07",
+      "source": "D:\\yacs\\work\\pcg365\\rock-source-inspection01\\lod0\\rock_07_lod0.fbx",
+      "source_relative": "rock-source/rock_07.fbx",
+      "sha256": "8f93bfba3e5abe10fcf51e76bd3ee3d60bb166d5fcfddb4eac6b6bf7b910b148",
+      "bytes": 514860,
+      "original_source_sha256": "a49a0fce3da2a976013aac8be3899817b0fe03a1f19628ea0677820df3bdbae1",
+      "selected_source_object": "rock_07_LOD0",
+      "expected_lod0_triangles": 14844,
+      "expected_source_dimensions_cm": [
+        16.888190805912018,
+        32.02769607305527,
+        14.372014440596104
+      ],
+      "license": "CC0-1.0",
+      "source_provenance": "POLY_HAVEN_EXPLICIT_LOD0_UNCHANGED_GEOMETRY",
+      "lifecycle_status": "acquired",
+      "qualification_status": "pending"
+    },
+    {
+      "id": "rock_09",
+      "source": "D:\\yacs\\work\\pcg365\\rock-source-inspection01\\lod0\\rock_09_lod0.fbx",
+      "source_relative": "rock-source/rock_09.fbx",
+      "sha256": "e4d60fca53f426e986700ca90676452bd8ce3c3a7be26dec8d782251a6a82297",
+      "bytes": 442236,
+      "original_source_sha256": "a04920ea816c4a3ca88c57ce8cbe2a9ba9315130df1c32b589640819d5096333",
+      "selected_source_object": "rock_09_LOD0",
+      "expected_lod0_triangles": 12416,
+      "expected_source_dimensions_cm": [
+        7.4009861797094345,
+        14.4624512642622,
+        3.2869411166757345
+      ],
+      "license": "CC0-1.0",
+      "source_provenance": "POLY_HAVEN_EXPLICIT_LOD0_UNCHANGED_GEOMETRY",
+      "lifecycle_status": "acquired",
+      "qualification_status": "pending"
+    }
+  ],
+  "acquisition_manifest": "worldgen/sa_calobra/pcg365_rock_acquisition_v1.json",
+  "download_index_sha256": "5267186afa0a8ceb85f6ffe9211158a15b7c8daad0ef28c62f198d59dfbe9bf8",
+  "policy_id": "PCG_ROCK_SAMPLED_CONTACT_TRIAL_V1",
+  "placement": false,
+  "qualified_assets": [],
+  "geology": "UNKNOWN_NOT_INFERRED_FROM_MATERIAL",
+  "source_units_policy": "CONVERT_DECLARED_FBX_SCENE_UNITS_TO_CM_NO_RESCALE",
+  "contact_points": "five diagnostic XY not rock semantic selectors",
+  "source_inspection": {
+    "path": "D:\\yacs\\work\\pcg365\\rock-source-inspection01\\lod0-source-report.json",
+    "sha256": "bbc4f2328f9a77dbd2dde190d5945388e82f184fbfa4b84b6b388b8f812846da"
+  }
+}

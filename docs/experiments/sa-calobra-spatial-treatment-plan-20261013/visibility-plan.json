@@ -1,0 +1,181 @@
+{
+  "status": "SAMPLED_TERRAIN_VISIBILITY_TREATMENT_PROPOSAL",
+  "issue": 365,
+  "milestone": "M3",
+  "reanalysis": {
+    "scope": "former technical holdbacks outside exact road/water exclusions; terrain criteria reused, then existing 1338-camera visibility applied",
+    "released_source_cells": 645368,
+    "released_source_area_m2": 161342.0,
+    "released_cliff_candidate_cells": 70384,
+    "released_scree_candidate_cells": 21518,
+    "former_holdback_bin_treatments": {
+      "Simplified objects \u2014 obiekty uproszczone": 3658,
+      "Material-first proposal: visible terrain; no selected cliff/near scree requirement": 11233,
+      "Cliff mesh review: visible steep/rough source candidate; preserve major forms": 1508,
+      "Rock trial review: visible scree candidate; 1 m feature projects to >=8 px": 7235,
+      "Raised-form review: 2 m form may emerge above occluded ground": 136,
+      "Road/water exclusion overlay (exact source pixels)": 0,
+      "Unknown terrain neighborhood: no placement": 66
+    },
+    "filled_planning_bins": 13934,
+    "released_bin_treatments": {
+      "Simplified objects \u2014 obiekty uproszczone": 63,
+      "Material-first proposal: visible terrain; no selected cliff/near scree requirement": 5825,
+      "Cliff mesh review: visible steep/rough source candidate; preserve major forms": 1027,
+      "Rock trial review: visible scree candidate; 1 m feature projects to >=8 px": 6998,
+      "Raised-form review: 2 m form may emerge above occluded ground": 21,
+      "Road/water exclusion overlay (exact source pixels)": 0,
+      "Unknown terrain neighborhood: no placement": 0
+    },
+    "consumer_exclusions_changed": false,
+    "native_modified_surfaces": "Base_DTM inference only; BOB/native presentation may differ and still requires review"
+  },
+  "frames": 1338,
+  "station_pairs": 669,
+  "windows": 185,
+  "owner_unsampled_treatment": "Simplified objects: simple major forms and limited detail; not a confirmed hidden region or automatic placement permission",
+  "hard_exclusions_display": {
+    "bits": [
+      1,
+      16
+    ],
+    "source_cell_m": 0.5,
+    "aggregation": "none",
+    "water": "existing source water holdback; includes 5 m decorative buffer, not measured channel width",
+    "technical_consumer_holdbacks": "unchanged"
+  },
+  "grid_cell_m": 4,
+  "grid_origin_edges_local_m": [
+    -0.25,
+    -0.25
+  ],
+  "grid_shape": [
+    505,
+    505
+  ],
+  "grid_rule": "ANY terrain candidate within each 8x8 source-cell block; visibility may hit another point in that block. Classification covers former technical holdbacks; exact road/water overlay is separate. Planning bins are not fill polygons; consumer masks remain binding.",
+  "array_file_sha256": "f8132be4ad7bbbea2a6dffceaeca495dfdcc83f0b2144fa9afa676957681babb",
+  "array_logical_sha256": {
+    "hits": "df03d785e3e988bc09cb8f582e901418cd00b6fd78c9a1b336ab74a84c3feb5f",
+    "tested": "caa3d24bcb16a424d4a47f46d385c5fe8d85b8bf70351ee457cb695405418ebf",
+    "elevated": "2b9b379bec79136d165603ef7f168e37cfa4f4142e6efdaaf8063356dd443587",
+    "pixels_per_m": "caad5b7dbd752d61ac2d68d711a4bef49113792d7f130d6b23fe1a26308b5578",
+    "nearest_m": "c09dc36a1f042684f143adcd113801f5228bc2cea42d3da2e7a4f9cbc391d860",
+    "witness": "ac077583e4b15595269eb96911a8f77dd3e67cb5fee90344de29018c35312e71",
+    "treatment": "2177e573be88a86a5562bbb43add7d9cffc9012e38956c6e474ea6cda0698058"
+  },
+  "ray_step_m": 1,
+  "ray_angle_step_deg": 0.25,
+  "nominal_feature_review_threshold": {
+    "feature_m": 1,
+    "pixels": 8,
+    "authority": "explicit planning heuristic; not accepted LOD/performance limit"
+  },
+  "compute_script_sha256": "c431fc88aef5afaf2b65f930e8a1813c80c7c82aea2f82ae40283fc50a8be604",
+  "render_script_sha256": "121e15c55e934ff81f10a1eda9e1a905f56326764f6cc3f5020771658aff99bd",
+  "sources": [
+    {
+      "path": "D:\\yacs\\work\\pcg365-contact-remote\\docs\\experiments\\sa-calobra-spatial-treatment-plan-20261013\\spatial-plan.json",
+      "sha256": "dd60c9f052aa5f09d97f0c6fbaa20b11159ccbdaded17be135034329d4865d75"
+    },
+    {
+      "path": "D:\\yacs\\work\\pcg365-contact-remote\\docs\\experiments\\sa-calobra-tpp-survey-20261008\\frames.csv",
+      "sha256": "15e0a2350c613bf52bfb1354192043ca0c6cd785493c59e7721305b67de099a3"
+    },
+    {
+      "path": "D:\\yacs\\data\\world-data\\sa-calobra-working-v1\\normalized-context-v1a-2026-10-04\\elevation.tif",
+      "sha256": "c1abe56ce87265416a3c6dc1b0e2fa4668e593a8a4b82d30e2a95e8b01e27791"
+    },
+    {
+      "path": "D:\\yacs\\work\\pcg365\\spatial-plan-20261013\\selectors\\cliff-erosion-manifest.json",
+      "sha256": "30fa592b60604a8ab211085f2ece0ce6fa93c744eb066bdda7f9969a1d488bbd"
+    },
+    {
+      "path": "D:\\yacs\\work\\pcg365-contact-remote\\docs\\experiments\\sa-calobra-roadside-visibility-prestudy-20261008\\observations.json",
+      "sha256": "101f807832897715984230f1875b70859c245d4663aee7a312a51dd3599220d8"
+    },
+    {
+      "path": "D:\\yacs\\data\\world-data\\sa-calobra-working-v1\\normalized-context-v1a-2026-10-04\\slope.tif",
+      "sha256": "0f5721f3d68352d51da52f518f1cc876fd030d28fef17a58e8971f44ddc8c4ab"
+    },
+    {
+      "path": "D:\\yacs\\data\\world-data\\sa-calobra-working-v1\\normalized-context-v1a-2026-10-04\\roughness.tif",
+      "sha256": "7ff4bb951639e453d2b082955d8677c4ea5221951a135e5302d989a94513ac18"
+    }
+  ],
+  "counts": {
+    "Simplified objects \u2014 obiekty uproszczone": 81472,
+    "Material-first proposal: visible terrain; no selected cliff/near scree requirement": 93426,
+    "Cliff mesh review: visible steep/rough source candidate; preserve major forms": 49888,
+    "Rock trial review: visible scree candidate; 1 m feature projects to >=8 px": 18634,
+    "Raised-form review: 2 m form may emerge above occluded ground": 9589,
+    "Road/water exclusion overlay (exact source pixels)": 0,
+    "Unknown terrain neighborhood: no placement": 2016
+  },
+  "limits": [
+    "TPP camera poses, not a continuous rider traversal or look-around proof",
+    "Base_DTM only; excludes v8 mesh, earthworks, buildings and vegetation occluders",
+    "Radial 1 m/.25 degree sampling and 4 m bins; sampled hits do not prove every point in a bin",
+    "No observed hit: owner-selected simplified-object treatment; visibility remains unverified, never confirmed hidden D",
+    "Material-first is a review proposal; visibility cannot establish geological need or geometry correctness",
+    "2 m raised-form test is a diagnostic proxy, not an asset-placement test",
+    "Original PNG correspondence and live native checks required before regional placement",
+    "ANY-source 4 m planning bins may include unselected neighboring source cells; never fill a whole bin with geometry",
+    "Geometry review means inspect existing geometry first; it does not prescribe adding another mesh over an existing accepted surface",
+    "Missing or occluded ground does not prove a larger rock, skyline, shadow or reflection contribution unnecessary"
+  ],
+  "placement": false,
+  "qualified_assets": [],
+  "performance_pass": false,
+  "layers": [
+    {
+      "id": "visibility-0",
+      "label": "Simplified objects \u2014 obiekty uproszczone",
+      "cells": 81472,
+      "extent_m": 2020,
+      "cell_label": "planning bins"
+    },
+    {
+      "id": "visibility-1",
+      "label": "Material-first proposal: visible terrain; no selected cliff/near scree requirement",
+      "cells": 93426,
+      "extent_m": 2020,
+      "cell_label": "planning bins"
+    },
+    {
+      "id": "visibility-2",
+      "label": "Cliff mesh review: visible steep/rough source candidate; preserve major forms",
+      "cells": 49888,
+      "extent_m": 2020,
+      "cell_label": "planning bins"
+    },
+    {
+      "id": "visibility-3",
+      "label": "Rock trial review: visible scree candidate; 1 m feature projects to >=8 px",
+      "cells": 18634,
+      "extent_m": 2020,
+      "cell_label": "planning bins"
+    },
+    {
+      "id": "visibility-4",
+      "label": "Raised-form review: 2 m form may emerge above occluded ground",
+      "cells": 9589,
+      "extent_m": 2020,
+      "cell_label": "planning bins"
+    },
+    {
+      "id": "visibility-6",
+      "label": "Unknown terrain neighborhood: no placement",
+      "cells": 2016,
+      "extent_m": 2020,
+      "cell_label": "planning bins"
+    },
+    {
+      "id": "visibility-5",
+      "label": "Hard exclusions: roads and watercourses only",
+      "cells": 619451,
+      "extent_m": 2016.5,
+      "cell_label": "source cells (0.5 m); water holdback includes 5 m buffer"
+    }
+  ]
+}

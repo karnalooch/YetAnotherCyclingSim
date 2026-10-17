@@ -1,0 +1,13 @@
+{
+  "session": "20261013T132819Z-730779601501",
+  "sequence": 13,
+  "request_id": "7ab0a8ac9fca4d0fb231",
+  "receipt_path": "D:\\yacs\\live-host\\runtime\\sessions\\20261013T132819Z-730779601501\\commands\\000013-7ab0a8ac9fca4d0fb231.result.json",
+  "receipt_sha256": "11a57e308396fbd78576ad91f029c59f4fab3d487271aaaa05ea0c4182daf89c",
+  "recipe_revision": "f0588aa2cb8a9362cc7e524b54d80b60e478ed39",
+  "operation_status": "CONTACT_JOB_CANCELLED_ROLLED_BACK",
+  "preview_placed": 0,
+  "rollback_complete": true,
+  "map_saved": false,
+  "recorded_utc": "2026-10-13T13:33:20.995+00:00"
+}

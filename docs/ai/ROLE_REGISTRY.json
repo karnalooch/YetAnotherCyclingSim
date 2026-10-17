@@ -42,7 +42,8 @@
       "read_docs": [
         "docs/WORLD_BUILDING_BIBLE.md",
         "docs/ASSET_PLAN.md",
-        "docs/ai/policies/M3_WORLD_OPERATIONS.md"
+        "docs/ai/policies/M3_WORLD_OPERATIONS.md",
+        "docs/tooling/sidefx/README.md"
       ],
       "can_admit": false,
       "can_merge": false,
@@ -59,7 +60,8 @@
         "docs/WORLD_BUILDING_BIBLE.md",
         "docs/STAGE_3_ROUTE_GEOMETRY_CONTRACT.md",
         "docs/ROAD_PHYSICS_PROFILE.md",
-        "docs/ai/policies/M3_WORLD_OPERATIONS.md"
+        "docs/ai/policies/M3_WORLD_OPERATIONS.md",
+        "docs/tooling/sidefx/README.md"
       ],
       "can_admit": false,
       "can_merge": false,
@@ -75,7 +77,8 @@
       "read_docs": [
         "docs/WORLD_BUILDING_BIBLE.md",
         "docs/YACS_WORLD_AUTHORING_LIBRARY.md",
-        "docs/ai/policies/M3_WORLD_OPERATIONS.md"
+        "docs/ai/policies/M3_WORLD_OPERATIONS.md",
+        "docs/tooling/sidefx/README.md"
       ],
       "can_admit": false,
       "can_merge": false,
@@ -92,7 +95,8 @@
         "docs/WORLD_BUILDING_BIBLE.md",
         "docs/ASSET_PLAN.md",
         "docs/tooling/BLENDER_HEADLESS.md",
-        "docs/ai/policies/M3_WORLD_OPERATIONS.md"
+        "docs/ai/policies/M3_WORLD_OPERATIONS.md",
+        "docs/tooling/sidefx/README.md"
       ],
       "can_admit": false,
       "can_merge": false,
@@ -109,7 +113,8 @@
         "docs/UE_MCP_WORLD_GENERATION.md",
         "docs/UNREAL_CI_RUNNER.md",
         "docs/ai/policies/CODE_PHYSICS_UNREAL.md",
-        "docs/ai/policies/M3_WORLD_OPERATIONS.md"
+        "docs/ai/policies/M3_WORLD_OPERATIONS.md",
+        "docs/tooling/sidefx/README.md"
       ],
       "can_admit": false,
       "can_merge": false,
