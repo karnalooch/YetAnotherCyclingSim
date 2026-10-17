@@ -1,0 +1,3 @@
+@echo off
+echo Otwieranie projektu SaCalobra_Pegasus_Lesson04.hiplc w Houdini...
+start "" "D:\yacs\tools\houdini-22.0.466\bin\houdinifx.exe" "%~dp0SaCalobra_Pegasus_Lesson04.hiplc"

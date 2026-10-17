@@ -1,4 +1,8 @@
-"""Render a single shot in an isolated hython process to prevent OpenGL driver re-entry issues."""
+"""Render a single shot for Lesson 04 in an isolated hython process.
+
+Completely eliminates OpenGL driver re-entry / VBO accumulation crashes.
+Strictly renders genuine material colors (@Cd = set(r, g, b)) with NO synthetic fallbacks.
+"""
 import sys
 import os
 import shutil
@@ -7,7 +11,7 @@ import hou
 
 project_dir = "D:/yacs/project/worldgen/houdini/sa_calobra"
 evidence_dir = f"{project_dir}/evidence"
-artifact_dir = "C:/Users/akarn/.gemini/antigravity/brain/d3ee11c1-e4d3-48e9-98a6-76b17331ecf5"
+artifact_dir = "C:/Users/akarn/.gemini/antigravity/brain/a8bdbe87-c1b2-4851-a60b-d95da6c97b58"
 os.makedirs(evidence_dir, exist_ok=True)
 os.makedirs(artifact_dir, exist_ok=True)
 
@@ -30,17 +34,14 @@ def build_mesh(name, tx, tz, sx=180, sy=180, source_node="/obj/SA_CALOBRA/WORKIN
     w = geo.createNode("attribwrangle")
     w.setInput(0, conv)
     w.setInput(1, crop)
+    # Strictly genuine material colors directly from Lesson 04 R/G/B volume layers
     w.parm("snippet").set("""
     vector p = @P;
     p.y = 0;
     float r = volumesample(1, 'r', p);
     float g = volumesample(1, 'g', p);
     float b = volumesample(1, 'b', p);
-    if (r > 0.05 || g > 0.05 || b > 0.05) {
-        @Cd = set(r, g, b);
-    } else {
-        @Cd = set(0.30, 0.33, 0.25);
-    }
+    @Cd = set(r, g, b);
     """)
 
     nrm = geo.createNode("normal")
@@ -55,14 +56,14 @@ def main():
     parser.add_argument("--shot", required=True)
     args = parser.parse_args()
 
-    hip_file = f"{project_dir}/SaCalobra_Pegasus_Lesson03.hiplc"
+    hip_file = f"{project_dir}/SaCalobra_Pegasus_Lesson04.hiplc"
     hou.hipFile.load(hip_file, suppress_save_prompt=True, ignore_load_warnings=True)
 
     for n in hou.node("/obj").children():
         n.setDisplayFlag(False)
 
     if args.shot == "01_pano":
-        out_filename = "lesson03_01_full_panorama_color.png"
+        out_filename = "04_context_background_panorama.png"
         geo = hou.node("/obj").createNode("geo", "RENDER_PANO")
         m_pano = geo.createNode("object_merge")
         m_pano.parm("objpath1").set("/obj/SA_CALOBRA/CONTEXT_MATERIAL_CACHE")
@@ -77,11 +78,7 @@ def main():
         float r = volumesample(1, 'r', p);
         float g = volumesample(1, 'g', p);
         float b = volumesample(1, 'b', p);
-        if (r > 0.05 || g > 0.05 || b > 0.05) {
-            @Cd = set(r, g, b);
-        } else {
-            @Cd = set(0.26, 0.30, 0.22);
-        }
+        @Cd = set(r, g, b);
         """)
         nrm_pano = geo.createNode("normal")
         nrm_pano.setInput(0, w_pano)
@@ -91,34 +88,42 @@ def main():
         tgt_pos = (0, 300, 500)
 
     elif args.shot == "02a_crags":
-        out_filename = "lesson03_02a_closeup_crags_color.png"
-        geo = build_mesh("CRAGS", 224.0, -711.0, 160, 160)
+        out_filename = "04_closeup_crags.png"
+        geo = build_mesh("CRAGS", 224.0, -711.0, 180, 180)
         cam_pos = (224.0 - 75.0, 357.2 + 45.0, -711.0 - 75.0)
         tgt_pos = (224.0, 357.2, -711.0)
 
     elif args.shot == "02b_canyon":
-        out_filename = "lesson03_02b_closeup_canyon_color.png"
+        out_filename = "04_closeup_canyon.png"
         geo = build_mesh("CANYON", -324.5, 545.5, 180, 180)
         cam_pos = (-324.5 - 80.0, 362.4 + 50.0, 545.5 - 80.0)
         tgt_pos = (-324.5, 362.4, 545.5)
 
     elif args.shot == "02c_coastal":
-        out_filename = "lesson03_02c_closeup_coastal_color.png"
+        out_filename = "04_closeup_coastal_sand.png"
         geo = build_mesh("COASTAL", -479.0, 2213.0, 180, 180)
         cam_pos = (-479.0 - 80.0, 911.6 + 45.0, 2213.0 - 80.0)
         tgt_pos = (-479.0, 911.6, 2213.0)
 
-    elif args.shot == "03a_before":
-        out_filename = "lesson03_03a_fixed_cam_before_base.png"
-        geo = build_mesh("BEFORE", 224.0, -711.0, 120, 120, source_node="/obj/SA_CALOBRA/COMPOSE_SOURCE_AND_MANUAL")
+    elif args.shot == "03a_tint_before":
+        out_filename = "04_tint_comparison_before.png"
+        # Fixed camera framing Before Tint (Sand & Grass material without tinting)
+        geo = build_mesh("BEFORE_TINT", 224.0, -711.0, 150, 150, source_node="/obj/SA_CALOBRA/WORKING_SAND_MATERIAL")
         cam_pos = (224.0 - 55.0, 357.2 + 25.0, -711.0 - 55.0)
         tgt_pos = (224.0, 357.2, -711.0)
 
-    elif args.shot == "03b_after":
-        out_filename = "lesson03_03b_fixed_cam_after_material.png"
-        geo = build_mesh("AFTER", 224.0, -711.0, 120, 120, source_node="/obj/SA_CALOBRA/WORKING_MATERIAL_CACHE")
+    elif args.shot == "03b_tint_after":
+        out_filename = "04_tint_comparison_after.png"
+        # Fixed camera framing After Tint (Heightfield Tint gradient & occlusion applied)
+        geo = build_mesh("AFTER_TINT", 224.0, -711.0, 150, 150, source_node="/obj/SA_CALOBRA/WORKING_HEIGHTFIELD_TINT")
         cam_pos = (224.0 - 55.0, 357.2 + 25.0, -711.0 - 55.0)
         tgt_pos = (224.0, 357.2, -711.0)
+
+    elif args.shot == "04_cliff_trans":
+        out_filename = "04_cliff_smooth_transition.png"
+        geo = build_mesh("CLIFF_TRANS", 180.0, -650.0, 150, 150)
+        cam_pos = (180.0 - 50.0, 330.0 + 30.0, -650.0 - 50.0)
+        tgt_pos = (180.0, 330.0, -650.0)
 
     else:
         raise ValueError(f"Unknown shot: {args.shot}")
@@ -150,7 +155,7 @@ def main():
 
     art_path = f"{artifact_dir}/{out_filename}"
     shutil.copy2(out_path, art_path)
-    print(f"SUCCESS: Rendered {out_filename}: {os.path.getsize(out_path)} bytes")
+    print(f"SUCCESS: Rendered {out_filename}: {os.path.getsize(out_path)} bytes -> copied to {art_path}")
 
 
 if __name__ == "__main__":
