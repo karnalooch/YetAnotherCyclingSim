@@ -45,6 +45,8 @@ scripts/ue/Invoke-YacsRoadAsphaltRender.ps1 text eol=lf
 *.hiplc filter=lfs diff=lfs merge=lfs -text
 *.hda filter=lfs diff=lfs merge=lfs -text
 *.hdalc filter=lfs diff=lfs merge=lfs -text
+*.bgeo filter=lfs diff=lfs merge=lfs -text
+*.bgeo.sc filter=lfs diff=lfs merge=lfs -text
 *.terrain filter=lfs diff=lfs merge=lfs -text
 *.tif filter=lfs diff=lfs merge=lfs -text
 
@@ -71,6 +73,7 @@ worldgen/materials/material_maker/**/*.ptex -text whitespace=cr-at-eol
 worldgen/materials/material_maker/**/export/*.png filter=lfs diff=lfs merge=lfs -text
 
 worldgen/materials/visual_fill/*.png filter=lfs diff=lfs merge=lfs -text
+worldgen/houdini/**/*.png filter=lfs diff=lfs merge=lfs -text
 
 # Retained material-repair evidence and CC0 source images
 worldgen/materials/scanned_refinement/source/*.png filter=lfs diff=lfs merge=lfs -text
