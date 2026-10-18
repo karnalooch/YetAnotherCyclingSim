@@ -114,3 +114,5 @@ The uploaded `sidefx_packages.7z`, complete Labs distribution, compiled binaries
 M3 performance remains `DEFERRED_AFTER_M3`, `performance_pass: false`. This guide grants neither a merge to `main` nor world/visual/performance acceptance, and records no new Houdini or Unreal execution.
 
 The bounded [Lesson04 Unreal consumer repair](LESSON04_UNREAL_REPAIR.md) records the isolated 2026-10-18 height, seam, UV, runtime collision and fresh-reopen measurements. Its native receipt is separate from owner visual acceptance and production promotion.
+
+The [Lesson05 scree plan with Material Forge](LESSON05_SCREE_PLAN.md) records the next source-mapped pass, original dependencies, surface adapter, checkpoints and native verification gates. It is a plan only: Lesson05 execution and acceptance remain NOT RUN.
