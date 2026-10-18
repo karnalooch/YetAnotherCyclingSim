@@ -154,3 +154,53 @@ Heavy caches, map binaries, textures and raw logs remain local. The compact
 receipt records source and code identities without publishing WebRTC session
 credentials from logs. Owner visual acceptance remains pending, and performance
 is `DEFERRED_AFTER_M3`, `performance_pass: false`.
+
+## Persistent stream startup and memory workaround
+
+The two later stream losses at 02:19:55 and 02:35:02 on 2026-10-18
+(Europe/Warsaw) coincided with Windows Resource-Exhaustion-Detector event 2004.
+UE committed approximately 46-48 GiB and Logitech G HUB another 19.22 GiB.
+The owner authorized restarting G HUB; that recovered approximately 19 GiB.
+The stream still grew from 20.12 to 23.99 GiB in 52 seconds, so restarting that
+utility alone did not resolve the ongoing encoder leak.
+
+After a separately authorized orderly editor restart, the launch option
+`-AVCodecs.NvEnc.D3D12UsesCUDA=true` retained H.264/NVENC and removed the observed
+rapid growth. This is the workaround described by
+[Epic's Pixel Streaming discussion](https://forums.unrealengine.com/t/pixelstreaming-memory-leak-in-5-7/2712465)
+and [the upstream issue](https://github.com/EpicGames/PixelStreamingInfrastructure/issues/954).
+The tested GPU is RTX 2070 SUPER, driver 610.88. CUDA can be incompatible with
+some resource configurations; a flat memory graph without received frames is
+not success. The existing receiving-client check passed with CUDA enabled.
+The same editor PID remained alive at 03:40:53, about 56 minutes after launch,
+with 15.012 GiB committed and 52.74 GiB system commit headroom. This is an
+observed interval, not an overnight or all-hardware stability guarantee.
+See the [compact stream measurements](lesson04-stream-stability-20261018.json).
+
+For the next session, from the repository root on the retained Windows host:
+
+```powershell
+pwsh -File scripts/ue/Start-YacsLesson04RepairStream.ps1 -WhatIf
+pwsh -File scripts/ue/Start-YacsLesson04RepairStream.ps1
+```
+
+This launcher opens the saved repaired test map. It reuses the engine resolver
+and host-ownership check, refuses an occupied host/stream ports, enables the
+session-only CUDA workaround, and never stops an editor or changes global
+configuration. The generated map/materials must already exist locally; they
+are deliberately not distributed through Git. An existing active stream should
+be reused. Viewer: `http://127.0.0.1/?AutoConnect=true&AutoPlayVideo=true`.
+If autoplay is blocked, use the viewer's Play button.
+
+The launcher argument plan was checked with `-WhatIf`; its busy-host guard was
+checked without restarting the active editor. Native CUDA/frame/memory proof
+comes from the equivalent inspected launch configuration, not a second live
+launch of this wrapper. The wrapper deliberately omits the temporary diagnostic
+Python command queue. Use the existing `Test-YacsLevelEditorStreamClient.ps1`
+with a fresh evidence directory to qualify any later launch. Watch process
+private commit and system commit headroom, rather than RAM working set alone.
+
+No automatic restarts, G HUB changes, pagefile changes or driver upgrades are
+performed by this launcher. The separately requested local sun adjustment
+(6.0 to 3.9) was saved in the derivative map; it does not alter source materials.
+Lesson05 authoring and PR merge remain outside this repair.

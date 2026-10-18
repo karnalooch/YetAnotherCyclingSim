@@ -1,0 +1,129 @@
+{
+  "date": "2026-10-18",
+  "cause_evidence": "Windows Resource-Exhaustion-Detector 2004 at 02:19:55 and 02:35:02 Europe/Warsaw; UE private commit 49-51 billion bytes; G HUB 20.6 billion bytes",
+  "mitigations": [
+    "User-approved restart of Logitech G HUB: 19.22 GiB to 0.13 GiB",
+    "User-approved orderly UE restart with -AVCodecs.NvEnc.D3D12UsesCUDA=true; H264 hardware encoding retained"
+  ],
+  "before_samples": [
+    {
+      "time": "2026-10-18T02:41:50.2230004+02:00",
+      "ueGB": 20.12,
+      "freeCommitGB": 44.42,
+      "ghubGB": 0.13
+    },
+    {
+      "time": "2026-10-18T02:42:00.6553969+02:00",
+      "ueGB": 20.86,
+      "freeCommitGB": 43.65,
+      "ghubGB": 0.13
+    },
+    {
+      "time": "2026-10-18T02:42:11.0164266+02:00",
+      "ueGB": 21.81,
+      "freeCommitGB": 42.65,
+      "ghubGB": 0.13
+    },
+    {
+      "time": "2026-10-18T02:42:21.3330211+02:00",
+      "ueGB": 22.51,
+      "freeCommitGB": 42.07,
+      "ghubGB": 0.13
+    },
+    {
+      "time": "2026-10-18T02:42:31.7064621+02:00",
+      "ueGB": 23.15,
+      "freeCommitGB": 41.37,
+      "ghubGB": 0.13
+    },
+    {
+      "time": "2026-10-18T02:42:42.0802707+02:00",
+      "ueGB": 23.99,
+      "freeCommitGB": 40.57,
+      "ghubGB": 0.13
+    }
+  ],
+  "cuda_samples": [
+    {
+      "time": "2026-10-18T02:47:38.9655045+02:00",
+      "ueGB": 14.554,
+      "freeCommitGB": 50.4
+    },
+    {
+      "time": "2026-10-18T02:47:49.2452502+02:00",
+      "ueGB": 14.554,
+      "freeCommitGB": 50.37
+    },
+    {
+      "time": "2026-10-18T02:47:59.4888042+02:00",
+      "ueGB": 14.552,
+      "freeCommitGB": 50.65
+    },
+    {
+      "time": "2026-10-18T02:48:09.7981049+02:00",
+      "ueGB": 14.553,
+      "freeCommitGB": 50.04
+    },
+    {
+      "time": "2026-10-18T02:48:20.0592055+02:00",
+      "ueGB": 14.916,
+      "freeCommitGB": 50.27
+    },
+    {
+      "time": "2026-10-18T02:48:30.2947689+02:00",
+      "ueGB": 14.916,
+      "freeCommitGB": 50.26
+    }
+  ],
+  "stream_status": "RECEIVED_BROWSER_FRAMES",
+  "frame_samples": [
+    {
+      "video": {
+        "element_token": 1,
+        "id": "streamingVideo",
+        "video_width": 1912,
+        "video_height": 910,
+        "ready_state": 4,
+        "paused": false,
+        "current_time": 0.864114,
+        "total_video_frames": 32,
+        "dropped_video_frames": 1,
+        "live_media_stream": true,
+        "media_error": null
+      },
+      "observed_at_utc": "2026-10-18T00:48:15.6017088Z",
+      "elapsed_ms": 10184
+    },
+    {
+      "video": {
+        "element_token": 1,
+        "id": "streamingVideo",
+        "video_width": 1912,
+        "video_height": 910,
+        "ready_state": 4,
+        "paused": false,
+        "current_time": 2.254284,
+        "total_video_frames": 55,
+        "dropped_video_frames": 1,
+        "live_media_stream": true,
+        "media_error": null
+      },
+      "observed_at_utc": "2026-10-18T00:48:16.9902763Z",
+      "elapsed_ms": 11573
+    }
+  ],
+  "active_editor_pid": 10792,
+  "launcher": "scripts/ue/Start-YacsLesson04RepairStream.ps1",
+  "limits": "Short observation only, not an overnight soak. Additional receiver during final sampling accounts for a separate allocation step; no CUDA errors observed. No driver or global pagefile changes.",
+  "reference": "https://forums.unrealengine.com/t/pixelstreaming-memory-leak-in-5-7/2712465",
+  "late_observation": {
+    "observed_local": "2026-10-18T03:40:53.5016783+02:00",
+    "editor_pid": 10792,
+    "started_local": "2026-10-18T02:44:33.1007929+02:00",
+    "private_gib": 15.012,
+    "system_free_commit_gib": 52.74
+  },
+  "source_revision": "6e5fac878d1c655f788b3a2f3bc865f3f3e619f9",
+  "gpu": "NVIDIA GeForce RTX 2070 SUPER",
+  "driver": "610.88"
+}
