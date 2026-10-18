@@ -7,8 +7,9 @@ inputs. Native authoring, Unreal admission and owner visual acceptance are
 separate states; see the [measurement receipt](lesson05-full-landscape-20261018.json).
 
 **Completed:** full Working and Context authoring, saved HIP, fresh-process
-full-grid tail rebuild and all-sample height/colour comparison. **Not run:**
-Lesson05 UE import/reopen and owner visual acceptance.
+full-grid tail rebuild and all-sample height/colour comparison. **Subsequently
+completed:** Lesson05 UE import/reopen (see consumer evidence below). Final M3
+owner visual acceptance remains pending.
 
 ## Source mapping and implementation
 
@@ -158,7 +159,8 @@ increment. Removing non-height primitives (as in the L04 adapter) fixes the
 transport without changing source geography or retained visibility. One final
 restart applied this correction only to Context, gated by a full readback of
 the known mixed pre-correction state. All attempts and failures remain retained.
-The successful stream retains H.264 NVENC and the CUDA workaround. The receipt
+The initial successful stream retained H.264 NVENC and the CUDA workaround;
+that configuration was later superseded by the recovery below. The receipt
 records actual increasing decoded browser frames; this is a bounded reception
 proof, not an overnight stability claim or a performance PASS.
 
@@ -190,3 +192,40 @@ Retained work: `D:/yacs/work/lesson05-ue-20261018`; successful proof:
 existing source-retention policy. Git preserves the scripts and compact proof.
 Owner visual acceptance remains pending the final M3 audit; performance is
 `DEFERRED_AFTER_M3`. PR #474 remains Draft and is not merged.
+
+## Saved-map stream recovery — 2026-10-18
+
+The CUDA profile froze shortly after a second viewer joined: NVENC 20 preceded
+CUDA 700 and repeated external-memory import failures. This is a measured
+sequence, not proof of the underlying NVIDIA driver defect. The owner approved
+a restart without import. The saved Lesson05 map hash stayed identical.
+
+The launcher now retains H.264 NVENC/D3D12 with
+`-AVCodecs.NvEnc.D3D12UsesCUDA=false`, CBR, and fixed 12,000,000 bit/s encoder
+and WebRTC min/start/max bitrates. This local/LAN candidate avoids the failing
+CUDA interop path and limits bitrate reconfiguration; fixed bitrate is not a
+recommendation for constrained Internet links. Epic's
+[driver issue discussion](https://github.com/EpicGames/PixelStreamingInfrastructure/issues/900)
+reports a D3D12 reconfiguration leak and caveats for the CUDA workaround.
+
+[Runtime receipt](lesson05-stream-recovery-20261018.json) records a concurrent
+isolated second client decoding 16 then 44 frames, cleanup of that client,
+and zero CUDA 700/NVENC 20 matches in the sampled replacement log. UE remained
+running. Process private memory increased from approximately 17.0 to 18.4 GB
+across the observations, which include startup and camera movement. The leak
+is **not proven resolved**, and long-duration stability is **not proven**.
+`t.MaxFPS 30` caps the engine; the inherited `WebRTCMaxFps` argument was not
+confirmed applied (the observed WebRTC property remained 60). Do not infer a
+30 FPS receiver guarantee from the launch arguments.
+
+For the next startup on an idle host, run
+`scripts/ue/Start-YacsLesson05Stream.ps1` without import switches. Optional
+`-ScreeCloseup` invokes the [camera-only script](../../../scripts/ue/show_lesson05_scree.py),
+which rejects the wrong map and does not cook, import, or save packages. It
+uses an explicit named pitch/yaw/roll and a native scree-mask sample. The first
+camera attempt had incorrect positional Rotator arguments and was corrected;
+the streamed framing still needed manual adjustment, accepted by the owner.
+This optional preset is not proof of the final displayed camera position.
+The saved consumer contains Forge-derived baked global colour, not independently
+bound full Forge PBR channels. No terrain source, checkpoint or geometry was
+changed during this recovery. No merge; leave the active stream running.

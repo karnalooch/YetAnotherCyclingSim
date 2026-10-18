@@ -1,15 +1,16 @@
 #requires -Version 7.4
 <#
 .SYNOPSIS
-    Open the isolated Lesson05 map, or explicitly import from saved Lesson04 with Epic's CUDA NVENC workaround.
+    Open the isolated Lesson05 map, or explicitly import from saved Lesson04 with a fixed-rate native D3D12 NVENC stream.
 .DESCRIPTION
     Starts one editor only on an idle host. Never kills an editor, saves a map,
     changes global configuration or manages other applications. -ImportLesson05 runs the bounded import.
     The local generated map must already exist. Use -WhatIf to inspect arguments.
 #>
 [CmdletBinding(SupportsShouldProcess)]
-param([switch] $ImportLesson05, [switch] $RecoverBaseline, [switch] $RepairContext)
+param([switch] $ImportLesson05, [switch] $RecoverBaseline, [switch] $RepairContext, [switch] $ScreeCloseup)
 
+if ($ScreeCloseup -and $ImportLesson05) { throw 'Close-up only opens the saved map; it cannot import.' }
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) { throw 'The native review stream requires Windows.' }
@@ -40,19 +41,23 @@ $Arguments = @(
     '-ini:Game:[/Script/PixelStreaming2Settings.PixelStreaming2PluginSettings]:EditorUseRemoteSignallingServer=False',
     '-ini:Game:[/Script/PixelStreaming2Settings.PixelStreaming2PluginSettings]:ConnectionURL=ws://127.0.0.1:8888',
     '-EditorPixelStreamingRes=1920x1080',
-    # Epic's supported workaround for the NVIDIA D3D12 H264 reconfigure leak.
-    # Retains NVENC hardware H264; verify real frames, not merely flat memory.
-    '-AVCodecs.NvEnc.D3D12UsesCUDA=true',
+    # CUDA interop failed with NVENC 20 / CUDA 700 when a second viewer joined.
+    # Fixed local bitrate reduces rate reconfiguration; bounded runtime proof is required.
+    '-AVCodecs.NvEnc.D3D12UsesCUDA=false',
     '-PixelStreamingEncoderCodec=H264', '-PixelStreamingWebRTCMaxFps=30',
-    '-PixelStreamingWebRTCStartBitrate=12000000', '-PixelStreamingWebRTCMaxBitrate=25000000',
-    '-PixelStreamingEncoderMinQuality=60', '-PixelStreamingEncoderTargetBitrate=-1',
+    '-PixelStreamingWebRTCMinBitrate=12000000',
+    '-PixelStreamingWebRTCStartBitrate=12000000', '-PixelStreamingWebRTCMaxBitrate=12000000',
+    '-PixelStreamingEncoderMinQuality=60', '-PixelStreamingEncoderTargetBitrate=12000000',
     '-PixelStreamingEncoderRateControl=CBR', '-NoSound', '-NoVSync',
     ('-AbsLog="' + $Log + '"')
 )
 if ($ImportLesson05) {
     $Arguments += '-ExecutePythonScript="' + (Join-Path $PSScriptRoot 'bootstrap_lesson05_import.py') + '"'
 }
-if (-not $PSCmdlet.ShouldProcess($Map, 'Start isolated Lesson05 H264/CUDA editor stream')) {
+if ($ScreeCloseup) {
+    $Arguments += '-ExecutePythonScript="' + (Join-Path $PSScriptRoot 'show_lesson05_scree.py') + '"'
+}
+if (-not $PSCmdlet.ShouldProcess($Map, 'Start isolated Lesson05 H264/D3D12 editor stream')) {
     [ordered]@{ map = $Map; arguments = $Arguments; started = $false } | ConvertTo-Json
     return
 }
@@ -69,5 +74,7 @@ $Process = Start-Process -FilePath $Engine.UnrealEditorPath -ArgumentList $Argum
     log = $Log
     status = 'STARTED_NOT_YET_VERIFIED'
     codec = 'H264'
-    d3d12_uses_cuda = $true
+    d3d12_uses_cuda = $false
+    target_bitrate = 12000000
+    scree_closeup = [bool]$ScreeCloseup
 } | ConvertTo-Json
