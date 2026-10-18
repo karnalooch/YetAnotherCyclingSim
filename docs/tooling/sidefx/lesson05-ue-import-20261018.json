@@ -1,0 +1,1037 @@
+{
+  "source_head": "6d2af280e4b878c9797929dd058f5cc8739cbdbf",
+  "map": "/Game/Generated/YACS/Lesson05_20261018/L_SaCalobra_Lesson05",
+  "session": {
+    "status": "IMPORTED_MEASURED_REOPENED",
+    "pid": 1168,
+    "map": "/Game/Generated/YACS/Lesson05_20261018/L_SaCalobra_Lesson05",
+    "stream_restarted_during_import": false,
+    "visual_acceptance": false
+  },
+  "measurements": {
+    "baseline": {
+      "status": "MATCH",
+      "native_export": "D:\\yacs\\work\\lesson05-ue-20261018\\proof-context\\baseline",
+      "tiles": [
+        {
+          "name": "SaCalobra_Detail_0_0",
+          "samples": 19363691,
+          "minimum_m": -0.732421875,
+          "maximum_m": 576.3702392578125,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.011445815250783064,
+          "error_p95_abs_m": 0.021728515625,
+          "native_uint16_sha256": "7c472d0cdb8a59fe568328537dfbd3c325cf4d711b3a7eccf87a8d2a81a37191",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 0.0,
+            "hidden_vertices": 0
+          }
+        },
+        {
+          "name": "SaCalobra_Detail_1_0",
+          "samples": 19363691,
+          "minimum_m": -0.0457763671875,
+          "maximum_m": 751.64794921875,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.011443205410065738,
+          "error_p95_abs_m": 0.021728515625,
+          "native_uint16_sha256": "cf6fd84a2dafe22627e2425b5e3f9482c8fb3e1191a79f7ab8477fa1abbfc88e",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 0.0,
+            "hidden_vertices": 0
+          }
+        },
+        {
+          "name": "SaCalobra_Detail_0_1",
+          "samples": 19363691,
+          "minimum_m": 325.01220703125,
+          "maximum_m": 1414.947509765625,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.011443525447527164,
+          "error_p95_abs_m": 0.021728515625,
+          "native_uint16_sha256": "53fcd9ab54aec20d4739b3a87e8594ce0434465e1f0e3a2f20e9a4d23e4d744a",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 0.0,
+            "hidden_vertices": 0
+          }
+        },
+        {
+          "name": "SaCalobra_Detail_1_1",
+          "samples": 19363691,
+          "minimum_m": 300.8880615234375,
+          "maximum_m": 906.1431884765625,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.011445258668427823,
+          "error_p95_abs_m": 0.021728515625,
+          "native_uint16_sha256": "2fafa4594453c484fea63f6c0eb6c844a7697718f64e631b6c92ccaa361f1ba4",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 0.0,
+            "hidden_vertices": 0
+          }
+        },
+        {
+          "name": "SaCalobra_Context_Valid",
+          "samples": 4068289,
+          "minimum_m": -0.8697509765625,
+          "maximum_m": 1436.7828369140625,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.009740024906252488,
+          "error_p95_abs_m": 0.02154541015625,
+          "native_uint16_sha256": "d8264e91de708e562e466077fd1a207a6f8754a94c512d1961c3182fe45c737e",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 1.0,
+            "hidden_vertices": 1353604
+          }
+        }
+      ],
+      "complete_shared_edges": [
+        {
+          "tiles": [
+            "0_0",
+            "1_0"
+          ],
+          "samples": 5081,
+          "max_abs_m": 0.0
+        },
+        {
+          "tiles": [
+            "0_1",
+            "1_1"
+          ],
+          "samples": 5081,
+          "max_abs_m": 0.0
+        },
+        {
+          "tiles": [
+            "0_1",
+            "0_0"
+          ],
+          "samples": 3811,
+          "max_abs_m": 0.0
+        },
+        {
+          "tiles": [
+            "1_1",
+            "1_0"
+          ],
+          "samples": 3811,
+          "max_abs_m": 0.0
+        }
+      ],
+      "total_samples_including_duplicate_edges": 81523053,
+      "visual_acceptance": false,
+      "performance_pass": false
+    },
+    "after": {
+      "status": "MATCH",
+      "native_export": "D:\\yacs\\work\\lesson05-ue-20261018\\proof-context\\after",
+      "tiles": [
+        {
+          "name": "SaCalobra_Detail_0_0",
+          "samples": 19363691,
+          "minimum_m": -0.732421875,
+          "maximum_m": 576.3702392578125,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.011445815250783064,
+          "error_p95_abs_m": 0.021728515625,
+          "native_uint16_sha256": "7c472d0cdb8a59fe568328537dfbd3c325cf4d711b3a7eccf87a8d2a81a37191",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 0.0,
+            "hidden_vertices": 0
+          }
+        },
+        {
+          "name": "SaCalobra_Detail_1_0",
+          "samples": 19363691,
+          "minimum_m": -0.0457763671875,
+          "maximum_m": 751.64794921875,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.011443205410065738,
+          "error_p95_abs_m": 0.021728515625,
+          "native_uint16_sha256": "cf6fd84a2dafe22627e2425b5e3f9482c8fb3e1191a79f7ab8477fa1abbfc88e",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 0.0,
+            "hidden_vertices": 0
+          }
+        },
+        {
+          "name": "SaCalobra_Detail_0_1",
+          "samples": 19363691,
+          "minimum_m": 325.01220703125,
+          "maximum_m": 1414.947509765625,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.011443525447527164,
+          "error_p95_abs_m": 0.021728515625,
+          "native_uint16_sha256": "53fcd9ab54aec20d4739b3a87e8594ce0434465e1f0e3a2f20e9a4d23e4d744a",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 0.0,
+            "hidden_vertices": 0
+          }
+        },
+        {
+          "name": "SaCalobra_Detail_1_1",
+          "samples": 19363691,
+          "minimum_m": 300.8880615234375,
+          "maximum_m": 906.1431884765625,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.011445258668427823,
+          "error_p95_abs_m": 0.021728515625,
+          "native_uint16_sha256": "2fafa4594453c484fea63f6c0eb6c844a7697718f64e631b6c92ccaa361f1ba4",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 0.0,
+            "hidden_vertices": 0
+          }
+        },
+        {
+          "name": "SaCalobra_Context_Valid",
+          "samples": 4068289,
+          "minimum_m": -0.8697509765625,
+          "maximum_m": 1436.7828369140625,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.00974002743382884,
+          "error_p95_abs_m": 0.02154541015625,
+          "native_uint16_sha256": "57332136fe7502977612afbca12e594e82662065cd572cb5ada6b8dc1c0591cd",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 1.0,
+            "hidden_vertices": 1353604
+          }
+        }
+      ],
+      "complete_shared_edges": [
+        {
+          "tiles": [
+            "0_0",
+            "1_0"
+          ],
+          "samples": 5081,
+          "max_abs_m": 0.0
+        },
+        {
+          "tiles": [
+            "0_1",
+            "1_1"
+          ],
+          "samples": 5081,
+          "max_abs_m": 0.0
+        },
+        {
+          "tiles": [
+            "0_1",
+            "0_0"
+          ],
+          "samples": 3811,
+          "max_abs_m": 0.0
+        },
+        {
+          "tiles": [
+            "1_1",
+            "1_0"
+          ],
+          "samples": 3811,
+          "max_abs_m": 0.0
+        }
+      ],
+      "total_samples_including_duplicate_edges": 81523053,
+      "visual_acceptance": false,
+      "performance_pass": false
+    },
+    "reopened": {
+      "status": "MATCH",
+      "native_export": "D:\\yacs\\work\\lesson05-ue-20261018\\proof-context\\reopened",
+      "tiles": [
+        {
+          "name": "SaCalobra_Detail_0_0",
+          "samples": 19363691,
+          "minimum_m": -0.732421875,
+          "maximum_m": 576.3702392578125,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.011445815250783064,
+          "error_p95_abs_m": 0.021728515625,
+          "native_uint16_sha256": "7c472d0cdb8a59fe568328537dfbd3c325cf4d711b3a7eccf87a8d2a81a37191",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 0.0,
+            "hidden_vertices": 0
+          }
+        },
+        {
+          "name": "SaCalobra_Detail_1_0",
+          "samples": 19363691,
+          "minimum_m": -0.0457763671875,
+          "maximum_m": 751.64794921875,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.011443205410065738,
+          "error_p95_abs_m": 0.021728515625,
+          "native_uint16_sha256": "cf6fd84a2dafe22627e2425b5e3f9482c8fb3e1191a79f7ab8477fa1abbfc88e",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 0.0,
+            "hidden_vertices": 0
+          }
+        },
+        {
+          "name": "SaCalobra_Detail_0_1",
+          "samples": 19363691,
+          "minimum_m": 325.01220703125,
+          "maximum_m": 1414.947509765625,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.011443525447527164,
+          "error_p95_abs_m": 0.021728515625,
+          "native_uint16_sha256": "53fcd9ab54aec20d4739b3a87e8594ce0434465e1f0e3a2f20e9a4d23e4d744a",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 0.0,
+            "hidden_vertices": 0
+          }
+        },
+        {
+          "name": "SaCalobra_Detail_1_1",
+          "samples": 19363691,
+          "minimum_m": 300.8880615234375,
+          "maximum_m": 906.1431884765625,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.011445258668427823,
+          "error_p95_abs_m": 0.021728515625,
+          "native_uint16_sha256": "2fafa4594453c484fea63f6c0eb6c844a7697718f64e631b6c92ccaa361f1ba4",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 0.0,
+            "hidden_vertices": 0
+          }
+        },
+        {
+          "name": "SaCalobra_Context_Valid",
+          "samples": 4068289,
+          "minimum_m": -0.8697509765625,
+          "maximum_m": 1436.7828369140625,
+          "error_min_m": -0.02288818359375,
+          "error_max_m": 0.02288818359375,
+          "error_max_abs_m": 0.02288818359375,
+          "error_mean_abs_m": 0.00974002743382884,
+          "error_p95_abs_m": 0.02154541015625,
+          "native_uint16_sha256": "57332136fe7502977612afbca12e594e82662065cd572cb5ada6b8dc1c0591cd",
+          "all_codes_match_expected": true,
+          "visibility": {
+            "min": 0.0,
+            "max": 1.0,
+            "hidden_vertices": 1353604
+          }
+        }
+      ],
+      "complete_shared_edges": [
+        {
+          "tiles": [
+            "0_0",
+            "1_0"
+          ],
+          "samples": 5081,
+          "max_abs_m": 0.0
+        },
+        {
+          "tiles": [
+            "0_1",
+            "1_1"
+          ],
+          "samples": 5081,
+          "max_abs_m": 0.0
+        },
+        {
+          "tiles": [
+            "0_1",
+            "0_0"
+          ],
+          "samples": 3811,
+          "max_abs_m": 0.0
+        },
+        {
+          "tiles": [
+            "1_1",
+            "1_0"
+          ],
+          "samples": 3811,
+          "max_abs_m": 0.0
+        }
+      ],
+      "total_samples_including_duplicate_edges": 81523053,
+      "visual_acceptance": false,
+      "performance_pass": false
+    }
+  },
+  "consumer": {
+    "visibility": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "changed_after": 0,
+        "changed_reopened": 0,
+        "hidden_vertices": 0
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "changed_after": 0,
+        "changed_reopened": 0,
+        "hidden_vertices": 0
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "changed_after": 0,
+        "changed_reopened": 0,
+        "hidden_vertices": 0
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "changed_after": 0,
+        "changed_reopened": 0,
+        "hidden_vertices": 0
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "changed_after": 0,
+        "changed_reopened": 0,
+        "hidden_vertices": 1353604
+      }
+    ],
+    "materials": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "location_cm": [
+          -190025.0,
+          73975.0,
+          0.0
+        ],
+        "scale": [
+          50.0,
+          50.0,
+          585.9375
+        ],
+        "rotation": [
+          0.0,
+          -90.0,
+          1.961151042451094e-06
+        ],
+        "bytes": 47201149,
+        "layers": [
+          "Houdini_Source_Pegasus_Gentle",
+          "Layer2_Procedural",
+          "Layer1_Manual",
+          "Source_Manual_Lesson04",
+          "Lesson04_Procedural_Delta",
+          "Lesson05_Increment"
+        ],
+        "material": "/Game/Generated/YACS/Lesson05_20261018/Materials/MI_Lesson04_SaCalobra_Detail_0_0.MI_Lesson04_SaCalobra_Detail_0_0",
+        "hole_material": "/Game/Generated/YACS/Lesson05_20261018/Materials/MI_Lesson04_SaCalobra_Detail_0_0.MI_Lesson04_SaCalobra_Detail_0_0",
+        "blend_mode": "<BlendMode.BLEND_MASKED: 1>",
+        "opacity_mask_input": "<Object '/Game/Generated/YACS/Lesson05_20261018/Materials/M_SaCalobra_Lesson04_Review.M_SaCalobra_Lesson04_Review:MaterialExpressionLandscapeVisibilityMask_0' (0x0000020118038260) Class 'MaterialExpressionLandscapeVisibilityMask'>",
+        "albedo": "/Game/Generated/YACS/Lesson05_20261018/Textures/T_Lesson05_SaCalobra_Detail_0_0.T_Lesson05_SaCalobra_Detail_0_0",
+        "albedo_srgb": true,
+        "uv": {
+          "OriginCm": [
+            -190050.0,
+            74000.0,
+            0.0
+          ],
+          "InvSizeCm": [
+            5.2479663281701505e-06,
+            -3.936233042622916e-06,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "location_cm": [
+          475.0,
+          73975.0,
+          0.0
+        ],
+        "scale": [
+          50.0,
+          50.0,
+          585.9375
+        ],
+        "rotation": [
+          0.0,
+          -90.0,
+          1.961151042451094e-06
+        ],
+        "bytes": 47840855,
+        "layers": [
+          "Houdini_Source_Pegasus_Gentle",
+          "Source_Manual_Lesson04",
+          "Lesson04_Procedural_Delta",
+          "Lesson05_Increment"
+        ],
+        "material": "/Game/Generated/YACS/Lesson05_20261018/Materials/MI_Lesson04_SaCalobra_Detail_1_0.MI_Lesson04_SaCalobra_Detail_1_0",
+        "hole_material": "/Game/Generated/YACS/Lesson05_20261018/Materials/MI_Lesson04_SaCalobra_Detail_1_0.MI_Lesson04_SaCalobra_Detail_1_0",
+        "blend_mode": "<BlendMode.BLEND_MASKED: 1>",
+        "opacity_mask_input": "<Object '/Game/Generated/YACS/Lesson05_20261018/Materials/M_SaCalobra_Lesson04_Review.M_SaCalobra_Lesson04_Review:MaterialExpressionLandscapeVisibilityMask_0' (0x0000020118038260) Class 'MaterialExpressionLandscapeVisibilityMask'>",
+        "albedo": "/Game/Generated/YACS/Lesson05_20261018/Textures/T_Lesson05_SaCalobra_Detail_1_0.T_Lesson05_SaCalobra_Detail_1_0",
+        "albedo_srgb": true,
+        "uv": {
+          "OriginCm": [
+            450.0,
+            74000.0,
+            0.0
+          ],
+          "InvSizeCm": [
+            5.2479663281701505e-06,
+            -3.936233042622916e-06,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "location_cm": [
+          -190025.0,
+          327975.0,
+          0.0
+        ],
+        "scale": [
+          50.0,
+          50.0,
+          585.9375
+        ],
+        "rotation": [
+          0.0,
+          -90.0,
+          1.961151042451094e-06
+        ],
+        "bytes": 43807011,
+        "layers": [
+          "Houdini_Source_Pegasus_Gentle",
+          "Source_Manual_Lesson04",
+          "Lesson04_Procedural_Delta",
+          "Lesson05_Increment"
+        ],
+        "material": "/Game/Generated/YACS/Lesson05_20261018/Materials/MI_Lesson04_SaCalobra_Detail_0_1.MI_Lesson04_SaCalobra_Detail_0_1",
+        "hole_material": "/Game/Generated/YACS/Lesson05_20261018/Materials/MI_Lesson04_SaCalobra_Detail_0_1.MI_Lesson04_SaCalobra_Detail_0_1",
+        "blend_mode": "<BlendMode.BLEND_MASKED: 1>",
+        "opacity_mask_input": "<Object '/Game/Generated/YACS/Lesson05_20261018/Materials/M_SaCalobra_Lesson04_Review.M_SaCalobra_Lesson04_Review:MaterialExpressionLandscapeVisibilityMask_0' (0x0000020118038260) Class 'MaterialExpressionLandscapeVisibilityMask'>",
+        "albedo": "/Game/Generated/YACS/Lesson05_20261018/Textures/T_Lesson05_SaCalobra_Detail_0_1.T_Lesson05_SaCalobra_Detail_0_1",
+        "albedo_srgb": true,
+        "uv": {
+          "OriginCm": [
+            -190050.0,
+            328000.0,
+            0.0
+          ],
+          "InvSizeCm": [
+            5.2479663281701505e-06,
+            -3.936233042622916e-06,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "location_cm": [
+          475.0,
+          327975.0,
+          0.0
+        ],
+        "scale": [
+          50.0,
+          50.0,
+          585.9375
+        ],
+        "rotation": [
+          0.0,
+          -90.0,
+          1.961151042451094e-06
+        ],
+        "bytes": 42687325,
+        "layers": [
+          "Houdini_Source_Pegasus_Gentle",
+          "Source_Manual_Lesson04",
+          "Lesson04_Procedural_Delta",
+          "Lesson05_Increment"
+        ],
+        "material": "/Game/Generated/YACS/Lesson05_20261018/Materials/MI_Lesson04_SaCalobra_Detail_1_1.MI_Lesson04_SaCalobra_Detail_1_1",
+        "hole_material": "/Game/Generated/YACS/Lesson05_20261018/Materials/MI_Lesson04_SaCalobra_Detail_1_1.MI_Lesson04_SaCalobra_Detail_1_1",
+        "blend_mode": "<BlendMode.BLEND_MASKED: 1>",
+        "opacity_mask_input": "<Object '/Game/Generated/YACS/Lesson05_20261018/Materials/M_SaCalobra_Lesson04_Review.M_SaCalobra_Lesson04_Review:MaterialExpressionLandscapeVisibilityMask_0' (0x0000020118038260) Class 'MaterialExpressionLandscapeVisibilityMask'>",
+        "albedo": "/Game/Generated/YACS/Lesson05_20261018/Textures/T_Lesson05_SaCalobra_Detail_1_1.T_Lesson05_SaCalobra_Detail_1_1",
+        "albedo_srgb": true,
+        "uv": {
+          "OriginCm": [
+            450.0,
+            328000.0,
+            0.0
+          ],
+          "InvSizeCm": [
+            5.2479663281701505e-06,
+            -3.936233042622916e-06,
+            0.0
+          ]
+        }
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "location_cm": [
+          -393554.6875,
+          393945.3125,
+          0.0
+        ],
+        "scale": [
+          390.625,
+          390.625,
+          585.9375
+        ],
+        "rotation": [
+          0.0,
+          -90.0,
+          1.961151042451094e-06
+        ],
+        "bytes": 9170388,
+        "layers": [
+          "Houdini_Source_Pegasus_Gentle",
+          "Source_Manual_Lesson04",
+          "Lesson04_Procedural_Delta",
+          "Lesson05_Increment"
+        ],
+        "material": "/Game/Generated/YACS/Lesson05_20261018/Materials/MI_Lesson04_SaCalobra_Context_Valid.MI_Lesson04_SaCalobra_Context_Valid",
+        "hole_material": "/Game/Generated/YACS/Lesson05_20261018/Materials/MI_Lesson04_SaCalobra_Context_Valid.MI_Lesson04_SaCalobra_Context_Valid",
+        "blend_mode": "<BlendMode.BLEND_MASKED: 1>",
+        "opacity_mask_input": "<Object '/Game/Generated/YACS/Lesson05_20261018/Materials/M_SaCalobra_Lesson04_Review.M_SaCalobra_Lesson04_Review:MaterialExpressionLandscapeVisibilityMask_0' (0x0000020118038260) Class 'MaterialExpressionLandscapeVisibilityMask'>",
+        "albedo": "/Game/Generated/YACS/Lesson05_20261018/Textures/T_Lesson05_SaCalobra_Context_Valid.T_Lesson05_SaCalobra_Context_Valid",
+        "albedo_srgb": true,
+        "uv": {
+          "OriginCm": [
+            -393750.0,
+            394140.625,
+            0.0
+          ],
+          "InvSizeCm": [
+            1.2692116797552444e-06,
+            -1.2692116797552444e-06,
+            0.0
+          ]
+        }
+      }
+    ],
+    "color_edges": [
+      {
+        "tiles": [
+          "0_0",
+          "1_0"
+        ],
+        "max_uint8_channel_error": 0
+      },
+      {
+        "tiles": [
+          "0_1",
+          "1_1"
+        ],
+        "max_uint8_channel_error": 1
+      },
+      {
+        "tiles": [
+          "0_1",
+          "0_0"
+        ],
+        "max_uint8_channel_error": 0
+      },
+      {
+        "tiles": [
+          "1_1",
+          "1_0"
+        ],
+        "max_uint8_channel_error": 0
+      }
+    ],
+    "source_map_unchanged": true,
+    "exact_color_seams": false,
+    "status": "GEOMETRY_OWNERSHIP_MATERIAL_MATCH_COLOR_DIFFERENCE_RECORDED"
+  },
+  "stream": {
+    "status": "RECEIVED_BROWSER_FRAMES",
+    "received_browser_frame": true,
+    "frame_samples": [
+      {
+        "observed_at_utc": "2026-10-18T10:11:54.1609430Z",
+        "video": {
+          "element_token": 1,
+          "id": "streamingVideo",
+          "video_width": 1912,
+          "video_height": 910,
+          "ready_state": 4,
+          "paused": false,
+          "current_time": 2.261999,
+          "total_video_frames": 16,
+          "dropped_video_frames": 0,
+          "live_media_stream": true,
+          "media_error": null
+        },
+        "elapsed_ms": 18672
+      },
+      {
+        "observed_at_utc": "2026-10-18T10:11:55.4386193Z",
+        "video": {
+          "element_token": 1,
+          "id": "streamingVideo",
+          "video_width": 1912,
+          "video_height": 910,
+          "ready_state": 4,
+          "paused": false,
+          "current_time": 3.538666,
+          "total_video_frames": 21,
+          "dropped_video_frames": 0,
+          "live_media_stream": true,
+          "media_error": null
+        },
+        "elapsed_ms": 19950
+      }
+    ],
+    "screenshot": {
+      "sha256": "e74f2d787336b7d3f5518eb85c3ff856a00e94df4f33dc62d60c336b0f0e1764",
+      "bytes": 1129495,
+      "path": "D:\\yacs\\work\\lesson05-ue-20261018\\stream-receive\\level-editor-stream-client.png"
+    },
+    "cleanup_complete": true,
+    "started_at_utc": "2026-10-18T10:11:35.4907084Z",
+    "completed_at_utc": "2026-10-18T10:11:56.2593862Z"
+  },
+  "visual_acceptance": false,
+  "performance_pass": false,
+  "original_l04_baseline": {
+    "status": "MATCH",
+    "native_export": "D:\\yacs\\work\\lesson05-ue-20261018\\proof\\baseline",
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "samples": 19363691,
+        "minimum_m": -0.732421875,
+        "maximum_m": 576.3702392578125,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.011445844489582285,
+        "error_p95_abs_m": 0.021728515625,
+        "native_uint16_sha256": "525a283dcc5dadff641b64366e3b74b04b521567c91ea119b02fd9d977756d04",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "samples": 19363691,
+        "minimum_m": -0.0457763671875,
+        "maximum_m": 751.64794921875,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.01144331902372963,
+        "error_p95_abs_m": 0.021728515625,
+        "native_uint16_sha256": "65aafabe20e0ea65539c03f78bec45fbb18a3706625f0e490a6ea6309a7320f6",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "samples": 19363691,
+        "minimum_m": 325.01220703125,
+        "maximum_m": 1414.947509765625,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.011443480825652675,
+        "error_p95_abs_m": 0.021728515625,
+        "native_uint16_sha256": "3e4da3913557df6d45e85e052f1181da06107c45e23e036c1d394ab0fe135d5f",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "samples": 19363691,
+        "minimum_m": 300.8880615234375,
+        "maximum_m": 906.1431884765625,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.011445280538867278,
+        "error_p95_abs_m": 0.021728515625,
+        "native_uint16_sha256": "6af0586221d37be52cefc2983fce2cd3b4a55f0f47f5057a4dca01fa72a5f8ba",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "samples": 4068289,
+        "minimum_m": -0.8697509765625,
+        "maximum_m": 1436.7828369140625,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.009740024906252488,
+        "error_p95_abs_m": 0.02154541015625,
+        "native_uint16_sha256": "d8264e91de708e562e466077fd1a207a6f8754a94c512d1961c3182fe45c737e",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 1.0,
+          "hidden_vertices": 1353604
+        }
+      }
+    ],
+    "complete_shared_edges": [
+      {
+        "tiles": [
+          "0_0",
+          "1_0"
+        ],
+        "samples": 5081,
+        "max_abs_m": 0.0
+      },
+      {
+        "tiles": [
+          "0_1",
+          "1_1"
+        ],
+        "samples": 5081,
+        "max_abs_m": 0.0
+      },
+      {
+        "tiles": [
+          "0_1",
+          "0_0"
+        ],
+        "samples": 3811,
+        "max_abs_m": 0.0
+      },
+      {
+        "tiles": [
+          "1_1",
+          "1_0"
+        ],
+        "samples": 3811,
+        "max_abs_m": 0.0
+      }
+    ],
+    "total_samples_including_duplicate_edges": 81523053,
+    "visual_acceptance": false,
+    "performance_pass": false
+  },
+  "context_failure": {
+    "status": "MISMATCH",
+    "native_export": "D:\\yacs\\work\\lesson05-ue-20261018\\proof-retry\\after",
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "samples": 19363691,
+        "minimum_m": -0.732421875,
+        "maximum_m": 576.3702392578125,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.011445815250783064,
+        "error_p95_abs_m": 0.021728515625,
+        "native_uint16_sha256": "7c472d0cdb8a59fe568328537dfbd3c325cf4d711b3a7eccf87a8d2a81a37191",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "samples": 19363691,
+        "minimum_m": -0.0457763671875,
+        "maximum_m": 751.64794921875,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.011443205410065738,
+        "error_p95_abs_m": 0.021728515625,
+        "native_uint16_sha256": "cf6fd84a2dafe22627e2425b5e3f9482c8fb3e1191a79f7ab8477fa1abbfc88e",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "samples": 19363691,
+        "minimum_m": 325.01220703125,
+        "maximum_m": 1414.947509765625,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.011443525447527164,
+        "error_p95_abs_m": 0.021728515625,
+        "native_uint16_sha256": "53fcd9ab54aec20d4739b3a87e8594ce0434465e1f0e3a2f20e9a4d23e4d744a",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "samples": 19363691,
+        "minimum_m": 300.8880615234375,
+        "maximum_m": 906.1431884765625,
+        "error_min_m": -0.02288818359375,
+        "error_max_m": 0.02288818359375,
+        "error_max_abs_m": 0.02288818359375,
+        "error_mean_abs_m": 0.011445258668427823,
+        "error_p95_abs_m": 0.021728515625,
+        "native_uint16_sha256": "2fafa4594453c484fea63f6c0eb6c844a7697718f64e631b6c92ccaa361f1ba4",
+        "all_codes_match_expected": true,
+        "visibility": {
+          "min": 0.0,
+          "max": 0.0,
+          "hidden_vertices": 0
+        }
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "samples": 4068289,
+        "minimum_m": -0.8697509765625,
+        "maximum_m": 1436.7828369140625,
+        "error_min_m": -0.039093017578125,
+        "error_max_m": 0.02301025390625,
+        "error_max_abs_m": 0.039093017578125,
+        "error_mean_abs_m": 0.009740845646515612,
+        "error_p95_abs_m": 0.02154541015625,
+        "native_uint16_sha256": "d8264e91de708e562e466077fd1a207a6f8754a94c512d1961c3182fe45c737e",
+        "all_codes_match_expected": false,
+        "visibility": {
+          "min": 0.0,
+          "max": 1.0,
+          "hidden_vertices": 1353604
+        }
+      }
+    ],
+    "complete_shared_edges": [
+      {
+        "tiles": [
+          "0_0",
+          "1_0"
+        ],
+        "samples": 5081,
+        "max_abs_m": 0.0
+      },
+      {
+        "tiles": [
+          "0_1",
+          "1_1"
+        ],
+        "samples": 5081,
+        "max_abs_m": 0.0
+      },
+      {
+        "tiles": [
+          "0_1",
+          "0_0"
+        ],
+        "samples": 3811,
+        "max_abs_m": 0.0
+      },
+      {
+        "tiles": [
+          "1_1",
+          "1_0"
+        ],
+        "samples": 3811,
+        "max_abs_m": 0.0
+      }
+    ],
+    "total_samples_including_duplicate_edges": 81523053,
+    "visual_acceptance": false,
+    "performance_pass": false
+  },
+  "color_precision_diagnostic": {
+    "edge": [
+      "0_1",
+      "1_1"
+    ],
+    "row": 167,
+    "channel": "green",
+    "uint8": [
+      76,
+      75
+    ],
+    "native_green": [
+      0.2960801124572754,
+      0.2960715889930725
+    ],
+    "native_x_m": [
+      4.7501220703125,
+      4.75
+    ],
+    "native_z_m": 3196.25,
+    "working_footprint": false,
+    "exact_color_seams": false
+  }
+}

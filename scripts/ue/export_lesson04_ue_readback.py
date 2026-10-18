@@ -5,17 +5,18 @@ import traceback
 import unreal
 import os
 
+MAP = "/Game/Generated/YACS/Lesson05_20261018/L_SaCalobra_Lesson05" if os.environ.get("YACS_LANDSCAPE_LESSON") == "05" else "/Game/Generated/YACS/Lesson04Repair_20261018/L_SaCalobra_Lesson04_Test"
 world = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world()
 assert (
     world.get_path_name().split(".")[0]
-    == "/Game/Generated/YACS/Lesson04Repair_20261018/L_SaCalobra_Lesson04_Test"
+    == MAP
 ), "Only the isolated repair map may be measured"
 out = pathlib.Path(os.environ["YACS_LESSON04_READBACK_OUT"]).resolve()
 assert not out.exists(), "Use a fresh evidence directory"
 out.mkdir(parents=True)
 hda_path = pathlib.Path(os.environ["YACS_LESSON04_READBACK_HDA"]).resolve()
 assert hda_path.is_file()
-assetpath = "/Game/Generated/YACS/Lesson04Repair_20261018/Probe/Landscape_Readback_v3"
+assetpath = MAP.rsplit("/", 1)[0] + "/Probe/Landscape_Readback_v3"
 if not unreal.EditorAssetLibrary.does_asset_exist(assetpath):
     task = unreal.AssetImportTask()
     task.filename = hda_path.as_posix()
@@ -138,6 +139,20 @@ def tick(dt):
                     ],
                 }
             )
+            if os.environ.get("YACS_LANDSCAPE_LESSON") == "05":
+                material = a.get_editor_property("landscape_material")
+                texture = unreal.MaterialEditingLibrary.get_material_instance_texture_parameter_value(material, "AlbedoTexture")
+                records[-1]["material"] = material.get_path_name()
+                records[-1]["hole_material"] = a.get_editor_property("landscape_hole_material").get_path_name()
+                parent = material.get_editor_property("parent")
+                records[-1]["blend_mode"] = str(parent.get_editor_property("blend_mode"))
+                records[-1]["opacity_mask_input"] = str(unreal.MaterialEditingLibrary.get_material_property_input_node(parent, unreal.MaterialProperty.MP_OPACITY_MASK))
+                records[-1]["albedo"] = texture.get_path_name() if texture else None
+                records[-1]["albedo_srgb"] = bool(texture.get_editor_property("srgb")) if texture else None
+                records[-1]["uv"] = {}
+                for parameter in ("OriginCm", "InvSizeCm"):
+                    value = unreal.MaterialEditingLibrary.get_material_instance_vector_parameter_value(material, parameter)
+                    records[-1]["uv"][parameter] = [value.r, value.g, value.b]
             assert wrapper.delete_instantiated_asset()
             wrapper = None
             (out / "inventory.json").write_text(json.dumps(records, indent=2))

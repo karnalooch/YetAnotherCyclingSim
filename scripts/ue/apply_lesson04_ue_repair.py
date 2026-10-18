@@ -13,8 +13,10 @@ import time
 import traceback
 import unreal
 
-MAP = "/Game/Generated/YACS/Lesson04Repair_20261018/L_SaCalobra_Lesson04_Test"
-ROOT = "/Game/Generated/YACS/Lesson04Repair_20261018"
+CONTEXT_REPAIR = os.environ.get('YACS_LESSON05_CONTEXT_REPAIR') == '1'
+LESSON05 = os.environ.get("YACS_LANDSCAPE_LESSON") == "05"
+MAP = "/Game/Generated/YACS/Lesson05_20261018/L_SaCalobra_Lesson05" if LESSON05 else "/Game/Generated/YACS/Lesson04Repair_20261018/L_SaCalobra_Lesson04_Test"
+ROOT = MAP.rsplit("/", 1)[0]
 HDA = "/Game/Worlds/SaCalobra_Houdini_20261016/Houdini/SaCalobra_Terrain_Transfer_v2"
 transfer = Path(os.environ["YACS_LESSON04_TRANSFER"])
 proof = Path(os.environ["YACS_LESSON04_PROOF"])
@@ -34,6 +36,8 @@ assert plugin["Version"] == 22000466 and manifest["houdini_version"] == "22.0.46
 )
 
 assert manifest["target_map"] == MAP and manifest["output_mode"] == 1
+if LESSON05:
+    assert manifest.get("height_only") is True, "Lesson05 must not carry visibility or paint volumes"
 actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 levels = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
 editor = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
@@ -83,6 +87,8 @@ def fix_materials():
             old + "/" + mat_name, master_path
         )
     master = unreal.load_asset(master_path)
+    if LESSON05:
+        unreal.MaterialEditingLibrary.recompile_material(master)
     for tile in manifest["tiles"]:
         name = "MI_Lesson04_" + tile["name"]
         path = ROOT + "/Materials/" + name
@@ -113,6 +119,27 @@ def fix_materials():
                 abs(a - b) <= max(1e-11, abs(b) * 1e-6)
                 for a, b in zip((actual.r, actual.g, actual.b), tile[key])
             ), "Material parameter readback mismatch"
+        if LESSON05:
+            image = transfer / tile["albedo"]
+            assert hashlib.file_digest(image.open("rb"), "sha256").hexdigest() == tile["albedo_sha256"]
+            task = unreal.AssetImportTask()
+            task.filename = str(image)
+            task.destination_path = ROOT + "/Textures"
+            task.destination_name = "T_Lesson05_" + tile["name"]
+            task.automated = True
+            task.save = True
+            unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+            texture = unreal.load_asset(task.destination_path + "/" + task.destination_name)
+            assert texture, "Lesson05 albedo import failed"
+            texture.set_editor_property("srgb", True)
+            assert unreal.EditorAssetLibrary.save_loaded_asset(texture)
+            # Use the already validated Forge importer pattern: wrapper return
+            # values are not authoritative; the independently read value is.
+            unreal.MaterialEditingLibrary.set_material_instance_parameter_override(mi, "AlbedoTexture", True)
+            unreal.MaterialEditingLibrary.set_material_instance_texture_parameter_value(mi, "AlbedoTexture", texture)
+            unreal.MaterialEditingLibrary.update_material_instance(mi)
+            actual = unreal.MaterialEditingLibrary.get_material_instance_texture_parameter_value(mi, "AlbedoTexture")
+            assert actual and actual.get_path_name() == texture.get_path_name(), "Lesson05 albedo readback mismatch"
         unreal.MaterialEditingLibrary.update_material_instance(mi)
         assert unreal.EditorAssetLibrary.save_loaded_asset(mi)
         a = targets[tile["name"]]
@@ -263,6 +290,18 @@ try:
         assert abs(a.get_actor_location().z) < 0.001, (
             "Nonzero Z origin requires a separately calibrated transfer"
         )
+        if LESSON05:
+            names = [str(layer.get_name_bp()) for layer in a.get_edit_layers_bp()]
+            assert "Source_Manual_Lesson04" in names and "Lesson04_Procedural_Delta" in names
+            if CONTEXT_REPAIR:
+                assert manifest["delta_layer"] in names
+                if tile["name"] != "SaCalobra_Context_Valid":
+                    continue
+            else:
+                assert manifest["delta_layer"] not in names, "Refuse a second incremental import"
+            assert a.get_actor_scale3d().z == manifest["scale_z"]
+            pending.append((tile, manifest["delta_layer"]))
+            continue
         # Replace every height layer under the test map. Retained visibility data
         # is independent; this helper clears heights only using native UE APIs.
         for layer in a.get_edit_layers_bp():

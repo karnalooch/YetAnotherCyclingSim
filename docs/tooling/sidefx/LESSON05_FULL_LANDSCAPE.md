@@ -115,10 +115,78 @@ correct ranges, and curvature/verification were rerun. Legacy overview nodes
 emit ID-layer menu errors during HIP save; those retained later-lesson menus
 are not the Lesson05 output and are not claimed as repaired.
 
-## Consumer and acceptance boundaries
+## Unreal consumer import, 2026-10-18
 
-The running UE session is the repaired Lesson04 map, preserved with H.264 NVENC
-and the CUDA workaround. No restart, map replacement, source asset edit or merge
-is implied by native Houdini completion. Full Lesson05 UE import, native seam
-readback, fresh UE reopen, matched-camera review and owner acceptance must be
-reported separately. They cannot inherit Lesson04 PASS results.
+The [consumer receipt](lesson05-ue-import-20261018.json) records a separate saved
+map: `/Game/Generated/YACS/Lesson05_20261018/L_SaCalobra_Lesson05`.
+The original repaired Lesson04 map is byte-identical to its pre-import hash.
+Houdini Engine output mode 1 adds `Lesson05_Increment` above retained L04 layers.
+It encodes **q(L05) - q(L04)** around the calibrated neutral height code; it does
+not import absolute height as an additive delta or clear the retained layers.
+All five tiles retain Scale.Z 585.9375 and Z origin zero.
+
+Full native readback before import, after save and after map reopen compares
+81,523,053 samples (including duplicate tile edges). All expected uint16 hashes
+match. The maximum source-height error is 0.022888184 m, the half-step of the
+shared 0.0457763671875 m encoding. All four complete shared edges have exactly
+0 m discrepancy. The reopen is a fresh map load within the same editor process,
+not a claim of a separate-process reload of the final saved map.
+
+Every Working/Context visibility sample is unchanged across those three reads;
+the previously verified Context exclusion remains retained. Native readback
+confirms the five new albedo textures, sRGB flags and north-first world UVs.
+Three exported RGB tile edges match exactly. One green channel at row 167 of
+the 0_1/1_1 boundary differs by one code (76 versus 75). Repeating native SideFX
+resampling reproduced green values 0.296080112 and 0.296071589: the two tile
+transforms represent X as 4.750122070 and 4.75 m at Z 3196.25 m, outside Working.
+This straddles the 75.5 rounding boundary. Exact colour-seam equality is **false**,
+not silently accepted by a relaxed test; the measured discrepancy is retained.
+The consumer uses baked
+Pegasus global colour containing the Forge scree; this is not a new multi-layer
+PBR shader or a claim that every Forge channel was independently bound in UE.
+
+The old offscreen stream reported CUDA 700 and could not expose a console.
+The owner approved a controlled restart with the import at startup. A
+corrective restart was needed after the texture setter returned false; the
+existing Forge importer pattern (explicit override plus independent readback)
+resolved the failure. Full measurements then found 1605 unchanged Context
+samples while all four detail tile hashes matched. The transfer incorrectly
+retained a visibility volume: in pinned SideFX `HoudiniLandscapeTranslator.cpp`
+the clear path for both Height and Visibility clears the heightmap, keyed
+separately per target name. Visibility therefore erased the preceding height
+increment. Removing non-height primitives (as in the L04 adapter) fixes the
+transport without changing source geography or retained visibility. One final
+restart applied this correction only to Context, gated by a full readback of
+the known mixed pre-correction state. All attempts and failures remain retained.
+The successful stream retains H.264 NVENC and the CUDA workaround. The receipt
+records actual increasing decoded browser frames; this is a bounded reception
+proof, not an overnight stability claim or a performance PASS.
+
+### Replay and next startup
+
+- [Prepare the transfer](../../../scripts/houdini/prepare_lesson05_ue.py) with
+  `--lesson05-root`, `--lesson04-transfer`, `--tile-root`, and a fresh
+  `--output-root` set to the retained work root's `transfer-height-only` folder.
+  Use Houdini 22.0.466 with CPU OpenCL.
+- On an idle host, [start the stream](../../../scripts/ue/Start-YacsLesson05Stream.ps1)
+  **without switches** to open the saved Lesson05 map without importing again.
+  `-ImportLesson05` explicitly runs the bounded first-import bootstrap from L04.
+  `-ImportLesson05 -RecoverBaseline` is only for a failed first attempt with a
+  retained saved baseline; its full pre-import readback must still match L04.
+  `-ImportLesson05 -RepairContext` is restricted to the recorded Context-only
+  mismatch; it replaces that new Edit Layer and never reimports the detail tiles.
+- [Bootstrap](../../../scripts/ue/bootstrap_lesson05_import.py) pauses at baseline,
+  after, and reopened. For each completed native export, run
+  [height/seam verification](../../../scripts/houdini/verify_lesson04_ue_readback.py)
+  using `--export-root` and `--transfer-root`; baseline uses the L04 transfer,
+  the other two use L05. Context-only recovery uses `transfer-before-context`
+  for its mixed-state baseline. Only MATCH advances the next stage.
+- [Consumer verification](../../../scripts/houdini/verify_lesson05_consumer.py)
+  takes `--root` and `--proof` and checks full visibility retention, UV/material
+  readback, RGB seams and the source map hash.
+
+Retained work: `D:/yacs/work/lesson05-ue-20261018`; successful proof:
+`proof-context`. Large map packages, images and caches remain local under the
+existing source-retention policy. Git preserves the scripts and compact proof.
+Owner visual acceptance remains pending the final M3 audit; performance is
+`DEFERRED_AFTER_M3`. PR #474 remains Draft and is not merged.
