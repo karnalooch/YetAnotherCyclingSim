@@ -112,3 +112,5 @@ Use the existing [recipe template](RECIPE_TEMPLATE.md), CI and proof system, not
 The uploaded `sidefx_packages.7z`, complete Labs distribution, compiled binaries, `Intermediate`/`Binaries` content and full help corpus stay outside the product repository. Retain concise metadata, source paths/hashes and authored guidance. Existing [JSON storage rules](../../evidence/JSON_STORAGE.md) remain in force, including the 1 MiB raw-documentation JSON budget and byte-preserving archival. Do not delete recipes, interchange inputs or failed evidence simply because they use JSON.
 
 M3 performance remains `DEFERRED_AFTER_M3`, `performance_pass: false`. This guide grants neither a merge to `main` nor world/visual/performance acceptance, and records no new Houdini or Unreal execution.
+
+The bounded [Lesson04 Unreal consumer repair](LESSON04_UNREAL_REPAIR.md) records the isolated 2026-10-18 height, seam, UV, runtime collision and fresh-reopen measurements. Its native receipt is separate from owner visual acceptance and production promotion.
