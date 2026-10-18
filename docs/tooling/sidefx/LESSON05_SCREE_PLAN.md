@@ -2,7 +2,9 @@
 
 **Status:** PLAN with execution progress tracked below. Prepared 2026-10-18.
 
-**Execution update, 2026-10-18:** [Precheck and Material Forge preparation](LESSON05_MATERIAL_PREPARATION.md) completed with two matching native map renders. Houdini adapter calibration, scree placement, Lesson05 checkpoint and UE import remain NOT RUN.
+**Owner scope update, 2026-10-18:** The owner explicitly requested the complete lesson on the full Landscape, superseding the small-patch-only execution scope. [Full native execution and fresh-rebuild measurements](LESSON05_FULL_LANDSCAPE.md) are now recorded; UE import and visual acceptance remain separate.
+
+**Earlier execution update, 2026-10-18:** [Precheck and Material Forge preparation](LESSON05_MATERIAL_PREPARATION.md) completed with two matching native map renders. Houdini adapter calibration, scree placement, Lesson05 checkpoint and UE import remain NOT RUN.
 
 **Delivery:** [PR #474](https://github.com/karnalooch/YetAnotherCyclingSim/pull/474), `codex/365-world-graph`; no merge.
 

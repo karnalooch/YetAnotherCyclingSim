@@ -1,0 +1,819 @@
+{
+  "status": "FULL_HOUDINI_AUTHORING_AND_FRESH_REBUILD_PASS",
+  "unreal_lesson05_import": "NOT_RUN; live Lesson04 preserved",
+  "visual_acceptance": false,
+  "performance_pass": false,
+  "checkpoint": {
+    "hip": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson05.hiplc",
+    "hip_sha256": "876eb856004822a014ed4bcf383a96a030d493cea3d383704e692c53c6562b32",
+    "lesson04_unchanged_sha256": "6d5419191083ed32a79e4fb1668a1476cdf49b38bdc27d3b869424959793d098",
+    "stage_graphs_per_area": 10,
+    "fresh_reopen": "PASS, full native tail rebuilt for Working and Context"
+  },
+  "source_identity": [
+    {
+      "name": "source_working_05m.bgeo.sc",
+      "sha256": "01dd245efdcedde5352b9142905bc53aa43c2794231039ab8bca0893d18690c0",
+      "matches_retained_lesson04": true
+    },
+    {
+      "name": "Pegasus_Landscape_Layer_2_Manual_Edits.bgeo.sc",
+      "sha256": "de46c2f2d0ea12c7ca937edafdc70f70b1b0504e1d4015092a7c72bcf1adccd2",
+      "matches_retained_lesson04": true
+    },
+    {
+      "name": "lesson04_working_material_05m.bgeo.sc",
+      "sha256": "afe0dbf675b3bf81066b7cdffbf1fae6867c57e1ff7cea751f32d4701640a300",
+      "matches_retained_lesson04": true
+    },
+    {
+      "name": "SaCalobra_Detail_0_0.bgeo.sc",
+      "sha256": "c3493cd71fdab4372c59ea78e16cfcd47da92852604e5630b4ab026e6d0dc351",
+      "matches_retained_lesson04": true
+    },
+    {
+      "name": "SaCalobra_Detail_1_0.bgeo.sc",
+      "sha256": "dd98506eaf50e515bdff2a2859827fac1c0ac834bf3c790042b456bc057ec576",
+      "matches_retained_lesson04": true
+    },
+    {
+      "name": "SaCalobra_Detail_0_1.bgeo.sc",
+      "sha256": "060b7395d52267f504756363a3b182a54326335657ad868a36b17b136f1f1d67",
+      "matches_retained_lesson04": true
+    },
+    {
+      "name": "SaCalobra_Detail_1_1.bgeo.sc",
+      "sha256": "063cf62e6da1943c7c38560e4f0c58bc5e492704dd2a42f57a57012347de3964",
+      "matches_retained_lesson04": true
+    },
+    {
+      "name": "SaCalobra_Context_Valid.bgeo.sc",
+      "sha256": "7d9d17ee60c58542e0599e12ec7d26032ecc6513b8dac10fb130cfb03fa6ec89",
+      "matches_retained_lesson04": true
+    },
+    {
+      "name": "context_source.bgeo.sc",
+      "sha256": "cbab49ef798a91891602a085d2a8347de69e07344e5232c85190d9ad59377ae5",
+      "matches_retained_lesson04": true
+    },
+    {
+      "name": "lesson04_context_material.bgeo.sc",
+      "sha256": "54e8d16351083d8b96933ff4801d64bdd9cb779ef83bfdb976222a20d45577a7",
+      "matches_retained_lesson04": true
+    },
+    {
+      "name": "SaCalobra_Pegasus_Lesson03.hiplc",
+      "sha256": "3bee48c5d6371d3ef65a584329a5bda081d456849790db3f42bccbf964282667"
+    },
+    {
+      "name": "SaCalobra_Pegasus_Lesson04.hiplc",
+      "sha256": "6d5419191083ed32a79e4fb1668a1476cdf49b38bdc27d3b869424959793d098"
+    }
+  ],
+  "png_color_control": {
+    "height": 0.0,
+    "mask": 0.0,
+    "r": 0.5019609928131104,
+    "g": 0.2509799897670746,
+    "b": 0.7529410123825073,
+    "roughness": 0.874509871006012
+  },
+  "areas": {
+    "working": {
+      "cliff_tint": {
+        "stage": "cliff_tint",
+        "area": "working",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.7467375993728638,
+          "max": 1413.280029296875,
+          "mean": 507.0816563602106,
+          "count": 70316666
+        },
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "origin": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.44076908167188333,
+          "count": 70316666
+        }
+      },
+      "curvature": {
+        "stage": "curvature",
+        "area": "working",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "computed_curvature_range": 2.0,
+        "height": {
+          "min": -0.7467375993728638,
+          "max": 1413.280029296875,
+          "mean": 507.0816563602106,
+          "count": 70316666
+        },
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "origin": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.018250569811346186,
+          "count": 70316666
+        }
+      },
+      "fresh_measurements": {
+        "area": "working",
+        "fresh_hip_read": true,
+        "samples": 70316666,
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "origin": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "delta_l05": {
+          "min": -0.00048828125,
+          "max": 0.0167236328125,
+          "mean": 3.1194096163891086e-05
+        },
+        "outside_scree_delta_max_m": 0,
+        "mask": {
+          "min": 0.0,
+          "max": 0.7987728714942932,
+          "mean": 0.004377347514570864
+        },
+        "colors": {
+          "r": {
+            "min": 0.0,
+            "max": 0.7616127729415894,
+            "mean": 0.424202927282922
+          },
+          "g": {
+            "min": 0.0,
+            "max": 0.7608626484870911,
+            "mean": 0.40642180219842783
+          },
+          "b": {
+            "min": 0.0,
+            "max": 0.7608442902565002,
+            "mean": 0.3243655570527754
+          },
+          "roughness": {
+            "min": 0.0,
+            "max": 0.9863357543945312,
+            "mean": 0.6357638103487053
+          }
+        },
+        "fresh_native_tail_rebuild": {
+          "height": 0,
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "roughness": 0
+        },
+        "total_procedural_vs_source_manual_m": {
+          "min": -0.34796908497810364,
+          "max": 0.5093994140625,
+          "mean": 0.014337529474223589
+        },
+        "total_abs_p95_m": 0.16064453125,
+        "final_cache_sha256": "e74db92c8b6d8dd227b7aaed09e03e7dd5a9580f101f76e579ec5beac75d148e"
+      },
+      "material": {
+        "stage": "material",
+        "area": "working",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height_scale_candidate_m": 0.1,
+        "height": {
+          "min": -0.7467375993728638,
+          "max": 1413.280029296875,
+          "mean": 507.0816563602106,
+          "count": 70316666
+        },
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "origin": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.5145133762933293,
+          "count": 70316666
+        }
+      },
+      "occlusion": {
+        "stage": "occlusion",
+        "area": "working",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.7467375993728638,
+          "max": 1413.280029296875,
+          "mean": 507.0816563602106,
+          "count": 70316666
+        },
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "origin": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "mask": {
+          "min": 0.0006579868495464325,
+          "max": 1.0,
+          "mean": 0.8390692309690537,
+          "count": 70316666
+        }
+      },
+      "pockets": {
+        "stage": "pockets",
+        "area": "working",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.7467375993728638,
+          "max": 1413.280029296875,
+          "mean": 507.08162516611475,
+          "count": 70316666
+        },
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "origin": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 0.9993420243263245,
+          "mean": 0.0868122306879583,
+          "count": 70316666
+        },
+        "height_changed_samples": 0
+      },
+      "scree_tint": {
+        "stage": "scree_tint",
+        "area": "working",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.7467375993728638,
+          "max": 1413.280029296875,
+          "mean": 507.0816563602106,
+          "count": 70316666
+        },
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "origin": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 0.7987728714942932,
+          "mean": 0.004377347514570864,
+          "count": 70316666
+        }
+      },
+      "slump": {
+        "stage": "slump",
+        "area": "working",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.7467375993728638,
+          "max": 1413.280029296875,
+          "mean": 507.08162516611475,
+          "count": 70316666
+        },
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "origin": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 44.15713119506836,
+          "mean": 0.2790041919747569,
+          "count": 70316666
+        },
+        "height_changed_samples": 0
+      },
+      "source": {
+        "stage": "source",
+        "area": "working",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.7467375993728638,
+          "max": 1413.280029296875,
+          "mean": 507.08162516611475,
+          "count": 70316666
+        },
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "origin": [
+          -1771.25,
+          0.0,
+          3144.25
+        ]
+      },
+      "transport": {
+        "stage": "transport",
+        "area": "working",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "raw_transport_max": 0.6418575644493103,
+        "height": {
+          "min": -0.7467375993728638,
+          "max": 1413.280029296875,
+          "mean": 507.08162516611475,
+          "count": 70316666
+        },
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "origin": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 0.7987728714942932,
+          "mean": 0.004377347514570864,
+          "count": 70316666
+        },
+        "height_changed_samples": 0
+      },
+      "verify": {
+        "stage": "verify",
+        "area": "working",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.7467375993728638,
+          "max": 1413.280029296875,
+          "mean": 507.0816563602106,
+          "count": 70316666
+        },
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "origin": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.018250569811346186,
+          "count": 70316666
+        },
+        "delta_l05_m": {
+          "min": -0.00048828125,
+          "max": 0.0167236328125,
+          "mean": 3.1194096163891086e-05,
+          "count": 70316666
+        },
+        "delta_l05_abs_p95_m": 3.0517578125e-05,
+        "outside_mask_raw_max_m": 0.0,
+        "final_delta_l05_m": {
+          "min": -0.00048828125,
+          "max": 0.0167236328125,
+          "mean": 3.1194096163891086e-05,
+          "count": 70316666
+        },
+        "scree_coverage_positive": 0.07586820171479688,
+        "scree_coverage_gt_01": 0.013312647673028184,
+        "final_changed_samples": 4034078,
+        "final_delta_abs_p95_m": 3.0517578125e-05,
+        "outside_mask_final_max_m": 0.0
+      }
+    },
+    "context": {
+      "cliff_tint": {
+        "stage": "cliff_tint",
+        "area": "context",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.8825892806053162,
+          "max": 1436.796142578125,
+          "mean": 418.9083209999863,
+          "count": 4194304
+        },
+        "resolution": [
+          2048,
+          2048,
+          1
+        ],
+        "origin": [
+          -3998.046875,
+          0.0,
+          3998.046875
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.3005006014411262,
+          "count": 4194304
+        }
+      },
+      "curvature": {
+        "stage": "curvature",
+        "area": "context",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "computed_curvature_range": 0.25600001215934753,
+        "height": {
+          "min": -0.8825892806053162,
+          "max": 1436.796142578125,
+          "mean": 418.9083209999863,
+          "count": 4194304
+        },
+        "resolution": [
+          2048,
+          2048,
+          1
+        ],
+        "origin": [
+          -3998.046875,
+          0.0,
+          3998.046875
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.06149030804881647,
+          "count": 4194304
+        }
+      },
+      "fresh_measurements": {
+        "area": "context",
+        "fresh_hip_read": true,
+        "samples": 4194304,
+        "resolution": [
+          2048,
+          2048,
+          1
+        ],
+        "origin": [
+          -3998.046875,
+          0.0,
+          3998.046875
+        ],
+        "delta_l05": {
+          "min": -0.000457763671875,
+          "max": 0.019287109375,
+          "mean": 1.7683012510191776e-05
+        },
+        "outside_scree_delta_max_m": 0,
+        "mask": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.00254920741159192
+        },
+        "colors": {
+          "r": {
+            "min": 0.0,
+            "max": 0.7616127729415894,
+            "mean": 0.3353958866160962
+          },
+          "g": {
+            "min": 0.0,
+            "max": 0.7608626484870911,
+            "mean": 0.3151483337728535
+          },
+          "b": {
+            "min": 0.0,
+            "max": 0.7608442902565002,
+            "mean": 0.23762620155602338
+          },
+          "roughness": {
+            "min": 0.0,
+            "max": 0.9911764860153198,
+            "mean": 0.5307391353459419
+          }
+        },
+        "fresh_native_tail_rebuild": {
+          "height": 0,
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "roughness": 0
+        },
+        "total_procedural_vs_source_manual_m": {
+          "min": -0.3404541015625,
+          "max": 0.35107421875,
+          "mean": 0.010371764886210215
+        },
+        "total_abs_p95_m": 0.1416015625,
+        "final_cache_sha256": "49df5df4d816c65dfb52039db4cf1159e22bc8b69051665543050162c8f0cc27"
+      },
+      "material": {
+        "stage": "material",
+        "area": "context",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height_scale_candidate_m": 0.1,
+        "height": {
+          "min": -0.8825892806053162,
+          "max": 1436.796142578125,
+          "mean": 418.9083209999863,
+          "count": 4194304
+        },
+        "resolution": [
+          2048,
+          2048,
+          1
+        ],
+        "origin": [
+          -3998.046875,
+          0.0,
+          3998.046875
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.4631724188794965,
+          "count": 4194304
+        }
+      },
+      "occlusion": {
+        "stage": "occlusion",
+        "area": "context",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.8825892806053162,
+          "max": 1436.796142578125,
+          "mean": 418.9083209999863,
+          "count": 4194304
+        },
+        "resolution": [
+          2048,
+          2048,
+          1
+        ],
+        "origin": [
+          -3998.046875,
+          0.0,
+          3998.046875
+        ],
+        "mask": {
+          "min": 0.026121992617845535,
+          "max": 1.0,
+          "mean": 0.9446859584439977,
+          "count": 4194304
+        }
+      },
+      "pockets": {
+        "stage": "pockets",
+        "area": "context",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.8825892806053162,
+          "max": 1436.796142578125,
+          "mean": 418.90830331697333,
+          "count": 4194304
+        },
+        "resolution": [
+          2048,
+          2048,
+          1
+        ],
+        "origin": [
+          -3998.046875,
+          0.0,
+          3998.046875
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 0.9714931845664978,
+          "mean": 0.01628420976433631,
+          "count": 4194304
+        },
+        "height_changed_samples": 0
+      },
+      "scree_tint": {
+        "stage": "scree_tint",
+        "area": "context",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.8825892806053162,
+          "max": 1436.796142578125,
+          "mean": 418.9083209999863,
+          "count": 4194304
+        },
+        "resolution": [
+          2048,
+          2048,
+          1
+        ],
+        "origin": [
+          -3998.046875,
+          0.0,
+          3998.046875
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.00254920741159192,
+          "count": 4194304
+        }
+      },
+      "slump": {
+        "stage": "slump",
+        "area": "context",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.8825892806053162,
+          "max": 1436.796142578125,
+          "mean": 418.90830331697333,
+          "count": 4194304
+        },
+        "resolution": [
+          2048,
+          2048,
+          1
+        ],
+        "origin": [
+          -3998.046875,
+          0.0,
+          3998.046875
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 25.54274559020996,
+          "mean": 0.15980172398499473,
+          "count": 4194304
+        },
+        "height_changed_samples": 0
+      },
+      "source": {
+        "stage": "source",
+        "area": "context",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.8825892806053162,
+          "max": 1436.796142578125,
+          "mean": 418.90830331697333,
+          "count": 4194304
+        },
+        "resolution": [
+          2048,
+          2048,
+          1
+        ],
+        "origin": [
+          -3998.046875,
+          0.0,
+          3998.046875
+        ]
+      },
+      "transport": {
+        "stage": "transport",
+        "area": "context",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "raw_transport_max": 0.9552562236785889,
+        "height": {
+          "min": -0.8825892806053162,
+          "max": 1436.796142578125,
+          "mean": 418.90830331697333,
+          "count": 4194304
+        },
+        "resolution": [
+          2048,
+          2048,
+          1
+        ],
+        "origin": [
+          -3998.046875,
+          0.0,
+          3998.046875
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.00254920741159192,
+          "count": 4194304
+        },
+        "height_changed_samples": 0
+      },
+      "verify": {
+        "stage": "verify",
+        "area": "context",
+        "houdini": "22.0.466",
+        "opencl": "CPU",
+        "height": {
+          "min": -0.8825892806053162,
+          "max": 1436.796142578125,
+          "mean": 418.9083209999863,
+          "count": 4194304
+        },
+        "resolution": [
+          2048,
+          2048,
+          1
+        ],
+        "origin": [
+          -3998.046875,
+          0.0,
+          3998.046875
+        ],
+        "mask": {
+          "min": 0.0,
+          "max": 1.0,
+          "mean": 0.06149030804881647,
+          "count": 4194304
+        },
+        "delta_l05_m": {
+          "min": -0.000457763671875,
+          "max": 0.019287109375,
+          "mean": 1.7683012510191776e-05,
+          "count": 4194304
+        },
+        "delta_l05_abs_p95_m": 0.0,
+        "outside_mask_raw_max_m": 0.0,
+        "final_delta_l05_m": {
+          "min": -0.000457763671875,
+          "max": 0.019287109375,
+          "mean": 1.7683012510191776e-05,
+          "count": 4194304
+        },
+        "scree_coverage_positive": 0.044414520263671875,
+        "scree_coverage_gt_01": 0.007336139678955078,
+        "final_changed_samples": 134728,
+        "final_delta_abs_p95_m": 0.0,
+        "outside_mask_final_max_m": 0.0
+      }
+    }
+  },
+  "original_hdas": {
+    "sop_PE_heightfield_material.1.0.hda": "e7d41ca64757699aa65b69520aca96b11f7325365506ddc675f8ea2b23a45023",
+    "sop_PE_heightfield_tint.1.0.hda": "93cc47dd511bc3d5868835b5dd3b9082c13cab23355b688aaf2a947e8687a2ed",
+    "sop_PE_heightfield_layerslump.hda": "7d6fdfa34a3794ad320cf7593966b68caeb64d243309d8d422babcb7cfe057b4"
+  },
+  "native_diagnostics": [
+    "Default curvature range produced blank mask; retained diagnostic outputs, used native Compute Curvature Range, rebuilt tail.",
+    "Legacy pipeline-overview ID-layer menu callbacks report missing attribute while saving; Lesson05 stage nodes cook successfully.",
+    "Prototype zero-height HDA blend roundoff retained in prototype receipt; full final output has exactly zero height change outside scree support."
+  ]
+}

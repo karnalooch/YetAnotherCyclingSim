@@ -84,7 +84,7 @@ All listed TXT/VTT files were read and the original VTT hashes checked. `INDEXED
 - Original VTT SHA-256: `d72a5b91f2d7b5a10600cb18d2650fdbe145d59db53c5a804a61dc09443062d7`
 - Source lesson objective: Building on the previous lesson, learn how you can use some of the heightfield tools to build more complex and natural-looking masks to place detailed textures.
 - Materials: shared `PEG-02` bundle listed below. Per-lesson dependency mapping has not been established.
-- Verification: `INDEXED`; implementation: `NO_PER_LESSON_YACS_IMPLEMENTATION_RECEIPT_REGISTERED`.
+- Verification: `INDEXED`; implementation: [full Working/Context native execution, saved HIP and fresh rebuild](../LESSON05_FULL_LANDSCAPE.md); UE import/visual acceptance NOT RUN.
 
 ### PEG-02-06: 6 | IDmap Workflow [17:30]
 
