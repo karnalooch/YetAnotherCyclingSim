@@ -17,6 +17,19 @@ tools/material-forge/material-forge.ps1 author `
 The Material Maker 1.7 install provides the reviewed PBR node definition and
 executable identity. Accepted run directories are never silently overwritten.
 
+## One selected candidate
+
+To author the Lesson05 scree surface without generating unrelated variants, add
+`--family mediterranean_soil --variant limestone_scree_v1` to `author`.
+Both selectors are required together and unknown selections fail before creating
+an output directory. The run manifest contains only that candidate; rendering,
+`validate-run` and two-run `compare` retain the same contracts.
+
+See the [Lesson05 preparation receipt](../../docs/tooling/sidefx/LESSON05_MATERIAL_PREPARATION.md)
+for native results and pending Pegasus adapter calibration. The current
+[Houdini-first ownership boundary](../../docs/tooling/MATERIAL_FORGE.md)
+supersedes the historical PCG-first labels above; Forge does not place scree.
+
 ## Prime the render source
 
 The render runtime is the reviewed Material Maker source commit under pinned

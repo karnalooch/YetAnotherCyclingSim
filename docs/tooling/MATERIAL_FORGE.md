@@ -68,6 +68,22 @@ The earlier variants retain their existing recipes. See the
 [road material evidence](../evidence/ROAD_SURFACE_MATERIALS_364.md) for exact
 source/native revisions and the still-pending final M3 visual audit.
 
+## Lesson05 scree candidate
+
+The owner-selected `mediterranean_soil/limestone_scree_v1` adds one artistic
+limestone-fragment surface for the Pegasus Lesson05 input. It keeps the 4 m/2K
+five-map contract and reuses the existing periodic polygon-grain helpers.
+Its material-local masks are R=coarse fragment coverage, G=fine fragment coverage,
+B=mineral variation; Houdini owns spatial placement. The [preparation receipt](sidefx/LESSON05_MATERIAL_PREPARATION.md)
+records two identical native runs, preservation of all 16 historical graph bytes
+and pending original-HDA height/colour calibration. It is not an admitted terrain
+material or a completed Lesson05 consumer.
+
+Author only this candidate by adding `--family mediterranean_soil --variant
+limestone_scree_v1` to the existing `author` command. Both selectors are required
+together; omission retains full-catalog generation. Run validation and comparison
+over the selected run manifests before downstream use.
+
 ## Output contract
 
 Each rendered variant contains:

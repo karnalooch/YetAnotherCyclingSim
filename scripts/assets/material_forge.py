@@ -311,6 +311,43 @@ vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
 }
 """
 
+
+# Reuse the existing periodic polygon-grain helpers, at scree rather than
+# asphalt aggregate scale. This is material-local relief, not world placement.
+SCREE_VARIANT = "limestone_scree_v1"
+SCREE_FUNCTION = DRY_ASPHALT_FUNCTION.split("vec4 yacs_limestone(", 1)[0] + r"""
+vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
+    vec2 warp = vec2(yacs_dry_noise(uv,11.0,seed),
+                     yacs_dry_noise(uv,13.0,seed+3.0))-0.5;
+    vec2 q = uv+0.006*warp;
+    // 4 m tile: 148 / 48 mm mean cell pitch, with independently rotated
+    // clipped interiors. Fine fragments fill the coarse population's gaps.
+    vec4 coarse = yacs_dry_grains(q,27.0,seed+11.0);
+    vec4 fine = yacs_dry_grains(q,83.0,seed+17.0);
+    float radius = mix(0.25,0.51,coarse.w);
+    float fine_radius = mix(0.22,0.46,fine.w);
+    float rock = smoothstep(0.015,0.070,coarse.y)
+        *(1.0-smoothstep(0.72*radius,radius,coarse.x));
+    rock *= clamp(fractures,0.0,1.0);
+    float chips = smoothstep(0.010,0.055,fine.y)
+        *(1.0-smoothstep(0.65*fine_radius,fine_radius,fine.x));
+    chips *= (1.0-rock)*clamp(pores,0.0,1.0);
+    float grain = yacs_dry_noise(q,487.0,seed+23.0);
+    float fines = yacs_dry_noise(q,173.0,seed+29.0);
+    float mineral = yacs_dry_noise(q,7.0,seed+31.0);
+    // Relief follows fragments. Mineral brightness is independent of height.
+    float facet = clamp(1.0-0.40*coarse.x/max(radius,0.01),0.5,1.0);
+    float chip_facet = clamp(1.0-0.35*fine.x/max(fine_radius,0.01),0.5,1.0);
+    float height = 0.47+(0.085+0.055*coarse.w)*rock*facet;
+    height += 0.045*chips*chip_facet;
+    height += (0.008+0.012*rock)*(fines-0.5)+0.005*(grain-0.5);
+    float variation = clamp(0.50+0.62*rock*(coarse.z-0.5)
+        +0.30*chips*(fine.z-0.5)+0.08*(mineral-0.5)
+        +(0.08+0.28*rock)*(fines-0.5)+0.05*(grain-0.5),0.0,1.0);
+    return vec4(clamp(height,0.0,1.0),rock,chips,variation);
+}
+"""
+
 def _json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -423,6 +460,8 @@ def _replace_surface_function(
             else ASPHALT_FUNCTION
         )
     if family_id == "mediterranean_soil":
+        if variant and variant.get("id") == SCREE_VARIANT:
+            return helpers + SCREE_FUNCTION
         return helpers + SOIL_FUNCTION
     if family_id == "regional_limestone":
         return helpers + LIMESTONE_FUNCTION
@@ -556,6 +595,9 @@ def _color_code(
         variation, crack, pore = 0.105, -0.052, -0.030
     elif family_id == "mediterranean_soil":
         variation, crack, pore = 0.130, 0.055, -0.045
+        if variant and variant.get("id") == SCREE_VARIANT:
+            # Both size populations are mineral fragments, not dark cracks.
+            variation, crack, pore = 0.180, 0.045, 0.035
     else:
         raise ValueError(family_id)
     return (
@@ -719,7 +761,7 @@ def author_variant(
         seed=int(variant["seed"]),
         tile_metres=float(family["tile_metres"]),
         normal_convention=EXPECTED_NORMAL_CONVENTION,
-        local_mask_channels=family["local_masks"],
+        local_mask_channels=variant.get("local_masks", family["local_masks"]),
         semantic_owner=SEMANTIC_OWNER,
         world_semantics_generated=False,
         parameters={
@@ -747,7 +789,7 @@ def author_variant(
         "family": family_id,
         "variant": variant,
         "tile_metres": family["tile_metres"],
-        "local_masks": family["local_masks"],
+        "local_masks": variant.get("local_masks", family["local_masks"]),
         "upstreams": upstreams,
         "graph_sha256": provenance["graph_sha256"],
     }
@@ -767,25 +809,38 @@ def author_all(
     output: Path,
     catalog_path: Path = DEFAULT_CATALOG,
     upstreams_path: Path = DEFAULT_UPSTREAMS,
+    *,
+    selected_family: str | None = None,
+    selected_variant: str | None = None,
 ) -> dict[str, Any]:
     catalog = load_catalog(catalog_path)
     upstreams = load_upstreams(upstreams_path)
+    if bool(selected_family) != bool(selected_variant):
+        raise ValueError("Select both --family and --variant, or neither")
+    selected = [
+        (family, variant)
+        for family in catalog["families"]
+        for variant in family["variants"]
+        if selected_family is None
+        or (family["id"] == selected_family and variant["id"] == selected_variant)
+    ]
+    if not selected:
+        raise ValueError(f"Unknown Material Forge variant: {selected_family}/{selected_variant}")
     if output.exists():
         raise FileExistsError(f"Refusing existing run directory: {output}")
     output.mkdir(parents=True)
 
     variants: list[dict[str, Any]] = []
-    for family in catalog["families"]:
-        for variant in family["variants"]:
-            destination = output / family["id"] / variant["id"]
-            entry = author_variant(
-                material_maker_source, destination, family, variant, upstreams
-            )
-            entry["directory"] = str(destination.relative_to(output)).replace("\\", "/")
-            entry["graph"] = str((destination / "Material.ptex").relative_to(output)).replace(
-                "\\", "/"
-            )
-            variants.append(entry)
+    for family, variant in selected:
+        destination = output / family["id"] / variant["id"]
+        entry = author_variant(
+            material_maker_source, destination, family, variant, upstreams
+        )
+        entry["directory"] = str(destination.relative_to(output)).replace("\\", "/")
+        entry["graph"] = str((destination / "Material.ptex").relative_to(output)).replace(
+            "\\", "/"
+        )
+        variants.append(entry)
 
     manifest = {
         "schema_version": 1,
@@ -1196,7 +1251,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 
-    author = sub.add_parser("author", help="Create all 3x3 editable Material Maker graphs")
+    author = sub.add_parser("author", help="Create catalog graphs or one selected variant")
     author.add_argument(
         "--material-maker",
         "--material-maker-source",
@@ -1205,6 +1260,8 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Material Maker 1.7 install directory containing nodes/material.mmg and material_maker.exe",
     )
+    author.add_argument("--family", help="Select one family; requires --variant")
+    author.add_argument("--variant", help="Select one variant; requires --family")
     author.add_argument("--output", type=Path, required=True)
     author.add_argument("--catalog", type=Path, default=DEFAULT_CATALOG)
     author.add_argument("--upstreams", type=Path, default=DEFAULT_UPSTREAMS)
@@ -1216,6 +1273,8 @@ def build_parser() -> argparse.ArgumentParser:
                     args.output,
                     args.catalog,
                     args.upstreams,
+                    selected_family=args.family,
+                    selected_variant=args.variant,
                 ),
                 indent=2,
             )

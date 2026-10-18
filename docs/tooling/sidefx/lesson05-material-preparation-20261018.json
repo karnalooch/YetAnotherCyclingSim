@@ -1,0 +1,591 @@
+{
+  "recipe": "SA-CALOBRA-L05-MATERIAL-PREP-20261018",
+  "status": "FORGE_MAPS_VALIDATED_HOUDINI_ADAPTER_PENDING",
+  "base_revision": "7401f69019c796abc493349d410735fe71d45cec",
+  "source_revision_note": "Native runs used the source file bytes listed below on the base revision plus this scoped patch. No claim of unmodified-base native proof.",
+  "source_file_sha256": {
+    "scripts/assets/material_forge.py": "9b7a1b1e95a6501ecd582debedd1ca77ffd94a2915724b7b82e68bf308020b00",
+    "scripts/assets/build_material_maker_limestone.py": "e0233cf2fc68e66de958f5eee36e18ec6dead5da2a8255a8eb048f178aaa68d2",
+    "scripts/assets/render_material_forge.py": "129ea385e218302f921ea0fa1881abeb7fd17661565aed7656433ffbfe30d920",
+    "scripts/assets/render_material_forge.gd": "c8c05b6e60c92b0c0c4f2948f6be89f38424e5581108bc6245f61fbdcd100a12",
+    "worldgen/materials/material_forge/families.json": "82ec168a828fd65860b02ddc0ba5363875147cc1cdb6170a7a5db9db32634477",
+    "worldgen/materials/material_forge/upstreams.json": "791655eb1b6b2ceee990c101f59a71f2e970651dd1e98c5174eefef8e40c329d"
+  },
+  "source_lesson": "PEG-02-05 00:00-00:20 surface-input adaptation to owner-selected Material Forge",
+  "native_precheck": {
+    "status": "PRECHECK_INPUT_IDENTITIES_AND_SOURCE_GRID_PASS",
+    "time_utc": "2026-10-18T06:28:14.474052+00:00",
+    "houdini_version": "22.0.466",
+    "hip_sha256": "6d5419191083ed32a79e4fb1668a1476cdf49b38bdc27d3b869424959793d098",
+    "cache_checks": [
+      {
+        "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\cache\\source_working_05m.bgeo.sc",
+        "sha256": "01dd245efdcedde5352b9142905bc53aa43c2794231039ab8bca0893d18690c0",
+        "matches_lesson04_receipt": true
+      },
+      {
+        "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\Pegasus\\Landscape\\Landscape Heightfield Layers\\Pegasus_Landscape_Layer_2_Manual_Edits.bgeo.sc",
+        "sha256": "de46c2f2d0ea12c7ca937edafdc70f70b1b0504e1d4015092a7c72bcf1adccd2",
+        "matches_lesson04_receipt": true
+      },
+      {
+        "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\cache\\lesson04_working_material_05m.bgeo.sc",
+        "sha256": "afe0dbf675b3bf81066b7cdffbf1fae6867c57e1ff7cea751f32d4701640a300",
+        "matches_lesson04_receipt": true
+      },
+      {
+        "path": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Detail_0_0.bgeo.sc",
+        "sha256": "c3493cd71fdab4372c59ea78e16cfcd47da92852604e5630b4ab026e6d0dc351",
+        "matches_lesson04_receipt": true
+      },
+      {
+        "path": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Detail_1_0.bgeo.sc",
+        "sha256": "dd98506eaf50e515bdff2a2859827fac1c0ac834bf3c790042b456bc057ec576",
+        "matches_lesson04_receipt": true
+      },
+      {
+        "path": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Detail_0_1.bgeo.sc",
+        "sha256": "060b7395d52267f504756363a3b182a54326335657ad868a36b17b136f1f1d67",
+        "matches_lesson04_receipt": true
+      },
+      {
+        "path": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Detail_1_1.bgeo.sc",
+        "sha256": "063cf62e6da1943c7c38560e4f0c58bc5e492704dd2a42f57a57012347de3964",
+        "matches_lesson04_receipt": true
+      },
+      {
+        "path": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\unreal_transfer\\SaCalobra_Context_Valid.bgeo.sc",
+        "sha256": "7d9d17ee60c58542e0599e12ec7d26032ecc6513b8dac10fb130cfb03fa6ec89",
+        "matches_lesson04_receipt": true
+      },
+      {
+        "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\cache\\context_source.bgeo.sc",
+        "sha256": "cbab49ef798a91891602a085d2a8347de69e07344e5232c85190d9ad59377ae5",
+        "matches_lesson04_receipt": true
+      },
+      {
+        "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\cache\\lesson04_context_material.bgeo.sc",
+        "sha256": "54e8d16351083d8b96933ff4801d64bdd9cb779ef83bfdb976222a20d45577a7",
+        "matches_lesson04_receipt": true
+      }
+    ],
+    "source_volumes": [
+      {
+        "name": "height",
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "index0": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "axis_x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "axis_y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      },
+      {
+        "name": "mask",
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "index0": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "axis_x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "axis_y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      },
+      {
+        "name": "Alpha",
+        "resolution": [
+          7154,
+          9829,
+          1
+        ],
+        "index0": [
+          -1771.25,
+          0.0,
+          3144.25
+        ],
+        "axis_x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "axis_y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    ],
+    "hip_opened": false,
+    "hip_saved": false,
+    "graph_cooked": false,
+    "lesson05_checkpoint_created": false,
+    "height_exr": {
+      "range_min": 0.464599609375,
+      "range_max": 0.61376953125,
+      "mean": 0.5048879674868658,
+      "all_finite": true,
+      "units": "Material Forge authoring scalar, NOT metres",
+      "neutral_reference_from_recipe": 0.47,
+      "pegasus_height_scale_calibration": "NOT_RUN"
+    }
+  },
+  "material_variant": "mediterranean_soil/limestone_scree_v1",
+  "seed": 547,
+  "tile_metres": 4,
+  "resolution": [
+    2048,
+    2048
+  ],
+  "output_root": "D:/yacs/work/lesson05-material-forge-20261018",
+  "runs": {
+    "run-a": {
+      "manifest_sha256": "f9db2427be662bd342ff0a285f3ca1db43f5d1c61643cd3e647481b8410e654d",
+      "render": {
+        "producer": "Material Maker source runtime under pinned Godot",
+        "source_commit": "4d29a815489866aae483281cf44b2cfe48d3cc3e",
+        "source_class_cache_sha256": "144ac4db66b01bdab6a7101620234bab0ff41667ba94e21e520515100fd538be",
+        "source_imported_file_count": 249,
+        "godot_sha256": "ab1824f85bfd8e0e4128182c000c4003a3e042245b2967848d089b2a04b22424",
+        "graph_sha256": "36c05727c7f7013ee7d70097705fe65fa2f4ef14244fce6fbc63549d9a465e2f",
+        "engine": {
+          "build": "official",
+          "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+          "hex": 263938,
+          "major": 4,
+          "minor": 7,
+          "patch": 2,
+          "status": "stable",
+          "string": "4.7.2-stable (official)",
+          "timestamp": 0
+        },
+        "command": [
+          "D:\\yacs\\tools\\godot-4.7.2\\Godot_v4.7.2-stable_win64.exe",
+          "--path",
+          "D:\\yacs\\research\\material-maker-20261005",
+          "--script",
+          "D:\\yacs\\project\\scripts\\assets\\render_material_forge.gd",
+          "--",
+          "D:\\yacs\\work\\lesson05-material-forge-20261018\\run-a\\mediterranean_soil\\limestone_scree_v1\\Material.ptex",
+          "D:\\yacs\\work\\lesson05-material-forge-20261018\\run-a\\mediterranean_soil\\limestone_scree_v1\\export\\YACS_Material",
+          "2048"
+        ],
+        "exit_code": 0,
+        "upstream_diagnostics": [
+          "ERROR: Networking Sockets class not found, Steam may not be initialized: initAuthentication",
+          "ERROR: Apps class not found, Steam may not be initialized: isSubscribed",
+          "WARNING: 6 ObjectDB instances were leaked at exit (run with `--verbose` for details).",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "validation_sha256": "786b00e34552d4b7751946b29d8a8db8fd1045a436a8e265ac7cd7329314b507",
+        "status": "MAP_CHECKS_PASS_UE_REVIEW_PENDING"
+      },
+      "native_decode": {
+        "engine": {
+          "build": "official",
+          "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+          "hex": 263938,
+          "major": 4,
+          "minor": 7,
+          "patch": 2,
+          "status": "stable",
+          "string": "4.7.2-stable (official)",
+          "timestamp": 0
+        },
+        "images": {
+          "BaseColor.png": {
+            "format": 5,
+            "height": 2048,
+            "sha256": "970ba2edac525d4d49390702250cbc4ae214319f79fbee6b7035e0afca276c11",
+            "width": 2048
+          },
+          "DetailMasks.png": {
+            "format": 5,
+            "height": 2048,
+            "sha256": "d43aac92c7ac19994b0595e570c78f72d81dbcb751629f05e7011a424359a7d2",
+            "width": 2048
+          },
+          "Height.exr": {
+            "format": 15,
+            "height": 2048,
+            "sha256": "c09875121fdce61eb1fa6308094b5050ec37be3f7dbc9d2687bae28f6455a6c7",
+            "width": 2048
+          },
+          "Normal_DX.png": {
+            "format": 5,
+            "height": 2048,
+            "sha256": "8a5691062f23ae44b6f86c0a2eff2a738d77f3d9e8e702c776f59d5774623319",
+            "width": 2048
+          },
+          "ORM.png": {
+            "format": 5,
+            "height": 2048,
+            "sha256": "debd8d6c66e9f9fad1bfcf24a3fc10064fbf4f416d57866afe72918c02904996",
+            "width": 2048
+          }
+        },
+        "valid": true
+      }
+    },
+    "run-b": {
+      "manifest_sha256": "f9db2427be662bd342ff0a285f3ca1db43f5d1c61643cd3e647481b8410e654d",
+      "render": {
+        "producer": "Material Maker source runtime under pinned Godot",
+        "source_commit": "4d29a815489866aae483281cf44b2cfe48d3cc3e",
+        "source_class_cache_sha256": "144ac4db66b01bdab6a7101620234bab0ff41667ba94e21e520515100fd538be",
+        "source_imported_file_count": 249,
+        "godot_sha256": "ab1824f85bfd8e0e4128182c000c4003a3e042245b2967848d089b2a04b22424",
+        "graph_sha256": "36c05727c7f7013ee7d70097705fe65fa2f4ef14244fce6fbc63549d9a465e2f",
+        "engine": {
+          "build": "official",
+          "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+          "hex": 263938,
+          "major": 4,
+          "minor": 7,
+          "patch": 2,
+          "status": "stable",
+          "string": "4.7.2-stable (official)",
+          "timestamp": 0
+        },
+        "command": [
+          "D:\\yacs\\tools\\godot-4.7.2\\Godot_v4.7.2-stable_win64.exe",
+          "--path",
+          "D:\\yacs\\research\\material-maker-20261005",
+          "--script",
+          "D:\\yacs\\project\\scripts\\assets\\render_material_forge.gd",
+          "--",
+          "D:\\yacs\\work\\lesson05-material-forge-20261018\\run-b\\mediterranean_soil\\limestone_scree_v1\\Material.ptex",
+          "D:\\yacs\\work\\lesson05-material-forge-20261018\\run-b\\mediterranean_soil\\limestone_scree_v1\\export\\YACS_Material",
+          "2048"
+        ],
+        "exit_code": 0,
+        "upstream_diagnostics": [
+          "ERROR: Networking Sockets class not found, Steam may not be initialized: initAuthentication",
+          "ERROR: Apps class not found, Steam may not be initialized: isSubscribed",
+          "WARNING: 6 ObjectDB instances were leaked at exit (run with `--verbose` for details).",
+          "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        ],
+        "validation_sha256": "786b00e34552d4b7751946b29d8a8db8fd1045a436a8e265ac7cd7329314b507",
+        "status": "MAP_CHECKS_PASS_UE_REVIEW_PENDING"
+      },
+      "native_decode": {
+        "engine": {
+          "build": "official",
+          "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+          "hex": 263938,
+          "major": 4,
+          "minor": 7,
+          "patch": 2,
+          "status": "stable",
+          "string": "4.7.2-stable (official)",
+          "timestamp": 0
+        },
+        "images": {
+          "BaseColor.png": {
+            "format": 5,
+            "height": 2048,
+            "sha256": "970ba2edac525d4d49390702250cbc4ae214319f79fbee6b7035e0afca276c11",
+            "width": 2048
+          },
+          "DetailMasks.png": {
+            "format": 5,
+            "height": 2048,
+            "sha256": "d43aac92c7ac19994b0595e570c78f72d81dbcb751629f05e7011a424359a7d2",
+            "width": 2048
+          },
+          "Height.exr": {
+            "format": 15,
+            "height": 2048,
+            "sha256": "c09875121fdce61eb1fa6308094b5050ec37be3f7dbc9d2687bae28f6455a6c7",
+            "width": 2048
+          },
+          "Normal_DX.png": {
+            "format": 5,
+            "height": 2048,
+            "sha256": "8a5691062f23ae44b6f86c0a2eff2a738d77f3d9e8e702c776f59d5774623319",
+            "width": 2048
+          },
+          "ORM.png": {
+            "format": 5,
+            "height": 2048,
+            "sha256": "debd8d6c66e9f9fad1bfcf24a3fc10064fbf4f416d57866afe72918c02904996",
+            "width": 2048
+          }
+        },
+        "valid": true
+      }
+    }
+  },
+  "validation": {
+    "family": "mediterranean_soil",
+    "geometry_changed": false,
+    "local_mask_channels": {
+      "B": "mineral_variation",
+      "G": "fine_fragment_coverage",
+      "R": "coarse_fragment_coverage"
+    },
+    "maps": {
+      "BaseColor": {
+        "interior_step_x": 0.0029565049335360527,
+        "interior_step_y": 0.002936902455985546,
+        "path": "export/YACS_Material_BaseColor.png",
+        "sha256": "970ba2edac525d4d49390702250cbc4ae214319f79fbee6b7035e0afca276c11",
+        "size": [
+          2048,
+          2048
+        ],
+        "wrap_step_x": 0.00446729501709342,
+        "wrap_step_y": 0.0034173307940363884
+      },
+      "DetailMasks": {
+        "interior_step_x": 0.018822558224201202,
+        "interior_step_y": 0.018776560202240944,
+        "path": "export/YACS_Material_DetailMasks.png",
+        "sha256": "d43aac92c7ac19994b0595e570c78f72d81dbcb751629f05e7011a424359a7d2",
+        "size": [
+          2048,
+          2048
+        ],
+        "wrap_step_x": 0.02601996622979641,
+        "wrap_step_y": 0.0222203079611063
+      },
+      "Height": {
+        "path": "export/YACS_Material_Height.exr",
+        "sha256": "c09875121fdce61eb1fa6308094b5050ec37be3f7dbc9d2687bae28f6455a6c7"
+      },
+      "Normal_DX": {
+        "interior_step_x": 0.023487485945224762,
+        "interior_step_y": 0.02336229383945465,
+        "path": "export/YACS_Material_Normal_DX.png",
+        "sha256": "8a5691062f23ae44b6f86c0a2eff2a738d77f3d9e8e702c776f59d5774623319",
+        "size": [
+          2048,
+          2048
+        ],
+        "wrap_step_x": 0.030401095747947693,
+        "wrap_step_y": 0.024897240102291107
+      },
+      "ORM": {
+        "interior_step_x": 0.0003547614614944905,
+        "interior_step_y": 0.00035268982173874974,
+        "path": "export/YACS_Material_ORM.png",
+        "sha256": "debd8d6c66e9f9fad1bfcf24a3fc10064fbf4f416d57866afe72918c02904996",
+        "size": [
+          2048,
+          2048
+        ],
+        "wrap_step_x": 0.0004091349837835878,
+        "wrap_step_y": 0.0003733915218617767
+      }
+    },
+    "normal_convention": "DirectX",
+    "normal_length_error_p99": 0.009689390659332275,
+    "performance_accepted": false,
+    "semantic_owner": "PCG/PCGEx",
+    "status": "MAP_CHECKS_PASS_UE_REVIEW_PENDING",
+    "variant": "limestone_scree_v1",
+    "visual_accepted": false,
+    "world_semantics_generated": false
+  },
+  "surface_statistics": {
+    "basecolor_srgb_min": [
+      0.3921568691730499,
+      0.37254902720451355,
+      0.35686275362968445
+    ],
+    "basecolor_srgb_max": [
+      0.6196078658103943,
+      0.5921568870544434,
+      0.5647059082984924
+    ],
+    "basecolor_srgb_mean": [
+      0.4565541744232178,
+      0.43239760398864746,
+      0.4110209047794342
+    ],
+    "roughness_min": 0.8509804010391235,
+    "roughness_max": 0.9019607901573181,
+    "metallic_max": 0.0,
+    "coarse_fragment_coverage_above_half": 0.32613301277160645,
+    "fine_fragment_coverage_above_half": 0.1554255485534668
+  },
+  "determinism": {
+    "deterministic": true,
+    "left_run_fingerprint": "f1b0da440caa61f3773565276601faa8887650ba0b481055fa98ea4aa0d92707",
+    "right_run_fingerprint": "f1b0da440caa61f3773565276601faa8887650ba0b481055fa98ea4aa0d92707",
+    "mismatches": []
+  },
+  "historical_graph_regression": {
+    "status": "PASS",
+    "unchanged_graph_count": 16,
+    "checks": [
+      {
+        "family": "aged_mountain_asphalt",
+        "variant": "base",
+        "before": "6b381516854c44dc4bdeb69b69fbb2b97ecf22c228db2c09204822d7f0bc0970",
+        "after": "6b381516854c44dc4bdeb69b69fbb2b97ecf22c228db2c09204822d7f0bc0970"
+      },
+      {
+        "family": "aged_mountain_asphalt",
+        "variant": "worn",
+        "before": "eacbb415f381f028adec3baa8a746c3e5edb00794238f6d49bed1f7aa0cba36a",
+        "after": "eacbb415f381f028adec3baa8a746c3e5edb00794238f6d49bed1f7aa0cba36a"
+      },
+      {
+        "family": "aged_mountain_asphalt",
+        "variant": "repaired",
+        "before": "bca591b31e36265b31f662877337841a37345d92fa982ec0f3129f5c33098b5e",
+        "after": "bca591b31e36265b31f662877337841a37345d92fa982ec0f3129f5c33098b5e"
+      },
+      {
+        "family": "aged_mountain_asphalt",
+        "variant": "dry_varied",
+        "before": "9c0a41f6e2ae5733469cb0cf87df25cb2460c9aadcf3f3c948f030661b1ba562",
+        "after": "9c0a41f6e2ae5733469cb0cf87df25cb2460c9aadcf3f3c948f030661b1ba562"
+      },
+      {
+        "family": "regional_limestone",
+        "variant": "base",
+        "before": "9c03b3f8c67ad934a6484296384852cd7d448be835f0c3e5c8233bbea7c995a9",
+        "after": "9c03b3f8c67ad934a6484296384852cd7d448be835f0c3e5c8233bbea7c995a9"
+      },
+      {
+        "family": "regional_limestone",
+        "variant": "fractured",
+        "before": "3b3234f6b5f4e870ecad5fbc6876529fb34e69cda252eef42a1702ebf7807d0c",
+        "after": "3b3234f6b5f4e870ecad5fbc6876529fb34e69cda252eef42a1702ebf7807d0c"
+      },
+      {
+        "family": "regional_limestone",
+        "variant": "karst_weathered",
+        "before": "31732d02f22de5606e9ac192b4387c45cf0c9d1abb7b1c6b39940a375e8a4bd3",
+        "after": "31732d02f22de5606e9ac192b4387c45cf0c9d1abb7b1c6b39940a375e8a4bd3"
+      },
+      {
+        "family": "regional_limestone",
+        "variant": "refined_a",
+        "before": "83c131d1f67d76b01bf93d98ebf4edb128bf10eea63874bb826fc532610e2909",
+        "after": "83c131d1f67d76b01bf93d98ebf4edb128bf10eea63874bb826fc532610e2909"
+      },
+      {
+        "family": "regional_limestone",
+        "variant": "refined_b",
+        "before": "4b01d76e71d29664ff96dae424b1f09b6fa09d27e3515d8348bbda4886465686",
+        "after": "4b01d76e71d29664ff96dae424b1f09b6fa09d27e3515d8348bbda4886465686"
+      },
+      {
+        "family": "regional_limestone",
+        "variant": "refined_c",
+        "before": "1410f464382673e8430cdd7859ed3d622719734db32b8457520c4ec941cb2077",
+        "after": "1410f464382673e8430cdd7859ed3d622719734db32b8457520c4ec941cb2077"
+      },
+      {
+        "family": "mediterranean_soil",
+        "variant": "fine",
+        "before": "e963a6a0bf0b42f6bbf936d24841dfa1013fe5ebfa24c1ecb09cefab41e317f3",
+        "after": "e963a6a0bf0b42f6bbf936d24841dfa1013fe5ebfa24c1ecb09cefab41e317f3"
+      },
+      {
+        "family": "mediterranean_soil",
+        "variant": "stony",
+        "before": "12134ae2dc5457177d9f99714f16c1fd7ae4155cceb56e183a1b3ff1e2640b9a",
+        "after": "12134ae2dc5457177d9f99714f16c1fd7ae4155cceb56e183a1b3ff1e2640b9a"
+      },
+      {
+        "family": "mediterranean_soil",
+        "variant": "dry_crusted",
+        "before": "2e6f24bdbcc44efa3dc375294fd59717c74e8ac633c857e35225ada55e21fb7d",
+        "after": "2e6f24bdbcc44efa3dc375294fd59717c74e8ac633c857e35225ada55e21fb7d"
+      },
+      {
+        "family": "mediterranean_soil",
+        "variant": "refined_a",
+        "before": "2ba3bfdde6f18e5c73cfb8b0dee0ec692d33023351bcbd3e17e6dd0f2dcf8813",
+        "after": "2ba3bfdde6f18e5c73cfb8b0dee0ec692d33023351bcbd3e17e6dd0f2dcf8813"
+      },
+      {
+        "family": "mediterranean_soil",
+        "variant": "refined_b",
+        "before": "ae803e804b06121585261a4ad5b23f5dd922a90412e3a869177ffe943111272b",
+        "after": "ae803e804b06121585261a4ad5b23f5dd922a90412e3a869177ffe943111272b"
+      },
+      {
+        "family": "mediterranean_soil",
+        "variant": "refined_c",
+        "before": "a61974e999a304db2bbf99b14306bf52506c76f8bcbcedf362b37539a59cbe37",
+        "after": "a61974e999a304db2bbf99b14306bf52506c76f8bcbcedf362b37539a59cbe37"
+      }
+    ]
+  },
+  "material_maker_tracked_changes": {
+    "count": 16,
+    "all_import_metadata": true,
+    "source_code_changed": false
+  },
+  "host": {
+    "initial_state": "IDLE_NO_EDITOR_AFTER_OWNER_CONFIRMED_REBOOT",
+    "restart_authorized": true,
+    "launcher": "scripts/ue/Start-YacsLesson04RepairStream.ps1",
+    "viewer_verified_before_computer_use_stopped": true,
+    "owner_confirmed_viewer": true,
+    "computer_use_stopped_at_owner_request": true,
+    "after": {
+      "time": "2026-10-18T08:29:08.8648143+02:00",
+      "pid": 24432,
+      "start": "2026-10-18T08:17:54.3346637+02:00",
+      "private_bytes": 15507234816,
+      "working_set_bytes": 10135121920,
+      "available_mb": 7150,
+      "committed_bytes": 40547188736,
+      "commit_limit_bytes": 107675762688,
+      "ports": [
+        {
+          "LocalPort": 80,
+          "OwningProcess": 24432
+        },
+        {
+          "LocalPort": 8888,
+          "OwningProcess": 24432
+        }
+      ]
+    }
+  },
+  "tests": {
+    "command": "python -m unittest scripts.assets.test_material_forge scripts.blender.test_material_forge_reference scripts.ci.test_material_forge_transfer_contract",
+    "passed": 43
+  },
+  "remaining": {
+    "neutral_lit_reference": "NOT_RUN",
+    "pegasus_color_space_and_height_adapter": "NOT_RUN",
+    "lesson05_hip_save_as": "NOT_RUN",
+    "scree_mask_placement": "NOT_RUN",
+    "unreal_import_and_fresh_reopen": "NOT_RUN",
+    "owner_material_acceptance": "NOT_CLAIMED",
+    "performance_pass": false,
+    "merge": "NOT_PERFORMED"
+  }
+}

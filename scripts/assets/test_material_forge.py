@@ -275,6 +275,54 @@ class MaterialForgeContractTests(unittest.TestCase):
             self.assertEqual(material["parameters"]["emission_energy"], 0)
             self.assertEqual(len(material["shader_model"]["exports"]["YACS/Textures"]["files"]), 5)
 
+    def test_selected_authoring_rejects_invalid_scope_before_writing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for family, variant in (("mediterranean_soil", None),
+                                    (None, "stony"),
+                                    ("mediterranean_soil", "missing")):
+                output = root / "run"
+                with self.subTest(family=family, variant=variant):
+                    with self.assertRaises(ValueError):
+                        forge.author_all(root / "missing-tool", output,
+                                         selected_family=family, selected_variant=variant)
+                    self.assertFalse(output.exists())
+
+    def test_selected_scree_authoring_is_bounded_and_preserves_map_contract(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            mm = root / "synthetic-mm"
+            (mm / "nodes").mkdir(parents=True)
+            (mm / "material_maker.exe").write_bytes(b"synthetic tool")
+            (mm / "nodes/material.mmg").write_text(json.dumps({
+                "parameters": {},
+                "shader_model": {"inputs": [{"name": name} for name in (
+                    "albedo_tex", "roughness_tex", "ao_tex", "depth_tex",
+                    "normal_tex", "emission_tex",
+                )]},
+            }))
+            output = root / "run"
+            manifest = forge.author_all(mm, output, selected_family="mediterranean_soil",
+                                        selected_variant="limestone_scree_v1")
+            self.assertEqual(len(manifest["variants"]), 1)
+            entry = manifest["variants"][0]
+            self.assertEqual(entry["directory"], "mediterranean_soil/limestone_scree_v1")
+            self.assertEqual(len(list(output.rglob("Material.ptex"))), 1)
+            variant_dir = output / entry["directory"]
+            provenance = json.loads((variant_dir / "provenance.json").read_bytes())
+            self.assertFalse(provenance["world_semantics_generated"])
+            self.assertEqual(provenance["tile_metres"], 4)
+            self.assertEqual(provenance["normal_convention"], "DirectX")
+            self.assertEqual(provenance["local_mask_channels"]["R"], "coarse_fragment_coverage")
+            graph = json.loads((variant_dir / "Material.ptex").read_bytes())
+            material = next(row for row in graph["nodes"] if row["name"] == "PBR_Output")
+            self.assertEqual(material["parameters"]["depth_scale"], 0)
+            self.assertEqual(material["parameters"]["metallic"], 0)
+            self.assertEqual(len(material["shader_model"]["exports"]["YACS/Textures"]["files"]), 5)
+            with self.assertRaises(FileExistsError):
+                forge.author_all(mm, output, selected_family="mediterranean_soil",
+                                 selected_variant="limestone_scree_v1")
+
     def test_dry_visual_correction_preserves_the_exact_periodic_helper(self):
         # The b385 fix for source run 38087789852/c773f871 stays byte-exact.
         # The later UE9242 appearance rejection changes the surface recipe.

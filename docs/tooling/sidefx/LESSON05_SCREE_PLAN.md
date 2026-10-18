@@ -1,6 +1,8 @@
 # Lesson05 plan: Sa Calobra scree with Material Forge
 
-**Status:** PLAN / Lesson05 execution NOT RUN. Prepared 2026-10-18.
+**Status:** PLAN with execution progress tracked below. Prepared 2026-10-18.
+
+**Execution update, 2026-10-18:** [Precheck and Material Forge preparation](LESSON05_MATERIAL_PREPARATION.md) completed with two matching native map renders. Houdini adapter calibration, scree placement, Lesson05 checkpoint and UE import remain NOT RUN.
 
 **Delivery:** [PR #474](https://github.com/karnalooch/YetAnotherCyclingSim/pull/474), `codex/365-world-graph`; no merge.
 
@@ -172,4 +174,4 @@ Stop the dependent stage for a missing original HDA/input, unverified Forge heig
 
 Completion requires a reproducible Lesson05 checkpoint, scree mask, one Forge variant with all maps/hashes, separated measured height contribution, full native measurements, fresh Houdini/UE reopen and an operating viewer with explicit owner review. Record actual implementation status and remaining gaps using the existing recipe/proof system; do not introduce another proof framework.
 
-Deliver scoped code/adapters, parameters, documentation and compact receipts on existing PR #474. Heavy HIPs, caches, source distributions and rendered images remain outside Git at recorded workspace locations. Update the build guide and lesson concordance only to the evidence level actually achieved. **No merge; no Lesson05 authoring/render/import was performed to save this plan.**
+Deliver scoped code/adapters, parameters, documentation and compact receipts on existing PR #474. Heavy HIPs, caches, source distributions and rendered images remain outside Git at recorded workspace locations. Update the build guide and lesson concordance only to the evidence level actually achieved. **No merge. The original planning revision performed no Lesson05 authoring/render/import; consult the execution update above for subsequent bounded progress.**
