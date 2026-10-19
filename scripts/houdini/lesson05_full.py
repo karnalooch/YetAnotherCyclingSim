@@ -18,6 +18,8 @@ ap.add_argument('--output-root', type=Path, required=True)
 ap.add_argument('--corpus', type=Path, required=True)
 ap.add_argument('--forge-root', type=Path, required=True)
 ap.add_argument('--adapter-root', type=Path, required=True)
+ap.add_argument('--reuse-root', type=Path, help='Retained unchanged stages for an incremental tail repair')
+ap.add_argument('--checkpoint-input', type=Path, help='Retained HIP providing the original Lesson04 cliff mask')
 ap.add_argument('--area', choices=['working', 'context'], default='working')
 ap.add_argument('--stage', choices=['source','slump','pockets','transport','material','cliff_tint','scree_tint','occlusion','curvature','verify'], required=True)
 args = ap.parse_args()
@@ -25,7 +27,14 @@ root, out = args.source_root.resolve(), args.output_root.resolve() / args.area
 assert root != out and root not in out.parents, 'Keep outputs outside retained source tree'
 assert hou.applicationVersionString() == '22.0.466', 'Revalidate node bindings for this version'
 out.mkdir(parents=True, exist_ok=True)
+assert not (out / ('final.bgeo.sc' if args.stage == 'verify' else args.stage + '.bgeo.sc')).exists(), 'Refuse stage overwrite: use a new output root'
+if args.reuse_root:
+    retained = args.reuse_root.resolve()
+    assert out != retained and retained not in out.parents, 'Keep correction outputs outside retained stages'
 assert os.environ.get('HOUDINI_OCL_DEVICETYPE') == 'CPU', 'Reserve GPU for UE stream'
+if args.checkpoint_input:
+    hou.setUpdateMode(hou.updateMode.Manual)
+    hou.hipFile.load(str(args.checkpoint_input), suppress_save_prompt=True, ignore_load_warnings=True)
 hou.setUpdateMode(hou.updateMode.AutoUpdate)
 for name in ['material.1.0', 'tint.1.0']:
     hou.hda.installFile(str(root / 'otls' / f'sop_PE_heightfield_{name}.hda'))
@@ -41,7 +50,10 @@ def node(kind, name, first=None, **parms):
     return n
 
 def load(stage):
-    n = node('file', 'CACHE_' + stage.upper(), file=str(out / (stage + '.bgeo.sc')))
+    path = out / (stage + '.bgeo.sc')
+    if not path.exists() and args.reuse_root:
+        path = args.reuse_root / args.area / (stage + '.bgeo.sc')
+    n = node('file', 'CACHE_' + stage.upper(), file=str(path))
     if stage == 'source':
         n = node('heightfield_copylayer', 'INITIALIZE_MASK', n, srcname1='height', dstname1='mask')
     return n
@@ -69,7 +81,9 @@ def ramp(n, parm, points, vals):
     n.parm(parm).set(hou.Ramp([hou.rampBasis.Linear] * len(points), points, vals))
 
 def tint(first, mask, name, strength, color=None, colors=None):
-    n = node('PE_heightfield_tint::1.0', name, first, strength=strength, use_ramp=int(colors is not None), srcname1='mask', ramp_mask='')
+    # Original HDA labels: srcname1 = Ramp Layer, ramp_mask = Mask.
+    # Constant tints require the latter; ramp grading deliberately has no mask.
+    n = node('PE_heightfield_tint::1.0', name, first, strength=strength, use_ramp=int(colors is not None), srcname1='mask', ramp_mask='mask' if colors is None else '')
     n.setInput(1, mask)
     if color is not None:
         n.parmTuple('tint').set(color)
@@ -114,25 +128,41 @@ elif args.stage == 'material':
 elif args.stage in ['cliff_tint', 'scree_tint']:
     f = load('material' if args.stage == 'cliff_tint' else 'cliff_tint')
     if args.stage == 'cliff_tint':
-        mask = node('heightfield_maskbyfeature', 'INDEPENDENT_CLIFF_MASK', load('source'), maskbyslope=1, min_slopeangle=28, max_slopeangle=90, maskbyheight=0, maskbyocclusion=0)
+        assert args.checkpoint_input, 'Original Lesson04 cliff mask requires --checkpoint-input'
+        original = hou.node('/obj/SA_CALOBRA/' + args.area.upper() + '_MASK_CLIFF')
+        assert original is not None, 'Missing original Lesson04 cliff mask'
+        mask = node('object_merge', 'RETAINED_CLIFF_MASK', objpath1=original.path(), xformtype=0)
         result = tint(f, mask, 'CLIFF_TINT', .15, color=(.94,.96,1))
     else:
         result = tint(f, load('transport'), 'SCREE_TINT', .2, color=(1,.98,.95))
 elif args.stage == 'occlusion':
     f = load('scree_tint')
-    mask = node('heightfield_maskbyfeature', 'BROAD_EXPOSURE', load('source'), maskbyslope=0, maskbyheight=0, maskbyocclusion=1, viewdistance=25)
+    if args.reuse_root:
+        mask = node('file', 'RETAINED_BROAD_EXPOSURE', file=str(args.reuse_root/args.area/'occlusion.bgeo.sc'))
+    else:
+        mask = node('heightfield_maskbyfeature', 'BROAD_EXPOSURE', load('source'), maskbyslope=0, maskbyheight=0, maskbyocclusion=1, viewdistance=25)
     result = tint(f, mask, 'EXPOSURE_TINT', .2, colors=[(1,1,1),(.93,.95,.92),(1,1,1)])
 elif args.stage == 'curvature':
     f = load('occlusion')
-    mask = node('heightfield_maskbyfeature', 'CURVATURE_MASK', load('source'), maskbyslope=0, maskbyheight=0, maskbyocclusion=0, maskbycurvature=1)
-    mask.parm('computercurvature').pressButton()
-    receipt['computed_curvature_range'] = mask.parm('max_curvature').eval()
+    if args.reuse_root:
+        mask = node('file', 'RETAINED_CURVATURE_MASK', file=str(args.reuse_root/args.area/'curvature.bgeo.sc'))
+        receipt['computed_curvature_range'] = json.loads((args.reuse_root/args.area/'curvature.json').read_text())['computed_curvature_range']
+    else:
+        mask = node('heightfield_maskbyfeature', 'CURVATURE_MASK', load('source'), maskbyslope=0, maskbyheight=0, maskbyocclusion=0, maskbycurvature=1)
+        mask.parm('computercurvature').pressButton()
+        receipt['computed_curvature_range'] = mask.parm('max_curvature').eval()
     assert float(values(geo(mask),'mask').max()) > 0, 'Curvature mask must be nonblank'
     result = tint(f, mask, 'CURVATURE_TINT', .1, colors=[(1,1,1),(1.02,1.02,1.02),(1.05,1.05,1.05)])
 else:
     f = node('file', 'BASELINE', file=str(baseline)); result = load('curvature')
 
 raw = geo(result)
+if args.stage in ['cliff_tint', 'occlusion', 'curvature']:
+    name = {'cliff_tint': 'cliff', 'occlusion': 'broad_occlusion', 'curvature': 'curvature'}[args.stage]
+    mask_geo = hou.Geometry(); mask_geo.merge(geo(mask))
+    mask_geo.deletePrims([p for p in mask_geo.prims() if p.attribValue('name') != 'mask'])
+    volume(mask_geo, 'mask').setAttribValue('name', name)
+    mask_geo.saveToFile(str(out / (name + '_mask.bgeo.sc')))
 receipt['height'] = stats(values(raw, 'height'))
 receipt['resolution'] = list(volume(raw, 'height').resolution())
 receipt['origin'] = list(volume(raw, 'height').indexToPos((0,0,0)))
@@ -161,6 +191,19 @@ if args.stage == 'verify':
     mg.deletePrims([p for p in mg.prims() if p.attribValue('name') != 'mask'])
     volume(mg,'mask').setAttribValue('name','scree')
     final.merge(mg)
+    for name in ['cliff', 'broad_occlusion', 'curvature', 'pockets']:
+        path = out / (name + '_mask.bgeo.sc')
+        if name == 'pockets':
+            layer_geo = hou.Geometry(); layer_geo.merge(geo(load('pockets')))
+            layer_geo.deletePrims([p for p in layer_geo.prims() if p.attribValue('name') != 'mask'])
+            volume(layer_geo, 'mask').setAttribValue('name', name)
+        else:
+            assert path.is_file(), 'Missing retained output mask: ' + str(path)
+            layer_geo = hou.Geometry(); layer_geo.loadFromFile(str(path))
+        assert volume(layer_geo, name).resolution() == volume(final, 'height').resolution()
+        for index in [(0,0,0), (1,0,0), (0,1,0)]:
+            assert volume(layer_geo, name).indexToPos(index) == volume(final, 'height').indexToPos(index)
+        final.merge(layer_geo)
     final.saveToFile(str(out/'final.bgeo.sc'))
     delta = h.astype(np.float64)-values(base,'height')
     receipt['final_delta_l05_m'] = stats(delta)

@@ -1,0 +1,28 @@
+=== DEBUG PE_LOAD_LANDSCAPE IN UNREAL ===
+Target landscape: SaCalobra_Detail_0_0 (SaCalobra_Detail_0_0)
+Setting dir = D:/yacs/project/worldgen/houdini/sa_calobra
+Setting environment = 0 (Unreal)
+Setting mode = 1 (Update Existing)
+Setting input7 = 1 (Layer1_Manual)
+Setting output_name = SaCalobra_Detail_0_0
+Readback values:
+  dir: D:/yacs/project/worldgen/houdini/sa_calobra
+  environment: 0
+  mode: 1
+  input7: 1
+  output_name: SaCalobra_Detail_0_0
+
+Calling recook()...
+Calling process_component_synchronous()...
+process_component_synchronous returned: None
+last_error: 'None'
+num_outputs: 1
+  Output 0: type=<HoudiniOutputType.LANDSCAPE: 3>
+Calling bake_all_outputs()...
+bake_all_outputs returned: True
+Post-bake last_error: 'None'
+
+Target edit layers count: 2
+  layer: LandscapeEditLayer_0 (bp: Houdini_Source_Pegasus_Gentle)
+  layer: LandscapeEditLayer_1 (bp: Layer1_Manual)
+Done!

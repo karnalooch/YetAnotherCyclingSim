@@ -10,6 +10,7 @@ ap.add_argument('--source-root', type=Path, required=True)
 ap.add_argument('--output-root', type=Path, required=True)
 ap.add_argument('--corpus', type=Path, required=True)
 ap.add_argument('--checkpoint', type=Path, required=True)
+ap.add_argument('--reuse-root', type=Path, help='Retained unchanged stage graphs')
 a = ap.parse_args()
 assert a.checkpoint.parent.resolve() == a.source_root.resolve()
 assert not a.checkpoint.exists(), 'Refuse checkpoint overwrite'
@@ -25,7 +26,10 @@ for area in ['working','context']:
     obj = hou.node('/obj').createNode('geo','LESSON05_'+area.upper(),run_init_scripts=False)
     for stage in stages:
         network = obj.createNode('subnet',stage.upper())
-        network.loadItemsFromFile(str(directory/(stage+'.cpio')))
+        stage_file = directory/(stage+'.cpio')
+        if not stage_file.exists() and a.reuse_root:
+            stage_file = a.reuse_root/area/(stage+'.cpio')
+        network.loadItemsFromFile(str(stage_file))
         network.setDisplayFlag(False); network.setRenderFlag(False)
     f = obj.createNode('file','FINAL_CACHE');f.parm('file').set(str(directory/'final.bgeo.sc'))
     color = obj.createNode('heightfield_visualize','GLOBAL_COLOR')

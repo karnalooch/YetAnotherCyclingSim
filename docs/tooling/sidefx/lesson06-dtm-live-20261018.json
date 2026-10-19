@@ -1,0 +1,67 @@
+{
+  "status": "LIVE_NATIVE_DTM_AND_VISIBILITY_PASS_MATERIAL_VISUAL_DIFFERENCE_REMAINS",
+  "issue": 365,
+  "milestone": "M3",
+  "pr": 474,
+  "base_head": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+  "local_uncommitted_changes": true,
+  "editor_pid": 11820,
+  "launch": {
+    "pid": 11820,
+    "started": "2026-10-18T23:12:44.1000429+02:00",
+    "profile": "retained L06 Remote",
+    "log": "Saved/Logs/lesson06-dtm-visibility-20261018.log"
+  },
+  "tiles_deployed": 22,
+  "working_retained": 4,
+  "old_context_retained_hidden": true,
+  "map_saved": false,
+  "restart_after_launch": false,
+  "lessons_2_to_5_rebuilt": false,
+  "merge": false,
+  "native_build": "Succeeded; YetAnotherCyclingSimEditor Win64 Development, 5 actions, 57.44 seconds",
+  "context_samples": 186972978,
+  "context_maximum_dtm_delta_m": 0.06468582153320312,
+  "whole_samples": 264427742,
+  "whole_maximum_dtm_delta_m": 0.510986328125,
+  "above_2m": 0,
+  "grid_spacing_m": 0.5,
+  "maximum_shared_edge_vertical_m": 0.05152127742769608,
+  "original_heights_and_masks": "BIT_EXACT",
+  "source_retention": {
+    "status": "BIT_EXACT",
+    "files": {
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_mask.bgeo.sc": "7ed77879f7538684a3d244b36ce2b7de3dceacb19cd041dc72b2f43fd0fdb0b9",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_mask.bgeo.sc": "fe6f639983f99196018e5c3a2f4209e70655396ee3931630d06083e14bbe1754",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_2_mask.bgeo.sc": "097bb0248a90fa9f58a2d384dc2b6aec87970e679777739bcbc0a16cbd0f4a6d",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_2_mask.bgeo.sc": "7735cb00c181a27d8771e2af72c93b37859d103b7dec56b29349f5823403f70f",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\sand_mask.bgeo.sc": "278ddd69b37e357fc4cc4821bb1236beee806ab5e13b89c8ee4644f37ceb8757",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\sand_mask.bgeo.sc": "5b2268ad1372f53997567c3ba5c99df8a93f084eaf209b39344532ef46a7e76c",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\cliffs_mask.bgeo.sc": "e272ddee9994acbaa77f3e239c8009ca40ef348dddea44557548f4d6d82c373b",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\cliffs_mask.bgeo.sc": "305b662145d1306b87255c95f6f991f030a869eb9effdc6ce89f69fc116ced94",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\scree_mask.bgeo.sc": "87382b3a69a3c2aed2252ead2f9de281bc2a0f3ef70e797a178d8b84264f5c4e",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\scree_mask.bgeo.sc": "88b757fa2c99122bfcc376b4cf8950686ee8dff670e62b13c568cc9e4804e09b",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\final.bgeo.sc": "c47153ce49452d40d1575ce27c199a8ebf5c54dc761ed254d692e8ccb99e01d6",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\final.bgeo.sc": "70bc11b639591a44a7d2a92eb9bd7a3aa0483aeafb1bf3534ce1150be34c3ec2",
+      "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_height_float32.tif": "2ba280dd59da8df89620deb3b1e0ca6b8d0e7eafc0e13a7a96e35df6a6e5a0dd",
+      "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_validity.tif": "96acc1b90fdf926ee4ada618a66c82406d312f613b84f5453a363fa08b10f35c"
+    }
+  },
+  "visibility": "All 22 native readbacks bit-exact against retained-mask-derived representation",
+  "visual_review": "Four Remote views inspected. Geometry resolution improved; material sharpness difference remains. Not fully seamless visual acceptance.",
+  "owner_visual_acceptance": "NOT_RUN",
+  "protected_ci": "NOT_RUN",
+  "render_lod_dtm_bound": "NOT_MEASURED; reported limit is exhaustive native height samples",
+  "local_code_sha256": {
+    "Source/YetAnotherCyclingSim/Public/Cycling/CyclingLandscapeEarthworksLibrary.h": "e4fda5eb3a258b3c8e8da70af31564e79e5c3a41c30a2a86e61268abe49571c3",
+    "Source/YetAnotherCyclingSim/Private/Editor/CyclingLandscapeEarthworksLibrary.cpp": "95e38d45efdd7b7cdff326f870fd420e1be4e4494d58031b506cf52569e78bc1",
+    "scripts/ue/stage_lesson06_dtm_context.py": "945ac88927091822a0c47b473cae3659af15b02c2faffdf3a634bfa4b259601f",
+    "scripts/ue/publish_lesson06_dtm_context.py": "b20a213a1d867ba12e21c5e95e1ab804cd5076c0e24902cfc17bedcba58cb98b",
+    "scripts/houdini/verify_lesson06_dtm_whole.py": "9f7217c9ce1039266ba5375af448295561294cf7f938cdd502492680d81d3b0e"
+  },
+  "evidence_root": "Saved\\RuntimeProof\\Lesson06DTMContext",
+  "official_sources": [
+    "https://www.sidefx.com/docs/houdini/unreal/landscape/basics.html",
+    "https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Landscape/ALandscapeProxy/AddTargetLayer"
+  ]
+}

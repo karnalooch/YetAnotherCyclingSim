@@ -1,0 +1,145 @@
+{
+  "status": "APPLIED_MATERIAL_ONLY",
+  "pid": 31408,
+  "map": "/Game/Generated/YACS/Lesson05_20261018/L_SaCalobra_Lesson05.L_SaCalobra_Lesson05",
+  "map_sha256_before": "ccabe772cb307c8f4cfee91ed9bc7b9485098162c73c5330a76c5d31a7ac7681",
+  "tiles": [
+    {
+      "name": "SaCalobra_Detail_0_0",
+      "material": "/Game/Generated/YACS/Lesson06Seam_20261018/Materials/MI_SaCalobra_Detail_0_0.MI_SaCalobra_Detail_0_0",
+      "texture": "/Game/Generated/YACS/Lesson06Seam_20261018/Textures/T_SaCalobra_Detail_0_0.T_SaCalobra_Detail_0_0",
+      "source_sha256": "65988c08dfc54ab75ed837d06344c66fcf122d2d8228e9b91e6d2886c8e8474d",
+      "native_export": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06SeamRemote\\SaCalobra_Detail_0_0_imported.png",
+      "texture_srgb": true
+    },
+    {
+      "name": "SaCalobra_Detail_1_0",
+      "material": "/Game/Generated/YACS/Lesson06Seam_20261018/Materials/MI_SaCalobra_Detail_1_0.MI_SaCalobra_Detail_1_0",
+      "texture": "/Game/Generated/YACS/Lesson06Seam_20261018/Textures/T_SaCalobra_Detail_1_0.T_SaCalobra_Detail_1_0",
+      "source_sha256": "e13daeb9b4196f7dbf728b06a8382598882fe03a3a247076771ed97e53724f09",
+      "native_export": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06SeamRemote\\SaCalobra_Detail_1_0_imported.png",
+      "texture_srgb": true
+    },
+    {
+      "name": "SaCalobra_Detail_0_1",
+      "material": "/Game/Generated/YACS/Lesson06Seam_20261018/Materials/MI_SaCalobra_Detail_0_1.MI_SaCalobra_Detail_0_1",
+      "texture": "/Game/Generated/YACS/Lesson06Seam_20261018/Textures/T_SaCalobra_Detail_0_1.T_SaCalobra_Detail_0_1",
+      "source_sha256": "28e5bcba891f211554e1bc8875a3055b55a61bc5a4dfcc4d270b875345374026",
+      "native_export": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06SeamRemote\\SaCalobra_Detail_0_1_imported.png",
+      "texture_srgb": true
+    },
+    {
+      "name": "SaCalobra_Detail_1_1",
+      "material": "/Game/Generated/YACS/Lesson06Seam_20261018/Materials/MI_SaCalobra_Detail_1_1.MI_SaCalobra_Detail_1_1",
+      "texture": "/Game/Generated/YACS/Lesson06Seam_20261018/Textures/T_SaCalobra_Detail_1_1.T_SaCalobra_Detail_1_1",
+      "source_sha256": "387296ce35b4f1941889e0130e08ab99dc447bbf62063f34ee2af7387e9e36a8",
+      "native_export": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06SeamRemote\\SaCalobra_Detail_1_1_imported.png",
+      "texture_srgb": true
+    },
+    {
+      "name": "SaCalobra_Context_Valid",
+      "material": "/Game/Generated/YACS/Lesson06Seam_20261018/Materials/MI_SaCalobra_Context_Valid.MI_SaCalobra_Context_Valid",
+      "texture": "/Game/Generated/YACS/Lesson06Seam_20261018/Textures/T_SaCalobra_Context_Valid.T_SaCalobra_Context_Valid",
+      "source_sha256": "0ca3df7e784bd47e3b1b78350377e8197ae8f661a2d19a88300b5c76939684ce",
+      "native_export": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06SeamRemote\\SaCalobra_Context_Valid_imported.png",
+      "texture_srgb": true
+    }
+  ],
+  "map_saved": false,
+  "height_or_mask_import": false,
+  "restart": false,
+  "map_sha256_after": "ccabe772cb307c8f4cfee91ed9bc7b9485098162c73c5330a76c5d31a7ac7681",
+  "native_landscape_structure_unchanged": true,
+  "context_geometry_unchanged": true,
+  "consumer": "Global color AlbedoTexture; no L07 ID/detail shader introduced",
+  "issue": 365,
+  "milestone": "M3",
+  "pr": 474,
+  "base_revision": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+  "pixel_verification": {
+    "status": "PASS",
+    "comparison": "Native UE PNG export versus prepared source RGB, every pixel",
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "width": 3811,
+        "height": 5081,
+        "pixels": 19363691,
+        "different_pixels": 0,
+        "max_channel_delta": 0
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "width": 3811,
+        "height": 5081,
+        "pixels": 19363691,
+        "different_pixels": 0,
+        "max_channel_delta": 0
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "width": 3811,
+        "height": 5081,
+        "pixels": 19363691,
+        "different_pixels": 0,
+        "max_channel_delta": 0
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "width": 3811,
+        "height": 5081,
+        "pixels": 19363691,
+        "different_pixels": 0,
+        "max_channel_delta": 0
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "width": 2017,
+        "height": 2017,
+        "pixels": 4068289,
+        "different_pixels": 0,
+        "max_channel_delta": 0
+      }
+    ],
+    "total_pixels": 81523053
+  },
+  "process_start_local": "2026-10-18T21:47:59+02:00",
+  "live_stream": {
+    "codec": "H264",
+    "frames_decoded_samples": [
+      4805,
+      5164
+    ],
+    "fps": 30,
+    "dropped_frames": 0
+  },
+  "visual_status": "GEOMETRY_RESOLUTION_SHADING_SEAM_REMAINS; OWNER_VISUAL_PENDING",
+  "height_mask_proof": "No height/mask imports; unchanged scene structure and map file. No fresh UE height/weightmap pixel export; Python properties unavailable.",
+  "persistence": "New texture and material assets saved; actor bindings active only, original map unsaved.",
+  "lesson02_05_rebuilt": false,
+  "merge": false,
+  "remote_commit": "NOT_RUN",
+  "protected_ci": "NOT_RUN",
+  "screenshots": {
+    "north_before": {
+      "path": "worldgen/houdini/sa_calobra/evidence/lesson06_remote/north_before.png",
+      "sha256": "24f0dab4bfa086677f1b3726ceadf6c84c23246359f58132d412e4e61da36ac5"
+    },
+    "north_after": {
+      "path": "worldgen/houdini/sa_calobra/evidence/lesson06_remote/north_after.png",
+      "sha256": "385301d3736f3504ebf64f220f11485250e597c83599448ee6e63beb911d8f8a"
+    },
+    "south_after": {
+      "path": "worldgen/houdini/sa_calobra/evidence/lesson06_remote/south_after.png",
+      "sha256": "c7e128b25e2679e5cb296aaab971c35c48584ddffe52b64c2c9f7a7ef91a6133"
+    },
+    "west_after": {
+      "path": "worldgen/houdini/sa_calobra/evidence/lesson06_remote/west_after.png",
+      "sha256": "ee7503022679a5f30d0eca93c6e156dccca7d1562069b1819de58351844c1691"
+    },
+    "east_after": {
+      "path": "worldgen/houdini/sa_calobra/evidence/lesson06_remote/east_after.png",
+      "sha256": "c89ef80db31a2792d304dd1d81efc04da2ded299791bb1d57486f3488056b5bb"
+    }
+  }
+}

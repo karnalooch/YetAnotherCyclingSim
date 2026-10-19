@@ -1,0 +1,1196 @@
+{
+  "status": "BLOCKED_NATIVE_VISIBILITY_ADMISSION",
+  "owner_reference": "Original 0.5 m DTM for Working and Context",
+  "head": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+  "issue": 365,
+  "milestone": "M3",
+  "pr": 474,
+  "terrain_source_hashes": {
+    "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_height_float32.tif": "2ba280dd59da8df89620deb3b1e0ca6b8d0e7eafc0e13a7a96e35df6a6e5a0dd",
+    "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_validity.tif": "96acc1b90fdf926ee4ada618a66c82406d312f613b84f5453a363fa08b10f35c"
+  },
+  "prepared_tiles": [
+    {
+      "name": "SaCalobra_DTM_Context_00",
+      "x0": -4059.25,
+      "z0": -4086.25,
+      "nx": 2033,
+      "ny": 4065,
+      "components": [
+        8,
+        16
+      ],
+      "zmax": -2054.25,
+      "source_array_sha256": "f76421e16026b0afa1cbd080cfbed114a0ada683844ce97b4f137bf623cfa936",
+      "valid_samples": 2078328,
+      "source_window": [
+        -119,
+        -173,
+        2033,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_00.bgeo.sc",
+      "sha256": "4c9d19f5804bb542664b5a40840234797c9fa213b397f5360ba8ae26726dece3",
+      "expected_codes_sha256": "f9a72bc8945e447283dfeaceacff83aa90eb847a3b18e719dd8858a01738ab15",
+      "visibility_sha256": "9b32dba95b7e48d1e67f01f42bc0ebf487d815dd93a87d1e21a082c3194122a8",
+      "max_source_delta_m": 0.022670894861221313,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 2000277,
+      "lattice": {
+        "resolution": [
+          2033,
+          4065,
+          1
+        ],
+        "origin": [
+          -4059.25,
+          0.0,
+          -2054.25
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_01",
+      "x0": -4059.25,
+      "z0": -2054.25,
+      "nx": 2033,
+      "ny": 4065,
+      "components": [
+        8,
+        16
+      ],
+      "zmax": -22.25,
+      "source_array_sha256": "d7ab45aafeffff65fe1b8c59360e5f6e66347f6a7a04e38fa1bcb10ecd69baf8",
+      "valid_samples": 6968970,
+      "source_window": [
+        -119,
+        3891,
+        2033,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_01.bgeo.sc",
+      "sha256": "d6883ffc0f6c6de7f1aec9a64029695848fa37cee3132e234e7f0f14ad882de6",
+      "expected_codes_sha256": "9eefaec6e3c17d0367c32a22346cf87b6d408804129b0a35dd14cff865cb880c",
+      "visibility_sha256": "3ef819f22ad5379ade2fad32c629f78d2a5301771a4ceaccd61856061c74e64e",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 6532587,
+      "lattice": {
+        "resolution": [
+          2033,
+          4065,
+          1
+        ],
+        "origin": [
+          -4059.25,
+          0.0,
+          -22.25
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_02",
+      "x0": -4059.25,
+      "z0": -22.25,
+      "nx": 2033,
+      "ny": 4065,
+      "components": [
+        8,
+        16
+      ],
+      "zmax": 2009.75,
+      "source_array_sha256": "f20d8620e09f5cdced1e3dd2d7fe5f7f598fa7259bcbf3e4bf6b50d8aec6078d",
+      "valid_samples": 7780410,
+      "source_window": [
+        -119,
+        7955,
+        2033,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_02.bgeo.sc",
+      "sha256": "415c5f057ca96687bbc95d297c6c70fad86ba38f03426e94da2740055ff97254",
+      "expected_codes_sha256": "2f58ccbfa604685141a35d269dacad67907a2b5fc6403f91125f482e76e2d690",
+      "visibility_sha256": "5b6ed61badf2be677bfd42d78aab81e17dd47ff7c5eaf5fa0d564c545fb9aeb8",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 7272285,
+      "lattice": {
+        "resolution": [
+          2033,
+          4065,
+          1
+        ],
+        "origin": [
+          -4059.25,
+          0.0,
+          2009.75
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_03",
+      "x0": -4059.25,
+      "z0": 2009.75,
+      "nx": 2033,
+      "ny": 4065,
+      "components": [
+        8,
+        16
+      ],
+      "zmax": 4041.75,
+      "source_array_sha256": "dad271d30b0c5e12664b4af0f7df85c6a5006f258a3ba1e744c5b17a59b532f9",
+      "valid_samples": 7619634,
+      "source_window": [
+        -119,
+        12019,
+        2033,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_03.bgeo.sc",
+      "sha256": "2fb291b6f5c2ea951edf88a13bcecea8ec2a2b41e5c2e73f01863a57a15c40bf",
+      "expected_codes_sha256": "2699cf493c6279602ddad8938b5bb1162e5b5c61175dffbe5c3e4c0c8176a129",
+      "visibility_sha256": "a63fb419df94af8f0d7aaa5419208f14f560cad39d8d69fe4948d125fd41b4c8",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 6912696,
+      "lattice": {
+        "resolution": [
+          2033,
+          4065,
+          1
+        ],
+        "origin": [
+          -4059.25,
+          0.0,
+          4041.75
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_04",
+      "x0": -3043.25,
+      "z0": -4086.25,
+      "nx": 2287,
+      "ny": 4065,
+      "components": [
+        9,
+        16
+      ],
+      "zmax": -2054.25,
+      "source_array_sha256": "92c791df9070222b50b1604c618e5467e981412689bd0b8c90313eb535220009",
+      "valid_samples": 8901004,
+      "source_window": [
+        1913,
+        -173,
+        2287,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_04.bgeo.sc",
+      "sha256": "1bdd886143cc8e1b5ec808206d1623e4da0a864ee879ccde90a0e2aaddecfa68",
+      "expected_codes_sha256": "e6f4e14c17944b51f5684ff815abd1be152c6940f775c3307477ac9b91430080",
+      "visibility_sha256": "9c74dd3504c72b87b8d745f0ff8864794b60a7f14f83078f080c85694e30262d",
+      "max_source_delta_m": 0.02278319001197815,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 8615129,
+      "lattice": {
+        "resolution": [
+          2287,
+          4065,
+          1
+        ],
+        "origin": [
+          -3043.25,
+          0.0,
+          -2054.25
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_05",
+      "x0": -3043.25,
+      "z0": -2054.25,
+      "nx": 2287,
+      "ny": 4065,
+      "components": [
+        9,
+        16
+      ],
+      "zmax": -22.25,
+      "source_array_sha256": "125bceab223d6e5ad80b74e02f3a4c32339ba15e6bc28dabb7d4f27c74e6d9b3",
+      "valid_samples": 9296655,
+      "source_window": [
+        1913,
+        3891,
+        2287,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_05.bgeo.sc",
+      "sha256": "c51ca25f69c21677471a164805c4e0519517f9b0a785b0010a8176fc3be6d7c5",
+      "expected_codes_sha256": "da0b8076c5159aac5b118808cf8f3fd72e18dfdde5df8bd42a35ffeafeb6364e",
+      "visibility_sha256": "5e5e8457d6f155fa56879ffee04d8fa7e57bd856f8a017487588e4273580b844",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 9296655,
+      "lattice": {
+        "resolution": [
+          2287,
+          4065,
+          1
+        ],
+        "origin": [
+          -3043.25,
+          0.0,
+          -22.25
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_06",
+      "x0": -3043.25,
+      "z0": -22.25,
+      "nx": 2287,
+      "ny": 4065,
+      "components": [
+        9,
+        16
+      ],
+      "zmax": 2009.75,
+      "source_array_sha256": "f38c1b565be1cbb3fa1a839de866e58938ef60ee7af1777c2701ce26f1528cc7",
+      "valid_samples": 9296655,
+      "source_window": [
+        1913,
+        7955,
+        2287,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_06.bgeo.sc",
+      "sha256": "39bae6a8c022db684cbbca492343524cef2896f354b54c7dcf3373259db5b603",
+      "expected_codes_sha256": "e5bb65179a4949086d73ca05c95d797c3c62c7cff2ca86681b2f83238bf42b5a",
+      "visibility_sha256": "5e5e8457d6f155fa56879ffee04d8fa7e57bd856f8a017487588e4273580b844",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 9296655,
+      "lattice": {
+        "resolution": [
+          2287,
+          4065,
+          1
+        ],
+        "origin": [
+          -3043.25,
+          0.0,
+          2009.75
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_07",
+      "x0": -3043.25,
+      "z0": 2009.75,
+      "nx": 2287,
+      "ny": 4065,
+      "components": [
+        9,
+        16
+      ],
+      "zmax": 4041.75,
+      "source_array_sha256": "949206ebaca9ccaea6523867975a9c922b6ac4d78930956ee80548469264fad7",
+      "valid_samples": 9104547,
+      "source_window": [
+        1913,
+        12019,
+        2287,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_07.bgeo.sc",
+      "sha256": "524ebf443a05a2d5c1ce049a558430b7b75a54cc2437bece6db7ac2900eae295",
+      "expected_codes_sha256": "b5f02c895810e4f50af19392bd5b0b14c503d3ac99b632c51f621fff7b806884",
+      "visibility_sha256": "1f8f66b1f61fafc26e1f728b7ad8fdda8d3211021347a897ee3a21f2fa37d53d",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 8836968,
+      "lattice": {
+        "resolution": [
+          2287,
+          4065,
+          1
+        ],
+        "origin": [
+          -3043.25,
+          0.0,
+          4041.75
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_08",
+      "x0": 1909.75,
+      "z0": -4086.25,
+      "nx": 2033,
+      "ny": 4065,
+      "components": [
+        8,
+        16
+      ],
+      "zmax": -2054.25,
+      "source_array_sha256": "cc20ed71f8e353ad526a6b2a660ba48c1d9465ed244c5990ac5e3acdd997a5e9",
+      "valid_samples": 7912436,
+      "source_window": [
+        11819,
+        -173,
+        2033,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_08.bgeo.sc",
+      "sha256": "49cc8dd24cbbf316a3e81258357f5094d42dbdb4653a0668d72956aa245d6786",
+      "expected_codes_sha256": "cfa038e7629ef116dc67c6f7fdd9114957e5e339cf63676ff7d9062b6f70241d",
+      "visibility_sha256": "4a26145eac245c711943e18e7b356cee94f7926c0f780b7acfd5973fd8f97600",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 7658311,
+      "lattice": {
+        "resolution": [
+          2033,
+          4065,
+          1
+        ],
+        "origin": [
+          1909.75,
+          0.0,
+          -2054.25
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_09",
+      "x0": 1909.75,
+      "z0": -2054.25,
+      "nx": 2033,
+      "ny": 4065,
+      "components": [
+        8,
+        16
+      ],
+      "zmax": -22.25,
+      "source_array_sha256": "1900fb080cc461c2ed8e791afc7f713bbb1cf97dcd2a91f37fb2bacd13e75058",
+      "valid_samples": 8264145,
+      "source_window": [
+        11819,
+        3891,
+        2033,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_09.bgeo.sc",
+      "sha256": "a2bf03252ca2556320a6132e0336e13f9a192e5a81eb845c9e602b0b3d0d0e53",
+      "expected_codes_sha256": "342d33e5b7ccdba4ec08512323b8215a4e69989d354853dac76863f547a5677b",
+      "visibility_sha256": "9f873e81f91667ba7a3161cc1b7ff420a00345649b85c7a4067f9e1afb2c9a9c",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 8264145,
+      "lattice": {
+        "resolution": [
+          2033,
+          4065,
+          1
+        ],
+        "origin": [
+          1909.75,
+          0.0,
+          -22.25
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_10",
+      "x0": 1909.75,
+      "z0": -22.25,
+      "nx": 2033,
+      "ny": 4065,
+      "components": [
+        8,
+        16
+      ],
+      "zmax": 2009.75,
+      "source_array_sha256": "ffcb4650c132c6607614fb73a51030669f6a52ddcebfd30e988119be3cc4dcbd",
+      "valid_samples": 8264145,
+      "source_window": [
+        11819,
+        7955,
+        2033,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_10.bgeo.sc",
+      "sha256": "74ab3c11bee4ac0e5325ee3014aba5e3f5946e5416f048474f3c04e78ef8f7fb",
+      "expected_codes_sha256": "e09d209cc9aa1ab9a9003cec6980b2fab5a3bedc1108d23545a32547e21e4a55",
+      "visibility_sha256": "9f873e81f91667ba7a3161cc1b7ff420a00345649b85c7a4067f9e1afb2c9a9c",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 8264145,
+      "lattice": {
+        "resolution": [
+          2033,
+          4065,
+          1
+        ],
+        "origin": [
+          1909.75,
+          0.0,
+          2009.75
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_11",
+      "x0": 1909.75,
+      "z0": 2009.75,
+      "nx": 2033,
+      "ny": 4065,
+      "components": [
+        8,
+        16
+      ],
+      "zmax": 4041.75,
+      "source_array_sha256": "b19d85c43768f3398718fe963f5c274d95f69f69bc6e171ffb329da851ad2bc8",
+      "valid_samples": 8093373,
+      "source_window": [
+        11819,
+        12019,
+        2033,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_11.bgeo.sc",
+      "sha256": "bc19cce7b7a1e301e57cb968cd2da621b575ceb5199691d1444ca032621d022d",
+      "expected_codes_sha256": "4a311b9c95408e3debfea8690cfef6caeaeb66ecaa03fb97e88b92a45366020d",
+      "visibility_sha256": "acff1d4b5db09c287fc3441b7f21b017327caeb769863c33d9c806fd019a77b8",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 7855512,
+      "lattice": {
+        "resolution": [
+          2033,
+          4065,
+          1
+        ],
+        "origin": [
+          1909.75,
+          0.0,
+          4041.75
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_12",
+      "x0": 2925.75,
+      "z0": -4086.25,
+      "nx": 2287,
+      "ny": 4065,
+      "components": [
+        9,
+        16
+      ],
+      "zmax": -2054.25,
+      "source_array_sha256": "e6119b3504eda8be4c767b252b9fd6b5f4e65bd3f8008584d41e960bcb2e81c4",
+      "valid_samples": 8363908,
+      "source_window": [
+        13851,
+        -173,
+        2287,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_12.bgeo.sc",
+      "sha256": "415fa68c43cbca0cfb387bd1caf05e9158355bd00e373d60a2ef5694d529f2fc",
+      "expected_codes_sha256": "973bb20e67eb269191262736a399ca463f4f508f3d51c1defa3b4638fa3fd262",
+      "visibility_sha256": "7d230a5aab821fe07867bb16390364531e9f4100033fdeb78b38992ce96d5d95",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 7654544,
+      "lattice": {
+        "resolution": [
+          2287,
+          4065,
+          1
+        ],
+        "origin": [
+          2925.75,
+          0.0,
+          -2054.25
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_13",
+      "x0": 2925.75,
+      "z0": -2054.25,
+      "nx": 2287,
+      "ny": 4065,
+      "components": [
+        9,
+        16
+      ],
+      "zmax": -22.25,
+      "source_array_sha256": "45e203c96137e0771d4a03f413e151d157fdc116634816ea40a9d81af5c5eb20",
+      "valid_samples": 8735685,
+      "source_window": [
+        13851,
+        3891,
+        2287,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_13.bgeo.sc",
+      "sha256": "2db460c138bf32fc3542f36f8f1cecef82ba0b877db7bbb49803735fc17b7b6f",
+      "expected_codes_sha256": "e4795c06ea0c595749d336140b98a951c10dc85eb5e3a3ec535ac695144129ed",
+      "visibility_sha256": "4a6893574fd9f92214627805ecd57851ac19f9f7f5d9309116f5701a53f3f82b",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 8260080,
+      "lattice": {
+        "resolution": [
+          2287,
+          4065,
+          1
+        ],
+        "origin": [
+          2925.75,
+          0.0,
+          -22.25
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_14",
+      "x0": 2925.75,
+      "z0": -22.25,
+      "nx": 2287,
+      "ny": 4065,
+      "components": [
+        9,
+        16
+      ],
+      "zmax": 2009.75,
+      "source_array_sha256": "39295d221d1beed5dc5b10976d5a6d633b2571cc9d49817eeddcc86a81bada30",
+      "valid_samples": 8735685,
+      "source_window": [
+        13851,
+        7955,
+        2287,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_14.bgeo.sc",
+      "sha256": "088c31590fcacd4fcf3839aedc384a93c7524a3509c0316e181f18c636171a02",
+      "expected_codes_sha256": "c1b52e00ef0b2ea8718d68ce7273f904327e4bc05b55597e68ed34fa7ab7f7c5",
+      "visibility_sha256": "4a6893574fd9f92214627805ecd57851ac19f9f7f5d9309116f5701a53f3f82b",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 8260080,
+      "lattice": {
+        "resolution": [
+          2287,
+          4065,
+          1
+        ],
+        "origin": [
+          2925.75,
+          0.0,
+          2009.75
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_15",
+      "x0": 2925.75,
+      "z0": 2009.75,
+      "nx": 2287,
+      "ny": 4065,
+      "components": [
+        9,
+        16
+      ],
+      "zmax": 4041.75,
+      "source_array_sha256": "2f656fe13c3abeac98b73037c4102def16d3b009f2abb5dfb1c4fb5ce7345678",
+      "valid_samples": 8555169,
+      "source_window": [
+        13851,
+        12019,
+        2287,
+        4065
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_15.bgeo.sc",
+      "sha256": "e49c1a764de458d81b534aff78e0144dc2498224cc4b996d45fb920eff3c8666",
+      "expected_codes_sha256": "d20ca1cb2f48b93050758a281a4c487568c1ad099ebf4b9c1a7ef75a10138db4",
+      "visibility_sha256": "79d184b3a3c25a1d944fb25fbc4cda7f8bc9731a014d50c13f587815b62ebab2",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 7851648,
+      "lattice": {
+        "resolution": [
+          2287,
+          4065,
+          1
+        ],
+        "origin": [
+          2925.75,
+          0.0,
+          4041.75
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_16",
+      "x0": -1900.25,
+      "z0": -4086.25,
+      "nx": 3811,
+      "ny": 2287,
+      "components": [
+        15,
+        9
+      ],
+      "zmax": -2943.25,
+      "source_array_sha256": "d5b4e8f88b5c95aaddd357499c4f62757a2c11bab51c9a7ce69738c8ddfd257a",
+      "valid_samples": 8056454,
+      "source_window": [
+        4199,
+        -173,
+        3811,
+        2287
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_16.bgeo.sc",
+      "sha256": "6df365bf30dbfed7e810b49e6ee0fd3edab1d680cd6d0700be214fdd3b373f73",
+      "expected_codes_sha256": "e347d4cd23b2c2745cbba03cfa79188b2101c34da90405e68c7f195e8048e427",
+      "visibility_sha256": "e3dd7e7a4b010ec79152721175ba25a723491a6f9d7affbe6bc805a7adfd4b4f",
+      "max_source_delta_m": 0.022832036018371582,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 7580079,
+      "lattice": {
+        "resolution": [
+          3811,
+          2287,
+          1
+        ],
+        "origin": [
+          -1900.25,
+          0.0,
+          -2943.25
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_17",
+      "x0": -1900.25,
+      "z0": -2943.25,
+      "nx": 3811,
+      "ny": 2287,
+      "components": [
+        15,
+        9
+      ],
+      "zmax": -1800.25,
+      "source_array_sha256": "d4f0d5410db16bc8b09e3012d7576f907a72c04218d1c199758f34c51eee8091",
+      "valid_samples": 8715757,
+      "source_window": [
+        4199,
+        2113,
+        3811,
+        2287
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_17.bgeo.sc",
+      "sha256": "1840ba50bd2f946439cfd6ec13cd6244ebe06eac6a7b5f5b7e7765373171c7ea",
+      "expected_codes_sha256": "fbf495b86489edcbe00ff3737135ef72abab7fc7cb3359eb82f35732784295cb",
+      "visibility_sha256": "2a66269e25894767eacdf871b6856a97cec73824ba215160d4f35fc858259336",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 8715757,
+      "lattice": {
+        "resolution": [
+          3811,
+          2287,
+          1
+        ],
+        "origin": [
+          -1900.25,
+          0.0,
+          -1800.25
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_18",
+      "x0": -1900.25,
+      "z0": 3279.75,
+      "nx": 3811,
+      "ny": 1525,
+      "components": [
+        15,
+        6
+      ],
+      "zmax": 4041.75,
+      "source_array_sha256": "0fc1f84bf418cc5c0ad111a003d7999f81734b2cfaf33b26e2e33e8abaa96d4b",
+      "valid_samples": 5491651,
+      "source_window": [
+        4199,
+        14559,
+        3811,
+        1525
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_18.bgeo.sc",
+      "sha256": "11c5b8380dd1365f02a4631c0fda58d0a02e55964910248ba1a829f9ecf272e6",
+      "expected_codes_sha256": "09a881e160c23785d7e39782cd8680e8759a4eb1deece52d422ce583aae7f3b3",
+      "visibility_sha256": "9f8cb8a0fe0ad779d233cf6e91d83f74f5efe57218fe829ff8827f22c76794dd",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 5045764,
+      "lattice": {
+        "resolution": [
+          3811,
+          1525,
+          1
+        ],
+        "origin": [
+          -1900.25,
+          0.0,
+          4041.75
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_19",
+      "x0": 4.75,
+      "z0": -4086.25,
+      "nx": 3811,
+      "ny": 2287,
+      "components": [
+        15,
+        9
+      ],
+      "zmax": -2943.25,
+      "source_array_sha256": "b7e6aebef5d6c435790ff878650437d8da3b2ba4c038f3f0984077194fb851f0",
+      "valid_samples": 8056454,
+      "source_window": [
+        8009,
+        -173,
+        3811,
+        2287
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_19.bgeo.sc",
+      "sha256": "1b59524c9ec048c8a2c37061f1001b957f954355bfbe4a9afcb7d08dbb7a221f",
+      "expected_codes_sha256": "0ef0c715e8149ab76c86f89f75d423936f19cd46c10d84a5cf5b230a51a9694d",
+      "visibility_sha256": "e3dd7e7a4b010ec79152721175ba25a723491a6f9d7affbe6bc805a7adfd4b4f",
+      "max_source_delta_m": 0.0228271484375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 7580079,
+      "lattice": {
+        "resolution": [
+          3811,
+          2287,
+          1
+        ],
+        "origin": [
+          4.75,
+          0.0,
+          -2943.25
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_20",
+      "x0": 4.75,
+      "z0": -2943.25,
+      "nx": 3811,
+      "ny": 2287,
+      "components": [
+        15,
+        9
+      ],
+      "zmax": -1800.25,
+      "source_array_sha256": "3c77ed02878a1385b61c8bd37a2e2451c702ee842f70166847720de15f60ead5",
+      "valid_samples": 8715757,
+      "source_window": [
+        8009,
+        2113,
+        3811,
+        2287
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_20.bgeo.sc",
+      "sha256": "cde9e3760163eaa609d995d0d7f542d6cf5e94397d90e575241ea3a245a28ff6",
+      "expected_codes_sha256": "c42d9bd6672787c0312dc90aa2ac52fdff99800376acf62ea17d013313227cf7",
+      "visibility_sha256": "2a66269e25894767eacdf871b6856a97cec73824ba215160d4f35fc858259336",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 8715757,
+      "lattice": {
+        "resolution": [
+          3811,
+          2287,
+          1
+        ],
+        "origin": [
+          4.75,
+          0.0,
+          -1800.25
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    },
+    {
+      "name": "SaCalobra_DTM_Context_21",
+      "x0": 4.75,
+      "z0": 3279.75,
+      "nx": 3811,
+      "ny": 1525,
+      "components": [
+        15,
+        6
+      ],
+      "zmax": 4041.75,
+      "source_array_sha256": "1e264cbf4eb534b33cff64b5b2fd3589397a5df5c5e4583cc1f9deb46a79909c",
+      "valid_samples": 5491651,
+      "source_window": [
+        8009,
+        14559,
+        3811,
+        1525
+      ],
+      "status": "PREPARED_SOURCE_EXACT",
+      "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06DTMContext\\SaCalobra_DTM_Context_21.bgeo.sc",
+      "sha256": "a409f47fcf70e8a447d3add4c099dd6dff01a1a5f2c2136bb9a1c3742c943963",
+      "expected_codes_sha256": "de7d0464f465af95e6ff9d208e18e22e1064f5490109ca0da4880ca3e664c731",
+      "visibility_sha256": "9f8cb8a0fe0ad779d233cf6e91d83f74f5efe57218fe829ff8827f22c76794dd",
+      "max_source_delta_m": 0.02288818359375,
+      "native_source_delta_m": 0.0,
+      "visible_samples": 5045764,
+      "lattice": {
+        "resolution": [
+          3811,
+          1525,
+          1
+        ],
+        "origin": [
+          4.75,
+          0.0,
+          4041.75
+        ],
+        "x": [
+          0.5,
+          0.0,
+          0.0
+        ],
+        "y": [
+          0.0,
+          0.0,
+          -0.5
+        ]
+      }
+    }
+  ],
+  "geography": "Houdini X=easting-483650; Z=4409899.5-northing; Working base arrays independently equal full DTM windows bit-for-bit",
+  "native_houdini_source_delta_m": 0.0,
+  "prepared_samples": 186972978,
+  "native_ue_admission": "FAILED: exported height and mask only; visibility target missing; get_target_layer_names(True) returned []",
+  "exact_live_api_error": "Landscape: Property 'TargetLayers' for attribute 'target_layers' on 'Landscape' is read-only and cannot be set",
+  "attempts": [
+    "Native import with retained material",
+    "Correct unreal_material_hole attribute and material binding",
+    "ForceLayersFullUpdate/PostEditChange",
+    "Retained target-layer registration refused by read-only property"
+  ],
+  "first_probes": "Initial geographic window orientation rejected; those UE height measurements are not accepted DTM fidelity evidence",
+  "active_scene": "Original five Landscapes restored; all 81,523,053 height/mask samples bit-exact; no candidate actor retained",
+  "lesson02_05_rebuilt": false,
+  "restart": false,
+  "merge": false,
+  "references": [
+    "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_resample.html",
+    "https://www.sidefx.com/docs/houdini/unreal/landscape/basics.html",
+    "https://www.sidefx.com/docs/houdini/unreal/attributes.html"
+  ],
+  "native_postprobe_verification": {
+    "status": "PRE_TRANSITION_HEIGHTS_AND_MASKS_RESTORED",
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "volumes": {
+          "height": "BIT_EXACT",
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "volumes": {
+          "height": "BIT_EXACT",
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "volumes": {
+          "height": "BIT_EXACT",
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        }
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "volumes": {
+          "height": "BIT_EXACT",
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        }
+      },
+      {
+        "name": "SaCalobra_Context_Valid",
+        "volumes": {
+          "height": "BIT_EXACT",
+          "mask": "BIT_EXACT",
+          "visibility": "BIT_EXACT"
+        }
+      }
+    ],
+    "total_height_samples": 81523053
+  },
+  "original_mask_cache_retention": {
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_mask.bgeo.sc": "7ed77879f7538684a3d244b36ce2b7de3dceacb19cd041dc72b2f43fd0fdb0b9",
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_mask.bgeo.sc": "fe6f639983f99196018e5c3a2f4209e70655396ee3931630d06083e14bbe1754",
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_2_mask.bgeo.sc": "097bb0248a90fa9f58a2d384dc2b6aec87970e679777739bcbc0a16cbd0f4a6d",
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_2_mask.bgeo.sc": "7735cb00c181a27d8771e2af72c93b37859d103b7dec56b29349f5823403f70f",
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\sand_mask.bgeo.sc": "278ddd69b37e357fc4cc4821bb1236beee806ab5e13b89c8ee4644f37ceb8757",
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\sand_mask.bgeo.sc": "5b2268ad1372f53997567c3ba5c99df8a93f084eaf209b39344532ef46a7e76c",
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\cliffs_mask.bgeo.sc": "e272ddee9994acbaa77f3e239c8009ca40ef348dddea44557548f4d6d82c373b",
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\cliffs_mask.bgeo.sc": "305b662145d1306b87255c95f6f991f030a869eb9effdc6ce89f69fc116ced94",
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\scree_mask.bgeo.sc": "87382b3a69a3c2aed2252ead2f9de281bc2a0f3ef70e797a178d8b84264f5c4e",
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\scree_mask.bgeo.sc": "88b757fa2c99122bfcc376b4cf8950686ee8dff670e62b13c568cc9e4804e09b",
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\final.bgeo.sc": "c47153ce49452d40d1575ce27c199a8ebf5c54dc761ed254d692e8ccb99e01d6",
+    "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\final.bgeo.sc": "70bc11b639591a44a7d2a92eb9bd7a3aa0483aeafb1bf3534ce1150be34c3ec2"
+  },
+  "map_sha256": "ccabe772cb307c8f4cfee91ed9bc7b9485098162c73c5330a76c5d31a7ac7681"
+}

@@ -72,9 +72,12 @@ worldgen/terrain/benchmarks/sa_calobra/world_data/frozen_road_recipe_2026-10-04.
 worldgen/materials/material_maker/**/*.ptex -text whitespace=cr-at-eol
 worldgen/materials/material_maker/**/export/*.png filter=lfs diff=lfs merge=lfs -text
 worldgen/materials/visual_fill/*.png filter=lfs diff=lfs merge=lfs -text
-worldgen/houdini/**/*.png filter=lfs diff=lfs merge=lfs -text
-worldgen/houdini/**/*.jpg filter=lfs diff=lfs merge=lfs -text
-worldgen/houdini/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
+Content/**/*.png filter=lfs diff=lfs merge=lfs -text
+Content/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+Content/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
+worldgen/**/*.png filter=lfs diff=lfs merge=lfs -text
+worldgen/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+worldgen/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
 # Retained material-repair evidence and CC0 source images
 worldgen/materials/scanned_refinement/source/*.png filter=lfs diff=lfs merge=lfs -text
 docs/experiments/sa-calobra-material-repair-20261006/evidence/**/*.png filter=lfs diff=lfs merge=lfs -text

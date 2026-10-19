@@ -1,0 +1,118 @@
+{
+  "status": "DEFORMATION_CONFIRMED_IN_AUTHORIZED_BAND",
+  "peak": {
+    "tile": "SaCalobra_Detail_0_0",
+    "pixel_xy": [
+      1180,
+      5055
+    ],
+    "houdini_position_m": [
+      -1310.25,
+      -2.0194838725728914e-05,
+      -1787.7501220703125
+    ],
+    "before_m": 58.502197265625,
+    "after_m": 171.31874084472656,
+    "delta_m": 112.81654357910156,
+    "inside_native_working": false,
+    "south_of_native_working_m": 18.0001220703125,
+    "band_weight": 1.0,
+    "ue_context_sample_m": 171.31874084472656,
+    "ue_context_lattice": {
+      "resolution": [
+        2017,
+        2017,
+        1
+      ],
+      "origin": [
+        -3935.546875,
+        0.0,
+        3939.453125
+      ],
+      "x": [
+        3.90625,
+        -1.3370299711823463e-07,
+        0.0
+      ],
+      "y": [
+        0.0,
+        0.0,
+        -3.90625
+      ]
+    },
+    "context_visibility_sample": 1.0,
+    "context_surrounding_heights_m": [
+      [
+        186.21826171875,
+        123.7335205078125
+      ],
+      [
+        122.6806640625,
+        81.756591796875
+      ]
+    ],
+    "context_source_manual_bilinear_m": 186.2586669921875,
+    "original_context_sample_m": 171.3138427734375,
+    "original_context_lattice": {
+      "resolution": [
+        2048,
+        2048,
+        1
+      ],
+      "origin": [
+        -3998.046875,
+        0.0,
+        3998.046875
+      ],
+      "x": [
+        3.90625,
+        0.0,
+        0.0
+      ],
+      "y": [
+        0.0,
+        0.0,
+        -3.90625
+      ]
+    },
+    "ue_before_m": 58.502197265625,
+    "ue_after_m": 171.3409423828125,
+    "working_padding_source_manual_m": 58.47999954223633
+  },
+  "tiles": [
+    {
+      "tile": "SaCalobra_Detail_0_0",
+      "native_working_changed_samples": 1574994,
+      "native_working_max_abs_m": 51.98561096191406,
+      "above_1m": 310189,
+      "above_10m": 8794,
+      "above_50m": 104
+    },
+    {
+      "tile": "SaCalobra_Detail_1_0",
+      "native_working_changed_samples": 1618362,
+      "native_working_max_abs_m": 83.14205932617188,
+      "above_1m": 466714,
+      "above_10m": 13215,
+      "above_50m": 64
+    },
+    {
+      "tile": "SaCalobra_Detail_0_1",
+      "native_working_changed_samples": 1568303,
+      "native_working_max_abs_m": 37.3909912109375,
+      "above_1m": 386121,
+      "above_10m": 6953,
+      "above_50m": 0
+    },
+    {
+      "tile": "SaCalobra_Detail_1_1",
+      "native_working_changed_samples": 1577512,
+      "native_working_max_abs_m": 25.141815185546875,
+      "above_1m": 340224,
+      "above_10m": 5482,
+      "above_50m": 0
+    }
+  ],
+  "outside_band": "Previous full native verification BIT_EXACT; not a geography acceptance",
+  "original_cache_and_masks": "Retained; changing derived surface is nevertheless real deformation"
+}

@@ -1,0 +1,16 @@
+=== TESTING PE_LOAD_LANDSCAPE SYNCHRONOUS COOK & BAKE ===
+Target: SaCalobra_Detail_0_0
+Initial edit layers count: 1
+  layer: LandscapeEditLayer_0 (bp: Houdini_Source_Pegasus_Gentle)
+API session valid: True
+Instantiated wrapper: <Object '/Engine/Transient.HoudiniPublicAPI_0:HoudiniPublicAPIAssetWrapper_0' (0x0000012EB4FE3F00) Class 'HoudiniPublicAPIAssetWrapper'>
+Calling process_component_synchronous()...
+Post-cook: last_error='None', num_outputs=0
+Calling bake_all_outputs()...
+bake_all_outputs returned: True
+Post-bake: last_error='None'
+
+Checking target edit layers after bake:
+Edit layers count: 1
+  layer: LandscapeEditLayer_0 (bp: Houdini_Source_Pegasus_Gentle)
+Done!

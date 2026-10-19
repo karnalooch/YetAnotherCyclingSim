@@ -1,0 +1,50 @@
+{
+  "before_sha256": "bfc6e06461f9cf092d5bee4380ec527955c02e4566286853318f6d777270ce7d",
+  "backup": "worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson05_Reviewed_BeforeIdMenuRepair.hiplc",
+  "hip": "worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson05_Reviewed.hiplc",
+  "after_sha256": "c4720f00e1bdcab20a1a4639509bee8cb874eff01d7d18b4a7049b1d1cdcd539",
+  "nodes": [
+    {
+      "node": "/obj/PEGASUS_PIPELINE_OVERVIEW/Houdini_Load_Landscape/PE_Heightfield_Layers_to_ID",
+      "menu": [],
+      "input_detail_attributes": [],
+      "input_connections": [
+        "/obj/PEGASUS_PIPELINE_OVERVIEW/Houdini_Load_Landscape/PE_Heightfield_Layers_to_ID/object_merge1"
+      ],
+      "fixture_results": [
+        [],
+        [],
+        [
+          "0",
+          "Background",
+          "1",
+          "Scree"
+        ]
+      ],
+      "hda": "Embedded",
+      "external_hda_sha256": "9ff14ed0d6e43fe38cde69dd286197f7bd8ed3396de7132042d21d7d8d3a58ac"
+    },
+    {
+      "node": "/obj/PEGASUS_PIPELINE_OVERVIEW/Unreal_Load_Landscape/PE_Heightfield_Layers_to_ID",
+      "menu": [],
+      "input_detail_attributes": [],
+      "input_connections": [
+        "/obj/PEGASUS_PIPELINE_OVERVIEW/Unreal_Load_Landscape/PE_Heightfield_Layers_to_ID/object_merge1"
+      ],
+      "fixture_results": [
+        [],
+        [],
+        [
+          "0",
+          "Background",
+          "1",
+          "Scree"
+        ]
+      ],
+      "hda": "Embedded",
+      "external_hda_sha256": "9ff14ed0d6e43fe38cde69dd286197f7bd8ed3396de7132042d21d7d8d3a58ac"
+    }
+  ],
+  "scope": "Embedded definition menu guard, used by two overview nodes; external HDA unchanged",
+  "fresh_reopen": "PASS: both menus and three metadata fixtures per menu"
+}

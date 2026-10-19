@@ -886,8 +886,9 @@
           },
           "parsed_timing_count": 373,
           "verification": "INDEXED; ORIGINAL_VTT_HASH_VERIFIED",
-          "implementation_status": "NO_PER_LESSON_YACS_IMPLEMENTATION_RECEIPT_REGISTERED",
-          "material_association": "Shared PEG-02 series bundle; no inferred per-lesson pairing"
+          "implementation_status": "IMPLEMENTED_LOCAL_STAGE_CHECKPOINT; NATIVE_SEAM_VERIFIED; OWNER_VISUAL_PENDING",
+          "material_association": "Shared PEG-02 series bundle; no inferred per-lesson pairing",
+          "implementation_receipt": "../LESSON06_FULL_IDMAP.md"
         },
         {
           "id": "PEG-02-07",

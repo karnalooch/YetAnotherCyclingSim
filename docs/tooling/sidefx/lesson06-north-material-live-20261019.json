@@ -1,0 +1,57 @@
+{
+  "status": "STREAMING_RESOLVED_NORTH_DEPLOYMENT_MEMORY_BLOCKED",
+  "time_utc": "2026-10-18T23:45:09.098644+00:00",
+  "issue": 365,
+  "scope": "M3; issue milestone unassigned",
+  "pr": 474,
+  "head": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+  "pid": 42752,
+  "restarts_this_turn": 0,
+  "streaming": {
+    "warning_observed_resolved": true,
+    "pool_mib": 4992,
+    "nonstreaming_mib": 4789.47,
+    "streaming_pool_mib": 197.53,
+    "required_mib": 0.76,
+    "limit_to_vram": true,
+    "session_only": true,
+    "mip_or_compression_changes": false,
+    "inactive_rgb_unloaded": true,
+    "evidence": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06NorthMaterial\\streaming_measured_budget.png"
+  },
+  "north": {
+    "candidate": "NorthBoundaryRGB",
+    "native_fresh_reopen": "BIT_EXACT_AFTER_REGISTERED_TRANSPORT",
+    "tiles": 2,
+    "working_rgb_unchanged": true,
+    "all_non_north_pixels_unchanged": true,
+    "shared_edge_max_code_delta": 0,
+    "local_expansion_m": 32,
+    "local_blur_m": 32,
+    "sidefx_standard_value": false,
+    "deployed": false,
+    "visual_pass": false,
+    "blocker": "Available system commit below unchanged 12 GiB import guard; GC and inactive RGB unload did not restore required headroom. UE private commit continues to rise; root cause unproven.",
+    "candidate_manifest": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\NorthBoundaryRGB\\manifest.json"
+  },
+  "memory_final": {
+    "available_commit_bytes": 5458026496,
+    "available_physical_bytes": 10314579968,
+    "total_commit_bytes": 107675762688
+  },
+  "protected_source_hashes_rechecked": 14,
+  "map_sha256": "ccabe772cb307c8f4cfee91ed9bc7b9485098162c73c5330a76c5d31a7ac7681",
+  "landscape_components_layers_transforms_materials_unchanged": 27,
+  "height_mask_payload_changes": false,
+  "dtm_prior_native_maximum_m": 0.510986328125,
+  "dtm_new_native_readback": false,
+  "lesson02_to_05_rebuilt": false,
+  "merged": false,
+  "map_saved": false,
+  "remote_current_screenshot": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06NorthMaterial\\north_current_blocked.png",
+  "official_sources": [
+    "https://www.sidefx.com/docs/houdini/heightfields/masking.html",
+    "https://www.sidefx.com/docs/houdini/heightfields/layers.html",
+    "https://dev.epicgames.com/documentation/unreal-engine/texture-streaming-metrics-in-unreal-engine?lang=en-US"
+  ]
+}

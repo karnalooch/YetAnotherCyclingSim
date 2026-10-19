@@ -21,6 +21,10 @@ class UCyclingLandscapeEarthworksLibrary : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	/** Register the engine's special Visibility target on a staged DTM tile; no pixel writes or save. */
+	UFUNCTION(BlueprintCallable, Category = "Cycling|Editor")
+	static bool RegisterDtmLandscapeVisibility(ALandscape* Landscape);
+
 	UFUNCTION(BlueprintCallable, Category = "Cycling|Editor")
 	static bool ApplyRoadEarthworksPatch(
 		ALandscape* Landscape,

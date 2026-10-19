@@ -4,6 +4,8 @@ import time
 import traceback
 import unreal
 import os
+import runpy
+memory_guard = runpy.run_path(str(pathlib.Path(__file__).with_name('lesson06_memory_guard.py'))) if os.environ.get('YACS_L06_MEMORY_GUARD')=='1' else None
 
 MAP = "/Game/Generated/YACS/Lesson05_20261018/L_SaCalobra_Lesson05" if os.environ.get("YACS_LANDSCAPE_LESSON") == "05" else "/Game/Generated/YACS/Lesson04Repair_20261018/L_SaCalobra_Lesson04_Test"
 world = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world()
@@ -37,20 +39,35 @@ landscapes = [
     ).get_all_level_actors()
     if isinstance(a, unreal.LandscapeProxy)
 ]
-assert {a.get_actor_label() for a in landscapes} == {
+if os.environ.get('YACS_DTM_CONTEXT_READBACK') == '1':
+    dtm_root=pathlib.Path(unreal.Paths.project_dir()).resolve()/'Saved/RuntimeProof/Lesson06DTMContext'
+    expected={t['name'] for t in json.loads((dtm_root/'windows.json').read_text())['tiles']}
+    landscapes=[a for a in landscapes if a.get_actor_label() in expected]
+    staged=[]
+    stage_paths = list((pathlib.Path(unreal.Paths.project_dir()).resolve()/'Saved/RuntimeProof/Lesson06ContextColor/recovery').glob('stage_*.json')) if os.environ.get('YACS_L06_RECOVERY_READBACK')=='1' else [dtm_root/f for f in ['dtm_stage_first.json','dtm_stage_remaining.json']]
+    for stage_path in stage_paths:
+        if stage_path.exists():
+            receipt=json.loads(stage_path.read_text())
+            assert receipt['status']=='STAGED_HIDDEN'
+            if os.environ.get('YACS_L06_RECOVERY_READBACK')=='1':assert receipt['pid']==os.getpid()
+            staged += [t['name'] for t in receipt['completed']]
+    assert {a.get_actor_label() for a in landscapes}==set(staged) and len(staged) in (1,22)
+else:
+ landscapes=[a for a in landscapes if not a.get_actor_label().startswith('SaCalobra_DTM_Context_')]
+ assert {a.get_actor_label() for a in landscapes} == {
     "SaCalobra_Detail_0_0",
     "SaCalobra_Detail_1_0",
     "SaCalobra_Detail_0_1",
     "SaCalobra_Detail_1_1",
     "SaCalobra_Context_Valid",
-}
+ }
 unreal.EditorPythonScripting.set_keep_python_script_alive(True)
 records = []
 wrapper = None
 current = None
 phase = "next"
 ready = False
-deadline = time.monotonic() + 900
+deadline = time.monotonic() + 3600
 last_size = None
 stable_since = 0
 busy = False
@@ -101,6 +118,7 @@ def tick(dt):
         assert time.monotonic() < deadline, "Native readback timed out"
         if phase == "next":
             if landscapes:
+                if memory_guard:memory_guard['require_headroom']()
                 begin(landscapes.pop(0))
             else:
                 (out / "complete.json").write_text(
@@ -143,7 +161,8 @@ def tick(dt):
                 material = a.get_editor_property("landscape_material")
                 texture = unreal.MaterialEditingLibrary.get_material_instance_texture_parameter_value(material, "AlbedoTexture")
                 records[-1]["material"] = material.get_path_name()
-                records[-1]["hole_material"] = a.get_editor_property("landscape_hole_material").get_path_name()
+                hole_material = a.get_editor_property("landscape_hole_material")
+                records[-1]["hole_material"] = hole_material.get_path_name() if hole_material else None
                 parent = material.get_editor_property("parent")
                 records[-1]["blend_mode"] = str(parent.get_editor_property("blend_mode"))
                 records[-1]["opacity_mask_input"] = str(unreal.MaterialEditingLibrary.get_material_property_input_node(parent, unreal.MaterialProperty.MP_OPACITY_MASK))
@@ -155,6 +174,9 @@ def tick(dt):
                     records[-1]["uv"][parameter] = [value.r, value.g, value.b]
             assert wrapper.delete_instantiated_asset()
             wrapper = None
+            if memory_guard:
+                unreal.SystemLibrary.collect_garbage()
+                records[-1]['memory_after']=memory_guard['memory_status']()
             (out / "inventory.json").write_text(json.dumps(records, indent=2))
             phase = "next"
     except Exception:

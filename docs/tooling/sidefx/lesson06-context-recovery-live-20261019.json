@@ -1,0 +1,62 @@
+{
+  "status": "LIVE_SOURCE_BOUNDARY_RGB_WITH_VISUAL_LIMITATIONS",
+  "time_utc": "2026-10-18T23:24:20.773644+00:00",
+  "issue": 365,
+  "scope": "M3; issue milestone field is unassigned",
+  "pr": 474,
+  "head": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+  "pid": 42752,
+  "restart_count_this_turn": 1,
+  "owner_authorized_restart": true,
+  "restored_context_tiles": 22,
+  "visible_landscape_actors": 26,
+  "native_readback_actors": 27,
+  "height_and_mask_comparison": "BIT_EXACT",
+  "dtm_max_delta_m": 0.510986328125,
+  "dtm_samples": 264427742,
+  "protected_source_hashes_unchanged": 14,
+  "map_sha256": "ccabe772cb307c8f4cfee91ed9bc7b9485098162c73c5330a76c5d31a7ac7681",
+  "map_saved": false,
+  "rgb_live_applied": true,
+  "native_exported_rgb_pixels_bitexact": 159192228,
+  "source_working_pixels_bitexact": 70333650,
+  "fresh_native_graph_replays": 16,
+  "shared_edges_max_code_delta": 0,
+  "shared_transport_changed_context_pixels": 8,
+  "shared_transport_changed_working_pixels": 0,
+  "source_boundary_feather_expansion_m": 8,
+  "source_boundary_feather_blur_m": 8,
+  "adaptation": "Presentation-only native HeightField Mask by Geometry and Layer composite. Feather lies outside original Working source lattice, including background padding within UE Detail actors. Original source Working samples copied exactly; original terrain and material masks never edited.",
+  "visual_review": {
+    "views": [
+      "west",
+      "east",
+      "north",
+      "south"
+    ],
+    "wide_streak_artifact_removed": true,
+    "source_detail_difference_still_visible": true,
+    "most_obvious_view": "north",
+    "seam_invisible_pass": false,
+    "owner_visual_acceptance": false,
+    "texture_streaming_warning": "Approximately 780 KiB over budget remained visible in captured views; session pool changed 600 to 616 MiB, not claimed resolved."
+  },
+  "screenshots": {
+    "west": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\screenshots\\west_source_boundary.png",
+    "east": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\screenshots\\east_source_boundary.png",
+    "north": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\screenshots\\north_source_boundary.png",
+    "south": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\screenshots\\south_source_boundary.png"
+  },
+  "memory_final": {
+    "available_commit_bytes": 22683901952,
+    "available_physical_bytes": 3784626176,
+    "total_commit_bytes": 107675762688
+  },
+  "original_map_and_caches_preserved": true,
+  "lesson02_to_05_rebuilt": false,
+  "merged": false,
+  "native_geometry_receipt": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\recovery\\native_verification.json",
+  "native_rgb_receipt": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SourceBoundaryRGB\\texture_verification.json",
+  "live_snapshot": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SourceBoundaryRGB\\final_snapshot.json",
+  "previous_attempt_receipt": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\recovery_pid21524\\delivery_receipt.json"
+}

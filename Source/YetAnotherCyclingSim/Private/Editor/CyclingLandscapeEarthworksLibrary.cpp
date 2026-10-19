@@ -8,6 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "Landscape.h"
 #include "LandscapeInfo.h"
+#include "LandscapeLayerInfoObject.h"
 #include "LandscapeEdit.h"
 #include "LandscapePatchEditLayer.h"
 #include "LandscapeTexturePatch.h"
@@ -20,6 +21,32 @@
 #include "Serialization/JsonSerializer.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogCyclingLandscapeEarthworks, Log, All);
+
+bool UCyclingLandscapeEarthworksLibrary::RegisterDtmLandscapeVisibility(ALandscape* Landscape)
+{
+	// UE 5.8 target registration is not exposed to Python. Use the engine's
+	// special Visibility object, never a generated ordinary paint-layer asset.
+	if (!IsValid(Landscape) || !Landscape->GetActorLabel().StartsWith(TEXT("SaCalobra_DTM_Context_")) ||
+		!IsValid(ALandscapeProxy::VisibilityLayer) || !Landscape->GetLandscapeInfo())
+	{
+		return false;
+	}
+	const FName Name = ALandscapeProxy::VisibilityLayer->GetLayerName();
+	const FLandscapeTargetLayerSettings* Existing = Landscape->GetTargetLayers().Find(Name);
+	if (!Existing)
+	{
+		Landscape->Modify();
+		Landscape->AddTargetLayer(Name, FLandscapeTargetLayerSettings(ALandscapeProxy::VisibilityLayer));
+	}
+	else if (Existing->LayerInfoObj != ALandscapeProxy::VisibilityLayer)
+	{
+		return false;
+	}
+	Landscape->GetLandscapeInfo()->UpdateLayerInfoMap(Landscape, false);
+	Landscape->ForceLayersFullUpdate();
+	Landscape->PostEditChange();
+	return Landscape->GetLandscapeInfo()->GetLayerInfoByName(Name) == ALandscapeProxy::VisibilityLayer;
+}
 
 namespace CyclingLandscapeEarthworksInternal
 {

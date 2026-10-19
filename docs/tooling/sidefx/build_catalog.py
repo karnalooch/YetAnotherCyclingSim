@@ -62,6 +62,16 @@ def save_json(path, data):
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def implementation_records():
+    """Preserve registered implementation evidence when rebuilding source metadata."""
+    path = Path(__file__).parent / 'catalog/catalog.json'
+    if not path.exists():
+        return {}
+    return {part['id']: {key: part[key] for key in
+            ('implementation_status', 'implementation_receipt') if key in part}
+            for series in read_json(path)['series'] for part in series['parts']}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--corpus", type=Path, required=True)
@@ -70,6 +80,7 @@ def main():
     ap.add_argument("--output", type=Path, required=True)
     args = ap.parse_args()
     root, out = args.corpus.resolve(), args.output.resolve()
+    implementations = implementation_records()
     out.mkdir(parents=True, exist_ok=True)
     tm = read_json(root / "manifest_transkrypcji.json")
     mm = read_json(root / "manifest_materialow.json")
@@ -120,7 +131,8 @@ def main():
                 raise ValueError(f"Transcript mismatch: {pid}")
             p = {**part, "id": pid, "txt_integrity": td, "vtt_integrity": vd, "parsed_timing_count": len(timings), "verification": "INDEXED; ORIGINAL_VTT_HASH_VERIFIED", "implementation_status": "NO_PER_LESSON_YACS_IMPLEMENTATION_RECEIPT_REGISTERED", "material_association": f"Shared {sid} series bundle; no inferred per-lesson pairing"}
             item["parts"].append(p)
-            rows += [f"### {pid}: {part['title']}", "", f"[Original video]({part['url']}) · [Caption resource]({part['caption_resource']})", "", f"- Language: `{part['language']}`; source track: `{part['source_language']}`; automatic: `{str(part.get('automatic', 'unspecified')).lower()}`.", f"- Text coverage: `{part['first_text_start']}` → `{part['last_text_end']}`; {part['nonempty_cue_count']} nonempty cues; original timestamps retained.", f"- TXT: `{part['txt']}`", f"- VTT: `{part['vtt']}`", f"- Original VTT SHA-256: `{vd['sha256']}`", f"- Source lesson objective: {part.get('description') or 'Not supplied in the captured source listing.'}", f"- Materials: shared `{sid}` bundle listed below. Per-lesson dependency mapping has not been established.", "- Verification: `INDEXED`; implementation: `NO_PER_LESSON_YACS_IMPLEMENTATION_RECEIPT_REGISTERED`.", ""]
+            p.update(implementations.get(pid, {}))
+            rows += [f"### {pid}: {part['title']}", "", f"[Original video]({part['url']}) · [Caption resource]({part['caption_resource']})", "", f"- Language: `{part['language']}`; source track: `{part['source_language']}`; automatic: `{str(part.get('automatic', 'unspecified')).lower()}`.", f"- Text coverage: `{part['first_text_start']}` → `{part['last_text_end']}`; {part['nonempty_cue_count']} nonempty cues; original timestamps retained.", f"- TXT: `{part['txt']}`", f"- VTT: `{part['vtt']}`", f"- Original VTT SHA-256: `{vd['sha256']}`", f"- Source lesson objective: {part.get('description') or 'Not supplied in the captured source listing.'}", f"- Materials: shared `{sid}` bundle listed below. Per-lesson dependency mapping has not been established.", f"- Verification: `INDEXED`; implementation: `{p['implementation_status']}`." + (f" Receipt: [{p['implementation_receipt']}]({p['implementation_receipt']})." if p.get("implementation_receipt") else ""), ""]
         rows += ["## Original material bundle", "", "The filenames and HDA type names below are evidence of supplied files. They are not a claim that every dependency is present, licensed for redistribution, version-compatible or successfully cooked.", ""]
         for download in downloads:
             rows += [f"- [{download['filename']}]({download['download_url']}) — original archive SHA-256 `{download['sha256']}`."]

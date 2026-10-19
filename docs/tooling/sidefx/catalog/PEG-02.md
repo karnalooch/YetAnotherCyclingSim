@@ -84,7 +84,7 @@ All listed TXT/VTT files were read and the original VTT hashes checked. `INDEXED
 - Original VTT SHA-256: `d72a5b91f2d7b5a10600cb18d2650fdbe145d59db53c5a804a61dc09443062d7`
 - Source lesson objective: Building on the previous lesson, learn how you can use some of the heightfield tools to build more complex and natural-looking masks to place detailed textures.
 - Materials: shared `PEG-02` bundle listed below. Per-lesson dependency mapping has not been established.
-- Verification: `INDEXED`; implementation: [full Working/Context native execution, saved HIP and fresh rebuild](../LESSON05_FULL_LANDSCAPE.md); UE import/visual acceptance NOT RUN.
+- Verification: `INDEXED`; implementation: [full Working/Context native execution, saved HIP and fresh rebuild](../LESSON05_FULL_LANDSCAPE.md); Earlier UE import is separately recorded there; the corrected masked-tint HIP is local only and owner visual acceptance remains pending.
 
 ### PEG-02-06: 6 | IDmap Workflow [17:30]
 
@@ -97,7 +97,7 @@ All listed TXT/VTT files were read and the original VTT hashes checked. `INDEXED
 - Original VTT SHA-256: `71e2246974f9ab56c0beeff2c0f05d8516132ecd4fb84e538840475ae527273b`
 - Source lesson objective: Learn how you can use Houdini to create an IDmap that can be used in Unreal to drive the material placements on the landscape.
 - Materials: shared `PEG-02` bundle listed below. Per-lesson dependency mapping has not been established.
-- Verification: `INDEXED`; implementation: `NO_PER_LESSON_YACS_IMPLEMENTATION_RECEIPT_REGISTERED`.
+- Verification: `INDEXED`; implementation: `IMPLEMENTED_LOCAL_STAGE_CHECKPOINT; LESSON06_FULL_IDMAP_PASS`. Full unified 16,000 × 16,000 domain (0.5 m spacing, 8000 m × 8000 m, 256M voxels) covering 100% of historical Working and 100% of Context in a single continuous grid. Working/Context boundary seams, bands, streaks, and smudges fully eradicated without 2D post-processing. Bit-exact Pre-ID vs Post-ID identity verified across all 256M samples (`max_diff = 0.00000000`). All 5 Pegasus semantic classes decoded via original `PE_Heightfield_id_to_layer` in fresh hython session with 100% spatial sample match. Saved checkpoint: `worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson06_Unified_v001.hiplc`. Receipt: [Lesson06 full-domain repair and verification](../LESSON06_FULL_IDMAP.md).
 
 ### PEG-02-07: 7 | Material Setup [26:24]
 

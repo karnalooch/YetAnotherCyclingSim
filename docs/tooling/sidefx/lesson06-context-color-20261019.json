@@ -1,0 +1,728 @@
+{
+  "issue": 365,
+  "milestone": "M3",
+  "existing_pr": 474,
+  "base_sha": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+  "status": "PREPARED_VERIFIED_UE_BLOCKED",
+  "owner_direction": "Preserve Working sharpness; feather only on Context; no height/mask/cache changes, UE restart or merge.",
+  "sidefx_references": [
+    "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_layerproperty.html",
+    "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_maskbyobject.html",
+    "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_layer.html"
+  ],
+  "native_method": {
+    "border": "streak",
+    "composite_layers": "r g b",
+    "outer_box_expansion_m": 128,
+    "box_blur_radius_m": 128,
+    "setting_authority": "Local adaptation, not Pegasus tutorial constants"
+  },
+  "working_source_pixels_bitexact": 70333650,
+  "rgb_transport_shared_context_pixels": 382,
+  "prepared": {
+    "status": "VERIFIED_RGB_ONLY",
+    "tiles": [
+      {
+        "name": "SaCalobra_Detail_0_0",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_Detail_0_0_Shared.png",
+        "resolution": [
+          3811,
+          5081
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": true,
+        "uv_origin_cm": [
+          -190050.0,
+          74000.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0,
+          0
+        ],
+        "sharp_working_pixels_bitexact": 17836060,
+        "sha256": "ce55121a0e75da3e5a520153b88c94d57180b47485c55c44a9b18b301efac767",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_Detail_0_0.png",
+        "native_pixels_sha256": "42eb0fa08f39b88e71a30b41c2ae29f3a27697d5d7e5b10d91ed8f7c5793fae9",
+        "shared_vertex_pixels_copied": 0,
+        "max_transport_rgb_code_delta": 0
+      },
+      {
+        "name": "SaCalobra_Detail_0_1",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_Detail_0_1_Shared.png",
+        "resolution": [
+          3811,
+          5081
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": true,
+        "uv_origin_cm": [
+          -190050.0,
+          328000.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0,
+          0
+        ],
+        "sharp_working_pixels_bitexact": 17089930,
+        "sha256": "8895a478b3d6c36b3223e64afef07b623822999016d372611f743db11e8df949",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_Detail_0_1.png",
+        "native_pixels_sha256": "0f7b11321a947e1c720bba79cd3ac58a53c8f8fb1f5fce0c9143860aeac61cdd",
+        "shared_vertex_pixels_copied": 0,
+        "max_transport_rgb_code_delta": 0
+      },
+      {
+        "name": "SaCalobra_Detail_1_0",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_Detail_1_0_Shared.png",
+        "resolution": [
+          3811,
+          5081
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": true,
+        "uv_origin_cm": [
+          450.0,
+          74000.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0,
+          0
+        ],
+        "sharp_working_pixels_bitexact": 18082040,
+        "sha256": "6d24a51f1538285772e108142539513781d45146af3465cd9608dcc5b1a4189a",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_Detail_1_0.png",
+        "native_pixels_sha256": "eb2971888fc7a475900e5c325a5527548dd2d0baf929a4fb0c5cab8afaebc059",
+        "shared_vertex_pixels_copied": 0,
+        "max_transport_rgb_code_delta": 0
+      },
+      {
+        "name": "SaCalobra_Detail_1_1",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_Detail_1_1_Shared.png",
+        "resolution": [
+          3811,
+          5081
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": true,
+        "uv_origin_cm": [
+          450.0,
+          328000.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -3.93623302499508e-06,
+          0,
+          0
+        ],
+        "sharp_working_pixels_bitexact": 17325620,
+        "sha256": "02107e4278b51212f6690cbeb81bb393239ab47c87fc5758924f86df6ea0b316",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_Detail_1_1.png",
+        "native_pixels_sha256": "e24df80795896f8bc1000672f394839e1081fa7a5b6d7c544cdf023413e8dd8f",
+        "shared_vertex_pixels_copied": 0,
+        "max_transport_rgb_code_delta": 0
+      },
+      {
+        "name": "SaCalobra_DTM_Context_05",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_05_Shared.png",
+        "resolution": [
+          2287,
+          4065
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": false,
+        "uv_origin_cm": [
+          -304350.0,
+          -2200.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          8.745080891998251e-06,
+          -4.920049200492005e-06,
+          0,
+          0
+        ],
+        "weight_range": [
+          0.0,
+          1.0
+        ],
+        "transition_pixels": 2085345,
+        "sha256": "b87e0e96800cab0537356f598001613dd6eec7872a8f0cca1a7cb188e01a34c7",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_05.png",
+        "native_pixels_sha256": "f6fdd986e0d954649594ac950558bab3ab0acbfff1e09731ecc0bfa541ca798c",
+        "shared_vertex_pixels_copied": 145,
+        "max_transport_rgb_code_delta": 1
+      },
+      {
+        "name": "SaCalobra_DTM_Context_06",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_06_Shared.png",
+        "resolution": [
+          2287,
+          4065
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": false,
+        "uv_origin_cm": [
+          -304350.0,
+          201000.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          8.745080891998251e-06,
+          -4.920049200492005e-06,
+          0,
+          0
+        ],
+        "weight_range": [
+          0.0,
+          1.0
+        ],
+        "transition_pixels": 2085345,
+        "sha256": "56ff51ace0b6c3f7c160851149604c141fa956d972e9aaab9bf8073634f6f772",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_06.png",
+        "native_pixels_sha256": "aad783509d85136e9cd7cefd43d831f1f0c5e02dcc59ed9ad4108e45ba335732",
+        "shared_vertex_pixels_copied": 3,
+        "max_transport_rgb_code_delta": 1
+      },
+      {
+        "name": "SaCalobra_DTM_Context_07",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_07_Shared.png",
+        "resolution": [
+          2287,
+          4065
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": false,
+        "uv_origin_cm": [
+          -304350.0,
+          404200.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          8.745080891998251e-06,
+          -4.920049200492005e-06,
+          0,
+          0
+        ],
+        "weight_range": [
+          0.0,
+          1.0
+        ],
+        "transition_pixels": 1566189,
+        "sha256": "486b2464b1c5049d9bbbbad44d6fc2f556c12249e86f07a396addd8cf22f8884",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_07.png",
+        "native_pixels_sha256": "fed4e70fbea6e30d98c6f10df21d91643283e1e0628f74933dc486dcc2a2b235",
+        "shared_vertex_pixels_copied": 0,
+        "max_transport_rgb_code_delta": 0
+      },
+      {
+        "name": "SaCalobra_DTM_Context_09",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_09_Shared.png",
+        "resolution": [
+          2033,
+          4065
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": false,
+        "uv_origin_cm": [
+          190950.0,
+          -2200.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          9.837678307919331e-06,
+          -4.920049200492005e-06,
+          0,
+          0
+        ],
+        "weight_range": [
+          0.0,
+          1.0
+        ],
+        "transition_pixels": 2085345,
+        "sha256": "8238d59c5277d0640f178f2a63d45af1786bcc565a6efc20d9372468fe8aec15",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_09.png",
+        "native_pixels_sha256": "644fb46f1f66f988fd166882b65fd570dc77e10eb2e81bbe5ce0613ef0f7ccd4",
+        "shared_vertex_pixels_copied": 223,
+        "max_transport_rgb_code_delta": 2
+      },
+      {
+        "name": "SaCalobra_DTM_Context_10",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_10_Shared.png",
+        "resolution": [
+          2033,
+          4065
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": false,
+        "uv_origin_cm": [
+          190950.0,
+          201000.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          9.837678307919331e-06,
+          -4.920049200492005e-06,
+          0,
+          0
+        ],
+        "weight_range": [
+          0.0,
+          1.0
+        ],
+        "transition_pixels": 2085345,
+        "sha256": "f5067ec1f0c8780e1857a443bc3676ae1cb85d0a86913a4ea11ac81841a86d81",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_10.png",
+        "native_pixels_sha256": "faa1a4481b77467ff76b06e466fcde480024b37998e00ada85073ba1b10081a8",
+        "shared_vertex_pixels_copied": 4,
+        "max_transport_rgb_code_delta": 1
+      },
+      {
+        "name": "SaCalobra_DTM_Context_11",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_11_Shared.png",
+        "resolution": [
+          2033,
+          4065
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": false,
+        "uv_origin_cm": [
+          190950.0,
+          404200.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          9.837678307919331e-06,
+          -4.920049200492005e-06,
+          0,
+          0
+        ],
+        "weight_range": [
+          0.0,
+          1.0
+        ],
+        "transition_pixels": 1566189,
+        "sha256": "2c6f8899c10f7e491927e2abcf5945083f08bd0b9932ec120bad1e97ee0db18b",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_11.png",
+        "native_pixels_sha256": "2423c8ca3d6e9ac515790faa5206c21bd995e2fee5d0efa9b1d7d705dfb144aa",
+        "shared_vertex_pixels_copied": 0,
+        "max_transport_rgb_code_delta": 0
+      },
+      {
+        "name": "SaCalobra_DTM_Context_17",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_17_Shared.png",
+        "resolution": [
+          3811,
+          2287
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": false,
+        "uv_origin_cm": [
+          -190050.0,
+          -180000.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -8.745080891998251e-06,
+          0,
+          0
+        ],
+        "weight_range": [
+          0.0,
+          1.0
+        ],
+        "transition_pixels": 1955043,
+        "sha256": "33f2422040260b6fbb860ddbc3435b886a29698b1e5f9958c3f66e5dc7afedf0",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_17.png",
+        "native_pixels_sha256": "cdc8678464d11c0e32f3f0c7c530a7b4e762ff57fa6e9bd5aa488d0503105000",
+        "shared_vertex_pixels_copied": 0,
+        "max_transport_rgb_code_delta": 0
+      },
+      {
+        "name": "SaCalobra_DTM_Context_18",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_18_Shared.png",
+        "resolution": [
+          3811,
+          1525
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": false,
+        "uv_origin_cm": [
+          -190050.0,
+          404200.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -1.3114754098360655e-05,
+          0,
+          0
+        ],
+        "weight_range": [
+          0.0,
+          1.0
+        ],
+        "transition_pixels": 1955043,
+        "sha256": "608243dce7d12fbe5e295aaacb85fd5ae647144ca9522cfbd1e90938e3d44a9d",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_18.png",
+        "native_pixels_sha256": "96d23ee82829aaef61a5e59bbfa49b16a20a417d0b35989008b503e7e4836711",
+        "shared_vertex_pixels_copied": 0,
+        "max_transport_rgb_code_delta": 0
+      },
+      {
+        "name": "SaCalobra_DTM_Context_20",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_20_Shared.png",
+        "resolution": [
+          3811,
+          2287
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": false,
+        "uv_origin_cm": [
+          450.0,
+          -180000.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -8.745080891998251e-06,
+          0,
+          0
+        ],
+        "weight_range": [
+          0.0,
+          1.0
+        ],
+        "transition_pixels": 1955043,
+        "sha256": "5299e5b24b41b7d0b4b734eb2f6f8014f22118ec1a8d0952f728c0114c5f6370",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_20.png",
+        "native_pixels_sha256": "2eb415649f07f5c8868699b42dedc8d9da6f9d364174e03625f7cacd8f4ba9a8",
+        "shared_vertex_pixels_copied": 4,
+        "max_transport_rgb_code_delta": 1
+      },
+      {
+        "name": "SaCalobra_DTM_Context_21",
+        "file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_21_Shared.png",
+        "resolution": [
+          3811,
+          1525
+        ],
+        "height_or_mask_payload": false,
+        "working_restored": false,
+        "uv_origin_cm": [
+          450.0,
+          404200.0,
+          0,
+          0
+        ],
+        "uv_inverse_cm": [
+          5.2479664130149565e-06,
+          -1.3114754098360655e-05,
+          0,
+          0
+        ],
+        "weight_range": [
+          0.0,
+          1.0
+        ],
+        "transition_pixels": 1955043,
+        "sha256": "7defe46b068ca2ec4db97233385c3d0b111e566da7cee6d2cbeb14baf9158da4",
+        "native_pixels_file": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson06ContextColor\\SaCalobra_DTM_Context_21.png",
+        "native_pixels_sha256": "9a7ea1d2685ae987a44bbc44faf228aaa32c37ae1ffe51f846783e1f7f842085",
+        "shared_vertex_pixels_copied": 3,
+        "max_transport_rgb_code_delta": 1
+      }
+    ],
+    "unchanged_context_not_deployed": [
+      "SaCalobra_DTM_Context_04",
+      "SaCalobra_DTM_Context_08"
+    ],
+    "fresh_reopen": "BIT_EXACT_AFTER_REGISTERED_TRANSPORT",
+    "shared_edges": [
+      {
+        "a": "SaCalobra_Detail_0_0",
+        "b": "SaCalobra_Detail_0_1",
+        "samples": 3811,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_0_0",
+        "b": "SaCalobra_Detail_1_0",
+        "samples": 5081,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_0_0",
+        "b": "SaCalobra_Detail_1_1",
+        "samples": 1,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_0_0",
+        "b": "SaCalobra_DTM_Context_05",
+        "samples": 3557,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_0_0",
+        "b": "SaCalobra_DTM_Context_06",
+        "samples": 1525,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_0_0",
+        "b": "SaCalobra_DTM_Context_17",
+        "samples": 3811,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_0_0",
+        "b": "SaCalobra_DTM_Context_20",
+        "samples": 1,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_0_1",
+        "b": "SaCalobra_Detail_1_0",
+        "samples": 1,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_0_1",
+        "b": "SaCalobra_Detail_1_1",
+        "samples": 5081,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_0_1",
+        "b": "SaCalobra_DTM_Context_06",
+        "samples": 2541,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_0_1",
+        "b": "SaCalobra_DTM_Context_07",
+        "samples": 2541,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_0_1",
+        "b": "SaCalobra_DTM_Context_18",
+        "samples": 3811,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_0_1",
+        "b": "SaCalobra_DTM_Context_21",
+        "samples": 1,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_1_0",
+        "b": "SaCalobra_Detail_1_1",
+        "samples": 3811,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_1_0",
+        "b": "SaCalobra_DTM_Context_09",
+        "samples": 3557,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_1_0",
+        "b": "SaCalobra_DTM_Context_10",
+        "samples": 1525,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_1_0",
+        "b": "SaCalobra_DTM_Context_17",
+        "samples": 1,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_1_0",
+        "b": "SaCalobra_DTM_Context_20",
+        "samples": 3811,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_1_1",
+        "b": "SaCalobra_DTM_Context_10",
+        "samples": 2541,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_1_1",
+        "b": "SaCalobra_DTM_Context_11",
+        "samples": 2541,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_1_1",
+        "b": "SaCalobra_DTM_Context_18",
+        "samples": 1,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_Detail_1_1",
+        "b": "SaCalobra_DTM_Context_21",
+        "samples": 3811,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_04",
+        "b": "SaCalobra_DTM_Context_05",
+        "samples": 2287,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_04",
+        "b": "SaCalobra_DTM_Context_17",
+        "samples": 1779,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_05",
+        "b": "SaCalobra_DTM_Context_06",
+        "samples": 2287,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_05",
+        "b": "SaCalobra_DTM_Context_17",
+        "samples": 509,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_06",
+        "b": "SaCalobra_DTM_Context_07",
+        "samples": 2287,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_07",
+        "b": "SaCalobra_DTM_Context_18",
+        "samples": 1525,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_08",
+        "b": "SaCalobra_DTM_Context_09",
+        "samples": 2033,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_08",
+        "b": "SaCalobra_DTM_Context_20",
+        "samples": 1779,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_09",
+        "b": "SaCalobra_DTM_Context_10",
+        "samples": 2033,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_09",
+        "b": "SaCalobra_DTM_Context_20",
+        "samples": 509,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_10",
+        "b": "SaCalobra_DTM_Context_11",
+        "samples": 2033,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_11",
+        "b": "SaCalobra_DTM_Context_21",
+        "samples": 1525,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_17",
+        "b": "SaCalobra_DTM_Context_20",
+        "samples": 2287,
+        "max_rgb_code_delta": 0
+      },
+      {
+        "a": "SaCalobra_DTM_Context_18",
+        "b": "SaCalobra_DTM_Context_21",
+        "samples": 1525,
+        "max_rgb_code_delta": 0
+      }
+    ],
+    "max_edge_code_delta": 0
+  },
+  "source_retention": {
+    "status": "BIT_EXACT",
+    "files": {
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_mask.bgeo.sc": "7ed77879f7538684a3d244b36ce2b7de3dceacb19cd041dc72b2f43fd0fdb0b9",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_mask.bgeo.sc": "fe6f639983f99196018e5c3a2f4209e70655396ee3931630d06083e14bbe1754",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_2_mask.bgeo.sc": "097bb0248a90fa9f58a2d384dc2b6aec87970e679777739bcbc0a16cbd0f4a6d",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_2_mask.bgeo.sc": "7735cb00c181a27d8771e2af72c93b37859d103b7dec56b29349f5823403f70f",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\sand_mask.bgeo.sc": "278ddd69b37e357fc4cc4821bb1236beee806ab5e13b89c8ee4644f37ceb8757",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\sand_mask.bgeo.sc": "5b2268ad1372f53997567c3ba5c99df8a93f084eaf209b39344532ef46a7e76c",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\cliffs_mask.bgeo.sc": "e272ddee9994acbaa77f3e239c8009ca40ef348dddea44557548f4d6d82c373b",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\cliffs_mask.bgeo.sc": "305b662145d1306b87255c95f6f991f030a869eb9effdc6ce89f69fc116ced94",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\scree_mask.bgeo.sc": "87382b3a69a3c2aed2252ead2f9de281bc2a0f3ef70e797a178d8b84264f5c4e",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\scree_mask.bgeo.sc": "88b757fa2c99122bfcc376b4cf8950686ee8dff670e62b13c568cc9e4804e09b",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\final.bgeo.sc": "c47153ce49452d40d1575ce27c199a8ebf5c54dc761ed254d692e8ccb99e01d6",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\final.bgeo.sc": "70bc11b639591a44a7d2a92eb9bd7a3aa0483aeafb1bf3534ce1150be34c3ec2",
+      "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_height_float32.tif": "2ba280dd59da8df89620deb3b1e0ca6b8d0e7eafc0e13a7a96e35df6a6e5a0dd",
+      "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_validity.tif": "96acc1b90fdf926ee4ada618a66c82406d312f613b84f5453a363fa08b10f35c"
+    },
+    "map_sha256": "ccabe772cb307c8f4cfee91ed9bc7b9485098162c73c5330a76c5d31a7ac7681"
+  },
+  "editor_failure": {
+    "last_pid": 11820,
+    "memory_event": {
+      "TimeCreated": "2026-10-18T23:52:16.2192587+02:00",
+      "Id": 2004,
+      "Message": "System Windows pomy\u015blnie zdiagnozowa\u0142 warunek braku pami\u0119ci wirtualnej. Nast\u0119puj\u0105ce programy zu\u017cywaj\u0105 wi\u0119kszo\u015b\u0107 pami\u0119ci wirtualnej: UnrealEditor.exe (11820) zu\u017cywa 74276270080 b, hython.exe (35792) zu\u017cywa 3496292352 b i quick-look.exe (1940) zu\u017cywa 1725259776 b."
+    },
+    "termination_cause": "Unconfirmed; virtual-memory exhaustion recorded before process disappearance",
+    "stop_or_restart_issued": false,
+    "relaunched": false,
+    "new_correction_dispatched": false,
+    "previous_unsaved_scene_recovery": "NOT VERIFIED"
+  },
+  "validation": {
+    "python_compile": "PASS",
+    "docs_i18n_structure_links_freshness": "PASS",
+    "fresh_houdini_replay": "PASS",
+    "shared_rgb_edges": "BIT_EXACT",
+    "native_ue_import": "NOT RUN",
+    "ue_remote_visual": "BLOCKED_EDITOR_NOT_RUNNING",
+    "owner_visual_acceptance": "NOT RUN"
+  },
+  "forbidden_operations_performed": [],
+  "remaining": "Owner-authorized session recovery and material import with native/visual verification; do not assume unsaved 22-tile scene survived.",
+  "evidence_root": "Saved\\RuntimeProof\\Lesson06ContextColor"
+}

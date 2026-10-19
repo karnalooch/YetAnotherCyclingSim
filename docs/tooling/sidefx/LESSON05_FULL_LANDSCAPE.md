@@ -6,10 +6,156 @@ This supersedes the earlier small-patch-only execution scope in the
 inputs. Native authoring, Unreal admission and owner visual acceptance are
 separate states; see the [measurement receipt](lesson05-full-landscape-20261018.json).
 
-**Completed:** full Working and Context authoring, saved HIP, fresh-process
+**Historical checkpoint:** full Working and Context authoring, saved HIP, fresh-process
 full-grid tail rebuild and all-sample height/colour comparison. **Subsequently
 completed:** Lesson05 UE import/reopen (see consumer evidence below). Final M3
 owner visual acceptance remains pending.
+
+## Local correction and audit, 2026-10-18
+
+Owner-requested local work on `codex/365-world-graph`, HEAD
+`99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6`, issue #365 / open Draft PR #474.
+GitHub has no milestone assigned to #365; the Roadmap places this work in M3.
+No commit, push, merge, UE import, stream changes or Lesson06/07 work.
+The [correction receipt](lesson05-tail-repair-20261018.json) records this pass.
+
+Native inspection and hashes confirmed the original HIP and both final caches
+match the preceding fresh-rebuild evidence. A real HDA binding error remained:
+`PE_heightfield_tint::1.0` labels `srcname1` as **Ramp Layer**, and `ramp_mask`
+as **Mask**. Empty `ramp_mask` made both constant cliff/scree tints global.
+The correction uses `ramp_mask="mask"` for constant tints only; the broad
+occlusion and curvature ramp bindings were already correct. Cliff tint now
+reads the original L04 `WORKING_MASK_CLIFF` / `CONTEXT_MASK_CLIFF`, rather than
+recomputing that slope selector on L04's displaced height.
+
+Only the tint/output tail was rebuilt, under
+`D:/yacs/work/lesson05-tail-repair-20261018`. Source, Manual, L04, Slump,
+pockets, Layer Slump, remapped scree and material/displacement caches were
+reused. The original broad-occlusion/curvature masks are also reusable through
+`--reuse-root`; Context initially recomputed those two masks before the reuse
+path was added. Final caches additionally retain named `cliff`, `pockets`,
+`broad_occlusion`, `curvature`, and the actual material-placement `scree`.
+
+Corrected checkpoint:
+`worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson05_Reviewed.hiplc`.
+The original Lesson05 HIP/cache remain unchanged rollback inputs. The older
+receipt describes that earlier checkpoint, not the corrected global colour.
+
+### Native checks and source mapping
+
+Fresh processes reopened the corrected HIP and rebuilt the native final Tint
+for both full domains: **zero differences** in height/R/G/B/roughness versus
+the corrected caches, over **74,510,970 samples**. All height/scree/roughness
+samples equal the earlier Lesson05 result. Constant cliff/scree tint changes
+outside their respective masks are exactly zero in every RGB channel.
+Native resolution/origin/axes are:
+
+| Domain | Grid | First sample (Houdini metres) | Grid steps |
+|---|---|---|---|
+| Working | 7154 x 9829 | (-1771.25, 0, 3144.25) | +X 0.5 m; -Z 0.5 m |
+| Context | 2048 x 2048 | (-3998.046875, 0, 3998.046875) | +X 3.90625 m; -Z 3.90625 m |
+
+The retained original PEG-02-05 transcript was read. Direct Vimeo retrieval
+failed; the timestamped retained caption was available. All three original
+HDA hashes match the preceding receipt. Layer Slump resolves from retained
+`ProjectFiles_LandscapeWorkflow3/.../Houdini/Packages/PegasusDemo/otls/`;
+Material and Tint resolve from the project's `otls/` copies of those definitions.
+`SIDEFXLABS` resolves to `D:/yacs/tools/sidefx_packages/SideFXLabs22.0`;
+no new Labs node or generator was introduced.
+
+| Lesson time | Actual node under each `LESSON05_<AREA>` | Effective settings/result |
+|---|---|---|
+| 00:00–00:20; 06:39–07:58 | `MATERIAL/FORGE_SCREE` | Original Material; size 4 m, Height Scale .1, Use Mask 1; reused cache |
+| 00:20–02:07; 08:00–09:20 | `SLUMP/SCREE_SOURCE_SLOPE`, `SCREE_DOWNHILL` | Source 35–90 degrees; 20 iterations, repose 30 degrees; erosion/bedrock off, outflow on |
+| 02:22–03:10 | `TRANSPORT/MEASURED_SLUMP_RANGE` | Measured maxima Working 44.15713119506836 / Context 25.54274559020996; mask to 0–1 |
+| 03:10–06:38 | `POCKETS/LOCAL_POCKETS`, `TRANSPORT/POCKETS_LAYER`, `PEGASUS_POCKET_TRANSPORT` | Occlusion 5 m, inverted ramp; left mask/right pockets; direction 1, iterations 20, repose 0, spread 1 |
+| 06:39–07:58 | `TRANSPORT/MEASURED_SPARSE_REMAP` | Measured maxima .6418575644493103 / .9552562236785889; output 0–1; original sparse ramp and dry/Alpha exclusion |
+| 09:20–10:38 | `CLIFF_TINT/CLIFF_TINT`, `SCREE_TINT/SCREE_TINT` | Correct mask binding; strengths .15/.2; colours (.94,.96,1)/(1,.98,.95) |
+| 10:38–14:10 | `OCCLUSION/EXPOSURE_TINT` | 25 m exposure; strength .2; white–(.93,.95,.92)–white ramp |
+| 14:10–15:19 | `CURVATURE/CURVATURE_TINT` | Computed curvature range 2 / .25600001215934753; strength .1; 1–1.02–1.05 ramp |
+| 15:19–17:19 | `FINAL_CACHE`, `GLOBAL_COLOR`, `NEUTRAL_GEOMETRY` | Complete saved HeightField; default colour display; independent named masks |
+
+The [native direction control](../../../scripts/houdini/check_lesson05_transport.py)
+used a 400 m diagnostic crop with a 50 m analysis margin. Pocket-weighted mask
+accumulation was .137867 with zero iterations, .014172 in the opposite direction
+and .185187 in the retained direction. All three preserved height exactly.
+This supports the intended pocket attraction; it does not replace full-domain
+processing or whole-area visual acceptance.
+
+Material inputs remain Forge `run-a/mediterranean_soil/limestone_scree_v1/export/YACS_Material_BaseColor.png`
+under `D:/yacs/work/lesson05-material-forge-20261018`, plus
+`D:/yacs/work/lesson05-houdini-20261018/Height_Pegasus.exr` and
+`Roughness_Pegasus.exr`. Height uses the existing Forge +.03 neutral adapter;
+roughness is ORM green. These are Material Forge assets, not SideFX textures.
+No additional texture generation or colour-space conversion occurred.
+
+### Replay, views and remaining acceptance
+
+For an incremental correction, pass `--reuse-root <original-full-root>` and
+`--checkpoint-input <retained-L04-or-L05-HIP>` to `lesson05_full.py`, with a
+fresh output root. Execute `cliff_tint`, `scree_tint`, `occlusion`, `curvature`,
+`verify` serially for each area. Pass `--reuse-root` to the checkpoint assembler
+and `--previous-root <original-full-root>` to the fresh measurement script.
+
+The [review renderer](../../../scripts/houdini/render_lesson05_review.py), run
+with the project Python and `--root <correction-root>`, writes images in its
+`working/` and `context/` folders:
+`whole_domain_review.png`, `review_scree.png`, `review_pocket.png`,
+`review_transition.png`, `review_gentle.png`. Each compares the same registered
+L04/L05 location in colour, mask and neutral geometry. Overviews sample every
+eighth cell; closeups use native samples. Neutral images are CPU hillshade
+diagnostics, not perspective renders or Unreal screenshots. Coordinates are
+recorded in the correction receipt. Native hillshade shows existing fine
+terrain patterns; the colour correction makes no claim to repair source or
+L04 geometry. Scree remains sparse and the gentle-area centre remains unmasked.
+For occlusion/curvature on/off views, run the same renderer with hython and
+`--export-stages` first, then with project Python. `grading_review.png` compares
+the retained stage colours without applying the tints twice. The direction
+control figure uses one shared mask scale for zero/opposite/retained cases.
+
+Native persistence and the bounded direction test pass. Owner visual
+acceptance, perspective-camera review and final Working/Context consumer
+transition acceptance remain open. The active saved UE map still shows the
+earlier baked global colour, not this correction or a Lesson07 material.
+The inherited ID-layer menu warning was subsequently repaired with explicit
+owner authorization; see the bounded follow-up below.
+
+### ID-layer menu follow-up, 2026-10-18
+
+The owner authorized repairing the warning after the Lesson05 review.
+Both overview `PE_Heightfield_Layers_to_ID::2.0/IN_MENU` geometries have no
+detail attributes. The original menu calls `dictAttribValue("id")` without
+checking that `id` exists. The adaptation adds only
+`findGlobalAttrib("id") is not None` before that read, using the documented
+[SideFX Geometry API](https://www.sidefx.com/docs/houdini/hom/hou/Geometry.html).
+Missing metadata now returns an empty menu; it does not fabricate an IDMap.
+
+The corrected definition is embedded in `SaCalobra_Pegasus_Lesson05_Reviewed.hiplc`
+and serves the two overview instances. The external original HDA is unchanged.
+The pre-fix HIP is retained as `SaCalobra_Pegasus_Lesson05_Reviewed_BeforeIdMenuRepair.hiplc`.
+The [menu repair receipt](lesson05-id-menu-repair-20261018.json) supersedes the
+earlier receipt's HIP hash only: current SHA-256 is
+`c4720f00e1bdcab20a1a4639509bee8cb874eff01d7d18b4a7049b1d1cdcd539`.
+No terrain nodes or cache files were edited or recooked.
+
+Fresh-process reopen passed for both menus and real HOM fixtures with absent,
+empty and two-entry ID dictionaries. Save emitted no ID-layer traceback;
+Houdini did emit its informational notice that the embedded definition was
+saved despite the general Save Definitions preference being disabled.
+This repairs the menu only; Lesson06 IDMap generation is not implemented.
+Reproduction: `scripts/houdini/repair_lesson05_id_menu.py --hip <HIP> --receipt <JSON>`;
+use `--verify` for read-only HIP verification (updates the receipt).
+
+Validation: Python compilation, `git diff --check`, documentation index
+links/i18n/structure/freshness and targeted changed-document UTF-8/link checks
+pass. The new compact receipt passes the raw-storage limit. The global
+`check_evidence_storage.py` fails on the unchanged historical
+`docs/experiments/sa-calobra-roadside-visibility-prestudy-20261008/observations.json`:
+its 44,200 CRLF endings change the raw blob from the exact LF exception pin.
+LF-normalized content matches HEAD and the exception; no historical evidence
+was rewritten to bypass the guard. Native hython initially failed in the
+sandbox with a system-DLL relocation error; execution outside that sandbox
+succeeded. No application installation or shared host setting was changed.
 
 ## Source mapping and implementation
 
@@ -70,7 +216,8 @@ hython processes to release native caches between stages.
    with `--source-root`, fresh `--output-root` and `--material-root`.
 2. [Execute full native stages](../../../scripts/houdini/lesson05_full.py) with
    `--source-root`, fresh `--output-root`, `--corpus`, `--forge-root`,
-   `--adapter-root`, `--area working|context`, and `--stage` in this order:
+   `--adapter-root`, `--checkpoint-input <retained-L04-HIP>`,
+   `--area working|context`, and `--stage` in this order:
    source, slump, pockets, transport, material, cliff_tint, scree_tint,
    occlusion, curvature, verify.
 3. [Assemble the checkpoint](../../../scripts/houdini/save_lesson05_full_checkpoint.py)
@@ -89,7 +236,7 @@ use a new output root rather than overwrite evidence.
 | Measurement | Working | Context |
 |---|---:|---:|
 | Native samples | 70,316,666 | 4,194,304 |
-| Resolution | 7154 � 9829 | 2048 � 2048 |
+| Resolution | 7154 x 9829 | 2048 x 2048 |
 | Lesson05 signed increment | -0.000488281 to +0.016723633 m | -0.000457764 to +0.019287109 m |
 | Nonzero scree coverage | 7.58682% | 4.44145% |
 | Coverage above .1 | 1.33126% | .73361% |
@@ -113,8 +260,8 @@ comparing all five channels, then measures Source+Manual-relative deltas.
 The default curvature range initially yielded an empty mask. That diagnostic
 output was retained, the native Compute Curvature Range action supplied the
 correct ranges, and curvature/verification were rerun. Legacy overview nodes
-emit ID-layer menu errors during HIP save; those retained later-lesson menus
-are not the Lesson05 output and are not claimed as repaired.
+originally emitted ID-layer menu errors during HIP save; the bounded follow-up
+above records their subsequent repair.
 
 ## Unreal consumer import, 2026-10-18
 

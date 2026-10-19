@@ -1,0 +1,353 @@
+{
+  "scope": "Issue #365 / M3 / existing PR #474; local L06 material seam only",
+  "base_sha": "99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6",
+  "status": "NATIVE_SEAM_VERIFIED; OWNER_VISUAL_PENDING",
+  "performance_pass": false,
+  "source_attribution": {
+    "samples": 33966,
+    "mask_differences": {
+      "grass": {
+        "threshold_disagreements": 8845,
+        "mean_abs_delta": 0.2610630393028259,
+        "max_abs_delta": 1.0
+      },
+      "grass 2": {
+        "threshold_disagreements": 9567,
+        "mean_abs_delta": 0.1918344497680664,
+        "max_abs_delta": 1.0
+      },
+      "sand": {
+        "threshold_disagreements": 1131,
+        "mean_abs_delta": 0.024990631267428398,
+        "max_abs_delta": 1.0
+      },
+      "cliffs": {
+        "threshold_disagreements": 7223,
+        "mean_abs_delta": 0.21508342027664185,
+        "max_abs_delta": 1.0
+      },
+      "scree": {
+        "threshold_disagreements": 16,
+        "mean_abs_delta": 0.004134753253310919,
+        "max_abs_delta": 0.6301513910293579
+      }
+    },
+    "source_hashes": {
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_mask.bgeo.sc": "7ed77879f7538684a3d244b36ce2b7de3dceacb19cd041dc72b2f43fd0fdb0b9",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_mask.bgeo.sc": "fe6f639983f99196018e5c3a2f4209e70655396ee3931630d06083e14bbe1754",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_2_mask.bgeo.sc": "097bb0248a90fa9f58a2d384dc2b6aec87970e679777739bcbc0a16cbd0f4a6d",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_2_mask.bgeo.sc": "7735cb00c181a27d8771e2af72c93b37859d103b7dec56b29349f5823403f70f",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\sand_mask.bgeo.sc": "278ddd69b37e357fc4cc4821bb1236beee806ab5e13b89c8ee4644f37ceb8757",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\sand_mask.bgeo.sc": "5b2268ad1372f53997567c3ba5c99df8a93f084eaf209b39344532ef46a7e76c",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\cliffs_mask.bgeo.sc": "e272ddee9994acbaa77f3e239c8009ca40ef348dddea44557548f4d6d82c373b",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\cliffs_mask.bgeo.sc": "305b662145d1306b87255c95f6f991f030a869eb9effdc6ce89f69fc116ced94",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\scree_mask.bgeo.sc": "87382b3a69a3c2aed2252ead2f9de281bc2a0f3ef70e797a178d8b84264f5c4e",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\scree_mask.bgeo.sc": "88b757fa2c99122bfcc376b4cf8950686ee8dff670e62b13c568cc9e4804e09b",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\final.bgeo.sc": "c47153ce49452d40d1575ce27c199a8ebf5c54dc761ed254d692e8ccb99e01d6",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\final.bgeo.sc": "70bc11b639591a44a7d2a92eb9bd7a3aa0483aeafb1bf3534ce1150be34c3ec2"
+    },
+    "perimeter_deltas": {
+      "id": {
+        "mean_abs": 0.18149463832378387,
+        "max_abs": 1.0
+      },
+      "r": {
+        "mean_abs": 0.13320381939411163,
+        "max_abs": 0.7539368867874146
+      },
+      "g": {
+        "mean_abs": 0.135999396443367,
+        "max_abs": 0.7562192678451538
+      },
+      "b": {
+        "mean_abs": 0.16440075635910034,
+        "max_abs": 0.7607839703559875
+      },
+      "roughness": {
+        "mean_abs": 0.1343173384666443,
+        "max_abs": 0.9843140244483948
+      },
+      "height": {
+        "mean_abs": 0.9016602635383606,
+        "max_abs": 51.99395751953125
+      }
+    },
+    "id_disagree": 12049
+  },
+  "fresh_replay": {
+    "status": "NATIVE_SEAM_PASS",
+    "version": "22.0.466",
+    "fresh_reopen": true,
+    "checkpoints": {
+      "context_id_aligned": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\context_id_aligned.bgeo.sc",
+        "sha256": "fc6e5044060ca9c405489d72014549095fdf8a7d290f310f3aab06fda9e5ca9c",
+        "producer": "/obj/LESSON06_SEAM/ALIGN_CONTEXT_ID",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "border_weight": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\border_weight.bgeo.sc",
+        "sha256": "37705d6a9f506dda21d968f490a1d3643bf05557ea7ffbb9eacedfbf6086d9d7",
+        "producer": "/obj/LESSON06_SEAM/BORDER_MASK_ONLY",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "color_transition": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\color_transition.bgeo.sc",
+        "sha256": "e7d3b525f8ca0d5e8108a4f9cbdc49fb2ff893808643fad26b31ca92efbbab61",
+        "producer": "/obj/LESSON06_SEAM/COLOR_TRANSITION",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "derived_grass": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\derived_grass.bgeo.sc",
+        "sha256": "a1c43fdce06c29f3fb4d9f9f851f6db3db3f0284893aa6217db94415efb2a317",
+        "producer": "/obj/LESSON06_SEAM/BLEND_GRASS",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "encoded_grass": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\encoded_grass.bgeo.sc",
+        "sha256": "b04b96187d2a5ee2184060ab6c7a014dd54839a52c526f2eac075b59da37aea5",
+        "producer": "/obj/LESSON06_SEAM/ENCODE_GRASS",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "derived_grass_2": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\derived_grass_2.bgeo.sc",
+        "sha256": "4491143597338c81c354d41face60f94a00b04e405df6c80d2f5ee0be024295e",
+        "producer": "/obj/LESSON06_SEAM/BLEND_GRASS_2",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "encoded_grass_2": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\encoded_grass_2.bgeo.sc",
+        "sha256": "c3acee3bc1a0401277c5f0c360413d8c6488c3e9215e763a5ab58403aab0d76c",
+        "producer": "/obj/LESSON06_SEAM/ENCODE_GRASS_2",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "derived_sand": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\derived_sand.bgeo.sc",
+        "sha256": "e3e3219bc7cb20f42f8065d1bafa631b0815ce2d018b9cfcf6a0312cfb586122",
+        "producer": "/obj/LESSON06_SEAM/BLEND_SAND",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "encoded_sand": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\encoded_sand.bgeo.sc",
+        "sha256": "17c1627f3b09198f3ad555864e3e243d006f6c202ce6db3663b5585234739451",
+        "producer": "/obj/LESSON06_SEAM/ENCODE_SAND",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "derived_cliffs": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\derived_cliffs.bgeo.sc",
+        "sha256": "a3812dff0a87166de7330d8b96917b5e8ef304d537b2d8575be7900087feb1a8",
+        "producer": "/obj/LESSON06_SEAM/BLEND_CLIFFS",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "encoded_cliffs": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\encoded_cliffs.bgeo.sc",
+        "sha256": "16d0e43644b7dd07bd745df98d34af99a434f1c737c604100514e4f266a01377",
+        "producer": "/obj/LESSON06_SEAM/ENCODE_CLIFFS",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "derived_scree": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\derived_scree.bgeo.sc",
+        "sha256": "bafbadf8e45db871abe2985e4ab0ec4785853b5b7f4b6e684db61c41ab587967",
+        "producer": "/obj/LESSON06_SEAM/BLEND_SCREE",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "encoded_scree": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\encoded_scree.bgeo.sc",
+        "sha256": "3d38b83569d65528ed42c786866c0afc2f0a525b47c1b7acb74dadcc7b3a29b4",
+        "producer": "/obj/LESSON06_SEAM/ENCODE_SCREE",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      },
+      "final": {
+        "path": "D:\\yacs\\work\\lesson06-seam-20261018\\final.bgeo.sc",
+        "sha256": "c7d1bb2fd3a6ad230f5f0859cfabd15de33dd21dcf75f8d78132a14823d526de",
+        "producer": "/obj/LESSON06_SEAM/PRESERVE_ORIGINAL_MASKS",
+        "fresh_replay": true,
+        "errors": [],
+        "warnings": []
+      }
+    },
+    "inset_m": 32,
+    "blur_radius_m": 16,
+    "lattice": {
+      "resolution": [
+        7154,
+        9829,
+        1
+      ],
+      "origin": [
+        -1771.25,
+        0.0,
+        3144.25
+      ],
+      "x": [
+        0.5,
+        0.0,
+        0.0
+      ],
+      "y": [
+        0.0,
+        0.0,
+        -0.5
+      ]
+    },
+    "invariants": {
+      "height": "BIT_EXACT",
+      "mask": "BIT_EXACT",
+      "Alpha": "BIT_EXACT",
+      "ramp": "BIT_EXACT",
+      "scree": "BIT_EXACT",
+      "cliff": "BIT_EXACT",
+      "broad_occlusion": "BIT_EXACT",
+      "curvature": "BIT_EXACT",
+      "pockets": "BIT_EXACT"
+    },
+    "unchanged_core_samples": 67092794,
+    "affected_band_samples": 3223872,
+    "id_changed_samples": 424842,
+    "perimeter_samples": 33966,
+    "perimeter_before": 12049,
+    "perimeter_after_numpy_ties_even": 13,
+    "resample_max_float_delta": 0.7490196228027344,
+    "equidistant_samples": 270,
+    "resample_nearest_mismatches": 0,
+    "perimeter_after": 0,
+    "color_boundary": {
+      "r": {
+        "before_mean_abs": 0.13013271987438202,
+        "after_mean_abs": 1.965619276234065e-06,
+        "after_max_abs": 8.934736251831055e-05
+      },
+      "g": {
+        "before_mean_abs": 0.13206444680690765,
+        "after_mean_abs": 2.0846591723966412e-06,
+        "after_max_abs": 8.997321128845215e-05
+      },
+      "b": {
+        "before_mean_abs": 0.1602243334054947,
+        "after_mean_abs": 2.4474013571307296e-06,
+        "after_max_abs": 9.03010368347168e-05
+      },
+      "roughness": {
+        "before_mean_abs": 0.12791217863559723,
+        "after_mean_abs": 2.3315121779887704e-06,
+        "after_max_abs": 0.00011366605758666992
+      }
+    },
+    "decoded": {
+      "grass": 23071464,
+      "grass 2": 16436527,
+      "sand": 660432,
+      "cliffs": 30147291,
+      "scree": 952
+    },
+    "retained_source_hashes": {
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_mask.bgeo.sc": "7ed77879f7538684a3d244b36ce2b7de3dceacb19cd041dc72b2f43fd0fdb0b9",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_mask.bgeo.sc": "fe6f639983f99196018e5c3a2f4209e70655396ee3931630d06083e14bbe1754",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\grass_2_mask.bgeo.sc": "097bb0248a90fa9f58a2d384dc2b6aec87970e679777739bcbc0a16cbd0f4a6d",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\grass_2_mask.bgeo.sc": "7735cb00c181a27d8771e2af72c93b37859d103b7dec56b29349f5823403f70f",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\sand_mask.bgeo.sc": "278ddd69b37e357fc4cc4821bb1236beee806ab5e13b89c8ee4644f37ceb8757",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\sand_mask.bgeo.sc": "5b2268ad1372f53997567c3ba5c99df8a93f084eaf209b39344532ef46a7e76c",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\cliffs_mask.bgeo.sc": "e272ddee9994acbaa77f3e239c8009ca40ef348dddea44557548f4d6d82c373b",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\cliffs_mask.bgeo.sc": "305b662145d1306b87255c95f6f991f030a869eb9effdc6ce89f69fc116ced94",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\scree_mask.bgeo.sc": "87382b3a69a3c2aed2252ead2f9de281bc2a0f3ef70e797a178d8b84264f5c4e",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\scree_mask.bgeo.sc": "88b757fa2c99122bfcc376b4cf8950686ee8dff670e62b13c568cc9e4804e09b",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\working\\final.bgeo.sc": "c47153ce49452d40d1575ce27c199a8ebf5c54dc761ed254d692e8ccb99e01d6",
+      "D:\\yacs\\work\\lesson06-reviewed-20261018\\context\\final.bgeo.sc": "70bc11b639591a44a7d2a92eb9bd7a3aa0483aeafb1bf3534ce1150be34c3ec2"
+    },
+    "hip_sha256": "be10d9d9c021a454d13566c86540f5c22853215354b95458c15b055b9e11659f",
+    "script_sha256": "4c34b3c764d847687d6de2e5048619e183c548b4b863f46a74bcf4302e451844"
+  },
+  "retained_original_hips": {
+    "worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson05_Reviewed.hiplc": "c4720f00e1bdcab20a1a4639509bee8cb874eff01d7d18b4a7049b1d1cdcd539",
+    "worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson06.hiplc": "b5a57a752034efd334ec12710233682d6ce38fe3d3f5dbfdca93cc4eb88d7567",
+    "worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson06_Reviewed.hiplc": "f0a7738268770c11aa1d0b95038d362e56939e4b3217868fe6f024f2c0db7008"
+  },
+  "context_full_replay": {
+    "path": "D:/yacs/work/lesson06-reviewed-20261018/context/reopen.json",
+    "sha256": "bcb252c3cdb98e09472d7d603f558e9b7aecb79a195cb6e5c1f084eee6d9cf5b",
+    "samples": 4194304,
+    "cache_unchanged": true
+  },
+  "unreal": "NOT_TOUCHED",
+  "merge": "NOT_PERFORMED",
+  "diagnostic_images": {
+    "worldgen\\houdini\\sa_calobra\\evidence\\lesson06_seam\\color_east.png": "b60012fc1743dd2a2055c9081cb6892c0501518e96849acad11851a879fddd8b",
+    "worldgen\\houdini\\sa_calobra\\evidence\\lesson06_seam\\color_north.png": "77883952bf17872cefd8dc442f3ae3868a5ed2bbc4fba82ff2bbcd4c3ba18afe",
+    "worldgen\\houdini\\sa_calobra\\evidence\\lesson06_seam\\color_south.png": "ffe699d6362d0f1c2f6cfc62af3335f774a98d26a0540bbb46d22cdd7f6105eb",
+    "worldgen\\houdini\\sa_calobra\\evidence\\lesson06_seam\\color_west.png": "9875c7a74e835c9b44fac4c23bfea931a0114806c42e8fee54bb2c790cd675f8",
+    "worldgen\\houdini\\sa_calobra\\evidence\\lesson06_seam\\overview.png": "03f5646878cdd7231766ff548a2fc6f153d1325d2eebd7993b54188319ec3714",
+    "worldgen\\houdini\\sa_calobra\\evidence\\lesson06_seam\\perimeter_east.png": "ccc4d47f0292406ed4b8832ac5166c6ed2925d3e6c7086e9929ec2b8fd6ab5f7",
+    "worldgen\\houdini\\sa_calobra\\evidence\\lesson06_seam\\perimeter_north.png": "ab07d04fcbdf9ab4ccff36e79fdf1cc71dbd3938dc3f4fa9ea95876d3f4e8c7e",
+    "worldgen\\houdini\\sa_calobra\\evidence\\lesson06_seam\\perimeter_south.png": "e1931b23291b3b32ad68dadc7cc92fe9f27a7a3ee68792fccbc50a4ab3162675",
+    "worldgen\\houdini\\sa_calobra\\evidence\\lesson06_seam\\perimeter_west.png": "f3e7dd1239430a2b89925b8123b6ebd69c5ac54de16c104262e8302628dda973"
+  },
+  "diagnostic_windows": {
+    "north": {
+      "center_index": 4172,
+      "length_m": 512,
+      "across_m": 128,
+      "boundary_row": 128,
+      "outside": "bilinear diagnostic Context RGB",
+      "inside": "native Working cache RGB"
+    },
+    "south": {
+      "center_index": 2940,
+      "length_m": 512,
+      "across_m": 128,
+      "boundary_row": 128,
+      "outside": "bilinear diagnostic Context RGB",
+      "inside": "native Working cache RGB"
+    },
+    "west": {
+      "center_index": 4045,
+      "length_m": 512,
+      "across_m": 128,
+      "boundary_row": 128,
+      "outside": "bilinear diagnostic Context RGB",
+      "inside": "native Working cache RGB"
+    },
+    "east": {
+      "center_index": 4796,
+      "length_m": 512,
+      "across_m": 128,
+      "boundary_row": 128,
+      "outside": "bilinear diagnostic Context RGB",
+      "inside": "native Working cache RGB"
+    }
+  },
+  "validation": {
+    "docs_index": "PASS: i18n, structure, links, freshness",
+    "python_compile": "PASS",
+    "scoped_diff_whitespace": "PASS",
+    "protected_ci": "NOT_RUN",
+    "owner_visual_acceptance": "PENDING",
+    "unreal": "NOT_TOUCHED",
+    "merge": "NOT_PERFORMED"
+  }
+}

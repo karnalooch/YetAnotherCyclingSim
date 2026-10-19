@@ -1,0 +1,9 @@
+=== TESTING PE_CACHE_LANDSCAPE SYNCHRONOUS ===
+Target Landscape: SaCalobra_Detail_0_0
+Wrapper: <Object '/Engine/Transient.HoudiniPublicAPI_0:HoudiniPublicAPIAssetWrapper_0' (0x000001BF70FBB700) Class 'HoudiniPublicAPIAssetWrapper'>
+Input objects: ["/Script/Landscape.Landscape'/Game/Worlds/SaCalobra_Houdini_20261016/L_SaCalobra_LandscapeOnly.L_SaCalobra_LandscapeOnly:PersistentLevel.SaCalobra_Detail_0_0'"]
+Calling process_component_synchronous()...
+Post-process: last_error='None', num_outputs=0
+Triggering execute button...
+Post-execute: last_error='None'
+Done!

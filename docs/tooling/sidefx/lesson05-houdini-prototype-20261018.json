@@ -1,0 +1,225 @@
+{
+  "calibration.json": {
+    "controls": [
+      {
+        "input": 0,
+        "layers": {
+          "height": [
+            -1.0,
+            -1.0
+          ],
+          "mask": [
+            0.0,
+            0.0
+          ],
+          "r": [
+            0.0,
+            0.0
+          ],
+          "g": [
+            0.0,
+            0.0
+          ],
+          "b": [
+            0.0,
+            0.0
+          ],
+          "roughness": [
+            0.0,
+            0.0
+          ]
+        }
+      },
+      {
+        "input": 0.47,
+        "layers": {
+          "height": [
+            -0.06000000238418579,
+            -0.06000000238418579
+          ],
+          "mask": [
+            0.0,
+            0.0
+          ],
+          "r": [
+            0.4699999988079071,
+            0.4699999988079071
+          ],
+          "g": [
+            0.4699999988079071,
+            0.4699999988079071
+          ],
+          "b": [
+            0.4699999988079071,
+            0.4699999988079071
+          ],
+          "roughness": [
+            0.4699999988079071,
+            0.4699999988079071
+          ]
+        }
+      },
+      {
+        "input": 0.5,
+        "layers": {
+          "height": [
+            0.0,
+            0.0
+          ],
+          "mask": [
+            0.0,
+            0.0
+          ],
+          "r": [
+            0.5,
+            0.5
+          ],
+          "g": [
+            0.5,
+            0.5
+          ],
+          "b": [
+            0.5,
+            0.5
+          ],
+          "roughness": [
+            0.5,
+            0.5
+          ]
+        }
+      },
+      {
+        "input": 0.75,
+        "layers": {
+          "height": [
+            0.5,
+            0.5
+          ],
+          "mask": [
+            0.0,
+            0.0
+          ],
+          "r": [
+            0.75,
+            0.75
+          ],
+          "g": [
+            0.75,
+            0.75
+          ],
+          "b": [
+            0.75,
+            0.75
+          ],
+          "roughness": [
+            0.75,
+            0.75
+          ]
+        }
+      },
+      {
+        "input": 1,
+        "layers": {
+          "height": [
+            1.0,
+            1.0
+          ],
+          "mask": [
+            0.0,
+            0.0
+          ],
+          "r": [
+            1.0,
+            1.0
+          ],
+          "g": [
+            1.0,
+            1.0
+          ],
+          "b": [
+            1.0,
+            1.0
+          ],
+          "roughness": [
+            1.0,
+            1.0
+          ]
+        }
+      }
+    ],
+    "height_adapter": "H + 0.03; HDA output = scale*(2*H_adapter-1)",
+    "roughness": "ORM green, linear float EXR",
+    "basecolor": "sRGB decode to linear float EXR",
+    "zero_height_control": true
+  },
+  "prototype.json": {
+    "status": "transport prototype only; pocket stage pending",
+    "center_xz": [
+      0,
+      1000
+    ],
+    "extent_m": 600,
+    "samples": 1444804,
+    "height_minmax": [
+      269.4700012207031,
+      701.7801513671875
+    ],
+    "height_changed_samples": 0,
+    "mask_max": 6.820335388183594,
+    "iterations": 20,
+    "repose_degrees": 30
+  },
+  "patch_receipt.json": {
+    "status": "small-patch candidate, not full Lesson05 acceptance",
+    "samples": 1444804,
+    "shape": [
+      1202,
+      1202
+    ],
+    "mask_minmax": [
+      0.0,
+      1.0
+    ],
+    "coverage_gt_0_1": 0.44856880241195346,
+    "height_changed_samples": 222445,
+    "pocket_raw_max": 0.43089020252227783,
+    "height_scale": 0,
+    "zero_height_control": "FAIL exact equality",
+    "zero_height_max_abs_m": 6.103515625e-05,
+    "halo_convergence": "NOT_RUN",
+    "direction_control": "tutorial inverted setting; independent pocket-vs-peak validation pending",
+    "hda_sha256": "7d6fdfa34a3794ad320cf7593966b68caeb64d243309d8d422babcb7cfe057b4",
+    "baseline_sha256": "6d5419191083ed32a79e4fb1668a1476cdf49b38bdc27d3b869424959793d098",
+    "hip": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson05_Prototype.hiplc",
+    "hip_sha256": "63200dfcd056e0c48fd87e5c40a0ee8ba9e1ebefccbdec0936ba4e26e51ab744"
+  },
+  "reopen_halo.json": {
+    "fresh_reopen_mask_exact": true,
+    "core_shape": [
+      600,
+      600
+    ],
+    "halo_m": [
+      75,
+      150
+    ],
+    "mask_max_abs_difference": 4.51207160949707e-05,
+    "mask_changed_samples": 245830,
+    "larger_shape": [
+      1202,
+      1202
+    ],
+    "smaller_shape": [
+      902,
+      902
+    ],
+    "note": "Fixed remap bounds across both runs. Native crop includes boundary samples."
+  },
+  "limitations": [
+    "No full Working authoring or UE import.",
+    "Zero-height exact equality failed in original HDA.",
+    "Halo exact equality not achieved.",
+    "Independent pocket direction, UV and owner visual acceptance pending.",
+    "Legacy overview ID-layer menus report missing attribute during save; bounded branch cooked without node errors."
+  ]
+}
