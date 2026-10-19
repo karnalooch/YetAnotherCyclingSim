@@ -1,7 +1,7 @@
 # Lesson06: original Pegasus IDMap repair and full-domain verification
 
 Issue #365 / M3, existing PR #474, branch `codex/365-world-graph`.
-Base revision: `99a5ae03a35fc5ff56e34a23ecfb9580431c8ba6`.
+Base revision: `7833e8bd8e5bfa19a183905335d2ba25b2c22969`.
 
 ## Unified 16,000 × 16,000 single-quality closure — 2026-10-19
 **Status: `LESSON06_FULL_IDMAP_PASS`**
@@ -10,31 +10,48 @@ The entire Sa Calobra landscape (8000 m × 8000 m) is fully unified into a singl
 
 ### Key Metrics and Receipts
 - **Domain**: Bounds `[-4000, +4000]` m in X and Z, Origin `[-3999.75, 0.0, 3999.75]`, Resolution `[16000, 16000, 1]`, Spacing `0.5 m`.
-- **Relief (Invariant A)**: Elevation range `[-1.30, 1437.16]` m, Mean `418.99 m`. Puig Major peak preserved bit-exact from raw source DTM. Valid land area `Alpha > 0` comprises 249,818,980 samples (97.59%).
-- **Pre-ID vs Post-ID Identity (Invariant B)**: `height`, `r`, `g`, and `b` layers are 100% bit-identical between Pre-ID cache and final IDMap (`max_diff = 0.00000000`).
-- **Decoder & Class Distribution (Invariant C)**: Fresh hython reload of checkpoint HIP decoded all 5 Pegasus classes with 100% spatial sample match:
-  - `grass` (ID 0, Code 0, Float 0.0000): 69,121,582 voxels (27.00%)
-  - `grass 2` (ID 1, Code 64, Float 0.2510): 90,518,267 voxels (35.36%)
-  - `sand` (ID 2, Code 128, Float 0.5020): 18,624,143 voxels (7.28%)
-  - `cliffs` (ID 3, Code 191, Float 0.7490): 77,735,243 voxels (30.37%)
-  - `scree` (ID 4, Code 255, Float 1.0000): 765 voxels (0.0003%)
+- **Relief & Procedural Displacement (Invariant A)**:
+  - Source DTM elevation range `[-1.30, 1437.16]` m, Mean `418.99 m`.
+  - Procedural displacement (Base -> Pre-ID): Range `[-0.3578, +0.5333]` m, Mean `+0.0104 m`, Std `0.0556 m`, p50 `0.0000 m`, p95 `0.1434 m`, p99 `0.2060 m`, modified cells `127,031,426` (49.62%).
+  - Authentic landmark preservation:
+    - Puig Major summit preserved at `X = -1283.75 m, Z = 3495.25 m`, peak elevation `1437.16 m` bit-exact from raw source DTM.
+    - Sa Calobra cove sea-level beach preserved at `X = 470.0 m, Z = -1060.0 m`, elevation `10.34 m`.
+  - Alpha integrity: `249,818,980` valid land samples (97.59%), bit-exact match vs base validity raster (0 mismatches).
+- **Pre-ID vs Post-ID Identity (Invariant B)**: `height`, `r`, `g`, `b`, and `Alpha` layers are 100% bit-identical between Pre-ID cache and final IDMap (`max_diff = 0.00000000`).
+- **Decoder & Class Distribution (Invariant C)**:
+  - Strict ID validation: 0 NaN, 0 Inf, 0 unrecognized values.
+  - Unit tests verified: illegal ID value (0.15) rejected and not classified as grass; spatially shifted mask with identical count correctly registers mismatches and fails.
+  - Fresh hython reload of checkpoint HIP decoded all 5 Pegasus classes with 0 sample mismatches:
+    - `grass` (ID 0, Code 0, Float 0.0000): 104,122,143 voxels (40.67%)
+    - `grass 2` (ID 1, Code 64, Float 0.2510): 55,517,706 voxels (21.69%)
+    - `sand` (ID 2, Code 128, Float 0.5020): 18,624,143 voxels (7.28%)
+    - `cliffs` (ID 3, Code 191, Float 0.7490): 77,735,227 voxels (30.37%)
+    - `scree` (ID 4, Code 255, Float 1.0000): 781 voxels (0.0003%)
 - **Saved Caches & Checkpoint**:
-  - Pre-ID Cache: `D:/yacs/work/lesson06-unified-20261019/pre_id_cache.bgeo.sc` (SHA-256: `d97cd262cf7d94f1a1e0458b4a0c13308d9b98c6238231e5c99f2425c160a069`)
-  - Final IDMap Cache: `D:/yacs/work/lesson06-unified-20261019/final_unified_idmap.bgeo.sc` (SHA-256: `ea6f95f113ecb74af7dd6519f965aed5c8431a2329c3645061cc653d2f5ba2b8`)
-  - Checkpoint HIP: `worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson06_Unified_v001.hiplc` (SHA-256: `0a7f757f0dc74603bb724d519aae2f90579765038fccf52b2941dd92cc8f9d98`)
-  - Verification Receipt: `D:/yacs/work/lesson06-unified-20261019/verification_receipt.json`
-- **Diagnostic Evidence**:
-  - `worldgen/houdini/sa_calobra/evidence/lesson06_unified/global_rgb_overview.png` (2000 × 2000)
-  - `worldgen/houdini/sa_calobra/evidence/lesson06_unified/global_idmap_overview.png` (2000 × 2000)
-  - `worldgen/houdini/sa_calobra/evidence/lesson06_unified/decoded_mask_grass.png` (2000 × 2000)
-  - `worldgen/houdini/sa_calobra/evidence/lesson06_unified/decoded_mask_grass_2.png` (2000 × 2000)
-  - `worldgen/houdini/sa_calobra/evidence/lesson06_unified/decoded_mask_sand.png` (2000 × 2000)
-  - `worldgen/houdini/sa_calobra/evidence/lesson06_unified/decoded_mask_cliffs.png` (2000 × 2000)
-  - `worldgen/houdini/sa_calobra/evidence/lesson06_unified/decoded_mask_scree.png` (2000 × 2000)
-  - `worldgen/houdini/sa_calobra/evidence/lesson06_unified/closeup_former_north_seam.png` (2048 × 1024 side-by-side native 0.5 m crop)
-  - `worldgen/houdini/sa_calobra/evidence/lesson06_unified/closeup_former_south_seam.png` (2048 × 1024 side-by-side native 0.5 m crop)
-  - `worldgen/houdini/sa_calobra/evidence/lesson06_unified/closeup_puig_major_peak.png` (2048 × 1024 side-by-side native 0.5 m crop)
-  - `worldgen/houdini/sa_calobra/evidence/lesson06_unified/closeup_sa_calobra_cove.png` (2048 × 1024 side-by-side native 0.5 m crop)
+  - Pre-ID Cache: `D:/yacs/work/lesson06-unified-20261019/pre_id_cache.bgeo.sc` (SHA-256: `b97969d87cc887bdea28b5f3e5b04ce7fc20e15f6cec682c1b46f21f4acda45e`)
+  - Final IDMap Cache: `D:/yacs/work/lesson06-unified-20261019/final_unified_idmap.bgeo.sc` (SHA-256: `f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24`)
+  - Checkpoint HIP: `worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson06_Unified_v001.hiplc` (SHA-256: `7701a844bd82d1496995866676a20ee069e9cac6e873889aca02a64be3ae2abb`)
+  - Verification Receipt: `docs/tooling/sidefx/lesson06-unified-verification-receipt.json`
+- **Diagnostic Evidence Manifest (19 verified images in `worldgen/houdini/sa_calobra/evidence/lesson06_unified/`)**:
+  - `global_rgb_overview.png` (2000 × 2000)
+  - `global_idmap_overview.png` (2000 × 2000)
+  - `global_alpha_overview.png` (2000 × 2000, displaying valid survey coverage vs NoData sea)
+  - `decoded_mask_grass.png` (2000 × 2000, exported from Pegasus decoder)
+  - `decoded_mask_grass_2.png` (2000 × 2000, exported from Pegasus decoder)
+  - `decoded_mask_sand.png` (2000 × 2000, exported from Pegasus decoder)
+  - `decoded_mask_cliffs.png` (2000 × 2000, exported from Pegasus decoder)
+  - `decoded_mask_scree.png` (2000 × 2000, exported from Pegasus decoder)
+  - `closeup_former_north_seam.png` (2048 × 1024 native 0.5 m crop at Z=3144.25 with dashed former boundary guide)
+  - `closeup_former_south_seam.png` (2048 × 1024 native 0.5 m crop at Z=-1769.75 with dashed former boundary guide)
+  - `closeup_former_west_seam.png` (2048 × 1024 native 0.5 m crop at X=-1771.25 with dashed former boundary guide)
+  - `closeup_former_east_seam.png` (2048 × 1024 native 0.5 m crop at X=1805.25 with dashed former boundary guide)
+  - `closeup_former_nw_corner.png` (2048 × 1024 native 0.5 m crop at X=-1771.25, Z=3144.25)
+  - `closeup_former_ne_corner.png` (2048 × 1024 native 0.5 m crop at X=1805.25, Z=3144.25)
+  - `closeup_former_sw_corner.png` (2048 × 1024 native 0.5 m crop at X=-1771.25, Z=-1769.75)
+  - `closeup_former_se_corner.png` (2048 × 1024 native 0.5 m crop at X=1805.25, Z=-1769.75)
+  - `closeup_puig_major_peak.png` (2048 × 1024 native 0.5 m crop at X=-1283.8, Z=3495.2)
+  - `closeup_sa_calobra_cove.png` (2048 × 1024 native 0.5 m crop at X=470.0, Z=-1060.0)
+  - `closeup_scree_occurrence.png` (1536 × 512 native 3-panel: input scree mask, shaded RGB, and decoded scree class)
 
 ## UE Remote material handoff and recovery — 2026-10-18–19
 

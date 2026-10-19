@@ -83,10 +83,10 @@ def linear_ramp(points, vals):
 # ==============================================================================
 # STAGE 1: BASE TERRAIN & VALIDITY
 # ==============================================================================
-def stage1_base():
+def stage1_base(force: bool = False):
     print("=== [STAGE 1] BUILDING UNIFIED BASE TERRAIN & VALIDITY ===", flush=True)
     out_file = WORK_DIR / "stage1_base.bgeo.sc"
-    if out_file.exists():
+    if out_file.exists() and not force:
         print(f"Stage 1 cache already exists: {out_file}, skipping cook.", flush=True)
         return
 
@@ -173,10 +173,10 @@ def stage1_base():
 # ==============================================================================
 # STAGE 2: PROCEDURAL MASKS (Grass, Sand, Cliff, Tint Ramp)
 # ==============================================================================
-def stage2_masks():
+def stage2_masks(force: bool = False):
     print("=== [STAGE 2] COMPUTING PROCEDURAL MASKS ===", flush=True)
     out_file = WORK_DIR / "stage2_masks.bgeo.sc"
-    if out_file.exists():
+    if out_file.exists() and not force:
         print(f"Stage 2 cache already exists: {out_file}, skipping cook.", flush=True)
         return
 
@@ -310,10 +310,10 @@ def stage2_masks():
 # ==============================================================================
 # STAGE 3: SCREE MASKS (Slump + Pockets + Transport)
 # ==============================================================================
-def stage3_scree():
+def stage3_scree(force: bool = False):
     print("=== [STAGE 3] COMPUTING SCREE SLUMP & TRANSPORT ===", flush=True)
     out_file = WORK_DIR / "stage3_scree.bgeo.sc"
-    if out_file.exists():
+    if out_file.exists() and not force:
         print(f"Stage 3 cache already exists: {out_file}, skipping cook.", flush=True)
         return
 
@@ -321,8 +321,8 @@ def stage3_scree():
     t0 = time.time()
     g = hou.node("/obj").createNode("geo", "BUILD_STAGE3")
 
-    base = g.createNode("file", "LOAD_BASE")
-    base.parm("file").set(str(WORK_DIR / "stage1_base.bgeo.sc"))
+    base = g.createNode("file", "LOAD_L04_MATERIAL")
+    base.parm("file").set(str(WORK_DIR / "stage4c_cliff.bgeo.sc"))
 
     # 1. Slump source (slope 35-90 deg)
     s_src = g.createNode("heightfield_maskbyfeature", "SCREE_SOURCE_SLOPE")
@@ -602,10 +602,10 @@ def stage4c_cliff():
     print(f"=== [STAGE 4c COMPLETE in {time.time() - t0:.1f}s] ===", flush=True)
 
 
-def stage4d_scree():
+def stage4d_scree(force: bool = False):
     print("=== [STAGE 4d] APPLYING SCREE MATERIAL, TINTS & COMPILING PRE-ID CACHE ===", flush=True)
     out_file = WORK_DIR / "pre_id_cache.bgeo.sc"
-    if out_file.exists():
+    if out_file.exists() and not force:
         print(f"Pre-ID cache already exists: {out_file}, skipping.", flush=True)
         return
 
@@ -616,9 +616,6 @@ def stage4d_scree():
     prev = g.createNode("file", "LOAD_PREV")
     prev.parm("file").set(str(WORK_DIR / "stage4c_cliff.bgeo.sc"))
 
-    base = g.createNode("file", "LOAD_BASE")
-    base.parm("file").set(str(WORK_DIR / "stage1_base.bgeo.sc"))
-
     masks = g.createNode("file", "LOAD_MASKS")
     masks.parm("file").set(str(WORK_DIR / "stage2_masks.bgeo.sc"))
 
@@ -628,7 +625,7 @@ def stage4d_scree():
     # Scree mask
     bl_scree = g.createNode("blast", "BLAST_SCREE")
     bl_scree.setInput(0, scree)
-    bl_scree.setParms({"group": "@name=scree_mask", "negate": 1})
+    bl_scree.setParms({"group": '@name="scree_mask"', "negate": 1})
     cl_scree = g.createNode("heightfield_copylayer", "COPY_SCREE")
     cl_scree.setInput(0, bl_scree)
     cl_scree.setParms({"srcname1": "scree_mask", "dstname1": "mask"})
@@ -636,7 +633,7 @@ def stage4d_scree():
     # Cliff mask for tint
     bl_cliff = g.createNode("blast", "BLAST_CLIFF")
     bl_cliff.setInput(0, masks)
-    bl_cliff.setParms({"group": "@name=cliff_mask", "negate": 1})
+    bl_cliff.setParms({"group": '@name="cliff_mask"', "negate": 1})
     cl_cliff = g.createNode("heightfield_copylayer", "COPY_CLIFF")
     cl_cliff.setInput(0, bl_cliff)
     cl_cliff.setParms({"srcname1": "cliff_mask", "dstname1": "mask"})
@@ -670,9 +667,9 @@ def stage4d_scree():
     t_scree.setParms({"strength": 0.2, "use_ramp": 0, "srcname1": "mask", "ramp_mask": "mask"})
     t_scree.parmTuple("tint").set((1.0, 0.98, 0.95))
 
-    # 4. Exposure Tint
+    # 4. Exposure Tint (computed on lesson 04 post-material height)
     m_exp = g.createNode("heightfield_maskbyfeature", "BROAD_EXPOSURE")
-    m_exp.setInput(0, base)
+    m_exp.setInput(0, prev)
     m_exp.setParms({"maskbyslope": 0, "maskbyheight": 0, "maskbyocclusion": 1, "viewdistance": 25.0})
 
     t_exp = g.createNode("PE_heightfield_tint::1.0", "EXPOSURE_TINT")
@@ -681,9 +678,9 @@ def stage4d_scree():
     t_exp.setParms({"strength": 0.2, "use_ramp": 1, "srcname1": "mask", "ramp_mask": ""})
     t_exp.parm("tint_ramp").set(linear_ramp([0.0, 0.5, 1.0], [(1.0, 1.0, 1.0), (0.93, 0.95, 0.92), (1.0, 1.0, 1.0)]))
 
-    # 5. Curvature Tint
+    # 5. Curvature Tint (computed on lesson 04 post-material height)
     m_curv = g.createNode("heightfield_maskbyfeature", "CURVATURE_MASK")
-    m_curv.setInput(0, base)
+    m_curv.setInput(0, prev)
     m_curv.setParms({"maskbyslope": 0, "maskbyheight": 0, "maskbyocclusion": 0, "maskbycurvature": 1})
     m_curv.parm("computercurvature").pressButton()
 
@@ -742,20 +739,24 @@ def stage4d_scree():
     print(f"=== [STAGE 4 COMPLETE in {receipt['seconds']:.1f}s] ===", flush=True)
 
 
-def stage4_materials_and_tints():
+def stage4_materials_and_tints(force: bool = False):
     stage4a_grass()
     stage4b_sand()
     stage4c_cliff()
-    stage4d_scree()
+    stage3_scree(force=force)
+    stage4d_scree(force=force)
 
 
 # ==============================================================================
 # STAGE 5: LESSON 06 IDMAP GENERATION & HIP CHECKPOINT
 # ==============================================================================
-def stage5_idmap():
+def stage5_idmap(force: bool = False):
     print("=== [STAGE 5] GENERATING LESSON 06 UNIFIED IDMAP ===", flush=True)
     out_file = WORK_DIR / "final_unified_idmap.bgeo.sc"
     checkpoint_hip = WORLD_DIR / "SaCalobra_Pegasus_Lesson06_Unified_v001.hiplc"
+    if out_file.exists() and not force:
+        print(f"Final unified IDMap cache already exists: {out_file}, skipping cook.", flush=True)
+        return
 
     install_hdas()
     t0 = time.time()
@@ -769,10 +770,10 @@ def stage5_idmap():
     def extract_id_mask(layer_name, node_name):
         bl = g.createNode("blast", node_name)
         bl.setInput(0, pre_cache)
-        bl.setParms({"group": f"@name={layer_name}", "negate": 1})
+        bl.setParms({"group": f'@name="{layer_name}"', "negate": 1})
         cl = g.createNode("heightfield_copylayer", f"COPY_{node_name}")
         cl.setInput(0, bl)
-        cl.setParms({"srcname1": layer_name, "dstname1": "mask"})
+        cl.setParms({"srcname1": f'"{layer_name}"', "dstname1": "mask"})
         n = g.createNode("null", f"OUT_MASK_{node_name}")
         n.setInput(0, cl)
         return n
@@ -815,6 +816,27 @@ def stage5_idmap():
     l_sand = make_layer(l_grass2, m_sand, 2, "sand")
     l_cliffs = make_layer(l_sand, m_cliffs, 3, "cliffs")
     l_scree = make_layer(l_cliffs, m_scree, 4, "scree")
+
+    # Explicit validation of GRASS_2 selector and mask
+    blast_grass2 = g.node("GRASS_2")
+    blast_grass2.cook(force=True)
+    b_prims = [p.attribValue("name") for p in blast_grass2.geometry().prims() if isinstance(p, hou.Volume)]
+    print(f"Primitives remaining after GRASS_2 blast: {b_prims}", flush=True)
+    assert b_prims == ["grass 2"], f"GRASS_2 blast failed to isolate 'grass 2'! Found: {b_prims}"
+
+    copy_grass2 = g.node("COPY_GRASS_2")
+    copy_grass2.cook(force=True)
+    cg_geo = copy_grass2.geometry()
+    cg_vox = vol_layer(cg_geo, "mask")[0]
+    src_vox = vol_layer(pre_cache.geometry(), "grass 2")[0]
+    cg_res = list(vol_layer(cg_geo, "mask")[1].resolution())
+    src_res = list(vol_layer(pre_cache.geometry(), "grass 2")[1].resolution())
+    assert cg_res == src_res, f"Resolution mismatch between COPY_GRASS_2 and source: {cg_res} vs {src_res}"
+
+    diff_g2 = float(np.max(np.abs(cg_vox - src_vox)))
+    mismatches_g2 = int(np.count_nonzero(cg_vox != src_vox))
+    print(f"COPY_GRASS_2 sample-by-sample check vs source 'grass 2': max_diff={diff_g2:.8f}, mismatches={mismatches_g2}", flush=True)
+    assert diff_g2 == 0.0 and mismatches_g2 == 0, f"COPY_GRASS_2 does not match source 'grass 2' layer! diff={diff_g2}, mismatches={mismatches_g2}"
 
     print("Cooking Final Layers-to-ID...", flush=True)
     l_scree.cook(force=True)
@@ -865,7 +887,8 @@ def stage5_idmap():
 # ==============================================================================
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--stage", choices=["base", "masks", "scree", "materials", "4a", "4b", "4c", "4d", "idmap", "all"], default="all")
+    ap.add_argument("--stage", choices=["base", "masks", "4a", "4b", "4c", "scree", "4d", "materials", "idmap", "all"], default="all")
+    ap.add_argument("--force", action="store_true", help="Force recooking even if stage cache exists")
     args = ap.parse_args()
 
     print(f"Houdini Version: {hou.applicationVersionString()}", flush=True)
@@ -873,23 +896,23 @@ def main():
     print(f"Work Dir: {WORK_DIR}", flush=True)
 
     if args.stage in ["base", "all"]:
-        stage1_base()
+        stage1_base(force=args.force)
     if args.stage in ["masks", "all"]:
-        stage2_masks()
-    if args.stage in ["scree", "all"]:
-        stage3_scree()
-    if args.stage in ["4a"]:
+        stage2_masks(force=args.force)
+    if args.stage in ["4a", "all"]:
         stage4a_grass()
-    if args.stage in ["4b"]:
+    if args.stage in ["4b", "all"]:
         stage4b_sand()
-    if args.stage in ["4c"]:
+    if args.stage in ["4c", "all"]:
         stage4c_cliff()
-    if args.stage in ["4d"]:
-        stage4d_scree()
-    if args.stage in ["materials", "all"]:
-        stage4_materials_and_tints()
+    if args.stage in ["scree", "all"]:
+        stage3_scree(force=args.force)
+    if args.stage in ["4d", "all"]:
+        stage4d_scree(force=args.force)
+    if args.stage in ["materials"]:
+        stage4_materials_and_tints(force=args.force)
     if args.stage in ["idmap", "all"]:
-        stage5_idmap()
+        stage5_idmap(force=args.force)
 
     print("ALL REQUESTED STAGES COMPLETED.", flush=True)
 
