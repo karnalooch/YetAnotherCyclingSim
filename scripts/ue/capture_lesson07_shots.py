@@ -19,38 +19,38 @@ MAP_PATH = "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07"
 SHOTS = [
     {
         "name": "ue_panorama_material.png",
-        "cam": unreal.Vector(-95000.0, -260000.0, 180000.0),
-        "target": unreal.Vector(0.0, 74000.0, 40000.0),
-        "fov": 80.0,
+        "cam": unreal.Vector(-450000.0, -450000.0, 350000.0),
+        "target": unreal.Vector(0.0, 0.0, 50000.0),
+        "fov": 85.0,
         "note": "Full terrain panorama with Pegasus master material, global color and PBR lighting"
     },
     {
         "name": "ue_closeup_puig_major.png",
-        "cam": unreal.Vector(111255.0, 19592.0, 75709.0),
-        "target": unreal.Vector(126255.0, 39592.0, 67709.0),
-        "fov": 65.0,
+        "cam": unreal.Vector(-278375.0, 199525.0, 180000.0),
+        "target": unreal.Vector(-128375.0, 349525.0, 143716.0),
+        "fov": 60.0,
         "note": "Closeup Puig Major summit ridge showing rock/cliffs surface and global tint"
     },
     {
         "name": "ue_closeup_sa_calobra_cove.png",
-        "cam": unreal.Vector(-87000.0, -61000.0, 28150.0),
-        "target": unreal.Vector(-95000.0, -53000.0, 24150.0),
+        "cam": unreal.Vector(-20000.0, -160000.0, 35000.0),
+        "target": unreal.Vector(47000.0, -106000.0, 1034.0),
         "fov": 65.0,
         "note": "Closeup Sa Calobra cove coastal sand and rock contact zone"
     },
     {
-        "name": "ue_closeup_transition.png",
-        "cam": unreal.Vector(51912.0, 46090.0, 49766.0),
-        "target": unreal.Vector(56912.0, 53090.0, 46766.0),
-        "fov": 60.0,
-        "note": "Closeup transition showing detail textures blending with global color"
-    },
-    {
         "name": "ue_closeup_scree.png",
-        "cam": unreal.Vector(173275.0, 109825.0, 36285.0),
-        "target": unreal.Vector(172075.0, 111625.0, 34785.0),
+        "cam": unreal.Vector(187925.0, -3775.0, 35000.0),
+        "target": unreal.Vector(217925.0, 26225.0, 21712.0),
         "fov": 60.0,
         "note": "Closeup Scree occurrence showing normal map response and roughness under sunlight"
+    },
+    {
+        "name": "ue_closeup_transition.png",
+        "cam": unreal.Vector(-100000.0, -130000.0, 28000.0),
+        "target": unreal.Vector(-50000.0, -80000.0, 8000.0),
+        "fov": 65.0,
+        "note": "Closeup transition showing detail textures blending with global color"
     }
 ]
 

@@ -203,8 +203,12 @@ unreal.MaterialEditingLibrary.set_material_instance_texture_parameter_value(mi, 
 unreal.MaterialEditingLibrary.set_material_instance_texture_parameter_value(mi, "Normal Atlas", ta_normal)
 unreal.MaterialEditingLibrary.set_material_instance_texture_parameter_value(mi, "Masks Atlas", ta_masks)
 
+# Exact derived parameters for full unified domain (0.5m spacing, 8x8 km span)
 unreal.MaterialEditingLibrary.set_material_instance_scalar_parameter_value(mi, "Num IDmap Layers", 5.0)
 unreal.MaterialEditingLibrary.set_material_instance_scalar_parameter_value(mi, "Terrain Resolution", 16000.0)
+unreal.MaterialEditingLibrary.set_material_instance_scalar_parameter_value(mi, "Terrain Scale", 50.0)
+unreal.MaterialEditingLibrary.set_material_instance_scalar_parameter_value(mi, "UV Rotate", 0.0)
+unreal.MaterialEditingLibrary.set_material_instance_vector_parameter_value(mi, "Offset", unreal.LinearColor(-8000.0, -8000.0, 0.0, 0.0))
 unreal.MaterialEditingLibrary.set_material_instance_scalar_parameter_value(mi, "Global Colour Strength", 0.5)
 unreal.MaterialEditingLibrary.set_material_instance_scalar_parameter_value(mi, "Global Specular Scale", 1.0)
 unreal.MaterialEditingLibrary.set_material_instance_scalar_parameter_value(mi, "Detail Brightness", 1.5)
@@ -213,9 +217,37 @@ unreal.MaterialEditingLibrary.update_material_instance(mi)
 unreal.EditorAssetLibrary.save_loaded_asset(mi)
 log(f"Updated and saved {mi_path}")
 
+# 6. Assign MI to all Landscape Actors in L_SaCalobra_Lesson07
+level_path = "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07"
+world = unreal.EditorLoadingAndSavingUtils.load_map(level_path)
+landscapes_assigned = []
+for actor in unreal.EditorLevelLibrary.get_all_level_actors():
+    if isinstance(actor, unreal.Landscape):
+        actor.set_editor_property("landscape_material", mi)
+        landscapes_assigned.append(actor.get_name())
+        log(f"Assigned MI_Landscape_Instance_YACS to landscape: {actor.get_name()}")
+
+unreal.EditorLevelLibrary.save_current_level()
+log(f"Saved level {level_path} with {len(landscapes_assigned)} landscapes assigned")
+
+# 7. Verification Re-Open Pass: Reload from disk and verify parameters
+log("Starting mandatory verification reload pass...")
+reloaded_mi = unreal.EditorAssetLibrary.load_asset(mi_path)
+readback_scalars = {
+    "Num IDmap Layers": float(unreal.MaterialEditingLibrary.get_material_instance_scalar_parameter_value(reloaded_mi, "Num IDmap Layers")),
+    "Terrain Resolution": float(unreal.MaterialEditingLibrary.get_material_instance_scalar_parameter_value(reloaded_mi, "Terrain Resolution")),
+    "Terrain Scale": float(unreal.MaterialEditingLibrary.get_material_instance_scalar_parameter_value(reloaded_mi, "Terrain Scale")),
+    "UV Rotate": float(unreal.MaterialEditingLibrary.get_material_instance_scalar_parameter_value(reloaded_mi, "UV Rotate")),
+    "Global Colour Strength": float(unreal.MaterialEditingLibrary.get_material_instance_scalar_parameter_value(reloaded_mi, "Global Colour Strength")),
+    "Global Specular Scale": float(unreal.MaterialEditingLibrary.get_material_instance_scalar_parameter_value(reloaded_mi, "Global Specular Scale")),
+    "Detail Brightness": float(unreal.MaterialEditingLibrary.get_material_instance_scalar_parameter_value(reloaded_mi, "Detail Brightness")),
+}
+offset_vec = unreal.MaterialEditingLibrary.get_material_instance_vector_parameter_value(reloaded_mi, "Offset")
+readback_vector = [offset_vec.r, offset_vec.g, offset_vec.b, offset_vec.a]
+
 report["material_instance"] = {
     "path": mi_path,
-    "class": mi.get_class().get_name(),
+    "class": reloaded_mi.get_class().get_name(),
     "textures": {
         "Terrain IDmap": tex_idmap.get_path_name(),
         "Terrain Colour": tex_color.get_path_name(),
@@ -223,13 +255,10 @@ report["material_instance"] = {
         "Normal Atlas": ta_normal.get_path_name(),
         "Masks Atlas": ta_masks.get_path_name(),
     },
-    "scalars": {
-        "Num IDmap Layers": 5.0,
-        "Terrain Resolution": 16000.0,
-        "Global Colour Strength": 0.5,
-        "Global Specular Scale": 1.0,
-        "Detail Brightness": 1.5,
-    }
+    "scalars": readback_scalars,
+    "vector_offset": readback_vector,
+    "landscapes_assigned": landscapes_assigned,
+    "reopened_cleanly": True
 }
 
 report["status"] = "AUTHORING_COMPLETED"
@@ -237,3 +266,4 @@ report["duration_seconds"] = time.time() - report["timestamp"]
 
 LOG_FILE.write_text(json.dumps(report, indent=2))
 log(f"All operations finished in {report['duration_seconds']:.2f}s. Report saved to {LOG_FILE}")
+

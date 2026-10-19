@@ -7,7 +7,7 @@ out_dir.mkdir(parents=True, exist_ok=True)
 
 tex_dir = Path("D:/yacs/project/worldgen/houdini/sa_calobra/inputs/textures")
 stage3g_dir = Path("D:/yacs/work/lesson07-unified-20261019/stage3g_exported")
-scree_dir = Path("D:/yacs/work/lesson05-material-forge-20261018/candidate-a/mediterranean_soil/limestone_scree_v1/export")
+scree_dir = Path("D:/yacs/work/lesson05-material-forge-20261018/run-a/mediterranean_soil/limestone_scree_v1/export")
 
 def load_rgba(p, target_size=(2048, 2048)):
     im = Image.open(p)
@@ -111,7 +111,13 @@ c4_col.save(out_dir / "slice_4_scree_colour.png")
 c4_norm = load_rgba(scree_dir / "YACS_Material_Normal_DX.png")
 c4_norm.save(out_dir / "slice_4_scree_normal.png")
 
-c4_masks = load_rgba(scree_dir / "YACS_Material_DetailMasks.png")
+# Assemble Pegasus masks according to original master contract:
+# R = Ambient Occlusion, G = Roughness, B = Displacement/Height, A = Ambient Occlusion / 255
+c4_orm = np.array(load_rgba(scree_dir / "YACS_Material_ORM.png"))
+c4_ao = c4_orm[:, :, 0]
+c4_rough = c4_orm[:, :, 1]
+c4_disp = np.array(load_l("D:/yacs/work/lesson07-unified-20261019/scree_height_test.png"))
+c4_masks = Image.fromarray(np.stack([c4_ao, c4_rough, c4_disp, c4_ao], axis=-1), mode="RGBA")
 c4_masks.save(out_dir / "slice_4_scree_masks.png")
 
 print("ALL 5 CLASSES ASSEMBLED SUCCESSFULLY!")

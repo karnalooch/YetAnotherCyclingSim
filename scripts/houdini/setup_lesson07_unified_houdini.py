@@ -53,6 +53,13 @@ def compute_lookat_rotations(pos: tuple[float, float, float], target: tuple[floa
 
 
 def create_or_update_cam(parent: hou.Node, name: str, pos: tuple[float, float, float], target: tuple[float, float, float], focal: float = 35.0, clip_far: float = 25000.0) -> hou.Node:
+    target_node = parent.node(f"{name}_target")
+    if not target_node:
+        target_node = parent.createNode("null", f"{name}_target")
+    target_node.parm("tx").set(target[0])
+    target_node.parm("ty").set(target[1])
+    target_node.parm("tz").set(target[2])
+
     cam = parent.node(name)
     if not cam:
         cam = parent.createNode("cam", name)
@@ -60,14 +67,21 @@ def create_or_update_cam(parent: hou.Node, name: str, pos: tuple[float, float, f
     cam.parm("ty").set(pos[1])
     cam.parm("tz").set(pos[2])
 
-    rx, ry, rz = compute_lookat_rotations(pos, target)
-    cam.parm("rx").set(rx)
-    cam.parm("ry").set(ry)
-    cam.parm("rz").set(rz)
-
+    # Use native Houdini look-at target
+    cam.parm("lookatpath").set(target_node.path())
     cam.parm("focal").set(focal)
     cam.parm("far").set(clip_far)
     cam.parm("near").set(1.0)
+
+    # Verify camera local -Z direction vector points directly at target
+    wt = cam.worldTransform()
+    rot = wt.extractRotationMatrix3()
+    vec_neg_z = hou.Vector3(0, 0, -1) * rot
+    aim = (hou.Vector3(target) - hou.Vector3(pos)).normalized()
+    dot = float(vec_neg_z.dot(aim))
+    print(f"  Camera {name}: local -Z alignment dot={dot:.8f}", flush=True)
+    assert dot > 0.999, f"Camera {name} local -Z not aligned to target (dot={dot})"
+
     return cam
 
 
@@ -102,87 +116,126 @@ def main():
     # -------------------------------------------------------------
     print("Setting up 4 Preview modes...", flush=True)
 
+    # Responsive Preview Resample node for fluid interactive 60 FPS viewport navigation
+    # Resamples 16000x16000 (0.5m) to 2000x2000 (4.0m) preserving all 14 heightfield volume layers
+    prev_resample = net.node("PREVIEW_RESAMPLE")
+    if not prev_resample:
+        prev_resample = net.createNode("heightfield_resample", "PREVIEW_RESAMPLE")
+    prev_resample.setInput(0, final_cache_node)
+    prev_resample.parm("divisionmode").set(0)  # By scale
+    prev_resample.parm("resscale").set(0.125)  # 2000x2000
+    prev_resample.setColor(hou.Color((0.3, 0.5, 0.8)))
+
     # Mode 1: PREVIEW_GLOBAL_COLOR
     # Native 3D terrain with global RGB volumes.
-    # We clean any overriding shop_materialpath attribute or visualizer tint
     prev_color = net.node("PREVIEW_GLOBAL_COLOR")
     if not prev_color:
         prev_color = net.createNode("null", "PREVIEW_GLOBAL_COLOR")
-    prev_color.setInput(0, final_cache_node)
+    prev_color.setInput(0, prev_resample)
     prev_color.setColor(hou.Color((0.2, 0.7, 0.3)))
 
     # Mode 2: PREVIEW_NEUTRAL_SHADING
-    # Neutral geometry clay visualization
+    # Neutral geometry clay visualization via uniform RGB volume
     prev_neutral = net.node("PREVIEW_NEUTRAL_SHADING")
-    if not prev_neutral:
-        prev_neutral = net.createNode("heightfield_visualize", "PREVIEW_NEUTRAL_SHADING")
-    prev_neutral.setInput(0, final_cache_node)
-    prev_neutral.parm("updatetinting").set(1)
-    prev_neutral.parm("cdrampmode").set("clamp")
-    # Set ramp to uniform neutral grey
-    ramp_grey = hou.Ramp(
-        [hou.rampBasis.Linear, hou.rampBasis.Linear],
-        [0.0, 1.0],
-        [hou.Vector3(0.55, 0.55, 0.55), hou.Vector3(0.55, 0.55, 0.55)]
-    )
-    prev_neutral.parm("cdramp").set(ramp_grey)
-    prev_neutral.parm("updatematerial").set(0)
+    if not prev_neutral or prev_neutral.type().name() != "python":
+        if prev_neutral:
+            prev_neutral.destroy()
+        prev_neutral = net.createNode("python", "PREVIEW_NEUTRAL_SHADING")
+    prev_neutral.setInput(0, prev_resample)
+    code_neutral = """import numpy as np
+geo = hou.pwd().geometry()
+r_p = [p for p in geo.prims() if p.attribValue('name') == 'r'][0]
+g_p = [p for p in geo.prims() if p.attribValue('name') == 'g'][0]
+b_p = [p for p in geo.prims() if p.attribValue('name') == 'b'][0]
+n = r_p.resolution()[0] * r_p.resolution()[1]
+grey = tuple([0.55] * n)
+r_p.setAllVoxels(grey)
+g_p.setAllVoxels(grey)
+b_p.setAllVoxels(grey)
+"""
+    prev_neutral.parm("python").set(code_neutral)
     prev_neutral.setColor(hou.Color((0.6, 0.6, 0.6)))
 
     # Mode 3: PREVIEW_IDMAP
-    # Colorized 5-class IDMap visualization
+    # Colorized 5-class IDMap visualization via direct RGB volume mapping
     # grass: dark green, grass 2: yellow-green, sand: golden sand, cliffs: slate brown, scree: limestone grey/white
     prev_idmap = net.node("PREVIEW_IDMAP")
-    if not prev_idmap:
-        prev_idmap = net.createNode("heightfield_visualize", "PREVIEW_IDMAP")
-    prev_idmap.setInput(0, final_cache_node)
-    prev_idmap.parm("updatetinting").set(1)
-    prev_idmap.parm("cdvolume").set("id")
-    prev_idmap.parm("cdrangeoverride").set(1)
-    prev_idmap.parm("cdrange1").set(0.0)
-    prev_idmap.parm("cdrange2").set(1.0)
-    prev_idmap.parm("cdrampmode").set("clamp")
-    # 5 discrete class steps
-    ramp_id = hou.Ramp(
-        [hou.rampBasis.Constant, hou.rampBasis.Constant, hou.rampBasis.Constant, hou.rampBasis.Constant, hou.rampBasis.Constant],
-        [0.0, 64.0 / 255.0, 128.0 / 255.0, 191.0 / 255.0, 1.0],
-        [
-            hou.Vector3(64/255, 140/255, 38/255),    # grass (green)
-            hou.Vector3(217/255, 217/255, 38/255),  # grass 2 (olive/tundra)
-            hou.Vector3(230/255, 191/255, 115/255), # sand (golden)
-            hou.Vector3(102/255, 89/255, 77/255),   # cliffs (rock brown)
-            hou.Vector3(255/255, 255/255, 255/255)  # scree (white/limestone)
-        ]
-    )
-    prev_idmap.parm("cdramp").set(ramp_id)
-    prev_idmap.parm("updatematerial").set(0)
+    if not prev_idmap or prev_idmap.type().name() != "python":
+        if prev_idmap:
+            prev_idmap.destroy()
+        prev_idmap = net.createNode("python", "PREVIEW_IDMAP")
+    prev_idmap.setInput(0, prev_resample)
+    code_idmap = """import numpy as np
+geo = hou.pwd().geometry()
+id_p = [p for p in geo.prims() if p.attribValue('name') == 'id'][0]
+r_p = [p for p in geo.prims() if p.attribValue('name') == 'r'][0]
+g_p = [p for p in geo.prims() if p.attribValue('name') == 'g'][0]
+b_p = [p for p in geo.prims() if p.attribValue('name') == 'b'][0]
+
+id_arr = np.array(id_p.allVoxels())
+r = np.zeros_like(id_arr)
+g = np.zeros_like(id_arr)
+b = np.zeros_like(id_arr)
+
+m0 = id_arr <= 0.125
+r[m0] = 64/255.0; g[m0] = 140/255.0; b[m0] = 38/255.0
+
+m1 = (id_arr > 0.125) & (id_arr <= 0.375)
+r[m1] = 217/255.0; g[m1] = 217/255.0; b[m1] = 38/255.0
+
+m2 = (id_arr > 0.375) & (id_arr <= 0.625)
+r[m2] = 230/255.0; g[m2] = 191/255.0; b[m2] = 115/255.0
+
+m3 = (id_arr > 0.625) & (id_arr <= 0.875)
+r[m3] = 102/255.0; g[m3] = 89/255.0; b[m3] = 77/255.0
+
+m4 = id_arr > 0.875
+r[m4] = 1.0; g[m4] = 1.0; b[m4] = 1.0
+
+r_p.setAllVoxels(tuple(r))
+g_p.setAllVoxels(tuple(g))
+b_p.setAllVoxels(tuple(b))
+"""
+    prev_idmap.parm("python").set(code_idmap)
     prev_idmap.setColor(hou.Color((0.9, 0.6, 0.2)))
 
     # Mode 4: PREVIEW_CLASS_ISOLATION
-    # Uses existing PE_Heightfield_id_to_layer node
+    # Uses existing PE_Heightfield_id_to_layer node to extract scree to mask
     id_to_layer = net.node("ID_TO_LAYER")
     if not id_to_layer:
         id_to_layer = net.createNode("PE_Heightfield_id_to_layer", "ID_TO_LAYER")
-    id_to_layer.setInput(0, final_cache_node)
+    id_to_layer.setInput(0, prev_resample)
     id_to_layer.parm("srcname1").set("id")
     id_to_layer.parm("dstname1").set("mask")
 
     prev_iso = net.node("PREVIEW_CLASS_ISOLATION")
-    if not prev_iso:
-        prev_iso = net.createNode("heightfield_visualize", "PREVIEW_CLASS_ISOLATION")
+    if not prev_iso or prev_iso.type().name() != "python":
+        if prev_iso:
+            prev_iso.destroy()
+        prev_iso = net.createNode("python", "PREVIEW_CLASS_ISOLATION")
     prev_iso.setInput(0, id_to_layer)
-    prev_iso.parm("updatetinting").set(1)
-    prev_iso.parm("cdvolume").set("mask")
-    prev_iso.parm("cdrangeoverride").set(1)
-    prev_iso.parm("cdrange1").set(0.0)
-    prev_iso.parm("cdrange2").set(1.0)
-    prev_iso.parm("cdrampmode").set("clamp")
-    ramp_iso = hou.Ramp(
-        [hou.rampBasis.Linear, hou.rampBasis.Linear],
-        [0.0, 1.0],
-        [hou.Vector3(0.05, 0.05, 0.05), hou.Vector3(0.95, 0.1, 0.1)] # Dark to vivid red
-    )
-    prev_iso.parm("cdramp").set(ramp_iso)
+    code_iso = """import numpy as np
+geo = hou.pwd().geometry()
+mask_p = [p for p in geo.prims() if p.attribValue('name') == 'mask'][0]
+r_p = [p for p in geo.prims() if p.attribValue('name') == 'r'][0]
+g_p = [p for p in geo.prims() if p.attribValue('name') == 'g'][0]
+b_p = [p for p in geo.prims() if p.attribValue('name') == 'b'][0]
+
+m_arr = np.array(mask_p.allVoxels())
+r = np.full_like(m_arr, 0.2)
+g = np.full_like(m_arr, 0.2)
+b = np.full_like(m_arr, 0.2)
+
+iso = m_arr > 0.05
+r[iso] = 0.95
+g[iso] = 0.10
+b[iso] = 0.10
+
+r_p.setAllVoxels(tuple(r))
+g_p.setAllVoxels(tuple(g))
+b_p.setAllVoxels(tuple(b))
+"""
+    prev_iso.parm("python").set(code_iso)
     prev_iso.setColor(hou.Color((0.8, 0.2, 0.2)))
 
     # Set default display and selection flag to Mode 1 (PREVIEW_GLOBAL_COLOR)

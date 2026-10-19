@@ -7,7 +7,10 @@ def main():
     engine_bin = Path("D:/yacs/engine/UE_5.8/Engine/Binaries/Win64")
     editor_exe = engine_bin / "UnrealEditor.exe"
     project = Path("D:/yacs/project/YetAnotherCyclingSim.uproject").resolve()
-    script = Path("D:/yacs/project/scripts/ue/capture_lesson07_shots.py").resolve()
+    if len(sys.argv) > 1:
+        script = Path(sys.argv[1]).resolve()
+    else:
+        script = Path("D:/yacs/project/scripts/ue/capture_lesson07_shots.py").resolve()
     
     toolset_bin = Path("D:/yacs/engine/UE_5.8/Engine/Plugins/Experimental/ToolsetRegistry/Binaries/Win64")
     sandbox_bin = Path("D:/yacs/engine/UE_5.8/Engine/Plugins/Developer/Sandbox/FileSandbox/Binaries/Win64")
