@@ -9,16 +9,34 @@ Base revision: `7833e8bd8e5bfa19a183905335d2ba25b2c22969`.
 The entire Sa Calobra landscape (8000 m × 8000 m) is fully unified into a single, continuous, high-fidelity domain at 0.5 m native grid spacing (16,000 × 16,000 cells = 256,000,000 samples). The historical Working vs Context boundary split has been completely eliminated, definitively solving the seam, band, streak, and blur artifacts without 2D image post-processing hacks.
 
 ### Key Metrics and Receipts
-- **Domain**: Bounds `[-4000, +4000]` m in X and Z, Origin `[-3999.75, 0.0, 3999.75]`, Resolution `[16000, 16000, 1]`, Spacing `0.5 m`.
-- **Relief & Procedural Displacement (Invariant A)**:
-  - Source DTM elevation range `[-1.30, 1437.16]` m, Mean `418.99 m`.
-  - Procedural displacement (Base -> Pre-ID): Range `[-0.3578, +0.5333]` m, Mean `+0.0104 m`, Std `0.0556 m`, p50 `0.0000 m`, p95 `0.1434 m`, p99 `0.2060 m`, modified cells `127,031,426` (49.62%).
-  - Authentic landmark preservation:
-    - Puig Major summit preserved at `X = -1283.75 m, Z = 3495.25 m`, peak elevation `1437.16 m` bit-exact from raw source DTM.
-    - Sa Calobra cove sea-level beach preserved at `X = 470.0 m, Z = -1060.0 m`, elevation `10.34 m`.
-  - Alpha integrity: `249,818,980` valid land samples (97.59%), bit-exact match vs base validity raster (0 mismatches).
-- **Pre-ID vs Post-ID Identity (Invariant B)**: `height`, `r`, `g`, `b`, and `Alpha` layers are 100% bit-identical between Pre-ID cache and final IDMap (`max_diff = 0.00000000`).
+- **Domain**: Bounds `[-4000, +4000]` m in X and Z, Origin `[-3999.75, 0.0, 3999.75]`, Resolution `[16000, 16000, 1]`, Spacing `0.5 m`, Total Cells `256,000,000`.
+- **Source DTM Verification (TIFF -> Base Geometry)**:
+  - Source DTM: `dtm_height_float32.tif` (SHA-256: `2ba280dd59da8df89620deb3b1e0ca6b8d0e7eafc0e13a7a96e35df6a6e5a0dd`)
+  - Source Validity: `dtm_validity.tif` (SHA-256: `96acc1b90fdf926ee4ada618a66c82406d312f613b84f5453a363fa08b10f35c`)
+  - Base Cache: `stage1_base.bgeo.sc` (SHA-256: `08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952`)
+  - Coordinate & Geometric Mapping: Raster row $r \in [0, 15999]$, col $c \in [0, 15999]$ maps to Houdini Heightfield voxel $x = c, y = 15999 - r$ (since Houdini Heightfield UV origin $y=0$ is at the southern bottom, while raster scanline row 0 is at the northern top). World coordinates: $X = -3999.75 + x \times 0.5$ m, $Z = 3999.75 - y \times 0.5$ m.
+  - Bounded-Memory Block Comparison: All 256,000,000 cells compared block-by-block (1024 rows / chunk):
+    - Height mismatches: 0 (`max_diff = 0.00000000 m`).
+    - Validity / Alpha mismatches: 0 (`validity == 0` offshore sea maps to `Alpha == 0.0` and `height == 0.0`; `validity == 1` valid land maps to `Alpha > 0`).
+  - Raw Source DTM Elevation:
+    - Valid land domain (`249,818,980` voxels = 97.59%): Range `[-1.30, 1437.16]` m, Mean `429.35 m`, Std `358.35 m`.
+    - All voxels including NoData sea (`6,181,020` voxels = 2.41%): Range `[-1.30, 1437.16]` m, Mean `418.98 m`.
+- **Base Terrain Elevation (Stage 1 Base)**:
+  - Elevation range `[-1.30, 1437.16]` m, Mean `418.98 m`.
+- **Final IDMap Terrain Elevation (Stage 5 Post-ID)**:
+  - Elevation range `[-1.30, 1437.16]` m, Mean `418.99 m`.
+- **Procedural Displacement (Base -> Pre-ID / IDMap)**:
+  - Range `[-0.3578, +0.5333]` m, Mean `+0.0104 m`, Std `0.0556 m`, p50 `0.0000 m`, p95 `0.1434 m`, p99 `0.2060 m`, modified cells `127,031,426` (49.62%).
+  - *Note on Interpretation*: Procedural displacement reflects intentional material and slump displacements from the Pegasus workflow (Lesson 04 material displacement and Lesson 05 scree slump & transport), and is **NOT** a DTM reproduction error.
+- **Authentic Landmark Preservation**:
+  - Puig Major summit preserved at `X = -1283.75 m, Z = 3495.25 m`, peak elevation `1437.16 m` bit-exact from raw source DTM.
+  - Sa Calobra cove sea-level beach preserved at `X = 470.0 m, Z = -1060.0 m`, elevation `10.34 m`.
+- **Alpha Integrity**:
+  - `249,818,980` valid land samples (97.59%), bit-exact match vs base validity raster (0 mismatches).
+- **Pre-ID vs Post-ID Identity (Invariant B)**:
+  - `height`, `r`, `g`, `b`, and `Alpha` layers are 100% bit-identical between Pre-ID cache and final IDMap (`max_diff = 0.00000000`).
 - **Decoder & Class Distribution (Invariant C)**:
+  - Finite validation: `np.isfinite(dec_arr).all()` strictly verified for all decoded classes (0 NaN, 0 Inf).
   - Strict ID validation: 0 NaN, 0 Inf, 0 unrecognized values.
   - Unit tests verified: illegal ID value (0.15) rejected and not classified as grass; spatially shifted mask with identical count correctly registers mismatches and fails.
   - Fresh hython reload of checkpoint HIP decoded all 5 Pegasus classes with 0 sample mismatches:
@@ -27,7 +45,10 @@ The entire Sa Calobra landscape (8000 m × 8000 m) is fully unified into a singl
     - `sand` (ID 2, Code 128, Float 0.5020): 18,624,143 voxels (7.28%)
     - `cliffs` (ID 3, Code 191, Float 0.7490): 77,735,227 voxels (30.37%)
     - `scree` (ID 4, Code 255, Float 1.0000): 781 voxels (0.0003%)
-- **Saved Caches & Checkpoint**:
+- **Saved Caches & Checkpoint Hashes**:
+  - Source DTM: `D:/yacs/work/sa-calobra-houdini-unreal-20261016/inputs/dtm_height_float32.tif` (SHA-256: `2ba280dd59da8df89620deb3b1e0ca6b8d0e7eafc0e13a7a96e35df6a6e5a0dd`)
+  - Source Validity: `D:/yacs/work/sa-calobra-houdini-unreal-20261016/inputs/dtm_validity.tif` (SHA-256: `96acc1b90fdf926ee4ada618a66c82406d312f613b84f5453a363fa08b10f35c`)
+  - Stage 1 Base Cache: `D:/yacs/work/lesson06-unified-20261019/stage1_base.bgeo.sc` (SHA-256: `08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952`)
   - Pre-ID Cache: `D:/yacs/work/lesson06-unified-20261019/pre_id_cache.bgeo.sc` (SHA-256: `b97969d87cc887bdea28b5f3e5b04ce7fc20e15f6cec682c1b46f21f4acda45e`)
   - Final IDMap Cache: `D:/yacs/work/lesson06-unified-20261019/final_unified_idmap.bgeo.sc` (SHA-256: `f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24`)
   - Checkpoint HIP: `worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson06_Unified_v001.hiplc` (SHA-256: `7701a844bd82d1496995866676a20ee069e9cac6e873889aca02a64be3ae2abb`)

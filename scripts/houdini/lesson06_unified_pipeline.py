@@ -440,10 +440,10 @@ def stage3_scree(force: bool = False):
 # ==============================================================================
 # STAGE 4: MATERIALS, TINTS & PRE-ID CACHE (STAGED FOR BOUNDED MEMORY)
 # ==============================================================================
-def stage4a_grass():
+def stage4a_grass(force: bool = False):
     print("=== [STAGE 4a] APPLYING GRASS MATERIAL ===", flush=True)
     out_file = WORK_DIR / "stage4a_grass.bgeo.sc"
-    if out_file.exists():
+    if out_file.exists() and not force:
         print(f"Stage 4a cache already exists: {out_file}, skipping.", flush=True)
         return
 
@@ -491,10 +491,10 @@ def stage4a_grass():
     print(f"=== [STAGE 4a COMPLETE in {time.time() - t0:.1f}s] ===", flush=True)
 
 
-def stage4b_sand():
+def stage4b_sand(force: bool = False):
     print("=== [STAGE 4b] APPLYING SAND MATERIAL & TINT RAMP ===", flush=True)
     out_file = WORK_DIR / "stage4b_sand.bgeo.sc"
-    if out_file.exists():
+    if out_file.exists() and not force:
         print(f"Stage 4b cache already exists: {out_file}, skipping.", flush=True)
         return
 
@@ -557,10 +557,10 @@ def stage4b_sand():
     print(f"=== [STAGE 4b COMPLETE in {time.time() - t0:.1f}s] ===", flush=True)
 
 
-def stage4c_cliff():
+def stage4c_cliff(force: bool = False):
     print("=== [STAGE 4c] APPLYING CLIFF MATERIAL ===", flush=True)
     out_file = WORK_DIR / "stage4c_cliff.bgeo.sc"
-    if out_file.exists():
+    if out_file.exists() and not force:
         print(f"Stage 4c cache already exists: {out_file}, skipping.", flush=True)
         return
 
@@ -740,9 +740,9 @@ def stage4d_scree(force: bool = False):
 
 
 def stage4_materials_and_tints(force: bool = False):
-    stage4a_grass()
-    stage4b_sand()
-    stage4c_cliff()
+    stage4a_grass(force=force)
+    stage4b_sand(force=force)
+    stage4c_cliff(force=force)
     stage3_scree(force=force)
     stage4d_scree(force=force)
 
@@ -900,11 +900,11 @@ def main():
     if args.stage in ["masks", "all"]:
         stage2_masks(force=args.force)
     if args.stage in ["4a", "all"]:
-        stage4a_grass()
+        stage4a_grass(force=args.force)
     if args.stage in ["4b", "all"]:
-        stage4b_sand()
+        stage4b_sand(force=args.force)
     if args.stage in ["4c", "all"]:
-        stage4c_cliff()
+        stage4c_cliff(force=args.force)
     if args.stage in ["scree", "all"]:
         stage3_scree(force=args.force)
     if args.stage in ["4d", "all"]:

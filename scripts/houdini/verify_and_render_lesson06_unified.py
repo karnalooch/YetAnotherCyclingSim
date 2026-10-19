@@ -164,6 +164,141 @@ def draw_dashed_guide(img: np.ndarray, orientation: str, pos: int, color=(1.0, 0
                     img[y, max(0, pos - 1):min(w, pos + 2)] = color
 
 
+def verify_source_dtm_to_base(base_geo: hou.Geometry) -> dict:
+    print("\n--- Source DTM to Base Terrain Verification ---", flush=True)
+    assert DTM_FILE.exists(), f"Source DTM missing: {DTM_FILE}"
+    assert VAL_FILE.exists(), f"Source Validity missing: {VAL_FILE}"
+
+    t0 = time.time()
+    dtm_sha = digest(DTM_FILE)
+    val_sha = digest(VAL_FILE)
+    base_cache_file = WORK_DIR / "stage1_base.bgeo.sc"
+    base_sha = digest(base_cache_file)
+
+    p_h = vol_prim(base_geo, "height")
+    p_a = vol_prim(base_geo, "Alpha")
+    base_h = np.frombuffer(p_h.allVoxelsAsString(), np.float32).reshape(16000, 16000)
+    base_a = np.frombuffer(p_a.allVoxelsAsString(), np.float32).reshape(16000, 16000)
+
+    inp_d = oi.ImageInput.open(str(DTM_FILE))
+    spec_d = inp_d.spec()
+    assert spec_d.width == 16000 and spec_d.height == 16000, f"Unexpected DTM spec: {spec_d.width}x{spec_d.height}"
+
+    inp_v = oi.ImageInput.open(str(VAL_FILE))
+    spec_v = inp_v.spec()
+    assert spec_v.width == 16000 and spec_v.height == 16000, f"Unexpected Validity spec: {spec_v.width}x{spec_v.height}"
+
+    # Verify block-by-block with bounded memory (1024 rows per block = 32 MB per chunk)
+    chunk_rows = 1024
+    total_samples = 0
+    height_mismatches = 0
+    height_max_diff = 0.0
+    val_mismatches = 0
+    nodata_samples = 0
+    valid_samples = 0
+
+    valid_min = float("inf")
+    valid_max = float("-inf")
+    sum_valid = 0.0
+    sum_sq_valid = 0.0
+
+    print("Comparing Source TIFFs to Base Geometry block-by-block (1024 rows/chunk)...", flush=True)
+    for y0 in range(0, 16000, chunk_rows):
+        y1 = min(y0 + chunk_rows, 16000)
+        tile_d = inp_d.read_tiles(0, 16000, y0, y1, 0, 1, 0, 1, oi.FLOAT)
+        chunk_dtm = np.array(tile_d).reshape(y1 - y0, 16000)
+
+        tile_v = inp_v.read_tiles(0, 16000, y0, y1, 0, 1, 0, 1, oi.UINT8)
+        chunk_val = np.array(tile_v).reshape(y1 - y0, 16000)
+
+        # Geometric mapping: Houdini Heightfield voxel Y=0 is South (bottom), TIFF row 0 is North (top)
+        b0 = 16000 - y1
+        b1 = 16000 - y0
+        base_h_chunk = base_h[b0:b1, :]
+        base_a_chunk = base_a[b0:b1, :]
+
+        dtm_flipped = np.flipud(chunk_dtm)
+        val_flipped = np.flipud(chunk_val)
+
+        # Height comparison
+        diff_h = np.abs(dtm_flipped - base_h_chunk)
+        chunk_max_diff = float(diff_h.max())
+        if chunk_max_diff > height_max_diff:
+            height_max_diff = chunk_max_diff
+        h_mismatches = int(np.count_nonzero(diff_h > 1e-4))
+        height_mismatches += h_mismatches
+
+        # Validity/Alpha comparison
+        v_mismatches = int(np.count_nonzero((val_flipped > 0) != (base_a_chunk > 0)))
+        val_mismatches += v_mismatches
+
+        c_valid = (val_flipped > 0)
+        c_nodata = (val_flipped == 0)
+        valid_samples += int(np.count_nonzero(c_valid))
+        nodata_samples += int(np.count_nonzero(c_nodata))
+        total_samples += chunk_dtm.size
+
+        if np.any(c_valid):
+            v_vals = dtm_flipped[c_valid].astype(np.float64)
+            c_min = float(v_vals.min())
+            c_max = float(v_vals.max())
+            if c_min < valid_min:
+                valid_min = c_min
+            if c_max > valid_max:
+                valid_max = c_max
+            sum_valid += float(np.sum(v_vals))
+            sum_sq_valid += float(np.sum(v_vals ** 2))
+
+    inp_d.close()
+    inp_v.close()
+
+    valid_mean = sum_valid / valid_samples
+    valid_var = (sum_sq_valid / valid_samples) - (valid_mean ** 2)
+    valid_std = float(np.sqrt(max(0.0, valid_var)))
+
+    print(f"  Source DTM SHA-256: {dtm_sha}")
+    print(f"  Source Validity SHA-256: {val_sha}")
+    print(f"  Stage1 Base SHA-256: {base_sha}")
+    print(f"  Samples Compared: {total_samples:,}")
+    print(f"  Height Mismatches: {height_mismatches} (max diff = {height_max_diff:.8f} m)")
+    print(f"  Validity/Alpha Mismatches: {val_mismatches}")
+    print(f"  Valid Land Samples: {valid_samples:,} ({(valid_samples/total_samples)*100:.2f}%)")
+    print(f"  NoData Sea Samples: {nodata_samples:,} ({(nodata_samples/total_samples)*100:.2f}%)")
+    print(f"  Source Valid Land Elevation: min={valid_min:.4f}m, max={valid_max:.4f}m, mean={valid_mean:.4f}m, std={valid_std:.4f}m")
+    print(f"Source DTM -> Base Terrain Verified in {time.time() - t0:.1f}s.", flush=True)
+
+    assert height_mismatches == 0, f"Source DTM vs Base Height mismatch: {height_mismatches} samples!"
+    assert val_mismatches == 0, f"Source Validity vs Base Alpha mismatch: {val_mismatches} samples!"
+
+    return {
+        "source_dtm_file": str(DTM_FILE),
+        "source_dtm_sha256": dtm_sha,
+        "source_validity_file": str(VAL_FILE),
+        "source_validity_sha256": val_sha,
+        "stage1_base_file": str(base_cache_file),
+        "stage1_base_sha256": base_sha,
+        "coordinate_mapping": "Raster (row r, col c) -> Houdini voxel (x=c, y=15999-r); World X = -3999.75 + x*0.5, World Z = 3999.75 - y*0.5",
+        "nodata_convention": "Source validity == 0 (offshore sea, 6,181,020 samples) maps to base Alpha == 0.0 and height == 0.0; valid land domain validity == 1 (249,818,980 samples) maps to base Alpha > 0",
+        "samples_compared": total_samples,
+        "height_mismatches": height_mismatches,
+        "height_max_diff_m": height_max_diff,
+        "validity_alpha_mismatches": val_mismatches,
+        "valid_land_samples": valid_samples,
+        "nodata_sea_samples": nodata_samples,
+        "raw_source_elevation_valid_land_m": {
+            "min_m": valid_min,
+            "max_m": valid_max,
+            "mean_m": round(valid_mean, 5),
+            "std_m": round(valid_std, 4)
+        },
+        "raw_source_elevation_all_voxels_m": {
+            "min_m": float(base_h.min()),
+            "max_m": float(base_h.max()),
+            "mean_m": float(base_h.mean())
+        }
+    }
+
+
 # ==============================================================================
 # INVARIANT VERIFICATION
 # ==============================================================================
@@ -183,6 +318,8 @@ def verify_invariants():
     g_base = hou.Geometry(); g_base.loadFromFile(str(base_cache_file))
     g_pre = hou.Geometry(); g_pre.loadFromFile(str(pre_cache_file))
     g_id = hou.Geometry(); g_id.loadFromFile(str(idmap_file))
+
+    source_metrics = verify_source_dtm_to_base(g_base)
 
     # --- INVARIANT A: Geometry, Grid, Procedural Delta & Alpha ---
     print("\n--- Invariant A: Domain, Geography & Alpha Audit ---", flush=True)
@@ -301,6 +438,7 @@ def verify_invariants():
         np.testing.assert_allclose(list(dec_prim.indexToPos((0, 0, 0))), [-3999.75, 0.0, 3999.75], atol=0.01)
 
         dec_arr = np.frombuffer(dec_prim.allVoxelsAsString(), np.float32).reshape(16000, 16000)
+        assert np.isfinite(dec_arr).all(), f"Decoder produced non-finite values (NaN/Inf) for class '{name}'!"
         expected_binary = (id_indices == idx).astype(np.float32)
 
         mismatch_count = int(np.count_nonzero(np.abs(dec_arr - expected_binary) > 0.01))
@@ -317,6 +455,8 @@ def verify_invariants():
         "resolution": res,
         "origin": orig,
         "gridspacing": 0.5,
+        "source_dtm_verification": source_metrics,
+        "base_terrain_stats": {"min": float(h_base.min()), "max": float(h_base.max()), "mean": float(h_base.mean())},
         "height_stats": {"min": float(h_final.min()), "max": float(h_final.max()), "mean": float(h_final.mean())},
         "procedural_displacement": {
             "min_m": delta_min, "max_m": delta_max, "mean_m": delta_mean, "std_m": delta_std,
@@ -557,14 +697,27 @@ def main():
             "bounds_z": [-4000.0, 4000.0],
             "total_voxels": 256000000
         },
-        "height_elevation_m": metrics["height_stats"],
+        "source_dtm_verification": metrics["source_dtm_verification"],
+        "base_terrain_elevation_m": metrics["base_terrain_stats"],
+        "final_idmap_terrain_elevation_m": metrics["height_stats"],
         "procedural_displacement_base_to_preid_m": metrics["procedural_displacement"],
+        "procedural_displacement_note": (
+            "Procedural displacement reflects intentional material and slump displacements "
+            "from Pegasus workflow (L04 material displacement and L05 scree slump/transport), "
+            "NOT a DTM reproduction error."
+        ),
         "authentic_landforms": metrics["landforms"],
         "alpha_integrity": metrics["alpha_integrity"],
         "invariant_b_preid_vs_postid_max_diff": metrics["invariant_b_layer_diffs"],
         "id_distribution": metrics["id_distribution"],
         "pegasus_decoder_mismatches": metrics["decoder_mismatches"],
         "hashes": {
+            "source_dtm_tif": str(DTM_FILE),
+            "source_dtm_tif_sha256": metrics["source_dtm_verification"]["source_dtm_sha256"],
+            "source_validity_tif": str(VAL_FILE),
+            "source_validity_tif_sha256": metrics["source_dtm_verification"]["source_validity_sha256"],
+            "stage1_base": str(WORK_DIR / "stage1_base.bgeo.sc"),
+            "stage1_base_sha256": metrics["source_dtm_verification"]["stage1_base_sha256"],
             "checkpoint_hip": str(CHECKPOINT_HIP),
             "checkpoint_hip_sha256": digest(CHECKPOINT_HIP),
             "pre_id_cache": str(pre_cache_file),

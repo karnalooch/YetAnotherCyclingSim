@@ -1,6 +1,6 @@
 {
   "status": "LESSON06_FULL_IDMAP_PASS",
-  "timestamp": "2026-10-19T14:47:52",
+  "timestamp": "2026-10-19T16:09:11",
   "base_commit": "7833e8bd8e5bfa19a183905335d2ba25b2c22969",
   "houdini_version": "22.0.466",
   "domain": {
@@ -25,7 +25,39 @@
     ],
     "total_voxels": 256000000
   },
-  "height_elevation_m": {
+  "source_dtm_verification": {
+    "source_dtm_file": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_height_float32.tif",
+    "source_dtm_sha256": "2ba280dd59da8df89620deb3b1e0ca6b8d0e7eafc0e13a7a96e35df6a6e5a0dd",
+    "source_validity_file": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_validity.tif",
+    "source_validity_sha256": "96acc1b90fdf926ee4ada618a66c82406d312f613b84f5453a363fa08b10f35c",
+    "stage1_base_file": "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.bgeo.sc",
+    "stage1_base_sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
+    "coordinate_mapping": "Raster (row r, col c) -> Houdini voxel (x=c, y=15999-r); World X = -3999.75 + x*0.5, World Z = 3999.75 - y*0.5",
+    "nodata_convention": "Source validity == 0 (offshore sea, 6,181,020 samples) maps to base Alpha == 0.0 and height == 0.0; valid land domain validity == 1 (249,818,980 samples) maps to base Alpha > 0",
+    "samples_compared": 256000000,
+    "height_mismatches": 0,
+    "height_max_diff_m": 0.0,
+    "validity_alpha_mismatches": 0,
+    "valid_land_samples": 249818980,
+    "nodata_sea_samples": 6181020,
+    "raw_source_elevation_valid_land_m": {
+      "min_m": -1.2999999523162842,
+      "max_m": 1437.158203125,
+      "mean_m": 429.34505,
+      "std_m": 358.3486
+    },
+    "raw_source_elevation_all_voxels_m": {
+      "min_m": -1.2999999523162842,
+      "max_m": 1437.158203125,
+      "mean_m": 418.97869873046875
+    }
+  },
+  "base_terrain_elevation_m": {
+    "min": -1.2999999523162842,
+    "max": 1437.158203125,
+    "mean": 418.97869873046875
+  },
+  "final_idmap_terrain_elevation_m": {
     "min": -1.2999999523162842,
     "max": 1437.158203125,
     "mean": 418.9890441894531
@@ -41,6 +73,7 @@
     "changed_voxels": 127031426,
     "changed_pct": 49.62165078125
   },
+  "procedural_displacement_note": "Procedural displacement reflects intentional material and slump displacements from Pegasus workflow (L04 material displacement and L05 scree slump/transport), NOT a DTM reproduction error.",
   "authentic_landforms": {
     "puig_major": {
       "x_m": -1283.7498779296875,
@@ -110,6 +143,12 @@
     "scree": 0
   },
   "hashes": {
+    "source_dtm_tif": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_height_float32.tif",
+    "source_dtm_tif_sha256": "2ba280dd59da8df89620deb3b1e0ca6b8d0e7eafc0e13a7a96e35df6a6e5a0dd",
+    "source_validity_tif": "D:\\yacs\\work\\sa-calobra-houdini-unreal-20261016\\inputs\\dtm_validity.tif",
+    "source_validity_tif_sha256": "96acc1b90fdf926ee4ada618a66c82406d312f613b84f5453a363fa08b10f35c",
+    "stage1_base": "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.bgeo.sc",
+    "stage1_base_sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
     "checkpoint_hip": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson06_Unified_v001.hiplc",
     "checkpoint_hip_sha256": "7701a844bd82d1496995866676a20ee069e9cac6e873889aca02a64be3ae2abb",
     "pre_id_cache": "D:\\yacs\\work\\lesson06-unified-20261019\\pre_id_cache.bgeo.sc",
@@ -138,5 +177,5 @@
     "closeup_sa_calobra_cove.png",
     "closeup_scree_occurrence.png"
   ],
-  "elapsed_seconds": 242.75
+  "elapsed_seconds": 277.69
 }
