@@ -1,0 +1,295 @@
+{
+  "status": "LESSON07_TECHNICAL_PASS",
+  "timestamp": "2026-10-19T20:01:00+02:00",
+  "lesson": "PEG-02-07",
+  "lesson_title": "7 | Material Setup",
+  "course": "Project Pegasus Landscape Workflow",
+  "source_video": "https://player.vimeo.com/video/888569514",
+  "source_vtt_sha256": "2f0c5e8292219b145ab59ecb173f706bcced71bec15622cb0e926c500a32fa80",
+  "base_commit": "2e1c209995b100fe01af08c39542605cffee9305",
+  "branch": "codex/365-world-graph",
+  "pull_request": "#474",
+  "houdini_version": "22.0.466",
+  "unreal_version": "5.8.2-56702186+++UE5+Release-5.8",
+  "acceptance_criteria": {
+    "LESSON07_TECHNICAL_PASS": true,
+    "visual_review": "PENDING_FINAL_M3_AUDIT",
+    "performance_pass": false,
+    "performance_note": "DEFERRED_AFTER_M3"
+  },
+  "domain": {
+    "grid_dimensions": [16000, 16000, 1],
+    "total_samples": 256000000,
+    "gridspacing_m": 0.5,
+    "bounds_x_m": [-4000.0, 4000.0],
+    "bounds_z_m": [-4000.0, 4000.0],
+    "origin_sample_m": [-3999.75, 0.0, 3999.75]
+  },
+  "checkpoints": {
+    "input_l06_hip": {
+      "path": "worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson06_Unified_v001.hiplc",
+      "sha256": "7701a844bd82d1496995866676a20ee069e9cac6e873889aca02a64be3ae2abb",
+      "size_bytes": 391364
+    },
+    "output_l07_hip": {
+      "path": "worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc",
+      "sha256": "724ba6e2eb669613e4ad1727da95b72d1d4e25559f9b776deb51169c89338c52",
+      "size_bytes": 520804,
+      "preview_nodes": [
+        "/obj/SA_CALOBRA_UNIFIED/PREVIEW_GLOBAL_COLOR",
+        "/obj/SA_CALOBRA_UNIFIED/PREVIEW_NEUTRAL_SHADING",
+        "/obj/SA_CALOBRA_UNIFIED/PREVIEW_IDMAP",
+        "/obj/SA_CALOBRA_UNIFIED/PREVIEW_CLASS_ISOLATION"
+      ],
+      "cameras": [
+        "/obj/cam_panorama",
+        "/obj/cam_puig_major",
+        "/obj/cam_sa_calobra_cove",
+        "/obj/cam_transition",
+        "/obj/cam_scree_site"
+      ]
+    }
+  },
+  "caches": {
+    "stage1_base": {
+      "path": "D:/yacs/work/lesson06-unified-20261019/stage1_base.bgeo.sc",
+      "sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
+      "size_bytes": 519575557
+    },
+    "final_idmap": {
+      "path": "D:/yacs/work/lesson06-unified-20261019/final_unified_idmap.bgeo.sc",
+      "sha256": "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24",
+      "size_bytes": 4808520505
+    },
+    "procedural_detail": {
+      "path": "D:/yacs/work/lesson07-unified-20261019/procedural_detail.bgeo.sc",
+      "sha256": "82881547af8992abdc19d3674218eac2a7d475fc555df9b945e0cdf39e19129a",
+      "size_bytes": 319851981,
+      "formula": "procedural_delta = final_height - stage1_base_height",
+      "reconstruction_identity_verified": true,
+      "samples_compared": 256000000,
+      "mismatches": 0,
+      "max_abs_diff_m": 2.9802322387695312e-08,
+      "delta_min_m": -0.3577566146850586,
+      "delta_max_m": 0.53326416015625,
+      "delta_mean_m": 0.010344445705413818
+    }
+  },
+  "pegasus_texture_exports": {
+    "idmap": {
+      "file": "D:/yacs/work/lesson07-unified-20261019/T_PE_Terrain_IDMap.png",
+      "sha256": "cb794170135e3b918e3d809275f9c68ba8595653453d8c8dafe1297bcf6e1bc3",
+      "size_bytes": 12392456,
+      "dimensions": [16000, 16000],
+      "channels": 1,
+      "data_format": "uint8",
+      "unique_class_codes": [0, 64, 128, 191, 255],
+      "class_count": 5,
+      "class_mapping": {
+        "0": "grass",
+        "64": "grass 2",
+        "128": "sand",
+        "191": "cliffs",
+        "255": "scree"
+      }
+    },
+    "global_color": {
+      "file": "D:/yacs/work/lesson07-unified-20261019/T_PE_Terrain_Color.png",
+      "sha256": "90bd39006ed5f56888ef9a3de887c7840bc8ff9782c11d68062755b516afbb7b",
+      "size_bytes": 398192590,
+      "dimensions": [16000, 16000],
+      "channels": 3,
+      "data_format": "uint8",
+      "color_space": "sRGB",
+      "hda_used": "sop_PE_heightfield_RGB_ColorSpace.1.0.hda (Linear -> sRGB)",
+      "height_flattened_to_zero": true
+    }
+  },
+  "unreal_engine_material_setup": {
+    "master_material": "/Game/PegasusDemo/Materials/Landscape/M_Pegasus_Landscape_Master",
+    "base_instance": "/Game/PegasusDemo/Materials/Landscape/MI_Landscape_Instance",
+    "yacs_material_instance": {
+      "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS",
+      "asset_file": "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset",
+      "sha256": "abbce8ae203d7e1527e9fa4fba6a33d4e5ccd8c461f1b22d06075c92f2e9de2c",
+      "size_bytes": 35333,
+      "scalar_parameters": {
+        "Num IDmap Layers": 5.0,
+        "Terrain Resolution": 16000.0,
+        "Global Colour Strength": 0.5,
+        "Global Specular Scale": 1.0,
+        "Detail Brightness": 1.5
+      },
+      "texture_parameters": {
+        "Terrain IDmap": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap",
+        "Terrain Colour": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color",
+        "Colour Atlas": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified",
+        "Normal Atlas": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified",
+        "Masks Atlas": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified"
+      }
+    },
+    "texture_2d_arrays": {
+      "TA_Colour_Unified": {
+        "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified",
+        "asset_file": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+        "sha256": "fa1bebede697cf6aacaec43ea41ab818462b89306f65f20dd6403812ae482f6f",
+        "size_bytes": 27552266,
+        "slices": 5,
+        "resolution": [2048, 2048],
+        "srgb": true,
+        "compression": "TC_Default",
+        "wrapping": "Wrap"
+      },
+      "TA_Normal_Unified": {
+        "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified",
+        "asset_file": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+        "sha256": "a80de6fa0887d737058a2e6f47628ec89cbccf4cb80adeb329b67f1b89c8196e",
+        "size_bytes": 45545889,
+        "slices": 5,
+        "resolution": [2048, 2048],
+        "srgb": false,
+        "compression": "TC_Normalmap",
+        "wrapping": "Wrap"
+      },
+      "TA_Masks_Unified": {
+        "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified",
+        "asset_file": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset",
+        "sha256": "7c40f0e2a935bca1c99794e415942867f98cef06441cce60c777dba8ef30d939",
+        "size_bytes": 12087514,
+        "slices": 5,
+        "resolution": [2048, 2048],
+        "srgb": false,
+        "compression": "TC_Masks",
+        "packing": "R=AO/Macro, G=Roughness, B=Displacement/Metallic",
+        "wrapping": "Wrap"
+      }
+    },
+    "imported_ue_textures": {
+      "T_PE_Terrain_IDMap": {
+        "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap",
+        "asset_file": "Content/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap.uasset",
+        "sha256": "e8f35312e8754df84c34b10381c27f15af6b187bb54a00ef483f76e95d3c5f04",
+        "size_bytes": 13409264,
+        "srgb": false,
+        "compression": "TC_Grayscale",
+        "filter": "TF_Nearest"
+      },
+      "T_PE_Terrain_Color": {
+        "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color",
+        "asset_file": "Content/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color.uasset",
+        "sha256": "6dcf927db213b6fcd3ce00f777884cf4e339f8c0588bcc219079e216409de4b2",
+        "size_bytes": 425489467,
+        "srgb": true,
+        "compression": "TC_Default",
+        "filter": "TF_Default"
+      }
+    }
+  },
+  "unreal_engine_map": {
+    "package_path": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07",
+    "file_path": "Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap",
+    "sha256": "d4bd490a14dac9f7e9761200ac3a1d5c027784f9e1b996a5dbf0f98e1069ed1f",
+    "size_bytes": 682622550,
+    "assigned_material": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.MI_Landscape_Instance_YACS",
+    "landscape_actors_assigned": 5,
+    "lighting_configuration": {
+      "DirectionalLight_0": "CastDynamicShadows=True, Intensity>0",
+      "SkyAtmosphere_0": "Active",
+      "SkyLight_0": "RealTimeCapture=True"
+    },
+    "verification_reopen": {
+      "reopened_cleanly": true,
+      "actor_count": 9,
+      "missing_references": 0
+    }
+  },
+  "evidence": {
+    "houdini_artifacts": {
+      "diagnostic_idmap_overview_2k.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/diagnostic_idmap_overview_2k.png",
+        "sha256": "006530a9b5c6dd0ab874747e714b7c9058a12c499bcff8d21441c0e9132425a6",
+        "size_bytes": 767679,
+        "resolution": [2000, 2000]
+      },
+      "diagnostic_global_color_overview_2k.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/diagnostic_global_color_overview_2k.png",
+        "sha256": "0cf4c1e32013c57cdfe2b4dcddd37f8ceeda46c632297cc3fc31b0e46120a481",
+        "size_bytes": 8332353,
+        "resolution": [2000, 2000]
+      },
+      "diagnostic_neutral_shading_overview_2k.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/diagnostic_neutral_shading_overview_2k.png",
+        "sha256": "9e6042f5631ecf1216a2b30f6d633b0571ee60caa84a7487cdf7d16d090975e1",
+        "size_bytes": 4690499,
+        "resolution": [2000, 2000]
+      },
+      "diagnostic_scree_isolation_overview_2k.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/diagnostic_scree_isolation_overview_2k.png",
+        "sha256": "68bfc893198bcfe59df190cc2ab81fcef3ce332e12d3660fee8d3accc406b6f7",
+        "size_bytes": 4689544,
+        "resolution": [2000, 2000]
+      },
+      "closeup_puig_major_peak.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/closeup_puig_major_peak.png",
+        "sha256": "0b14ab2bc5a569bfca136e9a820a1afef3f0b3d76747713711107fce2e7a2a47",
+        "size_bytes": 4283237,
+        "resolution": [2048, 1024]
+      },
+      "closeup_sa_calobra_cove.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/closeup_sa_calobra_cove.png",
+        "sha256": "8293349dcea48088f262041e073d1a10fad7b3c69156a87e1f4fb0d96dd5b245",
+        "size_bytes": 4315883,
+        "resolution": [2048, 1024]
+      },
+      "closeup_transition_grass_sand_cliffs.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/closeup_transition_grass_sand_cliffs.png",
+        "sha256": "f54d9a7bda04358f52b276ea78d09ffc3337cfbcd24f5263339abc5716dc3f71",
+        "size_bytes": 4389763,
+        "resolution": [2048, 1024]
+      },
+      "closeup_scree_occurrence.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/closeup_scree_occurrence.png",
+        "sha256": "81ee6736bbe873e896ad9186fabb446644c20d7241f150ae794d2d5b76206fb8",
+        "size_bytes": 2898948,
+        "resolution": [2040, 1024]
+      }
+    },
+    "unreal_artifacts": {
+      "ue_panorama_material.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_panorama_material.png",
+        "sha256": "5c85ce356778e87c32b9d6612a418bff27f19d0870728b134098afab45809939",
+        "size_bytes": 3124701,
+        "resolution": [1920, 1080],
+        "description": "Full terrain panorama with Pegasus master material, global color and PBR lighting"
+      },
+      "ue_closeup_puig_major.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_puig_major.png",
+        "sha256": "f6bb36dbbae56f4701db09d911902d0c62a41949718a0b71bae6003654a27f68",
+        "size_bytes": 3681788,
+        "resolution": [1920, 1080],
+        "description": "Closeup Puig Major summit ridge showing rock/cliffs surface and global tint"
+      },
+      "ue_closeup_sa_calobra_cove.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_sa_calobra_cove.png",
+        "sha256": "2d35eb78b0888ddcee43ffb90e1a11c3b74d8a2666f43188e389f4b0d4433276",
+        "size_bytes": 3493031,
+        "resolution": [1920, 1080],
+        "description": "Closeup Sa Calobra cove coastal sand and rock contact zone"
+      },
+      "ue_closeup_transition.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_transition.png",
+        "sha256": "c8bee4c698148caa08bf601ea56be7d585223840f0aa01e254b278e6cac7c469",
+        "size_bytes": 915728,
+        "resolution": [1920, 1080],
+        "description": "Closeup transition showing detail textures blending with global color"
+      },
+      "ue_closeup_scree.png": {
+        "path": "worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_scree.png",
+        "sha256": "585f0e5de2aab8512b6e68c7d742c2150262f1eb8e362bb87111c6d8cb93eb35",
+        "size_bytes": 1513850,
+        "resolution": [1920, 1080],
+        "description": "Closeup Scree occurrence showing normal map response and roughness under sunlight"
+      }
+    }
+  }
+}

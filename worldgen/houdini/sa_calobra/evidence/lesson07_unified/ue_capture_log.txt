@@ -1,0 +1,15 @@
+=== START LESSON 07 UE OFFSCREEN CAPTURE ===
+[19:57:33] Loading level /Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07...
+[19:57:38] Level loaded successfully.
+[19:57:38] --- Scheduling [1/5] ue_panorama_material.png ---
+[19:57:57] Shot ue_panorama_material.png captured successfully (3124701 bytes in 3.95s)
+[19:57:58] --- Scheduling [2/5] ue_closeup_puig_major.png ---
+[19:58:01] Shot ue_closeup_puig_major.png captured successfully (3681788 bytes in 1.12s)
+[19:58:02] --- Scheduling [3/5] ue_closeup_sa_calobra_cove.png ---
+[19:58:04] Shot ue_closeup_sa_calobra_cove.png captured successfully (3493031 bytes in 2.53s)
+[19:58:05] --- Scheduling [4/5] ue_closeup_transition.png ---
+[19:58:08] Shot ue_closeup_transition.png captured successfully (915728 bytes in 2.25s)
+[19:58:09] --- Scheduling [5/5] ue_closeup_scree.png ---
+[19:58:11] Shot ue_closeup_scree.png captured successfully (1513850 bytes in 2.38s)
+[19:58:12] All 5 shots captured and verified successfully!
+[19:58:12] Quitting editor...
