@@ -27,9 +27,13 @@ class ScriptDiscoveryTests(unittest.TestCase):
                 "    def test_genuine(self): pass\n",
                 encoding="utf-8",
             )
-            self.assertFalse(native_unreal_entrypoint(root, "scripts/ue/test_native.py"))
+            self.assertFalse(
+                native_unreal_entrypoint(root, "scripts/ue/test_native.py")
+            )
             native.write_text("import unreal\n", encoding="utf-8")
-            self.assertFalse(native_unreal_entrypoint(root, "scripts/ci/test_native.py"))
+            self.assertFalse(
+                native_unreal_entrypoint(root, "scripts/ci/test_native.py")
+            )
 
     def test_new_nested_test_is_discovered_without_workflow_edit(self):
         with tempfile.TemporaryDirectory() as temp:
