@@ -16,6 +16,10 @@ class YETANOTHERCYCLINGSIMEDITOR_API UYacsLandscapeMeshDiagnosticLibrary : publi
 {
     GENERATED_BODY()
 public:
+    /** Read actual component grid/section settings in quads from the saved Lesson 07 editor world; never modifies it. */
+    UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
+    static FString ReadLesson07ComponentLayout(ULandscapeComponent* Component);
+
     /** Read at most 12000 existing support triangle positions for Issue459. Empty IDs reads all; never changes the mesh. */
     UFUNCTION(BlueprintCallable, Category = "YACS|Diagnostics")
     static FString ReadWindow0112SupportTriangles(UDynamicMesh* Mesh, const TArray<int32>& TriangleIds);

@@ -15,7 +15,7 @@ Przegląd bazowy: `5a33c31a43e4933547a64bcb12e78552ce06e83a`, 2026-10-20. Przed 
 | Wydajność | `docs/performance/PERFORMANCE_FRAMEWORK.md`; `docs/CI_VALIDATION_TIERS.md` | CSV, sprzęt, jakość, sektory i progi |
 | Landscape i późniejsze decyzje | `docs/ai/policies/M3_WORLD_OPERATIONS.md`; `docs/tooling/sidefx/SA_CALOBRA_BUILD_GUIDE.md` | Obszar, source/manual/detail, zakres i wyjątki |
 | L06/L07 | `docs/tooling/sidefx/LESSON06_FULL_IDMAP.md`; `docs/tooling/sidefx/LESSON07_MATERIAL_SETUP.md`; `docs/tooling/sidefx/catalog/PEG-02.md` | Plan i zgodność źródłowa; status wymaga potwierdzenia artefaktem |
-| Ograniczenia UE readback | `scripts/ue/readback_lesson07_geometry.py` | Komponenty, raycasty, niepotwierdzone source height/visibility |
+| Ograniczenia UE readback | `scripts/ue/Invoke-YacsLesson07Readback.ps1`; `scripts/ue/readback_lesson07_geometry.py`; `.github/workflows/yacs-lesson07-unreal-readonly.yml` | Pochodzenie DLL i kopii mapy, komponenty, raycasty, niepotwierdzone source height/visibility; komplet zapytań pakietów nie oznacza zweryfikowanego wyglądu |
 | Trwałość i Live Host | `docs/tooling/LOCAL_WORKSPACE.md`; `docs/tooling/YACS_LIVE_HOST.md`; `scripts/live_host/Get-YacsLiveHostStatus.ps1` | Zapis, reopen, backup, nowe klatki i post-job survival |
 | Archiwa i JSON | `docs/evidence/JSON_STORAGE.md`; `scripts/ci/check_evidence_storage.py`; `scripts/ci/test_evidence_storage.py` | Byte identity, indeksy gzip i exact-blob wyjątki |
 | Raport błędu i docs | `docs/ai/policies/DOCS_AND_PLATFORM.md`; `scripts/ci/check_docs_index.py` | Konkretna przyczyna i links/i18n/structure/freshness |

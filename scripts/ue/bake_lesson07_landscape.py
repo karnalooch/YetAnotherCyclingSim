@@ -74,9 +74,12 @@ def preflight_tiles():
     if linked is None or linked.get_class().get_name() != "MaterialExpressionLandscapeVisibilityMask":
         raise RuntimeError("Opacity Mask is not directly connected to LandscapeVisibilityMask")
     for tile in tiles:
-        validity = tile.get("visibility") or {}
-        if (validity.get("layer") != "visibility" or not validity.get("outside_source_zero")
-                or tile.get("requested_hole_material") != material_path):
+        # Houdini records the per-tile hole material inside visibility metadata.
+        validity = tile.get("visibility")
+        if (not isinstance(validity, dict)
+                or validity.get("layer") != "visibility"
+                or validity.get("outside_source_zero") is not True
+                or validity.get("requested_hole_material") != material_path):
             raise RuntimeError(f"{tile.get('name')}: no validity/visibility proof")
         path = MANIFEST_PATH.parent / tile["file"]
         if not path.is_file():

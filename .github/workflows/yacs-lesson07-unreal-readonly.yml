@@ -1,124 +1,172 @@
 name: YACS Lesson07 native UE readback (non-mutating)
 
+# workflow_run needs its definition on default branch. Follow the existing
+# road-proof pattern: await exact protected CI on Ubuntu before using Windows.
 on:
   push:
     branches: [codex/365-world-graph]
     paths:
       - .github/workflows/yacs-lesson07-unreal-readonly.yml
+      - scripts/ue/Invoke-YacsLesson07Readback.ps1
+      - scripts/ue/readback_lesson07_geometry.py
+      - scripts/ue/test_lesson07_readback.py
 
 permissions:
   contents: read
-
-concurrency:
-  group: yacs-lesson07-native-ue-readonly
-  cancel-in-progress: false
+  actions: read
 
 jobs:
-  ue-readback:
-    name: Load saved L07 map and inspect geometry, never save
+  await_ci:
+    name: Await successful exact-SHA protected CI without reserving Windows
     if: >-
+      github.event_name == 'push' &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/365-world-graph' &&
       github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    # Normal CI permits 5 min classification + 10 min Python + 45 min UE +
+    # 2 min aggregation. Leave a bounded queue allowance before using Windows.
+    timeout-minutes: 95
+    outputs:
+      ci_run_id: ${{ steps.await.outputs.ci_run_id }}
+    steps:
+      - name: Require latest matching CyclingSim CI success
+        id: await
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 270); do
+            payload=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${GITHUB_SHA}&event=pull_request&per_page=50")
+            row=$(jq -r --arg sha "$GITHUB_SHA" --arg repo "$GITHUB_REPOSITORY" '
+              [.workflow_runs[] | select(
+                .name == "CyclingSim CI" and .path == ".github/workflows/ci.yml" and
+                .head_sha == $sha and .head_branch == "codex/365-world-graph" and
+                .head_repository.full_name == $repo)]
+              | . as $runs
+              | (([.[] | select(.status != "completed")]
+                  | sort_by((.updated_at // .created_at), .id, .run_attempt) | last)
+                 // ($runs | sort_by((.updated_at // .created_at), .id, .run_attempt) | last))
+              | if . == null then "" else "\(.id)|\(.status)|\(.conclusion // "pending")" end
+            ' <<< "$payload")
+            if [[ -n "$row" ]]; then
+              IFS='|' read -r ci_id state conclusion <<< "$row"
+              if [[ "$state" == "completed" ]]; then
+                if [[ "$conclusion" == "success" ]]; then
+                  echo "ci_run_id=$ci_id" >> "$GITHUB_OUTPUT"
+                  echo "Exact-SHA protected CI succeeded: $ci_id at $GITHUB_SHA"
+                  exit 0
+                fi
+                echo "::error::Latest exact-SHA CI $ci_id completed with $conclusion. L07 native readback remains blocked."
+                exit 1
+              fi
+              echo "Awaiting exact-SHA CI $ci_id: $state (poll $attempt/270)"
+            else
+              echo "Awaiting same-repository exact-SHA PR CI (poll $attempt/270)"
+            fi
+            sleep 20
+          done
+          echo "::error::No successful exact-SHA protected CI within the bounded wait."
+          exit 1
+
+  ue-readback:
+    name: Read an isolated physical copy of saved L07 with verified ordinary CI DLLs
+    needs: await_ci
+    if: >-
+      needs.await_ci.result == 'success' &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
     runs-on: [self-hosted, yacs-ue58]
-    timeout-minutes: 16
+    timeout-minutes: 30
     defaults:
       run:
         shell: pwsh
+        working-directory: l07-${{ github.run_id }}-${{ github.run_attempt }}
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
+      GIT_OPTIONAL_LOCKS: '0'
+      PYTHONDONTWRITEBYTECODE: '1'
+      YACS_WORKSPACE_CONFIG: 'D:\yacs\workspace.json'
     steps:
-      - name: Refuse a busy or low-space host
+      - name: Isolate Git configuration for the new code checkout
+        working-directory: ${{ github.workspace }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $free = ([IO.DriveInfo]::new('D:\')).AvailableFreeSpace
-          Write-Host ("D: free = {0:N2} GiB" -f ($free/1GB))
-          if ($free -lt 30GB) { throw 'Need at least 30 GiB for read-only map load.' }
-          $busy = @(Get-Process -Name UnrealEditor,UnrealEditor-Cmd,hython,houdini,hbatch -ErrorAction SilentlyContinue)
-          if ($busy.Count -gt 0) {
-            $busy | Select-Object ProcessName,Id | Format-Table
-            throw 'Native authoring process is active; refuse concurrent readback.'
-          }
-          if (-not (Test-Path -LiteralPath 'D:\yacs\project\YetAnotherCyclingSim.uproject' -PathType Leaf)) {
-            throw 'Canonical project file is absent.'
-          }
-          if (-not (Test-Path -LiteralPath 'D:\yacs\project\Content\Generated\YACS\Lesson07_Unified\L_SaCalobra_Lesson07.umap' -PathType Leaf)) {
-            throw 'Saved Lesson 07 map is absent.'
-          }
-      - name: Checkout only reviewed exact-SHA Python reader, no LFS
+          $isolated = Join-Path $env:RUNNER_TEMP 'l07-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          if (Test-Path -LiteralPath $isolated) { throw 'Owned Git config already exists.' }
+          [IO.File]::WriteAllText($isolated, '')
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths in owned Git configuration.' }
+
+      - name: Checkout exact committed code and LFS pointers only
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
-          path: _l07_native_reader
+          path: l07-${{ github.run_id }}-${{ github.run_attempt }}
           fetch-depth: 1
-          persist-credentials: false
           lfs: false
-          sparse-checkout: |
-            scripts/ue/readback_lesson07_geometry.py
-          sparse-checkout-cone-mode: false
-      - name: Execute native Unreal map inspection, no bake or save
+          persist-credentials: false
+
+      - name: Validate actual PowerShell gates and synthetic reader boundaries
         run: |
           $ErrorActionPreference = 'Stop'
-          $ue = 'D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
-          $project = 'D:\yacs\project\YetAnotherCyclingSim.uproject'
-          $map = 'D:\yacs\project\Content\Generated\YACS\Lesson07_Unified\L_SaCalobra_Lesson07.umap'
-          $script = Join-Path $env:GITHUB_WORKSPACE '_l07_native_reader\scripts\ue\readback_lesson07_geometry.py'
-          $log = Join-Path $env:RUNNER_TEMP 'l07-native-editor.log'
-          $stdout = Join-Path $env:RUNNER_TEMP 'l07-native-stdout.log'
-          $stderr = Join-Path $env:RUNNER_TEMP 'l07-native-stderr.log'
-          $env:YACS_LESSON07_READBACK_PATH = Join-Path $env:RUNNER_TEMP 'l07-native-geometry.json'
-          if (-not (Test-Path -LiteralPath $ue -PathType Leaf) -or
-              -not (Test-Path -LiteralPath $script -PathType Leaf)) {
-            throw 'UnrealEditor-Cmd or pinned proof script is missing.'
-          }
-          if (([IO.DriveInfo]::new('D:\')).AvailableFreeSpace -lt 30GB) {
-            throw 'Disk reserve changed after checkout. Readback prohibited.'
-          }
-          if (@(Get-Process -Name UnrealEditor,UnrealEditor-Cmd,hython,houdini -ErrorAction SilentlyContinue).Count -gt 0) {
-            throw 'Another editor/Houdini process started after preflight.'
-          }
-          $before = (Get-FileHash -LiteralPath $map -Algorithm SHA256).Hash
-          $argString = '"' + $project + '" -NullRHI -Unattended -NoSplash -NoSound -NoLiveCoding -NoShaderCompile -ExecutePythonScript="' + $script + '" -AbsLog="' + $log + '"'
-          Write-Host 'Opening existing level via editor Python in a new NullRHI process (no map saves).'
-          $proc = Start-Process -FilePath $ue -ArgumentList $argString -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
-          $completed = $proc.WaitForExit(660000)
-          if (-not $completed) {
-            $proc.Kill()
-            $proc.WaitForExit()
-          }
-          $after = (Get-FileHash -LiteralPath $map -Algorithm SHA256).Hash
-          if ($after -ne $before) { throw 'Canonical Lesson 07 map changed during readback!' }
-          if (-not $completed) { throw 'Unreal native readback exceeded 11 minutes.' }
-          if ($proc.ExitCode -ne 0) { throw "Unreal exited $($proc.ExitCode). No acceptance." }
-          if (-not (Test-Path -LiteralPath $env:YACS_LESSON07_READBACK_PATH -PathType Leaf)) {
-            throw 'Native UE did not produce geometry readback.'
-          }
-          $proof = Get-Content -LiteralPath $env:YACS_LESSON07_READBACK_PATH -Raw | ConvertFrom-Json
-          Write-Host ("Native UE status: {0}" -f $proof.status)
-          Write-Host ("Landscape actors: {0}; components: {1}" -f $proof.total_landscape_actors, $proof.total_components)
-          Write-Host ("Actual component fields read: {0}" -f $proof.native_component_properties_complete)
-          if ($proof.total_landscape_actors -ne 4 -or $proof.total_components -ne 4096) {
-            throw 'Native structural inventory differs from expected L07; scene not accepted.'
-          }
-          Write-Host 'STRUCTURE_READBACK_ONLY: height source, visibility material, UE collisions and tile seams still require proof.'
-      - name: Preserve bounded native diagnostics on success or failure
-        if: ${{ always() }}
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Join-Path (Get-Location).Path 'scripts/ue/Invoke-YacsLesson07Readback.ps1'),
+            [ref]$tokens, [ref]$errors
+          ) | Out-Null
+          if ($errors.Count) { throw ($errors.Message -join "`n") }
+          $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Existing Python is unavailable.' }
+          & $python -B -m unittest scripts.ue.test_lesson07_readback
+          if ($LASTEXITCODE -ne 0) { throw 'L07 staging/reader boundary tests failed before native work.' }
+
+      - name: Stage bounded independent copies and run only the owned readback
+        env:
+          L07_PROTECTED_CI_RUN_ID: ${{ needs.await_ci.outputs.ci_run_id }}
         run: |
-          $ErrorActionPreference = 'Continue'
-          $tail = Join-Path $env:RUNNER_TEMP 'l07-native-log-tail.txt'
-          $log = Join-Path $env:RUNNER_TEMP 'l07-native-editor.log'
-          if (Test-Path -LiteralPath $log) {
-            Get-Content -LiteralPath $log -Tail 250 -ErrorAction SilentlyContinue |
-              Set-Content -LiteralPath $tail -Encoding utf8
+          ./scripts/ue/Invoke-YacsLesson07Readback.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -ProtectedCiRunId $env:L07_PROTECTED_CI_RUN_ID `
+            -WorkspaceConfig $env:YACS_WORKSPACE_CONFIG
+
+      - name: Preserve bounded diagnostics on success or failure
+        if: ${{ always() }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $proof = Join-Path $env:GITHUB_WORKSPACE 'l07-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/Lesson07Readback/${{ github.run_id }}-${{ github.run_attempt }}'
+          if (-not (Test-Path -LiteralPath $proof -PathType Container)) { return }
+          foreach ($name in @('owned-editor.log', 'owned-editor-stdout.log', 'owned-editor-stderr.log', 'verify-existing-cache-stderr.log')) {
+            $path = Join-Path $proof $name
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
+            if ((Get-Item -LiteralPath $path).Length -gt 128MB) {
+              "Log exceeds 128 MiB; full bytes retained on host: $name" | Set-Content -LiteralPath ($path + '.tail.txt')
+              continue
+            }
+            Get-Content -LiteralPath $path -Tail 250 | ForEach-Object {
+              $_.Substring(0, [Math]::Min(2000, $_.Length))
+            } | Set-Content -LiteralPath ($path + '.tail.txt') -Encoding utf8
           }
-      - name: Publish proof without binary assets
+
+      - name: Publish bounded evidence only, never world assets or DLLs
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: l07-native-readonly-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            ${{ runner.temp }}/l07-native-geometry.json
-            ${{ runner.temp }}/l07-native-log-tail.txt
-            ${{ runner.temp }}/l07-native-stderr.log
+            l07-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/Lesson07Readback/${{ github.run_id }}-${{ github.run_attempt }}/*.json
+            l07-${{ github.run_id }}-${{ github.run_attempt }}/Saved/RuntimeProof/Lesson07Readback/${{ github.run_id }}-${{ github.run_attempt }}/*.tail.txt
           if-no-files-found: warn
           retention-days: 7
