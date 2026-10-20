@@ -739,7 +739,7 @@
       "Geometry, visibility and collision after update"
     ]
   },
-  "updated_at": "2026-10-20T13:42:53.200586+00:00",
+  "updated_at": "2026-10-20T14:05:15.476970+00:00",
   "houdini_preview_verification": {
     "status": "NATIVE_PREVIEW_SIGNALS_VERIFIED_VISUAL_REVIEW_PENDING",
     "original_reviewed_hip_sha256": "2ea5eafb0e5b2965ef718243a81aa83919255d0cb2af56444d0e7d6bf99fd8d1",
@@ -1081,5 +1081,35 @@
     "other_ci_jobs_are_l07_proof": false,
     "consumer_readback_at_observed_head": "NOT_RUN: disk-reserve failure in 39413841851; later 39420689675 skipped after upstream CI failure.",
     "writer_rule": "One writer on affected paths; recheck remote head and asset/source identity before writes. Isolated proof copies preserve exact bytes."
+  },
+  "latest_native_consumer_attempt": {
+    "source_head": "9ddebf5a8a7387313a8751e1fb0c960785af4b2a",
+    "status": "INCOMPLETE",
+    "started_at_utc": "2026-10-20T14:00:56.7822204Z",
+    "ended_at_utc": "2026-10-20T14:01:18.9228580Z",
+    "level": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07",
+    "source_map_before": {
+      "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+      "size_bytes": 1842190204,
+      "sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7"
+    },
+    "source_map_after": {
+      "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+      "size_bytes": 1842190204,
+      "sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7"
+    },
+    "source_map_unchanged": true,
+    "candidate_root": null,
+    "owned_editor_pid": null,
+    "structural_readback_complete": false,
+    "geometry_accepted": false,
+    "error": "Cannot process argument because the value of argument \"size_bytes\" is not valid. Change the value of the \"size_bytes\" argument and run the operation again.",
+    "ci_run_id": 39434128373,
+    "readback_run_id": 39434119045,
+    "normal_automation_passed": 28,
+    "normal_automation_failed": 0,
+    "normal_automation_skipped": 0,
+    "normal_automation_warnings": 2,
+    "fix": "Resolve ordered-dictionary size_bytes keys with the native Measure-Object calculated-property form. Reserve and copying bounds unchanged. Fresh native retry required."
   }
 }

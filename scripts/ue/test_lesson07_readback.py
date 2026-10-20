@@ -731,6 +731,24 @@ $assets = Join-Path $Fixture 'Content/Known'
 [IO.File]::WriteAllText((Join-Path $assets 'T_A.uasset'), 'fixture asset bytes')
 $inventory = @(Get-L07AssetInventory $Fixture @('Content/Known') 1024 2)
 if ($inventory.Count -ne 1) { throw 'Valid bounded fixture inventory failed.' }
+& {
+    # Execute the production budget assignments with the actual ordered inventory
+    # shape, a >2 GiB input and an empty valid config, without allocating big files.
+    $assets = @($inventory[0], [ordered]@{ size_bytes = [long]3GB })
+    $moduleRows = @(@{ source_identity = [ordered]@{ size_bytes = [long]42 } })
+    $metadataRows = @(@{ source_identity = [ordered]@{ size_bytes = [long]0 } },
+                      @{ source_identity = [ordered]@{ size_bytes = [long]17 } })
+    $assignments = @($ast.FindAll({ param($node)
+        $node -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+        $node.Left -is [System.Management.Automation.Language.VariableExpressionAst] -and
+        $node.Left.VariablePath.UserPath -ceq 'plannedBytes'
+    }, $true))
+    if ($assignments.Count -eq 0) { throw 'Production copy budget was not exercised.' }
+    foreach ($assignment in $assignments) { . ([scriptblock]::Create($assignment.Extent.Text)) }
+    if ($plannedBytes -ne ([long]3GB + $inventory[0].size_bytes + 59)) {
+        throw 'Copy budget omitted or truncated asset/module/config bytes.'
+    }
+}
 $changedTarget = Join-Path $Fixture 'changed-inventory-copy'
 [IO.File]::WriteAllText((Join-Path $assets 'T_A.uasset'), 'fixture asset bytes that grew after inventory')
 Must-Reject { Copy-L07InventoriedAsset $inventory[0] $changedTarget } 'size changed after inventory'

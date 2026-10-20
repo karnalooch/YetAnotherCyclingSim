@@ -445,9 +445,10 @@ try {
         $allowEmptyConfig = $_ -cmatch '^(Config/.+\.ini|Plugins/RoadForge/Config/.+\.ini)$'
         @{ relative = $_; source_identity = Get-L07Identity (Join-Path $RepoRoot $_) 8MB -AllowEmpty:$allowEmptyConfig }
     })
-    $plannedBytes = [long](($assets | Measure-Object size_bytes -Sum).Sum)
-    $plannedBytes += [long](($moduleRows.source_identity | Measure-Object size_bytes -Sum).Sum)
-    $plannedBytes += [long](($metadataRows.source_identity | Measure-Object size_bytes -Sum).Sum)
+    # Identities are OrderedDictionary values; read their keys explicitly.
+    $plannedBytes = [long](($assets | Measure-Object -Property { $_.size_bytes } -Sum).Sum)
+    $plannedBytes += [long](($moduleRows.source_identity | Measure-Object -Property { $_.size_bytes } -Sum).Sum)
+    $plannedBytes += [long](($metadataRows.source_identity | Measure-Object -Property { $_.size_bytes } -Sum).Sum)
     $receipt.planned_copy_bytes = $plannedBytes
     [void](Assert-L07Reserve $plannedBytes)
     Assert-L07IdleHost

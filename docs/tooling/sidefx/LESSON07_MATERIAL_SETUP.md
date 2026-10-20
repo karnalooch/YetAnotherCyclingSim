@@ -384,6 +384,22 @@ The reader records actual actor transforms, per-component layout, assigned mater
 
 The highest result for this stage is `STRUCTURE_READBACK_COMPLETE_GEOMETRY_PENDING`. It does not establish full height samples, the true tile seams at `-0.25 m`, Visibility polarity, continuous collision, material rendering or a reopen after repair. Those still require native measurements against the accepted Houdini source and an isolated candidate update. No current result authorizes the destructive bake helper as an ordinary `PE_Load_Landscape` update.
 
+**Audit follow-up at `9ddebf5a8a7387313a8751e1fb0c960785af4b2a`:**
+[ordinary CI 39434128373](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39434128373)
+passed, including 28/28 native Automation tests, zero failed/skipped/errors and
+two warnings. Physical compile fingerprint `d590157323ba1dee7a999cba34718cd204df0ea8f53dacd6bba7836b4ab66ac7`
+matched the retained build; the cache preserved actual compile head `e2aed213`
+and recorded fresh proof head `9ddebf5a`.
+[L07 readback 39434119045](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39434119045)
+authenticated the canonical map and CI cache, then stopped before candidate
+creation or Editor launch: `Measure-Object size_bytes` did not resolve the
+ordered-dictionary keys under strict mode. Its receipt measured the original
+map unchanged; it provides no structural or geometry result. The wrapper now
+uses the supported calculated-property form of `Measure-Object` for the same
+three size sums. A real PowerShell regression reproduces the old failure and
+verifies asset/module/config accounting above 2 GiB, including empty config.
+The 30 GiB reserve and identity protections are unchanged.
+
 **First isolated readback attempt: blocked before map measurement.** [Run 39413841851, job 118603360623](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39413841851/job/118603360623) used `e2aed213870a7151106049a7b56953eaba919d6f` after that protected CI succeeded. Its `host-receipt.json` reports `INCOMPLETE`: the first `Assert-L07Reserve` rejected insufficient free space for the unchanged 30 GiB reserve, before candidate creation, map hashing or Editor launch. `candidate_root`, `owned_editor_pid` and all source/candidate map measurements are null. There is no new unchanged-map hash measurement, structural result or collision proof. The [1038-byte artifact 12261980942](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39413841851/artifacts/12261980942) contains only that receipt; archive SHA256 is `d428d16cd8304442111be7c2c6a5704c370a496ce412d28c1cd71b0ed42725c9`.
 
 A later read-only host diagnostic measured **22.04 GiB free on D:** at `2026-10-20 11:59:27 UTC`: [run 39386777997, attempt 2, job 118614584666](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39386777997/job/118614584666), [716-byte artifact 12262321889](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39386777997/artifacts/12262321889), SHA256 `0d9e3d75ee9b83382f711ac4e5040e0552ac83090cad4120718ab2f1955d7819`. The diagnostic ran historical workflow code `113021b84f3316868ffad164cd88e5ef4c141ec8`; it did not build, check out or launch UE. Its canonical-project module BuildId `55116800` and present DLLs are inventory only, not admission of the ordinary CI cache. Preserve the accepted Houdini caches and the reserve while following the [bounded retention policy](../../ci/RUNNER_WORKSPACE_RETENTION.md).
