@@ -61,6 +61,17 @@ class L07NativeInvariants(unittest.TestCase):
         self.assertEqual(int(np.count_nonzero(output)), 9)
         self.assertEqual(float(output[0, 0]), 0)
 
+    def test_native_255_alpha_is_normalized_to_binary_unit_visibility(self):
+        mask = np.full((5, 5), 255.0, dtype=np.float32)
+        mask[2, 2] = 0
+        output, padded = mask_padding(
+            mask, (-2, 0, -2), (2, 0, 2), (-1, 1), (-1, 1)
+        )
+        self.assertEqual(padded, 16)
+        self.assertEqual(float(output.max()), 1.0)
+        self.assertEqual(float(output[2, 2]), 0.0)
+        self.assertEqual(int(np.count_nonzero(output)), 8)
+
     def test_off_grid_point_requires_interpolation(self):
         tile, start, end = synthetic_tiles()[(1, 1)]
         self.assertAlmostEqual(

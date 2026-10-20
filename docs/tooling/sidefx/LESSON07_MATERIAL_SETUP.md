@@ -221,3 +221,8 @@ The previous transfer discarded `Alpha`. New code preserves it as a `visibility`
 ## 2026-10-20 L07 UE consumer repair gate (non-destructive)
 
 The accepted full-domain L06 cache remains frozen and SHA pinned. Earlier rounded-height, 4-actor and 4096-component records cannot establish a seam-free driveable UE landscape. The read-only Windows source audit authenticated the unchanged source but the older four-tile transport manifest has not established an Unreal `visibility` layer. Fresh UE readback failed during module load before any geometry could be verified. A separate module inventory confirmed both project DLLs exist, but did not prove ABI/build compatibility. Remediation must be carried out in isolated, bounded staging before any opt-in bake, and validate `LandscapeVisibilityMask`, source-coordinate seam alignment, collision, materials and frame time independently. Do not set a technical PASS on a static inventory, successful source hash or successful DLL compile alone.
+
+
+### Native repair test: 2026-10-20 (first runner attempt)
+
+A native 4-tile Houdini test (Actions 39389560761) authenticated the unchanged L06 SHA-256, then failed on the first tile at the former [0,1] Alpha-range assertion. The accepted L06 Stage 1 explicitly imports a binary validity raster with heightscale 255; accepting any positive Alpha as valid is its already-verified convention. The L07 transfer now converts the *copy* to exact 0/1 while preserving all other valid source data and forcing outer padding to 0. This is a versioned transport repair, not a terrain rebuild. Native replay must still verify all four saved tiles and actual Unreal hole-material/collision behavior. Old run status stays FAILED; source SHA and original map are untouched.

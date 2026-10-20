@@ -164,6 +164,10 @@ def main():
         raw_mask = np.frombuffer(
             validity.allVoxelsAsString(), dtype=np.float32
         ).reshape(res[1], res[0])
+        raw_alpha_min = float(np.min(raw_mask))
+        raw_alpha_max = float(np.max(raw_mask))
+        print(f"  Native Alpha range [{raw_alpha_min:.4f}, {raw_alpha_max:.4f}]")
+
         mask, padded_count = mask_padding(
             raw_mask, pos0, pos_max, src_x, src_z
         )
@@ -210,6 +214,8 @@ def main():
                 "ue_masked_material_verified": False,
                 "requested_hole_material": HOLE_MATERIAL or None,
                 "mask_export_range": [0.0, 1.0],
+                "source_crop_alpha_range": [raw_alpha_min, raw_alpha_max],
+                "source_alpha_normalization": "Alpha > 0 maps to 1.0; zero maps to 0.0",
                 "pixel_registration_ue_verified": False,
             },
         }

@@ -88,13 +88,16 @@ def mask_padding(alpha, start, end, src_x, src_z, epsilon=0.0001):
     a = np.asarray(alpha, dtype=np.float32)
     if a.ndim != 2 or not np.isfinite(a).all():
         raise ValueError("Invalid Alpha array")
-    if np.min(a) < -1e-5 or np.max(a) > 1.00001:
-        raise ValueError("Alpha outside [0,1]")
+    # L06 loads its binary source validity raster with heightscale=255.
+    # Preserve original Alpha in the accepted cache; normalize ONLY the
+    # copied L07 transfer mask. Original convention: Alpha > 0 is valid.
+    if np.min(a) < -1e-5:
+        raise ValueError("Native L06 Alpha contains unsupported negative values")
     x = np.linspace(start[0], end[0], a.shape[1], dtype=np.float64)
     z = np.linspace(start[2], end[2], a.shape[0], dtype=np.float64)
     outside_columns = (x < min(src_x) - epsilon) | (x > max(src_x) + epsilon)
     outside_rows = (z < min(src_z) - epsilon) | (z > max(src_z) + epsilon)
-    out = a.copy()
+    out = (a > 0).astype(np.float32)
     out[outside_rows, :] = 0
     out[:, outside_columns] = 0
     padded = int(
