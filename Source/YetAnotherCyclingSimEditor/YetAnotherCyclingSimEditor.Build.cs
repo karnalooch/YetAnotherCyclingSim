@@ -23,9 +23,17 @@ public class YetAnotherCyclingSimEditor : ModuleRules
             "GeometryCore",
             "GeometryFramework",
             "DynamicMesh",
-            "ToolsetRegistry",
 			"YetAnotherCyclingSim"
 		});
+
+        // ToolsetRegistry is an opt-in experimental engine plugin for PCG365.
+        // Ordinary Editor C++ does not use its APIs. Unconditional dependency
+        // made the base Editor DLL import an unavailable ToolsetRegistry DLL
+        // and stopped startup (GetLastError=126). Preserve the opt-in target.
+        if (Target.Name == "YetAnotherCyclingSimPcg365Editor")
+        {
+            PrivateDependencyModuleNames.Add("ToolsetRegistry");
+        }
 
 		// PCGEx is deliberately an optional authoring-only dependency. The pinned
 		// source checkout is materialized by Bootstrap-YacsPcgEx.ps1 for the
