@@ -1,9 +1,10 @@
-"""Setup Lesson 07 Unified Houdini Checkpoint, Preview Nodes, Cameras, and Export Graph.
+"""Setup Lesson 07 Unified Houdini Checkpoint, Preview Modes, Cameras, and Export Graph.
 
 Follows SideFX Project Pegasus Landscape Workflow Lesson 7 ("Material Setup") exactly:
 - Checkpoint: SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc (Save As from L06)
-- 4 Preview modes connected to FINAL_CACHE
+- 4 Preview modes connected to FINAL_CACHE with authentic native display mechanisms
 - 5 Verified Camera Bookmarks in /obj
+- Dedicated full-resolution Scree isolation and closeup
 - Procedural Delta calculation: final_height - stage1_base_height
 - IDMap export branch: HeightField Output, 8b fixed, single channel, id layer
 - Global Color export branch: HeightField RGB ColorSpace (Linear->sRGB), @height=0, HeightField Output RGB
@@ -34,22 +35,6 @@ FINAL_CACHE = Path("D:/yacs/work/lesson06-unified-20261019/final_unified_idmap.b
 PROCEDURAL_DETAIL_CACHE = WORK_DIR / "procedural_detail.bgeo.sc"
 IDMAP_PNG = WORK_DIR / "T_PE_Terrain_IDMap.png"
 COLOR_PNG = WORK_DIR / "T_PE_Terrain_Color.png"
-
-
-def compute_lookat_rotations(pos: tuple[float, float, float], target: tuple[float, float, float]) -> tuple[float, float, float]:
-    """Compute Houdini rx, ry, rz Euler angles (in degrees, order XYZ) to aim camera from pos to target."""
-    dx = target[0] - pos[0]
-    dy = target[1] - pos[1]
-    dz = target[2] - pos[2]
-    dist_xz = math.sqrt(dx * dx + dz * dz)
-
-    # In Houdini camera space: pointing down -Z axis
-    # Pitch (rx): rotation around X
-    rx = -math.degrees(math.atan2(dy, dist_xz))
-    # Yaw (ry): rotation around Y
-    ry = math.degrees(math.atan2(dx, -dz))
-    rz = 0.0
-    return (rx, ry, rz)
 
 
 def create_or_update_cam(parent: hou.Node, name: str, pos: tuple[float, float, float], target: tuple[float, float, float], focal: float = 35.0, clip_far: float = 25000.0) -> hou.Node:
@@ -114,129 +99,119 @@ def main():
     # -------------------------------------------------------------
     # 1. SETUP PREVIEW MODES
     # -------------------------------------------------------------
-    print("Setting up 4 Preview modes...", flush=True)
+    print("Setting up 4 Preview modes with verified native mechanisms...", flush=True)
 
-    # Responsive Preview Resample node for fluid interactive 60 FPS viewport navigation
-    # Resamples 16000x16000 (0.5m) to 2000x2000 (4.0m) preserving all 14 heightfield volume layers
+    # Responsive Preview Resample node for fluid interactive viewport navigation
+    # Resamples 16000x16000 (0.5m) to 2000x2000 (4.0m) preserving all layers
+    # Uses filter=point to preserve categorical discrete class IDs without linear blur
     prev_resample = net.node("PREVIEW_RESAMPLE")
     if not prev_resample:
         prev_resample = net.createNode("heightfield_resample", "PREVIEW_RESAMPLE")
     prev_resample.setInput(0, final_cache_node)
     prev_resample.parm("divisionmode").set(0)  # By scale
     prev_resample.parm("resscale").set(0.125)  # 2000x2000
+    prev_resample.parm("filter").set("point")  # Nearest-neighbor categorical sampling
     prev_resample.setColor(hou.Color((0.3, 0.5, 0.8)))
 
     # Mode 1: PREVIEW_GLOBAL_COLOR
     # Native 3D terrain with global RGB volumes.
+    # We delete detail attribute 'volvis' so Houdini's native HeightField shader
+    # renders the authentic r, g, b color volumes directly!
     prev_color = net.node("PREVIEW_GLOBAL_COLOR")
+    if prev_color and prev_color.type().name() != "attribdelete":
+        prev_color.destroy()
+        prev_color = None
     if not prev_color:
-        prev_color = net.createNode("null", "PREVIEW_GLOBAL_COLOR")
+        prev_color = net.createNode("attribdelete", "PREVIEW_GLOBAL_COLOR")
     prev_color.setInput(0, prev_resample)
+    prev_color.parm("dtldel").set("volvis")
     prev_color.setColor(hou.Color((0.2, 0.7, 0.3)))
 
     # Mode 2: PREVIEW_NEUTRAL_SHADING
-    # Neutral geometry clay visualization via uniform RGB volume
+    # Pure clay neutral shading: isolate height layer, delete volvis and color layers
+    iso_neutral = net.node("PREVIEW_NEUTRAL_ISO")
+    if not iso_neutral:
+        iso_neutral = net.createNode("heightfield_isolatelayer", "PREVIEW_NEUTRAL_ISO")
+    iso_neutral.setInput(0, prev_resample)
+    iso_neutral.parm("layer").set("height")
+
     prev_neutral = net.node("PREVIEW_NEUTRAL_SHADING")
-    if not prev_neutral or prev_neutral.type().name() != "python":
-        if prev_neutral:
-            prev_neutral.destroy()
-        prev_neutral = net.createNode("python", "PREVIEW_NEUTRAL_SHADING")
-    prev_neutral.setInput(0, prev_resample)
-    code_neutral = """import numpy as np
-geo = hou.pwd().geometry()
-r_p = [p for p in geo.prims() if p.attribValue('name') == 'r'][0]
-g_p = [p for p in geo.prims() if p.attribValue('name') == 'g'][0]
-b_p = [p for p in geo.prims() if p.attribValue('name') == 'b'][0]
-n = r_p.resolution()[0] * r_p.resolution()[1]
-grey = tuple([0.55] * n)
-r_p.setAllVoxels(grey)
-g_p.setAllVoxels(grey)
-b_p.setAllVoxels(grey)
-"""
-    prev_neutral.parm("python").set(code_neutral)
+    if prev_neutral and prev_neutral.type().name() != "attribdelete":
+        prev_neutral.destroy()
+        prev_neutral = None
+    if not prev_neutral:
+        prev_neutral = net.createNode("attribdelete", "PREVIEW_NEUTRAL_SHADING")
+    prev_neutral.setInput(0, iso_neutral)
+    prev_neutral.parm("dtldel").set("volvis")
     prev_neutral.setColor(hou.Color((0.6, 0.6, 0.6)))
 
     # Mode 3: PREVIEW_IDMAP
-    # Colorized 5-class IDMap visualization via direct RGB volume mapping
-    # grass: dark green, grass 2: yellow-green, sand: golden sand, cliffs: slate brown, scree: limestone grey/white
+    # Native discrete 5-class Pegasus IDMap palette visualization via heightfield_visualize
     prev_idmap = net.node("PREVIEW_IDMAP")
-    if not prev_idmap or prev_idmap.type().name() != "python":
-        if prev_idmap:
-            prev_idmap.destroy()
-        prev_idmap = net.createNode("python", "PREVIEW_IDMAP")
+    if prev_idmap and prev_idmap.type().name() != "heightfield_visualize":
+        prev_idmap.destroy()
+        prev_idmap = None
+    if not prev_idmap:
+        prev_idmap = net.createNode("heightfield_visualize", "PREVIEW_IDMAP")
     prev_idmap.setInput(0, prev_resample)
-    code_idmap = """import numpy as np
-geo = hou.pwd().geometry()
-id_p = [p for p in geo.prims() if p.attribValue('name') == 'id'][0]
-r_p = [p for p in geo.prims() if p.attribValue('name') == 'r'][0]
-g_p = [p for p in geo.prims() if p.attribValue('name') == 'g'][0]
-b_p = [p for p in geo.prims() if p.attribValue('name') == 'b'][0]
-
-id_arr = np.array(id_p.allVoxels())
-r = np.zeros_like(id_arr)
-g = np.zeros_like(id_arr)
-b = np.zeros_like(id_arr)
-
-m0 = id_arr <= 0.125
-r[m0] = 64/255.0; g[m0] = 140/255.0; b[m0] = 38/255.0
-
-m1 = (id_arr > 0.125) & (id_arr <= 0.375)
-r[m1] = 217/255.0; g[m1] = 217/255.0; b[m1] = 38/255.0
-
-m2 = (id_arr > 0.375) & (id_arr <= 0.625)
-r[m2] = 230/255.0; g[m2] = 191/255.0; b[m2] = 115/255.0
-
-m3 = (id_arr > 0.625) & (id_arr <= 0.875)
-r[m3] = 102/255.0; g[m3] = 89/255.0; b[m3] = 77/255.0
-
-m4 = id_arr > 0.875
-r[m4] = 1.0; g[m4] = 1.0; b[m4] = 1.0
-
-r_p.setAllVoxels(tuple(r))
-g_p.setAllVoxels(tuple(g))
-b_p.setAllVoxels(tuple(b))
-"""
-    prev_idmap.parm("python").set(code_idmap)
+    prev_idmap.parm("cdvolume").set("id")
+    keys = (0.0, 0.125, 0.375, 0.625, 0.875)
+    values = (
+        (64 / 255.0, 140 / 255.0, 38 / 255.0),    # grass (0.0)
+        (217 / 255.0, 217 / 255.0, 38 / 255.0),  # grass 2 (0.25)
+        (230 / 255.0, 191 / 255.0, 115 / 255.0), # sand (0.50)
+        (102 / 255.0, 89 / 255.0, 77 / 255.0),   # cliffs (0.75)
+        (1.0, 1.0, 1.0)                          # scree (1.0)
+    )
+    basis = (hou.rampBasis.Constant,) * 5
+    ramp_idmap = hou.Ramp(basis, keys, values)
+    prev_idmap.parm("cdramp").set(ramp_idmap)
+    prev_idmap.parm("cdrange1").set(0.0)
+    prev_idmap.parm("cdrange2").set(1.0)
     prev_idmap.setColor(hou.Color((0.9, 0.6, 0.2)))
 
     # Mode 4: PREVIEW_CLASS_ISOLATION
-    # Uses existing PE_Heightfield_id_to_layer node to extract scree to mask
+    # Uses PE_Heightfield_id_to_layer node to extract scree to mask
     id_to_layer = net.node("ID_TO_LAYER")
     if not id_to_layer:
         id_to_layer = net.createNode("PE_Heightfield_id_to_layer", "ID_TO_LAYER")
     id_to_layer.setInput(0, prev_resample)
     id_to_layer.parm("srcname1").set("id")
     id_to_layer.parm("dstname1").set("mask")
+    id_to_layer.parm("id_layer").set("255")  # Explicitly Scree discrete ID 255
 
     prev_iso = net.node("PREVIEW_CLASS_ISOLATION")
-    if not prev_iso or prev_iso.type().name() != "python":
-        if prev_iso:
-            prev_iso.destroy()
-        prev_iso = net.createNode("python", "PREVIEW_CLASS_ISOLATION")
+    if prev_iso and prev_iso.type().name() != "heightfield_visualize":
+        prev_iso.destroy()
+        prev_iso = None
+    if not prev_iso:
+        prev_iso = net.createNode("heightfield_visualize", "PREVIEW_CLASS_ISOLATION")
     prev_iso.setInput(0, id_to_layer)
-    code_iso = """import numpy as np
-geo = hou.pwd().geometry()
-mask_p = [p for p in geo.prims() if p.attribValue('name') == 'mask'][0]
-r_p = [p for p in geo.prims() if p.attribValue('name') == 'r'][0]
-g_p = [p for p in geo.prims() if p.attribValue('name') == 'g'][0]
-b_p = [p for p in geo.prims() if p.attribValue('name') == 'b'][0]
-
-m_arr = np.array(mask_p.allVoxels())
-r = np.full_like(m_arr, 0.2)
-g = np.full_like(m_arr, 0.2)
-b = np.full_like(m_arr, 0.2)
-
-iso = m_arr > 0.05
-r[iso] = 0.95
-g[iso] = 0.10
-b[iso] = 0.10
-
-r_p.setAllVoxels(tuple(r))
-g_p.setAllVoxels(tuple(g))
-b_p.setAllVoxels(tuple(b))
-"""
-    prev_iso.parm("python").set(code_iso)
+    prev_iso.parm("cdvolume").set("mask")
+    ramp_iso = hou.Ramp((hou.rampBasis.Linear, hou.rampBasis.Linear), (0.0, 1.0), ((0.7, 0.7, 0.7), (1.0, 0.0, 0.0)))
+    prev_iso.parm("cdramp").set(ramp_iso)
+    prev_iso.parm("cdrange1").set(0.0)
+    prev_iso.parm("cdrange2").set(1.0)
     prev_iso.setColor(hou.Color((0.8, 0.2, 0.2)))
+
+    # Full resolution Scree isolation node for bit-exact full-resolution verification
+    id_to_layer_full = net.node("ID_TO_LAYER_FULLRES")
+    if not id_to_layer_full:
+        id_to_layer_full = net.createNode("PE_Heightfield_id_to_layer", "ID_TO_LAYER_FULLRES")
+    id_to_layer_full.setInput(0, final_cache_node)
+    id_to_layer_full.parm("srcname1").set("id")
+    id_to_layer_full.parm("dstname1").set("mask")
+    id_to_layer_full.parm("id_layer").set("255")
+
+    scree_fullres = net.node("SCREE_FULLRES_PREVIEW")
+    if not scree_fullres:
+        scree_fullres = net.createNode("heightfield_visualize", "SCREE_FULLRES_PREVIEW")
+    scree_fullres.setInput(0, id_to_layer_full)
+    scree_fullres.parm("cdvolume").set("mask")
+    scree_fullres.parm("cdramp").set(ramp_iso)
+    scree_fullres.parm("cdrange1").set(0.0)
+    scree_fullres.parm("cdrange2").set(1.0)
+    scree_fullres.setColor(hou.Color((0.9, 0.1, 0.1)))
 
     # Set default display and selection flag to Mode 1 (PREVIEW_GLOBAL_COLOR)
     prev_color.setDisplayFlag(True)
@@ -248,7 +223,7 @@ b_p.setAllVoxels(tuple(b))
     # -------------------------------------------------------------
     print("Setting up 5 verified Camera Bookmarks in /obj...", flush=True)
     obj = hou.node("/obj")
-    
+
     # Cam 1: Panorama (Whole domain overview looking South-East towards Puig Major)
     create_or_update_cam(
         obj, "cam_panorama",
@@ -261,35 +236,35 @@ b_p.setAllVoxels(tuple(b))
     # Cam 2: Puig Major (Peak summit at X=-1283.75, Y=1437.16, Z=3495.25)
     create_or_update_cam(
         obj, "cam_puig_major",
-        pos=(-2800.0, 2200.0, 1800.0),
+        pos=(-2783.75, 1800.0, 1995.25),
         target=(-1283.75, 1437.16, 3495.25),
         focal=45.0,
         clip_far=20000.0
     )
 
-    # Cam 3: Sa Calobra Cove (Beach at X=470.0, Y=10.34, Z=-1060.0)
+    # Cam 3: Sa Calobra Cove (Beach at X=470.0, Y=10.34, Z=-1060.0, camera elevated over bay looking into cove)
     create_or_update_cam(
         obj, "cam_sa_calobra_cove",
-        pos=(-200.0, 450.0, -1800.0),
+        pos=(470.0, 160.0, -1800.0),
         target=(470.0, 10.34, -1060.0),
         focal=35.0,
         clip_far=10000.0
     )
 
-    # Cam 4: Transition Grass/Sand/Cliffs (Coastal transition zone)
+    # Cam 4: Transition Grass/Sand/Cliffs
     create_or_update_cam(
         obj, "cam_transition",
-        pos=(150.0, 350.0, -1450.0),
-        target=(380.0, 45.0, -1120.0),
+        pos=(-2480.0, 500.0, 1800.0),
+        target=(-2495.0, 460.0, 1840.0),
         focal=40.0,
         clip_far=10000.0
     )
 
-    # Cam 5: Scree Site (Centroid at X=-1260.25, Y=445.08, Z=262.25)
+    # Cam 5: Scree Site (Cluster 1 centroid at X=-2502.78, Y=460.95, Z=1845.95)
     create_or_update_cam(
         obj, "cam_scree_site",
-        pos=(-1450.0, 580.0, 100.0),
-        target=(-1260.25, 445.08, 262.25),
+        pos=(-2550.0, 520.0, 1780.0),
+        target=(-2502.78, 460.95, 1845.95),
         focal=50.0,
         clip_far=5000.0
     )
@@ -310,9 +285,8 @@ b_p.setAllVoxels(tuple(b))
     delta_layer.setInput(0, final_cache_node)
     delta_layer.setInput(1, base_file)
     delta_layer.parm("layer").set("height")
-    delta_layer.parm("mode").set("subtract")  # Input 1 - Input 2 = final - base
+    delta_layer.parm("mode").set("subtract")
 
-    # Isolate height volume only for storage efficiency
     delta_isolate = net.node("PROCEDURAL_DELTA_ISOLATE")
     if not delta_isolate:
         delta_isolate = net.createNode("heightfield_isolatelayer", "PROCEDURAL_DELTA_ISOLATE")
@@ -324,7 +298,7 @@ b_p.setAllVoxels(tuple(b))
         delta_cache = net.createNode("file", "PROCEDURAL_DELTA_OUT")
     delta_cache.setInput(0, delta_isolate)
     delta_cache.parm("file").set(str(PROCEDURAL_DETAIL_CACHE).replace("\\", "/"))
-    delta_cache.parm("filemode").set(2)  # Write files
+    delta_cache.parm("filemode").set(2)
 
     # -------------------------------------------------------------
     # 4. SETUP IDMAP EXPORT BRANCH (ETAP D)
@@ -348,7 +322,7 @@ b_p.setAllVoxels(tuple(b))
     if not color_srgb:
         color_srgb = net.createNode("heightfield_rgb_colorspace::1.0", "COLOR_COLORSPACE_SRGB")
     color_srgb.setInput(0, final_cache_node)
-    color_srgb.parm("input").set(0)  # Linear to sRGB
+    color_srgb.parm("input").set(0)
 
     color_flatten = net.node("COLOR_FLATTEN_HEIGHT")
     if not color_flatten:
@@ -370,10 +344,8 @@ b_p.setAllVoxels(tuple(b))
     out_color.parm("green_out_range").set("none")
     out_color.parm("blue_out_range").set("none")
 
-    # Layout nodes neatly
     net.layoutChildren()
 
-    # Save checkpoint HIP
     print(f"Saving L07 Checkpoint to: {L07_HIP}...", flush=True)
     hou.hipFile.save(str(L07_HIP))
     print("[ok] SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc saved successfully!", flush=True)

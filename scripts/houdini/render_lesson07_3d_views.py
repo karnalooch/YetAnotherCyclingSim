@@ -5,18 +5,20 @@ in its own isolated hython sub-process.
 
 Renders:
 1. 4 PREVIEW modes from cam_panorama:
-   - 3d_preview_global_color.png
-   - 3d_preview_neutral_shading.png
-   - 3d_preview_idmap_palette.png
-   - 3d_preview_scree_isolation.png
+   - 3d_preview_global_color.png (PREVIEW_GLOBAL_COLOR)
+   - 3d_preview_neutral_shading.png (PREVIEW_NEUTRAL_SHADING)
+   - 3d_preview_idmap_palette.png (PREVIEW_IDMAP)
+   - 3d_preview_scree_isolation.png (PREVIEW_CLASS_ISOLATION)
 2. Landmark closeup 3D camera views:
-   - 3d_cam_panorama.png (from /obj/cam_panorama)
-   - 3d_cam_puig_major.png (from /obj/cam_puig_major)
-   - 3d_cam_sa_calobra_cove.png (from /obj/cam_sa_calobra_cove)
-   - 3d_cam_scree_site.png (from /obj/cam_scree_site)
-   - 3d_cam_transition.png (from /obj/cam_transition)
+   - 3d_cam_panorama.png (from /obj/cam_panorama on PREVIEW_GLOBAL_COLOR)
+   - 3d_cam_puig_major.png (from /obj/cam_puig_major on PREVIEW_GLOBAL_COLOR)
+   - 3d_cam_sa_calobra_cove.png (from /obj/cam_sa_calobra_cove on PREVIEW_GLOBAL_COLOR)
+   - 3d_cam_scree_site.png (from /obj/cam_scree_site on PREVIEW_GLOBAL_COLOR)
+   - 3d_cam_scree_site_isolation.png (from /obj/cam_scree_site on PREVIEW_CLASS_ISOLATION)
+   - 3d_cam_transition.png (from /obj/cam_transition on PREVIEW_GLOBAL_COLOR)
 """
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -72,10 +74,13 @@ def inspect_image(path: Path):
     img = Image.open(path)
     arr = np.array(img)
     non_black = float(np.count_nonzero(arr > 10)) / arr.size * 100
+    file_bytes = path.read_bytes()
+    sha256 = hashlib.sha256(file_bytes).hexdigest()
     return {
         "name": path.name,
         "path": str(path),
         "size_bytes": path.stat().st_size,
+        "sha256": sha256,
         "shape": list(arr.shape),
         "mean": float(arr.mean()),
         "std": float(arr.std()),
@@ -112,6 +117,8 @@ def main():
     print("\n--- Part 1: Rendering 4 PREVIEW Modes from cam_panorama ---", flush=True)
     for node_name, img_name, note in preview_modes:
         out_file = EVIDENCE_DIR / img_name
+        if out_file.exists():
+            out_file.unlink()
         cmd = [
             str(HYTHON_BIN),
             str(Path(__file__).resolve()),
@@ -128,29 +135,32 @@ def main():
         stats = inspect_image(out_file)
         stats["note"] = note
         rendered_previews.append(stats)
-        print(f"  [ok] {img_name}: {stats['size_bytes']} bytes, mean={stats['mean']:.1f}, std={stats['std']:.1f}, non_black={stats['non_black_pct']:.1f}%")
+        print(f"  [ok] {img_name}: {stats['size_bytes']} bytes, sha256={stats['sha256'][:12]}..., mean={stats['mean']:.1f}, std={stats['std']:.1f}, non_black={stats['non_black_pct']:.1f}%")
 
     cameras = [
-        ("cam_panorama", "3d_cam_panorama.png", "Panorama view of full 8x8 km domain"),
-        ("cam_puig_major", "3d_cam_puig_major.png", "Closeup view of Puig Major peak and ridgeline"),
-        ("cam_sa_calobra_cove", "3d_cam_sa_calobra_cove.png", "Closeup view of Sa Calobra cove and beach"),
-        ("cam_scree_site", "3d_cam_scree_site.png", "Closeup view of Scree slope site"),
-        ("cam_transition", "3d_cam_transition.png", "Closeup view of coastal transition zone"),
+        ("cam_panorama", "PREVIEW_GLOBAL_COLOR", "3d_cam_panorama.png", "Panorama view of full 8x8 km domain"),
+        ("cam_puig_major", "PREVIEW_GLOBAL_COLOR", "3d_cam_puig_major.png", "Closeup view of Puig Major peak and ridgeline"),
+        ("cam_sa_calobra_cove", "PREVIEW_GLOBAL_COLOR", "3d_cam_sa_calobra_cove.png", "Framed closeup view of Sa Calobra cove and beach"),
+        ("cam_scree_site", "PREVIEW_GLOBAL_COLOR", "3d_cam_scree_site.png", "Closeup view of Scree slope site with terrain surface"),
+        ("cam_scree_site", "PREVIEW_CLASS_ISOLATION", "3d_cam_scree_site_isolation.png", "Closeup view of Scree site with red class isolation mask"),
+        ("cam_transition", "PREVIEW_GLOBAL_COLOR", "3d_cam_transition.png", "Closeup view of Scree/Cliffs boundary zone"),
     ]
 
     rendered_cameras = []
     print("\n--- Part 2: Rendering Landmark Camera Views ---", flush=True)
-    for cam_name, img_name, note in cameras:
+    for cam_name, node_name, img_name, note in cameras:
         out_file = EVIDENCE_DIR / img_name
+        if out_file.exists():
+            out_file.unlink()
         cmd = [
             str(HYTHON_BIN),
             str(Path(__file__).resolve()),
             "--single",
             "--cam", cam_name,
-            "--node", "PREVIEW_GLOBAL_COLOR",
+            "--node", node_name,
             "--out", str(out_file),
         ]
-        print(f"\n[Running] {cam_name} -> {img_name}...", flush=True)
+        print(f"\n[Running] {cam_name} ({node_name}) -> {img_name}...", flush=True)
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             print(f"Error rendering {img_name}:\n{res.stderr}\n{res.stdout}", flush=True)
@@ -158,7 +168,7 @@ def main():
         stats = inspect_image(out_file)
         stats["note"] = note
         rendered_cameras.append(stats)
-        print(f"  [ok] {img_name}: {stats['size_bytes']} bytes, mean={stats['mean']:.1f}, std={stats['std']:.1f}, non_black={stats['non_black_pct']:.1f}%")
+        print(f"  [ok] {img_name}: {stats['size_bytes']} bytes, sha256={stats['sha256'][:12]}..., mean={stats['mean']:.1f}, std={stats['std']:.1f}, non_black={stats['non_black_pct']:.1f}%")
 
     report = {
         "status": "PASS",

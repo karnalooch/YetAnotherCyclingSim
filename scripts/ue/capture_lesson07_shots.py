@@ -15,42 +15,81 @@ def log(msg):
     unreal.log(f"[UE_CAPTURE] {msg}")
 
 MAP_PATH = "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07"
+MAT_NEUTRAL = "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview"
+MAT_MATERIAL = "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS"
 
 SHOTS = [
+    # 1. Full Domain Panorama (Material)
     {
         "name": "ue_panorama_material.png",
-        "cam": unreal.Vector(-450000.0, -450000.0, 350000.0),
-        "target": unreal.Vector(0.0, 0.0, 50000.0),
-        "fov": 85.0,
+        "cam": unreal.Vector(-450000.0, -500000.0, 420000.0),
+        "target": unreal.Vector(0.0, 0.0, 40000.0),
+        "fov": 75.0,
+        "material": MAT_MATERIAL,
         "note": "Full terrain panorama with Pegasus master material, global color and PBR lighting"
     },
+    # 2. Full Domain Panorama (Neutral Clay)
+    {
+        "name": "ue_panorama_neutral.png",
+        "cam": unreal.Vector(-450000.0, -500000.0, 420000.0),
+        "target": unreal.Vector(0.0, 0.0, 40000.0),
+        "fov": 75.0,
+        "material": MAT_NEUTRAL,
+        "note": "Full terrain panorama with neutral review material"
+    },
+    # 3. Authentic Scree Occurrence Closeup (Material)
+    {
+        "name": "ue_closeup_scree.png",
+        "cam": unreal.Vector(-255000.0, 178000.0, 52000.0),
+        "target": unreal.Vector(-250278.0, 184595.0, 46095.0),
+        "fov": 50.0,
+        "material": MAT_MATERIAL,
+        "note": "Closeup Scree occurrence showing normal map response and roughness under sunlight"
+    },
+    # 4. Authentic Scree Occurrence Closeup (Neutral Clay) - Identical camera!
+    {
+        "name": "ue_closeup_scree_neutral.png",
+        "cam": unreal.Vector(-255000.0, 178000.0, 52000.0),
+        "target": unreal.Vector(-250278.0, 184595.0, 46095.0),
+        "fov": 50.0,
+        "material": MAT_NEUTRAL,
+        "note": "Closeup Scree occurrence neutral shading from identical camera and lighting"
+    },
+    # 5. Puig Major Summit Ridge
     {
         "name": "ue_closeup_puig_major.png",
         "cam": unreal.Vector(-278375.0, 199525.0, 180000.0),
         "target": unreal.Vector(-128375.0, 349525.0, 143716.0),
-        "fov": 60.0,
+        "fov": 50.0,
+        "material": MAT_MATERIAL,
         "note": "Closeup Puig Major summit ridge showing rock/cliffs surface and global tint"
     },
+    # 6. Sa Calobra Cove Beach and Bay
     {
         "name": "ue_closeup_sa_calobra_cove.png",
-        "cam": unreal.Vector(-20000.0, -160000.0, 35000.0),
+        "cam": unreal.Vector(47000.0, -180000.0, 16000.0),
         "target": unreal.Vector(47000.0, -106000.0, 1034.0),
-        "fov": 65.0,
-        "note": "Closeup Sa Calobra cove coastal sand and rock contact zone"
+        "fov": 45.0,
+        "material": MAT_MATERIAL,
+        "note": "Framed closeup Sa Calobra cove beach and sea bay"
     },
-    {
-        "name": "ue_closeup_scree.png",
-        "cam": unreal.Vector(187925.0, -3775.0, 35000.0),
-        "target": unreal.Vector(217925.0, 26225.0, 21712.0),
-        "fov": 60.0,
-        "note": "Closeup Scree occurrence showing normal map response and roughness under sunlight"
-    },
+    # 7. Two-class boundary transition (Scree / Cliffs)
     {
         "name": "ue_closeup_transition.png",
-        "cam": unreal.Vector(-100000.0, -130000.0, 28000.0),
-        "target": unreal.Vector(-50000.0, -80000.0, 8000.0),
-        "fov": 65.0,
-        "note": "Closeup transition showing detail textures blending with global color"
+        "cam": unreal.Vector(-248000.0, 180000.0, 50000.0),
+        "target": unreal.Vector(-249500.0, 184000.0, 46000.0),
+        "fov": 40.0,
+        "material": MAT_MATERIAL,
+        "note": "Closeup two-class boundary between scree and cliffs detail textures"
+    },
+    # 8. Tile Seam Inspection across X=0 border
+    {
+        "name": "ue_tile_seam_check.png",
+        "cam": unreal.Vector(-5000.0, -5000.0, 55000.0),
+        "target": unreal.Vector(0.0, 0.0, 47350.0),
+        "fov": 40.0,
+        "material": MAT_MATERIAL,
+        "note": "Closeup inspection across tile seam at domain center verifying continuous UV mapping and lighting"
     }
 ]
 
@@ -61,16 +100,38 @@ _start_time = 0.0
 _handle = None
 _cooling_down = False
 _cooldown_start = 0.0
+_current_mat_path = None
+
+def set_landscape_material(mat_path):
+    global _current_mat_path
+    if _current_mat_path == mat_path:
+        return
+    log(f"Setting landscape material to {mat_path}...")
+    mat_asset = unreal.EditorAssetLibrary.load_asset(mat_path)
+    if not mat_asset:
+        raise RuntimeError(f"Failed to load material asset: {mat_path}")
+    actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    for a in actor_subsystem.get_all_level_actors():
+        if isinstance(a, unreal.LandscapeProxy):
+            a.set_editor_property("landscape_material", mat_asset)
+    _current_mat_path = mat_path
 
 def finish(error=""):
     global _handle
     if _handle is not None:
         unreal.unregister_slate_post_tick_callback(_handle)
         _handle = None
+    # Restore Pegasus material before exit
+    try:
+        set_landscape_material(MAT_MATERIAL)
+        unreal.EditorLevelLibrary.save_current_level()
+    except Exception as e:
+        log(f"Warning restoring material: {e}")
+
     if error:
         log(f"ERROR: {error}")
     else:
-        log("All 5 shots captured and verified successfully!")
+        log("All shots captured and verified successfully!")
     log("Quitting editor...")
     unreal.SystemLibrary.execute_console_command(None, "QUIT_EDITOR")
 
@@ -86,6 +147,8 @@ def schedule_current_shot():
         os.remove(out_file)
 
     log(f"--- Scheduling [{_current_idx + 1}/{len(SHOTS)}] {shot['name']} ---")
+    set_landscape_material(shot["material"])
+
     rot = unreal.MathLibrary.find_look_at_rotation(shot["cam"], shot["target"])
 
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -127,7 +190,7 @@ def tick(_delta):
     elapsed = now - _start_time
 
     if _cooling_down:
-        if now - _cooldown_start > 1.0:
+        if now - _cooldown_start > 1.5:
             _cooling_down = False
             _current_idx += 1
             schedule_current_shot()
