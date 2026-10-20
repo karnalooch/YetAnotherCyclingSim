@@ -118,9 +118,14 @@ def main():
             raise RuntimeError(f"{name}: expected height + Alpha, got {sorted(layers)}")
         validity = layers["Alpha"]
         validity.setAttribValue("name", "visibility")
+        # Houdini Engine uses prim min/max settings for masks too.
+        # Height remains [-5, 1500], visibility must be mapped from [0, 1].
+        validity.setAttribValue("unreal_landscape_layer_min", 0.0)
+        validity.setAttribValue("unreal_landscape_layer_max", 1.0)
         prim = layers["height"]
         res = prim.resolution()
-        assert res == (8129, 8129, 1), f"Expected resolution (8129, 8129, 1), got {res}"
+        if res != (8129, 8129, 1):
+            raise RuntimeError(f"{name}: expected 8129x8129 native tile, got {res}")
         
         pos0 = tuple(prim.indexToPos((0, 0, 0)))
         pos_max = tuple(prim.indexToPos((res[0] - 1, res[1] - 1, 0)))
@@ -149,7 +154,9 @@ def main():
         print(f"  Saving to {out_path}...")
         g.saveToFile(str(out_path).replace("\\", "/"))
         
-        file_sha256 = hashlib.sha256(out_path.read_bytes()).hexdigest()
+        # Stream multi-gigabyte file hashing; do not allocate entire file in RAM.
+        with out_path.open("rb") as stream:
+            file_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
         
         tile_info = {
             "name": name,
@@ -173,6 +180,8 @@ def main():
                 "padded_samples": padded_count,
                 "outside_source_zero": True,
                 "ue_masked_material_verified": False,
+                "mask_export_range": [0.0, 1.0],
+                "pixel_registration_ue_verified": False,
             },
         }
         tiles_manifest.append(tile_info)
@@ -230,7 +239,7 @@ def main():
         })
 
     manifest = {
-        "status": "PASS",
+        "status": "NATIVE_TRANSFER_READY_UE_VALIDATION_PENDING",
         "duration_seconds": time.time() - start_time,
         "source_cache": str(SOURCE_CACHE).replace("\\", "/"),
         "tiles": tiles_manifest,

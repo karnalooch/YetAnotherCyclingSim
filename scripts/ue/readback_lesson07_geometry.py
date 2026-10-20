@@ -16,6 +16,29 @@ def actor_height_step_cm(scale_z):
         raise ValueError("Invalid Landscape Scale.Z")
     return float(scale_z) / 128.0
 
+def read_component_int(component, prop_name):
+    # Missing UPROPERTY fields are UNKNOWN, not made up from assumed layout.
+    try:
+        return int(component.get_editor_property(prop_name))
+    except Exception:
+        return None
+
+
+def actual_component_settings(components):
+    properties = ("component_size_quads", "subsection_size_quads",
+                  "num_subsections", "section_base_x", "section_base_y")
+    observed = {}
+    for prop in properties:
+        values = [read_component_int(comp, prop) for comp in components]
+        observed[prop] = {
+            "values": sorted({v for v in values if v is not None}),
+            "read_count": len(values) - values.count(None),
+            "total": len(values),
+            "complete": bool(values) and None not in values,
+        }
+    return observed
+
+
 def main():
     world = unreal.EditorLoadingAndSavingUtils.load_map(LEVEL_PATH)
     if not world:
@@ -50,12 +73,12 @@ def main():
             "bounds_origin_cm": [origin.x, origin.y, origin.z],
             "bounds_extent_cm": [extent.x, extent.y, extent.z],
             "component_count": num_comps,
-            "component_grid": "32x32",
-            "section_size_quads": 127,
-            "sections_per_component": "2x2",
-            "component_size_quads": 254,
-            "tile_quads": 8128,
-            "tile_vertices": 8129,
+            "actual_component_properties": actual_component_settings(comps),
+            "expected_design_not_observed": {
+                "component_grid": "32x32", "section_quads": 127,
+                "num_subsections": 2, "component_quads": 254,
+                "tile_quads": 8128, "tile_vertices": 8129,
+            },
             "assigned_material": mat_name,
         }
         landscape_data.append(info)
@@ -110,7 +133,7 @@ def main():
                         f"{qp['name']}: {delta_cm:.2f}cm differs beyond "
                         f"half actor-specific quantization step ({step_cm/2:.2f}cm)"
                     )
-                print(f"  Hit {qp['name']}: Z = {hit_z_m:.3f} m (expected {qp['expected_h_m']}), delta={delta_cm:.2f} cm ({delta_cm/2.2965:.2f} quant steps), actor={actor_hit}")
+                print(f"  Hit {qp['name']}: {hit_z_m:.3f}m, rounded ref={qp['expected_h_m']}, delta={delta_cm:.2f}cm, actor={actor_hit}; exact native L06 witness still required")
             else:
                 print(f"  Hit {qp['name']}: Z = {hit_z_m:.3f} m, actor={actor_hit}")
             sampled_points.append(sampled)
@@ -132,12 +155,21 @@ def main():
         "actor_quantization_step_cm": {
             name: actor_height_step_cm(z) for name, z in scales.items()
         },
+        "native_component_properties_complete": all(
+            all(row["actual_component_properties"][prop]["complete"]
+                for prop in ("component_size_quads", "subsection_size_quads",
+                             "num_subsections"))
+            for row in landscape_data
+        ),
+        "source_height_interpolation_proved": False,
+        "visibility_layer_proved_in_ue": False,
         "transport_envelope": {
             "source_domain": "8000x8000 m, 16000x16000 cells at 0.5m spacing",
             "transport_envelope": "8128x8128 m, 4 tiles of 8129x8129 vertices (16257x16257 total envelope)",
-            "padding_handling": "Each tile has 64m padding (128 quads) beyond the 4000m sub-domain to satisfy Unreal 127-quad section sizing. The outer 64m padding boundary contains Alpha=0 / NoData, which is handled cleanly as border geometry and never classified as legal Grass (ID=0).",
+            "padding_handling": "UNVERIFIED IN EXISTING UE MAP; original bake predated visibility-preserving transfer.",
             "quantization_unit_cm": None,
-            "note": "Per-actor Landscape Scale.Z differs; no shared height step."        },
+            "note": "Scale.Z differs by actor. Rounded source landmarks are not a true interpolated-height reference."
+        },
         "landscapes": landscape_data,
         "sampled_heights": sampled_points,
     }
