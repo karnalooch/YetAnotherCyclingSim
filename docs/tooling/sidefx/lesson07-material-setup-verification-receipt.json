@@ -1653,7 +1653,7 @@
     "performance_pass": false
   },
   "remote_connection_continuation_20261021": {
-    "status": "EDITOR_STARTED_CLIENT_DISCOVERY_COMPATIBILITY_REPAIR_PENDING",
+    "status": "EDITOR_CREATED_AUTHENTICATED_CONNECTION_AND_POST_JOB_SURVIVAL_VERIFIED",
     "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
     "owner_authorized_missing_connection_infrastructure": true,
     "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
@@ -1669,7 +1669,7 @@
       }
     ],
     "performance_pass": false,
-    "note": "The corrected launcher successfully migrated only the verified inactive failed task action and started canonical UE PID17896 at2026-10-20T23:20:00.0674689Z. The owned loopback listener and stable process identity were verified. The client then rejected additional vendor discovery metadata before HTTP. The running Editor is retained; sign-in, tool schema, native world and post-job survival still need the next existing-session probe.",
+    "note": "The separate task created PID17896 at2026-10-20T23:20:00.0674689Z. At23:37:42.3866008Z, after startupjobcleanup23:24:03.9664401Z, both current owner checks returned ATTACH_EXISTING with the samePID and native startfiletime. The owned listener authenticated, signed_in=true and all84tools were discovered. No native tool call, current-world readback or channel comparison has yet occurred.",
     "inventory": {
       "source_commit": "4bf894dd8dccc482a3e90a53bce6d6b01653e6a7",
       "run_id": 39507345660,
@@ -1697,7 +1697,7 @@
       "editor_commands_executed": 0
     },
     "connection_workflow": ".github/workflows/yacs-lesson07-remote-editor.yml",
-    "connection_execution": "EDITOR_RUNNING_BRIDGE_DISCOVERY_FAILED_BEFORE_HTTP",
+    "connection_execution": "BRIDGE_DISCOVERY_COMPLETE_NATIVE_READBACK_PENDING",
     "first_connection_attempt": {
       "source_commit": "3ba05803bfc3ff095eb012e3f790752b55b47d12",
       "protected_ci_run_id": 39508823330,
@@ -1740,7 +1740,7 @@
       "dictionary_bug_reproduced": false
     },
     "startup_retry_execution": "BLOCKED_HANDOFF",
-    "post_job_survival": "NOT_YET_VERIFIED_AFTER_2026_10_20T23_24_03Z_CLEANUP",
+    "post_job_survival": "VERIFIED_SAME_PID_AND_NATIVE_START_AFTER_STARTUP_JOB_CLEANUP",
     "second_connection_attempt": {
       "source_commit": "457dc899adb858abee69c8ec1c4174cb7bc8032d",
       "protected_ci_run_id": 39510984665,
@@ -1808,11 +1808,11 @@
       "installer_entered_in_observation_mode": false,
       "shared_native_concurrency_preserved": true,
       "collector_sha256": "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5",
-      "client_sha256": "c7c265d67d24584ce7bcd8499653d2b9e8657d55c87a591c455a869b307e07d7",
-      "client_tests_passed": 33,
+      "client_sha256": "09d5085878fbcb38af9eb8b66647b96497985304e3fef8be52860aa8f4310d28",
+      "client_tests_passed": 37,
       "collector_tests_passed": 20,
-      "independent_review": "NO_CONCRETE_BLOCKER_LOCAL_ONLY",
-      "actual_installed_tool_contract": "NOT_YET_OBSERVED",
+      "independent_review": "NO_CONCRETE_BLOCKER_FOR_FIRST_BOUNDED_OBSERVER_ATTEMPT",
+      "actual_installed_tool_contract": "OBSERVED_CODE_FILE_MODE_INPUT_NO_ADVERTISED_OUTPUT_SCHEMA",
       "native_tool_calls": 0,
       "native_execution": "NOT_RUN",
       "output_status_if_verified": "OBSERVED_PARTIAL_DIAGNOSIS_NOT_ACCEPTANCE",
@@ -1825,13 +1825,30 @@
       "probe_sha256": "7b2ee9876d6bd741d70fe9b1ac2bc4045d70d4ea963beb1549c70b02f1c269e9",
       "existing_editor_probe_mocked_flow_cases_passed": 17,
       "existing_editor_probe_independent_receipt_cases_passed": 8,
-      "observation_transport_native_compatibility": "PENDING_SCHEMA_AND_INLINE_SOURCE_REVIEW",
-      "next_execution_mode": "EXISTING_EDITOR_DISCOVERY_ONLY",
+      "observation_transport_native_compatibility": "INSTALLED_INPUT_SCHEMA_VERIFIED_FIXED_INLINE_SOURCE_READY_OUTPUT_WRAPPER_UNVERIFIED",
+      "next_execution_mode": "EXISTING_EDITOR_FIXED_PASSIVE_OBSERVATION",
       "selected_installed_contracts": [
         "execute_python",
         "take_viewport_screenshot"
       ],
-      "selected_contract_bytes_limit": 32768
+      "selected_contract_bytes_limit": 32768,
+      "fixed_source_transport": {
+        "kind": "ORDINARY_PYTHON_SOURCE_BYTES_IN_CODE_ARGUMENT",
+        "native_source_file_read_or_write": false,
+        "fixed_request_size_bytes": 32349,
+        "fixed_observation_request_limit_bytes": 65536,
+        "discovery_request_limit_bytes": 16384,
+        "actual_collector_with_forbidden_file_apis_test_passed": true,
+        "execute_python_arguments": [
+          "code",
+          "mode"
+        ],
+        "execute_python_mode": "file",
+        "execute_python_file_argument_supplied": false
+      },
+      "client_test_sha256": "9cd0be5207053168000737084b61fa33ab62a8d5d22c113fa9f196c0d884a9a1",
+      "execute_python_input_schema_sha256": "021f8f2a2f45d8e2047a61d14f619f302ba99f981925b0c6d7b2c3eed4bd6e08",
+      "unsupported_response_policy": "FAIL_WITH_FIXED_SHAPE_DIAGNOSTIC_ATTEMPTED_ONE_COMPLETION_UNKNOWN_NO_RETRY"
     },
     "third_connection_attempt": {
       "source_commit": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3",
@@ -1933,6 +1950,155 @@
       "editor_lifecycle_action": false,
       "repair": "SPARSE_CODE_ONLY_CHECKOUT_WITH_CLEAN_STATUS_AND_EXACT_BLOB_BYTES_FOR_SIX_FILES",
       "unrelated_asset_modified": false
+    },
+    "second_existing_session_discovery_attempt": {
+      "source_commit": "96a7bb0d0972d87a760e986eca381da82158076c",
+      "run_id": 39515925462,
+      "cpu_job_id": 118947932497,
+      "cpu_conclusion": "success",
+      "connection_job_id": 118948001389,
+      "connection_probe_step_conclusion": "success",
+      "installer_step_conclusion": "skipped",
+      "observed_utc": "2026-10-20T23:37:42.3866008Z",
+      "status": "BRIDGE_DISCOVERY_COMPLETE_NATIVE_READBACK_PENDING",
+      "client_sha256": "c7c265d67d24584ce7bcd8499653d2b9e8657d55c87a591c455a869b307e07d7",
+      "probe": {
+        "schema_version": 1,
+        "source_commit": "96a7bb0d0972d87a760e986eca381da82158076c",
+        "status": "BRIDGE_DISCOVERY_COMPLETE_NATIVE_READBACK_PENDING",
+        "observed_utc": "2026-10-20T23:37:42.3866008Z",
+        "error_type": null,
+        "identity_stable_across_probe": true,
+        "client_exit_code": 0,
+        "observation_requested": false,
+        "owner_before": {
+          "status": "ATTACH_EXISTING",
+          "owner_sid_matches": true,
+          "editor": {
+            "editor_pid": 17896,
+            "editor_start_filetime_utc": "134370120000674689",
+            "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+            "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+            "interactive_session_id": 1,
+            "canonical_project_matches": true
+          }
+        },
+        "owner_after": {
+          "status": "ATTACH_EXISTING",
+          "owner_sid_matches": true,
+          "editor": {
+            "editor_pid": 17896,
+            "editor_start_filetime_utc": "134370120000674689",
+            "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+            "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+            "interactive_session_id": 1,
+            "canonical_project_matches": true
+          }
+        },
+        "existing_editor_only_requested": true,
+        "existing_owner_required": true,
+        "identity_before": {
+          "schema_version": 1,
+          "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+          "observed_utc": "2026-10-20T23:37:38.4196792Z",
+          "source_commit": "96a7bb0d0972d87a760e986eca381da82158076c",
+          "pid": 17896,
+          "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+          "process_start_filetime_utc": "134370120000674689",
+          "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+          "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+          "canonical_project_argument_matches": true,
+          "listener": {
+            "address": "127.0.0.1",
+            "port": 19315,
+            "pid": 17896
+          }
+        },
+        "identity_after": {
+          "schema_version": 1,
+          "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+          "observed_utc": "2026-10-20T23:37:42.3727476Z",
+          "source_commit": "96a7bb0d0972d87a760e986eca381da82158076c",
+          "pid": 17896,
+          "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+          "process_start_filetime_utc": "134370120000674689",
+          "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+          "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+          "canonical_project_argument_matches": true,
+          "listener": {
+            "address": "127.0.0.1",
+            "port": 19315,
+            "pid": 17896
+          }
+        },
+        "native_tool_called": false,
+        "editor_started_or_stopped": false,
+        "native_tool_attempted": false,
+        "native_tool_completed": false,
+        "native_tool_call_attempts": 0,
+        "native_material_readback": "NOT_RUN",
+        "channel_comparison_performed": false,
+        "performance_pass": false
+      },
+      "identity": {
+        "schema_version": 1,
+        "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+        "observed_utc": "2026-10-20T23:37:38.4196792Z",
+        "source_commit": "96a7bb0d0972d87a760e986eca381da82158076c",
+        "pid": 17896,
+        "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+        "process_start_filetime_utc": "134370120000674689",
+        "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+        "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+        "canonical_project_argument_matches": true,
+        "listener": {
+          "address": "127.0.0.1",
+          "port": 19315,
+          "pid": 17896
+        }
+      },
+      "signed_in": true,
+      "tool_list_complete": true,
+      "tool_count": 84,
+      "http_requests": 4,
+      "native_tool_calls": 0,
+      "protocol_version": "2025-03-26",
+      "execute_python_input_schema_sha256": "021f8f2a2f45d8e2047a61d14f619f302ba99f981925b0c6d7b2c3eed4bd6e08",
+      "execute_python_parameters": [
+        "code",
+        "file",
+        "mode"
+      ],
+      "execute_python_mode_enum": [
+        "file",
+        "eval"
+      ],
+      "execute_python_output_schema_advertised": false,
+      "take_viewport_screenshot_input_schema_sha256": "4ef41b0bf0c6c93d64a049687e0e43565fb351cd484169b58473801840b3dcdc",
+      "screenshot_output_schema_advertised": false,
+      "artifact_id": 12308127249,
+      "artifact_sha256": "cceef00cec19278f5939c832f00fc8ca9dbf0b3983e7ad5b275f80bd7db5ee69",
+      "artifact_downloaded_and_digest_verified": true,
+      "bridge_sha256": "b0fe7bd6ebf790e488ac0a8936c6e7a48f7e200efad4dc6d989b21539e1c3105",
+      "probe_sha256": "5a3954e5e3d439c1eb05595a338fdf7c65362ca8ead2935d6ab635e71c1678c1",
+      "connection_job_conclusion": "success",
+      "workflow_conclusion": "success"
+    },
+    "post_job_survival_proof": {
+      "startup_run_id": 39513355021,
+      "startup_job_id": 118942077869,
+      "startup_job_cleanup_utc": "2026-10-20T23:24:03.9664401Z",
+      "recheck_run_id": 39515925462,
+      "recheck_job_id": 118948001389,
+      "recheck_observed_utc": "2026-10-20T23:37:42.3866008Z",
+      "same_pid": 17896,
+      "same_native_start_filetime_utc": "134370120000674689",
+      "owner_before_and_after": "ATTACH_EXISTING",
+      "owner_sid_matches": true,
+      "signed_in": true,
+      "owned_listener_stable": true,
+      "installer_invoked": false,
+      "editor_started_or_stopped_by_recheck": false
     }
   }
 }

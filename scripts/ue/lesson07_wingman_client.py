@@ -1,7 +1,7 @@
 """Bounded host-local Wingman discovery and fixed passive Lesson07 observation.
 
 Discovery is the default. Opt-in observation admits one hash-pinned adjacent
-collector through an exactly checked execute_python code:string contract.
+collector through the exact observed execute_python contract, in file mode.
 There is no arbitrary code/tool argument, Editor startup or retry surface.
 The Windows harness must supply a fresh OS identity receipt and recheck that
 identity after this process exits. The receipt is not an active-world readback.
@@ -61,7 +61,11 @@ CONTRACT_BOOLEAN_ANNOTATIONS = {
 OBSERVER_TOOL = "execute_python"
 OBSERVER_FILE = "lesson07_observe_editor.py"
 OBSERVER_SHA256 = "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5"
+OBSERVER_SCHEMA_SHA256 = (
+    "021f8f2a2f45d8e2047a61d14f619f302ba99f981925b0c6d7b2c3eed4bd6e08"
+)
 OBSERVER_SOURCE_LIMIT = 64 * 1024
+OBSERVER_REQUEST_LIMIT = 64 * 1024
 OBSERVER_OUTPUT_LIMIT = 1024 * 1024
 OBSERVER_TAG = "YACS_LESSON07_OBSERVATION_V1:"
 OBSERVER_STATUS = "OBSERVED_PARTIAL_DIAGNOSIS_NOT_ACCEPTANCE"
@@ -394,6 +398,7 @@ class ObservationState:
     started_utc: datetime | None = None
     source_verified: bool = False
     schema_sha256: str | None = None
+    result_shape: dict | None = None
 
     def report_fields(self):
         return {
@@ -408,76 +413,129 @@ class ObservationState:
             "observer_source_sha256": OBSERVER_SHA256,
             "observer_source_verified_before_call": self.source_verified,
             "observer_input_schema_sha256": self.schema_sha256,
+            "native_tool_result_shape": self.result_shape,
         }
 
 
 def validate_observer_schema(schema):
-    """Admit the raw schema only; sanitized discovery schemas lose constraints."""
-    annotations = {"description", "title"}
+    """Pin the raw installed contract from discovery run 39515925462, source 96a7."""
     require(
         type(schema) is dict
-        and set(schema)
-        <= {"type", "properties", "required", "additionalProperties"} | annotations
+        and set(schema) == {"type", "properties"}
         and schema.get("type") == "object"
-        and schema.get("required") == ["code"]
-        and schema.get("additionalProperties", False) is False,
+        and type(schema.get("properties")) is dict
+        and set(schema["properties"]) == {"code", "file", "mode"},
         "OBSERVER_TOOL_SCHEMA_UNSUPPORTED",
     )
-    properties = schema.get("properties")
+    # Full canonical hash includes descriptions, enum ordering and all defaults
+    # or constraints. Any installed drift needs a newly reviewed discovery.
+    digest = hashlib.sha256(canonical(schema)).hexdigest()
     require(
-        type(properties) is dict and set(properties) == {"code"},
+        digest == OBSERVER_SCHEMA_SHA256,
         "OBSERVER_TOOL_SCHEMA_UNSUPPORTED",
     )
-    code = properties["code"]
-    require(
-        type(code) is dict
-        and set(code) <= {"type"} | annotations
-        and code.get("type") == "string",
-        "OBSERVER_TOOL_SCHEMA_UNSUPPORTED",
-    )
-    for value in (schema, code):
-        for key in annotations & set(value):
-            require(
-                type(value[key]) is str and len(value[key]) <= CONFIG_LIMIT,
-                "OBSERVER_TOOL_SCHEMA_UNSUPPORTED",
+    return digest
+
+
+def observer_result_shape(result):
+    """Bounded fixed-key diagnostics only; never retain native text or values."""
+    mcp_fields = {"content", "isError", "structuredContent"}
+    wrapper_fields = {
+        "success",
+        "output",
+        "logs",
+        "command_result",
+        "error",
+        "message",
+        "result",
+    }
+
+    def describe(value):
+        names = {
+            dict: "object",
+            list: "array",
+            str: "string",
+            bool: "boolean",
+            int: "integer",
+            float: "number",
+            type(None): "null",
+        }
+        info = {"type": names.get(type(value), "unsupported")}
+        if type(value) is str:
+            info.update(
+                {
+                    "characters": len(value),
+                    "tag_occurrences": value.count(OBSERVER_TAG),
+                    "has_uobject_pin_footer": "UObject pin report" in value,
+                }
             )
-    return hashlib.sha256(canonical(schema)).hexdigest()
+        elif type(value) in (dict, list):
+            info["count"] = len(value)
+        return info
+
+    def known_fields(value, allowed):
+        summary = describe(value)
+        if type(value) is dict:
+            summary["fields"] = {
+                key: describe(value[key]) for key in sorted(allowed & set(value))
+            }
+            summary["unknown_field_count"] = len(set(value) - allowed)
+        return summary
+
+    summary = known_fields(result, mcp_fields | wrapper_fields)
+    if type(result) is not dict:
+        return summary
+    if "structuredContent" in result:
+        summary["structured_content"] = known_fields(
+            result["structuredContent"], wrapper_fields
+        )
+    content = result.get("content")
+    if type(content) is list:
+        blocks = []
+        for block in content[:8]:
+            row = describe(block)
+            if type(block) is dict:
+                kind = block.get("type")
+                row["content_type"] = (
+                    kind
+                    if type(kind) is str
+                    and kind in {"text", "image", "audio", "resource", "resource_link"}
+                    else "other"
+                )
+                if type(block.get("text")) is str:
+                    text = block["text"]
+                    row["text"] = describe(text)
+                    try:
+                        parsed = parse_json(text.encode("utf-8"))
+                    except (ProbeError, UnicodeError):
+                        row["text_json_parsed"] = False
+                    else:
+                        row["text_json_parsed"] = True
+                        row["text_json"] = known_fields(parsed, wrapper_fields)
+            blocks.append(row)
+        summary["content_blocks"] = blocks
+        summary["content_blocks_truncated"] = len(content) > 8
+    return summary
 
 
 def observer_loader():
-    """Return only the fixed loader; verify its adjacent source before sending."""
+    """Embed only the locally verified collector; the native side reads no file."""
     source_path = Path(__file__).absolute().with_name(OBSERVER_FILE)
     source = read_bounded(source_path, OBSERVER_SOURCE_LIMIT)
     require(
         hashlib.sha256(source).hexdigest() == OBSERVER_SHA256,
         "OBSERVER_SOURCE_HASH",
     )
-    # Both loader and collector use fresh namespaces. The remote loader reads
-    # once, hashes those bytes, and executes those same bytes, with no import
-    # cache, run_path, native compile/update/load, or disk output.
-    body = f"""from pathlib import Path
-import hashlib
+    # Plain Python source bytes, never compressed or encoded as an opaque blob.
+    # Both namespaces are fresh. The native side hashes and executes the same
+    # embedded bytes; no source path, import cache, run_path, or file I/O.
+    body = f"""import hashlib
 import json
-import stat
-p = Path({str(source_path)!r})
-if not p.is_absolute():
-    raise RuntimeError("OBSERVER_SOURCE_PATH")
-for entry in (p, *p.parents):
-    info = entry.lstat()
-    if stat.S_ISLNK(info.st_mode) or (getattr(info, "st_file_attributes", 0) & 0x400):
-        raise RuntimeError("OBSERVER_SOURCE_PATH")
-before = p.stat()
-if not stat.S_ISREG(before.st_mode) or not 0 < before.st_size <= {OBSERVER_SOURCE_LIMIT}:
-    raise RuntimeError("OBSERVER_SOURCE_SIZE")
-with p.open("rb") as stream:
-    source = stream.read({OBSERVER_SOURCE_LIMIT + 1})
-after = p.stat()
-if len(source) != before.st_size or before.st_size != after.st_size or before.st_mtime_ns != after.st_mtime_ns:
-    raise RuntimeError("OBSERVER_SOURCE_CHANGED")
+source = {source!r}
 if hashlib.sha256(source).hexdigest() != {OBSERVER_SHA256!r}:
     raise RuntimeError("OBSERVER_SOURCE_HASH")
-scope = {{"__name__": "_yacs_lesson07_observer", "__file__": str(p)}}
-exec(compile(source, str(p), "exec"), scope, scope)
+scope = {{"__name__": "_yacs_lesson07_observer"}}
+exec(compile(source, "<yacs_lesson07_observer>", "exec"), scope, scope)
 collected = scope["collect_json"]()
 if type(collected) is not str or not 0 < len(collected.encode("utf-8")) <= {OBSERVER_OUTPUT_LIMIT}:
     raise RuntimeError("OBSERVER_OUTPUT_SIZE")
@@ -691,7 +749,10 @@ class DiscoveryClient:
         if params is not None:
             payload["params"] = params
         raw = canonical(payload)
-        require(len(raw) <= CONFIG_LIMIT, "REQUEST_SIZE")
+        require(
+            len(raw) <= (OBSERVER_REQUEST_LIMIT if observing else CONFIG_LIMIT),
+            "REQUEST_SIZE",
+        )
         headers = {
             "Authorization": "Bearer " + self.discovery.token,
             "Accept": "application/json, text/event-stream",
@@ -918,9 +979,10 @@ class DiscoveryClient:
             state.source_verified = True
             self._observer_params = {
                 "name": OBSERVER_TOOL,
-                "arguments": {"code": code},
+                "arguments": {"code": code, "mode": "file"},
             }
             result = self._post("tools/call", self._observer_params)
+            state.result_shape = observer_result_shape(result)
             observed = extract_observation(result, self.identity, state)
             state.completed = True
             report.update(
@@ -930,7 +992,7 @@ class DiscoveryClient:
                     "notifications_received": self.notifications_received,
                     "native_material_readback": OBSERVER_STATUS,
                     "observation": observed,
-                    "observer_contract": "EXACT_REQUIRED_CODE_STRING_ONLY",
+                    "observer_contract": "PINNED_INSTALLED_SCHEMA_INLINE_CODE_EXPLICIT_FILE_MODE",
                     "plugin_execution_defaults_verified": False,
                     "visual_acceptance": False,
                     **state.report_fields(),

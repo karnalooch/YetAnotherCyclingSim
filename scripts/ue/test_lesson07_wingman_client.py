@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+import builtins
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import hashlib
@@ -13,6 +14,7 @@ from pathlib import Path
 import tempfile
 import threading
 import time
+import sys
 import unittest
 from unittest import mock
 
@@ -20,6 +22,26 @@ from scripts.ue import lesson07_wingman_client as client
 
 
 TOKEN = "SYNTHETIC_SECRET_7ec473bf_NOT_A_CREDENTIAL"
+
+# Exact raw inputSchema from authenticated discovery run 39515925462, source 96a7.
+INSTALLED_PYTHON_SCHEMA = {
+    "properties": {
+        "code": {
+            "description": "Python code to execute. Pass this OR 'file' - at least one is required, and 'file' wins when both are given. Use 'import unreal' for UE APIs. Example: unreal.EditorAssetLibrary.save_asset('/Game/BP_MyActor'). Runs in the editor's PERSISTENT interpreter namespace - globals survive between calls, so any global left holding an unreal.Object pins it for the session and blocks a later delete of its asset. The result carries a 'UObject pin report' footer naming every new holder this call created; 'del <name>' in your NEXT call releases it.",
+            "type": "string",
+        },
+        "file": {
+            "description": "Path to a Python 3 script file to execute (absolute, or relative to the project directory; UTF-8; 2 MB cap). A file-only call is fully supported: pass this OR 'code' (at least one is required), and this one wins when both are passed. Use for multi-line scripts - the file path avoids every JSON/transport escaping layer that mangles inline code.",
+            "type": "string",
+        },
+        "mode": {
+            "description": "Execution mode: 'file' (default, multi-line script, side effects) or 'eval' (a single expression whose value-repr is returned in command_result with no print needed). Note: 'eval' must be ONE expression; loco helpers / multi-line setup must run in a prior 'file' call (module imports persist in the interpreter).",
+            "enum": ["file", "eval"],
+            "type": "string",
+        },
+    },
+    "type": "object",
+}
 
 
 def identity(port):
@@ -141,9 +163,7 @@ def observer_reply(request):
     status, headers, raw = default_reply(request)
     if request["method"] == "tools/list":
         payload = json.loads(raw)
-        del payload["result"]["tools"][0]["inputSchema"]["properties"]["code"][
-            "default"
-        ]
+        payload["result"]["tools"][0]["inputSchema"] = INSTALLED_PYTHON_SCHEMA
         raw = client.canonical(payload)
     return status, headers, raw
 
@@ -750,17 +770,34 @@ class ObserverTests(unittest.TestCase):
         params = calls[0]["body"]["params"]
         self.assertEqual(set(params), {"name", "arguments"})
         self.assertEqual(params["name"], "execute_python")
-        self.assertEqual(set(params["arguments"]), {"code"})
+        self.assertEqual(set(params["arguments"]), {"code", "mode"})
+        self.assertEqual(params["arguments"]["mode"], "file")
+        self.assertNotIn("file", params["arguments"])
+        self.assertEqual(
+            report["observer_input_schema_sha256"], client.OBSERVER_SCHEMA_SHA256
+        )
         code = params["arguments"]["code"]
         self.assertIn(client.OBSERVER_SHA256, code)
         self.assertIn("collect_json", code)
         self.assertNotIn(TOKEN, code)
-        self.assertLess(len(client.canonical(calls[0]["body"])), client.CONFIG_LIMIT)
+        request_size = len(client.canonical(calls[0]["body"]))
+        self.assertGreater(request_size, client.CONFIG_LIMIT)
+        self.assertLess(request_size, client.OBSERVER_REQUEST_LIMIT)
         self.assertNotIn(TOKEN.encode(), client.canonical(report))
 
     def test_raw_defaults_not_sanitized_schema_decide_admission(self):
+        def changed_default(request):
+            status, headers, raw = observer_reply(request)
+            if request["method"] == "tools/list":
+                payload = json.loads(raw)
+                payload["result"]["tools"][0]["inputSchema"]["properties"]["mode"][
+                    "default"
+                ] = "eval"
+                raw = client.canonical(payload)
+            return status, headers, raw
+
         state = client.ObservationState()
-        with peer(default_reply) as (port, requests):
+        with peer(changed_default) as (port, requests):
             with self.assertRaises(client.ProbeError) as caught:
                 connection(port, state=state).probe(observe_lesson07=True)
         self.assertEqual(caught.exception.code, "OBSERVER_TOOL_SCHEMA_UNSUPPORTED")
@@ -769,12 +806,7 @@ class ObserverTests(unittest.TestCase):
         self.assertEqual(len(requests), 4)
 
     def test_unknown_required_optional_or_constraint_arguments_rejected(self):
-        base = {
-            "type": "object",
-            "properties": {"code": {"type": "string"}},
-            "required": ["code"],
-            "additionalProperties": False,
-        }
+        base = INSTALLED_PYTHON_SCHEMA
         cases = [
             {**base, "required": []},
             {**base, "required": ["python_code"]},
@@ -782,13 +814,30 @@ class ObserverTests(unittest.TestCase):
             {**base, "default": {}},
             {**base, "oneOf": [base]},
             {**base, "properties": {**base["properties"], "mode": {"type": "string"}}},
+            {**base, "properties": {**base["properties"], "file": {"type": "number"}}},
+            {
+                **base,
+                "properties": {**base["properties"], "timeout": {"type": "number"}},
+            },
+            {
+                **base,
+                "properties": {
+                    **base["properties"],
+                    "code": {
+                        **base["properties"]["code"],
+                        "description": "Changed installed contract",
+                    },
+                },
+            },
             {**base, "properties": {"code": {"type": "string", "enum": ["x"]}}},
             {**base, "properties": {"code": {"type": "string", "maxLength": 1}}},
         ]
         for schema in cases:
             with self.subTest(schema=schema), self.assertRaises(client.ProbeError):
                 client.validate_observer_schema(schema)
-        self.assertEqual(len(client.validate_observer_schema(base)), 64)
+        self.assertEqual(
+            client.validate_observer_schema(base), client.OBSERVER_SCHEMA_SHA256
+        )
 
     def test_signed_out_and_incomplete_or_duplicate_inventory_cannot_call(self):
         for fault in ("signed_out", "pagination", "duplicate", "missing_tool"):
@@ -831,7 +880,7 @@ class ObserverTests(unittest.TestCase):
         self.assertFalse(state.attempted)
         self.assertEqual(len(requests), 4)
 
-    def test_loader_reads_once_executes_pinned_bytes_in_fresh_namespace(self):
+    def test_inline_program_uses_verified_snapshot_in_fresh_namespace(self):
         source = (
             b'assert __name__ == "_yacs_lesson07_observer"\n'
             b'assert "existing_private_global" not in globals()\n'
@@ -850,7 +899,20 @@ class ObserverTests(unittest.TestCase):
                 code = client.observer_loader()
             namespace = {"existing_private_global": object()}
             stdout = io.StringIO()
-            with mock.patch("sys.stdout", stdout):
+            # The remote program must not revisit the host source path.
+            source_path.write_text('raise AssertionError("EXECUTED_CHANGED_SOURCE")')
+            with (
+                mock.patch("sys.stdout", stdout),
+                mock.patch.object(
+                    Path, "open", side_effect=AssertionError("Native file I/O")
+                ),
+                mock.patch.object(
+                    builtins, "open", side_effect=AssertionError("Native file I/O")
+                ),
+                mock.patch.object(
+                    io, "open", side_effect=AssertionError("Native file I/O")
+                ),
+            ):
                 exec(code, namespace, namespace)
             self.assertEqual(
                 set(namespace), {"existing_private_global", "__builtins__"}
@@ -859,11 +921,79 @@ class ObserverTests(unittest.TestCase):
             envelope = json.loads(stdout.getvalue()[len(client.OBSERVER_TAG) :])
             self.assertEqual(envelope["observer_sha256"], digest)
             self.assertEqual(envelope["observation"], {"status": "synthetic"})
-            # A changed remote source is rejected before any of its code runs.
-            source_path.write_text('raise AssertionError("EXECUTED_CHANGED_SOURCE")')
             with self.assertRaisesRegex(RuntimeError, "OBSERVER_SOURCE_HASH"):
-                exec(code, {})
+                exec(code.replace("synthetic", "tampered"), {})
+            self.assertNotIn(str(source_path), code)
+            # A new request cannot accept the changed local source.
+            with (
+                mock.patch.object(
+                    client, "__file__", str(Path(directory) / "client.py")
+                ),
+                mock.patch.object(client, "OBSERVER_SHA256", digest),
+                self.assertRaisesRegex(client.ProbeError, "OBSERVER_SOURCE_HASH"),
+            ):
+                client.observer_loader()
             self.assertFalse((Path(directory) / "__pycache__").exists())
+
+    def test_real_pinned_collector_runs_with_fake_unreal_without_file_io(self):
+        from scripts.ue.test_lesson07_observe_editor import Fixture
+
+        fixture = Fixture()
+        code = client.observer_loader()
+        namespace = {"existing_private_global": object()}
+        stdout = io.StringIO()
+        with (
+            mock.patch.dict(sys.modules, {"unreal": fixture.api}),
+            mock.patch("sys.stdout", stdout),
+            mock.patch.object(
+                Path, "open", side_effect=AssertionError("Native file I/O")
+            ),
+            mock.patch.object(
+                builtins, "open", side_effect=AssertionError("Native file I/O")
+            ),
+            mock.patch.object(
+                io, "open", side_effect=AssertionError("Native file I/O")
+            ),
+            mock.patch.object(
+                os, "open", side_effect=AssertionError("Native file I/O")
+            ),
+        ):
+            exec(code, namespace, namespace)
+        fixture.forbidden.assert_not_called()
+        self.assertEqual(set(namespace), {"existing_private_global", "__builtins__"})
+        self.assertNotIn("_yacs_lesson07_observer", sys.modules)
+        self.assertEqual(stdout.getvalue().count(client.OBSERVER_TAG), 1)
+        envelope = json.loads(stdout.getvalue()[len(client.OBSERVER_TAG) :])
+        self.assertEqual(envelope["observer_sha256"], client.OBSERVER_SHA256)
+        self.assertEqual(envelope["observation"]["status"], client.OBSERVER_STATUS)
+        self.assertEqual(envelope["observation"]["world"], client.OBSERVER_WORLD)
+        self.assertIs(envelope["observation"]["limitations"]["new_captures"], False)
+        self.assertIs(
+            envelope["observation"]["limitations"]["visual_acceptance"], False
+        )
+
+    def test_request_caps_remain_fixed_and_oversize_stops_before_send(self):
+        with mock.patch.object(client.http.client, "HTTPConnection") as http:
+            with self.assertRaisesRegex(client.ProbeError, "REQUEST_SIZE"):
+                connection(19315)._post(
+                    "tools/list", {"cursor": "x" * client.CONFIG_LIMIT}
+                )
+            http.assert_not_called()
+        state = client.ObservationState()
+        with (
+            peer(observer_reply) as (port, requests),
+            mock.patch.object(
+                client,
+                "observer_loader",
+                return_value="x" * client.OBSERVER_REQUEST_LIMIT,
+            ),
+        ):
+            with self.assertRaisesRegex(client.ProbeError, "REQUEST_SIZE"):
+                connection(port, state=state).probe(observe_lesson07=True)
+        self.assertFalse(state.attempted)
+        self.assertIs(state.completed, False)
+        self.assertEqual(len(requests), 4)
+        self.assertFalse(any(r["body"]["method"] == "tools/call" for r in requests))
 
     def test_one_large_sse_result_only_allowed_for_observer_and_total_is_bounded(self):
         def sse(request):
@@ -940,6 +1070,111 @@ class ObserverTests(unittest.TestCase):
         self.assertIsNone(state.completed)
         self.assertFalse(state.response_received)
         self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), 1)
+
+    def test_unsupported_wrapper_reports_only_shape_and_keeps_attempt_unknown(self):
+        def wrapped(request):
+            if request["method"] == "tools/call":
+                wrapper = {
+                    "success": True,
+                    "output": tool_result()["content"][0]["text"]
+                    + "\nUObject pin report: "
+                    + TOKEN,
+                    "logs": [TOKEN],
+                    TOKEN: {TOKEN: TOKEN},
+                }
+                return (
+                    200,
+                    {"Content-Type": "application/json"},
+                    client.canonical(
+                        {
+                            "jsonrpc": "2.0",
+                            "id": request["id"],
+                            "result": {
+                                "isError": False,
+                                "content": [
+                                    {"type": "text", "text": json.dumps(wrapper)}
+                                ],
+                                TOKEN: TOKEN,
+                            },
+                        }
+                    ),
+                )
+            return observer_reply(request)
+
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            peer(wrapped) as (port, requests),
+        ):
+            output = Path(directory) / "report.json"
+            stdout = io.StringIO()
+
+            def from_fixture(_path, *, observe_lesson07, observation_state):
+                return connection(port, state=observation_state).probe(
+                    observe_lesson07=observe_lesson07
+                )
+
+            with (
+                mock.patch.object(client, "probe_from_files", side_effect=from_fixture),
+                mock.patch("sys.stdout", stdout),
+            ):
+                code = client.main(
+                    [
+                        "--identity-receipt",
+                        str(Path(directory) / "identity.json"),
+                        "--output",
+                        str(output),
+                        "--observe-lesson07",
+                    ]
+                )
+            report = json.loads(output.read_bytes())
+        self.assertEqual(code, 1)
+        self.assertEqual(report["status"], "OBSERVATION_FAILED")
+        self.assertEqual(report["error_code"], "OBSERVER_RESULT_TAG")
+        self.assertEqual(report["native_tool_calls"], 1)
+        self.assertTrue(report["native_tool_attempted"])
+        self.assertTrue(report["native_tool_response_received"])
+        self.assertIsNone(report["native_tool_completed"])
+        self.assertEqual(report["native_material_readback"], "UNVERIFIED")
+        shape = report["native_tool_result_shape"]
+        self.assertEqual(shape["unknown_field_count"], 1)
+        block = shape["content_blocks"][0]
+        self.assertTrue(block["text_json_parsed"])
+        self.assertEqual(block["text_json"]["unknown_field_count"], 1)
+        self.assertEqual(block["text_json"]["fields"]["success"], {"type": "boolean"})
+        self.assertEqual(
+            block["text_json"]["fields"]["logs"], {"type": "array", "count": 1}
+        )
+        self.assertEqual(block["text_json"]["fields"]["output"]["tag_occurrences"], 1)
+        self.assertTrue(
+            block["text_json"]["fields"]["output"]["has_uobject_pin_footer"]
+        )
+        self.assertNotIn(TOKEN.encode(), client.canonical(report))
+        self.assertNotIn(TOKEN, stdout.getvalue())
+        self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), 1)
+
+    def test_shape_diagnostics_bound_blocks_and_never_echo_unknown_keys_or_types(self):
+        shape = client.observer_result_shape(
+            {
+                "content": [{"type": TOKEN, TOKEN: TOKEN, "text": "\ud800"}] * 20,
+                "structuredContent": {"command_result": TOKEN, TOKEN: TOKEN},
+                TOKEN: TOKEN,
+            }
+        )
+        self.assertEqual(shape["fields"]["content"], {"type": "array", "count": 20})
+        self.assertEqual(len(shape["content_blocks"]), 8)
+        self.assertTrue(shape["content_blocks_truncated"])
+        self.assertTrue(
+            all(block["content_type"] == "other" for block in shape["content_blocks"])
+        )
+        self.assertTrue(
+            all(block["text_json_parsed"] is False for block in shape["content_blocks"])
+        )
+        self.assertEqual(shape["structured_content"]["unknown_field_count"], 1)
+        self.assertEqual(
+            shape["structured_content"]["fields"]["command_result"]["type"], "string"
+        )
+        self.assertNotIn(TOKEN.encode(), client.canonical(shape))
+        self.assertLess(len(client.canonical(shape)), 4096)
 
     def test_untrusted_result_errors_duplicates_wrappers_and_identity_rejected(self):
         bad_results = []

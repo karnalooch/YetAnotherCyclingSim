@@ -13,6 +13,17 @@
 
 ## Remote continuation and scoped connection authority (2026-10-21)
 
+**Current connection result:** at `2026-10-20T23:37:42.3866008Z`,
+[discovery job 118948001389](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39515925462/job/118948001389)
+verified authenticated Wingman access to **the same Editor PID 17896 and native
+start filetime `134370120000674689`** created at 23:20 UTC. Both owner checks
+returned `ATTACH_EXISTING`; the installer was skipped, no Editor was started or
+stopped, and the endpoint stayed owned by this process. This observation is after
+the startup job's 23:24:03 UTC cleanup and establishes post-job session survival.
+Wingman reported `signed_in=true`; all **84** tools were discovered through four
+HTTP requests, with **zero native tool calls**. World/material readback remains
+the next step, not an established result.
+
 The owner requested remote execution of the channel diagnosis and explicitly
 allowed creating the missing connection infrastructure. This supersedes the
 previous no-new-transport restriction for this bounded Lesson07 task only.
@@ -87,15 +98,21 @@ unknown, and no native request is retried. The collector records bounded
 viewport metadata without selecting or changing a viewport. Its active view
 identity is not a proven screenshot target.
 
-The prepared passive mode passed 53 focused Python tests (33 client and 20
-collector), independently rerun. These synthetic tests do not establish the
-installed input/output contract or native compatibility. The frozen collector
+The prepared passive mode passed 57 focused Python tests (37 client and 20
+collector), independently rerun. These synthetic tests do not establish native execution or output-wrapper
+compatibility; the input contract was independently verified from the installed tool. The frozen collector
 SHA256 is `033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5`;
-its first native execution remains pending. The next delivery runs discovery
-only. Before the observer is invoked, its source transfer must be adapted to
-[Wingman's documented project-local file-I/O boundary](https://ai.locodev.dev/docs/how-it-works)
-and checked against the actual installed tool contract; the prepared filesystem
-loader is not treated as native-compatible.
+its first native execution remains pending. To respect
+[Wingman's documented project-local file-I/O boundary](https://ai.locodev.dev/docs/how-it-works),
+the client embeds the exact hash-verified collector bytes in the fixed Python
+argument, checks that hash again in a fresh native namespace, and performs no
+native source-file read or write. The fixed request is 32,349 bytes under an
+observation-only 64 KiB cap; discovery retains its 16 KiB cap. The actual pinned
+collector passed a fake-Unreal test with all file-open APIs forbidden. Installed
+input-schema SHA256 is pinned to the actual discovery response; output-wrapper
+compatibility still requires native evidence. The request supplies only `code` and
+explicit `mode="file"`, never a file argument. Bounded failure diagnostics retain
+only fixed response-shape fields, counts and tag/footer indicators, not raw logs.
 
 At exact source `3ba05803bfc3ff095eb012e3f790752b55b47d12`,
 [protected CyclingSim CI 39508823330](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39508823330)
@@ -210,7 +227,25 @@ failed the new whole-checkout guard; the Windows job was skipped. This run made
 no connection or native request. The CPU checkout is now restricted to
 `scripts/ue`, retaining the clean-worktree guard and adding exact Git-blob byte
 comparison for all six admitted code/test files. The unrelated historical image
-is not rewritten. Discovery and post-job survival still await the next run.
+is not rewritten. At source `96a7bb0d0972d87a760e986eca381da82158076c`,
+the [corrected CPU gate 118947932497](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39515925462/job/118947932497)
+passed, followed by the successful Windows discovery described above. Both the
+Windows job and the complete connection workflow concluded `success`. Artifact
+`12308127249` was downloaded and verified against ZIP SHA256
+`cceef00cec19278f5939c832f00fc8ca9dbf0b3983e7ad5b275f80bd7db5ee69`.
+
+The installed `execute_python` schema has `code`, `file` and `mode` properties;
+its descriptor states that `file` wins if both source forms are supplied and
+that the interpreter namespace persists. The fixed observer must therefore
+supply only inline `code` and explicit `mode="file"` in its isolated namespace.
+The exact observed input-schema SHA256 is
+`021f8f2a2f45d8e2047a61d14f619f302ba99f981925b0c6d7b2c3eed4bd6e08`.
+There is no advertised output schema. The installed screenshot tool advertises
+`return_image=false` for a JPEG and capture metadata under
+`Saved/LocoHelperAI/ViewportShots/`; its schema SHA256 is
+`4ef41b0bf0c6c93d64a049687e0e43565fb351cd484169b58473801840b3dcdc`.
+Those contracts establish available operations, not an actual capture, current
+viewport mode or channel comparison.
 
 The first-stage inventory artifact is `12303367952`, ZIP SHA256
 `6fffea19df0900427e77881e4dbfdba3ab8f75d992d39027c813b78ecc946c0e`.
