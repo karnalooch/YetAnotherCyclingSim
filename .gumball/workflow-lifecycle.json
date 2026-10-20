@@ -367,6 +367,11 @@
       "reason": "Owner-only issue-comment remote-editor smoke command from trusted default-branch workflow code."
     },
     {
+      "file": "yacs-l07-native-transfer-verify.yml",
+      "state": "CURRENT",
+      "reason": "Owner-only exact-SHA, native Houdini L07 4-tile verification in a NEW bounded scratch directory; immutable accepted L06 SHA and world-coordinate seam/Alpha checks; never launch UE, bake, save, or claim native UE acceptance."
+    },
+    {
       "file": "yacs-lesson07-editor-module-diagnostic.yml",
       "state": "CURRENT",
       "reason": "Read-only canonical project module presence/BuildId probe for L07 native startup triage; no compile, UE launch or authoring mutation."
