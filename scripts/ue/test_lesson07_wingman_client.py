@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import hashlib
 import io
 import json
 import os
@@ -92,6 +93,61 @@ def default_reply(request):
     )
 
 
+def observation():
+    return {
+        "status": client.OBSERVER_STATUS,
+        "pid": 1234,
+        "project": "D:/yacs/project/",
+        "project_file": client.PROJECT,
+        "world": client.OBSERVER_WORLD,
+        "observed_at_utc": datetime.now(timezone.utc).isoformat(),
+        "dirty_sets_equal": None,
+        "limitations": {
+            "mutating_apis_requested": False,
+            "asset_loads_requested": False,
+            "new_captures": False,
+            "visual_acceptance": False,
+            "performance_pass": False,
+        },
+        "validation": {"visual_or_native_graph_acceptance": False},
+    }
+
+
+def tool_result(observed=None):
+    envelope = {
+        "observer_sha256": client.OBSERVER_SHA256,
+        "observation": observation() if observed is None else observed,
+    }
+    return {
+        "isError": False,
+        "content": [
+            {
+                "type": "text",
+                "text": client.OBSERVER_TAG + client.canonical(envelope).decode(),
+            }
+        ],
+    }
+
+
+def observer_reply(request):
+    if request["method"] == "tools/call":
+        return (
+            200,
+            {"Content-Type": "application/json"},
+            client.canonical(
+                {"jsonrpc": "2.0", "id": request["id"], "result": tool_result()}
+            ),
+        )
+    status, headers, raw = default_reply(request)
+    if request["method"] == "tools/list":
+        payload = json.loads(raw)
+        del payload["result"]["tools"][0]["inputSchema"]["properties"]["code"][
+            "default"
+        ]
+        raw = client.canonical(payload)
+    return status, headers, raw
+
+
 @contextmanager
 def peer(responder=default_reply):
     requests = []
@@ -134,13 +190,43 @@ def peer(responder=default_reply):
         thread.join(timeout=2)
 
 
-def connection(port, timeout=2):
+def connection(port, timeout=2, state=None):
     return client.DiscoveryClient(
-        client.Discovery.from_mapping(config(port)), identity(port), timeout=timeout
+        client.Discovery.from_mapping(config(port)),
+        identity(port),
+        timeout=timeout,
+        observation_state=state,
     )
 
 
 class AdmissionTests(unittest.TestCase):
+    def test_metadata_is_bounded_and_cannot_supply_missing_or_malformed_core(self):
+        metadata = {"metadata": {**config(19315), "note": "synthetic metadata"}}
+        for key in ("url", "token", "type"):
+            missing = {**config(19315), **metadata}
+            del missing[key]
+            with self.subTest(missing=key), self.assertRaises(client.ProbeError):
+                client.Discovery.from_mapping(missing)
+        for key, value in (
+            ("url", "http://example.invalid:19315/loco"),
+            ("url", {"url": config(19315)["url"]}),
+            ("token", "bad token with spaces"),
+            ("token", None),
+            ("type", "sse"),
+            ("type", {"type": "http"}),
+        ):
+            with (
+                self.subTest(key=key, value=value),
+                self.assertRaises(client.ProbeError),
+            ):
+                client.Discovery.from_mapping({**config(19315), **metadata, key: value})
+        for value in ("x" * client.CONFIG_LIMIT, float("nan"), object()):
+            with (
+                self.subTest(metadata_type=type(value).__name__),
+                self.assertRaises(client.ProbeError),
+            ):
+                client.Discovery.from_mapping({**config(19315), "metadata": value})
+
     def test_invalid_endpoint_and_header_input_rejected(self):
         invalid = [
             "https://127.0.0.1:19315/loco",
@@ -235,6 +321,214 @@ class AdmissionTests(unittest.TestCase):
 
 
 class WireTests(unittest.TestCase):
+    def test_selected_installed_contracts_retain_exact_schemas_and_safe_metadata(self):
+        input_schema = {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Python source"},
+                "mode": {
+                    "type": "string",
+                    "enum": ["first", "second"],
+                    "default": "first",
+                },
+            },
+            "required": ["code"],
+            "additionalProperties": False,
+        }
+        output_schema = {
+            "type": "object",
+            "properties": {
+                "output": {"type": "string"},
+                "success": {"type": "boolean"},
+            },
+        }
+        annotations = {
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "idempotentHint": False,
+            "openWorldHint": False,
+        }
+        selected = {
+            "name": "execute_python",
+            "inputSchema": input_schema,
+            "outputSchema": output_schema,
+            "description": "Synthetic installed contract; data only.",
+            "annotations": {**annotations, "title": TOKEN, "unrecognized": TOKEN},
+            "unknown_metadata": TOKEN,
+        }
+
+        def contract_reply(request):
+            if request["method"] == "tools/list":
+                return (
+                    200,
+                    {"Content-Type": "application/json"},
+                    client.canonical(
+                        {
+                            "jsonrpc": "2.0",
+                            "id": request["id"],
+                            "result": {
+                                "tools": [
+                                    selected,
+                                    {
+                                        "name": "take_viewport_screenshot",
+                                        "inputSchema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "return_image": {
+                                                    "type": "boolean",
+                                                    "default": True,
+                                                }
+                                            },
+                                        },
+                                    },
+                                    {
+                                        "name": "other_tool",
+                                        "inputSchema": input_schema,
+                                        "outputSchema": output_schema,
+                                        "description": TOKEN,
+                                    },
+                                ]
+                            },
+                        }
+                    ),
+                )
+            return default_reply(request)
+
+        with peer(contract_reply) as (port, requests):
+            report = connection(port).probe()
+        contracts = report["installed_tool_contracts"]
+        self.assertEqual(set(contracts), {"execute_python", "take_viewport_screenshot"})
+        self.assertEqual(
+            contracts["execute_python"],
+            {
+                "status": "RETAINED",
+                "inputSchema": input_schema,
+                "outputSchema": output_schema,
+                "description": selected["description"],
+                "annotations": annotations,
+            },
+        )
+        self.assertIs(
+            contracts["take_viewport_screenshot"]["inputSchema"]["properties"][
+                "return_image"
+            ]["default"],
+            True,
+        )
+        self.assertNotIn("outputSchema", contracts["take_viewport_screenshot"])
+        for row in report["tools"]:
+            if row["name"] in {"execute_python", "other_tool"}:
+                self.assertEqual(
+                    row["inputSchema"]["properties"]["mode"], {"type": "string"}
+                )
+        self.assertEqual(report["status"], "DISCOVERY_COMPLETE")
+        self.assertEqual(report["native_tool_calls"], 0)
+        self.assertEqual(len(requests), 4)
+        self.assertNotIn(TOKEN.encode(), client.canonical(report))
+
+    def test_selected_contract_exclusions_never_expose_credentials_or_large_values(
+        self,
+    ):
+        nested = {"type": "string"}
+        for _ in range(13):
+            nested = {"items": nested}
+        cases = [
+            ({"description": TOKEN}, "CONTRACT_CREDENTIAL"),
+            (
+                {"inputSchema": {"type": "object", "default": {"secret": TOKEN}}},
+                "CONTRACT_CREDENTIAL",
+            ),
+            (
+                {
+                    "inputSchema": {
+                        "type": "object",
+                        "enum": ["x" * client.CONTRACT_LIMIT],
+                    }
+                },
+                "CONTRACT_SIZE",
+            ),
+            (
+                {"description": "x" * (client.CONTRACT_DESCRIPTION_LIMIT + 1)},
+                "CONTRACT_DESCRIPTION",
+            ),
+            ({"outputSchema": nested}, "CONTRACT_DEPTH"),
+            ({"annotations": {"readOnlyHint": "true"}}, "CONTRACT_ANNOTATIONS"),
+        ]
+        for fields, reason in cases:
+
+            def excluded_reply(request):
+                if request["method"] == "tools/list":
+                    return (
+                        200,
+                        {"Content-Type": "application/json"},
+                        client.canonical(
+                            {
+                                "jsonrpc": "2.0",
+                                "id": request["id"],
+                                "result": {
+                                    "tools": [
+                                        {
+                                            "name": "execute_python",
+                                            "inputSchema": {"type": "object"},
+                                            **fields,
+                                        }
+                                    ]
+                                },
+                            }
+                        ),
+                    )
+                return default_reply(request)
+
+            with self.subTest(reason=reason), peer(excluded_reply) as (port, requests):
+                report = connection(port).probe()
+            self.assertEqual(
+                report["installed_tool_contracts"]["execute_python"],
+                {"status": "EXCLUDED", "reason": reason},
+            )
+            self.assertEqual(report["status"], "DISCOVERY_COMPLETE")
+            self.assertEqual(report["native_tool_calls"], 0)
+            self.assertEqual(len(requests), 4)
+            self.assertNotIn(TOKEN.encode(), client.canonical(report))
+
+    def test_json_escaped_credential_in_contract_is_excluded(self):
+        token = 'synthetic\\secret"value'
+        contract = client.installed_tool_contract(
+            {
+                "inputSchema": {"type": "object", "default": {"note": token}},
+            },
+            token,
+        )
+        self.assertEqual(
+            contract, {"status": "EXCLUDED", "reason": "CONTRACT_CREDENTIAL"}
+        )
+
+    def test_extra_discovery_metadata_never_changes_route_auth_or_report(self):
+        ignored_secret = "SYNTHETIC_IGNORED_METADATA_VALUE"
+        with peer() as (port, requests):
+            discovery = client.Discovery.from_mapping(
+                {
+                    **config(port),
+                    "metadata": {
+                        "url": "https://example.invalid/alternate",
+                        "token": ignored_secret,
+                        "type": "sse",
+                    },
+                    "headers": {"Authorization": "Bearer " + ignored_secret},
+                    "endpoint": "https://example.invalid/alternate",
+                    "arbitrary_note": ignored_secret,
+                }
+            )
+            self.assertEqual(discovery, client.Discovery(port, TOKEN))
+            report = client.DiscoveryClient(discovery, identity(port)).probe()
+        self.assertEqual(report["status"], "DISCOVERY_COMPLETE")
+        self.assertEqual(len(requests), 4)
+        for request in requests:
+            self.assertEqual(request["path"], client.ENDPOINT)
+            self.assertEqual(request["headers"]["Authorization"], "Bearer " + TOKEN)
+            self.assertNotIn(ignored_secret.encode(), client.canonical(request))
+        self.assertNotIn(ignored_secret.encode(), client.canonical(report))
+        self.assertNotIn(TOKEN.encode(), client.canonical(report))
+        self.assertEqual(report["native_tool_calls"], 0)
+
     def test_handshake_auth_session_headers_and_sanitized_schema(self):
         with (
             peer() as (port, requests),
@@ -432,6 +726,383 @@ class WireTests(unittest.TestCase):
         self.assertEqual(report["status"], "DISCOVERY_INCOMPLETE")
         self.assertEqual(sum(r["body"]["method"] == "tools/list" for r in requests), 1)
         self.assertNotIn(TOKEN.encode(), client.canonical(report))
+
+
+class ObserverTests(unittest.TestCase):
+    def test_one_fixed_call_preserves_partial_findings_and_false_acceptance(self):
+        state = client.ObservationState()
+        with peer(observer_reply) as (port, requests):
+            probe = connection(port, state=state)
+            report = probe.probe(observe_lesson07=True)
+            with self.assertRaises(client.ProbeError):
+                probe._post("tools/call", probe._observer_params)
+        self.assertEqual(report["status"], "OBSERVATION_COMPLETE")
+        self.assertEqual(report["native_tool_calls"], 1)
+        self.assertIs(report["native_tool_attempted"], True)
+        self.assertIs(report["native_tool_completed"], True)
+        self.assertEqual(report["native_material_readback"], client.OBSERVER_STATUS)
+        self.assertIsNone(report["observation"]["dirty_sets_equal"])
+        self.assertFalse(report["visual_acceptance"])
+        self.assertFalse(report["performance_pass"])
+        self.assertFalse(report["plugin_execution_defaults_verified"])
+        calls = [r for r in requests if r["body"]["method"] == "tools/call"]
+        self.assertEqual(len(calls), 1)
+        params = calls[0]["body"]["params"]
+        self.assertEqual(set(params), {"name", "arguments"})
+        self.assertEqual(params["name"], "execute_python")
+        self.assertEqual(set(params["arguments"]), {"code"})
+        code = params["arguments"]["code"]
+        self.assertIn(client.OBSERVER_SHA256, code)
+        self.assertIn("collect_json", code)
+        self.assertNotIn(TOKEN, code)
+        self.assertLess(len(client.canonical(calls[0]["body"])), client.CONFIG_LIMIT)
+        self.assertNotIn(TOKEN.encode(), client.canonical(report))
+
+    def test_raw_defaults_not_sanitized_schema_decide_admission(self):
+        state = client.ObservationState()
+        with peer(default_reply) as (port, requests):
+            with self.assertRaises(client.ProbeError) as caught:
+                connection(port, state=state).probe(observe_lesson07=True)
+        self.assertEqual(caught.exception.code, "OBSERVER_TOOL_SCHEMA_UNSUPPORTED")
+        self.assertFalse(state.attempted)
+        self.assertIs(state.completed, False)
+        self.assertEqual(len(requests), 4)
+
+    def test_unknown_required_optional_or_constraint_arguments_rejected(self):
+        base = {
+            "type": "object",
+            "properties": {"code": {"type": "string"}},
+            "required": ["code"],
+            "additionalProperties": False,
+        }
+        cases = [
+            {**base, "required": []},
+            {**base, "required": ["python_code"]},
+            {**base, "additionalProperties": True},
+            {**base, "default": {}},
+            {**base, "oneOf": [base]},
+            {**base, "properties": {**base["properties"], "mode": {"type": "string"}}},
+            {**base, "properties": {"code": {"type": "string", "enum": ["x"]}}},
+            {**base, "properties": {"code": {"type": "string", "maxLength": 1}}},
+        ]
+        for schema in cases:
+            with self.subTest(schema=schema), self.assertRaises(client.ProbeError):
+                client.validate_observer_schema(schema)
+        self.assertEqual(len(client.validate_observer_schema(base)), 64)
+
+    def test_signed_out_and_incomplete_or_duplicate_inventory_cannot_call(self):
+        for fault in ("signed_out", "pagination", "duplicate", "missing_tool"):
+
+            def changed(request):
+                status, headers, raw = observer_reply(request)
+                if request["method"] == "session/status" and fault == "signed_out":
+                    payload = json.loads(raw)
+                    payload["result"]["signed_in"] = False
+                    raw = client.canonical(payload)
+                if request["method"] == "tools/list":
+                    payload = json.loads(raw)
+                    if fault == "pagination":
+                        payload["result"]["nextCursor"] = "repeated"
+                    elif fault == "duplicate":
+                        payload["result"]["tools"] *= 2
+                    elif fault == "missing_tool":
+                        payload["result"]["tools"] = []
+                    raw = client.canonical(payload)
+                return status, headers, raw
+
+            state = client.ObservationState()
+            with self.subTest(fault=fault), peer(changed) as (port, requests):
+                with self.assertRaises(client.ProbeError):
+                    connection(port, state=state).probe(observe_lesson07=True)
+                self.assertFalse(state.attempted)
+                self.assertFalse(
+                    any(r["body"]["method"] == "tools/call" for r in requests)
+                )
+
+    def test_changed_source_refuses_before_native_submission(self):
+        state = client.ObservationState()
+        with (
+            peer(observer_reply) as (port, requests),
+            mock.patch.object(client, "OBSERVER_SHA256", "0" * 64),
+        ):
+            with self.assertRaises(client.ProbeError) as caught:
+                connection(port, state=state).probe(observe_lesson07=True)
+        self.assertEqual(caught.exception.code, "OBSERVER_SOURCE_HASH")
+        self.assertFalse(state.attempted)
+        self.assertEqual(len(requests), 4)
+
+    def test_loader_reads_once_executes_pinned_bytes_in_fresh_namespace(self):
+        source = (
+            b'assert __name__ == "_yacs_lesson07_observer"\n'
+            b'assert "existing_private_global" not in globals()\n'
+            b'def collect_json():\n    return \'{"status":"synthetic"}\'\n'
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            source_path = Path(directory) / client.OBSERVER_FILE
+            source_path.write_bytes(source)
+            digest = hashlib.sha256(source).hexdigest()
+            with (
+                mock.patch.object(
+                    client, "__file__", str(Path(directory) / "client.py")
+                ),
+                mock.patch.object(client, "OBSERVER_SHA256", digest),
+            ):
+                code = client.observer_loader()
+            namespace = {"existing_private_global": object()}
+            stdout = io.StringIO()
+            with mock.patch("sys.stdout", stdout):
+                exec(code, namespace, namespace)
+            self.assertEqual(
+                set(namespace), {"existing_private_global", "__builtins__"}
+            )
+            self.assertEqual(stdout.getvalue().count(client.OBSERVER_TAG), 1)
+            envelope = json.loads(stdout.getvalue()[len(client.OBSERVER_TAG) :])
+            self.assertEqual(envelope["observer_sha256"], digest)
+            self.assertEqual(envelope["observation"], {"status": "synthetic"})
+            # A changed remote source is rejected before any of its code runs.
+            source_path.write_text('raise AssertionError("EXECUTED_CHANGED_SOURCE")')
+            with self.assertRaisesRegex(RuntimeError, "OBSERVER_SOURCE_HASH"):
+                exec(code, {})
+            self.assertFalse((Path(directory) / "__pycache__").exists())
+
+    def test_one_large_sse_result_only_allowed_for_observer_and_total_is_bounded(self):
+        def sse(request):
+            status, headers, raw = observer_reply(request)
+            if request["method"] == "tools/call":
+                value = observation()
+                value["synthetic_bounded_diagnostic"] = "x" * (client.LINE_LIMIT + 1)
+                payload = {
+                    "jsonrpc": "2.0",
+                    "id": request["id"],
+                    "result": tool_result(value),
+                }
+                return (
+                    200,
+                    {"Content-Type": "text/event-stream"},
+                    b"data: " + client.canonical(payload) + b"\n\n",
+                )
+            return status, headers, raw
+
+        with peer(sse) as (port, _requests):
+            report = connection(port).probe(observe_lesson07=True)
+        self.assertEqual(report["status"], "OBSERVATION_COMPLETE")
+
+        def oversized(request):
+            if request["method"] == "tools/call":
+                return (
+                    200,
+                    {
+                        "Content-Type": "text/event-stream",
+                        "Content-Length": str(client.RESPONSE_LIMIT + 1),
+                    },
+                    b"",
+                )
+            return observer_reply(request)
+
+        state = client.ObservationState()
+        with peer(oversized) as (port, requests):
+            with self.assertRaises(client.ProbeError) as caught:
+                connection(port, state=state).probe(observe_lesson07=True)
+        self.assertEqual(caught.exception.code, "HTTP_DECLARED_SIZE")
+        self.assertTrue(state.attempted)
+        self.assertIsNone(state.completed)
+        self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), 1)
+
+        def large_discovery(request):
+            status, headers, raw = default_reply(request)
+            if request["method"] == "initialize":
+                payload = json.loads(raw)
+                payload["result"]["instructions"] = "x" * client.LINE_LIMIT
+                return (
+                    200,
+                    {**headers, "Content-Type": "text/event-stream"},
+                    b"data: " + client.canonical(payload) + b"\n\n",
+                )
+            return status, headers, raw
+
+        with peer(large_discovery) as (port, _requests):
+            with self.assertRaises(client.ProbeError) as caught:
+                connection(port).probe()
+        self.assertEqual(caught.exception.code, "HTTP_BODY_SIZE")
+
+    def test_tool_timeout_is_attempted_unknown_completion_without_retry(self):
+        def delayed(request):
+            if request["method"] == "tools/call":
+                time.sleep(0.3)
+            return observer_reply(request)
+
+        state = client.ObservationState()
+        with peer(delayed) as (port, requests):
+            with self.assertRaises(client.ProbeError) as caught:
+                connection(port, timeout=0.08, state=state).probe(observe_lesson07=True)
+        self.assertEqual(caught.exception.code, "REQUEST_TIMEOUT")
+        self.assertTrue(state.attempted)
+        self.assertIsNone(state.completed)
+        self.assertFalse(state.response_received)
+        self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), 1)
+
+    def test_untrusted_result_errors_duplicates_wrappers_and_identity_rejected(self):
+        bad_results = []
+        good = tool_result()
+        bad_results.extend(
+            [
+                {**good, "isError": True},
+                {**good, "isError": 0},
+                {**good, "content": good["content"] * 2},
+                {
+                    **good,
+                    "content": [
+                        {"type": "text", "text": TOKEN + good["content"][0]["text"]}
+                    ],
+                },
+                {**good, "structuredContent": {"output": good["content"][0]["text"]}},
+                {
+                    **good,
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": json.dumps({"output": good["content"][0]["text"]}),
+                        }
+                    ],
+                },
+            ]
+        )
+        for field, value in (
+            ("pid", 1235),
+            ("pid", True),
+            ("project_file", "D:/other/project.uproject"),
+            ("project", "D:/other"),
+            ("world", "/Game/Other.Other"),
+            ("status", "PASS"),
+            (
+                "observed_at_utc",
+                (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat(),
+            ),
+            (
+                "observed_at_utc",
+                (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat(),
+            ),
+            (
+                "limitations",
+                {**observation()["limitations"], "visual_acceptance": True},
+            ),
+            ("validation", {"visual_or_native_graph_acceptance": True}),
+        ):
+            bad_results.append(tool_result({**observation(), field: value}))
+        wrong_hash = tool_result()
+        wrong_hash["content"][0]["text"] = wrong_hash["content"][0]["text"].replace(
+            client.OBSERVER_SHA256, "0" * 64
+        )
+        bad_results.append(wrong_hash)
+        for bad in bad_results:
+
+            def reply(request):
+                if request["method"] == "tools/call":
+                    return (
+                        200,
+                        {"Content-Type": "application/json"},
+                        client.canonical(
+                            {"jsonrpc": "2.0", "id": request["id"], "result": bad}
+                        ),
+                    )
+                return observer_reply(request)
+
+            state = client.ObservationState()
+            with self.subTest(result=bad), peer(reply) as (port, requests):
+                with self.assertRaises(client.ProbeError) as caught:
+                    connection(port, state=state).probe(observe_lesson07=True)
+                self.assertTrue(state.attempted)
+                self.assertIsNone(state.completed)
+                self.assertEqual(
+                    sum(r["body"]["method"] == "tools/call" for r in requests), 1
+                )
+                self.assertNotIn(TOKEN, str(caught.exception))
+
+    def test_cli_keeps_attempt_and_completion_after_post_call_file_recheck_failure(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            receipt, discovery_path, output = (
+                root / "identity.json",
+                root / "config.json",
+                root / "report.json",
+            )
+
+            def changed(request):
+                if request["method"] == "tools/call":
+                    receipt.write_bytes(receipt.read_bytes() + b" ")
+                return observer_reply(request)
+
+            with peer(changed) as (port, requests):
+                receipt.write_bytes(client.canonical(identity(port)))
+                discovery_path.write_bytes(client.canonical(config(port)))
+                original = client.probe_from_files
+
+                def from_fixture(path, **kwargs):
+                    return original(path, discovery_path, **kwargs)
+
+                stdout = io.StringIO()
+                with (
+                    mock.patch.object(client, "WINDOWS_HOST", True),
+                    mock.patch.object(
+                        client, "probe_from_files", side_effect=from_fixture
+                    ),
+                    mock.patch("sys.stdout", stdout),
+                ):
+                    code = client.main(
+                        [
+                            "--identity-receipt",
+                            str(receipt),
+                            "--output",
+                            str(output),
+                            "--observe-lesson07",
+                        ]
+                    )
+            report = json.loads(output.read_bytes())
+            self.assertEqual(code, 1)
+            self.assertEqual(report["status"], "OBSERVATION_FAILED")
+            self.assertEqual(report["error_code"], "INPUT_CHANGED")
+            self.assertEqual(report["native_tool_calls"], 1)
+            self.assertTrue(report["native_tool_attempted"])
+            self.assertTrue(report["native_tool_completed"])
+            self.assertEqual(report["native_material_readback"], "UNVERIFIED")
+            self.assertIn("native_tool_calls=1", stdout.getvalue())
+            self.assertEqual(
+                sum(r["body"]["method"] == "tools/call" for r in requests), 1
+            )
+            self.assertNotIn(TOKEN.encode(), output.read_bytes())
+
+    def test_cli_unexpected_failure_after_send_retains_unknown_completion(self):
+        def failed(_identity, **kwargs):
+            state = kwargs["observation_state"]
+            state.attempted = True
+            state.completed = None
+            raise ValueError(TOKEN)
+
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "report.json"
+            stdout = io.StringIO()
+            with (
+                mock.patch.object(client, "probe_from_files", side_effect=failed),
+                mock.patch("sys.stdout", stdout),
+            ):
+                code = client.main(
+                    [
+                        "--identity-receipt",
+                        str(Path(directory) / "identity.json"),
+                        "--output",
+                        str(output),
+                        "--observe-lesson07",
+                    ]
+                )
+            report = json.loads(output.read_bytes())
+            self.assertEqual(code, 1)
+            self.assertEqual(report["error_code"], "UNEXPECTED_CLIENT_FAILURE")
+            self.assertEqual(report["native_tool_calls"], 1)
+            self.assertIsNone(report["native_tool_completed"])
+            self.assertNotIn(TOKEN.encode(), output.read_bytes())
+            self.assertNotIn(TOKEN, stdout.getvalue())
 
 
 class FileTests(unittest.TestCase):

@@ -29,7 +29,9 @@ jobs:
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/365-world-graph' &&
       github.actor == github.repository_owner &&
-      contains(github.event.head_commit.message, '[l07-remote-editor]')
+      contains(github.event.head_commit.message, '[l07-remote-editor]') &&
+      !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+      !contains(github.event.head_commit.message, '[l07-discover-editor]')
     runs-on: ubuntu-latest
     timeout-minutes: 95
     outputs:
@@ -72,10 +74,67 @@ jobs:
           echo "::error::Exact-SHA protected CI did not succeed within the bounded wait."
           exit 1
 
+  observe_cpu:
+    name: Admit an exact-source probe of the existing Editor
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner &&
+      !contains(github.event.head_commit.message, '[l07-remote-editor]') &&
+      ((contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Checkout the exact passive-reader source without LFS
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Verify immutable source and the fixed passive observer
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import hashlib
+          import subprocess
+          from pathlib import Path
+
+          if subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"]):
+              raise ValueError("Tracked source changed after checkout")
+          for name in (
+              "lesson07_wingman_client.py", "lesson07_observe_editor.py",
+              "Invoke-YacsLesson07RemoteProbe.ps1", "Start-YacsLesson07RemoteEditor.ps1",
+          ):
+              path = Path("scripts/ue") / name
+              subprocess.run(["git", "ls-files", "--error-unmatch", "--", str(path)], check=True)
+              if path.is_symlink() or not 0 < path.stat().st_size <= 256 * 1024:
+                  raise ValueError("Passive-reader source boundary differs")
+          observer = Path("scripts/ue/lesson07_observe_editor.py").read_bytes()
+          if hashlib.sha256(observer).hexdigest() != "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5":
+              raise ValueError("Reviewed observer source differs")
+          print("Fixed passive observer admitted; existing native Editor still required")
+          PY
+      - name: Run focused client and passive-observer CPU tests
+        run: python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor
+
   connect:
-    name: Retain or start one canonical L07 Editor and discover its bridge
-    needs: await_ci
-    if: ${{ needs.await_ci.result == 'success' }}
+    name: Verify one canonical L07 Editor connection
+    needs: [await_ci, observe_cpu]
+    if: ${{ !cancelled() && (needs.await_ci.result == 'success' || needs.observe_cpu.result == 'success') }}
     concurrency:
       group: yacs-unreal-ci-${{ github.repository }}
       cancel-in-progress: false
@@ -90,6 +149,8 @@ jobs:
       GIT_OPTIONAL_LOCKS: '0'
       PYTHONDONTWRITEBYTECODE: '1'
       L07_PROTECTED_CI_RUN_ID: ${{ needs.await_ci.outputs.ci_run_id }}
+      L07_READONLY_OBSERVATION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-observe-editor]') }}
+      L07_READONLY_DISCOVERY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-discover-editor]') }}
     steps:
       - name: Create isolated Git settings for code-only staging
         working-directory: ${{ github.workspace }}
@@ -140,6 +201,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'L07 discovery or passive-reader boundary tests failed.' }
 
       - name: Start a separate limited interactive task only if the host is idle
+        if: ${{ needs.await_ci.result == 'success' && needs.observe_cpu.result == 'skipped' }}
         run: |
           ./scripts/ue/Install-YacsLesson07RemoteEditor.ps1 `
             -ExpectedHead $env:GITHUB_SHA `
@@ -148,9 +210,13 @@ jobs:
 
       - name: Verify process ownership and discover authenticated native tools
         run: |
-          ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 `
-            -ExpectedHead $env:GITHUB_SHA `
-            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}'
+          $parameters = @{
+            ExpectedHead = $env:GITHUB_SHA
+            RunToken = '${{ github.run_id }}-${{ github.run_attempt }}'
+          }
+          if ($env:L07_READONLY_OBSERVATION -ceq 'true') { $parameters['ObserveLesson07'] = $true }
+          if ($env:L07_READONLY_DISCOVERY -ceq 'true') { $parameters['ExistingEditorOnly'] = $true }
+          & ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 @parameters
 
       - name: Print bounded reports without config, credentials or raw UE logs
         id: reports

@@ -1653,16 +1653,23 @@
     "performance_pass": false
   },
   "remote_connection_continuation_20261021": {
-    "status": "UTC_HANDOFF_REPAIR_PREPARED",
+    "status": "EDITOR_STARTED_CLIENT_DISCOVERY_COMPATIBILITY_REPAIR_PENDING",
     "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
     "owner_authorized_missing_connection_infrastructure": true,
     "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
     "native_tool_called": false,
     "channel_comparison_performed": false,
     "asset_changes": [],
-    "editor_lifecycle_changes": [],
+    "editor_lifecycle_changes": [
+      {
+        "action": "CREATE_MISSING_CANONICAL_EDITOR",
+        "pid": 17896,
+        "started_utc": "2026-10-20T23:20:00.0674689Z",
+        "source_commit": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3"
+      }
+    ],
     "performance_pass": false,
-    "note": "The GUID-specific admission passed on Windows and all accepted checkpoint hashes and required module BuildIds were verified. The separate limited interactive task was registered and started, but reported BLOCKED_HANDOFF / MethodInvocationException before an Editor identity or autosave override. The exact production date expression reproduces this error under pl-PL and en-GB and a UTC-offset error under en-US; native exact-line and culture attribution were not recorded. The failed task release and report remain retained; a corrected native attempt is still pending.",
+    "note": "The corrected launcher successfully migrated only the verified inactive failed task action and started canonical UE PID17896 at2026-10-20T23:20:00.0674689Z. The owned loopback listener and stable process identity were verified. The client then rejected additional vendor discovery metadata before HTTP. The running Editor is retained; sign-in, tool schema, native world and post-job survival still need the next existing-session probe.",
     "inventory": {
       "source_commit": "4bf894dd8dccc482a3e90a53bce6d6b01653e6a7",
       "run_id": 39507345660,
@@ -1690,7 +1697,7 @@
       "editor_commands_executed": 0
     },
     "connection_workflow": ".github/workflows/yacs-lesson07-remote-editor.yml",
-    "connection_execution": "BLOCKED_HANDOFF",
+    "connection_execution": "EDITOR_RUNNING_BRIDGE_DISCOVERY_FAILED_BEFORE_HTTP",
     "first_connection_attempt": {
       "source_commit": "3ba05803bfc3ff095eb012e3f790752b55b47d12",
       "protected_ci_run_id": 39508823330,
@@ -1733,7 +1740,7 @@
       "dictionary_bug_reproduced": false
     },
     "startup_retry_execution": "BLOCKED_HANDOFF",
-    "post_job_survival": "NOT_RUN",
+    "post_job_survival": "NOT_YET_VERIFIED_AFTER_2026_10_20T23_24_03Z_CLEANUP",
     "second_connection_attempt": {
       "source_commit": "457dc899adb858abee69c8ec1c4174cb7bc8032d",
       "protected_ci_run_id": 39510984665,
@@ -1780,7 +1787,7 @@
       "native_culture_known": false,
       "native_causality": "REPRODUCED_DEFECT_CONSISTENT_WITH_RECORDED_FAILURE"
     },
-    "utc_handoff_retry_execution": "NOT_RUN",
+    "utc_handoff_retry_execution": "EDITOR_RUNNING_NATIVE_NOT_VERIFIED",
     "utc_handoff_repair": {
       "deadline_semantics": "PRESERVE_TYPED_UTC_OR_EXACT_INVARIANT_UTC_TEXT",
       "start_permission_duration_minutes": 4,
@@ -1790,8 +1797,127 @@
       "migration_scope": "ONLY_VERIFIED_INACTIVE_FAILED_TASK_ACTION",
       "old_release_and_state_retained": true,
       "task_stop_or_unregister_requested": false,
-      "native_migration_verified": false,
-      "native_startup_verified": false
+      "native_migration_verified": true,
+      "native_startup_verified": true
+    },
+    "passive_observer_preparation": {
+      "status": "PREPARED_NATIVE_EXECUTION_PENDING",
+      "intent": "[l07-observe-editor]",
+      "admission": "EXACT_SOURCE_FOCUSED_CPU_AND_EXISTING_OWNER_EDITOR",
+      "startup_intent_separate": true,
+      "installer_entered_in_observation_mode": false,
+      "shared_native_concurrency_preserved": true,
+      "collector_sha256": "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5",
+      "client_sha256": "c7c265d67d24584ce7bcd8499653d2b9e8657d55c87a591c455a869b307e07d7",
+      "client_tests_passed": 33,
+      "collector_tests_passed": 20,
+      "independent_review": "NO_CONCRETE_BLOCKER_LOCAL_ONLY",
+      "actual_installed_tool_contract": "NOT_YET_OBSERVED",
+      "native_tool_calls": 0,
+      "native_execution": "NOT_RUN",
+      "output_status_if_verified": "OBSERVED_PARTIAL_DIAGNOSIS_NOT_ACCEPTANCE",
+      "viewport_metadata_is_proven_capture_target": false,
+      "asset_load_or_save_requested": false,
+      "camera_or_viewmode_change_requested": false,
+      "visual_acceptance": false,
+      "performance_pass": false,
+      "discovery_only_intent": "[l07-discover-editor]",
+      "probe_sha256": "7b2ee9876d6bd741d70fe9b1ac2bc4045d70d4ea963beb1549c70b02f1c269e9",
+      "existing_editor_probe_mocked_flow_cases_passed": 17,
+      "existing_editor_probe_independent_receipt_cases_passed": 8,
+      "observation_transport_native_compatibility": "PENDING_SCHEMA_AND_INLINE_SOURCE_REVIEW",
+      "next_execution_mode": "EXISTING_EDITOR_DISCOVERY_ONLY",
+      "selected_installed_contracts": [
+        "execute_python",
+        "take_viewport_screenshot"
+      ],
+      "selected_contract_bytes_limit": 32768
+    },
+    "third_connection_attempt": {
+      "source_commit": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3",
+      "protected_ci_run_id": 39513361856,
+      "protected_ci_conclusion": "success",
+      "native_ci_proof": "COMPATIBLE_CACHED_PROOF_NOT_NEW_MATERIAL_EXECUTION",
+      "connection_run_id": 39513355021,
+      "connection_job_id": 118942077869,
+      "connection_job_conclusion": "failure",
+      "startup_status": "EDITOR_RUNNING_NATIVE_NOT_VERIFIED",
+      "task_registered": false,
+      "task_migrated": true,
+      "task_start_requested": true,
+      "task_migration": {
+        "prior_source_sha": "457dc899adb858abee69c8ec1c4174cb7bc8032d",
+        "prior_session_sha256": "57fa56edbd2d1eff4be7f3f765227457754f8dce298e2212a4ed5cff1e3ed1d9",
+        "prior_release_retained": true,
+        "prior_state_retained": true,
+        "owner_sid_matches": true,
+        "prior_task_result": 1
+      },
+      "editor": {
+        "editor_pid": 17896,
+        "editor_start_filetime_utc": "134370120000674689",
+        "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+        "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+        "interactive_session_id": 1,
+        "canonical_project_matches": true
+      },
+      "owner_sid_matches": true,
+      "checkpoint_bytes_verified": true,
+      "module_build_ids_verified": true,
+      "engine_build_id": "55116800",
+      "autosave_session_override": true,
+      "identity": {
+        "schema_version": 1,
+        "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+        "observed_utc": "2026-10-20T23:23:47.6792494Z",
+        "source_commit": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3",
+        "pid": 17896,
+        "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+        "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+        "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+        "canonical_project_argument_matches": true,
+        "listener": {
+          "address": "127.0.0.1",
+          "port": 19315,
+          "pid": 17896
+        }
+      },
+      "probe": {
+        "schema_version": 1,
+        "source_commit": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3",
+        "status": "BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED",
+        "observed_utc": "2026-10-20T23:23:48.6441973Z",
+        "error_type": "RuntimeException",
+        "identity_stable_across_probe": true,
+        "client_exit_code": 1,
+        "native_tool_called": false,
+        "editor_started_or_stopped": false,
+        "native_material_readback": "NOT_RUN",
+        "channel_comparison_performed": false,
+        "performance_pass": false,
+        "reason": "AUTHENTICATED_BRIDGE_PROBE_FAILED"
+      },
+      "bridge": {
+        "error_code": "DISCOVERY_SCHEMA",
+        "native_material_readback": "NOT_RUN",
+        "native_tool_calls": 0,
+        "performance_pass": false,
+        "schema_version": 1,
+        "status": "DISCOVERY_FAILED"
+      },
+      "http_requests_made": 0,
+      "native_tool_calls": 0,
+      "native_world_verified": false,
+      "job_cleanup_utc": "2026-10-20T23:24:03.9664401Z",
+      "powershell_data_fixtures_passed": 72,
+      "python_tests_passed": 30,
+      "artifact_id": 12307810528,
+      "artifact_sha256": "0b9eeb047937c21dc6412af44da76003756158a9f28f4d20882cc7cd034e9cf7",
+      "session_sha256": "2527f25a860198bf6548c3a031885eb9fc6bf3cfc821101ea12f146fd3f94e50",
+      "artifact_downloaded_and_digest_verified": true,
+      "package_save_requested": false,
+      "project_config_write_requested": false,
+      "editor_stop_requested": false
     }
   }
 }

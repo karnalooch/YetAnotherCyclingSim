@@ -1,14 +1,15 @@
-"""Bounded host-local Wingman discovery for the existing Lesson07 Editor.
+"""Bounded host-local Wingman discovery and fixed passive Lesson07 observation.
 
-This client only initializes MCP, lists tool schemas and reads session/status.
-It cannot call a tool, start an Editor, expose a listener or change an asset.
+Discovery is the default. Opt-in observation admits one hash-pinned adjacent
+collector through an exactly checked execute_python code:string contract.
+There is no arbitrary code/tool argument, Editor startup or retry surface.
 The Windows harness must supply a fresh OS identity receipt and recheck that
 identity after this process exits. The receipt is not an active-world readback.
 
 Wire contracts: https://ai.locodev.dev/docs/developers/antigravity and
 https://modelcontextprotocol.io/specification/2025-03-26/basic/transports .
 The existing fixed BOB client admits JSON only and another protocol/toolset;
-this small adapter adds the vendor's JSON/SSE discovery, without changing it.
+this small adapter adds the vendor's JSON/SSE transport, without changing it.
 """
 
 from __future__ import annotations
@@ -48,6 +49,25 @@ MAX_EVENTS = 512
 IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_.:-]{0,127}\Z")
 SCHEMA_TYPES = {"object", "array", "string", "number", "integer", "boolean", "null"}
 METHODS = {"initialize", "tools/list", "session/status"}
+CONTRACT_TOOLS = {"execute_python", "take_viewport_screenshot"}
+CONTRACT_LIMIT = 32 * 1024
+CONTRACT_DESCRIPTION_LIMIT = 16 * 1024
+CONTRACT_BOOLEAN_ANNOTATIONS = {
+    "readOnlyHint",
+    "destructiveHint",
+    "idempotentHint",
+    "openWorldHint",
+}
+OBSERVER_TOOL = "execute_python"
+OBSERVER_FILE = "lesson07_observe_editor.py"
+OBSERVER_SHA256 = "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5"
+OBSERVER_SOURCE_LIMIT = 64 * 1024
+OBSERVER_OUTPUT_LIMIT = 1024 * 1024
+OBSERVER_TAG = "YACS_LESSON07_OBSERVATION_V1:"
+OBSERVER_STATUS = "OBSERVED_PARTIAL_DIAGNOSIS_NOT_ACCEPTANCE"
+OBSERVER_WORLD = (
+    "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07"
+)
 
 
 class ProbeError(Exception):
@@ -141,9 +161,18 @@ class Discovery:
     @classmethod
     def from_mapping(cls, value):
         require(
-            type(value) is dict and set(value) == {"url", "token", "type"},
+            type(value) is dict
+            and {"url", "token", "type"} <= set(value)
+            and all(type(key) is str for key in value),
             "DISCOVERY_SCHEMA",
         )
+        # Installed releases may include metadata. Bound the entire JSON value,
+        # then ignore all extra fields: only the three core fields below may
+        # select transport, endpoint or credentials. Metadata is never reported.
+        try:
+            require(len(canonical(value)) <= CONFIG_LIMIT, "DISCOVERY_SIZE")
+        except (TypeError, ValueError, RecursionError):
+            raise ProbeError("DISCOVERY_SCHEMA") from None
         require(value["type"] == "http", "DISCOVERY_TRANSPORT")
         url, token = value["url"], value["token"]
         require(
@@ -303,8 +332,247 @@ def schema_structure(schema, token, depth=0):
     return result
 
 
+def installed_tool_contract(tool, token):
+    """Retain selected authenticated metadata as data, without broadening calls."""
+
+    def bounded_json(value, depth=0):
+        require(depth <= 12, "CONTRACT_DEPTH")
+        if type(value) is dict:
+            for key, item in value.items():
+                require(type(key) is str, "CONTRACT_JSON")
+                require(token not in key, "CONTRACT_CREDENTIAL")
+                bounded_json(item, depth + 1)
+        elif type(value) is list:
+            for item in value:
+                bounded_json(item, depth + 1)
+        elif type(value) is str:
+            require(token not in value, "CONTRACT_CREDENTIAL")
+        elif type(value) is float:
+            require(math.isfinite(value), "CONTRACT_JSON")
+        else:
+            require(value is None or type(value) in (bool, int), "CONTRACT_JSON")
+
+    try:
+        contract = {"status": "RETAINED", "inputSchema": tool.get("inputSchema")}
+        require(type(contract["inputSchema"]) in (dict, bool), "CONTRACT_SCHEMA")
+        if "outputSchema" in tool:
+            require(type(tool["outputSchema"]) in (dict, bool), "CONTRACT_SCHEMA")
+            contract["outputSchema"] = tool["outputSchema"]
+        if "description" in tool:
+            require(
+                type(tool["description"]) is str
+                and len(tool["description"]) <= CONTRACT_DESCRIPTION_LIMIT,
+                "CONTRACT_DESCRIPTION",
+            )
+            contract["description"] = tool["description"]
+        if "annotations" in tool:
+            annotations = tool["annotations"]
+            require(type(annotations) is dict, "CONTRACT_ANNOTATIONS")
+            retained = {}
+            for key in CONTRACT_BOOLEAN_ANNOTATIONS & set(annotations):
+                require(type(annotations[key]) is bool, "CONTRACT_ANNOTATIONS")
+                retained[key] = annotations[key]
+            contract["annotations"] = retained
+        bounded_json(contract)
+        serialized = canonical(contract)
+        require(len(serialized) <= CONTRACT_LIMIT, "CONTRACT_SIZE")
+        require(token.encode() not in serialized, "CONTRACT_CREDENTIAL")
+        return contract
+    except ProbeError as error:
+        return {"status": "EXCLUDED", "reason": error.code}
+    except (TypeError, ValueError, RecursionError):
+        return {"status": "EXCLUDED", "reason": "CONTRACT_JSON"}
+
+
+@dataclass
+class ObservationState:
+    """Attempt accounting survives errors after submission and file rechecks."""
+
+    attempted: bool = False
+    completed: bool | None = False
+    response_received: bool = False
+    started_utc: datetime | None = None
+    source_verified: bool = False
+    schema_sha256: str | None = None
+
+    def report_fields(self):
+        return {
+            # This is a wire-attempt count, not a count of completed evaluations.
+            "native_tool_calls": int(self.attempted),
+            "native_tool_attempted": self.attempted,
+            "native_tool_completed": self.completed,
+            "native_tool_response_received": self.response_received,
+            "native_tool_started_utc": (
+                self.started_utc.isoformat() if self.started_utc else None
+            ),
+            "observer_source_sha256": OBSERVER_SHA256,
+            "observer_source_verified_before_call": self.source_verified,
+            "observer_input_schema_sha256": self.schema_sha256,
+        }
+
+
+def validate_observer_schema(schema):
+    """Admit the raw schema only; sanitized discovery schemas lose constraints."""
+    annotations = {"description", "title"}
+    require(
+        type(schema) is dict
+        and set(schema)
+        <= {"type", "properties", "required", "additionalProperties"} | annotations
+        and schema.get("type") == "object"
+        and schema.get("required") == ["code"]
+        and schema.get("additionalProperties", False) is False,
+        "OBSERVER_TOOL_SCHEMA_UNSUPPORTED",
+    )
+    properties = schema.get("properties")
+    require(
+        type(properties) is dict and set(properties) == {"code"},
+        "OBSERVER_TOOL_SCHEMA_UNSUPPORTED",
+    )
+    code = properties["code"]
+    require(
+        type(code) is dict
+        and set(code) <= {"type"} | annotations
+        and code.get("type") == "string",
+        "OBSERVER_TOOL_SCHEMA_UNSUPPORTED",
+    )
+    for value in (schema, code):
+        for key in annotations & set(value):
+            require(
+                type(value[key]) is str and len(value[key]) <= CONFIG_LIMIT,
+                "OBSERVER_TOOL_SCHEMA_UNSUPPORTED",
+            )
+    return hashlib.sha256(canonical(schema)).hexdigest()
+
+
+def observer_loader():
+    """Return only the fixed loader; verify its adjacent source before sending."""
+    source_path = Path(__file__).absolute().with_name(OBSERVER_FILE)
+    source = read_bounded(source_path, OBSERVER_SOURCE_LIMIT)
+    require(
+        hashlib.sha256(source).hexdigest() == OBSERVER_SHA256,
+        "OBSERVER_SOURCE_HASH",
+    )
+    # Both loader and collector use fresh namespaces. The remote loader reads
+    # once, hashes those bytes, and executes those same bytes, with no import
+    # cache, run_path, native compile/update/load, or disk output.
+    body = f"""from pathlib import Path
+import hashlib
+import json
+import stat
+p = Path({str(source_path)!r})
+if not p.is_absolute():
+    raise RuntimeError("OBSERVER_SOURCE_PATH")
+for entry in (p, *p.parents):
+    info = entry.lstat()
+    if stat.S_ISLNK(info.st_mode) or (getattr(info, "st_file_attributes", 0) & 0x400):
+        raise RuntimeError("OBSERVER_SOURCE_PATH")
+before = p.stat()
+if not stat.S_ISREG(before.st_mode) or not 0 < before.st_size <= {OBSERVER_SOURCE_LIMIT}:
+    raise RuntimeError("OBSERVER_SOURCE_SIZE")
+with p.open("rb") as stream:
+    source = stream.read({OBSERVER_SOURCE_LIMIT + 1})
+after = p.stat()
+if len(source) != before.st_size or before.st_size != after.st_size or before.st_mtime_ns != after.st_mtime_ns:
+    raise RuntimeError("OBSERVER_SOURCE_CHANGED")
+if hashlib.sha256(source).hexdigest() != {OBSERVER_SHA256!r}:
+    raise RuntimeError("OBSERVER_SOURCE_HASH")
+scope = {{"__name__": "_yacs_lesson07_observer", "__file__": str(p)}}
+exec(compile(source, str(p), "exec"), scope, scope)
+collected = scope["collect_json"]()
+if type(collected) is not str or not 0 < len(collected.encode("utf-8")) <= {OBSERVER_OUTPUT_LIMIT}:
+    raise RuntimeError("OBSERVER_OUTPUT_SIZE")
+envelope = {{"observer_sha256": {OBSERVER_SHA256!r}, "observation": json.loads(collected)}}
+print({OBSERVER_TAG!r} + json.dumps(envelope, ensure_ascii=True, allow_nan=False, separators=(",", ":")))
+"""
+    return f"exec({body!r}, {{'__name__': '_yacs_lesson07_loader'}})"
+
+
+def extract_observation(result, identity, state):
+    """Accept one exact tagged envelope in standard MCP text, never raw logs."""
+    require(type(result) is dict, "OBSERVER_RESULT_SHAPE")
+    if "isError" in result:
+        require(type(result["isError"]) is bool, "OBSERVER_RESULT_SHAPE")
+        require(not result["isError"], "OBSERVER_TOOL_ERROR")
+    # No undocumented vendor wrapper or structured output interpretation.
+    require("structuredContent" not in result, "OBSERVER_RESULT_WRAPPER_UNSUPPORTED")
+    content = result.get("content")
+    require(
+        type(content) is list and 0 < len(content) <= 16,
+        "OBSERVER_RESULT_SHAPE",
+    )
+    texts = []
+    for block in content:
+        require(
+            type(block) is dict
+            and block.get("type") == "text"
+            and type(block.get("text")) is str,
+            "OBSERVER_RESULT_SHAPE",
+        )
+        texts.append(block["text"])
+    text = "\n".join(texts).strip()
+    require(
+        text.count(OBSERVER_TAG) == 1 and text.startswith(OBSERVER_TAG),
+        "OBSERVER_RESULT_TAG",
+    )
+    envelope = parse_json(
+        text[len(OBSERVER_TAG) :].encode("utf-8"), OBSERVER_OUTPUT_LIMIT
+    )
+    require(
+        type(envelope) is dict
+        and set(envelope) == {"observer_sha256", "observation"}
+        and envelope["observer_sha256"] == OBSERVER_SHA256,
+        "OBSERVER_RESULT_SOURCE",
+    )
+    observed = envelope["observation"]
+    require(
+        type(observed) is dict and observed.get("status") == OBSERVER_STATUS,
+        "OBSERVER_RESULT_STATUS",
+    )
+    require(
+        type(observed.get("pid")) is int and observed["pid"] == identity["pid"],
+        "OBSERVER_RESULT_PID",
+    )
+    for key, expected in (
+        ("project", str(PureWindowsPath(PROJECT).parent)),
+        ("project_file", PROJECT),
+    ):
+        require(
+            type(observed.get(key)) is str
+            and PureWindowsPath(observed[key]) == PureWindowsPath(expected),
+            "OBSERVER_RESULT_PROJECT",
+        )
+    require(observed.get("world") == OBSERVER_WORLD, "OBSERVER_RESULT_WORLD")
+    observed_at = utc(observed.get("observed_at_utc"))
+    require(
+        state.started_utc is not None
+        and (observed_at - state.started_utc).total_seconds() >= -5
+        and (datetime.now(timezone.utc) - observed_at).total_seconds() >= -5,
+        "OBSERVER_RESULT_STALE",
+    )
+    limitations = observed.get("limitations")
+    require(
+        type(limitations) is dict
+        and all(
+            limitations.get(key) is False
+            for key in (
+                "mutating_apis_requested",
+                "asset_loads_requested",
+                "new_captures",
+                "visual_acceptance",
+                "performance_pass",
+            )
+        )
+        and type(observed.get("validation")) is dict
+        and observed["validation"].get("visual_or_native_graph_acceptance") is False,
+        "OBSERVER_RESULT_ACCEPTANCE",
+    )
+    return observed
+
+
 class DiscoveryClient:
-    def __init__(self, discovery, identity, timeout=TIMEOUT_SECONDS):
+    def __init__(
+        self, discovery, identity, timeout=TIMEOUT_SECONDS, observation_state=None
+    ):
         require(
             type(timeout) in (int, float) and 0 < timeout <= TIMEOUT_SECONDS,
             "TIMEOUT_BOUND",
@@ -317,6 +585,8 @@ class DiscoveryClient:
         self.next_id = 1
         self.requests = 0
         self.notifications_received = 0
+        self.observation_state = observation_state or ObservationState()
+        self._observer_params = None
 
     def _message(self, value, request_id):
         messages = value if type(value) is list else [value]
@@ -344,7 +614,7 @@ class DiscoveryClient:
             found = message["result"]
         return found
 
-    def _read_result(self, response, request_id, wire, deadline):
+    def _read_result(self, response, request_id, wire, deadline, line_limit=LINE_LIMIT):
         content_type = (
             (response.getheader("Content-Type") or "").split(";", 1)[0].strip().lower()
         )
@@ -374,10 +644,10 @@ class DiscoveryClient:
             remaining = deadline - time.monotonic()
             require(remaining > 0, "REQUEST_TIMEOUT")
             wire.settimeout(remaining)
-            line = response.readline(LINE_LIMIT + 1)
+            line = response.readline(line_limit + 1)
             total += len(line)
             require(
-                len(line) <= LINE_LIMIT and total <= RESPONSE_LIMIT, "HTTP_BODY_SIZE"
+                len(line) <= line_limit and total <= RESPONSE_LIMIT, "HTTP_BODY_SIZE"
             )
             if not line:
                 raise ProbeError("SSE_RESULT_MISSING")
@@ -395,9 +665,17 @@ class DiscoveryClient:
             # SSE comments, id/retry/event fields are ignored; never reconnect.
 
     def _post(self, method, params=None, notification=False):
+        observing = (
+            method == "tools/call"
+            and self._observer_params is not None
+            and params is self._observer_params
+            and not self.observation_state.attempted
+            and not notification
+        )
         require(
             method in METHODS
-            or (notification and method == "notifications/initialized"),
+            or (notification and method == "notifications/initialized")
+            or observing,
             "METHOD_NOT_ALLOWED",
         )
         require(
@@ -448,6 +726,11 @@ class DiscoveryClient:
             watchdog = threading.Timer(remaining, expire)
             watchdog.daemon = True
             watchdog.start()
+            if observing:
+                # request() may partially send and then raise. Never retry it.
+                self.observation_state.attempted = True
+                self.observation_state.completed = None
+                self.observation_state.started_utc = datetime.now(timezone.utc)
             connection.request("POST", ENDPOINT, body=raw, headers=headers)
             response = connection.getresponse()
             require(not 300 <= response.status < 400, "HTTP_REDIRECT_DENIED")
@@ -493,7 +776,16 @@ class DiscoveryClient:
                 )
                 require(response.read(1) == b"", "NOTIFICATION_BODY")
                 return None
-            return self._read_result(response, request_id, wire, deadline)
+            result = self._read_result(
+                response,
+                request_id,
+                wire,
+                deadline,
+                RESPONSE_LIMIT if observing else LINE_LIMIT,
+            )
+            if observing:
+                self.observation_state.response_received = True
+            return result
         except ProbeError:
             if expired.is_set():
                 raise ProbeError("REQUEST_TIMEOUT") from None
@@ -509,7 +801,7 @@ class DiscoveryClient:
                 watchdog.cancel()
             connection.close()
 
-    def probe(self):
+    def probe(self, observe_lesson07=False):
         initialization = self._post(
             "initialize",
             {
@@ -525,9 +817,11 @@ class DiscoveryClient:
         )
         self._post("notifications/initialized", notification=True)
         tools = []
+        contracts = {}
         cursor = None
         seen_cursors = set()
         tool_error = None
+        observer_schema = None
         try:
             for _page in range(MAX_PAGES):
                 listing = self._post(
@@ -553,6 +847,10 @@ class DiscoveryClient:
                         and name not in {t["name"] for t in tools},
                         "TOOL_COUNT_OR_DUPLICATE",
                     )
+                    if name in CONTRACT_TOOLS:
+                        contracts[name] = installed_tool_contract(
+                            tool, self.discovery.token
+                        )
                     tools.append(
                         {
                             "name": name,
@@ -561,6 +859,8 @@ class DiscoveryClient:
                             ),
                         }
                     )
+                    if name == OBSERVER_TOOL:
+                        observer_schema = tool.get("inputSchema")
                 cursor = listing.get("nextCursor")
                 if cursor is None:
                     break
@@ -590,7 +890,7 @@ class DiscoveryClient:
             "enterprise",
         }:
             safe_session["plan"] = plan.lower()
-        return {
+        report = {
             "status": "DISCOVERY_INCOMPLETE"
             if tool_error
             else (
@@ -599,6 +899,7 @@ class DiscoveryClient:
             "protocol_version": PROTOCOL,
             "session": safe_session,
             "tools": tools,
+            "installed_tool_contracts": contracts,
             "tool_list_complete": tool_error is None,
             "tool_list_error": tool_error,
             "schema_fidelity": "STRUCTURE_ONLY_FREE_TEXT_DEFAULTS_ENUMS_OMITTED",
@@ -608,17 +909,51 @@ class DiscoveryClient:
             "native_material_readback": "NOT_RUN",
             "performance_pass": False,
         }
+        if observe_lesson07:
+            require(tool_error is None, "OBSERVER_INCOMPLETE_TOOL_LIST")
+            require(session["signed_in"], "OBSERVER_SIGNED_OUT")
+            state = self.observation_state
+            state.schema_sha256 = validate_observer_schema(observer_schema)
+            code = observer_loader()
+            state.source_verified = True
+            self._observer_params = {
+                "name": OBSERVER_TOOL,
+                "arguments": {"code": code},
+            }
+            result = self._post("tools/call", self._observer_params)
+            observed = extract_observation(result, self.identity, state)
+            state.completed = True
+            report.update(
+                {
+                    "status": "OBSERVATION_COMPLETE",
+                    "http_requests": self.requests,
+                    "notifications_received": self.notifications_received,
+                    "native_material_readback": OBSERVER_STATUS,
+                    "observation": observed,
+                    "observer_contract": "EXACT_REQUIRED_CODE_STRING_ONLY",
+                    "plugin_execution_defaults_verified": False,
+                    "visual_acceptance": False,
+                    **state.report_fields(),
+                }
+            )
+        return report
 
 
-def probe_from_files(identity_path, discovery_path=DISCOVERY_PATH):
+def probe_from_files(
+    identity_path,
+    discovery_path=DISCOVERY_PATH,
+    *,
+    observe_lesson07=False,
+    observation_state=None,
+):
     require(WINDOWS_HOST, "WINDOWS_HOST_REQUIRED")
     discovery_raw = read_bounded(discovery_path, CONFIG_LIMIT)
     discovery = Discovery.from_mapping(parse_json(discovery_raw, CONFIG_LIMIT))
     identity_raw = read_bounded(identity_path, CONFIG_LIMIT)
     identity = parse_json(identity_raw, CONFIG_LIMIT)
     safe_identity = validate_identity(identity, discovery)
-    client = DiscoveryClient(discovery, identity)
-    report = client.probe()
+    client = DiscoveryClient(discovery, identity, observation_state=observation_state)
+    report = client.probe(observe_lesson07=observe_lesson07)
     require(
         read_bounded(discovery_path, CONFIG_LIMIT) == discovery_raw
         and read_bounded(identity_path, CONFIG_LIMIT) == identity_raw,
@@ -658,37 +993,54 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--identity-receipt", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--observe-lesson07", action="store_true")
     args = parser.parse_args(argv)
+    state = ObservationState()
+    error_code = None
+    rpc_code = None
     try:
-        report = probe_from_files(args.identity_receipt)
+        report = probe_from_files(
+            args.identity_receipt,
+            observe_lesson07=args.observe_lesson07,
+            observation_state=state,
+        )
     except ProbeError as error:
-        report = {
-            "schema_version": 1,
-            "status": "DISCOVERY_FAILED",
-            "error_code": error.code,
-            "native_tool_calls": 0,
-            "native_material_readback": "NOT_RUN",
-            "performance_pass": False,
-        }
-        if error.rpc_code is not None:
-            report["rpc_code"] = error.rpc_code
+        error_code, rpc_code = error.code, error.rpc_code
     except Exception:
         # Do not print a traceback, response body, file contents or exception text.
+        error_code = "UNEXPECTED_CLIENT_FAILURE"
+    if error_code is not None:
         report = {
             "schema_version": 1,
-            "status": "DISCOVERY_FAILED",
-            "error_code": "UNEXPECTED_CLIENT_FAILURE",
+            "status": "OBSERVATION_FAILED"
+            if args.observe_lesson07
+            else "DISCOVERY_FAILED",
+            "error_code": error_code,
             "native_tool_calls": 0,
-            "native_material_readback": "NOT_RUN",
+            "native_material_readback": "UNVERIFIED" if state.attempted else "NOT_RUN",
+            "visual_acceptance": False,
             "performance_pass": False,
         }
+        if args.observe_lesson07:
+            report.update(state.report_fields())
+        if rpc_code is not None:
+            report["rpc_code"] = rpc_code
+    prefix = (
+        "L07_WINGMAN_OBSERVATION" if args.observe_lesson07 else "L07_WINGMAN_DISCOVERY"
+    )
     try:
         write_report(args.output, report)
     except ProbeError:
-        print("L07_WINGMAN_DISCOVERY OUTPUT_UNAVAILABLE")
+        print(prefix + f" OUTPUT_UNAVAILABLE native_tool_calls={int(state.attempted)}")
         return 1
-    print("L07_WINGMAN_DISCOVERY " + report["status"] + " native_tool_calls=0")
-    return 0 if report["status"] == "DISCOVERY_COMPLETE" else 1
+    print(
+        prefix
+        + " "
+        + report["status"]
+        + f" native_tool_calls={report['native_tool_calls']}"
+    )
+    expected = "OBSERVATION_COMPLETE" if args.observe_lesson07 else "DISCOVERY_COMPLETE"
+    return 0 if report["status"] == expected else 1
 
 
 if __name__ == "__main__":

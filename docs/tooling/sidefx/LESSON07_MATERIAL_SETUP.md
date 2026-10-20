@@ -57,16 +57,45 @@ It does not stop an Editor on probe failure or run a restart loop. Project
 configuration, accepted packages and the canonical Git checkout are not edited.
 
 The [host probe](../../../scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1) verifies
-the discovery port belongs exclusively to the exact canonical Editor process,
-then the [fixed MCP client](../../../scripts/ue/lesson07_wingman_client.py) uses
-only vendor initialization, `tools/list` and `session/status`. It supports the
+the discovery port belongs exclusively to the exact canonical Editor process.
+The [fixed MCP client](../../../scripts/ue/lesson07_wingman_client.py) defaults
+to vendor initialization, `tools/list` and `session/status`. It supports the
 official [2025-03-26 Streamable HTTP contract](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports)
 with bounded responses and timeouts, without redirects, proxy routing or
-automatic retries. Native tool calls are a subsequent step after actual schemas
-and current world identity have been observed. The
-[passive reader](../../../scripts/ue/lesson07_observe_editor.py) is opt-in and
-neither loads/saves packages nor changes the camera or material; partial graph
-API information remains unavailable instead of being promoted to proof.
+automatic retries. The fixed opt-in observation path requires the actual
+installed `execute_python` input schema to pass its raw-schema guard, a signed-in
+session and unchanged process ownership. It sends one hash-pinned collector,
+with no retry or arbitrary script argument. The
+[passive reader](../../../scripts/ue/lesson07_observe_editor.py) checks its actual
+project and world before reading loaded objects; it neither loads/saves packages
+nor changes the camera or material. Partial graph API information remains
+unavailable instead of being promoted to proof.
+
+The explicit `[l07-discover-editor]` and `[l07-observe-editor]` intents use a
+separate exact-source focused CPU gate, consistent with the existing M3
+live-read admission, and require an already-open verified owner Editor. All
+three intents are mutually exclusive. They retain the shared native concurrency
+lane; neither existing-session path can enter the installer or start an Editor.
+Discovery initializes MCP and reads metadata without a native tool call. It
+retains bounded exact input/output contracts for `execute_python` and
+`take_viewport_screenshot`, including defaults and enums; other tool rows stay
+structural. Credentials and unrelated metadata are excluded. The wrapper
+checks the owner, PID, native start time and listener again after the read. Its
+success status is deliberately partial diagnosis, not graph, visual or
+performance acceptance. Unknown completion after a timeout is retained as
+unknown, and no native request is retried. The collector records bounded
+viewport metadata without selecting or changing a viewport. Its active view
+identity is not a proven screenshot target.
+
+The prepared passive mode passed 53 focused Python tests (33 client and 20
+collector), independently rerun. These synthetic tests do not establish the
+installed input/output contract or native compatibility. The frozen collector
+SHA256 is `033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5`;
+its first native execution remains pending. The next delivery runs discovery
+only. Before the observer is invoked, its source transfer must be adapted to
+[Wingman's documented project-local file-I/O boundary](https://ai.locodev.dev/docs/how-it-works)
+and checked against the actual installed tool contract; the prepared filesystem
+loader is not treated as native-compatible.
 
 At exact source `3ba05803bfc3ff095eb012e3f790752b55b47d12`,
 [protected CyclingSim CI 39508823330](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39508823330)
@@ -127,8 +156,8 @@ the deadline by the local time-zone offset. This is a reproduced launcher
 defect consistent with the recorded handoff failure. The native report did
 not retain its exact failing line or host culture, so native causal attribution
 is not stronger than that evidence. The failed release and session report are
-retained. Editor startup, authenticated MCP discovery, native world readback
-and post-job survival remain pending the corrected attempt.
+retained. That failed attempt did not establish an Editor process or any MCP,
+world or post-job survival proof.
 
 The corrected launcher preserves an existing UTC `DateTime` or parses exact
 round-trip UTC text with invariant culture. The start deadline remains bounded.
@@ -138,7 +167,38 @@ permission, inactive failed state, desktop owner and task settings must match,
 and a fresh host check must still be `IDLE`. It retains the old release/state
 and a private copy of the prior task definition. It neither stops nor deletes a
 task or Editor. Reports now include the bounded handoff step and numeric error
-metadata. Local production-validator fixtures pass; native retry is pending.
+metadata. All 72 actual PowerShell fixtures passed, including independent
+non-UTC reproduction and rejection cases.
+
+The corrected source `602f8d0136d8f930adab1cda0c5006de8bf2d9d3` passed
+[protected CI 39513361856](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39513361856).
+The native CI job reused a compatible cached proof; this is not a fresh material
+or world acceptance. Its [connection job 118942077869](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39513355021/job/118942077869)
+then successfully migrated only the known failed task action and started
+**Unreal Editor PID 17896** in interactive session 1 at
+`2026-10-20T23:20:00.0674689Z` (native start filetime
+`134370120000674689`). The saved checkpoint and module checks passed again.
+At `23:23:47.6792494Z`, the canonical project process exclusively owned the
+loopback listener `127.0.0.1:19315`; the process identity remained stable through
+the probe. The supervisor reported `EDITOR_RUNNING_NATIVE_NOT_VERIFIED`.
+
+The connection workflow nevertheless concluded `failure`: its Python client
+rejected the discovery JSON with `DISCOVERY_SCHEMA` before making HTTP requests.
+The Windows probe had accepted the required `type`, `url` and `token` fields;
+the client's exact three-key restriction therefore rejected additional vendor
+metadata. This is a client compatibility defect, not evidence of failed Editor
+startup or sign-in failure. The repair keeps bounded JSON, duplicate-key
+rejection, exact loopback routing, token validation and process ownership while
+ignoring extra metadata. No credential or unknown field is forwarded or logged.
+Native `tools/list`, sign-in status and tool input/output compatibility remain
+unobserved. The next discovery-only probe must establish these and confirm the
+same PID and native start time after the previous job cleanup at
+`2026-10-20T23:24:03.9664401Z`.
+
+The actual startup reports were downloaded and inspected from artifact
+`12307810528`, ZIP SHA256
+`0b9eeb047937c21dc6412af44da76003756158a9f28f4d20882cc7cd034e9cf7`.
+No package save, canonical configuration write or Editor stop was requested.
 
 The first-stage inventory artifact is `12303367952`, ZIP SHA256
 `6fffea19df0900427e77881e4dbfdba3ab8f75d992d39027c813b78ecc946c0e`.
@@ -146,7 +206,7 @@ The first-stage inventory artifact is `12303367952`, ZIP SHA256
 The subsequent target is the already specified passive graph/world readback,
 followed by same-camera Lit/BaseColor observations. This infrastructure work
 alone does not establish a channel cause, correct the material, symbolize the
-crash, satisfy protected CI or grant visual/performance acceptance.
+crash or grant Lesson07 technical, visual or performance acceptance.
 
 ## Technical deep dive of the retained checkpoint (2026-10-20)
 

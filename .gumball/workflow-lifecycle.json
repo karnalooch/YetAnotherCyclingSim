@@ -384,7 +384,7 @@
     {
       "file": "yacs-lesson07-remote-editor.yml",
       "state": "CURRENT",
-      "reason": "Owner-only explicit Lesson07 connection continuation after protected exact-SHA CI; attach to an existing canonical Editor or start the hash-pinned saved checkpoint through a separate limited interactive one-shot task. Reuse installed loopback-authenticated Wingman, preserve all running sessions, and report discovery without material/visual acceptance."
+      "reason": "Owner-only Lesson07 connection modes: explicit startup requires protected exact-SHA CI; separate discovery-only and fixed passive-observer intents require exact-source CPU checks and an already running canonical Editor. Neither existing-session path enters the installer or starts an Editor. All modes retain the shared native lane and authenticated process ownership, preserve all running sessions and make no material/visual acceptance claim."
     },
     {
       "file": "yacs-lesson07-runner-probe.yml",

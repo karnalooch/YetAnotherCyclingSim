@@ -62,6 +62,16 @@ class ArrayTexture(Object):
     pass
 
 
+class ViewportKey:
+    """Stand-in for an Unreal Name, kept intact when passed back to the API."""
+
+    def __init__(self, label):
+        self.label = label
+
+    def __str__(self):
+        return self.label
+
+
 class Fixture:
     def __init__(self):
         self.forbidden = Mock(side_effect=AssertionError("Mutating API was invoked"))
@@ -109,6 +119,44 @@ class Fixture:
             get_all_level_actors=Mock(return_value=self.actors),
             spawn_actor_from_class=self.forbidden,
         )
+        self.viewport_keys = [ViewportKey("PrimaryViewport"), ViewportKey("View.2")]
+        self.active_viewport_key = self.viewport_keys[1]
+        self.viewport_poses = {
+            "PrimaryViewport": self.editor.get_level_viewport_camera_info(),
+            "View.2": (
+                SimpleNamespace(x=10.125, y=20.25, z=30.5),
+                SimpleNamespace(pitch=-25.0, yaw=50.0, roll=0.0),
+            ),
+        }
+        self.viewport_fovs = {"PrimaryViewport": 90.0, "View.2": 65.125}
+        self.pilot = Object(reader.WORLD + ":PersistentLevel.InspectionCamera")
+        self.level = SimpleNamespace(
+            get_viewport_config_keys=Mock(side_effect=lambda: self.viewport_keys),
+            get_active_viewport_config_key=Mock(
+                side_effect=lambda: self.active_viewport_key
+            ),
+            get_level_viewport_camera_info=Mock(
+                side_effect=lambda key: self.viewport_poses[str(key)]
+            ),
+            get_level_viewport_fov=Mock(
+                side_effect=lambda key: self.viewport_fovs[str(key)]
+            ),
+            editor_get_game_view=Mock(side_effect=lambda key: str(key) == "View.2"),
+            get_pilot_level_actor=Mock(
+                side_effect=lambda key: self.pilot if str(key) == "View.2" else None
+            ),
+            is_in_play_in_editor=Mock(return_value=False),
+            set_level_viewport_camera_info=self.forbidden,
+            set_level_viewport_fov=self.forbidden,
+            editor_set_game_view=self.forbidden,
+            editor_set_viewport_realtime=self.forbidden,
+            pilot_level_actor=self.forbidden,
+            eject_pilot_level_actor=self.forbidden,
+            load_level=self.forbidden,
+            save_current_level=self.forbidden,
+            editor_request_begin_play=self.forbidden,
+            editor_request_end_play=self.forbidden,
+        )
         self.lib = SimpleNamespace(
             get_material_expressions=Mock(side_effect=lambda _: self.master_nodes),
             get_material_function_expressions=Mock(
@@ -138,6 +186,7 @@ class Fixture:
                 convert_relative_path_to_full=str,
             ),
             UnrealEditorSubsystem="editor",
+            LevelEditorSubsystem="level",
             EditorActorSubsystem="actors",
             LandscapeProxy=Landscape,
             LandscapeComponent=object,
@@ -156,7 +205,9 @@ class Fixture:
             ),
             AutomationLibrary=SimpleNamespace(
                 get_editor_active_viewport_view_mode=lambda: "VMI_LIT",
+                set_editor_active_viewport_view_mode=self.forbidden,
                 set_editor_viewport_view_mode=self.forbidden,
+                set_editor_viewport_visualize_buffer=self.forbidden,
                 take_high_res_screenshot=self.forbidden,
             ),
             EditorAssetLibrary=SimpleNamespace(
@@ -169,6 +220,7 @@ class Fixture:
             get_editor_subsystem=Mock(
                 side_effect=lambda kind: {
                     "editor": self.editor,
+                    "level": self.level,
                     "actors": self.actor_api,
                 }[kind]
             ),
@@ -226,6 +278,9 @@ class PassiveObservationTests(unittest.TestCase):
                     fixture.collect()
                 fixture.api.find_object.assert_not_called()
                 fixture.actor_api.get_all_level_actors.assert_not_called()
+                fixture.api.get_editor_subsystem.assert_called_once_with("editor")
+                fixture.level.get_viewport_config_keys.assert_not_called()
+                fixture.level.get_active_viewport_config_key.assert_not_called()
 
     def test_native_identity_api_error_propagates_before_asset_handling(self):
         fixture = Fixture()
@@ -235,6 +290,7 @@ class PassiveObservationTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "world getter unavailable"):
             fixture.collect()
         fixture.api.find_object.assert_not_called()
+        fixture.level.get_active_viewport_config_key.assert_not_called()
 
     def test_collects_dirty_state_transforms_and_bindings_without_mutation(self):
         fixture = Fixture()
@@ -259,6 +315,154 @@ class PassiveObservationTests(unittest.TestCase):
         for call in fixture.api.find_object.call_args_list:
             self.assertIs(call.kwargs["follow_redirectors"], False)
         json.dumps(result, allow_nan=False)
+
+    def test_keyed_active_camera_is_distinct_from_primary_camera(self):
+        fixture = Fixture()
+        result = fixture.collect()
+        viewports = result["viewports"]["value"]
+        self.assertTrue(result["viewports"]["observed"])
+        self.assertEqual(viewports["active_config_key_before"]["value"], "View.2")
+        self.assertTrue(viewports["active_key_unchanged_across_read"])
+        rows = {row["config_key"]: row for row in viewports["keyed_viewports"]}
+        self.assertEqual(
+            rows["View.2"]["pose"]["value"]["location_cm"], [10.125, 20.25, 30.5]
+        )
+        self.assertEqual(
+            result["camera"]["primary_viewport_pose"]["value"]["location_cm"],
+            [1.0, 2.0, 3.0],
+        )
+        self.assertEqual(rows["View.2"]["horizontal_fov_degrees"]["value"], 65.125)
+        self.assertTrue(rows["View.2"]["game_view"]["value"])
+        self.assertEqual(
+            rows["View.2"]["pilot_actor_path"]["value"], fixture.pilot.path
+        )
+        self.assertIsNone(rows["PrimaryViewport"]["pilot_actor_path"]["value"])
+        self.assertFalse(viewports["is_in_play_in_editor"]["value"])
+        self.assertIsNone(
+            result["camera"]["primary_and_active_viewport_identity_match"]
+        )
+        self.assertFalse(viewports["primary_viewport_key_identified"])
+        self.assertFalse(viewports["capture_target_identity_verified"])
+        for method in (
+            "get_level_viewport_camera_info",
+            "get_level_viewport_fov",
+            "editor_get_game_view",
+            "get_pilot_level_actor",
+        ):
+            calls = getattr(fixture.level, method).call_args_list
+            self.assertIs(calls[0].args[0], fixture.active_viewport_key)
+            self.assertIs(calls[1].args[0], fixture.viewport_keys[0])
+
+    def test_active_viewport_change_during_observation_is_explicit(self):
+        fixture = Fixture()
+        fixture.level.get_active_viewport_config_key.side_effect = [
+            fixture.viewport_keys[1],
+            fixture.viewport_keys[0],
+        ]
+        viewports = fixture.collect()["viewports"]["value"]
+        self.assertFalse(viewports["active_key_unchanged_across_read"])
+        self.assertFalse(viewports["snapshot_atomic"])
+        self.assertEqual(
+            viewports["active_config_key_after"]["value"], "PrimaryViewport"
+        )
+
+    def test_missing_viewport_subsystem_or_methods_remain_unavailable(self):
+        fixture = Fixture()
+        del fixture.api.LevelEditorSubsystem
+        result = fixture.collect()
+        self.assertEqual(result["viewports"]["status"], "UNAVAILABLE")
+        fixture.level.get_viewport_config_keys.assert_not_called()
+        self.assertTrue(result["dirty_sets_equal"])
+
+        fixture = Fixture()
+        del fixture.level.get_viewport_config_keys
+        del fixture.level.get_level_viewport_fov
+        del fixture.level.editor_get_game_view
+        del fixture.level.is_in_play_in_editor
+        viewports = fixture.collect()["viewports"]["value"]
+        self.assertEqual(viewports["enumeration"]["status"], "UNAVAILABLE")
+        self.assertEqual(len(viewports["keyed_viewports"]), 1)
+        active = viewports["keyed_viewports"][0]
+        self.assertEqual(active["horizontal_fov_degrees"]["status"], "UNAVAILABLE")
+        self.assertEqual(active["game_view"]["status"], "UNAVAILABLE")
+        self.assertTrue(active["pose"]["observed"])
+        self.assertEqual(viewports["is_in_play_in_editor"]["status"], "UNAVAILABLE")
+
+    def test_null_camera_nonfinite_fov_and_nonbool_are_not_valid_observations(self):
+        fixture = Fixture()
+        fixture.viewport_poses["View.2"] = None
+        fixture.viewport_fovs["View.2"] = float("inf")
+        fixture.viewport_poses["PrimaryViewport"][0].x = float("nan")
+        fixture.viewport_fovs["PrimaryViewport"] = None
+        fixture.level.editor_get_game_view.side_effect = lambda _key: 0
+        fixture.level.is_in_play_in_editor.return_value = None
+        result = fixture.collect()
+        viewports = result["viewports"]["value"]
+        for row in viewports["keyed_viewports"]:
+            for field in ("pose", "horizontal_fov_degrees", "game_view"):
+                self.assertEqual(row[field]["status"], "UNAVAILABLE")
+                self.assertNotIn("value", row[field])
+        self.assertEqual(viewports["is_in_play_in_editor"]["status"], "UNAVAILABLE")
+        json.dumps(result, allow_nan=False)
+
+    def test_viewport_labels_paths_and_errors_do_not_echo_untrusted_strings(self):
+        fixture = Fixture()
+        fixture.active_viewport_key = ViewportKey("None")
+        fixture.viewport_keys = [
+            fixture.viewport_keys[0],
+            ViewportKey("PRIVATE_SENTINEL\nInjected"),
+            ViewportKey("x" * 257),
+            None,
+        ]
+        fixture.level.editor_get_game_view.side_effect = RuntimeError(
+            "PRIVATE_SENTINEL\x1b[0m"
+        )
+        fixture.level.get_pilot_level_actor.side_effect = lambda _: Object(
+            "/Game/PRIVATE_SENTINEL\x00Actor"
+        )
+        result = fixture.collect()
+        viewports = result["viewports"]["value"]
+        self.assertIsNone(viewports["active_key_unchanged_across_read"])
+        self.assertEqual(viewports["active_config_key_before"]["status"], "UNAVAILABLE")
+        keys = viewports["enumeration"]["value"]["sampled_keys"]
+        self.assertEqual([key["observed"] for key in keys], [True, False, False, False])
+        self.assertEqual(len(viewports["keyed_viewports"]), 1)
+        self.assertEqual(
+            viewports["keyed_viewports"][0]["pilot_actor_path"]["status"], "UNAVAILABLE"
+        )
+        raw = json.dumps(result, allow_nan=False)
+        self.assertNotIn("PRIVATE_SENTINEL", raw)
+        self.assertNotIn("x" * 257, raw)
+
+    def test_key_sampling_and_metadata_reads_are_bounded_with_active_priority(self):
+        fixture = Fixture()
+        produced = []
+
+        def keys():
+            for index in range(100):
+                produced.append(index)
+                yield ViewportKey("Viewport" + str(index))
+
+        fixture.level.get_viewport_config_keys.side_effect = keys
+        with patch.object(reader, "MAX_VIEWPORTS", 2):
+            viewports = fixture.collect()["viewports"]["value"]
+        self.assertEqual(produced, [0, 1, 2])
+        self.assertEqual(
+            [row["config_key"] for row in viewports["keyed_viewports"]],
+            ["View.2", "Viewport0"],
+        )
+        enumeration = viewports["enumeration"]["value"]
+        self.assertTrue(enumeration["truncated"])
+        self.assertEqual(enumeration["sampled_keys_without_metadata"], ["Viewport1"])
+        self.assertEqual(fixture.level.get_level_viewport_camera_info.call_count, 2)
+
+    def test_duplicate_viewport_keys_do_not_repeat_native_reads(self):
+        fixture = Fixture()
+        fixture.viewport_keys = [fixture.active_viewport_key] * 5
+        viewports = fixture.collect()["viewports"]["value"]
+        self.assertEqual(len(viewports["keyed_viewports"]), 1)
+        self.assertEqual(fixture.level.get_level_viewport_camera_info.call_count, 1)
+        self.assertFalse(viewports["enumeration"]["value"]["truncated"])
 
     def test_baseline_deviations_and_rejected_references_are_explicit(self):
         fixture = Fixture()

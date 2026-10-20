@@ -7,9 +7,10 @@ It returns data only; the coordinator owns evidence storage and native calls.
 
 Reuses the traversal pattern in inspect_sa_calobra_material_projection.py and
 read-only properties in repair_lesson07_materials.py. Public Epic Python 5.8
-MaterialEditingLibrary, UnrealEditorSubsystem, EditorLoadingAndSavingUtils and
-AutomationLibrary are capability references; the installed binding is recorded
-by successful observations rather than assumed. Native pin/output/mask proof,
+MaterialEditingLibrary, UnrealEditorSubsystem, LevelEditorSubsystem,
+EditorLoadingAndSavingUtils and AutomationLibrary are capability references;
+the installed binding is recorded by successful observations rather than
+assumed. Native pin/output/mask proof,
 built array pixels and shader error/fallback status are deliberately unresolved.
 """
 
@@ -17,7 +18,9 @@ import json
 import math
 import ntpath
 import os
+import re
 from datetime import datetime, timezone
+from itertools import islice
 
 
 PROJECT = "D:/yacs/project"
@@ -50,6 +53,7 @@ EXPECTED_SCALARS = {
 # These bound observational work, not visual or geometry acceptance.
 MAX_GRAPHS = 128
 MAX_NODES = 8192
+MAX_VIEWPORTS = 16
 
 NODE_PROPERTIES = {
     "MaterialExpressionConstant": ("r",),
@@ -243,8 +247,153 @@ def _camera(api, editor):
             lambda: str(api.AutomationLibrary.get_editor_active_viewport_view_mode())
         ),
         "primary_and_active_viewport_identity_match": None,
-        "fov": {"observed": False, "reason": "No verified read-only FOV binding"},
+        "fov": {
+            "observed": False,
+            "reason": "Primary viewport key unknown; explicitly keyed FOV is under viewports",
+        },
         "exposure": {"observed": False, "reason": "Not read by first observation"},
+    }
+
+
+def _viewport_observe(action):
+    """Do not echo arbitrary native error text or malformed viewport labels."""
+    try:
+        return {"observed": True, "value": action()}
+    except Exception as error:
+        name = type(error).__name__
+        return {
+            "observed": False,
+            "status": "UNAVAILABLE",
+            "error_type": name
+            if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,79}", name)
+            else "Exception",
+        }
+
+
+def _viewport_key(value):
+    if value is None or isinstance(value, (bool, int, float, bytes)):
+        raise ValueError("Missing viewport key")
+    label = str(value)
+    if label == "None" or not re.fullmatch(
+        r"[A-Za-z0-9_][A-Za-z0-9_.:/ -]{0,255}", label
+    ):
+        raise ValueError("Unusable viewport key")
+    return label
+
+
+def _viewport_pose(result):
+    if result is None:
+        raise ValueError("No camera returned for viewport key")
+    location, rotation = result
+    return {
+        "location_cm": [_finite(v) for v in (location.x, location.y, location.z)],
+        "rotation_pitch_yaw_roll_deg": [
+            _finite(v) for v in (rotation.pitch, rotation.yaw, rotation.roll)
+        ],
+    }
+
+
+def _viewport_fov(value):
+    if value is None or isinstance(value, bool):
+        raise ValueError("No FOV returned for viewport key")
+    return _finite(value)
+
+
+def _viewport_bool(value):
+    if type(value) is not bool:
+        raise ValueError("Viewport API did not return a boolean")
+    return value
+
+
+def _viewport_pilot(actor):
+    if actor is None:
+        return None
+    path = actor.get_path_name()
+    if not isinstance(path, str) or not re.fullmatch(
+        r"/[A-Za-z0-9_./:-]{1,1023}", path
+    ):
+        raise ValueError("Unusable pilot actor path")
+    return path
+
+
+def _viewports(api):
+    # Epic Python 5.8: /python-api/class/LevelEditorSubsystem. Preserve the
+    # returned Name objects for keyed reads; sanitized strings are report labels.
+    level = api.get_editor_subsystem(api.LevelEditorSubsystem)
+    if level is None:
+        raise RuntimeError("LevelEditorSubsystem unavailable")
+    selected = {}
+
+    def active_key():
+        key = level.get_active_viewport_config_key()
+        label = _viewport_key(key)
+        selected[label] = key
+        return label
+
+    active_before = _viewport_observe(active_key)
+
+    def enumerate_keys():
+        keys = level.get_viewport_config_keys()
+        if isinstance(keys, (str, bytes)):
+            raise ValueError("Viewport enumeration is not an array")
+        sample = list(islice(iter(keys), MAX_VIEWPORTS + 1))
+        labels, omitted = [], []
+        for key in sample[:MAX_VIEWPORTS]:
+            label = _viewport_observe(lambda key=key: _viewport_key(key))
+            labels.append(label)
+            if label["observed"] and label["value"] not in selected:
+                if len(selected) < MAX_VIEWPORTS:
+                    selected[label["value"]] = key
+                else:
+                    omitted.append(label["value"])
+        return {
+            "sampled_keys": labels,
+            "sample_limit": MAX_VIEWPORTS,
+            "truncated": len(sample) > MAX_VIEWPORTS,
+            "sampled_keys_without_metadata": omitted,
+        }
+
+    enumeration = _viewport_observe(enumerate_keys)
+    rows = []
+    for label, key in selected.items():
+        rows.append(
+            {
+                "config_key": label,
+                "pose": _viewport_observe(
+                    lambda: _viewport_pose(level.get_level_viewport_camera_info(key))
+                ),
+                "horizontal_fov_degrees": _viewport_observe(
+                    lambda: _viewport_fov(level.get_level_viewport_fov(key))
+                ),
+                "game_view": _viewport_observe(
+                    lambda: _viewport_bool(level.editor_get_game_view(key))
+                ),
+                "pilot_actor_path": _viewport_observe(
+                    lambda: _viewport_pilot(level.get_pilot_level_actor(key))
+                ),
+            }
+        )
+    pie = _viewport_observe(lambda: _viewport_bool(level.is_in_play_in_editor()))
+    active_after = _viewport_observe(
+        lambda: _viewport_key(level.get_active_viewport_config_key())
+    )
+    return {
+        "active_config_key_before": active_before,
+        "active_config_key_after": active_after,
+        "active_key_unchanged_across_read": (
+            active_before["value"] == active_after["value"]
+            if active_before["observed"] and active_after["observed"]
+            else None
+        ),
+        "enumeration": enumeration,
+        "metadata_key_limit": MAX_VIEWPORTS,
+        "metadata_selection": "Active key first, then unique sampled keys in API order",
+        "keyed_viewports": rows,
+        "is_in_play_in_editor": pie,
+        "snapshot_atomic": False,
+        "primary_viewport_key_identified": False,
+        "per_viewport_view_mode_and_buffer_observed": False,
+        "capture_target_identity_verified": False,
     }
 
 
@@ -534,6 +683,7 @@ def collect(api=None):
         "dirty_before": _dirty(api),
         "actors": _observe(lambda: _actor_snapshot(api)),
         "camera": _camera(api, editor),
+        "viewports": _viewport_observe(lambda: _viewports(api)),
     }
     # Explicit no-redirect loaded-object lookup: never load a package as fallback.
     instance, instance_lookup = _lookup_loaded(api, INSTANCE)
