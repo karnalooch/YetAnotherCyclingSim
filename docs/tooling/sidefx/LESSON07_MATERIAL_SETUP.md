@@ -11,6 +11,65 @@
 
 ---
 
+## Close-up squares correction (2026-10-20)
+
+**Current checkpoint:** this supersedes the scale-only tiling assessment at
+`7e3b0001d1d325553f0fbf09c7aee71b33a57935`. The owner supplied a close-up showing
+clear squares. The previous panorama was insufficient evidence; that earlier
+checkpoint is not accepted as a tiling fix.
+
+The grid remained after isolating normal influence. Source Grass0 edge
+measurements did not show a large wrap discontinuity. The retained texture
+pattern repeats under plain UV tiling; reducing the repeat scale alone cannot
+remove it. The bounded correction reuses the installed Epic function
+`/Engine/Functions/Engine_MaterialFunctions03/Texturing/TextureVariation`.
+No replacement sampling algorithm, generated terrain or new surface textures
+are introduced. The saved UE material/function graphs are the authoring source.
+
+The same `M_Landscape_YACS` now shares each detail/macro `Shifted UVs` output
+between Colour, Normal and Masks sampling. Three bounded copies under
+`Materials/Functions/MF_YACS_ArrayVariation{Colour,Normal,Masks}` retain the
+original four corner indices/outputs and add explicit `UV_DDX` / `UV_DDY`.
+Each array sample uses Derivative mode. Append a zero layer-index derivative
+to each float2 gradient before the float3 array sampler; the first float2-only
+trial was rejected by the compiler and restored before retrying. IDMap/global
+UVs, class codes, array contents and geometry stay untouched.
+
+Variation uses scale 1, 13 levels, Random Offset Variation 7.173, temporal dither
+on, rotation/scale randomization off and Heightmap Influence 0. These are local
+artistic settings, not SideFX/Epic standards. The neutral default Heightmap
+is not used as world geography or as a class-dependent displacement map.
+Current anti-aliasing is TSR (method 4); temporal stability and cost still
+require separate review.
+
+The inherited Normal sampler function contained three Color interpretations
+and one Normal interpretation. In the bounded copy, all four now decode as
+Normal. The master passes signed DirectX XYZ, removing its encoded `1-G`
+operation. Refreshing the existing instance after function changes is necessary
+to avoid stale bindings/glare. Rejected intermediate images were not accepted
+as proof. Shared original Pegasus and Engine functions are unchanged.
+
+Native readback and post-save images:
+[receipt](../../assets/lesson07-squares-20261020/receipt.json),
+[close-up before](../../assets/lesson07-squares-20261020/close-before.jpg),
+[close-up after](../../assets/lesson07-squares-20261020/close-after.jpg),
+[panorama after](../../assets/lesson07-squares-20261020/panorama-after.jpg).
+The close pair uses the same explicit camera/FOV. Compilation returned no errors
+and drained to zero jobs. The read-only verifier is
+`scripts/ue/readback_lesson07_texture_variation.py`; it never loads/saves a map
+or changes an asset. Native statistics: 610 pixel shader instructions, 41 pixel
+texture samples, 9 samplers. These are counts, not a measured performance PASS.
+
+Only five material assets were saved: the existing master/MI and three bounded
+function copies. Four actors, 4096 components, transforms, material bindings and
+all other previously audited assets remain unchanged. Map SHA remains
+`d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75`;
+the owner's dirty scene was not saved. UE PID10872 remains open; no Computer
+Use, terrain cook or base rebuild occurred. Resume from these saved graphs,
+not the scale-only checkpoint. Do not blindly replay first-import/tuning
+scripts over this later graph. Fresh reopen, whole-area/temporal review,
+owner visual acceptance and protected exact-commit proof remain pending.
+
 ## Current appearance checkpoint and next session (2026-10-20)
 
 This section supersedes the earlier import-stage/render-pending appearance

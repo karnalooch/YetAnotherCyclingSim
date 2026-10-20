@@ -13,6 +13,7 @@ class EditorProjectGuardTests(unittest.TestCase):
             "apply_lesson07_grass2.py",
             "repair_lesson07_global_colour.py",
             "tune_lesson07_landscape_appearance.py",
+            "readback_lesson07_texture_variation.py",
         ):
             with self.subTest(script=name):
                 code = """

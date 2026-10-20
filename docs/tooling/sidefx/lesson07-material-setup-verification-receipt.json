@@ -1605,5 +1605,15 @@
     "owner_visual_accepted": false,
     "fresh_reopen_verified": false,
     "delivery_tracking": "Existing Draft PR #474 head; protected delivery proof remains separate"
+  },
+  "closeup_squares_correction_20261020": {
+    "status": "SAVED_TEXTURE_VARIATION_NATIVE_READBACK_AND_CLOSE_CAPTURE",
+    "receipt": "docs/assets/lesson07-squares-20261020/receipt.json",
+    "supersedes_scale_only_tiling_claim_at": "7e3b0001d1d325553f0fbf09c7aee71b33a57935",
+    "native_compile_errors": [],
+    "terrain_rebuilt": false,
+    "map_saved": false,
+    "fresh_reopen_verified": false,
+    "owner_visual_accepted": false
   }
 }
