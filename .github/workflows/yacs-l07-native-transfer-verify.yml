@@ -4,6 +4,8 @@ on:
     branches: [codex/365-world-graph]
     paths:
       - .github/workflows/yacs-l07-native-transfer-verify.yml
+      - scripts/houdini/prepare_lesson07_ue_transfer.py
+      - scripts/houdini/l07_tile_invariants.py
 
 permissions:
   contents: read
