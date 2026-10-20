@@ -4,8 +4,9 @@
   Audit or build/stage the #365 native point-count witness without deploying it.
 .DESCRIPTION
   Inspect is strictly read-only. BuildStage compiles ONLY the D:\yacs\project
-  worktree and copies output into a fresh immutable-by-convention staging
-  directory on D:. It never touches a running Editor's project, DLL, Live Host,
+  worktree and copies the project modules plus the optional witness plugin
+  into a fresh project-relative staging directory on D:. It never touches
+  a running Editor's project, DLL, Live Host,
   saved levels or source checkpoint. It never restarts or hot-reloads UE.
 #>
 [CmdletBinding()]
@@ -27,8 +28,27 @@ $BuildTarget = 'YetAnotherCyclingSimPcg365Editor'
 $BuildTargetFile = Join-Path $ProjectRoot 'Source/YetAnotherCyclingSimPcg365Editor.Target.cs'
 $PinnedProjectSha256 = '09fbd6cd85fbdd299a3e37cfb65658e1210183878516599c90b783acc1d8099b'
 $PinnedProjectBytes = 1152
-$CandidateDll = Join-Path $ProjectRoot 'Binaries/Win64/UnrealEditor-YetAnotherCyclingSimEditor.dll'
-$CandidateModules = Join-Path $ProjectRoot 'Binaries/Win64/UnrealEditor.modules'
+$WitnessPluginName = 'YacsPcgWitness'
+$WitnessPluginRelativeRoot = 'Plugins/YacsPcgWitness'
+$WitnessPluginRoot = Join-Path $ProjectRoot $WitnessPluginRelativeRoot
+$WitnessPluginDescriptor = Join-Path $WitnessPluginRoot 'YacsPcgWitness.uplugin'
+$WitnessSourcePaths = @(
+    'Source/YacsPcgWitness/YacsPcgWitness.Build.cs',
+    'Source/YacsPcgWitness/Public/PCG/YacsPcgWitnessToolset.h',
+    'Source/YacsPcgWitness/Private/PCG/YacsPcgWitnessToolset.cpp',
+    'Source/YacsPcgWitness/Private/YacsPcgWitnessModule.cpp'
+)
+$CandidateDll = Join-Path $WitnessPluginRoot 'Binaries/Win64/UnrealEditor-YacsPcgWitness.dll'
+$CandidateModules = Join-Path $WitnessPluginRoot 'Binaries/Win64/UnrealEditor.modules'
+$ProjectModules = Join-Path $ProjectRoot 'Binaries/Win64/UnrealEditor.modules'
+$ProjectModuleFiles = [ordered]@{
+    YetAnotherCyclingSim = 'UnrealEditor-YetAnotherCyclingSim.dll'
+    YetAnotherCyclingSimEditor = 'UnrealEditor-YetAnotherCyclingSimEditor.dll'
+}
+$BuildCandidateDlls = @($CandidateDll) + @($ProjectModuleFiles.Values | ForEach-Object {
+    Join-Path $ProjectRoot "Binaries/Win64/$_"
+})
+$RuntimeEnableArgument = '-EnablePlugins=YacsPcgWitness'
 $EngineModules = Join-Path $EngineRoot 'Engine/Binaries/Win64/UnrealEditor.modules'
 $BuildBat = Join-Path $EngineRoot 'Engine/Build/BatchFiles/Build.bat'
 $StagePath = Join-Path $StageRoot $ExpectedHead
@@ -64,8 +84,10 @@ function Check-HeadAndWorkspace {
     }
     [void](Require-File $BuildTargetFile)
     [void](Require-File (Join-Path $ProjectRoot 'scripts/ci/Assert-YacsBuildIsolation.ps1'))
-    [void](Require-File (Join-Path $ProjectRoot 'Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPcgWitnessToolset.cpp'))
-    [void](Require-File (Join-Path $ProjectRoot 'Source/YetAnotherCyclingSimEditor/Public/PCG/YacsPcgWitnessToolset.h'))
+    [void](Require-File $WitnessPluginDescriptor)
+    foreach ($path in $WitnessSourcePaths) {
+        [void](Require-File (Join-Path $WitnessPluginRoot $path))
+    }
     $head = ((& git -C $ProjectRoot rev-parse HEAD) | Out-String).Trim()
     if ($LASTEXITCODE -ne 0 -or $head -cne $ExpectedHead) {
         throw "Exact HEAD mismatch: found $head, expected $ExpectedHead"
@@ -112,12 +134,11 @@ function Check-EditorBuildIsolation {
     foreach ($process in $processes) {
         $native = Get-Process -Id ([int]$process.ProcessId) -ErrorAction SilentlyContinue
         if ($null -eq $native) { continue }
-        $modules = @($native.Modules | Where-Object {
-            $_.ModuleName -ieq 'UnrealEditor-YetAnotherCyclingSimEditor.dll'
-        })
+        $candidateNames = @($BuildCandidateDlls | ForEach-Object { Split-Path $_ -Leaf })
+        $modules = @($native.Modules | Where-Object { $_.ModuleName -iin $candidateNames })
         foreach ($module in $modules) {
             $loadedPath = [IO.Path]::GetFullPath([string]$module.FileName)
-            if ($loadedPath -ieq [IO.Path]::GetFullPath($CandidateDll)) {
+            if ($loadedPath -iin $BuildCandidateDlls) {
                 throw "The build candidate DLL is already loaded by PID $($native.Id); refuse compilation."
             }
             $records += [pscustomobject]@{
@@ -142,6 +163,33 @@ function Assert-StageRoot {
     }
 }
 
+function Check-ModuleManifest(
+    [string]$Path,
+    [string]$ExpectedBuildId,
+    [System.Collections.IDictionary]$ExpectedModules
+) {
+    [void](Require-File $Path)
+    $metadata = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -AsHashtable
+    if (-not $metadata.BuildId -or $metadata.BuildId -cne $ExpectedBuildId) {
+        throw "Editor and engine BuildId mismatch; block staging: $Path"
+    }
+    if ($metadata.Modules -isnot [System.Collections.IDictionary]) {
+        throw "Missing module-to-DLL mapping: $Path"
+    }
+    foreach ($name in $ExpectedModules.Keys) {
+        if (-not $metadata.Modules.Contains($name) -or
+            $metadata.Modules[$name] -cne $ExpectedModules[$name]) {
+            throw "Unexpected module-to-DLL mapping for ${name}: $Path"
+        }
+        [void](Require-File (Join-Path (Split-Path $Path -Parent) $ExpectedModules[$name]))
+    }
+    return [pscustomobject]@{
+        identity = File-Identity $Path
+        build_id = [string]$metadata.BuildId
+        modules = $ExpectedModules
+    }
+}
+
 Check-HeadAndWorkspace
 $checkpoint = @(Check-CanonicalCheckpoint)
 $loaded = @(Check-EditorBuildIsolation)
@@ -157,6 +205,8 @@ if ($Action -ceq 'Inspect') {
         live_editor_modules = $loaded
         checkpoint_packages_verified = $checkpoint.Count
         stage_target = $StagePath
+        witness_plugin = $WitnessPluginName
+        required_runtime_enable_argument = $RuntimeEnableArgument
         warning = 'Does not validate unsaved in-editor state; native witness remains blocked until approved deployment and trusted in-process transport.'
     } | ConvertTo-Json -Depth 9
     exit 0
@@ -190,46 +240,74 @@ $dllItem = Require-File $CandidateDll
 if ($dllItem.LastWriteTimeUtc -lt $buildStartedUtc.AddMinutes(-2)) {
     throw "No freshly linked DLL for requested exact HEAD. Preserve UBT log: $log"
 }
-[void](Require-File $CandidateModules)
-$buildId = (Get-Content -LiteralPath $CandidateModules -Raw | ConvertFrom-Json).BuildId
 $engineBuildId = (Get-Content -LiteralPath $EngineModules -Raw | ConvertFrom-Json).BuildId
-if (-not $buildId -or -not $engineBuildId -or $buildId -cne $engineBuildId) {
+if (-not $engineBuildId) {
     throw 'Editor and engine BuildId mismatch; block staging.'
 }
+$projectModuleIdentity = Check-ModuleManifest $ProjectModules $engineBuildId $ProjectModuleFiles
+$pluginModuleIdentity = Check-ModuleManifest $CandidateModules $engineBuildId ([ordered]@{
+    YacsPcgWitness = 'UnrealEditor-YacsPcgWitness.dll'
+})
 Check-HeadAndWorkspace
 $checkpointAfter = @(Check-CanonicalCheckpoint)
 $loadedAfter = @(Check-EditorBuildIsolation)
 
 [void](New-Item -ItemType Directory -Path $StagePath -ErrorAction Stop)
-$files = @($CandidateDll, $CandidateModules, $log)
-$pdb = Join-Path $ProjectRoot 'Binaries/Win64/UnrealEditor-YetAnotherCyclingSimEditor.pdb'
-if (Test-Path -LiteralPath $pdb -PathType Leaf) { $files += $pdb }
+$relativePaths = @(
+    'YetAnotherCyclingSim.uproject',
+    'Source/YetAnotherCyclingSimPcg365Editor.Target.cs',
+    'Binaries/Win64/UnrealEditor.modules',
+    "$WitnessPluginRelativeRoot/YacsPcgWitness.uplugin",
+    "$WitnessPluginRelativeRoot/Binaries/Win64/UnrealEditor-YacsPcgWitness.dll",
+    "$WitnessPluginRelativeRoot/Binaries/Win64/UnrealEditor.modules"
+)
+$relativePaths += @($WitnessSourcePaths | ForEach-Object { "$WitnessPluginRelativeRoot/$_" })
+$relativePaths += @($ProjectModuleFiles.Values | ForEach-Object { "Binaries/Win64/$_" })
+foreach ($dll in $BuildCandidateDlls) {
+    $pdb = [IO.Path]::ChangeExtension($dll, '.pdb')
+    if (Test-Path -LiteralPath $pdb -PathType Leaf) {
+        $relativePaths += [IO.Path]::GetRelativePath($ProjectRoot, $pdb).Replace('\', '/')
+    }
+}
+$files = @($relativePaths | ForEach-Object {
+    [pscustomobject]@{ source = Join-Path $ProjectRoot $_; relative_path = $_ }
+})
+$files += [pscustomobject]@{ source = $log; relative_path = 'build.log' }
 $artifacts = @()
 foreach ($file in $files) {
-    $original = File-Identity $file
-    $destination = Join-Path $StagePath (Split-Path $file -Leaf)
+    $original = File-Identity $file.source
+    # Project-relative paths keep the project and plugin module manifests
+    # separate. This stage is an overlay, never a deployed or standalone map.
+    $destination = Join-Path $StagePath $file.relative_path
     if (Test-Path -LiteralPath $destination) { throw "Staging collision: $destination" }
-    Copy-Item -LiteralPath $file -Destination $destination -ErrorAction Stop
+    [void](New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force)
+    Copy-Item -LiteralPath $file.source -Destination $destination -ErrorAction Stop
     $copied = File-Identity $destination
     if ($original.sha256 -cne $copied.sha256 -or $original.bytes -ne $copied.bytes) {
         throw "Staged byte identity drift: $destination"
     }
     $artifacts += [pscustomobject]@{
-        filename = Split-Path $file -Leaf
+        relative_path = $file.relative_path
+        filename = Split-Path $file.source -Leaf
         bytes = $copied.bytes
         sha256 = $copied.sha256
     }
 }
 $manifest = [ordered]@{
-    schema_version = 1
+    schema_version = 2
     status = 'STAGED_NOT_DEPLOYED'
     source_sha = $ExpectedHead
     source_branch = 'codex/365-world-graph'
     created_at_utc = [DateTime]::UtcNow.ToString('o')
     build_exit_code = [int]$buildExit
     build_target = $BuildTarget
+    witness_plugin = $WitnessPluginName
+    witness_module = 'YacsPcgWitness'
+    required_runtime_enable_argument = $RuntimeEnableArgument
+    stage_layout = 'PROJECT_RELATIVE_OVERLAY_NOT_DEPLOYED'
     original_project_sha256 = $PinnedProjectSha256
     engine_build_id = $engineBuildId
+    module_manifests = @($projectModuleIdentity, $pluginModuleIdentity)
     source_project = $ProjectFile
     stage_dir = $StagePath
     artifacts = $artifacts

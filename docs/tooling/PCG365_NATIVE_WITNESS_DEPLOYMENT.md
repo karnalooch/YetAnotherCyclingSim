@@ -2,6 +2,8 @@
 
 **Issue:** #365, **PR:** #474, **branch:** `codex/365-world-graph`. This is a preparatory procedure, **not** authorization to restart the owner Editor or install new DLLs.
 
+**Current owner direction (reaffirmed 2026-10-20): Houdini FIRST.** Houdini leads world generation and Pegasus lessons 06/07. Material Forge supplies surface appearance, Blender supports preparation and inspection, and Unreal Engine consumes the resulting world. This optional PCG365 diagnostic must not become a competing generator or delay the ordinary Editor's Landscape readback. The historical PCG pilot and rollout below remain deferred; this module repair does not authorize them.
+
 ## Why the normal Windows CI may be waiting
 
 The `CyclingSim CI` Unreal job in `.github/workflows/reusable-unreal.yml` uses `[self-hosted, yacs-ue58]` and checks `Get-YacsUnrealHostState.ps1`. A local/unknown interactive Editor has priority. When a Live Host owns the workstation, the job can remain queued or fail as `LOCAL_BUSY`. Neither outcome is permission to stop the running Editor. The 243-script Python lane and CodeQL checks are distinct from native Windows proof.
@@ -14,9 +16,11 @@ Authoring source: `D:\yacs\project`. The existing, running owner Editor uses a s
 
 The original `YetAnotherCyclingSim.uproject` is an immutable dependency of the accepted #364 launcher snapshot. It must remain **exactly 1152 bytes, SHA256 `09fbd6cd85fbdd299a3e37cfb65658e1210183878516599c90b783acc1d8099b`**. This is not a changeable fixture or migration hash.
 
-PCG365 now opts into Epic's `ToolsetRegistry` and `ModelContextProtocol` through the **separate** `Source/YetAnotherCyclingSimPcg365Editor.Target.cs` (`TargetRules.EnablePlugins`). The standard `YetAnotherCyclingSimEditor.Target.cs` and the original `.uproject` stay unchanged. The native stager compiles `YetAnotherCyclingSimPcg365Editor Win64 Development` with the **original, byte-pinned** `.uproject` and places any new output only in the dedicated candidate stage. Epic UE 5.8 UBT officially supports `TargetRules.EnablePlugins`; whether this target builds and loads with the pinned engine must be independently demonstrated by a fresh UHT/UBT receipt. A source declaration is not native runtime proof.
+PCG365 opts into the disabled-by-default project plugin `Plugins/YacsPcgWitness/YacsPcgWitness.uplugin`, together with Epic's `ToolsetRegistry` and `ModelContextProtocol`, through the **separate** `Source/YetAnotherCyclingSimPcg365Editor.Target.cs` (`TargetRules.EnablePlugins`). The reflected toolset, inspection library and registration lifecycle live entirely in that plugin's Editor module. The ordinary `YetAnotherCyclingSimEditor` module has no toolset header or dependency; restricting only its Build.cs dependency is insufficient because UHT must resolve reflected parent classes.
 
-The eventual derived review Editor must explicitly enable those plugins through a separate, approved deployment/launch contract. Do not modify, repin or regenerate the historical accepted launcher project or its proof metadata to make CI green.
+The standard `YetAnotherCyclingSimEditor.Target.cs` and the original `.uproject` stay unchanged. The native stager compiles `YetAnotherCyclingSimPcg365Editor Win64 Development` with the **original, byte-pinned** `.uproject` and prepares a dedicated candidate stage. Epic documents the [module boundary](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-modules), [plugin descriptors](https://dev.epicgames.com/documentation/en-us/unreal-engine/plugins-in-unreal-engine) and [target rules](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-build-tool-target-reference). Fresh UHT/UBT receipts are required for both the ordinary and opt-in target; a source declaration is not native runtime proof.
+
+The eventual derived review Editor must explicitly enable `YacsPcgWitness` through its versioned deployment/launch contract, using the stage's `required_runtime_enable_argument=-EnablePlugins=YacsPcgWitness`. Its descriptor declares the supporting plugins. The stage records that argument and does not execute it. Do not modify, repin or regenerate the historical accepted launcher project or its proof metadata to make CI green.
 
 Use `scripts/ue/Prepare-YacsPcgWitnessStage.ps1` in the **local Windows source checkout**, with the 40-character SHA of the current PR HEAD:
 
@@ -32,13 +36,15 @@ Only after that inspection is satisfactory, and with sufficient free space on D:
 pwsh -NoProfile -File D:\yacs\project\scripts\ue\Prepare-YacsPcgWitnessStage.ps1 -ExpectedHead <exact-40-char-head> -Action BuildStage
 ```
 
-`BuildStage` runs UBT for `YetAnotherCyclingSimPcg365Editor Win64 Development` using pinned UE 5.8.2, with `-NoHotReloadFromIDE` and `Assert-YacsBuildIsolation.ps1`. It requires a newly linked editor DLL, engine/project BuildId equality, clean tracked source, matching protected checkpoint hashes, and byte-for-byte verification of copied artifacts. It creates a **new** `D:\yacs\work\pcg365-native-witness-stage\<SHA>` folder containing the DLL, `UnrealEditor.modules`, optional PDB, UBT log, and `staging-manifest.json`. An existing stage directory is never overwritten. It **does not copy** anything to the running editor project.
+`BuildStage` runs UBT for `YetAnotherCyclingSimPcg365Editor Win64 Development` using pinned UE 5.8.2, with `-NoHotReloadFromIDE` and `Assert-YacsBuildIsolation.ps1`. It requires a newly linked witness DLL, module-to-DLL mappings and BuildId equality for both the project and plugin against the engine, clean tracked source, matching protected checkpoint hashes, and byte-for-byte verification of copied artifacts. It creates a **new** `D:\yacs\work\pcg365-native-witness-stage\<SHA>` folder; an existing stage is never overwritten.
+
+The stage preserves **project-relative paths** for the plugin descriptor and four source files, plugin binaries, project runtime and ordinary Editor binaries, the pinned `.uproject` and the opt-in target. Optional PDBs, the UBT log and `staging-manifest.json` accompany them. In particular, `Binaries/Win64/UnrealEditor.modules` and `Plugins/YacsPcgWitness/Binaries/Win64/UnrealEditor.modules` remain separate. The manifest uses `schema_version=2`, `artifacts[].relative_path`, `module_manifests`, `witness_plugin` and `witness_module`. Its state is `STAGED_NOT_DEPLOYED`, `stage_layout=PROJECT_RELATIVE_OVERLAY_NOT_DEPLOYED` and `native_reader_loaded=false`. This is a binary/source overlay, not a self-contained map or runtime receipt. It **does not copy** anything to the running editor project.
 
 ### Important limitations and resolutions
 
 - A successful isolated UBT result proves compilation/linking of the exact source, not that the new class is loaded or callable from the Live Host.
 - `UYacsPcgWitnessInspectionLibrary` is a `UBlueprintFunctionLibrary`. `BlueprintCallable` does not automatically expose an authenticated Epic MCP tool. To bridge this safely without arbitrary remote execution, `UYacsPcgWitnessToolset` was implemented deriving from `UToolsetDefinition` (`#include "ToolsetRegistry/ToolsetDefinition.h"`) with `UFUNCTION(meta = (AICallable))`. It registers with `UToolsetRegistry` and is directly invokable by Epic's in-engine MCP server under `call_tool`.
-- `attest_live_reduced_node()` can use `unreal.YacsPcgWitnessInspectionLibrary` only from inside a Python-enabled Unreal process. Its Python object registry and HMAC secret are process-local and cannot authenticate an external-process object by simple copying. The production `SafeMcpAdapter` must remain blocked until a trusted, session-bound bridge verifies a specific reduction node **before** any `GetNodeDataView`. For external callers, `BoundedPcgMcpClient.call_bounded` now bridges to `YetAnotherCyclingSimEditor.YacsPcgWitnessToolset.InspectReducedNodeOutput`, validating the receipt against the live session PID and minting authentic in-session witness tokens.
+- `attest_live_reduced_node()` can use `unreal.YacsPcgWitnessInspectionLibrary` only from inside a Python-enabled Unreal process. Its Python object registry and HMAC secret are process-local and cannot authenticate an external-process object by simple copying. The production `SafeMcpAdapter` must remain blocked until a trusted, session-bound bridge verifies a specific reduction node **before** any `GetNodeDataView`. For external callers, `BoundedPcgMcpClient.call_bounded` bridges to `YacsPcgWitness.YacsPcgWitnessToolset.InspectReducedNodeOutput`, validating the receipt against the live session PID and minting authentic in-session witness tokens. The previous common-module identity is rejected.
 - The C++ `generation_token` was previously a newly generated UUID per inspection, **not a persistent graph-generation identity**. It now uses a deterministic MD5 content fingerprint over `(ActorPath, GraphPath, ReductionNodePath, OutputPin, TotalPointCount, TaggedDataCount, CombinedDataCrc)`. Identical data regenerated in the same graph can produce the **same** fingerprint; it is not a generation epoch or proof that no regeneration occurred. Treat it only as data-identity evidence and require fresh native re-attestation under exclusive graph access immediately before each bounded read. Pending that exact session/dispatch proof, `SAFE_MCP_BLOCKED` and `NATIVE_WITNESS_BLOCKED` remain engaged.
 - The stage script does not inspect the in-memory dirty level state. Before any eventual restart, obtain a read-only Live Host/editor unsaved-work and asset hash receipt. No automatic save of the canonical `L_RoadSurface`, road or terrain is authorized.
 
@@ -47,19 +53,19 @@ pwsh -NoProfile -File D:\yacs\project\scripts\ue\Prepare-YacsPcgWitnessStage.ps1
 **Do not use an old staged binary after any source change.** The previous `c4899ee0` stage and its UBT report were generated before the immutable-launcher compatibility fix. They are historical evidence, **not** deployable binaries for a future HEAD. A previous documentation revision listed a DLL SHA256 of `79dfa395...`, while the build report listed `d390bd39...`; neither is accepted without rehashing the exact stage bytes.
 
 - Candidate stage: `D:\yacs\work\pcg365-native-witness-stage\<CURRENT_EXACT_HEAD>`.
-- Trusted artifact identity is the **actual current stage** `staging-manifest.json`, cross-checked with independently recomputed `Get-FileHash -Algorithm SHA256` values for the DLL, module descriptor, optional PDB and UBT log.
+- Trusted artifact identity is the **actual current stage** `staging-manifest.json`, cross-checked with independently recomputed `Get-FileHash -Algorithm SHA256` values for every listed artifact and both module manifests. Follow `relative_path`; do not flatten the overlay.
 - Verify `source_sha` equals `git rev-parse HEAD`, `build_target` equals `YetAnotherCyclingSimPcg365Editor`, `build_exit_code=0` and `engine_build_id` equals the installed engine's BuildId.
-- Confirm that `UnrealEditor-YetAnotherCyclingSimEditor.dll` is **not loaded from the source build workspace**, that the current owner Editor's loaded binary hash remains the previously observed `706edb198abecb81...`, and that all five source checkpoint hashes remain unchanged.
+- Confirm that none of the three candidate module DLLs (`YetAnotherCyclingSim`, `YetAnotherCyclingSimEditor`, `YacsPcgWitness`) is loaded from the source build workspace, that the current owner Editor's binaries match its freshly recorded preflight hashes, and that all five source checkpoint hashes remain unchanged. The historical `706edb198abecb81...` hash is not a substitute for current process identity.
 - Do **not** copy from an older SHA-named stage, overwrite an existing stage, switch source world or claim `READY_FOR_CONTROLLED_DEPLOYMENT` merely because the old UBT build succeeded.
 - The ordinary pinned `YetAnotherCyclingSim.uproject` is not a destination for MCP plugin registration changes.
 
-### Rollback Plan
+### Rollback boundary
 
-1. **Backup before deployment:** Before copying staged binaries to `D:\yacs\work\level-editor-review\b9fddea3f602-y473save01\Binaries\Win64\`, back up existing files to `D:\yacs\work\level-editor-review\b9fddea3f602-y473save01\Binaries\Win64\backup-706edb198abecb81\`.
-2. **Emergency rollback:** In case of editor load failure or witness discrepancy, restore `UnrealEditor-YetAnotherCyclingSimEditor.dll` and `UnrealEditor.modules` from `backup-706edb198abecb81\`.
-3. **Audit receipt:** Verify running editor module hash equals `706edb198abecb81b339498b0fb8847205cd4b66d4ef34829026ec593a4d97d5`.
+Before any authorized deployment, preserve the complete previous versioned release, its plugin enablement contract, both module manifests and all affected binaries. Roll back that same complete release and reverify its recorded hashes; do not combine old shared modules with a new plugin manifest. Staging alone does not authorize changing the accepted #364 review project.
 
-## Native registration startup race observed after controlled deployment (2026-10-14)
+The earlier single-module procedure referenced `D:\yacs\work\level-editor-review\b9fddea3f602-y473save01\Binaries\Win64\backup-706edb198abecb81\` and Editor DLL SHA256 `706edb198abecb81b339498b0fb8847205cd4b66d4ef34829026ec593a4d97d5`. Those values are retained as historical evidence, not a rollback plan for the new plugin overlay.
+
+## Historical native registration startup race (2026-10-14)
 
 The owner Windows audit reports a new running **derived-map** Unreal Editor process
 (PID `45048` at observation time) with the staged `2b8b3784` DLL actually
@@ -100,8 +106,9 @@ do not count as `NATIVE_WITNESS_PASS`.
 **Important:** The previously deployed/staged DLL with SHA256
 `02cea22e336213b8ceb7f009817b2c428cfceaa07b8cedd9c5823c0741c388e7`
 is built from `2b8b3784` and **does not contain** the deferred-registration
-source fix. Any later Git commit changing `YetAnotherCyclingSimEditor.cpp`
-needs its own isolated exact-HEAD UHT/UBT build, fresh `staging-manifest.json`,
+source fix. The registration lifecycle now lives in the optional plugin's
+`Private/YacsPcgWitnessModule.cpp`. Any source change needs its own isolated
+exact-HEAD UHT/UBT build, fresh `staging-manifest.json`,
 hash verification, and a newly authorized maintenance transaction.
 **Do not overwrite that DLL while PID 45048 is active**, do not perform
 hot-reload, do not kill the editor, and do not claim that repository code has
@@ -112,7 +119,9 @@ native probe is genuinely registered, MCP discovery is refreshed and the
 native graph/point-count/session safeguards have succeeded. The map
 `L_RoadSurface` and five canonical package hashes must remain unchanged.
 
-## Controlled deployment (separate, owner-approved maintenance window)
+## Deferred historical PCG deployment sequence
+
+This sequence records the previous PCG pilot plan. The current Houdini-first decision does not activate steps 5–7; closing Pegasus 06/07 takes priority. A future diagnostic-only deployment still needs its own concrete versioned release and authorized maintenance window.
 
 1. Verify latest exact-HEAD UBT, full GitHub CI and byte-pinned `.uproject`; inspect the staged manifest, DLL hash, module BuildId, current Editor command line, session identity and loaded-module path. The PCG365 opt-in target is distinct from the ordinary Editor target.
 2. Read-only check the unsaved world state. Preserve source packages, original release DLL/module metadata and current Live Host session evidence. Prepare a rollback to the **same previous immutable release**; no blind overwrite of shared modules.

@@ -19,7 +19,7 @@ class UPCGGraph;
  * without calling GetNodeDataView, without serializing row data, and without transport slicing.
  */
 UCLASS(BlueprintType)
-class YETANOTHERCYCLINGSIMEDITOR_API UYacsPcgWitnessToolset : public UToolsetDefinition
+class YACSPCGWITNESS_API UYacsPcgWitnessToolset : public UToolsetDefinition
 {
     GENERATED_BODY()
 
@@ -46,7 +46,7 @@ public:
  * Blueprint Function Library wrapper forwarding to UYacsPcgWitnessToolset.
  */
 UCLASS()
-class YETANOTHERCYCLINGSIMEDITOR_API UYacsPcgWitnessInspectionLibrary : public UBlueprintFunctionLibrary
+class YACSPCGWITNESS_API UYacsPcgWitnessInspectionLibrary : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
 

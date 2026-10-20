@@ -12,7 +12,7 @@ To tożsamość przeglądu skilla, nie domyślny SHA wdrożenia ani status świa
 | Kto zajmuje host? | `scripts/runner/Get-YacsUnrealHostState.ps1` | IDLE/REMOTE_BUSY/LOCAL_BUSY/MIXED_BUSY i procesy |
 | Jaki build jest konieczny? | `docs/CI_VALIDATION_TIERS.md`; `docs/ci/CHANGE_CLASSIFIER.md`; `scripts/ci/Resolve-YacsUnrealCiCache.ps1` | STATIC/RUNTIME/COMPILE i fingerprinty |
 | Jak rozwiązać silnik i dowód? | `scripts/ci/Resolve-YacsUnrealEngine.ps1`; `scripts/ue/Preflight-YacsProof.ps1`; `scripts/ci/Invoke-YacsUnrealCi.ps1`; `scripts/ue/Invoke-YacsProof.ps1` | Parametry, rezerwy, ExpectedHead, discovery Automation i błędy |
-| Gdzie badać ToolsetRegistry/UHT? | `Source/YetAnotherCyclingSimEditor/YetAnotherCyclingSimEditor.Build.cs`; `Source/YetAnotherCyclingSimPcg365Editor.Target.cs`; `Source/YetAnotherCyclingSimEditor/Public/PCG/YacsPcgWitnessToolset.h` | Zależności, UCLASS, widoczność modułu dla UHT |
+| Gdzie badać ToolsetRegistry/UHT? | `Source/YetAnotherCyclingSimEditor/YetAnotherCyclingSimEditor.Build.cs`; `Source/YetAnotherCyclingSimPcg365Editor.Target.cs`; `Plugins/YacsPcgWitness/YacsPcgWitness.uplugin`; `Plugins/YacsPcgWitness/Source/YacsPcgWitness/Public/PCG/YacsPcgWitnessToolset.h` | Zwykły Editor i odrębny, domyślnie wyłączony moduł witness; wymagany dowód obu targetów |
 | Jak zachować izolację Houdini Engine? | `docs/tooling/sidefx/UNREAL_CONFIGURATION.md`; `scripts/houdini/unreal-engine.args` | HAPI, efektywne ustawienia, jawny argument |
 | Jak interpretować L07 readback? | `scripts/ue/readback_lesson07_geometry.py`; `.github/workflows/yacs-lesson07-unreal-readonly.yml` | Ładowana mapa, ograniczenia raycastu, brak pełnej akceptacji |
 | Jak sprawdzić zapis bez przebudowy? | `scripts/ue/verify_accepted_scene_checkpoint.py`; `docs/tooling/LOCAL_WORKSPACE.md` | Dokładny profil/mapa; historyczny checkpoint nie zastępuje nowego |
@@ -23,7 +23,7 @@ To tożsamość przeglądu skilla, nie domyślny SHA wdrożenia ani status świa
 ## Szybkie wyszukiwanie
 
 ```text
-rg -n "ToolsetRegistry|UToolsetDefinition|YACS_WITH_PCGEX" Source
+rg -n "ToolsetRegistry|UToolsetDefinition|YACS_WITH_PCGEX" Source Plugins/YacsPcgWitness
 rg -n "STATIC|RUNTIME|COMPILE|SkipBuild|ownership" docs/CI_VALIDATION_TIERS.md scripts/ci
 rg -n "load_map|save_|geometry_accepted|visibility|trace" scripts/ue/readback_lesson07_geometry.py
 rg -n "heartbeat|map_package|source_sha|browser_frames|post_job" scripts/live_host/Get-YacsLiveHostStatus.ps1

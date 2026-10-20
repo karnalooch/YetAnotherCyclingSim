@@ -239,7 +239,15 @@ A native 4-tile Houdini test (Actions 39389560761) authenticated the unchanged L
 Hython successfully wrote all four binary Alpha-normalized native .bgeo.sc tiles (about 0.50 GiB total, D:/yacs/work/lesson07-native-proof-39390052167-1). Acceptance stopped at a 0.000244 m discrepancy between nominally co-located world coordinates stored as float32. This is the expected representational quantization scale of km-scale float32 volume transforms, not a measured vertical surface gap. The world coordinate comparison now allows <=0.0005 m (0.5 mm), while the independent height seam threshold remains <=0.0001 m (0.1 mm). The old run remains FAILED; a fresh native run must establish both the true height and visibility seams.
 
 
-### Current code-build blocker: 39397896686
+### Native source transport success 39390349735
+
+[Run 39390349735, job 118520101615](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39390349735/job/118520101615) completed successfully on `c575cf21c884455595650a173fa6863254527dc0`. Its status is `NATIVE_TRANSFER_VERIFIED_NOT_UE_ACCEPTED`. The accepted L06 source SHA256 remained `f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24`; four saved native tiles totalled 0.50 GiB in `D:/yacs/work/lesson07-native-proof-39390349735-1`.
+
+All four height edges and all four normalized validity edges were compared across 8129 samples each: sample error was **zero**. World-position error was `0.000244140625 m`, within the separate 0.5 mm coordinate tolerance. The accepted source's bilinearly interpolated height at `(0, 0)` was `473.5955810546875 m`. Preserve these source and export results; the earlier failed run statuses remain unchanged.
+
+The receipt explicitly keeps `masked_hole_material_ue_verified=false`, `center_0_0_ue_collision_verified=false` and `saved_map_mutated_by_this_job=false`. Validity continuity does not prove the installed Houdini Engine translator's hole polarity. Before a full UE transfer, verify known valid land, known NoData and padding in a bounded native canary, including rendered holes and collision. Do not infer the result from the layer name or mask seam test alone.
+
+### Ordinary Editor build blocker and module isolation
 
 At source HEAD `5a33c31a43e4933547a64bcb12e78552ce06e83a`, the ordinary Editor
 build in [run 39397896686, job 118545978608](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39397896686/job/118545978608)
@@ -258,3 +266,5 @@ module/target boundary must isolate those opt-in dependencies and be validated
 with the ordinary and PCG365 Editor targets. Do not re-enable experimental
 plugins in the byte-pinned common `.uproject` merely to bypass the failure.
 This run provides no new L07 geometry, collision, visibility or visual PASS.
+
+The same UHT error recurred in [run 39401819414, job 118559693068](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39401819414/job/118559693068), whose PR source was `0c94f388b0551ec0e3bfed57d758b3c35c356565`. The repair moves the reflected witness and registration into the disabled-by-default `Plugins/YacsPcgWitness` Editor plugin, enabled only by the separate PCG365 target. The ordinary target and pinned `.uproject` are unchanged. Its native build result remains pending; portable adapter tests and successful compilation cannot stand in for Landscape acceptance.

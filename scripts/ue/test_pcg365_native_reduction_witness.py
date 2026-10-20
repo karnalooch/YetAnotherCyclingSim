@@ -205,7 +205,7 @@ class LiveWitnessProxyTests(unittest.TestCase):
 
         cpp = (
             Path(__file__).resolve().parents[2]
-            / "Source/YetAnotherCyclingSimEditor/Private/PCG/YacsPcgWitnessToolset.cpp"
+            / "Plugins/YacsPcgWitness/Source/YacsPcgWitness/Private/PCG/YacsPcgWitnessToolset.cpp"
         ).read_text(encoding="utf-8")
         self.assertIn("ActualPath == InSourceNodePath", cpp)
         self.assertIn("ActualPath == InReductionNodePath", cpp)
@@ -483,6 +483,21 @@ class LiveWitnessProxyTests(unittest.TestCase):
             self.assertEqual(witness.native_point_count, 42)
             self.assertEqual(witness.session_pid, 45868)
             self.assertTrue(verify_witness_authenticity(witness, expected_pid=45868))
+            fake_client.call_bounded.assert_called_once_with(
+                "YacsPcgWitness.YacsPcgWitnessToolset",
+                "InspectReducedNodeOutput",
+                {
+                    "inActorPath": ACTOR,
+                    "inGraphPath": GRAPH,
+                    "inSourceNodePath": SOURCE,
+                    "inReductionNodePath": REDUCE,
+                    "inReductionClass": SETTINGS,
+                    "inOutputPin": "Out",
+                    "maxAllowedPoints": 256,
+                },
+                timeout_seconds=5.0,
+                max_response_bytes=1024 * 1024,
+            )
 
     def test_attest_live_reduced_node_via_failing_bounded_mcp_client(self):
         from unittest.mock import patch, MagicMock

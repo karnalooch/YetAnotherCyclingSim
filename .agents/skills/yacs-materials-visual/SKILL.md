@@ -16,7 +16,7 @@ description: "Twórz, naprawiaj i oceniaj materiały oraz wygląd YetAnotherCycl
 
 Współpracuj z `$yacs-houdini-world` przy eksporcie/geometrii, `$yacs-road-bob` przy kontakcie poboczy, `$yacs-unreal-integration` przy izolowanym konsumencie i `$yacs-verify-evidence` przy kwalifikacji wyników. Nie zmieniaj celu ani SHA między domenami bez odnotowania.
 
-- Pozostaw geografię i przestrzenne maski World/domain Authorities; Houdini wykonuje bieżącą recepturę. Material Forge tworzy wygląd i materiałowe maski drobnego detalu. Starsze etykiety PCG-first nie przywracają dawnej architektury.
+- Houdini prowadzi bieżącą recepturę świata zgodnie z zasadą Houdini-first, ponowioną przez użytkownika 2026-10-20. Geografia i przestrzenne maski pozostają przy World/domain Authorities. Material Forge uzupełnia wygląd i materiałowe maski drobnego detalu, Blender przygotowanie/inspekcję, a Unreal konsumpcję/runtime. Priorytetem jest ukończenie lekcji 06/07; starsze etykiety PCG-first nie zmieniają tej decyzji.
 - Zmieniaj wygląd wskazanej powierzchni bez przemieszczania jej klasy. Rejestruj source hashes i `classification_changed=false` tam, gdzie wymaga tego istniejący kontrakt.
 - Nie ukrywaj wysokościowych szwów, braków podparcia, błędnej kolizji lub kształtu klifu przez ciemniejszy materiał, RVT, vegetation albo dodatkowe kamienie. Kieruj potwierdzoną wadę geometrii do właściwej receptury świata.
 - Traktuj Forge Height jako dane authoringu/inspekcji. Użycie w displacement Houdiniego wymaga jawnej kalibracji jednostek, fizycznej wielkości i skali; zwykły import materiału UE nie może zmieniać Landscape.

@@ -42,7 +42,7 @@ Wybierz jednego właściciela implementacji na dziedzinę. W zadaniu wielodziedz
 
 ## 4. Zachowaj granice źródeł i etapów
 
-- Traktuj Houdini z oryginalnymi metodami SideFX jako podstawowy generator świata zgodnie z aktualną decyzją projektu; Unreal jako konsument/runtime. PCG/PCGEx, MCP i Blender stosuj w udokumentowanej roli pomocniczej. Sprawdź, czy późniejsza decyzja zmieniła ten podział.
+- Houdini z oryginalnymi metodami SideFX prowadzi workflow świata. Material Forge uzupełnia wygląd powierzchni, Blender przygotowanie/inspekcję, a Unreal konsumpcję/runtime; PCG/PCGEx i MCP zachowują rolę pomocniczą. Użytkownik ponowił tę zasadę 2026-10-20 i wskazał ukończenie lekcji 06/07 jako bieżący priorytet. Sprawdź późniejsze decyzje przed zmianą tego podziału.
 - Przy kontynuacji otwórz istniejący HIP, recepturę i zaakceptowany cache. Zmień potrzebną gałąź i odśwież tylko zależne wyniki. Zachowaj źródłowy DTM, rozdział Source / Manual Edits / Procedural Detail i oryginalną geografię.
 - Zweryfikuj cały obszar zatwierdzonego zadania; mały wycinek jest próbą techniczną. Nie przenoś jego akceptacji na cały Landscape.
 - Do przyszłych funkcji użyj mapy M0–M10 w references. Planowanie lub utworzenie skilla nie otwiera zależności milestone. Naprawy aktualnego etapu kontynuuj w posiadanym zakresie.

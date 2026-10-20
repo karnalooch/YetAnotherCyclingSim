@@ -12,6 +12,9 @@ SCRIPT = ROOT / "scripts/ue/Prepare-YacsPcgWitnessStage.ps1"
 DOCS = ROOT / "docs/tooling/PCG365_NATIVE_WITNESS_DEPLOYMENT.md"
 PINNED_PROJECT = ROOT / "YetAnotherCyclingSim.uproject"
 NATIVE_TARGET = ROOT / "Source/YetAnotherCyclingSimPcg365Editor.Target.cs"
+ORDINARY_TARGET = ROOT / "Source/YetAnotherCyclingSimEditor.Target.cs"
+COMMON_EDITOR = ROOT / "Source/YetAnotherCyclingSimEditor"
+PLUGIN = ROOT / "Plugins/YacsPcgWitness"
 
 
 class NativeWitnessStageContractTests(unittest.TestCase):
@@ -35,15 +38,46 @@ class NativeWitnessStageContractTests(unittest.TestCase):
         plugins = {item["Name"] for item in json.loads(raw)["Plugins"]}
         self.assertNotIn("ToolsetRegistry", plugins)
         self.assertNotIn("ModelContextProtocol", plugins)
+        self.assertNotIn("YacsPcgWitness", plugins)
 
     def test_pcg365_mcp_plugins_only_on_opt_in_editor_target(self):
         target = NATIVE_TARGET.read_text(encoding="utf-8")
         self.assertIn("class YetAnotherCyclingSimPcg365EditorTarget", target)
         self.assertIn('EnablePlugins.Add("ToolsetRegistry")', target)
         self.assertIn('EnablePlugins.Add("ModelContextProtocol")', target)
+        self.assertIn('EnablePlugins.Add("YacsPcgWitness")', target)
         self.assertIn("$BuildTarget = 'YetAnotherCyclingSimPcg365Editor'", self.script)
         self.assertIn("PINNED_LAUNCHER_PROJECT_CHANGED", self.script)
         self.assertIn("build_target = $BuildTarget", self.script)
+
+    def test_witness_reflection_is_isolated_from_ordinary_editor(self):
+        descriptor = json.loads((PLUGIN / "YacsPcgWitness.uplugin").read_text())
+        self.assertIs(descriptor["EnabledByDefault"], False)
+        self.assertEqual(
+            descriptor["Modules"],
+            [
+                {
+                    "Name": "YacsPcgWitness",
+                    "Type": "Editor",
+                    "LoadingPhase": "PostEngineInit",
+                }
+            ],
+        )
+        dependencies = {
+            item["Name"] for item in descriptor["Plugins"] if item["Enabled"]
+        }
+        self.assertTrue(
+            {"ToolsetRegistry", "ModelContextProtocol", "PCG"} <= dependencies
+        )
+        common_build = (COMMON_EDITOR / "YetAnotherCyclingSimEditor.Build.cs").read_text()
+        common_module = (
+            COMMON_EDITOR / "Private/YetAnotherCyclingSimEditor.cpp"
+        ).read_text()
+        self.assertNotIn("ToolsetRegistry", common_build)
+        self.assertNotIn("ToolsetRegistry", common_module)
+        self.assertNotIn("YacsPcgWitness", ORDINARY_TARGET.read_text())
+        self.assertFalse((COMMON_EDITOR / "Public/PCG/YacsPcgWitnessToolset.h").exists())
+        self.assertFalse((COMMON_EDITOR / "Private/PCG/YacsPcgWitnessToolset.cpp").exists())
 
     def test_exact_source_and_worktree_guards(self):
         self.assertIn("git -C $ProjectRoot rev-parse HEAD", self.script)
@@ -73,6 +107,37 @@ class NativeWitnessStageContractTests(unittest.TestCase):
         self.assertIn("Staged byte identity drift", self.script)
         self.assertIn("never overwrite it", self.script)
         self.assertIn("'-NoHotReloadFromIDE'", self.script)
+
+    def test_stage_keeps_plugin_sources_and_separate_module_manifests(self):
+        for path in (
+            "Source/YacsPcgWitness/YacsPcgWitness.Build.cs",
+            "Source/YacsPcgWitness/Public/PCG/YacsPcgWitnessToolset.h",
+            "Source/YacsPcgWitness/Private/PCG/YacsPcgWitnessToolset.cpp",
+            "Source/YacsPcgWitness/Private/YacsPcgWitnessModule.cpp",
+        ):
+            self.assertTrue((PLUGIN / path).is_file(), path)
+            self.assertIn(path, self.script)
+        self.assertIn('"$WitnessPluginRelativeRoot/YacsPcgWitness.uplugin"', self.script)
+        self.assertIn(
+            '"$WitnessPluginRelativeRoot/Binaries/Win64/UnrealEditor.modules"',
+            self.script,
+        )
+        self.assertIn("'Binaries/Win64/UnrealEditor.modules'", self.script)
+        self.assertIn(
+            "Check-ModuleManifest $ProjectModules $engineBuildId $ProjectModuleFiles",
+            self.script,
+        )
+        self.assertIn("Check-ModuleManifest $CandidateModules $engineBuildId", self.script)
+        self.assertIn("Unexpected module-to-DLL mapping", self.script)
+        self.assertIn("Join-Path $StagePath $file.relative_path", self.script)
+        self.assertIn("relative_path = $file.relative_path", self.script)
+        self.assertIn("schema_version = 2", self.script)
+
+    def test_runtime_plugin_enable_is_a_requirement_not_deployment(self):
+        self.assertIn("$RuntimeEnableArgument = '-EnablePlugins=YacsPcgWitness'", self.script)
+        self.assertIn("required_runtime_enable_argument = $RuntimeEnableArgument", self.script)
+        self.assertIn("stage_layout = 'PROJECT_RELATIVE_OVERLAY_NOT_DEPLOYED'", self.script)
+        self.assertIn("native_reader_loaded = $false", self.script)
 
     def test_docs_keep_external_witness_and_generation_gates_blocked(self):
         self.assertIn("process-local", self.docs)

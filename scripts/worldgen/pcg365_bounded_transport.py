@@ -248,7 +248,7 @@ class BoundedPcgMcpClient:
         """Read one already-certified reduced node (no graph writes, no fallback)."""
         allowed_toolsets = {
             "PCGToolset.PCGToolset",
-            "YetAnotherCyclingSimEditor.YacsPcgWitnessToolset",
+            "YacsPcgWitness.YacsPcgWitnessToolset",
             "YacsPcgWitnessToolset",
         }
         if toolset not in allowed_toolsets:

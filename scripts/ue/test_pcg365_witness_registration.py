@@ -11,11 +11,11 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 MODULE = (
     ROOT
-    / "Source/YetAnotherCyclingSimEditor/Private/YetAnotherCyclingSimEditor.cpp"
+    / "Plugins/YacsPcgWitness/Source/YacsPcgWitness/Private/YacsPcgWitnessModule.cpp"
 )
 TOOLSET = (
     ROOT
-    / "Source/YetAnotherCyclingSimEditor/Public/PCG/YacsPcgWitnessToolset.h"
+    / "Plugins/YacsPcgWitness/Source/YacsPcgWitness/Public/PCG/YacsPcgWitnessToolset.h"
 )
 DOCS = ROOT / "docs/tooling/PCG365_NATIVE_WITNESS_DEPLOYMENT.md"
 
@@ -61,6 +61,15 @@ class WitnessRegistrationSourceContractTests(unittest.TestCase):
         self.assertIn("UFUNCTION(meta = (AICallable)", self.header)
         self.assertIn("ModelContextProtocol.RefreshTools", self.docs)
         self.assertIn("NATIVE_WITNESS_BLOCKED", self.docs)
+
+    def test_registration_and_allowlist_use_the_optional_module_identity(self):
+        self.assertIn('TEXT("YacsPcgWitness.YacsPcgWitnessToolset")', self.module)
+        self.assertIn(
+            'TEXT("/^YacsPcgWitness[.]YacsPcgWitnessToolset([.].*)?$/")',
+            self.module,
+        )
+        self.assertNotIn("YetAnotherCyclingSimEditor.YacsPcgWitnessToolset", self.module)
+        self.assertIn("YACSPCGWITNESS_API UYacsPcgWitnessToolset", self.header)
 
 
 if __name__ == "__main__":

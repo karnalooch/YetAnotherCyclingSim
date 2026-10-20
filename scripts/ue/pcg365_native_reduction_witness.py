@@ -526,7 +526,7 @@ def attest_live_reduced_node(
                 "NO_LIVE_EDITOR: No active UnrealEditor process found for native witness attestation"
             )
 
-        toolset_name = "YetAnotherCyclingSimEditor.YacsPcgWitnessToolset"
+        toolset_name = "YacsPcgWitness.YacsPcgWitnessToolset"
         tool_name = "InspectReducedNodeOutput"
         call_args = {
             "inActorPath": actor_path,

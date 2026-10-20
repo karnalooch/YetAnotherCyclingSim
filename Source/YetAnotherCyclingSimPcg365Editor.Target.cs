@@ -14,6 +14,8 @@ public class YetAnotherCyclingSimPcg365EditorTarget : TargetRules
         ExtraModuleNames.Add("YetAnotherCyclingSimEditor");
 
         // Official UBT TargetRules.EnablePlugins opt-in (UE 5.8).
+        // Keep the reflected witness and its registry lifecycle out of the common Editor module.
+        EnablePlugins.Add("YacsPcgWitness");
         EnablePlugins.Add("ToolsetRegistry");
         EnablePlugins.Add("ModelContextProtocol");
     }

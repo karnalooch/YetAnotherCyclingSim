@@ -277,7 +277,7 @@ class BoundedTransportTests(unittest.TestCase):
             "maxAllowedPoints": 128,
         }
         res = self.client.call_bounded(
-            "YetAnotherCyclingSimEditor.YacsPcgWitnessToolset",
+            "YacsPcgWitness.YacsPcgWitnessToolset",
             "InspectReducedNodeOutput",
             witness_args,
             timeout_seconds=0.5,
@@ -289,7 +289,7 @@ class BoundedTransportTests(unittest.TestCase):
         self.assertEqual(call["body"]["params"]["name"], "call_tool")
         self.assertEqual(
             call["body"]["params"]["arguments"]["toolset_name"],
-            "YetAnotherCyclingSimEditor.YacsPcgWitnessToolset",
+            "YacsPcgWitness.YacsPcgWitnessToolset",
         )
         self.assertEqual(
             call["body"]["params"]["arguments"]["tool_name"], "InspectReducedNodeOutput"
@@ -298,9 +298,20 @@ class BoundedTransportTests(unittest.TestCase):
         bad_args = dict(witness_args, inActorPath="RelativePath")
         with self.assertRaises(ValueError):
             self.client.call_bounded(
-                "YetAnotherCyclingSimEditor.YacsPcgWitnessToolset",
+                "YacsPcgWitness.YacsPcgWitnessToolset",
                 "InspectReducedNodeOutput",
                 bad_args,
                 timeout_seconds=0.5,
                 max_response_bytes=MAX_RESPONSE_BYTES,
             )
+
+    def test_retired_common_editor_toolset_is_rejected_before_wire_use(self):
+        with self.assertRaisesRegex(ValueError, "permits only PCGToolset"):
+            self.client.call_bounded(
+                "YetAnotherCyclingSimEditor.YacsPcgWitnessToolset",
+                "InspectReducedNodeOutput",
+                {},
+                timeout_seconds=0.5,
+                max_response_bytes=MAX_RESPONSE_BYTES,
+            )
+        self.assertEqual(self.wire.calls, [])

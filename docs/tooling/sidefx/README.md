@@ -5,6 +5,8 @@
 **Authority:** explicit owner instructions in the local research/generation task; no GitHub issue or production admission is fabricated.  
 **Current scope:** fresh, independent Ma-2141 Landscape in Houdini; the entire road reference with 500 m on either side and surrounding terrain for background. No road mesh, earthworks, vegetation, buildings or assembled world yet.
 
+**Immediate owner priority, reaffirmed 2026-10-20:** finish Pegasus lessons 06 and 07. Houdini leads; Material Forge, Blender and Unreal Engine complement its workflow. Preserve the accepted L06 source/cache, complete the L07 material and transfer, and verify the actual UE consumer's heights, validity/visibility, seams, collision and saved/reopened state. See the current [L07 audit](LESSON07_MATERIAL_SETUP.md) for the remaining gaps; a supporting tool's build or render alone does not close the lesson.
+
 ## Owner decision and precedence
 
 Houdini is the **primary executor for procedural world authoring**, including Landscape, roads, cliffs and later environment assets. Original SideFX tutorial projects, HDAs and their demonstrated workflows are the implementation starting point. Unreal consumes the outputs and provides the supported runtime/material/editor integration demonstrated by the selected recipe. This does not replace route, physics or geographic data authority with a DCC tool.
