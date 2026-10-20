@@ -22,6 +22,11 @@ PINNED_L06_BYTES = 4808520505
 
 MANIFEST_PATH = OUTPUT_DIR / "manifest.json"
 REVIEW_MATERIAL = "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview.M_TerrainReview"
+# SideFX Houdini Engine 22 uses this primitive attribute for Landscape
+# holes. Empty is allowed for source-only proof but forbids production bake.
+HOLE_MATERIAL = os.environ.get("YACS_LESSON07_MASKED_HOLE_MATERIAL", "")
+if HOLE_MATERIAL and not HOLE_MATERIAL.startswith("/Game/"):
+    raise RuntimeError("Hole material must be an Unreal /Game/ asset path")
 BAKE_FOLDER = "/Game/Generated/YACS/Lesson07_Unified/Baked"
 
 def attr(parent, name, inp, values):
@@ -129,6 +134,9 @@ def main():
             # Opaque review material is not a hole/visibility shader.
             "unreal_uproperty_tag_source": "SaCalobra_Unified_Lesson07",
         }
+        if HOLE_MATERIAL:
+            # Official Houdini Engine 22 spelling: unreal_material_hole.
+            attrs["unreal_material_hole"] = HOLE_MATERIAL
         attributed = attr(geo, f"{name}_ATTRS", crop, attrs)
         attributed.cook(force=True)
         if attributed.errors():
@@ -200,6 +208,7 @@ def main():
                 "padded_samples": padded_count,
                 "outside_source_zero": True,
                 "ue_masked_material_verified": False,
+                "requested_hole_material": HOLE_MATERIAL or None,
                 "mask_export_range": [0.0, 1.0],
                 "pixel_registration_ue_verified": False,
             },
@@ -265,6 +274,8 @@ def main():
         "accepted_l06_sha256": accepted_sha,
         "output_policy": "NEW_DIRECTORY_NO_OVERWRITE",
         "masked_material_ue_verified": False,
+        "requested_hole_material": HOLE_MATERIAL or None,
+        "performance_1080p60_verified": False,
         "duration_seconds": time.time() - start_time,
         "source_cache": str(SOURCE_CACHE).replace("\\", "/"),
         "tiles": tiles_manifest,
