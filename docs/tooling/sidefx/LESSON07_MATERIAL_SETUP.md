@@ -5,7 +5,7 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](file:///d:/yacs/project/docs/tooling/sidefx/lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: true`
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (L07 Houdini lesson finished; native UE transfer, visibility and collision proof remain pending)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
@@ -216,3 +216,8 @@ All 6 review points have been thoroughly resolved, verified, and backed by verif
 ## Current geometry acceptance warning (2026-10-20)
 
 The previous transfer discarded `Alpha`. New code preserves it as a `visibility` volume and zeroes validity outside the unified source footprint. This is not yet proof of visible holes: the native UE material must use `LandscapeVisibilityMask`. Existing saved UE content is unchanged, and destructive rebake now requires deliberate `YACS_LESSON07_ALLOW_REBAKE=YES`. The raycast report had deviations up to 39.26 cm and a false shared quantization assumption despite differing actor Scale.Z. Native UE geometry, visibility and collision need a new verified run before claiming `LESSON07_TECHNICAL_PASS`.
+
+
+## 2026-10-20 L07 UE consumer repair gate (non-destructive)
+
+The accepted full-domain L06 cache remains frozen and SHA pinned. Earlier rounded-height, 4-actor and 4096-component records cannot establish a seam-free driveable UE landscape. The read-only Windows source audit authenticated the unchanged source but the older four-tile transport manifest has not established an Unreal `visibility` layer. Fresh UE readback failed during module load before any geometry could be verified. A separate module inventory confirmed both project DLLs exist, but did not prove ABI/build compatibility. Remediation must be carried out in isolated, bounded staging before any opt-in bake, and validate `LandscapeVisibilityMask`, source-coordinate seam alignment, collision, materials and frame time independently. Do not set a technical PASS on a static inventory, successful source hash or successful DLL compile alone.

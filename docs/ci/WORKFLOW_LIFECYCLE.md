@@ -70,6 +70,10 @@ endpoint is forbidden outside an explicit test fixture.
 | `stage3g-forest-target-density-performance.yml` | CURRENT | Paired target-density performance proof |
 | `stage3g-source-asset-audit.yml` | BROKER-MANAGED | Exact-SHA non-mutating source-asset/performance audit; manual dispatch is fallback |
 | `windows-probe.yml` | CURRENT | Cheap manual hosted-Windows probe |
+| `yacs-lesson07-editor-module-diagnostic.yml` | CURRENT | Read-only canonical project module presence/BuildId probe for L07 native startup triage; no compile, UE launch or authoring mutation. |
+| `yacs-lesson07-native-audit.yml` | CURRENT | Owner-only L06 accepted cache SHA and L07 on-disk map/texture source authentication on Windows; no Houdini/UE launch and no source changes. |
+| `yacs-lesson07-runner-probe.yml` | CURRENT | Owner-only restricted workflow_dispatch runner presence probe; historical successes confirm connectivity but no terrain acceptance. |
+| `yacs-lesson07-unreal-readonly.yml` | CURRENT | L07 native UE readback with protected saved-map hash, no intentional map saves or rebake; real native startup/geometry proof still pending. |
 | `yacs-editor-command.yml` | CURRENT | Owner-only issue-command remote-editor smoke |
 
 The two `UNKNOWN` native Passo Giau workflows are intentionally retained only as

@@ -182,6 +182,11 @@
       "reason": "Trusted PR orchestration control."
     },
     {
+      "file": "pr474-evidence-cleanup.yml",
+      "state": "ONE-SHOT/DEAD",
+      "reason": "Owner-requested PR474 JSON audit and byte-preserving migration completed; permanent integrity/budget checks now run in primary CI. No native execution or branch-ref write in this retired workflow."
+    },
+    {
       "file": "project-bootstrap.yml",
       "state": "CURRENT",
       "reason": "Manual Project-board bootstrap/recovery utility."
@@ -362,6 +367,26 @@
       "reason": "Owner-only issue-comment remote-editor smoke command from trusted default-branch workflow code."
     },
     {
+      "file": "yacs-lesson07-editor-module-diagnostic.yml",
+      "state": "CURRENT",
+      "reason": "Read-only canonical project module presence/BuildId probe for L07 native startup triage; no compile, UE launch or authoring mutation."
+    },
+    {
+      "file": "yacs-lesson07-native-audit.yml",
+      "state": "CURRENT",
+      "reason": "Owner-only L06 accepted cache SHA and L07 on-disk map/texture source authentication on Windows; no Houdini/UE launch and no source changes."
+    },
+    {
+      "file": "yacs-lesson07-runner-probe.yml",
+      "state": "CURRENT",
+      "reason": "Owner-only restricted workflow_dispatch runner presence probe; historical successes confirm connectivity but no terrain acceptance."
+    },
+    {
+      "file": "yacs-lesson07-unreal-readonly.yml",
+      "state": "CURRENT",
+      "reason": "L07 native UE readback with protected saved-map hash, no intentional map saves or rebake; real native startup/geometry proof still pending."
+    },
+    {
       "file": "yacs-live-command.yml",
       "state": "CURRENT",
       "reason": "Issue #476 full-unreal extensible recipe protocol: explicit owner-authored commit marker [yacs-live-command], exact-SHA protected CI, verified published code-only script from reviewed manifest/catalog, bounded single action and native readback into the ALREADY running Editor. No arbitrary browser Python/shell, no automatic editor restart, original world/road/DTM protected by project authority."
@@ -370,11 +395,6 @@
       "file": "yacs-live-host.yml",
       "state": "CURRENT",
       "reason": "Issue #476 owner-only fixed-branch opt-in YACS Live Host preflight/install/activate/post-job verify. Independent limited interactive AtLogOn scheduled task owns the persistent PixelStreaming2 Unreal Editor, never a GitHub Actions child; no run gets persistent visual PASS until a separate later receiver observes current PID+SID+heartbeat and new WebRTC frames. Scoped code-only, no runner/service/scene mutations on default preflight."
-    },
-    {
-      "file": "pr474-evidence-cleanup.yml",
-      "state": "ONE-SHOT/DEAD",
-      "reason": "Owner-requested PR474 JSON audit and byte-preserving migration completed; permanent integrity/budget checks now run in primary CI. No native execution or branch-ref write in this retired workflow."
     }
   ]
 }
