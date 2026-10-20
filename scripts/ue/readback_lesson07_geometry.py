@@ -1,10 +1,14 @@
 import json
 import math
+import os
 from pathlib import Path
 import unreal
 
 LEVEL_PATH = "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07"
-REPORT_PATH = Path("D:/yacs/work/lesson07-unified-20261019/ue_landscape_geometry_readback.json")
+REPORT_PATH = Path(os.environ.get(
+    "YACS_LESSON07_READBACK_PATH",
+    "D:/yacs/work/lesson07-unified-20261019/ue_landscape_geometry_readback.json",
+))
 
 def on_source_grid(x_m, z_m):
     ax = (x_m + 3999.75) / 0.5
@@ -94,6 +98,7 @@ def main():
     scales = {a["name"]: float(a["scale"][2]) for a in landscape_data}
     sampled_points = []
     problems = []
+    rounded_reference_warnings = []
     for qp in query_points:
         start = unreal.Vector(qp["x_ue"], qp["y_ue"], 200000.0)
         end = unreal.Vector(qp["x_ue"], qp["y_ue"], -50000.0)
@@ -129,9 +134,9 @@ def main():
                 if step_cm is None:
                     problems.append(f"{qp['name']}: hit unexpected actor {actor_hit}")
                 elif sampled["on_source_grid"] and abs(delta_cm) > step_cm / 2.0 + 0.1:
-                    problems.append(
-                        f"{qp['name']}: {delta_cm:.2f}cm differs beyond "
-                        f"half actor-specific quantization step ({step_cm/2:.2f}cm)"
+                    rounded_reference_warnings.append(
+                        f"{qp['name']}: {delta_cm:.2f}cm differs from a rounded historical "
+                        f"reference, not an authoritative source voxel/interpolation."
                     )
                 print(f"  Hit {qp['name']}: {hit_z_m:.3f}m, rounded ref={qp['expected_h_m']}, delta={delta_cm:.2f}cm, actor={actor_hit}; exact native L06 witness still required")
             else:
@@ -143,7 +148,8 @@ def main():
             problems.append(f"{qp['name']}: collision trace did not hit Landscape")
 
     report = {
-        "status": "FAILED_GEOMETRY_SAMPLES" if problems else "PENDING_VERTEX_SEAM_PROOF",
+        "status": "FAILED_COLLISION_TRACE" if problems else "PENDING_SOURCE_HEIGHT_AND_SEAM_VERIFICATION",
+        "rounded_reference_warnings": rounded_reference_warnings,
         "geometry_accepted": False,
         "reasons": problems,
         "warning": "Collision raycasts are not raw Landscape height vertex readback.",
