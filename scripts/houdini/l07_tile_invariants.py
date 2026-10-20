@@ -49,7 +49,10 @@ def compare_edge(first, second, side_a, side_b, tolerance_m=0.0001):
         abs(loc_a - loc_b),
         float(np.max(np.abs(coords_a - coords_b))),
     )
-    if position_error > 1e-4:
+    # Houdini stores volume transforms as float32. At 2-4 km, one ULP can
+    # reach 0.244-0.488 mm; this coordinate tolerance is separate from the
+    # strict height discontinuity test, which remains 0.1 mm.
+    if position_error > 5e-4:
         raise ValueError(
             f"Seam world-coordinate mismatch {position_error:.6f} m"
         )

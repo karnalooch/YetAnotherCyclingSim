@@ -226,3 +226,8 @@ The accepted full-domain L06 cache remains frozen and SHA pinned. Earlier rounde
 ### Native repair test: 2026-10-20 (first runner attempt)
 
 A native 4-tile Houdini test (Actions 39389560761) authenticated the unchanged L06 SHA-256, then failed on the first tile at the former [0,1] Alpha-range assertion. The accepted L06 Stage 1 explicitly imports a binary validity raster with heightscale 255; accepting any positive Alpha as valid is its already-verified convention. The L07 transfer now converts the *copy* to exact 0/1 while preserving all other valid source data and forcing outer padding to 0. This is a versioned transport repair, not a terrain rebuild. Native replay must still verify all four saved tiles and actual Unreal hole-material/collision behavior. Old run status stays FAILED; source SHA and original map are untouched.
+
+
+### Native source transport retry 39390052167
+
+Hython successfully wrote all four binary Alpha-normalized native .bgeo.sc tiles (about 0.50 GiB total, D:/yacs/work/lesson07-native-proof-39390052167-1). Acceptance stopped at a 0.000244 m discrepancy between nominally co-located world coordinates stored as float32. This is the expected representational quantization scale of km-scale float32 volume transforms, not a measured vertical surface gap. The world coordinate comparison now allows <=0.0005 m (0.5 mm), while the independent height seam threshold remains <=0.0001 m (0.1 mm). The old run remains FAILED; a fresh native run must establish both the true height and visibility seams.

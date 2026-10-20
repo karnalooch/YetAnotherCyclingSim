@@ -44,6 +44,14 @@ class L07NativeInvariants(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "world-coordinate mismatch"):
             compare_all_four(tiles)
 
+    def test_float32_world_position_roundoff_is_not_a_height_seam(self):
+        first = synthetic_tiles()[(0, 0)]
+        data, start, end = synthetic_tiles()[(1, 0)]
+        second = (data, (0.000244140625, 0, -2), (2.000244140625, 0, 0))
+        result = compare_edge(first, second, "east", "west")
+        self.assertLess(result["position_error_m"], 0.0005)
+        self.assertEqual(result["sample_error"], 0)
+
     def test_subcentimeter_vertical_discontinuity_fails(self):
         tiles = synthetic_tiles()
         a, start, end = tiles[(1, 0)]
