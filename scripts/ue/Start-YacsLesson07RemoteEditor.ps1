@@ -32,6 +32,7 @@ $closure = @(
 $report = [ordered]@{
     schema_version=1; source_sha=$ExpectedHead; status='PREFLIGHT_PENDING'; phase='HOST'
     checked_at_utc=[DateTime]::UtcNow.ToString('o'); subject=$null; error_type=$null;reason_code=$null
+    handoff_step=$null; error_inner_type=$null; error_hresult=$null; error_native_code=$null
     project_file=$project; map_package=$mapPackage; editor=$null; host_status=$null
     checkpoint_bytes_verified=$false; module_build_ids_verified=$false
     native_world_verified=$false; native_module_load_verified=$false
@@ -47,6 +48,23 @@ function Stop-L07([string]$Reason) {
     $failure=[InvalidOperationException]::new('Lesson07 preflight blocked.')
     $failure.Data['l07_reason']=$Reason
     throw $failure
+}
+function Get-L07StartDeadline([object]$Value, [DateTime]$NowUtc=[DateTime]::UtcNow) {
+    # ConvertFrom-Json already turns an ISO Z timestamp into DateTime(Utc).
+    # Casting that value to string loses Kind/precision and uses another culture
+    # than DateTime.Parse. Preserve the typed value; accept only exact UTC text.
+    $deadline=[DateTime]::MinValue
+    if ($Value -is [DateTime] -and $Value.Kind -eq [DateTimeKind]::Utc) {
+        $deadline=$Value
+    } elseif ($Value -is [string] -and $Value -cmatch '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{7}Z$' -and
+        [DateTime]::TryParseExact($Value,'o',[Globalization.CultureInfo]::InvariantCulture,
+            [Globalization.DateTimeStyles]::RoundtripKind,[ref]$deadline) -and $deadline.Kind -eq [DateTimeKind]::Utc) {
+        # Exact round-trip UTC text also supports readers that retain strings.
+    } else { Stop-L07 'START_DEADLINE_FORMAT' }
+    if ($NowUtc.Kind -ne [DateTimeKind]::Utc -or $deadline -le $NowUtc -or $deadline -gt $NowUtc.AddMinutes(5)) {
+        Stop-L07 'START_REQUEST_EXPIRED'
+    }
+    return $deadline
 }
 function Assert-L07PlainPath([string]$Path) {
     $cursor = [IO.Path]::GetFullPath($Path)
@@ -227,7 +245,7 @@ try {
         if ($sid -cne $install.desktop_sid -or [Security.Principal.WindowsIdentity]::GetCurrent().User.Value -cne $sid -or
             (Get-Process -Id $PID -ErrorAction Stop).SessionId -le 0) { Stop-L07 'TASK_CONSOLE_IDENTITY' }
         . (Join-Path $release 'scripts/live_host/Assert-YacsLiveTaskPrincipal.ps1')
-        $task=Get-ScheduledTask -TaskName 'YACS Lesson07 Remote Editor' -ErrorAction Stop
+        $task=Get-ScheduledTask -TaskName 'YACS Lesson07 Remote Editor' -TaskPath '\' -ErrorAction Stop
         $null=Assert-YacsLiveTaskPrincipal -Task $task -ExpectedSid $sid
         if (@($task.Triggers | Where-Object { $null -ne $_ }).Count -ne 0 -or
             [Xml.XmlConvert]::ToTimeSpan([string]$task.Settings.ExecutionTimeLimit) -ne [TimeSpan]::Zero -or
@@ -313,12 +331,17 @@ try {
     if ($PreflightOnly) { return [pscustomobject]$report }
 
     $report.phase='HANDOFF'
-    $deadline=[DateTime]::Parse([string]$install.start_permitted_until_utc).ToUniversalTime()
-    if ($deadline -lt [DateTime]::UtcNow -or $deadline -gt [DateTime]::UtcNow.AddMinutes(5)) { Stop-L07 'START_REQUEST_EXPIRED' }
+    $report.handoff_step='DEADLINE'
+    $deadline=Get-L07StartDeadline $install['start_permitted_until_utc']
+    $report.start_permitted_until_utc=$deadline.ToString('o')
+    $report.handoff_step='HOST'
     $existing=Get-L07Host
     if ($null -ne $existing) { $report.editor=$existing; $report.status='ATTACH_EXISTING'; Save-L07Session; return }
+    $report.handoff_step='OTHER_TASK'
     Assert-L07OtherTaskIdle
+    $report.handoff_step='CONSOLE_OWNER'
     if ((Get-L07ConsoleSid) -cne $install.desktop_sid) { Stop-L07 'CONSOLE_OWNER_CHANGED' }
+    $report.handoff_step='DISK_RESERVE'
     if ([IO.DriveInfo]::new('D:\').AvailableFreeSpace -lt 5GB) { Stop-L07 'DISK_RESERVE_CHANGED' }
     $arguments=@(
         ('"'+$project+'"'), $mapPackage,
@@ -327,19 +350,30 @@ try {
         ('-AbsLog="'+(Join-Path $stateRoot 'editor.log')+'"')
     )
     $report.status='STARTING_NOT_NATIVE_PROOF'; $report.autosave_session_override=$true
+    $report.handoff_step='SAVE_STARTING'
     Save-L07Session
+    $report.handoff_step='FINAL_DEADLINE'
     if ([DateTime]::UtcNow -ge $deadline) { Stop-L07 'START_REQUEST_EXPIRED' }
+    $report.handoff_step='START_PROCESS'
     $editor=Start-Process -FilePath $editorExe -ArgumentList $arguments -WorkingDirectory $projectRoot -PassThru
+    $report.handoff_step='PROCESS_IDENTITY'
     $report.editor=[ordered]@{
         editor_pid=$editor.Id; editor_start_filetime_utc=$editor.StartTime.ToUniversalTime().ToFileTimeUtc().ToString()
         editor_started_utc=$editor.StartTime.ToUniversalTime().ToString('o'); editor_executable_path=$editorExe
         interactive_session_id=$editor.SessionId; canonical_project_matches=$true
     }
     $report.status='EDITOR_RUNNING_NATIVE_NOT_VERIFIED'; $report.phase='SUPERVISING'
+    $report.handoff_step='SAVE_RUNNING'
     Save-L07Session
 } catch {
     $report.status='BLOCKED_'+$report.phase
     $report.error_type=$_.Exception.GetType().Name
+    $report.error_hresult=[int]$_.Exception.HResult
+    if ($_.Exception.InnerException) { $report.error_inner_type=$_.Exception.InnerException.GetType().Name }
+    $nativeError=if ($_.Exception -is [ComponentModel.Win32Exception]) { $_.Exception }
+        elseif ($_.Exception.InnerException -is [ComponentModel.Win32Exception]) { $_.Exception.InnerException }
+        else { $null }
+    if ($null -ne $nativeError) { $report.error_native_code=[int]$nativeError.NativeErrorCode }
     $reason=[string]$_.Exception.Data['l07_reason']
     $report.reason_code=if ($reason -cmatch '^[A-Z][A-Z0-9_]{0,79}$') { $reason } else { 'SYSTEM_EXCEPTION' }
     if ($null -ne $editor) { $report.status='EDITOR_RETAINED_AFTER_STARTUP_ERROR' }

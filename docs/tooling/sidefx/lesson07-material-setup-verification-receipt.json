@@ -1653,7 +1653,7 @@
     "performance_pass": false
   },
   "remote_connection_continuation_20261021": {
-    "status": "ENGINE_GUID_OBSERVED_STARTUP_RETRY_PREPARED",
+    "status": "UTC_HANDOFF_REPAIR_PREPARED",
     "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
     "owner_authorized_missing_connection_infrastructure": true,
     "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
@@ -1662,7 +1662,7 @@
     "asset_changes": [],
     "editor_lifecycle_changes": [],
     "performance_pass": false,
-    "note": "Remote inventory found no deployed Editor or Wingman discovery file. Exact-source protected CI passed, but the first connection attempt stopped before task registration at a literal engine association check. Read-only host evidence identified a GUID association with both required modules intact. The retry admits only that observed GUID and exact descriptor hash while preserving installed engine/module checks. The PowerShell dictionary-bug hypothesis was disproved. Historical PID 19056 is not treated as live identity.",
+    "note": "The GUID-specific admission passed on Windows and all accepted checkpoint hashes and required module BuildIds were verified. The separate limited interactive task was registered and started, but reported BLOCKED_HANDOFF / MethodInvocationException before an Editor identity or autosave override. The exact production date expression reproduces this error under pl-PL and en-GB and a UTC-offset error under en-US; native exact-line and culture attribution were not recorded. The failed task release and report remain retained; a corrected native attempt is still pending.",
     "inventory": {
       "source_commit": "4bf894dd8dccc482a3e90a53bce6d6b01653e6a7",
       "run_id": 39507345660,
@@ -1690,7 +1690,7 @@
       "editor_commands_executed": 0
     },
     "connection_workflow": ".github/workflows/yacs-lesson07-remote-editor.yml",
-    "connection_execution": "BLOCKED_PROJECT",
+    "connection_execution": "BLOCKED_HANDOFF",
     "first_connection_attempt": {
       "source_commit": "3ba05803bfc3ff095eb012e3f790752b55b47d12",
       "protected_ci_run_id": 39508823330,
@@ -1732,7 +1732,66 @@
       "canonical_project_written": false,
       "dictionary_bug_reproduced": false
     },
-    "startup_retry_execution": "NOT_RUN",
-    "post_job_survival": "NOT_RUN"
+    "startup_retry_execution": "BLOCKED_HANDOFF",
+    "post_job_survival": "NOT_RUN",
+    "second_connection_attempt": {
+      "source_commit": "457dc899adb858abee69c8ec1c4174cb7bc8032d",
+      "protected_ci_run_id": 39510984665,
+      "protected_ci_conclusion": "success",
+      "connection_run_id": 39510976391,
+      "connection_job_id": 118934957954,
+      "connection_job_conclusion": "failure",
+      "checked_at_utc": "2026-10-20T23:01:15.3694751Z",
+      "status": "BLOCKED_HANDOFF",
+      "phase": "HANDOFF",
+      "error_type": "MethodInvocationException",
+      "reason_code": "SYSTEM_EXCEPTION",
+      "host_status": "IDLE",
+      "task_registered": true,
+      "task_start_requested": true,
+      "owner_sid_matches": true,
+      "checkpoint_bytes_verified": true,
+      "module_build_ids_verified": true,
+      "engine_build_id": "55116800",
+      "editor": null,
+      "autosave_session_override": false,
+      "editor_stop_requested": false,
+      "package_save_requested": false,
+      "project_config_write_requested": false,
+      "native_world_verified": false,
+      "powershell_data_fixtures_passed": 24,
+      "python_tests_passed": 30,
+      "artifact_id": 12305158956,
+      "artifact_sha256": "36778c15dd1dde65d9395be22b0c4e45691d6db32bad241555eaadc59a33313c",
+      "session_json_downloaded_and_digest_verified": true,
+      "session_sha256": "57fa56edbd2d1eff4be7f3f765227457754f8dce298e2212a4ed5cff1e3ed1d9",
+      "session_size_bytes": 6251
+    },
+    "handoff_date_reproduction": {
+      "runtime": "PowerShell 7.6.6",
+      "production_expression_extracted_from_source": true,
+      "json_timestamp_observed_type": "DateTime",
+      "json_timestamp_kind": "Utc",
+      "pl_PL_error_type": "MethodInvocationException",
+      "en_GB_error_type": "MethodInvocationException",
+      "inner_error_type": "FormatException",
+      "en_US_Europe_Warsaw_utc_shift_seconds": -7200,
+      "native_exact_failure_line_known": false,
+      "native_culture_known": false,
+      "native_causality": "REPRODUCED_DEFECT_CONSISTENT_WITH_RECORDED_FAILURE"
+    },
+    "utc_handoff_retry_execution": "NOT_RUN",
+    "utc_handoff_repair": {
+      "deadline_semantics": "PRESERVE_TYPED_UTC_OR_EXACT_INVARIANT_UTC_TEXT",
+      "start_permission_duration_minutes": 4,
+      "maximum_accepted_remaining_minutes": 5,
+      "failed_task_migration_source": "457dc899adb858abee69c8ec1c4174cb7bc8032d",
+      "failed_task_migration_session_sha256": "57fa56edbd2d1eff4be7f3f765227457754f8dce298e2212a4ed5cff1e3ed1d9",
+      "migration_scope": "ONLY_VERIFIED_INACTIVE_FAILED_TASK_ACTION",
+      "old_release_and_state_retained": true,
+      "task_stop_or_unregister_requested": false,
+      "native_migration_verified": false,
+      "native_startup_verified": false
+    }
   }
 }

@@ -192,6 +192,8 @@ jobs:
           if (Test-Path -LiteralPath $session -PathType Leaf) {
             Assert-PlainReportPath $session
             if ((Get-Item -LiteralPath $session).Length -gt 64KB) { throw 'Session report exceeds bounded output size.' }
+            $sessionReport = Get-Content -LiteralPath $session -Raw | ConvertFrom-Json
+            Write-Host ('L07_REMOTE_REPORT session.json=' + ($sessionReport | ConvertTo-Json -Depth 32 -Compress))
             Copy-Item -LiteralPath $session -Destination (Join-Path $stage 'session.json') -ErrorAction Stop
           }
           "directory=$stage" >> $env:GITHUB_OUTPUT

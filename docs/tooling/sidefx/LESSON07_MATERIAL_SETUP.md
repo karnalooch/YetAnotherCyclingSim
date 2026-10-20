@@ -102,8 +102,43 @@ its [command-line guide](https://dev.epicgames.com/documentation/en-us/unreal-en
 supports launching a project/map through an explicit Editor executable. This
 does not claim that the host GUID's registry mapping has been read.
 The PowerShell dictionary hypothesis was disproved by both local reproduction
-and the host's matching counts. Task installation, startup, MCP discovery,
-native readback and post-job survival remain unverified pending the new attempt.
+and the host's matching counts.
+
+At source `457dc899adb858abee69c8ec1c4174cb7bc8032d`,
+[protected CI 39510984665](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39510984665)
+passed. The [next connection job](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39510976391/job/118934957954)
+passed all 24 actual PowerShell data fixtures and 30 Python tests. Its Windows
+preflight verified the accepted map, MI, master and all three array hashes,
+installed UE 5.8.2 and the required module BuildIds (`55116800`). It registered
+and requested the separate `YACS Lesson07 Remote Editor` task with the matching
+desktop owner. The task's own preflight also passed, then its session report at
+`2026-10-20T23:01:15.3694751Z` recorded `BLOCKED_HANDOFF`,
+`MethodInvocationException / SYSTEM_EXCEPTION`, with `editor: null` and no
+autosave override reached. This proves task installation and startup request,
+not an Editor process or a native connection. Artifact `12305158956`, ZIP
+SHA256 `36778c15dd1dde65d9395be22b0c4e45691d6db32bad241555eaadc59a33313c`,
+was downloaded and its `session.json` inspected independently of the installer.
+
+The deadline expression in that source round-trips a JSON UTC `DateTime`
+through a string and a culture-dependent parser. Reproduction using the exact
+production expression under PowerShell 7.6.6 raises the same exception class
+under `pl-PL` and `en-GB`; under `en-US` it instead loses the UTC kind and shifts
+the deadline by the local time-zone offset. This is a reproduced launcher
+defect consistent with the recorded handoff failure. The native report did
+not retain its exact failing line or host culture, so native causal attribution
+is not stronger than that evidence. The failed release and session report are
+retained. Editor startup, authenticated MCP discovery, native world readback
+and post-job survival remain pending the corrected attempt.
+
+The corrected launcher preserves an existing UTC `DateTime` or parses exact
+round-trip UTC text with invariant culture. The start deadline remains bounded.
+The installer may retarget only the action of the specifically recorded failed
+`457dc899` task: its original source hashes, original session bytes, expired
+permission, inactive failed state, desktop owner and task settings must match,
+and a fresh host check must still be `IDLE`. It retains the old release/state
+and a private copy of the prior task definition. It neither stops nor deletes a
+task or Editor. Reports now include the bounded handoff step and numeric error
+metadata. Local production-validator fixtures pass; native retry is pending.
 
 The first-stage inventory artifact is `12303367952`, ZIP SHA256
 `6fffea19df0900427e77881e4dbfdba3ab8f75d992d39027c813b78ecc946c0e`.

@@ -12,12 +12,23 @@ $tokens=$null; $parseErrors=$null
 $ast=[Management.Automation.Language.Parser]::ParseFile($source,[ref]$tokens,[ref]$parseErrors)
 if (@($parseErrors).Count) { throw 'Lesson07 launcher did not parse.' }
 # Load only these pure data validators, never the launcher's executable body.
-foreach ($name in @('Stop-L07','Get-L07ReleaseEntry','Assert-L07ProjectIdentity')) {
+foreach ($name in @('Stop-L07','Get-L07ReleaseEntry','Assert-L07ProjectIdentity','Get-L07StartDeadline')) {
     $nodes=@($ast.FindAll({
         param($node)
         $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name
     },$false))
     if ($nodes.Count -ne 1) { throw 'Expected one production validator.' }
+    . ([scriptblock]::Create($nodes[0].Extent.Text))
+}
+$installer=Join-Path $PSScriptRoot 'Install-YacsLesson07RemoteEditor.ps1'
+$installerAst=[Management.Automation.Language.Parser]::ParseFile($installer,[ref]$tokens,[ref]$parseErrors)
+if (@($parseErrors).Count) { throw 'Lesson07 installer did not parse.' }
+foreach ($name in @('Stop-L07Install','Assert-L07TaskSettings','Get-L07FailedTaskPin','Assert-L07FailedTaskData','Copy-L07SessionFailure')) {
+    $nodes=@($installerAst.FindAll({
+        param($node)
+        $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name
+    },$false))
+    if ($nodes.Count -ne 1) { throw 'Expected one production installer validator.' }
     . ([scriptblock]::Create($nodes[0].Extent.Text))
 }
 function Require([bool]$Condition,[string]$Message) {
@@ -108,5 +119,129 @@ Expect-ReleaseBlock $wrongCase $relative
 $cases++
 $arrayPath='{"files":[{"path":["scripts/ue/Start-YacsLesson07RemoteEditor.ps1","INVALID"]}]}' | ConvertFrom-Json -AsHashtable
 Expect-ReleaseBlock $arrayPath $relative
+$cases++
+# The actual installer JSON becomes DateTime(Utc); preserve its exact ticks under
+# the owner's regional settings and other common cultures, including string input.
+$now=[DateTime]::new(2026,10,20,23,0,0,[DateTimeKind]::Utc)
+$timestamp='2026-10-20T23:04:00.1234567Z'
+$parsedDeadline=('{"start_permitted_until_utc":"'+$timestamp+'"}' | ConvertFrom-Json -AsHashtable)['start_permitted_until_utc']
+Require ($parsedDeadline -is [DateTime] -and $parsedDeadline.Kind -eq [DateTimeKind]::Utc) 'Fixture must exercise real default JSON date conversion.'
+$originalCulture=[Threading.Thread]::CurrentThread.CurrentCulture
+try {
+    foreach ($culture in @('pl-PL','en-GB','en-US')) {
+        [Threading.Thread]::CurrentThread.CurrentCulture=[Globalization.CultureInfo]::GetCultureInfo($culture)
+        foreach ($value in @($parsedDeadline,$timestamp)) {
+            $deadline=Get-L07StartDeadline -Value $value -NowUtc $now
+            Require ($deadline.Kind -eq [DateTimeKind]::Utc -and $deadline.Ticks -eq $parsedDeadline.Ticks -and $deadline.ToString('o') -ceq $timestamp) 'Deadline changed UTC, precision or culture.'
+            $cases++
+        }
+    }
+} finally { [Threading.Thread]::CurrentThread.CurrentCulture=$originalCulture }
+foreach ($value in @($null,'PRIVATE_SENTINEL','2026-10-20T23:04:00.1234567','2026-10-20T23:04:00.1234567+00:00',
+    ([DateTime]::SpecifyKind($parsedDeadline,[DateTimeKind]::Local)),([DateTime]::SpecifyKind($parsedDeadline,[DateTimeKind]::Unspecified)),
+    @($parsedDeadline,$parsedDeadline))) {
+    $blocked=$false
+    try { $null=Get-L07StartDeadline -Value $value -NowUtc $now } catch {
+        Require ($_.Exception.Data['l07_reason'] -ceq 'START_DEADLINE_FORMAT') 'Wrong deadline format failure.'
+        $blocked=$true
+    }
+    Require $blocked 'Malformed deadline was admitted.'
+    $cases++
+}
+foreach ($value in @($now,$now.AddTicks(-1),$now.AddMinutes(5).AddTicks(1))) {
+    $blocked=$false
+    try { $null=Get-L07StartDeadline -Value $value -NowUtc $now } catch {
+        Require ($_.Exception.Data['l07_reason'] -ceq 'START_REQUEST_EXPIRED') 'Wrong expired deadline failure.'
+        $blocked=$true
+    }
+    Require $blocked 'Expired or excessive start permission was admitted.'
+    $cases++
+}
+# Data-only migration admission; native SID resolution, file hashes and live
+# Task Scheduler/host reads are performed by the wrapper before this validator.
+function New-MigrationFixture {
+    $pin=Get-L07FailedTaskPin
+    $priorRelease='D:\yacs\lesson07-remote\releases\457dc899adb858abee69c8ec1c4174cb7bc8032d'
+    $priorScript=if ($IsWindows) { Join-Path $priorRelease 'scripts/ue/Start-YacsLesson07RemoteEditor.ps1' }
+        else { $priorRelease+'\scripts\ue\Start-YacsLesson07RemoteEditor.ps1' }
+    $sid='S-1-5-21-100-200-300-1001'
+    return @{
+        Task=[pscustomobject]@{
+            TaskName='YACS Lesson07 Remote Editor';TaskPath='\';State='Ready';Triggers=@()
+            Principal=[pscustomobject]@{RunLevel='Limited';LogonType='Interactive'}
+            Actions=@([pscustomobject]@{Execute='D:\yacs\tools\powershell-7.6.6-win-x64\pwsh.exe';WorkingDirectory=$priorRelease
+                Arguments='-NoLogo -NoProfile -File "'+$priorScript+'" -ExpectedHead 457dc899adb858abee69c8ec1c4174cb7bc8032d'})
+            Settings=[pscustomobject]@{ExecutionTimeLimit='PT0S';RestartCount=0;MultipleInstances='IgnoreNew';AllowHardTerminate=$false
+                StopIfGoingOnBatteries=$false;DisallowStartIfOnBatteries=$false;IdleSettings=[pscustomobject]@{StopOnIdleEnd=$false}}
+        }
+        TaskInfo=[pscustomobject]@{LastTaskResult=1}
+        PriorInstall=@{source_sha='457dc899adb858abee69c8ec1c4174cb7bc8032d';run_token='39510976391-1';desktop_sid=$sid
+            start_permitted_until_utc=$now.AddMinutes(-1);files=@(foreach ($path in $pin.files.Keys) { @{path=$path;sha256=$pin.files[$path]} })}
+        PriorSession=@{source_sha='457dc899adb858abee69c8ec1c4174cb7bc8032d';status='BLOCKED_HANDOFF';phase='HANDOFF'
+            reason_code='SYSTEM_EXCEPTION';error_type='MethodInvocationException';host_status='IDLE';editor=$null
+            owner_sid_matches=$true;checkpoint_bytes_verified=$true;module_build_ids_verified=$true;autosave_session_override=$false
+            editor_stop_requested=$false;package_save_requested=$false;project_config_write_requested=$false}
+        SessionSha256='57fa56edbd2d1eff4be7f3f765227457754f8dce298e2212a4ed5cff1e3ed1d9'
+        ResolvedTaskSid=$sid;ExpectedSid=$sid;HostStatus='IDLE';NowUtc=$now
+    }
+}
+$migration=New-MigrationFixture
+Assert-L07FailedTaskData @migration
+$cases++
+# A valid AzureAD-style owner is not excluded by an invented account-family rule.
+$migration=New-MigrationFixture
+$migration.ExpectedSid='S-1-12-1-100-200-300-400';$migration.ResolvedTaskSid=$migration.ExpectedSid;$migration.PriorInstall.desktop_sid=$migration.ExpectedSid
+Assert-L07FailedTaskData @migration
+$cases++
+$negativeMigrations=@(
+    {param($x) $x.Task.State='Running'},
+    {param($x) $x.Task.State='Queued'},
+    {param($x) $x.TaskInfo.LastTaskResult=0},
+    {param($x) $x.HostStatus='LOCAL_BUSY'},
+    {param($x) $x.Task.TaskName='YACS Live Host'},
+    {param($x) $x.Task.TaskPath='\Other\'},
+    {param($x) $x.Task.Actions[0].Execute='D:\other\pwsh.exe'},
+    {param($x) $x.Task.Actions[0].Arguments+=' -Other'},
+    {param($x) $x.Task.Actions[0].WorkingDirectory='D:\other'},
+    {param($x) $x.Task.Principal.RunLevel='Highest'},
+    {param($x) $x.Task.Principal.LogonType='ServiceAccount'},
+    {param($x) $x.ResolvedTaskSid='S-1-5-21-100-200-300-9999'},
+    {param($x) $x.PriorInstall.desktop_sid='S-1-5-21-100-200-300-9999'},
+    {param($x) $x.Task.Triggers=@([pscustomobject]@{Enabled=$true})},
+    {param($x) $x.Task.Settings.RestartCount=1},
+    {param($x) $x.Task.Settings.ExecutionTimeLimit='PT1H'},
+    {param($x) $x.Task.Settings.AllowHardTerminate=$true},
+    {param($x) $x.PriorInstall.source_sha='0'*40},
+    {param($x) $x.PriorInstall.run_token='39510976391-2'},
+    {param($x) $x.PriorInstall.files[0].sha256='0'*64},
+    {param($x) $x.PriorInstall.start_permitted_until_utc=$x.NowUtc.AddMinutes(1)},
+    {param($x) $x.PriorInstall.start_permitted_until_utc=$null},
+    {param($x) $x.SessionSha256='0'*64},
+    {param($x) $x.PriorSession.status='EDITOR_RUNNING_NATIVE_NOT_VERIFIED'},
+    {param($x) $x.PriorSession.error_type='OtherException'},
+    {param($x) $x.PriorSession.editor=@{editor_pid=123}},
+    {param($x) $x.PriorSession.owner_sid_matches=$false},
+    {param($x) $x.PriorSession.autosave_session_override=$true}
+)
+foreach ($mutate in $negativeMigrations) {
+    $migration=New-MigrationFixture
+    & $mutate $migration
+    $blocked=$false
+    try { Assert-L07FailedTaskData @migration } catch {
+        Require ($_.Exception.Data['l07_reason'] -like 'MIGRATION_*' -or $_.Exception.Data['l07_reason'] -ceq 'TASK_SETTINGS_MISMATCH') 'Unexpected migration failure.'
+        $blocked=$true
+    }
+    Require $blocked 'Unproven or active prior task was admitted for migration.'
+    $cases++
+}
+$failure=@{reason_code='SYSTEM_EXCEPTION';error_type='MethodInvocationException';error_inner_type='FormatException';error_hresult=-2146233087;error_native_code=5;handoff_step='DEADLINE'}
+$target=@{}
+Copy-L07SessionFailure -Session $failure -Target $target
+Require ($target.reason_code -ceq 'SYSTEM_EXCEPTION' -and $target.error_type -ceq 'MethodInvocationException' -and
+    $target.error_inner_type -ceq 'FormatException' -and $target.error_native_code -eq 5 -and $target.handoff_step -ceq 'DEADLINE') 'Failure diagnostics were lost.'
+$cases++
+$failure=@{reason_code='private message';error_type='PRIVATE/SENTINEL';error_inner_type=@('private');error_hresult='secret';error_native_code='secret';handoff_step='PRIVATE_SENTINEL'}
+Copy-L07SessionFailure -Session $failure -Target $target
+Require (($target | ConvertTo-Json) -notmatch 'PRIVATE|SENTINEL|secret|private') 'Unbounded session failure content leaked.'
 $cases++
 [ordered]@{status='LESSON07_REMOTE_JSON_PREFLIGHT_PASS';cases=$cases;powershell_version=$PSVersionTable.PSVersion.ToString();native_host_actions=$false} | ConvertTo-Json -Compress
