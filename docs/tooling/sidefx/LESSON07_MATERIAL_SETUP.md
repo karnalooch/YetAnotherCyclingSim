@@ -400,6 +400,33 @@ three size sums. A real PowerShell regression reproduces the old failure and
 verifies asset/module/config accounting above 2 GiB, including empty config.
 The 30 GiB reserve and identity protections are unchanged.
 
+**Actual Editor attempt at `c98a89dc35b481c75a37ada06b92ae8194757975`:**
+[ordinary CI 39436179335](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39436179335)
+passed. [L07 attempt 39436127684](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39436127684)
+then staged all 59 intended assets and verified module/config copies, totalling
+2,453,803,817 bytes. The owned Editor (PID 8420) started, but crashed at engine
+initialization with `Null assigned to TNotNull` (`NotNull.cpp:12`), before a
+native L07 report was written. Its recorded exit code is `-1073741571`.
+The isolated session also logged missing Stage3F/Stage3G constructor references
+from the common project module; their relationship to the fatal error is not
+established. These startup references do not establish that another world was
+opened or generated.
+
+The result remains `INCOMPLETE`, with structural and geometry acceptance false.
+After the crash, the original map, copied map and every protected input were
+verified unchanged. Host receipt SHA-256:
+`7f2921b958b88d54d04c0fdb5cc5d073402782a20babda3d2cd2ccdafe7264db`.
+[Diagnostic artifact 12273361465](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39436127684/artifacts/12273361465)
+has archive SHA-256 `af3c187885ee03f923905f05ba172b3a52fe495a1f268d199059ae1a00c16a83`.
+The exact remaining gap is Editor startup and native map execution, followed by
+the geometry/visibility/collision gates already listed. Do not infer a repair
+from ordinary Automation success or bypass native errors.
+
+An additional independent byte audit at the same commit compared **all 59
+canonical assets (2,451,237,244 bytes)** against their committed Git LFS objects:
+zero differences. This closes local/remote asset identity for the complete
+staged asset set; it does not close the failed native execution gate.
+
 **First isolated readback attempt: blocked before map measurement.** [Run 39413841851, job 118603360623](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39413841851/job/118603360623) used `e2aed213870a7151106049a7b56953eaba919d6f` after that protected CI succeeded. Its `host-receipt.json` reports `INCOMPLETE`: the first `Assert-L07Reserve` rejected insufficient free space for the unchanged 30 GiB reserve, before candidate creation, map hashing or Editor launch. `candidate_root`, `owned_editor_pid` and all source/candidate map measurements are null. There is no new unchanged-map hash measurement, structural result or collision proof. The [1038-byte artifact 12261980942](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39413841851/artifacts/12261980942) contains only that receipt; archive SHA256 is `d428d16cd8304442111be7c2c6a5704c370a496ce412d28c1cd71b0ed42725c9`.
 
 A later read-only host diagnostic measured **22.04 GiB free on D:** at `2026-10-20 11:59:27 UTC`: [run 39386777997, attempt 2, job 118614584666](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39386777997/job/118614584666), [716-byte artifact 12262321889](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39386777997/artifacts/12262321889), SHA256 `0d9e3d75ee9b83382f711ac4e5040e0552ac83090cad4120718ab2f1955d7819`. The diagnostic ran historical workflow code `113021b84f3316868ffad164cd88e5ef4c141ec8`; it did not build, check out or launch UE. Its canonical-project module BuildId `55116800` and present DLLs are inventory only, not admission of the ordinary CI cache. Preserve the accepted Houdini caches and the reserve while following the [bounded retention policy](../../ci/RUNNER_WORKSPACE_RETENTION.md).

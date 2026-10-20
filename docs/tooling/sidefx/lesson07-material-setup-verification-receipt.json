@@ -17,7 +17,7 @@
     "performance_pass": false,
     "performance_note": "DEFERRED_AFTER_M3",
     "native_recheck_required": true,
-    "reason": "Preview display and camera corrected; unchanged saved UE map still requires native geometry, visibility, collision and visual recheck. Source/transport success and ordinary Automation are not L07 acceptance."
+    "reason": "Preview signals repaired; all 59 staged assets match Git LFS. Dedicated native Editor startup crashed before L07 inspection; geometry, visibility, collision and visual acceptance remain false."
   },
   "domain": {
     "grid_dimensions": [
@@ -739,7 +739,7 @@
       "Geometry, visibility and collision after update"
     ]
   },
-  "updated_at": "2026-10-20T14:05:15.476970+00:00",
+  "updated_at": "2026-10-20T14:17:43.254050+00:00",
   "houdini_preview_verification": {
     "status": "NATIVE_PREVIEW_SIGNALS_VERIFIED_VISUAL_REVIEW_PENDING",
     "original_reviewed_hip_sha256": "2ea5eafb0e5b2965ef718243a81aa83919255d0cb2af56444d0e7d6bf99fd8d1",
@@ -1080,9 +1080,61 @@
     "old_live_host_status": "STALE_OR_DEAD_NOT_LIVE",
     "other_ci_jobs_are_l07_proof": false,
     "consumer_readback_at_observed_head": "NOT_RUN: disk-reserve failure in 39413841851; later 39420689675 skipped after upstream CI failure.",
-    "writer_rule": "One writer on affected paths; recheck remote head and asset/source identity before writes. Isolated proof copies preserve exact bytes."
+    "writer_rule": "One writer on affected paths; recheck remote head and asset/source identity before writes. Isolated proof copies preserve exact bytes.",
+    "complete_asset_byte_audit": {
+      "head": "c98a89dc35b481c75a37ada06b92ae8194757975",
+      "files": 59,
+      "size_bytes": 2451237244,
+      "matches_committed_git_lfs": true,
+      "mismatches": []
+    }
   },
   "latest_native_consumer_attempt": {
+    "source_head": "c98a89dc35b481c75a37ada06b92ae8194757975",
+    "status": "INCOMPLETE",
+    "started_at_utc": "2026-10-20T14:13:37.4200239Z",
+    "ended_at_utc": "2026-10-20T14:15:07.4185078Z",
+    "level": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07",
+    "source_map_before": {
+      "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+      "size_bytes": 1842190204,
+      "sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7"
+    },
+    "source_map_after": {
+      "path": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+      "size_bytes": 1842190204,
+      "sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7"
+    },
+    "source_map_unchanged": true,
+    "candidate_map_before": {
+      "path": "D:\\yacs\\work\\lesson07-readback-39436127684-1\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+      "size_bytes": 1842190204,
+      "sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7"
+    },
+    "candidate_map_after": {
+      "path": "D:\\yacs\\work\\lesson07-readback-39436127684-1\\Content\\Generated\\YACS\\Lesson07_Unified\\L_SaCalobra_Lesson07.umap",
+      "size_bytes": 1842190204,
+      "sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7"
+    },
+    "candidate_map_unchanged": true,
+    "protected_inputs_unchanged": true,
+    "candidate_root": "D:\\yacs\\work\\lesson07-readback-39436127684-1",
+    "owned_editor_pid": 8420,
+    "owned_editor_exit_code": -1073741571,
+    "planned_copy_bytes": 2453803817,
+    "structural_readback_complete": false,
+    "geometry_accepted": false,
+    "error": "Cannot find path 'D:\\yacs\\runner\\_work\\YetAnotherCyclingSim\\YetAnotherCyclingSim\\l07-39436127684-1\\Saved\\RuntimeProof\\Lesson07Readback\\39436127684-1\\l07-native-geometry.json' because it does not exist.",
+    "ci_run_id": 39436179335,
+    "readback_run_id": 39436127684,
+    "staged_assets": 59,
+    "host_receipt_sha256": "7f2921b958b88d54d04c0fdb5cc5d073402782a20babda3d2cd2ccdafe7264db",
+    "artifact_id": 12273361465,
+    "artifact_sha256": "af3c187885ee03f923905f05ba172b3a52fe495a1f268d199059ae1a00c16a83",
+    "first_fatal_log": "Null assigned to TNotNull (NotNull.cpp:12), at Editor initialization before the native L07 report. Root cause unresolved.",
+    "additional_observation": "Common project module constructors reference unstaged Stage3F/Stage3G assets. This is not evidence that another world was opened; causality for the crash is unproven."
+  },
+  "previous_native_consumer_attempt": {
     "source_head": "9ddebf5a8a7387313a8751e1fb0c960785af4b2a",
     "status": "INCOMPLETE",
     "started_at_utc": "2026-10-20T14:00:56.7822204Z",
