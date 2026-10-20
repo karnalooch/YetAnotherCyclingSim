@@ -207,6 +207,8 @@ $receipt = [ordered]@{
     warnings=@($notes)
 }
 if ($Apply) {
+    # Write a tiny status receipt even when no cache was eligible.
+    [void][IO.Directory]::CreateDirectory($maintenanceRoot)
     Assert-NoReparse $maintenanceRoot
     $receiptPath = Join-Path $maintenanceRoot 'latest-autoclean.json'
     $tempPath = Join-Path $maintenanceRoot ('autoclean-' + [guid]::NewGuid().ToString('n') + '.tmp')
