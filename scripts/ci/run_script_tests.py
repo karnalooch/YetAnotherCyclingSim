@@ -8,6 +8,7 @@ discovered module. Processes run in parallel with separate receipts and logs.
 from __future__ import annotations
 
 import argparse
+import ast
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import importlib.util
 import json
@@ -29,6 +30,36 @@ def discover(root: Path) -> list[str]:
     return sorted(
         p.relative_to(root).as_posix() for p in (root / "scripts").rglob("test_*.py")
     )
+
+
+def native_unreal_entrypoint(root: Path, relative: str) -> bool:
+    """Recognize editor-only invocation scripts, not Python unittest modules.
+
+    These legacy scripts are named test_*.py but execute Unreal API calls at
+    import time; executing them on a Linux Python host is not a valid test.
+    Classification is fail closed if any unittest-style test method exists.
+    """
+    if not relative.startswith("scripts/ue/"):
+        return False
+    path = root / relative
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=relative)
+    imports_unreal = any(
+        isinstance(node, ast.Import)
+        and any(alias.name == "unreal" for alias in node.names)
+        or isinstance(node, ast.ImportFrom)
+        and node.module == "unreal"
+        for node in tree.body
+    )
+    has_unittests = any(
+        isinstance(node, ast.ClassDef)
+        and any(
+            isinstance(part, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and part.name.startswith("test_")
+            for part in node.body
+        )
+        for node in ast.walk(tree)
+    )
+    return imports_unreal and not has_unittests
 
 
 def run_module(root: Path, relative: str) -> dict:
@@ -118,6 +149,21 @@ def run_isolated(relative: str, output: Path) -> dict:
     folder.mkdir(parents=True, exist_ok=True)
     receipt = folder / "result.json"
     receipt.unlink(missing_ok=True)
+    if native_unreal_entrypoint(ROOT, relative):
+        # Explicitly defer native entrypoints: zero hosted tests, never labelled
+        # as native PASS, never imported on Linux or executed against the world.
+        result = {
+            "tests": 0,
+            "skipped": 0,
+            "passed": True,
+            "deferred_native": True,
+            "kind": "unreal_editor_entrypoint",
+            "path": relative,
+            "exit_code": 0,
+            "seconds": 0.0,
+        }
+        receipt.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        return result
     started = time.monotonic()
     code = 125
     error = None
@@ -209,7 +255,7 @@ def main() -> int:
             result = future.result()
             results.append(result)
             print(
-                f"{'PASS' if result['passed'] else 'FAIL'} {result['path']}: "
+                f"{'DEFERRED_EDITOR_ONLY' if result.get('deferred_native') else ('PASS' if result['passed'] else 'FAIL')} {result['path']}: "
                 f"{result['tests']} tests ({result['seconds']} s)",
                 flush=True,
             )
@@ -219,13 +265,20 @@ def main() -> int:
 
     results.sort(key=lambda r: r["path"])
     passed = all(r["passed"] for r in results)
+    native_deferred = sum(1 for r in results if r.get("deferred_native"))
+    hosted_test_modules = sum(1 for r in results if r.get("tests", 0) > 0)
+    if hosted_test_modules == 0:
+        passed = False
     summary = {
         "schema_version": 2,
         "head": subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
         ).strip(),
         "mode": mode,
-        "full_suite_passed": passed and mode == "FULL",
+        "full_suite_passed": passed and mode == "FULL" and native_deferred == 0,
+        "hosted_test_modules": hosted_test_modules,
+        "deferred_native_editor_entrypoints": native_deferred,
+        "native_editor_proof_pending": native_deferred > 0,
         "total_discovered_modules": total,
         "modules": len(results),
         "tests": sum(r["tests"] for r in results),
@@ -248,9 +301,14 @@ def main() -> int:
             handle.write(f"Reason: {reason}.\n\n")
             handle.write("| Module | Result | Tests | Seconds |\n|---|---|---:|---:|\n")
             for result in results:
+                outcome = (
+                    "DEFERRED_EDITOR_ONLY"
+                    if result.get("deferred_native")
+                    else ("PASS" if result["passed"] else "FAIL")
+                )
                 handle.write(
                     f"| \x60{result['path']}\x60 | "
-                    f"{'PASS' if result['passed'] else 'FAIL'} | "
+                    f"{outcome} | "
                     f"{result['tests']} | {result['seconds']} |\n"
                 )
     return 0 if passed else 1

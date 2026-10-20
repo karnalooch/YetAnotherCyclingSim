@@ -9,6 +9,28 @@ from scripts.ci.run_script_tests import discover, run_module
 
 
 class ScriptDiscoveryTests(unittest.TestCase):
+    def test_unreal_editor_entrypoints_are_deferred_not_imported_on_linux(self):
+        from scripts.ci.run_script_tests import native_unreal_entrypoint
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            native = root / "scripts/ue/test_native.py"
+            native.parent.mkdir(parents=True)
+            native.write_text(
+                "import unreal\nunreal.SystemLibrary.execute_console_command(None, 'QUIT_EDITOR')\n",
+                encoding="utf-8",
+            )
+            self.assertTrue(native_unreal_entrypoint(root, "scripts/ue/test_native.py"))
+            native.write_text(
+                "import unreal\nimport unittest\n"
+                "class TestReal(unittest.TestCase):\n"
+                "    def test_genuine(self): pass\n",
+                encoding="utf-8",
+            )
+            self.assertFalse(native_unreal_entrypoint(root, "scripts/ue/test_native.py"))
+            native.write_text("import unreal\n", encoding="utf-8")
+            self.assertFalse(native_unreal_entrypoint(root, "scripts/ci/test_native.py"))
+
     def test_new_nested_test_is_discovered_without_workflow_edit(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
