@@ -211,3 +211,8 @@ All 6 review points have been thoroughly resolved, verified, and backed by verif
 - `LESSON07_TECHNICAL_PASS: true`
 - `visual_review: PENDING_FINAL_M3_AUDIT`
 - `performance_pass: false` (`performance_note: "DEFERRED_AFTER_M3"`)
+
+
+## Current geometry acceptance warning (2026-10-20)
+
+The previous transfer discarded `Alpha`. New code preserves it as a `visibility` volume and zeroes validity outside the unified source footprint. This is not yet proof of visible holes: the native UE material must use `LandscapeVisibilityMask`. Existing saved UE content is unchanged, and destructive rebake now requires deliberate `YACS_LESSON07_ALLOW_REBAKE=YES`. The raycast report had deviations up to 39.26 cm and a false shared quantization assumption despite differing actor Scale.Z. Native UE geometry, visibility and collision need a new verified run before claiming `LESSON07_TECHNICAL_PASS`.

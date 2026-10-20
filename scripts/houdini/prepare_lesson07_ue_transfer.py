@@ -49,9 +49,20 @@ def main():
     
     height_only = geo.createNode("blast", "HEIGHT_ONLY")
     height_only.setInput(0, src)
-    height_only.parm("group").set("@name=height")
+    height_only.parm("group").set("@name=height @name=Alpha")
     height_only.parm("negate").set(1)
     
+    source_geo = src.geometry()
+    source_volumes = {p.attribValue("name"): p for p in source_geo.prims()
+                      if isinstance(p, hou.Volume)}
+    if not {"height", "Alpha"}.issubset(source_volumes):
+        raise RuntimeError("Source L06 cache must contain height and Alpha")
+    source_height = source_volumes["height"]
+    xres, zres, _ = source_height.resolution()
+    first = source_height.indexToPos((0, 0, 0))
+    last = source_height.indexToPos((xres - 1, zres - 1, 0))
+    src_x = sorted((float(first[0]), float(last[0])))
+    src_z = sorted((float(first[2]), float(last[2])))
     # Tile definitions:
     # ix=0: tx = -2032.25, ix=1: tx = +2031.75
     # iy=0: tz = -2032.25, iy=1: tz = +2031.75
@@ -92,7 +103,7 @@ def main():
             "unreal_landscape_layer_max": 1500.0,
             "unreal_landscape_editlayer_name": "Houdini_Unified_Final",
             "unreal_material": REVIEW_MATERIAL,
-            "unreal_hole_material": REVIEW_MATERIAL,
+            # Opaque review material is not a hole/visibility shader.
             "unreal_uproperty_tag_source": "SaCalobra_Unified_Lesson07",
         }
         attributed = attr(geo, f"{name}_ATTRS", crop, attrs)
@@ -100,15 +111,36 @@ def main():
         if attributed.errors():
             raise RuntimeError(f"Cook error on {name}: {attributed.errors()}")
             
-        g = attributed.geometry()
-        prim = next(p for p in g.prims() if p.attribValue("name") == "height")
+        g = attributed.geometry().freeze()
+        layers = {p.attribValue("name"): p for p in g.prims()
+                  if isinstance(p, hou.Volume)}
+        if set(layers) != {"height", "Alpha"}:
+            raise RuntimeError(f"{name}: expected height + Alpha, got {sorted(layers)}")
+        validity = layers["Alpha"]
+        validity.setAttribValue("name", "visibility")
+        prim = layers["height"]
         res = prim.resolution()
         assert res == (8129, 8129, 1), f"Expected resolution (8129, 8129, 1), got {res}"
         
         pos0 = tuple(prim.indexToPos((0, 0, 0)))
         pos_max = tuple(prim.indexToPos((res[0] - 1, res[1] - 1, 0)))
         bbox = prim.boundingBox()
-        
+        mask = np.frombuffer(validity.allVoxelsAsString(), dtype=np.float32)
+        mask = mask.reshape(res[1], res[0]).copy()
+        if not np.isfinite(mask).all() or mask.min() < 0 or mask.max() > 1:
+            raise RuntimeError(f"{name}: invalid visibility range")
+        xs = np.linspace(pos0[0], pos_max[0], res[0])
+        zs = np.linspace(pos0[2], pos_max[2], res[1])
+        outside_cols = (xs < src_x[0] - 1e-4) | (xs > src_x[1] + 1e-4)
+        outside_rows = (zs < src_z[0] - 1e-4) | (zs > src_z[1] + 1e-4)
+        mask[outside_rows, :] = 0.0
+        mask[:, outside_cols] = 0.0
+        validity.setAllVoxelsFromString(np.ascontiguousarray(mask))
+        valid_count = int(np.count_nonzero(mask > 0.5))
+        invalid_count = int(mask.size - valid_count)
+        padded_count = int(outside_rows.sum() * res[0]
+                           + outside_cols.sum() * res[1]
+                           - outside_rows.sum() * outside_cols.sum())
         arr = np.frombuffer(prim.allVoxelsAsString(), dtype=np.float32).reshape(res[1], res[0])
         arrays[(ix, iy)] = arr
         
@@ -134,6 +166,14 @@ def main():
             "elevation_min_m": float(arr.min()),
             "elevation_max_m": float(arr.max()),
             "sha256": file_sha256,
+            "visibility": {
+                "layer": "visibility", "source": "Alpha",
+                "valid_samples": valid_count,
+                "invalid_samples": invalid_count,
+                "padded_samples": padded_count,
+                "outside_source_zero": True,
+                "ue_masked_material_verified": False,
+            },
         }
         tiles_manifest.append(tile_info)
         print(f"  Done: min={tile_info['elevation_min_m']:.2f} m, max={tile_info['elevation_max_m']:.2f} m, sha256={file_sha256[:12]}...")

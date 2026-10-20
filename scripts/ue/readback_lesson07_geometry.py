@@ -1,9 +1,20 @@
 import json
+import math
 from pathlib import Path
 import unreal
 
 LEVEL_PATH = "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07"
 REPORT_PATH = Path("D:/yacs/work/lesson07-unified-20261019/ue_landscape_geometry_readback.json")
+
+def on_source_grid(x_m, z_m):
+    ax = (x_m + 3999.75) / 0.5
+    az = (3999.75 - z_m) / 0.5
+    return abs(ax - round(ax)) < 1e-5 and abs(az - round(az)) < 1e-5
+
+def actor_height_step_cm(scale_z):
+    if not math.isfinite(scale_z) or scale_z <= 0:
+        raise ValueError("Invalid Landscape Scale.Z")
+    return float(scale_z) / 128.0
 
 def main():
     world = unreal.EditorLoadingAndSavingUtils.load_map(LEVEL_PATH)
@@ -57,7 +68,9 @@ def main():
         {"name": "Scree Cluster 1 Centroid", "x_ue": -250278.0, "y_ue": 184595.0, "x_h": -2502.78, "z_h": 1845.95, "expected_h_m": 460.95},
     ]
 
+    scales = {a["name"]: float(a["scale"][2]) for a in landscape_data}
     sampled_points = []
+    problems = []
     for qp in query_points:
         start = unreal.Vector(qp["x_ue"], qp["y_ue"], 200000.0)
         end = unreal.Vector(qp["x_ue"], qp["y_ue"], -50000.0)
@@ -86,7 +99,17 @@ def main():
                 delta_cm = delta_m * 100.0
                 sampled["delta_m"] = delta_m
                 sampled["delta_cm"] = delta_cm
-                sampled["quantization_steps"] = delta_cm / 2.2965
+                step_cm = actor_height_step_cm(scales[actor_hit]) if actor_hit in scales else None
+                sampled["actor_quantization_step_cm"] = step_cm
+                sampled["on_source_grid"] = on_source_grid(qp["x_h"], qp["z_h"])
+                sampled["quantization_steps"] = delta_cm / step_cm if step_cm else None
+                if step_cm is None:
+                    problems.append(f"{qp['name']}: hit unexpected actor {actor_hit}")
+                elif sampled["on_source_grid"] and abs(delta_cm) > step_cm / 2.0 + 0.1:
+                    problems.append(
+                        f"{qp['name']}: {delta_cm:.2f}cm differs beyond "
+                        f"half actor-specific quantization step ({step_cm/2:.2f}cm)"
+                    )
                 print(f"  Hit {qp['name']}: Z = {hit_z_m:.3f} m (expected {qp['expected_h_m']}), delta={delta_cm:.2f} cm ({delta_cm/2.2965:.2f} quant steps), actor={actor_hit}")
             else:
                 print(f"  Hit {qp['name']}: Z = {hit_z_m:.3f} m, actor={actor_hit}")
@@ -94,20 +117,27 @@ def main():
         else:
             print(f"  Trace on {qp['name']} did not hit landscape via line trace")
             sampled_points.append({**qp, "hit": False})
+            problems.append(f"{qp['name']}: collision trace did not hit Landscape")
 
     report = {
-        "status": "PASS",
+        "status": "FAILED_GEOMETRY_SAMPLES" if problems else "PENDING_VERTEX_SEAM_PROOF",
+        "geometry_accepted": False,
+        "reasons": problems,
+        "warning": "Collision raycasts are not raw Landscape height vertex readback.",
         "level": LEVEL_PATH,
         "total_landscape_actors": len(landscapes),
         "total_components": total_components,
         "expected_total_components": 4096,
-        "components_pass": total_components == 4096,
+        "components_pass": total_components == 4096 and len(landscapes) == 4,
+        "actor_quantization_step_cm": {
+            name: actor_height_step_cm(z) for name, z in scales.items()
+        },
         "transport_envelope": {
             "source_domain": "8000x8000 m, 16000x16000 cells at 0.5m spacing",
             "transport_envelope": "8128x8128 m, 4 tiles of 8129x8129 vertices (16257x16257 total envelope)",
             "padding_handling": "Each tile has 64m padding (128 quads) beyond the 4000m sub-domain to satisfy Unreal 127-quad section sizing. The outer 64m padding boundary contains Alpha=0 / NoData, which is handled cleanly as border geometry and never classified as legal Grass (ID=0).",
-            "quantization_unit_cm": 2.2965
-        },
+            "quantization_unit_cm": None,
+            "note": "Per-actor Landscape Scale.Z differs; no shared height step."        },
         "landscapes": landscape_data,
         "sampled_heights": sampled_points,
     }

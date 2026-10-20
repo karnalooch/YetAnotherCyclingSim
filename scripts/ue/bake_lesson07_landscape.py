@@ -5,6 +5,8 @@ Each tile is 8129 x 8129 vertices (1024 components, 127 quads/section, 2 section
 All 4 tiles share exact 0.5 m native lattice across the full [-4064, +4064] m domain.
 """
 import json
+import hashlib
+import os
 from pathlib import Path
 import time
 import traceback
@@ -42,6 +44,22 @@ state = {
 
 manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
 tiles = manifest["tiles"]
+
+def preflight_tiles():
+    if len(tiles) != 4:
+        raise RuntimeError("Expected four L07 tiles")
+    for tile in tiles:
+        validity = tile.get("visibility") or {}
+        if validity.get("layer") != "visibility" or not validity.get("outside_source_zero"):
+            raise RuntimeError(f"{tile.get('name')}: no validity/visibility proof")
+        path = MANIFEST_PATH.parent / tile["file"]
+        if not path.is_file():
+            raise RuntimeError(f"Missing tile {path}")
+        with path.open("rb") as f:
+            actual = hashlib.file_digest(f, "sha256").hexdigest()
+        if actual != tile.get("sha256"):
+            raise RuntimeError(f"Stale tile {path}; refusing destructive bake")
+
 world = None
 actor_subsystem = None
 api = None
@@ -74,6 +92,13 @@ def setup_level_and_environment():
     if not world:
         raise RuntimeError("Failed to obtain editor world")
         
+    if any(isinstance(a, unreal.LandscapeProxy)
+           for a in actor_subsystem.get_all_level_actors()):
+        if os.environ.get("YACS_LESSON07_ALLOW_REBAKE") != "YES":
+            raise RuntimeError(
+                "Existing landscapes are protected; deliberate "
+                "YACS_LESSON07_ALLOW_REBAKE=YES required"
+            )
     # Delete any pre-existing landscape actors to ensure clean transfer
     existing_actors = actor_subsystem.get_all_level_actors()
     removed_count = 0
@@ -268,8 +293,14 @@ def finish():
     log(f"save_directory({BAKE_FOLDER}) returned: {saved_dir}")
     
     # Verification checks
-    passed = len(landscape_inventory) == 4 and all(t in state["baked_tiles"] for t in [tile["name"] for tile in tiles])
     total_components = sum(la["component_count"] for la in landscape_inventory)
+    bake_pass = (
+        not state["errors"] and bool(saved_map) and bool(saved_dir)
+        and len(landscape_inventory) == 4 and total_components == 4096
+        and set(state["baked_tiles"]) == {tile["name"] for tile in tiles}
+    )
+    # A visibility volume is not proof of holes without LandscapeVisibilityMask.
+    passed = False
     
     # 16-bit height quantization calculation
     # Range -5.0m to 1500.0m = 1505.0m = 150500 cm.
@@ -279,7 +310,11 @@ def finish():
     quantization_m = quantization_cm / 100.0
     
     final_report = {
-        "status": "PASS" if passed else "FAILED",
+        "status": "PENDING_VISIBILITY_MATERIAL_PROOF" if bake_pass else "FAILED",
+        "bake_operations_pass": bool(bake_pass),
+        "visibility_material_verified": False,
+        "saved_map": bool(saved_map),
+        "saved_assets": bool(saved_dir),
         "duration_seconds": time.time() - state["start_time"],
         "map_path": MAP_PATH,
         "baked_folder": BAKE_FOLDER,
@@ -326,6 +361,7 @@ def main():
     global tick_handle
     try:
         unreal.EditorPythonScripting.set_keep_python_script_alive(True)
+        preflight_tiles()
         setup_level_and_environment()
         init_houdini_api()
         tick_handle = unreal.register_slate_post_tick_callback(tick)

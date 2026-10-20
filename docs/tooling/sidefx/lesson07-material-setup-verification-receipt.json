@@ -1,5 +1,5 @@
 {
-  "status": "LESSON07_TECHNICAL_PASS",
+  "status": "LESSON07_REQUIRES_NATIVE_GEOMETRY_RECHECK",
   "timestamp": "2026-10-20T03:20:00+02:00",
   "lesson": "PEG-02-07",
   "lesson_title": "7 | Material Setup",
@@ -12,25 +12,45 @@
   "houdini_version": "22.0.466",
   "unreal_version": "5.8.2-56702186+++UE5+Release-5.8",
   "acceptance_criteria": {
-    "LESSON07_TECHNICAL_PASS": true,
+    "LESSON07_TECHNICAL_PASS": false,
     "visual_review": "PENDING_FINAL_M3_AUDIT",
     "performance_pass": false,
-    "performance_note": "DEFERRED_AFTER_M3"
+    "performance_note": "DEFERRED_AFTER_M3",
+    "native_recheck_required": true,
+    "reason": "Prior transfer omitted validity Alpha; visibility material and geometry raycasts have not passed native recheck."
   },
   "domain": {
-    "grid_dimensions": [16000, 16000, 1],
+    "grid_dimensions": [
+      16000,
+      16000,
+      1
+    ],
     "total_samples": 256000000,
     "gridspacing_m": 0.5,
-    "bounds_x_m": [-4000.0, 4000.0],
-    "bounds_z_m": [-4000.0, 4000.0],
-    "origin_sample_m": [-3999.75, 0.0, 3999.75]
+    "bounds_x_m": [
+      -4000,
+      4000
+    ],
+    "bounds_z_m": [
+      -4000,
+      4000
+    ],
+    "origin_sample_m": [
+      -3999.75,
+      0,
+      3999.75
+    ]
   },
   "ue_geometry_source_and_actual_geometry": {
     "source_cache": {
       "path": "D:/yacs/work/lesson06-unified-20261019/final_unified_idmap.bgeo.sc",
       "sha256": "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24",
       "size_bytes": 4808520505,
-      "dimensions": [16000, 16000, 1],
+      "dimensions": [
+        16000,
+        16000,
+        1
+      ],
       "spacing_m": 0.5
     },
     "transport_envelope": {
@@ -41,15 +61,33 @@
     },
     "transfer_tiles": {
       "tile_count": 4,
-      "tile_resolution": [8129, 8129],
-      "tile_span_m": [4064.0, 4064.0],
+      "tile_resolution": [
+        8129,
+        8129
+      ],
+      "tile_span_m": [
+        4064,
+        4064
+      ],
       "crop_centers_m": {
-        "SaCalobra_Unified_0_0": [-2032.25, -2032.25],
-        "SaCalobra_Unified_1_0": [2031.75, -2032.25],
-        "SaCalobra_Unified_0_1": [-2032.25, 2031.75],
-        "SaCalobra_Unified_1_1": [2031.75, 2031.75]
+        "SaCalobra_Unified_0_0": [
+          -2032.25,
+          -2032.25
+        ],
+        "SaCalobra_Unified_1_0": [
+          2031.75,
+          -2032.25
+        ],
+        "SaCalobra_Unified_0_1": [
+          -2032.25,
+          2031.75
+        ],
+        "SaCalobra_Unified_1_1": [
+          2031.75,
+          2031.75
+        ]
       },
-      "max_seam_elevation_error_m": 0.0
+      "max_seam_elevation_error_m": 0
     },
     "ue_landscape_actual_readback": {
       "level_package": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07",
@@ -65,45 +103,112 @@
       "component_size_quads": 254,
       "tile_quads": 8128,
       "tile_vertices": 8129,
-      "grid_spacing_cm": 50.0,
+      "grid_spacing_cm": 50,
       "assigned_material": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS",
       "actors": [
         {
           "name": "SaCalobra_Unified_0_0",
-          "location_cm": [-406425.0, -25.012, 0.0],
-          "scale": [50.0, 50.0, 185.7248],
-          "bounds_origin_cm": [-203225.0, -203225.0, 23678.5],
-          "bounds_extent_cm": [203200.0, 203200.0, 23865.6],
+          "location_cm": [
+            -406425,
+            -25.012,
+            0
+          ],
+          "scale": [
+            50,
+            50,
+            185.7248
+          ],
+          "bounds_origin_cm": [
+            -203225,
+            -203225,
+            23678.5
+          ],
+          "bounds_extent_cm": [
+            203200,
+            203200,
+            23865.6
+          ],
           "components": 1024
         },
         {
           "name": "SaCalobra_Unified_0_1",
-          "location_cm": [-406425.0, 406375.0, 0.0],
-          "scale": [50.0, 50.0, 561.3899],
-          "bounds_origin_cm": [-203225.0, 203175.0, 71820.6],
-          "bounds_extent_cm": [203200.0, 203200.0, 71890.8],
+          "location_cm": [
+            -406425,
+            406375,
+            0
+          ],
+          "scale": [
+            50,
+            50,
+            561.3899
+          ],
+          "bounds_origin_cm": [
+            -203225,
+            203175,
+            71820.6
+          ],
+          "bounds_extent_cm": [
+            203200,
+            203200,
+            71890.8
+          ],
           "components": 1024
         },
         {
           "name": "SaCalobra_Unified_1_0",
-          "location_cm": [-24.988, -25.012, 0.0],
-          "scale": [50.0, 50.0, 333.9102],
-          "bounds_origin_cm": [203175.0, -203225.0, 42570.9],
-          "bounds_extent_cm": [203200.0, 203200.0, 42907.5],
+          "location_cm": [
+            -24.988,
+            -25.012,
+            0
+          ],
+          "scale": [
+            50,
+            50,
+            333.9102
+          ],
+          "bounds_origin_cm": [
+            203175,
+            -203225,
+            42570.9
+          ],
+          "bounds_extent_cm": [
+            203200,
+            203200,
+            42907.5
+          ],
           "components": 1024
         },
         {
           "name": "SaCalobra_Unified_1_1",
-          "location_cm": [-24.988, 406375.0, 0.0],
-          "scale": [50.0, 50.0, 533.0430],
-          "bounds_origin_cm": [203175.0, 203175.0, 71796.3],
-          "bounds_extent_cm": [203200.0, 203200.0, 64658.5],
+          "location_cm": [
+            -24.988,
+            406375,
+            0
+          ],
+          "scale": [
+            50,
+            50,
+            533.043
+          ],
+          "bounds_origin_cm": [
+            203175,
+            203175,
+            71796.3
+          ],
+          "bounds_extent_cm": [
+            203200,
+            203200,
+            64658.5
+          ],
           "components": 1024
         }
       ],
       "height_quantization_16bit": {
-        "height_range_m": [-5.0, 1500.0],
-        "height_range_cm": 150500.0,
+        "height_range_m": [
+          -5,
+          1500
+        ],
+        "height_range_cm": 150500,
         "quantization_levels": 65535,
         "step_size_cm": 2.2964674,
         "step_size_m": 0.022964674,
@@ -112,8 +217,8 @@
       "sampled_heights_readback": [
         {
           "name": "Puig Major Summit",
-          "x_ue_cm": -128375.0,
-          "y_ue_cm": 349525.0,
+          "x_ue_cm": -128375,
+          "y_ue_cm": 349525,
           "x_h_m": -1283.75,
           "z_h_m": 3495.25,
           "source_h_m": 1437.16,
@@ -125,10 +230,10 @@
         },
         {
           "name": "Sa Calobra Cove Beach",
-          "x_ue_cm": 47000.0,
-          "y_ue_cm": -106000.0,
-          "x_h_m": 470.0,
-          "z_h_m": -1060.0,
+          "x_ue_cm": 47000,
+          "y_ue_cm": -106000,
+          "x_h_m": 470,
+          "z_h_m": -1060,
           "source_h_m": 10.34,
           "hit_z_ue_m": 10.291,
           "hit_actor": "SaCalobra_Unified_1_0",
@@ -138,8 +243,8 @@
         },
         {
           "name": "Scree Cluster 1 Centroid",
-          "x_ue_cm": -250278.0,
-          "y_ue_cm": 184595.0,
+          "x_ue_cm": -250278,
+          "y_ue_cm": 184595,
           "x_h_m": -2502.78,
           "z_h_m": 1845.95,
           "source_h_m": 460.95,
@@ -151,10 +256,10 @@
         },
         {
           "name": "Inland Center (0, 0)",
-          "x_ue_cm": 0.0,
-          "y_ue_cm": 0.0,
-          "x_h_m": 0.0,
-          "z_h_m": 0.0,
+          "x_ue_cm": 0,
+          "y_ue_cm": 0,
+          "x_h_m": 0,
+          "z_h_m": 0,
           "source_h_m": 473.51,
           "hit_z_ue_m": 473.117,
           "hit_actor": "SaCalobra_Unified_1_1",
@@ -168,52 +273,119 @@
   "idmap_and_color_registration": {
     "coordinate_math_derivation": {
       "sample_spacing_m": 0.5,
-      "ue_units_per_sample_cm": 50.0,
-      "domain_span_cm": 800000.0,
-      "domain_resolution_samples": 16000.0,
-      "terrain_scale": 50.0,
-      "terrain_resolution": 16000.0,
-      "uv_rotate": 0.0,
-      "uv_offset": [-8000.0, -8000.0, 0.0, 0.0],
-      "num_idmap_layers": 5.0
+      "ue_units_per_sample_cm": 50,
+      "domain_span_cm": 800000,
+      "domain_resolution_samples": 16000,
+      "terrain_scale": 50,
+      "terrain_resolution": 16000,
+      "uv_rotate": 0,
+      "uv_offset": [
+        -8000,
+        -8000,
+        0,
+        0
+      ],
+      "num_idmap_layers": 5
     },
     "landmark_alignment_verification": {
       "southwest_corner": {
-        "ue_coords_cm": [-400000.0, -400000.0],
-        "texture_pixel": [0, 0],
-        "uv_coord": [0.0, 0.0]
+        "ue_coords_cm": [
+          -400000,
+          -400000
+        ],
+        "texture_pixel": [
+          0,
+          0
+        ],
+        "uv_coord": [
+          0,
+          0
+        ]
       },
       "northeast_corner": {
-        "ue_coords_cm": [400000.0, 400000.0],
-        "texture_pixel": [15999, 15999],
-        "uv_coord": [0.9999375, 0.9999375]
+        "ue_coords_cm": [
+          400000,
+          400000
+        ],
+        "texture_pixel": [
+          15999,
+          15999
+        ],
+        "uv_coord": [
+          0.9999375,
+          0.9999375
+        ]
       },
       "puig_major_summit": {
-        "ue_coords_cm": [-128375.0, 349525.0],
-        "texture_pixel": [5432, 14990],
+        "ue_coords_cm": [
+          -128375,
+          349525
+        ],
+        "texture_pixel": [
+          5432,
+          14990
+        ],
         "expected_class": "Grass 2 (High Alpine)",
         "readback_id": 64
       },
       "sa_calobra_cove": {
-        "ue_coords_cm": [47000.0, -106000.0],
-        "texture_pixel": [8940, 5880],
+        "ue_coords_cm": [
+          47000,
+          -106000
+        ],
+        "texture_pixel": [
+          8940,
+          5880
+        ],
         "expected_class": "Cliffs",
         "readback_id": 191
       },
       "scree_cluster1": {
-        "ue_coords_cm": [-250278.0, 184595.0],
-        "texture_pixel": [2994, 11692],
+        "ue_coords_cm": [
+          -250278,
+          184595
+        ],
+        "texture_pixel": [
+          2994,
+          11692
+        ],
         "expected_class": "Scree",
         "readback_id": 255
       }
     },
-    "legal_id_codes": [0, 64, 128, 191, 255],
+    "legal_id_codes": [
+      0,
+      64,
+      128,
+      191,
+      255
+    ],
     "class_order": [
-      {"id": 0, "name": "Grass", "atlas_slice": 0},
-      {"id": 64, "name": "Grass2", "atlas_slice": 1},
-      {"id": 128, "name": "Sand", "atlas_slice": 2},
-      {"id": 191, "name": "Cliffs", "atlas_slice": 3},
-      {"id": 255, "name": "Scree", "atlas_slice": 4}
+      {
+        "id": 0,
+        "name": "Grass",
+        "atlas_slice": 0
+      },
+      {
+        "id": 64,
+        "name": "Grass2",
+        "atlas_slice": 1
+      },
+      {
+        "id": 128,
+        "name": "Sand",
+        "atlas_slice": 2
+      },
+      {
+        "id": 191,
+        "name": "Cliffs",
+        "atlas_slice": 3
+      },
+      {
+        "id": 255,
+        "name": "Scree",
+        "atlas_slice": 4
+      }
     ]
   },
   "material_configuration": {
@@ -223,16 +395,21 @@
       "uasset_size_bytes": 40261,
       "uasset_sha256": "2e2256df25fee01d9975c67570e8f7839836a707374ee7440c624ac5a64c428c",
       "readback_scalar_parameters": {
-        "Num IDmap Layers": 5.0,
-        "Terrain Resolution": 16000.0,
-        "Terrain Scale": 50.0,
-        "UV Rotate": 0.0,
+        "Num IDmap Layers": 5,
+        "Terrain Resolution": 16000,
+        "Terrain Scale": 50,
+        "UV Rotate": 0,
         "Global Colour Strength": 0.5,
-        "Global Specular Scale": 1.0,
+        "Global Specular Scale": 1,
         "Detail Brightness": 1.5
       },
       "readback_vector_parameters": {
-        "Offset": [-8000.0, -8000.0, 0.0, 0.0]
+        "Offset": [
+          -8000,
+          -8000,
+          0,
+          0
+        ]
       },
       "readback_texture_parameters": {
         "Terrain IDmap": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap",
@@ -248,7 +425,10 @@
         "uasset_size_bytes": 27552324,
         "uasset_sha256": "682d7c3a0bd80f58d7cfe0f924b08a537d3f28dd4301f9810770b0d34b571e33",
         "slices": 5,
-        "resolution": [2048, 2048],
+        "resolution": [
+          2048,
+          2048
+        ],
         "srgb": true,
         "compression": "TC_Default",
         "addressing": "Wrap"
@@ -258,7 +438,10 @@
         "uasset_size_bytes": 45545946,
         "uasset_sha256": "15e531bfa888fe7c8b87a8d9b8a94a860029c3944b48a109ec179c00af28d76b",
         "slices": 5,
-        "resolution": [2048, 2048],
+        "resolution": [
+          2048,
+          2048
+        ],
         "srgb": false,
         "compression": "TC_Normalmap",
         "addressing": "Wrap"
@@ -268,7 +451,10 @@
         "uasset_size_bytes": 12087571,
         "uasset_sha256": "0de2cd408ae436d5b8d96e5e5ea666eb3a9e0dc0c936b3a8d21beb8e0914476b",
         "slices": 5,
-        "resolution": [2048, 2048],
+        "resolution": [
+          2048,
+          2048
+        ],
         "srgb": false,
         "compression": "TC_Masks",
         "packing_contract": "R=AO, G=Roughness, B=Displacement",
@@ -294,11 +480,71 @@
       "method": "Native Houdini null targets + lookatpath parameter",
       "alignment_check": "Camera local -Z unit vector dot aim unit vector",
       "cameras": {
-        "cam_panorama": {"dot": 1.00000000, "pos": [-4500.0, 4200.0, -5000.0], "target": [0.0, 400.0, 0.0]},
-        "cam_puig_major": {"dot": 1.00000000, "pos": [-2800.0, 2200.0, 1800.0], "target": [-1283.75, 1437.16, 3495.25]},
-        "cam_sa_calobra_cove": {"dot": 1.00000000, "pos": [-200.0, 450.0, -1800.0], "target": [470.0, 10.34, -1060.0]},
-        "cam_scree_site": {"dot": 1.00000000, "pos": [-2550.0, 520.0, 1780.0], "target": [-2502.78, 460.95, 1845.95]},
-        "cam_transition": {"dot": 1.00000000, "pos": [-2420.0, 490.0, 1800.0], "target": [-2460.0, 470.0, 1830.0]}
+        "cam_panorama": {
+          "dot": 1,
+          "pos": [
+            -4500,
+            4200,
+            -5000
+          ],
+          "target": [
+            0,
+            400,
+            0
+          ]
+        },
+        "cam_puig_major": {
+          "dot": 1,
+          "pos": [
+            -2800,
+            2200,
+            1800
+          ],
+          "target": [
+            -1283.75,
+            1437.16,
+            3495.25
+          ]
+        },
+        "cam_sa_calobra_cove": {
+          "dot": 1,
+          "pos": [
+            -200,
+            450,
+            -1800
+          ],
+          "target": [
+            470,
+            10.34,
+            -1060
+          ]
+        },
+        "cam_scree_site": {
+          "dot": 1,
+          "pos": [
+            -2550,
+            520,
+            1780
+          ],
+          "target": [
+            -2502.78,
+            460.95,
+            1845.95
+          ]
+        },
+        "cam_transition": {
+          "dot": 1,
+          "pos": [
+            -2420,
+            490,
+            1800
+          ],
+          "target": [
+            -2460,
+            470,
+            1830
+          ]
+        }
       }
     },
     "scree_isolation_verification": {
@@ -310,7 +556,10 @@
     "interactive_preview_resample": {
       "node": "/obj/SA_CALOBRA_UNIFIED/PREVIEW_RESAMPLE",
       "mode": "By scale (0.125) with point filtering for discrete class labels",
-      "interactive_resolution": [2000, 2000],
+      "interactive_resolution": [
+        2000,
+        2000
+      ],
       "preserved_layers": 14,
       "export_nodes_connection": "Directly connected to FINAL_CACHE at full 16000x16000 (0.5m) native resolution"
     },
@@ -362,7 +611,7 @@
         "size_bytes": 382413,
         "sha256": "6b5baea368b21a1514308b2eafe764345bcff40a3a3e14af8a95802f18ed5347",
         "mean_pixel": 72.29,
-        "non_black_pct": 44.20,
+        "non_black_pct": 44.2,
         "description": "Puig Major summit peak closeup from /obj/cam_puig_major"
       },
       {
@@ -378,7 +627,7 @@
         "size_bytes": 183609,
         "sha256": "7ede8aec922403e49a146d40f5f774bd72fe271556e972420ed89e819cb2f778",
         "mean_pixel": 143.14,
-        "non_black_pct": 100.0,
+        "non_black_pct": 100,
         "description": "Closeup view of Scree slope surface from /obj/cam_scree_site"
       },
       {
@@ -386,7 +635,7 @@
         "size_bytes": 193216,
         "sha256": "40a87e60b9ac3d420334adc3cbf180e269c5606d44b4fbbd567ea1ff9d0e85ea",
         "mean_pixel": 142.13,
-        "non_black_pct": 100.0,
+        "non_black_pct": 100,
         "description": "Closeup view of Scree slope with red class isolation mask from /obj/cam_scree_site"
       },
       {
@@ -394,7 +643,7 @@
         "size_bytes": 82926,
         "sha256": "623e698401ef7c9966abac9335145b187f786eb6a5f7efcec2c7fb0f2b422a65",
         "mean_pixel": 165.42,
-        "non_black_pct": 100.0,
+        "non_black_pct": 100,
         "description": "Scree/Cliffs boundary transition closeup from /obj/cam_transition"
       }
     ]
@@ -406,8 +655,8 @@
         "file": "ue_panorama_material.png",
         "size_bytes": 2650872,
         "sha256": "c74bd5b84bef1f22a51e55dc3755758361ca6492486e3bd3c64b5913be3ad236",
-        "mean_pixel": 134.10,
-        "non_black_pct": 100.0,
+        "mean_pixel": 134.1,
+        "non_black_pct": 100,
         "visual_assessment": "Complete 8x8 km landscape panorama shaded with MI_Landscape_Instance_YACS showing realistic lighting, atmospheric depth, and harmonious macro color"
       },
       {
@@ -415,7 +664,7 @@
         "size_bytes": 1901267,
         "sha256": "2cfea8063cfc0904b76bb9037a46be72ea75fb45edf6ea37c4df3491ddb278f2",
         "mean_pixel": 173.59,
-        "non_black_pct": 100.0,
+        "non_black_pct": 100,
         "visual_assessment": "Identical panorama shot on neutral clay M_TerrainReview confirming pure geometric relief without shader masking or missing tiles"
       },
       {
@@ -431,7 +680,7 @@
         "size_bytes": 2155082,
         "sha256": "b187162d78ba1a31a7ce9a8a4d6629e8df212595548569f45e02819a99260efd",
         "mean_pixel": 100.17,
-        "non_black_pct": 100.0,
+        "non_black_pct": 100,
         "visual_assessment": "Identical camera on Scree Cluster 1 with neutral clay shading confirming terrain surface continuity and ridge geometry"
       },
       {
@@ -439,14 +688,14 @@
         "size_bytes": 2577999,
         "sha256": "c812c2f5e02b9610f3fa39a4ec225fe0e3b8febe2e4746a2ad96da3b79d0e8fc",
         "mean_pixel": 166.02,
-        "non_black_pct": 100.0,
+        "non_black_pct": 100,
         "visual_assessment": "Summit crags cleanly framed showing pale limestone cliff normal map relief and high-alpine grass blend"
       },
       {
         "file": "ue_closeup_sa_calobra_cove.png",
         "size_bytes": 2449739,
         "sha256": "f12a07b1c7cf8b9ee5c401b2832a2ad79089dfa37bc171b7251c7c715dcee5c8",
-        "mean_pixel": 96.30,
+        "mean_pixel": 96.3,
         "non_black_pct": 94.8,
         "visual_assessment": "Cove bay beach and limestone cliff walls correctly framed showing turquoise water edge and coastal rock"
       },
