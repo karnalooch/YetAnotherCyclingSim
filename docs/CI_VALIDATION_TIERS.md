@@ -361,17 +361,29 @@ compile/proof fingerprints and expected DLLs. The pointer never authorizes
 For migration without a pointer, selection recovers the newest complete green
 schema-3 warm/isolated state. Invalidated states remain invalidated; malformed
 pointers or missing active worktrees stop cleanup. Interrupted pointer publication
-leaves the old pointer intact. Cleanup excludes the active worktree, moves and
-hash-verifies materialized LFS assets through the existing retention helper before
-removing stale build worktrees. Private standalone Git LFS object bytes are also
-archived and hash-verified before deletion; shared linked Git stores are never
-moved or pruned. Active-worktree materialized assets are retained before entering
-`actions/checkout`, not only before the later sanitization step. Cleanup does not
-remove region capture worktrees or shared LFS storage. Linked `.git` metadata is converted to an independent local
+leaves the old pointer intact. The 2026-10-20 correction to
+[`unreal_ci_workspace.py`](../scripts/ci/unreal_ci_workspace.py) keeps the existing
+`select` entrypoint but restricts retirement to direct `Intermediate` and
+`DerivedDataCache` directories in inactive, valid `_unreal-build-<run>-<attempt>`
+checkouts. It preserves each root, source, Git metadata/objects, Binaries, Saved
+and proof files, Content and LFS; a root without `.git` is preserved. The selected
+cache is excluded and its pointer is rechecked before deletion. Logical removed
+bytes and measured free space are separate results. Follow the
+[workspace retention policy](ci/RUNNER_WORKSPACE_RETENTION.md); native execution
+of this correction remains `NOT_RUN`, so no reclaimed space is claimed.
+Active-worktree materialized assets are still retained before entering
+`actions/checkout`, not only before its separate sanitization step. Linked `.git` metadata is converted to an independent local
 repository before checkout, without moving assets or build outputs: the pinned
 `actions/checkout` implementation expects a `.git` directory and can discard a
 linked-worktree checkout. Local Git objects are copied without alternates so
-retiring an older build cannot break the active repository.
+the active repository does not depend on an older build's Git store.
+
+The complete read-only fingerprint inventory in
+[`materialize_unreal_cache_inputs.py`](../scripts/ci/materialize_unreal_cache_inputs.py)
+now admits up to 1024 entries instead of 512, covering the observed 670 current
+compile/proof inputs while checking every file's bytes. The separate 256 repair
+targets and 2 MiB per-file bounds are unchanged. This is a bounded enumeration
+repair, not a fingerprint exemption; its new native run remains `NOT_RUN`.
 
 The compile fingerprint covers the project descriptor, compiled project/plugin
 inputs and the build/engine-selection orchestration used by the normal Unreal lane.

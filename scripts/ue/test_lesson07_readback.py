@@ -3,11 +3,13 @@
 from copy import deepcopy
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shutil
 import subprocess
 import tempfile
+from textwrap import dedent
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
@@ -526,6 +528,61 @@ class PreparationBoundaryTests(unittest.TestCase):
 
 
 class WorkflowBoundaryTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("git") and shutil.which("pwsh"), "Git and PowerShell 7 required for actual checkout fixture")
+    def test_owned_workflow_git_config_preserves_blob_bytes_after_crlf_baseline(self):
+        value = WORKFLOW.read_text(encoding="utf-8")
+        step = value.split("      - name: Isolate Git configuration for the new code checkout\n", 1)[1]
+        body = dedent(step.split("        run: |\n", 1)[1].split("\n      - name:", 1)[0])
+        body = body.replace("${{ github.run_id }}", "fixture").replace("${{ github.run_attempt }}", "1")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = root / "repo"
+            repo.mkdir()
+            template = root / "empty-template"
+            template.mkdir()
+            private_global = root / "private-global.gitconfig"
+            original_config = b"[core]\n\tautocrlf = false\n\teol = crlf\n"
+            private_global.write_bytes(original_config)
+            env = {key: item for key, item in os.environ.items() if not key.upper().startswith("GIT_")}
+            env.update(GIT_CONFIG_GLOBAL=str(private_global), GIT_CONFIG_NOSYSTEM="1",
+                       GIT_ATTR_NOSYSTEM="1", GIT_TEMPLATE_DIR=str(template),
+                       RUNNER_TEMP=str(root), GITHUB_ENV=str(root / "github-env"))
+
+            def git(*args):
+                return subprocess.run(["git", *args], cwd=repo, env=env, capture_output=True,
+                                      check=True, timeout=15).stdout
+
+            relative = "scripts/ue/Invoke-YacsLesson07Readback.ps1"
+            target = repo / relative
+            target.parent.mkdir(parents=True)
+            expected = WRAPPER.read_bytes().replace(b"\r\n", b"\n")
+            target.write_bytes(expected)
+            (repo / ".gitattributes").write_bytes(b"* text=auto\n")
+            git("init", "--quiet")
+            git("add", "--", ".gitattributes", relative)
+            blob = git("show", ":" + relative)
+            self.assertEqual(blob, expected)
+            target.unlink()
+            git("checkout-index", "--force", "--", relative)
+            self.assertEqual(target.read_bytes(), blob.replace(b"\n", b"\r\n"))
+            self.assertNotEqual(hashlib.sha256(target.read_bytes()).digest(), hashlib.sha256(blob).digest())
+
+            script = root / "workflow-config.ps1"
+            script.write_text(body, encoding="utf-8")
+            subprocess.run(["pwsh", "-NoLogo", "-NoProfile", "-NonInteractive", "-File", str(script)],
+                           cwd=repo, env=env, capture_output=True, check=True, timeout=30)
+            exported = dict(line.split("=", 1) for line in (root / "github-env").read_text(encoding="utf-8-sig").splitlines())
+            self.assertEqual(exported, {"GIT_CONFIG_GLOBAL": str(root / "l07-fixture-1.gitconfig"),
+                                        "GIT_CONFIG_NOSYSTEM": "1"})
+            env.update(exported)
+            self.assertEqual(git("config", "--global", "--get", "core.autocrlf").strip(), b"false")
+            self.assertEqual(git("config", "--global", "--get", "core.eol").strip(), b"lf")
+            target.unlink()
+            git("checkout-index", "--force", "--", relative)
+            self.assertEqual(target.read_bytes(), blob)
+            self.assertEqual(hashlib.sha256(target.read_bytes()).digest(), hashlib.sha256(blob).digest())
+            self.assertEqual(private_global.read_bytes(), original_config)
+
     @unittest.skipUnless(shutil.which("jq"), "jq unavailable for actual workflow selector execution")
     def test_actual_ci_selector_ignores_other_contexts_and_never_uses_older_green_run(self):
         workflow = WORKFLOW.read_text(encoding="utf-8")

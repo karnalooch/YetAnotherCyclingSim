@@ -254,9 +254,14 @@ class UnrealWorkspaceTests(unittest.TestCase):
         self.publish()
         other = self.workspace / "_unreal-build-99-1"
         shutil.copytree(self.root, other)
+        derived = other / "Intermediate/fixture.obj"
+        derived.parent.mkdir()
+        derived.write_bytes(b"reproducible build output")
         # A downstream preparation failure has no authority over compile state.
         cache.cleanup(self.workspace, self.name, "101-1")
-        self.assertFalse(other.exists())
+        self.assertTrue(other.exists())
+        self.assertFalse(derived.parent.exists())
+        self.assertEqual(cache.verified(other), self.state)
         self.assertEqual(cache.select(self.workspace), self.name)
         self.assertEqual(cache.verified(self.root)["CompileHead"], self.head)
         self.assertTrue((self.root / "Binaries/Win64" / cache.BINARY_NAMES[0]).exists())
@@ -462,100 +467,216 @@ class UnrealWorkspaceTests(unittest.TestCase):
         )
         self.assertFalse((linked / ".git/objects/info/alternates").exists())
 
-    def test_cleanup_retains_materialized_assets_before_deletion(self):
+    def test_cleanup_removes_only_inactive_derived_outputs_and_preserves_unique_bytes(
+        self,
+    ):
         self.publish()
         other = self.workspace / "_unreal-build-99-1"
         shutil.copytree(self.root, other)
-        asset = other / "Content/fixture.uasset"
-        asset.parent.mkdir()
-        asset.write_bytes(b"materialized fixture")
-        cache.cleanup(self.workspace, self.name, "101-1")
-        retained = (
-            self.workspace
-            / "_yacs-retained-lfs/cache-101-1-_unreal-build-99-1/Content/fixture.uasset"
+        tracked = other / "Source/Tracked.cpp"
+        tracked.parent.mkdir()
+        tracked.write_bytes(b"committed source\n")
+        subprocess.run(["git", "add", "Source/Tracked.cpp"], cwd=other, check=True)
+        subprocess.run(
+            [
+                "git",
+                "-c",
+                "user.name=Test",
+                "-c",
+                "user.email=test@example.invalid",
+                "commit",
+                "-qm",
+                "retired source fixture",
+            ],
+            cwd=other,
+            check=True,
         )
-        self.assertEqual(retained.read_bytes(), b"materialized fixture")
-        self.assertTrue(self.root.exists())
+        tracked.write_bytes(b"unique uncommitted tracked source\n")
+        preserved = {
+            "Source/Local.cpp": b"unique untracked source",
+            "Content/fixture.uasset": b"unique materialized asset",
+            "Content/fixture.umap": b"unique saved world",
+            "Saved/proof.png": b"unique GPU observation",
+            "Saved/Logs/failed.log": b"unique failed native observation",
+            "Saved/diagnostic.umap": b"unique diagnostic package outside Content",
+            ".git/lfs/objects/ab/cd/payload": b"private LFS bytes",
+            "Plugins/Fixture/Binaries/plugin.dll": b"retained plugin binary",
+            "Plugins/Fixture/Intermediate/local.obj": b"outside direct-child scope",
+            "local-notes.txt": b"unique local notes",
+        }
+        for relative, payload in preserved.items():
+            path = other / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(payload)
+        for name in ("Intermediate", "DerivedDataCache"):
+            (other / name).mkdir()
+            (other / name / "fixture.bin").write_bytes(b"derived")
+            (self.root / name).mkdir()
+            (self.root / name / "active.bin").write_bytes(b"active derived bytes")
+        snapshots = {}
+        for root in (self.root, other):
+            snapshots[root] = {
+                path.relative_to(root).as_posix(): path.read_bytes()
+                for path in root.rglob("*")
+                if path.is_file()
+                and (
+                    root == self.root
+                    or path.relative_to(root).parts[0]
+                    not in ("Intermediate", "DerivedDataCache")
+                )
+            }
+        pointer_before = (self.workspace / cache.POINTER).read_bytes()
 
-    def test_cleanup_quarantines_incomplete_old_build_without_deleting_outputs(self):
+        with patch("builtins.print") as log:
+            cache.cleanup(self.workspace, self.name, "101-1")
+
+        for root, expected in snapshots.items():
+            actual = {
+                path.relative_to(root).as_posix(): path.read_bytes()
+                for path in root.rglob("*")
+                if path.is_file()
+            }
+            self.assertEqual(actual, expected)
+        self.assertFalse((other / "Intermediate").exists())
+        self.assertFalse((other / "DerivedDataCache").exists())
+        self.assertFalse((self.workspace / "_yacs-retained-lfs").exists())
+        self.assertEqual((self.workspace / cache.POINTER).read_bytes(), pointer_before)
+        messages = [str(call.args[0]) for call in log.call_args_list]
+        self.assertTrue(
+            any("plan_count=2 plan_files=2 plan_bytes=14" in m for m in messages)
+        )
+        self.assertTrue(
+            any(
+                "removed_count=2 removed_files=2 removed_bytes=14" in m
+                for m in messages
+            )
+        )
+        self.assertTrue(any("free_after_bytes=" in m for m in messages))
+
+    def test_cleanup_preserves_incomplete_old_build_in_place(self):
         self.publish()
         other = self.workspace / "_unreal-build-99-1"
         other.mkdir()
         payload = other / "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log"
         payload.parent.mkdir(parents=True)
         payload.write_bytes(b"preserve interrupted build")
+        derived = other / "Intermediate/fixture.obj"
+        derived.parent.mkdir()
+        derived.write_bytes(b"incomplete checkout output")
 
         cache.cleanup(self.workspace, self.name, "101-1")
 
-        quarantine = (
-            self.workspace
-            / "_yacs-unreal-ci/quarantine/101-1-_unreal-build-99-1-cleanup"
-        )
-        self.assertFalse(other.exists())
-        self.assertEqual(
-            (
-                quarantine / "Saved/RuntimeProof/CI/Unreal/Proof/automation_editor.log"
-            ).read_bytes(),
-            b"preserve interrupted build",
-        )
+        self.assertTrue(other.exists())
+        self.assertEqual(payload.read_bytes(), b"preserve interrupted build")
+        self.assertEqual(derived.read_bytes(), b"incomplete checkout output")
+        self.assertFalse((self.workspace / "_yacs-unreal-ci/quarantine").exists())
         self.assertTrue(self.root.exists())
         self.assertEqual(cache.select(self.workspace), self.name)
 
-    def test_cleanup_preserves_locked_incomplete_old_build(self):
+    def test_cleanup_without_pointer_preserves_outputs_without_recovering_pointer(self):
         self.publish()
         other = self.workspace / "_unreal-build-99-1"
-        other.mkdir()
-        payload = other / "Intermediate/locked.bin"
+        shutil.copytree(self.root, other)
+        payload = other / "Intermediate/fixture.bin"
         payload.parent.mkdir(parents=True)
-        payload.write_bytes(b"locked fixture")
+        payload.write_bytes(b"preserve unknown active output")
+        (self.workspace / cache.POINTER).unlink()
 
-        real_replace = cache.os.replace
-
-        def locked_replace(source, destination):
-            if Path(source) == other:
-                raise PermissionError("fixture lock")
-            return real_replace(source, destination)
-
-        with patch.object(cache.os, "replace", side_effect=locked_replace):
-            cache.cleanup(self.workspace, self.name, "101-1")
+        cache.cleanup(self.workspace, self.name, "101-1")
 
         self.assertTrue(other.exists())
-        self.assertEqual(payload.read_bytes(), b"locked fixture")
+        self.assertEqual(payload.read_bytes(), b"preserve unknown active output")
+        self.assertFalse((self.workspace / cache.POINTER).exists())
         self.assertTrue(self.root.exists())
-        self.assertEqual(cache.select(self.workspace), self.name)
 
-    def test_cleanup_archives_private_lfs_objects_without_deleting_bytes(self):
+    def test_cleanup_preserves_private_lfs_objects_at_original_paths(self):
         self.publish()
         other = self.workspace / "_unreal-build-99-1"
         shutil.copytree(self.root, other)
         obj = other / ".git/lfs/objects/ab/cd/payload"
         obj.parent.mkdir(parents=True)
         obj.write_bytes(b"private LFS fixture")
+        output = other / "DerivedDataCache/fixture.bin"
+        output.parent.mkdir()
+        output.write_bytes(b"reproducible data")
         cache.cleanup(self.workspace, self.name, "101-1")
-        retained = (
-            self.workspace
-            / "_yacs-retained-lfs/cache-101-1-_unreal-build-99-1/git-lfs-objects/ab/cd/payload"
-        )
-        self.assertEqual(retained.read_bytes(), b"private LFS fixture")
-        self.assertFalse(other.exists())
+        self.assertEqual(obj.read_bytes(), b"private LFS fixture")
+        self.assertTrue(other.exists())
+        self.assertFalse(output.parent.exists())
+        self.assertFalse((self.workspace / "_yacs-retained-lfs").exists())
 
-    def test_cleanup_preserves_locked_retired_verified_build(self):
+    def test_cleanup_locked_output_fails_without_deleting_retired_checkout(self):
         self.publish()
         other = self.workspace / "_unreal-build-99-1"
         shutil.copytree(self.root, other)
+        output = other / "Intermediate/locked.obj"
+        output.parent.mkdir()
+        output.write_bytes(b"preserve locked output")
 
         real_rmtree = cache.shutil.rmtree
 
         def locked_rmtree(path, *args, **kwargs):
-            if Path(path) == other:
-                raise PermissionError("fixture locked pack")
+            if Path(path) == output.parent:
+                raise PermissionError("fixture locked derived output")
             return real_rmtree(path, *args, **kwargs)
 
-        with patch.object(cache.shutil, "rmtree", side_effect=locked_rmtree):
+        with (
+            patch.object(cache.shutil, "rmtree", side_effect=locked_rmtree),
+            self.assertRaisesRegex(PermissionError, "fixture locked derived output"),
+        ):
             cache.cleanup(self.workspace, self.name, "101-1")
 
         self.assertTrue(other.exists())
+        self.assertEqual(output.read_bytes(), b"preserve locked output")
+        self.assertEqual(cache.verified(other), self.state)
         self.assertTrue(self.root.exists())
+        self.assertEqual(cache.select(self.workspace), self.name)
+
+    def test_cleanup_pointer_change_prevents_following_output_deletion(self):
+        self.publish()
+        other = self.workspace / "_unreal-build-99-1"
+        shutil.copytree(self.root, other)
+        for name in ("Intermediate", "DerivedDataCache"):
+            (other / name).mkdir()
+            (other / name / "fixture.bin").write_bytes(b"derived output")
+        real_rmtree = cache.shutil.rmtree
+
+        def change_pointer_after_first_delete(path, *args, **kwargs):
+            self.assertEqual(Path(path), other / "Intermediate")
+            real_rmtree(path, *args, **kwargs)
+            cache.write_pointer(self.workspace, other.name)
+
+        with (
+            patch.object(
+                cache.shutil, "rmtree", side_effect=change_pointer_after_first_delete
+            ),
+            self.assertRaisesRegex(ValueError, "Active cache changed"),
+        ):
+            cache.cleanup(self.workspace, self.name, "101-1")
+
+        self.assertFalse((other / "Intermediate").exists())
+        self.assertEqual(
+            (other / "DerivedDataCache/fixture.bin").read_bytes(), b"derived output"
+        )
+        self.assertEqual(cache.select(self.workspace), other.name)
+        self.assertEqual(cache.verified(self.root), self.state)
+
+    def test_cleanup_rejects_linked_candidate_before_any_deletion(self):
+        self.publish()
+        other = self.workspace / "_unreal-build-99-1"
+        shutil.copytree(self.root, other)
+        output = other / "Intermediate/fixture.obj"
+        output.parent.mkdir()
+        output.write_bytes(b"preserve pending link inspection")
+        protected = self.workspace / "outside.bin"
+        protected.write_bytes(b"outside candidate")
+        (other / "Intermediate/linked.bin").symlink_to(protected)
+
+        with self.assertRaisesRegex(ValueError, "link/junction"):
+            cache.cleanup(self.workspace, self.name, "101-1")
+
+        self.assertEqual(output.read_bytes(), b"preserve pending link inspection")
+        self.assertEqual(protected.read_bytes(), b"outside candidate")
         self.assertEqual(cache.select(self.workspace), self.name)
 
     def test_selection_retains_assets_before_checkout_and_exports_active_path(self):
