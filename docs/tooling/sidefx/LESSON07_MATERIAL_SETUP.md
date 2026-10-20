@@ -80,14 +80,30 @@ checkpoint hashes, module compatibility, MCP discovery and native readback
 were not reached. Report artifact `12305610506` has ZIP SHA256
 `d3cab464fe202a4e588f0a6f96c997f4d3d21156620858efe8a61cac74e9f79a`.
 
-The combined guard does not reveal whether the canonical host descriptor's
-engine association or required-module counts differ. The original production
-read helpers and predicate pass the committed descriptor under verified
-PowerShell 7.6.6; an explicit dictionary-key rewrite is not an established fix.
-A follow-up **read-only** inventory records bounded engine association, module
-names/types, descriptor hash and both predicate counts before any new startup
-attempt. The canonical descriptor is not overwritten. Task installation,
-startup, MCP discovery, native readback and post-job survival remain unverified.
+The [read-only follow-up 39510504128](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39510504128/job/118930037564)
+at source `2609d45d881e8a9fce6a2022ac24d3268a3a22a7` identified the actual
+cause: the canonical descriptor's engine association is
+`{FEF18A3B-4D4B-15FD-E2E3-E5AA38A2AB75}`, not the literal `5.8`. Both required
+modules have the correct names/types and all four property/key match counts
+are one. The descriptor SHA256 is
+`f00d5117b63b3a6a5d200ff4ffab035a770712cd358b3e6f4cb50b6063c06c66`.
+At `2026-10-20T22:46:36.3229338Z`, there was still no deployed Editor process
+or discovery file. The diagnostic artifact is `12305906278`, ZIP SHA256
+`625242854e2f5add1814173ba724975f9a6804314aa8b4d8e8fd39be2dab920c`.
+
+The startup guard now admits this **specific observed GUID together with that
+exact descriptor hash**, as well as the previously supported `5.8` descriptor.
+It still independently requires the fixed engine executable, installed engine
+version/build and compatible module BuildIds. An unknown GUID or changed
+descriptor hash is rejected. The canonical descriptor is not rewritten.
+[Epic's project documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/managing-game-code-in-unreal-engine)
+describes GUID engine associations for locally registered installations, and
+its [command-line guide](https://dev.epicgames.com/documentation/en-us/unreal-engine/command-line-arguments-in-unreal-engine)
+supports launching a project/map through an explicit Editor executable. This
+does not claim that the host GUID's registry mapping has been read.
+The PowerShell dictionary hypothesis was disproved by both local reproduction
+and the host's matching counts. Task installation, startup, MCP discovery,
+native readback and post-job survival remain unverified pending the new attempt.
 
 The first-stage inventory artifact is `12303367952`, ZIP SHA256
 `6fffea19df0900427e77881e4dbfdba3ab8f75d992d39027c813b78ecc946c0e`.

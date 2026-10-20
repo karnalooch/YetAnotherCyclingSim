@@ -1653,7 +1653,7 @@
     "performance_pass": false
   },
   "remote_connection_continuation_20261021": {
-    "status": "EDITOR_ABSENT_STARTUP_BLOCKED_PROJECT_PREFLIGHT",
+    "status": "ENGINE_GUID_OBSERVED_STARTUP_RETRY_PREPARED",
     "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
     "owner_authorized_missing_connection_infrastructure": true,
     "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
@@ -1662,7 +1662,7 @@
     "asset_changes": [],
     "editor_lifecycle_changes": [],
     "performance_pass": false,
-    "note": "Remote inventory found no deployed Editor or Wingman discovery file. Exact-source protected CI passed, but the first connection attempt stopped at project descriptor preflight before task registration, startup, saved hash verification or MCP discovery. Actual host engine association/module counts require read-only observation; the PowerShell dictionary-bug hypothesis did not reproduce. Historical PID 19056 is not treated as live identity.",
+    "note": "Remote inventory found no deployed Editor or Wingman discovery file. Exact-source protected CI passed, but the first connection attempt stopped before task registration at a literal engine association check. Read-only host evidence identified a GUID association with both required modules intact. The retry admits only that observed GUID and exact descriptor hash while preserving installed engine/module checks. The PowerShell dictionary-bug hypothesis was disproved. Historical PID 19056 is not treated as live identity.",
     "inventory": {
       "source_commit": "4bf894dd8dccc482a3e90a53bce6d6b01653e6a7",
       "run_id": 39507345660,
@@ -1711,7 +1711,28 @@
       "artifact_id": 12305610506,
       "artifact_sha256": "d3cab464fe202a4e588f0a6f96c997f4d3d21156620858efe8a61cac74e9f79a"
     },
-    "host_project_descriptor_followup": "READ_ONLY_OBSERVATION_PENDING",
+    "host_project_descriptor_followup": {
+      "status": "ENGINE_ASSOCIATION_GUID_OBSERVED",
+      "source_commit": "2609d45d881e8a9fce6a2022ac24d3268a3a22a7",
+      "run_id": 39510504128,
+      "job_id": 118930037564,
+      "conclusion": "success",
+      "engine_association": "{FEF18A3B-4D4B-15FD-E2E3-E5AA38A2AB75}",
+      "descriptor_sha256": "f00d5117b63b3a6a5d200ff4ffab035a770712cd358b3e6f4cb50b6063c06c66",
+      "required_module_names_and_types_match": true,
+      "runtime_property_count": 1,
+      "runtime_key_count": 1,
+      "editor_property_count": 1,
+      "editor_key_count": 1,
+      "observed_utc": "2026-10-20T22:46:36.3229338Z",
+      "editors": [],
+      "discovery_status": "NOT_FOUND",
+      "artifact_id": 12305906278,
+      "artifact_sha256": "625242854e2f5add1814173ba724975f9a6804314aa8b4d8e8fd39be2dab920c",
+      "canonical_project_written": false,
+      "dictionary_bug_reproduced": false
+    },
+    "startup_retry_execution": "NOT_RUN",
     "post_job_survival": "NOT_RUN"
   }
 }

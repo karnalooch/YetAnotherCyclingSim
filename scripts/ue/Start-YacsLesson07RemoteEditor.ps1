@@ -76,6 +76,60 @@ function Read-L07Json([string]$Path, [long]$Limit=256KB) {
     $null=Get-L07FileProof $Path $Limit
     return (Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -AsHashtable -Depth 32)
 }
+function Get-L07ReleaseEntry([Collections.IDictionary]$Install, [string]$Relative) {
+    # Keep source-entry matching explicit for dictionary-backed JSON records.
+    $rows=@($Install['files'] | Where-Object {
+        $_ -is [Collections.IDictionary] -and $_['path'] -is [string] -and $_['path'] -ceq $Relative
+    })
+    if ($rows.Count -ne 1) { Stop-L07 'RELEASE_FILE_HASH' }
+    return $rows[0]
+}
+function Assert-L07ProjectIdentity([Collections.IDictionary]$ProjectData, [string]$DescriptorSha256) {
+    $association=$ProjectData['EngineAssociation']
+    # Native read-only observation: run 39510504128, job 118930037564.
+    # This is one saved descriptor, not admission for arbitrary custom engines.
+    $knownGuid='{FEF18A3B-4D4B-15FD-E2E3-E5AA38A2AB75}'
+    $knownDescriptorHash='f00d5117b63b3a6a5d200ff4ffab035a770712cd358b3e6f4cb50b6063c06c66'
+    $associationBasis=if ($association -is [string] -and $association -ceq '5.8') { 'NUMERIC_5_8' }
+        elseif ($association -is [string] -and $association -ceq $knownGuid -and $DescriptorSha256 -ceq $knownDescriptorHash) { 'OBSERVED_GUID_AND_DESCRIPTOR_SHA256' }
+        else { 'NOT_ADMITTED' }
+    $modules=@($ProjectData['Modules'])
+    $runtimeCount=@($modules | Where-Object {
+        $_ -is [Collections.IDictionary] -and $_['Name'] -is [string] -and $_['Name'] -ceq 'YetAnotherCyclingSim'
+    }).Count
+    $editorCount=@($modules | Where-Object {
+        $_ -is [Collections.IDictionary] -and $_['Name'] -is [string] -and $_['Name'] -ceq 'YetAnotherCyclingSimEditor'
+    }).Count
+    $runtimeTypeCount=@($modules | Where-Object {
+        $_ -is [Collections.IDictionary] -and $_['Name'] -is [string] -and $_['Type'] -is [string] -and
+            $_['Name'] -ceq 'YetAnotherCyclingSim' -and $_['Type'] -ceq 'Runtime'
+    }).Count
+    $editorTypeCount=@($modules | Where-Object {
+        $_ -is [Collections.IDictionary] -and $_['Name'] -is [string] -and $_['Type'] -is [string] -and
+            $_['Name'] -ceq 'YetAnotherCyclingSimEditor' -and $_['Type'] -ceq 'Editor'
+    }).Count
+    $observedModules=@(foreach ($module in ($modules | Select-Object -First 32)) {
+        $name=$null; $type=$null
+        if ($module -is [Collections.IDictionary]) { $name=$module['Name']; $type=$module['Type'] }
+        [ordered]@{
+            name=if ($name -is [string] -and $name -cmatch '^[A-Za-z][A-Za-z0-9_]{0,127}$') { $name } else { 'INVALID' }
+            type=if ($type -is [string] -and $type -cin @('Runtime','RuntimeNoCommandlet','RuntimeAndProgram','CookedOnly','UncookedOnly','Developer','DeveloperTool','Editor','EditorNoCommandlet','EditorAndProgram','Program','ServerOnly','ClientOnly','ClientOnlyNoCommandlet')) { $type } else { 'INVALID' }
+        }
+    })
+    $report.project_observation=[ordered]@{
+        engine_association=if ($association -is [string] -and $association -cmatch '^(?:[0-9]{1,3}(?:\.[0-9]{1,3}){1,2}|\{[A-Fa-f0-9]{8}(?:-[A-Fa-f0-9]{4}){3}-[A-Fa-f0-9]{12}\})$') { $association } else { 'INVALID' }
+        descriptor_sha256=if ($DescriptorSha256 -cmatch '^[a-f0-9]{64}$') { $DescriptorSha256 } else { 'INVALID' }
+        admission_basis='NOT_ADMITTED'
+        module_count=$modules.Count; modules=$observedModules; modules_truncated=($modules.Count -gt 32)
+        required_runtime_matches=$runtimeCount; required_editor_matches=$editorCount
+        required_runtime_type_matches=$runtimeTypeCount; required_editor_type_matches=$editorTypeCount
+    }
+    if ($associationBasis -ceq 'NOT_ADMITTED' -or $runtimeCount -ne 1 -or $editorCount -ne 1 -or
+        $runtimeTypeCount -ne 1 -or $editorTypeCount -ne 1) {
+        Stop-L07 'PROJECT_MODULES_OR_ENGINE'
+    }
+    $report.project_observation.admission_basis=$associationBasis
+}
 function Get-L07ConsoleSid {
     $user=[string](Get-CimInstance Win32_ComputerSystem -ErrorAction Stop).UserName
     if (-not $user) { Stop-L07 'NO_CONSOLE_OWNER' }
@@ -164,9 +218,9 @@ try {
         $install=Read-L07Json (Join-Path $release 'installation.json')
         if ($install.source_sha -cne $ExpectedHead -or @($install.files).Count -ne $closure.Count) { Stop-L07 'RELEASE_IDENTITY' }
         foreach ($relative in $closure) {
-            $rows=@($install.files | Where-Object path -CEQ $relative)
+            $entry=Get-L07ReleaseEntry $install $relative
             $proof=Get-L07FileProof (Join-Path $release $relative) 256KB
-            if ($rows.Count -ne 1 -or $rows[0].sha256 -cne $proof.sha256) { Stop-L07 'RELEASE_FILE_HASH' }
+            if ($entry['sha256'] -cne $proof.sha256) { Stop-L07 'RELEASE_FILE_HASH' }
         }
         $report.phase='DESKTOP'
         $sid=(Get-L07ConsoleSid)
@@ -205,11 +259,14 @@ try {
     $report.free_d_bytes=[IO.DriveInfo]::new('D:\').AvailableFreeSpace
     if ($report.free_d_bytes -lt 5GB) { Stop-L07 'DISK_RESERVE' }
     $report.phase='PROJECT'
-    $projectData=Read-L07Json $project
-    if ($projectData.EngineAssociation -cne '5.8' -or
-        @($projectData.Modules | Where-Object Name -CEQ 'YetAnotherCyclingSim').Count -ne 1 -or
-        @($projectData.Modules | Where-Object Name -CEQ 'YetAnotherCyclingSimEditor').Count -ne 1) { Stop-L07 'PROJECT_MODULES_OR_ENGINE' }
-    $report.file_proofs+=,(Get-L07FileProof $project 256KB)
+    $projectProof=Get-L07FileProof $project 256KB
+    $report.file_proofs+=,$projectProof
+    # Bind the parsed JSON to the exact bytes whose descriptor hash is admitted.
+    $projectBytes=[IO.File]::ReadAllBytes($project)
+    $readHash=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($projectBytes)).ToLowerInvariant()
+    if ($projectBytes.Length -ne $projectProof.size_bytes -or $readHash -cne $projectProof.sha256) { Stop-L07 'PROJECT_CHANGED_DURING_READ' }
+    $projectData=[Text.UTF8Encoding]::new($false,$true).GetString($projectBytes).TrimStart([char]0xFEFF) | ConvertFrom-Json -AsHashtable -Depth 32
+    Assert-L07ProjectIdentity $projectData $projectProof.sha256
     $report.phase='CHECKPOINT'
     $materialRoot='Content/Generated/YACS/Lesson07_Unified/Materials/'
     $pins=@(
