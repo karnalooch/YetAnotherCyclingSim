@@ -170,3 +170,12 @@ The public [Embark landscape workflow](https://www.sidefx.com/learn/talks/embark
 supports the producer/prepared-data/Unreal-consumer boundary. The directory
 layout and checkpoint implementation are YACS decisions, not claims about
 Embark's unpublished storage infrastructure.
+
+## Windows automatic storage maintenance (2026-10-20)
+
+Review [safe auto-clean](YACS_STORAGE_AUTOCLEAN.md). The existing 5-GiB
+runner-job admission hook remains unchanged. A separate owner-installed
+Windows task can audit or delete ONLY old numbered build caches and
+individual filesystem DerivedDataCache entries. It never touches Zen,
+source/accepted Houdini data, Unreal maps, Git LFS or proof retention.
+The task is independent of GitHub Actions and is audit-only by default.

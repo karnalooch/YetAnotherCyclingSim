@@ -1,0 +1,40 @@
+name: YACS auto-clean script static validation
+
+on:
+  pull_request:
+    paths:
+      - scripts/runner/Invoke-YacsStorageAutoclean.ps1
+      - scripts/runner/Install-YacsStorageAutoclean.ps1
+      - scripts/ci/test_yacs_storage_autoclean_contract.py
+      - .github/workflows/yacs-autoclean-static.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: Hosted PowerShell syntax and allowlist checks
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          lfs: false
+      - name: Parse PowerShell without execution
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($file in @(
+            'scripts/runner/Invoke-YacsStorageAutoclean.ps1',
+            'scripts/runner/Install-YacsStorageAutoclean.ps1'
+          )) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Join-Path (Get-Location) $file), [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) { throw "PowerShell parse failed in $file : $errors" }
+          }
+      - name: Check non-deletion contract
+        shell: pwsh
+        run: python scripts/ci/test_yacs_storage_autoclean_contract.py
