@@ -1,0 +1,106 @@
+name: YACS Lesson07 editor module diagnostic (read-only)
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/yacs-lesson07-editor-module-diagnostic.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-lesson07-module-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    name: Inspect project Editor DLL and BuildIds (no build)
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 4
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Inspect missing Editor module and available binary manifests
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = 'D:\yacs\project'
+          $engine = 'D:\yacs\engine\UE_5.8'
+          $binaries = Join-Path $root 'Binaries\Win64'
+          $out = Join-Path $env:RUNNER_TEMP 'lesson07-editor-module-diagnostic.json'
+          $dlls = @(
+            'UnrealEditor-YetAnotherCyclingSim.dll',
+            'UnrealEditor-YetAnotherCyclingSimEditor.dll'
+          )
+          $items = @()
+          foreach ($name in $dlls) {
+            $path = Join-Path $binaries $name
+            $item = Get-Item -LiteralPath $path -ErrorAction SilentlyContinue
+            $items += [ordered]@{
+              name = $name
+              exists = $null -ne $item
+              bytes = if ($item) { [long]$item.Length } else { 0 }
+              modified_utc = if ($item) { $item.LastWriteTimeUtc.ToString('o') } else { $null }
+            }
+          }
+          $manifestInfo = @()
+          $manifestFiles = @(Get-ChildItem -LiteralPath $binaries -Filter '*.modules' -File -ErrorAction SilentlyContinue)
+          foreach ($file in $manifestFiles) {
+            try {
+              $obj = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
+              $mods = @()
+              if ($obj.Modules) {
+                $mods = @($obj.Modules.PSObject.Properties.Name | Sort-Object)
+              }
+              $manifestInfo += [ordered]@{
+                file = $file.Name
+                build_id = [string]$obj.BuildId
+                modules = $mods
+              }
+            } catch {
+              $manifestInfo += [ordered]@{
+                file=$file.Name
+                parse_error=$_.Exception.Message
+              }
+            }
+          }
+          $plugins = @(
+            'Plugins\Runtime\HoudiniEngine',
+            'Plugins\PCGExtendedToolkit',
+            'Plugins\RoadForge'
+          )
+          $pluginInventory = @()
+          foreach ($relative in $plugins) {
+            $path = Join-Path $root $relative
+            $pluginInventory += [ordered]@{
+              path = $relative
+              exists = (Test-Path -LiteralPath $path -PathType Container)
+              plugin_descriptor_count = @(Get-ChildItem -LiteralPath $path -Filter '*.uplugin' -ErrorAction SilentlyContinue).Count
+            }
+          }
+          $free = [math]::Round(([IO.DriveInfo]::new('D:\')).AvailableFreeSpace / 1GB, 2)
+          $report = [ordered]@{
+            status = 'READ_ONLY_DIAGNOSTIC'
+            source_commit = '${{ github.sha }}'
+            engine_editor_cmd = (Test-Path -LiteralPath (Join-Path $engine 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe') -PathType Leaf)
+            canonical_project_present = (Test-Path -LiteralPath (Join-Path $root 'YetAnotherCyclingSim.uproject') -PathType Leaf)
+            free_d_gib = $free
+            editor_binaries = $items
+            module_manifests = $manifestInfo
+            plugins = $pluginInventory
+            note = 'Module presence is diagnostic, not a binary compatibility or successful runtime load proof.'
+          }
+          $report | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $out -Encoding utf8
+          $report | ConvertTo-Json -Depth 6
+      - name: Retain minimal diagnostic
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lesson07-module-diagnostic-${{ github.run_id }}
+          path: ${{ runner.temp }}/lesson07-editor-module-diagnostic.json
+          if-no-files-found: warn
+          retention-days: 7
