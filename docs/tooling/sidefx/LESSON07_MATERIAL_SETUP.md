@@ -5,13 +5,41 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (material rollback after live-update crash; recovery reopen, tiling, whole-area collision, exact interpolation, protected CI and owner visual acceptance remain unverified; earlier sampled checks are historical)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (rollback reopened and running checkpoint accepted; saved normal-flatten workaround; tiling, detailed-normal correctness, symbolized crash cause, whole-area proof and protected CI remain unverified)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
 ---
 
-## Current recovery state: rejected variation rolled back (2026-10-20, 21:12 UTC)
+## Current running checkpoint: flattened normals (2026-10-20, 21:29 UTC)
+
+The owner requested reopening the same saved map, then reported that it works
+and requested remote publication and a detailed technical handoff. UE PID19056
+opened `L_SaCalobra_Lesson07` from the rolled-back packages. Native readback
+confirmed four original actor transforms, 4096 components and no active
+TextureVariation/ArrayVariation calls in the restored master. The map was
+clean at initial readback. Updating this restored instance succeeded without
+the prior missing-gradient warnings or access violation during the observed
+session. This is a bounded recovery observation, not a symbolized engine fix.
+
+**Only the existing MI was saved:** `Global Normal Flatten` changed from 0.2
+to 1.0; every other scalar matches the reopened checkpoint. This suppresses
+texture-normal detail as a reversible workaround. It does not repair the
+inherited Normal sampler interpretation or prove correct normal decoding.
+The same-camera image still contains regular repetition: **tiling remains
+unresolved**. The owner's feedback accepts the running checkpoint, not final
+whole-area visual acceptance or completion of Lesson07/M3.
+
+[Current saved receipt and comparison](../../assets/lesson07-recovery-20261020/receipt.json).
+The master remains byte-identical to the pre-variation baseline, the three
+arrays and geographical classification remain unchanged, and no map save,
+terrain rebuild, new shader warp or Computer Use occurred. A fresh reopen
+after this latest MI save has not been run; leave the owner's Editor open.
+Resume diagnosis from this saved checkpoint. Do not rerun the old tuning
+script, which contains the historical normal-flatten value 0.2, or replay
+the rejected variation graph. The earlier recovery records below are historical.
+
+## Historical recovery: rejected variation rolled back (2026-10-20, 21:12 UTC)
 
 **Do not resume the TextureVariation candidate at
 `1441c8556888cfaa4654a89ad1ea8e857acbac5b`.** The owner rejected its marbled

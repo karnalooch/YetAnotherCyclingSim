@@ -1,5 +1,5 @@
 {
-  "status": "LESSON07_MATERIAL_ROLLBACK_AFTER_CRASH_NATIVE_RECOVERY_UNVERIFIED",
+  "status": "LESSON07_RUNNING_RECOVERY_CHECKPOINT_ACCEPTED_FLAT_NORMAL_WORKAROUND_SAVED",
   "timestamp": "2026-10-20T03:20:00+02:00",
   "lesson": "PEG-02-07",
   "lesson_title": "7 | Material Setup",
@@ -17,7 +17,7 @@
     "performance_pass": false,
     "performance_note": "DEFERRED_AFTER_M3",
     "native_recheck_required": true,
-    "reason": "The later TextureVariation candidate was rejected by the owner; unsaved follow-up live material isolation crashed the Editor. Master and MI were restored on disk to the pre-variation checkpoint. Recovery reopen and tiling remain unverified. Earlier fresh reopen, 65032 boundary checks and SIE 15/15 checks are historical evidence only. Exact interpolation, whole-area collision, protected exact-commit CI and owner visual acceptance remain unverified."
+    "reason": "Same saved map reopened after rollback; existing MI updated and saved with Global Normal Flatten=1. Owner reports running checkpoint works. Tiling, detailed-normal correctness, symbolized crash cause, fresh reopen after latest MI save, full world proof and protected exact-commit CI remain unverified."
   },
   "domain": {
     "grid_dimensions": [
@@ -1624,5 +1624,17 @@
     "owner_visual_accepted": false,
     "crash_observed": true,
     "editor_restarted": false
+  },
+  "running_recovery_checkpoint_20261020": {
+    "status": "OWNER_ACCEPTED_RUNNING_CHECKPOINT_INSTANCE_SAVED",
+    "receipt": "docs/assets/lesson07-recovery-20261020/receipt.json",
+    "owner_running_checkpoint_accepted": true,
+    "whole_area_owner_visual_accepted": false,
+    "parameter": {
+      "Global Normal Flatten": 1.0
+    },
+    "tiling_fixed": false,
+    "fresh_reopen_before_latest_scalar_save": true,
+    "fresh_reopen_after_latest_scalar_save": false
   }
 }
