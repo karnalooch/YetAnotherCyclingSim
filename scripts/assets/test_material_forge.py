@@ -323,6 +323,68 @@ class MaterialForgeContractTests(unittest.TestCase):
                 forge.author_all(mm, output, selected_family="mediterranean_soil",
                                  selected_variant="limestone_scree_v1")
 
+    def test_grass2_selection_shared_field_and_historical_graphs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            mm = root / "synthetic-mm"
+            (mm / "nodes").mkdir(parents=True)
+            (mm / "material_maker.exe").write_bytes(b"synthetic tool")
+            (mm / "nodes/material.mmg").write_text(json.dumps({
+                "parameters": {},
+                "shader_model": {"inputs": [{"name": name} for name in (
+                    "albedo_tex", "roughness_tex", "ao_tex", "depth_tex",
+                    "normal_tex", "emission_tex",
+                )]},
+            }))
+            output = root / "selected"
+            manifest = forge.author_all(
+                mm, output, selected_family="mediterranean_soil",
+                selected_variant=forge.GRASS2_VARIANT,
+            )
+            self.assertEqual(len(manifest["variants"]), 1)
+            self.assertEqual(len(list(output.rglob("Material.ptex"))), 1)
+            graph = json.loads(next(output.rglob("Material.ptex")).read_bytes())
+            nodes = {x["name"]: x for x in graph["nodes"]}
+            self.assertEqual(nodes["Height_Normal"]["parameters"]["strength"], 0.3)
+            self.assertEqual(nodes["PBR_Output"]["parameters"]["depth_scale"], 0)
+            self.assertEqual(nodes["PBR_Output"]["parameters"]["metallic"], 0)
+            links = graph["connections"]
+            for target, port in (("Height_Normal", 0), ("Limestone_Response", 3)):
+                self.assertIn({"from": "Limestone_Form", "from_port": 0,
+                               "to": target, "to_port": port}, links)
+            for target in ("Limestone_Color", "Limestone_Response", "Material_Local_Masks"):
+                self.assertTrue(any(x["from"] == "Limestone_Form" and x["to"] == target
+                                    and x["from_port"] == 1 for x in links))
+            colour = nodes["Limestone_Color"]["shader_model"]["outputs"][0]["rgb"]
+            palette = re.findall(r"vec3\(([\d.,]+)\)", colour)
+            self.assertEqual(len(palette), 2)
+            olive, grey = [np.array([float(x) for x in p.split(",")]) for p in palette]
+            # Every mixture is greener than the previous brown RGB(102,80,45).
+            for coverage in np.linspace(0, 1, 11):
+                rgb = olive * (1-coverage) + grey * coverage
+                self.assertGreater(rgb[1] / rgb[0], 80 / 102)
+            self.assertLess(np.ptp(grey), 0.04)
+            self.assertIn("$crack($uv)+$pore($uv)", colour)
+            self.assertNotIn("yacs_rect_patch", nodes["Limestone_Form"]["shader_model"]["global"])
+            # Golden digest captured before this variant was added. Compare all
+            # pre-existing authored nodes/connections; upstream PBR stub excluded.
+            historical = {}
+            for family in forge.load_catalog()["families"]:
+                for variant in family["variants"]:
+                    if variant["id"] == forge.GRASS2_VARIANT:
+                        continue
+                    key = family["id"] + "/" + variant["id"]
+                    dest = root / "historical" / key
+                    forge.author_variant(mm, dest, family, variant, forge.load_upstreams())
+                    old = json.loads((dest / "Material.ptex").read_bytes())
+                    historical[key] = forge.canonical_hash({
+                        "nodes": [x for x in old["nodes"] if x["name"] != "PBR_Output"],
+                        "connections": [x for x in old["connections"] if x["to"] != "PBR_Output"],
+                        "seed_int": old["seed_int"],
+                    })
+            self.assertEqual(forge.canonical_hash(historical),
+                             "0a05bb427c861ccd33bd606b411e5abdf14d62cd86441a83adf02806125c0a9a")
+
     def test_dry_visual_correction_preserves_the_exact_periodic_helper(self):
         # The b385 fix for source run 38087789852/c773f871 stays byte-exact.
         # The later UE9242 appearance rejection changes the surface recipe.

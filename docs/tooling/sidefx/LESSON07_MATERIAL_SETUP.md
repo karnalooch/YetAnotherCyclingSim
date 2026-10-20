@@ -1,6 +1,6 @@
-# Lesson 07: Material Setup — Full Unified Domain Verification & Remediation
+# Lesson 07: Material Setup â€” Full Unified Domain Verification & Remediation
 
-- **Task**: SideFX Project Pegasus Landscape Workflow — Lesson 7 "Material Setup" (PEG-02-07)
+- **Task**: SideFX Project Pegasus Landscape Workflow â€” Lesson 7 "Material Setup" (PEG-02-07)
 - **Domain**: Sa Calobra Unified $16\,000 \times 16\,000$ single-quality domain ($8000 \times 8000\text{ m}$, $0.5\text{ m}$ spacing, $256\,000\,000$ samples)
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
@@ -10,6 +10,173 @@
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
 ---
+
+## Current appearance checkpoint and next session (2026-10-20)
+
+This section supersedes the earlier import-stage/render-pending appearance
+notes below. Same #365/M3 candidate, branch `codex/365-world-graph`, Draft
+PR #474. Delivery targets that existing PR; its head identifies the remote
+checkpoint. GitHub #365 currently has no milestone assigned; ROADMAP still owns M3.
+
+**Saved locally:** existing material instance and three existing texture arrays,
+plus the preceding three Grass2 textures. The global colour black-patch repair
+is retained. Existing Pegasus parameters now remove the defective global hue /
+saturation influence (`Global Colour Strength=0`, `Global Saturation=0`,
+`Global Brightness=0`), use `Detail Brightness=1`, `Macro Tiling=0.25` and
+`Global Normal Flatten=0.2`. Detail Tiling remains 0.25. The former distant
+20 m repetition is reduced to the 4 m texture period rather than enlarged into
+a visible grid. This reduces visible distant repetition; it is not a stochastic
+non-repeating shader or a finished near-field surface.
+
+The existing Colour array uses native non-destructive Hue +25 degrees,
+Saturation 0.7 and Brightness 1.1. This intentionally grades **all five slices**,
+not only Grass0. Original Grass0 is ochre (mean encoded RGB 113.76/97.08/36.13);
+Cliffs is almost neutral grey (181.15/181.40/181.66), so the broad grade shifts
+the ground towards subdued green while retaining near-neutral limestone.
+Original source pixels, all class codes and slice order remain intact. Normal
+and Masks arrays now use `TMGS_FROM_TEXTURE_GROUP` to suppress distant aliasing;
+IDMap filtering/mips are unchanged. These are measured artistic adaptations,
+not tutorial defaults or geographic classifications.
+
+[Retained native before/after captures and receipt](../../assets/lesson07-appearance-20261020/receipt.json):
+[panorama before](../../assets/lesson07-appearance-20261020/panorama-before.jpg),
+[panorama after](../../assets/lesson07-appearance-20261020/panorama-after.jpg),
+[black patches before](../../assets/lesson07-appearance-20261020/black-before.jpg),
+[black patches after](../../assets/lesson07-appearance-20261020/black-after.jpg).
+The current pair uses the same explicit camera/FOV and completed native shader
+compilation. The after image contains an owner selection outline/gizmo; that
+is not a material artifact. This is a limited 956x431 panorama, not whole-world
+visual acceptance. Native arrays remain 2048x2048x5, DXT1/BC5/DXT5, with sRGB
+only on Colour. No actor transform, Landscape geometry, IDMap, global-colour
+source, original slice texture or shader graph changed. Only four material
+assets changed after the preceding Grass2 import. Original array/MI backups
+remain under `Saved/RuntimeProof/Lesson07Appearance-20261020-1/before-assets`.
+
+**Resume here:** open the existing `L_SaCalobra_Lesson07` map and inspect the
+saved material assets; do not rerun terrain generation or the first-import
+Grass2 script. The latter refuses an existing destination deliberately.
+The bounded tuning source is `scripts/ue/tune_lesson07_landscape_appearance.py`;
+its pre-change backup check also prevents blind replay over a later checkpoint.
+The source recipe/package adapters for Grass2 are committed for reproducibility;
+rendered intermediary PBR maps stay in local proof storage, and the saved UE
+textures retain their source art. No Material Maker installation is needed to
+open the saved consumer.
+
+**Important session boundary:** the owner's map remains dirty and unsaved.
+The saved map SHA is still
+`d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75`.
+Remote material delivery does not include arbitrary unsaved map edits. Current
+read-only lighting is 6 lux, temperature disabled (6500 K stored), sun rotation
+pitch/yaw/roll -35/0/-38, exposure min/max 1/1, bias 1. Earlier 80000 lux / EV15
+trials are historical, not the current appearance producer. Do not replay those
+old trials or save over the owner's scene. Streaming pool remains a local
+session configuration; performance is not accepted.
+
+Validation: 40 unique selected CPU tests passed, including optimized-Python
+cross-project rejection of all three editor scripts; Ruff passed. Review fixes
+add explicit (non-assert) save/guard checks, reject wrong editor checkouts and
+pre-existing dirty import arrays, and roll back only touched arrays including
+sRGB. They do not require reimporting the completed consumer. Fresh reopen,
+protected exact-commit CI, whole-domain comparison to the reference, finer
+limestone/grass detail and owner visual acceptance remain open. Next work is
+visual review of this saved checkpoint, then bounded surface refinement only;
+never restart the base terrain. No merge or overall Lesson07 PASS is claimed.
+
+## Black global-colour patches: bounded live repair (2026-10-20)
+
+Issue #365 / M3, local candidate on base
+`c4d2a44aa2b79579507cda2babd448eab45e1144`. Status:
+`GLOBAL_BRIGHTNESS_REPAIRED_SAVED_NATIVE_AB_VERIFIED`.
+
+Native inspection found `Use Terrain Colour=true`, `Global Brightness=0.5`,
+`Global Colour Strength=0.5` and `Global Saturation=0.5`. The existing Pegasus
+HSV graph feeds both hue branches from the same Value expression: detail V,
+2*detail V*global V, and global V through `Lerp_3Color`. Black pixels already
+exist inside valid Grass2 regions of the source global colour. The new local
+Grass2 colour and AO do not contain corresponding black pixels. Reducing
+Global Colour Strength alone would not isolate the shared Value expression.
+
+The bounded repair sets only **Global Brightness to 0.0**, selecting detail
+Value while retaining the existing hue/saturation mix, classes, textures and
+shader graph. This is an artistic consumer adaptation to defective source
+colour modulation, not a SideFX default. The exact earlier Houdini stage
+that produced the black RGB remains unisolated; original source RGB is retained.
+
+Native API screenshots at the same explicit camera and FOV, after zero pending
+asset/shader jobs, confirm the surface black patches disappear while terrain
+shadows remain. The capture service reported near-black fraction 0.005 before
+and 0.000 after (rounded service statistics, not an acceptance threshold).
+One earlier fallback-shader image was rejected. Evidence is retained locally:
+`Saved/RuntimeProof/Lesson07BlackPatches-20261020-1/summary.json`,
+`fixed-camera-before.jpg`, `fixed-camera-after.jpg`, `compile-drain-0.0.json`.
+
+`scripts/ue/repair_lesson07_global_colour.py` saved only the existing
+`MI_Landscape_Instance_YACS`, with an original disk backup. All other live
+parameters and four Landscape transforms/bindings are preserved; previously
+unsaved MI settings are included in that scoped MI save. Disk conservation
+against the preceding Grass2 receipt confirms every other audited asset is
+unchanged. The map still hashes to
+`d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75`.
+The active editor remained PID 10872; the map was not saved, no terrain was
+rebuilt and no Computer Use was involved. Fresh reopen, whole-area visual
+acceptance and protected delivery remain separate and unverified. This repair
+is included in the current appearance checkpoint described above.
+
+## Grass2 appearance replacement candidate (2026-10-20)
+
+Status: `APPLIED_SAVED_NATIVE_READBACK_PASS_RENDER_PENDING`. Owner-authorized scope is
+muted green and grey limestone in the existing Grass2 class, evaluated across
+the full Landscape from a distance. It does not authorize terrain regeneration,
+mask reclassification or detailed world dressing.
+
+The previous Grass2 source contains brown block-like rocks. The new selected
+Forge variant `mediterranean_soil/limestone_grass2_v1` reuses the existing periodic
+fragment recipe with smaller material-local fragments, muted olive/grey colours,
+roughness 0.88 and normal strength 0.3. These are artistic candidate settings,
+not geographic measurements or a SideFX standard. All 17 historical Forge
+graphs remain byte-identical. Two native Material Maker/Godot runs exited 0 and
+produced identical hashes for all five PBR maps. CPU validation ran 39 tests
+without failures; Ruff and diff checks passed. Native source mean encoded RGB
+is approximately (97.4,105.2,80.2), versus (102.0,80.0,44.9) for the old Grass2
+slice. Pixel statistics describe the files, not visual acceptance.
+
+The package is retained under
+`Saved/RuntimeProof/Lesson07Grass2-20261020-1/package/grass2-package.json`.
+Colour and DirectX Normal preserve the rendered bytes; Masks is packed as
+AO/Roughness/Height/AO from the matching Forge outputs. Metallic is not Height.
+The original EXR remains retained; there is no height rescaling or Landscape
+height operation. The original texture sources and accepted terrain caches
+remain intact.
+
+The bounded importer is `scripts/ue/apply_lesson07_grass2.py`. It verifies the
+active L07 world and four Landscape bindings, imports three new candidate
+textures, and replaces only index 1 in the existing Colour/Normal/Masks arrays.
+Indices 0,2,3,4 and the material-instance binding remain unchanged. It backs up
+the array files and saves only the six scoped texture/array assets. It never
+loads or saves a level, starts/closes UE, enables a listener, or cooks Houdini.
+The original Grass2 textures remain available for rollback.
+
+The existing authenticated Wingman/Loco channel executed the importer once in
+editor PID 10872 without Computer Use, a new listener or an editor restart.
+`live-import.json` confirms successful saving; `native-verification.json`
+confirms the same four actors, transforms, material bindings, camera and
+pre-existing dirty map/material-instance packages. All three arrays report
+2048x2048x5 with the new source at index 1; other indices are unchanged.
+Colour uses DXT1/sRGB, Normal BC5 and Masks DXT5 without sRGB.
+
+Disk comparison confirms exactly six scoped asset changes. The map retains
+SHA-256 `d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75`;
+the other protected source files are unchanged. Original array backups remain
+under the proof directory. Do not rerun the first-import command against the
+already-created destination assets.
+
+At the Grass2 import stage, rendered appearance was unverified. The later
+black-patch repair above adds scoped native A/B images; fresh reopen and owner
+visual acceptance remain unverified.
+The native screenshot task did not complete; any late output is not a valid
+before-image. No second capture was stacked and no camera or focus was changed.
+The candidate is included in the current appearance checkpoint described
+above. The existing whole-world admission gates remain in force.
 
 ## Local consumer repair and sampled verification (2026-10-20)
 
@@ -24,7 +191,7 @@ terrain cache was regenerated.
 
 Native measurements cover 65,032 boundary vertices and 1,040 collision queries.
 All four retained source seams match exactly. The saved UE seams differ by
-3.117–5.800 cm; every measured uint16 height matches the installed Houdini
+3.117â€“5.800 cm; every measured uint16 height matches the installed Houdini
 Engine conversion using the corresponding actor's different Z scale. This
 identifies a consumer quantization defect, not a reason to rebuild the source.
 The boundary read found no allocated visibility weights. Measurements and
@@ -211,14 +378,14 @@ does not establish terrain quality or full-domain correctness. No smoothing or
 material concealment was applied. The old cove/transition camera labels and UE
 images remain unaccepted landmark evidence.
 
-The L07 source map remains PEG-02-07 ID encoding at 05:03–05:28 / 08:01–08:06
-and colour export at 06:24–07:26 / 10:36–11:54. Diagnostic cameras, crop and
+The L07 source map remains PEG-02-07 ID encoding at 05:03â€“05:28 / 08:01â€“08:06
+and colour export at 06:24â€“07:26 / 10:36â€“11:54. Diagnostic cameras, crop and
 display controls are documented YACS adaptations using native SideFX nodes.
 The source export recipe was not regenerated by this correction.
 
 ## 1. Executive Summary & Review Remediation
 
-The numbered items below retain the earlier remediation report following commit `b84ff443`; sections 1–7 are historical measurements and claims, not acceptance of the current UE consumer. The current verification receipt records `LESSON07_REQUIRES_NATIVE_GEOMETRY_RECHECK` and `LESSON07_TECHNICAL_PASS: false`. The later geometry warnings and the acceptance status in section 8 supersede the earlier all-points-resolved conclusion. Preserve the accepted L06 cache while checking the affected transfer and UE consumer.
+The numbered items below retain the earlier remediation report following commit `b84ff443`; sections 1â€“7 are historical measurements and claims, not acceptance of the current UE consumer. The current verification receipt records `LESSON07_REQUIRES_NATIVE_GEOMETRY_RECHECK` and `LESSON07_TECHNICAL_PASS: false`. The later geometry warnings and the acceptance status in section 8 supersede the earlier all-points-resolved conclusion. Preserve the accepted L06 cache while checking the affected transfer and UE consumer.
 
 1. **Houdini 3 Preview Modes Remediated (Krok 1)**:
    - Root cause resolved: upstream `volvis` detail dictionary attribute was overriding the viewport primitive rendering, forcing identical color ramps regardless of display flag.
@@ -306,7 +473,7 @@ With texture resolution $N = 16\,000$ and sample spacing $\Delta = 50\text{ cm}$
 1. **Terrain Scale**: $\Delta = 50.0\text{ cm/px}$
 2. **Terrain Resolution**: $N = 16\,000.0$
 3. **UV Rotate**: $0.0^\circ$ (Houdini $X \to$ UE $X$, Houdini $Z \to$ UE $Y$; raster coordinate system aligns with world axes).
-4. **Offset — documented equation requires graph verification**: The previous report used the following additive expression. It has not been authenticated against the current `M_Pegasus_Landscape_Master` graph:
+4. **Offset â€” documented equation requires graph verification**: The previous report used the following additive expression. It has not been authenticated against the current `M_Pegasus_Landscape_Master` graph:
    $$\text{UV} = \frac{(X_{UE}, Y_{UE}) + \text{Offset}_{xy} \times \text{Scale}}{\text{Resolution} \times \text{Scale}}$$
    For the southwest corner $(X=-400\,000, Y=-400\,000)$ to map to UV $(0.0, 0.0)$:
    $$-400\,000 + \text{Offset}_x \times 50.0 = 0 \implies \text{Offset}_x = \frac{+400\,000}{50.0} = +8000.0$$
@@ -377,7 +544,7 @@ In [SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc](../../../worldgen/houdini/sa_
 
 ---
 
-## 6. Historical Unreal captures — not current acceptance
+## 6. Historical Unreal captures â€” not current acceptance
 
 The following images and descriptions are the earlier submission. Their
 claims of seamless geometry, authentic scree framing, cove location and a

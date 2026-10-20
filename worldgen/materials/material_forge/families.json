@@ -332,6 +332,21 @@
             "G": "fine_fragment_coverage",
             "B": "mineral_variation"
           }
+        },
+        {
+          "id": "limestone_grass2_v1",
+          "label": "Lesson07 muted olive ground with grey limestone",
+          "seed": 571,
+          "brightness": 0.36,
+          "surface_a": 0.75,
+          "surface_b": 0.4,
+          "roughness": 0.88,
+          "normal_strength": 0.3,
+          "local_masks": {
+            "R": "coarse_fragment_coverage",
+            "G": "fine_fragment_coverage",
+            "B": "mineral_variation"
+          }
         }
       ]
     }

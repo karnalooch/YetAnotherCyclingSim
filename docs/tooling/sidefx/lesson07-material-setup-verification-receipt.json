@@ -1524,5 +1524,86 @@
     },
     "delivery_authorization": "Owner requested publishing the same local repair on the existing branch, without regenerating terrain; exact commit and remote delivery are verified separately."
   },
-  "updated_at_utc": "2026-10-20T16:29:19.581084+00:00"
+  "updated_at_utc": "2026-10-20T16:29:19.581084+00:00",
+  "grass2_replacement_20261020": {
+    "status": "APPLIED_SAVED_NATIVE_READBACK_PASS_RENDER_PENDING",
+    "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
+    "issue": 365,
+    "milestone": "M3",
+    "local_proof": "Saved/RuntimeProof/Lesson07Grass2-20261020-1/native-verification.json",
+    "local_proof_sha256": "4a3856228f9c283f73a8e5f3a6aedd06fc2a05bc3fd1ad581c0fb5ebdf73d3fd",
+    "same_editor_pid": 10872,
+    "changed_assets": [
+      "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Colour.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Masks.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Normal.uasset"
+    ],
+    "array_dimensions_each": "2048x2048*5",
+    "slot": 1,
+    "other_slots_unchanged": true,
+    "terrain_rebuilt": false,
+    "map_unchanged": true,
+    "existing_dirty_packages_preserved": true,
+    "render_verified": false,
+    "fresh_reopen_verified": false,
+    "owner_visual_accepted": false
+  },
+  "black_global_colour_repair_20261020": {
+    "status": "GLOBAL_BRIGHTNESS_REPAIRED_SAVED_NATIVE_AB_VERIFIED",
+    "world": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07",
+    "parameter": "Global Brightness",
+    "original_observed_value": 0.5,
+    "final_value": 0.0,
+    "other_live_parameters_preserved": true,
+    "landscapes_unchanged": true,
+    "saved_asset": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS",
+    "backup_sha256": "0581cd80055ec2632c3f56de19f80513c904ed5a5d7a5a7a8187ed17b218a3dc",
+    "saved_asset_sha256": "c702af46f8f5a7af2d71052991680c9a164b65f7d67dd08fa93b9f649c807c87",
+    "map_saved": false,
+    "terrain_rebuilt": false,
+    "computer_use": false,
+    "editor_closed": false,
+    "fresh_reopen_verified": false,
+    "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
+    "issue": 365,
+    "milestone": "M3",
+    "changed_files": [
+      "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset"
+    ],
+    "map_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+    "root_cause": "Black valid-class pixels in global Terrain Colour become zero HSV Value through existing Pegasus Global Brightness=0.5 modulation",
+    "upstream_black_colour_generation_stage": "NOT_ISOLATED",
+    "native_ab": {
+      "before": "fixed-camera-before.jpg",
+      "after": "fixed-camera-after.jpg",
+      "camera": "fixed-camera.json",
+      "compiled_assets_remaining": 0,
+      "shader_jobs_remaining": 0,
+      "near_black_fraction_reported_before": 0.005,
+      "near_black_fraction_reported_after": 0.0,
+      "not_full_world_acceptance": true
+    },
+    "initial_trial_note": "Setter mutated successfully but returned false; initial assertion rejected its return. Immediate native readback verified value0; subsequent trials assert actual readback rather than setter return.",
+    "discarded_capture": "192953 fallback shader; not A/B proof"
+  },
+  "appearance_checkpoint_20261020": {
+    "status": "APPEARANCE_CHECKPOINT_SAVED_NATIVE_AB_VERIFIED",
+    "receipt": "docs/assets/lesson07-appearance-20261020/receipt.json",
+    "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
+    "map_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+    "map_saved": false,
+    "terrain_rebuilt": false,
+    "saved_assets": [
+      "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset",
+      "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset"
+    ],
+    "owner_visual_accepted": false,
+    "fresh_reopen_verified": false,
+    "delivery_tracking": "Existing Draft PR #474 head; protected delivery proof remains separate"
+  }
 }

@@ -1,0 +1,311 @@
+{
+  "status": "APPEARANCE_CHECKPOINT_SAVED_NATIVE_AB_VERIFIED",
+  "issue": 365,
+  "roadmap_stage": "M3",
+  "github_issue_milestone": null,
+  "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
+  "branch": "codex/365-world-graph",
+  "pr": 474,
+  "producer": "existing editor PID10872, dirty working tree based on base_head; not protected exact-commit CI",
+  "world": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07",
+  "material_scalars": {
+    "Global Colour Strength": 0.0,
+    "Global Saturation": 0.0,
+    "Global Brightness": 0.0,
+    "Detail Brightness": 1.0,
+    "Macro Tiling": 0.25,
+    "Global Normal Flatten": 0.20000000298023224,
+    "Detail Tiling": 0.25,
+    "Macro Texture Distance": 10000.0
+  },
+  "colour_adjustments_all_five_slices": {
+    "adjust_hue": 25.0,
+    "adjust_saturation": 0.7,
+    "adjust_brightness": 1.1
+  },
+  "array_native_readback": {
+    "TA_Colour_Unified": {
+      "srgb": "True",
+      "compression_settings": "<TextureCompressionSettings.TC_DEFAULT: 0>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "adjust_hue": "25.0",
+      "adjust_saturation": "0.699999988079071",
+      "adjust_brightness": "1.100000023841858",
+      "sources": [
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass_Colour.T_Grass_Colour",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Colour.T_Grass2_Colour",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Sand_Colour.T_Sand_Colour",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Cliffs_Colour.T_Cliffs_Colour",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Colour.T_Scree_Colour"
+      ],
+      "dimensions": "2048x2048*5",
+      "format": "DXT1"
+    },
+    "TA_Normal_Unified": {
+      "srgb": "False",
+      "compression_settings": "<TextureCompressionSettings.TC_NORMALMAP: 1>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "adjust_hue": "0.0",
+      "adjust_saturation": "1.0",
+      "adjust_brightness": "1.0",
+      "sources": [
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass_Normal.T_Grass_Normal",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Normal.T_Grass2_Normal",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Sand_Normal.T_Sand_Normal",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Cliffs_Normal.T_Cliffs_Normal",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Normal.T_Scree_Normal"
+      ],
+      "dimensions": "2048x2048*5",
+      "format": "BC5"
+    },
+    "TA_Masks_Unified": {
+      "srgb": "False",
+      "compression_settings": "<TextureCompressionSettings.TC_MASKS: 2>",
+      "mip_gen_settings": "<TextureMipGenSettings.TMGS_FROM_TEXTURE_GROUP: 0>",
+      "adjust_hue": "0.0",
+      "adjust_saturation": "1.0",
+      "adjust_brightness": "1.0",
+      "sources": [
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass_Masks.T_Grass_Masks",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Masks.T_Grass2_Masks",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Sand_Masks.T_Sand_Masks",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Cliffs_Masks.T_Cliffs_Masks",
+        "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Masks.T_Scree_Masks"
+      ],
+      "dimensions": "2048x2048*5",
+      "format": "DXT5"
+    }
+  },
+  "four_landscapes_unchanged": true,
+  "classification_changed": false,
+  "terrain_rebuilt": false,
+  "map_saved": false,
+  "map_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+  "changed_since_grass2_import": [
+    "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset",
+    "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+    "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset",
+    "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset"
+  ],
+  "all_other_audited_assets_unchanged": true,
+  "asset_files": {
+    "Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap": {
+      "sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+      "size_bytes": 1838638056
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset": {
+      "sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66",
+      "size_bytes": 208956
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset": {
+      "sha256": "b4c2dadf01b2f4a4a805e2379a38c9970021ac92be1065251e436c426027bcd4",
+      "size_bytes": 43433
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset": {
+      "sha256": "9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf",
+      "size_bytes": 24178947
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset": {
+      "sha256": "e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8",
+      "size_bytes": 12124066
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset": {
+      "sha256": "838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1",
+      "size_bytes": 40441798
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Colour.uasset": {
+      "sha256": "0583b834ce78faa7af76ab736ee9902faad197e8e1ad2c39fb11cb75fbb3d1c7",
+      "size_bytes": 3399597
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Masks.uasset": {
+      "sha256": "2fd1e54cd516038f634398e036d292a3feb0baa629b8941e1df7b83c25c68e47",
+      "size_bytes": 2366629
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Grass2_Limestone_V1/T_Grass2_Normal.uasset": {
+      "sha256": "fa3b035466bd0fb6bfefbc6866b48f4611646e285ba3a230c05d12d66f643b26",
+      "size_bytes": 4912688
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Cliffs_Colour.uasset": {
+      "sha256": "442717ba68f021e1ad7932906a0650fcac3572d429b9d545ea37518f1b907be2",
+      "size_bytes": 1313188
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Cliffs_Masks.uasset": {
+      "sha256": "5ffb335d3f889cffc87de80d7a930c118afb55c7a52e7a1df841f70b915bf3ee",
+      "size_bytes": 536175
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Cliffs_Normal.uasset": {
+      "sha256": "5712b0c87f08effdc76e496413e927d39681388c37126d838f143a4b78ae356b",
+      "size_bytes": 10765148
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass2_Colour.uasset": {
+      "sha256": "40e1e82f22c6d84204d32799957d929412e529ff6e653a5e44d273e0eaad6f87",
+      "size_bytes": 7470834
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass2_Masks.uasset": {
+      "sha256": "2b52d18eeb8956a43d668befd8ee95466d9daa27bace8640d16a01f38ef4e544",
+      "size_bytes": 16876
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass2_Normal.uasset": {
+      "sha256": "771d945fe3eed0699ab99e3d66a217cad0f67826e8ee33dca7131ff3410eec3b",
+      "size_bytes": 10322499
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass_Colour.uasset": {
+      "sha256": "161d75d48fe8a7c7570ec9da61bf055463ccdad89eef91b4d49e8a1a1ba7187b",
+      "size_bytes": 9198404
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass_Masks.uasset": {
+      "sha256": "7ff4bc4ceb1454e1444fd53bc1d9ac91c32c624fa3013be9d9743bf42f5e163d",
+      "size_bytes": 3480558
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass_Normal.uasset": {
+      "sha256": "351a322f5b3a53851c7bdda09929f3d2ea55ccee7d6a6b4b1f70dc9013450666",
+      "size_bytes": 12716125
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Sand_Colour.uasset": {
+      "sha256": "7fbb1ab497494a3f191abdc3e699c9718e7d8ec44fd2cd3298e20692951f5b2b",
+      "size_bytes": 7158327
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Sand_Masks.uasset": {
+      "sha256": "fc221fc455aefa5cb4f4f84ad343c7aa78872a1bba5ba4c379bd427d55f482aa",
+      "size_bytes": 3940116
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Sand_Normal.uasset": {
+      "sha256": "f22b74a5c232e074a8a054ab5baeedaf3abf1e112c9666b48bcc7d32ef164f89",
+      "size_bytes": 3532069
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Colour.uasset": {
+      "sha256": "25d89092c8897eb316bceb34f68f572c71503a957a24edbced526f7a2c2001f3",
+      "size_bytes": 3169221
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Masks.uasset": {
+      "sha256": "5324c6d87a743e75aab316d98f962cc2977ebf4b80f9418434aaeb1ead3b1112",
+      "size_bytes": 1855796
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Normal.uasset": {
+      "sha256": "914736946fe0612f99f91fcddf0d0011f62984674ace1ec623a26a0e30e30ab8",
+      "size_bytes": 8574185
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color.uasset": {
+      "sha256": "ffe2f2aa37af5c38b2e6c622a95cf9462d41764f6d9b5b474029d89540000690",
+      "size_bytes": 425514280
+    },
+    "Content/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap.uasset": {
+      "sha256": "0641c28615a1af24dcd3c6c01938db2ce092c3f1ee292bf293f1f7724b9ebf36",
+      "size_bytes": 13437988
+    }
+  },
+  "array_sources_unchanged_since_grass2": true,
+  "fresh_reopen_verified": false,
+  "whole_area_visual_accepted": false,
+  "owner_visual_accepted": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3",
+  "editor_closed": false,
+  "computer_use": false,
+  "tests": {
+    "selected_unique_tests": 40,
+    "failed": 0,
+    "new_cross_project_guard_checks_python_optimized": true
+  },
+  "local_evidence": "Saved/RuntimeProof/Lesson07Appearance-20261020-1",
+  "screenshots": {
+    "black-before.jpg": {
+      "sha256": "bd63ce3feec6ebd125b4eac2ad91a32805e362db291468e86e14a2e8e72b2a62",
+      "size_bytes": 69354
+    },
+    "black-after.jpg": {
+      "sha256": "977dd5c6e49f85939844873ed38d86dd62ee885b41917324b96356d5c720dfa8",
+      "size_bytes": 58182
+    },
+    "panorama-before.jpg": {
+      "sha256": "7da50b98654d7c4395eb2f68c72abf7194f1960278b7f16ec9e90e45d9493b40",
+      "size_bytes": 58179
+    },
+    "panorama-after.jpg": {
+      "sha256": "be79971c96dc455f89966b3865efa42dfcd891f94a3fba38e3c6f313920ba6d9",
+      "size_bytes": 55000
+    }
+  },
+  "camera": {
+    "return_image": false,
+    "camera_location": [
+      105778.94955443848,
+      47473.457161979335,
+      93809.76178785607
+    ],
+    "camera_rotation": [
+      -19.65209645623969,
+      1238.4000218212605,
+      0.0
+    ],
+    "fov": 90.0
+  },
+  "capture_limits": [
+    "956x431 Level Editor native viewport",
+    "after image includes owner selection overlay; do not interpret it as material change",
+    "limited panorama, not whole-domain acceptance"
+  ],
+  "compile_drains": {
+    "baseline": {
+      "ok": true,
+      "remaining_before": 3,
+      "remaining_after": 0,
+      "shader_jobs_before": 0,
+      "shader_jobs_after": 0,
+      "shader_workers_before": 2,
+      "shader_workers_after": 2,
+      "shader_external_physical_before": 367747072,
+      "shader_external_physical_after": 367747072,
+      "shader_external_virtual_before": 408756224,
+      "shader_external_virtual_after": 408756224,
+      "shader_active_workers_before": 0,
+      "shader_active_workers_after": 0,
+      "shader_max_worker_memory_before": 0,
+      "shader_max_worker_memory_after": 0,
+      "available_physical_before": 7160373248,
+      "available_physical_after": 7070593024,
+      "available_virtual_before": 58145546240,
+      "available_virtual_after": 58002587648
+    },
+    "final": {
+      "ok": true,
+      "remaining_before": 0,
+      "remaining_after": 0,
+      "shader_jobs_before": 0,
+      "shader_jobs_after": 0,
+      "shader_workers_before": 2,
+      "shader_workers_after": 2,
+      "shader_external_physical_before": 367747072,
+      "shader_external_physical_after": 367747072,
+      "shader_external_virtual_before": 408756224,
+      "shader_external_virtual_after": 408756224,
+      "shader_active_workers_before": 0,
+      "shader_active_workers_after": 0,
+      "shader_max_worker_memory_before": 0,
+      "shader_max_worker_memory_after": 0,
+      "available_physical_before": 7777046528,
+      "available_physical_after": 7777046528,
+      "available_virtual_before": 59043958784,
+      "available_virtual_after": 59043958784
+    }
+  },
+  "pending_owner_map_changes": [
+    "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07"
+  ],
+  "current_lighting": {
+    "sun_lux": 6.0,
+    "sun_temperature_kelvin": 6500.0,
+    "sun_use_temperature": false,
+    "sun_rotation_pitch_yaw_roll": [
+      -35.0,
+      0.0,
+      -38.0
+    ],
+    "exposure_min_ev": 1.0,
+    "exposure_max_ev": 1.0,
+    "exposure_bias": 1.0,
+    "note": "Read from current owner session; earlier 80000lux/EV15 trial is not current. Do not overwrite owner lighting. Map unsaved edits are not remotely published."
+  },
+  "known_storage_guard_failure": "Pre-existing oversized docs/experiments/sa-calobra-roadside-visibility-prestudy-20261008/observations.json; unchanged",
+  "delivery_tracking": "Existing Draft PR #474 head on codex/365-world-graph; native evidence was produced before publication"
+}

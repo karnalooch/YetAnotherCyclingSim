@@ -84,6 +84,24 @@ limestone_scree_v1` to the existing `author` command. Both selectors are require
 together; omission retains full-catalog generation. Run validation and comparison
 over the selected run manifests before downstream use.
 
+## Lesson07 Grass2 candidate
+
+The owner-approved `mediterranean_soil/limestone_grass2_v1` replaces the brown
+block-like Grass2 appearance with muted olive ground and grey limestone
+fragments. It reuses the existing periodic fragment helpers at smaller scale,
+with shared coverage for albedo, material-local relief and PBR response. It
+keeps the 4 m/2K five-map contract and all historical graph bytes unchanged.
+This is a surface recipe, not vegetation placement or terrain generation.
+
+Use both selectors with the existing `author` command. The bounded
+`scripts/assets/prepare_lesson07_grass2.py` adapter validates the native outputs
+without modifying them, preserves Colour/Normal bytes and packs Pegasus
+AO/Roughness/Height/AO. It preserves the original EXR and does not interpret
+metallic as displacement. The [Lesson07 report](sidefx/LESSON07_MATERIAL_SETUP.md)
+records the two-run native source proof and successful saved in-place Unreal
+import/readback. Rendered appearance, fresh reopen and owner visual acceptance
+remain pending.
+
 ## Output contract
 
 Each rendered variant contains:

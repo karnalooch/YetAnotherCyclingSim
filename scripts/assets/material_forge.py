@@ -348,6 +348,20 @@ vec4 yacs_limestone(vec2 uv, float seed, float fractures, float pores) {
 }
 """
 
+GRASS2_VARIANT = "limestone_grass2_v1"
+# Reuse the reviewed periodic polygon field. Smaller, lower fragments sit in
+# olive ground; there are no rectangular patches or world classification.
+GRASS2_FUNCTION = SCREE_FUNCTION.replace(
+    "yacs_dry_grains(q,27.0", "yacs_dry_grains(q,53.0"
+).replace(
+    "yacs_dry_grains(q,83.0", "yacs_dry_grains(q,113.0"
+).replace(
+    "(0.085+0.055*coarse.w)", "(0.018+0.012*coarse.w)"
+).replace(
+    "0.045*chips*chip_facet", "0.009*chips*chip_facet"
+).replace("148 / 48 mm", "75 / 35 mm")
+
+
 def _json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -460,6 +474,8 @@ def _replace_surface_function(
             else ASPHALT_FUNCTION
         )
     if family_id == "mediterranean_soil":
+        if variant and variant.get("id") == GRASS2_VARIANT:
+            return helpers + GRASS2_FUNCTION
         if variant and variant.get("id") == SCREE_VARIANT:
             return helpers + SCREE_FUNCTION
         return helpers + SOIL_FUNCTION
@@ -550,6 +566,13 @@ def _color_output(
     family_id: str,
     variant: dict[str, Any] | None = None,
 ) -> str:
+    if family_id == "mediterranean_soil" and variant and variant.get("id") == GRASS2_VARIANT:
+        # The same fragment coverage drives colour, height/normal and response.
+        return (
+            "mix(vec3(0.32,0.36,0.23),vec3(0.52,0.53,0.50),"
+            "clamp($crack($uv)+$pore($uv),0.0,1.0))"
+            "*($(name_uv)_tone/0.36)"
+        )
     profile = _refinement_profile(variant)
     gains = _profile_color_gain(profile)
     if family_id == "aged_mountain_asphalt":
@@ -595,6 +618,8 @@ def _color_code(
         variation, crack, pore = 0.105, -0.052, -0.030
     elif family_id == "mediterranean_soil":
         variation, crack, pore = 0.130, 0.055, -0.045
+        if variant and variant.get("id") == GRASS2_VARIANT:
+            variation, crack, pore = 0.045, 0.0, 0.0
         if variant and variant.get("id") == SCREE_VARIANT:
             # Both size populations are mineral fragments, not dark cracks.
             variation, crack, pore = 0.180, 0.045, 0.035
@@ -621,6 +646,12 @@ def _response_expressions(
     ac = _profile_scale(profile, "ao_crack_scale")
     ap = _profile_scale(profile, "ao_pore_scale")
     r = f"{roughness:.6f}"
+    if family_id == "mediterranean_soil" and variant and variant.get("id") == GRASS2_VARIANT:
+        return (
+            f"clamp({r}+0.025*($variation($uv)-0.5)"
+            "-0.025*clamp($crack($uv)+$pore($uv),0.0,1.0),0.82,0.94)",
+            "clamp(1.0-0.045*clamp($crack($uv)+$pore($uv),0.0,1.0),0.0,1.0)",
+        )
     if _is_dry_asphalt(family_id, variant):
         # Repair islands retain the same high dry roughness floor while colour
         # and roughness vary together across the surface.
