@@ -4,7 +4,7 @@
 - **Domain**: Sa Calobra Unified $16\,000 \times 16\,000$ single-quality domain ($8000 \times 8000\text{ m}$, $0.5\text{ m}$ spacing, $256\,000\,000$ samples)
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
-- **Receipt**: [lesson07-material-setup-verification-receipt.json](file:///d:/yacs/project/docs/tooling/sidefx/lesson07-material-setup-verification-receipt.json)
+- **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
 - **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (L07 Houdini lesson finished; native UE transfer, visibility and collision proof remain pending)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
@@ -13,7 +13,7 @@
 
 ## 1. Executive Summary & Review Remediation
 
-Following the review of commit `b84ff443`, a complete technical remediation of all 6 points was performed without altering or re-running Lesson 06:
+The numbered items below retain the earlier remediation report following commit `b84ff443`; sections 1–7 are historical measurements and claims, not acceptance of the current UE consumer. The current verification receipt records `LESSON07_REQUIRES_NATIVE_GEOMETRY_RECHECK` and `LESSON07_TECHNICAL_PASS: false`. The later geometry warnings and the acceptance status in section 8 supersede the earlier all-points-resolved conclusion. Preserve the accepted L06 cache while checking the affected transfer and UE consumer.
 
 1. **Houdini 3 Preview Modes Remediated (Krok 1)**:
    - Root cause resolved: upstream `volvis` detail dictionary attribute was overriding the viewport primitive rendering, forcing identical color ramps regardless of display flag.
@@ -28,7 +28,7 @@ Following the review of commit `b84ff443`, a complete technical remediation of a
    - Identified densest scree cluster at Centroid $(X=-2502.78\text{ m}, Y=460.95\text{ m}, Z=1845.95\text{ m})$ and framed camera `cam_scree_site` directly onto the gravel slope surface.
 3. **Texture Array Scree Slice & UE Assets Confirmed (Krok 3)**:
    - Verified `slice_4_scree_masks.png` channel values: $R=255$ (AO 1.0), $G=223.46$ (Roughness $0.85\text{--}0.90$), $B=186.79$ (Height/Displacement $0.73$).
-   - Executed [verify_ta_scree.py](file:///d:/yacs/project/scripts/ue/verify_ta_scree.py) inside Unreal Editor: confirmed `TA_Masks_Unified` slice 4 references `/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Masks`.
+   - Executed [verify_ta_scree.py](../../../scripts/ue/verify_ta_scree.py) inside Unreal Editor: confirmed `TA_Masks_Unified` slice 4 references `/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Scree_Masks`.
    - Re-saved and verified on-disk packages for `TA_Masks_Unified.uasset`, `TA_Colour_Unified.uasset`, and `TA_Normal_Unified.uasset`.
    - Deleted temporary scratch file `scree_height_test.png` and obsolete fallback level script `setup_lesson07_level.py`.
 4. **UE Landscape Geometry Read Back & Quantization Quantified (Krok 4)**:
@@ -47,7 +47,7 @@ Following the review of commit `b84ff443`, a complete technical remediation of a
    - Corrected Scree framing: positioned camera at $(-2550, 520, 1780)\text{ m}$ aiming at $(-2503, 461, 1846)\text{ m}$, looking down onto the actual scree slope surface with zero void or black wall artifacts.
    - Captured 8 offscreen shots including identical-camera material and neutral clay pairs for panorama and scree closeup, plus summit, cove, boundary transition, and domain center tile seam.
 6. **Verification Receipt & Reporting Corrected (Krok 6)**:
-   - Updated [lesson07-material-setup-verification-receipt.json](file:///d:/yacs/project/docs/tooling/sidefx/lesson07-material-setup-verification-receipt.json) strictly with measured readback data.
+   - Updated [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json) strictly with measured readback data.
    - Removed unmeasured "60 FPS" claims, recording `performance_pass: false` and `performance_note: "DEFERRED_AFTER_M3"`.
 
 ---
@@ -65,8 +65,8 @@ To satisfy Unreal Engine's native section sizing ($127 \times 127$ quads per sec
 - **Padding Handling**: Each tile contains $64\text{ m}$ ($128$ quads) of outer padding beyond the $4000\text{ m}$ quadrant span. The outer boundary vertices contain `Alpha=0 / NoData`, cleanly separating border geometry from the active domain and preventing classification as legal Grass (ID=0).
 - **Seam Elevation Continuity**: Maximum elevation difference at interior tile boundaries is strictly $0.000000\text{ m}$.
 
-### Unreal Engine Read-Back Metrics ([readback_lesson07_geometry.py](file:///d:/yacs/project/scripts/ue/readback_lesson07_geometry.py))
-- **Level Package**: `/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07` ([L_SaCalobra_Lesson07.umap](file:///d:/yacs/project/Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap), $1\,842\,190\,204\text{ B}$, SHA-256 `61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7`)
+### Unreal Engine Read-Back Metrics ([readback_lesson07_geometry.py](../../../scripts/ue/readback_lesson07_geometry.py))
+- **Level Package**: `/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07` ([L_SaCalobra_Lesson07.umap](../../../Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap), $1\,842\,190\,204\text{ B}$, SHA-256 `61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7`)
 - **Landscape Actors**: 4 actors (`SaCalobra_Unified_0_0`, `0_1`, `1_0`, `1_1`)
 - **Total Components**: $4 \times 1024 = 4096$ components (`components_pass = true`)
 - **Component Grid**: $32 \times 32$ components per landscape
@@ -101,14 +101,15 @@ With texture resolution $N = 16\,000$ and sample spacing $\Delta = 50\text{ cm}$
 1. **Terrain Scale**: $\Delta = 50.0\text{ cm/px}$
 2. **Terrain Resolution**: $N = 16\,000.0$
 3. **UV Rotate**: $0.0^\circ$ (Houdini $X \to$ UE $X$, Houdini $Z \to$ UE $Y$; raster coordinate system aligns with world axes).
-4. **Offset**: The UV evaluation expression in `M_Pegasus_Landscape_Master` computes:
+4. **Offset — documented equation requires graph verification**: The previous report used the following additive expression. It has not been authenticated against the current `M_Pegasus_Landscape_Master` graph:
    $$\text{UV} = \frac{(X_{UE}, Y_{UE}) + \text{Offset}_{xy} \times \text{Scale}}{\text{Resolution} \times \text{Scale}}$$
    For the southwest corner $(X=-400\,000, Y=-400\,000)$ to map to UV $(0.0, 0.0)$:
-   $$-400\,000 + \text{Offset}_x \times 50.0 = 0 \implies \text{Offset}_x = \frac{-400\,000}{50.0} = -8000.0$$
-   $$\text{Offset} = (-8000.0, -8000.0, 0.0, 0.0)$$
+   $$-400\,000 + \text{Offset}_x \times 50.0 = 0 \implies \text{Offset}_x = \frac{+400\,000}{50.0} = +8000.0$$
+   $$\text{Offset}_{\mathrm{additive}} = (+8000.0, +8000.0, 0.0, 0.0)$$
+   Under that additive convention, the domain corners map to UV (0, 0) and (1, 1). The historical parameter readback below instead contains -8000, which would map those corners to (-1, -1) and (0, 0) under this formula. The actual master may apply a different convention; inspect its graph, texel centers and landmark registration before changing any asset. This arithmetic correction does not certify the saved material mapping.
 5. **Num IDmap Layers**: $5.0$
 
-### Material Instance Parameter Readback ([MI_Landscape_Instance_YACS.uasset](file:///d:/yacs/project/Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset))
+### Historical Material Instance Parameter Readback ([MI_Landscape_Instance_YACS.uasset](../../../Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset))
 - `Terrain Resolution`: $16000.0$
 - `Terrain Scale`: $50.0$
 - `UV Rotate`: $0.0$
@@ -151,23 +152,23 @@ With texture resolution $N = 16\,000$ and sample spacing $\Delta = 50\text{ cm}$
 ## 5. Houdini Daily Preview & Checkpoint Verification
 
 ### Look-At Camera Rigging & Resolution
-In [SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc](file:///d:/yacs/project/worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc) ($570\,182\text{ B}$, SHA-256 `2ea5eafb0e5b2965ef718243a81aa83919255d0cb2af56444d0e7d6bf99fd8d1`):
+In [SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc](../../../worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc) ($570\,182\text{ B}$, SHA-256 `2ea5eafb0e5b2965ef718243a81aa83919255d0cb2af56444d0e7d6bf99fd8d1`):
 - All cameras use native null targets wired to `lookatpath`. Camera local -Z alignment dot product with target aim vector is strictly **$1.00000000$** across all 5 cameras.
 - `PREVIEW_RESAMPLE` creates an interactive $2000 \times 2000$ ($4.0\text{ m}$) proxy with `filter="point"`, preserving discrete categorical ID codes $(0, 64, 128, 191, 255)$ without continuous blending. Full $16000 \times 16000$ ($0.5\text{ m}$) feeds export nodes directly from `FINAL_CACHE`.
 
 ### 4 Authentic Viewport Preview Modes (1920x1080)
-1. [3d_preview_global_color.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_preview_global_color.png): $949\,800\text{ B}$, SHA-256 `2a80d3b31045...`, mean $91.83$, non-black $58.5\%$. Native RGB volumes rendered directly after stripping overriding `volvis`.
-2. [3d_preview_neutral_shading.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_preview_neutral_shading.png): $1\,044\,646\text{ B}$, SHA-256 `880012514859...`, mean $90.15$, non-black $58.6\%$. Pure neutral grey clay geometry shading.
-3. [3d_preview_idmap_palette.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_preview_idmap_palette.png): $1\,853\,941\text{ B}$, SHA-256 `122e5ed8078f...`, mean $52.24$, non-black $50.1\%$. 5-class discrete Pegasus color palette.
-4. [3d_preview_scree_isolation.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_preview_scree_isolation.png): $1\,017\,936\text{ B}$, SHA-256 `8dc590953849...`, mean $70.03$, non-black $56.7\%$. Decoded scree layer 255 visualized in vivid red.
+1. [3d_preview_global_color.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_preview_global_color.png): $949\,800\text{ B}$, SHA-256 `2a80d3b31045...`, mean $91.83$, non-black $58.5\%$. Native RGB volumes rendered directly after stripping overriding `volvis`.
+2. [3d_preview_neutral_shading.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_preview_neutral_shading.png): $1\,044\,646\text{ B}$, SHA-256 `880012514859...`, mean $90.15$, non-black $58.6\%$. Pure neutral grey clay geometry shading.
+3. [3d_preview_idmap_palette.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_preview_idmap_palette.png): $1\,853\,941\text{ B}$, SHA-256 `122e5ed8078f...`, mean $52.24$, non-black $50.1\%$. 5-class discrete Pegasus color palette.
+4. [3d_preview_scree_isolation.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_preview_scree_isolation.png): $1\,017\,936\text{ B}$, SHA-256 `8dc590953849...`, mean $70.03$, non-black $56.7\%$. Decoded scree layer 255 visualized in vivid red.
 
 ### Landmark Camera Renders
-- [3d_cam_panorama.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_cam_panorama.png): $949\,800\text{ B}$, SHA-256 `2a80d3b31045...`, mean $91.83$
-- [3d_cam_puig_major.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_cam_puig_major.png): $382\,413\text{ B}$, SHA-256 `6b5baea368b2...`, mean $72.29$
-- [3d_cam_sa_calobra_cove.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_cam_sa_calobra_cove.png): $340\,135\text{ B}$, SHA-256 `76d9eae1be6a...`, mean $51.81$
-- [3d_cam_scree_site.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_cam_scree_site.png): $183\,609\text{ B}$, SHA-256 `7ede8aec9224...`, mean $143.14$, non-black $100.0\%$
-- [3d_cam_scree_site_isolation.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_cam_scree_site_isolation.png): $193\,216\text{ B}$, SHA-256 `40a87e60b9ac...`, mean $142.13$, non-black $100.0\%$
-- [3d_cam_transition.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_cam_transition.png): $82\,926\text{ B}$, SHA-256 `623e698401ef...`, mean $165.42$, non-black $100.0\%$
+- [3d_cam_panorama.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_cam_panorama.png): $949\,800\text{ B}$, SHA-256 `2a80d3b31045...`, mean $91.83$
+- [3d_cam_puig_major.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_cam_puig_major.png): $382\,413\text{ B}$, SHA-256 `6b5baea368b2...`, mean $72.29$
+- [3d_cam_sa_calobra_cove.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_cam_sa_calobra_cove.png): $340\,135\text{ B}$, SHA-256 `76d9eae1be6a...`, mean $51.81$
+- [3d_cam_scree_site.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_cam_scree_site.png): $183\,609\text{ B}$, SHA-256 `7ede8aec9224...`, mean $143.14$, non-black $100.0\%$
+- [3d_cam_scree_site_isolation.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_cam_scree_site_isolation.png): $193\,216\text{ B}$, SHA-256 `40a87e60b9ac...`, mean $142.13$, non-black $100.0\%$
+- [3d_cam_transition.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/3d_cam_transition.png): $82\,926\text{ B}$, SHA-256 `623e698401ef...`, mean $165.42$, non-black $100.0\%$
 
 ---
 
@@ -175,14 +176,14 @@ In [SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc](file:///d:/yacs/project/world
 
 Eight high-resolution offscreen renders were captured using native `AutomationLibrary.take_high_res_screenshot` under direct PBR sunlight:
 
-1. [ue_panorama_material.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_panorama_material.png) ($2\,650\,872\text{ B}$, SHA-256 `c74bd5b84bef...`, mean $134.10$, non-black $100.0\%$): Full $8 \times 8\text{ km}$ landscape shaded with `MI_Landscape_Instance_YACS`.
-2. [ue_panorama_neutral.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_panorama_neutral.png) ($1\,901\,267\text{ B}$, SHA-256 `2cfea8063cfc...`, mean $173.59$, non-black $100.0\%$): Identical camera on neutral clay `M_TerrainReview` verifying pure relief and seamless geometry.
-3. [ue_closeup_scree.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_scree.png) ($3\,217\,612\text{ B}$, SHA-256 `a64f9ea56193...`, mean $95.66$, non-black $75.4\%$): Direct framing on Scree Cluster 1 gravel surface; verified Mediterranean limestone response with zero dark voids.
-4. [ue_closeup_scree_neutral.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_scree_neutral.png) ($2\,155\,082\text{ B}$, SHA-256 `b187162d78ba...`, mean $100.17$, non-black $100.0\%$): Identical scree camera on neutral clay confirming slope surface continuity.
-5. [ue_closeup_puig_major.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_puig_major.png) ($2\,577\,999\text{ B}$, SHA-256 `c812c2f5e02b...`, mean $166.02$, non-black $100.0\%$): Summit crags showing pale limestone cliff normal map relief.
-6. [ue_closeup_sa_calobra_cove.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_sa_calobra_cove.png) ($2\,449\,739\text{ B}$, SHA-256 `f12a07b1c7cf...`, mean $96.30$, non-black $94.8\%$): Framed beach, cove inlet, and coastal cliff walls.
-7. [ue_closeup_transition.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_transition.png) ($2\,852\,572\text{ B}$, SHA-256 `da25ec9c99fa...`, mean $84.86$, non-black $75.8\%$): Two-class boundary transition zone demonstrating crisp classification without blending artifacts.
-8. [ue_tile_seam_check.png](file:///d:/yacs/project/worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_tile_seam_check.png) ($3\,668\,402\text{ B}$, SHA-256 `213260e4fa95...`, mean $171.47$, non-black $98.7\%$): Domain center tile seam boundary looking along $X=0$ and $Y=0$ axes; zero visible elevation step or texture misalignment.
+1. [ue_panorama_material.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_panorama_material.png) ($2\,650\,872\text{ B}$, SHA-256 `c74bd5b84bef...`, mean $134.10$, non-black $100.0\%$): Full $8 \times 8\text{ km}$ landscape shaded with `MI_Landscape_Instance_YACS`.
+2. [ue_panorama_neutral.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_panorama_neutral.png) ($1\,901\,267\text{ B}$, SHA-256 `2cfea8063cfc...`, mean $173.59$, non-black $100.0\%$): Identical camera on neutral clay `M_TerrainReview` verifying pure relief and seamless geometry.
+3. [ue_closeup_scree.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_scree.png) ($3\,217\,612\text{ B}$, SHA-256 `a64f9ea56193...`, mean $95.66$, non-black $75.4\%$): Direct framing on Scree Cluster 1 gravel surface; verified Mediterranean limestone response with zero dark voids.
+4. [ue_closeup_scree_neutral.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_scree_neutral.png) ($2\,155\,082\text{ B}$, SHA-256 `b187162d78ba...`, mean $100.17$, non-black $100.0\%$): Identical scree camera on neutral clay confirming slope surface continuity.
+5. [ue_closeup_puig_major.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_puig_major.png) ($2\,577\,999\text{ B}$, SHA-256 `c812c2f5e02b...`, mean $166.02$, non-black $100.0\%$): Summit crags showing pale limestone cliff normal map relief.
+6. [ue_closeup_sa_calobra_cove.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_sa_calobra_cove.png) ($2\,449\,739\text{ B}$, SHA-256 `f12a07b1c7cf...`, mean $96.30$, non-black $94.8\%$): Framed beach, cove inlet, and coastal cliff walls.
+7. [ue_closeup_transition.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_closeup_transition.png) ($2\,852\,572\text{ B}$, SHA-256 `da25ec9c99fa...`, mean $84.86$, non-black $75.8\%$): Two-class boundary transition zone demonstrating crisp classification without blending artifacts.
+8. [ue_tile_seam_check.png](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/ue_tile_seam_check.png) ($3\,668\,402\text{ B}$, SHA-256 `213260e4fa95...`, mean $171.47$, non-black $98.7\%$): Domain center tile seam boundary looking along $X=0$ and $Y=0$ axes; zero visible elevation step or texture misalignment.
 
 ---
 
@@ -207,10 +208,15 @@ Eight high-resolution offscreen renders were captured using native `AutomationLi
 
 ## 8. Conclusion & Acceptance Status
 
-All 6 review points have been thoroughly resolved, verified, and backed by verifiable on-disk readbacks and evidence:
-- `LESSON07_TECHNICAL_PASS: true`
+Current acceptance follows the [verification receipt](lesson07-material-setup-verification-receipt.json), not the earlier all-six-points-resolved claim:
+
+- `status: LESSON07_REQUIRES_NATIVE_GEOMETRY_RECHECK`
+- `LESSON07_TECHNICAL_PASS: false`
+- `native_recheck_required: true`
 - `visual_review: PENDING_FINAL_M3_AUDIT`
 - `performance_pass: false` (`performance_note: "DEFERRED_AFTER_M3"`)
+
+Successful source/cache or export checks retain their own scope. They do not establish correct UE actor transforms, source-coordinate height agreement, visibility, collision, material registration or fresh reopen. The 39.26 cm historical landmark residual is not by itself a measured tile-to-tile step: the reported interior tile edges are at -0.25 m, while that landmark is at (0, 0). Measure both sides of the actual seams and compare against the properly interpolated source before diagnosing a vertical gap.
 
 
 ## Current geometry acceptance warning (2026-10-20)
@@ -231,3 +237,24 @@ A native 4-tile Houdini test (Actions 39389560761) authenticated the unchanged L
 ### Native source transport retry 39390052167
 
 Hython successfully wrote all four binary Alpha-normalized native .bgeo.sc tiles (about 0.50 GiB total, D:/yacs/work/lesson07-native-proof-39390052167-1). Acceptance stopped at a 0.000244 m discrepancy between nominally co-located world coordinates stored as float32. This is the expected representational quantization scale of km-scale float32 volume transforms, not a measured vertical surface gap. The world coordinate comparison now allows <=0.0005 m (0.5 mm), while the independent height seam threshold remains <=0.0001 m (0.1 mm). The old run remains FAILED; a fresh native run must establish both the true height and visibility seams.
+
+
+### Current code-build blocker: 39397896686
+
+At source HEAD `5a33c31a43e4933547a64bcb12e78552ce06e83a`, the ordinary Editor
+build in [run 39397896686, job 118545978608](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39397896686/job/118545978608)
+failed in Unreal Header Tool before Automation or L07 consumer readback. The
+first compiler diagnostic is:
+
+```text
+YacsPcgWitnessToolset.h(21): Error: Unable to find parent class type for 'UYacsPcgWitnessToolset' named 'UToolsetDefinition'
+Result: Failed (OtherCompilationError)
+```
+
+The build exited with code 6. Conditional `ToolsetRegistry` dependency selection
+in `YetAnotherCyclingSimEditor.Build.cs` does not isolate the reflected witness
+classes or their registration code from the common Editor module. A supported
+module/target boundary must isolate those opt-in dependencies and be validated
+with the ordinary and PCG365 Editor targets. Do not re-enable experimental
+plugins in the byte-pinned common `.uproject` merely to bypass the failure.
+This run provides no new L07 geometry, collision, visibility or visual PASS.
