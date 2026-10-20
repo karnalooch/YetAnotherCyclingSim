@@ -1918,6 +1918,21 @@
       "package_save_requested": false,
       "project_config_write_requested": false,
       "editor_stop_requested": false
+    },
+    "first_existing_session_discovery_attempt": {
+      "source_commit": "6ffaa33e6bcdc1c7090e8ac5795a416156bc49d2",
+      "run_id": 39515519790,
+      "cpu_job_id": 118946621710,
+      "conclusion": "failure",
+      "status": "CPU_TRACKED_WORKTREE_GATE_FAILED_BEFORE_NATIVE",
+      "checkout_warning": "ONE_TRACKED_FILE_SHOULD_BE_LFS_POINTER_BUT_WAS_NOT",
+      "unrelated_file": "worldgen/terrain/benchmarks/sa_calobra/ma2141_pnoa_review_2026-10-02.jpg",
+      "windows_job_conclusion": "skipped",
+      "http_requests_made": 0,
+      "native_tool_calls": 0,
+      "editor_lifecycle_action": false,
+      "repair": "SPARSE_CODE_ONLY_CHECKOUT_WITH_CLEAN_STATUS_AND_EXACT_BLOB_BYTES_FOR_SIX_FILES",
+      "unrelated_asset_modified": false
     }
   }
 }

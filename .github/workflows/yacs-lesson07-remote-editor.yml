@@ -99,6 +99,7 @@ jobs:
           fetch-depth: 1
           lfs: false
           persist-credentials: false
+          sparse-checkout: scripts/ue
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -117,12 +118,15 @@ jobs:
               raise ValueError("Tracked source changed after checkout")
           for name in (
               "lesson07_wingman_client.py", "lesson07_observe_editor.py",
+              "test_lesson07_wingman_client.py", "test_lesson07_observe_editor.py",
               "Invoke-YacsLesson07RemoteProbe.ps1", "Start-YacsLesson07RemoteEditor.ps1",
           ):
               path = Path("scripts/ue") / name
               subprocess.run(["git", "ls-files", "--error-unmatch", "--", str(path)], check=True)
               if path.is_symlink() or not 0 < path.stat().st_size <= 256 * 1024:
                   raise ValueError("Passive-reader source boundary differs")
+              if path.read_bytes() != subprocess.check_output(["git", "show", "HEAD:" + str(path)]):
+                  raise ValueError("Passive-reader source bytes differ from exact commit")
           observer = Path("scripts/ue/lesson07_observe_editor.py").read_bytes()
           if hashlib.sha256(observer).hexdigest() != "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5":
               raise ValueError("Reviewed observer source differs")

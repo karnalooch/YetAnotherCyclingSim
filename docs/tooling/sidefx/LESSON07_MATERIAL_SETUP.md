@@ -200,6 +200,18 @@ The actual startup reports were downloaded and inspected from artifact
 `0b9eeb047937c21dc6412af44da76003756158a9f28f4d20882cc7cd034e9cf7`.
 No package save, canonical configuration write or Editor stop was requested.
 
+The first existing-session discovery delivery, source
+`6ffaa33e6bcdc1c7090e8ac5795a416156bc49d2`, stopped in its hosted CPU gate:
+[run 39515519790, job 118946621710](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39515519790/job/118946621710).
+Checkout reported that the historical
+`worldgen/terrain/benchmarks/sa_calobra/ma2141_pnoa_review_2026-10-02.jpg`
+should be an LFS pointer but is not. The resulting tracked-worktree change
+failed the new whole-checkout guard; the Windows job was skipped. This run made
+no connection or native request. The CPU checkout is now restricted to
+`scripts/ue`, retaining the clean-worktree guard and adding exact Git-blob byte
+comparison for all six admitted code/test files. The unrelated historical image
+is not rewritten. Discovery and post-job survival still await the next run.
+
 The first-stage inventory artifact is `12303367952`, ZIP SHA256
 `6fffea19df0900427e77881e4dbfdba3ab8f75d992d39027c813b78ecc946c0e`.
 
