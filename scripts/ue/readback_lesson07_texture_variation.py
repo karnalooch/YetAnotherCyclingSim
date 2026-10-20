@@ -1,4 +1,8 @@
-"""Read the saved L07 TextureVariation graph without modifying editor assets.
+"""Historical readback of the rejected L07 TextureVariation graph.
+
+The owner rejected this graph and its master/MI were rolled back after a
+subsequent live-update crash. This verifier is retained as historical evidence;
+it must reject the restored current material, not certify it as accepted.
 
 The saved UE graphs are the authoring source: Epic TextureVariation, shared
 shifted UVs/gradients, and bounded Pegasus array-function copies. No custom

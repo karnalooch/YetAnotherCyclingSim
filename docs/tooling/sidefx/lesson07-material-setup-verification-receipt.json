@@ -1,5 +1,5 @@
 {
-  "status": "LESSON07_LOCALLY_REPAIRED_SAMPLED_PROOF_COMPLETE_ACCEPTANCE_PENDING",
+  "status": "LESSON07_MATERIAL_ROLLBACK_AFTER_CRASH_NATIVE_RECOVERY_UNVERIFIED",
   "timestamp": "2026-10-20T03:20:00+02:00",
   "lesson": "PEG-02-07",
   "lesson_title": "7 | Material Setup",
@@ -16,8 +16,8 @@
     "visual_review": "PENDING_FINAL_M3_AUDIT",
     "performance_pass": false,
     "performance_note": "DEFERRED_AFTER_M3",
-    "native_recheck_required": false,
-    "reason": "Same-map local repair promoted. Fresh native reopen, 65032 boundary conversion checks, actual SIE hole/valid checks 15/15 and rendered captures complete. Exact source collision interpolation, whole-area collision, protected exact-commit CI and owner visual acceptance remain unverified."
+    "native_recheck_required": true,
+    "reason": "The later TextureVariation candidate was rejected by the owner; unsaved follow-up live material isolation crashed the Editor. Master and MI were restored on disk to the pre-variation checkpoint. Recovery reopen and tiling remain unverified. Earlier fresh reopen, 65032 boundary checks and SIE 15/15 checks are historical evidence only. Exact interpolation, whole-area collision, protected exact-commit CI and owner visual acceptance remain unverified."
   },
   "domain": {
     "grid_dimensions": [
@@ -1607,7 +1607,7 @@
     "delivery_tracking": "Existing Draft PR #474 head; protected delivery proof remains separate"
   },
   "closeup_squares_correction_20261020": {
-    "status": "SAVED_TEXTURE_VARIATION_NATIVE_READBACK_AND_CLOSE_CAPTURE",
+    "status": "REJECTED_BY_OWNER_MARBLED_APPEARANCE_SUPERSEDED_BY_RECOVERY",
     "receipt": "docs/assets/lesson07-squares-20261020/receipt.json",
     "supersedes_scale_only_tiling_claim_at": "7e3b0001d1d325553f0fbf09c7aee71b33a57935",
     "native_compile_errors": [],
@@ -1615,5 +1615,14 @@
     "map_saved": false,
     "fresh_reopen_verified": false,
     "owner_visual_accepted": false
+  },
+  "variation_recovery_20261020": {
+    "status": "REJECTED_VARIATION_ROLLED_BACK_ON_DISK_NATIVE_RECOVERY_UNVERIFIED",
+    "receipt": "docs/assets/lesson07-squares-20261020/recovery-receipt.json",
+    "tiling_fixed": false,
+    "native_reopen_verified": false,
+    "owner_visual_accepted": false,
+    "crash_observed": true,
+    "editor_restarted": false
   }
 }

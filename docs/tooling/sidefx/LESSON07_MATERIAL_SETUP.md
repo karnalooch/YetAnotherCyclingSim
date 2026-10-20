@@ -5,15 +5,51 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (local consumer repair and sampled native/runtime checks complete; whole-area collision, exact interpolation, protected CI and owner visual acceptance remain unverified)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (material rollback after live-update crash; recovery reopen, tiling, whole-area collision, exact interpolation, protected CI and owner visual acceptance remain unverified; earlier sampled checks are historical)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
 ---
 
-## Close-up squares correction (2026-10-20)
+## Current recovery state: rejected variation rolled back (2026-10-20, 21:12 UTC)
 
-**Current checkpoint:** this supersedes the scale-only tiling assessment at
+**Do not resume the TextureVariation candidate at
+`1441c8556888cfaa4654a89ad1ea8e857acbac5b`.** The owner rejected its marbled
+close-up. Further unsaved material isolation ended in an Editor crash during
+`MaterialEditingLibrary.update_material_instance`, after the log reported
+missing `UV_DDX` / `UV_DDY` function inputs and default-material fallback.
+The exception was `EXCEPTION_ACCESS_VIOLATION reading address 0x0000000000000010`.
+This is an observed sequence, not a symbolized root-cause diagnosis.
+
+The existing master and MI have been restored on disk, byte-for-byte, from
+`7e3b0001d1d325553f0fbf09c7aee71b33a57935`. That preserves the Grass2,
+black-patch and palette checkpoint while removing the rejected variation
+graph from the active material. The three experimental function assets remain
+historical and are no longer referenced by this restored master. Do not run
+the historical `readback_lesson07_texture_variation.py` as a current-state
+acceptance check. Fresh native reopening and crash remediation are **NOT
+VERIFIED**; tiling is **UNRESOLVED**. No automatic restart was performed.
+
+Before the crash, the owner's accidental movement of `SaCalobra_Unified_0_1`
+was restored from Y=410245 to Y=406375 cm (-38.7 m). All four actor locations
+and 4096 components were read back. This live transform repair was not saved;
+the saved map already contains the original placement and was never changed.
+The map hash remains
+`d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75`.
+Other unsaved owner scene edits cannot be claimed preserved after the crash.
+Do not blindly recover a material autosave containing the rejected graph.
+
+The subsequent raw-UV/source-isolation trial still showed a grid and was not
+saved. Original array sources were restored in memory before the crash; no
+array source replacement is delivered. All saved arrays remain at the earlier
+checkpoint. Current recovery evidence and exact restored hashes are in the
+[recovery receipt](../../assets/lesson07-squares-20261020/recovery-receipt.json).
+The full local crash log is retained outside Git. No geometry authoring,
+terrain rebuild, Computer Use or requested Editor shutdown was performed.
+
+## Historical rejected close-up squares trial (2026-10-20)
+
+**Rejected historical checkpoint:** this attempted to supersede the scale-only tiling assessment at
 `7e3b0001d1d325553f0fbf09c7aee71b33a57935`. The owner supplied a close-up showing
 clear squares. The previous panorama was insufficient evidence; that earlier
 checkpoint is not accepted as a tiling fix.
@@ -64,13 +100,15 @@ Only five material assets were saved: the existing master/MI and three bounded
 function copies. Four actors, 4096 components, transforms, material bindings and
 all other previously audited assets remain unchanged. Map SHA remains
 `d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75`;
-the owner's dirty scene was not saved. UE PID10872 remains open; no Computer
-Use, terrain cook or base rebuild occurred. Resume from these saved graphs,
-not the scale-only checkpoint. Do not blindly replay first-import/tuning
+the owner's dirty scene was not saved. UE PID10872 was open at that earlier
+capture, before the subsequent crash; no Computer
+Use, terrain cook or base rebuild occurred during that earlier capture. These
+graphs have since been rejected and rolled back as described above. Do not
+resume them or blindly replay first-import/tuning
 scripts over this later graph. Fresh reopen, whole-area/temporal review,
 owner visual acceptance and protected exact-commit proof remain pending.
 
-## Current appearance checkpoint and next session (2026-10-20)
+## Retained pre-variation appearance checkpoint (2026-10-20)
 
 This section supersedes the earlier import-stage/render-pending appearance
 notes below. Same #365/M3 candidate, branch `codex/365-world-graph`, Draft
@@ -111,7 +149,8 @@ source, original slice texture or shader graph changed. Only four material
 assets changed after the preceding Grass2 import. Original array/MI backups
 remain under `Saved/RuntimeProof/Lesson07Appearance-20261020-1/before-assets`.
 
-**Resume here:** open the existing `L_SaCalobra_Lesson07` map and inspect the
+**Historical resume instructions, superseded by the recovery section above:**
+only when the owner chooses to reopen, use the same `L_SaCalobra_Lesson07` map and inspect the
 saved material assets; do not rerun terrain generation or the first-import
 Grass2 script. The latter refuses an existing destination deliberately.
 The bounded tuning source is `scripts/ue/tune_lesson07_landscape_appearance.py`;
@@ -121,7 +160,8 @@ rendered intermediary PBR maps stay in local proof storage, and the saved UE
 textures retain their source art. No Material Maker installation is needed to
 open the saved consumer.
 
-**Important session boundary:** the owner's map remains dirty and unsaved.
+**Historical session boundary:** the owner's map was dirty and unsaved at this
+checkpoint. That Editor later crashed as recorded in the current recovery section.
 The saved map SHA is still
 `d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75`.
 Remote material delivery does not include arbitrary unsaved map edits. Current
