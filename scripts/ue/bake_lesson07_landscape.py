@@ -13,7 +13,12 @@ import time
 import traceback
 import unreal
 
-MANIFEST_PATH = Path("D:/yacs/work/lesson07-unified-20261019/ue_transfer/manifest.json")
+_manifest_env = os.environ.get("YACS_LESSON07_REPAIR_MANIFEST")
+if not _manifest_env:
+    raise RuntimeError("Set YACS_LESSON07_REPAIR_MANIFEST to a verified fresh transfer manifest")
+MANIFEST_PATH = Path(_manifest_env).resolve()
+if Path("D:/yacs/work") not in MANIFEST_PATH.parents or "ue_transfer" == MANIFEST_PATH.parent.name:
+    raise RuntimeError("Refusing legacy or non-versioned manifest")
 REPORT_PATH = Path("D:/yacs/work/lesson07-unified-20261019/ue_landscape_bake_report.json")
 LOG_PATH = Path("D:/yacs/work/lesson07-unified-20261019/ue_bake_log.txt")
 
@@ -47,11 +52,31 @@ manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
 tiles = manifest["tiles"]
 
 def preflight_tiles():
+    if manifest.get("status") != "NATIVE_TRANSFER_READY_UE_VALIDATION_PENDING":
+        raise RuntimeError("Unverified L07 transfer: status must be native-ready pending")
+    if manifest.get("accepted_l06_sha256") != "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24":
+        raise RuntimeError("Transfer was not authenticated to the frozen L06 source")
+    if not manifest.get("seam_verification", {}).get("seams_perfect"):
+        raise RuntimeError("Native world-coordinate seams have not passed")
     if len(tiles) != 4:
         raise RuntimeError("Expected four L07 tiles")
+    material_path = manifest.get("requested_hole_material")
+    if not isinstance(material_path, str) or not material_path.startswith("/Game/"):
+        raise RuntimeError("Production bake requires a validated masked hole material")
+    material = unreal.load_asset(material_path)
+    if not material or not isinstance(material, unreal.Material):
+        raise RuntimeError(f"Masked landscape hole Material does not exist: {material_path}")
+    if material.get_editor_property("blend_mode") != unreal.BlendMode.BLEND_MASKED:
+        raise RuntimeError("Hole material must have BLEND_MASKED blend mode")
+    linked = unreal.MaterialEditingLibrary.get_material_property_input_node(
+        material, unreal.MaterialProperty.MP_OPACITY_MASK
+    )
+    if linked is None or linked.get_class().get_name() != "MaterialExpressionLandscapeVisibilityMask":
+        raise RuntimeError("Opacity Mask is not directly connected to LandscapeVisibilityMask")
     for tile in tiles:
         validity = tile.get("visibility") or {}
-        if validity.get("layer") != "visibility" or not validity.get("outside_source_zero"):
+        if (validity.get("layer") != "visibility" or not validity.get("outside_source_zero")
+                or tile.get("requested_hole_material") != material_path):
             raise RuntimeError(f"{tile.get('name')}: no validity/visibility proof")
         path = MANIFEST_PATH.parent / tile["file"]
         if not path.is_file():
@@ -76,6 +101,13 @@ def fail(err_msg):
 def setup_level_and_environment():
     global world, actor_subsystem
     log("Setting up level and environment...")
+    project_path = Path(unreal.Paths.get_project_file_path()).resolve()
+    # This mutating importer must run ONLY in an isolated work project. The
+    # canonical author's active world is never an allowed target.
+    if Path("D:/yacs/work").resolve() not in project_path.parents:
+        raise RuntimeError("Destructive L07 baking in D:/yacs/project is prohibited")
+    if os.environ.get("YACS_LESSON07_ALLOW_REBAKE") != "YES":
+        raise RuntimeError("Explicit YACS_LESSON07_ALLOW_REBAKE=YES required")
     
     levels = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
     actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -84,11 +116,7 @@ def setup_level_and_environment():
         log(f"Loading existing map {MAP_PATH}...")
         world = unreal.EditorLoadingAndSavingUtils.load_map(MAP_PATH)
     else:
-        log(f"Creating new level {MAP_PATH}...")
-        if not levels.new_level(MAP_PATH):
-            raise RuntimeError(f"Failed to create new level {MAP_PATH}")
-        world = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world()
-        unreal.EditorLoadingAndSavingUtils.save_map(world, MAP_PATH)
+        raise RuntimeError(f"Refusing to create a new L07 level without a prior isolated copy: {MAP_PATH}")
         
     if not world:
         raise RuntimeError("Failed to obtain editor world")
@@ -102,9 +130,9 @@ def setup_level_and_environment():
             )
     # Create a verified on-D: backup before approved destructive rebake.
     if os.environ.get("YACS_LESSON07_ALLOW_REBAKE") == "YES":
-        saved_file = Path("D:/yacs/project/Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap")
+        saved_file = project_path.parent / "Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap"
         if saved_file.is_file():
-            backup_dir = Path("D:/yacs/work/lesson07-unified-20261019/pre_rebake_backups")
+            backup_dir = project_path.parent / "Saved/L07_PreRebake_Backups"
             backup_dir.mkdir(parents=True, exist_ok=True)
             with saved_file.open("rb") as fd:
                 old_sha = hashlib.file_digest(fd, "sha256").hexdigest()
@@ -193,7 +221,7 @@ def start_tile_bake():
         
     tile = tiles[idx]
     tile_name = tile["name"]
-    tile_file = str(Path("D:/yacs/work/lesson07-unified-20261019/ue_transfer") / tile["file"]).replace("\\", "/")
+    tile_file = str(MANIFEST_PATH.parent / tile["file"]).replace("\\", "/")
     
     log(f"\n>>> STARTING BAKE FOR TILE {idx + 1}/{len(tiles)}: {tile_name} <<<")
     log(f"    Cache: {tile_file}")
