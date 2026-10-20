@@ -27,7 +27,6 @@ jobs:
         shell: pwsh
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
-      YACS_LESSON07_READBACK_PATH: ${{ runner.temp }}/l07-native-geometry.json
     steps:
       - name: Refuse a busy or low-space host
         run: |
@@ -67,6 +66,7 @@ jobs:
           $log = Join-Path $env:RUNNER_TEMP 'l07-native-editor.log'
           $stdout = Join-Path $env:RUNNER_TEMP 'l07-native-stdout.log'
           $stderr = Join-Path $env:RUNNER_TEMP 'l07-native-stderr.log'
+          $env:YACS_LESSON07_READBACK_PATH = Join-Path $env:RUNNER_TEMP 'l07-native-geometry.json'
           if (-not (Test-Path -LiteralPath $ue -PathType Leaf) -or
               -not (Test-Path -LiteralPath $script -PathType Leaf)) {
             throw 'UnrealEditor-Cmd or pinned proof script is missing.'
