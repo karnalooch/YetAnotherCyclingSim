@@ -44,7 +44,7 @@ foreach ($file in $files) {
     $hashes[$file] = (Get-FileHash -LiteralPath $src -Algorithm SHA256).Hash
 }
 $pwsh = (Get-Command pwsh.exe -ErrorAction Stop).Source
-$command = '-NoLogo -NoProfile -NonInteractive -File "{0}"{1} -Json' -f (Join-Path $dest $files[0]), $(if ($EnableDeletion) { ' -Apply' } else { '' })
+$command = '-NoLogo -NoProfile -NonInteractive -File "{0}"{1} -WriteReceipt -Json' -f (Join-Path $dest $files[0]), $(if ($EnableDeletion) { ' -Apply' } else { '' })
 Write-Host "Scheduled task: $name"
 Write-Host "Scheduled: logon and daily at 12:00"
 Write-Host "Command: $pwsh $command"
