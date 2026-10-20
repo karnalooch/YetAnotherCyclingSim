@@ -1653,7 +1653,7 @@
     "performance_pass": false
   },
   "remote_connection_continuation_20261021": {
-    "status": "EDITOR_ABSENT_CONNECTION_PREPARED_NOT_EXECUTED",
+    "status": "EDITOR_ABSENT_STARTUP_BLOCKED_PROJECT_PREFLIGHT",
     "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
     "owner_authorized_missing_connection_infrastructure": true,
     "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
@@ -1662,7 +1662,7 @@
     "asset_changes": [],
     "editor_lifecycle_changes": [],
     "performance_pass": false,
-    "note": "The remote inventory found no deployed Editor process or Wingman discovery file. The owner-authorized bounded connection/startup is prepared; actual execution and native material evidence remain pending. Historical PID 19056 is not treated as live identity.",
+    "note": "Remote inventory found no deployed Editor or Wingman discovery file. Exact-source protected CI passed, but the first connection attempt stopped at project descriptor preflight before task registration, startup, saved hash verification or MCP discovery. Actual host engine association/module counts require read-only observation; the PowerShell dictionary-bug hypothesis did not reproduce. Historical PID 19056 is not treated as live identity.",
     "inventory": {
       "source_commit": "4bf894dd8dccc482a3e90a53bce6d6b01653e6a7",
       "run_id": 39507345660,
@@ -1690,7 +1690,28 @@
       "editor_commands_executed": 0
     },
     "connection_workflow": ".github/workflows/yacs-lesson07-remote-editor.yml",
-    "connection_execution": "NOT_RUN",
+    "connection_execution": "BLOCKED_PROJECT",
+    "first_connection_attempt": {
+      "source_commit": "3ba05803bfc3ff095eb012e3f790752b55b47d12",
+      "protected_ci_run_id": 39508823330,
+      "protected_ci_conclusion": "success",
+      "connection_run_id": 39508814955,
+      "connection_job_id": 118927017770,
+      "connection_job_conclusion": "failure",
+      "checked_at_utc": "2026-10-20T22:39:49.5565226Z",
+      "phase": "PROJECT",
+      "reason_code": "PROJECT_MODULES_OR_ENGINE",
+      "host_status": "IDLE",
+      "task_registered": false,
+      "task_start_requested": false,
+      "editor_stop_requested": false,
+      "checkpoint_bytes_verified": false,
+      "module_build_ids_verified": false,
+      "native_world_verified": false,
+      "artifact_id": 12305610506,
+      "artifact_sha256": "d3cab464fe202a4e588f0a6f96c997f4d3d21156620858efe8a61cac74e9f79a"
+    },
+    "host_project_descriptor_followup": "READ_ONLY_OBSERVATION_PENDING",
     "post_job_survival": "NOT_RUN"
   }
 }

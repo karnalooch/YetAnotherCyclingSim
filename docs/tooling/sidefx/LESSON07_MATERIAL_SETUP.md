@@ -68,9 +68,28 @@ and current world identity have been observed. The
 neither loads/saves packages nor changes the camera or material; partial graph
 API information remains unavailable instead of being promoted to proof.
 
-At this source change, task installation, startup, MCP discovery, native
-readback and post-job survival are **not yet observed**. The first-stage
-inventory artifact is `12303367952`, ZIP SHA256
+At exact source `3ba05803bfc3ff095eb012e3f790752b55b47d12`,
+[protected CyclingSim CI 39508823330](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39508823330)
+completed successfully. The subsequent
+[connection job 118927017770](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39508814955/job/118927017770)
+passed PowerShell parsing, principal checks and all 30 focused Python tests,
+then stopped at `2026-10-20T22:39:49.5565226Z` with
+`BLOCKED_PROJECT / PROJECT_MODULES_OR_ENGINE`. Its fresh host guard was
+`IDLE`. No task was registered or started and no Editor was launched; saved
+checkpoint hashes, module compatibility, MCP discovery and native readback
+were not reached. Report artifact `12305610506` has ZIP SHA256
+`d3cab464fe202a4e588f0a6f96c997f4d3d21156620858efe8a61cac74e9f79a`.
+
+The combined guard does not reveal whether the canonical host descriptor's
+engine association or required-module counts differ. The original production
+read helpers and predicate pass the committed descriptor under verified
+PowerShell 7.6.6; an explicit dictionary-key rewrite is not an established fix.
+A follow-up **read-only** inventory records bounded engine association, module
+names/types, descriptor hash and both predicate counts before any new startup
+attempt. The canonical descriptor is not overwritten. Task installation,
+startup, MCP discovery, native readback and post-job survival remain unverified.
+
+The first-stage inventory artifact is `12303367952`, ZIP SHA256
 `6fffea19df0900427e77881e4dbfdba3ab8f75d992d39027c813b78ecc946c0e`.
 
 The subsequent target is the already specified passive graph/world readback,

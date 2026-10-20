@@ -83,11 +83,43 @@ jobs:
             }
           }
           $free = [math]::Round(([IO.DriveInfo]::new('D:\')).AvailableFreeSpace / 1GB, 2)
+          $projectDescriptor = [ordered]@{status='NOT_READ';engine_association=$null;modules=@();sha256=$null}
+          try {
+            $projectPath = Join-Path $root 'YetAnotherCyclingSim.uproject'
+            $cursor = $projectPath
+            while ($cursor) {
+              if ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Redirected project path.' }
+              $parent = Split-Path -Path $cursor -Parent
+              if ($parent -eq $cursor) { break }
+              $cursor = $parent
+            }
+            $item = Get-Item -LiteralPath $projectPath
+            if ($item.Length -le 0 -or $item.Length -gt 256KB) { throw 'Project descriptor size.' }
+            $raw = Get-Content -LiteralPath $projectPath -Raw
+            $object = $raw | ConvertFrom-Json
+            $dictionary = $raw | ConvertFrom-Json -AsHashtable
+            $association = [string]$object.EngineAssociation
+            $projectDescriptor.engine_association = if ($association -cmatch '^(?:[0-9]+\.[0-9]+(?:\.[0-9]+)?|\{?[0-9A-Fa-f-]{36}\}?)$') { $association } else { 'UNRECOGNIZED' }
+            $projectDescriptor.modules = @($object.Modules | Select-Object -First 32 | ForEach-Object {
+              if ($_.Name -cmatch '^[A-Za-z][A-Za-z0-9_]{0,127}$' -and $_.Type -cmatch '^[A-Za-z]{1,32}$') {
+                [ordered]@{name=[string]$_.Name;type=[string]$_.Type}
+              }
+            })
+            $projectDescriptor.sha256 = (Get-FileHash -LiteralPath $projectPath -Algorithm SHA256).Hash.ToLowerInvariant()
+            $projectDescriptor.dictionary_name_predicate_counts = [ordered]@{
+              runtime_property = @($dictionary.Modules | Where-Object Name -CEQ 'YetAnotherCyclingSim').Count
+              runtime_key = @($dictionary.Modules | Where-Object { $_['Name'] -ceq 'YetAnotherCyclingSim' }).Count
+              editor_property = @($dictionary.Modules | Where-Object Name -CEQ 'YetAnotherCyclingSimEditor').Count
+              editor_key = @($dictionary.Modules | Where-Object { $_['Name'] -ceq 'YetAnotherCyclingSimEditor' }).Count
+            }
+            $projectDescriptor.status = 'BOUNDED_PROJECT_DESCRIPTOR_OBSERVED'
+          } catch { $projectDescriptor.status='DESCRIPTOR_READ_FAILED';$projectDescriptor.error_type=$_.Exception.GetType().Name }
           $report = [ordered]@{
             status = 'READ_ONLY_DIAGNOSTIC'
             source_commit = '${{ github.sha }}'
             engine_editor_cmd = (Test-Path -LiteralPath (Join-Path $engine 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe') -PathType Leaf)
             canonical_project_present = (Test-Path -LiteralPath (Join-Path $root 'YetAnotherCyclingSim.uproject') -PathType Leaf)
+            project_descriptor = $projectDescriptor
             free_d_gib = $free
             editor_binaries = $items
             module_manifests = $manifestInfo
