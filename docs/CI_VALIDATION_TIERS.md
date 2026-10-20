@@ -337,6 +337,18 @@ requiring ordinary successful Unreal build/Automation before any green cache
 can be published. This is not permission to rewrite, delete or ignore existing
 DLLs, weaken CI proof or change physics/world geometry.
 
+The 2026-10-20 nested-plugin correction also recognizes `.uplugin` roots
+recursively below `Plugins`, including `Plugins/Runtime/HoudiniEngine`.
+It excludes only their direct `Binaries` and `Intermediate` output directories;
+authored `Source`, `Build`, `Resources` and unknown inputs remain fingerprinted.
+Run `39420698136` exposed 333 generated nested-plugin inputs in the retained
+Windows cache. Removing those inputs reproduces the hosted and recorded compile
+fingerprint without deleting or rewriting binaries or cache state. The existing
+`yacs-unreal-binary-v2` identity is retained. `classify_changes.py` now participates
+in the proof fingerprint and Unreal RUNTIME routing, requiring fresh normal
+Automation before read-only cache reuse. This cache repair does not establish
+Lesson 7 map, material, geometry or visual acceptance.
+
 A compile-fingerprint mismatch is **not** cache corruption:
 when engine/toolchain provenance still matches, the lane invalidates the green
 stamp but keeps `Intermediate/Binaries` and performs a WARM COMPILE. Missing

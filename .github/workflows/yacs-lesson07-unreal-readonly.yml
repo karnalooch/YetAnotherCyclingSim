@@ -10,6 +10,9 @@ on:
       - scripts/ue/Invoke-YacsLesson07Readback.ps1
       - scripts/ue/readback_lesson07_geometry.py
       - scripts/ue/test_lesson07_readback.py
+      - scripts/ci/classify_changes.py
+      - Content/Generated/YACS/Lesson07_Unified/**
+      - Content/PegasusDemo/Materials/**
 
 permissions:
   contents: read

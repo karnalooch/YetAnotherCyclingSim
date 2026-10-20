@@ -1,6 +1,7 @@
 """Synthetic L07 admission/path/native-query boundary tests, never UE evidence."""
 
 from copy import deepcopy
+from fnmatch import fnmatchcase
 import hashlib
 import json
 import os
@@ -528,6 +529,44 @@ class PreparationBoundaryTests(unittest.TestCase):
 
 
 class WorkflowBoundaryTests(unittest.TestCase):
+    def test_l07_paths_include_cache_gate_and_copied_assets_without_other_worlds(self):
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        push = workflow.split("  push:\n", 1)[1].split("\npermissions:", 1)[0]
+        path_lines = push.split("    paths:\n", 1)[1].strip("\n").splitlines()
+        paths = []
+        for line in path_lines:
+            match = re.fullmatch(r"      - ([A-Za-z0-9_./-]+(?:/\*\*)?)", line)
+            self.assertIsNotNone(match, "Only literal paths and trailing /** are admitted")
+            paths.append(match.group(1))
+
+        # For this restricted syntax, fnmatchcase has the same path behavior as
+        # Actions. Exercise real changed-file routes, including nested assets.
+        routes = {
+            ".github/workflows/yacs-lesson07-unreal-readonly.yml": True,
+            "scripts/ue/Invoke-YacsLesson07Readback.ps1": True,
+            "scripts/ue/readback_lesson07_geometry.py": True,
+            "scripts/ue/test_lesson07_readback.py": True,
+            "scripts/ci/classify_changes.py": True,
+            "Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap": True,
+            "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape.uasset": True,
+            "Content/PegasusDemo/Materials/M_Landscape.uasset": True,
+            "Content/PegasusDemo/Materials/Functions/MF_Landscape.uasset": True,
+            "Content/Generated/YACS/Lesson06/L_SaCalobra.umap": False,
+            "Content/Generated/YACS/OtherWorld/L_World.umap": False,
+            "Content/Generated/YACS/Lesson07_Unified_Other/L_World.umap": False,
+            "Content/PegasusDemo/OtherAssets/T_Texture.uasset": False,
+            "Content/PegasusDemo/Materials_Other/M_Landscape.uasset": False,
+            "Content/OtherWorld/Materials/M_Landscape.uasset": False,
+            "scripts/houdini/setup_lesson07_unified_houdini.py": False,
+            "scripts/ue/bake_lesson07_landscape.py": False,
+            "scripts/ci/unrelated.py": False,
+            "Source/YetAnotherCyclingSim/Unrelated.cpp": False,
+            "docs/tooling/sidefx/LESSON07_MATERIAL_SETUP.md": False,
+        }
+        for path, expected in routes.items():
+            with self.subTest(path=path):
+                self.assertEqual(any(fnmatchcase(path, pattern) for pattern in paths), expected)
+
     @unittest.skipUnless(shutil.which("git") and shutil.which("pwsh"), "Git and PowerShell 7 required for actual checkout fixture")
     def test_owned_workflow_git_config_preserves_blob_bytes_after_crlf_baseline(self):
         value = WORKFLOW.read_text(encoding="utf-8")
