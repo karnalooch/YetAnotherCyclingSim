@@ -24,6 +24,7 @@ causes the cleanup to stop. Zen running prevents filesystem DDC cleanup.
 The task will not touch the Zen database even when the server is stopped.
 
 A dedicated exclusive lock prevents simultaneous maintenance jobs.
+Scheduled audit mode writes **only** one tiny status JSON (no cache deletion).
 Results are stored as one bounded file:
 D:\yacs\maintenance\latest-autoclean.json. An unhandled failure is
 fail-closed, not silently reported as successful. The task does not reboot,
