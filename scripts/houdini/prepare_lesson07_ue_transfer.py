@@ -153,22 +153,17 @@ def main():
         pos0 = tuple(prim.indexToPos((0, 0, 0)))
         pos_max = tuple(prim.indexToPos((res[0] - 1, res[1] - 1, 0)))
         bbox = prim.boundingBox()
-        mask = np.frombuffer(validity.allVoxelsAsString(), dtype=np.float32)
-        mask = mask.reshape(res[1], res[0]).copy()
-        if not np.isfinite(mask).all() or mask.min() < 0 or mask.max() > 1:
-            raise RuntimeError(f"{name}: invalid visibility range")
-        xs = np.linspace(pos0[0], pos_max[0], res[0])
-        zs = np.linspace(pos0[2], pos_max[2], res[1])
-        outside_cols = (xs < src_x[0] - 1e-4) | (xs > src_x[1] + 1e-4)
-        outside_rows = (zs < src_z[0] - 1e-4) | (zs > src_z[1] + 1e-4)
-        mask[outside_rows, :] = 0.0
-        mask[:, outside_cols] = 0.0
-        validity.setAllVoxelsFromString(np.ascontiguousarray(mask))
+        raw_mask = np.frombuffer(
+            validity.allVoxelsAsString(), dtype=np.float32
+        ).reshape(res[1], res[0])
+        mask, padded_count = mask_padding(
+            raw_mask, pos0, pos_max, src_x, src_z
+        )
+        validity.setAllVoxelsFromString(
+            np.ascontiguousarray(mask, dtype=np.float32).tobytes()
+        )
         valid_count = int(np.count_nonzero(mask > 0.5))
         invalid_count = int(mask.size - valid_count)
-        padded_count = int(outside_rows.sum() * res[0]
-                           + outside_cols.sum() * res[1]
-                           - outside_rows.sum() * outside_cols.sum())
         arr = np.frombuffer(prim.allVoxelsAsString(), dtype=np.float32).reshape(res[1], res[0])
         arrays[(ix, iy)] = arr.copy()
         masks[(ix, iy)] = mask
@@ -212,26 +207,28 @@ def main():
         tiles_manifest.append(tile_info)
         print(f"  Done: min={tile_info['elevation_min_m']:.2f} m, max={tile_info['elevation_max_m']:.2f} m, sha256={file_sha256[:12]}...")
 
-    # Seam verification
-    print("\n=== VERIFYING TILE SEAMS ===")
-    diff_x_bottom = np.abs(arrays[(0, 0)][:, -1] - arrays[(1, 0)][:, 0])
-    diff_x_top = np.abs(arrays[(0, 1)][:, -1] - arrays[(1, 1)][:, 0])
-    diff_z_left = np.abs(arrays[(0, 0)][0, :] - arrays[(0, 1)][-1, :])
-    diff_z_right = np.abs(arrays[(1, 0)][0, :] - arrays[(1, 1)][-1, :])
-    
-    seam_x_bottom = float(np.max(diff_x_bottom))
-    seam_x_top = float(np.max(diff_x_top))
-    seam_z_left = float(np.max(diff_z_left))
-    seam_z_right = float(np.max(diff_z_right))
-    
-    print(f"  Seam X bottom error: {seam_x_bottom:.6f} m")
-    print(f"  Seam X top error:    {seam_x_top:.6f} m")
-    print(f"  Seam Z left error:   {seam_z_left:.6f} m")
-    print(f"  Seam Z right error:  {seam_z_right:.6f} m")
-    
-    max_seam_error = max(seam_x_bottom, seam_x_top, seam_z_left, seam_z_right)
-    assert max_seam_error < 1e-4, f"Seam error exceeds tolerance: {max_seam_error}"
-    print("  ALL TILE SEAMS ARE 100% PERFECT AND SEAMLESS (0.000000 m error)!")
+    # Compare physically identical world-coordinate edges, including
+    # alternate Houdini volume-row orientation and the visibility layer.
+    print("\n=== VERIFYING NATIVE L07 WORLD-COORDINATE SEAMS ===")
+    height_tiles = {
+        key: (value, *world_coords[key]) for key, value in arrays.items()
+    }
+    mask_tiles = {
+        key: (value, *world_coords[key]) for key, value in masks.items()
+    }
+    height_seams = compare_all_four(height_tiles, tolerance_m=0.0001)
+    mask_seams = compare_all_four(mask_tiles, tolerance_m=1.0 / 255.0)
+    max_seam_error = max(v["sample_error"] for v in height_seams.values())
+    for side, stats in height_seams.items():
+        print(f"  {side}: height={stats['sample_error']:.7f}m "
+              f"world-position={stats['position_error_m']:.7f}m")
+    # The point (0,0) is off the source's 0.5m lattice. Compare later to
+    # an interpolated native reference, not the rounded 473.51m receipt.
+    origin_reference_m = interpolate_bilinear(
+        arrays[(1, 1)], *world_coords[(1, 1)], 0.0, 0.0
+    )
+    print(f"  Source center interpolation: {origin_reference_m:.6f} m")
+    print("  4 exact world-aligned seams verified.")
 
     # Verify landmarks against source cache
     print("\n=== VERIFYING LANDMARK ELEVATIONS ===")
@@ -265,16 +262,19 @@ def main():
 
     manifest = {
         "status": "NATIVE_TRANSFER_READY_UE_VALIDATION_PENDING",
+        "accepted_l06_sha256": accepted_sha,
+        "output_policy": "NEW_DIRECTORY_NO_OVERWRITE",
+        "masked_material_ue_verified": False,
         "duration_seconds": time.time() - start_time,
         "source_cache": str(SOURCE_CACHE).replace("\\", "/"),
         "tiles": tiles_manifest,
         "seam_verification": {
-            "seam_x_bottom_m": seam_x_bottom,
-            "seam_x_top_m": seam_x_top,
-            "seam_z_left_m": seam_z_left,
-            "seam_z_right_m": seam_z_right,
-            "max_seam_error_m": max_seam_error,
+            "height_world_aligned": height_seams,
+            "visibility_world_aligned": mask_seams,
+            "max_height_seam_error_m": max_seam_error,
             "seams_perfect": True,
+            "accepted_l06_center_0_0_bilinear_m": origin_reference_m,
+            "center_0_0_ue_collision_verified": False,
         },
         "landmark_verification": landmark_results,
     }
