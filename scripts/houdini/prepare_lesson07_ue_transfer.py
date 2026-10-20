@@ -5,15 +5,20 @@ unified cache (D:/yacs/work/lesson06-unified-20261019/final_unified_idmap.bgeo.s
 Domain bounds: [-4064, +4064] m in X and Z, covering the full 8000 x 8000 m domain.
 """
 import hashlib
+import os
+import shutil
 import json
 from pathlib import Path
 import time
 import hou
 import numpy as np
 
+from l07_tile_invariants import compare_all_four, interpolate_bilinear, mask_padding
+
 SOURCE_CACHE = Path("D:/yacs/work/lesson06-unified-20261019/final_unified_idmap.bgeo.sc")
-OUTPUT_DIR = Path("D:/yacs/work/lesson07-unified-20261019/ue_transfer")
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+OUTPUT_DIR = Path(os.environ.get("YACS_LESSON07_EXPORT_DIR", "D:/yacs/work/lesson07-ue-transfer-repair-20261020")).resolve()
+PINNED_L06_SHA256 = "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24"
+PINNED_L06_BYTES = 4808520505
 
 MANIFEST_PATH = OUTPUT_DIR / "manifest.json"
 REVIEW_MATERIAL = "/Game/Worlds/SaCalobra_Houdini_20261016/Materials/M_TerrainReview.M_TerrainReview"
@@ -40,6 +45,20 @@ def attr(parent, name, inp, values):
 def main():
     start_time = time.time()
     print("=== STARTING PREPARATION OF LESSON 07 UE TRANSFER TILES ===")
+    work_root = Path("D:/yacs/work").resolve()
+    if work_root not in OUTPUT_DIR.parents or OUTPUT_DIR.exists():
+        raise RuntimeError("L07 output must be a NEW directory below D:/yacs/work")
+    free_gib = shutil.disk_usage(work_root).free / (1024 ** 3)
+    if free_gib < 30:
+        raise RuntimeError(f"Need 30 GiB free for L07 transfer, got {free_gib:.2f}")
+    if not SOURCE_CACHE.is_file() or SOURCE_CACHE.stat().st_size != PINNED_L06_BYTES:
+        raise RuntimeError("Accepted L06 cache missing or size mismatch")
+    with SOURCE_CACHE.open("rb") as stream:
+        accepted_sha = hashlib.file_digest(stream, "sha256").hexdigest()
+    if accepted_sha != PINNED_L06_SHA256:
+        raise RuntimeError("Accepted L06 cache hash mismatch, refusing export")
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=False)
+    print(f"Accepted L06 SHA256 pinned: {accepted_sha}")
     
     geo = hou.node("/obj").createNode("geo", "UNIFIED_UE_TRANSFER", run_init_scripts=False)
     
@@ -47,7 +66,7 @@ def main():
     src = geo.createNode("file", "SOURCE_UNIFIED")
     src.parm("file").set(str(SOURCE_CACHE).replace("\\", "/"))
     
-    height_only = geo.createNode("blast", "HEIGHT_ONLY")
+    height_only = geo.createNode("blast", "HEIGHT_AND_ALPHA")
     height_only.setInput(0, src)
     height_only.parm("group").set("@name=height @name=Alpha")
     height_only.parm("negate").set(1)
@@ -58,7 +77,9 @@ def main():
     if not {"height", "Alpha"}.issubset(source_volumes):
         raise RuntimeError("Source L06 cache must contain height and Alpha")
     source_height = source_volumes["height"]
-    xres, zres, _ = source_height.resolution()
+    xres, zres, depth = source_height.resolution()
+    if (xres, zres, depth) != (16000, 16000, 1):
+        raise RuntimeError("L06 accepted source is not 16000x16000x1")
     first = source_height.indexToPos((0, 0, 0))
     last = source_height.indexToPos((xres - 1, zres - 1, 0))
     src_x = sorted((float(first[0]), float(last[0])))
@@ -76,6 +97,8 @@ def main():
     
     tiles_manifest = []
     arrays = {}
+    masks = {}
+    world_coords = {}
     
     for cfg in tile_configs:
         name = cfg["name"]
@@ -147,7 +170,9 @@ def main():
                            + outside_cols.sum() * res[1]
                            - outside_rows.sum() * outside_cols.sum())
         arr = np.frombuffer(prim.allVoxelsAsString(), dtype=np.float32).reshape(res[1], res[0])
-        arrays[(ix, iy)] = arr
+        arrays[(ix, iy)] = arr.copy()
+        masks[(ix, iy)] = mask
+        world_coords[(ix, iy)] = (pos0, pos_max)
         
         out_filename = f"{name}.bgeo.sc"
         out_path = OUTPUT_DIR / out_filename
