@@ -20,10 +20,9 @@ Renders:
 import argparse
 import hashlib
 import json
-import os
 from pathlib import Path
+import shutil
 import subprocess
-import sys
 import time
 
 PROJECT_DIR = Path("D:/yacs/project").resolve()
@@ -46,9 +45,20 @@ def render_single_view(cam_name: str, node_name: str, out_file: Path, width: int
 
     node = net.node(node_name)
     assert node is not None, f"Node {node_name} not found"
+    repair = json.loads(REPORT_PATH.with_name("preview_repair_report.json").read_text(encoding="utf-8"))
+    if repair["hip_after_sha256"] != hashlib.sha256(L07_HIP.read_bytes()).hexdigest():
+        raise RuntimeError("Render cache belongs to a different HIP")
+    cached = repair["render_caches"][node_name]
+    cache_file = Path(cached["path"])
+    with cache_file.open("rb") as stream:
+        if hashlib.file_digest(stream, "sha256").hexdigest() != cached["sha256"]:
+            raise RuntimeError("Diagnostic geometry cache changed")
+    node = net.createNode("file", "RENDER_PREVIEW_CACHE")
+    node.parm("file").set(str(cache_file))
     node.setDisplayFlag(True)
     node.setRenderFlag(True)
-    node.setSelected(True, clear_all_selected=True)
+    for selected in hou.selectedNodes():
+        selected.setSelected(False)
 
     out = hou.node("/out")
     rop = out.node("RENDER_3D_EVIDENCE")
@@ -72,7 +82,7 @@ def inspect_image(path: Path):
     from PIL import Image
     import numpy as np
     img = Image.open(path)
-    arr = np.array(img)
+    arr = np.array(img.convert("RGB"))
     non_black = float(np.count_nonzero(arr > 10)) / arr.size * 100
     file_bytes = path.read_bytes()
     sha256 = hashlib.sha256(file_bytes).hexdigest()
@@ -87,6 +97,12 @@ def inspect_image(path: Path):
         "min": int(arr.min()),
         "max": int(arr.max()),
         "non_black_pct": non_black,
+        "chromatic_pct": float(np.mean(np.ptp(arr, axis=2) > 10) * 100),
+        "red_mask_pixels": int(np.count_nonzero(
+            (arr[:, :, 0] > 80)
+            & (arr[:, :, 0].astype(np.int16) > arr[:, :, 1].astype(np.int16) * 2)
+            & (arr[:, :, 0].astype(np.int16) > arr[:, :, 2].astype(np.int16) * 2)
+        )),
     }
 
 
@@ -102,7 +118,18 @@ def main():
         render_single_view(args.cam, args.node, Path(args.out))
         return
 
-    # Master driver loop
+    # A render receipt is evidence of frames, not visual/terrain acceptance.
+    repair_path = REPORT_PATH.with_name("preview_repair_report.json")
+    repair = json.loads(repair_path.read_text(encoding="utf-8"))
+    hip_sha = hashlib.sha256(L07_HIP.read_bytes()).hexdigest()
+    if repair["hip_after_sha256"] != hip_sha or not repair["source_unchanged"]:
+        raise RuntimeError("Preview repair receipt does not identify this HIP")
+    if REPORT_PATH.exists():
+        previous_hash = hashlib.sha256(REPORT_PATH.read_bytes()).hexdigest()
+        archive = REPORT_PATH.parent / "render_history" / f"{previous_hash}.json"
+        archive.parent.mkdir(parents=True, exist_ok=True)
+        if not archive.exists():
+            shutil.copy2(REPORT_PATH, archive)
     start_time = time.time()
     print("=== STARTING HOUDINI 3D VIEWPORT EVIDENCE RENDERING ===", flush=True)
 
@@ -141,8 +168,8 @@ def main():
         ("cam_panorama", "PREVIEW_GLOBAL_COLOR", "3d_cam_panorama.png", "Panorama view of full 8x8 km domain"),
         ("cam_puig_major", "PREVIEW_GLOBAL_COLOR", "3d_cam_puig_major.png", "Closeup view of Puig Major peak and ridgeline"),
         ("cam_sa_calobra_cove", "PREVIEW_GLOBAL_COLOR", "3d_cam_sa_calobra_cove.png", "Framed closeup view of Sa Calobra cove and beach"),
-        ("cam_scree_site", "PREVIEW_GLOBAL_COLOR", "3d_cam_scree_site.png", "Closeup view of Scree slope site with terrain surface"),
-        ("cam_scree_site", "PREVIEW_CLASS_ISOLATION", "3d_cam_scree_site_isolation.png", "Closeup view of Scree site with red class isolation mask"),
+        ("cam_scree_site", "SCREE_SITE_GLOBAL_COLOR", "3d_cam_scree_site.png", "Native 0.5 m crop at a verified Scree texel"),
+        ("cam_scree_site", "SCREE_FULLRES_PREVIEW", "3d_cam_scree_site_isolation.png", "Same native crop/camera with original Pegasus Scree decoder in red"),
         ("cam_transition", "PREVIEW_GLOBAL_COLOR", "3d_cam_transition.png", "Closeup view of Scree/Cliffs boundary zone"),
     ]
 
@@ -170,16 +197,29 @@ def main():
         rendered_cameras.append(stats)
         print(f"  [ok] {img_name}: {stats['size_bytes']} bytes, sha256={stats['sha256'][:12]}..., mean={stats['mean']:.1f}, std={stats['std']:.1f}, non_black={stats['non_black_pct']:.1f}%")
 
+    by_name = {item["name"]: item for item in rendered_previews + rendered_cameras}
+    signal_checks = {
+        "global_color_has_chroma": by_name["3d_preview_global_color.png"]["chromatic_pct"] > 0.5,
+        "neutral_is_achromatic": by_name["3d_preview_neutral_shading.png"]["chromatic_pct"] < 0.1,
+        "scree_closeup_has_red_mask": by_name["3d_cam_scree_site_isolation.png"]["red_mask_pixels"] >= 20,
+    }
     report = {
-        "status": "PASS",
+        "status": "RENDERS_WRITTEN_VISUAL_REVIEW_PENDING" if all(signal_checks.values()) else "FAILED_RENDER_SIGNAL_CHECK",
         "duration_seconds": time.time() - start_time,
         "hip_path": str(L07_HIP),
+        "hip_sha256": hip_sha,
+        "source_cache_sha256": repair["source_cache_sha256"],
+        "scree_houdini_xyz_m": repair["scree_houdini_xyz_m"],
+        "signal_checks": signal_checks,
+        "signal_checks_are_visual_acceptance": False,
         "evidence_dir": str(EVIDENCE_DIR),
         "preview_mode_renders": rendered_previews,
         "camera_renders": rendered_cameras,
     }
     REPORT_PATH.write_text(json.dumps(report, indent=2))
     print(f"\nSaved report to {REPORT_PATH}", flush=True)
+    if not all(signal_checks.values()):
+        raise RuntimeError(f"Preview signal check failed: {signal_checks}")
     print("=== HOUDINI 3D RENDERING COMPLETED SUCCESSFULLY ===", flush=True)
 
 

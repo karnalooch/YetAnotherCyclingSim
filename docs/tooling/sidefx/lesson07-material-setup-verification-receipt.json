@@ -17,7 +17,7 @@
     "performance_pass": false,
     "performance_note": "DEFERRED_AFTER_M3",
     "native_recheck_required": true,
-    "reason": "Prior transfer omitted validity Alpha; visibility material and geometry raycasts have not passed native recheck."
+    "reason": "Preview display and camera corrected; unchanged saved UE map still requires native geometry, visibility, collision and visual recheck. Source/transport success and ordinary Automation are not L07 acceptance."
   },
   "domain": {
     "grid_dimensions": [
@@ -268,6 +268,18 @@
           "quantization_steps": -17.095
         }
       ]
+    },
+    "historical_measurements_require_native_recheck": true,
+    "quantization_correction": {
+      "shared_2_2964674_cm_step_is_valid": false,
+      "basis": "Scale.Z / 128 cm per stored height unit, using historical observed actor scales; fresh native readback pending.",
+      "actor_step_cm": {
+        "SaCalobra_Unified_0_0": 1.450975,
+        "SaCalobra_Unified_0_1": 4.38585859375,
+        "SaCalobra_Unified_1_0": 2.6086734375,
+        "SaCalobra_Unified_1_1": 4.1643984375
+      },
+      "is_seam_acceptance": false
     }
   },
   "idmap_and_color_registration": {
@@ -470,7 +482,7 @@
       }
     }
   },
-  "houdini_preview_verification": {
+  "historical_houdini_preview_verification": {
     "checkpoint_hip": {
       "path": "worldgen/houdini/sa_calobra/SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc",
       "size_bytes": 570182,
@@ -646,7 +658,10 @@
         "non_black_pct": 100,
         "description": "Scree/Cliffs boundary transition closeup from /obj/cam_transition"
       }
-    ]
+    ],
+    "status": "SUPERSEDED_PREVIEW_CLAIMS_NOT_ACCEPTANCE",
+    "source_commit": "926505d9",
+    "reason": "The old global preview was achromatic and the claimed Scree closeup had no red mask. Historical frame hashes no longer identify the updated evidence files."
   },
   "unreal_camera_inspection": {
     "camera_alignment_formula": "UE_pos = [src_pos.x * 100, src_pos.z * 100, src_pos.y * 100]",
@@ -715,6 +730,356 @@
         "non_black_pct": 98.7,
         "visual_assessment": "Domain center tile seam boundary looking along X=0 and Y=0 axes; zero visible elevation step or texture misalignment"
       }
+    ],
+    "status": "HISTORICAL_IMAGES_NOT_FRESH_NATIVE_ACCEPTANCE",
+    "claims_requiring_recheck": [
+      "Scree class/location alignment",
+      "Cove/beach framing",
+      "True seams at -0.25 m, not axes at 0 m",
+      "Geometry, visibility and collision after update"
     ]
+  },
+  "updated_at": "2026-10-20T13:42:53.200586+00:00",
+  "houdini_preview_verification": {
+    "status": "NATIVE_PREVIEW_SIGNALS_VERIFIED_VISUAL_REVIEW_PENDING",
+    "original_reviewed_hip_sha256": "2ea5eafb0e5b2965ef718243a81aa83919255d0cb2af56444d0e7d6bf99fd8d1",
+    "repair": {
+      "status": "PREVIEW_GRAPH_REPAIRED_RENDER_REVIEW_PENDING",
+      "houdini_version": "22.0.466",
+      "hip": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc",
+      "hip_before_sha256": "75a9a2e9e996a27ca3c2b2d536ed0172fa295165993356e19e63b667d084bc15",
+      "hip_after_sha256": "340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775",
+      "backup": "D:\\yacs\\work\\lesson07-unified-20261019\\checkpoints\\SaCalobra_Pegasus_Lesson07_Unified_v001-75a9a2e9e996a27ca3c2b2d536ed0172fa295165993356e19e63b667d084bc15.hiplc",
+      "source_cache": "D:\\yacs\\work\\lesson06-unified-20261019\\final_unified_idmap.bgeo.sc",
+      "source_cache_sha256": "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24",
+      "source_l06_hip_sha256": "7701a844bd82d1496995866676a20ee069e9cac6e873889aca02a64be3ae2abb",
+      "source_unchanged": true,
+      "idmap_sha256": "cb794170135e3b918e3d809275f9c68ba8595653453d8c8dafe1297bcf6e1bc3",
+      "scree_png_xy": [
+        2981,
+        4311
+      ],
+      "scree_native_voxel": [
+        2981,
+        11688,
+        0
+      ],
+      "scree_houdini_xyz_m": [
+        -2509.25,
+        44.647972106933594,
+        -1844.250244140625
+      ],
+      "scree_source_id": 1.0,
+      "scree_crop_size_m": 128,
+      "scree_selection_radius_m": 32,
+      "scree_selection_neighbours": 22,
+      "scree_crop_resolution": [
+        257,
+        257,
+        1
+      ],
+      "scree_crop_class_pixels": 34,
+      "scree_decoder_mismatches": 0,
+      "scree_crop_max_height_m": 255.7100067138672,
+      "global_tint_field": "r g b",
+      "global_tint_ramp": "none",
+      "cooked_preview_fields": {
+        "PREVIEW_GLOBAL_COLOR": "r g b",
+        "PREVIEW_IDMAP": "id",
+        "PREVIEW_CLASS_ISOLATION": "mask",
+        "SCREE_FULLRES_PREVIEW": "mask",
+        "SCREE_SITE_GLOBAL_COLOR": "r g b"
+      },
+      "render_caches": {
+        "PREVIEW_GLOBAL_COLOR": {
+          "path": "D:\\yacs\\work\\lesson07-unified-20261019\\preview_cache\\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\\PREVIEW_GLOBAL_COLOR.bgeo.sc",
+          "sha256": "90394f2c0689f1287fca2614833b82278bd61d42b5f8f014bcb15e391a830658"
+        },
+        "PREVIEW_IDMAP": {
+          "path": "D:\\yacs\\work\\lesson07-unified-20261019\\preview_cache\\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\\PREVIEW_IDMAP.bgeo.sc",
+          "sha256": "526051b7399e2f2a6ac3a8ab9bace2bd00157cd731aed74fbc8ef63598371884"
+        },
+        "PREVIEW_CLASS_ISOLATION": {
+          "path": "D:\\yacs\\work\\lesson07-unified-20261019\\preview_cache\\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\\PREVIEW_CLASS_ISOLATION.bgeo.sc",
+          "sha256": "c2ca79cdd7b7b92dce6727ae602f5ed1615c1c5a42b9a988512eea418e7cf73a"
+        },
+        "SCREE_FULLRES_PREVIEW": {
+          "path": "D:\\yacs\\work\\lesson07-unified-20261019\\preview_cache\\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\\SCREE_FULLRES_PREVIEW.bgeo.sc",
+          "sha256": "5578cec56f5d215c7fa2e563ddc119a4412c927f251ba5ccae8b9b2d545a0f2b"
+        },
+        "SCREE_SITE_GLOBAL_COLOR": {
+          "path": "D:\\yacs\\work\\lesson07-unified-20261019\\preview_cache\\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\\SCREE_SITE_GLOBAL_COLOR.bgeo.sc",
+          "sha256": "058a52fdf717bc8ff5eb770101594c54f3f12e12a928efd67720205da50f59ac"
+        },
+        "PREVIEW_NEUTRAL_SHADING": {
+          "path": "D:\\yacs\\work\\lesson07-unified-20261019\\preview_cache\\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\\PREVIEW_NEUTRAL_SHADING.bgeo.sc",
+          "sha256": "1e374a9778402ec91cdd844cdd3327c80101ad914ef84b92264d3a131c851e56"
+        }
+      },
+      "invalidated": [
+        "L07 preview renders",
+        "historical Scree camera/texel evidence"
+      ],
+      "terrain_exports_regenerated": false,
+      "unreal_assets_changed": false
+    },
+    "render": {
+      "status": "RENDERS_WRITTEN_VISUAL_REVIEW_PENDING",
+      "duration_seconds": 70.24628782272339,
+      "hip_path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc",
+      "hip_sha256": "340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775",
+      "source_cache_sha256": "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24",
+      "scree_houdini_xyz_m": [
+        -2509.25,
+        44.647972106933594,
+        -1844.250244140625
+      ],
+      "signal_checks": {
+        "global_color_has_chroma": true,
+        "neutral_is_achromatic": true,
+        "scree_closeup_has_red_mask": true
+      },
+      "signal_checks_are_visual_acceptance": false,
+      "evidence_dir": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified",
+      "preview_mode_renders": [
+        {
+          "name": "3d_preview_global_color.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_preview_global_color.png",
+          "size_bytes": 2196197,
+          "sha256": "9fefd2eb63083d987985d40e71ac9a8122e5b0bf9c8e32d76c03a33bc4d93d53",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 26.40917807998971,
+          "std": 34.980761428292624,
+          "min": 0,
+          "max": 191,
+          "non_black_pct": 46.31489519032922,
+          "chromatic_pct": 21.303337191358025,
+          "red_mask_pixels": 0,
+          "note": "Global color preview on 3D terrain"
+        },
+        {
+          "name": "3d_preview_neutral_shading.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_preview_neutral_shading.png",
+          "size_bytes": 1044596,
+          "sha256": "5a99e88e1d098976c689fc4eea914d90fe2a9414d805827e95cc989963cb96ff",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 70.36318849665638,
+          "std": 62.34488159430263,
+          "min": 0,
+          "max": 255,
+          "non_black_pct": 58.61948623971194,
+          "chromatic_pct": 0.0006751543209876544,
+          "red_mask_pixels": 0,
+          "note": "Neutral shading clay preview on 3D terrain"
+        },
+        {
+          "name": "3d_preview_idmap_palette.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_preview_idmap_palette.png",
+          "size_bytes": 2070461,
+          "sha256": "e704785c744dbf463221765c6346e24431180b840ecfb826347dc36794588df3",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 31.412414801954732,
+          "std": 32.81987305269033,
+          "min": 0,
+          "max": 191,
+          "non_black_pct": 58.367750128600825,
+          "chromatic_pct": 54.248312114197525,
+          "red_mask_pixels": 0,
+          "note": "5-class IDMap palette preview on 3D terrain"
+        },
+        {
+          "name": "3d_preview_scree_isolation.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_preview_scree_isolation.png",
+          "size_bytes": 859192,
+          "sha256": "f68bc61a3b44b8ec77965af092f947597da08fd2be68873f77fd555ad86ad117",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 51.83619791666667,
+          "std": 44.97904287188891,
+          "min": 0,
+          "max": 191,
+          "non_black_pct": 58.42325745884773,
+          "chromatic_pct": 0.005738811728395062,
+          "red_mask_pixels": 18,
+          "note": "Scree class isolation mask preview on 3D terrain"
+        }
+      ],
+      "camera_renders": [
+        {
+          "name": "3d_cam_panorama.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_cam_panorama.png",
+          "size_bytes": 2196197,
+          "sha256": "9fefd2eb63083d987985d40e71ac9a8122e5b0bf9c8e32d76c03a33bc4d93d53",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 26.40917807998971,
+          "std": 34.980761428292624,
+          "min": 0,
+          "max": 191,
+          "non_black_pct": 46.31489519032922,
+          "chromatic_pct": 21.303337191358025,
+          "red_mask_pixels": 0,
+          "note": "Panorama view of full 8x8 km domain"
+        },
+        {
+          "name": "3d_cam_puig_major.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_cam_puig_major.png",
+          "size_bytes": 1104070,
+          "sha256": "087aaf6c39137bdc22218f39024b6b3dee878c56c469e12e39a56c8d433ca42a",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 34.550862911522636,
+          "std": 43.362011433801314,
+          "min": 0,
+          "max": 191,
+          "non_black_pct": 43.55799897119342,
+          "chromatic_pct": 10.13527199074074,
+          "red_mask_pixels": 0,
+          "note": "Closeup view of Puig Major peak and ridgeline"
+        },
+        {
+          "name": "3d_cam_sa_calobra_cove.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_cam_sa_calobra_cove.png",
+          "size_bytes": 563202,
+          "sha256": "1851be0f134a6a4023f0de4a58221a00812c9cc85de1f73413c1a2e92b19fb55",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 18.070804558899177,
+          "std": 25.20374902311458,
+          "min": 0,
+          "max": 91,
+          "non_black_pct": 35.91454475308642,
+          "chromatic_pct": 0.0,
+          "red_mask_pixels": 0,
+          "note": "Framed closeup view of Sa Calobra cove and beach"
+        },
+        {
+          "name": "3d_cam_scree_site.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_cam_scree_site.png",
+          "size_bytes": 1582378,
+          "sha256": "9d257a2459049d80a115fad648e0343521d8cbdff565e7b7b49261cad3974f29",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 45.1246177340535,
+          "std": 30.483643960722002,
+          "min": 0,
+          "max": 117,
+          "non_black_pct": 80.25601208847736,
+          "chromatic_pct": 9.279465663580247,
+          "red_mask_pixels": 0,
+          "note": "Native 0.5 m crop at a verified Scree texel"
+        },
+        {
+          "name": "3d_cam_scree_site_isolation.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_cam_scree_site_isolation.png",
+          "size_bytes": 833866,
+          "sha256": "cca6362858027dd900332cfa39b12d81971753b74e52118392b1e73c4410f509",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 54.3443124678498,
+          "std": 34.5178412355942,
+          "min": 0,
+          "max": 129,
+          "non_black_pct": 80.90263310185185,
+          "chromatic_pct": 0.03390239197530864,
+          "red_mask_pixels": 170,
+          "note": "Same native crop/camera with original Pegasus Scree decoder in red"
+        },
+        {
+          "name": "3d_cam_transition.png",
+          "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\3d_cam_transition.png",
+          "size_bytes": 682434,
+          "sha256": "ba848291ca768bfc390e4d75fc75868ca4f96ec68e65161020f98e967bd81e66",
+          "shape": [
+            1080,
+            1920,
+            3
+          ],
+          "mean": 47.676700585133744,
+          "std": 27.50621857696415,
+          "min": 0,
+          "max": 191,
+          "non_black_pct": 95.25469393004116,
+          "chromatic_pct": 64.22313850308642,
+          "red_mask_pixels": 0,
+          "note": "Closeup view of Scree/Cliffs boundary zone"
+        }
+      ]
+    },
+    "scope": "Only L07 display nodes, diagnostic crop, camera and evidence frames. No source recook, terrain export, base/manual layer rewrite or UE asset change.",
+    "source_mapping": {
+      "lesson": "PEG-02-07",
+      "id_encoding_time": "05:03-05:28; 08:01-08:06",
+      "colour_export_time": "06:24-07:26; 10:36-11:54",
+      "adaptation": "Native Houdini HeightField Visualize with custom tint and no RGB ramp; original PE_Heightfield_id_to_layer for class 255; native HeightField Crop at source resolution and an overhead diagnostic camera.",
+      "official_docs": [
+        "https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_visualize.html",
+        "https://www.sidefx.com/docs/houdini/nodes/sop/volumevisualization.html",
+        "https://www.sidefx.com/docs/houdini/hom/hou/OpNode.html"
+      ]
+    },
+    "visual_observation": "The witness is sparse and lies among very steep source walls. Presence of 170 red pixels validates the display signal, not terrain or material quality. The overview uses 4 m sampling; the 128 m witness crop retains 0.5 m samples.",
+    "base_comparison": {
+      "scope": "Nine diagnostic samples at witness X/Z offsets -5, 0, +5 m; not whole-area validation",
+      "source_base_cache": "D:/yacs/work/lesson06-unified-20261019/stage1_base.bgeo.sc",
+      "stage1_sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
+      "base_height_range_m": [
+        39.240108489990234,
+        152.1381072998047
+      ],
+      "final_minus_base_range_m": [
+        -0.015735626220703125,
+        0.132965087890625
+      ],
+      "conclusion": "Large local height differences predate this preview repair and are already present in Stage 1. No geometry smoothing or concealment was applied."
+    }
+  },
+  "local_remote_identity_audit": {
+    "observed_head": "c6cd4c0982cf0ee5fa1575cc0cd496d8d17b708b",
+    "same_pr": 474,
+    "same_branch": "codex/365-world-graph",
+    "map_package": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07",
+    "map_sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7",
+    "source_cache_sha256": "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24",
+    "native_transfer_run": 39390349735,
+    "native_transfer_manifest_sha256": "66847b4a614e748a0012dcefabbbc6f2be9b0326f0a863714e690cb71c068a8f6",
+    "remote_repair_chat_matches_pr_and_head": true,
+    "active_second_l07_writer_observed": false,
+    "future_cloud_schedule_state": "NOT_VERIFIED",
+    "old_live_host_is_current_l07": false,
+    "old_live_host_status": "STALE_OR_DEAD_NOT_LIVE",
+    "other_ci_jobs_are_l07_proof": false,
+    "consumer_readback_at_observed_head": "NOT_RUN: disk-reserve failure in 39413841851; later 39420689675 skipped after upstream CI failure.",
+    "writer_rule": "One writer on affected paths; recheck remote head and asset/source identity before writes. Isolated proof copies preserve exact bytes."
   }
 }

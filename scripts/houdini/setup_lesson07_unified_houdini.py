@@ -1,6 +1,8 @@
-"""Setup Lesson 07 Unified Houdini Checkpoint, Preview Modes, Cameras, and Export Graph.
+"""Resume Lesson 07 and repair its display-only branches on the retained cache.
 
-Follows SideFX Project Pegasus Landscape Workflow Lesson 7 ("Material Setup") exactly:
+Initial setup is explicit and refuses to overwrite an existing L07 checkpoint.
+The export recipe follows SideFX Project Pegasus Landscape Workflow Lesson 7;
+the diagnostic cameras and preview crops are YACS adaptations:
 - Checkpoint: SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc (Save As from L06)
 - 4 Preview modes connected to FINAL_CACHE with authentic native display mechanisms
 - 5 Verified Camera Bookmarks in /obj
@@ -11,9 +13,11 @@ Follows SideFX Project Pegasus Landscape Workflow Lesson 7 ("Material Setup") ex
 """
 from __future__ import annotations
 
-import math
+import argparse
+import hashlib
+import json
 import os
-import sys
+import shutil
 from pathlib import Path
 
 # Set Houdini environment overrides
@@ -70,7 +74,7 @@ def create_or_update_cam(parent: hou.Node, name: str, pos: tuple[float, float, f
     return cam
 
 
-def main():
+def initialize_from_lesson06():
     print(f"Loading L06 Checkpoint: {L06_HIP}...", flush=True)
     hou.hipFile.load(str(L06_HIP), suppress_save_prompt=True)
 
@@ -351,5 +355,196 @@ def main():
     print("[ok] SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc saved successfully!", flush=True)
 
 
+def digest(path: Path) -> str:
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def repair_previews():
+    """Resume L07 and change only display branches/cameras, never the producer."""
+    import numpy as np
+    from PIL import Image
+
+    expected_cache = "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24"
+    expected_idmap = "cb794170135e3b918e3d809275f9c68ba8595653453d8c8dafe1297bcf6e1bc3"
+    if digest(FINAL_CACHE) != expected_cache or digest(IDMAP_PNG) != expected_idmap:
+        raise RuntimeError("L06 cache / L07 IDMap changed; review source identity first")
+    old_hip_sha = digest(L07_HIP)
+    base_hip_sha = digest(L06_HIP)
+    backup = WORK_DIR / "checkpoints" / f"{L07_HIP.stem}-{old_hip_sha}.hiplc"
+    backup.parent.mkdir(parents=True, exist_ok=True)
+    if not backup.exists():
+        shutil.copy2(L07_HIP, backup)
+    if digest(backup) != old_hip_sha:
+        raise RuntimeError("L07 backup does not match the checkpoint")
+
+    hou.hipFile.load(str(L07_HIP), suppress_save_prompt=True)
+    net = hou.node("/obj/SA_CALOBRA_UNIFIED")
+    final = net.node("FINAL_CACHE")
+    if final.type().name() != "file" or final.inputs():
+        raise RuntimeError("FINAL_CACHE must read the retained file without upstream cooking")
+    if Path(final.parm("file").eval()).resolve() != FINAL_CACHE:
+        raise RuntimeError("HIP uses a different FINAL_CACHE")
+
+    def visualize(name, source, field, ramp=None):
+        node = net.node(name)
+        if node and node.type().name() != "heightfield_visualize":
+            node = node.changeNodeType(
+                "heightfield_visualize", keep_parms=False, keep_network_contents=False,
+            )
+        if node is None:
+            node = net.createNode("heightfield_visualize", name)
+        node.matchCurrentDefinition()
+        node.setInput(0, source)
+        # Houdini 22 defaults are unchanged tint + an elevation material.
+        # Explicit native tinting is necessary for RGB and categorical displays.
+        node.setParms({
+            "updatetinting": "custom", "updatematerial": "none",
+            "heightvolume": "height", "cdvolume": field,
+            "cdrangeoverride": 1, "cdrange1": 0.0, "cdrange2": 1.0,
+            "cdrampmode": "clamp" if ramp is not None else "none",
+        })
+        if ramp is not None:
+            node.parm("cdramp").set(ramp)
+        return node
+
+    overview = net.node("PREVIEW_RESAMPLE")
+    color = visualize("PREVIEW_GLOBAL_COLOR", overview, "r g b")
+    palette = net.node("PREVIEW_IDMAP").parm("cdramp").eval()
+    visualize("PREVIEW_IDMAP", overview, "id", palette)
+    isolation = hou.Ramp(
+        (hou.rampBasis.Linear,) * 2, (0.0, 1.0),
+        ((0.7, 0.7, 0.7), (1.0, 0.0, 0.0)),
+    )
+    visualize("PREVIEW_CLASS_ISOLATION", net.node("ID_TO_LAYER"), "mask", isolation)
+
+    # Select an actual encoded texel in the densest 32 m diagnostic neighbourhood.
+    # A centroid need not belong to the class. This only selects the camera;
+    # neither the mask nor the terrain is changed.
+    Image.MAX_IMAGE_PIXELS = None  # This pinned 16000² local export is expected.
+    with Image.open(IDMAP_PNG) as image:
+        ids = np.asarray(image)
+        if ids.shape != (16000, 16000) or ids.dtype != np.uint8:
+            raise RuntimeError("Unexpected pinned IDMap encoding")
+        rows, cols = np.where(ids == 255)
+    if not len(rows):
+        raise RuntimeError("Pinned IDMap has no Scree texels")
+    distance_squared = (
+        (cols[:, None] - cols[None, :]) ** 2 + (rows[:, None] - rows[None, :]) ** 2
+    )
+    nearby_counts = np.count_nonzero(distance_squared <= 64 ** 2, axis=1)
+    selected = int(np.argmax(nearby_counts))
+    png_xy = (int(cols[selected]), int(rows[selected]))
+    voxel = (png_xy[0], 15999 - png_xy[1], 0)
+    geo = final.geometry()
+    volumes = {p.attribValue("name"): p for p in geo.prims() if isinstance(p, hou.Volume)}
+    if volumes["id"].resolution() != (16000, 16000, 1):
+        raise RuntimeError("Unexpected source resolution")
+    source_id = float(volumes["id"].voxel(voxel))
+    if abs(source_id - 1.0) > 1e-6 or volumes["Alpha"].voxel(voxel) <= 0:
+        raise RuntimeError("PNG Scree site does not match valid native source data")
+    pos = volumes["height"].indexToPos(voxel)
+    target = (float(pos[0]), float(volumes["height"].voxel(voxel)), float(pos[2]))
+    expected_xz = (-3999.75 + png_xy[0] * 0.5, -3999.75 + png_xy[1] * 0.5)
+    if max(abs(target[0] - expected_xz[0]), abs(target[2] - expected_xz[1])) > 0.0005:
+        raise RuntimeError("PNG/native orientation or sample centers differ")
+
+    # Native crop preserves 0.5 m samples. The 4 m overview can miss rare Scree.
+    crop = net.node("SCREE_SITE_CROP") or net.createNode("heightfield_crop", "SCREE_SITE_CROP")
+    crop.setInput(0, final)
+    crop.setParms({
+        "cropmode": "intersect", "orient": "zx", "sizex": 128.0, "sizey": 128.0,
+        "tx": target[0], "ty": 0.0, "tz": target[2],
+    })
+    decoder = net.node("ID_TO_LAYER_FULLRES")
+    decoder.setInput(0, crop)
+    decoder.setParms({"srcname1": "id", "dstname1": "mask", "id_layer": "255"})
+    local_iso = visualize("SCREE_FULLRES_PREVIEW", decoder, "mask", isolation)
+    visualize("SCREE_SITE_GLOBAL_COLOR", crop, "r g b")
+    crop_geo = decoder.geometry()
+    crop_vols = {p.attribValue("name"): p for p in crop_geo.prims() if isinstance(p, hou.Volume)}
+    decoded = np.frombuffer(crop_vols["mask"].allVoxelsAsString(), dtype=np.float32)
+    local_ids = np.frombuffer(crop_vols["id"].allVoxelsAsString(), dtype=np.float32)
+    expected = np.isclose(local_ids, 1.0, atol=1e-6)
+    mismatches = int(np.count_nonzero((decoded > 0.5) != expected))
+    count = int(np.count_nonzero(expected))
+    if not count or mismatches:
+        raise RuntimeError(f"Native Scree decoder failed: count={count}, mismatches={mismatches}")
+
+    # The witness can lie below a steep neighbouring cliff. Place the camera
+    # above the entire diagnostic crop, not just above the target's elevation.
+    crop_max_height = float(max(crop_vols["height"].allVoxels()))
+    cam_x, cam_z = target[0], target[2] - 0.5
+    create_or_update_cam(
+        hou.node("/obj"), "cam_scree_site",
+        (cam_x, crop_max_height + 80.0, cam_z),
+        target, focal=85.0, clip_far=5000.0,
+    )
+    color.setDisplayFlag(True)
+    color.setRenderFlag(True)
+    for node in hou.selectedNodes():
+        node.setSelected(False)
+    if local_iso.errors() or crop.errors():
+        raise RuntimeError(str(local_iso.errors() + crop.errors()))
+    # Check the cooked native attributes, not just setters. Converting a node
+    # while retaining its old internal network can silently pass the input through.
+    cooked_fields = {}
+    preview_names = {
+        "PREVIEW_GLOBAL_COLOR": "r g b", "PREVIEW_IDMAP": "id",
+        "PREVIEW_CLASS_ISOLATION": "mask", "SCREE_FULLRES_PREVIEW": "mask",
+        "SCREE_SITE_GLOBAL_COLOR": "r g b",
+    }
+    for name, expected_field in preview_names.items():
+        settings = net.node(name).geometry().attribValue("volvis")
+        if settings.get("cdfield") != expected_field:
+            raise RuntimeError(f"{name} cooked the wrong color field: {settings}")
+        if expected_field == "r g b" and settings.get("cdramp"):
+            raise RuntimeError(f"{name} still applies an inherited categorical ramp")
+        cooked_fields[name] = expected_field
+    hou.hipFile.save(str(L07_HIP))
+    new_hip_sha = digest(L07_HIP)
+    # Rendering uses isolated processes for driver stability. Cache only these
+    # small diagnostic outputs so each frame need not reread/resample 256M voxels.
+    cache_dir = WORK_DIR / "preview_cache" / new_hip_sha
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    render_caches = {}
+    for name in [*preview_names, "PREVIEW_NEUTRAL_SHADING"]:
+        path = cache_dir / f"{name}.bgeo.sc"
+        net.node(name).geometry().saveToFile(str(path))
+        render_caches[name] = {"path": str(path), "sha256": digest(path)}
+    if digest(L06_HIP) != base_hip_sha or digest(FINAL_CACHE) != expected_cache:
+        raise RuntimeError("Retained L06 source changed during preview repair")
+    report = {
+        "status": "PREVIEW_GRAPH_REPAIRED_RENDER_REVIEW_PENDING",
+        "houdini_version": hou.applicationVersionString(),
+        "hip": str(L07_HIP), "hip_before_sha256": old_hip_sha,
+        "hip_after_sha256": new_hip_sha, "backup": str(backup),
+        "source_cache": str(FINAL_CACHE), "source_cache_sha256": expected_cache,
+        "source_l06_hip_sha256": base_hip_sha, "source_unchanged": True,
+        "idmap_sha256": expected_idmap, "scree_png_xy": png_xy,
+        "scree_native_voxel": voxel, "scree_houdini_xyz_m": target,
+        "scree_source_id": source_id, "scree_crop_size_m": 128,
+        "scree_selection_radius_m": 32, "scree_selection_neighbours": int(nearby_counts[selected]),
+        "scree_crop_resolution": list(crop_vols["id"].resolution()),
+        "scree_crop_class_pixels": count, "scree_decoder_mismatches": mismatches,
+        "scree_crop_max_height_m": crop_max_height,
+        "global_tint_field": "r g b", "global_tint_ramp": "none",
+        "cooked_preview_fields": cooked_fields, "render_caches": render_caches,
+        "invalidated": ["L07 preview renders", "historical Scree camera/texel evidence"],
+        "terrain_exports_regenerated": False, "unreal_assets_changed": False,
+    }
+    report_path = WORK_DIR / "preview_repair_report.json"
+    report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    print(json.dumps(report, indent=2), flush=True)
+
+
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--initialize-from-l06", action="store_true",
+                        help="Explicit initial setup only; normally resume the existing L07 HIP")
+    args = parser.parse_args()
+    if args.initialize_from_l06:
+        if L07_HIP.exists():
+            raise RuntimeError("L07 already exists; resume it instead of restarting from L06")
+        initialize_from_lesson06()
+    repair_previews()
