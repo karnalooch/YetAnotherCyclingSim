@@ -20,6 +20,14 @@ class UnrealCacheMaterializationTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        # Temporary repositories must finish their Git work before cleanup.
+        # Detached maintenance can recreate .git/objects while rmtree runs.
+        for key in ("maintenance.autoDetach", "gc.autoDetach"):
+            subprocess.run(
+                ["git", "config", "--local", key, "false"],
+                cwd=self.root,
+                check=True,
+            )
         subprocess.run(
             ["git", "config", "core.autocrlf", "true"], cwd=self.root, check=True
         )

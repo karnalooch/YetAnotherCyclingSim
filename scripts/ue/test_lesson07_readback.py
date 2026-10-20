@@ -547,6 +547,8 @@ class WorkflowBoundaryTests(unittest.TestCase):
             "scripts/ue/readback_lesson07_geometry.py": True,
             "scripts/ue/test_lesson07_readback.py": True,
             "scripts/ci/classify_changes.py": True,
+            "scripts/ci/materialize_unreal_cache_inputs.py": True,
+            "scripts/ci/test_materialize_unreal_cache_inputs.py": True,
             "Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap": True,
             "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape.uasset": True,
             "Content/PegasusDemo/Materials/M_Landscape.uasset": True,

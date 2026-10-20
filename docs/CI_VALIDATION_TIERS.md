@@ -349,6 +349,15 @@ in the proof fingerprint and Unreal RUNTIME routing, requiring fresh normal
 Automation before read-only cache reuse. This cache repair does not establish
 Lesson 7 map, material, geometry or visual acceptance.
 
+The first follow-up run `39433080045` stopped in a synthetic checkout test's
+temporary-directory cleanup (`Directory not empty: .../.git/objects`), after
+its inventory assertions. These disposable Git fixtures now set
+`maintenance.autoDetach=false` and `gc.autoDetach=false` locally so automatic
+maintenance finishes before cleanup, using the supported
+[Git configuration](https://git-scm.com/docs/git-config/2.55.0#Documentation/git-config.txt-maintenanceautoDetach).
+All inventory bounds, drift assertions and cleanup failures remain enforced;
+the production repository and cache configuration are unchanged.
+
 A compile-fingerprint mismatch is **not** cache corruption:
 when engine/toolchain provenance still matches, the lane invalidates the green
 stamp but keeps `Intermediate/Binaries` and performs a WARM COMPILE. Missing

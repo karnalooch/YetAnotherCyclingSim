@@ -11,6 +11,8 @@ on:
       - scripts/ue/readback_lesson07_geometry.py
       - scripts/ue/test_lesson07_readback.py
       - scripts/ci/classify_changes.py
+      - scripts/ci/materialize_unreal_cache_inputs.py
+      - scripts/ci/test_materialize_unreal_cache_inputs.py
       - Content/Generated/YACS/Lesson07_Unified/**
       - Content/PegasusDemo/Materials/**
 
