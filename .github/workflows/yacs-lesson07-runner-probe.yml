@@ -1,0 +1,54 @@
+name: YACS Lesson07 runner presence (read-only)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - .github/workflows/yacs-lesson07-runner-probe.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-lesson07-runner-presence
+  cancel-in-progress: false
+
+jobs:
+  presence:
+    name: Read-only probe on yacs-ue58
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.event.pull_request.number == 474 &&
+      github.event.pull_request.head.repo.full_name == 'karnalooch/YetAnotherCyclingSim'
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 3
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Probe existing tools without reading private data or running Unreal
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $checks = [ordered]@{
+            runner = 'ONLINE'
+            os = $env:RUNNER_OS
+            houdini_hython = Test-Path -LiteralPath 'D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+            unreal_editor = Test-Path -LiteralPath 'D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe'
+            project = Test-Path -LiteralPath 'D:\yacs\project\YetAnotherCyclingSim.uproject'
+            workspace_config = Test-Path -LiteralPath 'D:\yacs\workspace.json'
+          }
+          $out = Join-Path $env:RUNNER_TEMP 'yacs-lesson07-runner-presence.json'
+          $checks | ConvertTo-Json | Set-Content -LiteralPath $out -Encoding utf8
+          $checks.GetEnumerator() | ForEach-Object { Write-Host "$($_.Key)=$($_.Value)" }
+          if (-not $checks.project) { throw 'Project is missing from expected D: workspace' }
+          if (-not $checks.houdini_hython -or -not $checks.unreal_editor) {
+            throw 'One or more native authoring tools are missing from expected locations'
+          }
+      - name: Upload minimal health receipt
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lesson07-runner-presence-${{ github.run_id }}
+          path: ${{ runner.temp }}/yacs-lesson07-runner-presence.json
+          if-no-files-found: warn
+          retention-days: 3
