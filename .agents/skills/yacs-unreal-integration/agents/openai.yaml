@@ -1,0 +1,4 @@
+interface:
+  display_name: "YACS Unreal Integration"
+  short_description: "Integracja UE, sesje, buildy i natywny odczyt"
+  default_prompt: "Użyj $yacs-unreal-integration, aby zdiagnozować aktualny błąd Unreal i sprawdzić właściwego konsumenta YACS."

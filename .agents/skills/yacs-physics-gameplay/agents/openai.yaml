@@ -1,0 +1,4 @@
+interface:
+  display_name: "YACS — fizyka i gameplay"
+  short_description: "Fizyka, wejście i sesja zgodne z roadmapą"
+  default_prompt: "Użyj $yacs-physics-gameplay, aby naprawić wskazany błąd modelu lub sesji YACS i zweryfikować właściwy kontrakt."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "YACS — Houdini i świat"
+  short_description: "Generowanie świata według oryginalnych lekcji SideFX"
+  default_prompt: "Użyj $yacs-houdini-world, aby wykonać zadanie YACS na podstawie aktualnych źródeł i zweryfikować wynik."

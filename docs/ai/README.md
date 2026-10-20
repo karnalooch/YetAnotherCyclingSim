@@ -4,6 +4,12 @@
 
 Read [root AGENTS](../../AGENTS.md), then [documentation SSOT router](../README.md). Use [ROLE_REGISTRY.json](ROLE_REGISTRY.json) to map a bounded task domain to one specialist and read only the corresponding role card and listed authority sources.
 
+The [project skill catalogue](SKILL_CATALOG.md) provides reusable procedures in
+`.agents/skills/` for the eight domain roles, project coordination and GitHub
+delivery. Load the relevant skill after identifying the task owner; it remains
+subordinate to the current source contracts and does not grant execution,
+proof-admission, milestone or merge authority.
+
 ## World-authoring executor
 
 Houdini is the primary executor for new world generation under the owner's 2026-10-16 decision. Read [the SideFX workflow and complete concordance](../tooling/sidefx/README.md) before terrain, road or environment authoring. Domain roles still own source/proof boundaries; the tool is not geography or physics authority. The current fresh-Landscape task excludes road/world-asset construction. Indexing all sources is not a claim that every recipe has been implemented.

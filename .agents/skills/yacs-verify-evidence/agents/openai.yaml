@@ -1,0 +1,4 @@
+interface:
+  display_name: "YACS Evidence Review"
+  short_description: "Weryfikacja SHA, testów i dowodów całego świata"
+  default_prompt: "Użyj $yacs-verify-evidence, aby sprawdzić, co potwierdzają dowody bieżącego PR YACS i które bramki pozostają otwarte."

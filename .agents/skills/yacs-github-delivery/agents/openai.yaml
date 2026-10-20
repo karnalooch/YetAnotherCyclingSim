@@ -1,0 +1,4 @@
+interface:
+  display_name: "YACS GitHub Delivery"
+  short_description: "Zmiany, CI i dostawa przez istniejący PR"
+  default_prompt: "Użyj $yacs-github-delivery, aby naprawić konkretny problem w bieżącym PR YACS i zweryfikować publikację na remote."

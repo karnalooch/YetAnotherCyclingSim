@@ -1,0 +1,4 @@
+interface:
+  display_name: "YACS — Koordynacja projektu"
+  short_description: "Delegowanie prac i wybór źródeł dla całego YACS"
+  default_prompt: "Użyj $yacs-orchestrate, aby wykonać zadanie YACS na podstawie aktualnych źródeł i zweryfikować wynik."
