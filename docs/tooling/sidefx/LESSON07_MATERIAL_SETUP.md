@@ -5,13 +5,129 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (Houdini preview repair is separate from pending native UE geometry, visibility, collision and visual acceptance)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (local consumer repair and sampled native/runtime checks complete; whole-area collision, exact interpolation, protected CI and owner visual acceptance remain unverified)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
 ---
 
-## Current Unreal startup repair and native inspection (2026-10-20)
+## Local consumer repair and sampled verification (2026-10-20)
+
+The local repair preserves the same four Landscape actors and existing
+`L_SaCalobra_Lesson07` package in
+`D:/yacs/work/lesson07-readback-39436127684-1`, based on
+`5d4475af5fe04eade56ce87b2d62f257cd7095ef`. This is a working-tree candidate,
+not a protected-CI or visual acceptance claim. The repaired map, existing material
+instance and bounded derivative master are now promoted to the main local project
+`D:/yacs/project`, with original map/instance backups retained. No source HIP or
+terrain cache was regenerated.
+
+Native measurements cover 65,032 boundary vertices and 1,040 collision queries.
+All four retained source seams match exactly. The saved UE seams differ by
+3.117–5.800 cm; every measured uint16 height matches the installed Houdini
+Engine conversion using the corresponding actor's different Z scale. This
+identifies a consumer quantization defect, not a reason to rebuild the source.
+The boundary read found no allocated visibility weights. Measurements and
+source comparisons are retained under local
+`Saved/RuntimeProof/Lesson07Seams-20261020-1`.
+
+The existing material instance now uses a bounded derivative of the original
+Pegasus master in the isolated candidate. Its surface graph and texture bindings
+are preserved. The derivative removes the out-of-scope grass output and uses
+Epic's `MatLayerBlend_OverrideOpacityMask` with `LandscapeVisibilityMask` on
+the main masked material. A separate hole material is not required by this
+recipe. Native fresh material inspection confirms the actual graph connections.
+
+The same map was backed up and saved after native refresh removed 16,384 cached
+grass references from 4,096 components. Full source-mip hashes, texture bindings
+and component transforms match before and after; no height data changed.
+The refreshed candidate map is 1,841,267,493 bytes, SHA-256
+`6e41be524255492e5b025f96ee218294275f41aa0fa34bca166fdeb11a1a8ad5`.
+The local receipt is
+`Saved/RuntimeProof/Lesson07Materials-20261020-refresh1/refresh.json`.
+Fresh reopening of that cache-only repair completed with no reported native
+dependency problems. The subsequent mask-only canary preserved every mip of
+both composite and existing edit-layer heightmaps, including bindings and
+transforms. The first completed canary exited with `0xC0000005` after log close;
+its faulting module remains unknown. Explicit official `StopSession` followed
+by invalid-session verification produced clean exit code 0 in the next canary
+and the full update.
+
+The full update used the same retained four BGEO tiles, existing transfer HDA,
+actors and edit-layer GUIDs. It assigned common Scale.Z
+`561.389892578125`, inverted source validity into UE hole weights, waited for
+native layer composition and saved the existing map once. Only that map
+changed: 1,838,638,056 bytes, SHA-256
+`d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75`.
+The receipt is
+`Saved/RuntimeProof/Lesson07ConsumerUpdate-20261020-1/update.json`.
+Fresh post-update readback measured a maximum seam Z difference of
+`0.013910478999605402 cm` (about 0.139 mm), down from 5.800 cm.
+The preserved original actor transforms still produce a maximum XY difference
+of `0.03643035907043668 cm`; these are measured floating-point registration
+residuals, not a newly invented acceptance tolerance.
+Three source-selected interior NoData samples have four native weights of 255
+each. Their editor Visibility traces still hit; the separate actual Simulate In
+Editor world correctly returns MISS for all three holes and HIT for all twelve
+valid controls (15/15 sampled results), as recommended by
+[Epic's visibility documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/landscape-visibility-tool-in-unreal-engine).
+The runtime session stopped cleanly (exit 0), with the map unchanged. This proves
+the sampled hole/valid behavior, not whole-area collision or exact source-height
+interpolation. Runtime versus rendered-triangle differences reached 4.247 mm;
+Chaos has a separate height quantization whose exact triangle values were not
+read back, so this is not an accepted tolerance or interpolation PASS.
+Unallocated weights on other components remain explicitly unknown, not
+reported as measured zeros.
+
+Fresh native captures are retained without image editing:
+[full material panorama](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/consumer_repair_20261020/ue_panorama_material.png),
+[full neutral panorama](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/consumer_repair_20261020/ue_panorama_neutral.png),
+[Scree-location material view](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/consumer_repair_20261020/ue_closeup_scree.png),
+[matching neutral view](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/consumer_repair_20261020/ue_closeup_scree_neutral.png)
+and [central seam view](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/consumer_repair_20261020/ue_tile_seam_check.png).
+The [capture review](../../../worldgen/houdini/sa_calobra/evidence/lesson07_unified/consumer_repair_20261020/capture-review.json)
+records limits: the Scree location contains mixed classes, sharp cliff ribs are
+also present in the neutral/source views, and image appearance is not collision
+proof. Main-material tessellation and all four Landscape Nanite flags were
+observed disabled. Owner visual acceptance remains pending.
+
+The latest local native build and 50 Automation tests passed in
+`Saved/RuntimeProof/Lesson07NativeAPIBridge-20261020-retry1`. An earlier test
+fixture crash is retained in the first run: UE 5.8 requires a texture owner
+when initializing `FTextureSource`; the fixture was corrected and rerun.
+These local dirty-tree results do not substitute for exact-commit protected CI.
+
+Final local adapter tests ran 109 cases with no failures and two environment
+skips; Ruff and diff checks passed. Documentation index i18n, structure, links
+and freshness guards passed. The evidence-storage guard still rejects the
+unchanged, pre-existing oversized
+`docs/experiments/sa-calobra-roadside-visibility-prestudy-20261008/observations.json`;
+that guard was not weakened. Fresh current-pin admission (readback 3) exited 0,
+with four actors, 4,096 components, no structural reasons and unchanged map bytes.
+Readback 2 retains the independently authenticated full repair chain.
+
+Final SHA-256 conservation checks confirm the original Lesson07 HIP, base cache,
+final cache and IDMap PNG are unchanged. Before publication, the remote branch was rechecked at
+`5d4475af5fe04eade56ce87b2d62f257cd7095ef`. The owner subsequently authorized
+publishing this same repair on the existing branch, without rebuilding terrain.
+These native results remain dirty-tree evidence from before the delivery commit;
+exact-commit CI is a separate gate.
+Disk exhaustion interrupted a report write; verified backup relocation is recorded
+in the promotion proof. Active assets and source data were preserved.
+
+Source / Manual Edits / Procedural Detail describe the authoring workflow.
+They do not mandate three UE edit layers. The existing base cache, final cache
+and procedural-difference branch are retained; adding that difference again
+to the already-final consumer would double the detail.
+
+The actual material graph subtracts Offset:
+`GridCoordinates = WorldXY_cm / TerrainScale - OffsetXY`.
+With scale 50 and Offset (-8000,-8000), the authenticated Scree witness maps
+to (2981.5,4311.49951172), the expected source texel center. The later noise
+perturbation and four-neighbour shader sampling still require their actual
+parameter values and rendered verification.
+
+## Earlier Unreal startup repair and native inspection (2026-10-20)
 
 The startup failure recorded below is resolved in a local owned diagnostic.
 UE 5.8.2 editor session analytics called
@@ -31,7 +147,7 @@ It did not recopy assets, cook Houdini, import or save the map.
 The current receipt links the raw report, log and conservation hashes.
 This local diagnostic is separate from protected CI.
 
-Native inspection observed all four actors and 4096 components. It does **not**
+That earlier native inspection observed all four actors and 4096 components. It does **not**
 establish technical acceptance:
 
 - Seven referenced Pegasus groundcover mesh packages are absent from the
@@ -261,7 +377,14 @@ In [SaCalobra_Pegasus_Lesson07_Unified_v001.hiplc](../../../worldgen/houdini/sa_
 
 ---
 
-## 6. Unreal Engine Visual Inspection & Evidence Pairs
+## 6. Historical Unreal captures — not current acceptance
+
+The following images and descriptions are the earlier submission. Their
+claims of seamless geometry, authentic scree framing, cove location and a
+class-boundary transition were not established by native measurements.
+The later audit found actual seam differences and corrected the scree camera.
+Retain these files as historical evidence; use the remediation receipts and
+new captures for the repaired candidate.
 
 Eight high-resolution offscreen renders were captured using native `AutomationLibrary.take_high_res_screenshot` under direct PBR sunlight:
 
@@ -276,7 +399,11 @@ Eight high-resolution offscreen renders were captured using native `AutomationLi
 
 ---
 
-## 7. File Inventory & Checksums
+## 7. Historical submission inventory & checksums
+
+This table records the earlier submission, including the superseded L07 HIP
+identity. Current source and repaired-package identities are recorded in the
+verification receipt; this table is not a current synchronization manifest.
 
 | Asset / File Description | Location | File Size | SHA-256 Checksum |
 |---|---|---:|---|

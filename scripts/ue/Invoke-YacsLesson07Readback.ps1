@@ -20,7 +20,16 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if (-not $IsWindows) { throw 'The isolated L07 reader requires the trusted Windows host.' }
 $MapRelative = 'Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap'
-$MapPin = @{ sha256 = '61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7'; size_bytes = [long]1842190204 }
+$OriginalMapPin = @{ sha256 = '61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7'; size_bytes = [long]1842190204 }
+$MapPin = @{ sha256 = 'd14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75'; size_bytes = [long]1838638056 }
+$MaterialPins = @{
+    'Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset' = @{
+        sha256 = '0581cd80055ec2632c3f56de19f80513c904ed5a5d7a5a7a8187ed17b218a3dc'; size_bytes = [long]35682
+    }
+    'Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset' = @{
+        sha256 = '53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66'; size_bytes = [long]208956
+    }
+}
 $LevelPackage = '/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07'
 $SourceRoot = 'D:\yacs\project'
 $AssetRoots = @('Content/Generated/YACS/Lesson07_Unified', 'Content/PegasusDemo/Materials')
@@ -44,7 +53,8 @@ $receipt = [ordered]@{
     protected_ci_run_id = $ProtectedCiRunId; protected_ci_head = $ExpectedHead
     status = 'PREPARATION_PENDING'; started_at_utc = [DateTime]::UtcNow.ToString('o'); ended_at_utc = $null
     canonical_source_root = $SourceRoot; candidate_root = $null; level = $LevelPackage
-    expected_map = $MapPin; source_map_before = $null; source_map_after = $null
+    expected_map = $MapPin; original_map = $OriginalMapPin; expected_materials = $MaterialPins
+    source_map_before = $null; source_map_after = $null
     candidate_map_before = $null; candidate_map_after = $null
     source_map_unchanged = $null; candidate_map_unchanged = $null
     source_fingerprints = $null; cache_provenance = $null; binary_provenance = @()
@@ -100,6 +110,13 @@ function Assert-L07Identity {
     $actual = Get-L07Identity $Identity.path $Limit -AllowEmpty:$AllowEmpty
     if ($actual.sha256 -cne $Identity.sha256 -or $actual.size_bytes -ne $Identity.size_bytes) {
         throw ('Authenticated L07 input changed: ' + $Identity.path)
+    }
+}
+
+function Assert-L07Pin {
+    param($Identity, $Pin)
+    if ($Identity.sha256 -cne $Pin.sha256 -or $Identity.size_bytes -ne $Pin.size_bytes) {
+        throw ('L07 asset differs from its exact current pin: ' + $Identity.path)
     }
 }
 
@@ -426,13 +443,18 @@ try {
     $receipt.asset_inventory = $assets
     foreach ($required in @($MapRelative,
         'Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset',
-        'Content/PegasusDemo/Materials/Landscape/M_Pegasus_Landscape_Master.uasset',
+        'Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset',
         'Content/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap.uasset',
         'Content/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color.uasset',
         'Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset',
         'Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset',
         'Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset')) {
         if ($required -cnotin @($assets.relative)) { throw ('Known L07 package is absent: ' + $required) }
+    }
+    foreach ($relative in $MaterialPins.Keys) {
+        $identity = Get-L07Identity (Join-Path $SourceRoot $relative) 3GB
+        Assert-L07Pin $identity $MaterialPins[$relative]
+        Protect-L07Identity $identity 'pinned-current-material'
     }
     $metadataNames = @(& git -C $RepoRoot ls-files -- YetAnotherCyclingSim.uproject Config Plugins/RoadForge)
     if ($LASTEXITCODE -ne 0) { throw 'Cannot enumerate committed project/config inputs.' }
@@ -473,6 +495,9 @@ try {
     foreach ($asset in $assets) {
         [void](Assert-L07Reserve $remainingBytes)
         $copy = Copy-L07InventoriedAsset $asset $CandidateRoot
+        if ($MaterialPins.ContainsKey($asset.relative)) {
+            Assert-L07Pin $copy.copied_identity $MaterialPins[$asset.relative]
+        }
         $remainingBytes -= [long]$copy.copied_identity.size_bytes
         Protect-L07Identity $copy.source_identity 'original-asset'
         Protect-L07Identity $copy.copied_identity 'copied-asset'
@@ -486,7 +511,8 @@ try {
     $preparation = [ordered]@{
         schema_version = 1; status = 'L07_COPIED_BYTES_NATIVE_READ_PENDING'; source_head = $ExpectedHead
         candidate_root = $CandidateRoot; level = $LevelPackage; report_path = $reportPath
-        reader_identity = $receipt.proof_files.reader; map = @{ relative = $MapRelative; source_identity = $receipt.source_map_before }
+        reader_identity = $receipt.proof_files.reader
+        map = @{ relative = $MapRelative; source_identity = $receipt.source_map_before; original_identity = $OriginalMapPin }
         assets = $receipt.staged_assets; known_asset_roots = $AssetRoots; binary_provenance = $receipt.binary_provenance
         geometry_accepted = $false; dependency_closure_complete = $false; houdini_engine_staged = $false
     }

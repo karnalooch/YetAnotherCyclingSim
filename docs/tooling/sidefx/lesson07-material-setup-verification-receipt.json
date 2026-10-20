@@ -1,5 +1,5 @@
 {
-  "status": "LESSON07_REQUIRES_NATIVE_GEOMETRY_RECHECK",
+  "status": "LESSON07_LOCALLY_REPAIRED_SAMPLED_PROOF_COMPLETE_ACCEPTANCE_PENDING",
   "timestamp": "2026-10-20T03:20:00+02:00",
   "lesson": "PEG-02-07",
   "lesson_title": "7 | Material Setup",
@@ -16,8 +16,8 @@
     "visual_review": "PENDING_FINAL_M3_AUDIT",
     "performance_pass": false,
     "performance_note": "DEFERRED_AFTER_M3",
-    "native_recheck_required": true,
-    "reason": "Startup crash fixed by retaining shader compiler statistics; owned same-map reopen exited 0. Native inspection found 4 actors/4096 components, but missing referenced packages and unresolved geometry, visibility and visual proof keep technical acceptance false."
+    "native_recheck_required": false,
+    "reason": "Same-map local repair promoted. Fresh native reopen, 65032 boundary conversion checks, actual SIE hole/valid checks 15/15 and rendered captures complete. Exact source collision interpolation, whole-area collision, protected exact-commit CI and owner visual acceptance remain unverified."
   },
   "domain": {
     "grid_dimensions": [
@@ -1306,5 +1306,223 @@
     "geometry_accepted": false,
     "material_render_verified": false,
     "owner_visual_pass": false
-  }
+  },
+  "local_consumer_remediation_20261020": {
+    "status": "LOCALLY_REPAIRED_NATIVE_SAMPLES_VERIFIED_VISUAL_ACCEPTANCE_PENDING",
+    "base_head": "5d4475af5fe04eade56ce87b2d62f257cd7095ef",
+    "dirty_working_tree": true,
+    "protected_ci": false,
+    "candidate_project": "D:/yacs/work/lesson07-readback-39436127684-1/YetAnotherCyclingSim.uproject",
+    "source_terrain_rebuilt": false,
+    "canonical_assets_promoted": true,
+    "native_build_and_automation": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07NativeAPIBridge-20261020-retry1\\summary.json",
+      "sha256": "74e4a6a0db53e3ce384e9a1521b8e64110ca7a3613bb33251ac2aa4f6fb1ec52",
+      "size_bytes": 780
+    },
+    "material_apply": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07Materials-20261020-apply1\\apply.json",
+      "sha256": "6d7e626487045514e98c8272c20028ba858cc3a9e0066ea73e614e24f7c3cf2f",
+      "size_bytes": 154995
+    },
+    "material_fresh_audit": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07Materials-20261020-finalaudit\\audit.json",
+      "sha256": "c0d16f351984b058fa9f437e967638cae0b31fdcb28103e6ab31e24c149956e7",
+      "size_bytes": 121442
+    },
+    "map_grass_cache_refresh": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07Materials-20261020-refresh1\\refresh.json",
+      "sha256": "206070b17ede64ec0bad9473bc1a9c4ddce9221f117f862ef501b3d20ee22812",
+      "size_bytes": 14357966
+    },
+    "original_map_sha256": "61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7",
+    "grass_refreshed_map_sha256": "6e41be524255492e5b025f96ee218294275f41aa0fa34bca166fdeb11a1a8ad5",
+    "grass_references_before": 16384,
+    "grass_references_after": 0,
+    "whole_heightmaps_unchanged_during_grass_refresh": true,
+    "measured_boundary_vertices": 65032,
+    "source_seam_max_difference_cm": 0,
+    "source_manual_detail_contract": "Authoring workflow separation; three UE edit layers are not a requirement. Preserve base/final/difference branches and do not add the detail delta twice.",
+    "main_visibility_material_graph_verified": true,
+    "visibility_weights_repaired": true,
+    "seams_repaired": true,
+    "render_verified": true,
+    "owner_visual_pass": false,
+    "fresh_reopen_after_grass_refresh": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07RefreshedReadback-20261020-1\\l07-native-geometry.json",
+      "sha256": "87deb5c7e82394aa5f755fff14c3c4e02c3974c91d266af9e42a8f51c322a17d",
+      "size_bytes": 6771071
+    },
+    "mask_only_canary": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07VisibilityCanary-20261020-4\\update.json",
+      "sha256": "7abde0af779448f42420d21eed59ea4e5e5c0172a5852e307adce4cc21cd2ece",
+      "size_bytes": 18399674
+    },
+    "mask_only_canary_exit": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07VisibilityCanary-20261020-4\\exit.json",
+      "sha256": "78da804b223d63492f528bf70eb9eb67f5b382324cbe00a3dd9bed5ba751a630",
+      "size_bytes": 96
+    },
+    "mask_only_all_composite_and_edit_layer_mips_unchanged": true,
+    "consumer_update": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07ConsumerUpdate-20261020-1\\update.json",
+      "sha256": "12d7fc8a50710321440bfca0161b1c8645f66e3ffa45ecd6c5dd8713b1b36cea",
+      "size_bytes": 18404631
+    },
+    "consumer_update_exit": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07ConsumerUpdate-20261020-1\\exit.json",
+      "sha256": "0e9b006a7a352e592d378bcd4272d77bf8cd5d95403eb034798f67a00e9c5873",
+      "size_bytes": 96
+    },
+    "updated_map_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+    "updated_map_size_bytes": 1838638056,
+    "common_actor_scale_z": 561.389892578125,
+    "same_four_actors_and_layer_guids_preserved": true,
+    "only_map_changed_during_consumer_update": true,
+    "post_update_fresh_geometry_read_pending": false,
+    "shutdown_repair": {
+      "observed_canary3_exit": "0xC0000005 after log close",
+      "cause_module": "UNDETERMINED",
+      "change": "Explicit official StopSession and invalid-session verification before editor teardown",
+      "canary4_exit_code": 0,
+      "full_update_exit_code": 0
+    },
+    "actual_loaded_hapi": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07ConsumerUpdate-20261020-1\\loaded-hapi.json",
+      "sha256": "f7142191123eab02d4072f41877eff471a406d0cacf61f4ed5d3691607e7436f",
+      "observation": {
+        "sha256": "DCDE31C13B2213D4FF8007EAEAA13F12472565DC19AED3E653F94EAF53A60CD0",
+        "path": "D:\\yacs\\tools\\houdini-22.0.466\\bin\\libHAPIL.dll",
+        "version": "22, 0, 0, 466"
+      }
+    },
+    "final_native_readback": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07FinalReadback-20261020-2\\l07-native-geometry.json",
+      "sha256": "95c25aeacf363fe64ac2f10abeeccf93518ad591d3c3dd6889c2cf7e4accf9e7",
+      "size_bytes": 6786664
+    },
+    "final_source_comparison": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07FinalReadback-20261020-2\\source-comparison.json",
+      "sha256": "fefd259825f3594ec9a045ae4eb21059fa42855f24558c803229d751b128844a",
+      "size_bytes": 100301013
+    },
+    "runtime_collision": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07RuntimeCollision-20261020-1\\runtime.json",
+      "sha256": "808aa754a9a0a306adb343188d1a487ca3d5622c0352ba73109d171f3a08aeb4",
+      "size_bytes": 19962
+    },
+    "runtime_collision_exit": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07RuntimeCollision-20261020-1\\exit.json",
+      "sha256": "2a02ef7f12f4de7244181adcafc70412d277bf5f1066f4cac9f9da2763e242ed",
+      "size_bytes": 96
+    },
+    "canonical_promotion": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07CanonicalPromotion-20261020-1\\promotion.json",
+      "sha256": "98dbcd45de59bd2c8fdf58a4ab837e6e673a97faad9b68846086ab625ba0bdd4",
+      "size_bytes": 1536
+    },
+    "retained_capture_review": {
+      "path": "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\evidence\\lesson07_unified\\consumer_repair_20261020\\capture-review.json",
+      "sha256": "819d277fd500e8c42e1d87f7c8a7c23e6ae760294cb075946c1f7c78688bb0e4",
+      "size_bytes": 2927
+    },
+    "final_measurements": {
+      "boundary_vertex_count": 65032,
+      "all_boundary_uint16_match_installed_conversion": true,
+      "source_boundary_height_disagreement_cm": 0,
+      "native_boundary_max_height_disagreement_cm": 0.013910478999605402,
+      "native_boundary_max_xy_gap_cm": 0.03643035907043668,
+      "source_vertex_height_residual_cm_min_max": [
+        -8.2472879357083,
+        -2.191766262054472
+      ],
+      "model_clipping_count": 0,
+      "raw_visibility_boundary_counts": {
+        "not_allocated_unknown": 61980,
+        "zero": 2024,
+        "hole_255": 1028
+      },
+      "allocated_visibility_mismatch_count": 0,
+      "runtime_source_hole_samples_no_hit": 3,
+      "runtime_source_valid_samples_hit": 12,
+      "runtime_sample_count": 15,
+      "source_triangle_interpolation_proved": false,
+      "whole_landscape_collision_proved": false,
+      "runtime_hit_vs_rendered_triangle_max_abs_difference_cm": 0.4246065
+    },
+    "limits": [
+      "Source/consumer vertex quantization is verified on sampled boundaries, not a zero-error claim against real-valued source heights.",
+      "Unallocated visibility weights remain UNKNOWN; sampled runtime collision is independently verified.",
+      "The current editor Visibility query hits holes while the authenticated PIE world correctly does not.",
+      "Source triangle interpolation and whole-area collision are not inferred from the fifteen runtime hit/miss samples.",
+      "Owner visual acceptance and exact-commit protected CI remain separate gates; performance remains DEFERRED_AFTER_M3."
+    ],
+    "before_repair_native_seam_report": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07Seams-20261020-1\\l07-native-geometry.json",
+      "sha256": "767b1f77938f27ccf5076bbc7ff7002dcefa865a66e82305ddec10bc1a0e43a2",
+      "size_bytes": 6774056
+    },
+    "before_repair_source_comparison": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07Seams-20261020-1\\source-comparison.json",
+      "sha256": "8c0e9326b6a9137394a67617437881bd3f8ce0e4ee9af8f4154e55a4073c4f32",
+      "size_bytes": 100237535
+    },
+    "before_repair_ue_seam_max_difference_cm": 5.8002564907073975,
+    "before_repair_all_measured_uint16_match_installed_per_actor_conversion": true,
+    "current_pin_admission_readback": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07FinalReadback-20261020-3\\l07-native-geometry.json",
+      "sha256": "098e8d9e0fb13051521cf3419366056f665b3a4ede3fce6aed7ac000a3907d7f",
+      "size_bytes": 6786271
+    },
+    "current_pin_admission_exit": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07FinalReadback-20261020-3\\exit.json",
+      "sha256": "e4d4bdf0775fd1af7e8f56d564735c6e53cd7587df9c51462dc18b11d0a28c49",
+      "size_bytes": 96
+    },
+    "current_pin_admission_note": "Fresh read3 authenticates current map and both material pins. Full repair lineage remains authenticated separately by immutable read2 and its frozen reader/comparator sources.",
+    "python_tests": {
+      "run": 109,
+      "skipped": 2,
+      "failures": 0,
+      "errors": 0,
+      "receipt": {
+        "path": "C:\\Users\\akarn\\.codex\\visualizations\\2026\\10\\20\\01a15966-5124-7150-971d-d210470f86c6\\lesson07-python-tests.log",
+        "sha256": "1d65276858574466913d0b45862eca474fc3511f060643455379d573c9c42b5d",
+        "size_bytes": 2177
+      }
+    },
+    "validation": {
+      "ruff": "PASS",
+      "diff_check": "PASS",
+      "docs_index": {
+        "i18n": "PASS",
+        "structure": "PASS",
+        "links": "PASS",
+        "freshness": "PASS"
+      },
+      "evidence_storage": {
+        "status": "FAIL_EXISTING_OUT_OF_SCOPE_FILE",
+        "error": "raw evidence JSON exceeds 1 MiB without an exact reviewed exception",
+        "path": "docs/experiments/sa-calobra-roadside-visibility-prestudy-20261008/observations.json"
+      }
+    },
+    "backup_relocation": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07CanonicalPromotion-20261020-1\\backup-relocation.json",
+      "sha256": "e52685759a47335e6b8c86d297882b08977b68f10afb0bf9345cebe581b018dc",
+      "size_bytes": 1914
+    },
+    "protected_source_conservation": {
+      "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07CanonicalPromotion-20261020-1\\source-conservation.json",
+      "sha256": "ba56084a11bacee60bbfb2b264484f2a0be086adfb9a80a83f49798d584aa417",
+      "size_bytes": 1069
+    },
+    "before_publication_remote_parity": {
+      "remote_branch": "codex/365-world-graph",
+      "verified_remote_head": "5d4475af5fe04eade56ce87b2d62f257cd7095ef",
+      "local_repair_pushed": false,
+      "scope": "Same original source/assets; repaired map and materials remain local and remote has not received this repair."
+    },
+    "delivery_authorization": "Owner requested publishing the same local repair on the existing branch, without regenerating terrain; exact commit and remote delivery are verified separately."
+  },
+  "updated_at_utc": "2026-10-20T16:29:19.581084+00:00"
 }

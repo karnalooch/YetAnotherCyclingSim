@@ -1,0 +1,53 @@
+{
+  "status": "NATIVE_CAPTURED_REVIEWED_OWNER_ACCEPTANCE_PENDING",
+  "base_head": "5d4475af5fe04eade56ce87b2d62f257cd7095ef",
+  "dirty_working_tree": true,
+  "map_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+  "image_size": [
+    1920,
+    1080
+  ],
+  "images": [
+    {
+      "file": "ue_panorama_material.png",
+      "sha256": "a5cf48648ab9c5c86864551519caa026f8620c16934981a89755cede868677a9",
+      "size_bytes": 1405138,
+      "source_capture": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07RepairedCapture-20261020-3\\images\\ue_panorama_material.png"
+    },
+    {
+      "file": "ue_panorama_neutral.png",
+      "sha256": "d8eaa1a17dc55e819f3aef038a34f7852215a03fe277b31063894cc74e805d33",
+      "size_bytes": 1202680,
+      "source_capture": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07RepairedCapture-20261020-3\\images\\ue_panorama_neutral.png"
+    },
+    {
+      "file": "ue_closeup_scree.png",
+      "sha256": "f6c268c5d2053e8214d4f1411bec81084c3bf656fef674279d05fe1d377d4f6f",
+      "size_bytes": 3781895,
+      "source_capture": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07RepairedCapture-20261020-1\\images\\ue_closeup_scree.png"
+    },
+    {
+      "file": "ue_closeup_scree_neutral.png",
+      "sha256": "c23376e36bef7b7fe479ffb41ec4693e9bb452a2bb941e7b87ca10b6757dd8bd",
+      "size_bytes": 2415869,
+      "source_capture": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07RepairedCapture-20261020-1\\images\\ue_closeup_scree_neutral.png"
+    },
+    {
+      "file": "ue_tile_seam_check.png",
+      "sha256": "8f8aaeac662413a0b424d1d38914d49b785e3174d3e679081255f4366ebcc8d7",
+      "size_bytes": 3672953,
+      "source_capture": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07RepairedCapture-20261020-1\\images\\ue_tile_seam_check.png"
+    }
+  ],
+  "observations": [
+    "Final panorama pair frames the complete visible domain and its nearest corner. Earlier panorama attempts are retained locally because they clipped the near corner.",
+    "Material and neutral captures show matching major terrain silhouettes. No wide central fissure is visually apparent; numerical seam measurements remain separate evidence.",
+    "Elongated sharp cliff ribs occur in both neutral UE and the source Houdini render; they were not hidden by material tuning.",
+    "Scree closeup frames a source-authenticated occurrence with mixed surrounding classes, not a large pure Scree patch.",
+    "Dark flat foreground in PBR is visible as a continuous surface in neutral; screenshots alone do not establish source validity or collision.",
+    "Native main-material tessellation is disabled and Landscape Nanite is disabled on all four actors. Neutral masked material has a directly observed LandscapeVisibilityMask connection."
+  ],
+  "owner_visual_pass": false,
+  "geometry_accepted": false,
+  "runtime_collision_accepted": false
+}

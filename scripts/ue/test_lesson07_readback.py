@@ -4,6 +4,7 @@ from copy import deepcopy
 from fnmatch import fnmatchcase
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -139,6 +140,209 @@ class NativeComponentLayoutTests(unittest.TestCase):
         self.component.get_editor_property.assert_not_called()
 
 
+class NativeComponentSampleTests(unittest.TestCase):
+    def setUp(self):
+        self.path = reader.LEVEL_PATH + ".World:PersistentLevel.SaCalobra_Unified_0_0.Component0"
+        self.component = SimpleNamespace(get_path_name=lambda: self.path)
+        self.value = {
+            "schema_version": 1, "observed": True, "component_path": self.path,
+            "world_package": reader.LEVEL_PATH, "actor_name": "SaCalobra_Unified_0_0",
+            "vertex_indices": [0, 254, 65024], "visibility_observed": True,
+            "visibility_status": "ALLOCATED_READ",
+            "samples": [[32768, -25.012, 100.0, 0.0, 0],
+                        [32769, -25.012, 150.0, 1.45, 255],
+                        [65535, -25.012, 200.0, 100.0, 171]],
+        }
+        self.getter = Mock(side_effect=lambda *_args: json.dumps(self.value))
+        self.api = SimpleNamespace(YacsLandscapeMeshDiagnosticLibrary=SimpleNamespace(
+            read_lesson07_component_samples=self.getter))
+
+    def read(self, indices=None):
+        return reader.read_component_samples(self.api, self.component, [0, 254, 65024] if indices is None else indices)
+
+    def test_native_samples_retain_exact_world_coordinates_and_raw_codes(self):
+        result = self.read()
+        self.assertEqual(result["samples"], self.value["samples"])
+        self.assertEqual(result["samples"][0][1], -25.012)
+        self.getter.assert_called_once_with(self.component, [0, 254, 65024])
+
+    def test_missing_visibility_is_explicit_unknown_and_not_fabricated_zero(self):
+        for status in ("NOT_ALLOCATED", "READ_FAILED"):
+            self.value.update(visibility_observed=False, visibility_status=status)
+            for row in self.value["samples"]:
+                row[4] = None
+            self.assertTrue(all(row[4] is None for row in self.read()["samples"]))
+        self.value["samples"][0][4] = 0
+        with self.assertRaisesRegex(ValueError, "visibility sample"):
+            self.read()
+
+    def test_malformed_native_identity_counts_and_values_fail_closed(self):
+        original = deepcopy(self.value)
+        for key, bad in (("schema_version", True), ("observed", False),
+                         ("component_path", "/Game/Other.Component"), ("world_package", "/Game/Other"),
+                         ("actor_name", "Other"), ("vertex_indices", [0, 254, 65023]),
+                         ("vertex_indices", [False, 254, 65024]), ("samples", []),
+                         ("visibility_observed", "true"), ("visibility_status", "UNKNOWN")):
+            self.value = {**deepcopy(original), key: bad}
+            with self.subTest(key=key, bad=bad), self.assertRaises(ValueError):
+                self.read()
+        for column, bad in ((0, 1.5), (0, 65536), (1, float("nan")), (3, float("inf")),
+                            (4, -1), (4, 256), (4, True), (4, None)):
+            self.value = deepcopy(original)
+            self.value["samples"][0][column] = bad
+            with self.subTest(column=column, bad=bad), self.assertRaises(ValueError):
+                self.read()
+
+    def test_bad_requests_stop_before_native_call_and_oversized_reply_is_rejected(self):
+        for indices in ([], [0, 0], [-1], [65025], [True], list(range(1025))):
+            with self.subTest(indices=indices[:3]), self.assertRaises(ValueError):
+                self.read(indices)
+        self.getter.assert_not_called()
+        self.getter.side_effect = None
+        self.getter.return_value = "x" * (512 * 1024 + 1)
+        with self.assertRaisesRegex(ValueError, "bounded JSON"):
+            self.read()
+
+
+class NativeSeamMeasurementTests(unittest.TestCase):
+    def setUp(self):
+        self.api = SimpleNamespace(
+            Vector=lambda x, y, z: SimpleNamespace(x=x, y=y, z=z),
+            TraceTypeQuery=SimpleNamespace(TRACE_TYPE_QUERY1=1), DrawDebugTrace=SimpleNamespace(NONE=0),
+            SystemLibrary=SimpleNamespace(line_trace_single=Mock(return_value=None)),
+        )
+        self.world = object()
+        self.tiles = {}
+        self.calls = 0
+        for ix in range(2):
+            for iy in range(2):
+                name = f"SaCalobra_Unified_{ix}_{iy}"
+                # Synthetic native-transform fixture includes the actual -90deg
+                # orientation; tests must not assume local X is geographic X.
+                def transform(point, ix=ix, iy=iy):
+                    return self.api.Vector(-406425 + ix * 406400 + point.y * 50,
+                                           -25 + iy * 406400 - point.x * 50, point.z)
+                actor = SimpleNamespace(
+                    get_name=lambda name=name: name,
+                    get_actor_transform=lambda transform=transform: SimpleNamespace(transform_location=transform),
+                    get_actor_bounds=lambda _collision, transform=transform: (
+                        transform(self.api.Vector(4064, 4064, 0)), self.api.Vector(203200, 203200, 1000)),
+                )
+                components, layouts = [], []
+                for x in range(32):
+                    for y in range(32):
+                        fields = {**native_layout_reply("fixture")["fields"],
+                                  "section_base_x": x * 254, "section_base_y": y * 254}
+                        path = reader.LEVEL_PATH + f".World:PersistentLevel.{name}.Component_{x}_{y}"
+                        components.append(SimpleNamespace(
+                            get_path_name=lambda path=path: path, get_owner=lambda actor=actor: actor,
+                            actor=name, transform=transform, fields=fields,
+                        ))
+                        layouts.append({"observed": True, "fields": fields})
+                self.tiles[name] = actor, components, layouts
+        self.actors = [tile[0] for tile in self.tiles.values()]
+
+        def getter(component, indices):
+            self.calls += 1
+            rows = []
+            for index in indices:
+                x, y = index % 255, index // 255
+                pos = component.transform(self.api.Vector(
+                    component.fields["section_base_x"] + x, component.fields["section_base_y"] + y, 0))
+                rows.append([32768, pos.x, pos.y, 1000.0, 0])
+            return json.dumps({
+                "schema_version": 1, "observed": True, "component_path": component.get_path_name(),
+                "world_package": reader.LEVEL_PATH, "actor_name": component.actor,
+                "vertex_indices": indices, "samples": rows, "visibility_observed": True,
+                "visibility_status": "ALLOCATED_READ",
+            })
+        self.api.YacsLandscapeMeshDiagnosticLibrary = SimpleNamespace(read_lesson07_component_samples=getter)
+
+    def test_all_four_complete_two_sided_edges_and_bounded_collision_are_measured(self):
+        result = reader.native_seam_readback(self.api, self.world, self.actors, self.tiles)
+        self.assertEqual(self.calls, 256)
+        self.assertEqual({s["id"] for s in result["seams"]}, {"x_0", "x_1", "y_0", "y_1"})
+        self.assertTrue(result["height_samples_complete"])
+        self.assertTrue(result["visibility_samples_complete"])
+        self.assertTrue(result["collision_queries_complete"])
+        self.assertFalse(result["geometry_accepted"])
+        self.assertFalse(result["source_height_interpolation_proved"])
+        self.assertFalse(result["visibility_layer_proved_in_ue"])
+        for seam in result["seams"]:
+            for side in ("a", "b"):
+                self.assertEqual(len(seam[side]["samples"]), 8129)
+                self.assertEqual(len(seam[side]["component_joins"]), 31)
+            self.assertEqual(seam["peer_summary"]["max_xy_gap_cm"], 0)
+            self.assertEqual(seam["peer_summary"]["max_abs_height_delta_cm"], 0)
+            self.assertEqual(len(seam["collision_probes"]), 130)
+            self.assertTrue(all(p["at_vertex"]["observed"] and p["at_vertex"]["hit"] is False
+                                for p in seam["collision_probes"]))
+        self.assertEqual(self.api.SystemLibrary.line_trace_single.call_count, 1040)
+        for call in self.api.SystemLibrary.line_trace_single.call_args_list:
+            self.assertEqual(len(call.args[5]), 3)  # Other tiles cannot answer for this side.
+        # Full evidence, with realistic high-precision doubles, retains headroom
+        # for the existing per-component structural inventory under the 8MiB cap.
+        for seam in result["seams"]:
+            for side in ("a", "b"):
+                for row in seam[side]["samples"]:
+                    row[1:4] = [x + 0.123456789012345 for x in row[1:4]]
+        self.assertLess(len(json.dumps(result, separators=(",", ":"), allow_nan=False)), 6 * 1024**2)
+
+    def test_component_join_defect_is_preserved_when_deduplicating_shared_vertex(self):
+        actor, components, layouts = self.tiles["SaCalobra_Unified_0_0"]
+        plan = reader.landscape_edge_plans(self.api, actor, components, layouts)[0]
+        original = self.api.YacsLandscapeMeshDiagnosticLibrary.read_lesson07_component_samples
+        count = 0
+        def discontinuous(component, indices):
+            nonlocal count
+            count += 1
+            value = json.loads(original(component, indices))
+            if count == 2:
+                value["samples"][0][3] += 3.0
+            return json.dumps(value)
+        self.api.YacsLandscapeMeshDiagnosticLibrary.read_lesson07_component_samples = discontinuous
+        result = reader.read_native_edge(self.api, actor, plan)
+        self.assertEqual(len(result["samples"]), 8129)
+        self.assertEqual(result["component_joins"][0]["delta_xyz_cm"][2], 3.0)
+        self.assertEqual(result["component_joins"][0]["next_component_sample"][3], 1003.0)
+
+    def test_failed_seam_retains_completed_side_and_other_seams_without_completeness(self):
+        original = self.api.YacsLandscapeMeshDiagnosticLibrary.read_lesson07_component_samples
+        failed = False
+        def unavailable_once(component, indices):
+            nonlocal failed
+            if component.actor == "SaCalobra_Unified_1_0" and not failed:
+                failed = True
+                raise RuntimeError("native sample source unavailable")
+            return original(component, indices)
+        self.api.YacsLandscapeMeshDiagnosticLibrary.read_lesson07_component_samples = unavailable_once
+        result = reader.native_seam_readback(self.api, self.world, self.actors, self.tiles)
+        self.assertFalse(result["height_samples_complete"])
+        self.assertFalse(result["collision_queries_complete"])
+        self.assertFalse(result["geometry_accepted"])
+        first = result["seams"][0]
+        self.assertFalse(first["observed"])
+        self.assertIn("native sample source unavailable", first["error"])
+        self.assertEqual(len(first["a"]["samples"]), 8129)
+        self.assertTrue(all(seam["observed"] for seam in result["seams"][1:]))
+
+    def test_collision_rejects_wrong_actor_component_nonfinite_and_unknown(self):
+        target = self.actors[0]
+        component = self.tiles[target.get_name()][1][0]
+        hit = {"blocking_hit": True, "hit_actor": target, "hit_component": component,
+               "impact_point": self.api.Vector(0, 0, 1000)}
+        trace = self.api.SystemLibrary.line_trace_single
+        for changes in ({}, {"hit_actor": self.actors[1]}, {"hit_component": None},
+                        {"impact_point": self.api.Vector(0, 0, float("nan"))}, {"blocking_hit": "true"}):
+            trace.return_value = SimpleNamespace(to_dict=lambda changes=changes: {**hit, **changes})
+            result = reader.seam_collision_trace(self.api, self.world, self.actors, target, [0, 0])
+            self.assertEqual(result["observed"], not bool(changes))
+        trace.side_effect = RuntimeError("collision unavailable")
+        result = reader.seam_collision_trace(self.api, self.world, self.actors, target, [0, 0])
+        self.assertFalse(result["observed"])
+        self.assertIn("collision unavailable", result["error"])
+
+
 class LandscapeLayerOwnerTests(unittest.TestCase):
     def setUp(self):
         self.owner_type = type("Landscape", (), {})
@@ -199,7 +403,8 @@ class NativeInspectionReportingTests(unittest.TestCase):
         landscape_type = type("Landscape", (), {})
         proxy_type = type("LandscapeProxy", (), {})
         component_type = type("LandscapeComponent", (), {})
-        vector = lambda x, y, z: SimpleNamespace(x=x, y=y, z=z)
+        def vector(x, y, z):
+            return SimpleNamespace(x=x, y=y, z=z)
         self.world = SimpleNamespace(get_path_name=lambda: reader.LEVEL_PATH + ".World")
         self.actors = []
         for label in sorted(reader.EXPECTED_ACTORS):
@@ -231,6 +436,8 @@ class NativeInspectionReportingTests(unittest.TestCase):
             actor.get_landscape_actor = lambda value=owner: value
             self.actors.append(actor)
         self.trace = Mock()
+        self.seams = Mock(return_value={"height_samples_complete": True, "collision_queries_complete": True,
+                                       "fixture": "not native evidence"})
         self.getter = Mock(side_effect=lambda component: json.dumps(
             native_layout_reply(component.get_path_name(), component.fields)))
         self.api = SimpleNamespace(
@@ -253,7 +460,8 @@ class NativeInspectionReportingTests(unittest.TestCase):
     def inspect(self):
         preparation = {"fixture": "no native engine or geometry"}
         dependencies = {"problems": [], "queries_complete": True, "dependency_closure_complete": False}
-        with patch.object(reader, "native_dependencies", return_value=dependencies) as query, patch("builtins.print"):
+        with patch.object(reader, "native_dependencies", return_value=dependencies) as query, \
+                patch.object(reader, "native_seam_readback", self.seams), patch("builtins.print"):
             report = reader.inspect_map(self.api, preparation)
         query.assert_called_once_with(self.api, preparation)
         self.assertEqual(len(report["landscapes"]), 4)
@@ -300,8 +508,46 @@ class NativeInspectionReportingTests(unittest.TestCase):
         self.assertTrue(any("non-finite" in reason for reason in report["reasons"]))
         json.dumps(reader.finite_json(report), allow_nan=False)
 
+    def test_missing_native_seam_getter_retains_structural_observations_without_pass(self):
+        self.trace.return_value = self.hit()
+        self.seams.side_effect = RuntimeError("native seam getter unavailable")
+        report = self.inspect()
+        self.assertFalse(report["structural_readback_complete"])
+        self.assertTrue(report["components_pass"])
+        self.assertFalse(report["native_seams"]["observed"])
+        self.assertIn("native seam getter unavailable", report["native_seams"]["error"])
+
 
 class NativeQueryBoundaryTests(unittest.TestCase):
+    def test_actual_material_parent_is_required_only_when_referenced(self):
+        original = "/Game/PegasusDemo/Materials/Landscape/M_Pegasus_Landscape_Master"
+        self.assertNotIn(original, reader.REQUIRED_PACKAGES)
+        self.assertIn(reader.EXPECTED_MATERIAL, reader.REQUIRED_PACKAGES)
+        result = reader.dependency_inventory(
+            [reader.EXPECTED_MATERIAL], lambda _name: [original], lambda _name: True,
+            {reader.EXPECTED_MATERIAL},
+        )
+        self.assertFalse(result["queries_complete"])
+        self.assertIn(original, result["problems"][0])
+
+    def test_xy_representation_bound_preserves_measurement_and_rejects_actual_scale_drift(self):
+        actual = 49.99999701976776
+        result = reader.xy_scale_representation([actual, actual, 185.7248])
+        self.assertTrue(result["within_one_binary32_input_step"])
+        self.assertEqual(result["actual_tile_span_delta_cm"], [(actual - 50) * 8128] * 2)
+        self.assertFalse(result["geometry_accepted"])
+        for scale in (*reader.XY_SCALE_INTERVAL_CM, 50.0):
+            rows = landscape_rows()
+            rows[0]["scale"][0] = scale
+            self.assertEqual(reader.structure_problems(rows), [])
+        lower, upper = reader.XY_SCALE_INTERVAL_CM
+        for scale in (math.nextafter(lower, -math.inf), math.nextafter(upper, math.inf),
+                      49.9999, 50.0001, -50, float("nan"), float("inf")):
+            rows = landscape_rows()
+            rows[0]["scale"][1] = scale
+            with self.subTest(scale=scale):
+                self.assertTrue(reader.structure_problems(rows))
+
     def test_complete_cyclic_disk_queries_do_not_claim_full_asset_or_geometry_proof(self):
         dependencies = {"/Game/Map": ["/Game/Material", "/Script/Engine"],
                         "/Game/Material": ["/Game/Map", "/Engine/Default"], "/Engine/Default": []}
@@ -419,7 +665,22 @@ class PreparationBoundaryTests(unittest.TestCase):
         self.map.parent.mkdir(parents=True)
         self.map.write_bytes(b"synthetic tiny saved map fixture")
         identity = reader.file_identity(self.map, 1024)
-        self.pins = patch.multiple(reader, MAP_SHA256=identity["sha256"], MAP_SIZE=identity["size_bytes"])
+        original_bytes = b"synthetic original map fixture"
+        self.original_pin = {"sha256": hashlib.sha256(original_bytes).hexdigest(),
+                             "size_bytes": len(original_bytes)}
+        material_pins, assets = {}, []
+        for index, relative in enumerate(reader.CURRENT_MATERIAL_PINS):
+            path = self.project / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(f"synthetic current material {index}".encode())
+            material = reader.file_identity(path, 1024)
+            material_pins[relative] = (material["sha256"], material["size_bytes"])
+            assets.append({"relative": relative, "source_identity": material, "copied_identity": material})
+        self.pins = patch.multiple(
+            reader, MAP_SHA256=identity["sha256"], MAP_SIZE=identity["size_bytes"],
+            ORIGINAL_MAP_SHA256=self.original_pin["sha256"], ORIGINAL_MAP_SIZE=self.original_pin["size_bytes"],
+            CURRENT_MATERIAL_PINS=material_pins,
+        )
         self.pins.start()
         self.addCleanup(self.pins.stop)
         self.manifest = self.proof / "staging.json"
@@ -428,7 +689,9 @@ class PreparationBoundaryTests(unittest.TestCase):
             "schema_version": 1, "status": "L07_COPIED_BYTES_NATIVE_READ_PENDING",
             "source_head": "a" * 40, "candidate_root": str(self.project), "level": reader.LEVEL_PATH,
             "geometry_accepted": False, "dependency_closure_complete": False,
-            "map": {"relative": reader.MAP_FILE, "source_identity": identity},
+            "map": {"relative": reader.MAP_FILE, "source_identity": identity,
+                    "original_identity": self.original_pin},
+            "assets": assets,
             "reader_identity": reader.file_identity(reader.__file__, 256 * 1024), "report_path": str(self.report),
         }
         self.env = {"YACS_L07_EXPECTED_HEAD": "a" * 40,
@@ -490,6 +753,39 @@ class PreparationBoundaryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "reader bytes"):
             reader.authenticated_preparation(self.project, self.env)
 
+    def test_original_map_is_not_admitted_as_current_and_original_lineage_cannot_move(self):
+        current = deepcopy(self.value)
+        self.map.write_bytes(b"synthetic original map fixture")
+        self.value["map"]["source_identity"] = reader.file_identity(self.map, 1024)
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "pinned saved"):
+            reader.authenticated_preparation(self.project, self.env)
+        self.map.write_bytes(b"synthetic tiny saved map fixture")
+        self.value = deepcopy(current)
+        self.value["map"]["original_identity"] = self.value["map"]["source_identity"]
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "original identity"):
+            reader.authenticated_preparation(self.project, self.env)
+
+    def test_current_material_pins_reject_missing_substituted_and_falsely_inventoried_assets(self):
+        original = deepcopy(self.value)
+        for relative in reader.CURRENT_MATERIAL_PINS:
+            path = self.project / relative
+            content = path.read_bytes()
+            path.unlink()
+            with self.subTest(relative=relative), self.assertRaises(FileNotFoundError):
+                reader.authenticated_preparation(self.project, self.env)
+            path.write_bytes(b"changed material")
+            with self.assertRaisesRegex(ValueError, "Candidate current material"):
+                reader.authenticated_preparation(self.project, self.env)
+            path.write_bytes(content)
+            self.value["assets"] = [row for row in self.value["assets"] if row["relative"] != relative]
+            self.write_manifest()
+            with self.assertRaisesRegex(ValueError, "Staged current material"):
+                reader.authenticated_preparation(self.project, self.env)
+            self.value = deepcopy(original)
+            self.write_manifest()
+
     def test_unrelated_project_changed_pin_and_scope_promotion_are_rejected(self):
         original = deepcopy(self.value)
         for key, bad in (("source_head", "b" * 40), ("candidate_root", str(self.project / "other")),
@@ -528,7 +824,408 @@ class PreparationBoundaryTests(unittest.TestCase):
             reader.plain_path(link / "new.json")
 
 
+class InteriorPlanBoundaryTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.directory = Path(temporary.name)
+        self.manifest_path = self.directory / "manifest.json"
+        self.manifest_path.write_text(json.dumps({
+            "accepted_l06_sha256": reader.SOURCE_CACHE_SHA256}), encoding="utf-8")
+        self.manifest_hash = reader.file_identity(self.manifest_path, 1024)["sha256"]
+        pin = patch.object(reader, "SOURCE_MANIFEST_SHA256", self.manifest_hash)
+        pin.start()
+        self.addCleanup(pin.stop)
+        self.path = self.directory / "interior.json"
+        self.preparation = {"source_head": "a"*40}
+        name = "SaCalobra_Unified_0_0"
+        self.plan = {
+            "schema_version": 1, "status": "SOURCE_SELECTED_INTERIOR_NATIVE_READ_PENDING",
+            "source_head": self.preparation["source_head"], "level": reader.LEVEL_PATH,
+            "accepted_l06_sha256": reader.SOURCE_CACHE_SHA256,
+            "manifest": {"path": str(self.manifest_path), "sha256": self.manifest_hash},
+            "original_source_center_bounds_m": [-3999.75, 3999.75], "buffer_vertices": 3,
+            "geometry_accepted": False, "source_triangle_interpolation_proved": False,
+            "visibility_layer_proved_in_ue": False,
+            "actor_registration": {actor: {"location_cm": [0, 0, 0],
+                "rotation_deg_pitch_yaw_roll": [0, -90, 0], "scale": [50, 50, 185]}
+                for actor in reader.EXPECTED_ACTORS},
+            "probes": [{
+                "id": "fixture", "actor": name, "source_validity": 1,
+                "component_path": reader.LEVEL_PATH + ".World:PersistentLevel." + name + ".Component0",
+                "component_section_base": [0, 0],
+                "local_vertex_indices": [127*255+127, 127*255+128, 128*255+127, 128*255+128],
+                "uniform_source_patch_samples": 64,
+                "source_corners": [{"source_validity": 1, "source_voxel_index": [127+x, 127+y, 0],
+                    "source_voxel_center_houdini_m": [x*.5, 0, y*.5], "source_vertex_height_m": 1.0}
+                    for x, y in ((0, 0), (1, 0), (0, 1), (1, 1))],
+            }],
+        }
+        self.write_plan()
+
+    def write_plan(self):
+        self.path.write_text(json.dumps(self.plan), encoding="utf-8")
+        self.preparation["interior_plan"] = reader.file_identity(self.path, 1024**2)
+
+    def test_plan_bytes_and_physical_source_manifest_are_authenticated(self):
+        self.assertEqual(reader.authenticated_interior_plan(self.preparation), self.plan)
+        self.path.write_text("{}", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Untrusted repair"):
+            reader.authenticated_interior_plan(self.preparation)
+        self.write_plan()
+        self.manifest_path.write_text("{}", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Untrusted repair"):
+            reader.authenticated_interior_plan(self.preparation)
+
+    def test_changed_task_source_promotion_or_unbuffered_quad_is_rejected(self):
+        original = deepcopy(self.plan)
+        for field, value in (("source_head", "b"*40), ("accepted_l06_sha256", "f"*64),
+                             ("buffer_vertices", 0), ("geometry_accepted", True)):
+            self.plan = {**deepcopy(original), field: value}
+            self.write_plan()
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                reader.authenticated_interior_plan(self.preparation)
+        for indices in ([0, 1, 255, 256], [127*255+127]*4):
+            self.plan = deepcopy(original)
+            self.plan["probes"][0]["local_vertex_indices"] = indices
+            self.write_plan()
+            with self.assertRaisesRegex(ValueError, "buffered quad"):
+                reader.authenticated_interior_plan(self.preparation)
+
+    def test_padding_mixed_class_and_out_of_grid_indices_cannot_claim_interior(self):
+        original = deepcopy(self.plan)
+        for field, value in (("source_validity", 0),
+                             ("source_voxel_center_houdini_m", [4000, 0, 0]),
+                             ("source_voxel_index", [8129, 0, 0]),
+                             ("source_voxel_index", [0, 0, 1])):
+            self.plan = deepcopy(original)
+            self.plan["probes"][0]["source_corners"][0][field] = value
+            self.write_plan()
+            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                reader.authenticated_interior_plan(self.preparation)
+
+
+class InteriorReadbackTests(unittest.TestCase):
+    def setUp(self):
+        self.name = "SaCalobra_Unified_0_0"
+        self.path = reader.LEVEL_PATH + ".World:PersistentLevel." + self.name + ".Component0"
+        self.indices = [127*255+127, 127*255+128, 128*255+127, 128*255+128]
+        self.actor = SimpleNamespace(
+            get_name=lambda: self.name, get_actor_location=lambda: SimpleNamespace(x=0, y=0, z=0),
+            get_actor_rotation=lambda: SimpleNamespace(pitch=0, yaw=-90, roll=0),
+            get_actor_scale3d=lambda: SimpleNamespace(x=50, y=50, z=561),
+        )
+        self.component = SimpleNamespace(get_path_name=lambda: self.path)
+        self.collision = SimpleNamespace(
+            get_owner=lambda: self.actor, get_render_component=lambda: self.component,
+            get_path_name=lambda: self.path + "Collision")
+        self.hit = {"blocking_hit": True, "hit_actor": self.actor, "hit_component": self.collision,
+                    "impact_point": SimpleNamespace(x=25, y=25, z=100)}
+        self.reply = {"schema_version": 1, "observed": True, "component_path": self.path,
+                      "world_package": reader.LEVEL_PATH, "actor_name": self.name,
+                      "vertex_indices": self.indices, "visibility_observed": True,
+                      "visibility_status": "ALLOCATED_READ",
+                      "samples": [[32868, 0, 0, 100, 0], [32868, 50, 0, 100, 0],
+                                  [32868, 0, 50, 100, 0], [32868, 50, 50, 100, 0]]}
+        self.api = SimpleNamespace(
+            Vector=lambda x, y, z: SimpleNamespace(x=x, y=y, z=z),
+            TraceTypeQuery=SimpleNamespace(TRACE_TYPE_QUERY1=1), DrawDebugTrace=SimpleNamespace(NONE=0),
+            SystemLibrary=SimpleNamespace(line_trace_single=lambda *_args: SimpleNamespace(to_dict=lambda: self.hit)),
+            YacsLandscapeMeshDiagnosticLibrary=SimpleNamespace(
+                read_lesson07_component_samples=lambda *_args: json.dumps(self.reply)))
+        self.plan = {
+            "tiles": [{"actor": self.name, "selected_by_validity": {"0": 0, "1": 1}}],
+            "actor_registration": {self.name: {"location_cm": [0, 0, 0],
+                "rotation_deg_pitch_yaw_roll": [0, -90, 0], "scale": [50, 50, 185]}},
+            "probes": [{"id": "fixture", "actor": self.name, "component_path": self.path,
+                        "component_section_base": [0, 0], "local_vertex_indices": self.indices}],
+        }
+        self.tiles = {self.name: (self.actor, [self.component], [
+            {"observed": True, "fields": {"section_base_x": 0, "section_base_y": 0}}])}
+        self.preparation = {"interior_plan": {"path": "fixture", "sha256": "a"*64}}
+
+    def read(self):
+        with patch.object(reader, "authenticated_interior_plan", return_value=self.plan):
+            return reader.native_interior_readback(
+                self.api, object(), [self.actor], self.tiles, self.preparation)
+
+    def test_reads_four_actual_corners_and_center_with_matching_collision_render_component(self):
+        value = self.read()
+        self.assertTrue(value["samples_complete"])
+        row = value["probes"][0]
+        self.assertEqual(row["native_corners"]["vertex_indices"], self.indices)
+        self.assertEqual(row["center_collision"]["query_xy_cm"], [25, 25])
+        self.assertEqual(row["center_collision"]["hit_render_component"], self.path)
+        self.assertFalse(value["geometry_accepted"])
+        self.assertFalse(value["visibility_layer_proved_in_ue"])
+        self.hit = {"blocking_hit": False}
+        self.assertTrue(self.read()["samples_complete"])
+        self.assertFalse(self.read()["probes"][0]["center_collision"]["hit"])
+
+    def test_wrong_collider_or_changed_grid_registration_is_unknown_not_success(self):
+        self.collision.get_render_component = lambda: object()
+        value = self.read()
+        self.assertFalse(value["samples_complete"])
+        self.assertIn("another Landscape render component", value["probes"][0]["error"])
+        self.collision.get_render_component = lambda: self.component
+        self.plan["actor_registration"][self.name]["location_cm"] = [1, 0, 0]
+        value = self.read()
+        self.assertFalse(value["samples_complete"])
+        self.assertIn("registration changed", value["probes"][0]["error"])
+
+    def test_native_center_uses_fsum_for_real_world_coordinates(self):
+        # Actual final-readback values differed by one ULP between the embedded
+        # Python summation algorithms. Keep exact coordinates, not a tolerance.
+        values = [-6375.0223969160015, -6375.022396465635, -6325.022399295749, -6325.022399445867]
+        for sample, value in zip(self.reply["samples"], values):
+            sample[1] = value
+        expected = math.fsum(values)/4
+        sequential = ((values[0]+values[1])+values[2]+values[3])/4
+        self.assertNotEqual(expected, sequential)
+        value = self.read()
+        self.assertTrue(value["samples_complete"])
+        self.assertEqual(value["probes"][0]["center_collision"]["query_xy_cm"], [expected, 25.0])
+
+
+class RepairedPreparationBoundaryTests(unittest.TestCase):
+    write_manifest = PreparationBoundaryTests.write_manifest
+
+    def setUp(self):
+        PreparationBoundaryTests.setUp(self)
+        self.map.write_bytes(b"synthetic original map fixture")
+        self.original = reader.file_identity(self.map, 1024)
+        backup = self.proof / "original-map-backup.umap"
+        backup.write_bytes(self.map.read_bytes())
+        self.material_relative = "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset"
+        material = self.project / self.material_relative
+        material.parent.mkdir(parents=True, exist_ok=True)
+        material.write_bytes(b"same authenticated material")
+        material_hash = reader.file_identity(material, 1024)["sha256"]
+        before = {reader.MAP_FILE: self.original["sha256"], self.material_relative: material_hash}
+        self.map.write_bytes(b"saved repaired map; original remains in backup")
+        current = reader.file_identity(self.map, 1024)
+        after = {**before, reader.MAP_FILE: current["sha256"]}
+        heights = {"schema_version": 1, "success": True, "errors": [],
+                   "world_package": reader.LEVEL_PATH, "hash_algorithm": "BLAKE3-256",
+                   "actor_count": 4, "component_count": 4096,
+                   "component_bindings": [{} for _ in range(4096)], "textures": [{"fixture": True}]}
+        self.receipt = {
+            "status": "MAP_CACHES_REFRESHED_REOPEN_PENDING", "mode": "REFRESH_MAP",
+            "project": str(self.project), "geometry_accepted": False, "fresh_reopen_verified": False,
+            "files": before, "files_after": after, "changed_files": [reader.MAP_FILE],
+            "protected_files_unchanged": True, "map_saved_after_cache_refresh": True,
+            "whole_heightmaps_unchanged": True, "heightmaps_before": heights,
+            "heightmaps_after": deepcopy(heights), "map_backup": str(backup),
+            "grass_refresh": {"success": True, "errors": [], "world_package": reader.LEVEL_PATH,
+                              "actor_count": 4, "component_count": 4096,
+                              "updated_component_count": 4096, "grass_type_reference_count_after": 0},
+        }
+        self.receipt_path = self.proof / "refresh.json"
+        self.value["status"] = reader.REPAIRED_PREPARATION_STATUS
+        self.value["map"].update(original_identity=self.original, source_identity=current)
+        self.value["assets"] = [{"relative": p, "copied_identity": {"sha256": digest}}
+                                for p, digest in after.items()]
+        self.write_receipt()
+
+    def write_receipt(self):
+        self.receipt_path.write_text(json.dumps(self.receipt), encoding="utf-8")
+        self.value["map"]["repair_receipts"] = [
+            reader.file_identity(self.receipt_path, reader.REPAIR_RECEIPT_LIMIT)]
+        self.write_manifest()
+
+    def read(self):
+        return reader.authenticated_preparation(self.project, self.env)
+
+    def test_saved_refresh_chain_preserves_original_pin_and_current_asset_identity(self):
+        preparation, _identity, observed, _output = self.read()
+        self.assertEqual(preparation["map"]["original_identity"], self.original)
+        self.assertEqual(observed, self.value["map"]["source_identity"])
+        self.assertNotEqual(observed["sha256"], reader.MAP_SHA256)
+        self.assertFalse(preparation["geometry_accepted"])
+        self.assertFalse(preparation["dependency_closure_complete"])
+
+    def test_plain_mode_or_unauthenticated_repair_cannot_override_original_pin(self):
+        original = deepcopy(self.value)
+        self.value["status"] = "L07_COPIED_BYTES_NATIVE_READ_PENDING"
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "pinned saved"):
+            self.read()
+        self.value = original
+        self.value["map"]["repair_receipts"][0]["sha256"] = "f" * 64
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "Untrusted repair"):
+            self.read()
+
+    def test_failed_unsaved_incomplete_or_protected_change_receipts_are_rejected(self):
+        original = deepcopy(self.receipt)
+        cases = [
+            ("status", "FAILED"), ("status", "CANARY_COMPLETED_UNSAVED"),
+            ("mode", "APPLY"), ("map_saved_after_cache_refresh", False),
+            ("whole_heightmaps_unchanged", False), ("protected_files_unchanged", False),
+            ("geometry_accepted", True), ("fresh_reopen_verified", True),
+            ("changed_files", []),
+        ]
+        for name, bad in cases:
+            self.receipt = {**deepcopy(original), name: bad}
+            self.write_receipt()
+            with self.subTest(name=name, bad=bad), self.assertRaises(ValueError):
+                self.read()
+        self.receipt = deepcopy(original)
+        self.receipt["files_after"][self.material_relative] = "b" * 64
+        self.receipt["changed_files"].append(self.material_relative)
+        self.write_receipt()
+        with self.assertRaisesRegex(ValueError, "protected assets"):
+            self.read()
+        self.receipt = deepcopy(original)
+        self.receipt["heightmaps_after"]["textures"] = [{"changed": True}]
+        self.write_receipt()
+        with self.assertRaisesRegex(ValueError, "heightmaps"):
+            self.read()
+
+    def test_wrong_backup_lineage_and_current_bytes_are_rejected(self):
+        Path(self.receipt["map_backup"]).write_bytes(b"substituted original")
+        with self.assertRaisesRegex(ValueError, "backup"):
+            self.read()
+        Path(self.receipt["map_backup"]).write_bytes(b"synthetic original map fixture")
+        self.map.write_bytes(b"different current candidate")
+        with self.assertRaisesRegex(ValueError, "Candidate map"):
+            self.read()
+
+    def test_changed_current_material_or_substituted_staging_inventory_is_rejected(self):
+        material = self.project / self.material_relative
+        material.write_bytes(b"unauthenticated later change")
+        with self.assertRaisesRegex(ValueError, "Candidate asset"):
+            self.read()
+        self.value["assets"][1]["copied_identity"]["sha256"] = hashlib.sha256(material.read_bytes()).hexdigest()
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "Staged assets"):
+            self.read()
+
+    def test_duplicate_receipts_and_broken_hash_chain_are_rejected(self):
+        self.value["map"]["repair_receipts"] *= 2
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "Duplicate repair"):
+            self.read()
+        self.receipt["files"][reader.MAP_FILE] = "b" * 64
+        self.write_receipt()
+        with self.assertRaisesRegex(ValueError, "broke map lineage"):
+            self.read()
+
+    def test_traversal_aliases_and_missing_map_inventory_fail_closed(self):
+        for inventory in (
+            {reader.MAP_FILE: "a" * 64, "../outside.uasset": "b" * 64},
+            {reader.MAP_FILE: "a" * 64, reader.MAP_FILE.replace("/", "\\"): "a" * 64},
+            {self.material_relative: "b" * 64},
+        ):
+            with self.subTest(inventory=inventory), self.assertRaises(ValueError):
+                reader.repair_inventory(inventory)
+
+    def consumer_receipt(self, mode="visibility-only"):
+        selected = sorted(reader.EXPECTED_ACTORS)
+        actors = {}
+        for index, name in enumerate(selected):
+            path = reader.LEVEL_PATH + ".World:PersistentLevel." + name
+            actors[name] = {
+                "path": path, "landscape_guid": name + "-guid",
+                "location_cm": [index * 10.0, 0.0, 0.0],
+                "rotation_deg_pitch_yaw_roll": [0.0, -90.0, 0.000001961],
+                "scale": [49.999997, 49.999997, 200.0 + index * 100],
+                "edit_layer": "Houdini_Unified_Final", "edit_layer_guid": name + "-layer-guid",
+                "component_paths": [path + f".Component_{n}" for n in range(1024)],
+                "material": reader.EXPECTED_MATERIAL, "hole_material": None,
+            }
+        common = max(a["scale"][2] for a in actors.values()) if mode == "height-and-visibility" else None
+        transport = {
+            "schema_version": 1, "status": "DERIVED_TRANSPORT_READY_NATIVE_UPDATE_NOT_RUN",
+            "source_head": self.value["source_head"], "mode": mode, "selected_actors": selected,
+            "source_map": reader.LEVEL_PATH, "source_map_identity": self.original,
+            "geometry_accepted": False, "required_common_scale_z": common,
+        }
+        transport_file = self.proof / "transport.json"
+        transport_file.write_text(json.dumps(transport), encoding="utf-8")
+        result = {
+            **deepcopy(self.receipt), "schema_version": 1, "mode": mode,
+            "status": "UPDATED_EXISTING_MAP_REOPEN_PENDING", "map_saved": True,
+            "source_head": self.value["source_head"], "source_comparison_proved": False,
+            "visibility_source_proved": False, "source_map_identity": self.original,
+            "map_before": self.original, "map_after": self.value["map"]["source_identity"],
+            "selected_actors": selected, "completed_actors": selected,
+            "transport_manifest": reader.file_identity(transport_file, 65536),
+            "actors_before": actors, "actors_after": deepcopy(actors),
+            "required_common_scale_z": common,
+            "native_outputs": [{
+                "actor": name, "target_layer": layer, "extents": [0, 0, 8128, 8128],
+                "created_landscape": False, "layer_was_created": False, "clear_layer": False,
+                "cooked_edit_layer": "Houdini_Unified_Final", "cooked_layer_requires_baking": False,
+            } for name in selected for layer in (
+                ["height", "visibility"] if mode == "height-and-visibility" else ["visibility"])],
+        }
+        for key in ("heightmaps_before", "heightmaps_after"):
+            result[key]["height_source_scope"] = "composite_and_existing_edit_layer_all_mips"
+        if common is not None:
+            for actor in result["actors_after"].values():
+                actor["scale"][2] = common
+            result["heightmaps_after"]["textures"] = [{"new_quantization": True}]
+            result["whole_heightmaps_unchanged"] = False
+        return result
+
+    def validate_consumer(self, value):
+        reader.validate_consumer_repair(
+            value, self.original["sha256"], self.value["map"]["source_identity"]["sha256"],
+            self.value["source_head"])
+
+    def test_saved_consumer_modes_only_admit_their_exact_transform_and_height_changes(self):
+        for mode in ("visibility-only", "height-and-visibility"):
+            value = self.consumer_receipt(mode)
+            self.validate_consumer(value)
+            name = sorted(reader.EXPECTED_ACTORS)[0]
+            for field, altered in (("landscape_guid", "different"), ("edit_layer_guid", "new-layer"),
+                                   ("location_cm", [1, 2, 3]), ("component_paths", ["replaced"])):
+                bad = deepcopy(value)
+                bad["actors_after"][name][field] = altered
+                with self.subTest(mode=mode, field=field), self.assertRaisesRegex(ValueError, "unapproved"):
+                    self.validate_consumer(bad)
+            bad = deepcopy(value)
+            bad["native_outputs"][0]["clear_layer"] = True
+            with self.assertRaisesRegex(ValueError, "target contract"):
+                self.validate_consumer(bad)
+        value = self.consumer_receipt()
+        value["heightmaps_after"]["textures"] = [{"changed": True}]
+        with self.assertRaisesRegex(ValueError, "changed native heightmaps"):
+            self.validate_consumer(value)
+
+    def test_consumer_requires_authenticated_transport_complete_actors_and_existing_layer_reads(self):
+        original = self.consumer_receipt("height-and-visibility")
+        for key, bad in (("completed_actors", []), ("selected_actors", ["SaCalobra_Unified_0_0"]),
+                         ("map_saved", False), ("source_head", "b" * 40),
+                         ("required_common_scale_z", 999.0)):
+            value = {**deepcopy(original), key: bad}
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                self.validate_consumer(value)
+        value = deepcopy(original)
+        value["transport_manifest"]["sha256"] = "f" * 64
+        with self.assertRaisesRegex(ValueError, "Untrusted"):
+            self.validate_consumer(value)
+        value = deepcopy(original)
+        del value["heightmaps_after"]["height_source_scope"]
+        with self.assertRaisesRegex(ValueError, "complete native"):
+            self.validate_consumer(value)
+
+
 class WorkflowBoundaryTests(unittest.TestCase):
+    def test_launcher_and_reader_pins_agree_without_repointing_original_lineage(self):
+        value = WRAPPER.read_text(encoding="utf-8")
+        for name, expected in (("MapPin", (reader.MAP_SHA256, reader.MAP_SIZE)),
+                               ("OriginalMapPin", (reader.ORIGINAL_MAP_SHA256, reader.ORIGINAL_MAP_SIZE))):
+            match = re.search(r"\$" + name + r" = @\{ sha256 = '([a-f0-9]{64})'; size_bytes = \[long\](\d+) \}", value)
+            self.assertIsNotNone(match)
+            self.assertEqual((match[1], int(match[2])), expected)
+        self.assertNotEqual(reader.MAP_SHA256, reader.ORIGINAL_MAP_SHA256)
+        block = value.split("$MaterialPins = @{", 1)[1].split("\n$LevelPackage", 1)[0]
+        material_pins = {relative: (sha, int(size)) for relative, sha, size in re.findall(
+            r"'(Content/[^']+)' = @\{\s+sha256 = '([a-f0-9]{64})'; size_bytes = \[long\](\d+)", block)}
+        self.assertEqual(material_pins, reader.CURRENT_MATERIAL_PINS)
+
     def test_l07_paths_include_cache_gate_and_copied_assets_without_other_worlds(self):
         workflow = WORKFLOW.read_text(encoding="utf-8")
         push = workflow.split("  push:\n", 1)[1].split("\npermissions:", 1)[0]
@@ -687,7 +1384,7 @@ if ($errors.Count) { throw ($errors.Message -join '; ') }
         throw 'Read-only startup must retain NullRHI without removing shader statistics.'
     }
 }
-foreach ($name in @('Assert-L07PlainPath', 'Get-L07Identity', 'Assert-L07Identity', 'Protect-L07Identity', 'Read-L07Json',
+foreach ($name in @('Assert-L07PlainPath', 'Get-L07Identity', 'Assert-L07Identity', 'Assert-L07Pin', 'Protect-L07Identity', 'Read-L07Json',
     'Copy-L07Exclusive', 'Copy-L07InventoriedAsset', 'Assert-L07Materialized', 'Get-L07AssetInventory', 'Assert-L07CacheProvenance',
     'Get-L07ModuleClosure', 'Get-L07LogFindings', 'Assert-L07NativeReport')) {
     $nodes = @($ast.FindAll({ param($node)
@@ -704,6 +1401,12 @@ function Must-Reject([scriptblock] $Action, [string] $Label) {
 $source = Join-Path $Fixture 'source.bin'
 [IO.File]::WriteAllText($source, 'original bytes')
 $identity = Get-L07Identity $source
+$pin = @{ sha256 = $identity.sha256; size_bytes = $identity.size_bytes }
+Assert-L07Pin $identity $pin
+$badPin = $pin.Clone(); $badPin.sha256 = ('f' * 64)
+Must-Reject { Assert-L07Pin $identity $badPin } 'changed current asset hash'
+$badPin = $pin.Clone(); $badPin.size_bytes++
+Must-Reject { Assert-L07Pin $identity $badPin } 'changed current asset size'
 $target = Join-Path $Fixture 'copy.bin'
 $copied = Copy-L07Exclusive $identity $target
 if ($copied.sha256 -cne $identity.sha256) { throw 'Independent copy differs.' }
