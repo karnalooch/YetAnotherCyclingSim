@@ -7,6 +7,7 @@ All 4 tiles share exact 0.5 m native lattice across the full [-4064, +4064] m do
 import json
 import hashlib
 import os
+import shutil
 from pathlib import Path
 import time
 import traceback
@@ -99,6 +100,22 @@ def setup_level_and_environment():
                 "Existing landscapes are protected; deliberate "
                 "YACS_LESSON07_ALLOW_REBAKE=YES required"
             )
+    # Create a verified on-D: backup before approved destructive rebake.
+    if os.environ.get("YACS_LESSON07_ALLOW_REBAKE") == "YES":
+        saved_file = Path("D:/yacs/project/Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap")
+        if saved_file.is_file():
+            backup_dir = Path("D:/yacs/work/lesson07-unified-20261019/pre_rebake_backups")
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            with saved_file.open("rb") as fd:
+                old_sha = hashlib.file_digest(fd, "sha256").hexdigest()
+            backup = backup_dir / f"{old_sha}.umap"
+            if not backup.exists():
+                shutil.copy2(saved_file, backup)
+            with backup.open("rb") as fd:
+                check_sha = hashlib.file_digest(fd, "sha256").hexdigest()
+            if check_sha != old_sha:
+                raise RuntimeError("Pre-rebake map backup checksum mismatch; refusing mutation")
+            log(f"Verified old map backup at {backup} ({old_sha})")
     # Delete any pre-existing landscape actors to ensure clean transfer
     existing_actors = actor_subsystem.get_all_level_actors()
     removed_count = 0
@@ -150,8 +167,8 @@ def setup_level_and_environment():
         pp.set_editor_property("settings", s)
         log("Spawned Review PostProcessVolume")
         
-    unreal.EditorLoadingAndSavingUtils.save_map(world, MAP_PATH)
-    log("Level and environment ready.")
+    # Never save a partly rebuilt existing level before successful bake.
+    log("Level and environment prepared in memory; no early map save.")
 
 def init_houdini_api():
     global api, hda_asset
@@ -283,13 +300,16 @@ def finish():
     state["done"] = True
     log("\n=== EXECUTING FINAL VERIFICATION & SAVE PASS ===")
     
-    landscape_inventory = inventory_landscapes()
+    landscape_inventory = inventory_landscapes() if actor_subsystem is not None else []
     
     # Save the map and baked assets
-    saved_map = unreal.EditorLoadingAndSavingUtils.save_map(world, MAP_PATH)
+    saved_map = (unreal.EditorLoadingAndSavingUtils.save_map(world, MAP_PATH)
+                 if world is not None and not state["errors"] else False)
     log(f"save_map returned: {saved_map}")
     
-    saved_dir = unreal.EditorAssetLibrary.save_directory(BAKE_FOLDER, only_if_is_dirty=False, recursive=True)
+    saved_dir = (unreal.EditorAssetLibrary.save_directory(
+        BAKE_FOLDER, only_if_is_dirty=False, recursive=True)
+        if world is not None and not state["errors"] else False)
     log(f"save_directory({BAKE_FOLDER}) returned: {saved_dir}")
     
     # Verification checks
