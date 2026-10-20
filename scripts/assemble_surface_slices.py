@@ -116,7 +116,36 @@ c4_norm.save(out_dir / "slice_4_scree_normal.png")
 c4_orm = np.array(load_rgba(scree_dir / "YACS_Material_ORM.png"))
 c4_ao = c4_orm[:, :, 0]
 c4_rough = c4_orm[:, :, 1]
-c4_disp = np.array(load_l("D:/yacs/work/lesson07-unified-20261019/scree_height_test.png"))
+# Derive the slice deterministically from the retained Material Forge EXR,
+# rather than a temporary scree_height_test.png removed from the workspace.
+try:
+    import OpenImageIO as oi
+except ImportError as exc:
+    raise RuntimeError(
+        "Use D:/yacs/tools/houdini-22.0.466/bin/hython.exe "
+        "to assemble the EXR-based scree masks (OpenImageIO required)."
+    ) from exc
+height_exr = scree_dir / "YACS_Material_Height.exr"
+reader = oi.ImageInput.open(str(height_exr))
+if reader is None:
+    raise RuntimeError(f"Missing scree Height EXR: {height_exr}")
+try:
+    height_pixels = np.asarray(reader.read_image(format=oi.FLOAT), dtype=np.float32)
+finally:
+    reader.close()
+if height_pixels.ndim == 3:
+    height_pixels = height_pixels[:, :, 0]
+if height_pixels.ndim != 2 or not np.isfinite(height_pixels).all():
+    raise RuntimeError("Scree height EXR must contain finite 2D data")
+mn, mx = float(height_pixels.min()), float(height_pixels.max())
+if mn < -1e-4 or mx > 1.0001:
+    raise RuntimeError(f"Scree height EXR range [{mn}, {mx}] is not [0,1]; verify L05 contract")
+height_image = Image.fromarray(
+    np.uint8(np.rint(np.clip(height_pixels, 0, 1) * 255)), mode="L"
+)
+if height_image.size != (2048, 2048):
+    height_image = height_image.resize((2048, 2048), Image.Resampling.BILINEAR)
+c4_disp = np.asarray(height_image)
 c4_masks = Image.fromarray(np.stack([c4_ao, c4_rough, c4_disp, c4_ao], axis=-1), mode="RGBA")
 c4_masks.save(out_dir / "slice_4_scree_masks.png")
 

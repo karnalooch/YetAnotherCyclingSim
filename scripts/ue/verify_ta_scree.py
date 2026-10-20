@@ -28,19 +28,19 @@ report["TA_Masks_Unified"] = {
     "compression_settings": str(ta_masks.get_editor_property("compression_settings")),
 }
 
-# Ensure all 3 TAs are fully updated and saved
-for name, is_srgb, comp in [
-    ("TA_Masks_Unified", False, unreal.TextureCompressionSettings.TC_MASKS),
-    ("TA_Colour_Unified", True, unreal.TextureCompressionSettings.TC_DEFAULT),
-    ("TA_Normal_Unified", False, unreal.TextureCompressionSettings.TC_NORMALMAP),
-]:
-    ta = unreal.EditorAssetLibrary.load_asset(f"/Game/Generated/YACS/Lesson07_Unified/Materials/{name}")
-    ta.set_editor_property("srgb", is_srgb)
-    ta.set_editor_property("compression_settings", comp)
-    ta.set_editor_property("address_x", unreal.TextureAddress.TA_WRAP)
-    ta.set_editor_property("address_y", unreal.TextureAddress.TA_WRAP)
-    unreal.EditorAssetLibrary.save_loaded_asset(ta)
-    unreal.EditorLoadingAndSavingUtils.save_packages([ta.get_package()], only_dirty=False)
+# A verifier must never mutate or save native UE assets.
+# Correct SourceTextures references are a necessary, but not sufficient,
+# proof that the GPU/platform pixels were updated.
+expected_scree = (
+    "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/"
+    "T_Scree_Masks.T_Scree_Masks"
+)
+if len(sources) != 5 or report["TA_Masks_Unified"]["slice_4"] != expected_scree:
+    raise RuntimeError("Scree is not source texture 4 in the Masks atlas")
+if report["TA_Masks_Unified"]["srgb"]:
+    raise RuntimeError("Masks Texture2DArray must have sRGB disabled")
+report["status"] = "SOURCE_REFERENCE_PASS_NATIVE_PIXEL_PROOF_PENDING"
+report["platform_pixel_content_verified"] = False
 
 out_json = "D:/yacs/work/lesson07-unified-20261019/ta_scree_verification.json"
 with open(out_json, "w", encoding="utf-8") as f:
