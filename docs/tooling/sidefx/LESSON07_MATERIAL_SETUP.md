@@ -25,7 +25,14 @@ Wingman/Loco plugin declarations and discovery metadata. It does not call a
 native tool, build, launch/restart an Editor, update the canonical checkout or
 open a public listener. A process command line is checked internally for the
 canonical project; raw command lines and credentials are never reported.
-Inventory results remain pending until the published workflow actually runs.
+At `2026-10-20T22:20:28.5700392Z`,
+[run 39507345660, job 118919480626](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39507345660/job/118919480626)
+at exact source `4bf894dd8dccc482a3e90a53bce6d6b01653e6a7` reported no
+`UnrealEditor.exe` or `UnrealEditor-Cmd.exe`, no vendor discovery file and no
+diagnostic errors. Wingman **0.20.5** is installed. The earlier PID 19056 is a
+historical observation, not the current session. The existing shared-host guard
+independently reported `IDLE` at `22:21:47.9796499Z`. These observations do not
+explain when the earlier session ended and must be refreshed before startup.
 
 [Wingman's vendor MCP guide](https://ai.locodev.dev/docs/developers/antigravity)
 documents a per-session loopback URL and bearer token in
@@ -35,6 +42,36 @@ these are capability references, not proof of the installed endpoint. Any
 host-local client must validate the discovered loopback listener against the
 observed Editor PID, creation time, executable and project before using it.
 Keep credentials in memory on that host and never upload the discovery file.
+
+The [bounded remote connection workflow](../../../.github/workflows/yacs-lesson07-remote-editor.yml)
+implements the owner's missing-infrastructure instruction. An explicit
+`[l07-remote-editor]` intent on this owner branch first awaits protected
+exact-SHA CI and then takes the existing shared Unreal concurrency lane. It
+preserves a canonical interactive Editor if one exists. Otherwise it checks the
+accepted map, MI, master and array hashes, compatible installed modules, free
+space and the logged-in desktop identity before creating a **separate** limited
+interactive one-shot scheduled task. The installed exact-SHA launcher stays
+outside runner workspaces; the old road-world Live Host task is not repointed.
+The launcher rechecks ownership and saved identities immediately before launch.
+It does not stop an Editor on probe failure or run a restart loop. Project
+configuration, accepted packages and the canonical Git checkout are not edited.
+
+The [host probe](../../../scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1) verifies
+the discovery port belongs exclusively to the exact canonical Editor process,
+then the [fixed MCP client](../../../scripts/ue/lesson07_wingman_client.py) uses
+only vendor initialization, `tools/list` and `session/status`. It supports the
+official [2025-03-26 Streamable HTTP contract](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports)
+with bounded responses and timeouts, without redirects, proxy routing or
+automatic retries. Native tool calls are a subsequent step after actual schemas
+and current world identity have been observed. The
+[passive reader](../../../scripts/ue/lesson07_observe_editor.py) is opt-in and
+neither loads/saves packages nor changes the camera or material; partial graph
+API information remains unavailable instead of being promoted to proof.
+
+At this source change, task installation, startup, MCP discovery, native
+readback and post-job survival are **not yet observed**. The first-stage
+inventory artifact is `12303367952`, ZIP SHA256
+`6fffea19df0900427e77881e4dbfdba3ab8f75d992d39027c813b78ecc946c0e`.
 
 The subsequent target is the already specified passive graph/world readback,
 followed by same-camera Lit/BaseColor observations. This infrastructure work

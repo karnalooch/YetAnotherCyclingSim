@@ -1,0 +1,204 @@
+name: YACS Lesson07 remote Editor connection
+
+# Scoped owner authorization on 2026-10-21: attach without closing a live
+# Editor; establish the missing connection and start the saved L07 if absent.
+# This is not world authoring, material acceptance or a second public server.
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/yacs-lesson07-remote-editor.yml
+      - scripts/ue/Install-YacsLesson07RemoteEditor.ps1
+      - scripts/ue/Start-YacsLesson07RemoteEditor.ps1
+      - scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1
+      - scripts/ue/lesson07_wingman_client.py
+      - scripts/ue/test_lesson07_wingman_client.py
+      - scripts/ue/lesson07_observe_editor.py
+      - scripts/ue/test_lesson07_observe_editor.py
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  await_ci:
+    name: Require protected exact-SHA CI before establishing the session
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner &&
+      contains(github.event.head_commit.message, '[l07-remote-editor]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 95
+    outputs:
+      ci_run_id: ${{ steps.await.outputs.ci_run_id }}
+    steps:
+      - name: Await the latest same-repository PR CI for this exact revision
+        id: await
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 270); do
+            payload=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${GITHUB_SHA}&event=pull_request&per_page=50")
+            row=$(jq -r --arg sha "$GITHUB_SHA" --arg repo "$GITHUB_REPOSITORY" '
+              [.workflow_runs[] | select(
+                .name == "CyclingSim CI" and .path == ".github/workflows/ci.yml" and
+                .head_sha == $sha and .head_branch == "codex/365-world-graph" and
+                .head_repository.full_name == $repo)]
+              | . as $runs
+              | (([.[] | select(.status != "completed")]
+                  | sort_by((.updated_at // .created_at), .id, .run_attempt) | last)
+                 // ($runs | sort_by((.updated_at // .created_at), .id, .run_attempt) | last))
+              | if . == null then "" else "\(.id)|\(.status)|\(.conclusion // "pending")" end
+            ' <<< "$payload")
+            if [[ -n "$row" ]]; then
+              IFS='|' read -r ci_id state conclusion <<< "$row"
+              if [[ "$state" == completed ]]; then
+                if [[ "$conclusion" == success ]]; then
+                  echo "ci_run_id=$ci_id" >> "$GITHUB_OUTPUT"
+                  echo "Protected CI $ci_id succeeded for $GITHUB_SHA"
+                  exit 0
+                fi
+                echo "::error::Protected CI $ci_id ended with $conclusion; no session startup."
+                exit 1
+              fi
+            fi
+            sleep 20
+          done
+          echo "::error::Exact-SHA protected CI did not succeed within the bounded wait."
+          exit 1
+
+  connect:
+    name: Retain or start one canonical L07 Editor and discover its bridge
+    needs: await_ci
+    if: ${{ needs.await_ci.result == 'success' }}
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 18
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: l07-remote-${{ github.run_id }}-${{ github.run_attempt }}
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      GIT_OPTIONAL_LOCKS: '0'
+      PYTHONDONTWRITEBYTECODE: '1'
+      L07_PROTECTED_CI_RUN_ID: ${{ needs.await_ci.outputs.ci_run_id }}
+    steps:
+      - name: Create isolated Git settings for code-only staging
+        working-directory: ${{ github.workspace }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $isolated = Join-Path $env:RUNNER_TEMP 'l07-remote-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          if (Test-Path -LiteralPath $isolated) { throw 'Owned Git configuration already exists.' }
+          [IO.File]::WriteAllText($isolated, '')
+          $env:GIT_CONFIG_GLOBAL = $isolated
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enable long paths.' }
+          git config --global core.autocrlf false
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot preserve source bytes.' }
+          git config --global core.eol lf
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot preserve LF bytes.' }
+
+      - name: Checkout reviewed source without LFS payloads or canonical edits
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: l07-remote-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+
+      - name: Validate code and boundaries before any task creation
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          foreach ($relative in @(
+            'scripts/ue/Install-YacsLesson07RemoteEditor.ps1',
+            'scripts/ue/Start-YacsLesson07RemoteEditor.ps1',
+            'scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1')) {
+            $tokens=$null; $errors=$null
+            [Management.Automation.Language.Parser]::ParseFile(
+              (Join-Path (Get-Location).Path $relative), [ref]$tokens, [ref]$errors) | Out-Null
+            if (@($errors).Count) { throw ($errors.Message -join '; ') }
+          }
+          & ./scripts/live_host/Test-YacsLiveTaskPrincipal.ps1
+          $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Existing Python unavailable.' }
+          & $python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor
+          if ($LASTEXITCODE -ne 0) { throw 'L07 discovery or passive-reader boundary tests failed.' }
+
+      - name: Start a separate limited interactive task only if the host is idle
+        run: |
+          ./scripts/ue/Install-YacsLesson07RemoteEditor.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' `
+            -RepoRoot (Get-Location).Path -Apply
+
+      - name: Verify process ownership and discover authenticated native tools
+        run: |
+          ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}'
+
+      - name: Print bounded reports without config, credentials or raw UE logs
+        id: reports
+        if: ${{ always() }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          function Assert-PlainReportPath([string]$Path) {
+            $cursor = [IO.Path]::GetFullPath($Path)
+            while ($cursor) {
+              if (Test-Path -LiteralPath $cursor) {
+                if ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+                  throw 'Redirected evidence path is not admitted.'
+                }
+              }
+              $parent = Split-Path -Path $cursor -Parent
+              if ($parent -eq $cursor) { break }
+              $cursor = $parent
+            }
+          }
+          $root = 'D:\yacs\lesson07-remote\reports\${{ github.run_id }}-${{ github.run_attempt }}'
+          $stage = Join-Path $env:RUNNER_TEMP 'l07-connection-evidence-${{ github.run_id }}-${{ github.run_attempt }}'
+          Assert-PlainReportPath $root
+          Assert-PlainReportPath $stage
+          if (Test-Path -LiteralPath $stage) { throw 'Current evidence stage already exists.' }
+          [void][IO.Directory]::CreateDirectory($stage)
+          foreach ($name in @('install.json','identity.json','bridge.json','probe.json')) {
+            $path = Join-Path $root $name
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
+            Assert-PlainReportPath $path
+            $bytes = (Get-Item -LiteralPath $path).Length
+            if ($bytes -gt 2MB) { throw 'Report exceeds bounded output size.' }
+            $report = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+            if ($bytes -le 256KB) {
+              Write-Host ('L07_REMOTE_REPORT ' + $name + '=' + ($report | ConvertTo-Json -Depth 32 -Compress))
+            } else { Write-Host ('L07_REMOTE_REPORT ' + $name + '=SEE_BOUNDED_JSON_ARTIFACT') }
+            Copy-Item -LiteralPath $path -Destination (Join-Path $stage $name) -ErrorAction Stop
+          }
+          $session = 'D:\yacs\lesson07-remote\state\${{ github.sha }}\session.json'
+          if (Test-Path -LiteralPath $session -PathType Leaf) {
+            Assert-PlainReportPath $session
+            if ((Get-Item -LiteralPath $session).Length -gt 64KB) { throw 'Session report exceeds bounded output size.' }
+            Copy-Item -LiteralPath $session -Destination (Join-Path $stage 'session.json') -ErrorAction Stop
+          }
+          "directory=$stage" >> $env:GITHUB_OUTPUT
+          "validated=true" >> $env:GITHUB_OUTPUT
+
+      - name: Retain only explicit reports from this operation
+        if: ${{ always() && steps.reports.outputs.validated == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: lesson07-remote-connection-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.reports.outputs.directory }}/*.json
+          if-no-files-found: warn
+          retention-days: 7

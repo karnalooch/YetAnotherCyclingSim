@@ -382,6 +382,11 @@
       "reason": "Owner-only L06 accepted cache SHA and L07 on-disk map/texture source authentication on Windows; no Houdini/UE launch and no source changes."
     },
     {
+      "file": "yacs-lesson07-remote-editor.yml",
+      "state": "CURRENT",
+      "reason": "Owner-only explicit Lesson07 connection continuation after protected exact-SHA CI; attach to an existing canonical Editor or start the hash-pinned saved checkpoint through a separate limited interactive one-shot task. Reuse installed loopback-authenticated Wingman, preserve all running sessions, and report discovery without material/visual acceptance."
+    },
+    {
       "file": "yacs-lesson07-runner-probe.yml",
       "state": "CURRENT",
       "reason": "Owner-only restricted workflow_dispatch runner presence probe; historical successes confirm connectivity but no terrain acceptance."
