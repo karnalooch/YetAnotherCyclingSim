@@ -17,7 +17,7 @@
     "performance_pass": false,
     "performance_note": "DEFERRED_AFTER_M3",
     "native_recheck_required": true,
-    "reason": "Preview signals repaired; all 59 staged assets match Git LFS. Dedicated native Editor startup crashed before L07 inspection; geometry, visibility, collision and visual acceptance remain false."
+    "reason": "Startup crash fixed by retaining shader compiler statistics; owned same-map reopen exited 0. Native inspection found 4 actors/4096 components, but missing referenced packages and unresolved geometry, visibility and visual proof keep technical acceptance false."
   },
   "domain": {
     "grid_dimensions": [
@@ -1163,5 +1163,148 @@
     "normal_automation_skipped": 0,
     "normal_automation_warnings": 2,
     "fix": "Resolve ordered-dictionary size_bytes keys with the native Measure-Object calculated-property form. Reserve and copying bounds unchanged. Fresh native retry required."
+  },
+  "native_startup_fix_20261020": {
+    "status": "STARTUP_FIXED_L07_INSPECTED_ACCEPTANCE_BLOCKED",
+    "diagnostic_base_head": "52fb27e597608a290e72dec6cbd6d96dd6b77dc8",
+    "reader_and_staging_source_head": "c98a89dc35b481c75a37ada06b92ae8194757975",
+    "producer": "local owned diagnostic; not protected CI",
+    "candidate_root": "D:\\yacs\\work\\lesson07-readback-39436127684-1",
+    "change": "Removed only -NoShaderCompile from the previous launch arguments; new log and authenticated evidence output paths. No restaging, cook, import or save.",
+    "engine_exit_code": 0,
+    "root_cause": "UE 5.8.2 editor session analytics dereferenced null GShaderCompilerStats after -NoShaderCompile disabled its initialization.",
+    "native_status": "STRUCTURE_READBACK_INCOMPLETE",
+    "reasons": [
+      "SaCalobra_Unified_0_0: unexpected Landscape scale",
+      "SaCalobra_Unified_0_1: unexpected Landscape scale",
+      "SaCalobra_Unified_1_0: unexpected Landscape scale",
+      "SaCalobra_Unified_1_1: unexpected Landscape scale",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Grass/Grass_Patch_02",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Cottongrass/cottongrass_01",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/Fringe_Moss_Patch_03",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/Fringe_Moss_Patch_02",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/Fringe_Moss_Patch_01",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Calluna_Vulgaris/Calluna_Vulgaris_01_Medium_Clump",
+      "Referenced game package was not staged: /Game/PegasusDemo/Meshes/Foliage/Groundcover/Grass/Grass_Patch_01"
+    ],
+    "actor_count": 4,
+    "component_count": 4096,
+    "all_59_source_and_candidate_assets_unchanged": true,
+    "observed_xy_scale": [
+      49.99999701976776,
+      49.99999701976776
+    ],
+    "scale_check_note": "Strict equality to 50 fails for observed 49.99999701976776. Preserved the assertion and raw result; no geometry or acceptance tolerance changed.",
+    "observed_layers": {
+      "SaCalobra_Unified_0_0": {
+        "edit_layers": {
+          "observed": true,
+          "value": [
+            "Houdini_Unified_Final"
+          ],
+          "error": null
+        },
+        "target_layers": {
+          "observed": true,
+          "value": [
+            "__LANDSCAPE_VISIBILITY__"
+          ],
+          "error": null
+        },
+        "hole_material": {
+          "observed": true,
+          "value": null,
+          "error": null
+        }
+      },
+      "SaCalobra_Unified_0_1": {
+        "edit_layers": {
+          "observed": true,
+          "value": [
+            "Houdini_Unified_Final"
+          ],
+          "error": null
+        },
+        "target_layers": {
+          "observed": true,
+          "value": [
+            "__LANDSCAPE_VISIBILITY__"
+          ],
+          "error": null
+        },
+        "hole_material": {
+          "observed": true,
+          "value": null,
+          "error": null
+        }
+      },
+      "SaCalobra_Unified_1_0": {
+        "edit_layers": {
+          "observed": true,
+          "value": [
+            "Houdini_Unified_Final"
+          ],
+          "error": null
+        },
+        "target_layers": {
+          "observed": true,
+          "value": [
+            "__LANDSCAPE_VISIBILITY__"
+          ],
+          "error": null
+        },
+        "hole_material": {
+          "observed": true,
+          "value": null,
+          "error": null
+        }
+      },
+      "SaCalobra_Unified_1_1": {
+        "edit_layers": {
+          "observed": true,
+          "value": [
+            "Houdini_Unified_Final"
+          ],
+          "error": null
+        },
+        "target_layers": {
+          "observed": true,
+          "value": [
+            "__LANDSCAPE_VISIBILITY__"
+          ],
+          "error": null
+        },
+        "hole_material": {
+          "observed": true,
+          "value": null,
+          "error": null
+        }
+      }
+    },
+    "evidence": {
+      "diagnostic-launch.json": {
+        "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07StartupFix-20261020-1\\diagnostic-launch.json",
+        "sha256": "a319b9a26f68a7d4be5bdee8e276509d8345c1e4edb228fa407b069660c149f3"
+      },
+      "diagnostic-exit.json": {
+        "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07StartupFix-20261020-1\\diagnostic-exit.json",
+        "sha256": "ca1d5bfddc09cb424d2135d33a09e99a4c13df2ca1ba7e51f7d16bcfab0101a9"
+      },
+      "l07-native-geometry.json": {
+        "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07StartupFix-20261020-1\\l07-native-geometry.json",
+        "sha256": "569b61188b89b0d621a552404d95e65b6947287a54489f764f8c7cf731e1d467"
+      },
+      "owned-editor.log": {
+        "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07StartupFix-20261020-1\\owned-editor.log",
+        "sha256": "1739070d0668120a7986a9ae2be90452d61a3f7345f6a2883cf258910cf0ed1d"
+      },
+      "conservation.json": {
+        "path": "D:\\yacs\\project\\Saved\\RuntimeProof\\Lesson07StartupFix-20261020-1\\conservation.json",
+        "sha256": "c3a7cc16b03439714d2259f6b04dcfae5744844ce91d135a1e9dfee82b26111e"
+      }
+    },
+    "geometry_accepted": false,
+    "material_render_verified": false,
+    "owner_visual_pass": false
   }
 }

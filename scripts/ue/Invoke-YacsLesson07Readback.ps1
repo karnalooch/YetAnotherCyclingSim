@@ -503,13 +503,15 @@ try {
     $project = Join-Path $CandidateRoot 'YetAnotherCyclingSim.uproject'
     $editorArguments = @(('"' + $project + '"'), '/Engine/Maps/Entry',
         '-DisablePlugins=ModelContextProtocol,Wingman,AndroidFileServer,HoudiniEngine,PCGExtendedToolkit,YacsPcgWitness',
-        '-NullRHI', '-Unattended', '-NoSplash', '-NoSound', '-NoLiveCoding', '-NoShaderCompile', '-ScriptErrorsAreFatal', '-NoPause', '-NoP4',
+        # UE 5.8 editor session analytics reads shader-compiler statistics at startup.
+        # NullRHI is sufficient for this read; NoShaderCompile removes that manager.
+        '-NullRHI', '-Unattended', '-NoSplash', '-NoSound', '-NoLiveCoding', '-ScriptErrorsAreFatal', '-NoPause', '-NoP4',
         '-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:bRemoteExecution=False',
         ('-ExecutePythonScript="' + $reader + '"'), ('-AbsLog="' + $log + '"'))
     $receipt.editor_arguments = $editorArguments
     $receipt.status = 'OWNED_EDITOR_READING'
     $ownedEditor = Start-Process -FilePath $engine.UnrealEditorCmdPath -ArgumentList $editorArguments -WorkingDirectory $CandidateRoot `
-        -NoNewWindow -PassThru -RedirectStandardOutput (Join-Path $EvidenceRoot 'owned-editor-stdout.log') `
+        -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $EvidenceRoot 'owned-editor-stdout.log') `
         -RedirectStandardError (Join-Path $EvidenceRoot 'owned-editor-stderr.log') -Environment @{
             YACS_L07_EXPECTED_HEAD = $ExpectedHead; YACS_L07_PREPARATION_FILE = $preparationPath
             YACS_L07_PREPARATION_SHA256 = $preparationIdentity.sha256; YACS_LESSON07_READBACK_PATH = $reportPath
@@ -528,9 +530,11 @@ try {
     $ownedEditor.WaitForExit()
     $receipt.owned_editor_exit_code = $ownedEditor.ExitCode
     $receipt.native_log_findings = Get-L07LogFindings $log
+    if ($ownedEditor.ExitCode -ne 0) {
+        throw ('Owned L07 Editor failed with exit code {0}; see {1}.' -f $ownedEditor.ExitCode, $log)
+    }
     $native = Read-L07Json $reportPath 8MB
     $receipt.proof_files.native_readback = $native.identity
-    if ($ownedEditor.ExitCode -ne 0) { throw 'Owned L07 Editor failed; retain its actual diagnostics.' }
     if ($receipt.native_log_findings.total -gt 0) { throw 'Native missing-package/class/module or error diagnostics block completeness.' }
     Assert-L07NativeReport $native.value $ExpectedHead $CandidateRoot $preparationIdentity.sha256
     Assert-L07Source $RepoRoot $ExpectedHead

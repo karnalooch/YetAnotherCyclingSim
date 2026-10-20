@@ -11,6 +11,47 @@
 
 ---
 
+## Current Unreal startup repair and native inspection (2026-10-20)
+
+The startup failure recorded below is resolved in a local owned diagnostic.
+UE 5.8.2 editor session analytics called
+`FShaderCompilerStats::GetTotalShadersCompiled` with null
+`GShaderCompilerStats`: the L07 launcher had disabled its initialization with
+`-NoShaderCompile`. The installed Engine DLL export/unwind mapping identifies
+the crash return address at RVA `0x1f2cc44`, reached from the statistics call
+at `0x531a2d`. Removing that flag, retaining `-NullRHI`, let the same staged
+project load the canonical L07 and exit normally (code 0).
+The launcher now reports process failure before attempting to read a missing
+JSON report, preserving the primary error.
+
+The diagnostic reused `D:/yacs/work/lesson07-readback-39436127684-1`;
+reader and staging provenance remain `c98a89dc35b481c75a37ada06b92ae8194757975`,
+with diagnostic work based on `52fb27e597608a290e72dec6cbd6d96dd6b77dc8`.
+It did not recopy assets, cook Houdini, import or save the map.
+The current receipt links the raw report, log and conservation hashes.
+This local diagnostic is separate from protected CI.
+
+Native inspection observed all four actors and 4096 components. It does **not**
+establish technical acceptance:
+
+- Seven referenced Pegasus groundcover mesh packages are absent from the
+  staged asset set and canonical `Content/PegasusDemo/Meshes` tree. Missing
+  dependencies remain failures; no substitute vegetation is generated.
+- All actors have the single edit layer `Houdini_Unified_Final`, target layer
+  `__LANDSCAPE_VISIBILITY__`, and no separate hole material. These observations
+  do not prove source/manual/detail separation or working NoData holes.
+- The strict scale assertion rejects the measured XY scale
+  `49.99999701976776` versus nominal `50`. Raw measurements and the assertion
+  are retained; this small numerical difference is not evidence of a changed
+  source terrain, and no tolerance or geometry was adjusted to obtain PASS.
+- Four diagnostic collision hits reproduce earlier values; full source-height,
+  tile-edge, visibility/collision and rendered-material acceptance remain open.
+  Historical rounded landmarks are not exact source witnesses.
+
+Therefore the crash repair passes its native startup check, while L07 retains
+`LESSON07_TECHNICAL_PASS: false`. The original failure and all historical
+receipts below remain evidence of their own executions.
+
 ## Current Houdini preview correction (2026-10-20)
 
 This section and the current receipt supersede the earlier preview claims below.

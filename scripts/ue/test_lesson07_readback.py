@@ -674,6 +674,19 @@ $LevelPackage = '/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07'
 $tokens = $null; $errors = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseFile($Wrapper, [ref]$tokens, [ref]$errors)
 if ($errors.Count) { throw ($errors.Message -join '; ') }
+& {
+    $project = 'fixture.uproject'; $reader = 'fixture.py'; $log = 'fixture.log'
+    $launch = @($ast.FindAll({ param($node)
+        $node -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+        $node.Left -is [System.Management.Automation.Language.VariableExpressionAst] -and
+        $node.Left.VariablePath.UserPath -ceq 'editorArguments'
+    }, $true))
+    if ($launch.Count -ne 1) { throw 'Missing unique production editor arguments.' }
+    . ([scriptblock]::Create($launch[0].Extent.Text))
+    if ($editorArguments -contains '-NoShaderCompile' -or $editorArguments -notcontains '-NullRHI') {
+        throw 'Read-only startup must retain NullRHI without removing shader statistics.'
+    }
+}
 foreach ($name in @('Assert-L07PlainPath', 'Get-L07Identity', 'Assert-L07Identity', 'Protect-L07Identity', 'Read-L07Json',
     'Copy-L07Exclusive', 'Copy-L07InventoriedAsset', 'Assert-L07Materialized', 'Get-L07AssetInventory', 'Assert-L07CacheProvenance',
     'Get-L07ModuleClosure', 'Get-L07LogFindings', 'Assert-L07NativeReport')) {
@@ -783,6 +796,23 @@ $log = Join-Path $Fixture 'editor.log'
 [IO.File]::WriteAllText($log, "LogTemp: Display: safe`nLogLinker: Warning: Can't find file '/Game/Missing'`n")
 $findings = Get-L07LogFindings $log
 if ($findings.total -ne 1 -or $findings.lines.Count -ne 1 -or $findings.truncated) { throw 'Real matching error log was not inventoried.' }
+& {
+    # Exercise the real post-exit block with a crash and an absent report.
+    # Missing output must not replace the original process failure.
+    $ownedEditor = [pscustomobject]@{ ExitCode = -1073741571 }
+    $receipt = @{}
+    $reportPath = Join-Path $Fixture 'not-produced.json'
+    $wrapperText = [IO.File]::ReadAllText($Wrapper)
+    $start = $wrapperText.IndexOf('    $receipt.owned_editor_exit_code = $ownedEditor.ExitCode')
+    $end = $wrapperText.IndexOf('    Assert-L07NativeReport $native.value', $start)
+    if ($start -lt 0 -or $end -lt 0) { throw 'Missing production post-exit block.' }
+    $message = ''
+    try { . ([scriptblock]::Create($wrapperText.Substring($start, $end - $start))) }
+    catch { $message = $_.Exception.Message }
+    if ($message -notlike '*exit code -1073741571*' -or $message -notlike "*$log*") {
+        throw ('Crash cause was hidden by report handling: ' + $message)
+    }
+}
 $report = @{ schema_version = 2; source_head = ('c' * 40); project_root = $Fixture; preparation_identity = @{ sha256 = ('d' * 64) }
     level = $LevelPackage; engine_version = '5.8.2-56702186'; status = 'STRUCTURE_READBACK_COMPLETE_GEOMETRY_PENDING'
     structural_readback_complete = $true; candidate_map_unchanged = $true; native_component_properties_complete = $true; components_pass = $true
