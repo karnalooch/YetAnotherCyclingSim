@@ -11,6 +11,185 @@
 
 ---
 
+## Technical deep dive of the retained checkpoint (2026-10-20)
+
+**Scope:** static and remote-file review of
+`dd2322f1e1ad784ee45878d40e80fcf69f953b30`, plus a bounded correction to the
+existing readback admission pins. The accepted material checkpoint below is
+unchanged. No new Unreal measurement, material save or visual correction was
+performed in this audit. The current-session Wingman/Loco API was unavailable
+to this execution environment; GitHub access does not establish access to the
+open Windows Editor. Detailed findings and byte identities are retained in the
+[technical audit](../../assets/lesson07-recovery-20261020/technical-audit.json).
+
+### Confirmed reader regression and correction
+
+Both `scripts/ue/readback_lesson07_geometry.py` and
+`scripts/ue/Invoke-YacsLesson07Readback.ps1` still required the historical MI
+SHA256 `0581cd80055ec2632c3f56de19f80513c904ed5a5d7a5a7a8187ed17b218a3dc`
+and 35,682 bytes. The accepted MI actually has SHA256
+`8c1dc875218a027a5ac83d88f8eedba49769fdd8494d287e7264807082eb11bf`
+and 39,740 bytes. The obsolete pin would reject the correct saved checkpoint
+after the earlier CI/host gates. Update only that MI pin in both readers.
+Map/master identities and all admission, host-ownership and original-lineage
+checks remain enforced. Historical receipts retain their original identities.
+
+The existing test compared two constants that could agree while both were
+stale. It now also checks the recovery receipt and the committed Git LFS
+pointers for the map, master and MI, without requiring LFS payloads or allowing
+implicit network fetches. The regression failed before the pin correction.
+The selected admission/workflow tests then discovered 24 tests: 23 passed and
+the PowerShell checkout fixture was skipped because this audit environment
+lacks PowerShell 7. This is a CPU contract correction, not a material fix or
+a native acceptance result.
+
+Independent LFS retrieval into an initially empty object store verified nine
+objects, **77,071,503 bytes**: MI, master, all three arrays and the original
+Pegasus Colour/Normal/Masks sampling plus bilinear-blend functions. Every
+downloaded size and SHA256 matches its pointer at the source checkpoint. Both
+retained comparison JPG hashes also match the recovery receipt. The 1.84 GB
+map was checked by its committed pointer only; this audit did not download or
+reopen it. File integrity does not prove the pixels of a built array slice,
+the loaded graph or the current rendered material.
+
+### Separate the remaining grid from the normal workaround
+
+The retained `close-after.jpg` visibly still contains repeated squares after
+`Global Normal Flatten=1`, while the same-camera before/after pair shows a
+large shading change. The grid therefore remains unresolved; normal detail
+is not a sufficient explanation by itself if native readback confirms that
+the flatten branch completely suppresses it. These are retained images from
+the accepted checkpoint, not new captures from this audit.
+
+| Candidate source | Evidence and uncertainty | Next discriminating observation |
+|---|---|---|
+| Colour texture period | Grass0 has broad contrasting patches; the retained grid survives the flat-normal workaround. Actual built-slice pixels have not been independently inspected. | Same-camera BaseColor/Unlit and a read-only view of the built Colour slice in its actual UV mapping. |
+| Detail/Macro UV | Earlier graph readback identifies `TextureCoordinate_5` and both scales are 0.25. Full coordinate properties and world-to-UV mapping remain to be read. | Record coordinate index, U/V tiling, unmirror settings and all downstream factors; measure the repeat in metres. |
+| Normal interpretation | Earlier native notes report three Color samplers and one Normal sampler, followed by `1-G`; the restored master retains the original function. | Read each corner's sampler, actual signed/encoded output, component selection and complete path to final Normal before changing flatten. |
+| AO / Masks | The prior `Global AO Power=0` trial darkened the surface. A parameter name is not its equation. | Read the AO expression and output buffer; use a verified neutral signal only after identifying the equation. |
+| IDMap / corner blending | `UV Distort` belongs to the class-sampling branch; source replacement in memory did not prove an array-pixel rebuild. | Test only `UV Distort=0`, retain `Noise_Scale`, restore baseline after capture; inspect IDs, corner outputs and weights separately. |
+| Landscape boundaries | No current evidence ties the fine material period to the four actor seams or the 4096 component boundaries. | Overlay/read the real boundary positions and compare periods without moving any actor or changing geometry. |
+
+`Detail Tiling=0.25` alone does not prove a four-metre repeat: that requires
+the upstream coordinate scale to be one UV unit per metre. For a linear
+mapping with scale `s` UV units/metre and multiplier `t`, one source repeat
+is `1 / abs(s*t)` metres along that direction. The historical four-metre
+description below is not a new physical measurement. If Detail and Macro
+have identical full mappings, blending them by distance cannot remove their
+shared coordinate period. This remains a conditional graph inference.
+
+The historical function readback lists Colour/Masks outputs as BL, BR, TL,
+TR and Normal as BL, TL, BR, TR. A different output order is not itself a
+miswire. Verify the actual output chosen by every consumer; do not assume
+an output index has the same semantic corner across those functions.
+
+Keep `Global Brightness=0`: the retained black-global-colour defect does not
+permit reinstating 0.5. Keep the class order Grass, Grass2, Sand, Cliffs, Scree
+and the accepted Grass2 limestone source. Changing geographical masks, adding
+another warp or enlarging the repeat is not an evidence-backed correction.
+
+### Function-call contract and the earlier crash
+
+The official Epic C++ reference currently identifies these APIs as UE 5.8:
+
+- [MaterialFunctionCall](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/UMaterialExpressionMaterialFunct-): `SetMaterialFunctionEx` can transfer connections when names match.
+- [UpdateFromFunctionResource](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/UMaterialExpressionMaterialFunct-/UpdateFromFunctionResource): keep the call's `FunctionInputs` and `FunctionOutputs` synchronized with the function resource.
+- [FFunctionExpressionInput](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/FFunctionExpressionInput): the function-input GUID participates in linking the input reference.
+- [FExpressionInput](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/FExpressionInput): a connection includes the source expression, `OutputIndex` and component masks.
+- [TextureSample](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/UMaterialExpressionTextureSample): `CoordinatesDX` and `CoordinatesDY` are required in derivative mip mode.
+
+This establishes the required data contract, not the symbolized crash cause.
+The recorded missing `UV_DDX`, `UV_DDY` and `DDX(UVs)` messages establish an
+incomplete compiled variant before the fallback and access violation. They
+do not identify the null dereference, prove a driver fault or establish that
+the current restored graph is affected.
+
+Before any future graph edit, inspect the **installed 5.8.2-56702186**
+`MaterialExpressionMaterialFunctionCall.h`, `MaterialExpressions.cpp`,
+`MaterialEditingLibrary.cpp` and the loaded Python binding. In particular,
+determine how its setter/PostEditChange path refreshes function inputs and
+which entrypoints can trigger recompilation. Do not assume that
+`set_editor_property` always skips refresh, or that updating an MI repairs a
+function signature. The publicly readable Python reference found during this
+audit was [5.7](https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/MaterialEditingLibrary?application_version=5.7);
+it is not exact-version proof of the installed Python behavior. The installed
+source and binding were not accessible in this audit.
+
+The historical `readback_lesson07_texture_variation.py` checks producer-node
+identity for UVS/DDX/DDY and normal X/Y/Z, without their selected output indices
+or component masks. Three wrong connections from the same producer could
+satisfy those equality checks. This is a confirmed limitation of that test,
+not proof that such wiring caused the crash. Keep its historical status and
+do not use it as current acceptance.
+
+Likewise, `DrainAssetCompilationAndCollectGarbage` in
+`YacsTextureAuditLibrary.cpp` finishes compilation and runs GC; its `ok` field
+only checks remaining work counts. Zero jobs is compatible with failed
+compilation. It does not prove no material errors or no fallback and is not
+a neutral first read of a potentially inconsistent graph. Require separate
+shader-error/fallback evidence. Missing inputs or fallback stop the trial;
+do not respond by repeatedly refreshing the MI.
+
+### Existing entrypoint boundaries for the open Editor
+
+| Entrypoint | Why it is not an in-place diagnostic command |
+|---|---|
+| `capture_lesson07_shots.py` | Loads a map, changes Landscape bindings, spawns a camera and calls `QUIT_EDITOR`, including failure cleanup. |
+| `repair_lesson07_materials.py`, including `AUDIT` | Its `main()` exits through an unconditional `QUIT_EDITOR`. |
+| `readback_lesson07_geometry.py` / `Invoke-YacsLesson07Readback.ps1` | Own an isolated physical copy and a separate process; load the target map and terminate that owned process. The pin fix does not change this lifecycle. |
+| `tune_lesson07_landscape_appearance.py` | Saves the MI/arrays and contains the superseded normal-flatten value 0.2. |
+| `author_lesson07_materials.py` / bake/import entrypoints | Import, bind and save the first consumer; not continuation diagnostics. |
+| `readback_lesson07_texture_variation.py` | Requires the rejected graph and has the output-pin proof limitation above. |
+
+Individual `material_snapshot` / `texture_snapshot` functions can be inspected
+without executing their module's `main()`, but they do not provide a complete
+pin or pixel proof. The old texture snapshot expects Grass2 under
+`Textures/Slices`; the accepted `Grass2_Limestone_V1` path can therefore make
+its old order check false without any geographical class reorder. Do not
+interpret that result or a `source_textures` setter as native slice content.
+
+### Host/CI boundary and next allowed execution
+
+At the source checkpoint, [CyclingSim CI 39501068491](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39501068491)
+failed before build/Automation because cleanup returned `LOCAL_BUSY`.
+[Blender reference 39501067948](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39501067948)
+also stopped before rendering. Its 21:32:51 UTC probe recorded PID19056,
+the correct project/map and process creation at 21:22:07 UTC. This is a dated
+process observation, not proof the PID is still live. The
+[L07 readback 39501058600](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39501058600)
+then failed its protected-CI prerequisite and skipped native execution.
+None of these failures establish a material regression.
+
+The existing live-command path is restricted to its reviewed rock-preview
+recipes; it is not an arbitrary Lesson07 transport. Do not expand it, expose
+a new listener, close the owner's Editor or bypass host/CI guards. Continue
+through the already established authenticated native channel when available.
+
+The next in-place diagnostic sequence is:
+
+1. Read current process creation time, executable/project, active map, dirty
+   packages, four actors/transforms and bound assets. Compare against the
+   accepted checkpoint before any mutation; do not trust a remembered PID.
+2. Read reachable material/function graphs, input GUIDs/types, each consumer
+   pin's source/output/masks, TextureCoordinate settings and current shader
+   status. Do not trigger GC, recompilation or an MI update as a readback.
+3. Capture the retained camera/FOV with fixed light/exposure in Lit and the
+   relevant BaseColor/Unlit, normal and AO views. Record actual settings and
+   restore any temporary view-mode change. Obtain a panorama as well.
+4. Run only the single-factor trial justified by those buffers. If testing
+   `UV Distort=0`, keep `Noise_Scale` unchanged; restore baseline before the
+   next hypothesis. A surviving grid rejects that proposed explanation.
+5. Before an indicated material correction, back up the explicitly named
+   packages. Validate the function-call contract before recompiling or
+   updating the MI. Save only the named verified assets after no-fallback
+   readback and the close/panorama comparisons. Recheck map bytes and all
+   actor transforms. No Save All, terrain recook/import or rejected autosave.
+
+The bounded pin correction is delivered independently of these unexecuted
+native steps. Tiling, normal decoding, symbolized crash cause, fresh reopening
+after the latest scalar save and whole-area visual acceptance remain open.
+`performance_pass=false` / `DEFERRED_AFTER_M3` and Draft status are unchanged.
+
 ## Current running checkpoint: flattened normals (2026-10-20, 21:29 UTC)
 
 The owner requested reopening the same saved map, then reported that it works

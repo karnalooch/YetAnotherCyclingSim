@@ -1,0 +1,271 @@
+{
+  "status": "STATIC_AUDIT_COMPLETE_CURRENT_NATIVE_DIAGNOSIS_BLOCKED",
+  "observed_at_utc": "2026-10-20T21:48:03Z",
+  "source_checkpoint": "dd2322f1e1ad784ee45878d40e80fcf69f953b30",
+  "repository": "karnalooch/YetAnotherCyclingSim",
+  "branch": "codex/365-world-graph",
+  "issue": 365,
+  "roadmap_milestone": "M3",
+  "issue_milestone": null,
+  "pr": 474,
+  "producer": "Independent GitHub/source/file audit and CPU tests in an isolated Linux checkout with the bounded reader patch; not protected exact-delivery-SHA native proof",
+  "current_native_session": {
+    "accessed": false,
+    "process_identity_verified_now": false,
+    "active_project_verified_now": false,
+    "current_graph_readback": "NOT_RUN",
+    "current_render": "NOT_RUN",
+    "current_crash_log_read": "NOT_RUN_LOCAL_WINDOWS_ONLY",
+    "blocker": "The existing authenticated Wingman/Loco editor API and Windows host filesystem are not exposed in this execution environment. Available runner paths do not read the current editor in place.",
+    "retained_host_observation": {
+      "source": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39501067948/job/118898390715",
+      "observed_at_utc": "2026-10-20T21:32:51.8976445Z",
+      "status": "LOCAL_BUSY",
+      "pid": 19056,
+      "process_creation_utc": "2026-10-20T21:22:07.6969480Z",
+      "project": "D:/yacs/project/YetAnotherCyclingSim.uproject",
+      "map": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07",
+      "is_current_live_probe": false
+    }
+  },
+  "mutation_scope": {
+    "changed_material_assets": [],
+    "map_saved": false,
+    "terrain_rebuilt": false,
+    "houdini_run": false,
+    "landscape_imported": false,
+    "editor_closed": false,
+    "computer_use": false,
+    "new_control_server": false,
+    "forced_git_update": false
+  },
+  "independent_object_verification": {
+    "method": "Read exact-commit pointers with git show, download with git lfs smudge into a new empty object store, independently compare SHA256 and byte count",
+    "source_commit": "dd2322f1e1ad784ee45878d40e80fcf69f953b30",
+    "scope": "Independent retrieval of retained checkpoint objects; no native UE execution",
+    "initial_object_store_empty": true,
+    "objects": [
+      {
+        "path": "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset",
+        "sha256": "8c1dc875218a027a5ac83d88f8eedba49769fdd8494d287e7264807082eb11bf",
+        "size_bytes": 39740,
+        "pointer_matches_downloaded_bytes": true
+      },
+      {
+        "path": "Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset",
+        "sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66",
+        "size_bytes": 208956,
+        "pointer_matches_downloaded_bytes": true
+      },
+      {
+        "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+        "sha256": "9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf",
+        "size_bytes": 24178947,
+        "pointer_matches_downloaded_bytes": true
+      },
+      {
+        "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+        "sha256": "838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1",
+        "size_bytes": 40441798,
+        "pointer_matches_downloaded_bytes": true
+      },
+      {
+        "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset",
+        "sha256": "e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8",
+        "size_bytes": 12124066,
+        "pointer_matches_downloaded_bytes": true
+      },
+      {
+        "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_TextureAtlas_SampleNormal.uasset",
+        "sha256": "bb556279f30c6d116a4c24ae18a5234af28cf27cd9f2f59e43e6f85f71d5032a",
+        "size_bytes": 20948,
+        "pointer_matches_downloaded_bytes": true
+      },
+      {
+        "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_TextureAtlas_Sample.uasset",
+        "sha256": "688e07e906f5c8273d3acaadedc46aa5251d984b54f2d50e002b6bd082c5c5b2",
+        "size_bytes": 20824,
+        "pointer_matches_downloaded_bytes": true
+      },
+      {
+        "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_TextureAtlas_SampleMasks.uasset",
+        "sha256": "a5c39ede4f354fe42fbfedf5c07383b0362b651c8a60672679a54bdaf9eda282",
+        "size_bytes": 22310,
+        "pointer_matches_downloaded_bytes": true
+      },
+      {
+        "path": "Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_BilinearBlend.uasset",
+        "sha256": "f67f4057eba49d734c6dcd54e260f17a4edc350ed713d8af85f12942174dc64d",
+        "size_bytes": 13914,
+        "pointer_matches_downloaded_bytes": true
+      }
+    ],
+    "downloaded_object_count": 9,
+    "downloaded_bytes": 77071503,
+    "map": {
+      "path": "Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap",
+      "sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+      "size_bytes": 1838638056,
+      "verification": "COMMITTED_POINTER_ONLY",
+      "downloaded": false
+    },
+    "built_array_slice_pixels_inspected": false
+  },
+  "retained_capture_review": {
+    "new_captures": false,
+    "source_receipt": "docs/assets/lesson07-recovery-20261020/receipt.json",
+    "images": [
+      {
+        "path": "docs/assets/lesson07-recovery-20261020/close-before.jpg",
+        "sha256": "fd39b00ed7d3d76c2be80dc8cd6e5971071668d2661cca16fb07ef05cf64dae2",
+        "size_bytes": 46850,
+        "hash_matches_source_receipt": true
+      },
+      {
+        "path": "docs/assets/lesson07-recovery-20261020/close-after.jpg",
+        "sha256": "7515392d706b34c8f73567b60527fe2b8f72ecdc235d0d50bfaa39453bf33a8b",
+        "size_bytes": 62413,
+        "hash_matches_source_receipt": true
+      }
+    ],
+    "observation": "A large shading change and surviving regular grass grid are visible. Retained JPGs do not establish the channel causing the grid."
+  },
+  "readback_pin_correction": {
+    "files": [
+      "scripts/ue/readback_lesson07_geometry.py",
+      "scripts/ue/Invoke-YacsLesson07Readback.ps1"
+    ],
+    "asset": "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset",
+    "before": {
+      "sha256": "0581cd80055ec2632c3f56de19f80513c904ed5a5d7a5a7a8187ed17b218a3dc",
+      "size_bytes": 35682
+    },
+    "after": {
+      "sha256": "8c1dc875218a027a5ac83d88f8eedba49769fdd8494d287e7264807082eb11bf",
+      "size_bytes": 39740
+    },
+    "confirmed_effect": "The existing strict saved-consumer admission now names the accepted checkpoint instead of an obsolete MI; unrelated/missing/substituted assets remain rejected.",
+    "historical_receipts_modified": false,
+    "native_admission_after_patch": "NOT_RUN"
+  },
+  "findings": [
+    {
+      "id": "obsolete_mi_pin",
+      "status": "CONFIRMED_AND_CORRECTED_IN_CODE",
+      "source": "scripts/ue/test_lesson07_readback.py",
+      "scope": "Current pin matches the accepted receipt and committed LFS pointer; not material-render proof"
+    },
+    {
+      "id": "historical_graph_verifier_output_pins",
+      "status": "CONFIRMED_STATIC_LIMITATION",
+      "source": "scripts/ue/readback_lesson07_texture_variation.py",
+      "detail": "Producer node identity is checked without selected output indices/component masks. This does not establish that a miswire caused the crash."
+    },
+    {
+      "id": "normal_sampler_contract",
+      "status": "HISTORICAL_NATIVE_OBSERVATION_REQUIRES_CURRENT_READBACK",
+      "source": "docs/tooling/sidefx/LESSON07_MATERIAL_SETUP.md",
+      "detail": "Three Color plus one Normal sampler and later 1-G are recorded in prior native notes. Downloaded bytes and strings inspection do not independently reconstruct this contract."
+    },
+    {
+      "id": "grid_channel",
+      "status": "UNRESOLVED",
+      "detail": "Colour period, AO, UV mapping and IDMap/corner weights require controlled native buffer views. Equal Detail/Macro Tiling alone does not prove a physical repeat size."
+    },
+    {
+      "id": "pre_crash_compile_contract",
+      "status": "RETAINED_LOG_SEQUENCE",
+      "source": "docs/assets/lesson07-squares-20261020/recovery-receipt.json",
+      "detail": "Missing UV_DDX/UV_DDY/DDX(UVs), fallback and access violation were retained. The full Windows crash log and symbolized call stack were not available in this audit."
+    },
+    {
+      "id": "compile_drain",
+      "status": "CONFIRMED_STATIC_LIMITATION",
+      "source": "Source/YetAnotherCyclingSimEditor/Private/Diagnostics/YacsTextureAuditLibrary.cpp",
+      "detail": "DrainAssetCompilationAndCollectGarbage finishes work and runs GC; zero remaining jobs does not establish no shader error or fallback."
+    }
+  ],
+  "vendor_capability_review": {
+    "cpp_reference_version": "UE 5.8",
+    "installed_engine_version_from_retained_evidence": "5.8.2-56702186",
+    "installed_source_read": false,
+    "installed_python_binding_verified": false,
+    "python_reference_available": "5.7; supporting reference only",
+    "sources": [
+      "https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/UMaterialExpressionMaterialFunct-",
+      "https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/UMaterialExpressionMaterialFunct-/UpdateFromFunctionResource",
+      "https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/FFunctionExpressionInput",
+      "https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/FExpressionInput",
+      "https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/UMaterialExpressionTextureSample",
+      "https://dev.epicgames.com/documentation/en-us/unreal-engine/python-api/class/MaterialEditingLibrary?application_version=5.7"
+    ]
+  },
+  "validation": {
+    "regression_before_pin_correction": "FAIL_AS_EXPECTED_OLD_PIN_DIFFERS_FROM_ACCEPTED_RECEIPT",
+    "selected_cpu_tests": {
+      "command": "python -m unittest scripts.ue.test_lesson07_readback.PreparationBoundaryTests scripts.ue.test_lesson07_readback.RepairedPreparationBoundaryTests scripts.ue.test_lesson07_readback.WorkflowBoundaryTests -v",
+      "discovered": 24,
+      "passed": 23,
+      "skipped": 1,
+      "failures": 0,
+      "errors": 0,
+      "skip_reason": "PowerShell 7 is unavailable for the actual checkout fixture"
+    },
+    "ruff": {
+      "version": "0.16.8",
+      "rules": "E9,F63,F7,F82",
+      "paths": [
+        "scripts/ue/readback_lesson07_geometry.py",
+        "scripts/ue/test_lesson07_readback.py"
+      ],
+      "status": "PASS"
+    },
+    "docs_index": {
+      "i18n": "PASS",
+      "structure": "PASS",
+      "links": "PASS",
+      "freshness": "PASS"
+    },
+    "evidence_storage": {
+      "status": "PASS_IN_ISOLATED_CHECKOUT",
+      "migrated_receipts": 14,
+      "raw_exact_exceptions": 4,
+      "scope": "This clean Git checkout passed the existing guard. Historical authoring-workspace failures remain unchanged and their local bytes were not inspected."
+    },
+    "native_ue": "NOT_RUN",
+    "protected_ci_for_delivery_commit": "NOT_YET_OBSERVED"
+  },
+  "source_checkpoint_ci": [
+    {
+      "name": "CyclingSim CI",
+      "run_id": 39501068491,
+      "conclusion": "failure",
+      "native_build_automation_executed": false,
+      "reason": "LOCAL_BUSY before cleanup/build",
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39501068491"
+    },
+    {
+      "name": "Blender material reference",
+      "run_id": 39501067948,
+      "conclusion": "failure",
+      "render_executed": false,
+      "reason": "LOCAL_BUSY; owner Editor protected",
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39501067948"
+    },
+    {
+      "name": "Lesson07 native readback",
+      "run_id": 39501058600,
+      "conclusion": "failure",
+      "native_job": "SKIPPED",
+      "reason": "Exact-SHA protected CI prerequisite failed",
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39501058600"
+    }
+  ],
+  "tiling_fixed": false,
+  "normal_decoding_fixed": false,
+  "crash_root_cause_symbolized": false,
+  "fresh_reopen_after_latest_scalar_save": false,
+  "whole_area_owner_visual_accepted": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3"
+}

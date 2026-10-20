@@ -1226,6 +1226,38 @@ class WorkflowBoundaryTests(unittest.TestCase):
             r"'(Content/[^']+)' = @\{\s+sha256 = '([a-f0-9]{64})'; size_bytes = \[long\](\d+)", block)}
         self.assertEqual(material_pins, reader.CURRENT_MATERIAL_PINS)
 
+        # Agreement between two stale constants must not admit an obsolete MI.
+        checkpoint = json.loads((ROOT / "docs/assets/lesson07-recovery-20261020/receipt.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            reader.CURRENT_MATERIAL_PINS[checkpoint["saved_asset"]],
+            (checkpoint["saved_sha256"], checkpoint["saved_size"]),
+        )
+        self.assertEqual(reader.MAP_SHA256, checkpoint["map_sha256"])
+
+    @unittest.skipUnless(shutil.which("git"), "Git required to inspect committed asset pointers")
+    def test_current_pins_match_committed_asset_pointers_without_lfs_payloads(self):
+        if not (ROOT / ".git").exists():
+            self.skipTest("Repository HEAD is unavailable in a source archive")
+        # Read Git objects, not the sparse or LFS-materialized working tree.
+        # Do not allow a partial clone to fetch implicitly during a CPU test.
+        env = {**os.environ, "GIT_NO_LAZY_FETCH": "1", "GIT_TERMINAL_PROMPT": "0",
+               "GIT_OPTIONAL_LOCKS": "0"}
+        pins = {reader.MAP_FILE: (reader.MAP_SHA256, reader.MAP_SIZE),
+                **reader.CURRENT_MATERIAL_PINS}
+        for relative, expected in pins.items():
+            with self.subTest(relative=relative):
+                result = subprocess.run(
+                    ["git", "-c", "protocol.allow=never", "cat-file", "blob", "HEAD:" + relative],
+                    cwd=ROOT, env=env, capture_output=True, text=True, timeout=15,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                match = re.fullmatch(
+                    r"version https://git-lfs.github.com/spec/v1\noid sha256:([a-f0-9]{64})\nsize (\d+)\n?",
+                    result.stdout,
+                )
+                self.assertIsNotNone(match, "Expected a committed LFS pointer: " + relative)
+                self.assertEqual((match[1], int(match[2])), expected)
+
     def test_l07_paths_include_cache_gate_and_copied_assets_without_other_worlds(self):
         workflow = WORKFLOW.read_text(encoding="utf-8")
         push = workflow.split("  push:\n", 1)[1].split("\npermissions:", 1)[0]

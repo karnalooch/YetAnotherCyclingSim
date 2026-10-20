@@ -1636,5 +1636,20 @@
     "tiling_fixed": false,
     "fresh_reopen_before_latest_scalar_save": true,
     "fresh_reopen_after_latest_scalar_save": false
+  },
+  "technical_deep_dive_20261020": {
+    "status": "STATIC_AUDIT_COMPLETE_READBACK_PIN_CORRECTED_NATIVE_DIAGNOSIS_BLOCKED",
+    "observed_at_utc": "2026-10-20T21:48:03Z",
+    "source_checkpoint": "dd2322f1e1ad784ee45878d40e80fcf69f953b30",
+    "receipt": "docs/assets/lesson07-recovery-20261020/technical-audit.json",
+    "material_assets_changed": [],
+    "tiling_fixed": false,
+    "normal_decoding_fixed": false,
+    "crash_root_cause_symbolized": false,
+    "current_native_session_verified": false,
+    "native_validation": "NOT_RUN",
+    "independent_lfs_objects": 9,
+    "independent_lfs_bytes": 77071503,
+    "performance_pass": false
   }
 }
