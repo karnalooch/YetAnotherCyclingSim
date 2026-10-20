@@ -13,7 +13,8 @@ param(
     [ValidateRange(7,120)][int]$MinimumAgeDays = 14,
     [ValidateRange(10,1000)][double]$TargetFreeGiB = 50,
     [ValidateRange(1,40)][double]$MaxReclaimGiB = 12,
-    [switch]$Json
+    [switch]$Json,
+    [switch]$WriteReceipt
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -73,6 +74,9 @@ $takeRunner = $false
 $ddcSelected = [System.Collections.Generic.List[object]]::new()
 $ddcTotal = 0L
 $ddcEligible = 0L
+$protectedExtensions = @('.umap','.uasset','.ubulk','.uexp','.hiplc',
+    '.hip','.bgeo','.sc','.tif','.tiff','.exr','.png','.jpg','.jpeg',
+    '.zip','.7z','.tar','.gz','.json','.csv','.md','.txt')
 $notes = [System.Collections.Generic.List[string]]::new()
 
 if ($busy.Count -gt 0) {
@@ -108,6 +112,9 @@ if ($busy.Count -gt 0) {
         foreach ($file in @($files | Where-Object {
             $_.LastWriteTimeUtc -lt $cutoff
         } | Sort-Object LastWriteTimeUtc)) {
+            # Even inside a DDC root, do not touch source/asset/proof formats.
+            $extension = [IO.Path]::GetExtension($file.Name).ToLowerInvariant()
+            if ($extension -in $protectedExtensions) { continue }
             $ddcEligible += [long]$file.Length
             if ($ddcSelected.Count -ge 10000 -or $file.Length -gt $room -or
                 $shortfall -le 0) { continue }
@@ -204,10 +211,11 @@ $receipt = [ordered]@{
     protected=@('project','engine','data','tools','cache\Zen',
         'cache\git-lfs','work\lesson*','work\runner-retention',
         'project\Saved\RuntimeProof','project\.git')
+    disk_advice=$(if ($after -lt 15GB) { 'STOP_HEAVY_NATIVE' } elseif ($after -lt 30GB) { 'DEFER_HEAVY_NATIVE' } elseif ($after -lt 50GB) { 'WARN_LOW_SPACE' } else { 'OK' })
     warnings=@($notes)
 }
-if ($Apply) {
-    # Write a tiny status receipt even when no cache was eligible.
+if ($Apply -or $WriteReceipt) {
+    # Scheduled AUDIT writes only this tiny bounded status receipt, not cache.
     [void][IO.Directory]::CreateDirectory($maintenanceRoot)
     Assert-NoReparse $maintenanceRoot
     $receiptPath = Join-Path $maintenanceRoot 'latest-autoclean.json'
