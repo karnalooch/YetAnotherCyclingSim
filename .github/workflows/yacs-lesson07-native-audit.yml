@@ -1,0 +1,107 @@
+name: YACS Lesson07 native source audit (read-only)
+
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/yacs-lesson07-native-audit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yacs-lesson07-native-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: L06 source and L07 saved assets, no UE launch
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 8
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Authenticate source and inspect existing L07 on D
+        env:
+          AUDIT_SHA: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = Join-Path $env:RUNNER_TEMP 'lesson07-native-audit.json'
+          $src = 'D:\yacs\work\lesson06-unified-20261019\final_unified_idmap.bgeo.sc'
+          $map = 'D:\yacs\project\Content\Generated\YACS\Lesson07_Unified\L_SaCalobra_Lesson07.umap'
+          $masks = 'D:\yacs\project\Content\Generated\YACS\Lesson07_Unified\Materials\TA_Masks_Unified.uasset'
+          $manifest = 'D:\yacs\work\lesson07-unified-20261019\ue_transfer\manifest.json'
+          $free = ([IO.DriveInfo]::new('D:\')).AvailableFreeSpace
+          $active = @(Get-Process -Name UnrealEditor,UnrealEditor-Cmd,hython,houdini,hbatch -ErrorAction SilentlyContinue | Select-Object -ExpandProperty ProcessName -Unique)
+          $result = [ordered]@{
+            status = 'STARTING'
+            commit = $env:AUDIT_SHA
+            mode = 'READ_ONLY_NO_COOK_NO_UE'
+            free_gib = [math]::Round($free/1GB,2)
+            native_processes_present = $active
+            accepted_source = [ordered]@{exists=$false;bytes=0;sha256=$null;pinned=$false}
+            saved_map = [ordered]@{exists=$false;bytes=0}
+            masks_array = [ordered]@{exists=$false;bytes=0}
+            prior_tiles = [ordered]@{exists=$false;count=0;visibility_verified=$false}
+            can_proceed_native = $false
+            errors = @()
+          }
+          try {
+            if (Test-Path -LiteralPath $src -PathType Leaf) {
+              $file = Get-Item -LiteralPath $src -ErrorAction Stop
+              $result.accepted_source.exists = $true
+              $result.accepted_source.bytes = [long]$file.Length
+              if ($file.Length -eq 4808520505) {
+                $actual = (Get-FileHash -LiteralPath $src -Algorithm SHA256 -ErrorAction Stop).Hash.ToLowerInvariant()
+                $result.accepted_source.sha256 = $actual
+                $result.accepted_source.pinned = $actual -eq 'f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24'
+              }
+            }
+            if (Test-Path -LiteralPath $map -PathType Leaf) {
+              $file = Get-Item -LiteralPath $map -ErrorAction Stop
+              $result.saved_map.exists = $true
+              $result.saved_map.bytes = [long]$file.Length
+            }
+            if (Test-Path -LiteralPath $masks -PathType Leaf) {
+              $file = Get-Item -LiteralPath $masks -ErrorAction Stop
+              $result.masks_array.exists = $true
+              $result.masks_array.bytes = [long]$file.Length
+            }
+            if (Test-Path -LiteralPath $manifest -PathType Leaf) {
+              $old = Get-Content -LiteralPath $manifest -Raw -ErrorAction Stop | ConvertFrom-Json
+              $result.prior_tiles.exists = $true
+              $result.prior_tiles.count = @($old.tiles).Count
+              $result.prior_tiles.visibility_verified = (
+                @($old.tiles).Count -eq 4 -and
+                @($old.tiles | Where-Object {
+                  $null -eq $_.visibility -or
+                  $_.visibility.layer -ne 'visibility' -or
+                  $_.visibility.outside_source_zero -ne $true
+                }).Count -eq 0
+              )
+            }
+            $valid = $result.accepted_source.pinned -and
+              $result.saved_map.exists -and $result.masks_array.exists
+            $result.can_proceed_native = $valid -and $free -ge 30GB -and $active.Count -eq 0
+            $result.status = if ($valid) { 'SOURCE_AUTHENTICATED' } else { 'SOURCE_BLOCKED' }
+          } catch {
+            $result.status = 'ERROR'
+            $result.errors += [string]$_.Exception.Message
+          } finally {
+            $result | ConvertTo-Json -Depth 7 | Set-Content -LiteralPath $out -Encoding UTF8
+            $result | ConvertTo-Json -Depth 7
+          }
+          if ($result.status -ne 'SOURCE_AUTHENTICATED') { throw 'Source gate blocked; no native actions.' }
+      - name: Upload concise source audit even on failure
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lesson07-native-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lesson07-native-audit.json
+          if-no-files-found: warn
+          retention-days: 7
