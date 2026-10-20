@@ -374,7 +374,7 @@
     {
       "file": "yacs-lesson07-editor-module-diagnostic.yml",
       "state": "CURRENT",
-      "reason": "Read-only canonical project module presence/BuildId probe for L07 native startup triage; no compile, UE launch or authoring mutation."
+      "reason": "Owner-only read-only canonical Lesson07 project module, active Editor process/listener and installed Wingman API discovery inventory; no build, Editor launch, credential output or authoring mutation."
     },
     {
       "file": "yacs-lesson07-native-audit.yml",

@@ -71,7 +71,7 @@ endpoint is forbidden outside an explicit test fixture.
 | `stage3g-source-asset-audit.yml` | BROKER-MANAGED | Exact-SHA non-mutating source-asset/performance audit; manual dispatch is fallback |
 | `windows-probe.yml` | CURRENT | Cheap manual hosted-Windows probe |
 | `yacs-l07-native-transfer-verify.yml` | CURRENT | Bounded fresh native four-tile Houdini transfer from hash-pinned L06 into a new scratch directory, with actual coordinate-aware seam and Alpha proof; no UE import/bake. |
-| `yacs-lesson07-editor-module-diagnostic.yml` | CURRENT | Read-only canonical project module presence/BuildId probe for L07 native startup triage; no compile, UE launch or authoring mutation. |
+| `yacs-lesson07-editor-module-diagnostic.yml` | CURRENT | Owner-only read-only Lesson07 module, active Editor process/listener and installed Wingman API discovery inventory; no build, Editor launch, credential output or authoring mutation. |
 | `yacs-lesson07-native-audit.yml` | CURRENT | Owner-only L06 accepted cache SHA and L07 on-disk map/texture source authentication on Windows; no Houdini/UE launch and no source changes. |
 | `yacs-lesson07-runner-probe.yml` | CURRENT | Owner-only restricted workflow_dispatch runner presence probe; historical successes confirm connectivity but no terrain acceptance. |
 | `yacs-lesson07-unreal-readonly.yml` | CURRENT | L07 native UE readback with protected saved-map hash, no intentional map saves or rebake; real native startup/geometry proof still pending. |

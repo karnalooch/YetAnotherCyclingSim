@@ -11,6 +11,36 @@
 
 ---
 
+## Remote continuation and scoped connection authority (2026-10-21)
+
+The owner requested remote execution of the channel diagnosis and explicitly
+allowed creating the missing connection infrastructure. This supersedes the
+previous no-new-transport restriction for this bounded Lesson07 task only.
+Preserve the running Editor, unsaved owner state and existing host/CI guards.
+The historical rock-preview transport and its scene admission stay unchanged.
+
+The existing `yacs-lesson07-editor-module-diagnostic.yml` is extended first to
+inventory the current Editor identity, its owned listeners, the installed
+Wingman/Loco plugin declarations and discovery metadata. It does not call a
+native tool, build, launch/restart an Editor, update the canonical checkout or
+open a public listener. A process command line is checked internally for the
+canonical project; raw command lines and credentials are never reported.
+Inventory results remain pending until the published workflow actually runs.
+
+[Wingman's vendor MCP guide](https://ai.locodev.dev/docs/developers/antigravity)
+documents a per-session loopback URL and bearer token in
+`Saved/LocoAI/external-mcp-config.json`, JSON-RPC Streamable HTTP, and read-only
+`session/status` and `tools/list` discovery. The URL/token rotate at restart;
+these are capability references, not proof of the installed endpoint. Any
+host-local client must validate the discovered loopback listener against the
+observed Editor PID, creation time, executable and project before using it.
+Keep credentials in memory on that host and never upload the discovery file.
+
+The subsequent target is the already specified passive graph/world readback,
+followed by same-camera Lit/BaseColor observations. This infrastructure work
+alone does not establish a channel cause, correct the material, symbolize the
+crash, satisfy protected CI or grant visual/performance acceptance.
+
 ## Technical deep dive of the retained checkpoint (2026-10-20)
 
 **Scope:** static and remote-file review of
@@ -161,9 +191,11 @@ then failed its protected-CI prerequisite and skipped native execution.
 None of these failures establish a material regression.
 
 The existing live-command path is restricted to its reviewed rock-preview
-recipes; it is not an arbitrary Lesson07 transport. Do not expand it, expose
-a new listener, close the owner's Editor or bypass host/CI guards. Continue
-through the already established authenticated native channel when available.
+recipes; it is not an arbitrary Lesson07 transport. Do not expand that path,
+close the owner's Editor or bypass host/CI guards. The 2026-10-21 scoped owner
+authorization above permits establishing the missing Lesson07 connection;
+prefer the installed authenticated loopback Wingman channel and keep its
+credentials and endpoint local to the host.
 
 The next in-place diagnostic sequence is:
 

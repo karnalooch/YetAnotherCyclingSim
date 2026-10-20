@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   diagnose:
-    name: Inspect project Editor DLL and BuildIds (no build)
+    name: Inspect Editor modules and existing bridge (no build or HTTP)
     if: >-
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/365-world-graph' &&
@@ -64,7 +64,7 @@ jobs:
             } catch {
               $manifestInfo += [ordered]@{
                 file=$file.Name
-                parse_error=$_.Exception.Message
+                parse_error_type=$_.Exception.GetType().Name
               }
             }
           }
@@ -96,11 +96,231 @@ jobs:
           }
           $report | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $out -Encoding utf8
           $report | ConvertTo-Json -Depth 6
+      - name: Discover existing Editor bridge without connecting or changing state
+        if: ${{ always() }}
+        env:
+          L07_DIAGNOSTIC_SHA: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $projectRoot = 'D:\yacs\project'
+          $engineRoot = 'D:\yacs\engine\UE_5.8'
+          $projectFile = Join-Path $projectRoot 'YetAnotherCyclingSim.uproject'
+          $expectedExe = Join-Path $engineRoot 'Engine\Binaries\Win64\UnrealEditor.exe'
+          $output = Join-Path $env:RUNNER_TEMP 'lesson07-editor-bridge-discovery.json'
+          $failures = [Collections.Generic.List[string]]::new()
+          $editorRows = [Collections.Generic.List[object]]::new()
+          $pluginRows = [Collections.Generic.List[object]]::new()
+          $sourceRows = [Collections.Generic.List[object]]::new()
+          $declarations = [Collections.Generic.List[object]]::new()
+          $limits = [ordered]@{
+            editors=8; listeners_per_editor=32; plugin_directories=128
+            plugin_depth=3; descriptors=8; source_directories=128
+            source_depth=8; source_files=64; source_file_bytes=2MB
+            source_total_bytes=16MB; declarations=128; discovery_bytes=16KB
+          }
+          function Test-L07PlainPath([string]$Path, [string]$Boundary) {
+            $full = [IO.Path]::GetFullPath($Path)
+            $base = [IO.Path]::GetFullPath($Boundary).TrimEnd('\')
+            if ($full -ine $base -and -not $full.StartsWith($base+'\', [StringComparison]::OrdinalIgnoreCase)) { return $false }
+            $cursor = $full
+            while ($cursor.Length -ge $base.Length) {
+              $item = Get-Item -LiteralPath $cursor -Force -ErrorAction SilentlyContinue
+              if ($null -eq $item -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { return $false }
+              if ($cursor -ieq $base) { return $true }
+              $cursor = [IO.Path]::GetDirectoryName($cursor)
+            }
+            return $false
+          }
+          # Win32_Process is queried locally. Never serialize CommandLine or a
+          # CIM object: the only retained command-line fact is an exact match.
+          try {
+            $observed = @(Get-CimInstance -ClassName Win32_Process -Filter "Name='UnrealEditor.exe' OR Name='UnrealEditor-Cmd.exe'" |
+              Select-Object -First ($limits.editors + 1))
+            if ($observed.Count -gt $limits.editors) { throw 'EDITOR_COUNT_LIMIT' }
+            foreach ($editor in $observed) {
+              $projectArguments = @([regex]::Matches([string]$editor.CommandLine, '(?:"[^"]*"|\S)+') |
+                ForEach-Object { ($_.Value -replace '^-project=', '').Trim('"') } |
+                Where-Object { $_ -like '*.uproject' })
+              $projectMatches = $projectArguments.Count -eq 1 -and $projectArguments[0].Replace('/','\') -ieq $projectFile
+              $connections = @(Get-CimInstance -Namespace 'root/StandardCimv2' -ClassName MSFT_NetTCPConnection `
+                -Filter ("State=2 AND OwningProcess=" + [uint32]$editor.ProcessId) |
+                Select-Object -First ($limits.listeners_per_editor + 1))
+              if ($connections.Count -gt $limits.listeners_per_editor) { throw 'LISTENER_COUNT_LIMIT' }
+              $listeners = @($connections | Sort-Object LocalPort,LocalAddress | ForEach-Object {
+                [ordered]@{address=[string]$_.LocalAddress;port=[int]$_.LocalPort;pid=[int]$_.OwningProcess}
+              })
+              $editorRows.Add([ordered]@{
+                pid=[int]$editor.ProcessId; name=[string]$editor.Name
+                created_utc=$editor.CreationDate.ToUniversalTime().ToString('o')
+                executable=[string]$editor.ExecutablePath
+                executable_matches_expected=([string]$editor.ExecutablePath -ieq $expectedExe)
+                canonical_project_argument_matches=$projectMatches
+                listeners=$listeners
+                active_editor_world='NOT_QUERIED'
+              })
+            }
+          } catch { $failures.Add('PROCESS_OR_LISTENER_QUERY_FAILED:' + $_.Exception.GetType().Name) }
+
+          # Vendor discovery contract, read in memory only:
+          # https://ai.locodev.dev/docs/developers/antigravity
+          # No INI, environment, account data, auth header or credential value
+          # enters the report. The discovery file itself is never uploaded.
+          $discoveryPath = Join-Path $projectRoot 'Saved\LocoAI\external-mcp-config.json'
+          $discovery = [ordered]@{
+            relative_path='Saved/LocoAI/external-mcp-config.json'; exists=$false
+            bytes=$null; modified_utc=$null; status='NOT_FOUND'; token_present=$false
+            transport_type_matches_vendor=$false; endpoint=$null
+            matching_editor_pids=@(); http_requests_made=0
+          }
+          try {
+            if (Test-Path -LiteralPath $discoveryPath -PathType Leaf) {
+              $discovery.exists = $true
+              if (-not (Test-L07PlainPath $discoveryPath $projectRoot)) { throw 'UNSAFE_DISCOVERY_PATH' }
+              $meta = Get-Item -LiteralPath $discoveryPath
+              $discovery.bytes = [long]$meta.Length
+              $discovery.modified_utc = $meta.LastWriteTimeUtc.ToString('o')
+              if ($meta.Length -le 0 -or $meta.Length -gt $limits.discovery_bytes) { throw 'DISCOVERY_SIZE_LIMIT' }
+              $config = Get-Content -LiteralPath $discoveryPath -Raw | ConvertFrom-Json
+              $discovery.token_present = $config.token -is [string] -and -not [string]::IsNullOrWhiteSpace($config.token)
+              $discovery.transport_type_matches_vendor = $config.type -ceq 'http'
+              $uri = $null
+              if ($config.url -isnot [string] -or -not [Uri]::TryCreate($config.url, [UriKind]::Absolute, [ref]$uri) -or
+                  $uri.Scheme -cne 'http' -or $uri.Host -cne '127.0.0.1' -or $uri.Port -le 0 -or
+                  $uri.AbsolutePath -cne '/loco' -or $uri.UserInfo -or $uri.Query -or $uri.Fragment) { throw 'DISCOVERY_ENDPOINT_NOT_VENDOR_LOOPBACK' }
+              $discovery.endpoint = [ordered]@{scheme='http';host='127.0.0.1';port=[int]$uri.Port;path='/loco'}
+              $owners = @($editorRows | Where-Object {
+                $_.canonical_project_argument_matches -and $_.executable_matches_expected -and
+                @($_.listeners | Where-Object { $_.address -ceq '127.0.0.1' -and $_.port -eq $uri.Port }).Count -eq 1
+              })
+              $discovery.matching_editor_pids = @($owners | ForEach-Object { $_.pid })
+              $discovery.status = if ($owners.Count -eq 1 -and $discovery.token_present -and $discovery.transport_type_matches_vendor) {
+                'DISCOVERY_MATCHES_ONE_EDITOR_HTTP_NOT_TESTED'
+              } else { 'DISCOVERY_PRESENT_IDENTITY_OR_AUTH_NOT_ESTABLISHED' }
+              $config = $null
+            }
+          } catch {
+            $config = $null
+            $discovery.status = 'DISCOVERY_REJECTED'
+            $failures.Add('DISCOVERY_READ_FAILED:' + $_.Exception.GetType().Name)
+          }
+
+          # Inspect only named plugin descriptors, then source beneath those
+          # plugin roots. Never recurse into Config, Saved, binaries or links.
+          $pluginRoots = @((Join-Path $projectRoot 'Plugins'), (Join-Path $engineRoot 'Engine\Plugins\Marketplace'))
+          $discoveryDirectories = [Collections.Generic.Queue[object]]::new()
+          foreach ($base in $pluginRoots) {
+            if (Test-Path -LiteralPath $base -PathType Container) { $discoveryDirectories.Enqueue(@{path=$base;depth=0;boundary=$base}) }
+          }
+          $pluginDirectoryCount = 0
+          try {
+            while ($discoveryDirectories.Count) {
+              $entry = $discoveryDirectories.Dequeue()
+              $pluginDirectoryCount++
+              if ($pluginDirectoryCount -gt $limits.plugin_directories) { throw 'PLUGIN_DIRECTORY_LIMIT' }
+              if (-not (Test-L07PlainPath $entry.path $entry.boundary)) { continue }
+              $children = @(Get-ChildItem -LiteralPath $entry.path -Force | Select-Object -First 257)
+              if ($children.Count -gt 256) { throw 'PLUGIN_ENTRY_LIMIT' }
+              foreach ($child in ($children | Sort-Object Name)) {
+                if ($child.Attributes -band [IO.FileAttributes]::ReparsePoint) { continue }
+                if ($child.PSIsContainer) {
+                  if ($entry.depth -lt $limits.plugin_depth -and $child.Name -notin @('Config','Content','Source','Binaries','Intermediate','Resources','Saved','.git')) {
+                    $discoveryDirectories.Enqueue(@{path=$child.FullName;depth=($entry.depth+1);boundary=$entry.boundary})
+                  }
+                  continue
+                }
+                if ($child.Extension -ine '.uplugin' -or $child.BaseName -notmatch '^(Wingman|LocoHelperAI)$') { continue }
+                if ($pluginRows.Count -ge $limits.descriptors -or $child.Length -gt 128KB) { throw 'PLUGIN_DESCRIPTOR_LIMIT' }
+                $descriptor = Get-Content -LiteralPath $child.FullName -Raw | ConvertFrom-Json
+                $modules = @($descriptor.Modules | ForEach-Object {
+                  if ($_.Name -is [string] -and $_.Name -cmatch '^[A-Za-z_][A-Za-z0-9_]{0,79}$') { $_.Name }
+                } | Select-Object -First 32)
+                $versionName = if ($descriptor.VersionName -is [string] -and $descriptor.VersionName -cmatch '^[0-9][0-9A-Za-z.+_-]{0,47}$') { $descriptor.VersionName } else { 'UNRECOGNIZED' }
+                $pluginRows.Add([ordered]@{
+                  descriptor=$child.FullName;bytes=[long]$child.Length
+                  sha256=(Get-FileHash -LiteralPath $child.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+                  version_name=$versionName;module_names=$modules
+                })
+              }
+            }
+          } catch { $failures.Add('PLUGIN_DISCOVERY_INCOMPLETE:' + $_.Exception.GetType().Name) }
+
+          $sourceTotalBytes = 0L
+          $sourceDirectoryCount = 0
+          $literalNames = @('initialize','tools/list','tools/call','session/status','notifications/initialized',
+            'Authorization','Bearer','Content-Type','MCP-Protocol-Version','Mcp-Session-Id',
+            'jsonrpc','method','params','result','arguments','name','code','python_code',
+            'execute_python','execute_python_code','run_python','/loco','/mcp')
+          try {
+            foreach ($plugin in $pluginRows) {
+              $base = Split-Path -Parent $plugin.descriptor
+              $queue = [Collections.Generic.Queue[object]]::new()
+              foreach ($relative in @('Source','Content\Python')) {
+                $path = Join-Path $base $relative
+                if (Test-Path -LiteralPath $path -PathType Container) { $queue.Enqueue(@{path=$path;depth=0}) }
+              }
+              while ($queue.Count) {
+                $entry = $queue.Dequeue()
+                $sourceDirectoryCount++
+                if ($sourceDirectoryCount -gt $limits.source_directories) { throw 'SOURCE_DIRECTORY_LIMIT' }
+                if (-not (Test-L07PlainPath $entry.path $base)) { continue }
+                $children = @(Get-ChildItem -LiteralPath $entry.path -Force | Select-Object -First 257)
+                if ($children.Count -gt 256) { throw 'SOURCE_ENTRY_LIMIT' }
+                foreach ($child in ($children | Sort-Object Name)) {
+                  if ($child.Attributes -band [IO.FileAttributes]::ReparsePoint) { continue }
+                  if ($child.PSIsContainer) {
+                    if ($entry.depth -lt $limits.source_depth -and $child.Name -notin @('Config','Saved','Binaries','Intermediate','.git')) { $queue.Enqueue(@{path=$child.FullName;depth=($entry.depth+1)}) }
+                    continue
+                  }
+                  if ($child.Extension -notin @('.h','.cpp','.py') -or $child.BaseName -notmatch '(?i)MCP|Loco|Server|Settings|Http|Route|Python|Command') { continue }
+                  if ($sourceRows.Count -ge $limits.source_files -or $child.Length -gt $limits.source_file_bytes -or ($sourceTotalBytes+$child.Length) -gt $limits.source_total_bytes) { throw 'SOURCE_BYTE_OR_FILE_LIMIT' }
+                  $sourceTotalBytes += $child.Length
+                  $raw = [IO.File]::ReadAllBytes($child.FullName)
+                  if ($raw.Length -ne $child.Length) { throw 'SOURCE_CHANGED_DURING_READ' }
+                  $hash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($raw)).ToLowerInvariant()
+                  $relative = [IO.Path]::GetRelativePath($base,$child.FullName).Replace('\','/')
+                  $sourceRows.Add([ordered]@{plugin=$plugin.descriptor;path=$relative;bytes=$raw.Length;sha256=$hash})
+                  # Structured candidates only: no arbitrary code excerpts,
+                  # initializers, comments, free-form strings or credential data.
+                  $lines = [Text.Encoding]::UTF8.GetString($raw).Split("`n")
+                  for ($index=0; $index -lt $lines.Count -and $declarations.Count -lt $limits.declarations; $index++) {
+                    $line = $lines[$index]
+                    $names = [Collections.Generic.List[string]]::new()
+                    foreach ($literal in $literalNames) {
+                      if ($line.Contains('"'+$literal+'"') -or $line.Contains("'"+$literal+"'")) { $names.Add($literal) }
+                    }
+                    $definition = [regex]::Match($line, '^\s*(?:async\s+)?(?:class|struct|def)\s+(?:[A-Z_]+_API\s+)?([A-Za-z_][A-Za-z0-9_]{0,79})\b')
+                    if ($definition.Success -and $definition.Groups[1].Value -match '(?i)MCP|Loco|Python|Auth|Http|Server|Settings|Execute|Tool') { $names.Add($definition.Groups[1].Value) }
+                    $member = [regex]::Match($line, '^\s*(?:(?:virtual|static|inline|FORCEINLINE|const|mutable)\s+)*(?:[A-Za-z_][A-Za-z0-9_:<>*&]{0,79}\s+){1,3}([A-Za-z_][A-Za-z0-9_]{0,79})\s*(?:\(|;|=)')
+                    if ($member.Success -and $member.Groups[1].Value -match '(?i)MCP|Loco|Python|Auth|Bearer|Token|ApiKey|Http|Server|Port|Listen|Route|Json|Execute|Tool') { $names.Add($member.Groups[1].Value) }
+                    if ($names.Count) { $declarations.Add([ordered]@{plugin=$plugin.descriptor;path=$relative;line=($index+1);candidate_identifiers=@($names | Select-Object -Unique)}) }
+                  }
+                }
+              }
+            }
+          } catch { $failures.Add('SOURCE_INVENTORY_INCOMPLETE:' + $_.Exception.GetType().Name) }
+          $report = [ordered]@{
+            schema_version=1;status='READ_ONLY_BRIDGE_DISCOVERY_NOT_RUNTIME_PROOF'
+            source_commit=$env:L07_DIAGNOSTIC_SHA;observed_utc=[DateTime]::UtcNow.ToString('o')
+            editors=@($editorRows.ToArray());discovery=$discovery
+            plugins=@($pluginRows.ToArray());source_files=@($sourceRows.ToArray())
+            source_declaration_candidates=@($declarations.ToArray())
+            declaration_limit_reached=($declarations.Count -eq $limits.declarations)
+            source_bytes_read=$sourceTotalBytes;limits=$limits;diagnostic_failures=@($failures.ToArray())
+            http_requests_made=0;editor_commands_executed=0;editor_started_or_stopped=$false
+            project_files_written=$false;native_material_readback='NOT_RUN';performance_pass=$false
+            note='PID/listener and source declarations do not prove active world, authenticated API, schemas or rendered material. No credential value or discovery-file payload is retained.'
+          }
+          $json = $report | ConvertTo-Json -Depth 10
+          if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 256KB) { throw 'REPORT_SIZE_LIMIT' }
+          $json | Set-Content -LiteralPath $output -Encoding utf8
+          Write-Host ('L07_BRIDGE_DISCOVERY ' + ($report | ConvertTo-Json -Depth 10 -Compress))
       - name: Retain minimal diagnostic
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: lesson07-module-diagnostic-${{ github.run_id }}
-          path: ${{ runner.temp }}/lesson07-editor-module-diagnostic.json
+          path: |
+            ${{ runner.temp }}/lesson07-editor-module-diagnostic.json
+            ${{ runner.temp }}/lesson07-editor-bridge-discovery.json
           if-no-files-found: warn
           retention-days: 7
