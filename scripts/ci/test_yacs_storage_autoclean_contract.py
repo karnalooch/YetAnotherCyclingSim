@@ -1,4 +1,5 @@
 """Static policy checks for the reviewed YACS storage auto-clean scripts."""
+
 from pathlib import Path
 import unittest
 
