@@ -13,6 +13,7 @@ class StorageAutoCleanContract(unittest.TestCase):
         s = AUTO.read_text(encoding="utf-8")
         for token in (
             "[switch]$Apply",
+            "[switch]$WriteReceipt",
             "if ($Apply -and $selected -gt 0",
             "MinimumAgeDays = 14",
             "TargetFreeGiB = 50",
@@ -34,6 +35,9 @@ class StorageAutoCleanContract(unittest.TestCase):
         ):
             self.assertNotIn(token, s)
         self.assertIn("zenserver", s.lower())
+        self.assertIn("$protectedExtensions", s)
+        self.assertIn("'.umap'", s)
+        self.assertIn("'.hiplc'", s)
         self.assertIn("work\\lesson*", s)
 
     def test_install_is_opt_in_no_immediate_execute(self):
