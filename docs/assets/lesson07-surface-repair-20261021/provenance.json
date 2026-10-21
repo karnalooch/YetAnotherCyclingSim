@@ -1,0 +1,191 @@
+{
+  "schema": "yacs_lesson07_cc0_rock_sources_v1",
+  "selected_candidate": "dark_rock_02",
+  "alternate_light_source": "rock_boulder_dry",
+  "classification_changed": false,
+  "geology_verified_limestone": false,
+  "native_import_verified": false,
+  "assets": [
+    {
+      "asset_id": "dark_rock_02",
+      "title": "Dark Rock 02",
+      "authors": [
+        "Amal Kumar"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "source_url": "https://polyhaven.com/a/dark_rock_02",
+      "source_physical_scale_url": "https://api.polyhaven.com/assets?type=textures&category=stone/rock-cliffs",
+      "physical_repeat_m": [
+        2.0009167194366455,
+        2.000917911529541
+      ],
+      "geology": "Producer describes stratified rock; limestone not authenticated. This is distinct from the older dark_rock asset tagged metamorphic.",
+      "role": "dark-grey comparison candidate",
+      "source_files_modified": false,
+      "maps": [
+        {
+          "semantic": "diff",
+          "relative_path": "dark_rock_02_2k/dark_rock_02_diff_2k.png",
+          "download_url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_rock_02/dark_rock_02_diff_2k.png",
+          "sha256": "bf440eca64d945962c417a524b07fbc3aaa1591bd76d2d3fb60b0df8a05f1c54",
+          "bytes": 24251872,
+          "dimensions_px": [
+            2048,
+            2048
+          ],
+          "source_png_bit_depth": 16,
+          "source_png_color_type": 6,
+          "normal_convention": null
+        },
+        {
+          "semantic": "nor_dx",
+          "relative_path": "dark_rock_02_2k/dark_rock_02_nor_dx_2k.png",
+          "download_url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_rock_02/dark_rock_02_nor_dx_2k.png",
+          "sha256": "8f446aad3271078e9cdf94c9744363ae26339c392f3727619de3ef104a9976de",
+          "bytes": 25556874,
+          "dimensions_px": [
+            2048,
+            2048
+          ],
+          "source_png_bit_depth": 16,
+          "source_png_color_type": 6,
+          "normal_convention": "DirectX"
+        },
+        {
+          "semantic": "rough",
+          "relative_path": "dark_rock_02_2k/dark_rock_02_rough_2k.png",
+          "download_url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_rock_02/dark_rock_02_rough_2k.png",
+          "sha256": "0ba3d020f4cbf5a4cd452612476f6ee42ddf22b97d1f6f5221818221e057766e",
+          "bytes": 7095869,
+          "dimensions_px": [
+            2048,
+            2048
+          ],
+          "source_png_bit_depth": 16,
+          "source_png_color_type": 0,
+          "normal_convention": null
+        },
+        {
+          "semantic": "ao",
+          "relative_path": "dark_rock_02_2k/dark_rock_02_ao_2k.png",
+          "download_url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_rock_02/dark_rock_02_ao_2k.png",
+          "sha256": "fbb0c970a95edec729c725ce5289169a646498bf3ca0befab78260fb84d091ee",
+          "bytes": 4519546,
+          "dimensions_px": [
+            2048,
+            2048
+          ],
+          "source_png_bit_depth": 16,
+          "source_png_color_type": 0,
+          "normal_convention": null
+        },
+        {
+          "semantic": "disp",
+          "relative_path": "dark_rock_02_2k/dark_rock_02_disp_2k.png",
+          "download_url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_rock_02/dark_rock_02_disp_2k.png",
+          "sha256": "f1f452f2bbc13b2c094f52262b39e0e4e7fd7114bb4eaea33f805f1cd972ae4f",
+          "bytes": 5456217,
+          "dimensions_px": [
+            2048,
+            2048
+          ],
+          "source_png_bit_depth": 16,
+          "source_png_color_type": 0,
+          "normal_convention": null
+        }
+      ]
+    },
+    {
+      "asset_id": "rock_boulder_dry",
+      "title": "Rock Boulder Dry",
+      "authors": [
+        "Dimitrios Savva (photography)",
+        "Rico Cilliers (processing)"
+      ],
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "source_url": "https://polyhaven.com/a/rock_boulder_dry",
+      "source_physical_scale_url": "https://polyhaven.com/a/rock_boulder_dry",
+      "physical_repeat_m": [
+        1.8,
+        1.8
+      ],
+      "geology": "Generic natural boulder scan; limestone not authenticated.",
+      "role": "light-grey comparison candidate",
+      "source_files_modified": false,
+      "maps": [
+        {
+          "semantic": "diff",
+          "relative_path": "rock_boulder_dry_2k/rock_boulder_dry_diff_2k.png",
+          "download_url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rock_boulder_dry/rock_boulder_dry_diff_2k.png",
+          "sha256": "bba278641d6cda8c6907ee34b749b0b968a1731ca697470ba64a5819e8288085",
+          "bytes": 22821106,
+          "dimensions_px": [
+            2048,
+            2048
+          ],
+          "source_png_bit_depth": 16,
+          "source_png_color_type": 2,
+          "normal_convention": null
+        },
+        {
+          "semantic": "nor_dx",
+          "relative_path": "rock_boulder_dry_2k/rock_boulder_dry_nor_dx_2k.png",
+          "download_url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rock_boulder_dry/rock_boulder_dry_nor_dx_2k.png",
+          "sha256": "f2d6c1bb170ab6c2ffd182a4fbe516854ae0f013df15ef7cfa4582d054e0f1a7",
+          "bytes": 21992760,
+          "dimensions_px": [
+            2048,
+            2048
+          ],
+          "source_png_bit_depth": 16,
+          "source_png_color_type": 2,
+          "normal_convention": "DirectX"
+        },
+        {
+          "semantic": "rough",
+          "relative_path": "rock_boulder_dry_2k/rock_boulder_dry_rough_2k.png",
+          "download_url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rock_boulder_dry/rock_boulder_dry_rough_2k.png",
+          "sha256": "236c8c8bcb210db07fc0dc83ac0de8a843d26ee12766a5bb8ce0b29aa9915def",
+          "bytes": 10088454,
+          "dimensions_px": [
+            2048,
+            2048
+          ],
+          "source_png_bit_depth": 16,
+          "source_png_color_type": 2,
+          "normal_convention": null
+        },
+        {
+          "semantic": "ao",
+          "relative_path": "rock_boulder_dry_2k/rock_boulder_dry_ao_2k.png",
+          "download_url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rock_boulder_dry/rock_boulder_dry_ao_2k.png",
+          "sha256": "05fa0629f10a1ae3854dee9f03c1e3715486203cca80c4cf9708a91394509679",
+          "bytes": 7233204,
+          "dimensions_px": [
+            2048,
+            2048
+          ],
+          "source_png_bit_depth": 16,
+          "source_png_color_type": 0,
+          "normal_convention": null
+        },
+        {
+          "semantic": "disp",
+          "relative_path": "rock_boulder_dry_2k/rock_boulder_dry_disp_2k.png",
+          "download_url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rock_boulder_dry/rock_boulder_dry_disp_2k.png",
+          "sha256": "e07b06123bda2156f2a0fef79b0edb77280295135cb5063e7794998ff3e69a90",
+          "bytes": 8088495,
+          "dimensions_px": [
+            2048,
+            2048
+          ],
+          "source_png_bit_depth": 16,
+          "source_png_color_type": 2,
+          "normal_convention": null
+        }
+      ]
+    }
+  ]
+}

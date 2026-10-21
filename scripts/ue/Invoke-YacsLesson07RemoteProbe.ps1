@@ -10,6 +10,7 @@
   -CaptureLesson07 requests the vendor's dedicated viewport screenshot instead.
   -InspectLesson07 performs the fixed six-call dedicated read-only material batch.
   -InspectVault performs only the three fixed local owned-pack inventory reads.
+  -ImportSurfaces stages five pinned maps, imports once, and retains native captures.
   -TrialMacro performs the reviewed Macro Tiling A/B/A trial and verifies restore.
   -ApplyReviewedMacro retains the independently reviewed 0.05 candidate.
   The operation switches are mutually exclusive. No launch, task mutation or stop.
@@ -23,6 +24,7 @@ param(
   [Parameter(ParameterSetName='Capture')][switch]$CaptureLesson07,
   [Parameter(ParameterSetName='Inspection')][switch]$InspectLesson07,
   [Parameter(ParameterSetName='VaultInspection')][switch]$InspectVault,
+  [Parameter(ParameterSetName='SurfaceImport')][switch]$ImportSurfaces,
   [Parameter(ParameterSetName='MacroTrial')][switch]$TrialMacro,
   [Parameter(ParameterSetName='ReviewedMacroApply')][switch]$ApplyReviewedMacro,
   [Parameter(ParameterSetName='ExistingEditorDiscovery')][switch]$ExistingEditorOnly
@@ -30,11 +32,11 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$requireExistingOwner = [bool]($ExistingEditorOnly -or $ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $InspectVault -or $TrialMacro -or $ApplyReviewedMacro)
-$nativeRequested = [bool]($ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $InspectVault -or $TrialMacro -or $ApplyReviewedMacro)
-$expectedNativeCalls = if ($ApplyReviewedMacro) { 7 } elseif ($TrialMacro) { 12 } elseif ($InspectLesson07) { 6 } elseif ($InspectVault) { 3 } else { 1 }
+$requireExistingOwner = [bool]($ExistingEditorOnly -or $ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $InspectVault -or $TrialMacro -or $ApplyReviewedMacro -or $ImportSurfaces)
+$nativeRequested = [bool]($ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $InspectVault -or $TrialMacro -or $ApplyReviewedMacro -or $ImportSurfaces)
+$expectedNativeCalls = if ($ImportSurfaces) { 6 } elseif ($ApplyReviewedMacro) { 7 } elseif ($TrialMacro) { 12 } elseif ($InspectLesson07) { 6 } elseif ($InspectVault) { 3 } else { 1 }
 $maximumNativeCalls = if ($ApplyReviewedMacro) { 10 } elseif ($TrialMacro) { 15 } else { $expectedNativeCalls }
-$ownerGuardPrefix = if ($ObserveLesson07) { 'OBSERVATION' } elseif ($CaptureLesson07) { 'CAPTURE' } elseif ($InspectLesson07) { 'INSPECTION' } elseif ($InspectVault) { 'VAULT_INSPECTION' } elseif ($TrialMacro) { 'TRIAL_MACRO' } elseif ($ApplyReviewedMacro) { 'APPLY_MACRO' } else { 'DISCOVERY' }
+$ownerGuardPrefix = if ($ImportSurfaces) { 'SURFACE_IMPORT' } elseif ($ObserveLesson07) { 'OBSERVATION' } elseif ($CaptureLesson07) { 'CAPTURE' } elseif ($InspectLesson07) { 'INSPECTION' } elseif ($InspectVault) { 'VAULT_INSPECTION' } elseif ($TrialMacro) { 'TRIAL_MACRO' } elseif ($ApplyReviewedMacro) { 'APPLY_MACRO' } else { 'DISCOVERY' }
 $applyProofFlags=@('apply_verified','apply_candidate_verified','apply_mutation_attempted','apply_restore_attempted',
   'apply_restore_verified','apply_backup_verified','apply_registry_verified','apply_reviewed_trial_verified')
 $projectRoot = 'D:\yacs\project'
@@ -145,6 +147,7 @@ $report = [ordered]@{
   identity_stable_across_probe=$false;client_exit_code=$null
   observation_requested=[bool]$ObserveLesson07;owner_before=$null;owner_after=$null
   capture_requested=[bool]$CaptureLesson07
+  surface_import_requested=[bool]$ImportSurfaces;surface_import_verified=$false
   inspection_requested=[bool]$InspectLesson07
   vault_inspection_requested=[bool]$InspectVault;vault_inventory_accepted=$false;vault_license_verified=$false
   trial_macro_requested=[bool]$TrialMacro;trial_status=$null;trial_captures_received=0
@@ -193,6 +196,14 @@ try {
         $identity.process_start_filetime_utc -cne $owner.editor.editor_start_filetime_utc) { throw ($ownerGuardPrefix+'_OWNER_CHANGED') }
     $report.owner_before=$freshOwner
   }
+  if ($ImportSurfaces) {
+    # Existing owner proof above is required before downloading/staging any inputs.
+    & (Join-Path $PSScriptRoot 'Stage-Lesson07SurfaceRepair.ps1') -ExpectedHead $ExpectedHead -RunToken $RunToken
+    Assert-L07OwnerProcess $owner
+    $identity=Get-L07BridgeIdentity
+    if ($null -eq $identity -or $identity.pid -ne $owner.editor.editor_pid -or
+        $identity.process_start_filetime_utc -cne $owner.editor.editor_start_filetime_utc) { throw 'SURFACE_IMPORT_OWNER_CHANGED' }
+  }
   $report.identity_before=$identity
   $identity | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $identityPath -Encoding utf8
   $clientArguments=@('-B',(Join-Path $PSScriptRoot 'lesson07_wingman_client.py'),'--identity-receipt',$identityPath,'--output',$clientPath)
@@ -200,13 +211,14 @@ try {
   if ($CaptureLesson07) { $clientArguments+='--capture-lesson07' }
   if ($InspectLesson07) { $clientArguments+='--inspect-lesson07' }
   if ($InspectVault) { $clientArguments+='--inspect-vault' }
+  if ($ImportSurfaces) { $clientArguments+='--import-surfaces' }
   if ($TrialMacro) { $clientArguments+='--trial-macro' }
   if ($ApplyReviewedMacro) { $clientArguments+='--apply-reviewed-macro' }
   if ($nativeRequested) {
     # Until its bounded receipt is read, a subprocess failure leaves completion unknown.
     $report.native_tool_called=$null;$report.native_tool_attempted=$null;$report.native_tool_completed=$null
     $report.native_tool_call_attempts=$null
-    if ($ObserveLesson07 -or $InspectLesson07 -or $TrialMacro -or $ApplyReviewedMacro) { $report.native_material_readback='UNVERIFIED' }
+    if ($ObserveLesson07 -or $InspectLesson07 -or $TrialMacro -or $ApplyReviewedMacro -or $ImportSurfaces) { $report.native_material_readback='UNVERIFIED' }
     if ($TrialMacro) {
       foreach ($field in @('trial_mutation_attempted','trial_restore_verified','trial_backup_verified','trial_registry_verified')) {
         $report[$field]=$null
@@ -276,7 +288,20 @@ try {
     $report.native_material_readback='REVIEWED_MACRO_APPLIED_CAPTURE_REVIEW_PENDING'
   }
   if ($report.client_exit_code -ne 0) { throw 'AUTHENTICATED_BRIDGE_PROBE_FAILED' }
-  if ($ApplyReviewedMacro) {
+  if ($ImportSurfaces) {
+    if ($clientReport['status'] -cne 'SURFACE_IMPORT_SAVED_IMAGES_REVIEW_PENDING' -or
+        $clientReport['surface_verified'] -isnot [bool] -or $clientReport['surface_verified'] -ne $true -or
+        $report.native_tool_call_attempts -ne 6 -or $report.native_tool_completed -ne $true -or
+        $clientReport['native_tool_response_received'] -isnot [bool] -or $clientReport['native_tool_response_received'] -ne $true -or
+        $clientReport['surface_captures'] -isnot [array] -or $clientReport['surface_captures'].Count -ne 5 -or
+        $clientReport['surface_results'] -isnot [array] -or $clientReport['surface_results'].Count -ne 6 -or
+        $clientReport['surface_host_checks'] -isnot [array] -or $clientReport['surface_host_checks'].Count -ne 12) {
+      throw 'SURFACE_IMPORT_RECEIPT_NOT_CONFIRMED'
+    }
+    $report.surface_import_verified=$true
+    $report.native_material_readback='SURFACE_IMPORT_SAVED_IMAGES_REVIEW_PENDING'
+    $report.status='LESSON07_SURFACE_IMPORT_SAVED_IMAGES_REVIEW_PENDING'
+  } elseif ($ApplyReviewedMacro) {
     if ($report.apply_status -cne 'APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING' -or
         $report.native_tool_call_attempts -ne 7 -or $report.native_tool_attempted -ne $true -or $report.native_tool_completed -ne $true -or
         $clientReport['native_tool_response_received'] -isnot [bool] -or $clientReport['native_tool_response_received'] -ne $true -or
@@ -388,10 +413,12 @@ try {
   }
 } catch {
   $failure = $true
-  $report.status = if ($ObserveLesson07) { 'LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED' } elseif ($CaptureLesson07) { 'LESSON07_CAPTURE_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectLesson07) { 'LESSON07_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectVault) { 'LESSON07_VAULT_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } elseif ($TrialMacro) { 'LESSON07_TRIAL_MACRO_INCOMPLETE_EDITOR_RETAINED' } elseif ($ApplyReviewedMacro) { 'LESSON07_REVIEWED_MACRO_APPLY_INCOMPLETE_EDITOR_RETAINED' } else { 'BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED' }
+  $report.status = if ($ImportSurfaces) { 'LESSON07_SURFACE_IMPORT_INCOMPLETE_EDITOR_RETAINED' } elseif ($ObserveLesson07) { 'LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED' } elseif ($CaptureLesson07) { 'LESSON07_CAPTURE_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectLesson07) { 'LESSON07_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectVault) { 'LESSON07_VAULT_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } elseif ($TrialMacro) { 'LESSON07_TRIAL_MACRO_INCOMPLETE_EDITOR_RETAINED' } elseif ($ApplyReviewedMacro) { 'LESSON07_REVIEWED_MACRO_APPLY_INCOMPLETE_EDITOR_RETAINED' } else { 'BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED' }
   # Never serialize exception messages that might contain discovery credentials.
   $report.error_type = $_.Exception.GetType().Name
-  $safeCodes = @('CURRENT_RUN_REPORT_ALREADY_EXISTS','EXISTING_PYTHON_UNAVAILABLE',
+  $safeCodes = @('SURFACE_IMPORT_REQUIRES_EXISTING_EDITOR','SURFACE_IMPORT_REQUIRES_VERIFIED_OWNER','SURFACE_IMPORT_OWNER_CHANGED',
+    'SURFACE_IMPORT_CLIENT_REPORT_SIZE','SURFACE_IMPORT_RECEIPT_NOT_CONFIRMED','SURFACE_STAGE_ALREADY_EXISTS','SURFACE_STAGE_PACKAGE_FAILED',
+    'SURFACE_STAGE_SOURCE_HEAD','SURFACE_STAGE_REDIRECTED_PATH','SURFACE_STAGE_IMPORTER_HASH','SURFACE_STAGE_COPY_HASH','CURRENT_RUN_REPORT_ALREADY_EXISTS','EXISTING_PYTHON_UNAVAILABLE',
     'NO_VERIFIED_WINGMAN_LISTENER_WITHIN_SIX_MINUTES','BRIDGE_IDENTITY_CHANGED_DURING_PROBE',
     'AUTHENTICATED_BRIDGE_PROBE_FAILED','DISCOVERY_SIZE_REJECTED','DISCOVERY_CONTRACT_REJECTED',
     'PATH_OUTSIDE_BOUNDARY','REPARSE_POINT_REJECTED','PATH_BOUNDARY_NOT_REACHED',

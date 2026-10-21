@@ -5,13 +5,46 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (reviewed Macro 0.05 partial improvement saved remotely; source texture import pending; saved normal-flatten workaround; physical texel scale, detailed-normal correctness, symbolized crash cause and whole-area proof remain unverified; source CI `fae2634d` passed with compatible proof reuse; new Editor startup blocked by the 5 GiB disk reserve)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (two complete CC0 rock sets acquired and fixed five-map package prepared; native import pending; saved Macro 0.05 and normal-flatten workaround retained; physical texel scale, detailed-normal correctness and whole-area proof remain unverified; startup source CI passed, UE process and listener verified, first authenticated discovery timed out with zero native calls)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
 ---
 
-## Ready-made limestone assets and dark-grey requirement (2026-10-21)
+## Acquired surfaces and current repair (2026-10-21)
+
+The owner requested the actual textures and completion of Lesson07. Complete
+2K Poly Haven `dark_rock_02` and `rock_boulder_dry` sets are now acquired:
+Diffuse, NormalDX, Roughness, AO and Height, with all ten files hash/decode
+verified. The [source and implementation evidence](../../assets/lesson07-surface-repair-20261021/README.md)
+records authors, CC0 licensing, scale and exact bytes. These are generic rock
+scans; the provider does not authenticate limestone. The darker set is prepared
+as a neutral-grey Cliffs appearance candidate, while the lighter set remains a
+comparison and accepted Grass2 is preserved.
+
+The bounded importer replaces only Grass Normal/Masks (retained corrected maps)
+and the three matching Cliffs maps in the existing five-slice arrays. It uses
+the existing AssetImportTask/SourceTextures pattern and the normal Wingman
+safety gate. It does not retry the frozen F49-denied observer. Preparation and
+CPU validation are complete; native assignment, saved state, detailed-normal
+correctness, physical scale, steep-wall projection and whole-area review are
+still pending. Macro 0.05 and Global Normal Flatten 1 remain unchanged.
+
+The earlier startup retry superseded the disk blocker: run
+`39580724393`, attempt 2, saw **18.65 GiB free**, but job `119286447935` exhausted
+its 18-minute budget during Git fetch. No installer, Editor start or import ran.
+The bounded source checkout was corrected at `de903a85`; exact-source protected
+[CI 39625331286](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39625331286)
+passed with compatible Unreal proof reuse. The subsequent
+[startup 39625318792](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39625318792)
+passed checkout, checkpoint hashes and module checks, and started canonical
+Editor PID 24984 at `15:32:25.9789397 UTC`. Its loopback listener was verified
+at `15:36:32 UTC`; the first authenticated discovery timed out after 20 seconds
+with **zero native calls**. The same process/listener remained verified, but
+the current world and material are not yet read back. Exact reports and archive
+verification are retained in the [startup evidence](../../assets/lesson07-surface-repair-20261021/startup-evidence.json).
+
+## Earlier ready-made limestone selection (2026-10-21)
 
 The owner requested licensed ready-made assets and complete materials, with
 **dark-grey limestone as well as lighter limestone**. The current
@@ -22,10 +55,12 @@ Dolomites material provide alternatives; Shore lime rocks explicitly supplies
 dark-grey coastal forms. Fab candidates still require asset-specific license
 and entitlement evidence; paid checkout prices were not verified.
 
-Four actual CC0 Diffuse samples were acquired and inspected with hashes retained.
+At the earlier selection stage, four actual CC0 Diffuse samples were acquired and inspected with hashes retained.
 Their warm colour or unverified geology prevented selection as the main dark-grey
 limestone. Official downloads from three further CC0 providers returned HTTP 403; no new
-complete PBR set or Fab package was acquired. The source list is a selection
+complete PBR set or Fab package was acquired at that stage. The two complete CC0
+sets above supersede that acquisition status; Fab packages remain unacquired.
+The earlier source list is a selection
 result, not evidence of an imported replacement or repaired whole material.
 
 The bounded `--inspect-vault` / `[l07-inspect-vault]` mode uses the installed
@@ -58,7 +93,8 @@ cleanup or reserve bypass was attempted. The saved Macro improvement remains
 preserved by the earlier byte verification; whole-material acceptance is false.
 
 The five existing surface classes, accepted Grass2 and geographic masks remain
-unchanged. New neutral-grey sources must not inherit the old global hue grading.
+unchanged. The shared colour-array grading remains for accepted layers;
+achromatic Cliffs input must avoid an unintended hue shift.
 Darkening a texture does not resolve projection/stretching or geometry defects.
 Whole-material, native import and visual acceptance remain outstanding.
 

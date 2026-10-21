@@ -23,6 +23,11 @@ on:
       - scripts/ue/Test-YacsLesson07Viewport.ps1
       - scripts/assemble_surface_slices.py
       - scripts/assets/test_assemble_surface_slices.py
+      - scripts/ue/Stage-Lesson07SurfaceRepair.ps1
+      - scripts/ue/apply_lesson07_surface_repair.py
+      - scripts/ue/test_apply_lesson07_surface_repair.py
+      - scripts/assets/prepare_lesson07_surface_repair.py
+      - scripts/assets/test_prepare_lesson07_surface_repair.py
 
 permissions:
   contents: read
@@ -37,6 +42,7 @@ jobs:
       github.ref == 'refs/heads/codex/365-world-graph' &&
       github.actor == github.repository_owner &&
       contains(github.event.head_commit.message, '[l07-remote-editor]') &&
+      !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
       !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
       !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
       !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
@@ -87,7 +93,7 @@ jobs:
           exit 1
 
   observe_cpu:
-    name: Admit an exact-source probe of the existing Editor
+    name: Admit the exact-source bounded operation in the existing Editor
     if: >-
       github.event_name == 'push' &&
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
@@ -95,6 +101,7 @@ jobs:
       github.actor == github.repository_owner &&
       !contains(github.event.head_commit.message, '[l07-remote-editor]') &&
       ((contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
@@ -102,6 +109,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
@@ -109,6 +117,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
@@ -116,6 +125,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
@@ -123,6 +133,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
@@ -130,6 +141,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
@@ -137,12 +149,21 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
-        !contains(github.event.head_commit.message, '[l07-discover-editor]')))
+        !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]')))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -156,7 +177,9 @@ jobs:
           fetch-depth: 1
           lfs: false
           persist-credentials: false
-          sparse-checkout: scripts
+          sparse-checkout: |
+            scripts
+            .github/workflows
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -179,6 +202,8 @@ jobs:
               "Invoke-YacsLesson07RemoteProbe.ps1", "Start-YacsLesson07RemoteEditor.ps1",
               "Read-YacsLesson07ObserverFailure.ps1", "Test-YacsLesson07ObserverFailure.ps1",
               "Read-YacsLesson07Viewport.ps1", "Test-YacsLesson07Viewport.ps1",
+              "Stage-Lesson07SurfaceRepair.ps1", "apply_lesson07_surface_repair.py",
+              "test_apply_lesson07_surface_repair.py",
           ):
               path = Path("scripts/ue") / name
               subprocess.run(["git", "ls-files", "--error-unmatch", "--", str(path)], check=True)
@@ -190,7 +215,8 @@ jobs:
           if hashlib.sha256(observer).hexdigest() != "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5":
               raise ValueError("Reviewed observer source differs")
           print("Fixed passive observer admitted; existing native Editor still required")
-          for name in ("scripts/assemble_surface_slices.py", "scripts/assets/test_assemble_surface_slices.py"):
+          for name in ("scripts/assemble_surface_slices.py", "scripts/assets/test_assemble_surface_slices.py",
+                       "scripts/assets/prepare_lesson07_surface_repair.py", "scripts/assets/test_prepare_lesson07_surface_repair.py"):
               path = Path(name)
               if path.is_symlink() or not 0 < path.stat().st_size <= 256 * 1024:
                   raise ValueError("Surface-source adapter boundary differs")
@@ -200,8 +226,8 @@ jobs:
       - name: Install existing pinned image-test dependencies
         run: |
           python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 Pillow==12.3.0
-      - name: Run focused client and passive-observer CPU tests
-        run: python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.assets.test_assemble_surface_slices
+      - name: Run focused client, observer and surface-import CPU tests
+        run: python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.assets.test_assemble_surface_slices scripts.ue.test_apply_lesson07_surface_repair scripts.assets.test_prepare_lesson07_surface_repair
 
   connect:
     name: Verify one canonical L07 Editor connection
@@ -227,8 +253,9 @@ jobs:
       L07_READONLY_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-editor]') }}
       L07_VAULT_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-vault]') }}
       L07_MACRO_TRIAL: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-trial-macro]') }}
+      L07_SURFACE_IMPORT: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-import-surfaces]') }}
       L07_MACRO_APPLY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-apply-macro]') }}
-      L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') && !contains(github.event.head_commit.message, '[l07-inspect-vault]') }}
+      L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') && !contains(github.event.head_commit.message, '[l07-inspect-vault]') && !contains(github.event.head_commit.message, '[l07-import-surfaces]') }}
     steps:
       - name: Create isolated Git settings for code-only staging
         working-directory: ${{ github.workspace }}
@@ -249,7 +276,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Cannot preserve LF bytes.' }
 
       - name: Checkout reviewed source without LFS payloads or canonical edits
-        if: ${{ needs.await_ci.result != 'success' }}
+        if: ${{ needs.await_ci.result != 'success' && env.L07_SURFACE_IMPORT != 'true' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -258,8 +285,8 @@ jobs:
           lfs: false
           persist-credentials: false
 
-      - name: Checkout only startup source without LFS payloads
-        if: ${{ needs.await_ci.result == 'success' }}
+      - name: Checkout only startup or material-import source without LFS payloads
+        if: ${{ needs.await_ci.result == 'success' || env.L07_SURFACE_IMPORT == 'true' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -280,7 +307,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $l07PriorNoLazyFetch=$env:GIT_NO_LAZY_FETCH
           try {
-            if ('${{ needs.await_ci.result }}' -ceq 'success') {
+            if ('${{ needs.await_ci.result }}' -ceq 'success' -or $env:L07_SURFACE_IMPORT -ceq 'true') {
               # All pointer blobs are already local; do not fetch unrelated
               # large Git blobs merely to inspect their sizes in this scanner.
               $env:GIT_NO_LAZY_FETCH='1'
@@ -295,7 +322,8 @@ jobs:
             'scripts/ue/Read-YacsLesson07ObserverFailure.ps1',
             'scripts/ue/Test-YacsLesson07ObserverFailure.ps1',
             'scripts/ue/Read-YacsLesson07Viewport.ps1',
-            'scripts/ue/Test-YacsLesson07Viewport.ps1')) {
+            'scripts/ue/Test-YacsLesson07Viewport.ps1',
+            'scripts/ue/Stage-Lesson07SurfaceRepair.ps1')) {
             $tokens=$null; $errors=$null
             [Management.Automation.Language.Parser]::ParseFile(
               (Join-Path (Get-Location).Path $relative), [ref]$tokens, [ref]$errors) | Out-Null
@@ -307,7 +335,7 @@ jobs:
           & ./scripts/ue/Test-YacsLesson07Viewport.ps1
           $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
           if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Existing Python unavailable.' }
-          & $python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor
+          & $python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.ue.test_apply_lesson07_surface_repair
           if ($LASTEXITCODE -ne 0) { throw 'L07 discovery or passive-reader boundary tests failed.' }
 
       - name: Start a separate limited interactive task only if the host is idle
@@ -329,6 +357,7 @@ jobs:
           if ($env:L07_VIEWPORT_CAPTURE -ceq 'true') { $parameters['CaptureLesson07'] = $true }
           if ($env:L07_READONLY_INSPECTION -ceq 'true') { $parameters['InspectLesson07'] = $true }
           if ($env:L07_VAULT_INSPECTION -ceq 'true') { $parameters['InspectVault'] = $true }
+          if ($env:L07_SURFACE_IMPORT -ceq 'true') { $parameters['ImportSurfaces'] = $true }
           if ($env:L07_MACRO_TRIAL -ceq 'true') { $parameters['TrialMacro'] = $true }
           if ($env:L07_MACRO_APPLY -ceq 'true') { $parameters['ApplyReviewedMacro'] = $true }
           & ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 @parameters
@@ -532,6 +561,33 @@ jobs:
               throw 'Applied Macro JPEG changed during staging.'
             }
           }
+          if ($env:L07_SURFACE_IMPORT -ceq 'true') {
+            $surfaceRoot='D:\yacs\project\Saved\RuntimeProof\Lesson07SurfaceRepair-20261021\${{ github.run_id }}-${{ github.run_attempt }}'
+            Assert-PlainReportPath $surfaceRoot
+            # Retain partial receipts on failure as well; they do not establish success.
+            foreach ($name in @('live-import.json','surface-before.jpg','surface-after.jpg',
+                'surface-panorama.jpg','surface-puig-major.jpg','surface-scree.jpg')) {
+              $path=Join-Path $surfaceRoot $name
+              if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
+              Assert-PlainReportPath $path
+              $bytes=(Get-Item -LiteralPath $path).Length
+              $limit=if ($name.EndsWith('.json')) { 256KB } else { 32MB }
+              if ($bytes -le 0 -or $bytes -gt $limit) { throw 'Surface evidence outside size bound.' }
+              $hash=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash
+              $target=Join-Path $stage $name
+              [IO.File]::Copy($path,$target,$false)
+              if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -cne $hash) { throw 'Surface evidence copy changed.' }
+            }
+            $manifest=Join-Path $surfaceRoot 'package\surface-repair-package.json'
+            if (Test-Path -LiteralPath $manifest -PathType Leaf) {
+              Assert-PlainReportPath $manifest
+              if ((Get-Item -LiteralPath $manifest).Length -gt 64KB) { throw 'Surface package manifest too large.' }
+              $hash=(Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash
+              $target=Join-Path $stage 'surface-repair-package.json'
+              [IO.File]::Copy($manifest,$target,$false)
+              if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -cne $hash) { throw 'Surface manifest copy changed.' }
+            }
+          }
           $assembly = 'D:\yacs\work\lesson07-source-repair-20261021\${{ github.run_id }}-${{ github.run_attempt }}\assembly-receipt.json'
           if (Test-Path -LiteralPath $assembly -PathType Leaf) {
             Assert-PlainReportPath $assembly
@@ -563,5 +619,10 @@ jobs:
             ${{ steps.reports.outputs.directory }}/trial-macro-B-005.jpg
             ${{ steps.reports.outputs.directory }}/trial-macro-A-restored.jpg
             ${{ steps.reports.outputs.directory }}/apply-macro.jpg
+            ${{ steps.reports.outputs.directory }}/surface-before.jpg
+            ${{ steps.reports.outputs.directory }}/surface-after.jpg
+            ${{ steps.reports.outputs.directory }}/surface-panorama.jpg
+            ${{ steps.reports.outputs.directory }}/surface-puig-major.jpg
+            ${{ steps.reports.outputs.directory }}/surface-scree.jpg
           if-no-files-found: warn
           retention-days: 7

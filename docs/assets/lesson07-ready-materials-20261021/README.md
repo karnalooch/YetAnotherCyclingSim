@@ -6,7 +6,12 @@
 
 **Authority:** [current Lesson07 audit](../../tooling/sidefx/LESSON07_MATERIAL_SETUP.md).
 
-**State:** source selection complete; remote startup blocked by the existing disk reserve. No complete PBR package, new native import, purchase or whole-material acceptance.
+**State:** historical ready-made selection and first acquisition attempts. The
+[subsequent source repair](../lesson07-surface-repair-20261021/README.md) now has
+two complete CC0 PBR sets and a prepared candidate. Fab purchase, new native
+import and whole-material acceptance remain unverified. The later scoped
+startup passed CI and started a verified Editor/listener; its first authenticated
+discovery timed out before any native call. See the subsequent repair evidence.
 
 The owner requested ready-made licensed assets and complete materials, explicitly
 including **dark-grey limestone**. This extends source acquisition and appearance
@@ -110,8 +115,9 @@ badge alone is not sufficient acquisition evidence.
    use R=AO, G=Roughness, B=Height. A vendor ORM blue metallic channel cannot be
    substituted for height. Keep displacement disabled in the existing runtime
    until separately verified.
-4. Do not reapply the old global hue +25-degree grading to neutral-grey source
-   maps. Evaluate native albedo, roughness, physical repeat and projection in
+4. Keep neutral-grey source maps free of an unintended hue shift. The subsequent
+   bounded repair retains shared array grading for accepted layers and uses
+   achromatic Cliffs albedo. Evaluate native albedo, roughness, physical repeat and projection in
    the same lighting/camera before accepting a replacement. Keep the saved
    normal-flatten workaround until its separate sampler/derivative issue is
    resolved.

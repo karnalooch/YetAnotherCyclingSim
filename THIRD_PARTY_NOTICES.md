@@ -63,6 +63,18 @@ under CC0-1.0. Exact download URLs, hashes and metadata are retained in
 They are review samples, not accepted production limestone. No Poly Haven
 website example render or Fab source package is redistributed by this comparison.
 
+The subsequent Lesson07 surface repair acquired complete 2K Diffuse, DirectX
+Normal, Roughness, AO and Displacement sets for `dark_rock_02` by Amal Kumar,
+and `rock_boulder_dry` by Dimitrios Savva (photography) and Rico Cilliers
+(processing), under CC0-1.0. Source files remain outside Git. Exact official
+URLs, source dimensions, bit depths and SHA-256 hashes are retained in
+[`docs/assets/lesson07-surface-repair-20261021/provenance.json`](docs/assets/lesson07-surface-repair-20261021/provenance.json).
+The dark candidate's derived albedo removes chroma while preserving linear
+luminance; its normal and scalar maps come from the same source family.
+The provider does not authenticate either scan as limestone. Acquisition and
+offline preparation do not establish native import or visual acceptance; see
+the [repair evidence](docs/assets/lesson07-surface-repair-20261021/README.md).
+
 ## TINITALY 1.1 terrain data
 
 Dataset: TINITALY 1.1  

@@ -8,9 +8,11 @@ from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import hashlib
 import io
+import itertools
 import json
 import os
 from pathlib import Path
+import re
 import tempfile
 import threading
 import time
@@ -3425,6 +3427,174 @@ class FileTests(unittest.TestCase):
                 "UNEXPECTED_CLIENT_FAILURE",
             )
 
+
+
+class SurfaceImportTests(unittest.TestCase):
+    SUMMARY = {
+        "status": "SURFACE_REPAIR_SAVED_NATIVE_READBACK_PENDING_VISUAL", "saved": True,
+        "changed_slots": [0, 3], "classification_changed": False, "terrain_changed": False,
+        "normal_flatten_preserved": True, "failure_count": 0,
+    }
+
+    def fixture(self, *, deny_import=False, bad_schema=False):
+        def reply(request):
+            if request["method"] == "tools/list":
+                schema = {**INSTALLED_PYTHON_SCHEMA, "extra": True} if bad_schema else INSTALLED_PYTHON_SCHEMA
+                result = {"tools": [{"name": "execute_python", "inputSchema": schema},
+                                    {"name": "take_viewport_screenshot", "inputSchema": INSTALLED_CAPTURE_SCHEMA}]}
+            elif request["method"] == "tools/call":
+                importing = request["params"]["name"] == "execute_python"
+                denied = importing and deny_import
+                text = "Safety gate blocked this call - F49" if denied else (
+                    client.SURFACE_TAG + json.dumps(self.SUMMARY) if importing else "synthetic capture")
+                result = {"isError": denied, "content": [{"type": "text", "text": text}]}
+            else:
+                return default_reply(request)
+            return 200, {"Content-Type": "application/json"}, client.canonical(
+                {"jsonrpc": "2.0", "id": request["id"], "result": result})
+        return reply
+
+    @contextmanager
+    def admitted(self):
+        with (mock.patch.object(client, "verify_surface_source"),
+              mock.patch.object(client, "verify_trial_host_identity", side_effect=lambda i, d: {
+                  "verified_utc": datetime.now(timezone.utc).isoformat(), "pid": i["pid"]}),
+              mock.patch.object(client, "retain_surface_capture", side_effect=lambda token, row: {"index": row["index"]}),
+              mock.patch.object(client, "read_surface_receipt", return_value=self.SUMMARY)):
+            yield
+
+    def test_six_fixed_calls_use_one_import_same_before_after_and_review_views(self):
+        state = client.ObservationState()
+        with peer(self.fixture()) as (port, requests), self.admitted():
+            report = connection(port, state=state).probe(import_surfaces=True, surface_run_token="123-1")
+        calls = [r["body"]["params"] for r in requests if r["body"]["method"] == "tools/call"]
+        self.assertEqual(calls, client.surface_plan("123-1"))
+        self.assertEqual(calls[0], calls[2])
+        self.assertEqual([call["name"] for call in calls], [client.CAPTURE_TOOL, client.OBSERVER_TOOL] + [client.CAPTURE_TOOL] * 4)
+        self.assertEqual([(call["arguments"]["camera_location"], call["arguments"]["camera_rotation"], call["arguments"]["fov"])
+                          for call in calls[3:]], [
+            ([-810000, -900000, 724000], [-29.462259194079675, 48.01278750418334, 0], 75),
+            ([-278375, 199525, 180000], [-9.706195089959548, 45, 0], 50),
+            ([-250925, -184475, 33571], [-89.90162277905554, 90, 0], 50),
+        ])
+        self.assertEqual(set(calls[1]["arguments"]), {"file", "mode"})
+        self.assertNotIn("code", calls[1]["arguments"])
+        self.assertTrue(report["surface_verified"])
+        self.assertEqual(report["native_tool_calls"], 6)
+        self.assertEqual(len(report["surface_captures"]), 5)
+        self.assertEqual(len(report["surface_host_checks"]), 12)
+        self.assertFalse(report["visual_acceptance"])
+
+    def test_capture_camera_metadata_must_match_and_restore_every_fixed_view(self):
+        self.assertEqual([spec[0] for spec in client.surface_capture_specs().values()], [
+            "surface-before.jpg", "surface-after.jpg", "surface-panorama.jpg",
+            "surface-puig-major.jpg", "surface-scree.jpg"])
+        for index, (_, camera) in client.surface_capture_specs().items():
+            location = ",".join(f"{value:.1f}" for value in camera["camera_location"])
+            rotation = ",".join(f"{key}={value:.1f}" for key, value in zip(("P", "Y", "R"), camera["camera_rotation"]))
+            text = ("D:/yacs/project/Saved/LocoHelperAI/ViewportShots/Viewport_LevelEditor_20261021_022446.jpg "
+                    "viewport_type=LevelEditor | world_name=L_SaCalobra_Lesson07 | is_pie_running=0 | black_frame_detected=0 | "
+                    f"camera_override=1 | applied_location=({location}) | applied_rotation=({rotation}) | "
+                    f"applied_fov={camera['fov']:.1f} | camera_restored=1")
+            with self.subTest(index=index):
+                client.verify_trial_capture(text, expected=camera)
+                for invalid in (text.replace("camera_restored=1", "camera_restored=0"),
+                                text.replace("camera_override=1", "camera_override=0"),
+                                text.replace(f"applied_fov={camera['fov']:.1f}", "applied_fov=1.0"),
+                                text.replace(f"applied_location=({location})", "applied_location=(0.0,0.0,0.0)"),
+                                text.replace(f"applied_rotation=({rotation})", "applied_rotation=(P=0.0,Y=0.0,R=0.0)")):
+                    with self.assertRaisesRegex(client.ProbeError, "SURFACE_CAPTURE_CAMERA"):
+                        client.verify_trial_capture(invalid, expected=camera)
+                # Existing macro callers retain the original context-only default.
+                client.verify_trial_capture(text.split("camera_override", 1)[0])
+                with self.assertRaisesRegex(client.ProbeError, "SURFACE_CAPTURE_CAMERA"):
+                    client.retain_surface_capture("123-1", {
+                        "index": index, "arguments": {**camera, "fov": 1}, "result": {"text": text}})
+
+    def test_import_denial_stops_once_without_after_capture_or_observer(self):
+        state = client.ObservationState()
+        with peer(self.fixture(deny_import=True)) as (port, requests), self.admitted():
+            with self.assertRaisesRegex(client.ProbeError, "INSPECTION_TOOL_ERROR"):
+                connection(port, state=state).probe(import_surfaces=True, surface_run_token="123-1")
+        calls = [r["body"]["params"] for r in requests if r["body"]["method"] == "tools/call"]
+        self.assertEqual(len(calls), 2)
+        self.assertEqual([row["name"] for row in calls], [client.CAPTURE_TOOL, client.OBSERVER_TOOL])
+        self.assertFalse(state.surface_verified)
+        self.assertIsNone(state.completed)
+        self.assertIn("F49", state.tool_error["sanitized_text"])
+
+    def test_schema_drift_stops_before_any_native_call(self):
+        with peer(self.fixture(bad_schema=True)) as (port, requests), self.admitted():
+            with self.assertRaises(client.ProbeError):
+                connection(port).probe(import_surfaces=True, surface_run_token="123-1")
+        self.assertFalse(any(r["body"]["method"] == "tools/call" for r in requests))
+
+    def test_paths_and_unsigned_or_changed_importer_are_rejected(self):
+        for token in ("../123-1", "123-1/other", "123-0?", "0-1", "123-0", "1;python", None):
+            with self.subTest(token=token), self.assertRaises(client.ProbeError):
+                client.surface_plan(token)
+        with mock.patch.object(client, "read_bounded", return_value=b"changed importer"):
+            with self.assertRaisesRegex(client.ProbeError, "SURFACE_IMPORT_SOURCE_HASH"):
+                client.verify_surface_source("123-1")
+
+    def test_native_receipt_cannot_promote_failure_or_geometry_change(self):
+        self.assertEqual(client.verify_surface_summary(client.SURFACE_TAG + json.dumps(self.SUMMARY)), self.SUMMARY)
+        for update in ({"saved": 1}, {"terrain_changed": True}, {"failure_count": False},
+                       {"failure_count": 1}, {"changed_slots": [0, 1, 3]}, {"normal_flatten_preserved": False}):
+            with self.subTest(update=update), self.assertRaises(client.ProbeError):
+                client.verify_surface_summary(client.SURFACE_TAG + json.dumps({**self.SUMMARY, **update}))
+
+    def test_saved_receipt_must_be_fresh_and_stable(self):
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(client, "SURFACE_ROOT", Path(directory)):
+            stage = client.surface_stage("123-1")
+            stage.mkdir()
+            path = stage / "live-import.json"
+            path.write_bytes(client.canonical(self.SUMMARY))
+            row = {"started_utc": datetime.now(timezone.utc).isoformat()}
+            self.assertEqual(client.read_surface_receipt("123-1", row), self.SUMMARY)
+            os.utime(path, (1, 1))
+            with self.assertRaisesRegex(client.ProbeError, "SURFACE_RECEIPT_STALE"):
+                client.read_surface_receipt("123-1", row)
+            path.write_bytes(client.canonical(self.SUMMARY))
+            read = client.read_bounded
+
+            def change_after_read(receipt_path, limit):
+                raw = read(receipt_path, limit)
+                timestamp = path.stat().st_mtime + 1
+                os.utime(path, (timestamp, timestamp))
+                return raw
+
+            with mock.patch.object(client, "read_bounded", side_effect=change_after_read):
+                with self.assertRaisesRegex(client.ProbeError, "SURFACE_RECEIPT_CHANGED"):
+                    client.read_surface_receipt("123-1", row)
+
+    def test_workflow_all_512_intents_require_one_owner_operation(self):
+        workflow = Path(__file__).resolve().parents[2] / ".github/workflows/yacs-lesson07-remote-editor.yml"
+        source = workflow.read_text(encoding="utf-8")
+        markers = ("remote-editor", "observe-editor", "discover-editor", "capture-editor", "inspect-editor",
+                   "inspect-vault", "trial-macro", "apply-macro", "import-surfaces")
+        for bits in itertools.product((False, True), repeat=len(markers)):
+            selected = {name for name, bit in zip(markers, bits) if bit}
+            for job in ("await_ci", "observe_cpu"):
+                section = source.split("  " + job + ":", 1)[1]
+                expression = section.split("    if: >-", 1)[1].split("    runs-on:", 1)[0]
+                for owner in (True, False):
+                    expr = expression.replace("github.actor == github.repository_owner", str(owner))
+                    expr = re.sub(r"github\.(?:event_name|repository|ref) == '[^']*'", "True", expr)
+                    expr = re.sub(r"contains\(github.event.head_commit.message, '\[l07-([^']+)\]'\)",
+                                  lambda match: str(match.group(1) in selected), expr)
+                    expr = expr.replace("&&", " and ").replace("||", " or ").replace("!", " not ")
+                    actual = eval(" ".join(expr.split()), {"__builtins__": {}}, {})
+                    expected = owner and len(selected) == 1 and (
+                        ("remote-editor" in selected) if job == "await_ci" else ("remote-editor" not in selected))
+                    self.assertEqual(actual, expected, (job, selected, owner))
+
+    def test_import_is_mutually_exclusive_with_every_existing_native_mode(self):
+        for mode in ("observe_lesson07", "capture_lesson07", "inspect_lesson07", "inspect_vault", "trial_macro", "apply_reviewed_macro"):
+            with self.subTest(mode=mode), peer() as (port, requests):
+                with self.assertRaisesRegex(client.ProbeError, "NATIVE_MODES_MUTUALLY_EXCLUSIVE"):
+                    connection(port).probe(import_surfaces=True, surface_run_token="123-1", **{mode: True})
+                self.assertEqual(requests, [])
 
 if __name__ == "__main__":
     unittest.main()
