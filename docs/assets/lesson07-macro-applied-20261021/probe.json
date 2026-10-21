@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "source_commit": "da91a9c66c6d5a6ee30aa6151e6024861291b4d1",
+  "status": "LESSON07_REVIEWED_MACRO_APPLIED_IMAGE_PENDING",
+  "observed_utc": "2026-10-21T02:35:58.1501102Z",
+  "error_type": null,
+  "identity_stable_across_probe": true,
+  "client_exit_code": 0,
+  "observation_requested": false,
+  "owner_before": {
+    "status": "ATTACH_EXISTING",
+    "owner_sid_matches": true,
+    "editor": {
+      "editor_pid": 17896,
+      "editor_start_filetime_utc": "134370120000674689",
+      "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+      "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+      "interactive_session_id": 1,
+      "canonical_project_matches": true
+    }
+  },
+  "owner_after": {
+    "status": "ATTACH_EXISTING",
+    "owner_sid_matches": true,
+    "editor": {
+      "editor_pid": 17896,
+      "editor_start_filetime_utc": "134370120000674689",
+      "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+      "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+      "interactive_session_id": 1,
+      "canonical_project_matches": true
+    }
+  },
+  "capture_requested": false,
+  "inspection_requested": false,
+  "trial_macro_requested": false,
+  "trial_status": null,
+  "trial_captures_received": 0,
+  "trial_mutation_attempted": false,
+  "trial_restore_verified": false,
+  "trial_backup_verified": false,
+  "trial_registry_verified": false,
+  "apply_macro_requested": true,
+  "apply_status": "APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING",
+  "apply_captures_received": 1,
+  "apply_verified": true,
+  "apply_candidate_verified": true,
+  "apply_mutation_attempted": true,
+  "apply_restore_attempted": false,
+  "apply_restore_verified": false,
+  "apply_backup_verified": true,
+  "apply_registry_verified": true,
+  "apply_reviewed_trial_verified": true,
+  "existing_editor_only_requested": false,
+  "existing_owner_required": true,
+  "identity_before": {
+    "schema_version": 1,
+    "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+    "observed_utc": "2026-10-21T02:35:52.1870542Z",
+    "source_commit": "da91a9c66c6d5a6ee30aa6151e6024861291b4d1",
+    "pid": 17896,
+    "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+    "process_start_filetime_utc": "134370120000674689",
+    "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+    "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+    "canonical_project_argument_matches": true,
+    "listener": {
+      "address": "127.0.0.1",
+      "port": 19315,
+      "pid": 17896
+    }
+  },
+  "identity_after": {
+    "schema_version": 1,
+    "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+    "observed_utc": "2026-10-21T02:35:58.1388335Z",
+    "source_commit": "da91a9c66c6d5a6ee30aa6151e6024861291b4d1",
+    "pid": 17896,
+    "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+    "process_start_filetime_utc": "134370120000674689",
+    "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+    "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+    "canonical_project_argument_matches": true,
+    "listener": {
+      "address": "127.0.0.1",
+      "port": 19315,
+      "pid": 17896
+    }
+  },
+  "native_tool_called": true,
+  "editor_started_or_stopped": false,
+  "native_tool_attempted": true,
+  "native_tool_completed": true,
+  "native_tool_call_attempts": 7,
+  "native_material_readback": "REVIEWED_MACRO_APPLIED_CAPTURE_REVIEW_PENDING",
+  "channel_comparison_performed": false,
+  "performance_pass": false
+}

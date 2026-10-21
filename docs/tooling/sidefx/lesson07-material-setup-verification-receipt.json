@@ -1653,7 +1653,7 @@
     "performance_pass": false
   },
   "remote_connection_continuation_20261021": {
-    "status": "EDITOR_RETAINED_MACRO_REPEAT_CONFIRMED_REVIEWED_APPLICATION_PREPARATION",
+    "status": "EDITOR_RETAINED_MACRO_PARTIAL_FIX_SAVED_SOURCE_IMPORT_PENDING",
     "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
     "owner_authorized_missing_connection_infrastructure": true,
     "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
@@ -3401,14 +3401,14 @@
       }
     },
     "reviewed_macro_application_preparation": {
-      "status": "PREPARED_NOT_RUN",
+      "status": "REMOTE_APPLIED_SAVED_PARTIAL_IMPROVEMENT_REVIEWED",
       "scope": "Retain only visually reviewed Macro Tiling .05; all other current MI parameters and source assets unchanged",
       "reviewed_trial_run": 39532652532,
       "reviewed_trial_bridge_sha256": "e901c56e83821e771816be8f4dff49cfdad21c015f0b516cd06368cce9d072f4",
       "intent": "[l07-apply-macro]",
       "expected_candidate_snapshot_sha256": "99c384e9701889aa2cae667b69e1faff32835e2b4440a9953e6f5884439b75ee",
       "existing_backup_must_match_baseline": true,
-      "native_application_performed": false,
+      "native_application_performed": true,
       "source_import_performed": false,
       "whole_material_visual_accepted": false,
       "performance_pass": false,
@@ -3434,6 +3434,137 @@
           "scripts/ue/Read-YacsLesson07Viewport.ps1": "5aa40bea5adbe8702aafc60834817419e331dedd7d2aff5a45ece39cf9b15b1b",
           "scripts/ue/Test-YacsLesson07Viewport.ps1": "a564498d7c47891f0d4424b15af10388823d3f4f6f6f3f2c7964cf1b74ade563",
           ".github/workflows/yacs-lesson07-remote-editor.yml": "6555bcf9f820388450d77f915c2986bd06dfd3045bfc920725763741e2db170a"
+        },
+        "windows_process_and_listener_checks_native": "PASS; seven fresh OS owner/listener checks plus final host identity in run39533695950"
+      },
+      "native_execution": {
+        "source_commit": "da91a9c66c6d5a6ee30aa6151e6024861291b4d1",
+        "run_id": 39533695950,
+        "cpu_job_id": 119005279900,
+        "cpu_conclusion": "success",
+        "cpu_tests_passed": 108,
+        "windows_job_id": 119005369317,
+        "windows_conclusion": "success",
+        "client_status": "APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING",
+        "probe_status": "LESSON07_REVIEWED_MACRO_APPLIED_IMAGE_PENDING",
+        "capture_status": "APPLY_MACRO_VIEWPORT_RETAINED_REVIEW_PENDING",
+        "native_calls": 7,
+        "all_native_results_validated": true,
+        "fresh_host_identity_checks": 7,
+        "positive_native_save_response": "saved=true; failures=0",
+        "saved_response_received_utc": "2026-10-21T02:35:55.632118+00:00",
+        "apply_verified": true,
+        "apply_candidate_verified": true,
+        "apply_restore_attempted": false,
+        "apply_restore_verified": false,
+        "current_macro_tiling": 0.05000000074505806,
+        "current_detail_tiling": 0.25,
+        "baseline_and_backup_snapshot_sha256": "0b082e2e99bd7d12c307309a34704c4290eda073c6c895b8cdb3e91d4ded3bdd",
+        "applied_candidate_snapshot_sha256": "99c384e9701889aa2cae667b69e1faff32835e2b4440a9953e6f5884439b75ee",
+        "applied_candidate_equals_reviewed_trial_b": true,
+        "only_changed_row": {
+          "kind": "scalars",
+          "index": 46,
+          "name": "Macro Tiling",
+          "from": 0.25,
+          "to": 0.05000000074505806,
+          "overridden": true
+        },
+        "parameter_counts": {
+          "scalars": 61,
+          "vectors": 1,
+          "textures": 5,
+          "static_switches": 3
+        },
+        "backup_path": "/Game/Generated/YACS/Lesson07_Unified/RepairBackups/MI_PreMacroTrial_20261021",
+        "existing_backup_verified": true,
+        "backup_overwritten": false,
+        "same_editor_pid": 17896,
+        "same_editor_start_filetime_utc": "134370120000674689",
+        "interactive_session_id": 1,
+        "final_identity_observed_utc": "2026-10-21T02:35:58.1388335Z",
+        "same_camera_arguments_as_trial": true,
+        "editor_started_or_stopped": false,
+        "source_import_performed": false,
+        "texture_array_rebuild_performed": false,
+        "level_saved": false,
+        "terrain_or_classification_changed": false,
+        "artifact": {
+          "id": 12316287387,
+          "name": "lesson07-remote-connection-39533695950-1",
+          "bytes": 95077,
+          "sha256": "2ca3d2ea2ab199674239fe3301c78bb15ca3e3906efb5f9844660e12ae1d1d4c"
+        },
+        "retained_evidence_directory": "docs/assets/lesson07-macro-applied-20261021",
+        "files": {
+          "apply-macro.jpg": {
+            "bytes": 62529,
+            "sha256": "74ac4f51ad9d49e91241b137eac442a1b50063eb74cbb43979ffa38e87d88e31"
+          },
+          "apply-macro.json": {
+            "bytes": 1992,
+            "sha256": "856f63ae466b82233b6191dfb29ab99e0950a097eea689f0f4c216d78873e49e"
+          },
+          "identity.json": {
+            "bytes": 616,
+            "sha256": "09f9e8f663d151050f0ac7a66c2ce681043b6473ff3dfee526d613441e314961"
+          },
+          "bridge.json": {
+            "bytes": 137609,
+            "sha256": "81b3d9da3f87a825fa0c15628f9c461d443d8cc73a88b2df031f7486af2b6ece"
+          },
+          "probe.json": {
+            "bytes": 3688,
+            "sha256": "7f288afcddbca4c134f0d9d44e01aab9c89f1d966c058f436bf82909cbb26342"
+          }
+        },
+        "capture": {
+          "stage": "B_applied_macro_005",
+          "native_tool_started_utc": "2026-10-21T02:35:55.7329890+00:00",
+          "width": 956,
+          "height": 431,
+          "unchanged_native_jpeg": true,
+          "sha256": "74ac4f51ad9d49e91241b137eac442a1b50063eb74cbb43979ffa38e87d88e31"
+        },
+        "visual_review": {
+          "status": "PARTIAL_IMPROVEMENT_CONFIRMED_WHOLE_MATERIAL_NOT_ACCEPTED",
+          "root_and_independent_reviewer_agree": true,
+          "finding": "Applied view reproduces trial B reduction of the dense diamond pattern across the left valley floor and central foreground; it has not reverted to restored A repetition",
+          "decision": "Retain saved Macro .05 as partial improvement",
+          "remaining_defects": [
+            "Broad mottling, repetition and green smearing",
+            "Vertically stretched and streaked pale cliff surfaces",
+            "Crude grass-to-rock transitions"
+          ],
+          "limits": [
+            "No BaseColor-only causal isolation",
+            "No verified physical metres per repeat",
+            "No native source PNG import or source-array reconstruction",
+            "One retained camera does not establish whole-area acceptance"
+          ],
+          "raw_manifest_review_pending_preserved": true,
+          "subsequent_review_recorded_separately": true
+        },
+        "whole_material_visual_accepted": false,
+        "performance_pass": false,
+        "remaining_application_blocker": {
+          "corrected_grass_and_cliffs_sources": "PREPARED_OFFLINE_NOT_IMPORTED",
+          "verified_dedicated_import_and_texture2darray_rebuild_capability": false,
+          "edit_texture_contract": "does NOT import",
+          "python_observer": "F49_DENIED_FROZEN_NO_RETRY",
+          "source_import_attempted": false,
+          "source_import_denied": false
+        },
+        "protected_ci": {
+          "run_id": 39533702186,
+          "conclusion": "failure",
+          "native_job_id": 119006513287,
+          "native_status": "LOCAL_BUSY",
+          "owner_editor_and_logs_preserved": true,
+          "native_build_and_automation_performed": false,
+          "secondary_error": "post-failure log staging could not enter missing _unreal-ci-warm directory",
+          "focused_application_does_not_replace_protected_ci": true,
+          "performance_pass": false
         }
       }
     }

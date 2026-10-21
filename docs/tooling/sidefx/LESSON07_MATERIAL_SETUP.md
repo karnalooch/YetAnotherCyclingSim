@@ -5,7 +5,7 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (rollback reopened and running checkpoint accepted; saved normal-flatten workaround; physical texel scale, detailed-normal correctness, symbolized crash cause, whole-area proof and protected CI remain unverified)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (reviewed Macro 0.05 partial improvement saved remotely; source texture import pending; saved normal-flatten workaround; physical texel scale, detailed-normal correctness, symbolized crash cause, whole-area proof and protected CI remain unverified)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
@@ -65,8 +65,9 @@ retained in [the evidence directory](../../assets/lesson07-remote-20261021).
 
 This source repair is necessary but does not establish the whole visual fix.
 The current saved array has YACS grading (hue +25°, saturation 0.7, brightness
-1.1) applied to all five colour slices. Detail and Macro tiling are both 0.25,
-but their full mappings and physical periods remain unread. The Grass source
+1.1) applied to all five colour slices. Detail tiling remains 0.25; the reviewed
+Macro 0.05 partial improvement was saved at 02:35:55 UTC, as recorded below.
+Their full mappings and physical periods remain unread. The Grass source
 is a [15 m scan](https://polyhaven.com/a/aerial_grass_rock); the Cliffs source is
 a retained 2 m loose-limestone-fragments recipe. Neither source suitability nor
 live texel scale is established by its filename. The normal-flatten workaround
@@ -205,13 +206,14 @@ same PID 17896/start FILETIME was retained. Both scalar mutations reported
 `saved=true; failures=0`. Baseline, saved backup and restored readback match
 exactly across 61 scalars, one vector, five textures and three switches.
 The candidate differs only in Macro Tiling, represented as float32
-`0.05000000074505806`. The trial therefore left the current instance at **0.25**.
+`0.05000000074505806`. That trial restored the instance to **0.25** before the
+separate retained application below.
 
 Root and independent review of all three native JPEGs agree: the dense diamond
 repeat on the left valley floor and central foreground becomes substantially
 less conspicuous at **0.05**, then returns at restored **0.25**. This supports
-retaining that scalar as a **partial improvement**, subject to separate applied
-readback. Broad mottling/undulations, pale vertically stretched cliffs and
+retaining that scalar as a **partial improvement**; the separate applied
+readback is now complete below. Broad mottling/undulations, pale vertically stretched cliffs and
 crude grass-to-rock transitions remain. The transient upper-left shadow in the
 first A frame is excluded from the improvement claim; B versus restored A
 supports the same material finding.
@@ -223,16 +225,58 @@ supports the same material finding.
 The [unchanged native images and receipts](../../assets/lesson07-macro-trial-20261021)
 retain the first baseline as well. Artifact 12316570731 has ZIP SHA256
 `9d65747a33f01b24ac281d0f7b7d2515ef2da16c6f526faea104541c88983a4c`.
-The separate explicit `[l07-apply-macro]` operation is being prepared to retain
-only the reviewed scalar. It must verify this exact prior trial, the current
-clean baseline and the existing backup, then read the complete candidate and
-capture the result. Both the application and any recovery must report
-`saved=true; failures=0`; in-memory readback alone does not prove persistence.
+
+### Reviewed Macro improvement applied and saved remotely
+
+The separate [application run 39533695950](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39533695950)
+at source `da91a9c66c6d5a6ee30aa6151e6024861291b4d1` **passed** its
+108-test CPU job and Windows execution. All seven native calls and seven fresh
+host checks completed. The operation verified the exact prior trial receipt,
+the current clean baseline and the existing backup before changing the scalar.
+The native mutation returned **`saved=true; failures=0`** at 02:35:55 UTC;
+complete readback then matched the reviewed candidate. The only changed row
+is scalar 46, **Macro Tiling 0.25 → 0.05000000074505806**. All other rows in
+the 61-scalar, one-vector, five-texture and three-switch snapshot are unchanged.
+The complete candidate SHA256 is
+`99c384e9701889aa2cae667b69e1faff32835e2b4440a9953e6f5884439b75ee`.
+
+**The current saved instance retains Macro 0.05.** No recovery or restoration
+was attempted; the pre-trial backup remains intact. The final owner check at
+02:35:58 UTC still identifies PID 17896 and start FILETIME
+`134370120000674689`, session 1. The operation did not restart or stop the
+Editor, save the map, change any source texture, rebuild an array or alter
+terrain/classification. Global Normal Flatten remains 1.
+
+![Applied and saved Macro 0.05: actual remote viewport, 02:35:55 UTC](../../assets/lesson07-macro-applied-20261021/apply-macro.jpg)
+
+Root and independent visual review confirm that this final native capture
+reproduces trial B's reduction of the dense diamond pattern. **This is a
+partial material improvement, not whole-material acceptance.** Broad
+mottling/repetition, vertical cliff streaking and crude grass-to-rock
+transitions remain. The raw producer receipts retain their original
+`REVIEW_PENDING` status; this subsequent review is recorded separately in
+the verification receipt. The image is the unchanged 956×431 JPEG returned
+by the native capture tool, not a reconstructed or edited preview.
+
+The [five exact native evidence files](../../assets/lesson07-macro-applied-20261021)
+come from artifact 12316287387; ZIP SHA256
+`2ca3d2ea2ab199674239fe3301c78bb15ca3e3906efb5f9844660e12ae1d1d4c`.
 Preparation passed 82 focused client tests, 152 PowerShell cases, 128 workflow
 marker combinations and 64 Probe/four Reader switch combinations, plus
-independent review and a client-to-reader receipt check. **It has not run yet.**
-No source import, array rebuild, normal-unflattening or whole-material
-acceptance follows from the scalar trial.
+independent review and a client-to-reader receipt check.
+
+Corrected Grass/Cliffs normal and mask PNGs remain prepared **offline only**.
+The installed dedicated tools have no verified local-image import and
+Texture2DArray source-rebuild operation; `edit_texture` explicitly does not
+import. The F49-denied Python observer remains frozen. Source import itself
+has not been attempted or denied. Whole-material and performance acceptance
+remain false.
+
+Protected [CyclingSim CI 39533702186](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39533702186)
+failed at its native ownership guard with **`LOCAL_BUSY`**, preserving the
+running Editor and its logs. Native build/Automation did not run. A secondary
+log-staging step could not enter the missing `_unreal-ci-warm` directory.
+The successful focused application does not replace the protected CI gate.
 
 The first dedicated inspection [run 39528106136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39528106136)
 at `72919f499181a919b1708df7480be8bf99e4bf01` passed its 82-test focused CPU
