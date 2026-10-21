@@ -140,6 +140,10 @@ TRIAL_SECONDS = 300
 # three-call recovery allowance, capture spacing and local checks reserved.
 TRIAL_MUTATION_RESERVE_SECONDS = 9 * TIMEOUT_SECONDS + 3 + 10
 TRIAL_CAPTURE_STAGES = ("A_baseline", "B_macro_005", "A_restored")
+APPLY_CAPTURE_STAGE = "B_applied_macro_005"
+APPLY_REVIEWED_TRIAL_PATH = Path(r"D:\yacs\lesson07-remote\reports\39532652532-1\bridge.json")
+APPLY_REVIEWED_TRIAL_SHA256 = "e901c56e83821e771816be8f4dff49cfdad21c015f0b516cd06368cce9d072f4"
+APPLY_REVIEWED_TRIAL_SOURCE = "71914188cbdaeac200074b8a070e2f44ed50e501"
 
 
 def trial_capture_arguments():
@@ -176,6 +180,31 @@ def trial_plan():
         "recovery_restore": restore,
         "recovery_verify": read,
     }
+
+
+def apply_reviewed_macro_plan():
+    """Only the reviewed scalar delta, using the already verified backup."""
+    trial = trial_plan()
+    return {
+        **{stage: trial[stage] for stage in (
+            "registry", "baseline_mi", "baseline_clean", "backup_mi",
+            "apply_macro", "candidate_mi",
+        )},
+        APPLY_CAPTURE_STAGE: trial["B_macro_005"],
+        **{stage: trial[stage] for stage in (
+            "recovery_read", "recovery_restore", "recovery_verify",
+        )},
+    }
+
+
+def verify_reviewed_macro_receipt():
+    """Admit this exact reviewed remote A/B/A receipt, never a substitute."""
+    try:
+        raw = read_bounded(APPLY_REVIEWED_TRIAL_PATH, RESPONSE_LIMIT)
+    except ProbeError:
+        raise ProbeError("APPLY_REVIEWED_TRIAL_UNAVAILABLE") from None
+    require(hashlib.sha256(raw).hexdigest() == APPLY_REVIEWED_TRIAL_SHA256,
+            "APPLY_REVIEWED_TRIAL_HASH")
 
 
 def inspection_plan():
@@ -571,13 +600,20 @@ class ObservationState:
     trial_denied_tools: list = field(default_factory=list)
     trial_recovery_error: str | None = None
     trial_external_host_identity: dict | None = None
+    apply_requested: bool = False
+    apply_reviewed_trial_verified: bool = False
+    apply_candidate_verified: bool = False
+    apply_verified: bool = False
 
     def report_fields(self):
+        macro_mode = self.trial_requested or self.apply_requested
+        normal_count = 7 if self.apply_requested else 12
+        fixed_plan = apply_reviewed_macro_plan() if self.apply_requested else trial_plan()
         report = {
             # This is a wire-attempt count, not a count of completed evaluations.
             "native_tool_calls": (
                 sum(row["attempted"] for row in self.trial_results)
-                if self.trial_requested
+                if macro_mode
                 else
                 sum(row["attempted"] for row in self.inspection_results)
                 if self.inspection_requested
@@ -586,10 +622,10 @@ class ObservationState:
             "native_tool_attempted": self.attempted,
             "native_tool_completed": self.completed,
             "native_tool_response_received": (
-                len(self.trial_results) >= 12
-                and all(row["response_received"] for row in self.trial_results[:12])
-                and [row["stage"] for row in self.trial_results[:12]] == list(trial_plan())[:12]
-                if self.trial_requested
+                len(self.trial_results) >= normal_count
+                and all(row["response_received"] for row in self.trial_results[:normal_count])
+                and [row["stage"] for row in self.trial_results[:normal_count]] == list(fixed_plan)[:normal_count]
+                if macro_mode
                 else
                 len(self.inspection_results) == 6
                 and all(row["response_received"] for row in self.inspection_results)
@@ -611,8 +647,8 @@ class ObservationState:
         if self.installed_tool_contracts is not None:
             report["installed_tool_contracts"] = self.installed_tool_contracts
             report["tool_list_complete"] = self.tool_list_complete
-        if self.trial_requested:
-            report.update({
+        if macro_mode:
+            macro_fields = {
                 "trial_results": self.trial_results,
                 "trial_schema_sha256": self.trial_schema_sha256,
                 "trial_captures": self.trial_captures,
@@ -632,9 +668,24 @@ class ObservationState:
                     {"tool": "edit_material_instance", **trial_plan()["restore_macro"]["arguments"],
                      "reason": "Current state must be reviewed before manual restoration; no automatic retry is authorized."}
                     if self.trial_mutation_attempted and not self.trial_restore_verified
+                    and not (self.apply_requested and self.apply_verified)
                     else None
                 ),
-            })
+            }
+            if self.apply_requested:
+                macro_fields = {
+                    ("apply_" + key[6:] if key.startswith("trial_") else key): value
+                    for key, value in macro_fields.items()
+                }
+                macro_fields.update({
+                    "apply_verified": self.apply_verified,
+                    "apply_candidate_verified": self.apply_candidate_verified,
+                    "apply_reviewed_trial_verified": self.apply_reviewed_trial_verified,
+                    "apply_reviewed_trial_path": str(APPLY_REVIEWED_TRIAL_PATH),
+                    "apply_reviewed_trial_sha256": APPLY_REVIEWED_TRIAL_SHA256,
+                    "apply_reviewed_trial_source_commit": APPLY_REVIEWED_TRIAL_SOURCE,
+                })
+            report.update(macro_fields)
         elif self.inspection_requested:
             report.update(
                 {
@@ -1328,6 +1379,10 @@ class DiscoveryClient:
             # SSE comments, id/retry/event fields are ignored; never reconnect.
 
     def _post(self, method, params=None, notification=False):
+        if self.observation_state.apply_requested:
+            self.observation_state.apply_reviewed_trial_verified = False
+            verify_reviewed_macro_receipt()
+            self.observation_state.apply_reviewed_trial_verified = True
         observing = (
             method == "tools/call"
             and self._observer_params is not None
@@ -1379,15 +1434,17 @@ class DiscoveryClient:
         if trialing:
             state = self.observation_state
             rows, stage = state.trial_results, self._trial_row["stage"]
-            plan = trial_plan()
-            require(state.trial_requested and 0 < len(rows) <= 15
+            plan = apply_reviewed_macro_plan() if state.apply_requested else trial_plan()
+            normal_count = 7 if state.apply_requested else 12
+            require(state.trial_requested != state.apply_requested
+                    and 0 < len(rows) <= normal_count + 3
                     and rows[-1] is self._trial_row
                     and stage in plan and canonical(params) == canonical(plan[stage])
                     and state.trial_schema_sha256 == TRIAL_SCHEMA_SHA256
                     and stage not in [row["stage"] for row in rows[:-1]], "TRIAL_ARGUMENTS")
             if self._trial_recovering:
                 recovery = [row["stage"] for row in rows if row["stage"].startswith("recovery_")]
-                require(recovery == list(plan)[12:12 + len(recovery)]
+                require(recovery == list(plan)[normal_count:normal_count + len(recovery)]
                         and state.trial_mutation_attempted and not state.trial_restore_verified
                         and "edit_material_instance" not in state.trial_denied_tools,
                         "TRIAL_RECOVERY_DENIED")
@@ -1395,7 +1452,7 @@ class DiscoveryClient:
                     require(self._trial_recovery_candidate and not state.trial_restore_attempted,
                             "TRIAL_RECOVERY_DENIED")
             else:
-                require(len(rows) <= 12 and stage == list(plan)[len(rows) - 1]
+                require(len(rows) <= normal_count and stage == list(plan)[len(rows) - 1]
                         and all(row["validated"] for row in rows[:-1]), "TRIAL_SEQUENCE")
                 if stage == "apply_macro":
                     require(state.trial_backup_verified and state.trial_registry_verified,
@@ -1495,6 +1552,7 @@ class DiscoveryClient:
                         self.observation_state.trial_mutation_attempted = True
                     if stage in ("restore_macro", "recovery_restore"):
                         self.observation_state.trial_restore_attempted = True
+                        self.observation_state.apply_candidate_verified = False
             connection.request("POST", ENDPOINT, body=raw, headers=headers)
             response = connection.getresponse()
             require(not 300 <= response.status < 400, "HTTP_REDIRECT_DENIED")
@@ -1582,8 +1640,10 @@ class DiscoveryClient:
 
     def _trial_call(self, stage):
         state = self.observation_state
-        params = trial_plan()[stage]
-        if stage in TRIAL_CAPTURE_STAGES and self._trial_last_capture is not None:
+        plan = apply_reviewed_macro_plan() if state.apply_requested else trial_plan()
+        params = plan[stage]
+        capture = stage in TRIAL_CAPTURE_STAGES or stage == APPLY_CAPTURE_STAGE
+        if capture and self._trial_last_capture is not None:
             remaining = 1.1 - (time.monotonic() - self._trial_last_capture)
             if remaining > 0:
                 time.sleep(remaining)
@@ -1603,7 +1663,7 @@ class DiscoveryClient:
                 state.trial_denied_tools.append(params["name"])
             retain_inspection_result(result, row, (self.discovery.token, self.session_id))
             row["completed"] = True
-            if stage in TRIAL_CAPTURE_STAGES:
+            if capture:
                 temporary = ObservationState()
                 retain_capture_result(result, temporary, (self.discovery.token, self.session_id))
                 row["result"] = temporary.capture_result
@@ -1623,8 +1683,13 @@ class DiscoveryClient:
         if stage == "registry":
             verify_inspection_registry(text)
             registry = parse_json(re.findall(r"(?m)^#json-explore:(.*)$", text)[0].encode())
-            require(all(asset["path"] + "/" + asset["name"] != TRIAL_BACKUP
-                        for asset in registry["rows"]), "TRIAL_BACKUP_EXISTS")
+            backups = [asset for asset in registry["rows"]
+                       if asset["path"] + "/" + asset["name"] == TRIAL_BACKUP]
+            if state.apply_requested:
+                require(len(backups) == 1 and backups[0]["class"] == "MaterialInstanceConstant",
+                        "APPLY_EXISTING_BACKUP_REQUIRED")
+            else:
+                require(not backups, "TRIAL_BACKUP_EXISTS")
             state.trial_registry_verified = True
         elif stage in ("baseline_mi", "backup_mi", "restored_mi", "recovery_verify"):
             verify_trial_mi(text, TRIAL_BACKUP if stage == "backup_mi" else TRIAL_MI, 0.25)
@@ -1632,14 +1697,22 @@ class DiscoveryClient:
                 state.trial_backup_verified = True
             if stage in ("restored_mi", "recovery_verify"):
                 state.trial_restore_verified = True
+                state.apply_candidate_verified = False
         elif stage == "candidate_mi":
             verify_trial_mi(text, TRIAL_MI, TRIAL_VALUE_F32)
+            if state.apply_requested:
+                state.apply_candidate_verified = True
+        elif state.apply_requested and stage in ("apply_macro", "recovery_restore"):
+            value = "0.05" if stage == "apply_macro" else "0.25"
+            require(re.fullmatch(r"~ scalar Macro Tiling = " + re.escape(value)
+                    + r"\s+= parent=M_Landscape_YACS; saved=true; failures=0\s*", text)
+                    is not None, "APPLY_SAVE_UNCONFIRMED")
         elif stage == "baseline_clean":
             verify_trial_clean(text)
         elif stage == "backup_create":
             require(re.findall(r"(?m)^= failures=([0-9]+)\s*$", text) == ["0"]
                     and TRIAL_BACKUP in text, "TRIAL_BACKUP_UNCONFIRMED")
-        elif stage in TRIAL_CAPTURE_STAGES:
+        elif stage in TRIAL_CAPTURE_STAGES or stage == APPLY_CAPTURE_STAGE:
             path = verify_trial_capture(text)
             previous = [verify_trial_capture(item["capture_result"]["text"])
                         for item in state.trial_captures.values()]
@@ -1671,6 +1744,7 @@ class DiscoveryClient:
         else:
             row["validated"] = True
             state.trial_restore_verified = True
+            state.apply_candidate_verified = False
 
     def _run_trial(self, schemas):
         state = self.observation_state
@@ -1679,15 +1753,17 @@ class DiscoveryClient:
             require(type(schema) is dict and hashlib.sha256(canonical(schema)).hexdigest() == expected,
                     "TRIAL_TOOL_SCHEMA_UNSUPPORTED")
         state.trial_schema_sha256 = dict(TRIAL_SCHEMA_SHA256)
+        plan = apply_reviewed_macro_plan() if state.apply_requested else trial_plan()
+        normal_count = 7 if state.apply_requested else 12
         try:
-            for stage in list(trial_plan())[:12]:
+            for stage in list(plan)[:normal_count]:
                 self._trial_validate(self._trial_call(stage))
         except Exception as failure:
             error = failure if isinstance(failure, ProbeError) else ProbeError("UNEXPECTED_TRIAL_FAILURE")
             if state.trial_results:
                 state.trial_results[-1]["error_code"] = error.code
             try:
-                if error.code.startswith("TRIAL_IDENTITY") or error.code in ("INPUT_CHANGED", "TRIAL_INTERVAL"):
+                if error.code.startswith(("TRIAL_IDENTITY", "APPLY_REVIEWED_TRIAL")) or error.code in ("INPUT_CHANGED", "TRIAL_INTERVAL"):
                     raise ProbeError("TRIAL_RECOVERY_IDENTITY_UNSAFE")
                 self._trial_recover()
             except Exception as recovery_error:
@@ -1695,21 +1771,25 @@ class DiscoveryClient:
                 if state.trial_results and state.trial_results[-1]["stage"].startswith("recovery_"):
                     state.trial_results[-1]["error_code"] = state.trial_recovery_error
             state.completed = None
+            state.apply_verified = False
             raise error
         state.completed = True
+        if state.apply_requested:
+            state.apply_verified = True
 
     def probe(
         self, observe_lesson07=False, capture_lesson07=False, inspect_lesson07=False,
-        trial_macro=False,
+        trial_macro=False, apply_reviewed_macro=False,
     ):
         require(
-            sum((observe_lesson07, capture_lesson07, inspect_lesson07, trial_macro)) <= 1,
+            sum((observe_lesson07, capture_lesson07, inspect_lesson07, trial_macro, apply_reviewed_macro)) <= 1,
             "NATIVE_MODES_MUTUALLY_EXCLUSIVE",
         )
         self.observation_state.capture_requested = capture_lesson07
         self.observation_state.inspection_requested = inspect_lesson07
         self.observation_state.trial_requested = trial_macro
-        if trial_macro:
+        self.observation_state.apply_requested = apply_reviewed_macro
+        if trial_macro or apply_reviewed_macro:
             self._trial_started = time.monotonic()
         if capture_lesson07 or observe_lesson07:
             self.observation_state.tool_name = (
@@ -1947,15 +2027,17 @@ class DiscoveryClient:
                     **state.report_fields(),
                 }
             )
-        if trial_macro:
+        if trial_macro or apply_reviewed_macro:
             require(tool_error is None, "TRIAL_INCOMPLETE_TOOL_LIST")
             require(session["signed_in"], "TRIAL_SIGNED_OUT")
             self._run_trial({**inspection_schemas, CAPTURE_TOOL: capture_schema})
             report.update({
-                "status": "TRIAL_MACRO_RESTORED_REVIEW_PENDING",
+                "status": "APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING"
+                if apply_reviewed_macro else "TRIAL_MACRO_RESTORED_REVIEW_PENDING",
                 "http_requests": self.requests,
                 "notifications_received": self.notifications_received,
-                "native_material_readback": "TRIAL_BASELINE_RESTORED_CAPTURE_REVIEW_PENDING",
+                "native_material_readback": "REVIEWED_MACRO_APPLIED_CAPTURE_REVIEW_PENDING"
+                if apply_reviewed_macro else "TRIAL_BASELINE_RESTORED_CAPTURE_REVIEW_PENDING",
                 "visual_acceptance": False,
                 **self.observation_state.report_fields(),
             })
@@ -1970,6 +2052,7 @@ def probe_from_files(
     capture_lesson07=False,
     inspect_lesson07=False,
     trial_macro=False,
+    apply_reviewed_macro=False,
     observation_state=None,
 ):
     require(WINDOWS_HOST, "WINDOWS_HOST_REQUIRED")
@@ -1979,7 +2062,7 @@ def probe_from_files(
     identity = parse_json(identity_raw, CONFIG_LIMIT)
     safe_identity = validate_identity(identity, discovery)
     client = DiscoveryClient(discovery, identity, observation_state=observation_state)
-    if trial_macro:
+    if trial_macro or apply_reviewed_macro:
         client.observation_state.trial_external_host_identity = safe_identity
 
         def trial_files_guard():
@@ -1993,6 +2076,7 @@ def probe_from_files(
         capture_lesson07=capture_lesson07,
         inspect_lesson07=inspect_lesson07,
         **({"trial_macro": True} if trial_macro else {}),
+        **({"apply_reviewed_macro": True} if apply_reviewed_macro else {}),
     )
     require(
         read_bounded(discovery_path, CONFIG_LIMIT) == discovery_raw
@@ -2038,11 +2122,13 @@ def main(argv=None):
     mode.add_argument("--capture-lesson07", action="store_true")
     mode.add_argument("--inspect-lesson07", action="store_true")
     mode.add_argument("--trial-macro", action="store_true")
+    mode.add_argument("--apply-reviewed-macro", action="store_true")
     args = parser.parse_args(argv)
     state = ObservationState(
         capture_requested=args.capture_lesson07,
         inspection_requested=args.inspect_lesson07,
         trial_requested=args.trial_macro,
+        apply_requested=args.apply_reviewed_macro,
     )
     error_code = None
     rpc_code = None
@@ -2057,6 +2143,8 @@ def main(argv=None):
             options["inspect_lesson07"] = True
         if args.trial_macro:
             options["trial_macro"] = True
+        if args.apply_reviewed_macro:
+            options["apply_reviewed_macro"] = True
         report = probe_from_files(args.identity_receipt, **options)
     except ProbeError as error:
         error_code, rpc_code = error.code, error.rpc_code
@@ -2064,9 +2152,12 @@ def main(argv=None):
         # Do not print a traceback, response body, file contents or exception text.
         error_code = "UNEXPECTED_CLIENT_FAILURE"
     if error_code is not None:
+        state.apply_verified = False
         report = {
             "schema_version": 1,
-            "status": "TRIAL_MACRO_FAILED"
+            "status": "APPLY_REVIEWED_MACRO_FAILED"
+            if args.apply_reviewed_macro
+            else "TRIAL_MACRO_FAILED"
             if args.trial_macro
             else "INSPECTION_FAILED"
             if args.inspect_lesson07
@@ -2087,12 +2178,14 @@ def main(argv=None):
             "visual_acceptance": False,
             "performance_pass": False,
         }
-        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07 or args.trial_macro:
+        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07 or args.trial_macro or args.apply_reviewed_macro:
             report.update(state.report_fields())
         if rpc_code is not None:
             report["rpc_code"] = rpc_code
     prefix = (
-        "L07_WINGMAN_TRIAL_MACRO"
+        "L07_WINGMAN_APPLY_REVIEWED_MACRO"
+        if args.apply_reviewed_macro
+        else "L07_WINGMAN_TRIAL_MACRO"
         if args.trial_macro
         else "L07_WINGMAN_INSPECTION"
         if args.inspect_lesson07
@@ -2117,7 +2210,9 @@ def main(argv=None):
         + f" native_tool_calls={report['native_tool_calls']}"
     )
     expected = (
-        "TRIAL_MACRO_RESTORED_REVIEW_PENDING"
+        "APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING"
+        if args.apply_reviewed_macro
+        else "TRIAL_MACRO_RESTORED_REVIEW_PENDING"
         if args.trial_macro
         else "INSPECTION_RESPONSES_RECEIVED"
         if args.inspect_lesson07

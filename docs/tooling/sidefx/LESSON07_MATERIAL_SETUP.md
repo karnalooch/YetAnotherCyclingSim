@@ -5,7 +5,7 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (rollback reopened and running checkpoint accepted; saved normal-flatten workaround; tiling, detailed-normal correctness, symbolized crash cause, whole-area proof and protected CI remain unverified)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (rollback reopened and running checkpoint accepted; saved normal-flatten workaround; physical texel scale, detailed-normal correctness, symbolized crash cause, whole-area proof and protected CI remain unverified)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
@@ -165,14 +165,14 @@ UV period. The non-default property dump still does not expose every TexCoord
 value or nested-function implementation. The bounded engine-source search found
 zero matching lines; it does not prove an array-rebuild API is absent.
 
-### Controlled Macro frequency comparison, prepared (not executed)
+### Controlled Macro frequency comparison, executed and restored
 
 Preparation passed 73 focused client tests, 118 PowerShell viewport cases,
 64 workflow-intent and 32 PowerShell-switch combinations, plus a direct
 client-to-PowerShell receipt check. Independent review corrected a timing
 risk: the scalar cannot change unless 193 seconds remain in the unchanged
-300-second trial budget. Windows API process/listener checks still require
-actual remote execution; CPU validation is not native or visual acceptance.
+300-second trial budget. The preparation alone did not verify Windows API process/listener checks;
+the actual native execution and its separate review are recorded below.
 
 Direct review of the original [Lesson07 video](https://player.vimeo.com/video/888569514#t=22m44s)
 at **22:44** shows Detail Tiling=0.25, Macro Tiling=0.05 and Macro Texture
@@ -197,6 +197,42 @@ but their nested function has not been read; no displacement control is changed.
 Semantic restoration of the instance is checked separately from asset byte
 identity. A failure retains its actual status and restoration evidence rather
 than silently advancing to a permanent change.
+
+The actual [A/B/A run 39532652532](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39532652532)
+at source `71914188cbdaeac200074b8a070e2f44ed50e501` passed all 99 CPU tests
+and Windows execution. All 12 calls and 12 fresh owner checks completed; the
+same PID 17896/start FILETIME was retained. Both scalar mutations reported
+`saved=true; failures=0`. Baseline, saved backup and restored readback match
+exactly across 61 scalars, one vector, five textures and three switches.
+The candidate differs only in Macro Tiling, represented as float32
+`0.05000000074505806`. The trial therefore left the current instance at **0.25**.
+
+Root and independent review of all three native JPEGs agree: the dense diamond
+repeat on the left valley floor and central foreground becomes substantially
+less conspicuous at **0.05**, then returns at restored **0.25**. This supports
+retaining that scalar as a **partial improvement**, subject to separate applied
+readback. Broad mottling/undulations, pale vertically stretched cliffs and
+crude grass-to-rock transitions remain. The transient upper-left shadow in the
+first A frame is excluded from the improvement claim; B versus restored A
+supports the same material finding.
+
+![Trial B: Macro 0.05, partial improvement](../../assets/lesson07-macro-trial-20261021/trial-macro-B-005.jpg)
+
+![Restored A: Macro 0.25, dense repetition returns](../../assets/lesson07-macro-trial-20261021/trial-macro-A-restored.jpg)
+
+The [unchanged native images and receipts](../../assets/lesson07-macro-trial-20261021)
+retain the first baseline as well. Artifact 12316570731 has ZIP SHA256
+`9d65747a33f01b24ac281d0f7b7d2515ef2da16c6f526faea104541c88983a4c`.
+The separate explicit `[l07-apply-macro]` operation is being prepared to retain
+only the reviewed scalar. It must verify this exact prior trial, the current
+clean baseline and the existing backup, then read the complete candidate and
+capture the result. Both the application and any recovery must report
+`saved=true; failures=0`; in-memory readback alone does not prove persistence.
+Preparation passed 82 focused client tests, 152 PowerShell cases, 128 workflow
+marker combinations and 64 Probe/four Reader switch combinations, plus
+independent review and a client-to-reader receipt check. **It has not run yet.**
+No source import, array rebuild, normal-unflattening or whole-material
+acceptance follows from the scalar trial.
 
 The first dedicated inspection [run 39528106136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39528106136)
 at `72919f499181a919b1708df7480be8bf99e4bf01` passed its 82-test focused CPU

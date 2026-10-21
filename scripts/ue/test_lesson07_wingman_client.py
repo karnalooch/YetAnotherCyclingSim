@@ -2524,7 +2524,8 @@ class TrialPeer:
                                  if row["name"] == "Macro Tiling")
                     value = args["scalars"][0]["value"]
                     macro["value"] = client.struct.unpack("<f", client.struct.pack("<f", value))[0]
-                    text = "= saved=true"
+                    text = (f"~ scalar Macro Tiling = {value}\n"
+                            "= parent=M_Landscape_YACS; saved=true; failures=0\n")
                 else:
                     snapshot = self.backup if args["name"] == client.TRIAL_BACKUP else self.snapshot
                     text = trial_mi_text(snapshot, args["name"])
@@ -2890,6 +2891,232 @@ class TrialTests(unittest.TestCase):
             self.assertEqual(failed["external_host_identity"], report["external_host_identity"])
             for key in ("trial_mutation_attempted", "trial_restore_verified", "trial_backup_verified", "trial_registry_verified"):
                 self.assertIs(type(failed[key]), bool)
+
+
+def apply_peer():
+    native = TrialPeer()
+    native.backup = trial_snapshot()
+    native.registry.append({
+        "path": "/Game/Generated/YACS/Lesson07_Unified/RepairBackups",
+        "name": "MI_PreMacroTrial_20261021", "class": "MaterialInstanceConstant",
+        "class_path": "/Script/Engine.MaterialInstanceConstant", "loaded": True,
+    })
+    return native
+
+
+class ApplyReviewedMacroTests(unittest.TestCase):
+    def setUp(self):
+        for patcher in (
+            mock.patch.object(client, "TRIAL_SCHEMA_SHA256", TRIAL_FIXTURE_HASHES),
+            mock.patch.object(client, "verify_trial_host_identity", side_effect=trial_host_check),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.receipt_check = mock.patch.object(client, "verify_reviewed_macro_receipt")
+        self.receipt_guard = self.receipt_check.start()
+        self.addCleanup(self.receipt_check.stop)
+
+    def failure(self, native, code):
+        state = client.ObservationState()
+        with peer(native) as (port, _requests):
+            with self.assertRaisesRegex(client.ProbeError, code):
+                connection(port, state=state).probe(apply_reviewed_macro=True)
+        report = state.report_fields()
+        self.assertIs(report["apply_verified"], False)
+        return state, report
+
+    def test_seven_fixed_calls_apply_only_reviewed_delta_and_keep_existing_backup(self):
+        native = apply_peer()
+        with tempfile.TemporaryDirectory() as directory, peer(native) as (port, requests):
+            root = Path(directory)
+            receipt, discovery = root / "identity.json", root / "discovery.json"
+            host = identity(port)
+            host["process_start_filetime_utc"] = "134370120000674689"
+            receipt.write_bytes(client.canonical(host))
+            discovery.write_bytes(client.canonical(config(port)))
+            with mock.patch.object(client, "WINDOWS_HOST", True), mock.patch.object(client, "observer_loader") as loader:
+                report = client.probe_from_files(receipt, discovery, apply_reviewed_macro=True)
+        loader.assert_not_called()
+        self.assertEqual([c["name"] for c in native.calls], [
+            "explore", "edit_material_instance", "edit_asset", "edit_material_instance",
+            "edit_material_instance", "edit_material_instance", "take_viewport_screenshot",
+        ])
+        self.assertEqual(native.calls[0]["arguments"], {
+            "path": "/Game/Generated/YACS/Lesson07_Unified", "limit": 200, "offset": 0, "recursive": True,
+        })
+        mi = "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS"
+        backup = "/Game/Generated/YACS/Lesson07_Unified/RepairBackups/MI_PreMacroTrial_20261021"
+        self.assertEqual([c["arguments"] for c in native.calls[1:6]], [
+            {"name": mi}, {"save_assets": {"paths": [mi], "dry_run": True}}, {"name": backup},
+            {"name": mi, "scalars": [{"name": "Macro Tiling", "value": 0.05}]}, {"name": mi},
+        ])
+        self.assertEqual(native.calls[6]["arguments"], client.trial_capture_arguments())
+        expected = trial_snapshot()
+        next(row for row in expected["scalars"] if row["name"] == "Macro Tiling")["value"] = 0.05000000074505806
+        self.assertEqual(native.snapshot, expected)
+        self.assertEqual(native.backup, trial_snapshot())
+        self.assertEqual(report["status"], "APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING")
+        self.assertEqual(report["native_material_readback"], "REVIEWED_MACRO_APPLIED_CAPTURE_REVIEW_PENDING")
+        self.assertEqual(report["native_tool_calls"], 7)
+        self.assertEqual(self.receipt_guard.call_count, len(requests))
+        for key in ("apply_verified", "apply_candidate_verified", "apply_reviewed_trial_verified",
+                    "apply_mutation_attempted", "apply_registry_verified", "apply_backup_verified",
+                    "native_tool_attempted", "native_tool_completed", "native_tool_response_received"):
+            self.assertIs(report[key], True, key)
+        for key in ("apply_backup_attempted", "apply_restore_attempted", "apply_restore_verified",
+                    "performance_pass", "visual_acceptance"):
+            self.assertIs(report[key], False, key)
+        self.assertIsNone(report["apply_manual_restore"])
+        self.assertFalse(any(key.startswith("trial_") for key in report))
+        self.assertEqual(list(report["apply_captures"]), ["B_applied_macro_005"])
+        row = report["apply_results"][6]
+        self.assertEqual((row["index"], row["stage"]), (7, "B_applied_macro_005"))
+        self.assertEqual(report["apply_captures"]["B_applied_macro_005"], {
+            "capture_arguments": row["arguments"], "capture_result": row["result"],
+            "native_tool_started_utc": row["started_utc"],
+            "native_tool_response_received_utc": row["response_received_utc"],
+        })
+        self.assertEqual(report["external_host_identity"], client.validate_identity(host, client.Discovery.from_mapping(config(port))))
+        self.assertEqual(report["apply_reviewed_trial_sha256"], "e901c56e83821e771816be8f4dff49cfdad21c015f0b516cd06368cce9d072f4")
+        self.assertEqual(report["apply_reviewed_trial_path"], r"D:\yacs\lesson07-remote\reports\39532652532-1\bridge.json")
+        self.assertEqual(report["apply_reviewed_trial_source_commit"], "71914188cbdaeac200074b8a070e2f44ed50e501")
+
+    def test_reviewed_receipt_hash_is_mandatory_before_any_rpc(self):
+        self.receipt_check.stop()
+        raw = b"Synthetic reviewed A/B/A receipt for checksum admission only"
+        with mock.patch.object(client, "read_bounded", return_value=raw) as read:
+            with self.assertRaisesRegex(client.ProbeError, "APPLY_REVIEWED_TRIAL_HASH"):
+                client.verify_reviewed_macro_receipt()
+            read.assert_called_once_with(client.APPLY_REVIEWED_TRIAL_PATH, client.RESPONSE_LIMIT)
+            with mock.patch.object(client, "APPLY_REVIEWED_TRIAL_SHA256", hashlib.sha256(raw).hexdigest()):
+                client.verify_reviewed_macro_receipt()
+        with mock.patch.object(client, "read_bounded", side_effect=client.ProbeError("READ_DENIED")):
+            with self.assertRaisesRegex(client.ProbeError, "APPLY_REVIEWED_TRIAL_UNAVAILABLE"):
+                client.verify_reviewed_macro_receipt()
+        with mock.patch.object(client, "read_bounded", return_value=raw), peer(apply_peer()) as (port, requests):
+            state = client.ObservationState()
+            with self.assertRaisesRegex(client.ProbeError, "APPLY_REVIEWED_TRIAL_HASH"):
+                connection(port, state=state).probe(apply_reviewed_macro=True)
+        self.assertEqual(requests, [])
+        self.assertFalse(state.apply_reviewed_trial_verified)
+        self.assertFalse(state.trial_mutation_attempted)
+
+    def test_missing_wrong_class_or_changed_backup_and_current_drift_refuse_prewrite(self):
+        for case, code, count in (
+            ("missing", "APPLY_EXISTING_BACKUP_REQUIRED", 1),
+            ("class", "APPLY_EXISTING_BACKUP_REQUIRED", 1),
+            ("baseline", "TRIAL_BASELINE_DRIFT", 2),
+            ("backup", "TRIAL_BASELINE_DRIFT", 4),
+        ):
+            native = apply_peer()
+            if case == "missing":
+                native.registry.pop()
+            elif case == "class":
+                native.registry[-1].update({"class": "Texture2D", "class_path": "/Script/Engine.Texture2D"})
+            else:
+                snapshot = native.snapshot if case == "baseline" else native.backup
+                snapshot["scalars"][0]["overridden"] = False
+            with self.subTest(case=case):
+                state, report = self.failure(native, code)
+                self.assertEqual(len(native.calls), count)
+                self.assertFalse(report["apply_mutation_attempted"])
+                self.assertFalse(report["apply_restore_attempted"])
+
+    def test_apply_capture_failure_performs_one_verified_rollback_within_ten_calls(self):
+        native = apply_peer()
+        def deny_capture(peer, _params):
+            if len(peer.calls) == 7:
+                return {"isError": True, "content": [{"type": "text", "text": "Capture denied."}]}
+        native.before = deny_capture
+        _state, report = self.failure(native, "INSPECTION_TOOL_ERROR")
+        self.assertEqual(len(native.calls), 10)
+        self.assertEqual([row["stage"] for row in report["apply_results"][-3:]],
+                         ["recovery_read", "recovery_restore", "recovery_verify"])
+        self.assertTrue(report["apply_restore_verified"])
+        self.assertFalse(report["apply_candidate_verified"])
+        self.assertEqual(native.snapshot, trial_snapshot())
+        self.assertEqual(sum("scalars" in c["arguments"] for c in native.calls), 2)
+        self.assertEqual(sum(c["name"] == "take_viewport_screenshot" for c in native.calls), 1)
+
+    def test_apply_mi_denial_is_final_and_no_backup_is_created(self):
+        for fail_at in (5, 6):
+            native = apply_peer()
+            def deny_mi(peer, _params):
+                if len(peer.calls) == fail_at:
+                    return {"isError": True, "content": [{"type": "text", "text": "MI write/read denied."}]}
+            native.before = deny_mi
+            with self.subTest(fail_at=fail_at):
+                _state, report = self.failure(native, "INSPECTION_TOOL_ERROR")
+                self.assertEqual(len(native.calls), fail_at)
+                self.assertTrue(report["apply_mutation_attempted"])
+                self.assertFalse(report["apply_restore_attempted"])
+                self.assertIsNotNone(report["apply_manual_restore"])
+                self.assertFalse(any("duplicate_asset" in c["arguments"] for c in native.calls))
+
+    def test_live_candidate_without_confirmed_save_is_not_accepted(self):
+        for marker in ("saved=false", "failures=1"):
+            native = apply_peer()
+            def unconfirmed(peer, _params, text):
+                if len(peer.calls) == 5:
+                    return text.replace("saved=true" if marker.startswith("saved") else "failures=0", marker)
+                return text
+            native.after = unconfirmed
+            with self.subTest(marker=marker):
+                _state, report = self.failure(native, "APPLY_SAVE_UNCONFIRMED")
+                self.assertEqual(len(native.calls), 8)
+                self.assertTrue(report["apply_restore_verified"])
+                self.assertFalse(report["apply_candidate_verified"])
+                self.assertEqual(native.snapshot, trial_snapshot())
+                self.assertEqual(native.captures, 0)
+
+    def test_changed_review_receipt_after_mutation_blocks_further_rpc_and_reports_manual_restore(self):
+        native = apply_peer()
+        def checked():
+            if len(native.calls) == 5:
+                raise client.ProbeError("APPLY_REVIEWED_TRIAL_HASH")
+        self.receipt_guard.side_effect = checked
+        _state, report = self.failure(native, "APPLY_REVIEWED_TRIAL_HASH")
+        self.assertEqual(len(native.calls), 5)
+        self.assertFalse(report["apply_reviewed_trial_verified"])
+        self.assertFalse(report["apply_restore_attempted"])
+        self.assertIsNotNone(report["apply_manual_restore"])
+
+    def test_apply_requires_restoration_reserve_and_rejects_all_mixed_modes(self):
+        native = apply_peer()
+        with peer(native) as (port, requests):
+            for other in ("observe_lesson07", "capture_lesson07", "inspect_lesson07", "trial_macro"):
+                with self.assertRaisesRegex(client.ProbeError, "NATIVE_MODES_MUTUALLY_EXCLUSIVE"):
+                    connection(port).probe(apply_reviewed_macro=True, **{other: True})
+            self.assertEqual(requests, [])
+            probe = connection(port)
+            original = probe._trial_validate
+            def consume_budget(row):
+                original(row)
+                if row["stage"] == "backup_mi":
+                    probe._trial_started = time.monotonic() - 108
+            with mock.patch.object(probe, "_trial_validate", side_effect=consume_budget):
+                with self.assertRaisesRegex(client.ProbeError, "TRIAL_RESTORE_BUDGET"):
+                    probe.probe(apply_reviewed_macro=True)
+            self.assertEqual(len(native.calls), 4)
+            self.assertFalse(probe.observation_state.trial_mutation_attempted)
+
+    def test_apply_failure_cli_retains_typed_state_without_claiming_success(self):
+        def failed(_receipt, *, observation_state, **options):
+            self.assertIs(options["apply_reviewed_macro"], True)
+            observation_state.trial_mutation_attempted = True
+            observation_state.apply_verified = True
+            raise client.ProbeError("INPUT_CHANGED")
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(client, "probe_from_files", side_effect=failed), mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
+            output = Path(directory) / "bridge.json"
+            result = client.main(["--identity-receipt", str(Path(directory) / "identity.json"),
+                                  "--output", str(output), "--apply-reviewed-macro"])
+            report = json.loads(output.read_bytes())
+        self.assertEqual(result, 1)
+        self.assertEqual(report["status"], "APPLY_REVIEWED_MACRO_FAILED")
+        self.assertIn("L07_WINGMAN_APPLY_REVIEWED_MACRO", stdout.getvalue())
+        self.assertIs(report["apply_verified"], False)
+        self.assertIs(report["apply_mutation_attempted"], True)
+        self.assertIsNotNone(report["apply_manual_restore"])
 
 
 class FileTests(unittest.TestCase):

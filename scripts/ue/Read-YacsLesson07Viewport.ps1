@@ -5,14 +5,16 @@
 .DESCRIPTION
   Reads existing receipts and bounded files. -TrialMacro retains only completed
   A/B/A captures after verified restoration of the original material baseline.
+  -ApplyReviewedMacro retains the verified 0.05 candidate's final capture.
   It never calls Unreal, selects
   a newest file, retries capture, changes the camera, or modifies source assets.
 #>
-[CmdletBinding()]
+[CmdletBinding(DefaultParameterSetName='Capture')]
 param(
   [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string]$ExpectedHead,
   [Parameter(Mandatory)][ValidatePattern('^[0-9]{1,20}-[0-9]{1,10}$')][string]$RunToken,
-  [switch]$TrialMacro
+  [Parameter(ParameterSetName='MacroTrial')][switch]$TrialMacro,
+  [Parameter(ParameterSetName='ReviewedMacroApply')][switch]$ApplyReviewedMacro
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
@@ -383,6 +385,126 @@ function Assert-L07TrialViewportProofs([Collections.IDictionary]$Identity,[Colle
   return @{captures=$captures.ToArray();complete=$complete;session_id=$sessionId}
 }
 
+function Assert-L07AppliedViewportProofs([Collections.IDictionary]$Identity,[Collections.IDictionary]$Probe,
+    [Collections.IDictionary]$Bridge,[string]$Head,[DateTimeOffset]$Now) {
+  $before=ConvertTo-L07ViewportUtc $Identity.observed_utc
+  $after=ConvertTo-L07ViewportUtc $Probe.identity_after.observed_utc
+  if ($after -lt $before -or ($after-$before).TotalSeconds -gt 360 -or
+      $Now -lt $after -or ($Now-$after).TotalSeconds -gt 120) { throw 'APPLY_MACRO_IDENTITY_TIME_REJECTED' }
+  Assert-L07ViewportIdentity $Identity $Head $before
+  if ($Probe.source_commit -isnot [string] -or $Probe.source_commit -cne $Head -or
+      $Probe.status -isnot [string] -or $Probe.status -cne 'LESSON07_REVIEWED_MACRO_APPLIED_IMAGE_PENDING' -or
+      $Probe.apply_status -isnot [string] -or $Probe.apply_status -cne 'APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING' -or
+      $Bridge.status -isnot [string] -or $Bridge.status -cne 'APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING' -or
+      ($Probe.client_exit_code -isnot [int] -and $Probe.client_exit_code -isnot [long]) -or $Probe.client_exit_code -ne 0 -or
+      ($Probe.native_tool_call_attempts -isnot [int] -and $Probe.native_tool_call_attempts -isnot [long]) -or $Probe.native_tool_call_attempts -ne 7 -or
+      ($Bridge.native_tool_calls -isnot [int] -and $Bridge.native_tool_calls -isnot [long]) -or $Bridge.native_tool_calls -ne 7 -or
+      $Bridge.native_material_readback -isnot [string] -or $Bridge.native_material_readback -cne 'REVIEWED_MACRO_APPLIED_CAPTURE_REVIEW_PENDING') {
+    throw 'APPLY_MACRO_PROBE_REJECTED'
+  }
+  foreach ($field in @('apply_macro_requested','existing_owner_required','identity_stable_across_probe',
+      'native_tool_called','native_tool_attempted','native_tool_completed')) {
+    if ($Probe[$field] -isnot [bool] -or -not $Probe[$field]) { throw 'APPLY_MACRO_PROBE_FLAG_REJECTED' }
+  }
+  foreach ($field in @('capture_requested','inspection_requested','observation_requested','trial_macro_requested','editor_started_or_stopped','performance_pass')) {
+    if ($Probe[$field] -isnot [bool] -or $Probe[$field]) { throw 'APPLY_MACRO_PROBE_FLAG_REJECTED' }
+  }
+  foreach ($field in @('apply_verified','apply_candidate_verified','apply_mutation_attempted','apply_backup_verified','apply_registry_verified','apply_reviewed_trial_verified')) {
+    if ($Bridge[$field] -isnot [bool] -or -not $Bridge[$field] -or $Probe[$field] -isnot [bool] -or -not $Probe[$field]) {
+      throw 'APPLY_MACRO_CANDIDATE_REJECTED'
+    }
+  }
+  foreach ($field in @('apply_restore_attempted','apply_restore_verified')) {
+    if ($Bridge[$field] -isnot [bool] -or $Bridge[$field] -or $Probe[$field] -isnot [bool] -or $Probe[$field]) {
+      throw 'APPLY_MACRO_RESTORED_RESULT_REJECTED'
+    }
+  }
+  foreach ($field in @('native_tool_attempted','native_tool_completed','native_tool_response_received')) {
+    if ($Bridge[$field] -isnot [bool] -or -not $Bridge[$field]) { throw 'APPLY_MACRO_COMPLETION_REJECTED' }
+  }
+  if ($Bridge.apply_reviewed_trial_path -isnot [string] -or
+      $Bridge.apply_reviewed_trial_path -cne 'D:\yacs\lesson07-remote\reports\39532652532-1\bridge.json' -or
+      $Bridge.apply_reviewed_trial_sha256 -isnot [string] -or
+      $Bridge.apply_reviewed_trial_sha256 -cne 'e901c56e83821e771816be8f4dff49cfdad21c015f0b516cd06368cce9d072f4' -or
+      $Bridge.apply_reviewed_trial_source_commit -isnot [string] -or
+      $Bridge.apply_reviewed_trial_source_commit -cne '71914188cbdaeac200074b8a070e2f44ed50e501') { throw 'APPLY_MACRO_REVIEWED_TRIAL_REJECTED' }
+  if ($Bridge.apply_results -isnot [array] -or $Bridge.apply_results.Count -ne 7 -or
+      $Bridge.apply_captures -isnot [Collections.IDictionary] -or $Bridge.apply_captures.Count -ne 1 -or
+      $Bridge.apply_captures.Keys -cnotcontains 'B_applied_macro_005' -or
+      ($Probe.apply_captures_received -isnot [int] -and $Probe.apply_captures_received -isnot [long]) -or
+      $Probe.apply_captures_received -ne 1) { throw 'APPLY_MACRO_CAPTURE_SET_REJECTED' }
+  foreach ($field in @('identity_before','identity_after')) {
+    $other=$Probe[$field]
+    if ($other -isnot [Collections.IDictionary]) { throw 'APPLY_MACRO_IDENTITY_REJECTED' }
+    $observed=ConvertTo-L07ViewportUtc $other.observed_utc
+    Assert-L07ViewportIdentity $other $Head $observed
+    foreach ($key in @('pid','process_start_filetime_utc','executable','project')) {
+      if ($other[$key] -cne $Identity[$key]) { throw 'APPLY_MACRO_IDENTITY_CHANGED' }
+    }
+    if ((ConvertTo-L07ViewportUtc $other.process_created_utc) -ne (ConvertTo-L07ViewportUtc $Identity.process_created_utc) -or
+        $other.listener.port -ne $Identity.listener.port) { throw 'APPLY_MACRO_IDENTITY_CHANGED' }
+  }
+  if ((ConvertTo-L07ViewportUtc $Probe.identity_before.observed_utc) -ne $before) { throw 'APPLY_MACRO_IDENTITY_CHANGED' }
+  $sessionId=$null
+  foreach ($field in @('owner_before','owner_after')) {
+    $owner=$Probe[$field]
+    if ($owner -isnot [Collections.IDictionary] -or $owner.status -isnot [string] -or $owner.status -cne 'ATTACH_EXISTING' -or
+        $owner.owner_sid_matches -isnot [bool] -or -not $owner.owner_sid_matches -or
+        $owner.editor -isnot [Collections.IDictionary]) { throw 'APPLY_MACRO_OWNER_REJECTED' }
+    $editor=$owner.editor
+    if (($editor.editor_pid -isnot [int] -and $editor.editor_pid -isnot [long]) -or $editor.editor_pid -ne $Identity.pid -or
+        $editor.editor_start_filetime_utc -isnot [string] -or $editor.editor_start_filetime_utc -cne $Identity.process_start_filetime_utc -or
+        $editor.editor_executable_path -isnot [string] -or $editor.editor_executable_path -cne $Identity.executable -or
+        $editor.canonical_project_matches -isnot [bool] -or -not $editor.canonical_project_matches -or
+        ($editor.interactive_session_id -isnot [int] -and $editor.interactive_session_id -isnot [long]) -or
+        $editor.interactive_session_id -le 0) { throw 'APPLY_MACRO_OWNER_REJECTED' }
+    if ($null -ne $sessionId -and $sessionId -ne $editor.interactive_session_id) { throw 'APPLY_MACRO_OWNER_CHANGED' }
+    $sessionId=$editor.interactive_session_id
+  }
+  $hostIdentity=$Bridge.external_host_identity
+  if ($hostIdentity -isnot [Collections.IDictionary] -or
+      ($hostIdentity.pid -isnot [int] -and $hostIdentity.pid -isnot [long]) -or $hostIdentity.pid -ne $Identity.pid) { throw 'APPLY_MACRO_BRIDGE_IDENTITY_REJECTED' }
+  foreach ($key in @('executable','project')) {
+    if ($hostIdentity[$key] -isnot [string] -or $hostIdentity[$key] -cne $Identity[$key]) { throw 'APPLY_MACRO_BRIDGE_IDENTITY_REJECTED' }
+  }
+  $createdTicks=(ConvertTo-L07ViewportUtc $Identity.process_created_utc).UtcTicks
+  if ((ConvertTo-L07ViewportUtc $hostIdentity.process_created_utc).UtcTicks -ne ($createdTicks-($createdTicks%10)) -or
+      (ConvertTo-L07ViewportUtc $hostIdentity.observed_utc).UtcTicks -ne ($before.UtcTicks-($before.UtcTicks%10)) -or
+      $hostIdentity.listener -isnot [Collections.IDictionary] -or
+      $hostIdentity.listener.address -isnot [string] -or $hostIdentity.listener.address -cne $Identity.listener.address -or
+      ($hostIdentity.listener.port -isnot [int] -and $hostIdentity.listener.port -isnot [long]) -or $hostIdentity.listener.port -ne $Identity.listener.port -or
+      ($hostIdentity.listener.pid -isnot [int] -and $hostIdentity.listener.pid -isnot [long]) -or $hostIdentity.listener.pid -ne $Identity.pid) {
+    throw 'APPLY_MACRO_BRIDGE_IDENTITY_REJECTED'
+  }
+  $capture=$Bridge.apply_captures['B_applied_macro_005']
+  $rows=@($Bridge.apply_results | Where-Object { $_ -is [Collections.IDictionary] -and $_['stage'] -is [string] -and $_['stage'] -ceq 'B_applied_macro_005' })
+  if ($rows.Count -ne 1 -or $capture -isnot [Collections.IDictionary] -or $capture.Count -ne 4) { throw 'APPLY_MACRO_CAPTURE_ROW_REJECTED' }
+  $row=$rows[0]
+  if (($row.index -isnot [int] -and $row.index -isnot [long]) -or $row.index -ne 7 -or
+      $row.tool_name -isnot [string] -or $row.tool_name -cne 'take_viewport_screenshot' -or
+      $row.input_schema_sha256 -isnot [string] -or $row.input_schema_sha256 -cne '4ef41b0bf0c6c93d64a049687e0e43565fb351cd484169b58473801840b3dcdc') { throw 'APPLY_MACRO_CAPTURE_ROW_REJECTED' }
+  foreach ($field in @('attempted','completed','response_received')) {
+    if ($row[$field] -isnot [bool] -or -not $row[$field]) { throw 'APPLY_MACRO_CAPTURE_ROW_REJECTED' }
+  }
+  Assert-L07TrialCamera $row.arguments
+  Assert-L07TrialCamera $capture.capture_arguments
+  $result=$capture.capture_result
+  if ($result -isnot [Collections.IDictionary] -or $row.result -isnot [Collections.IDictionary] -or
+      $result.text -isnot [string] -or $result.text_truncated -isnot [bool] -or $result.text_truncated -or
+      ($result.text_block_count -isnot [int] -and $result.text_block_count -isnot [long]) -or
+      $result.text_block_count -lt 1 -or $result.text_block_count -gt 8 -or
+      $result.response_sha256 -isnot [string] -or $result.response_sha256 -cnotmatch '^[0-9a-f]{64}$') { throw 'APPLY_MACRO_CAPTURE_TEXT_REJECTED' }
+  foreach ($key in @('text','text_truncated','text_block_count','response_sha256')) {
+    if ($row.result[$key].GetType() -ne $result[$key].GetType() -or $row.result[$key] -cne $result[$key]) { throw 'APPLY_MACRO_CAPTURE_ROW_REJECTED' }
+  }
+  $started=ConvertTo-L07ViewportUtc $capture.native_tool_started_utc
+  $finished=ConvertTo-L07ViewportUtc $capture.native_tool_response_received_utc
+  if ((ConvertTo-L07ViewportUtc $row.started_utc) -ne $started -or
+      (ConvertTo-L07ViewportUtc $row.response_received_utc) -ne $finished -or
+      $started -lt $before -or $finished -lt $started -or $finished -gt $after) { throw 'APPLY_MACRO_CAPTURE_TIME_REJECTED' }
+  return @{stage='B_applied_macro_005';path=(Get-L07ViewportSourcePath $result.text);started=$started;finished=$finished;session_id=$sessionId;response_sha256=$result.response_sha256}
+}
+
 function Assert-L07ViewportFileWindow([long]$Length,[DateTimeOffset]$Modified,[DateTimeOffset]$Started,[DateTimeOffset]$Finished) {
   if ($Length -le 0 -or $Length -gt 32MB) { throw 'VIEWPORT_FILE_SIZE_REJECTED' }
   if ($Modified -lt $Started -or $Modified -gt $Finished) { throw 'VIEWPORT_FILE_OUTSIDE_CAPTURE_WINDOW' }
@@ -468,6 +590,38 @@ $identityProof=Read-L07ViewportProof (Join-Path $reportRoot 'identity.json') 64K
 $probeProof=Read-L07ViewportProof (Join-Path $reportRoot 'probe.json') 64KB
 $bridgeProof=Read-L07ViewportProof (Join-Path $reportRoot 'bridge.json') 2MB
 $identity=$identityProof.data
+if ($ApplyReviewedMacro) {
+  $capture=Assert-L07AppliedViewportProofs $identity $probeProof.data $bridgeProof.data $ExpectedHead ([DateTimeOffset]::UtcNow)
+  $imagePath=Join-Path $reportRoot 'apply-macro.jpg'
+  $manifestPath=Join-Path $reportRoot 'apply-macro.json'
+  if ((Test-Path -LiteralPath $imagePath) -or (Test-Path -LiteralPath $manifestPath)) { throw 'VIEWPORT_OUTPUT_ALREADY_EXISTS' }
+  Assert-L07ViewportProcess $identity $capture.session_id
+  $source=Read-L07ViewportBytes $capture.path $capture.started $capture.finished
+  $dimensions=Test-L07ViewportJpeg $source.bytes 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+  Assert-L07ViewportProcess $identity $capture.session_id
+  Assert-L07ViewportPlainPath $reportRoot
+  $hash=Copy-L07ViewportExactBytes $source.bytes $imagePath
+  Assert-L07ViewportProcess $identity $capture.session_id
+  Assert-L07ViewportPlainPath $imagePath
+  $manifest=[ordered]@{
+    schema_version=1;status='APPLY_MACRO_VIEWPORT_RETAINED_REVIEW_PENDING';stage=$capture.stage;source_commit=$ExpectedHead;run_token=$RunToken
+    observed_utc=[DateTimeOffset]::UtcNow.ToString('o');source_path=$capture.path;copied_path=$imagePath
+    sha256=$hash;source_sha256=$hash;byte_count=$source.bytes.Length;format='JPEG';width=$dimensions.width;height=$dimensions.height
+    source_last_write_utc=$source.modified_utc;native_tool_started_utc=$capture.started.ToString('o');native_tool_response_received_utc=$capture.finished.ToString('o')
+    process_id=$identity.pid;process_start_filetime_utc=$identity.process_start_filetime_utc;interactive_session_id=$capture.session_id
+    identity_sha256=$identityProof.sha256;probe_sha256=$probeProof.sha256;bridge_sha256=$bridgeProof.sha256
+    capture_response_sha256=$capture.response_sha256;operation_native_tool_calls=7;capture_native_tool_calls=1;additional_native_tool_calls=0
+    apply_status=$bridgeProof.data.status;apply_verified=$true;apply_candidate_verified=$true;apply_restore_attempted=$false;apply_restore_verified=$false
+    apply_reviewed_trial_path=$bridgeProof.data.apply_reviewed_trial_path;apply_reviewed_trial_sha256=$bridgeProof.data.apply_reviewed_trial_sha256
+    apply_reviewed_trial_source_commit=$bridgeProof.data.apply_reviewed_trial_source_commit
+    native_material_readback='REVIEWED_MACRO_APPLIED_CAPTURE_REVIEW_PENDING';whole_material_accepted=$false;visual_accepted=$false;performance_pass=$false
+  }
+  $encoded=[Text.UTF8Encoding]::new($false).GetBytes(($manifest | ConvertTo-Json -Depth 5 -Compress)+"`n")
+  if ($encoded.Length -gt 16KB) { throw 'VIEWPORT_MANIFEST_SIZE' }
+  $null=Copy-L07ViewportExactBytes $encoded $manifestPath
+  Write-Host ('L07_REVIEWED_MACRO_VIEWPORT_RETAINED '+$dimensions.width+'x'+$dimensions.height+' sha256='+$hash)
+  return
+}
 if ($TrialMacro) {
   $trial=Assert-L07TrialViewportProofs $identity $probeProof.data $bridgeProof.data $ExpectedHead ([DateTimeOffset]::UtcNow)
   $names=@{A_baseline='trial-macro-A-baseline';B_macro_005='trial-macro-B-005';A_restored='trial-macro-A-restored'}

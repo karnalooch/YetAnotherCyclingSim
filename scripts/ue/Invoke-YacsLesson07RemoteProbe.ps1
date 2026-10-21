@@ -10,6 +10,7 @@
   -CaptureLesson07 requests the vendor's dedicated viewport screenshot instead.
   -InspectLesson07 performs the fixed six-call dedicated read-only material batch.
   -TrialMacro performs the reviewed Macro Tiling A/B/A trial and verifies restore.
+  -ApplyReviewedMacro retains the independently reviewed 0.05 candidate.
   The operation switches are mutually exclusive. No launch, task mutation or stop.
   Discovery credentials stay on the Windows host.
 #>
@@ -21,16 +22,19 @@ param(
   [Parameter(ParameterSetName='Capture')][switch]$CaptureLesson07,
   [Parameter(ParameterSetName='Inspection')][switch]$InspectLesson07,
   [Parameter(ParameterSetName='MacroTrial')][switch]$TrialMacro,
+  [Parameter(ParameterSetName='ReviewedMacroApply')][switch]$ApplyReviewedMacro,
   [Parameter(ParameterSetName='ExistingEditorDiscovery')][switch]$ExistingEditorOnly
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$requireExistingOwner = [bool]($ExistingEditorOnly -or $ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $TrialMacro)
-$nativeRequested = [bool]($ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $TrialMacro)
-$expectedNativeCalls = if ($TrialMacro) { 12 } elseif ($InspectLesson07) { 6 } else { 1 }
-$maximumNativeCalls = if ($TrialMacro) { 15 } else { $expectedNativeCalls }
-$ownerGuardPrefix = if ($ObserveLesson07) { 'OBSERVATION' } elseif ($CaptureLesson07) { 'CAPTURE' } elseif ($InspectLesson07) { 'INSPECTION' } elseif ($TrialMacro) { 'TRIAL_MACRO' } else { 'DISCOVERY' }
+$requireExistingOwner = [bool]($ExistingEditorOnly -or $ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $TrialMacro -or $ApplyReviewedMacro)
+$nativeRequested = [bool]($ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $TrialMacro -or $ApplyReviewedMacro)
+$expectedNativeCalls = if ($ApplyReviewedMacro) { 7 } elseif ($TrialMacro) { 12 } elseif ($InspectLesson07) { 6 } else { 1 }
+$maximumNativeCalls = if ($ApplyReviewedMacro) { 10 } elseif ($TrialMacro) { 15 } else { $expectedNativeCalls }
+$ownerGuardPrefix = if ($ObserveLesson07) { 'OBSERVATION' } elseif ($CaptureLesson07) { 'CAPTURE' } elseif ($InspectLesson07) { 'INSPECTION' } elseif ($TrialMacro) { 'TRIAL_MACRO' } elseif ($ApplyReviewedMacro) { 'APPLY_MACRO' } else { 'DISCOVERY' }
+$applyProofFlags=@('apply_verified','apply_candidate_verified','apply_mutation_attempted','apply_restore_attempted',
+  'apply_restore_verified','apply_backup_verified','apply_registry_verified','apply_reviewed_trial_verified')
 $projectRoot = 'D:\yacs\project'
 $projectFile = Join-Path $projectRoot 'YetAnotherCyclingSim.uproject'
 $expectedExe = 'D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe'
@@ -142,6 +146,9 @@ $report = [ordered]@{
   inspection_requested=[bool]$InspectLesson07
   trial_macro_requested=[bool]$TrialMacro;trial_status=$null;trial_captures_received=0
   trial_mutation_attempted=$false;trial_restore_verified=$false;trial_backup_verified=$false;trial_registry_verified=$false
+  apply_macro_requested=[bool]$ApplyReviewedMacro;apply_status=$null;apply_captures_received=0
+  apply_verified=$false;apply_candidate_verified=$false;apply_mutation_attempted=$false;apply_restore_attempted=$false
+  apply_restore_verified=$false;apply_backup_verified=$false;apply_registry_verified=$false;apply_reviewed_trial_verified=$false
   existing_editor_only_requested=[bool]$ExistingEditorOnly;existing_owner_required=$requireExistingOwner
   identity_before=$null;identity_after=$null
   native_tool_called=$false;editor_started_or_stopped=$false
@@ -190,16 +197,21 @@ try {
   if ($CaptureLesson07) { $clientArguments+='--capture-lesson07' }
   if ($InspectLesson07) { $clientArguments+='--inspect-lesson07' }
   if ($TrialMacro) { $clientArguments+='--trial-macro' }
+  if ($ApplyReviewedMacro) { $clientArguments+='--apply-reviewed-macro' }
   if ($nativeRequested) {
     # Until its bounded receipt is read, a subprocess failure leaves completion unknown.
     $report.native_tool_called=$null;$report.native_tool_attempted=$null;$report.native_tool_completed=$null
     $report.native_tool_call_attempts=$null
-    if ($ObserveLesson07 -or $InspectLesson07 -or $TrialMacro) { $report.native_material_readback='UNVERIFIED' }
+    if ($ObserveLesson07 -or $InspectLesson07 -or $TrialMacro -or $ApplyReviewedMacro) { $report.native_material_readback='UNVERIFIED' }
     if ($TrialMacro) {
       foreach ($field in @('trial_mutation_attempted','trial_restore_verified','trial_backup_verified','trial_registry_verified')) {
         $report[$field]=$null
       }
       $report.trial_captures_received=$null
+    }
+    if ($ApplyReviewedMacro) {
+      foreach ($field in $applyProofFlags) { $report[$field]=$null }
+      $report.apply_captures_received=$null
     }
   }
   & $python @clientArguments
@@ -231,6 +243,15 @@ try {
     $report.trial_captures_received=if ($clientReport['trial_captures'] -is [Collections.IDictionary] -and
         $clientReport['trial_captures'].Count -le 3) { $clientReport['trial_captures'].Count } else { $null }
   }
+  if ($ApplyReviewedMacro) {
+    foreach ($field in $applyProofFlags) {
+      $report[$field]=if ($clientReport[$field] -is [bool]) { $clientReport[$field] } else { $null }
+    }
+    $report.apply_status=if ($clientReport['status'] -is [string] -and
+        $clientReport['status'] -cin @('APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING','APPLY_REVIEWED_MACRO_FAILED')) { $clientReport['status'] } else { $null }
+    $report.apply_captures_received=if ($clientReport['apply_captures'] -is [Collections.IDictionary] -and
+        $clientReport['apply_captures'].Count -le 1) { $clientReport['apply_captures'].Count } else { $null }
+  }
   if ($requireExistingOwner) {
     Assert-L07OwnerProcess $owner
     $report.owner_after=Get-L07ExistingOwner
@@ -247,8 +268,26 @@ try {
   if ($TrialMacro -and $report.trial_restore_verified -eq $true) {
     $report.native_material_readback='TRIAL_BASELINE_RESTORED_CAPTURE_REVIEW_PENDING'
   }
+  if ($ApplyReviewedMacro -and $report.apply_verified -eq $true -and $report.apply_candidate_verified -eq $true) {
+    $report.native_material_readback='REVIEWED_MACRO_APPLIED_CAPTURE_REVIEW_PENDING'
+  }
   if ($report.client_exit_code -ne 0) { throw 'AUTHENTICATED_BRIDGE_PROBE_FAILED' }
-  if ($TrialMacro) {
+  if ($ApplyReviewedMacro) {
+    if ($report.apply_status -cne 'APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING' -or
+        $report.native_tool_call_attempts -ne 7 -or $report.native_tool_attempted -ne $true -or $report.native_tool_completed -ne $true -or
+        $clientReport['native_tool_response_received'] -isnot [bool] -or $clientReport['native_tool_response_received'] -ne $true -or
+        $report.apply_verified -ne $true -or $report.apply_candidate_verified -ne $true -or
+        $report.apply_mutation_attempted -ne $true -or $report.apply_backup_verified -ne $true -or
+        $report.apply_registry_verified -ne $true -or $report.apply_reviewed_trial_verified -ne $true -or
+        $report.apply_restore_attempted -ne $false -or $report.apply_restore_verified -ne $false -or
+        $clientReport['native_material_readback'] -isnot [string] -or
+        $clientReport['native_material_readback'] -cne 'REVIEWED_MACRO_APPLIED_CAPTURE_REVIEW_PENDING' -or
+        $clientReport['apply_results'] -isnot [array] -or $clientReport['apply_results'].Count -ne 7 -or
+        $report.apply_captures_received -ne 1 -or -not $clientReport['apply_captures'].Contains('B_applied_macro_005')) {
+      throw 'APPLY_MACRO_CANDIDATE_OR_CAPTURE_NOT_CONFIRMED'
+    }
+    $report.status='LESSON07_REVIEWED_MACRO_APPLIED_IMAGE_PENDING'
+  } elseif ($TrialMacro) {
     if ($report.trial_status -cne 'TRIAL_MACRO_RESTORED_REVIEW_PENDING' -or
         $report.native_tool_call_attempts -ne 12 -or
         $report.native_tool_attempted -ne $true -or $report.native_tool_completed -ne $true -or
@@ -318,7 +357,7 @@ try {
   }
 } catch {
   $failure = $true
-  $report.status = if ($ObserveLesson07) { 'LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED' } elseif ($CaptureLesson07) { 'LESSON07_CAPTURE_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectLesson07) { 'LESSON07_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } elseif ($TrialMacro) { 'LESSON07_TRIAL_MACRO_INCOMPLETE_EDITOR_RETAINED' } else { 'BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED' }
+  $report.status = if ($ObserveLesson07) { 'LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED' } elseif ($CaptureLesson07) { 'LESSON07_CAPTURE_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectLesson07) { 'LESSON07_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } elseif ($TrialMacro) { 'LESSON07_TRIAL_MACRO_INCOMPLETE_EDITOR_RETAINED' } elseif ($ApplyReviewedMacro) { 'LESSON07_REVIEWED_MACRO_APPLY_INCOMPLETE_EDITOR_RETAINED' } else { 'BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED' }
   # Never serialize exception messages that might contain discovery credentials.
   $report.error_type = $_.Exception.GetType().Name
   $safeCodes = @('CURRENT_RUN_REPORT_ALREADY_EXISTS','EXISTING_PYTHON_UNAVAILABLE',
@@ -333,6 +372,8 @@ try {
     'INSPECTION_CLIENT_REPORT_SIZE','INSPECTION_RESPONSES_NOT_CONFIRMED',
     'TRIAL_MACRO_REQUIRES_EXISTING_EDITOR','TRIAL_MACRO_REQUIRES_VERIFIED_OWNER','TRIAL_MACRO_OWNER_CHANGED',
     'TRIAL_MACRO_CLIENT_REPORT_SIZE','TRIAL_MACRO_RESTORATION_OR_CAPTURES_NOT_CONFIRMED',
+    'APPLY_MACRO_REQUIRES_EXISTING_EDITOR','APPLY_MACRO_REQUIRES_VERIFIED_OWNER','APPLY_MACRO_OWNER_CHANGED',
+    'APPLY_MACRO_CLIENT_REPORT_SIZE','APPLY_MACRO_CANDIDATE_OR_CAPTURE_NOT_CONFIRMED',
     'DISCOVERY_REQUIRES_EXISTING_EDITOR','DISCOVERY_REQUIRES_VERIFIED_OWNER','DISCOVERY_OWNER_CHANGED',
     'DISCOVERY_CLIENT_REPORT_SIZE','DISCOVERY_ONLY_NOT_CONFIRMED')
   $report['reason'] = if ($_.Exception.Message -cin $safeCodes) { $_.Exception.Message } else { 'PROBE_VALIDATION_ERROR' }

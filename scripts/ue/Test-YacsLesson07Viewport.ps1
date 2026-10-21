@@ -235,6 +235,76 @@ Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $bad $hea
 $bad=Copy-Data $trialBridge; $bad.trial_captures.B_macro_005.native_tool_response_received_utc='2026-10-21T00:20:00Z'
 Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $bad $head $trialNow }; $cases++
 
+# Applying the reviewed candidate is a separate seven-call operation. A verified
+# rollback cannot be relabelled as the applied candidate's final image.
+$applyProbe=Copy-Data $trialProbe
+$applyProbe.status='LESSON07_REVIEWED_MACRO_APPLIED_IMAGE_PENDING'
+$applyProbe.apply_status='APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING'
+$applyProbe.trial_macro_requested=$false; $applyProbe.apply_macro_requested=$true
+$applyProbe.native_tool_call_attempts=7; $applyProbe.apply_captures_received=1
+$applyBridge=Copy-Data @{
+  status='APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING';native_material_readback='REVIEWED_MACRO_APPLIED_CAPTURE_REVIEW_PENDING'
+  native_tool_calls=7;native_tool_attempted=$true;native_tool_completed=$true;native_tool_response_received=$true
+  external_host_identity=$identity;apply_results=@();apply_captures=@{}
+  apply_reviewed_trial_path='D:\yacs\lesson07-remote\reports\39532652532-1\bridge.json'
+  apply_reviewed_trial_sha256='e901c56e83821e771816be8f4dff49cfdad21c015f0b516cd06368cce9d072f4'
+  apply_reviewed_trial_source_commit='71914188cbdaeac200074b8a070e2f44ed50e501'
+}
+foreach ($field in @('apply_verified','apply_candidate_verified','apply_mutation_attempted','apply_backup_verified','apply_registry_verified','apply_reviewed_trial_verified')) {
+  $applyProbe[$field]=$true; $applyBridge[$field]=$true
+}
+foreach ($field in @('apply_restore_attempted','apply_restore_verified')) { $applyProbe[$field]=$false; $applyBridge[$field]=$false }
+$applyStages=@('registry','baseline_mi','baseline_clean','backup_mi','apply_macro','candidate_mi','B_applied_macro_005')
+for ($i=0;$i -lt 6;$i++) { $applyBridge.apply_results+=,@{index=($i+1);stage=$applyStages[$i]} }
+$applyRow=Copy-Data $trialBridge.trial_results[8]
+$applyRow.index=7; $applyRow.stage='B_applied_macro_005'; $applyRow.result.text=$applyRow.result.text.Replace('B_macro_005','B_applied_macro_005')
+$applyBridge.apply_results+=,$applyRow
+$applyBridge.apply_captures.B_applied_macro_005=@{
+  capture_arguments=$applyRow.arguments;capture_result=$applyRow.result
+  native_tool_started_utc=$applyRow.started_utc;native_tool_response_received_utc=$applyRow.response_received_utc
+}
+$applyBridge=Copy-Data $applyBridge
+$applied=Assert-L07AppliedViewportProofs $identity $applyProbe $applyBridge $head $trialNow
+Require ($applied.stage -ceq 'B_applied_macro_005' -and $applied.session_id -eq 1 -and $applied.path -like '*B_applied_macro_005.jpg') 'Verified applied candidate rejected.'; $cases++
+foreach ($value in @($false,$null,'true',@($true,$true))) {
+  $bad=Copy-Data $applyBridge; $bad.apply_candidate_verified=$value
+  Expect-Rejection { Assert-L07AppliedViewportProofs $identity $applyProbe $bad $head $trialNow }; $cases++
+}
+foreach ($change in @(
+  @{key='status';value='APPLY_REVIEWED_MACRO_FAILED'},@{key='status';value='TRIAL_MACRO_RESTORED_REVIEW_PENDING'},
+  @{key='apply_verified';value=$false},@{key='apply_restore_attempted';value=$true},@{key='apply_restore_verified';value=$true},
+  @{key='apply_backup_verified';value=$false},@{key='apply_reviewed_trial_verified';value='true'},
+  @{key='apply_reviewed_trial_path';value='D:\yacs\lesson07-remote\reports\other\bridge.json'},
+  @{key='apply_reviewed_trial_sha256';value=('a'*64)},@{key='apply_reviewed_trial_source_commit';value=('a'*40)},
+  @{key='native_tool_calls';value=8},@{key='native_tool_calls';value='7'},@{key='native_tool_completed';value=$null}
+)) {
+  $bad=Copy-Data $applyBridge; $bad[$change.key]=$change.value
+  Expect-Rejection { Assert-L07AppliedViewportProofs $identity $applyProbe $bad $head $trialNow }; $cases++
+}
+foreach ($change in @(
+  @{key='apply_macro_requested';value=$false},@{key='trial_macro_requested';value=$true},
+  @{key='apply_candidate_verified';value=$null},@{key='apply_restore_attempted';value=$true},@{key='apply_restore_verified';value=$true},
+  @{key='apply_captures_received';value=0},@{key='native_tool_call_attempts';value=10},@{key='client_exit_code';value=1}
+)) {
+  $bad=Copy-Data $applyProbe; $bad[$change.key]=$change.value
+  Expect-Rejection { Assert-L07AppliedViewportProofs $identity $bad $applyBridge $head $trialNow }; $cases++
+}
+$bad=Copy-Data $applyBridge; $bad.apply_captures.A_restored=$bad.apply_captures.B_applied_macro_005
+Expect-Rejection { Assert-L07AppliedViewportProofs $identity $applyProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $applyBridge; $bad.apply_results[6].index=12
+Expect-Rejection { Assert-L07AppliedViewportProofs $identity $applyProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $applyBridge; $bad.apply_results[6].input_schema_sha256=('a'*64)
+Expect-Rejection { Assert-L07AppliedViewportProofs $identity $applyProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $applyBridge; $bad.apply_captures.B_applied_macro_005.capture_arguments.fov=89
+Expect-Rejection { Assert-L07AppliedViewportProofs $identity $applyProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $applyBridge; $bad.apply_captures.B_applied_macro_005.capture_result.text_truncated=$true
+Expect-Rejection { Assert-L07AppliedViewportProofs $identity $applyProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $applyBridge; $bad.apply_captures.B_applied_macro_005.native_tool_response_received_utc='2026-10-21T00:20:00Z'
+Expect-Rejection { Assert-L07AppliedViewportProofs $identity $applyProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $applyProbe; $bad.owner_after.editor.editor_start_filetime_utc='134370120000674690'
+Expect-Rejection { Assert-L07AppliedViewportProofs $identity $bad $applyBridge $head $trialNow }; $cases++
+Expect-Rejection { Assert-L07AppliedViewportProofs $identity $applyProbe $applyBridge $head ([DateTimeOffset]::Parse('2026-10-21T00:21:01Z')) }; $cases++
+
 $started=[DateTimeOffset]::Parse('2026-10-21T00:15:01Z')
 $finished=$started.AddSeconds(1)
 Assert-L07ViewportFileWindow 32MB $started $started $finished; $cases++

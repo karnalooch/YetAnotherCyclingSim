@@ -1524,7 +1524,7 @@
     },
     "delivery_authorization": "Owner requested publishing the same local repair on the existing branch, without regenerating terrain; exact commit and remote delivery are verified separately."
   },
-  "updated_at_utc": "2026-10-21T02:22:04.817531+00:00",
+  "updated_at_utc": "2026-10-21T02:33:04.425390+00:00",
   "grass2_replacement_20261020": {
     "status": "APPLIED_SAVED_NATIVE_READBACK_PASS_RENDER_PENDING",
     "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
@@ -1653,7 +1653,7 @@
     "performance_pass": false
   },
   "remote_connection_continuation_20261021": {
-    "status": "EDITOR_RETAINED_DEDICATED_PARAMETERS_READ_MACRO_TRIAL_PREPARATION",
+    "status": "EDITOR_RETAINED_MACRO_REPEAT_CONFIRMED_REVIEWED_APPLICATION_PREPARATION",
     "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
     "owner_authorized_missing_connection_infrastructure": true,
     "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
@@ -3230,7 +3230,7 @@
       }
     },
     "macro_trial_preparation": {
-      "status": "PREPARED_NOT_RUN",
+      "status": "REMOTE_TRIAL_COMPLETED_BASELINE_RESTORED",
       "intent": "[l07-trial-macro]",
       "scope": "Single existing Macro Tiling override .25 -> .05 -> .25 with exact baseline, backup, readback and same-camera A/B/A",
       "source_video": "https://player.vimeo.com/video/888569514",
@@ -3244,7 +3244,7 @@
       "physical_repeat_metres": "UNVERIFIED",
       "trial_is_final_repair": false,
       "source_import_performed": false,
-      "native_asset_mutation_performed": false,
+      "native_asset_mutation_performed": true,
       "visual_accepted": false,
       "performance_pass": false,
       "limitations": [
@@ -3271,7 +3271,7 @@
         "cross_language_client_receipt_check": "PASS; complete=true and three ordered stages; synthetic host envelope, no native calls",
         "independent_review": "PASS; pre-apply restoration reserve defect corrected and boundary regression independently verified",
         "native_calls_during_validation": 0,
-        "windows_os_guard_native_validation": "PENDING_REMOTE_EXECUTION",
+        "windows_os_guard_native_validation": "PASS; 12 fresh same-process checks in run 39532652532",
         "frozen_observer_sha256": "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5",
         "original_capture_and_inspection_paths": "Preserved; original standalone PowerShell proof validation unchanged",
         "files_sha256": {
@@ -3282,6 +3282,158 @@
           "scripts/ue/Read-YacsLesson07Viewport.ps1": "35a5cba0a83944c812abd861b34461c15d518d4be35cf084016311ef4468b7ad",
           "scripts/ue/Test-YacsLesson07Viewport.ps1": "93c09a38cc2960f357a60219622d5041fc646fd056580a154c3045f8c489cf88",
           ".github/workflows/yacs-lesson07-remote-editor.yml": "22c628ab46c914700bd591c5ce5384176c6e169fcaa65d4447c197e5316a6114"
+        }
+      },
+      "native_execution": {
+        "source_commit": "71914188cbdaeac200074b8a070e2f44ed50e501",
+        "run_id": 39532652532,
+        "cpu_job_id": 119001947751,
+        "cpu_conclusion": "success",
+        "cpu_tests_passed": 99,
+        "windows_job_id": 119002045700,
+        "windows_conclusion": "success",
+        "client_status": "TRIAL_MACRO_RESTORED_REVIEW_PENDING",
+        "probe_status": "LESSON07_TRIAL_MACRO_RESTORED_IMAGES_PENDING",
+        "capture_status": "TRIAL_MACRO_CAPTURES_RETAINED_REVIEW_PENDING",
+        "native_calls": 12,
+        "restored_parameter_snapshot_verified": true,
+        "baseline_backup_and_restored_sha256": "0b082e2e99bd7d12c307309a34704c4290eda073c6c895b8cdb3e91d4ded3bdd",
+        "candidate_parameter_snapshot_sha256": "99c384e9701889aa2cae667b69e1faff32835e2b4440a9953e6f5884439b75ee",
+        "only_changed_row": {
+          "kind": "scalars",
+          "index": 46,
+          "name": "Macro Tiling",
+          "from": 0.25,
+          "to": 0.05000000074505806,
+          "overridden": true
+        },
+        "parameter_counts": {
+          "scalars": 61,
+          "vectors": 1,
+          "textures": 5,
+          "static_switches": 3
+        },
+        "both_mutations_saved": true,
+        "same_editor_pid": 17896,
+        "same_editor_start_filetime_utc": "134370120000674689",
+        "same_camera_arguments": true,
+        "source_import_performed": false,
+        "level_saved": false,
+        "editor_started_or_stopped": false,
+        "artifact": {
+          "id": 12316570731,
+          "name": "lesson07-remote-connection-39532652532-1",
+          "bytes": 224085,
+          "sha256": "9d65747a33f01b24ac281d0f7b7d2515ef2da16c6f526faea104541c88983a4c"
+        },
+        "retained_evidence_directory": "docs/assets/lesson07-macro-trial-20261021",
+        "files": {
+          "bridge.json": {
+            "bytes": 155120,
+            "sha256": "e901c56e83821e771816be8f4dff49cfdad21c015f0b516cd06368cce9d072f4"
+          },
+          "identity.json": {
+            "bytes": 616,
+            "sha256": "74f62f31b39edea306bb2f2fe2cc7fe04700635b21b7da29ada4562cd1e9d6df"
+          },
+          "probe.json": {
+            "bytes": 3297,
+            "sha256": "deee2c81d0d9cc7107454a46f8d43d022c8771dacf1d50d4db1836af9d77d83b"
+          },
+          "trial-macro-A-baseline.jpg": {
+            "bytes": 63240,
+            "sha256": "6ae6c7f645f1b3c72379f3766e4f42407e0ec6f66f4711922f4649b5965938a0"
+          },
+          "trial-macro-A-baseline.json": {
+            "bytes": 1550,
+            "sha256": "73074b8148cd532523b938ab7c30902607b0e145563c14a481d9a7d61d053711"
+          },
+          "trial-macro-A-restored.jpg": {
+            "bytes": 62634,
+            "sha256": "1f73fe97a6eceab075a86ce8c9bbb004a91c01370a47542979377cd386fa140f"
+          },
+          "trial-macro-A-restored.json": {
+            "bytes": 1550,
+            "sha256": "cf18ca0c4451da4aee08d1caa2c0d0e0ffe0e47e46b1d1d4c50ee46c20f01384"
+          },
+          "trial-macro-B-005.jpg": {
+            "bytes": 63178,
+            "sha256": "2b61fa2258181903ef7486cdbb4c6fdc01c9ee7cdefad872837620b1c5f74be5"
+          },
+          "trial-macro-B-005.json": {
+            "bytes": 1546,
+            "sha256": "3469ceed09ca24f9bab10864f33be3dfcb9f4db7ac64486c24232e0405e96838"
+          },
+          "trial-macro.json": {
+            "bytes": 1011,
+            "sha256": "b0495e62a2744289ed89fc828f1c208f74eaa90e1ccc3cbbf0f12f22c58623a9"
+          }
+        },
+        "visual_review": {
+          "root_and_independent_reviewer_agree": true,
+          "finding": "Dense regular diamond repeat on left valley floor and central foreground becomes substantially less conspicuous at .05 and returns at restored .25",
+          "decision": "Retain only Macro .05 as a partial improvement, pending separate application and readback",
+          "remaining_defects": [
+            "Broad mottling and repeating surface undulations",
+            "Pale vertically stretched cliff surfaces",
+            "Crude grass-to-rock transitions"
+          ],
+          "first_capture_shadow": "Transient upper-left dark patch excluded from improvement claim; B vs restoredA supports same result",
+          "not_proven": [
+            "BaseColor-only cause",
+            "Physical metres per texture repeat",
+            "Whole material fixed",
+            "Native source PNG import"
+          ]
+        },
+        "visual_accepted": false,
+        "performance_pass": false,
+        "protected_ci": {
+          "run_id": 39532660002,
+          "conclusion": "failure",
+          "native_job_id": 119003182596,
+          "native_status": "LOCAL_BUSY",
+          "owner_editor_and_logs_preserved": true,
+          "native_build_and_automation_performed": false,
+          "secondary_error": "post-failure log staging could not enter missing _unreal-ci-warm directory",
+          "performance_pass": false
+        }
+      }
+    },
+    "reviewed_macro_application_preparation": {
+      "status": "PREPARED_NOT_RUN",
+      "scope": "Retain only visually reviewed Macro Tiling .05; all other current MI parameters and source assets unchanged",
+      "reviewed_trial_run": 39532652532,
+      "reviewed_trial_bridge_sha256": "e901c56e83821e771816be8f4dff49cfdad21c015f0b516cd06368cce9d072f4",
+      "intent": "[l07-apply-macro]",
+      "expected_candidate_snapshot_sha256": "99c384e9701889aa2cae667b69e1faff32835e2b4440a9953e6f5884439b75ee",
+      "existing_backup_must_match_baseline": true,
+      "native_application_performed": false,
+      "source_import_performed": false,
+      "whole_material_visual_accepted": false,
+      "performance_pass": false,
+      "success_native_calls": 7,
+      "maximum_native_calls": 10,
+      "positive_native_save_response_required": true,
+      "validation": {
+        "client_tests_passed": 82,
+        "powershell_viewport_cases_passed": 152,
+        "workflow_marker_combinations_passed": 128,
+        "probe_switch_combinations_passed": 64,
+        "reader_switch_combinations_passed": 4,
+        "powershell_files_parsed": 3,
+        "workflow_powershell_blocks_parsed": 10,
+        "cross_language_client_receipt_check": "PASS; production reader accepts complete applied candidate only, never restored trial state",
+        "independent_review": "PASS; positive persisted-save response required before full candidate readback",
+        "native_calls_during_validation": 0,
+        "existing_trial_and_observer_paths_preserved": true,
+        "files_sha256": {
+          "scripts/ue/lesson07_wingman_client.py": "15401aa11fcaedfee76f08d55a8ce6d74e5c514573fb7b10d1b492186ae777dd",
+          "scripts/ue/test_lesson07_wingman_client.py": "020ed8d9aef5ba9722d028d60740e9c35226688b841a56d439234133111acc06",
+          "scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1": "8cd041b4afcaad61218da170d389b37053c085c9ec587ecd3140221cd21ec92f",
+          "scripts/ue/Read-YacsLesson07Viewport.ps1": "5aa40bea5adbe8702aafc60834817419e331dedd7d2aff5a45ece39cf9b15b1b",
+          "scripts/ue/Test-YacsLesson07Viewport.ps1": "a564498d7c47891f0d4424b15af10388823d3f4f6f6f3f2c7964cf1b74ade563",
+          ".github/workflows/yacs-lesson07-remote-editor.yml": "6555bcf9f820388450d77f915c2986bd06dfd3045bfc920725763741e2db170a"
         }
       }
     }

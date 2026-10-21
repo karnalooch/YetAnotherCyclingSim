@@ -4,6 +4,7 @@ name: YACS Lesson07 remote Editor connection
 # Editor; establish the missing connection and start the saved L07 if absent.
 # Trial mode separately admits only the reviewed Macro Tiling A/B/A operation
 # on the existing owner session. No mode grants material/visual acceptance.
+# Apply mode retains only the independently reviewed Macro Tiling 0.05 result.
 on:
   push:
     branches: [codex/365-world-graph]
@@ -39,6 +40,7 @@ jobs:
       !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
       !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
       !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+      !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
       !contains(github.event.head_commit.message, '[l07-discover-editor]')
     runs-on: ubuntu-latest
     timeout-minutes: 95
@@ -91,26 +93,37 @@ jobs:
       github.actor == github.repository_owner &&
       !contains(github.event.head_commit.message, '[l07-remote-editor]') &&
       ((contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
@@ -198,6 +211,7 @@ jobs:
       L07_VIEWPORT_CAPTURE: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-capture-editor]') }}
       L07_READONLY_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-editor]') }}
       L07_MACRO_TRIAL: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-trial-macro]') }}
+      L07_MACRO_APPLY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-apply-macro]') }}
       L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') }}
     steps:
       - name: Create isolated Git settings for code-only staging
@@ -274,6 +288,7 @@ jobs:
           if ($env:L07_VIEWPORT_CAPTURE -ceq 'true') { $parameters['CaptureLesson07'] = $true }
           if ($env:L07_READONLY_INSPECTION -ceq 'true') { $parameters['InspectLesson07'] = $true }
           if ($env:L07_MACRO_TRIAL -ceq 'true') { $parameters['TrialMacro'] = $true }
+          if ($env:L07_MACRO_APPLY -ceq 'true') { $parameters['ApplyReviewedMacro'] = $true }
           & ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 @parameters
 
       - name: Retain the exact JPEG returned by the dedicated viewport tool
@@ -291,6 +306,14 @@ jobs:
           & ./scripts/ue/Read-YacsLesson07Viewport.ps1 `
             -ExpectedHead $env:GITHUB_SHA `
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' -TrialMacro
+
+      - name: Retain the final JPEG only after the reviewed Macro candidate is verified
+        id: apply_capture
+        if: ${{ success() && env.L07_MACRO_APPLY == 'true' }}
+        run: |
+          & ./scripts/ue/Read-YacsLesson07Viewport.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' -ApplyReviewedMacro
 
       - name: Recover the bounded error from the retained observer attempt
         if: ${{ success() && env.L07_READONLY_DISCOVERY == 'true' }}
@@ -343,7 +366,7 @@ jobs:
           if (Test-Path -LiteralPath $stage) { throw 'Current evidence stage already exists.' }
           [void][IO.Directory]::CreateDirectory($stage)
           foreach ($name in @('install.json','identity.json','bridge.json','probe.json','observer-failure-log.json','viewport.json',
-              'trial-macro.json','trial-macro-A-baseline.json','trial-macro-B-005.json','trial-macro-A-restored.json')) {
+              'trial-macro.json','trial-macro-A-baseline.json','trial-macro-B-005.json','trial-macro-A-restored.json','apply-macro.json')) {
             $path = Join-Path $root $name
             if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
             Assert-PlainReportPath $path
@@ -433,6 +456,37 @@ jobs:
               throw 'Trial aggregate receipt differs from retained JPEGs.'
             }
           }
+          $applyImagePath = Join-Path $root 'apply-macro.jpg'
+          if ('${{ steps.apply_capture.outcome }}' -ceq 'success' -and
+              -not (Test-Path -LiteralPath $applyImagePath -PathType Leaf)) {
+            throw 'Successful reviewed Macro retention has no exact JPEG.'
+          }
+          if (Test-Path -LiteralPath $applyImagePath -PathType Leaf) {
+            Assert-PlainReportPath $applyImagePath
+            $manifestPath = Join-Path $root 'apply-macro.json'
+            Assert-PlainReportPath $manifestPath
+            $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            if ($manifest.status -isnot [string] -or $manifest.status -cne 'APPLY_MACRO_VIEWPORT_RETAINED_REVIEW_PENDING' -or
+                $manifest.stage -isnot [string] -or $manifest.stage -cne 'B_applied_macro_005' -or
+                $manifest.source_commit -isnot [string] -or $manifest.source_commit -cne $env:GITHUB_SHA -or
+                $manifest.run_token -isnot [string] -or $manifest.run_token -cne '${{ github.run_id }}-${{ github.run_attempt }}' -or
+                $manifest.apply_verified -isnot [bool] -or -not $manifest.apply_verified -or
+                $manifest.apply_candidate_verified -isnot [bool] -or -not $manifest.apply_candidate_verified -or
+                $manifest.apply_restore_attempted -isnot [bool] -or $manifest.apply_restore_attempted -or
+                $manifest.apply_restore_verified -isnot [bool] -or $manifest.apply_restore_verified -or
+                $manifest.sha256 -isnot [string] -or $manifest.sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+                ($manifest.byte_count -isnot [int] -and $manifest.byte_count -isnot [long]) -or
+                $manifest.byte_count -ne (Get-Item -LiteralPath $applyImagePath).Length -or
+                $manifest.byte_count -le 0 -or $manifest.byte_count -gt 32MB -or
+                (Get-FileHash -LiteralPath $applyImagePath -Algorithm SHA256).Hash.ToLowerInvariant() -cne $manifest.sha256) {
+              throw 'Applied Macro JPEG does not match its verified candidate receipt.'
+            }
+            $stageImage = Join-Path $stage 'apply-macro.jpg'
+            Copy-Item -LiteralPath $applyImagePath -Destination $stageImage -ErrorAction Stop
+            if ((Get-FileHash -LiteralPath $stageImage -Algorithm SHA256).Hash.ToLowerInvariant() -cne $manifest.sha256) {
+              throw 'Applied Macro JPEG changed during staging.'
+            }
+          }
           $assembly = 'D:\yacs\work\lesson07-source-repair-20261021\${{ github.run_id }}-${{ github.run_attempt }}\assembly-receipt.json'
           if (Test-Path -LiteralPath $assembly -PathType Leaf) {
             Assert-PlainReportPath $assembly
@@ -463,5 +517,6 @@ jobs:
             ${{ steps.reports.outputs.directory }}/trial-macro-A-baseline.jpg
             ${{ steps.reports.outputs.directory }}/trial-macro-B-005.jpg
             ${{ steps.reports.outputs.directory }}/trial-macro-A-restored.jpg
+            ${{ steps.reports.outputs.directory }}/apply-macro.jpg
           if-no-files-found: warn
           retention-days: 7
