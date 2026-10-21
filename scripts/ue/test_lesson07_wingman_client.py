@@ -23,6 +23,33 @@ from scripts.ue import lesson07_wingman_client as client
 
 TOKEN = "SYNTHETIC_SECRET_7ec473bf_NOT_A_CREDENTIAL"
 
+# Exact raw inputSchema retained in the authenticated 2026-10-21 bridge receipt.
+INSTALLED_VAULT_SCHEMA = {
+    "properties": {
+        "action": {
+            "description": "'list' (default) or 'install'.",
+            "enum": ["list", "install"], "type": "string",
+        },
+        "dry_run": {
+            "description": "[install] Report what would be copied without writing anything (default false).",
+            "type": "boolean",
+        },
+        "filter": {
+            "description": "[list] Only show entries whose name contains this text, case-insensitive.",
+            "type": "string",
+        },
+        "force": {
+            "description": "[install] Install an entry that is NOT an AssetPack (a Project or plugin) by copying only its Content (default false). The Config folder and .uproject are not copied, so the assets may reference settings this project lacks. Only pass this when the user has asked for it after being told what is left behind.",
+            "type": "boolean",
+        },
+        "name": {
+            "description": "[install] The vault entry to install, as the 'entry' value printed by action=list. A case-insensitive partial match is accepted when it is unambiguous.",
+            "type": "string",
+        },
+    },
+    "type": "object",
+}
+
 # Exact raw inputSchema from authenticated discovery run 39515925462, source 96a7.
 INSTALLED_PYTHON_SCHEMA = {
     "properties": {
@@ -3117,6 +3144,224 @@ class ApplyReviewedMacroTests(unittest.TestCase):
         self.assertIs(report["apply_verified"], False)
         self.assertIs(report["apply_mutation_attempted"], True)
         self.assertIsNotNone(report["apply_manual_restore"])
+
+
+def vault_reply(request):
+    status, headers, raw = capture_reply(request)
+    if request["method"] in {"tools/list", "tools/call"}:
+        payload = json.loads(raw)
+        if request["method"] == "tools/list":
+            for tool in payload["result"]["tools"]:
+                if tool["name"] == "vault_asset":
+                    tool["inputSchema"] = INSTALLED_VAULT_SCHEMA
+        else:
+            payload["result"] = {"content": [{"type": "text", "text": (
+                "Uninterpreted owned inventory: QUARRY CLIFF\n"
+                "UnrelatedPrivatePack /Users/PrivateOwner\n"
+                + TOKEN + " synthetic-session-1 password=private-value"
+            )}]}
+        raw = client.canonical(payload)
+    return status, headers, raw
+
+
+class VaultInspectionTests(unittest.TestCase):
+    def setUp(self):
+        patcher = mock.patch.object(client, "verify_trial_host_identity", side_effect=trial_host_check)
+        self.host_check = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_exact_three_filtered_reads_with_fresh_identity_before_and_after_each(self):
+        self.assertEqual(hashlib.sha256(client.canonical(INSTALLED_VAULT_SCHEMA)).hexdigest(),
+                         "13ca66118e6fa53a0c8e1651374d001f756f7f0633d374bc5367336f06519ebf")
+        with peer(vault_reply) as (port, requests), mock.patch.object(client, "observer_loader") as loader:
+            probe = connection(port)
+            report = probe.probe(inspect_vault=True)
+            with self.assertRaisesRegex(client.ProbeError, "METHOD_NOT_ALLOWED"):
+                probe._post("tools/call", probe._vault_params)
+        loader.assert_not_called()
+        calls = [r["body"]["params"] for r in requests if r["body"]["method"] == "tools/call"]
+        self.assertEqual(calls, [
+            {"name": "vault_asset", "arguments": {"action": "list", "filter": "limestone"}},
+            {"name": "vault_asset", "arguments": {"action": "list", "filter": "cliff"}},
+            {"name": "vault_asset", "arguments": {"action": "list", "filter": "rock"}},
+        ])
+        self.assertEqual(report["status"], "VAULT_INSPECTION_RESPONSES_RECEIVED")
+        self.assertEqual(report["native_tool_calls"], 3)
+        for field in ("native_tool_attempted", "native_tool_completed", "native_tool_response_received"):
+            self.assertIs(report[field], True)
+        for field in ("vault_inventory_accepted", "vault_license_verified", "visual_acceptance", "performance_pass"):
+            self.assertIs(report[field], False)
+        self.assertEqual(report["native_material_readback"], "NOT_RUN")
+        self.assertNotIn("observer_source_sha256", report)
+        self.assertEqual(self.host_check.call_count, 6)
+        self.assertEqual([(r["filter"], r["phase"]) for r in report["vault_host_checks"]],
+                         [(name, phase) for name in ("limestone", "cliff", "rock") for phase in ("before", "after")])
+        public = client.vault_public_report(report)
+        self.assertTrue(public["shortlisted_candidate_text_observed"]["Quarry Cliff"])
+        self.assertEqual(sum(public["shortlisted_candidate_text_observed"].values()), 1)
+        self.assertEqual(len(public["shortlisted_candidate_text_observed"]), 6)
+        for value in ("UnrelatedPrivatePack", "PrivateOwner", TOKEN, "synthetic-session-1", "private-value"):
+            self.assertNotIn(value.encode(), client.canonical(public))
+        for row in report["vault_results"]:
+            self.assertLessEqual(len(client.canonical(row)), 64 * 1024)
+        self.assertNotIn(TOKEN.encode(), client.canonical(report))
+
+    def test_schema_missing_drift_duplicate_and_signed_out_stop_before_any_inventory(self):
+        for failure in ("missing", "drift", "duplicate", "signed_out"):
+            def failed(request):
+                status, headers, raw = vault_reply(request)
+                if request["method"] == "tools/list":
+                    payload = json.loads(raw)
+                    listing = payload["result"]["tools"]
+                    vault = next(tool for tool in listing if tool["name"] == "vault_asset")
+                    if failure == "missing":
+                        listing.remove(vault)
+                    elif failure == "drift":
+                        vault["inputSchema"]["additionalProperties"] = False
+                    elif failure == "duplicate":
+                        listing.append(vault)
+                    raw = client.canonical(payload)
+                elif request["method"] == "session/status" and failure == "signed_out":
+                    payload = json.loads(raw)
+                    payload["result"]["signed_in"] = False
+                    raw = client.canonical(payload)
+                return status, headers, raw
+            # Isolate the mutated fixture so the production schema pin never changes.
+            with self.subTest(failure=failure), mock.patch(__name__ + ".INSTALLED_VAULT_SCHEMA", json.loads(json.dumps(INSTALLED_VAULT_SCHEMA))):
+                with peer(failed) as (port, requests):
+                    state = client.ObservationState()
+                    with self.assertRaises(client.ProbeError):
+                        connection(port, state=state).probe(inspect_vault=True)
+                self.assertFalse(any(r["body"]["method"] == "tools/call" for r in requests))
+                self.assertEqual(state.report_fields()["native_tool_calls"], 0)
+
+    def test_install_force_arbitrary_filters_extra_keys_and_mixed_modes_are_rejected(self):
+        variants = (
+            {"action": "install", "name": "Any"},
+            {"action": "install", "name": "Any", "dry_run": True},
+            {"action": "list", "filter": "limestone", "force": False},
+            {"action": "list", "filter": "limestone", "name": "Any"},
+            {"action": "list", "filter": "other"},
+            {"action": "list"},
+        )
+        with peer(vault_reply) as (port, requests):
+            for other in ("observe_lesson07", "capture_lesson07", "inspect_lesson07", "trial_macro", "apply_reviewed_macro"):
+                with self.subTest(mode=other), self.assertRaisesRegex(client.ProbeError, "NATIVE_MODES_MUTUALLY_EXCLUSIVE"):
+                    connection(port).probe(inspect_vault=True, **{other: True})
+            for arguments in variants:
+                probe = connection(port)
+                state = probe.observation_state
+                state.vault_requested, state.vault_schema_sha256 = True, client.VAULT_SCHEMA_SHA256
+                row = {"attempted": False, "completed": False}
+                state.vault_results.append(row)
+                probe._vault_row = row
+                probe._vault_params = {"name": "vault_asset", "arguments": arguments}
+                with self.subTest(arguments=arguments), self.assertRaisesRegex(client.ProbeError, "VAULT_INSPECTION_ARGUMENTS"):
+                    probe._post("tools/call", probe._vault_params)
+            with mock.patch("sys.stderr", io.StringIO()), self.assertRaises(SystemExit):
+                client.main(["--identity-receipt", "i.json", "--output", "o.json", "--inspect-vault", "--observe-lesson07"])
+        self.assertEqual(requests, [])
+
+    def test_each_identity_drift_stops_without_any_retry_or_further_filter(self):
+        for fail_at, expected_calls in ((1, 0), (2, 1), (3, 1), (6, 3)):
+            count = 0
+            def drift(host, discovery):
+                nonlocal count
+                count += 1
+                if count == fail_at:
+                    raise client.ProbeError("TRIAL_IDENTITY_CHANGED")
+                return trial_host_check(host, discovery)
+            with self.subTest(fail_at=fail_at), peer(vault_reply) as (port, requests):
+                self.host_check.side_effect = drift
+                state = client.ObservationState()
+                with self.assertRaisesRegex(client.ProbeError, "TRIAL_IDENTITY_CHANGED"):
+                    connection(port, state=state).probe(inspect_vault=True)
+            self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), expected_calls)
+            self.assertEqual(state.report_fields()["native_tool_calls"], expected_calls)
+            self.assertIsNot(state.completed, True)
+
+    def test_tool_error_timeout_oversize_and_inline_image_stop_at_second_filter(self):
+        for failure in ("tool_error", "timeout", "oversize", "inline_image"):
+            def failed(request):
+                status, headers, raw = vault_reply(request)
+                if request["method"] == "tools/call" and request["params"]["arguments"]["filter"] == "cliff":
+                    if failure == "timeout":
+                        time.sleep(0.2)
+                    else:
+                        payload = json.loads(raw)
+                        if failure == "tool_error":
+                            payload["result"]["isError"] = True
+                        else:
+                            payload["result"]["content"][0]["text"] = "a" * (70 * 1024) if failure == "oversize" else "data:image/jpeg;base64:NOT_REAL"
+                        raw = client.canonical(payload)
+                return status, headers, raw
+            with self.subTest(failure=failure), peer(failed) as (port, requests):
+                state = client.ObservationState()
+                with self.assertRaises(client.ProbeError):
+                    connection(port, timeout=0.1 if failure == "timeout" else 2, state=state).probe(inspect_vault=True)
+            self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), 2)
+            self.assertEqual(state.report_fields()["native_tool_calls"], 2)
+            self.assertTrue(state.vault_results[0]["completed"])
+            self.assertIsNone(state.vault_results[1]["completed"])
+            self.assertIsNone(state.completed)
+            self.assertNotIn(TOKEN.encode(), client.canonical(state.report_fields()))
+            self.assertNotIn("UnrelatedPrivatePack", str(client.vault_public_report(state.report_fields())))
+
+    def test_file_guard_checks_before_and_after_each_call_without_replay(self):
+        for filename in ("identity.json", "discovery.json"):
+            with self.subTest(filename=filename), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                def changed(request):
+                    response = vault_reply(request)
+                    if request["method"] == "tools/call":
+                        (root / filename).write_text("{}")
+                    return response
+                with peer(changed) as (port, requests), mock.patch.object(client, "WINDOWS_HOST", True):
+                    (root / "identity.json").write_bytes(client.canonical(identity(port)))
+                    (root / "discovery.json").write_bytes(client.canonical(config(port)))
+                    state = client.ObservationState(vault_requested=True)
+                    with self.assertRaisesRegex(client.ProbeError, "INPUT_CHANGED"):
+                        client.probe_from_files(root / "identity.json", root / "discovery.json",
+                                                inspect_vault=True, observation_state=state)
+                self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), 1)
+                self.assertIsNone(state.completed)
+                self.assertTrue(state.vault_results[0]["response_received"])
+                self.assertIsNone(state.vault_results[0]["completed"])
+
+    def test_cli_keeps_private_inventory_local_and_emits_only_fixed_shortlist_booleans(self):
+        for native_error in (False, True):
+            def responded(request):
+                status, headers, raw = vault_reply(request)
+                if native_error and request["method"] == "tools/call":
+                    payload = json.loads(raw)
+                    payload["result"]["isError"] = True
+                    raw = client.canonical(payload)
+                return status, headers, raw
+            with self.subTest(native_error=native_error), tempfile.TemporaryDirectory() as directory, peer(responded) as (port, requests):
+                root = Path(directory)
+                receipt, discovery, output = root / "identity.json", root / "config.json", root / "bridge.json"
+                receipt.write_bytes(client.canonical(identity(port)))
+                discovery.write_bytes(client.canonical(config(port)))
+                real_from_files = client.probe_from_files
+                stdout = io.StringIO()
+                with mock.patch.object(client, "WINDOWS_HOST", True), mock.patch("sys.stdout", stdout), mock.patch.object(
+                    client, "probe_from_files", side_effect=lambda path, **kwargs: real_from_files(path, discovery, **kwargs)
+                ):
+                    code = client.main(["--identity-receipt", str(receipt), "--output", str(output), "--inspect-vault"])
+                private = json.loads(output.read_bytes())
+                public = json.loads((root / "vault-summary.json").read_bytes())
+            self.assertEqual(code, 1 if native_error else 0)
+            self.assertEqual(private["status"], "VAULT_INSPECTION_FAILED" if native_error else "VAULT_INSPECTION_RESPONSES_RECEIVED")
+            self.assertEqual(private["native_tool_calls"], 1 if native_error else 3)
+            self.assertEqual(private["native_material_readback"], "NOT_RUN")
+            self.assertIn("UnrelatedPrivatePack", private["vault_results"][0]["result"]["text"])
+            self.assertEqual(public["raw_responses"], "RETAINED_ON_HOST_NOT_PUBLISHED")
+            self.assertTrue(public["shortlisted_candidate_text_observed"]["Quarry Cliff"])
+            for secret in ("UnrelatedPrivatePack", "PrivateOwner", TOKEN, "synthetic-session-1", "private-value"):
+                self.assertNotIn(secret, stdout.getvalue())
+                self.assertNotIn(secret.encode(), client.canonical(public))
+            self.assertFalse(public["vault_inventory_accepted"])
+            self.assertFalse(public["vault_license_verified"])
 
 
 class FileTests(unittest.TestCase):

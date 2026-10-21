@@ -5,6 +5,7 @@ name: YACS Lesson07 remote Editor connection
 # Trial mode separately admits only the reviewed Macro Tiling A/B/A operation
 # on the existing owner session. No mode grants material/visual acceptance.
 # Apply mode retains only the independently reviewed Macro Tiling 0.05 result.
+# Vault mode only lists three fixed owned-pack filters; raw inventory stays local.
 on:
   push:
     branches: [codex/365-world-graph]
@@ -39,6 +40,7 @@ jobs:
       !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
       !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
       !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+      !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
       !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
       !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
       !contains(github.event.head_commit.message, '[l07-discover-editor]')
@@ -96,21 +98,25 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-discover-editor]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
@@ -120,12 +126,21 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')))
     runs-on: ubuntu-latest
@@ -210,9 +225,10 @@ jobs:
       L07_READONLY_DISCOVERY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-discover-editor]') }}
       L07_VIEWPORT_CAPTURE: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-capture-editor]') }}
       L07_READONLY_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-editor]') }}
+      L07_VAULT_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-vault]') }}
       L07_MACRO_TRIAL: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-trial-macro]') }}
       L07_MACRO_APPLY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-apply-macro]') }}
-      L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') }}
+      L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') && !contains(github.event.head_commit.message, '[l07-inspect-vault]') }}
     steps:
       - name: Create isolated Git settings for code-only staging
         working-directory: ${{ github.workspace }}
@@ -287,6 +303,7 @@ jobs:
           if ($env:L07_READONLY_DISCOVERY -ceq 'true') { $parameters['ExistingEditorOnly'] = $true }
           if ($env:L07_VIEWPORT_CAPTURE -ceq 'true') { $parameters['CaptureLesson07'] = $true }
           if ($env:L07_READONLY_INSPECTION -ceq 'true') { $parameters['InspectLesson07'] = $true }
+          if ($env:L07_VAULT_INSPECTION -ceq 'true') { $parameters['InspectVault'] = $true }
           if ($env:L07_MACRO_TRIAL -ceq 'true') { $parameters['TrialMacro'] = $true }
           if ($env:L07_MACRO_APPLY -ceq 'true') { $parameters['ApplyReviewedMacro'] = $true }
           & ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 @parameters
@@ -365,8 +382,11 @@ jobs:
           Assert-PlainReportPath $stage
           if (Test-Path -LiteralPath $stage) { throw 'Current evidence stage already exists.' }
           [void][IO.Directory]::CreateDirectory($stage)
-          foreach ($name in @('install.json','identity.json','bridge.json','probe.json','observer-failure-log.json','viewport.json',
+          foreach ($name in @('install.json','identity.json','bridge.json','vault-summary.json','probe.json','observer-failure-log.json','viewport.json',
               'trial-macro.json','trial-macro-A-baseline.json','trial-macro-B-005.json','trial-macro-A-restored.json','apply-macro.json')) {
+            # Vault text can include unrelated owned-pack or account-path data.
+            # Only the client's explicit metadata-only summary may leave the host.
+            if ($env:L07_VAULT_INSPECTION -ceq 'true' -and $name -ceq 'bridge.json') { continue }
             $path = Join-Path $root $name
             if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
             Assert-PlainReportPath $path

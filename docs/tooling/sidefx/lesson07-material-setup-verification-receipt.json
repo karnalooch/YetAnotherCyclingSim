@@ -3746,5 +3746,49 @@
       },
       "current_yacs_native_settings": "MATCHES: TMGS_NoMipmaps, TF_Nearest, TC_Grayscale, sRGB=false, PF_G8, 16000x16000 at 2026-10-21T02:05Z"
     }
+  },
+  "ready_material_selection_20261021": {
+    "status": "SOURCE_SHORTLIST_AND_CC0_SAMPLE_REVIEW_COMPLETE_NATIVE_IMPORT_NOT_RUN",
+    "owner_requirement": "Ready-made licensed assets and complete materials; include dark-grey and lighter limestone",
+    "report": "docs/assets/lesson07-ready-materials-20261021/README.md",
+    "acquisition_manifest": "docs/assets/lesson07-ready-materials-20261021/acquisition.json",
+    "primary_package_candidate": "Mediterranean Karst Biome Vol.01",
+    "license_verified_for_included_samples": "CC0-1.0",
+    "raw_diffuse_samples_acquired": 4,
+    "complete_pbr_set_acquired": false,
+    "fab_asset_specific_entitlement_verified": false,
+    "paid_purchase_performed": false,
+    "native_import_performed": false,
+    "whole_material_visual_accepted": false,
+    "performance_pass": false,
+    "read_only_vault_inspection": {
+      "status": "PREPARED_NOT_EXECUTED",
+      "filters": [
+        "limestone",
+        "cliff",
+        "rock"
+      ],
+      "native_tool": "vault_asset",
+      "action": "list",
+      "schema_sha256": "13ca66118e6fa53a0c8e1651374d001f756f7f0633d374bc5367336f06519ebf",
+      "raw_inventory_publicly_published": false,
+      "ownership_or_license_inferred_from_text_match": false
+    },
+    "preparation_validation": {
+      "client_and_observer_tests_passed": 109,
+      "vault_test_methods": 7,
+      "workflow_marker_combinations_passed": 256,
+      "independent_review": "PASS_NO_BLOCKING_FINDING",
+      "powershell_runtime": "7.6.6",
+      "powershell_typed_receipt_cases_passed": 11,
+      "powershell_mixed_mode_rejections_passed": 6,
+      "docs_guards": {
+        "links": "PASS",
+        "i18n": "PASS",
+        "structure": "PASS",
+        "freshness": "PASS"
+      },
+      "frozen_observer_unchanged": true
+    }
   }
 }

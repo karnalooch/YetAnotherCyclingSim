@@ -55,6 +55,14 @@ URLs and checksums into an ignored `download-index.json` before import.
 CC0 does not require attribution, but YACS keeps this notice and source metadata
 for provenance and reproducibility.
 
+The 2026-10-21 Lesson07 ready-material comparison separately includes unchanged
+1K Diffuse source samples of `rock_01` and `rock_3` by Rob Tuytel, and
+`gray_rocks` and `seaside_rock` by Dimitrios Savva, all supplied by Poly Haven
+under CC0-1.0. Exact download URLs, hashes and metadata are retained in
+[`docs/assets/lesson07-ready-materials-20261021/acquisition.json`](docs/assets/lesson07-ready-materials-20261021/acquisition.json).
+They are review samples, not accepted production limestone. No Poly Haven
+website example render or Fab source package is redistributed by this comparison.
+
 ## TINITALY 1.1 terrain data
 
 Dataset: TINITALY 1.1  

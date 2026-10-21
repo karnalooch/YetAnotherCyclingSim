@@ -53,6 +53,32 @@ into YACS.
 
 ## 3. Minimum record for a new external source
 
+### Issue #365 ready-made material selection, 2026-10-21
+
+The owner's new request authorizes licensed ready-made surface/asset research
+and bounded source acquisition for the ongoing Lesson07 appearance repair,
+explicitly including dark-grey limestone. It does not retroactively admit the
+historical comparison recipes as production materials or authorize paid
+purchases. See the [selection record](../assets/lesson07-ready-materials-20261021/README.md)
+and [machine-readable acquisition manifest](../assets/lesson07-ready-materials-20261021/acquisition.json).
+
+Poly Haven `rock_01`, `rock_3`, `gray_rocks` and `seaside_rock` are **acquired /
+review samples included**: four unchanged 1K Diffuse JPEGs and provider metadata.
+[CC0-1.0](https://polyhaven.com/license) permits commercial use, modification and
+source redistribution. License/API terms were checked on 2026-10-21; requests
+identify `YACS-ReadyMaterialReview/1.0`. Exact URLs, authors, dimensions,
+provider MD5/bytes and SHA-256 values are in the manifest. No protected website
+example render is copied. These samples are not authenticated limestone and
+none is selected for production. Credit is retained in `THIRD_PARTY_NOTICES.md`.
+
+cgbookcase `GreyRock03` and ambientCG `Rock063` are **approved for bounded CC0
+source acquisition, not acquired**: their official download routes returned
+HTTP 403. Their license sources and exact failed URLs are retained; no ZIP or
+complete source set was obtained. Fab product listings are **candidates only**:
+individual license/tier, account entitlement, package hashes and commercial
+redistribution limits must be recorded before use. No Fab asset payload or raw
+private Vault inventory is admitted into this public repository.
+
 ### Issue #363 surface comparison, 2026-10-05
 
 The owner authorized a visual candidate comparison. Poly Haven CC0 texture

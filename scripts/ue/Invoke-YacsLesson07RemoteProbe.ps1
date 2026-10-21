@@ -9,6 +9,7 @@
   requires that existing owner and requests only the fixed Lesson07 readback.
   -CaptureLesson07 requests the vendor's dedicated viewport screenshot instead.
   -InspectLesson07 performs the fixed six-call dedicated read-only material batch.
+  -InspectVault performs only the three fixed local owned-pack inventory reads.
   -TrialMacro performs the reviewed Macro Tiling A/B/A trial and verifies restore.
   -ApplyReviewedMacro retains the independently reviewed 0.05 candidate.
   The operation switches are mutually exclusive. No launch, task mutation or stop.
@@ -21,6 +22,7 @@ param(
   [Parameter(ParameterSetName='Observation')][switch]$ObserveLesson07,
   [Parameter(ParameterSetName='Capture')][switch]$CaptureLesson07,
   [Parameter(ParameterSetName='Inspection')][switch]$InspectLesson07,
+  [Parameter(ParameterSetName='VaultInspection')][switch]$InspectVault,
   [Parameter(ParameterSetName='MacroTrial')][switch]$TrialMacro,
   [Parameter(ParameterSetName='ReviewedMacroApply')][switch]$ApplyReviewedMacro,
   [Parameter(ParameterSetName='ExistingEditorDiscovery')][switch]$ExistingEditorOnly
@@ -28,11 +30,11 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$requireExistingOwner = [bool]($ExistingEditorOnly -or $ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $TrialMacro -or $ApplyReviewedMacro)
-$nativeRequested = [bool]($ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $TrialMacro -or $ApplyReviewedMacro)
-$expectedNativeCalls = if ($ApplyReviewedMacro) { 7 } elseif ($TrialMacro) { 12 } elseif ($InspectLesson07) { 6 } else { 1 }
+$requireExistingOwner = [bool]($ExistingEditorOnly -or $ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $InspectVault -or $TrialMacro -or $ApplyReviewedMacro)
+$nativeRequested = [bool]($ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $InspectVault -or $TrialMacro -or $ApplyReviewedMacro)
+$expectedNativeCalls = if ($ApplyReviewedMacro) { 7 } elseif ($TrialMacro) { 12 } elseif ($InspectLesson07) { 6 } elseif ($InspectVault) { 3 } else { 1 }
 $maximumNativeCalls = if ($ApplyReviewedMacro) { 10 } elseif ($TrialMacro) { 15 } else { $expectedNativeCalls }
-$ownerGuardPrefix = if ($ObserveLesson07) { 'OBSERVATION' } elseif ($CaptureLesson07) { 'CAPTURE' } elseif ($InspectLesson07) { 'INSPECTION' } elseif ($TrialMacro) { 'TRIAL_MACRO' } elseif ($ApplyReviewedMacro) { 'APPLY_MACRO' } else { 'DISCOVERY' }
+$ownerGuardPrefix = if ($ObserveLesson07) { 'OBSERVATION' } elseif ($CaptureLesson07) { 'CAPTURE' } elseif ($InspectLesson07) { 'INSPECTION' } elseif ($InspectVault) { 'VAULT_INSPECTION' } elseif ($TrialMacro) { 'TRIAL_MACRO' } elseif ($ApplyReviewedMacro) { 'APPLY_MACRO' } else { 'DISCOVERY' }
 $applyProofFlags=@('apply_verified','apply_candidate_verified','apply_mutation_attempted','apply_restore_attempted',
   'apply_restore_verified','apply_backup_verified','apply_registry_verified','apply_reviewed_trial_verified')
 $projectRoot = 'D:\yacs\project'
@@ -144,6 +146,7 @@ $report = [ordered]@{
   observation_requested=[bool]$ObserveLesson07;owner_before=$null;owner_after=$null
   capture_requested=[bool]$CaptureLesson07
   inspection_requested=[bool]$InspectLesson07
+  vault_inspection_requested=[bool]$InspectVault;vault_inventory_accepted=$false;vault_license_verified=$false
   trial_macro_requested=[bool]$TrialMacro;trial_status=$null;trial_captures_received=0
   trial_mutation_attempted=$false;trial_restore_verified=$false;trial_backup_verified=$false;trial_registry_verified=$false
   apply_macro_requested=[bool]$ApplyReviewedMacro;apply_status=$null;apply_captures_received=0
@@ -196,6 +199,7 @@ try {
   if ($ObserveLesson07) { $clientArguments+='--observe-lesson07' }
   if ($CaptureLesson07) { $clientArguments+='--capture-lesson07' }
   if ($InspectLesson07) { $clientArguments+='--inspect-lesson07' }
+  if ($InspectVault) { $clientArguments+='--inspect-vault' }
   if ($TrialMacro) { $clientArguments+='--trial-macro' }
   if ($ApplyReviewedMacro) { $clientArguments+='--apply-reviewed-macro' }
   if ($nativeRequested) {
@@ -329,6 +333,33 @@ try {
     }
     $report.native_material_readback='RAW_RESPONSES_REVIEW_PENDING'
     $report.status='LESSON07_INSPECTION_RESPONSES_RECEIVED_REVIEW_PENDING'
+  } elseif ($InspectVault) {
+    if ($clientReport['status'] -isnot [string] -or $clientReport['status'] -cne 'VAULT_INSPECTION_RESPONSES_RECEIVED' -or
+        $report.native_tool_call_attempts -ne 3 -or
+        $report.native_tool_attempted -ne $true -or $report.native_tool_completed -ne $true -or
+        $clientReport['native_tool_response_received'] -isnot [bool] -or $clientReport['native_tool_response_received'] -ne $true -or
+        $clientReport['native_material_readback'] -isnot [string] -or $clientReport['native_material_readback'] -cne 'NOT_RUN' -or
+        $clientReport['vault_schema_sha256'] -isnot [string] -or
+        $clientReport['vault_schema_sha256'] -cne '13ca66118e6fa53a0c8e1651374d001f756f7f0633d374bc5367336f06519ebf' -or
+        $clientReport['vault_inventory_accepted'] -isnot [bool] -or $clientReport['vault_inventory_accepted'] -ne $false -or
+        $clientReport['vault_license_verified'] -isnot [bool] -or $clientReport['vault_license_verified'] -ne $false -or
+        $clientReport['vault_results'] -isnot [array] -or $clientReport['vault_results'].Count -ne 3 -or
+        $clientReport['vault_host_checks'] -isnot [array] -or $clientReport['vault_host_checks'].Count -ne 6) {
+      throw 'VAULT_INSPECTION_RESPONSES_NOT_CONFIRMED'
+    }
+    $vaultFilters=@('limestone','cliff','rock')
+    for ($index=0; $index -lt 3; $index++) {
+      $row=$clientReport['vault_results'][$index]
+      if ($row -isnot [Collections.IDictionary] -or
+          $row['tool_name'] -isnot [string] -or $row['tool_name'] -cne 'vault_asset' -or
+          $row['arguments'] -isnot [Collections.IDictionary] -or $row['arguments'].Count -ne 2 -or
+          $row['arguments']['action'] -isnot [string] -or $row['arguments']['action'] -cne 'list' -or
+          $row['arguments']['filter'] -isnot [string] -or $row['arguments']['filter'] -cne $vaultFilters[$index] -or
+          $row['completed'] -isnot [bool] -or $row['completed'] -ne $true) {
+        throw 'VAULT_INSPECTION_RESPONSES_NOT_CONFIRMED'
+      }
+    }
+    $report.status='LESSON07_VAULT_INSPECTION_RESPONSES_RECEIVED_REVIEW_PENDING'
   } elseif ($CaptureLesson07) {
     if ($clientReport['status'] -isnot [string] -or $clientReport['status'] -cne 'CAPTURE_RESPONSE_RECEIVED' -or
         $report.native_tool_call_attempts -ne 1 -or
@@ -357,7 +388,7 @@ try {
   }
 } catch {
   $failure = $true
-  $report.status = if ($ObserveLesson07) { 'LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED' } elseif ($CaptureLesson07) { 'LESSON07_CAPTURE_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectLesson07) { 'LESSON07_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } elseif ($TrialMacro) { 'LESSON07_TRIAL_MACRO_INCOMPLETE_EDITOR_RETAINED' } elseif ($ApplyReviewedMacro) { 'LESSON07_REVIEWED_MACRO_APPLY_INCOMPLETE_EDITOR_RETAINED' } else { 'BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED' }
+  $report.status = if ($ObserveLesson07) { 'LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED' } elseif ($CaptureLesson07) { 'LESSON07_CAPTURE_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectLesson07) { 'LESSON07_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectVault) { 'LESSON07_VAULT_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } elseif ($TrialMacro) { 'LESSON07_TRIAL_MACRO_INCOMPLETE_EDITOR_RETAINED' } elseif ($ApplyReviewedMacro) { 'LESSON07_REVIEWED_MACRO_APPLY_INCOMPLETE_EDITOR_RETAINED' } else { 'BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED' }
   # Never serialize exception messages that might contain discovery credentials.
   $report.error_type = $_.Exception.GetType().Name
   $safeCodes = @('CURRENT_RUN_REPORT_ALREADY_EXISTS','EXISTING_PYTHON_UNAVAILABLE',
@@ -370,6 +401,8 @@ try {
     'CAPTURE_CLIENT_REPORT_SIZE','CAPTURE_RESPONSE_NOT_CONFIRMED',
     'INSPECTION_REQUIRES_EXISTING_EDITOR','INSPECTION_REQUIRES_VERIFIED_OWNER','INSPECTION_OWNER_CHANGED',
     'INSPECTION_CLIENT_REPORT_SIZE','INSPECTION_RESPONSES_NOT_CONFIRMED',
+    'VAULT_INSPECTION_REQUIRES_EXISTING_EDITOR','VAULT_INSPECTION_REQUIRES_VERIFIED_OWNER','VAULT_INSPECTION_OWNER_CHANGED',
+    'VAULT_INSPECTION_CLIENT_REPORT_SIZE','VAULT_INSPECTION_RESPONSES_NOT_CONFIRMED',
     'TRIAL_MACRO_REQUIRES_EXISTING_EDITOR','TRIAL_MACRO_REQUIRES_VERIFIED_OWNER','TRIAL_MACRO_OWNER_CHANGED',
     'TRIAL_MACRO_CLIENT_REPORT_SIZE','TRIAL_MACRO_RESTORATION_OR_CAPTURES_NOT_CONFIRMED',
     'APPLY_MACRO_REQUIRES_EXISTING_EDITOR','APPLY_MACRO_REQUIRES_VERIFIED_OWNER','APPLY_MACRO_OWNER_CHANGED',

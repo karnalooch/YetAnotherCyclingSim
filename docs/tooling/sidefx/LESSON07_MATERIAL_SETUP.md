@@ -11,6 +11,36 @@
 
 ---
 
+## Ready-made limestone assets and dark-grey requirement (2026-10-21)
+
+The owner requested licensed ready-made assets and complete materials, with
+**dark-grey limestone as well as lighter limestone**. The current
+[source selection and acquisition record](../../assets/lesson07-ready-materials-20261021/README.md)
+recommends Mediterranean Karst Biome Vol.01 as the most complete documented
+regional package. Free Quixel limestone mesh/surface candidates and the APEX
+Dolomites material provide alternatives; Shore lime rocks explicitly supplies
+dark-grey coastal forms. Fab candidates still require asset-specific license
+and entitlement evidence; paid checkout prices were not verified.
+
+Four actual CC0 Diffuse samples were acquired and inspected with hashes retained.
+Their warm colour or unverified geology prevented selection as the main dark-grey
+limestone. Two further official CC0 download attempts returned HTTP 403; no new
+complete PBR set or Fab package was acquired. The source list is a selection
+result, not evidence of an imported replacement or repaired whole material.
+
+The bounded `--inspect-vault` / `[l07-inspect-vault]` mode uses the installed
+dedicated tool only for three fixed local catalogue filters: `limestone`,
+`cliff`, `rock`. It retains fresh process/start/listener checks and cannot
+install, overwrite, download, run Python or import textures. Raw inventory
+remains on the host; public evidence exposes only result metadata and six
+fixed public product-name observations. The frozen observer and other modes
+are preserved. Native execution evidence is recorded separately when available.
+
+The five existing surface classes, accepted Grass2 and geographic masks remain
+unchanged. New neutral-grey sources must not inherit the old global hue grading.
+Darkening a texture does not resolve projection/stretching or geometry defects.
+Whole-material, native import and visual acceptance remain outstanding.
+
 ## Whole-material source repair (2026-10-21, native application pending)
 
 The owner rejected the whole texture appearance, including blurred yellow-green

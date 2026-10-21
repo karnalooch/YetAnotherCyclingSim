@@ -1,0 +1,258 @@
+{
+  "schema_version": 1,
+  "status": "ACQUIRED_RAW_DIFFUSE_SAMPLES_LICENSE_VERIFIED",
+  "issue": 365,
+  "milestone": "M3",
+  "base_sha": "75bb342c3f9f7d5cc12f776d8bf3f75bddba80dc",
+  "owner_request": "Find ready-made licensed assets and complete materials; include dark-grey limestone appearance; prepare for remote integration",
+  "checked_utc": "2026-10-21T08:54:49.732603+00:00",
+  "provider": "Poly Haven",
+  "license": "CC0-1.0",
+  "license_url": "https://polyhaven.com/license",
+  "legal_code_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "api_terms_url": "https://raw.githubusercontent.com/Poly-Haven/Public-API/master/ToS.md",
+  "api_user_agent": "YACS-ReadyMaterialReview/1.0 (+https://github.com/karnalooch/YetAnotherCyclingSim)",
+  "scope": "Licensed source acquisition and offline material preparation under current owner request; no native import or visual acceptance yet",
+  "commercial_game_use": true,
+  "modification_permitted": true,
+  "source_redistribution_permitted": true,
+  "protected_website_example_renders_copied": false,
+  "limestone_geology_authenticated": false,
+  "asset_ids": [
+    "rock_01",
+    "rock_3",
+    "gray_rocks",
+    "seaside_rock"
+  ],
+  "native_import_performed": false,
+  "classification_changed": false,
+  "terrain_changed": false,
+  "whole_material_visual_accepted": false,
+  "performance_pass": false,
+  "files": [
+    {
+      "asset_id": "rock_01",
+      "asset_page": "https://polyhaven.com/a/rock_01",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source_dimensions_mm": [
+        1500,
+        1500
+      ],
+      "path": "docs/assets/lesson07-ready-materials-20261021/rock_01-diffuse-1k.jpg",
+      "role": "unmodified Diffuse asset sample; not vendor sphere render",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_01/rock_01_diff_1k.jpg",
+      "bytes": 688083,
+      "provider_md5": "5897cd4496982b03cad0c3e2358486c0",
+      "sha256": "0b5f0418eb1e686190c5d33bb54c400b1f9ed58813b5e34aa5e573a5197302b5",
+      "width": 1024,
+      "height": 1024,
+      "mode": "RGB",
+      "limestone_geology_authenticated": false,
+      "full_pbr_set_acquired": false,
+      "visual_review_performed": true,
+      "production_selected": false,
+      "selection_reason": "Warm brown-grey; not selected as main dark neutral limestone"
+    },
+    {
+      "asset_id": "rock_3",
+      "asset_page": "https://polyhaven.com/a/rock_3",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "source_dimensions_mm": [
+        1500,
+        1500
+      ],
+      "path": "docs/assets/lesson07-ready-materials-20261021/rock_3-diffuse-1k.jpg",
+      "role": "unmodified Diffuse asset sample; not vendor sphere render",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_3/rock_3_diff_1k.jpg",
+      "bytes": 850585,
+      "provider_md5": "815bcc10e00c2abc43acc997b7d65361",
+      "sha256": "e68a81e113a4173c0e19f58bedda41b3b13adcfdeb2f8ae4808f63ec5de10225",
+      "width": 1024,
+      "height": 1024,
+      "mode": "RGB",
+      "limestone_geology_authenticated": false,
+      "full_pbr_set_acquired": false,
+      "visual_review_performed": true,
+      "production_selected": false,
+      "selection_reason": "Warm eroded pits; not selected as main dark neutral limestone"
+    },
+    {
+      "asset_id": "gray_rocks",
+      "asset_page": "https://polyhaven.com/a/gray_rocks",
+      "authors": {
+        "Dimitrios Savva": "All"
+      },
+      "source_dimensions_mm": [
+        1799.9995946884155,
+        1799.9995946884155
+      ],
+      "path": "docs/assets/lesson07-ready-materials-20261021/gray_rocks-diffuse-1k.jpg",
+      "role": "unmodified Diffuse asset sample; not vendor sphere render",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/gray_rocks/gray_rocks_diff_1k.jpg",
+      "bytes": 1014209,
+      "provider_md5": "bf2b62bc5eaa54c34231f0c378c1e5ca",
+      "sha256": "4c3b6fada26a9b564ca110ad47bca5921eceefc611d970159ce559c3c50728a0",
+      "width": 1024,
+      "height": 1024,
+      "mode": "RGB",
+      "limestone_geology_authenticated": false,
+      "full_pbr_set_acquired": false,
+      "visual_review_performed": true,
+      "production_selected": false,
+      "selection_reason": "Generic angular rubble; limestone geology unverified"
+    },
+    {
+      "asset_id": "seaside_rock",
+      "asset_page": "https://polyhaven.com/a/seaside_rock",
+      "authors": {
+        "Dimitrios Savva": "All"
+      },
+      "source_dimensions_mm": [
+        2000,
+        2000
+      ],
+      "path": "docs/assets/lesson07-ready-materials-20261021/seaside_rock-diffuse-1k.jpg",
+      "role": "unmodified Diffuse asset sample; not vendor sphere render",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/seaside_rock/seaside_rock_diff_1k.jpg",
+      "bytes": 954872,
+      "provider_md5": "d719765f07b7e5ec40ef7acb9b718df5",
+      "sha256": "7e1f1ce252c30d36fe442fcc529183b87cad112d26f6f656705172128efd936e",
+      "width": 1024,
+      "height": 1024,
+      "mode": "RGB",
+      "limestone_geology_authenticated": false,
+      "full_pbr_set_acquired": false,
+      "visual_review_performed": true,
+      "production_selected": false,
+      "selection_reason": "Dark brown/olive; not selected as main dark neutral limestone"
+    }
+  ],
+  "provider_metadata": [
+    {
+      "asset_id": "rock_01",
+      "kind": "info",
+      "path": "docs/assets/lesson07-ready-materials-20261021/rock_01-info.json",
+      "url": "https://api.polyhaven.com/info/rock_01",
+      "bytes": 909,
+      "sha256": "7d00a37fb318fc716183da19c4ad6d55eaf4e0b4c5f7c84586393f143a96a4f1"
+    },
+    {
+      "asset_id": "rock_01",
+      "kind": "files",
+      "path": "docs/assets/lesson07-ready-materials-20261021/rock_01-files.json",
+      "url": "https://api.polyhaven.com/files/rock_01",
+      "bytes": 28017,
+      "sha256": "1e218f010cf9e828e381fdb5e44cffcb0750a45472294bb6f50920ee1b5739b7"
+    },
+    {
+      "asset_id": "rock_3",
+      "kind": "info",
+      "path": "docs/assets/lesson07-ready-materials-20261021/rock_3-info.json",
+      "url": "https://api.polyhaven.com/info/rock_3",
+      "bytes": 898,
+      "sha256": "fb85dfb86c53384f67f88d986c5d0fa0db8d50512223c09ef38cdbceb3803d29"
+    },
+    {
+      "asset_id": "rock_3",
+      "kind": "files",
+      "path": "docs/assets/lesson07-ready-materials-20261021/rock_3-files.json",
+      "url": "https://api.polyhaven.com/files/rock_3",
+      "bytes": 27640,
+      "sha256": "909d18114b5e458c3655ebc8f4f6ff4e7c318ddcd6d0af52bc2757b9a5ef42e6"
+    },
+    {
+      "asset_id": "gray_rocks",
+      "kind": "info",
+      "path": "docs/assets/lesson07-ready-materials-20261021/gray_rocks-info.json",
+      "url": "https://api.polyhaven.com/info/gray_rocks",
+      "bytes": 904,
+      "sha256": "589864ba2d2909e23adf5bf892e0b4bd4fa382659f368ec0567e028df4b7f12a"
+    },
+    {
+      "asset_id": "gray_rocks",
+      "kind": "files",
+      "path": "docs/assets/lesson07-ready-materials-20261021/gray_rocks-files.json",
+      "url": "https://api.polyhaven.com/files/gray_rocks",
+      "bytes": 25213,
+      "sha256": "a37fa420ed2e3316234ac5f1e130233dc08de453f6b93d4dd8f9d302a6ffb0c6"
+    },
+    {
+      "asset_id": "seaside_rock",
+      "kind": "info",
+      "path": "docs/assets/lesson07-ready-materials-20261021/seaside_rock-info.json",
+      "url": "https://api.polyhaven.com/info/seaside_rock",
+      "bytes": 898,
+      "sha256": "bde212d9b341fa56188cec7c6c08199ef0401b23a4cfc0c91e2543f2e514b651"
+    },
+    {
+      "asset_id": "seaside_rock",
+      "kind": "files",
+      "path": "docs/assets/lesson07-ready-materials-20261021/seaside_rock-files.json",
+      "url": "https://api.polyhaven.com/files/seaside_rock",
+      "bytes": 25869,
+      "sha256": "61e68b126bf59ea552a94e6242aed7331570d416c299c1ebf4a103db807ed311"
+    }
+  ],
+  "additional_approved_acquisition": [
+    {
+      "provider": "Poly Haven",
+      "asset_id": "seaside_rock",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "verified_date": "2026-10-21",
+      "scope": "one unmodified 1K Diffuse review sample and source metadata; complete matched PBR acquisition only if visually selected",
+      "asset_page": "https://polyhaven.com/a/seaside_rock"
+    }
+  ],
+  "complete_pbr_set_acquired": false,
+  "download_failures": [
+    {
+      "provider": "cgbookcase",
+      "asset_id": "GreyRock03",
+      "url": "https://www.cgbookcase.com/_app/immutable/nodes/12.BUA7CczM.js",
+      "operation": "Resolve the publicly referenced download component",
+      "error": "HTTP Error 403: Forbidden",
+      "archive_acquired": false,
+      "native_import_attempted": false
+    },
+    {
+      "provider": "ambientCG",
+      "asset_id": "Rock063",
+      "url": "https://ambientcg.com/get?file=Rock063_2K-PNG.zip",
+      "operation": "Acquire official complete 2K PNG comparison set",
+      "error": "HTTP Error 403: Forbidden",
+      "archive_acquired": false,
+      "native_import_attempted": false
+    }
+  ],
+  "primary_recommendation": {
+    "name": "Mediterranean Karst Biome Vol.01",
+    "provider": "Terravision3D via Fab",
+    "url": "https://www.fab.com/listings/a60b0ff7-bd20-405b-928f-7a4d650d0b93",
+    "lifecycle": "candidate",
+    "payload_acquired": false,
+    "individual_license_verified": false,
+    "account_entitlement_verified": false,
+    "price_verified": false,
+    "geology": "publisher-described scanned karst limestone",
+    "dark_grey_variant_verified": false,
+    "native_compatibility_verified": false,
+    "reason": "Most complete documented Mediterranean limestone mesh and landscape material package"
+  },
+  "dark_grey_complement": {
+    "name": "Shore lime rocks volume one",
+    "provider": "lucidstormcg via Fab",
+    "url": "https://www.fab.com/listings/f33796c5-af51-4e7e-ab63-ef14a52c965d",
+    "lifecycle": "candidate",
+    "payload_acquired": false,
+    "individual_license_verified": false,
+    "account_entitlement_verified": false,
+    "price_verified": false,
+    "colour_evidence": "publisher explicitly describes dark-grey through sandy colours",
+    "geometry_role": "coastal boulder dressing, not an accepted main cliff replacement"
+  }
+}

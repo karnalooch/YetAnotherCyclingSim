@@ -4,6 +4,8 @@ Discovery is the default. Opt-in observation admits one hash-pinned adjacent
 collector through the exact observed execute_python contract, in file mode.
 The separate capture mode requests one current viewport JPEG through the
 dedicated screenshot tool, with no camera arguments or Python fallback.
+Vault inspection lists only three fixed name filters in the already-owned
+local cache; it cannot install, download or execute code.
 There is no arbitrary code/tool argument, Editor startup or retry surface.
 The Windows harness must supply a fresh OS identity receipt and recheck that
 identity after this process exits. The receipt is not an active-world readback.
@@ -107,6 +109,13 @@ INSPECTION_SCHEMA_SHA256 = {
     "edit_asset": "1a12cb39dc34abd43c69e54e9e91e3e5cc4f90dfdcfc55dd945cfc79ead695ba",
     "code_search": "5a8d65250ba94c62dd2cd1be3e622828cd72465d2acf64332f5bee655dd6e7d8",
 }
+VAULT_TOOL = "vault_asset"
+VAULT_SCHEMA_SHA256 = "13ca66118e6fa53a0c8e1651374d001f756f7f0633d374bc5367336f06519ebf"
+VAULT_FILTERS = ("limestone", "cliff", "rock")
+VAULT_PUBLIC_SHORTLIST = (
+    "Mediterranean Karst Biome", "Quarry Cliff", "Layered Rock Cliff",
+    "Limestone Rock Strata", "Dolomites", "Shore lime rocks",
+)
 INSPECTION_ROOT = "/Game/Generated/YACS/Lesson07_Unified"
 INSPECTION_TARGETS = {
     INSPECTION_ROOT + "/Materials/M_Landscape_YACS": "Material",
@@ -247,6 +256,14 @@ def inspection_plan():
                 "max_results": 50,
             },
         },
+    )
+
+
+def vault_inspection_plan():
+    """Three fixed local inventory reads, never an install or caller query."""
+    return tuple(
+        {"name": VAULT_TOOL, "arguments": {"action": "list", "filter": name}}
+        for name in VAULT_FILTERS
     )
 
 
@@ -586,6 +603,11 @@ class ObservationState:
     inspection_results: list = field(default_factory=list)
     inspection_schema_sha256: dict = field(default_factory=dict)
     inspection_registry_verified: bool = False
+    vault_requested: bool = False
+    vault_results: list = field(default_factory=list)
+    vault_schema_sha256: str | None = None
+    vault_host_checks: list = field(default_factory=list)
+    vault_external_host_identity: dict | None = None
     trial_requested: bool = False
     trial_results: list = field(default_factory=list)
     trial_schema_sha256: dict = field(default_factory=dict)
@@ -615,6 +637,9 @@ class ObservationState:
                 sum(row["attempted"] for row in self.trial_results)
                 if macro_mode
                 else
+                sum(row["attempted"] for row in self.vault_results)
+                if self.vault_requested
+                else
                 sum(row["attempted"] for row in self.inspection_results)
                 if self.inspection_requested
                 else int(self.attempted)
@@ -626,6 +651,10 @@ class ObservationState:
                 and all(row["response_received"] for row in self.trial_results[:normal_count])
                 and [row["stage"] for row in self.trial_results[:normal_count]] == list(fixed_plan)[:normal_count]
                 if macro_mode
+                else
+                len(self.vault_results) == 3
+                and all(row["response_received"] for row in self.vault_results)
+                if self.vault_requested
                 else
                 len(self.inspection_results) == 6
                 and all(row["response_received"] for row in self.inspection_results)
@@ -686,6 +715,15 @@ class ObservationState:
                     "apply_reviewed_trial_source_commit": APPLY_REVIEWED_TRIAL_SOURCE,
                 })
             report.update(macro_fields)
+        elif self.vault_requested:
+            report.update({
+                "vault_results": self.vault_results,
+                "vault_schema_sha256": self.vault_schema_sha256,
+                "vault_host_checks": self.vault_host_checks,
+                "external_host_identity": self.vault_external_host_identity,
+                "vault_inventory_accepted": False,
+                "vault_license_verified": False,
+            })
         elif self.inspection_requested:
             report.update(
                 {
@@ -1294,6 +1332,9 @@ class DiscoveryClient:
         self._capture_params = None
         self._inspection_params = None
         self._inspection_row = None
+        self._vault_params = None
+        self._vault_row = None
+        self._vault_files_guard = None
         self._trial_params = None
         self._trial_row = None
         self._trial_recovering = False
@@ -1426,6 +1467,22 @@ class DiscoveryClient:
                 and canonical(params) == canonical(inspection_plan()[index]),
                 "INSPECTION_ARGUMENTS",
             )
+        vault_inspecting = (
+            method == "tools/call" and self._vault_params is not None
+            and params is self._vault_params and self._vault_row is not None
+            and not self._vault_row["attempted"] and not notification
+        )
+        if vault_inspecting:
+            state = self.observation_state
+            index = len(state.vault_results) - 1
+            require(
+                state.vault_requested and 0 <= index < 3
+                and self._vault_row is state.vault_results[index]
+                and all(row["completed"] is True for row in state.vault_results[:index])
+                and state.vault_schema_sha256 == VAULT_SCHEMA_SHA256
+                and canonical(params) == canonical(vault_inspection_plan()[index]),
+                "VAULT_INSPECTION_ARGUMENTS",
+            )
         trialing = (
             method == "tools/call" and self._trial_params is not None
             and params is self._trial_params and self._trial_row is not None
@@ -1457,7 +1514,7 @@ class DiscoveryClient:
                 if stage == "apply_macro":
                     require(state.trial_backup_verified and state.trial_registry_verified,
                             "TRIAL_BACKUP_REQUIRED")
-        native_call = observing or capturing or inspecting or trialing
+        native_call = observing or capturing or inspecting or trialing or vault_inspecting
         require(
             method in METHODS
             or (notification and method == "notifications/initialized")
@@ -1468,7 +1525,9 @@ class DiscoveryClient:
             not notification or method == "notifications/initialized",
             "METHOD_NOT_ALLOWED",
         )
-        if trialing:
+        if vault_inspecting:
+            self._vault_host_check("before")
+        elif trialing:
             require(self._trial_started is not None
                     and time.monotonic() - self._trial_started <= TRIAL_SECONDS, "TRIAL_INTERVAL")
             if self._trial_row["stage"] == "apply_macro":
@@ -1540,6 +1599,11 @@ class DiscoveryClient:
                             "started_utc": self.observation_state.started_utc.isoformat(),
                         }
                     )
+                if vault_inspecting:
+                    self._vault_row.update({
+                        "attempted": True, "completed": None,
+                        "started_utc": self.observation_state.started_utc.isoformat(),
+                    })
                 if trialing:
                     self._trial_row.update({
                         "attempted": True, "completed": None,
@@ -1617,6 +1681,11 @@ class DiscoveryClient:
                             "response_received_utc": self.observation_state.response_received_utc.isoformat(),
                         }
                     )
+                if vault_inspecting:
+                    self._vault_row.update({
+                        "response_received": True,
+                        "response_received_utc": self.observation_state.response_received_utc.isoformat(),
+                    })
                 if trialing:
                     self._trial_row.update({
                         "response_received": True,
@@ -1637,6 +1706,45 @@ class DiscoveryClient:
             if watchdog is not None:
                 watchdog.cancel()
             connection.close()
+
+    def _vault_host_check(self, phase):
+        if self._vault_files_guard is not None:
+            self._vault_files_guard()
+        # Reuse the existing OS-only proof. The harness owns SID/project proof;
+        # immutable PID/FILETIME/executable and listener bind each read to it.
+        check = verify_trial_host_identity(self.identity, self.discovery)
+        validate_identity({**self.identity, "observed_utc": check["verified_utc"]}, self.discovery)
+        self.observation_state.vault_host_checks.append({
+            "filter": self._vault_row["arguments"]["filter"], "phase": phase, **check,
+        })
+
+    def _run_vault_inspection(self, schema):
+        require(type(schema) is dict and hashlib.sha256(canonical(schema)).hexdigest() == VAULT_SCHEMA_SHA256,
+                "VAULT_TOOL_SCHEMA_UNSUPPORTED")
+        state = self.observation_state
+        state.vault_schema_sha256 = VAULT_SCHEMA_SHA256
+        for index, params in enumerate(vault_inspection_plan(), 1):
+            row = {
+                "index": index, "tool_name": VAULT_TOOL, "arguments": params["arguments"],
+                "input_schema_sha256": VAULT_SCHEMA_SHA256,
+                "attempted": False, "completed": False, "response_received": False,
+                "started_utc": None, "response_received_utc": None,
+                "result": None, "error_code": None,
+            }
+            state.vault_results.append(row)
+            self._vault_params, self._vault_row = params, row
+            state.tool_name = VAULT_TOOL
+            try:
+                result = self._post("tools/call", params)
+                retain_inspection_result(result, row, (self.discovery.token, self.session_id))
+                self._vault_host_check("after")
+                require(len(canonical(state.vault_results)) <= INSPECTION_AGGREGATE_LIMIT,
+                        "VAULT_INSPECTION_AGGREGATE_SIZE")
+                row["completed"] = True
+            except ProbeError as error:
+                row["error_code"] = error.code
+                raise
+        state.completed = True
 
     def _trial_call(self, stage):
         state = self.observation_state
@@ -1779,14 +1887,15 @@ class DiscoveryClient:
 
     def probe(
         self, observe_lesson07=False, capture_lesson07=False, inspect_lesson07=False,
-        trial_macro=False, apply_reviewed_macro=False,
+        trial_macro=False, apply_reviewed_macro=False, inspect_vault=False,
     ):
         require(
-            sum((observe_lesson07, capture_lesson07, inspect_lesson07, trial_macro, apply_reviewed_macro)) <= 1,
+            sum((observe_lesson07, capture_lesson07, inspect_lesson07, trial_macro, apply_reviewed_macro, inspect_vault)) <= 1,
             "NATIVE_MODES_MUTUALLY_EXCLUSIVE",
         )
         self.observation_state.capture_requested = capture_lesson07
         self.observation_state.inspection_requested = inspect_lesson07
+        self.observation_state.vault_requested = inspect_vault
         self.observation_state.trial_requested = trial_macro
         self.observation_state.apply_requested = apply_reviewed_macro
         if trial_macro or apply_reviewed_macro:
@@ -1817,6 +1926,7 @@ class DiscoveryClient:
         observer_schema = None
         capture_schema = None
         inspection_schemas = {}
+        vault_schema = None
         try:
             for _page in range(MAX_PAGES):
                 listing = self._post(
@@ -1860,6 +1970,8 @@ class DiscoveryClient:
                         capture_schema = tool.get("inputSchema")
                     if name in INSPECTION_SCHEMA_SHA256:
                         inspection_schemas[name] = tool.get("inputSchema")
+                    if name == VAULT_TOOL:
+                        vault_schema = tool.get("inputSchema")
                 cursor = listing.get("nextCursor")
                 if cursor is None:
                     break
@@ -2027,6 +2139,18 @@ class DiscoveryClient:
                     **state.report_fields(),
                 }
             )
+        if inspect_vault:
+            require(tool_error is None, "VAULT_INCOMPLETE_TOOL_LIST")
+            require(session["signed_in"], "VAULT_SIGNED_OUT")
+            self._run_vault_inspection(vault_schema)
+            report.update({
+                "status": "VAULT_INSPECTION_RESPONSES_RECEIVED",
+                "http_requests": self.requests,
+                "notifications_received": self.notifications_received,
+                "native_material_readback": "NOT_RUN",
+                "visual_acceptance": False,
+                **self.observation_state.report_fields(),
+            })
         if trial_macro or apply_reviewed_macro:
             require(tool_error is None, "TRIAL_INCOMPLETE_TOOL_LIST")
             require(session["signed_in"], "TRIAL_SIGNED_OUT")
@@ -2053,6 +2177,7 @@ def probe_from_files(
     inspect_lesson07=False,
     trial_macro=False,
     apply_reviewed_macro=False,
+    inspect_vault=False,
     observation_state=None,
 ):
     require(WINDOWS_HOST, "WINDOWS_HOST_REQUIRED")
@@ -2062,21 +2187,28 @@ def probe_from_files(
     identity = parse_json(identity_raw, CONFIG_LIMIT)
     safe_identity = validate_identity(identity, discovery)
     client = DiscoveryClient(discovery, identity, observation_state=observation_state)
-    if trial_macro or apply_reviewed_macro:
-        client.observation_state.trial_external_host_identity = safe_identity
+    if trial_macro or apply_reviewed_macro or inspect_vault:
+        if inspect_vault:
+            client.observation_state.vault_external_host_identity = safe_identity
+        else:
+            client.observation_state.trial_external_host_identity = safe_identity
 
         def trial_files_guard():
             require(read_bounded(discovery_path, CONFIG_LIMIT) == discovery_raw
                     and read_bounded(identity_path, CONFIG_LIMIT) == identity_raw,
                     "INPUT_CHANGED")
 
-        client._trial_files_guard = trial_files_guard
+        if inspect_vault:
+            client._vault_files_guard = trial_files_guard
+        else:
+            client._trial_files_guard = trial_files_guard
     report = client.probe(
         observe_lesson07=observe_lesson07,
         capture_lesson07=capture_lesson07,
         inspect_lesson07=inspect_lesson07,
         **({"trial_macro": True} if trial_macro else {}),
         **({"apply_reviewed_macro": True} if apply_reviewed_macro else {}),
+        **({"inspect_vault": True} if inspect_vault else {}),
     )
     require(
         read_bounded(discovery_path, CONFIG_LIMIT) == discovery_raw
@@ -2113,6 +2245,39 @@ def write_report(path, report):
         raise ProbeError("OUTPUT_UNAVAILABLE") from None
 
 
+def vault_public_report(report):
+    """Only proof metadata may leave the host; owned-pack text stays private."""
+    fields = (
+        "schema_version", "observed_utc", "status", "error_code", "rpc_code",
+        "native_tool_calls", "native_tool_attempted", "native_tool_completed",
+        "native_tool_response_received", "native_material_readback",
+        "vault_schema_sha256", "vault_host_checks", "external_host_identity",
+        "client_sha256", "vault_inventory_accepted", "vault_license_verified",
+        "visual_acceptance", "performance_pass",
+    )
+    public = {key: report[key] for key in fields if key in report}
+    public["raw_responses"] = "RETAINED_ON_HOST_NOT_PUBLISHED"
+    texts = [(row.get("result") or {}).get("text", "").casefold()
+             for row in report.get("vault_results", [])]
+    public["shortlisted_candidate_text_observed"] = {
+        name: any(name.casefold() in text for text in texts)
+        for name in VAULT_PUBLIC_SHORTLIST
+    }
+    public["shortlist_observation_basis"] = "CASE_INSENSITIVE_TEXT_SUBSTRING_NOT_OWNERSHIP_LICENSE_OR_COMPLETENESS_PROOF"
+    public["vault_results"] = []
+    for row in report.get("vault_results", []):
+        safe = {key: row[key] for key in (
+            "index", "tool_name", "arguments", "input_schema_sha256", "attempted",
+            "completed", "response_received", "started_utc", "response_received_utc", "error_code",
+        )}
+        result = row.get("result")
+        safe["result"] = None if result is None else {
+            key: result[key] for key in ("response_sha256", "text_truncated", "text_block_count")
+        }
+        public["vault_results"].append(safe)
+    return public
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--identity-receipt", type=Path, required=True)
@@ -2121,12 +2286,14 @@ def main(argv=None):
     mode.add_argument("--observe-lesson07", action="store_true")
     mode.add_argument("--capture-lesson07", action="store_true")
     mode.add_argument("--inspect-lesson07", action="store_true")
+    mode.add_argument("--inspect-vault", action="store_true")
     mode.add_argument("--trial-macro", action="store_true")
     mode.add_argument("--apply-reviewed-macro", action="store_true")
     args = parser.parse_args(argv)
     state = ObservationState(
         capture_requested=args.capture_lesson07,
         inspection_requested=args.inspect_lesson07,
+        vault_requested=args.inspect_vault,
         trial_requested=args.trial_macro,
         apply_requested=args.apply_reviewed_macro,
     )
@@ -2141,6 +2308,8 @@ def main(argv=None):
             options["capture_lesson07"] = True
         if args.inspect_lesson07:
             options["inspect_lesson07"] = True
+        if args.inspect_vault:
+            options["inspect_vault"] = True
         if args.trial_macro:
             options["trial_macro"] = True
         if args.apply_reviewed_macro:
@@ -2161,6 +2330,8 @@ def main(argv=None):
             if args.trial_macro
             else "INSPECTION_FAILED"
             if args.inspect_lesson07
+            else "VAULT_INSPECTION_FAILED"
+            if args.inspect_vault
             else "CAPTURE_FAILED"
             if args.capture_lesson07
             else "OBSERVATION_FAILED"
@@ -2172,13 +2343,13 @@ def main(argv=None):
                 "RAW_RESPONSES_REVIEW_PENDING"
                 if args.inspect_lesson07 and state.attempted
                 else "UNVERIFIED"
-                if state.attempted and not args.capture_lesson07
+                if state.attempted and not (args.capture_lesson07 or args.inspect_vault)
                 else "NOT_RUN"
             ),
             "visual_acceptance": False,
             "performance_pass": False,
         }
-        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07 or args.trial_macro or args.apply_reviewed_macro:
+        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07 or args.trial_macro or args.apply_reviewed_macro or args.inspect_vault:
             report.update(state.report_fields())
         if rpc_code is not None:
             report["rpc_code"] = rpc_code
@@ -2189,6 +2360,8 @@ def main(argv=None):
         if args.trial_macro
         else "L07_WINGMAN_INSPECTION"
         if args.inspect_lesson07
+        else "L07_WINGMAN_VAULT_INSPECTION"
+        if args.inspect_vault
         else "L07_WINGMAN_CAPTURE"
         if args.capture_lesson07
         else "L07_WINGMAN_OBSERVATION"
@@ -2197,6 +2370,8 @@ def main(argv=None):
     )
     try:
         write_report(args.output, report)
+        if args.inspect_vault:
+            write_report(args.output.with_name("vault-summary.json"), vault_public_report(report))
     except ProbeError:
         print(
             prefix
@@ -2216,6 +2391,8 @@ def main(argv=None):
         if args.trial_macro
         else "INSPECTION_RESPONSES_RECEIVED"
         if args.inspect_lesson07
+        else "VAULT_INSPECTION_RESPONSES_RECEIVED"
+        if args.inspect_vault
         else "CAPTURE_RESPONSE_RECEIVED"
         if args.capture_lesson07
         else "OBSERVATION_COMPLETE"
