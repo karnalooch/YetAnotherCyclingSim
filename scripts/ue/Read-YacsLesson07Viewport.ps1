@@ -3,13 +3,16 @@
 .SYNOPSIS
   Retain the exact JPEG returned by this run's dedicated viewport capture.
 .DESCRIPTION
-  Reads existing receipts and one bounded file. It never calls Unreal, selects
+  Reads existing receipts and bounded files. -TrialMacro retains only completed
+  A/B/A captures after verified restoration of the original material baseline.
+  It never calls Unreal, selects
   a newest file, retries capture, changes the camera, or modifies source assets.
 #>
 [CmdletBinding()]
 param(
   [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string]$ExpectedHead,
-  [Parameter(Mandatory)][ValidatePattern('^[0-9]{1,20}-[0-9]{1,10}$')][string]$RunToken
+  [Parameter(Mandatory)][ValidatePattern('^[0-9]{1,20}-[0-9]{1,10}$')][string]$RunToken,
+  [switch]$TrialMacro
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
@@ -214,6 +217,172 @@ function Assert-L07ViewportProcess([Collections.IDictionary]$Identity,[long]$Ses
   }
 }
 
+function Assert-L07TrialCamera([Collections.IDictionary]$Arguments) {
+  if ($Arguments.Count -ne 4 -or $Arguments.return_image -isnot [bool] -or $Arguments.return_image -ne $false -or
+      ($Arguments.fov -isnot [int] -and $Arguments.fov -isnot [long] -and $Arguments.fov -isnot [double]) -or
+      $Arguments.fov -ne 90) { throw 'TRIAL_MACRO_CAMERA_REJECTED' }
+  foreach ($key in @('return_image','camera_location','camera_rotation','fov')) {
+    if ($Arguments.Keys -cnotcontains $key) { throw 'TRIAL_MACRO_CAMERA_REJECTED' }
+  }
+  $expected=@{
+    camera_location=@(-16145.268182324218,84377.62518478667,49067.09993071173)
+    camera_rotation=@(-18.85209781522559,165.400053560734,0)
+  }
+  foreach ($key in @('camera_location','camera_rotation')) {
+    $values=$Arguments[$key]
+    if ($values -isnot [array] -or $values.Count -ne 3) { throw 'TRIAL_MACRO_CAMERA_REJECTED' }
+    for ($i=0;$i -lt 3;$i++) {
+      if (($values[$i] -isnot [int] -and $values[$i] -isnot [long] -and $values[$i] -isnot [double]) -or
+          -not [double]::IsFinite([double]$values[$i]) -or [double]$values[$i] -ne [double]$expected[$key][$i]) {
+        throw 'TRIAL_MACRO_CAMERA_REJECTED'
+      }
+    }
+  }
+}
+
+function Assert-L07TrialViewportProofs([Collections.IDictionary]$Identity,[Collections.IDictionary]$Probe,
+    [Collections.IDictionary]$Bridge,[string]$Head,[DateTimeOffset]$Now) {
+  # The client bounds the entire trial to 300 seconds. Keep the original
+  # identity timestamp and allow 60 seconds for the final owner preflight;
+  # the final observation must still be fresh. Original capture rules are unchanged.
+  $before=ConvertTo-L07ViewportUtc $Identity.observed_utc
+  $after=ConvertTo-L07ViewportUtc $Probe.identity_after.observed_utc
+  if ($after -lt $before -or ($after-$before).TotalSeconds -gt 360 -or
+      $Now -lt $after -or ($Now-$after).TotalSeconds -gt 120) { throw 'TRIAL_MACRO_IDENTITY_TIME_REJECTED' }
+  Assert-L07ViewportIdentity $Identity $Head $before
+  if ($Probe.source_commit -isnot [string] -or $Probe.source_commit -cne $Head -or
+      $Probe.status -isnot [string] -or $Probe.status -cnotin @(
+        'LESSON07_TRIAL_MACRO_RESTORED_IMAGES_PENDING','LESSON07_TRIAL_MACRO_INCOMPLETE_EDITOR_RETAINED') -or
+      $Probe.trial_status -isnot [string] -or $Probe.trial_status -cne $Bridge.status -or
+      $Bridge.status -isnot [string] -or $Bridge.status -cnotin @('TRIAL_MACRO_RESTORED_REVIEW_PENDING','TRIAL_MACRO_FAILED') -or
+      ($Probe.client_exit_code -isnot [int] -and $Probe.client_exit_code -isnot [long]) -or
+      ($Probe.native_tool_call_attempts -isnot [int] -and $Probe.native_tool_call_attempts -isnot [long]) -or
+      ($Bridge.native_tool_calls -isnot [int] -and $Bridge.native_tool_calls -isnot [long]) -or
+      $Bridge.native_tool_calls -lt 1 -or $Bridge.native_tool_calls -gt 15 -or
+      $Probe.native_tool_call_attempts -ne $Bridge.native_tool_calls) { throw 'TRIAL_MACRO_PROBE_REJECTED' }
+  foreach ($field in @('trial_macro_requested','existing_owner_required','identity_stable_across_probe','native_tool_attempted')) {
+    if ($Probe[$field] -isnot [bool] -or -not $Probe[$field]) { throw 'TRIAL_MACRO_PROBE_FLAG_REJECTED' }
+  }
+  foreach ($field in @('capture_requested','inspection_requested','observation_requested','editor_started_or_stopped','performance_pass')) {
+    if ($Probe[$field] -isnot [bool] -or $Probe[$field]) { throw 'TRIAL_MACRO_PROBE_FLAG_REJECTED' }
+  }
+  foreach ($field in @('trial_mutation_attempted','trial_restore_verified','trial_backup_verified','trial_registry_verified')) {
+    if ($Bridge[$field] -isnot [bool] -or $Probe[$field] -isnot [bool] -or $Bridge[$field] -ne $Probe[$field]) {
+      throw 'TRIAL_MACRO_RESTORATION_REJECTED'
+    }
+  }
+  if (-not $Bridge.trial_restore_verified -or -not $Bridge.trial_registry_verified -or
+      ($Bridge.trial_mutation_attempted -and -not $Bridge.trial_backup_verified)) { throw 'TRIAL_MACRO_RESTORATION_REJECTED' }
+  $complete=$Bridge.status -ceq 'TRIAL_MACRO_RESTORED_REVIEW_PENDING'
+  if ($Bridge.trial_results -isnot [array] -or $Bridge.trial_results.Count -gt 15 -or
+      $Bridge.trial_captures -isnot [Collections.IDictionary] -or
+      $Bridge.trial_captures.Count -lt 1 -or $Bridge.trial_captures.Count -gt 3 -or
+      ($Probe.trial_captures_received -isnot [int] -and $Probe.trial_captures_received -isnot [long]) -or
+      $Probe.trial_captures_received -ne $Bridge.trial_captures.Count) { throw 'TRIAL_MACRO_CAPTURE_SET_REJECTED' }
+  if ($complete) {
+    if ($Probe.status -cne 'LESSON07_TRIAL_MACRO_RESTORED_IMAGES_PENDING' -or $Probe.client_exit_code -ne 0 -or
+        $Bridge.native_tool_calls -ne 12 -or $Bridge.trial_results.Count -ne 12 -or $Bridge.trial_captures.Count -ne 3 -or
+        -not $Bridge.trial_mutation_attempted -or -not $Bridge.trial_backup_verified -or
+        $Bridge.native_material_readback -isnot [string] -or $Bridge.native_material_readback -cne 'TRIAL_BASELINE_RESTORED_CAPTURE_REVIEW_PENDING') {
+      throw 'TRIAL_MACRO_COMPLETION_REJECTED'
+    }
+    foreach ($field in @('native_tool_attempted','native_tool_completed','native_tool_response_received')) {
+      if ($Bridge[$field] -isnot [bool] -or -not $Bridge[$field]) { throw 'TRIAL_MACRO_COMPLETION_REJECTED' }
+    }
+    foreach ($field in @('native_tool_called','native_tool_completed')) {
+      if ($Probe[$field] -isnot [bool] -or -not $Probe[$field]) { throw 'TRIAL_MACRO_COMPLETION_REJECTED' }
+    }
+  } elseif ($Probe.status -cne 'LESSON07_TRIAL_MACRO_INCOMPLETE_EDITOR_RETAINED') { throw 'TRIAL_MACRO_COMPLETION_REJECTED' }
+  foreach ($field in @('identity_before','identity_after')) {
+    $other=$Probe[$field]
+    if ($other -isnot [Collections.IDictionary]) { throw 'TRIAL_MACRO_IDENTITY_REJECTED' }
+    $observed=ConvertTo-L07ViewportUtc $other.observed_utc
+    Assert-L07ViewportIdentity $other $Head $observed
+    foreach ($key in @('pid','process_start_filetime_utc','executable','project')) {
+      if ($other[$key] -cne $Identity[$key]) { throw 'TRIAL_MACRO_IDENTITY_CHANGED' }
+    }
+    if ((ConvertTo-L07ViewportUtc $other.process_created_utc) -ne (ConvertTo-L07ViewportUtc $Identity.process_created_utc) -or
+        $other.listener.port -ne $Identity.listener.port) { throw 'TRIAL_MACRO_IDENTITY_CHANGED' }
+  }
+  if ((ConvertTo-L07ViewportUtc $Probe.identity_before.observed_utc) -ne $before) { throw 'TRIAL_MACRO_IDENTITY_CHANGED' }
+  $sessionId=$null
+  foreach ($field in @('owner_before','owner_after')) {
+    $owner=$Probe[$field]
+    if ($owner -isnot [Collections.IDictionary] -or $owner.status -isnot [string] -or $owner.status -cne 'ATTACH_EXISTING' -or
+        $owner.owner_sid_matches -isnot [bool] -or -not $owner.owner_sid_matches -or
+        $owner.editor -isnot [Collections.IDictionary]) { throw 'TRIAL_MACRO_OWNER_REJECTED' }
+    $editor=$owner.editor
+    if (($editor.editor_pid -isnot [int] -and $editor.editor_pid -isnot [long]) -or $editor.editor_pid -ne $Identity.pid -or
+        $editor.editor_start_filetime_utc -isnot [string] -or $editor.editor_start_filetime_utc -cne $Identity.process_start_filetime_utc -or
+        $editor.editor_executable_path -isnot [string] -or $editor.editor_executable_path -cne $Identity.executable -or
+        $editor.canonical_project_matches -isnot [bool] -or -not $editor.canonical_project_matches -or
+        ($editor.interactive_session_id -isnot [int] -and $editor.interactive_session_id -isnot [long]) -or
+        $editor.interactive_session_id -le 0) { throw 'TRIAL_MACRO_OWNER_REJECTED' }
+    if ($null -ne $sessionId -and $sessionId -ne $editor.interactive_session_id) { throw 'TRIAL_MACRO_OWNER_CHANGED' }
+    $sessionId=$editor.interactive_session_id
+  }
+  $hostIdentity=$Bridge.external_host_identity
+  if ($hostIdentity -isnot [Collections.IDictionary] -or
+      ($hostIdentity.pid -isnot [int] -and $hostIdentity.pid -isnot [long]) -or $hostIdentity.pid -ne $Identity.pid) {
+    throw 'TRIAL_MACRO_BRIDGE_IDENTITY_REJECTED'
+  }
+  foreach ($key in @('executable','project')) {
+    if ($hostIdentity[$key] -isnot [string] -or $hostIdentity[$key] -cne $Identity[$key]) { throw 'TRIAL_MACRO_BRIDGE_IDENTITY_REJECTED' }
+  }
+  $createdTicks=(ConvertTo-L07ViewportUtc $Identity.process_created_utc).UtcTicks
+  if ((ConvertTo-L07ViewportUtc $hostIdentity.process_created_utc).UtcTicks -ne ($createdTicks-($createdTicks%10)) -or
+      (ConvertTo-L07ViewportUtc $hostIdentity.observed_utc).UtcTicks -ne ($before.UtcTicks-($before.UtcTicks%10)) -or
+      $hostIdentity.listener -isnot [Collections.IDictionary] -or
+      $hostIdentity.listener.address -isnot [string] -or $hostIdentity.listener.address -cne $Identity.listener.address -or
+      ($hostIdentity.listener.port -isnot [int] -and $hostIdentity.listener.port -isnot [long]) -or $hostIdentity.listener.port -ne $Identity.listener.port -or
+      ($hostIdentity.listener.pid -isnot [int] -and $hostIdentity.listener.pid -isnot [long]) -or $hostIdentity.listener.pid -ne $Identity.pid) {
+    throw 'TRIAL_MACRO_BRIDGE_IDENTITY_REJECTED'
+  }
+  $stages=[ordered]@{A_baseline=4;B_macro_005=9;A_restored=12}
+  foreach ($key in $Bridge.trial_captures.Keys) {
+    if ($stages.Keys -cnotcontains $key) { throw 'TRIAL_MACRO_CAPTURE_SET_REJECTED' }
+  }
+  $paths=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+  $captures=[Collections.Generic.List[object]]::new()
+  $previousFinish=$before
+  foreach ($stage in $stages.Keys) {
+    if (-not $Bridge.trial_captures.Contains($stage)) { continue }
+    $capture=$Bridge.trial_captures[$stage]
+    $rows=@($Bridge.trial_results | Where-Object { $_ -is [Collections.IDictionary] -and $_['stage'] -is [string] -and $_['stage'] -ceq $stage })
+    if ($rows.Count -ne 1 -or $capture -isnot [Collections.IDictionary] -or $capture.Count -ne 4) { throw 'TRIAL_MACRO_CAPTURE_ROW_REJECTED' }
+    $row=$rows[0]
+    if (($row.index -isnot [int] -and $row.index -isnot [long]) -or $row.index -ne $stages[$stage] -or
+        $row.tool_name -isnot [string] -or $row.tool_name -cne 'take_viewport_screenshot' -or
+        $row.input_schema_sha256 -isnot [string] -or $row.input_schema_sha256 -cne '4ef41b0bf0c6c93d64a049687e0e43565fb351cd484169b58473801840b3dcdc') {
+      throw 'TRIAL_MACRO_CAPTURE_ROW_REJECTED'
+    }
+    foreach ($field in @('attempted','completed','response_received')) {
+      if ($row[$field] -isnot [bool] -or -not $row[$field]) { throw 'TRIAL_MACRO_CAPTURE_ROW_REJECTED' }
+    }
+    Assert-L07TrialCamera $row.arguments
+    Assert-L07TrialCamera $capture.capture_arguments
+    $result=$capture.capture_result
+    if ($result -isnot [Collections.IDictionary] -or $row.result -isnot [Collections.IDictionary] -or
+        $result.text -isnot [string] -or $result.text_truncated -isnot [bool] -or $result.text_truncated -or
+        ($result.text_block_count -isnot [int] -and $result.text_block_count -isnot [long]) -or
+        $result.text_block_count -lt 1 -or $result.text_block_count -gt 8 -or
+        $result.response_sha256 -isnot [string] -or $result.response_sha256 -cnotmatch '^[0-9a-f]{64}$') { throw 'TRIAL_MACRO_CAPTURE_TEXT_REJECTED' }
+    foreach ($key in @('text','text_truncated','text_block_count','response_sha256')) {
+      if ($row.result[$key].GetType() -ne $result[$key].GetType() -or $row.result[$key] -cne $result[$key]) { throw 'TRIAL_MACRO_CAPTURE_ROW_REJECTED' }
+    }
+    $started=ConvertTo-L07ViewportUtc $capture.native_tool_started_utc
+    $finished=ConvertTo-L07ViewportUtc $capture.native_tool_response_received_utc
+    if ((ConvertTo-L07ViewportUtc $row.started_utc) -ne $started -or
+        (ConvertTo-L07ViewportUtc $row.response_received_utc) -ne $finished -or
+        $started -lt $previousFinish -or $finished -lt $started -or $finished -gt $after) { throw 'TRIAL_MACRO_CAPTURE_TIME_REJECTED' }
+    $path=Get-L07ViewportSourcePath $result.text
+    if (-not $paths.Add($path)) { throw 'TRIAL_MACRO_CAPTURE_PATH_REUSED' }
+    $captures.Add(@{stage=$stage;path=$path;started=$started;finished=$finished;session_id=$sessionId;response_sha256=$result.response_sha256})
+    $previousFinish=$finished
+  }
+  return @{captures=$captures.ToArray();complete=$complete;session_id=$sessionId}
+}
+
 function Assert-L07ViewportFileWindow([long]$Length,[DateTimeOffset]$Modified,[DateTimeOffset]$Started,[DateTimeOffset]$Finished) {
   if ($Length -le 0 -or $Length -gt 32MB) { throw 'VIEWPORT_FILE_SIZE_REJECTED' }
   if ($Modified -lt $Started -or $Modified -gt $Finished) { throw 'VIEWPORT_FILE_OUTSIDE_CAPTURE_WINDOW' }
@@ -299,6 +468,56 @@ $identityProof=Read-L07ViewportProof (Join-Path $reportRoot 'identity.json') 64K
 $probeProof=Read-L07ViewportProof (Join-Path $reportRoot 'probe.json') 64KB
 $bridgeProof=Read-L07ViewportProof (Join-Path $reportRoot 'bridge.json') 2MB
 $identity=$identityProof.data
+if ($TrialMacro) {
+  $trial=Assert-L07TrialViewportProofs $identity $probeProof.data $bridgeProof.data $ExpectedHead ([DateTimeOffset]::UtcNow)
+  $names=@{A_baseline='trial-macro-A-baseline';B_macro_005='trial-macro-B-005';A_restored='trial-macro-A-restored'}
+  $aggregatePath=Join-Path $reportRoot 'trial-macro.json'
+  if (Test-Path -LiteralPath $aggregatePath) { throw 'VIEWPORT_OUTPUT_ALREADY_EXISTS' }
+  foreach ($capture in $trial.captures) {
+    foreach ($suffix in @('.jpg','.json')) {
+      if (Test-Path -LiteralPath (Join-Path $reportRoot ($names[$capture.stage]+$suffix))) { throw 'VIEWPORT_OUTPUT_ALREADY_EXISTS' }
+    }
+  }
+  $retained=[Collections.Generic.List[object]]::new()
+  foreach ($capture in $trial.captures) {
+    Assert-L07ViewportProcess $identity $capture.session_id
+    $source=Read-L07ViewportBytes $capture.path $capture.started $capture.finished
+    $dimensions=Test-L07ViewportJpeg $source.bytes 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+    Assert-L07ViewportProcess $identity $capture.session_id
+    Assert-L07ViewportPlainPath $reportRoot
+    $imagePath=Join-Path $reportRoot ($names[$capture.stage]+'.jpg')
+    $hash=Copy-L07ViewportExactBytes $source.bytes $imagePath
+    Assert-L07ViewportProcess $identity $capture.session_id
+    Assert-L07ViewportPlainPath $imagePath
+    $manifest=[ordered]@{
+      schema_version=1;status='TRIAL_MACRO_VIEWPORT_RETAINED';stage=$capture.stage;source_commit=$ExpectedHead;run_token=$RunToken
+      observed_utc=[DateTimeOffset]::UtcNow.ToString('o');source_path=$capture.path;copied_path=$imagePath
+      sha256=$hash;source_sha256=$hash;byte_count=$source.bytes.Length;format='JPEG';width=$dimensions.width;height=$dimensions.height
+      source_last_write_utc=$source.modified_utc;native_tool_started_utc=$capture.started.ToString('o');native_tool_response_received_utc=$capture.finished.ToString('o')
+      process_id=$identity.pid;process_start_filetime_utc=$identity.process_start_filetime_utc;interactive_session_id=$capture.session_id
+      identity_sha256=$identityProof.sha256;probe_sha256=$probeProof.sha256;bridge_sha256=$bridgeProof.sha256
+      capture_response_sha256=$capture.response_sha256;capture_native_tool_calls=1;additional_native_tool_calls=0
+      trial_status=$bridgeProof.data.status;trial_restore_verified=$true
+      native_material_readback='TRIAL_BASELINE_RESTORED_CAPTURE_REVIEW_PENDING';visual_accepted=$false;performance_pass=$false
+    }
+    $encoded=[Text.UTF8Encoding]::new($false).GetBytes(($manifest | ConvertTo-Json -Depth 5 -Compress)+"`n")
+    if ($encoded.Length -gt 16KB) { throw 'VIEWPORT_MANIFEST_SIZE' }
+    $null=Copy-L07ViewportExactBytes $encoded (Join-Path $reportRoot ($names[$capture.stage]+'.json'))
+    $retained.Add(@{stage=$capture.stage;name=($names[$capture.stage]+'.jpg');sha256=$hash})
+    Write-Host ('L07_TRIAL_MACRO_VIEWPORT_RETAINED '+$capture.stage+' '+$dimensions.width+'x'+$dimensions.height+' sha256='+$hash)
+  }
+  $aggregate=[ordered]@{
+    schema_version=1;status=$(if ($trial.complete) { 'TRIAL_MACRO_CAPTURES_RETAINED_REVIEW_PENDING' } else { 'TRIAL_MACRO_CAPTURES_PARTIAL_RESTORED_REVIEW_PENDING' })
+    source_commit=$ExpectedHead;run_token=$RunToken;trial_restore_verified=$true;trial_status=$bridgeProof.data.status
+    capture_count=$retained.Count;captures=$retained.ToArray();additional_native_tool_calls=0
+    identity_sha256=$identityProof.sha256;probe_sha256=$probeProof.sha256;bridge_sha256=$bridgeProof.sha256
+    visual_accepted=$false;performance_pass=$false
+  }
+  $encoded=[Text.UTF8Encoding]::new($false).GetBytes(($aggregate | ConvertTo-Json -Depth 5 -Compress)+"`n")
+  if ($encoded.Length -gt 16KB) { throw 'VIEWPORT_MANIFEST_SIZE' }
+  $null=Copy-L07ViewportExactBytes $encoded $aggregatePath
+  return
+}
 $capture=Assert-L07ViewportProofs $identity $probeProof.data $bridgeProof.data $ExpectedHead ([DateTimeOffset]::UtcNow)
 $imagePath=Join-Path $reportRoot 'current-viewport.jpg'
 $manifestPath=Join-Path $reportRoot 'viewport.json'

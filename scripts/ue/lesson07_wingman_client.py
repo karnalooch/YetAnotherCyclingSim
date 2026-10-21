@@ -28,6 +28,7 @@ from pathlib import Path, PureWindowsPath
 import re
 import socket
 import stat
+import struct
 import threading
 import time
 from urllib.parse import urlsplit
@@ -122,6 +123,59 @@ INSPECTION_TARGETS = {
     INSPECTION_ROOT + "/Textures/T_PE_Terrain_IDMap": "Texture2D",
     INSPECTION_ROOT + "/Textures/T_PE_Terrain_Color": "Texture2D",
 }
+TRIAL_MI = INSPECTION_ROOT + "/Materials/MI_Landscape_Instance_YACS"
+TRIAL_BACKUP = INSPECTION_ROOT + "/RepairBackups/MI_PreMacroTrial_20261021"
+# Complete ordered #json-mi snapshot observed in run 39530647438. Repeated
+# layer parameter names are intentional; never collapse these lists to maps.
+TRIAL_BASELINE_SHA256 = "0b082e2e99bd7d12c307309a34704c4290eda073c6c895b8cdb3e91d4ded3bdd"
+TRIAL_VALUE = 0.05
+TRIAL_VALUE_F32 = struct.unpack("<f", struct.pack("<f", TRIAL_VALUE))[0]
+TRIAL_SCHEMA_SHA256 = {
+    name: INSPECTION_SCHEMA_SHA256[name]
+    for name in ("explore", "edit_material_instance", "edit_asset")
+}
+TRIAL_SCHEMA_SHA256[CAPTURE_TOOL] = CAPTURE_SCHEMA_SHA256
+TRIAL_SECONDS = 300
+# Admit the mutation only with all remaining planned requests plus a full
+# three-call recovery allowance, capture spacing and local checks reserved.
+TRIAL_MUTATION_RESERVE_SECONDS = 9 * TIMEOUT_SECONDS + 3 + 10
+TRIAL_CAPTURE_STAGES = ("A_baseline", "B_macro_005", "A_restored")
+
+
+def trial_capture_arguments():
+    return {
+        "return_image": False,
+        "camera_location": [-16145.268182324218, 84377.62518478667, 49067.09993071173],
+        "camera_rotation": [-18.85209781522559, 165.400053560734, 0],
+        "fov": 90,
+    }
+
+
+def trial_plan():
+    """One reversible, source-mapped scalar experiment; no caller input."""
+    read = {"name": "edit_material_instance", "arguments": {"name": TRIAL_MI}}
+    restore = {
+        "name": "edit_material_instance",
+        "arguments": {"name": TRIAL_MI, "scalars": [{"name": "Macro Tiling", "value": 0.25}]},
+    }
+    capture = {"name": CAPTURE_TOOL, "arguments": trial_capture_arguments()}
+    return {
+        "registry": inspection_plan()[0],
+        "baseline_mi": read,
+        "baseline_clean": {"name": "edit_asset", "arguments": {"save_assets": {"paths": [TRIAL_MI], "dry_run": True}}},
+        "A_baseline": capture,
+        "backup_create": {"name": "edit_asset", "arguments": {"duplicate_asset": {"from": TRIAL_MI, "to": TRIAL_BACKUP}}},
+        "backup_mi": {"name": "edit_material_instance", "arguments": {"name": TRIAL_BACKUP}},
+        "apply_macro": {"name": "edit_material_instance", "arguments": {"name": TRIAL_MI, "scalars": [{"name": "Macro Tiling", "value": TRIAL_VALUE}]}},
+        "candidate_mi": read,
+        "B_macro_005": capture,
+        "restore_macro": restore,
+        "restored_mi": read,
+        "A_restored": capture,
+        "recovery_read": read,
+        "recovery_restore": restore,
+        "recovery_verify": read,
+    }
 
 
 def inspection_plan():
@@ -503,11 +557,28 @@ class ObservationState:
     inspection_results: list = field(default_factory=list)
     inspection_schema_sha256: dict = field(default_factory=dict)
     inspection_registry_verified: bool = False
+    trial_requested: bool = False
+    trial_results: list = field(default_factory=list)
+    trial_schema_sha256: dict = field(default_factory=dict)
+    trial_captures: dict = field(default_factory=dict)
+    trial_host_checks: list = field(default_factory=list)
+    trial_registry_verified: bool = False
+    trial_backup_attempted: bool = False
+    trial_backup_verified: bool = False
+    trial_mutation_attempted: bool = False
+    trial_restore_attempted: bool = False
+    trial_restore_verified: bool = False
+    trial_denied_tools: list = field(default_factory=list)
+    trial_recovery_error: str | None = None
+    trial_external_host_identity: dict | None = None
 
     def report_fields(self):
         report = {
             # This is a wire-attempt count, not a count of completed evaluations.
             "native_tool_calls": (
+                sum(row["attempted"] for row in self.trial_results)
+                if self.trial_requested
+                else
                 sum(row["attempted"] for row in self.inspection_results)
                 if self.inspection_requested
                 else int(self.attempted)
@@ -515,6 +586,11 @@ class ObservationState:
             "native_tool_attempted": self.attempted,
             "native_tool_completed": self.completed,
             "native_tool_response_received": (
+                len(self.trial_results) >= 12
+                and all(row["response_received"] for row in self.trial_results[:12])
+                and [row["stage"] for row in self.trial_results[:12]] == list(trial_plan())[:12]
+                if self.trial_requested
+                else
                 len(self.inspection_results) == 6
                 and all(row["response_received"] for row in self.inspection_results)
                 if self.inspection_requested
@@ -535,7 +611,31 @@ class ObservationState:
         if self.installed_tool_contracts is not None:
             report["installed_tool_contracts"] = self.installed_tool_contracts
             report["tool_list_complete"] = self.tool_list_complete
-        if self.inspection_requested:
+        if self.trial_requested:
+            report.update({
+                "trial_results": self.trial_results,
+                "trial_schema_sha256": self.trial_schema_sha256,
+                "trial_captures": self.trial_captures,
+                "trial_host_checks": self.trial_host_checks,
+                "trial_registry_verified": self.trial_registry_verified,
+                "trial_backup_path": TRIAL_BACKUP,
+                "trial_backup_attempted": self.trial_backup_attempted,
+                "trial_backup_verified": self.trial_backup_verified,
+                "trial_mutation_attempted": self.trial_mutation_attempted,
+                "trial_restore_attempted": self.trial_restore_attempted,
+                "trial_restore_verified": self.trial_restore_verified,
+                "trial_denied_tools": self.trial_denied_tools,
+                "trial_recovery_error": self.trial_recovery_error,
+                "trial_baseline_sha256": TRIAL_BASELINE_SHA256,
+                "external_host_identity": self.trial_external_host_identity,
+                "trial_manual_restore": (
+                    {"tool": "edit_material_instance", **trial_plan()["restore_macro"]["arguments"],
+                     "reason": "Current state must be reviewed before manual restoration; no automatic retry is authorized."}
+                    if self.trial_mutation_attempted and not self.trial_restore_verified
+                    else None
+                ),
+            })
+        elif self.inspection_requested:
             report.update(
                 {
                     "inspection_results": self.inspection_results,
@@ -906,6 +1006,113 @@ def verify_inspection_registry(text):
     require(set(INSPECTION_TARGETS) <= seen, "INSPECTION_REGISTRY_TARGET_MISSING")
 
 
+def verify_trial_mi(text, path, macro):
+    """Pin every typed value/override, including ordered layer duplicates."""
+    require(text.splitlines()[:1] == ["# MATERIAL INSTANCE " + path.rsplit("/", 1)[1]], "TRIAL_MI_IDENTITY")
+    require(re.findall(r"(?m)^parent = (.+)$", text) == ["M_Landscape_YACS"], "TRIAL_MI_PARENT")
+    require(text.count("= saved=false (read-only call - asset untouched, not saved)") == 1, "TRIAL_MI_READ_MODE")
+    markers = re.findall(r"(?m)^\s*#json-mi:(.*)$", text)
+    require(len(markers) == 1, "TRIAL_MI_FORMAT")
+    snapshot = parse_json(markers[0].encode(), INSPECTION_RESPONSE_LIMIT)
+    require(type(snapshot) is dict and set(snapshot) == {"scalars", "vectors", "textures", "static_switches"}, "TRIAL_MI_FORMAT")
+    for kind, count in (("scalars", 61), ("vectors", 1), ("textures", 5), ("static_switches", 3)):
+        rows = snapshot[kind]
+        require(type(rows) is list and len(rows) == count, "TRIAL_MI_FORMAT")
+        for row in rows:
+            require(type(row) is dict and set(row) == {"name", "value", "overridden"}
+                    and type(row["name"]) is str and type(row["overridden"]) is bool, "TRIAL_MI_FORMAT")
+            value = row["value"]
+            require((type(value) in (int, float) and math.isfinite(value)) if kind == "scalars"
+                    else type(value) is bool if kind == "static_switches" else type(value) is str,
+                    "TRIAL_MI_FORMAT")
+    entries = [row for row in snapshot["scalars"] if row["name"] == "Macro Tiling"]
+    require(len(entries) == 1 and entries[0]["overridden"] is True and entries[0]["value"] == macro, "TRIAL_MACRO_DRIFT")
+    entries[0]["value"] = 0.25
+    require(hashlib.sha256(canonical(snapshot)).hexdigest() == TRIAL_BASELINE_SHA256, "TRIAL_BASELINE_DRIFT")
+    return snapshot
+
+
+def verify_trial_clean(text):
+    require(re.fullmatch(
+        r"# EDIT ASSET\s+~ would save " + re.escape(TRIAL_MI)
+        + r" \(dirty=0\)\s+= save_assets dry_run: 1 package\(s\) considered, nothing written\s+= failures=0\s*",
+        text) is not None, "TRIAL_DIRTY_OR_UNKNOWN")
+
+
+def verify_trial_capture(text):
+    for key, value in (("viewport_type", "LevelEditor"), ("world_name", "L_SaCalobra_Lesson07"),
+                       ("is_pie_running", "0"), ("black_frame_detected", "0")):
+        require(re.findall(r"\b" + key + r"=([^\s|]+)", text) == [value], "TRIAL_CAPTURE_CONTEXT")
+    paths = re.findall(r"D:/yacs/project/Saved/LocoHelperAI/ViewportShots/Viewport_LevelEditor_[0-9]{8}_[0-9]{6}\.jpg", text)
+    require(len(paths) == 1, "TRIAL_CAPTURE_PATH")
+    return paths[0]
+
+
+def verify_trial_host_identity(identity, discovery):
+    """Read the same Windows PID/FILETIME/executable and IPv4 listener only.
+
+    Microsoft GetProcessTimes, QueryFullProcessImageNameW and
+    GetExtendedTcpTable (TCP_TABLE_OWNER_PID_LISTENER). This never starts,
+    stops, injects into or changes the Editor. The initial harness proof owns
+    command-line/project and SID checks; the immutable process identity binds
+    every subsequent trial request to that same process.
+    """
+    require(WINDOWS_HOST, "TRIAL_IDENTITY_WINDOWS_REQUIRED")
+    import ctypes
+    from ctypes import wintypes
+
+    expected = identity.get("process_start_filetime_utc")
+    require(type(expected) is str and re.fullmatch(r"[0-9]{1,20}", expected) is not None, "TRIAL_IDENTITY_FILETIME")
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    ip = ctypes.WinDLL("iphlpapi", use_last_error=True)
+    kernel.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+    kernel.OpenProcess.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle.restype = wintypes.BOOL
+    kernel.GetProcessTimes.argtypes = [wintypes.HANDLE] + [ctypes.POINTER(wintypes.FILETIME)] * 4
+    kernel.GetProcessTimes.restype = wintypes.BOOL
+    kernel.QueryFullProcessImageNameW.argtypes = [wintypes.HANDLE, wintypes.DWORD, wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD)]
+    kernel.QueryFullProcessImageNameW.restype = wintypes.BOOL
+    kernel.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+    kernel.GetExitCodeProcess.restype = wintypes.BOOL
+    handle = kernel.OpenProcess(0x1000, False, identity["pid"])
+    require(bool(handle), "TRIAL_IDENTITY_PROCESS")
+    try:
+        times = [wintypes.FILETIME() for _ in range(4)]
+        require(bool(kernel.GetProcessTimes(handle, *(ctypes.byref(x) for x in times))), "TRIAL_IDENTITY_PROCESS")
+        created = times[0].dwLowDateTime | (times[0].dwHighDateTime << 32)
+        require(str(created) == expected, "TRIAL_IDENTITY_CHANGED")
+        size = wintypes.DWORD(32768)
+        image = ctypes.create_unicode_buffer(size.value)
+        require(bool(kernel.QueryFullProcessImageNameW(handle, 0, image, ctypes.byref(size)))
+                and PureWindowsPath(image.value) == PureWindowsPath(EXECUTABLE), "TRIAL_IDENTITY_CHANGED")
+        status = wintypes.DWORD()
+        require(bool(kernel.GetExitCodeProcess(handle, ctypes.byref(status))) and status.value == 259, "TRIAL_IDENTITY_CHANGED")
+        ip.GetExtendedTcpTable.argtypes = [ctypes.c_void_p, ctypes.POINTER(wintypes.DWORD), wintypes.BOOL, wintypes.ULONG, ctypes.c_int, wintypes.ULONG]
+        ip.GetExtendedTcpTable.restype = wintypes.DWORD
+        length = wintypes.DWORD()
+        require(ip.GetExtendedTcpTable(None, ctypes.byref(length), False, 2, 3, 0) == 122
+                and 4 <= length.value <= 1024 * 1024, "TRIAL_IDENTITY_LISTENER")
+        capacity = length.value
+        data = ctypes.create_string_buffer(capacity)
+        require(ip.GetExtendedTcpTable(data, ctypes.byref(length), False, 2, 3, 0) == 0
+                and 4 <= length.value <= capacity, "TRIAL_IDENTITY_LISTENER")
+        raw = data.raw[:length.value]
+        count = struct.unpack_from("<I", raw)[0]
+        require(count <= 16384 and 4 + count * 24 <= len(raw), "TRIAL_IDENTITY_LISTENER")
+        listeners = []
+        for index in range(count):
+            state, address, port, _remote, _remote_port, pid = struct.unpack_from("<6I", raw, 4 + index * 24)
+            if state == 2 and socket.ntohs(port & 0xFFFF) == discovery.port:
+                listeners.append((socket.inet_ntoa(struct.pack("<I", address)), pid))
+        require(listeners == [(HOST, identity["pid"])], "TRIAL_IDENTITY_LISTENER")
+    finally:
+        kernel.CloseHandle(handle)
+    return {"verified_utc": datetime.now(timezone.utc).isoformat(), "pid": identity["pid"],
+            "process_start_filetime_utc": expected, "executable": EXECUTABLE,
+            "listener": {"address": HOST, "port": discovery.port, "pid": identity["pid"]}}
+
+
 def observer_loader():
     """Embed only the locally verified collector; the native side reads no file."""
     source_path = Path(__file__).absolute().with_name(OBSERVER_FILE)
@@ -1036,6 +1243,13 @@ class DiscoveryClient:
         self._capture_params = None
         self._inspection_params = None
         self._inspection_row = None
+        self._trial_params = None
+        self._trial_row = None
+        self._trial_recovering = False
+        self._trial_recovery_candidate = False
+        self._trial_started = None
+        self._trial_last_capture = None
+        self._trial_files_guard = None
 
     def _message(self, value, request_id):
         messages = value if type(value) is list else [value]
@@ -1157,7 +1371,36 @@ class DiscoveryClient:
                 and canonical(params) == canonical(inspection_plan()[index]),
                 "INSPECTION_ARGUMENTS",
             )
-        native_call = observing or capturing or inspecting
+        trialing = (
+            method == "tools/call" and self._trial_params is not None
+            and params is self._trial_params and self._trial_row is not None
+            and not self._trial_row["attempted"] and not notification
+        )
+        if trialing:
+            state = self.observation_state
+            rows, stage = state.trial_results, self._trial_row["stage"]
+            plan = trial_plan()
+            require(state.trial_requested and 0 < len(rows) <= 15
+                    and rows[-1] is self._trial_row
+                    and stage in plan and canonical(params) == canonical(plan[stage])
+                    and state.trial_schema_sha256 == TRIAL_SCHEMA_SHA256
+                    and stage not in [row["stage"] for row in rows[:-1]], "TRIAL_ARGUMENTS")
+            if self._trial_recovering:
+                recovery = [row["stage"] for row in rows if row["stage"].startswith("recovery_")]
+                require(recovery == list(plan)[12:12 + len(recovery)]
+                        and state.trial_mutation_attempted and not state.trial_restore_verified
+                        and "edit_material_instance" not in state.trial_denied_tools,
+                        "TRIAL_RECOVERY_DENIED")
+                if stage == "recovery_restore":
+                    require(self._trial_recovery_candidate and not state.trial_restore_attempted,
+                            "TRIAL_RECOVERY_DENIED")
+            else:
+                require(len(rows) <= 12 and stage == list(plan)[len(rows) - 1]
+                        and all(row["validated"] for row in rows[:-1]), "TRIAL_SEQUENCE")
+                if stage == "apply_macro":
+                    require(state.trial_backup_verified and state.trial_registry_verified,
+                            "TRIAL_BACKUP_REQUIRED")
+        native_call = observing or capturing or inspecting or trialing
         require(
             method in METHODS
             or (notification and method == "notifications/initialized")
@@ -1168,7 +1411,19 @@ class DiscoveryClient:
             not notification or method == "notifications/initialized",
             "METHOD_NOT_ALLOWED",
         )
-        validate_identity(self.identity, self.discovery)
+        if trialing:
+            require(self._trial_started is not None
+                    and time.monotonic() - self._trial_started <= TRIAL_SECONDS, "TRIAL_INTERVAL")
+            if self._trial_row["stage"] == "apply_macro":
+                require(TRIAL_SECONDS - (time.monotonic() - self._trial_started)
+                        >= TRIAL_MUTATION_RESERVE_SECONDS, "TRIAL_RESTORE_BUDGET")
+            if self._trial_files_guard is not None:
+                self._trial_files_guard()
+            check = verify_trial_host_identity(self.identity, self.discovery)
+            validate_identity({**self.identity, "observed_utc": check["verified_utc"]}, self.discovery)
+            self.observation_state.trial_host_checks.append({"stage": self._trial_row["stage"], **check})
+        else:
+            validate_identity(self.identity, self.discovery)
         request_id = None if notification else self.next_id
         payload = {"jsonrpc": "2.0", "method": method}
         if not notification:
@@ -1228,6 +1483,18 @@ class DiscoveryClient:
                             "started_utc": self.observation_state.started_utc.isoformat(),
                         }
                     )
+                if trialing:
+                    self._trial_row.update({
+                        "attempted": True, "completed": None,
+                        "started_utc": self.observation_state.started_utc.isoformat(),
+                    })
+                    stage = self._trial_row["stage"]
+                    if stage == "backup_create":
+                        self.observation_state.trial_backup_attempted = True
+                    if stage == "apply_macro":
+                        self.observation_state.trial_mutation_attempted = True
+                    if stage in ("restore_macro", "recovery_restore"):
+                        self.observation_state.trial_restore_attempted = True
             connection.request("POST", ENDPOINT, body=raw, headers=headers)
             response = connection.getresponse()
             require(not 300 <= response.status < 400, "HTTP_REDIRECT_DENIED")
@@ -1292,6 +1559,11 @@ class DiscoveryClient:
                             "response_received_utc": self.observation_state.response_received_utc.isoformat(),
                         }
                     )
+                if trialing:
+                    self._trial_row.update({
+                        "response_received": True,
+                        "response_received_utc": self.observation_state.response_received_utc.isoformat(),
+                    })
             return result
         except ProbeError:
             if expired.is_set():
@@ -1308,15 +1580,137 @@ class DiscoveryClient:
                 watchdog.cancel()
             connection.close()
 
+    def _trial_call(self, stage):
+        state = self.observation_state
+        params = trial_plan()[stage]
+        if stage in TRIAL_CAPTURE_STAGES and self._trial_last_capture is not None:
+            remaining = 1.1 - (time.monotonic() - self._trial_last_capture)
+            if remaining > 0:
+                time.sleep(remaining)
+        row = {"index": len(state.trial_results) + 1, "stage": stage,
+               "tool_name": params["name"], "arguments": params["arguments"],
+               "input_schema_sha256": state.trial_schema_sha256[params["name"]],
+               "attempted": False, "completed": False, "validated": False,
+               "response_received": False, "started_utc": None,
+               "response_received_utc": None, "result": None, "error_code": None}
+        state.trial_results.append(row)
+        self._trial_params, self._trial_row = params, row
+        state.tool_name = params["name"]
+        state.tool_error = state.result_shape = None
+        try:
+            result = self._post("tools/call", params)
+            if type(result) is dict and result.get("isError") is True:
+                state.trial_denied_tools.append(params["name"])
+            retain_inspection_result(result, row, (self.discovery.token, self.session_id))
+            row["completed"] = True
+            if stage in TRIAL_CAPTURE_STAGES:
+                temporary = ObservationState()
+                retain_capture_result(result, temporary, (self.discovery.token, self.session_id))
+                row["result"] = temporary.capture_result
+                self._trial_last_capture = time.monotonic()
+            require(len(canonical(state.trial_results)) <= INSPECTION_AGGREGATE_LIMIT,
+                    "TRIAL_AGGREGATE_SIZE")
+            return row
+        except ProbeError as error:
+            if error.code == "RPC_ERROR" and params["name"] not in state.trial_denied_tools:
+                state.trial_denied_tools.append(params["name"])
+            row["error_code"] = error.code
+            raise
+
+    def _trial_validate(self, row):
+        state, stage = self.observation_state, row["stage"]
+        text = row["result"]["text"]
+        if stage == "registry":
+            verify_inspection_registry(text)
+            registry = parse_json(re.findall(r"(?m)^#json-explore:(.*)$", text)[0].encode())
+            require(all(asset["path"] + "/" + asset["name"] != TRIAL_BACKUP
+                        for asset in registry["rows"]), "TRIAL_BACKUP_EXISTS")
+            state.trial_registry_verified = True
+        elif stage in ("baseline_mi", "backup_mi", "restored_mi", "recovery_verify"):
+            verify_trial_mi(text, TRIAL_BACKUP if stage == "backup_mi" else TRIAL_MI, 0.25)
+            if stage == "backup_mi":
+                state.trial_backup_verified = True
+            if stage in ("restored_mi", "recovery_verify"):
+                state.trial_restore_verified = True
+        elif stage == "candidate_mi":
+            verify_trial_mi(text, TRIAL_MI, TRIAL_VALUE_F32)
+        elif stage == "baseline_clean":
+            verify_trial_clean(text)
+        elif stage == "backup_create":
+            require(re.findall(r"(?m)^= failures=([0-9]+)\s*$", text) == ["0"]
+                    and TRIAL_BACKUP in text, "TRIAL_BACKUP_UNCONFIRMED")
+        elif stage in TRIAL_CAPTURE_STAGES:
+            path = verify_trial_capture(text)
+            previous = [verify_trial_capture(item["capture_result"]["text"])
+                        for item in state.trial_captures.values()]
+            require(path not in previous, "TRIAL_CAPTURE_PATH_REUSED")
+            state.trial_captures[stage] = {
+                "capture_arguments": row["arguments"], "capture_result": row["result"],
+                "native_tool_started_utc": row["started_utc"],
+                "native_tool_response_received_utc": row["response_received_utc"],
+            }
+        row["validated"] = True
+
+    def _trial_recover(self):
+        state = self.observation_state
+        if not state.trial_mutation_attempted or state.trial_restore_verified:
+            return
+        require("edit_material_instance" not in state.trial_denied_tools, "TRIAL_RECOVERY_DENIED")
+        self._trial_recovering = True
+        row = self._trial_call("recovery_read")
+        text = row["result"]["text"]
+        try:
+            verify_trial_mi(text, TRIAL_MI, 0.25)
+        except ProbeError:
+            verify_trial_mi(text, TRIAL_MI, TRIAL_VALUE_F32)
+            require(not state.trial_restore_attempted, "TRIAL_RESTORE_ALREADY_ATTEMPTED")
+            row["validated"] = True
+            self._trial_recovery_candidate = True
+            self._trial_validate(self._trial_call("recovery_restore"))
+            self._trial_validate(self._trial_call("recovery_verify"))
+        else:
+            row["validated"] = True
+            state.trial_restore_verified = True
+
+    def _run_trial(self, schemas):
+        state = self.observation_state
+        for name, expected in TRIAL_SCHEMA_SHA256.items():
+            schema = schemas.get(name)
+            require(type(schema) is dict and hashlib.sha256(canonical(schema)).hexdigest() == expected,
+                    "TRIAL_TOOL_SCHEMA_UNSUPPORTED")
+        state.trial_schema_sha256 = dict(TRIAL_SCHEMA_SHA256)
+        try:
+            for stage in list(trial_plan())[:12]:
+                self._trial_validate(self._trial_call(stage))
+        except Exception as failure:
+            error = failure if isinstance(failure, ProbeError) else ProbeError("UNEXPECTED_TRIAL_FAILURE")
+            if state.trial_results:
+                state.trial_results[-1]["error_code"] = error.code
+            try:
+                if error.code.startswith("TRIAL_IDENTITY") or error.code in ("INPUT_CHANGED", "TRIAL_INTERVAL"):
+                    raise ProbeError("TRIAL_RECOVERY_IDENTITY_UNSAFE")
+                self._trial_recover()
+            except Exception as recovery_error:
+                state.trial_recovery_error = recovery_error.code if isinstance(recovery_error, ProbeError) else "UNEXPECTED_RECOVERY_FAILURE"
+                if state.trial_results and state.trial_results[-1]["stage"].startswith("recovery_"):
+                    state.trial_results[-1]["error_code"] = state.trial_recovery_error
+            state.completed = None
+            raise error
+        state.completed = True
+
     def probe(
-        self, observe_lesson07=False, capture_lesson07=False, inspect_lesson07=False
+        self, observe_lesson07=False, capture_lesson07=False, inspect_lesson07=False,
+        trial_macro=False,
     ):
         require(
-            sum((observe_lesson07, capture_lesson07, inspect_lesson07)) <= 1,
+            sum((observe_lesson07, capture_lesson07, inspect_lesson07, trial_macro)) <= 1,
             "NATIVE_MODES_MUTUALLY_EXCLUSIVE",
         )
         self.observation_state.capture_requested = capture_lesson07
         self.observation_state.inspection_requested = inspect_lesson07
+        self.observation_state.trial_requested = trial_macro
+        if trial_macro:
+            self._trial_started = time.monotonic()
         if capture_lesson07 or observe_lesson07:
             self.observation_state.tool_name = (
                 CAPTURE_TOOL if capture_lesson07 else OBSERVER_TOOL
@@ -1553,6 +1947,18 @@ class DiscoveryClient:
                     **state.report_fields(),
                 }
             )
+        if trial_macro:
+            require(tool_error is None, "TRIAL_INCOMPLETE_TOOL_LIST")
+            require(session["signed_in"], "TRIAL_SIGNED_OUT")
+            self._run_trial({**inspection_schemas, CAPTURE_TOOL: capture_schema})
+            report.update({
+                "status": "TRIAL_MACRO_RESTORED_REVIEW_PENDING",
+                "http_requests": self.requests,
+                "notifications_received": self.notifications_received,
+                "native_material_readback": "TRIAL_BASELINE_RESTORED_CAPTURE_REVIEW_PENDING",
+                "visual_acceptance": False,
+                **self.observation_state.report_fields(),
+            })
         return report
 
 
@@ -1563,6 +1969,7 @@ def probe_from_files(
     observe_lesson07=False,
     capture_lesson07=False,
     inspect_lesson07=False,
+    trial_macro=False,
     observation_state=None,
 ):
     require(WINDOWS_HOST, "WINDOWS_HOST_REQUIRED")
@@ -1572,10 +1979,20 @@ def probe_from_files(
     identity = parse_json(identity_raw, CONFIG_LIMIT)
     safe_identity = validate_identity(identity, discovery)
     client = DiscoveryClient(discovery, identity, observation_state=observation_state)
+    if trial_macro:
+        client.observation_state.trial_external_host_identity = safe_identity
+
+        def trial_files_guard():
+            require(read_bounded(discovery_path, CONFIG_LIMIT) == discovery_raw
+                    and read_bounded(identity_path, CONFIG_LIMIT) == identity_raw,
+                    "INPUT_CHANGED")
+
+        client._trial_files_guard = trial_files_guard
     report = client.probe(
         observe_lesson07=observe_lesson07,
         capture_lesson07=capture_lesson07,
         inspect_lesson07=inspect_lesson07,
+        **({"trial_macro": True} if trial_macro else {}),
     )
     require(
         read_bounded(discovery_path, CONFIG_LIMIT) == discovery_raw
@@ -1620,10 +2037,12 @@ def main(argv=None):
     mode.add_argument("--observe-lesson07", action="store_true")
     mode.add_argument("--capture-lesson07", action="store_true")
     mode.add_argument("--inspect-lesson07", action="store_true")
+    mode.add_argument("--trial-macro", action="store_true")
     args = parser.parse_args(argv)
     state = ObservationState(
         capture_requested=args.capture_lesson07,
         inspection_requested=args.inspect_lesson07,
+        trial_requested=args.trial_macro,
     )
     error_code = None
     rpc_code = None
@@ -1636,6 +2055,8 @@ def main(argv=None):
             options["capture_lesson07"] = True
         if args.inspect_lesson07:
             options["inspect_lesson07"] = True
+        if args.trial_macro:
+            options["trial_macro"] = True
         report = probe_from_files(args.identity_receipt, **options)
     except ProbeError as error:
         error_code, rpc_code = error.code, error.rpc_code
@@ -1645,7 +2066,9 @@ def main(argv=None):
     if error_code is not None:
         report = {
             "schema_version": 1,
-            "status": "INSPECTION_FAILED"
+            "status": "TRIAL_MACRO_FAILED"
+            if args.trial_macro
+            else "INSPECTION_FAILED"
             if args.inspect_lesson07
             else "CAPTURE_FAILED"
             if args.capture_lesson07
@@ -1664,12 +2087,14 @@ def main(argv=None):
             "visual_acceptance": False,
             "performance_pass": False,
         }
-        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07:
+        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07 or args.trial_macro:
             report.update(state.report_fields())
         if rpc_code is not None:
             report["rpc_code"] = rpc_code
     prefix = (
-        "L07_WINGMAN_INSPECTION"
+        "L07_WINGMAN_TRIAL_MACRO"
+        if args.trial_macro
+        else "L07_WINGMAN_INSPECTION"
         if args.inspect_lesson07
         else "L07_WINGMAN_CAPTURE"
         if args.capture_lesson07
@@ -1692,7 +2117,9 @@ def main(argv=None):
         + f" native_tool_calls={report['native_tool_calls']}"
     )
     expected = (
-        "INSPECTION_RESPONSES_RECEIVED"
+        "TRIAL_MACRO_RESTORED_REVIEW_PENDING"
+        if args.trial_macro
+        else "INSPECTION_RESPONSES_RECEIVED"
         if args.inspect_lesson07
         else "CAPTURE_RESPONSE_RECEIVED"
         if args.capture_lesson07

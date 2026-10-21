@@ -23,7 +23,9 @@ at 10:21–11:41 explicitly pairs each colour layer with its matching normal and
 uses the same UVs. These are source-method observations, not YACS runtime proof.
 The original Lesson07 IDMap texture editor visibly shows **NoMipmaps** at
 15:31.7 and **Nearest** at 17:21.7. The existing YACS importer sets Nearest but
-does not explicitly set mip generation; the current native value is still unread.
+does not explicitly set mip generation. The current native read at 02:05 UTC
+confirmed **NoMipmaps, Nearest, sRGB=false and Grayscale/G8** already in effect;
+there is no indicated IDMap setting correction to apply.
 
 Two source-family and two channel defects are now proven by retained input
 hashes and import provenance:
@@ -143,6 +145,58 @@ remain pending review. The discovered tools do not establish local image import
 or source-array reassembly; `edit_texture` explicitly does not import. Graph
 read mode does not promise every TextureCoordinate or nested-function property,
 so absent values cannot be treated as defaults.
+
+**Complete dedicated reads:** [run 39530647438](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39530647438),
+source `0c7871670bcc42f837b17f8108b39fe1182a01a0`, passed its CPU and Windows
+jobs. All six responses were received without truncation. The live instance
+confirms Detail Tiling=0.25, Macro Tiling=0.25, Global Normal Flatten=1,
+Macro Texture Distance=10000, all three expected atlas bindings and the retained
+zero global-colour/brightness/specular overrides. The IDMap is 16000² G8 with
+the correct settings above. The eleven-package save dry run explicitly reported
+`dirty=0` for each target and wrote nothing. The same owner PID/start time
+remained verified through 02:05:08 UTC. [Raw readback](../../assets/lesson07-inspection-20261021/properties-bridge.json)
+is native parameter evidence, not a rendered repair or complete graph proof.
+
+The master properties section identifies the global AO source as original
+`Debug/T_W`; its name alone does not verify white pixels. The complete retained
+edge list confirms Detail and Macro start at the same `TextureCoordinate_5`
+and use the same atlases, so their current equal multipliers preserve the same
+UV period. The non-default property dump still does not expose every TexCoord
+value or nested-function implementation. The bounded engine-source search found
+zero matching lines; it does not prove an array-rebuild API is absent.
+
+### Controlled Macro frequency comparison, prepared (not executed)
+
+Preparation passed 73 focused client tests, 118 PowerShell viewport cases,
+64 workflow-intent and 32 PowerShell-switch combinations, plus a direct
+client-to-PowerShell receipt check. Independent review corrected a timing
+risk: the scalar cannot change unless 193 seconds remain in the unchanged
+300-second trial budget. Windows API process/listener checks still require
+actual remote execution; CPU validation is not native or visual acceptance.
+
+Direct review of the original [Lesson07 video](https://player.vimeo.com/video/888569514#t=22m44s)
+at **22:44** shows Detail Tiling=0.25, Macro Tiling=0.05 and Macro Texture
+Distance=10000. The source example therefore separates those frequencies 5:1.
+It does not establish metres per repeat in this differently scaled consumer.
+The earlier YACS scale-only result remains rejected; copying the tutorial
+value is not visual acceptance or a substitute for correcting source families.
+
+The explicit `[l07-trial-macro]` candidate tests only **Macro Tiling
+0.25 → 0.05 → 0.25**, keeping the other parameters and all source assets intact.
+It requires the actual clean instance and exact parameter baseline, a separate
+instance backup, native readback after both changes, and an A/B/A image set
+using the retained recovery camera. The dedicated screenshot operation applies
+that camera for one frame and restores the owner's view. No map save, shader
+graph rewrite, texture import, terrain generation, Python retry or Editor
+restart is part of the trial. The result must distinguish a changed texture
+period from a stationary grid; a nicer single frame is insufficient.
+
+The Macro coordinates also feed Normal and Masks, so this is not a pure
+BaseColor-only probe. All observed layer Macro displacement scales are zero,
+but their nested function has not been read; no displacement control is changed.
+Semantic restoration of the instance is checked separately from asset byte
+identity. A failure retains its actual status and restoration evidence rather
+than silently advancing to a permanent change.
 
 The first dedicated inspection [run 39528106136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39528106136)
 at `72919f499181a919b1708df7480be8bf99e4bf01` passed its 82-test focused CPU

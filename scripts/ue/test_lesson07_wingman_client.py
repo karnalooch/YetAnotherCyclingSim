@@ -2467,6 +2467,431 @@ class InspectionTests(unittest.TestCase):
         self.assertEqual(requests, [])
 
 
+TRIAL_FIXTURE_HASHES = {
+    name: INSPECTION_FIXTURE_HASHES[name]
+    for name in ("explore", "edit_material_instance", "edit_asset")
+}
+TRIAL_FIXTURE_HASHES[client.CAPTURE_TOOL] = client.CAPTURE_SCHEMA_SHA256
+
+
+def trial_snapshot():
+    return json.loads((Path(__file__).parent / "fixtures" /
+                       "lesson07_macro_baseline_native_20261021.json").read_bytes())
+
+
+def trial_mi_text(snapshot, path):
+    return ("# MATERIAL INSTANCE " + path.rsplit("/", 1)[1]
+            + "\nparent = M_Landscape_YACS\n"
+            "= saved=false (read-only call - asset untouched, not saved)\n"
+            "#json-mi:" + json.dumps(snapshot))
+
+
+def trial_host_check(host, discovery):
+    return {"verified_utc": datetime.now(timezone.utc).isoformat(),
+            "pid": host["pid"], "process_start_filetime_utc": "134370120000674689",
+            "executable": client.EXECUTABLE,
+            "listener": {"address": "127.0.0.1", "port": discovery.port,
+                         "pid": host["pid"]}}
+
+
+class TrialPeer:
+    """Stateful native-tool fixture with real captured MI values, no UE calls."""
+
+    def __init__(self):
+        self.snapshot = trial_snapshot()
+        self.backup = None
+        self.calls = []
+        self.captures = 0
+        self.before = lambda _peer, _params: None
+        self.after = lambda _peer, _params, text: text
+        self.registry = registry_records()
+
+    def __call__(self, request):
+        if request["method"] != "tools/call":
+            return inspection_reply(request)
+        params = request["params"]
+        self.calls.append(params)
+        override = self.before(self, params)
+        if override is not None:
+            result = override
+        else:
+            name, args = params["name"], params["arguments"]
+            if name == "explore":
+                text = registry_text(self.registry)
+            elif name == "edit_material_instance":
+                if "scalars" in args:
+                    macro = next(row for row in self.snapshot["scalars"]
+                                 if row["name"] == "Macro Tiling")
+                    value = args["scalars"][0]["value"]
+                    macro["value"] = client.struct.unpack("<f", client.struct.pack("<f", value))[0]
+                    text = "= saved=true"
+                else:
+                    snapshot = self.backup if args["name"] == client.TRIAL_BACKUP else self.snapshot
+                    text = trial_mi_text(snapshot, args["name"])
+            elif name == "edit_asset":
+                if "duplicate_asset" in args:
+                    self.backup = json.loads(json.dumps(self.snapshot))
+                    text = "# EDIT ASSET\n= duplicated " + client.TRIAL_BACKUP + "\n= failures=0\n"
+                else:
+                    text = ("# EDIT ASSET\n~ would save " + client.TRIAL_MI
+                            + " (dirty=0)\n= save_assets dry_run: 1 package(s) considered, nothing written\n\n= failures=0\n")
+            elif name == "take_viewport_screenshot":
+                self.captures += 1
+                text = ("Viewport screenshot saved: D:/yacs/project/Saved/LocoHelperAI/ViewportShots/"
+                        f"Viewport_LevelEditor_20261021_02010{self.captures}.jpg (956x431, 45551 bytes). "
+                        "Image payload NOT inlined (return_image:false). viewport_type=LevelEditor | "
+                        "world_name=L_SaCalobra_Lesson07 | is_pie_running=0 | retry_count=1 | "
+                        "black_frame_detected=0 | avg_brightness=118.85 | near_black_fraction=0.000")
+            else:
+                raise AssertionError("Unexpected native fixture tool " + name)
+            result = {"isError": False, "content": [{"type": "text", "text": self.after(self, params, text)}]}
+        return (200, {"Content-Type": "application/json"},
+                client.canonical({"jsonrpc": "2.0", "id": request["id"], "result": result}))
+
+
+class TrialTests(unittest.TestCase):
+    def setUp(self):
+        for patcher in (
+            mock.patch.object(client, "TRIAL_SCHEMA_SHA256", TRIAL_FIXTURE_HASHES),
+            mock.patch.object(client, "verify_trial_host_identity", side_effect=trial_host_check),
+            mock.patch.object(client.time, "sleep"),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def run_failure(self, native, code, *, guard=None):
+        state = client.ObservationState()
+        with peer(native) as (port, _requests):
+            probe = connection(port, state=state)
+            if guard:
+                probe._trial_files_guard = guard
+            with self.assertRaisesRegex(client.ProbeError, code):
+                probe.probe(trial_macro=True)
+        return state
+
+    def test_exact_fixed_twelve_calls_three_captures_and_whole_baseline_restoration(self):
+        native = TrialPeer()
+        with peer(native) as (port, requests), mock.patch.object(client, "observer_loader") as loader:
+            probe = connection(port)
+            report = probe.probe(trial_macro=True)
+            with self.assertRaisesRegex(client.ProbeError, "METHOD_NOT_ALLOWED"):
+                probe._post("tools/call", probe._trial_params)
+        loader.assert_not_called()
+        mi = "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS"
+        backup = "/Game/Generated/YACS/Lesson07_Unified/RepairBackups/MI_PreMacroTrial_20261021"
+        camera = {"return_image": False,
+                  "camera_location": [-16145.268182324218, 84377.62518478667, 49067.09993071173],
+                  "camera_rotation": [-18.85209781522559, 165.400053560734, 0], "fov": 90}
+        expected = [
+            ("explore", {"path": "/Game/Generated/YACS/Lesson07_Unified", "recursive": True, "limit": 200, "offset": 0}),
+            ("edit_material_instance", {"name": mi}),
+            ("edit_asset", {"save_assets": {"paths": [mi], "dry_run": True}}),
+            ("take_viewport_screenshot", camera),
+            ("edit_asset", {"duplicate_asset": {"from": mi, "to": backup}}),
+            ("edit_material_instance", {"name": backup}),
+            ("edit_material_instance", {"name": mi, "scalars": [{"name": "Macro Tiling", "value": 0.05}]}),
+            ("edit_material_instance", {"name": mi}),
+            ("take_viewport_screenshot", camera),
+            ("edit_material_instance", {"name": mi, "scalars": [{"name": "Macro Tiling", "value": 0.25}]}),
+            ("edit_material_instance", {"name": mi}),
+            ("take_viewport_screenshot", camera),
+        ]
+        self.assertEqual(native.calls, [{"name": name, "arguments": args} for name, args in expected])
+        self.assertEqual(native.snapshot, trial_snapshot())
+        self.assertEqual(native.backup, trial_snapshot())
+        self.assertEqual(report["status"], "TRIAL_MACRO_RESTORED_REVIEW_PENDING")
+        self.assertEqual(report["native_material_readback"], "TRIAL_BASELINE_RESTORED_CAPTURE_REVIEW_PENDING")
+        self.assertEqual(report["native_tool_calls"], 12)
+        for key in ("native_tool_attempted", "native_tool_completed", "native_tool_response_received",
+                    "trial_registry_verified", "trial_backup_attempted", "trial_backup_verified",
+                    "trial_mutation_attempted", "trial_restore_attempted", "trial_restore_verified"):
+            self.assertIs(report[key], True, key)
+        for key in ("performance_pass", "visual_acceptance"):
+            self.assertIs(report[key], False)
+        self.assertIsNone(report["trial_manual_restore"])
+        self.assertEqual(len(report["trial_host_checks"]), 12)
+        self.assertEqual(list(report["trial_captures"]), ["A_baseline", "B_macro_005", "A_restored"])
+        for stage, index in (("A_baseline", 4), ("B_macro_005", 9), ("A_restored", 12)):
+            row = report["trial_results"][index - 1]
+            self.assertEqual(row["index"], index)
+            self.assertEqual(row["stage"], stage)
+            self.assertEqual(report["trial_captures"][stage], {
+                "capture_arguments": camera, "capture_result": row["result"],
+                "native_tool_started_utc": row["started_utc"],
+                "native_tool_response_received_utc": row["response_received_utc"]})
+            self.assertEqual(set(row["result"]), {"text", "text_truncated", "text_block_count", "response_sha256"})
+        for row in report["trial_results"]:
+            self.assertIs(row["validated"], True)
+            self.assertIs(row["completed"], True)
+            self.assertIsNone(row["error_code"])
+        self.assertNotIn(TOKEN.encode(), client.canonical(report))
+        self.assertEqual(sum(r["body"]["method"] == "tools/list" for r in requests), 1)
+
+    def test_fixture_pins_ordered_values_and_overrides_including_layer_duplicates(self):
+        snapshot = trial_snapshot()
+        self.assertEqual(hashlib.sha256(client.canonical(snapshot)).hexdigest(), client.TRIAL_BASELINE_SHA256)
+        self.assertEqual(len(snapshot["scalars"]), 61)
+        self.assertGreater(len(snapshot["scalars"]), len({row["name"] for row in snapshot["scalars"]}))
+        for change in ("value", "override", "order"):
+            changed = trial_snapshot()
+            if change == "value":
+                changed["scalars"][0]["value"] += 1
+            elif change == "override":
+                changed["scalars"][0]["overridden"] = not changed["scalars"][0]["overridden"]
+            else:
+                changed["scalars"][0], changed["scalars"][1] = changed["scalars"][1], changed["scalars"][0]
+            with self.subTest(change=change), self.assertRaisesRegex(client.ProbeError, "TRIAL_BASELINE_DRIFT"):
+                client.verify_trial_mi(trial_mi_text(changed, client.TRIAL_MI), client.TRIAL_MI, 0.25)
+
+    def test_prewrite_baseline_dirty_backup_and_context_drifts_stop_before_macro(self):
+        for case, code, count in (
+            ("baseline", "TRIAL_BASELINE_DRIFT", 2),
+            ("dirty", "TRIAL_DIRTY_OR_UNKNOWN", 3),
+            ("world", "TRIAL_CAPTURE_CONTEXT", 4),
+            ("backup", "TRIAL_BASELINE_DRIFT", 6),
+            ("exists", "TRIAL_BACKUP_EXISTS", 1),
+        ):
+            native = TrialPeer()
+            if case == "baseline":
+                native.snapshot["scalars"][0]["value"] += 1
+            if case == "exists":
+                native.registry.append({"path": client.TRIAL_BACKUP.rsplit("/", 1)[0],
+                                        "name": client.TRIAL_BACKUP.rsplit("/", 1)[1],
+                                        "class": "MaterialInstanceConstant", "class_path": "/Script/Engine.MaterialInstanceConstant", "loaded": False})
+            def alter(peer, params, text):
+                if case == "dirty" and len(peer.calls) == 3:
+                    return text.replace("dirty=0", "dirty=1")
+                if case == "world" and len(peer.calls) == 4:
+                    return text.replace("world_name=L_SaCalobra_Lesson07", "world_name=OtherWorld")
+                if case == "backup" and len(peer.calls) == 6:
+                    copy = json.loads(json.dumps(peer.backup))
+                    copy["scalars"][0]["overridden"] = not copy["scalars"][0]["overridden"]
+                    return trial_mi_text(copy, client.TRIAL_BACKUP)
+                return text
+            native.after = alter
+            with self.subTest(case=case):
+                state = self.run_failure(native, code)
+                self.assertEqual(len(native.calls), count)
+                self.assertFalse(state.trial_mutation_attempted)
+                self.assertFalse(state.trial_restore_attempted)
+
+    def test_all_trial_schemas_are_pinned_before_native_calls(self):
+        native = TrialPeer()
+        def changed_schema(request):
+            status, headers, raw = native(request)
+            if request["method"] == "tools/list":
+                payload = json.loads(raw)
+                next(t for t in payload["result"]["tools"] if t["name"] == "take_viewport_screenshot")["inputSchema"]["new"] = True
+                raw = client.canonical(payload)
+            return status, headers, raw
+        state = self.run_failure(changed_schema, "TRIAL_TOOL_SCHEMA_UNSUPPORTED")
+        self.assertFalse(state.attempted)
+        self.assertEqual(native.calls, [])
+
+    def test_fresh_identity_or_input_file_drift_blocks_write_and_recovery(self):
+        for source in ("identity", "file"):
+            native = TrialPeer()
+            def host(host, discovery):
+                if len(native.calls) == 6:
+                    raise client.ProbeError("TRIAL_IDENTITY_CHANGED")
+                return trial_host_check(host, discovery)
+            def guard():
+                if len(native.calls) == 6:
+                    raise client.ProbeError("INPUT_CHANGED")
+            with self.subTest(source=source), mock.patch.object(client, "verify_trial_host_identity", side_effect=host if source == "identity" else trial_host_check):
+                state = self.run_failure(native, "TRIAL_IDENTITY_CHANGED|INPUT_CHANGED", guard=guard if source == "file" else None)
+                self.assertFalse(state.trial_mutation_attempted)
+                self.assertEqual(len(native.calls), 6)
+                self.assertFalse(state.trial_results[-1]["attempted"])
+
+    def test_capture_denial_after_candidate_restores_once_without_retrying_capture(self):
+        native = TrialPeer()
+        def deny_b(peer, _params):
+            if len(peer.calls) == 9:
+                return {"isError": True, "content": [{"type": "text", "text": "Capture access denied; " + TOKEN}]}
+        native.before = deny_b
+        state = self.run_failure(native, "INSPECTION_TOOL_ERROR")
+        self.assertEqual([row["stage"] for row in state.trial_results[-3:]], ["recovery_read", "recovery_restore", "recovery_verify"])
+        self.assertEqual(native.snapshot, trial_snapshot())
+        self.assertTrue(state.trial_restore_verified)
+        self.assertEqual(list(state.trial_captures), ["A_baseline"])
+        self.assertEqual(sum("scalars" in c["arguments"] for c in native.calls), 2)
+        self.assertEqual(sum(c["name"] == "take_viewport_screenshot" for c in native.calls), 2)
+        self.assertIn("Capture access denied", state.trial_results[8]["result"]["text"])
+        self.assertNotIn(TOKEN.encode(), client.canonical(state.report_fields()))
+        self.assertIsNone(state.completed)
+
+    def test_explicit_mi_denial_is_final_and_never_retried(self):
+        for fail_at in (7, 10):
+            native = TrialPeer()
+            def deny(peer, _params):
+                if len(peer.calls) == fail_at:
+                    return {"isError": True, "content": [{"type": "text", "text": "Operation denied."}]}
+            native.before = deny
+            with self.subTest(fail_at=fail_at):
+                state = self.run_failure(native, "INSPECTION_TOOL_ERROR")
+                self.assertEqual(len(native.calls), fail_at)
+                self.assertTrue(state.trial_mutation_attempted)
+                self.assertFalse(state.trial_restore_verified)
+                self.assertEqual(state.trial_recovery_error, "TRIAL_RECOVERY_DENIED")
+                self.assertEqual(state.report_fields()["trial_manual_restore"]["scalars"], [{"name": "Macro Tiling", "value": 0.25}])
+
+    def test_unknown_candidate_with_other_parameter_change_is_not_overwritten(self):
+        native = TrialPeer()
+        def change_other(peer, _params):
+            if len(peer.calls) == 8:
+                peer.snapshot["scalars"][0]["value"] += 1
+        native.before = change_other
+        state = self.run_failure(native, "TRIAL_BASELINE_DRIFT")
+        self.assertEqual(len(native.calls), 9)
+        self.assertEqual(state.trial_results[-1]["stage"], "recovery_read")
+        self.assertFalse(state.trial_restore_attempted)
+        self.assertFalse(state.trial_restore_verified)
+        self.assertIsNotNone(state.report_fields()["trial_manual_restore"])
+
+    def test_uncertain_apply_response_recovers_only_after_reading_exact_candidate(self):
+        native = TrialPeer()
+        original = client.DiscoveryClient._read_result
+        def timeout_after_apply(probe, *args, **kwargs):
+            result = original(probe, *args, **kwargs)
+            if len(native.calls) == 7:
+                raise client.ProbeError("REQUEST_TIMEOUT")
+            return result
+        with mock.patch.object(client.DiscoveryClient, "_read_result", timeout_after_apply):
+            state = self.run_failure(native, "REQUEST_TIMEOUT")
+        self.assertFalse(state.trial_results[6]["response_received"])
+        self.assertIsNone(state.trial_results[6]["completed"])
+        self.assertEqual([row["stage"] for row in state.trial_results[-3:]], ["recovery_read", "recovery_restore", "recovery_verify"])
+        self.assertTrue(state.trial_restore_verified)
+        self.assertEqual(native.snapshot, trial_snapshot())
+
+    def test_uncertain_restore_is_not_repeated_and_baseline_can_be_read_verified(self):
+        native = TrialPeer()
+        original = client.DiscoveryClient._read_result
+        def timeout_after_restore(probe, *args, **kwargs):
+            result = original(probe, *args, **kwargs)
+            if len(native.calls) == 10:
+                raise client.ProbeError("REQUEST_TIMEOUT")
+            return result
+        with mock.patch.object(client.DiscoveryClient, "_read_result", timeout_after_restore):
+            state = self.run_failure(native, "REQUEST_TIMEOUT")
+        self.assertEqual(len(native.calls), 11)
+        self.assertEqual(state.trial_results[-1]["stage"], "recovery_read")
+        self.assertTrue(state.trial_restore_verified)
+        self.assertEqual(sum("scalars" in c["arguments"] for c in native.calls), 2)
+
+    def test_failed_restore_that_did_not_apply_gets_no_second_restore(self):
+        native = TrialPeer()
+        original = client.DiscoveryClient._read_result
+        def ignore_restore(peer, _params):
+            if len(peer.calls) == 10:
+                return {"content": [{"type": "text", "text": "No conclusive result"}]}
+        native.before = ignore_restore
+        def timeout_after_restore(probe, *args, **kwargs):
+            result = original(probe, *args, **kwargs)
+            if len(native.calls) == 10:
+                raise client.ProbeError("REQUEST_TIMEOUT")
+            return result
+        with mock.patch.object(client.DiscoveryClient, "_read_result", timeout_after_restore):
+            state = self.run_failure(native, "REQUEST_TIMEOUT")
+        self.assertEqual(len(native.calls), 11)
+        self.assertFalse(state.trial_restore_verified)
+        self.assertEqual(state.trial_recovery_error, "TRIAL_RESTORE_ALREADY_ATTEMPTED")
+
+    def test_late_identity_failure_leaves_manual_restore_without_new_native_attempt(self):
+        native = TrialPeer()
+        def change_after_apply(host, discovery):
+            if len(native.calls) == 7:
+                raise client.ProbeError("TRIAL_IDENTITY_CHANGED")
+            return trial_host_check(host, discovery)
+        with mock.patch.object(client, "verify_trial_host_identity", side_effect=change_after_apply):
+            state = self.run_failure(native, "TRIAL_IDENTITY_CHANGED")
+        self.assertEqual(len(native.calls), 7)
+        self.assertTrue(state.trial_mutation_attempted)
+        self.assertFalse(state.trial_restore_attempted)
+        self.assertEqual(state.trial_recovery_error, "TRIAL_RECOVERY_IDENTITY_UNSAFE")
+
+    def test_late_trial_never_mutates_without_full_restoration_reserve(self):
+        native = TrialPeer()
+        with peer(native) as (port, _requests):
+            probe = connection(port)
+            original = probe._trial_validate
+            def consume_budget(row):
+                original(row)
+                if row["stage"] == "backup_mi":
+                    probe._trial_started = time.monotonic() - 108
+            with mock.patch.object(probe, "_trial_validate", side_effect=consume_budget):
+                with self.assertRaisesRegex(client.ProbeError, "TRIAL_RESTORE_BUDGET"):
+                    probe.probe(trial_macro=True)
+            self.assertEqual(len(native.calls), 6)
+            self.assertTrue(probe.observation_state.trial_backup_verified)
+            self.assertFalse(probe.observation_state.trial_mutation_attempted)
+
+    def test_capture_path_reuse_triggers_restore_and_a2_failure_keeps_verified_restore(self):
+        for fail_at in (9, 12):
+            native = TrialPeer()
+            def reused_path(peer, _params, text):
+                if len(peer.calls) == fail_at:
+                    return text.replace(f"02010{peer.captures}.jpg", "020101.jpg")
+                return text
+            native.after = reused_path
+            with self.subTest(fail_at=fail_at):
+                state = self.run_failure(native, "TRIAL_CAPTURE_PATH_REUSED")
+                self.assertTrue(state.trial_restore_verified)
+                self.assertEqual(native.snapshot, trial_snapshot())
+                self.assertNotIn("A_restored", state.trial_captures)
+                self.assertEqual(len(native.calls), 12)
+                self.assertEqual(sum("scalars" in c["arguments"] for c in native.calls), 2)
+
+    def test_mixed_modes_and_changed_fixed_arguments_are_rejected_before_network(self):
+        with peer(TrialPeer()) as (port, requests):
+            for other in ("observe_lesson07", "capture_lesson07", "inspect_lesson07"):
+                with self.assertRaisesRegex(client.ProbeError, "NATIVE_MODES_MUTUALLY_EXCLUSIVE"):
+                    connection(port).probe(trial_macro=True, **{other: True})
+            probe = connection(port)
+            state = probe.observation_state
+            state.trial_requested = True
+            state.trial_schema_sha256 = dict(TRIAL_FIXTURE_HASHES)
+            row = {"stage": "registry", "attempted": False}
+            state.trial_results.append(row)
+            probe._trial_row = row
+            probe._trial_params = {"name": "explore", "arguments": {"path": "/Game/Other"}}
+            with self.assertRaisesRegex(client.ProbeError, "TRIAL_ARGUMENTS"):
+                probe._post("tools/call", probe._trial_params)
+        self.assertEqual(requests, [])
+
+    def test_file_entry_point_and_failure_cli_preserve_original_identity_and_typed_flags(self):
+        native = TrialPeer()
+        with tempfile.TemporaryDirectory() as directory, peer(native) as (port, _requests):
+            root = Path(directory)
+            receipt, discovery, output = root / "identity.json", root / "discovery.json", root / "bridge.json"
+            host = identity(port)
+            host["process_start_filetime_utc"] = "134370120000674689"
+            receipt.write_bytes(client.canonical(host))
+            discovery.write_bytes(client.canonical(config(port)))
+            with mock.patch.object(client, "WINDOWS_HOST", True):
+                report = client.probe_from_files(receipt, discovery, trial_macro=True)
+            self.assertEqual(report["external_host_identity"], client.validate_identity(host, client.Discovery.from_mapping(config(port))))
+            self.assertEqual(receipt.read_bytes(), client.canonical(host))
+            state = client.ObservationState(trial_requested=True)
+            state.trial_external_host_identity = report["external_host_identity"]
+            state.trial_mutation_attempted = True
+            state.trial_restore_verified = True
+            def failed_probe(_receipt, *, observation_state, **options):
+                self.assertIs(options["trial_macro"], True)
+                observation_state.__dict__.update(state.__dict__)
+                raise client.ProbeError("TRIAL_CAPTURE_CONTEXT")
+            with mock.patch.object(client, "probe_from_files", side_effect=failed_probe), mock.patch("sys.stdout", new_callable=io.StringIO):
+                result = client.main(["--identity-receipt", str(receipt), "--output", str(output), "--trial-macro"])
+            self.assertEqual(result, 1)
+            failed = json.loads(output.read_bytes())
+            self.assertEqual(failed["status"], "TRIAL_MACRO_FAILED")
+            self.assertIs(failed["trial_restore_verified"], True)
+            self.assertEqual(failed["external_host_identity"], report["external_host_identity"])
+            for key in ("trial_mutation_attempted", "trial_restore_verified", "trial_backup_verified", "trial_registry_verified"):
+                self.assertIs(type(failed[key]), bool)
+
+
 class FileTests(unittest.TestCase):
     def test_end_to_end_files_keep_credentials_private_and_output_new(self):
         with tempfile.TemporaryDirectory() as directory, peer() as (port, _requests):

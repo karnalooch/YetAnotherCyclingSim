@@ -1524,7 +1524,7 @@
     },
     "delivery_authorization": "Owner requested publishing the same local repair on the existing branch, without regenerating terrain; exact commit and remote delivery are verified separately."
   },
-  "updated_at_utc": "2026-10-21T02:00:43Z",
+  "updated_at_utc": "2026-10-21T02:22:04.817531+00:00",
   "grass2_replacement_20261020": {
     "status": "APPLIED_SAVED_NATIVE_READBACK_PASS_RENDER_PENDING",
     "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
@@ -1653,7 +1653,7 @@
     "performance_pass": false
   },
   "remote_connection_continuation_20261021": {
-    "status": "EDITOR_RETAINED_REGISTRY_VERIFIED_PARTIAL_MASTER_READ_PARAMETERS_PENDING",
+    "status": "EDITOR_RETAINED_DEDICATED_PARAMETERS_READ_MACRO_TRIAL_PREPARATION",
     "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
     "owner_authorized_missing_connection_infrastructure": true,
     "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
@@ -2503,7 +2503,7 @@
       }
     },
     "dedicated_material_inspection_preparation": {
-      "status": "BOUNDED_PROPERTIES_SECTION_PREPARED_NEXT_NATIVE_READ_PENDING",
+      "status": "SIX_DEDICATED_READS_RECEIVED_REVIEWED",
       "intent": "[l07-inspect-editor]",
       "maximum_native_calls": 6,
       "automatic_retry": false,
@@ -2517,7 +2517,7 @@
         "code_search bounded installed Texture2DArray.cpp function search"
       ],
       "registry_prerequisite": "Exactly one observed #json-explore payload with typed complete metadata and exact directory/name/class/class_path from the same row for all eleven expected packages; header counts must agree. Unknown, duplicated or incomplete evidence stops the batch.",
-      "native_material_readback": "REGISTRY_VERIFIED_PARTIAL_MASTER_READ_INSTANCE_AND_TEXTURES_NOT_RUN",
+      "native_material_readback": "INSTANCE_AND_TEXTURE_SETTINGS_VERIFIED_MASTER_PROPERTIES_PARTIAL_SEMANTICS",
       "visual_accepted": false,
       "performance_pass": false,
       "limit": "Current contracts do not establish local image import, Texture2DArray source-list reassembly, or every TextureCoordinate/nested-function property. Missing readback remains unknown.",
@@ -2656,7 +2656,634 @@
         "download_asset",
         "vault_asset"
       ],
-      "source_import_capability": "UNPROVEN: edit_data_asset targets DataAsset/PrimaryDataAsset; download_asset requires execute_python import; vault_asset installs existing packs. No permitted texture-array source reconstruction established."
+      "source_import_capability": "UNPROVEN: edit_data_asset targets DataAsset/PrimaryDataAsset; download_asset requires execute_python import; vault_asset installs existing packs. No permitted texture-array source reconstruction established.",
+      "successful_native_read": {
+        "source_commit": "0c7871670bcc42f837b17f8108b39fe1182a01a0",
+        "run_id": 39530647438,
+        "cpu_job_id": 118995491322,
+        "cpu_conclusion": "success",
+        "windows_job_id": 118995562227,
+        "windows_conclusion": "success",
+        "artifact_id": 12315283215,
+        "artifact_zip_sha256": "be2897c73708db0860aa7c5f241b89dc437166d56209a20f56773dd73cc8ff4b",
+        "artifact_digest_verified": true,
+        "native_tool_calls": 6,
+        "responses_complete_without_client_truncation": true,
+        "response_characters": [
+          7992,
+          8925,
+          8373,
+          22013,
+          1090,
+          346
+        ],
+        "files_sha256": {
+          "properties-bridge.json": "c9237575af0757520511296f55be8616f344a54200320e599660a30c667cbc6c",
+          "properties-identity.json": "585484446e4c1736779d693d5b1f812e08130b88e93076e13accc7abd0072395",
+          "properties-probe.json": "096db62d60dfa4475210cf104c55586eb9c48cd9a443ac343e6e5a7ae3c92aba"
+        },
+        "owner_pid": 17896,
+        "owner_start_filetime_utc": "134370120000674689",
+        "observed_utc": "2026-10-21T02:05:08.9841859Z",
+        "identity_stable_across_probe": true,
+        "all_11_target_packages_dirty": false,
+        "save_dry_run_wrote_packages": false,
+        "native_asset_changes": [],
+        "visual_accepted": false,
+        "performance_pass": false,
+        "engine_source_search_matches": 0,
+        "engine_source_search_limit": "No matches does not establish absence of an API.",
+        "material_instance": {
+          "scalars": [
+            {
+              "name": "Detail Tiling",
+              "value": 0.25,
+              "overridden": true
+            },
+            {
+              "name": "Noise_Scale",
+              "value": 0.0005000000237487257,
+              "overridden": true
+            },
+            {
+              "name": "Terrain Resolution",
+              "value": 16000,
+              "overridden": true
+            },
+            {
+              "name": "UV Distort",
+              "value": 4,
+              "overridden": true
+            },
+            {
+              "name": "Grass_Type",
+              "value": -1,
+              "overridden": false
+            },
+            {
+              "name": "Material_Selection",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Global_Colour_Weight",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Macro_Selection",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Hue",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Brightness",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Material_Selection",
+              "value": 1,
+              "overridden": true
+            },
+            {
+              "name": "Grass_Type",
+              "value": -1,
+              "overridden": false
+            },
+            {
+              "name": "Brigthness",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Micro Scale",
+              "value": 0.019999999552965164,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Macro Scale",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Tiling Scale",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Global Colour Strength",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Material_Selection",
+              "value": 2,
+              "overridden": true
+            },
+            {
+              "name": "Grass_Type",
+              "value": -1,
+              "overridden": false
+            },
+            {
+              "name": "Brigthness",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Micro Scale",
+              "value": 0.019999999552965164,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Macro Scale",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Tiling Scale",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Global Colour Strength",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Material_Selection",
+              "value": 3,
+              "overridden": true
+            },
+            {
+              "name": "Grass_Type",
+              "value": -1,
+              "overridden": false
+            },
+            {
+              "name": "Brigthness",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Micro Scale",
+              "value": 0.019999999552965164,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Macro Scale",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Tiling Scale",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Global Colour Strength",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Material_Selection",
+              "value": 4,
+              "overridden": true
+            },
+            {
+              "name": "Grass_Type",
+              "value": -1,
+              "overridden": false
+            },
+            {
+              "name": "Brigthness",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Micro Scale",
+              "value": 0.019999999552965164,
+              "overridden": false
+            },
+            {
+              "name": "Displacement Macro Scale",
+              "value": 0,
+              "overridden": false
+            },
+            {
+              "name": "Tiling Scale",
+              "value": 1,
+              "overridden": false
+            },
+            {
+              "name": "Global Colour Strength",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Bit",
+              "value": 1,
+              "overridden": true
+            },
+            {
+              "name": "Bit",
+              "value": 2,
+              "overridden": true
+            },
+            {
+              "name": "Bit",
+              "value": 3,
+              "overridden": true
+            },
+            {
+              "name": "Bit",
+              "value": 4,
+              "overridden": true
+            },
+            {
+              "name": "Num IDmap Layers",
+              "value": 5,
+              "overridden": true
+            },
+            {
+              "name": "Global Specular Scale",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Global Normal Flatten",
+              "value": 1,
+              "overridden": true
+            },
+            {
+              "name": "Macro Texture Distance",
+              "value": 10000,
+              "overridden": true
+            },
+            {
+              "name": "Macro Tiling",
+              "value": 0.25,
+              "overridden": true
+            },
+            {
+              "name": "Displacement",
+              "value": 1,
+              "overridden": true
+            },
+            {
+              "name": "Displacement_Micro",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "UV Rotate",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Displacement Offset",
+              "value": 0.5019999742507935,
+              "overridden": true
+            },
+            {
+              "name": "Global Colour Strength",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Detail Brightness",
+              "value": 1,
+              "overridden": true
+            },
+            {
+              "name": "Specular Falloff Exponent",
+              "value": 0.5,
+              "overridden": true
+            },
+            {
+              "name": "Global Brightness",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Global AO Power",
+              "value": 1,
+              "overridden": true
+            },
+            {
+              "name": "Macro Texture Displacement",
+              "value": 5,
+              "overridden": true
+            },
+            {
+              "name": "Global Saturation",
+              "value": 0,
+              "overridden": true
+            },
+            {
+              "name": "Distance",
+              "value": 0.05000000074505806,
+              "overridden": false
+            },
+            {
+              "name": "Count",
+              "value": 8,
+              "overridden": false
+            },
+            {
+              "name": "Terrain Scale",
+              "value": 50,
+              "overridden": true
+            }
+          ],
+          "vectors": [
+            {
+              "name": "Offset",
+              "value": "(-8000,-8000,0,0)",
+              "overridden": true
+            }
+          ],
+          "textures": [
+            {
+              "name": "Normal Atlas",
+              "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.TA_Normal_Unified",
+              "overridden": true
+            },
+            {
+              "name": "Colour Atlas",
+              "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.TA_Colour_Unified",
+              "overridden": true
+            },
+            {
+              "name": "Terrain Colour",
+              "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color.T_PE_Terrain_Color",
+              "overridden": true
+            },
+            {
+              "name": "Masks Atlas",
+              "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.TA_Masks_Unified",
+              "overridden": true
+            },
+            {
+              "name": "Terrain IDmap",
+              "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap.T_PE_Terrain_IDMap",
+              "overridden": true
+            }
+          ],
+          "static_switches": [
+            {
+              "name": "Use Terrain Colour",
+              "value": true,
+              "overridden": true
+            },
+            {
+              "name": "Use IDmap",
+              "value": true,
+              "overridden": true
+            },
+            {
+              "name": "Allow Grass",
+              "value": false,
+              "overridden": true
+            }
+          ]
+        },
+        "textures": [
+          {
+            "name": "TA_Colour_Unified",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "<n/a>",
+            "compression": "TC_Default",
+            "srgb": true,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Color(0)"
+          },
+          {
+            "name": "TA_Normal_Unified",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "<n/a>",
+            "compression": "TC_Normalmap",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_HierarchicalLOD",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Normal(3)"
+          },
+          {
+            "name": "TA_Masks_Unified",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "<n/a>",
+            "compression": "TC_Masks",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Masks(4)"
+          },
+          {
+            "name": "T_Grass_Normal",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass_Normal",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "PF_BC5",
+            "compression": "TC_Normalmap",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Normal(3)"
+          },
+          {
+            "name": "T_Grass_Masks",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Grass_Masks",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "PF_DXT1",
+            "compression": "TC_Masks",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Masks(4)"
+          },
+          {
+            "name": "T_Cliffs_Normal",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Cliffs_Normal",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "PF_BC5",
+            "compression": "TC_Normalmap",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Normal(3)"
+          },
+          {
+            "name": "T_Cliffs_Masks",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/Slices/T_Cliffs_Masks",
+            "width": 2048,
+            "height": 2048,
+            "source_width": 2048,
+            "source_height": 2048,
+            "pixel_format": "PF_DXT1",
+            "compression": "TC_Masks",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_FromTextureGroup",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Masks(4)"
+          },
+          {
+            "name": "T_PE_Terrain_IDMap",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap",
+            "width": 16000,
+            "height": 16000,
+            "source_width": 16000,
+            "source_height": 16000,
+            "pixel_format": "PF_G8",
+            "compression": "TC_Grayscale",
+            "srgb": false,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Nearest",
+            "mip_gen": "TMGS_NoMipmaps",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_LinearGrayscale(7)"
+          },
+          {
+            "name": "T_PE_Terrain_Color",
+            "path": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color",
+            "width": 16000,
+            "height": 16000,
+            "source_width": 16000,
+            "source_height": 16000,
+            "pixel_format": "PF_DXT1",
+            "compression": "TC_Default",
+            "srgb": true,
+            "virtual_texture_streaming": false,
+            "lod_group": "TEXTUREGROUP_World",
+            "filter": "TF_Default",
+            "mip_gen": "TMGS_NoMipmaps",
+            "lod_bias": 0,
+            "virtual_streaming": false,
+            "required_sampler": "SAMPLERTYPE_Color(0)"
+          }
+        ],
+        "protected_ci": {
+          "run_id": 39530656175,
+          "conclusion": "failure",
+          "native_job_id": 118996423119,
+          "native_status": "LOCAL_BUSY",
+          "owner_editor_and_logs_preserved": true,
+          "native_build_and_automation_performed": false,
+          "secondary_error": "post-failure step could not enter missing _unreal-ci-warm directory",
+          "performance_pass": false
+        }
+      }
+    },
+    "macro_trial_preparation": {
+      "status": "PREPARED_NOT_RUN",
+      "intent": "[l07-trial-macro]",
+      "scope": "Single existing Macro Tiling override .25 -> .05 -> .25 with exact baseline, backup, readback and same-camera A/B/A",
+      "source_video": "https://player.vimeo.com/video/888569514",
+      "directly_reviewed_time": "22:44",
+      "original_values": {
+        "Detail Tiling": 0.25,
+        "Macro Tiling": 0.05,
+        "Macro Texture Distance": 10000
+      },
+      "camera_source": "docs/assets/lesson07-recovery-20261020/receipt.json capture_camera; yaw normalized modulo 360",
+      "physical_repeat_metres": "UNVERIFIED",
+      "trial_is_final_repair": false,
+      "source_import_performed": false,
+      "native_asset_mutation_performed": false,
+      "visual_accepted": false,
+      "performance_pass": false,
+      "limitations": [
+        "Macro UV also feeds Normal and Masks; not a pure BaseColor buffer trial",
+        "Nested material function/displacement implementation remains unread",
+        "Semantic restoration does not prove byte-identical .uasset serialization"
+      ],
+      "restoration_scope": "Complete ordered MI parameter snapshot must match baseline; this is not byte-identical .uasset serialization",
+      "backup_package": "/Game/Generated/YACS/Lesson07_Unified/RepairBackups/MI_PreMacroTrial_20261021",
+      "baseline_snapshot_sha256": "0b082e2e99bd7d12c307309a34704c4290eda073c6c895b8cdb3e91d4ded3bdd",
+      "success_native_calls": 12,
+      "maximum_native_calls": 15,
+      "maximum_duration_seconds": 300,
+      "minimum_remaining_seconds_before_apply": 193,
+      "restore_policy": "At most one restore mutation, only on fresh same-process evidence and an exact known candidate; denied operations are never retried",
+      "validation": {
+        "client_tests_passed": 73,
+        "powershell_viewport_cases_passed": 118,
+        "workflow_marker_combinations_passed": 64,
+        "powershell_switch_combinations_passed": 32,
+        "edited_powershell_files_parsed": 3,
+        "workflow_powershell_blocks_parsed": 9,
+        "powershell_version": "7.6.6",
+        "cross_language_client_receipt_check": "PASS; complete=true and three ordered stages; synthetic host envelope, no native calls",
+        "independent_review": "PASS; pre-apply restoration reserve defect corrected and boundary regression independently verified",
+        "native_calls_during_validation": 0,
+        "windows_os_guard_native_validation": "PENDING_REMOTE_EXECUTION",
+        "frozen_observer_sha256": "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5",
+        "original_capture_and_inspection_paths": "Preserved; original standalone PowerShell proof validation unchanged",
+        "files_sha256": {
+          "scripts/ue/lesson07_wingman_client.py": "f3e69666f321a38bad4ea771d4b73947798286d3bb2e76fc8188d2adcbb829b4",
+          "scripts/ue/test_lesson07_wingman_client.py": "57c001afd6e869792cee0c1b3adfe9a96948b8f8a88f94965dffde25d03dcf74",
+          "scripts/ue/fixtures/lesson07_macro_baseline_native_20261021.json": "279fe73462c4fbbad78727d5abae6593b7932fb9f8a0c6a00cae9533fe6060cb",
+          "scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1": "ee3cb752f4ef23af36b8b4222a0bd0baf97bdd4de366a7848713be3416aa8966",
+          "scripts/ue/Read-YacsLesson07Viewport.ps1": "35a5cba0a83944c812abd861b34461c15d518d4be35cf084016311ef4468b7ad",
+          "scripts/ue/Test-YacsLesson07Viewport.ps1": "93c09a38cc2960f357a60219622d5041fc646fd056580a154c3045f8c489cf88",
+          ".github/workflows/yacs-lesson07-remote-editor.yml": "22c628ab46c914700bd591c5ce5384176c6e169fcaa65d4447c197e5316a6114"
+        }
+      }
     }
   },
   "whole_material_source_repair_20261021": {
@@ -2834,7 +3461,7 @@
         "value": "Nearest",
         "observed_directly_in_texture_editor": true
       },
-      "current_yacs_native_settings": "UNREAD"
+      "current_yacs_native_settings": "MATCHES: TMGS_NoMipmaps, TF_Nearest, TC_Grayscale, sRGB=false, PF_G8, 16000x16000 at 2026-10-21T02:05Z"
     }
   }
 }

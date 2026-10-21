@@ -141,6 +141,100 @@ Expect-Rejection { Assert-L07ViewportProofs $identity $probe $bad $head $now }; 
 $bad=Copy-Data $bridge; $bad.status=@('CAPTURE_RESPONSE_RECEIVED','CAPTURE_RESPONSE_RECEIVED')
 Expect-Rejection { Assert-L07ViewportProofs $identity $probe $bad $head $now }; $cases++
 
+# The trial retains three distinct calls from one verified owner. Its original
+# identity may precede the final read by over 120 seconds; the final proof is fresh.
+$trialNow=[DateTimeOffset]::Parse('2026-10-21T00:20:00Z')
+$trialProbe=Copy-Data $probe
+$trialProbe.status='LESSON07_TRIAL_MACRO_RESTORED_IMAGES_PENDING'
+$trialProbe.trial_status='TRIAL_MACRO_RESTORED_REVIEW_PENDING'
+$trialProbe.capture_requested=$false; $trialProbe.inspection_requested=$false; $trialProbe.trial_macro_requested=$true
+$trialProbe.trial_mutation_attempted=$true; $trialProbe.trial_restore_verified=$true
+$trialProbe.trial_backup_verified=$true; $trialProbe.trial_registry_verified=$true
+$trialProbe.trial_captures_received=3; $trialProbe.native_tool_call_attempts=12; $trialProbe.performance_pass=$false
+$trialProbe.identity_after.observed_utc='2026-10-21T00:19:00Z'
+$trialBridge=Copy-Data @{
+  status='TRIAL_MACRO_RESTORED_REVIEW_PENDING';native_material_readback='TRIAL_BASELINE_RESTORED_CAPTURE_REVIEW_PENDING'
+  native_tool_calls=12;native_tool_attempted=$true;native_tool_completed=$true;native_tool_response_received=$true
+  trial_mutation_attempted=$true;trial_restore_verified=$true;trial_backup_verified=$true;trial_registry_verified=$true
+  external_host_identity=$identity;trial_results=@();trial_captures=@{}
+}
+$stageNames=@('registry','baseline_mi','baseline_clean','A_baseline','backup_create','backup_mi',
+  'apply_macro','candidate_mi','B_macro_005','restore_macro','restored_mi','A_restored')
+$arguments=@{return_image=$false;camera_location=@(-16145.268182324218,84377.62518478667,49067.09993071173)
+  camera_rotation=@(-18.85209781522559,165.400053560734,0);fov=90}
+for ($i=0;$i -lt $stageNames.Count;$i++) {
+  $stageName=$stageNames[$i]
+  $row=@{index=($i+1);stage=$stageName}
+  if ($stageName -cin @('A_baseline','B_macro_005','A_restored')) {
+    $start=[DateTimeOffset]::Parse('2026-10-21T00:15:00Z').AddSeconds(($i+1)*15)
+    $result=@{text=$path.Replace('001500',$stageName);text_truncated=$false;text_block_count=1;response_sha256=('a'*64)}
+    $row.tool_name='take_viewport_screenshot'; $row.input_schema_sha256=$bridge.capture_input_schema_sha256
+    $row.arguments=$arguments; $row.attempted=$true; $row.completed=$true; $row.response_received=$true
+    $row.result=$result; $row.started_utc=$start.ToString('o'); $row.response_received_utc=$start.AddSeconds(1).ToString('o')
+    $trialBridge.trial_captures[$stageName]=@{
+      capture_arguments=$arguments;capture_result=$result
+      native_tool_started_utc=$row.started_utc;native_tool_response_received_utc=$row.response_received_utc
+    }
+  }
+  $trialBridge.trial_results+=,$row
+}
+$trialBridge=Copy-Data $trialBridge
+$trial=Assert-L07TrialViewportProofs $identity $trialProbe $trialBridge $head $trialNow
+Require ($trial.complete -and $trial.captures.Count -eq 3 -and $trial.session_id -eq 1) 'Complete trial proof rejected.'; $cases++
+$partialProbe=Copy-Data $trialProbe; $partialBridge=Copy-Data $trialBridge
+$partialProbe.status='LESSON07_TRIAL_MACRO_INCOMPLETE_EDITOR_RETAINED'; $partialProbe.trial_status='TRIAL_MACRO_FAILED'
+$partialProbe.client_exit_code=1; $partialProbe.native_tool_completed=$null; $partialProbe.native_tool_called=$null
+$partialProbe.trial_captures_received=2; $partialProbe.native_tool_call_attempts=14
+$partialBridge.status='TRIAL_MACRO_FAILED'; $partialBridge.native_tool_calls=14; $partialBridge.native_tool_completed=$null
+$partialBridge.trial_captures.Remove('A_restored')
+$partial=Assert-L07TrialViewportProofs $identity $partialProbe $partialBridge $head $trialNow
+Require (-not $partial.complete -and $partial.captures.Count -eq 2) 'Restored partial trial evidence rejected.'; $cases++
+foreach ($value in @($false,$null,'true',@($true,$true))) {
+  $bad=Copy-Data $partialBridge; $bad.trial_restore_verified=$value
+  Expect-Rejection { Assert-L07TrialViewportProofs $identity $partialProbe $bad $head $trialNow }; $cases++
+}
+foreach ($change in @(
+  @{key='status';value='TRIAL_MACRO_FAILED'},@{key='status';value=@('TRIAL_MACRO_RESTORED_REVIEW_PENDING')},
+  @{key='native_tool_calls';value=11},@{key='native_tool_calls';value=16},@{key='native_tool_calls';value='12'},
+  @{key='native_tool_completed';value=$null},@{key='trial_backup_verified';value=$false},
+  @{key='trial_mutation_attempted';value=$false},@{key='trial_registry_verified';value='true'}
+)) {
+  $bad=Copy-Data $trialBridge; $bad[$change.key]=$change.value
+  Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $bad $head $trialNow }; $cases++
+}
+foreach ($change in @(
+  @{key='trial_macro_requested';value=$false},@{key='capture_requested';value=$true},
+  @{key='native_tool_call_attempts';value=13},@{key='native_tool_called';value=$null},
+  @{key='trial_captures_received';value=2},@{key='performance_pass';value=$true},@{key='client_exit_code';value=1}
+)) {
+  $bad=Copy-Data $trialProbe; $bad[$change.key]=$change.value
+  Expect-Rejection { Assert-L07TrialViewportProofs $identity $bad $trialBridge $head $trialNow }; $cases++
+}
+$bad=Copy-Data $trialProbe; $bad.owner_after.editor.editor_start_filetime_utc='134370120000674690'
+Expect-Rejection { Assert-L07TrialViewportProofs $identity $bad $trialBridge $head $trialNow }; $cases++
+$bad=Copy-Data $trialProbe; $bad.identity_after.observed_utc='2026-10-21T00:21:01Z'
+Expect-Rejection { Assert-L07TrialViewportProofs $identity $bad $trialBridge $head ([DateTimeOffset]::Parse('2026-10-21T00:21:02Z')) }; $cases++
+Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $trialBridge $head ([DateTimeOffset]::Parse('2026-10-21T00:21:01Z')) }; $cases++
+$bad=Copy-Data $trialBridge; $bad.trial_captures.A_restored=$bad.trial_captures.A_baseline
+Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $trialBridge; $bad.trial_captures.extra=$bad.trial_captures.A_baseline
+Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $trialBridge; $bad.trial_captures.B_macro_005.capture_arguments.camera_location[0]=0
+Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $trialBridge; $bad.trial_results[8].arguments.return_image=$true
+Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $trialBridge; $bad.trial_results[8].index=8
+Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $trialBridge; $bad.trial_results[8].completed=$null
+Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $trialBridge; $bad.trial_results[8].input_schema_sha256=('b'*64)
+Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $trialBridge; $bad.trial_results[8].result.text=$bad.trial_results[3].result.text
+$bad.trial_captures.B_macro_005.capture_result.text=$bad.trial_results[3].result.text
+Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $bad $head $trialNow }; $cases++
+$bad=Copy-Data $trialBridge; $bad.trial_captures.B_macro_005.native_tool_response_received_utc='2026-10-21T00:20:00Z'
+Expect-Rejection { Assert-L07TrialViewportProofs $identity $trialProbe $bad $head $trialNow }; $cases++
+
 $started=[DateTimeOffset]::Parse('2026-10-21T00:15:01Z')
 $finished=$started.AddSeconds(1)
 Assert-L07ViewportFileWindow 32MB $started $started $finished; $cases++
