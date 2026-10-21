@@ -62,6 +62,9 @@ CONTRACT_TOOLS = {
     "edit_asset",
     "edit_material",
     "edit_material_function",
+    "edit_data_asset",
+    "download_asset",
+    "vault_asset",
 }
 CONTRACT_LIMIT = 32 * 1024
 CONTRACT_DESCRIPTION_LIMIT = 16 * 1024
@@ -816,52 +819,85 @@ def retain_inspection_result(result, row, secrets):
 
 
 def verify_inspection_registry(text):
-    """Admit targets only from unambiguous same-record registry path/class data."""
-    counts = re.findall(r"\bshown=(\d+)\s+total=(\d+)\b", text)
+    """Validate the observed assets footer; each row names a directory + asset."""
+    lines = re.findall(r"(?m)^#json-explore:([^\r\n]+)$", text)
     require(
-        len(counts) == 1
-        and counts[0][0] == counts[0][1]
-        and 0 < int(counts[0][0]) <= 200
-        and re.search(r"\bTRUNCATED\b", text, re.IGNORECASE) is None,
+        text.count("#json-explore:") == 1 and len(lines) == 1,
+        "INSPECTION_REGISTRY_FORMAT",
+    )
+    registry = parse_json(lines[0].encode("utf-8"), INSPECTION_RESPONSE_LIMIT)
+    require(
+        type(registry) is dict
+        and set(registry) == {
+            "mode", "scope", "shown", "total", "offset", "limit", "truncated",
+            "raw_from_registry", "loaded_in_shown", "filters", "rows",
+        }
+        and registry["mode"] == "assets"
+        and registry["scope"] == INSPECTION_ROOT,
+        "INSPECTION_REGISTRY_FORMAT",
+    )
+    require(
+        all(type(registry[key]) is int for key in (
+            "shown", "total", "offset", "limit", "raw_from_registry", "loaded_in_shown"
+        ))
+        and type(registry["rows"]) is list
+        and 0 < len(registry["rows"]) <= 200
+        and registry["shown"] == registry["total"] == registry["raw_from_registry"] == len(registry["rows"])
+        and registry["offset"] == 0
+        and registry["limit"] == 200
+        and registry["truncated"] is False
+        and 0 <= registry["loaded_in_shown"] <= registry["shown"],
         "INSPECTION_REGISTRY_INCOMPLETE",
     )
-    lines = re.findall(r"(?m)^\s*#json-explore:\s*([^\r\n]+)$", text)
-    require(len(lines) == 1, "INSPECTION_REGISTRY_FORMAT")
-    registry = parse_json(lines[0].encode("utf-8"), INSPECTION_RESPONSE_LIMIT)
-    matches = {path: 0 for path in INSPECTION_TARGETS}
-    visited = 0
-
-    def walk(value, depth=0):
-        nonlocal visited
-        visited += 1
-        require(visited <= 4096 and depth <= 12, "INSPECTION_REGISTRY_SIZE")
-        if type(value) is dict:
-            strings = {item for item in value.values() if type(item) is str}
-            paths = [
-                path
-                for path in matches
-                if path in strings or path + "." + path.rsplit("/", 1)[1] in strings
-            ]
-            require(len(paths) <= 1, "INSPECTION_REGISTRY_AMBIGUOUS")
-            for path in paths:
-                kind = INSPECTION_TARGETS[path]
-                require(
-                    kind in strings or "/Script/Engine." + kind in strings,
-                    "INSPECTION_REGISTRY_CLASS",
-                )
-                matches[path] += 1
-                require(matches[path] == 1, "INSPECTION_REGISTRY_AMBIGUOUS")
-            for item in value.values():
-                walk(item, depth + 1)
-        elif type(value) is list:
-            for item in value:
-                walk(item, depth + 1)
-
-    walk(registry)
+    filters = registry["filters"]
     require(
-        all(count == 1 for count in matches.values()),
-        "INSPECTION_REGISTRY_TARGET_MISSING",
+        type(filters) is dict
+        and filters == {
+            "pattern": "", "query": "", "type": "", "class_path": "",
+            "class_filter_recursive": False,
+        }
+        and filters["class_filter_recursive"] is False,
+        "INSPECTION_REGISTRY_FORMAT",
     )
+    headers = re.findall(
+        r"(?m)^# ASSETS " + re.escape(INSPECTION_ROOT)
+        + r" shown=([0-9]{1,3}) total=([0-9]{1,3}) offset=([0-9]{1,3})"
+        + r" limit=([0-9]{1,3}) loaded=([0-9]{1,3})/([0-9]{1,3})$",
+        text,
+    )
+    require(
+        len(headers) == 1
+        and tuple(map(int, headers[0])) == (
+            registry["shown"], registry["total"], registry["offset"], registry["limit"],
+            registry["loaded_in_shown"], registry["shown"],
+        ),
+        "INSPECTION_REGISTRY_INCOMPLETE",
+    )
+    seen = set()
+    loaded = 0
+    for row in registry["rows"]:
+        require(
+            type(row) is dict
+            and set(row) == {"name", "path", "class", "class_path", "loaded"}
+            and all(type(row[key]) is str for key in ("name", "path", "class", "class_path"))
+            and type(row["loaded"]) is bool
+            and re.fullmatch(r"[A-Za-z0-9_]{1,128}", row["name"]) is not None
+            and re.fullmatch(re.escape(INSPECTION_ROOT) + r"(?:/[A-Za-z0-9_]{1,128})*", row["path"]) is not None,
+            "INSPECTION_REGISTRY_FORMAT",
+        )
+        require(
+            re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,127}", row["class"]) is not None
+            and row["class_path"] == "/Script/Engine." + row["class"],
+            "INSPECTION_REGISTRY_CLASS",
+        )
+        package = row["path"] + "/" + row["name"]
+        require(package not in seen, "INSPECTION_REGISTRY_AMBIGUOUS")
+        seen.add(package)
+        if package in INSPECTION_TARGETS:
+            require(row["class"] == INSPECTION_TARGETS[package], "INSPECTION_REGISTRY_CLASS")
+        loaded += row["loaded"]
+    require(loaded == registry["loaded_in_shown"], "INSPECTION_REGISTRY_INCOMPLETE")
+    require(set(INSPECTION_TARGETS) <= seen, "INSPECTION_REGISTRY_TARGET_MISSING")
 
 
 def observer_loader():

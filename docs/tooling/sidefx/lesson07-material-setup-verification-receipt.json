@@ -1653,7 +1653,7 @@
     "performance_pass": false
   },
   "remote_connection_continuation_20261021": {
-    "status": "EDITOR_RETAINED_DEDICATED_VIEWPORT_CAPTURE_VERIFIED_MATERIAL_READ_PENDING",
+    "status": "EDITOR_RETAINED_REGISTRY_READ_VERIFIED_MATERIAL_PARAMETERS_PENDING",
     "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
     "owner_authorized_missing_connection_infrastructure": true,
     "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
@@ -1669,7 +1669,7 @@
       }
     ],
     "performance_pass": false,
-    "note": "The same owner Editor PID 17896 and native start filetime 134370120000674689 were retained through the successful dedicated viewport capture at 2026-10-21T00:26:08Z. The captured LevelEditor reports world_name L_SaCalobra_Lesson07 and no PIE. Python remains blocked by the prior F49 error; no retry or bypass. Native material edits have not occurred. Current frame shows broad olive tint and regular diamond/grid repetition; fixed dedicated material readback is prepared next.",
+    "note": "The same owner Editor PID 17896 and start filetime 134370120000674689 remain verified through 2026-10-21T01:43:06Z. A dedicated explore call returned the complete 29-asset Lesson07 registry, including all 11 required targets. The client rejected its actual JSON representation before any material-parameter read. Parser correction is pending execution; no native material edits have occurred. Python F49 remains respected.",
     "inventory": {
       "source_commit": "4bf894dd8dccc482a3e90a53bce6d6b01653e6a7",
       "run_id": 39507345660,
@@ -1697,7 +1697,7 @@
       "editor_commands_executed": 0
     },
     "connection_workflow": ".github/workflows/yacs-lesson07-remote-editor.yml",
-    "connection_execution": "EDITOR_RETAINED_DEDICATED_VIEWPORT_CAPTURE_VERIFIED_MATERIAL_READ_PENDING",
+    "connection_execution": "EDITOR_RETAINED_REGISTRY_READ_VERIFIED_MATERIAL_PARAMETERS_PENDING",
     "first_connection_attempt": {
       "source_commit": "3ba05803bfc3ff095eb012e3f790752b55b47d12",
       "protected_ci_run_id": 39508823330,
@@ -2503,7 +2503,7 @@
       }
     },
     "dedicated_material_inspection_preparation": {
-      "status": "PREPARED_NATIVE_READ_PENDING",
+      "status": "ACTUAL_REGISTRY_PARSER_CORRECTED_NEXT_NATIVE_READ_PENDING",
       "intent": "[l07-inspect-editor]",
       "maximum_native_calls": 6,
       "automatic_retry": false,
@@ -2516,13 +2516,13 @@
         "edit_asset save_assets dry_run=true on eleven fixed targets",
         "code_search bounded installed Texture2DArray.cpp function search"
       ],
-      "registry_prerequisite": "Exact paths and classes for all eleven expected assets from a single actual explore JSON footer; unknown or incomplete evidence stops the batch.",
+      "registry_prerequisite": "Exactly one observed #json-explore payload with typed complete metadata and exact directory/name/class/class_path from the same row for all eleven expected packages; header counts must agree. Unknown, duplicated or incomplete evidence stops the batch.",
       "native_material_readback": "NOT_RUN",
       "visual_accepted": false,
       "performance_pass": false,
       "limit": "Current contracts do not establish local image import, Texture2DArray source-list reassembly, or every TextureCoordinate/nested-function property. Missing readback remains unknown.",
       "validation": {
-        "client_tests_passed": 56,
+        "client_tests_passed": 57,
         "workflow_marker_combinations_passed": 32,
         "powershell_switch_combinations_passed": 16,
         "receipt_negative_cases_rejected": 18,
@@ -2530,22 +2530,27 @@
         "native_calls_during_validation": 0,
         "review_scope": "Dedicated read-only client, workflow intent exclusivity, owner preservation and receipt validation; not native material acceptance",
         "files_sha256": {
-          "scripts/ue/lesson07_wingman_client.py": "500553e7e61f39c2630feb5705bab55870ce954b26e4474faaa00908a7cf2e68",
-          "scripts/ue/test_lesson07_wingman_client.py": "25abb7379189f5173c511a7508fc8129acbbb5fbe68bc4f5190e09467cf34a14",
+          "scripts/ue/lesson07_wingman_client.py": "964d77805a4d6ca2f6dae0129fb06375adcd3eb1581c300d973d1f5cfc71d007",
+          "scripts/ue/test_lesson07_wingman_client.py": "dc3c167a6319576fd1d0ab3f34c84b9d5245603760b41707793077a0961792af",
           "scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1": "d3b9b34fd9b7c670004780508450d58e5fe150cc6bade6bee593c024814427ff",
           ".github/workflows/yacs-lesson07-remote-editor.yml": "59511aac8167341b15d106c1149694c738fd44756c403d30034f9732b7c4292a"
         },
-        "root_focused_python_tests_passed": 82,
         "scoped_ruff_rules": "E9,F63,F7,F82",
-        "scoped_ruff_passed": true,
-        "ruff_format_check_passed": true,
         "docs_index_passed": [
           "i18n",
           "structure",
           "links",
           "freshness"
         ],
-        "sparse_checkout_review_limitation": "Static review confirmed lazyMissing worktree support, but did not establish git-lfs compatibility with missing promisor Git objects. Actual Windows attempt failed before native access; sparse checkout removed."
+        "sparse_checkout_review_limitation": "Static review confirmed lazyMissing worktree support, but did not establish git-lfs compatibility with missing promisor Git objects. Actual Windows attempt failed before native access; sparse checkout removed.",
+        "previous_client_root_focused_python_tests_passed": 82,
+        "previous_client_sha256": "500553e7e61f39c2630feb5705bab55870ce954b26e4474faaa00908a7cf2e68",
+        "previous_client_scoped_ruff_passed": true,
+        "previous_client_ruff_format_check_passed": true,
+        "current_ruff_status": "UNAVAILABLE_NOT_INSTALLED; compile/AST and focused client tests passed",
+        "actual_native_fixture_byte_identity_verified": true,
+        "actual_native_fixture_parser_passed": true,
+        "fixture_sha256": "a595806f3bb85800b99b9ed9a61cd8582a802a9679fc490f13fe523388acd8b1"
       },
       "first_attempt": {
         "source_commit": "72919f499181a919b1708df7480be8bf99e4bf01",
@@ -2569,7 +2574,51 @@
         "cause": "Correction matched existing CPU sparse checkout instead of new Windows sparse checkout.",
         "native_tool_calls": 0,
         "correction": "Restore exact bb29 CPU checkout and exact bb29 Windows checkout; both checkout steps compared structurally with that successful source."
-      }
+      },
+      "native_registry_attempt": {
+        "source_commit": "bcf855c618d6f78d2335675361454075e9fb3c20",
+        "run_id": 39528676794,
+        "cpu_job_id": 118989242996,
+        "cpu_conclusion": "success",
+        "windows_job_id": 118989319218,
+        "windows_conclusion": "failure",
+        "artifact_id": 12314281696,
+        "artifact_zip_sha256": "49e6fe108cdcd1bf4e222fa1440afbe93470c36d64b0116028c116a8954e954f",
+        "artifact_digest_verified": true,
+        "native_tool_calls": 1,
+        "native_tool": "explore",
+        "native_response_received": true,
+        "native_response_sha256": "b921530f444db2c322e4f980b124ed317e56f81754fc8f25e20f911942d0f168",
+        "actual_registry": {
+          "shown": 29,
+          "total": 29,
+          "truncated": false,
+          "required_targets_present_after_manual_review": 11
+        },
+        "client_error": "INSPECTION_REGISTRY_INCOMPLETE",
+        "cause": "Parser mistakenly matched the word truncated in the actual JSON truncated:false field, and expected complete package paths instead of observed same-row directory path plus name.",
+        "correction": "Parse the observed footer schema and typed truncated flag, with header/count/scope consistency and exact same-row name/path/class/class_path target verification. Keep all six fixed calls, schema pins and stop-on-error unchanged.",
+        "retained_evidence_directory": "docs/assets/lesson07-inspection-20261021",
+        "files_sha256": {
+          "identity.json": "ca9e8632bc6fd797c1cae6ea5b3dc2bfddd44d39f1c5729a572f2fee55b21657",
+          "probe.json": "9abb167b000d2fec83ddbfb16f97d12ff1670483207a3eedc117d9c88751b800",
+          "bridge.json": "d0aa049f19e6148935bbb877e831beb97d97d6a233b2357e6502a3cccb5241f8"
+        },
+        "owner_pid": 17896,
+        "owner_start_filetime_utc": "134370120000674689",
+        "identity_stable_across_probe": true,
+        "material_parameter_reads_performed": false,
+        "native_asset_changes": [],
+        "visual_accepted": false,
+        "performance_pass": false,
+        "exact_response_fixture": "scripts/ue/fixtures/lesson07_explore_assets_native_20261021.txt"
+      },
+      "additional_discovery_contracts_retained_next": [
+        "edit_data_asset",
+        "download_asset",
+        "vault_asset"
+      ],
+      "additional_native_calls_for_contract_discovery": 0
     }
   },
   "whole_material_source_repair_20261021": {

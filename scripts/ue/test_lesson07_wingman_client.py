@@ -244,6 +244,9 @@ def capture_reply(request):
             "edit_asset",
             "edit_material",
             "edit_material_function",
+            "edit_data_asset",
+            "download_asset",
+            "vault_asset",
         ):
             listing.append(
                 {
@@ -289,7 +292,13 @@ def registry_records():
     # must be proved present before any name-only tool can be admitted.
     root = "/Game/Generated/YACS/Lesson07_Unified/"
     return [
-        {"package": root + suffix, "kind": kind}
+        {
+            "name": suffix.rsplit("/", 1)[1],
+            "path": root + suffix.rsplit("/", 1)[0],
+            "class": kind,
+            "class_path": "/Script/Engine." + kind,
+            "loaded": True,
+        }
         for suffix, kind in (
             ("Materials/M_Landscape_YACS", "Material"),
             ("Materials/MI_Landscape_Instance_YACS", "MaterialInstanceConstant"),
@@ -307,8 +316,19 @@ def registry_records():
 
 
 def registry_text(records=None):
-    return "shown=11 total=11\n#json-explore: " + json.dumps(
-        {"assets": registry_records() if records is None else records}
+    rows = registry_records() if records is None else records
+    count = len(rows)
+    loaded = sum(row.get("loaded", False) for row in rows)
+    root = "/Game/Generated/YACS/Lesson07_Unified"
+    return (
+        f"# ASSETS {root} shown={count} total={count} offset=0 limit=200 loaded={loaded}/{count}\n"
+        "#json-explore:" + json.dumps({
+            "mode": "assets", "scope": root, "shown": count, "total": count,
+            "offset": 0, "limit": 200, "truncated": False,
+            "raw_from_registry": count, "loaded_in_shown": loaded,
+            "filters": {"pattern": "", "query": "", "type": "", "class_path": "", "class_filter_recursive": False},
+            "rows": rows,
+        })
     )
 
 
@@ -2047,6 +2067,9 @@ class CaptureTests(unittest.TestCase):
             "edit_asset",
             "edit_material",
             "edit_material_function",
+            "edit_data_asset",
+            "download_asset",
+            "vault_asset",
         ):
             self.assertEqual(contracts[name]["status"], "RETAINED")
             self.assertEqual(
@@ -2089,6 +2112,9 @@ class CaptureTests(unittest.TestCase):
             "edit_asset",
             "edit_material",
             "edit_material_function",
+            "edit_data_asset",
+            "download_asset",
+            "vault_asset",
         ):
             self.assertEqual(contracts[name]["status"], "RETAINED")
             self.assertEqual(
@@ -2138,7 +2164,7 @@ class InspectionTests(unittest.TestCase):
                 "code_search",
             ],
         )
-        paths = [record["package"] for record in registry_records()]
+        paths = [record["path"] + "/" + record["name"] for record in registry_records()]
         self.assertEqual(calls[2]["arguments"], {"name": paths[1]})
         self.assertEqual(calls[3]["arguments"], {"names": paths[2:]})
         self.assertEqual(
@@ -2192,38 +2218,78 @@ class InspectionTests(unittest.TestCase):
         self.assertEqual(state.report_fields()["native_tool_calls"], 0)
         self.assertFalse(state.completed)
 
-    def test_registry_guard_accepts_object_paths_and_full_classes_without_key_assumptions(
-        self,
-    ):
-        records = [
-            {
-                "arbitrary_name": row["package"]
-                + "."
-                + row["package"].rsplit("/", 1)[1],
-                "arbitrary_type": "/Script/Engine." + row["kind"],
-            }
-            for row in registry_records()
+    def test_actual_native_registry_fixture_passes_the_fixed_inspection_batch(self):
+        fixture = Path(__file__).parent / "fixtures" / "lesson07_explore_assets_native_20261021.txt"
+        raw = fixture.read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), "a595806f3bb85800b99b9ed9a61cd8582a802a9679fc490f13fe523388acd8b1")
+        text = raw.decode("utf-8")
+        client.verify_inspection_registry(text)
+
+        def actual_registry(request):
+            status, headers, raw = inspection_reply(request)
+            if request["method"] == "tools/call" and request["params"]["name"] == "explore":
+                payload = json.loads(raw)
+                payload["result"]["content"][0]["text"] = text
+                raw = client.canonical(payload)
+            return status, headers, raw
+
+        with peer(actual_registry) as (port, requests):
+            report = connection(port).probe(inspect_lesson07=True)
+        self.assertEqual(report["status"], "INSPECTION_RESPONSES_RECEIVED")
+        self.assertEqual(report["native_tool_calls"], 6)
+        self.assertTrue(report["inspection_registry_verified"])
+        self.assertEqual(report["inspection_results"][0]["result"]["text"], text)
+        self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), 6)
+
+    def test_registry_metadata_is_typed_complete_and_consistent_with_header(self):
+        text = registry_text()
+        header, encoded = text.split("#json-explore:", 1)
+        original = json.loads(encoded)
+        cases = [
+            ("truncated", value) for value in (True, 0, "false", None)
+        ] + [
+            (key, value)
+            for key in ("shown", "total", "offset", "limit", "raw_from_registry", "loaded_in_shown")
+            for value in (False, str(original[key]), original[key] + 1)
+        ] + [
+            ("mode", "actors"), ("scope", "/Game/Other"),
+            ("rows", {"rows": original["rows"]}), ("error", "native error"),
         ]
-        client.verify_inspection_registry(registry_text(records))
+        for key, value in cases:
+            with self.subTest(key=key, value=value), self.assertRaises(client.ProbeError):
+                client.verify_inspection_registry(header + "#json-explore:" + json.dumps({**original, key: value}))
+        for prefix in ("", " "):
+            with self.assertRaises(client.ProbeError):
+                client.verify_inspection_registry(text + "\n" + prefix + "#json-explore:" + encoded)
 
     def test_uncertain_registry_is_retained_and_stops_before_name_only_tools(self):
         records = registry_records()
         missing_mi = [
-            row for row in records if row["kind"] != "MaterialInstanceConstant"
+            row for row in records if row["class"] != "MaterialInstanceConstant"
         ]
         split = [
-            {"package": row["package"], "nested": {"kind": row["kind"]}}
+            {"name": row["name"], "nested": {key: value for key, value in row.items() if key != "name"}}
             for row in records
         ]
         wrong_class = [dict(row) for row in records]
-        wrong_class[1]["kind"] = "Material"
+        wrong_class[1]["class"] = "Material"
+        wrong_class[1]["class_path"] = "/Script/Engine.Material"
+        wrong_class_path = [dict(row) for row in records]
+        wrong_class_path[1]["class_path"] = "/Script/Engine.Material"
+        unsafe_name = [dict(row) for row in records]
+        unsafe_name[1]["name"] = "../MI_Landscape_Instance_YACS"
+        wrong_directory = [dict(row) for row in records]
+        wrong_directory[1]["path"] = "/Game/Generated/YACS/Lesson07_Unified/Textures"
         duplicate_key = registry_text().replace(
-            '"assets":', '"assets": [], "assets":', 1
+            '"rows":', '"rows": [], "rows":', 1
         )
         for text in (
             registry_text(missing_mi),
             registry_text(split),
             registry_text(wrong_class),
+            registry_text(wrong_class_path),
+            registry_text(unsafe_name),
+            registry_text(wrong_directory),
             registry_text(records + [records[1]]),
             registry_text().replace("shown=11", "shown=10"),
             registry_text().replace("#json-explore:", "unknown-output:"),

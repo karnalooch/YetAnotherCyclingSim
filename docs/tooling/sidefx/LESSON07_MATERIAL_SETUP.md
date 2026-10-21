@@ -156,6 +156,17 @@ Its CPU gate stopped on a dirty checkout before native admission. The corrected
 workflow restores the original CPU checkout and removes sparse checkout only
 from Windows, matching the successful capture checkout configuration.
 
+At `bcf855c618d6f78d2335675361454075e9fb3c20`, [run 39528676794](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39528676794)
+reached the existing Editor and completed the dedicated registry call. Its actual
+response contains **29/29 assets**, `truncated:false`, and all eleven expected
+targets with consistent classes. The client wrongly interpreted the JSON key
+`truncated` as a truncation warning and assumed a full package path rather than
+the observed same-row directory/name fields. It stopped before material reads.
+The parser correction uses this exact response as a regression fixture, verifies
+typed metadata and exact same-row identities, and retains the original six-call
+plan. [Exact registry evidence](../../assets/lesson07-inspection-20261021)
+also confirms unchanged owner PID/start time; no native asset change occurred.
+
 The owner requested remote execution of the channel diagnosis and explicitly
 allowed creating the missing connection infrastructure. This supersedes the
 previous no-new-transport restriction for this bounded Lesson07 task only.
