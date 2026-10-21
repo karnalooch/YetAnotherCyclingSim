@@ -249,6 +249,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Cannot preserve LF bytes.' }
 
       - name: Checkout reviewed source without LFS payloads or canonical edits
+        if: ${{ needs.await_ci.result != 'success' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -257,11 +258,35 @@ jobs:
           lfs: false
           persist-credentials: false
 
+      - name: Checkout only startup source without LFS payloads
+        if: ${{ needs.await_ci.result == 'success' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: l07-remote-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+          # LFS pointers are smaller than 1024 bytes. Retain all of them plus
+          # small blobs; checkout hydrates only the required source directories.
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts
+            .github/workflows
+
       - name: Validate code and boundaries before any task creation
         id: validate
         run: |
           $ErrorActionPreference = 'Stop'
-          ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          $l07PriorNoLazyFetch=$env:GIT_NO_LAZY_FETCH
+          try {
+            if ('${{ needs.await_ci.result }}' -ceq 'success') {
+              # All pointer blobs are already local; do not fetch unrelated
+              # large Git blobs merely to inspect their sizes in this scanner.
+              $env:GIT_NO_LAZY_FETCH='1'
+            }
+            ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          } finally { $env:GIT_NO_LAZY_FETCH=$l07PriorNoLazyFetch }
           foreach ($relative in @(
             'scripts/ue/Install-YacsLesson07RemoteEditor.ps1',
             'scripts/ue/Start-YacsLesson07RemoteEditor.ps1',
