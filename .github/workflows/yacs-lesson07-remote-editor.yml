@@ -120,6 +120,7 @@ jobs:
               "lesson07_wingman_client.py", "lesson07_observe_editor.py",
               "test_lesson07_wingman_client.py", "test_lesson07_observe_editor.py",
               "Invoke-YacsLesson07RemoteProbe.ps1", "Start-YacsLesson07RemoteEditor.ps1",
+              "Read-YacsLesson07ObserverFailure.ps1", "Test-YacsLesson07ObserverFailure.ps1",
           ):
               path = Path("scripts/ue") / name
               subprocess.run(["git", "ls-files", "--error-unmatch", "--", str(path)], check=True)
@@ -191,7 +192,9 @@ jobs:
             'scripts/ue/Install-YacsLesson07RemoteEditor.ps1',
             'scripts/ue/Start-YacsLesson07RemoteEditor.ps1',
             'scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1',
-            'scripts/ue/Test-YacsLesson07RemotePreflight.ps1')) {
+            'scripts/ue/Test-YacsLesson07RemotePreflight.ps1',
+            'scripts/ue/Read-YacsLesson07ObserverFailure.ps1',
+            'scripts/ue/Test-YacsLesson07ObserverFailure.ps1')) {
             $tokens=$null; $errors=$null
             [Management.Automation.Language.Parser]::ParseFile(
               (Join-Path (Get-Location).Path $relative), [ref]$tokens, [ref]$errors) | Out-Null
@@ -199,6 +202,7 @@ jobs:
           }
           & ./scripts/live_host/Test-YacsLiveTaskPrincipal.ps1
           & ./scripts/ue/Test-YacsLesson07RemotePreflight.ps1
+          & ./scripts/ue/Test-YacsLesson07ObserverFailure.ps1
           $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
           if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Existing Python unavailable.' }
           & $python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor
@@ -221,6 +225,13 @@ jobs:
           if ($env:L07_READONLY_OBSERVATION -ceq 'true') { $parameters['ObserveLesson07'] = $true }
           if ($env:L07_READONLY_DISCOVERY -ceq 'true') { $parameters['ExistingEditorOnly'] = $true }
           & ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 @parameters
+
+      - name: Recover the bounded error from the retained observer attempt
+        if: ${{ success() && env.L07_READONLY_DISCOVERY == 'true' }}
+        run: |
+          & ./scripts/ue/Read-YacsLesson07ObserverFailure.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}'
 
       - name: Print bounded reports without config, credentials or raw UE logs
         id: reports
@@ -246,7 +257,7 @@ jobs:
           Assert-PlainReportPath $stage
           if (Test-Path -LiteralPath $stage) { throw 'Current evidence stage already exists.' }
           [void][IO.Directory]::CreateDirectory($stage)
-          foreach ($name in @('install.json','identity.json','bridge.json','probe.json')) {
+          foreach ($name in @('install.json','identity.json','bridge.json','probe.json','observer-failure-log.json')) {
             $path = Join-Path $root $name
             if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
             Assert-PlainReportPath $path

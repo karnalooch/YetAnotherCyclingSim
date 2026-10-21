@@ -24,6 +24,24 @@ Wingman reported `signed_in=true`; all **84** tools were discovered through four
 HTTP requests, with **zero native tool calls**. World/material readback remains
 the next step, not an established result.
 
+**First native read attempt:** [run 39516981450, job 118951433360](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39516981450/job/118951433360)
+passed exact-source CPU and Windows validation at source
+`f485b18217deba19bc881aa78d22e5f862d13e3e`. At `2026-10-20T23:48:13.521280Z`
+it submitted the fixed observer once. The native tool returned `isError=true`
+with one 574-character text block, no collector tag and no UObject footer.
+The client correctly retained failure/unknown completion but discarded the
+actual message. Therefore the cause and current-world/material result remain
+unverified. PID 17896, its native start time, owner and listener stayed unchanged
+through the final check at 23:48:15 UTC. No automatic retry occurred.
+
+The next discovery-only delivery retrieves a bounded historical error excerpt
+from the launcher's fixed `D:\yacs\lesson07-remote\editor.log`. The reader requires
+fresh verified owner/process evidence, reads at most 4 MiB, selects only the
+failed call's timestamp window, redacts credentials and emits at most 32 KiB.
+Its 20 focused PowerShell cases passed. This recovery makes zero native calls;
+it does not assume that a Python exception or particular plugin setting caused
+the first failure.
+
 The owner requested remote execution of the channel diagnosis and explicitly
 allowed creating the missing connection infrastructure. This supersedes the
 previous no-new-transport restriction for this bounded Lesson07 task only.

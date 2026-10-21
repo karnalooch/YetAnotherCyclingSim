@@ -1697,7 +1697,7 @@
       "editor_commands_executed": 0
     },
     "connection_workflow": ".github/workflows/yacs-lesson07-remote-editor.yml",
-    "connection_execution": "BRIDGE_DISCOVERY_COMPLETE_NATIVE_READBACK_PENDING",
+    "connection_execution": "EDITOR_RETAINED_FIRST_NATIVE_OBSERVATION_FAILED_REASON_RECOVERY_PENDING",
     "first_connection_attempt": {
       "source_commit": "3ba05803bfc3ff095eb012e3f790752b55b47d12",
       "protected_ci_run_id": 39508823330,
@@ -2099,6 +2099,157 @@
       "owned_listener_stable": true,
       "installer_invoked": false,
       "editor_started_or_stopped_by_recheck": false
+    },
+    "first_native_observation_attempt": {
+      "source_commit": "f485b18217deba19bc881aa78d22e5f862d13e3e",
+      "run_id": 39516981450,
+      "cpu_job_id": 118951389330,
+      "cpu_conclusion": "success",
+      "connection_job_id": 118951433360,
+      "connection_job_conclusion": "failure",
+      "artifact_id": 12309090044,
+      "artifact_sha256": "e80d5512a8ecfc7029ade9bc5525205ff66ef1fda442b139aa5f8320cb16d4a9",
+      "artifact_downloaded_and_digest_verified": true,
+      "probe": {
+        "schema_version": 1,
+        "source_commit": "f485b18217deba19bc881aa78d22e5f862d13e3e",
+        "status": "LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED",
+        "observed_utc": "2026-10-20T23:48:15.6320430Z",
+        "error_type": "RuntimeException",
+        "identity_stable_across_probe": true,
+        "client_exit_code": 1,
+        "observation_requested": true,
+        "owner_before": {
+          "status": "ATTACH_EXISTING",
+          "owner_sid_matches": true,
+          "editor": {
+            "editor_pid": 17896,
+            "editor_start_filetime_utc": "134370120000674689",
+            "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+            "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+            "interactive_session_id": 1,
+            "canonical_project_matches": true
+          }
+        },
+        "owner_after": {
+          "status": "ATTACH_EXISTING",
+          "owner_sid_matches": true,
+          "editor": {
+            "editor_pid": 17896,
+            "editor_start_filetime_utc": "134370120000674689",
+            "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+            "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+            "interactive_session_id": 1,
+            "canonical_project_matches": true
+          }
+        },
+        "existing_editor_only_requested": false,
+        "existing_owner_required": true,
+        "identity_before": {
+          "schema_version": 1,
+          "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+          "observed_utc": "2026-10-20T23:48:11.5957519Z",
+          "source_commit": "f485b18217deba19bc881aa78d22e5f862d13e3e",
+          "pid": 17896,
+          "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+          "process_start_filetime_utc": "134370120000674689",
+          "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+          "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+          "canonical_project_argument_matches": true,
+          "listener": {
+            "address": "127.0.0.1",
+            "port": 19315,
+            "pid": 17896
+          }
+        },
+        "identity_after": {
+          "schema_version": 1,
+          "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+          "observed_utc": "2026-10-20T23:48:15.6216380Z",
+          "source_commit": "f485b18217deba19bc881aa78d22e5f862d13e3e",
+          "pid": 17896,
+          "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+          "process_start_filetime_utc": "134370120000674689",
+          "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+          "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+          "canonical_project_argument_matches": true,
+          "listener": {
+            "address": "127.0.0.1",
+            "port": 19315,
+            "pid": 17896
+          }
+        },
+        "native_tool_called": null,
+        "editor_started_or_stopped": false,
+        "native_tool_attempted": true,
+        "native_tool_completed": null,
+        "native_tool_call_attempts": 1,
+        "native_material_readback": "UNVERIFIED",
+        "channel_comparison_performed": false,
+        "performance_pass": false,
+        "reason": "AUTHENTICATED_BRIDGE_PROBE_FAILED"
+      },
+      "bridge": {
+        "error_code": "OBSERVER_TOOL_ERROR",
+        "native_material_readback": "UNVERIFIED",
+        "native_tool_attempted": true,
+        "native_tool_calls": 1,
+        "native_tool_completed": null,
+        "native_tool_response_received": true,
+        "native_tool_result_shape": {
+          "content_blocks": [
+            {
+              "content_type": "text",
+              "count": 2,
+              "text": {
+                "characters": 574,
+                "has_uobject_pin_footer": false,
+                "tag_occurrences": 0,
+                "type": "string"
+              },
+              "text_json_parsed": false,
+              "type": "object"
+            }
+          ],
+          "content_blocks_truncated": false,
+          "count": 2,
+          "fields": {
+            "content": {
+              "count": 1,
+              "type": "array"
+            },
+            "isError": {
+              "type": "boolean"
+            }
+          },
+          "type": "object",
+          "unknown_field_count": 0
+        },
+        "native_tool_started_utc": "2026-10-20T23:48:13.521280+00:00",
+        "observer_input_schema_sha256": "021f8f2a2f45d8e2047a61d14f619f302ba99f981925b0c6d7b2c3eed4bd6e08",
+        "observer_source_sha256": "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5",
+        "observer_source_verified_before_call": true,
+        "performance_pass": false,
+        "schema_version": 1,
+        "status": "OBSERVATION_FAILED",
+        "visual_acceptance": false
+      },
+      "bridge_sha256": "f5e178dfe9149e1878c9038f25123a3f3920e185fbd1ad18ccce0bf1b244b08f",
+      "probe_sha256": "9ebb3b0c5032398f865ec308e7615b84ff49d4fbf789c7d510d8b98f7f006362",
+      "native_error_message_retained": false,
+      "native_error_reason": "UNKNOWN",
+      "automatic_retry": false
+    },
+    "historical_native_error_recovery": {
+      "mode": "EXISTING_EDITOR_DISCOVERY_THEN_FIXED_READ_ONLY_LOG_EXCERPT",
+      "native_tool_calls": 0,
+      "execution": "PREPARED_NOT_RUN",
+      "source_path": "D:\\yacs\\lesson07-remote\\editor.log",
+      "max_read_bytes": 4194304,
+      "max_output_bytes": 32768,
+      "powershell_cases_passed": 20,
+      "reader_sha256": "1bb30d3033115b47d9e6f60ac637744121bb5bb61336fd337af7fdee13bdf594",
+      "test_sha256": "1214fba31d51ff90424a050628c995e86f1a0e4aa1a28dd5e8a9a99f7969dd79"
     }
   }
 }
