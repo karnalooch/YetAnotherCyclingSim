@@ -62,6 +62,7 @@ CONTRACT_TOOLS = {
     "execute_python",
     "take_viewport_screenshot",
     "read_bp",
+    "edit_graph",
     "explore",
     "code_search",
     "edit_texture",

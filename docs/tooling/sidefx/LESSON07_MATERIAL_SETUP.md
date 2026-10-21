@@ -5,7 +5,7 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (two complete CC0 rock sets acquired and fixed five-map package prepared; native import pending; saved Macro 0.05 and normal-flatten workaround retained; physical texel scale, detailed-normal correctness and whole-area proof remain unverified; the owner-closed Editor was reopened and native BEFORE images confirm the correct world; executor compilation was corrected, but the next attempt lacked file context before asset processing; an explicit reviewed file-context adaptation remains pending)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (two complete CC0 rock sets acquired; five textures and three arrays successfully saved in native run 39636694686; same-camera images show excessive darkening and unresolved steep-face streaking; Macro 0.05 and Global Normal Flatten 1 retained; detailed-normal correctness, physical scale, fresh reopen, whole-area proof and protected delivery remain open)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
@@ -26,9 +26,29 @@ The bounded importer replaces only Grass Normal/Masks (retained corrected maps)
 and the three matching Cliffs maps in the existing five-slice arrays. It uses
 the existing AssetImportTask/SourceTextures pattern and the normal Wingman
 safety gate. It does not retry the frozen F49-denied observer. Preparation and
-CPU validation are complete; native assignment, saved state, detailed-normal
-correctness, physical scale, steep-wall projection and whole-area review are
-still pending. Macro 0.05 and Global Normal Flatten 1 remain unchanged.
+CPU validation are complete. Native assignment and saved-array readback passed
+in [run 39636694686](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39636694686)
+from `c59f717f11b134f75f695a26b94f8655bd3bd271`: five new textures and three arrays
+were saved, with six completed native calls and twelve stable owner checks.
+The [original receipts and five images](../../assets/lesson07-surface-repair-20261021/import-39636694686-evidence.json)
+preserve the proof. Grass Colour, slots 1/2/4 and all four Landscape snapshots
+were preserved; the map, material instance and shader graph were not changed.
+
+The Cliffs candidate renders too dark and steep faces retain conspicuous
+vertical streaking. The images do not isolate projection from geometry or
+lighting causes. Detailed-normal correctness, physical scale, fresh reopen and
+whole-area review remain open. Macro 0.05 and Global Normal Flatten 1 remain
+unchanged. The native saved candidate and the already approved Macro material
+instance are queued for exact nine-package Git LFS retention; branch publication
+is not yet claimed. Metadata-only tool discovery separately checks whether a
+supported material-function graph inspection is available without retrying the
+frozen denied observer.
+
+Protected [CI 39636709351](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39636709351)
+passed hosted checks, then native admission refused `LOCAL_BUSY` while preserving
+the active owner Editor. Final protected delivery remains open.
+
+### Earlier recovery attempts retained as history
 
 The earlier startup retry superseded the disk blocker: run
 `39580724393`, attempt 2, saw **18.65 GiB free**, but job `119286447935` exhausted

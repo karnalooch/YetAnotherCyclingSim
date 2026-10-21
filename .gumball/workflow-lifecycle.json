@@ -47,6 +47,11 @@
       "reason": "One-shot cancellation of historical Actions run 36638798865 on a deleted canary branch."
     },
     {
+      "file": "lesson07-material-delivery.yml",
+      "state": "CURRENT",
+      "reason": "Issue #365 owner-only fixed-branch export of nine saved material packages (or separately explicit approved MI-only). Exact producer receipt and package pins, stable canonical read-only Windows copy on shared non-cancelling host lane, hosted explicit Git LFS upload and empty-store server readback. No Unreal/process/cleanup invocation or remote ref update; connector pointer delivery and protected/visual acceptance remain separate."
+    },
+    {
       "file": "level-editor-review.yml",
       "state": "CURRENT",
       "reason": "Issue #364 owner-selected Stream Level Editor and bounded material-instance preview. Owner-only fixed branch, explicit launch/manual intent, successful exact-SHA CI and the applicable Blender reference before the shared non-cancelling host lane. Verified independent saved scene, stock inspected PixelStreaming2, one restricted official MCP paint operation, exact session/process/launcher identity, native readback and small PNG response. Manual material-request reuses the owned session at its unchanged launch SHA. No build, saved source-world mutation, public tunnel, firewall change, visual acceptance or performance admission."

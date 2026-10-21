@@ -120,3 +120,7 @@ worldgen/live_host/window0067-regional-manifest.json text eol=lf
 
 # Preserve native MCP receipts for deterministic saved/fresh comparison.
 docs/experiments/sa-calobra-pcgex-mcp-20261013/*.json -text whitespace=cr-at-eol
+
+# Retain Lesson07 native receipt bytes, including Windows-authored CRLF.
+docs/assets/lesson07-surface-repair-20261021/*.json -text whitespace=cr-at-eol
+docs/assets/lesson07-surface-repair-20261021/*.json.gz -text -diff

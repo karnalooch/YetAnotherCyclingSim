@@ -3,8 +3,58 @@
 **Type:** implementation and source evidence, supporting the
 [Lesson07 audit](../../tooling/sidefx/LESSON07_MATERIAL_SETUP.md).
 **Issue/stage:** #365 / M3, existing Draft PR #474.
-**State:** complete source acquisition and offline preparation verified;
-native import and whole-area technical/visual verification pending.
+**State:** source acquisition, native import and saved-array readback verified;
+the rendered candidate remains too dark and visibly stretched on steep faces.
+Detailed normals, physical scale, fresh reopen and whole-area acceptance remain open.
+
+## Current native result
+
+[Run 39636694686](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39636694686)
+completed the reviewed operation from `c59f717f11b134f75f695a26b94f8655bd3bd271`:
+five new textures and three existing arrays were saved. All six native calls
+completed (one import and five captures), with twelve matching owner/process/
+listener checks. Four Landscape snapshots were identical before and after;
+Grass Colour and slots 1/2/4 were preserved. The map, material instance and
+shader graph were not saved or changed by this operation.
+
+The [evidence index](import-39636694686-evidence.json) binds the original native
+receipts, the byte-preserving compressed bridge report and all five JPEGs.
+The same-camera [BEFORE](import-39636694686-surface-before.jpg) and
+[AFTER](import-39636694686-surface-after.jpg) show excessive darkening of the
+Cliffs candidate; vertical streaks remain. The
+[panorama](import-39636694686-surface-panorama.jpg),
+[Puig Major](import-39636694686-surface-puig-major.jpg) and
+[Scree](import-39636694686-surface-scree.jpg) views do not establish resolved
+projection, physical texel scale or whole-area quality. These are image-review
+findings, not a measured diagnosis of their geometric or shader cause.
+
+`Global Normal Flatten=1` and `Macro Tiling=0.05` remain unchanged. Correct
+source normal maps do not establish a correct inner-function sampler or
+normal reconstruction. The frozen denied observer is not retried. A separate
+metadata-only discovery retains the advertised `edit_graph` contract, with
+zero native calls, to determine whether supported graph inspection is available.
+
+Protected [CI 39636709351](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39636709351)
+passed the hosted code/policy/security checks, but native workspace admission
+refused `LOCAL_BUSY` while the owner Editor was active. No native build proof
+was reached. This does not change the successful in-place import result or
+admit final protected delivery.
+
+## Retaining the saved candidate
+
+The [bounded exporter](../../../scripts/ci/export_lesson07_material_checkpoint.py)
+and [delivery workflow](../../../.github/workflows/lesson07-material-delivery.yml)
+retain exactly nine packages: five imported textures, three updated arrays and
+the previously approved Macro 0.05 material instance. The latter closes an
+existing branch-persistence gap; it is not a new scalar edit. Full export is
+pinned to the successful producer's exact native receipt bytes.
+
+The Windows phase only reads stable canonical files and writes a new run
+directory. A hosted phase uploads their explicit Git LFS objects and downloads
+them into empty storage for independent hash/size verification. Only after that
+proof may the connector commit the nine pointer texts with a branch-head lease.
+This retained candidate remains visually unaccepted. Export, server readback
+and pointer publication are pending at this source revision.
 
 ## Acquired sources
 
@@ -102,6 +152,8 @@ roundtrip/hash review. The initial importer passed ten CPU tests; the corrected
 executor-compatible importer passed thirteen, independently reproduced. Transport, Windows
 staging and marker admission have separate focused validation; none of those
 results represents native import or whole-area acceptance.
+
+### Earlier attempts retained as history
 
 The earlier startup run `39580724393`, attempt 2, reached 18.65 GiB free on D:
 but was cancelled after its 18-minute budget while fetching the repository

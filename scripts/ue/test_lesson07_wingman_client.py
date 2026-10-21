@@ -266,6 +266,7 @@ def capture_reply(request):
         )
         for name in (
             "read_bp",
+            "edit_graph",
             "explore",
             "code_search",
             "edit_texture",
@@ -2089,6 +2090,7 @@ class CaptureTests(unittest.TestCase):
         )
         for name in (
             "read_bp",
+            "edit_graph",
             "explore",
             "code_search",
             "edit_texture",
@@ -2134,6 +2136,7 @@ class CaptureTests(unittest.TestCase):
         )
         for name in (
             "read_bp",
+            "edit_graph",
             "explore",
             "code_search",
             "edit_texture",

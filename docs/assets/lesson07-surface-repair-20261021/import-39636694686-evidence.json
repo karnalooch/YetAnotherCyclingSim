@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "REVIEW_INDEX_ORIGINAL_NATIVE_RECEIPTS_RETAINED_UNCHANGED",
+  "status": "IMPORT_SAVED_RENDER_DEFECTS_UNRESOLVED",
+  "source_commit": "c59f717f11b134f75f695a26b94f8655bd3bd271",
+  "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39636694686",
+  "run_attempt": 1,
+  "job_id": 119349185890,
+  "job_conclusion": "success",
+  "artifact": {
+    "id": 12363445332,
+    "bytes": 225321,
+    "sha256": "94aa05248124f8da4211aa39e6bb6a5c083b58235e0e5464e188c09b719f1f9d"
+  },
+  "reports": [
+    {
+      "path": "import-39636694686-live-import.json",
+      "artifact_entry": "live-import.json",
+      "bytes": 8989,
+      "sha256": "c1485abbc5cd56d51bc044c59b8ae7be23f21679ec3fe298014ccb5166542d5b"
+    },
+    {
+      "path": "import-39636694686-probe.json",
+      "artifact_entry": "probe.json",
+      "bytes": 3843,
+      "sha256": "28cc3004e7cbbcae5e159e71426d579d5e8ccdcf7e582f839471ab91ae94f68c"
+    },
+    {
+      "path": "import-39636694686-identity.json",
+      "artifact_entry": "identity.json",
+      "bytes": 616,
+      "sha256": "4c37b7def89955c53542721b13d9677bce1b26b605b29cf7c0cc92f33c267111"
+    },
+    {
+      "path": "import-39636694686-surface-before.jpg",
+      "artifact_entry": "surface-before.jpg",
+      "bytes": 60863,
+      "sha256": "c647feeb49691c19c0690dfc00333299f39602b93f78827ddb2833b0aa6d01e4"
+    },
+    {
+      "path": "import-39636694686-surface-after.jpg",
+      "artifact_entry": "surface-after.jpg",
+      "bytes": 49323,
+      "sha256": "cc85d1fade9a549dd9aaab497ea7ab8a7b12783288909e7f8962eb3ad892e52f"
+    },
+    {
+      "path": "import-39636694686-surface-panorama.jpg",
+      "artifact_entry": "surface-panorama.jpg",
+      "bytes": 19373,
+      "sha256": "2076541419c16ca1800982c89faf2b74465beed873f8bf388a69eebaec43361b"
+    },
+    {
+      "path": "import-39636694686-surface-puig-major.jpg",
+      "artifact_entry": "surface-puig-major.jpg",
+      "bytes": 28145,
+      "sha256": "9e6b390177ef35b7b513a615acc9f71666d108c909ffb06e46329659a3f4ffef"
+    },
+    {
+      "path": "import-39636694686-surface-scree.jpg",
+      "artifact_entry": "surface-scree.jpg",
+      "bytes": 43058,
+      "sha256": "062d6146f51e9ab989855e72015f1e2157ccbdb6dca3c03900a149aca8916b8e"
+    }
+  ],
+  "compressed_bridge": {
+    "artifact_entry": "bridge.json",
+    "original": "import-39636694686-bridge.json",
+    "gzip": "import-39636694686-bridge.json.gz",
+    "original_bytes": 103063,
+    "original_sha256": "07a516eff6ff342367599a8a26113cba91cdefb5567eb74b451dff0b981933e2",
+    "gzip_bytes": 27183,
+    "gzip_sha256": "85bd396e6b4a7089188ac10a3cb14a9d79a9d2e326c081f44afeabfb288089bf"
+  },
+  "package_manifest_sha256": "e8e0ae6cbd752b6b564a67b830aa16a5c4dbb01db3af9792963e8c6121bc88a6",
+  "importer_template_sha256": "6c824070afe0ecc178dfa96d5f5fdef44d8b83168250a3917bc7c4c6da85d78e",
+  "rendered_importer_sha256": "d0ab417d9896bf2cb9df6a1b4ba89e51c223f4b2e12f71b34934cbd63ce29507",
+  "saved_texture_paths": {
+    "Grass_Normal": "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Grass_Normal.T_Grass_Normal",
+    "Grass_Masks": "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Grass_Masks.T_Grass_Masks",
+    "Cliffs_Colour": "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Colour.T_Cliffs_Colour",
+    "Cliffs_Normal": "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Normal.T_Cliffs_Normal",
+    "Cliffs_Masks": "/Game/Generated/YACS/Lesson07_Unified/Textures/SurfaceRepair_20261021/T_Cliffs_Masks.T_Cliffs_Masks"
+  },
+  "saved_array_sha256": {
+    "Colour": "ba2a452b240310b5303b4f3a50c4422846e2170fed69c9964ee09e8ecaf0cd57",
+    "Normal": "a9528c0d7277f3ef0384470f9a47d8f3d5d18888dfab50e04e43d19df6416003",
+    "Masks": "565986d6df8ab5d9483c99273ba69a05dcff661a8f55b430bef16e400ba84c94"
+  },
+  "native_calls": {
+    "attempted": 6,
+    "completed": 6,
+    "import": 1,
+    "captures": 5,
+    "host_identity_checks": 12
+  },
+  "owner": {
+    "pid": 34848,
+    "process_start_filetime_utc": "134370724521531735",
+    "last_verified_utc": "2026-10-21T16:41:53.8698075Z"
+  },
+  "preservation": {
+    "grass_colour": true,
+    "other_slots": [
+      1,
+      2,
+      4
+    ],
+    "landscape_snapshots_equal": true,
+    "landscape_count": 4,
+    "map_saved": false,
+    "material_instance_changed": false,
+    "terrain_changed": false,
+    "classification_changed": false
+  },
+  "scalar_readback": {
+    "Global Normal Flatten": 1.0,
+    "Macro Tiling": 0.05000000074505806
+  },
+  "review": {
+    "reviewed_images": [
+      "surface-before.jpg",
+      "surface-after.jpg",
+      "surface-panorama.jpg",
+      "surface-puig-major.jpg",
+      "surface-scree.jpg"
+    ],
+    "findings": [
+      "The matching AFTER image has excessively dark Cliffs compared with BEFORE.",
+      "Vertical streaks remain on steep faces, including the Puig Major and Scree views.",
+      "Grass remains yellow-green with weak visible fine detail in these images.",
+      "The panorama depicts a finite cropped domain and is not whole-route or whole-area acceptance."
+    ],
+    "limitations": [
+      "The 956x431 viewport JPEGs do not isolate BaseColor, AO, shadow, exposure, geometry or projection causes.",
+      "Capture receipts do not explicitly record the viewport view mode.",
+      "Global Normal Flatten remains 1; source normal-map correctness does not prove the inner sampler/reconstruction contract.",
+      "Saved assets were not reopened in a fresh Editor.",
+      "No owner visual acceptance or performance proof is claimed."
+    ],
+    "visual_accepted": false,
+    "technical_pass": false
+  },
+  "delivery": {
+    "planned_scope": "Five new textures, three updated arrays and the previously approved Macro0.05 MI",
+    "server_lfs_verified": false,
+    "branch_pointer_commit": null
+  },
+  "protected_ci": {
+    "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39636709351",
+    "conclusion": "failure",
+    "failed_native_job": 119351259602,
+    "reason": "Native workspace-lock admission refused LOCAL_BUSY with the owner Editor open. Hosted code/policy/security checks passed; native build/Automation not reached."
+  },
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3"
+}

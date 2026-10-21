@@ -1,5 +1,5 @@
 {
-  "status": "LESSON07_RUNNING_RECOVERY_CHECKPOINT_ACCEPTED_FLAT_NORMAL_WORKAROUND_SAVED",
+  "status": "LESSON07_SOURCE_IMPORT_SAVED_RENDER_DEFECTS_AND_NORMAL_CONTRACT_OPEN",
   "timestamp": "2026-10-20T03:20:00+02:00",
   "lesson": "PEG-02-07",
   "lesson_title": "7 | Material Setup",
@@ -17,7 +17,7 @@
     "performance_pass": false,
     "performance_note": "DEFERRED_AFTER_M3",
     "native_recheck_required": true,
-    "reason": "Same saved map reopened after rollback; existing MI updated and saved with Global Normal Flatten=1. Owner reports running checkpoint works. Tiling, detailed-normal correctness, symbolized crash cause, fresh reopen after latest MI save, full world proof and protected exact-commit CI remain unverified."
+    "reason": "Five matching surface textures and three arrays saved in native run39636694686 with unchanged Landscape/other slots. Render review shows excessively dark Cliffs and remaining steep-face streaks. Global Normal Flatten1 remains; physical scale, normal reconstruction, fresh reopen, whole-area proof and protected delivery remain open."
   },
   "domain": {
     "grid_dimensions": [
@@ -1524,7 +1524,7 @@
     },
     "delivery_authorization": "Owner requested publishing the same local repair on the existing branch, without regenerating terrain; exact commit and remote delivery are verified separately."
   },
-  "updated_at_utc": "2026-10-21T02:33:04.425390+00:00",
+  "updated_at_utc": "2026-10-21T16:41:53.8743735Z",
   "grass2_replacement_20261020": {
     "status": "APPLIED_SAVED_NATIVE_READBACK_PASS_RENDER_PENDING",
     "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
@@ -3745,7 +3745,8 @@
         "observed_directly_in_texture_editor": true
       },
       "current_yacs_native_settings": "MATCHES: TMGS_NoMipmaps, TF_Nearest, TC_Grayscale, sRGB=false, PF_G8, 16000x16000 at 2026-10-21T02:05Z"
-    }
+    },
+    "subsequent_implementation": "surface_import_20261021; this earlier source assembly and failed observer history remains unchanged"
   },
   "ready_material_selection_20261021": {
     "status": "SOURCE_SHORTLIST_AND_CC0_SAMPLE_REVIEW_COMPLETE_NATIVE_IMPORT_NOT_RUN",
@@ -4076,6 +4077,50 @@
           "downloaded_in_this_admission_review": false
         }
       ]
-    }
+    },
+    "subsequent_implementation": "surface_import_20261021; Fab entitlement remains unverified, two separate CC0 rock sets subsequently acquired"
+  },
+  "surface_import_20261021": {
+    "status": "IMPORT_SAVED_RENDER_DEFECTS_UNRESOLVED",
+    "source_commit": "c59f717f11b134f75f695a26b94f8655bd3bd271",
+    "run_id": 39636694686,
+    "native_job_id": 119349185890,
+    "evidence_index": "docs/assets/lesson07-surface-repair-20261021/import-39636694686-evidence.json",
+    "source_sets_acquired": [
+      "dark_rock_02",
+      "rock_boulder_dry"
+    ],
+    "license": "CC0-1.0",
+    "geology_authenticated_as_limestone": false,
+    "imported_textures": 5,
+    "saved_arrays": 3,
+    "changed_slots": [
+      0,
+      3
+    ],
+    "landscape_snapshots_equal": true,
+    "map_saved": false,
+    "material_instance_changed": false,
+    "scalar_readback": {
+      "Global Normal Flatten": 1.0,
+      "Macro Tiling": 0.05000000074505806
+    },
+    "saved_array_sha256": {
+      "Colour": "ba2a452b240310b5303b4f3a50c4422846e2170fed69c9964ee09e8ecaf0cd57",
+      "Normal": "a9528c0d7277f3ef0384470f9a47d8f3d5d18888dfab50e04e43d19df6416003",
+      "Masks": "565986d6df8ab5d9483c99273ba69a05dcff661a8f55b430bef16e400ba84c94"
+    },
+    "fresh_reopen_verified": false,
+    "visual_accepted": false,
+    "technical_pass": false,
+    "branch_retention": "PENDING_EXACT_NINE_PACKAGE_LFS_DELIVERY",
+    "protected_ci": {
+      "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39636709351",
+      "conclusion": "failure",
+      "failed_native_job": 119351259602,
+      "reason": "Native workspace-lock admission refused LOCAL_BUSY with the owner Editor open. Hosted code/policy/security checks passed; native build/Automation not reached."
+    },
+    "performance_pass": false,
+    "performance_note": "DEFERRED_AFTER_M3"
   }
 }
