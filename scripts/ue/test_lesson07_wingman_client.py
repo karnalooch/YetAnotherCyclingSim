@@ -742,6 +742,92 @@ class WireTests(unittest.TestCase):
             contract, {"status": "EXCLUDED", "reason": "CONTRACT_CREDENTIAL"}
         )
 
+    def test_large_edit_graph_contract_retains_only_complete_bounded_description(self):
+        description = "Synthetic graph description.\nThe final line must remain intact."
+        tool = {
+            "name": "edit_graph", "description": description,
+            "inputSchema": {"type": "object", "enum": ["x" * client.CONTRACT_LIMIT]},
+            "outputSchema": {"type": "object"},
+        }
+
+        def large_contract_reply(request):
+            if request["method"] == "tools/list":
+                return 200, {"Content-Type": "application/json"}, client.canonical({
+                    "jsonrpc": "2.0", "id": request["id"], "result": {"tools": [tool]}})
+            return default_reply(request)
+
+        with peer(large_contract_reply) as (port, requests):
+            report = connection(port).probe()
+        retained = report["installed_tool_contracts"]["edit_graph"]
+        self.assertEqual(retained, {
+            "status": "EXCLUDED", "reason": "CONTRACT_SIZE",
+            "description_only": {"status": "RETAINED_DESCRIPTION_ONLY",
+                                 "description": description, "schema_retained": False,
+                                 "truncated": False},
+        })
+        self.assertLessEqual(len(client.canonical(retained)), client.CONTRACT_LIMIT)
+        self.assertNotIn("inputSchema", retained)
+        self.assertNotIn("outputSchema", retained)
+        self.assertEqual(report["native_tool_calls"], 0)
+        self.assertFalse(any(row["body"]["method"] == "tools/call" for row in requests))
+        self.assertEqual(client.installed_tool_contract({**tool, "name": "edit_material"}, TOKEN),
+                         {"status": "EXCLUDED", "reason": "CONTRACT_SIZE"})
+
+    def test_graph_description_fallback_preserves_existing_length_and_type_limits(self):
+        base = {"name": "edit_graph", "inputSchema": {
+            "type": "object", "enum": ["x" * client.CONTRACT_LIMIT]}}
+        for description in ("x" * (client.CONTRACT_DESCRIPTION_LIMIT + 1), None, ["description"]):
+            with self.subTest(description_type=type(description).__name__):
+                self.assertEqual(client.installed_tool_contract({**base, "description": description}, TOKEN),
+                                 {"status": "EXCLUDED", "reason": "CONTRACT_DESCRIPTION"})
+        # The description limit is unchanged; the complete fallback must also
+        # fit the existing serialized contract cap, without a shortened string.
+        description = "x" * client.CONTRACT_DESCRIPTION_LIMIT
+        retained = client.installed_tool_contract({**base, "description": description}, TOKEN)
+        self.assertEqual(retained["description_only"]["description"], description)
+        self.assertEqual(client.installed_tool_contract(base, TOKEN),
+                         {"status": "EXCLUDED", "reason": "CONTRACT_SIZE"})
+        wide = "\u2603" * client.CONTRACT_DESCRIPTION_LIMIT
+        self.assertEqual(client.installed_tool_contract({**base, "description": wide}, TOKEN),
+                         {"status": "EXCLUDED", "reason": "CONTRACT_SIZE"})
+        mixed = "x" * 15000 + "\u00e9" * 1000
+        self.assertLessEqual(len(mixed), client.CONTRACT_DESCRIPTION_LIMIT)
+        self.assertGreater(len(mixed.encode("utf-8")), client.CONTRACT_DESCRIPTION_LIMIT)
+        self.assertLess(len(client.canonical({"description": mixed})), client.CONTRACT_LIMIT)
+        for description in (mixed, "invalid surrogate \ud800"):
+            with self.subTest(description_length=len(description)):
+                self.assertEqual(client.installed_tool_contract({**base, "description": description}, TOKEN),
+                                 {"status": "EXCLUDED", "reason": "CONTRACT_SIZE"})
+        escaped = "\u2603" * (client.CONTRACT_DESCRIPTION_LIMIT // 3)
+        self.assertLessEqual(len(escaped.encode("utf-8")), client.CONTRACT_DESCRIPTION_LIMIT)
+        self.assertGreater(len(client.canonical({"description": escaped})), client.CONTRACT_LIMIT)
+        self.assertEqual(client.installed_tool_contract({**base, "description": escaped}, TOKEN),
+                         {"status": "EXCLUDED", "reason": "CONTRACT_SIZE"})
+
+    def test_graph_description_fallback_never_salvages_a_credential_rejection(self):
+        base = {"name": "edit_graph", "description": "Synthetic safe description",
+                "inputSchema": {"type": "object", "enum": ["x" * client.CONTRACT_LIMIT]}}
+        for token in (TOKEN, 'synthetic\\secret"value'):
+            for fields in ({"description": "prefix " + token + " suffix"},
+                           {"inputSchema": {**base["inputSchema"], "default": token}}):
+                with self.subTest(token=token, location=next(iter(fields))):
+                    result = client.installed_tool_contract({**base, **fields}, token)
+                    self.assertEqual(result, {"status": "EXCLUDED", "reason": "CONTRACT_CREDENTIAL"})
+                    self.assertNotIn(token.encode(), client.canonical(result))
+        # The raw serialized check must still apply even when the schema-size
+        # rejection happens first and no decoded string contains this token.
+        token = r"\u2603"
+        for fields in ({"description": "Synthetic snowman \u2603"},
+                       {"inputSchema": {**base["inputSchema"], "default": "\u2603"}}):
+            with self.subTest(serialized_secret_location=next(iter(fields))):
+                self.assertNotIn(token, str(fields))
+                self.assertIn(token.encode(), client.canonical(fields))
+                result = client.installed_tool_contract({**base, **fields}, token)
+                self.assertEqual(result, {"status": "EXCLUDED", "reason": "CONTRACT_SIZE"})
+                self.assertNotIn(token.encode(), client.canonical(result))
+        self.assertEqual(client.installed_tool_contract(base, "RETAINED_DESCRIPTION_ONLY"),
+                         {"status": "EXCLUDED", "reason": "CONTRACT_SIZE"})
+
     def test_extra_discovery_metadata_never_changes_route_auth_or_report(self):
         ignored_secret = "SYNTHETIC_IGNORED_METADATA_VALUE"
         with peer() as (port, requests):

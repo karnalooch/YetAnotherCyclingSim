@@ -299,6 +299,9 @@ class CheckpointTests(unittest.TestCase):
         (repo / ".gitattributes").write_text(
             "*.uasset filter=lfs diff=lfs merge=lfs -text\n"
         )
+        unrelated = "Source/unrelated.bin"
+        (repo / unrelated).parent.mkdir()
+        (repo / unrelated).write_bytes(b"Unrelated non-LFS binary\x00" * 100_000)
         for path, pin in [(delivery.MI, delivery.MI_BRANCH_PIN)] + [
             (delivery.ARRAYS[name], pin) for name, pin in delivery.ARRAY_PINS.items()
         ]:
@@ -306,17 +309,46 @@ class CheckpointTests(unittest.TestCase):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(delivery.pointer(pin))
         delivery.git(
-            repo, "add", "--", ".gitattributes", delivery.MI, *delivery.ARRAYS.values()
+            repo,
+            "add",
+            "--",
+            ".gitattributes",
+            unrelated,
+            delivery.MI,
+            *delivery.ARRAYS.values(),
         )
         delivery.git(repo, "commit", "-m", "Synthetic baseline pointers")
         self.source_sha = delivery.git(repo, "rev-parse", "HEAD")
         result = self.export()
         manifest = self.validate(result)
-        local_commit = delivery.stage_lfs(
-            repo, Path(result["directory"]) / "checkpoint.zip", manifest
-        )
+        build_readback = delivery.readback_commit
+
+        def check_readback_preserves_checkout(repo, rows, source):
+            index_before = (repo / ".git/index").read_bytes()
+            head_before = delivery.git(repo, "rev-parse", "HEAD")
+            result = build_readback(repo, rows, source)
+            self.assertEqual(index_before, (repo / ".git/index").read_bytes())
+            self.assertEqual(head_before, delivery.git(repo, "rev-parse", "HEAD"))
+            return result
+
+        with patch.object(
+            delivery, "readback_commit", side_effect=check_readback_preserves_checkout
+        ) as build:
+            local_commit = delivery.stage_lfs(
+                repo, Path(result["directory"]) / "checkpoint.zip", manifest
+            )
+        build.assert_called_once()
         self.assertEqual(40, len(local_commit))
         self.assertEqual(self.source_sha, delivery.git(repo, "rev-parse", "HEAD"))
+        self.assertEqual(
+            set(delivery.FULL_PATHS),
+            set(
+                delivery.git(
+                    repo, "ls-tree", "-r", "--name-only", local_commit
+                ).splitlines()
+            ),
+        )
+        self.assertEqual(unrelated, delivery.git(repo, "ls-files", "--", unrelated))
         self.assertEqual(
             set(delivery.FULL_PATHS),
             set(delivery.git(repo, "diff", "--cached", "--name-only").splitlines()),
@@ -325,6 +357,10 @@ class CheckpointTests(unittest.TestCase):
             self.assertEqual(
                 delivery.pointer(row).strip(),
                 delivery.git(repo, "show", ":" + row["path"]),
+            )
+            self.assertEqual(
+                delivery.pointer(row).strip(),
+                delivery.git(repo, "show", local_commit + ":" + row["path"]),
             )
         # This is a local fixture for byte verification, not a server readback.
         storage = repo / ".git/lfs"

@@ -4113,7 +4113,27 @@
     "fresh_reopen_verified": false,
     "visual_accepted": false,
     "technical_pass": false,
-    "branch_retention": "PENDING_EXACT_NINE_PACKAGE_LFS_DELIVERY",
+    "branch_retention": "NINE_PACKAGE_EXPORT_RETAINED_INDEPENDENT_LFS_FETCH_TIMED_OUT_POINTER_COMMIT_PENDING",
+    "retention_evidence_index": "docs/assets/lesson07-surface-repair-20261021/retention-39638776920-evidence.json",
+    "metadata_discovery": {
+      "run_id": 39638776763,
+      "source_commit": "6ee31c5159ef3768a58560c40555f9fff9f42606",
+      "evidence_index": "docs/assets/lesson07-surface-repair-20261021/discovery-39638776763-evidence.json",
+      "native_tool_calls": 0,
+      "tool_count": 84,
+      "identity_stable": true,
+      "edit_graph_full_contract": "EXCLUDED_CONTRACT_SIZE",
+      "material_function_graph_read_supported": null,
+      "later_workflow_failure": "FAILURE_LOG_OWNER in the unchanged historical error reader; metadata discovery itself completed",
+      "frozen_observer_retried": false
+    },
+    "retention_source_protected_ci": {
+      "run_id": 39638791772,
+      "source_commit": "6ee31c5159ef3768a58560c40555f9fff9f42606",
+      "conclusion": "failure",
+      "failed_native_job": 119358375984,
+      "reason": "Native workspace-lock admission refused LOCAL_BUSY while preserving the active owner Editor; no new native build or Automation proof."
+    },
     "protected_ci": {
       "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39636709351",
       "conclusion": "failure",

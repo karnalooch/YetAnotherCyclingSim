@@ -39,14 +39,25 @@ vertical streaking. The images do not isolate projection from geometry or
 lighting causes. Detailed-normal correctness, physical scale, fresh reopen and
 whole-area review remain open. Macro 0.05 and Global Normal Flatten 1 remain
 unchanged. The native saved candidate and the already approved Macro material
-instance are queued for exact nine-package Git LFS retention; branch publication
-is not yet claimed. Metadata-only tool discovery separately checks whether a
-supported material-function graph inspection is available without retrying the
-frozen denied observer.
+instance were exported into the [exact nine-package checkpoint](../../assets/lesson07-surface-repair-20261021/retention-39638776920-evidence.json).
+The subsequent explicit-OID push returned successfully, but the independent
+server fetch timed out after 900 seconds; server byte verification and branch
+pointer publication are not yet claimed. The bounded follow-up restricts the
+local readback tree itself to the nine pointer blobs.
+[Metadata-only tool discovery](../../assets/lesson07-surface-repair-20261021/discovery-39638776763-evidence.json)
+completed with zero native calls and 84 tools. The full `edit_graph` contract
+was excluded by the existing size bound, so supported material-function graph
+inspection remains unproven. A later historical error-reader step refused the
+changed session with `FAILURE_LOG_OWNER`; neither its guard nor the frozen
+denied observer is bypassed. The bounded follow-up can retain the full plain-text
+description separately, without representing it as the complete tool schema.
 
 Protected [CI 39636709351](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39636709351)
 passed hosted checks, then native admission refused `LOCAL_BUSY` while preserving
 the active owner Editor. Final protected delivery remains open.
+Source-only [CI 39638791772](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39638791772)
+subsequently reached the same `LOCAL_BUSY` admission boundary and also provides
+no new native build or Automation proof.
 
 ### Earlier recovery attempts retained as history
 
@@ -268,7 +279,7 @@ reader returned **`LOG_UNAVAILABLE`** at 00:04:57 UTC: the launcher's requested
 `D:\yacs\lesson07-remote\editor.log` does not exist. No error message was recovered.
 The downloaded artifact digest was verified.
 
-**Current native blocker:** the following explicit attempt in
+**Historical passive-observer denial, still binding on that observer:** the explicit attempt in
 [run 39519585751](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39519585751/job/118959933031)
 retained the actual response at 00:12:21 UTC: Wingman's **F49 safety gate**
 classified `execute_python` as an attempted write to protected `.uproject`.

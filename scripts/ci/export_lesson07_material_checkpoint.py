@@ -20,6 +20,7 @@ import re
 import shutil
 import stat
 import subprocess
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -574,7 +575,7 @@ def pointer(row):
     return f"version https://git-lfs.github.com/spec/v1\noid sha256:{row['sha256']}\nsize {row['size_bytes']}\n"
 
 
-def git(repo, *args, input_text=None, timeout=120):
+def git(repo, *args, input_text=None, timeout=120, index_file=None):
     env = os.environ.copy()
     env.update(
         GIT_TERMINAL_PROMPT="0",
@@ -586,6 +587,8 @@ def git(repo, *args, input_text=None, timeout=120):
         GIT_AUTHOR_EMAIL="41898282+github-actions[bot]@users.noreply.github.com",
         GIT_COMMITTER_EMAIL="41898282+github-actions[bot]@users.noreply.github.com",
     )
+    if index_file is not None:
+        env["GIT_INDEX_FILE"] = str(plain(index_file))
     result = subprocess.run(
         ["git", *args],
         cwd=repo,
@@ -602,6 +605,42 @@ def git(repo, *args, input_text=None, timeout=120):
         f"Isolated Git operation {args[0]} failed with exit {result.returncode}",
     )
     return result.stdout.strip()
+
+
+def readback_commit(repo, rows, source):
+    """Build the local LFS scan tree from verified staged pointers only."""
+    entries = []
+    for row in rows:
+        oid = checked_sha(git(repo, "rev-parse", "--verify", ":" + row["path"]), 40)
+        entries.append(f"100644 {oid}\t{row['path']}\n")
+    # LFS scans the whole tree before its path filter. A separate empty index
+    # prevents unrelated tracked blobs from entering that scan and leaves the
+    # publication checkout's real index and HEAD unchanged.
+    with tempfile.TemporaryDirectory(prefix="l07-lfs-readback-") as directory:
+        index_file = Path(directory) / "index"
+        git(repo, "read-tree", "--empty", index_file=index_file)
+        git(
+            repo,
+            "update-index",
+            "--index-info",
+            input_text="".join(entries),
+            index_file=index_file,
+        )
+        tree = git(repo, "write-tree", index_file=index_file)
+    require(
+        set(git(repo, "ls-tree", "-r", "--name-only", tree).splitlines())
+        == {row["path"] for row in rows},
+        "Local readback tree must contain only the exact checkpoint pointers",
+    )
+    return git(
+        repo,
+        "commit-tree",
+        tree,
+        "-p",
+        source,
+        "-m",
+        "Local L07 LFS readback tree; no remote Git ref update",
+    )
 
 
 def stage_lfs(repo, archive, manifest):
@@ -657,15 +696,7 @@ def stage_lfs(repo, archive, manifest):
             git(repo, "show", ":" + row["path"]) + "\n" == pointer(row),
             "Staged package must be the exact LFS pointer, never raw Git bytes",
         )
-    return git(
-        repo,
-        "commit-tree",
-        git(repo, "write-tree"),
-        "-p",
-        manifest["delivery_source_commit"],
-        "-m",
-        "Local L07 LFS readback tree; no remote Git ref update",
-    )
+    return readback_commit(repo, rows, manifest["delivery_source_commit"])
 
 
 def verify_server_objects(storage, rows):

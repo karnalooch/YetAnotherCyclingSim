@@ -31,14 +31,24 @@ findings, not a measured diagnosis of their geometric or shader cause.
 `Global Normal Flatten=1` and `Macro Tiling=0.05` remain unchanged. Correct
 source normal maps do not establish a correct inner-function sampler or
 normal reconstruction. The frozen denied observer is not retried. A separate
-metadata-only discovery retains the advertised `edit_graph` contract, with
-zero native calls, to determine whether supported graph inspection is available.
+metadata-only discovery completed with zero native calls and 84 advertised
+tools. The full `edit_graph` contract exceeded the existing report size bound;
+no material-function graph-read capability is inferred from that excluded
+contract. The [discovery evidence](discovery-39638776763-evidence.json) separates
+this successful metadata operation from a later historical error-reader step,
+which refused the different owner session with `FAILURE_LOG_OWNER`. That guard
+and the old observer remain unchanged. A bounded follow-up retains the complete
+plain-text `edit_graph` description only when it passes the existing secret
+checks and an explicit size limit; it does not claim a complete tool schema.
 
 Protected [CI 39636709351](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39636709351)
 passed the hosted code/policy/security checks, but native workspace admission
 refused `LOCAL_BUSY` while the owner Editor was active. No native build proof
 was reached. This does not change the successful in-place import result or
 admit final protected delivery.
+The subsequent source-only [CI 39638791772](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39638791772)
+also refused native admission with `LOCAL_BUSY`; the active owner Editor was
+preserved. Neither result is a fresh native build or Automation pass.
 
 ## Retaining the saved candidate
 
@@ -53,8 +63,21 @@ The Windows phase only reads stable canonical files and writes a new run
 directory. A hosted phase uploads their explicit Git LFS objects and downloads
 them into empty storage for independent hash/size verification. Only after that
 proof may the connector commit the nine pointer texts with a branch-head lease.
-This retained candidate remains visually unaccepted. Export, server readback
-and pointer publication are pending at this source revision.
+This retained candidate remains visually unaccepted.
+
+[Delivery run 39638776920, attempt 2](retention-39638776920-evidence.json)
+completed the Windows export and retained immutable artifact `12364181709`
+(115,911,097 bytes; GitHub-reported archive SHA-256
+`0eb92760bb74917e2349c1066d4cc3efd5229949ad1fcb6f68936faba3266c9e`).
+The hosted explicit-OID push returned successfully, then independent `git lfs
+fetch` timed out after 900 seconds. Server byte verification and branch pointer
+publication are therefore still pending. The failed fetch scanned a local
+commit with the full repository tree; git-lfs applies its include filter after
+`ls-tree -l`, creating an unrelated promisor-blob hydration risk. A bounded
+correction builds the readback commit from only the nine already verified
+pointer blobs in a temporary index. It preserves the empty-storage readback,
+hash/size checks, source pins and branch lease; it does not assert that the
+scanner was the proven cause of the first timeout.
 
 ## Acquired sources
 

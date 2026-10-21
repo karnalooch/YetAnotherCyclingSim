@@ -705,7 +705,30 @@ def installed_tool_contract(tool, token):
         require(token.encode() not in serialized, "CONTRACT_CREDENTIAL")
         return contract
     except ProbeError as error:
-        return {"status": "EXCLUDED", "reason": error.code}
+        excluded = {"status": "EXCLUDED", "reason": error.code}
+        if (tool.get("name") == "edit_graph" and error.code == "CONTRACT_SIZE"
+                and "description" in contract):
+            # A size error follows decoded description/type/secret checks.
+            # Preserve the serialized secret check too, without keeping any
+            # schema or truncating the complete description.
+            try:
+                description_bytes = contract["description"].encode("utf-8")
+                token_bytes = token.encode("utf-8")
+            except UnicodeError:
+                return excluded
+            if (len(description_bytes) > CONTRACT_DESCRIPTION_LIMIT
+                    or token_bytes in serialized):
+                return excluded
+            candidate = {**excluded, "description_only": {
+                "status": "RETAINED_DESCRIPTION_ONLY",
+                "description": contract["description"],
+                "schema_retained": False, "truncated": False,
+            }}
+            candidate_bytes = canonical(candidate)
+            if (len(candidate_bytes) <= CONTRACT_LIMIT
+                    and token_bytes not in candidate_bytes):
+                return candidate
+        return excluded
     except (TypeError, ValueError, RecursionError):
         return {"status": "EXCLUDED", "reason": "CONTRACT_JSON"}
 

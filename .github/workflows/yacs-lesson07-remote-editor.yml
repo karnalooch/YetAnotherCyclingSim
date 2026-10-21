@@ -276,7 +276,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Cannot preserve LF bytes.' }
 
       - name: Checkout reviewed source without LFS payloads or canonical edits
-        if: ${{ needs.await_ci.result != 'success' && env.L07_SURFACE_IMPORT != 'true' }}
+        if: ${{ needs.await_ci.result != 'success' && env.L07_SURFACE_IMPORT != 'true' && env.L07_READONLY_DISCOVERY != 'true' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -286,7 +286,7 @@ jobs:
           persist-credentials: false
 
       - name: Checkout only startup or material-import source without LFS payloads
-        if: ${{ needs.await_ci.result == 'success' || env.L07_SURFACE_IMPORT == 'true' }}
+        if: ${{ needs.await_ci.result == 'success' || env.L07_SURFACE_IMPORT == 'true' || env.L07_READONLY_DISCOVERY == 'true' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -307,7 +307,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $l07PriorNoLazyFetch=$env:GIT_NO_LAZY_FETCH
           try {
-            if ('${{ needs.await_ci.result }}' -ceq 'success' -or $env:L07_SURFACE_IMPORT -ceq 'true') {
+            if ('${{ needs.await_ci.result }}' -ceq 'success' -or $env:L07_SURFACE_IMPORT -ceq 'true' -or $env:L07_READONLY_DISCOVERY -ceq 'true') {
               # All pointer blobs are already local; do not fetch unrelated
               # large Git blobs merely to inspect their sizes in this scanner.
               $env:GIT_NO_LAZY_FETCH='1'
