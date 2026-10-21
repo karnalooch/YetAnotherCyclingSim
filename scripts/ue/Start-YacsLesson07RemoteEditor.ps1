@@ -289,7 +289,8 @@ try {
     $materialRoot='Content/Generated/YACS/Lesson07_Unified/Materials/'
     $pins=@(
         @('Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap',1838638056,'d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75'),
-        @(($materialRoot+'MI_Landscape_Instance_YACS.uasset'),39740,'8c1dc875218a027a5ac83d88f8eedba49769fdd8494d287e7264807082eb11bf'),
+        # Saved Macro 0.05: apply run 39533695950; byte proof diagnostic 39579824031.
+        @(($materialRoot+'MI_Landscape_Instance_YACS.uasset'),40154,'dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d'),
         @(($materialRoot+'M_Landscape_YACS.uasset'),208956,'53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66'),
         @(($materialRoot+'TA_Colour_Unified.uasset'),24178947,'9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf'),
         @(($materialRoot+'TA_Normal_Unified.uasset'),40441798,'838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1'),

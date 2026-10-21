@@ -3804,18 +3804,18 @@
       "frozen_observer_unchanged": true
     },
     "latest_host_observation": {
-      "diagnostic_run_id": 39510504128,
-      "run_attempt": 2,
-      "job_id": 119149255036,
-      "source_commit": "2609d45d881e8a9fce6a2022ac24d3268a3a22a7",
-      "observed_utc": "2026-10-21T09:37:36.2439524Z",
+      "diagnostic_run_id": 39579824031,
+      "run_attempt": 1,
+      "job_id": 119154379466,
+      "source_commit": "7314caa31fb7126228be19fc5a6110b3835f8461",
+      "observed_utc": "2026-10-21T09:48:51.1775567Z",
       "editors": [],
       "discovery_exists": false,
       "diagnostic_failures": [],
       "http_requests_made": 0,
       "editor_commands_executed": 0,
       "editor_started_or_stopped": false,
-      "source": "Completed job log L07_BRIDGE_DISCOVERY JSON"
+      "source": "Exact retained prior-bridge-discovery.json artifact bytes"
     },
     "protected_source_ci": {
       "run_id": 39577539895,
@@ -3828,12 +3828,199 @@
       "visual_or_import_acceptance": false
     },
     "session_continuation": {
-      "status": "FRESH_CLOSED_SESSION_AND_CHECKPOINT_READ_REQUIRED",
+      "status": "CLOSED_602_REOPEN_IMPLEMENTED_REVIEWED_NATIVE_START_PENDING",
       "standing_owner_authorization": "Create missing session; preserve existing session if present",
       "prior_installed_source": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3",
       "old_one_shot_task_restarted": false,
       "prior_state_reset": false,
-      "saved_macro_005_must_be_preserved": true
+      "saved_macro_005_must_be_preserved": true,
+      "diagnostic_source_commit": "7314caa31fb7126228be19fc5a6110b3835f8461",
+      "diagnostic_run_id": 39579824031,
+      "diagnostic_job_id": 119154379466,
+      "observed_utc": "2026-10-21T09:48:59.2884226Z",
+      "artifact_id": 12335558376,
+      "artifact_bytes": 4368,
+      "artifact_zip_sha256": "6ac9b15cdeb49cbfd814d59c14b77b6666232c2a77eed2205faf44bbbffc2d5d",
+      "retained_evidence": [
+        {
+          "artifact_path": "lesson07-editor-module-diagnostic.json",
+          "retained_path": "docs/assets/lesson07-ready-materials-20261021/prior-module-diagnostic.json",
+          "bytes": 1875,
+          "sha256": "9186b41494df82d79b481acdc4d3ac04aec0595d3e1e9b5134cec84b43b4a574"
+        },
+        {
+          "artifact_path": "lesson07-editor-bridge-discovery.json",
+          "retained_path": "docs/assets/lesson07-ready-materials-20261021/prior-bridge-discovery.json",
+          "bytes": 1814,
+          "sha256": "97fc8fb06e12019b3a868544326ede5b2898b9a6c24e175d826fa2e31e4fcb7e"
+        },
+        {
+          "artifact_path": "lesson07-prior-session-diagnostic.json",
+          "retained_path": "docs/assets/lesson07-ready-materials-20261021/prior-session-diagnostic.json",
+          "bytes": 8748,
+          "sha256": "641e74714a594313d5aa6029a510acae9ae5d5d54a019d16c2ce71453e158032"
+        }
+      ],
+      "prior_installation": {
+        "status": "HASHED",
+        "bytes": 930,
+        "modified_utc": "2026-10-20T23:19:48.9994698Z",
+        "sha256": "8b78fa1df99f91897dbc301467743dd13ea5d6239e62d2c9ed5d4e5cff146ff5",
+        "stable_across_read": true
+      },
+      "prior_terminal_session": {
+        "file": {
+          "status": "HASHED",
+          "bytes": 6732,
+          "modified_utc": "2026-10-21T07:37:58.9627808Z",
+          "sha256": "8e2b1cd9c108d9ef1f6244ccdfc8d13bcd59ba30be06f3bea23e96e94b3c69eb",
+          "stable_across_read": true
+        },
+        "source_sha_matches_expected": true,
+        "status": "EDITOR_EXITED_NO_AUTORESTART",
+        "phase": "SUPERVISING",
+        "host_status": "IDLE",
+        "checked_at_utc": "2026-10-21T07:37:58.9575712Z",
+        "reason_code": null,
+        "editor": {
+          "pid_matches_original": true,
+          "start_filetime_matches_original": true,
+          "executable_matches_expected": true,
+          "interactive_session_matches_original": true,
+          "canonical_project_matches": true
+        },
+        "flags": {
+          "owner_sid_matches": true,
+          "checkpoint_bytes_verified": true,
+          "module_build_ids_verified": true,
+          "autosave_session_override": true,
+          "editor_stop_requested": false,
+          "package_save_requested": false,
+          "project_config_write_requested": false,
+          "native_world_verified": false,
+          "native_module_load_verified": false,
+          "performance_pass": false
+        }
+      },
+      "prior_task": {
+        "exists": true,
+        "state": "Ready",
+        "last_task_result": 0,
+        "last_run_utc": "2026-10-20T23:19:50.0000000Z",
+        "action_count": 1,
+        "action_executable_matches": true,
+        "action_arguments_match": true,
+        "action_working_directory_matches": true,
+        "principal_limited": true,
+        "principal_interactive": true,
+        "principal_sid_matches_console": true,
+        "principal_sid_matches_installation": true,
+        "settings_match_original": true
+      },
+      "current_checkpoint": [
+        {
+          "path": "Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap",
+          "original_size_bytes": 1838638056,
+          "original_sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+          "file": {
+            "status": "HASHED",
+            "bytes": 1838638056,
+            "modified_utc": "2026-10-20T15:36:24.0335549Z",
+            "sha256": "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75",
+            "stable_across_read": true
+          },
+          "matches_original_checkpoint": true
+        },
+        {
+          "path": "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset",
+          "original_size_bytes": 39740,
+          "original_sha256": "8c1dc875218a027a5ac83d88f8eedba49769fdd8494d287e7264807082eb11bf",
+          "file": {
+            "status": "HASHED",
+            "bytes": 40154,
+            "modified_utc": "2026-10-21T02:35:55.5125695Z",
+            "sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+            "stable_across_read": true
+          },
+          "matches_original_checkpoint": false
+        },
+        {
+          "path": "Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset",
+          "original_size_bytes": 208956,
+          "original_sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66",
+          "file": {
+            "status": "HASHED",
+            "bytes": 208956,
+            "modified_utc": "2026-10-20T21:13:45.3085829Z",
+            "sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66",
+            "stable_across_read": true
+          },
+          "matches_original_checkpoint": true
+        },
+        {
+          "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset",
+          "original_size_bytes": 24178947,
+          "original_sha256": "9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf",
+          "file": {
+            "status": "HASHED",
+            "bytes": 24178947,
+            "modified_utc": "2026-10-20T20:19:54.2651656Z",
+            "sha256": "9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf",
+            "stable_across_read": true
+          },
+          "matches_original_checkpoint": true
+        },
+        {
+          "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset",
+          "original_size_bytes": 40441798,
+          "original_sha256": "838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1",
+          "file": {
+            "status": "HASHED",
+            "bytes": 40441798,
+            "modified_utc": "2026-10-20T20:19:54.9994090Z",
+            "sha256": "838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1",
+            "stable_across_read": true
+          },
+          "matches_original_checkpoint": true
+        },
+        {
+          "path": "Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset",
+          "original_size_bytes": 12124066,
+          "original_sha256": "e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8",
+          "file": {
+            "status": "HASHED",
+            "bytes": 12124066,
+            "modified_utc": "2026-10-20T20:19:55.6634155Z",
+            "sha256": "e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8",
+            "stable_across_read": true
+          },
+          "matches_original_checkpoint": true
+        }
+      ],
+      "native_requests_made": 0,
+      "new_session_started": false,
+      "native_material_reopened_readback": "NOT_RUN",
+      "diagnostic_preparation_tests_passed": 29,
+      "diagnostic_independent_review": "PASS",
+      "reopen_preparation": {
+        "powershell_runtime": "7.6.6",
+        "production_validator_cases_passed": 108,
+        "previous_cases_retained": 72,
+        "independent_review": "PASS_NO_BLOCKING_FINDING",
+        "source_sha256": {
+          "scripts/ue/Install-YacsLesson07RemoteEditor.ps1": "1ae41ae62ead55bb24d2119f7b89d926ec3f2dad011d26cade5aeb6f7aa7059a",
+          "scripts/ue/Start-YacsLesson07RemoteEditor.ps1": "8dfd047027ac874ea550868f020997e0df731e26e7d8ba8deb8bcb2518931e91",
+          "scripts/ue/Test-YacsLesson07RemotePreflight.ps1": "70f3b2fc68677af7105456d5378d51de9b5a5dbd71a733efb391b27aafcfa8d4"
+        },
+        "failed_457_predicate_unchanged": true,
+        "launcher_only_saved_mi_pin_changed": true,
+        "other_five_checkpoint_pins_unchanged": true,
+        "same_completed_task_and_state_directory_rejection_retained": true,
+        "old_release_and_state_retained": true,
+        "fresh_deadline_minutes": 4,
+        "exact_source_protected_ci_required": true,
+        "native_launch_executed": false
+      }
     }
   }
 }

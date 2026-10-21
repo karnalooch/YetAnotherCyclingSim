@@ -4,9 +4,9 @@
   Stage and request one owner-approved Lesson07 Editor through Task Scheduler.
 .DESCRIPTION
   Requires the existing yacs-unreal-ci reservation and successful exact-SHA CI.
-  -Apply is explicit. Without it, only read-only preflight runs. The one pinned
-  failed, inactive task may have only its action migrated; no task is stopped or
-  unregistered. Existing releases/state and canonical project files are retained.
+  -Apply is explicit. Without it, only read-only preflight runs. Only the pinned
+  failed 457 or closed 602 task may have its action migrated; no task is stopped
+  or unregistered. Existing releases/state and canonical files are retained.
 #>
 [CmdletBinding()]
 param(
@@ -114,6 +114,88 @@ function Assert-L07FailedTaskData(
         if ($PriorSession[$field] -isnot [bool] -or $PriorSession[$field] -ne $false) { Stop-L07Install 'MIGRATION_FAILED_SESSION' }
     }
 }
+function Get-L07ClosedTaskPin {
+    # Observed original bytes: diagnostic run 39579824031/job 119154379466.
+    # Task result 0 is a completed supervisor, not proof of a clean UE exit.
+    return @{
+        source_sha='602f8d0136d8f930adab1cda0c5006de8bf2d9d3';run_token='39513355021-1'
+        installation_bytes=930;installation_sha256='8b78fa1df99f91897dbc301467743dd13ea5d6239e62d2c9ed5d4e5cff146ff5'
+        session_bytes=6732;session_sha256='8e2b1cd9c108d9ef1f6244ccdfc8d13bcd59ba30be06f3bea23e96e94b3c69eb'
+        checked_at_utc='2026-10-21T07:37:58.9575712Z'
+        files=@{
+            'scripts/ue/Install-YacsLesson07RemoteEditor.ps1'=@{bytes=22040;sha256='bf7d9314cadaa6aa04432eb5615795fad671978da97ebf43ab045ff5fe1ce247'}
+            'scripts/ue/Start-YacsLesson07RemoteEditor.ps1'=@{bytes=22830;sha256='215c4cd1ed651d229706e2570dc19b8d57f586677284af29e78f1c90d09eb6ad'}
+            'scripts/runner/Get-YacsUnrealHostState.ps1'=@{bytes=3374;sha256='73506d6f1707faa33c97797f6e57d1d22e381eb72787377c3bdbb66fe0d2c346'}
+            'scripts/live_host/Assert-YacsLiveTaskPrincipal.ps1'=@{bytes=2304;sha256='2bd54cda4f1a1aa3ca3af3d3a94d7013317bfe570910701fc7c17d946d0af0b2'}
+        }
+    }
+}
+function Get-L07KnownTaskMigrationKind([object]$Task) {
+    if ($Task.TaskName -isnot [string] -or $Task.TaskName -cne 'YACS Lesson07 Remote Editor' -or
+        $Task.TaskPath -isnot [string] -or $Task.TaskPath -cne '\' -or @($Task.Actions).Count -ne 1) { Stop-L07Install 'MIGRATION_TASK_DEFINITION' }
+    $action=$Task.Actions[0]
+    if ($action.Execute -isnot [string] -or $action.Execute -ine 'D:\yacs\tools\powershell-7.6.6-win-x64\pwsh.exe' -or
+        $action.Arguments -isnot [string] -or $action.WorkingDirectory -isnot [string]) { Stop-L07Install 'MIGRATION_TASK_DEFINITION' }
+    foreach ($kind in @('FAILED_457','CLOSED_602')) {
+        $pin=if ($kind -ceq 'FAILED_457') { Get-L07FailedTaskPin } else { Get-L07ClosedTaskPin }
+        $priorRelease='D:\yacs\lesson07-remote\releases\'+$pin.source_sha
+        $priorScript=if ($IsWindows) { Join-Path $priorRelease 'scripts/ue/Start-YacsLesson07RemoteEditor.ps1' }
+            else { $priorRelease+'\scripts\ue\Start-YacsLesson07RemoteEditor.ps1' }
+        $arguments='-NoLogo -NoProfile -File "'+$priorScript+'" -ExpectedHead '+$pin.source_sha
+        if ($action.Arguments -ceq $arguments -and $action.WorkingDirectory -ieq $priorRelease) { return $kind }
+    }
+    Stop-L07Install 'MIGRATION_TASK_DEFINITION'
+}
+function Assert-L07ClosedTaskData(
+    [object]$Task, [object]$TaskInfo, [Collections.IDictionary]$PriorInstall,
+    [Collections.IDictionary]$PriorSession, [string]$InstallationSha256, [long]$InstallationBytes,
+    [string]$SessionSha256, [long]$SessionBytes,
+    [string]$ResolvedTaskSid, [string]$ExpectedSid, [string]$HostStatus,
+    [DateTime]$NowUtc=[DateTime]::UtcNow
+) {
+    $pin=Get-L07ClosedTaskPin
+    if ($HostStatus -cne 'IDLE' -or $Task.State -is [Array] -or [string]$Task.State -cne 'Ready' -or
+        ($TaskInfo.LastTaskResult -isnot [int] -and $TaskInfo.LastTaskResult -isnot [long] -and $TaskInfo.LastTaskResult -isnot [uint32]) -or
+        $TaskInfo.LastTaskResult -ne 0) { Stop-L07Install 'MIGRATION_NOT_IDLE_CLOSED' }
+    if ((Get-L07KnownTaskMigrationKind $Task) -cne 'CLOSED_602') { Stop-L07Install 'MIGRATION_TASK_DEFINITION' }
+    Assert-L07TaskSettings $Task
+    if ($ResolvedTaskSid -cne $ExpectedSid -or $ExpectedSid -cnotmatch '^S-1-\d+-' -or
+        $ExpectedSid -cin @('S-1-5-18','S-1-5-19','S-1-5-20') -or
+        $Task.Principal.RunLevel -is [Array] -or [string]$Task.Principal.RunLevel -cne 'Limited' -or
+        $Task.Principal.LogonType -is [Array] -or [string]$Task.Principal.LogonType -cnotin @('Interactive','InteractiveToken') -or
+        $PriorInstall['desktop_sid'] -isnot [string] -or $PriorInstall['desktop_sid'] -cne $ExpectedSid) { Stop-L07Install 'MIGRATION_OWNER' }
+    if ($InstallationBytes -ne $pin.installation_bytes -or $InstallationSha256 -cne $pin.installation_sha256 -or
+        $PriorInstall['source_sha'] -isnot [string] -or $PriorInstall['source_sha'] -cne $pin.source_sha -or
+        $PriorInstall['run_token'] -isnot [string] -or $PriorInstall['run_token'] -cne $pin.run_token -or
+        @($PriorInstall['files']).Count -ne $pin.files.Count) { Stop-L07Install 'MIGRATION_CLOSED_INSTALLATION' }
+    $oldDeadline=$PriorInstall['start_permitted_until_utc']
+    if ($oldDeadline -isnot [DateTime] -or $oldDeadline.Kind -ne [DateTimeKind]::Utc -or
+        $NowUtc.Kind -ne [DateTimeKind]::Utc -or $oldDeadline -ge $NowUtc) { Stop-L07Install 'MIGRATION_PERMISSION_NOT_EXPIRED' }
+    foreach ($relative in $pin.files.Keys) {
+        $entries=@($PriorInstall['files'] | Where-Object { $_ -is [Collections.IDictionary] -and $_['path'] -is [string] -and $_['path'] -ceq $relative })
+        if ($entries.Count -ne 1 -or $entries[0]['sha256'] -isnot [string] -or $entries[0]['sha256'] -cne $pin.files[$relative].sha256) { Stop-L07Install 'MIGRATION_SOURCE_HASH' }
+    }
+    if ($SessionBytes -ne $pin.session_bytes -or $SessionSha256 -cne $pin.session_sha256 -or $null -ne $PriorSession['reason_code']) { Stop-L07Install 'MIGRATION_CLOSED_SESSION' }
+    $expectedFields=@{source_sha=$pin.source_sha;status='EDITOR_EXITED_NO_AUTORESTART';phase='SUPERVISING';host_status='IDLE'}
+    foreach ($field in $expectedFields.Keys) {
+        if ($PriorSession[$field] -isnot [string] -or $PriorSession[$field] -cne $expectedFields[$field]) { Stop-L07Install 'MIGRATION_CLOSED_SESSION' }
+    }
+    $checked=$PriorSession['checked_at_utc']
+    if ($checked -isnot [DateTime] -or $checked.Kind -ne [DateTimeKind]::Utc -or $checked.ToString('o') -cne $pin.checked_at_utc) { Stop-L07Install 'MIGRATION_CLOSED_SESSION' }
+    foreach ($field in @('owner_sid_matches','checkpoint_bytes_verified','module_build_ids_verified','autosave_session_override')) {
+        if ($PriorSession[$field] -isnot [bool] -or $PriorSession[$field] -ne $true) { Stop-L07Install 'MIGRATION_CLOSED_SESSION' }
+    }
+    foreach ($field in @('editor_stop_requested','package_save_requested','project_config_write_requested','native_world_verified','native_module_load_verified','performance_pass')) {
+        if ($PriorSession[$field] -isnot [bool] -or $PriorSession[$field] -ne $false) { Stop-L07Install 'MIGRATION_CLOSED_SESSION' }
+    }
+    $priorEditor=$PriorSession['editor']
+    if ($priorEditor -isnot [Collections.IDictionary] -or
+        ($priorEditor['editor_pid'] -isnot [int] -and $priorEditor['editor_pid'] -isnot [long]) -or $priorEditor['editor_pid'] -ne 17896 -or
+        $priorEditor['editor_start_filetime_utc'] -isnot [string] -or $priorEditor['editor_start_filetime_utc'] -cne '134370120000674689' -or
+        $priorEditor['editor_executable_path'] -isnot [string] -or $priorEditor['editor_executable_path'] -ine 'D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe' -or
+        ($priorEditor['interactive_session_id'] -isnot [int] -and $priorEditor['interactive_session_id'] -isnot [long]) -or $priorEditor['interactive_session_id'] -ne 1 -or
+        $priorEditor['canonical_project_matches'] -isnot [bool] -or $priorEditor['canonical_project_matches'] -ne $true) { Stop-L07Install 'MIGRATION_CLOSED_EDITOR_IDENTITY' }
+}
 function Read-L07MigrationJson([string]$Path) {
     Assert-L07InstallPath $Path
     $item=Get-Item -LiteralPath $Path -Force
@@ -121,6 +203,7 @@ function Read-L07MigrationJson([string]$Path) {
     $bytes=[IO.File]::ReadAllBytes($Path)
     if ($bytes.Length -ne $item.Length) { Stop-L07Install 'MIGRATION_FILE_CHANGED' }
     return @{
+        size_bytes=[long]$bytes.Length
         sha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
         data=([Text.UTF8Encoding]::new($false,$true).GetString($bytes).TrimStart([char]0xFEFF) | ConvertFrom-Json -AsHashtable -Depth 16)
     }
@@ -145,6 +228,36 @@ function Get-L07FailedTaskMigration([object]$Task, [string]$ExpectedSid) {
             (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -cne $pin.files[$relative]) { Stop-L07Install 'MIGRATION_SOURCE_HASH' }
     }
     return [ordered]@{prior_source_sha=$pin.source_sha;prior_session_sha256=$priorSession.sha256;prior_release_retained=$true;prior_state_retained=$true;owner_sid_matches=$true;prior_task_result=1}
+}
+function Get-L07ClosedTaskMigration([object]$Task, [string]$ExpectedSid) {
+    $pin=Get-L07ClosedTaskPin
+    $priorRelease=Join-Path $root ('releases\'+$pin.source_sha)
+    $priorInstall=Read-L07MigrationJson (Join-Path $priorRelease 'installation.json')
+    $priorSession=Read-L07MigrationJson (Join-Path $root ('state\'+$pin.source_sha+'\session.json'))
+    foreach ($relative in $pin.files.Keys) {
+        $path=Join-Path $priorRelease $relative
+        Assert-L07InstallPath $path
+        $item=Get-Item -LiteralPath $path -Force
+        if ($item.PSIsContainer -or $item.Length -ne $pin.files[$relative].bytes -or
+            (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -cne $pin.files[$relative].sha256) { Stop-L07Install 'MIGRATION_SOURCE_HASH' }
+    }
+    $currentUser=[string](Get-CimInstance Win32_ComputerSystem -ErrorAction Stop).UserName
+    if (-not $currentUser -or (Resolve-YacsLiveWindowsSid -UserId $currentUser) -cne $ExpectedSid) { Stop-L07Install 'MIGRATION_OWNER_CHANGED' }
+    $principalProof=Assert-YacsLiveTaskPrincipal -Task $Task -ExpectedSid $ExpectedSid
+    $taskInfo=Get-ScheduledTaskInfo -TaskName $taskName -TaskPath '\' -ErrorAction Stop
+    $hostState=& (Join-Path $RepoRoot 'scripts/runner/Get-YacsUnrealHostState.ps1')
+    Assert-L07ClosedTaskData -Task $Task -TaskInfo $taskInfo -PriorInstall $priorInstall.data -PriorSession $priorSession.data `
+        -InstallationSha256 $priorInstall.sha256 -InstallationBytes $priorInstall.size_bytes `
+        -SessionSha256 $priorSession.sha256 -SessionBytes $priorSession.size_bytes `
+        -ResolvedTaskSid $principalProof.sid -ExpectedSid $ExpectedSid -HostStatus $hostState.status
+    return [ordered]@{kind='CLOSED_602';prior_source_sha=$pin.source_sha;prior_installation_sha256=$priorInstall.sha256;prior_session_sha256=$priorSession.sha256
+        prior_release_retained=$true;prior_state_retained=$true;owner_sid_matches=$true;prior_task_result=0;prior_ue_clean_exit_verified=$false}
+}
+function Get-L07KnownTaskMigration([object]$Task, [string]$ExpectedSid) {
+    $kind=Get-L07KnownTaskMigrationKind $Task
+    if ($kind -ceq 'FAILED_457') { return Get-L07FailedTaskMigration -Task $Task -ExpectedSid $ExpectedSid }
+    if ($kind -ceq 'CLOSED_602') { return Get-L07ClosedTaskMigration -Task $Task -ExpectedSid $ExpectedSid }
+    Stop-L07Install 'MIGRATION_TASK_DEFINITION'
 }
 function Copy-L07SessionFailure([Collections.IDictionary]$Session, [Collections.IDictionary]$Target) {
     $Target['reason_code']=if ($Session['reason_code'] -is [string] -and $Session['reason_code'] -cmatch '^[A-Z][A-Z0-9_]{0,79}$') { $Session['reason_code'] } else { 'SYSTEM_EXCEPTION' }
@@ -217,7 +330,7 @@ try {
                 $stageRelease=$false
             } else {
                 $report.phase='MIGRATION'
-                $migration=Get-L07FailedTaskMigration -Task $existing -ExpectedSid $sid
+                $migration=Get-L07KnownTaskMigration -Task $existing -ExpectedSid $sid
             }
         }
         if ($stageRelease) {
@@ -248,7 +361,8 @@ try {
             if ($null -ne $migration) {
                 # Re-read every admission immediately before changing only action.
                 $existing=Get-ScheduledTask -TaskName $taskName -TaskPath '\' -ErrorAction Stop
-                $report.task_migration=Get-L07FailedTaskMigration -Task $existing -ExpectedSid $sid
+                $report.task_migration=Get-L07KnownTaskMigration -Task $existing -ExpectedSid $sid
+                if ($report.task_migration.prior_source_sha -cne $migration.prior_source_sha) { Stop-L07Install 'MIGRATION_TASK_CHANGED' }
                 Set-ScheduledTask -TaskName $taskName -TaskPath '\' -Action $action -ErrorAction Stop | Out-Null
                 $report.task_migrated=$true
             } else {

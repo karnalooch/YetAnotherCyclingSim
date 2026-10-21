@@ -23,7 +23,8 @@ foreach ($name in @('Stop-L07','Get-L07ReleaseEntry','Assert-L07ProjectIdentity'
 $installer=Join-Path $PSScriptRoot 'Install-YacsLesson07RemoteEditor.ps1'
 $installerAst=[Management.Automation.Language.Parser]::ParseFile($installer,[ref]$tokens,[ref]$parseErrors)
 if (@($parseErrors).Count) { throw 'Lesson07 installer did not parse.' }
-foreach ($name in @('Stop-L07Install','Assert-L07TaskSettings','Get-L07FailedTaskPin','Assert-L07FailedTaskData','Copy-L07SessionFailure')) {
+foreach ($name in @('Stop-L07Install','Assert-L07TaskSettings','Get-L07FailedTaskPin','Assert-L07FailedTaskData',
+    'Get-L07ClosedTaskPin','Get-L07KnownTaskMigrationKind','Assert-L07ClosedTaskData','Copy-L07SessionFailure')) {
     $nodes=@($installerAst.FindAll({
         param($node)
         $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq $name
@@ -232,6 +233,85 @@ foreach ($mutate in $negativeMigrations) {
         $blocked=$true
     }
     Require $blocked 'Unproven or active prior task was admitted for migration.'
+    $cases++
+}
+# The separately pinned closed 602 session permits exactly one new release;
+# it does not relax the failed-457 predicate or admit arbitrary completed tasks.
+function New-ClosedMigrationFixture {
+    $x=New-MigrationFixture
+    $pin=Get-L07ClosedTaskPin
+    $priorRelease='D:\yacs\lesson07-remote\releases\'+$pin.source_sha
+    $priorScript=if ($IsWindows) { Join-Path $priorRelease 'scripts/ue/Start-YacsLesson07RemoteEditor.ps1' }
+        else { $priorRelease+'\scripts\ue\Start-YacsLesson07RemoteEditor.ps1' }
+    $x.Task.Actions[0].WorkingDirectory=$priorRelease
+    $x.Task.Actions[0].Arguments='-NoLogo -NoProfile -File "'+$priorScript+'" -ExpectedHead '+$pin.source_sha
+    $x.TaskInfo.LastTaskResult=[uint32]0
+    $x.NowUtc=[DateTime]::new(2026,10,21,10,0,0,[DateTimeKind]::Utc)
+    $x.PriorInstall=@{source_sha=$pin.source_sha;run_token=$pin.run_token;desktop_sid=$x.ExpectedSid
+        start_permitted_until_utc=('{"utc":"2026-10-20T23:23:48.9836870Z"}' | ConvertFrom-Json -AsHashtable)['utc']
+        files=@(foreach ($path in $pin.files.Keys) { @{path=$path;sha256=$pin.files[$path].sha256} })}
+    $x.PriorSession=@{source_sha=$pin.source_sha;status='EDITOR_EXITED_NO_AUTORESTART';phase='SUPERVISING';host_status='IDLE';reason_code=$null
+        checked_at_utc=('{"utc":"2026-10-21T07:37:58.9575712Z"}' | ConvertFrom-Json -AsHashtable)['utc']
+        owner_sid_matches=$true;checkpoint_bytes_verified=$true;module_build_ids_verified=$true;autosave_session_override=$true
+        editor_stop_requested=$false;package_save_requested=$false;project_config_write_requested=$false
+        native_world_verified=$false;native_module_load_verified=$false;performance_pass=$false
+        editor=@{editor_pid=17896;editor_start_filetime_utc='134370120000674689';interactive_session_id=1;canonical_project_matches=$true
+            editor_executable_path='D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe'}}
+    $x.InstallationSha256=$pin.installation_sha256;$x.InstallationBytes=$pin.installation_bytes
+    $x.SessionSha256=$pin.session_sha256;$x.SessionBytes=$pin.session_bytes
+    return $x
+}
+$closed=New-ClosedMigrationFixture
+Assert-L07ClosedTaskData @closed
+Require ((Get-L07KnownTaskMigrationKind $closed.Task) -ceq 'CLOSED_602') 'Closed602 dispatch did not match exact action.'
+Require ((Get-L07KnownTaskMigrationKind (New-MigrationFixture).Task) -ceq 'FAILED_457') 'Failed457 dispatch changed.'
+$cases++
+$negativeClosedMigrations=@(
+    {param($x) $x.InstallationSha256='0'*64},
+    {param($x) $x.InstallationBytes=931},
+    {param($x) $x.SessionSha256='0'*64},
+    {param($x) $x.SessionBytes=6733},
+    {param($x) $x.Task.State='Running'},
+    {param($x) $x.Task.State='Queued'},
+    {param($x) $x.TaskInfo.LastTaskResult=1},
+    {param($x) $x.TaskInfo.LastTaskResult=$false},
+    {param($x) $x.HostStatus='LOCAL_BUSY'},
+    {param($x) $x.Task.Actions[0].Arguments+=' -Other'},
+    {param($x) $x.Task.Actions[0].Arguments=@($x.Task.Actions[0].Arguments)},
+    {param($x) $x.Task.Actions[0].WorkingDirectory='D:\other'},
+    {param($x) $x.ResolvedTaskSid='S-1-5-21-100-200-300-9999'},
+    {param($x) $x.PriorInstall.desktop_sid='S-1-5-21-100-200-300-9999'},
+    {param($x) $x.Task.Principal.RunLevel='Highest'},
+    {param($x) $x.Task.Settings.RestartCount=1},
+    {param($x) $x.PriorInstall.source_sha='0'*40},
+    {param($x) $x.PriorInstall.run_token='39513355021-2'},
+    {param($x) $x.PriorInstall.files[0].sha256='0'*64},
+    {param($x) $x.PriorInstall.start_permitted_until_utc=$x.NowUtc.AddMinutes(1)},
+    {param($x) $x.PriorSession.status='EDITOR_RUNNING_NATIVE_NOT_VERIFIED'},
+    {param($x) $x.PriorSession.status=@('EDITOR_EXITED_NO_AUTORESTART')},
+    {param($x) $x.PriorSession.phase='HANDOFF'},
+    {param($x) $x.PriorSession.reason_code='SYSTEM_EXCEPTION'},
+    {param($x) $x.PriorSession.checked_at_utc=$x.PriorSession.checked_at_utc.AddTicks(1)},
+    {param($x) $x.PriorSession.owner_sid_matches=$false},
+    {param($x) $x.PriorSession.owner_sid_matches=@($true)},
+    {param($x) $x.PriorSession.owner_sid_matches=$null},
+    {param($x) $x.PriorSession.editor_stop_requested=$true},
+    {param($x) $x.PriorSession.editor_stop_requested=@($false)},
+    {param($x) $x.PriorSession.editor_stop_requested=$null},
+    {param($x) $x.PriorSession.editor.editor_pid=17897},
+    {param($x) $x.PriorSession.editor.editor_start_filetime_utc='134370120000674688'},
+    {param($x) $x.PriorSession.editor.interactive_session_id=2},
+    {param($x) $x.PriorSession.editor.canonical_project_matches=@($true)}
+)
+foreach ($mutate in $negativeClosedMigrations) {
+    $closed=New-ClosedMigrationFixture
+    & $mutate $closed
+    $blocked=$false
+    try { Assert-L07ClosedTaskData @closed } catch {
+        Require ($_.Exception.Data['l07_reason'] -like 'MIGRATION_*' -or $_.Exception.Data['l07_reason'] -ceq 'TASK_SETTINGS_MISMATCH') 'Unexpected closed migration failure.'
+        $blocked=$true
+    }
+    Require $blocked 'Unproven closed session was admitted for migration.'
     $cases++
 }
 $failure=@{reason_code='SYSTEM_EXCEPTION';error_type='MethodInvocationException';error_inner_type='FormatException';error_hresult=-2146233087;error_native_code=5;handoff_step='DEADLINE'}

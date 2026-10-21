@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "status": "READ_ONLY_BRIDGE_DISCOVERY_NOT_RUNTIME_PROOF",
+  "source_commit": "7314caa31fb7126228be19fc5a6110b3835f8461",
+  "observed_utc": "2026-10-21T09:48:51.1775567Z",
+  "editors": [],
+  "discovery": {
+    "relative_path": "Saved/LocoAI/external-mcp-config.json",
+    "exists": false,
+    "bytes": null,
+    "modified_utc": null,
+    "status": "NOT_FOUND",
+    "token_present": false,
+    "transport_type_matches_vendor": false,
+    "endpoint": null,
+    "matching_editor_pids": [],
+    "http_requests_made": 0
+  },
+  "plugins": [
+    {
+      "descriptor": "D:\\yacs\\engine\\UE_5.8\\Engine\\Plugins\\Marketplace\\Wingman\\Wingman.uplugin",
+      "bytes": 4580,
+      "sha256": "54f34b9d3be93d951c3d1acd3ad37e04b391fd9b398f199c499d1f5dbd6b3b7e",
+      "version_name": "0.20.5",
+      "module_names": [
+        "Wingman"
+      ]
+    }
+  ],
+  "source_files": [],
+  "source_declaration_candidates": [],
+  "declaration_limit_reached": false,
+  "source_bytes_read": 0,
+  "limits": {
+    "editors": 8,
+    "listeners_per_editor": 32,
+    "plugin_directories": 128,
+    "plugin_depth": 3,
+    "descriptors": 8,
+    "source_directories": 128,
+    "source_depth": 8,
+    "source_files": 64,
+    "source_file_bytes": 2097152,
+    "source_total_bytes": 16777216,
+    "declarations": 128,
+    "discovery_bytes": 16384
+  },
+  "diagnostic_failures": [],
+  "http_requests_made": 0,
+  "editor_commands_executed": 0,
+  "editor_started_or_stopped": false,
+  "project_files_written": false,
+  "native_material_readback": "NOT_RUN",
+  "performance_pass": false,
+  "note": "PID/listener and source declarations do not prove active world, authenticated API, schemas or rendered material. No credential value or discovery-file payload is retained."
+}

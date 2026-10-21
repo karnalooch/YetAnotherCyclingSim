@@ -5,7 +5,7 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (reviewed Macro 0.05 partial improvement saved remotely; source texture import pending; saved normal-flatten workaround; physical texel scale, detailed-normal correctness, symbolized crash cause and whole-area proof remain unverified; latest source CI passed with compatible proof reuse)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (reviewed Macro 0.05 partial improvement saved remotely; source texture import pending; saved normal-flatten workaround; physical texel scale, detailed-normal correctness, symbolized crash cause and whole-area proof remain unverified; source CI `6bfa739c` passed with compatible proof reuse)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
@@ -40,6 +40,13 @@ Subsequent OS receipts independently confirmed zero Editors at 09:37:36 UTC.
 Protected source CI passed through compatible proof reuse; no new native build
 or material acceptance is implied. The linked source report retains the exact
 first-attempt receipt and the missing-session continuation state.
+The subsequent exact-source diagnostic at `7314caa3` confirmed the closed prior
+session, matching inactive task/owner and all four installed source files.
+Only the MI package differs from the original checkpoint (40,154 bytes,
+SHA-256 `dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d`),
+with the Macro-save timestamp. The other five packages are unchanged. A fresh
+one-shot session is being prepared from those measured bytes; no restart or
+reopened native material acceptance is claimed yet.
 
 The five existing surface classes, accepted Grass2 and geographic masks remain
 unchanged. New neutral-grey sources must not inherit the old global hue grading.

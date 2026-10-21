@@ -171,3 +171,47 @@ old successful `602f8d0` installation is deliberately one-shot and is not being
 restarted or reset. A fresh bounded read of its closed session/task and six
 saved checkpoint packages precedes any newly reviewed one-shot launch. Preserve
 the Macro 0.05 save, prior release/state and all owner/CI/checkpoint controls.
+
+### Closed-session and saved-checkpoint evidence
+
+The fresh diagnostic at source `7314caa31fb7126228be19fc5a6110b3835f8461`
+([run 39579824031](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39579824031),
+[job 119154379466](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39579824031/job/119154379466))
+passed at `2026-10-21T09:48:59.2884226Z`. Exact original artifact bytes are retained
+in the [prior-session report](prior-session-diagnostic.json),
+[module report](prior-module-diagnostic.json) and
+[process/discovery report](prior-bridge-discovery.json).
+Artifact `12335558376` is 4,368 bytes, ZIP SHA-256
+`6ac9b15cdeb49cbfd814d59c14b77b6666232c2a77eed2205faf44bbbffc2d5d`.
+
+The previous task is Ready, its original action, Limited/Interactive owner and
+settings match, and its original permission has expired. The exact saved
+`602f8d0` terminal session reports `EDITOR_EXITED_NO_AUTORESTART` at
+`07:37:58.9575712 UTC`; the task result is 0. Neither record establishes a clean
+UE exit code or the reason for closing. The current process list is empty.
+The original installation is 930 bytes / SHA-256
+`8b78fa1df99f91897dbc301467743dd13ea5d6239e62d2c9ed5d4e5cff146ff5`;
+the terminal session is 6,732 bytes / SHA-256
+`8e2b1cd9c108d9ef1f6244ccdfc8d13bcd59ba30be06f3bea23e96e94b3c69eb`.
+All four installed source files and their manifest entries match.
+
+Only `MI_Landscape_Instance_YACS.uasset` changed from the original startup
+baseline: **40,154 bytes**, SHA-256
+`dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d`,
+modified `02:35:55.5125695 UTC`, matching the time of the verified Macro 0.05 save.
+The map, master and three texture arrays retain their original bytes. This
+establishes saved-file continuity; a fresh native read is still needed after
+reopening. No older material is restored to satisfy the launcher.
+
+A specifically pinned handoff from this inactive owned task into a new immutable
+one-shot release is implemented with independent review. The failed-457 migration, prior release and
+state retention, exact-SHA protected CI, fresh owner/IDLE checks, 5 GiB reserve,
+checkpoint/module checks and four-minute start permission remain in force.
+The diagnostic itself admits no startup and made zero native requests.
+
+The three-file startup change passed **108 production-validator cases** on
+PowerShell 7.6.6, independently reproduced by review. The existing 72 cases
+remain included; failed-457 validators are unchanged. Only the measured MI pin
+changed in the launcher. Publication requests one fresh startup through the
+existing `[l07-remote-editor]` gate; protected CI and actual startup results
+remain pending for that new source. No general automatic restart was added.
