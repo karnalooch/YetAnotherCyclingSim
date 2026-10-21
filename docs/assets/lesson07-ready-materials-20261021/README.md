@@ -6,7 +6,7 @@
 
 **Authority:** [current Lesson07 audit](../../tooling/sidefx/LESSON07_MATERIAL_SETUP.md).
 
-**State:** source selection and licensed comparison samples; no new native import, purchase or whole-material acceptance.
+**State:** source selection complete; remote startup blocked by the existing disk reserve. No complete PBR package, new native import, purchase or whole-material acceptance.
 
 The owner requested ready-made licensed assets and complete materials, explicitly
 including **dark-grey limestone**. This extends source acquisition and appearance
@@ -212,6 +212,46 @@ The diagnostic itself admits no startup and made zero native requests.
 The three-file startup change passed **108 production-validator cases** on
 PowerShell 7.6.6, independently reproduced by review. The existing 72 cases
 remain included; failed-457 validators are unchanged. Only the measured MI pin
-changed in the launcher. Publication requests one fresh startup through the
-existing `[l07-remote-editor]` gate; protected CI and actual startup results
-remain pending for that new source. No general automatic restart was added.
+changed in the launcher. Publication requested one fresh startup through the
+existing `[l07-remote-editor]` gate. No general automatic restart was added.
+
+### Final startup admission result: disk reserve blocked execution
+
+Protected CyclingSim CI for exact source
+`fae2634d926545dfa7f7f71286e25386d9caf46b`
+([run 39580735431](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39580735431))
+completed **SUCCESS** at `10:02:31 UTC`. Its Unreal lane reused compatible
+exact-head proof; fresh Unreal build and Automation were skipped. This is
+source admission, not a new material or visual test.
+
+The startup workflow passed that exact-SHA gate, then
+[Windows job 119160447960](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39580724393/job/119160447960)
+failed in **Set up runner** at `10:03:02 UTC`. The installed pre-job hook
+measured **4.80 GiB free on D:** against the unchanged **5 GiB** minimum.
+Checkout, source validation, task installation and the native probe were all
+skipped. **No new Editor was started, no task was retargeted, and no native
+calls or material imports occurred.** The later report step also failed because
+the checkout directory had never been created. This run uploaded no artifacts.
+The [admission summary](reopen-admission.json) is explicitly derived from
+GitHub run/job metadata and logs, not an original host-generated JSON receipt.
+
+The completion hook reported a verified archive and pruning of only this
+job's retained tree. It supplied no reclaimed-byte count or new free-space
+measurement, so recovery above the reserve is unproven. No speculative retry
+was made. The last actual process inventory remains the earlier zero-Editor
+diagnostic; startup failure is not a new process inventory.
+
+General stale-workspace cleanup is explicitly **STOPPED BY OWNER** in the
+[retention contract](../../ci/RUNNER_WORKSPACE_RETENTION.md), dated
+2026-10-12. This material-selection request did not resume that separate
+cleanup. No reserve was lowered, hook bypassed, protected cache removed or
+previous installation reset. The already-reviewed startup can continue after
+space is restored, subject to its unchanged fresh owner, task, checkpoint,
+deadline and CI gates. Then rerun the fixed read-only Vault inspection and
+verify the saved Macro value in the reopened Editor.
+
+The actionable asset choice is Mediterranean Karst as the main coherent
+package, with Shore lime rocks as the explicit dark-grey coastal supplement;
+the free APEX material and Quixel limestone entries are alternatives. Actual
+package acquisition, selected-license evidence and a native material comparison
+remain necessary. The saved Macro 0.05 change is still only a partial repair.

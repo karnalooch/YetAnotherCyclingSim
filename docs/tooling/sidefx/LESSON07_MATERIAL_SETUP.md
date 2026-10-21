@@ -5,7 +5,7 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (reviewed Macro 0.05 partial improvement saved remotely; source texture import pending; saved normal-flatten workaround; physical texel scale, detailed-normal correctness, symbolized crash cause and whole-area proof remain unverified; source CI `6bfa739c` passed with compatible proof reuse)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (reviewed Macro 0.05 partial improvement saved remotely; source texture import pending; saved normal-flatten workaround; physical texel scale, detailed-normal correctness, symbolized crash cause and whole-area proof remain unverified; source CI `fae2634d` passed with compatible proof reuse; new Editor startup blocked by the 5 GiB disk reserve)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
@@ -44,9 +44,18 @@ The subsequent exact-source diagnostic at `7314caa3` confirmed the closed prior
 session, matching inactive task/owner and all four installed source files.
 Only the MI package differs from the original checkpoint (40,154 bytes,
 SHA-256 `dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d`),
-with the Macro-save timestamp. The other five packages are unchanged. A fresh
-one-shot session is being prepared from those measured bytes; no restart or
-reopened native material acceptance is claimed yet.
+with the Macro-save timestamp. The other five packages are unchanged. The fresh
+one-shot startup implementation passed 108 validator cases and independent
+review. Exact-source CI at `fae2634d` passed in run `39580735431`, with compatible
+Unreal proof reuse. Startup run `39580724393`, job `119160447960`, then stopped
+in the runner's pre-job hook at `10:03:02 UTC`: **4.80 GiB free on D:; 5 GiB
+required**. Checkout, installer and native probe were skipped; no new session,
+task retarget, Vault retry or reopened material readback occurred. The
+[derived admission summary](../../assets/lesson07-ready-materials-20261021/reopen-admission.json)
+records the exact result. Post-job retention did not provide a fresh disk
+measurement. The prior owner stop on general cleanup remains in force, so no
+cleanup or reserve bypass was attempted. The saved Macro improvement remains
+preserved by the earlier byte verification; whole-material acceptance is false.
 
 The five existing surface classes, accepted Grass2 and geographic masks remain
 unchanged. New neutral-grey sources must not inherit the old global hue grading.

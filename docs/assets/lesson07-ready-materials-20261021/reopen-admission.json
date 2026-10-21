@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "DERIVED_FROM_GITHUB_RUN_JOB_METADATA_AND_DECODED_LOGS_NOT_A_NATIVE_HOST_RECEIPT",
+  "source_commit": "fae2634d926545dfa7f7f71286e25386d9caf46b",
+  "status": "SOURCE_CI_PASS_REMOTE_START_BLOCKED_BY_PRE_JOB_DISK_RESERVE",
+  "protected_ci": {
+    "run_id": 39580735431,
+    "run_attempt": 1,
+    "url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39580735431",
+    "conclusion": "SUCCESS",
+    "completed_utc": "2026-10-21T10:02:31Z",
+    "native_job_id": 119159094265,
+    "native_proof": "COMPATIBLE_EXACT_HEAD_PROOF_REUSED",
+    "fresh_unreal_build_and_automation": "SKIPPED",
+    "artifacts": [
+      {
+        "id": 12337045140,
+        "name": "hosted-script-tests-39580735431-1",
+        "bytes": 269437,
+        "github_reported_sha256": "bb7bd98bd5801f0995072b088ee78dd3dd735bc9bffcfb10861cd5b3120e8669",
+        "downloaded_in_this_admission_review": false
+      },
+      {
+        "id": 12336486949,
+        "name": "unreal-ci-39580735431-1",
+        "bytes": 1180,
+        "github_reported_sha256": "ab0f6f4cb72b7f492d59c65ca3c20d8d489ddd48e1cb256cdb3a0ace3edcee34",
+        "downloaded_in_this_admission_review": false
+      },
+      {
+        "id": 12336004488,
+        "name": "world-proof-admission-39580735431-1",
+        "bytes": 354,
+        "github_reported_sha256": "5f69c0278669d356a7409d156691a59a3e01443df87cbd9ef4ede0c3d446ff9e",
+        "downloaded_in_this_admission_review": false
+      }
+    ]
+  },
+  "startup": {
+    "run_id": 39580724393,
+    "run_attempt": 1,
+    "job_id": 119160447960,
+    "url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39580724393/job/119160447960",
+    "conclusion": "FAILURE",
+    "completed_utc": "2026-10-21T10:03:06Z",
+    "gate_job_id": 119157362647,
+    "protected_ci_gate": "SUCCESS",
+    "failed_step": "Set up runner",
+    "failure_observed_utc": "2026-10-21T10:03:02Z",
+    "error": "YACS disk reserve: 4,80 GiB free on D:\\; 5 GiB required. Job stopped before heavy work. Review stale build outputs; do not delete source assets or retained caches.",
+    "available_space_gib_displayed": 4.8,
+    "required_reserve_gib": 5,
+    "checkout": "SKIPPED",
+    "source_validation": "SKIPPED",
+    "installer": "SKIPPED",
+    "native_probe": "SKIPPED",
+    "task_retargeted": false,
+    "editor_started": false,
+    "editor_stopped": false,
+    "native_tool_calls": 0,
+    "material_import_performed": false,
+    "saved_or_reopened_material_readback": "NOT_RUN",
+    "artifact_count": 0,
+    "secondary_report_step_error": "Code-only checkout directory absent because the pre-job hook stopped admission.",
+    "source_admission_or_reserve_changed": false
+  },
+  "completion_hook": {
+    "status": "RETAINED_TREE_PRUNED_VERIFIED_ARCHIVE_KEPT",
+    "source": "D:\\yacs\\work\\runner-retention\\39580724393-1",
+    "archive": "D:\\yacs\\work\\runner-retention\\39580724393-1.tar.gz",
+    "archive_sha256": "ddf8d240b7550003f058889cc57c506b36dee58aad13bce1b07d408fa2f9bbd3",
+    "compression_receipt_sha256": "dfa57a31fe4ecc9cc7342c6bab3f64c04248b250e29d05ae5ece0d14eacda3d1",
+    "original_work_mutated": false,
+    "ntfs_acl_ads_preserved": false,
+    "free_space_after_gib": null,
+    "bytes_reclaimed": null,
+    "disk_recovery_verified": false,
+    "installed_hook_source_inventory_verified": false
+  },
+  "continuation": {
+    "automatic_retry_performed": false,
+    "reason": "No fresh evidence that the completion hook recovered the required space; the setup failed before checkout.",
+    "vault_retry": "NOT_RUN_REQUIRES_ACTUAL_OWNED_EDITOR",
+    "last_process_observation": "Zero Editors at 2026-10-21T09:48:51.1775567Z; startup failure itself is not a new process inventory.",
+    "retained_saved_material_sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+    "global_cleanup_performed": false,
+    "cleanup_authority": "docs/ci/RUNNER_WORKSPACE_RETENTION.md: STOPPED BY OWNER on 2026-10-12; do not resume without a new owner instruction.",
+    "no_asset_specific_fab_entitlement_verified": true,
+    "no_complete_pbr_package_acquired": true,
+    "whole_material_visual_accepted": false,
+    "performance_pass": false
+  }
+}

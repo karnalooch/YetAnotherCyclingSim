@@ -3828,7 +3828,7 @@
       "visual_or_import_acceptance": false
     },
     "session_continuation": {
-      "status": "CLOSED_602_REOPEN_IMPLEMENTED_REVIEWED_NATIVE_START_PENDING",
+      "status": "CLOSED_602_REOPEN_REVIEWED_CI_PASSED_START_BLOCKED_PRE_JOB_DISK_RESERVE",
       "standing_owner_authorization": "Create missing session; preserve existing session if present",
       "prior_installed_source": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3",
       "old_one_shot_task_restarted": false,
@@ -4020,7 +4020,62 @@
         "fresh_deadline_minutes": 4,
         "exact_source_protected_ci_required": true,
         "native_launch_executed": false
+      },
+      "reopen_execution": {
+        "evidence_kind": "DERIVED_FROM_GITHUB_RUN_JOB_METADATA_AND_DECODED_LOGS_NOT_A_NATIVE_HOST_RECEIPT",
+        "summary_path": "docs/assets/lesson07-ready-materials-20261021/reopen-admission.json",
+        "summary_sha256": "46817614218db73c721f5640526c9ea31bf385bb4f16697a2e8f1f82e92d2ee4",
+        "source_commit": "fae2634d926545dfa7f7f71286e25386d9caf46b",
+        "run_id": 39580724393,
+        "run_attempt": 1,
+        "job_id": 119160447960,
+        "conclusion": "FAILURE",
+        "failed_step": "Set up runner",
+        "available_space_gib_displayed": 4.8,
+        "required_reserve_gib": 5,
+        "checkout_installer_and_native_probe": "SKIPPED",
+        "task_retargeted": false,
+        "new_editor_started": false,
+        "native_tool_calls": 0,
+        "artifact_count": 0,
+        "disk_recovery_after_completion_hook_verified": false,
+        "automatic_retry_performed": false,
+        "global_cleanup_performed": false,
+        "cleanup_status": "STOPPED_BY_OWNER_20261012_NOT_RESUMED"
       }
+    },
+    "protected_reopen_source_ci": {
+      "run_id": 39580735431,
+      "run_attempt": 1,
+      "url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39580735431",
+      "conclusion": "SUCCESS",
+      "completed_utc": "2026-10-21T10:02:31Z",
+      "native_job_id": 119159094265,
+      "native_proof": "COMPATIBLE_EXACT_HEAD_PROOF_REUSED",
+      "fresh_unreal_build_and_automation": "SKIPPED",
+      "artifacts": [
+        {
+          "id": 12337045140,
+          "name": "hosted-script-tests-39580735431-1",
+          "bytes": 269437,
+          "github_reported_sha256": "bb7bd98bd5801f0995072b088ee78dd3dd735bc9bffcfb10861cd5b3120e8669",
+          "downloaded_in_this_admission_review": false
+        },
+        {
+          "id": 12336486949,
+          "name": "unreal-ci-39580735431-1",
+          "bytes": 1180,
+          "github_reported_sha256": "ab0f6f4cb72b7f492d59c65ca3c20d8d489ddd48e1cb256cdb3a0ace3edcee34",
+          "downloaded_in_this_admission_review": false
+        },
+        {
+          "id": 12336004488,
+          "name": "world-proof-admission-39580735431-1",
+          "bytes": 354,
+          "github_reported_sha256": "5f69c0278669d356a7409d156691a59a3e01443df87cbd9ef4ede0c3d446ff9e",
+          "downloaded_in_this_admission_review": false
+        }
+      ]
     }
   }
 }
