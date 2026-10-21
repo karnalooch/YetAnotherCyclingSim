@@ -39,11 +39,13 @@ vertical streaking. The images do not isolate projection from geometry or
 lighting causes. Detailed-normal correctness, physical scale, fresh reopen and
 whole-area review remain open. Macro 0.05 and Global Normal Flatten 1 remain
 unchanged. The native saved candidate and the already approved Macro material
-instance were exported into the [exact nine-package checkpoint](../../assets/lesson07-surface-repair-20261021/retention-39638776920-evidence.json).
-The subsequent explicit-OID push returned successfully, but the independent
-server fetch timed out after 900 seconds; server byte verification and branch
-pointer publication are not yet claimed. The bounded follow-up restricts the
-local readback tree itself to the nine pointer blobs.
+instance are retained in the [verified nine-package checkpoint](../../assets/lesson07-surface-repair-20261021/retention-39643271947-evidence.json).
+Run 39643271947 independently downloaded all nine LFS objects into empty storage
+and verified their hashes and sizes (115,887,110 bytes total). The containing
+commit includes their exact pointer texts. The [earlier fetch timeout](../../assets/lesson07-surface-repair-20261021/retention-39638776920-evidence.json)
+remains recorded; restricting the local readback tree to the reviewed pointers
+enabled the successful follow-up. This is persistence proof, not a fresh native
+reopen or material-appearance acceptance.
 [Metadata-only tool discovery](../../assets/lesson07-surface-repair-20261021/discovery-39638776763-evidence.json)
 completed with zero native calls and 84 tools. The full `edit_graph` contract
 was excluded by the existing size bound, so supported material-function graph

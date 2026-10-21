@@ -52,6 +52,15 @@ preserved. Neither result is a fresh native build or Automation pass.
 
 ## Retaining the saved candidate
 
+**Current result:** [run 39643271947](retention-39643271947-evidence.json)
+completed export, explicit-OID upload and independent server readback into an
+empty object store. All nine asset SHA-256 values and sizes passed, totalling
+115,887,110 bytes. The containing commit includes their nine exact Git LFS
+pointer texts. This retains the saved native candidate and approved Macro MI;
+it does not establish fresh reopening or resolve the visible material defects.
+The two raw hosted receipts are preserved unchanged and remain explicit that
+the hosted job itself did not update a remote Git ref.
+
 The [bounded exporter](../../../scripts/ci/export_lesson07_material_checkpoint.py)
 and [delivery workflow](../../../.github/workflows/lesson07-material-delivery.yml)
 retain exactly nine packages: five imported textures, three updated arrays and
@@ -71,7 +80,7 @@ completed the Windows export and retained immutable artifact `12364181709`
 `0eb92760bb74917e2349c1066d4cc3efd5229949ad1fcb6f68936faba3266c9e`).
 The hosted explicit-OID push returned successfully, then independent `git lfs
 fetch` timed out after 900 seconds. Server byte verification and branch pointer
-publication are therefore still pending. The failed fetch scanned a local
+publication were not claimed for that attempt. The failed fetch scanned a local
 commit with the full repository tree; git-lfs applies its include filter after
 `ls-tree -l`, creating an unrelated promisor-blob hydration risk. A bounded
 correction builds the readback commit from only the nine already verified
