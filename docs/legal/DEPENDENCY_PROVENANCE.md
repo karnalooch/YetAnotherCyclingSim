@@ -71,10 +71,15 @@ provider MD5/bytes and SHA-256 values are in the manifest. No protected website
 example render is copied. These samples are not authenticated limestone and
 none is selected for production. Credit is retained in `THIRD_PARTY_NOTICES.md`.
 
-cgbookcase `GreyRock03` and ambientCG `Rock063` are **approved for bounded CC0
-source acquisition, not acquired**: their official download routes returned
-HTTP 403. Their license sources and exact failed URLs are retained; no ZIP or
-complete source set was obtained. Fab product listings are **candidates only**:
+cgbookcase `GreyRock03`, ambientCG `Rock063` and TextureCan `Rock0005` are
+**approved for bounded CC0 source acquisition, not acquired**: their official
+download routes returned HTTP 403. Their license sources and exact failed URLs
+are retained; no ZIP or complete source set was obtained. TextureCan's
+[official terms](https://www.texturecan.com/terms/) explicitly identify CC0 1.0;
+its procedural grey rock has no authenticated limestone geology. ShareTextures
+is excluded from the pure-CC0 route because its
+[custom terms](https://www.sharetextures.com/p/license) restrict redistribution
+and automated downloads. Fab product listings are **candidates only**:
 individual license/tier, account entitlement, package hashes and commercial
 redistribution limits must be recorded before use. No Fab asset payload or raw
 private Vault inventory is admitted into this public repository.

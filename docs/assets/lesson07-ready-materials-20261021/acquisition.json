@@ -227,6 +227,22 @@
       "error": "HTTP Error 403: Forbidden",
       "archive_acquired": false,
       "native_import_attempted": false
+    },
+    {
+      "provider": "TextureCan",
+      "asset_id": "Rock0005",
+      "asset_page": "https://www.texturecan.com/details/240/",
+      "license": "CC0-1.0",
+      "license_url": "https://www.texturecan.com/terms/",
+      "url": "https://www.texturecan.com/downloads/rock_0005/rock_0005_2k_2eg3Ht.zip",
+      "operation": "Acquire official complete 2K PBR comparison set",
+      "error": "HTTP Error 403: Forbidden",
+      "archive_acquired": false,
+      "archive_bytes_acquired": 0,
+      "native_import_attempted": false,
+      "geology_authenticated": false,
+      "raw_receipt": "texturecan-download-receipt.json",
+      "raw_receipt_sha256": "c350d75a023da50d024c50fad94c9fc0e589792d7d3114d98099c6261ac26a85"
     }
   ],
   "primary_recommendation": {

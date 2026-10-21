@@ -346,6 +346,169 @@ jobs:
           if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 256KB) { throw 'REPORT_SIZE_LIMIT' }
           $json | Set-Content -LiteralPath $output -Encoding utf8
           Write-Host ('L07_BRIDGE_DISCOVERY ' + ($report | ConvertTo-Json -Depth 10 -Compress))
+      - name: Inspect only the prior 602 session and current saved Lesson07 checkpoint
+        if: ${{ always() }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $priorSha='602f8d0136d8f930adab1cda0c5006de8bf2d9d3'
+          $priorRun='39513355021-1'
+          $root='D:\yacs\lesson07-remote'
+          $release=Join-Path $root ('releases\'+$priorSha)
+          $stateRoot=Join-Path $root ('state\'+$priorSha)
+          $project='D:\yacs\project'
+          $taskName='YACS Lesson07 Remote Editor'
+          $pwsh='D:\yacs\tools\powershell-7.6.6-win-x64\pwsh.exe'
+          $editorExe='D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe'
+          $failures=[Collections.Generic.List[string]]::new()
+          function Read-L07PinnedEvidence([string]$Path,[long]$Limit,[switch]$Json) {
+            $proof=[ordered]@{status='NOT_FOUND';bytes=$null;modified_utc=$null;sha256=$null;stable_across_read=$false}
+            $result=@{proof=$proof;data=$null}
+            try {
+              if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $result }
+              $cursor=[IO.Path]::GetFullPath($Path)
+              while ($cursor) {
+                if ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'REPARSE_PATH' }
+                $cursor=[IO.Path]::GetDirectoryName($cursor)
+              }
+              $before=Get-Item -LiteralPath $Path -Force
+              $proof.bytes=[long]$before.Length;$proof.modified_utc=$before.LastWriteTimeUtc.ToString('o')
+              if ($before.Length -le 0 -or $before.Length -gt $Limit) { $proof.status='SIZE_LIMIT';return $result }
+              if ($Json) {
+                # Hash the exact bytes being parsed; never serialize private JSON.
+                $raw=[IO.File]::ReadAllBytes($Path)
+                if ($raw.Length -ne $before.Length) { throw 'FILE_CHANGED' }
+                $proof.sha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($raw)).ToLowerInvariant()
+                $data=[Text.UTF8Encoding]::new($false,$true).GetString($raw).TrimStart([char]0xFEFF) | ConvertFrom-Json -AsHashtable -Depth 16
+                if ($data -isnot [Collections.IDictionary]) { throw 'JSON_ROOT' }
+              } else { $proof.sha256=(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant() }
+              $after=Get-Item -LiteralPath $Path -Force
+              if ($after.Length -ne $before.Length -or $after.LastWriteTimeUtc -ne $before.LastWriteTimeUtc) { throw 'FILE_CHANGED' }
+              $proof.stable_across_read=$true;$proof.status='HASHED'
+              if ($Json) { $result.data=$data }
+            } catch { $proof.status='READ_FAILED';$proof['error_type']=$_.Exception.GetType().Name }
+            return $result
+          }
+          function Get-L07SafeUtc([object]$Value) {
+            if ($Value -is [DateTime] -and $Value.Kind -eq [DateTimeKind]::Utc) { return $Value.ToString('o') }
+            return $null
+          }
+          function Get-L07PrivateSid([string]$Value) {
+            if ([string]::IsNullOrWhiteSpace($Value)) { throw 'NO_DESKTOP_IDENTITY' }
+            if ($Value -match '^S-1-\d+-') { return ([Security.Principal.SecurityIdentifier]::new($Value)).Value }
+            return ([Security.Principal.NTAccount]::new($Value)).Translate([Security.Principal.SecurityIdentifier]).Value
+          }
+          $installation=Read-L07PinnedEvidence (Join-Path $release 'installation.json') 64KB -Json
+          $session=Read-L07PinnedEvidence (Join-Path $stateRoot 'session.json') 256KB -Json
+          $installData=$installation.data;$sessionData=$session.data
+          $installInfo=[ordered]@{file=$installation.proof;source_sha_matches_expected=$false;run_token_matches_expected=$false;file_count=$null;start_permitted_until_utc=$null;start_permission_expired=$null;desktop_sid_matches_console=$null}
+          if ($null -ne $installData) {
+            $installInfo.source_sha_matches_expected=$installData['source_sha'] -is [string] -and $installData['source_sha'] -ceq $priorSha
+            $installInfo.run_token_matches_expected=$installData['run_token'] -is [string] -and $installData['run_token'] -ceq $priorRun
+            $installInfo.file_count=@($installData['files']).Count
+            $installInfo.start_permitted_until_utc=Get-L07SafeUtc $installData['start_permitted_until_utc']
+            if ($null -ne $installInfo.start_permitted_until_utc) { $installInfo.start_permission_expired=$installData['start_permitted_until_utc'] -lt [DateTime]::UtcNow }
+          } else { $failures.Add('INSTALLATION_NOT_PARSED') }
+          $sessionInfo=[ordered]@{file=$session.proof;source_sha_matches_expected=$false;status=$null;phase=$null;host_status=$null;checked_at_utc=$null;reason_code=$null;editor=$null;flags=[ordered]@{}}
+          if ($null -ne $sessionData) {
+            $sessionInfo.source_sha_matches_expected=$sessionData['source_sha'] -is [string] -and $sessionData['source_sha'] -ceq $priorSha
+            $statuses=@('PREFLIGHT_PENDING','TASK_PREFLIGHT','ATTACH_EXISTING','PREFLIGHT_PASS','STARTING_NOT_NATIVE_PROOF','EDITOR_RUNNING_NATIVE_NOT_VERIFIED','EDITOR_EXITED_NO_AUTORESTART','EDITOR_RETAINED_AFTER_STARTUP_ERROR',
+              'BLOCKED_RELEASE','BLOCKED_DESKTOP','BLOCKED_HOST','BLOCKED_RESERVE','BLOCKED_PROJECT','BLOCKED_CHECKPOINT','BLOCKED_MODULES','BLOCKED_HANDOFF','BLOCKED_SUPERVISING')
+            $sessionInfo.status=if ($sessionData['status'] -is [string] -and $sessionData['status'] -cin $statuses) { $sessionData['status'] } else { 'UNRECOGNIZED' }
+            $sessionInfo.phase=if ($sessionData['phase'] -is [string] -and $sessionData['phase'] -cin @('RELEASE','DESKTOP','HOST','RESERVE','PROJECT','CHECKPOINT','MODULES','HANDOFF','SUPERVISING')) { $sessionData['phase'] } else { 'UNRECOGNIZED' }
+            $sessionInfo.host_status=if ($sessionData['host_status'] -is [string] -and $sessionData['host_status'] -cin @('IDLE','CI_BUSY','LOCAL_BUSY','MIXED_BUSY')) { $sessionData['host_status'] } else { 'UNRECOGNIZED' }
+            $sessionInfo.checked_at_utc=Get-L07SafeUtc $sessionData['checked_at_utc']
+            $sessionInfo.reason_code=if ($null -eq $sessionData['reason_code']) { $null } elseif ($sessionData['reason_code'] -is [string] -and $sessionData['reason_code'] -cin @('SYSTEM_EXCEPTION','START_REQUEST_EXPIRED','PRIOR_SESSION_RETAINED','CONSOLE_OWNER_CHANGED','DISK_RESERVE_CHANGED','TASK_CONSOLE_IDENTITY','CHECKPOINT_HASH_OR_SIZE','RELEASE_IDENTITY','RELEASE_FILE_HASH','TASK_SETTINGS_MISMATCH','INDEPENDENT_TASK_REQUIRED')) { $sessionData['reason_code'] } else { 'UNRECOGNIZED' }
+            foreach ($field in @('owner_sid_matches','checkpoint_bytes_verified','module_build_ids_verified','autosave_session_override','editor_stop_requested','package_save_requested','project_config_write_requested','native_world_verified','native_module_load_verified','performance_pass')) {
+              $sessionInfo.flags[$field]=if ($sessionData[$field] -is [bool]) { $sessionData[$field] } else { $null }
+            }
+            $priorEditor=$sessionData['editor']
+            if ($priorEditor -is [Collections.IDictionary]) {
+              $sessionInfo.editor=[ordered]@{
+                pid_matches_original=($priorEditor['editor_pid'] -is [int] -or $priorEditor['editor_pid'] -is [long]) -and $priorEditor['editor_pid'] -eq 17896
+                start_filetime_matches_original=$priorEditor['editor_start_filetime_utc'] -is [string] -and $priorEditor['editor_start_filetime_utc'] -ceq '134370120000674689'
+                executable_matches_expected=$priorEditor['editor_executable_path'] -is [string] -and $priorEditor['editor_executable_path'] -ieq $editorExe
+                interactive_session_matches_original=($priorEditor['interactive_session_id'] -is [int] -or $priorEditor['interactive_session_id'] -is [long]) -and $priorEditor['interactive_session_id'] -eq 1
+                canonical_project_matches=$priorEditor['canonical_project_matches'] -is [bool] -and $priorEditor['canonical_project_matches']
+              }
+            }
+          } else { $failures.Add('SESSION_NOT_PARSED') }
+          $sourcePins=[ordered]@{
+            'scripts/ue/Install-YacsLesson07RemoteEditor.ps1'='bf7d9314cadaa6aa04432eb5615795fad671978da97ebf43ab045ff5fe1ce247'
+            'scripts/ue/Start-YacsLesson07RemoteEditor.ps1'='215c4cd1ed651d229706e2570dc19b8d57f586677284af29e78f1c90d09eb6ad'
+            'scripts/runner/Get-YacsUnrealHostState.ps1'='73506d6f1707faa33c97797f6e57d1d22e381eb72787377c3bdbb66fe0d2c346'
+            'scripts/live_host/Assert-YacsLiveTaskPrincipal.ps1'='2bd54cda4f1a1aa3ca3af3d3a94d7013317bfe570910701fc7c17d946d0af0b2'
+          }
+          $sourceProofs=@(foreach ($relative in $sourcePins.Keys) {
+            $proof=(Read-L07PinnedEvidence (Join-Path $release $relative) 256KB).proof
+            $entries=@();if ($null -ne $installData) { $entries=@($installData['files'] | Where-Object { $_ -is [Collections.IDictionary] -and $_['path'] -is [string] -and $_['path'] -ceq $relative }) }
+            [ordered]@{path=$relative;expected_sha256=$sourcePins[$relative];file=$proof;file_matches_expected=$proof.status -ceq 'HASHED' -and $proof.sha256 -ceq $sourcePins[$relative];manifest_entry_count=$entries.Count;manifest_hash_matches_expected=$entries.Count -eq 1 -and $entries[0]['sha256'] -is [string] -and $entries[0]['sha256'] -ceq $sourcePins[$relative]}
+          })
+          $taskInfo=[ordered]@{exists=$false;state=$null;last_task_result=$null;last_run_utc=$null;action_count=$null;action_executable_matches=$null;action_arguments_match=$null;action_working_directory_matches=$null;principal_limited=$null;principal_interactive=$null;principal_sid_matches_console=$null;principal_sid_matches_installation=$null;settings_match_original=$null}
+          try {
+            $task=Get-ScheduledTask -TaskName $taskName -TaskPath '\' -ErrorAction SilentlyContinue
+            if ($null -ne $task) {
+              $taskInfo.exists=$true
+              $taskInfo.state=if ([string]$task.State -cin @('Unknown','Disabled','Queued','Ready','Running')) { [string]$task.State } else { 'UNRECOGNIZED' }
+              $timing=Get-ScheduledTaskInfo -TaskName $taskName -TaskPath '\'
+              $taskInfo.last_task_result=[long]$timing.LastTaskResult
+              $taskInfo.last_run_utc=$timing.LastRunTime.ToUniversalTime().ToString('o')
+              $actions=@($task.Actions);$taskInfo.action_count=$actions.Count
+              if ($actions.Count -eq 1) {
+                $expectedArguments='-NoLogo -NoProfile -File "'+(Join-Path $release 'scripts/ue/Start-YacsLesson07RemoteEditor.ps1')+'" -ExpectedHead '+$priorSha
+                $taskInfo.action_executable_matches=[string]$actions[0].Execute -ieq $pwsh
+                $taskInfo.action_arguments_match=[string]$actions[0].Arguments -ceq $expectedArguments
+                $taskInfo.action_working_directory_matches=[string]$actions[0].WorkingDirectory -ieq $release
+              }
+              $taskInfo.principal_limited=[string]$task.Principal.RunLevel -ceq 'Limited'
+              $taskInfo.principal_interactive=[string]$task.Principal.LogonType -cin @('Interactive','InteractiveToken')
+              # Account representations and installation SID are compared only in memory.
+              $consoleSid=Get-L07PrivateSid ([string](Get-CimInstance Win32_ComputerSystem).UserName)
+              $taskSid=Get-L07PrivateSid ([string]$task.Principal.UserId)
+              $taskInfo.principal_sid_matches_console=$consoleSid -cnotin @('S-1-5-18','S-1-5-19','S-1-5-20') -and $taskSid -ceq $consoleSid
+              if ($null -ne $installData) {
+                $installInfo.desktop_sid_matches_console=$installData['desktop_sid'] -is [string] -and $installData['desktop_sid'] -ceq $consoleSid
+                $taskInfo.principal_sid_matches_installation=$installData['desktop_sid'] -is [string] -and $installData['desktop_sid'] -ceq $taskSid
+              }
+              $taskInfo.settings_match_original=@($task.Triggers | Where-Object { $null -ne $_ }).Count -eq 0 -and
+                [Xml.XmlConvert]::ToTimeSpan([string]$task.Settings.ExecutionTimeLimit) -eq [TimeSpan]::Zero -and
+                $task.Settings.RestartCount -eq 0 -and [string]$task.Settings.MultipleInstances -cin @('IgnoreNew','2') -and
+                $task.Settings.AllowHardTerminate -eq $false -and $task.Settings.StopIfGoingOnBatteries -eq $false -and
+                $task.Settings.DisallowStartIfOnBatteries -eq $false -and $task.Settings.IdleSettings.StopOnIdleEnd -eq $false
+            }
+          } catch { $failures.Add('TASK_READ_FAILED:'+$_.Exception.GetType().Name) }
+          $checkpointPins=@(
+            @('Content/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.umap',1838638056,'d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75'),
+            @('Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset',39740,'8c1dc875218a027a5ac83d88f8eedba49769fdd8494d287e7264807082eb11bf'),
+            @('Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset',208956,'53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66'),
+            @('Content/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.uasset',24178947,'9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf'),
+            @('Content/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.uasset',40441798,'838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1'),
+            @('Content/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.uasset',12124066,'e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8')
+          )
+          $checkpointBytes=0L;$checkpointAttemptBytes=0L
+          $checkpointProofs=@(foreach ($pin in $checkpointPins) {
+            $remaining=[math]::Max(0L,2GB-$checkpointAttemptBytes)
+            $proof=(Read-L07PinnedEvidence (Join-Path $project $pin[0]) $remaining).proof
+            if ($proof.bytes -gt 0 -and $proof.bytes -le $remaining) { $checkpointAttemptBytes+=$proof.bytes }
+            if ($proof.status -ceq 'HASHED') { $checkpointBytes+=$proof.bytes }
+            [ordered]@{path=$pin[0];original_size_bytes=$pin[1];original_sha256=$pin[2];file=$proof;matches_original_checkpoint=$proof.status -ceq 'HASHED' -and $proof.bytes -eq $pin[1] -and $proof.sha256 -ceq $pin[2]}
+          })
+          $report=[ordered]@{
+            schema_version=1;status='READ_ONLY_PRIOR_SESSION_AND_CHECKPOINT_NOT_START_ADMISSION'
+            source_commit='${{ github.sha }}';observed_utc=[DateTime]::UtcNow.ToString('o')
+            expected_prior_source_sha=$priorSha;expected_prior_run_token=$priorRun
+            expected_prior_editor_pid=17896;expected_prior_editor_start_filetime_utc='134370120000674689'
+            installation=$installInfo;session=$sessionInfo;task=$taskInfo;source_closure=$sourceProofs
+            current_checkpoint=$checkpointProofs;checkpoint_bytes_hashed=$checkpointBytes;checkpoint_attempt_bytes=$checkpointAttemptBytes
+            limits=[ordered]@{installation_bytes=64KB;session_bytes=256KB;source_files=4;source_file_bytes=256KB;checkpoint_files=6;checkpoint_total_bytes=2GB;output_bytes=64KB}
+            diagnostic_failures=@($failures.ToArray());native_requests_made=0
+            task_changed_or_started=$false;editor_started_or_stopped=$false;project_files_written=$false
+            startup_admitted=$false;performance_pass=$false
+          }
+          $json=$report | ConvertTo-Json -Depth 12
+          if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 64KB) { throw 'PRIOR_SESSION_REPORT_SIZE' }
+          $out=Join-Path $env:RUNNER_TEMP 'lesson07-prior-session-diagnostic.json'
+          $json | Set-Content -LiteralPath $out -Encoding utf8
+          Write-Host ('L07_PRIOR_SESSION_DIAGNOSTIC '+($report | ConvertTo-Json -Depth 12 -Compress))
       - name: Retain minimal diagnostic
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -354,5 +517,6 @@ jobs:
           path: |
             ${{ runner.temp }}/lesson07-editor-module-diagnostic.json
             ${{ runner.temp }}/lesson07-editor-bridge-discovery.json
+            ${{ runner.temp }}/lesson07-prior-session-diagnostic.json
           if-no-files-found: warn
           retention-days: 7

@@ -75,7 +75,7 @@ These visual descriptions are reviewer observations. No provider authenticates
 the four samples' geology as limestone. `dark_rock` is also excluded from the
 limestone recommendation because its provider tag identifies metamorphic rock.
 
-Two further CC0 candidates remain **not acquired**:
+Further CC0 candidates remain **not acquired**:
 [cgbookcase Grey Rock 03](https://www.cgbookcase.com/textures/grey-rock-03)
 advertises a complete DirectX-normal PBR set, while
 [ambientCG Rock063](https://ambientcg.com/view?id=Rock063) is a scanned layered
@@ -83,6 +83,18 @@ grey/mossy surface. Their physical scale and limestone geology are unverified.
 The exact public cgbookcase download module and official Rock063 2K PNG download
 returned **HTTP 403** during approved fetches. No ZIP or complete map set was
 obtained; no alternate identity or access-control workaround was attempted.
+A third official comparison set,
+[TextureCan Rock0005](https://www.texturecan.com/details/240/), is a generic
+procedural grey tileable rock under [CC0](https://www.texturecan.com/terms/).
+Its exact 2K ZIP and preview also returned HTTP 403 with zero retained bytes;
+see the [unaltered download receipt](texturecan-download-receipt.json).
+Its geology, physical scale, actual map contents and visual suitability remain
+unverified. No full material was acquired from any of these three providers.
+
+ShareTextures was excluded from the pure-CC0 acquisition route because its
+[current license](https://www.sharetextures.com/p/license) describes custom
+restrictions, including redistribution and automated downloads. A CC0-style
+badge alone is not sufficient acquisition evidence.
 
 ## Integration contract
 
@@ -126,3 +138,36 @@ all 256 workflow marker combinations and nonowner rejection. Existing PowerShell
 mixed-mode rejections and eleven typed receipt cases. Documentation links,
 i18n, structure and freshness guards passed. These are preparation results;
 remote catalogue evidence is recorded separately after execution.
+
+## First remote catalogue attempt and current host state
+
+The first exact-source attempt at `6bfa739c03eb55d9bcd3c4374d3fedc62a246c79`
+([run 39577528208](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39577528208))
+passed 115 CPU tests and the Windows preparation checks. At
+`2026-10-21T09:33:16.8578333Z` it stopped before the native client with
+`VAULT_INSPECTION_REQUIRES_EXISTING_EDITOR`: the process count was not exactly
+one. This error alone did not distinguish zero from multiple Editors. There
+were **zero native calls, installs, imports or Editor starts/stops**.
+The [unaltered probe receipt](first-vault-probe.json) is retained; its SHA-256 is
+`cf7ff8fd4758aeafefa2b9b5e2829fc09f820f21411867e5fd062bcc15865b80`.
+Artifact `12334394767` has ZIP SHA-256
+`0630c49e02cdeea40dea55183b6c3e73b27cc5f59f331b275ad5b3f40354484e`.
+
+Subsequent independent OS observations resolved the ambiguity:
+[CI job 119148097228](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39577539895/job/119148097228)
+reported `IDLE`, with zero remote-CI, local/unknown and stale process records at
+`09:35:06.3313504 UTC`;
+[diagnostic job 119149255036](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39510504128/job/119149255036)
+reported `editors=[]`, no discovery file and no diagnostic failures at
+`09:37:36.2439524 UTC`. The diagnostic issued no HTTP or Editor commands.
+
+Protected CyclingSim CI for the exact `6bfa739c` source completed **SUCCESS** at
+`09:37:11 UTC`. Its Unreal lane reused compatible proof; new build, Automation,
+capture and interactive handoff steps were skipped. This source-CI result does
+not establish an active Editor, material import or visual acceptance.
+
+The owner's standing instruction permits creating a session when absent. The
+old successful `602f8d0` installation is deliberately one-shot and is not being
+restarted or reset. A fresh bounded read of its closed session/task and six
+saved checkpoint packages precedes any newly reviewed one-shot launch. Preserve
+the Macro 0.05 save, prior release/state and all owner/CI/checkpoint controls.

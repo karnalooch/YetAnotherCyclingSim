@@ -1,0 +1,29 @@
+{
+  "created_utc": "2026-10-21T09:42:35.216423+00:00",
+  "asset_page": "https://www.texturecan.com/details/240/",
+  "license": "CC0-1.0",
+  "license_url": "https://www.texturecan.com/terms/",
+  "source_type": "procedural",
+  "geology_verified": false,
+  "native_import_performed": false,
+  "attempts": [
+    {
+      "name": "rock_0005_2k.zip",
+      "source_url": "https://www.texturecan.com/downloads/rock_0005/rock_0005_2k_2eg3Ht.zip",
+      "sandbox_permissions": "require_escalated",
+      "bytes": 0,
+      "status": "HTTP_ERROR",
+      "http_status": 403,
+      "error_reason": "Forbidden"
+    },
+    {
+      "name": "rock_0005_plane_600.png",
+      "source_url": "https://www.texturecan.com/img/textures/rock_0005/rock_0005_plane_600.png",
+      "sandbox_permissions": "require_escalated",
+      "bytes": 0,
+      "status": "HTTP_ERROR",
+      "http_status": 403,
+      "error_reason": "Forbidden"
+    }
+  ]
+}

@@ -5,7 +5,7 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (reviewed Macro 0.05 partial improvement saved remotely; source texture import pending; saved normal-flatten workaround; physical texel scale, detailed-normal correctness, symbolized crash cause, whole-area proof and protected CI remain unverified)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (reviewed Macro 0.05 partial improvement saved remotely; source texture import pending; saved normal-flatten workaround; physical texel scale, detailed-normal correctness, symbolized crash cause and whole-area proof remain unverified; latest source CI passed with compatible proof reuse)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
@@ -24,7 +24,7 @@ and entitlement evidence; paid checkout prices were not verified.
 
 Four actual CC0 Diffuse samples were acquired and inspected with hashes retained.
 Their warm colour or unverified geology prevented selection as the main dark-grey
-limestone. Two further official CC0 download attempts returned HTTP 403; no new
+limestone. Official downloads from three further CC0 providers returned HTTP 403; no new
 complete PBR set or Fab package was acquired. The source list is a selection
 result, not evidence of an imported replacement or repaired whole material.
 
@@ -34,7 +34,12 @@ dedicated tool only for three fixed local catalogue filters: `limestone`,
 install, overwrite, download, run Python or import textures. Raw inventory
 remains on the host; public evidence exposes only result metadata and six
 fixed public product-name observations. The frozen observer and other modes
-are preserved. Native execution evidence is recorded separately when available.
+are preserved. The first native job at `6bfa739c` passed preparation but
+stopped before any native call because there was no single Editor session.
+Subsequent OS receipts independently confirmed zero Editors at 09:37:36 UTC.
+Protected source CI passed through compatible proof reuse; no new native build
+or material acceptance is implied. The linked source report retains the exact
+first-attempt receipt and the missing-session continuation state.
 
 The five existing surface classes, accepted Grass2 and geographic masks remain
 unchanged. New neutral-grey sources must not inherit the old global hue grading.

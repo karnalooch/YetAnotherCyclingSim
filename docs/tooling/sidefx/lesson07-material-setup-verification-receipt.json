@@ -3762,7 +3762,7 @@
     "whole_material_visual_accepted": false,
     "performance_pass": false,
     "read_only_vault_inspection": {
-      "status": "PREPARED_NOT_EXECUTED",
+      "status": "FIRST_ATTEMPT_BLOCKED_BEFORE_NATIVE_NO_SINGLE_EDITOR",
       "filters": [
         "limestone",
         "cliff",
@@ -3772,7 +3772,20 @@
       "action": "list",
       "schema_sha256": "13ca66118e6fa53a0c8e1651374d001f756f7f0633d374bc5367336f06519ebf",
       "raw_inventory_publicly_published": false,
-      "ownership_or_license_inferred_from_text_match": false
+      "ownership_or_license_inferred_from_text_match": false,
+      "source_commit": "6bfa739c03eb55d9bcd3c4374d3fedc62a246c79",
+      "run_id": 39577528208,
+      "job_id": 119146799296,
+      "observed_utc": "2026-10-21T09:33:16.8578333Z",
+      "reason": "VAULT_INSPECTION_REQUIRES_EXISTING_EDITOR",
+      "process_count_from_this_error": "NOT_EXACTLY_ONE_ZERO_OR_MULTIPLE",
+      "native_tool_call_attempts": 0,
+      "client_exit_code": null,
+      "editor_started_or_stopped": false,
+      "probe_receipt": "docs/assets/lesson07-ready-materials-20261021/first-vault-probe.json",
+      "probe_sha256": "cf7ff8fd4758aeafefa2b9b5e2829fc09f820f21411867e5fd062bcc15865b80",
+      "artifact_id": 12334394767,
+      "artifact_zip_sha256": "0630c49e02cdeea40dea55183b6c3e73b27cc5f59f331b275ad5b3f40354484e"
     },
     "preparation_validation": {
       "client_and_observer_tests_passed": 109,
@@ -3789,6 +3802,38 @@
         "freshness": "PASS"
       },
       "frozen_observer_unchanged": true
+    },
+    "latest_host_observation": {
+      "diagnostic_run_id": 39510504128,
+      "run_attempt": 2,
+      "job_id": 119149255036,
+      "source_commit": "2609d45d881e8a9fce6a2022ac24d3268a3a22a7",
+      "observed_utc": "2026-10-21T09:37:36.2439524Z",
+      "editors": [],
+      "discovery_exists": false,
+      "diagnostic_failures": [],
+      "http_requests_made": 0,
+      "editor_commands_executed": 0,
+      "editor_started_or_stopped": false,
+      "source": "Completed job log L07_BRIDGE_DISCOVERY JSON"
+    },
+    "protected_source_ci": {
+      "run_id": 39577539895,
+      "source_commit": "6bfa739c03eb55d9bcd3c4374d3fedc62a246c79",
+      "conclusion": "SUCCESS",
+      "completed_utc": "2026-10-21T09:37:11Z",
+      "native_job_id": 119148097228,
+      "native_proof": "COMPATIBLE_PROOF_REUSED",
+      "new_build_automation_capture_handoff": "SKIPPED",
+      "visual_or_import_acceptance": false
+    },
+    "session_continuation": {
+      "status": "FRESH_CLOSED_SESSION_AND_CHECKPOINT_READ_REQUIRED",
+      "standing_owner_authorization": "Create missing session; preserve existing session if present",
+      "prior_installed_source": "602f8d0136d8f930adab1cda0c5006de8bf2d9d3",
+      "old_one_shot_task_restarted": false,
+      "prior_state_reset": false,
+      "saved_macro_005_must_be_preserved": true
     }
   }
 }
