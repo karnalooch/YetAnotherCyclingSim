@@ -11,7 +11,7 @@
 
 ---
 
-## Current owner direction: original ZIP texture delivery (2026-10-21)
+## Current owner direction: original SideFX material reproduction (2026-10-21)
 
 The owner requested a fresh download of `ProjectFiles_LandscapeWorkflow3.zip`,
 a close reinspection of Lesson07 (Vimeo 888569514), then reproduction of the
@@ -20,6 +20,15 @@ texture changes are paused before native execution. The [source reinspection](..
 retains the new verified archive, exact final surface IDs and video parameters;
 the archive default arrays are diagnostic placeholders. The five final
 PBR surfaces are acquired separately in the video.
+
+After the completed extraction below, the owner requested implementation of
+the author's solution 1:1. Native material reproduction is active again.
+Preparation first retains the installed `edit_level` description/schema in
+the existing authenticated discovery report, with zero native calls. A copy of
+the original MI will preserve its layered parameter identity while geographic
+inputs and the current visibility support remain YACS-specific. Native
+candidate creation, source-colour repair, application and visual proof are
+not yet established by this metadata-only preparation.
 
 The owner then explicitly narrowed the immediate task to getting the textures
 from that ZIP. **The requested file delivery is complete:**

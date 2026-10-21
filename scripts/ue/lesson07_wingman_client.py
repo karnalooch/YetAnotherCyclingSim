@@ -70,6 +70,7 @@ CONTRACT_TOOLS = {
     "edit_texture",
     "edit_material_instance",
     "edit_asset",
+    "edit_level",
     "edit_material",
     "edit_material_function",
     "edit_data_asset",

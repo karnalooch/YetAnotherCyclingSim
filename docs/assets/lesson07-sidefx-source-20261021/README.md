@@ -7,11 +7,20 @@ review of Lesson07, followed by reproduction of that material workflow. This
 supersedes the unexecuted custom normal candidate and further substitute-rock
 experiments. Issue #365 / M3 continues in the existing Draft PR #474.
 
-The owner's later clarification narrowed the immediate request to extracting
+The owner's preceding clarification narrowed the immediate request to extracting
 the textures from that supplied ZIP. **This extraction and file delivery is
 complete.** External Fab/Quixel acquisition, purchase and substitute searches
 are no longer the active task; no existing local export is requested from the
 owner. This delivery made no Unreal import or material change.
+
+The subsequent owner request is to implement the author's solution 1:1.
+Native reproduction is now active again. The next bounded step retains the
+installed `edit_level` contract during the existing authenticated discovery;
+this adds no native call or binding mutation. An original-MI copy is being
+prepared so layer associations are preserved instead of guessed through
+name-only setters. The current Sa Calobra geography, visibility and registered
+texture coordinates remain required inputs. The source global-colour coverage
+defect and missing final video surface sets remain explicit dependencies.
 
 The archive and video establish an important dependency: **the downloaded
 project contains the material system and diagnostic arrays, not the five
@@ -298,8 +307,9 @@ Automation PASS is claimed.
 
 The requested original-ZIP extraction and delivery are complete. The 57 files
 have not been imported by this delivery, and the five final video PBR families
-have not been added. No external acquisition or substitute search is active
-under this narrowed request.
+have not been added. No external acquisition or substitute search is active.
+The later reproduction request resumes material work using the original source
+system; its native candidate and application are not yet verified.
 
 Actual application, corrected global-colour generation, matching PBR sources,
 whole-area native evidence and final visual acceptance remain separate work.
