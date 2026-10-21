@@ -98,7 +98,8 @@ On successful completion, the import receipt and all five exact JPEG files are r
 an Editor or change configuration.
 
 Offline preparation passed six focused tests and independent full-image
-roundtrip/hash review. The importer passed ten CPU tests. Transport, Windows
+roundtrip/hash review. The initial importer passed ten CPU tests; the corrected
+executor-compatible importer passed thirteen, independently reproduced. Transport, Windows
 staging and marker admission have separate focused validation; none of those
 results represents native import or whole-area acceptance.
 
@@ -152,7 +153,37 @@ The launcher, original failed-session path and installer execution body remain
 unchanged. The same-source one-shot restriction, a new release/state, retained
 old evidence and checks immediately before handoff remain enforced. Production
 validator tests passed 146 cases, independently reproduced; no native action
-was performed by those tests. The actual fresh start is still pending.
+was performed by those tests. The exact source `007c5c0737bc36e0dc482b66f4b326e363104621`
+then passed protected [CI 39630660478](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39630660478).
+[Fresh startup 39630648547](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39630648547)
+started canonical owner Editor PID 34848 at `16:07:32.1531735 UTC`; the same
+process, native start time and loopback listener were verified at `16:10:20`
+and `16:10:40 UTC`. The first authenticated discovery again returned
+`REQUEST_TIMEOUT` with zero native tool calls. The Editor was retained and
+no asset save was requested; a verified OS listener is not current-world proof.
+The [exact restart evidence](restart-39630648547-evidence.json) preserves all
+five reports, their byte hashes and the downloaded artifact identity.
+
+The single resumed [import attempt 2](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39627916711/attempts/2)
+authenticated successfully and captured the actual `L_SaCalobra_Lesson07`
+viewport with PIE off and the camera restored. The subsequent explicit import
+call failed during source compilation: `from __future__ imports must occur at
+the beginning of the file (<string>, line 17)`. This is a Python compatibility
+error, not a policy denial or a reason to retry the frozen observer. The same
+owner process/listener was verified afterwards. The tool's generic completion
+field remains null, and no `live-import.json` or AFTER image exists; no saved
+asset success is inferred. [Exact evidence](import-39627916711-attempt2-evidence.json)
+includes the original BEFORE JPEG and both unmodified sanitized receipts.
+
+The source uses no type annotations, so removing its unnecessary future import
+allows a preceding tool prologue without changing runtime import semantics.
+A focused compile regression reproduces the reported failure mode. Separately,
+[Epic's UE 5.8 import-task contract](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Editor/UnrealEd/UAssetImportTask)
+states that Interchange ignores `DestinationName`; fixed byte-identical input
+copies named for the five required assets avoid that naming ambiguity while
+preserving the original manifest and strict destination checks. A reviewed
+corrected source uses a new run and all original checkpoint guards; no automatic
+retry, gate bypass or Editor restart is introduced.
 
 **Lesson07 remains open.** Final M3 owner visual audit and performance remain at
 their existing project stages; `performance_pass: false`,

@@ -8,8 +8,6 @@ No level, material instance, material graph, terrain or classification is saved.
 API: Epic UE 5.8 UAssetImportTask; Texture2DArray.source_textures;
 EditorAssetLibrary.save_loaded_asset. Native pattern: apply_lesson07_grass2.py.
 """
-from __future__ import annotations
-
 import hashlib
 import json
 import re
@@ -119,6 +117,38 @@ def validate_package(directory, expected_sha256):
                 or header[24] != 8 or header[25] not in (2, 6) or header[26:29] != b"\0\0\0"):
             raise ValueError("Surface image must be noninterlaced RGB/RGBA 2K 8-bit PNG")
     return manifest
+
+
+def stage_import_inputs(package, manifest):
+    """Keep source bytes; give legacy and Interchange the same fixed asset names."""
+    package = Path(package)
+    if package.name != "package" or set(manifest.get("maps", {})) != set(MAPS):
+        raise ValueError("Exactly the five staged package inputs are required")
+    plain_path(package, package.parent)
+    directory = package.parent / "import-inputs"
+    if directory.exists() or directory.is_symlink():
+        raise RuntimeError("Import input staging already exists; inspect the prior attempt")
+    sources = {}
+    for name, (_, _, filename) in MAPS.items():
+        record = manifest["maps"][name]
+        source = plain_path(package / filename, package)
+        if record.get("file") != filename or (source.stat().st_size, sha(source)) != (
+                record.get("size_bytes"), record.get("sha256")):
+            raise ValueError("Import source hash, size or filename changed")
+        sources[name] = source
+    directory.mkdir(exist_ok=False)
+    plain_path(directory, package.parent)
+    result = {}
+    for name, source in sources.items():
+        target = directory / ("T_" + name + ".png")
+        with source.open("rb") as incoming, target.open("xb") as outgoing:
+            shutil.copyfileobj(incoming, outgoing)
+        record = manifest["maps"][name]
+        expected = (record["size_bytes"], record["sha256"])
+        if any((path.stat().st_size, sha(path)) != expected for path in (source, target)):
+            raise RuntimeError("Import input copy differs from its pinned source")
+        result[name] = target
+    return result
 
 
 def landscape_snapshot(unreal):
@@ -262,9 +292,11 @@ def main():
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     imported, touched = {}, []
     try:
-        for name, (_, channel, filename) in MAPS.items():
+        import_inputs = stage_import_inputs(package, manifest)
+        report["import_inputs"] = {name: path.name for name, path in import_inputs.items()}
+        for name, (_, channel, _) in MAPS.items():
             task = unreal.AssetImportTask()
-            task.filename, task.destination_path = str(package / filename), DESTINATION
+            task.filename, task.destination_path = str(import_inputs[name]), DESTINATION
             task.destination_name = "T_" + name
             task.automated, task.replace_existing, task.save = True, False, False
             task.set_editor_property("async_", False)

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "status": "EDITOR_STARTED_LISTENER_VERIFIED_AUTHENTICATED_DISCOVERY_TIMEOUT",
+  "source_commit": "007c5c0737bc36e0dc482b66f4b326e363104621",
+  "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39630648547",
+  "run_attempt": 1,
+  "job_id": 119331395678,
+  "protected_ci": {
+    "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39630660478",
+    "conclusion": "success",
+    "exact_source": true
+  },
+  "artifact": {
+    "id": 12360326127,
+    "bytes": 6510,
+    "sha256": "dc0014f242eb2c5202a868e43219ea617b8f9abc950cea588a593674cd6cbe16"
+  },
+  "reports": [
+    {
+      "path": "restart-39630648547-install.json",
+      "artifact_entry": "install.json",
+      "bytes": 8372,
+      "sha256": "2c6ef0a6d97deee959c94e3d1c54f13a07e228661bab48480eaa41bf95827dcd"
+    },
+    {
+      "path": "restart-39630648547-identity.json",
+      "artifact_entry": "identity.json",
+      "bytes": 616,
+      "sha256": "2c9d734f4855a022df8123eca9793777b9e26a1c4e8b264a931562ed861ec60a"
+    },
+    {
+      "path": "restart-39630648547-bridge.json",
+      "artifact_entry": "bridge.json",
+      "bytes": 190,
+      "sha256": "589477bfd2cb74d8f51b76bab3934d71149bee700f3105c8dc2f17784c26177a"
+    },
+    {
+      "path": "restart-39630648547-probe.json",
+      "artifact_entry": "probe.json",
+      "bytes": 3030,
+      "sha256": "a1e9b574079d6c9485d24d27ec5380cc3b523d9f97cc7d87eb570656f83c88d2"
+    },
+    {
+      "path": "restart-39630648547-session.json",
+      "artifact_entry": "session.json",
+      "bytes": 6738,
+      "sha256": "0e730120bf8fb12990e3107265d551ec81aabe1225c19289742ba63d205f7758"
+    }
+  ],
+  "editor": {
+    "schema_version": 1,
+    "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+    "observed_utc": "2026-10-21T16:10:20.1208856Z",
+    "source_commit": "007c5c0737bc36e0dc482b66f4b326e363104621",
+    "pid": 34848,
+    "process_created_utc": "2026-10-21T16:07:32.1531730Z",
+    "process_start_filetime_utc": "134370724521531735",
+    "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+    "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+    "canonical_project_argument_matches": true,
+    "listener": {
+      "address": "127.0.0.1",
+      "port": 19315,
+      "pid": 34848
+    }
+  },
+  "last_stable_identity_utc": "2026-10-21T16:10:40.8524293Z",
+  "native_world_verified": false,
+  "native_tool_calls": 0,
+  "asset_save_requested": false,
+  "editor_stop_requested": false,
+  "interpretation": "The authorized new session started and its canonical process and listener were stable across the first connection probe. Authenticated discovery timed out; no native tool was called. This does not establish current-world, import, shader or visual success. The next existing-editor operation must freshly verify owner/process/listener and authenticate.",
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3"
+}

@@ -5,7 +5,7 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (two complete CC0 rock sets acquired and fixed five-map package prepared; native import pending; saved Macro 0.05 and normal-flatten workaround retained; physical texel scale, detailed-normal correctness and whole-area proof remain unverified; source CI passed; first import stopped before any native call when the owner accidentally closed the Editor; fresh session required)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (two complete CC0 rock sets acquired and fixed five-map package prepared; native import pending; saved Macro 0.05 and normal-flatten workaround retained; physical texel scale, detailed-normal correctness and whole-area proof remain unverified; source CI passed; the owner-closed Editor was reopened and a native BEFORE image confirms the correct world; the submitted importer failed source compilation, and a corrected new-source operation remains pending)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
@@ -60,6 +60,26 @@ unchanged bytes for all six saved map/material/array checkpoints, including
 Macro 0.05. Its [exact evidence](../../assets/lesson07-surface-repair-20261021/closed-session-evidence.json)
 is retained for the specifically pinned fresh-session startup; the diagnostic
 itself does not authorize or perform a start.
+
+The specifically pinned fresh start at `007c5c0737bc36e0dc482b66f4b326e363104621`
+passed protected [CI 39630660478](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39630660478).
+[Startup 39630648547](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39630648547)
+started canonical owner Editor PID 34848 at `16:07:32.1531735 UTC` and verified
+the same native process/listener through `16:10:40 UTC`. Its first authenticated
+discovery timed out with zero native calls; no import or material save occurred.
+The [restart evidence](../../assets/lesson07-surface-repair-20261021/restart-39630648547-evidence.json)
+retains the exact reports. A subsequent import still requires fresh owner,
+process and listener checks and successful native authentication.
+
+The resumed [import attempt 2](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39627916711/attempts/2)
+then authenticated and returned a real BEFORE screenshot of the correct
+Lesson07 world with its camera restored. The import source failed compilation
+on its unnecessary `from __future__ import annotations` after the executor's
+prologue. The [exact failure evidence](../../assets/lesson07-surface-repair-20261021/import-39627916711-attempt2-evidence.json)
+retains the JPEG and raw sanitized receipts; there is no import save receipt
+or AFTER image. This is not a policy denial. The owner Editor remained verified.
+The compatibility correction and fixed input-name adaptation are reviewed as a
+new source, with unchanged asset scope, package pins and normal safety gate.
 
 ## Earlier ready-made limestone selection (2026-10-21)
 

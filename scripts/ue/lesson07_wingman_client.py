@@ -162,7 +162,7 @@ APPLY_REVIEWED_TRIAL_SOURCE = "71914188cbdaeac200074b8a070e2f44ed50e501"
 # This is a new bounded material import, not a replay of the frozen observer.
 # The vendor execute_python safety gate remains active and sees the clear file path.
 SURFACE_IMPORT_FILE = "apply_lesson07_surface_repair.py"
-SURFACE_IMPORT_SHA256 = "7ee7e8d598918231df0a171059c496bed3099daea0aeb2dde6761060ed04af21"
+SURFACE_IMPORT_SHA256 = "6c824070afe0ecc178dfa96d5f5fdef44d8b83168250a3917bc7c4c6da85d78e"
 SURFACE_ROOT = Path("D:/yacs/project/Saved/RuntimeProof/Lesson07SurfaceRepair-20261021")
 SURFACE_TAG = "YACS_L07_SURFACE_IMPORT="
 SURFACE_TIMEOUT_SECONDS = 180.0

@@ -11,6 +11,57 @@ from PIL import Image
 from scripts.ue import apply_lesson07_surface_repair as repair
 
 
+class FileTransportTests(unittest.TestCase):
+    def test_importer_compiles_after_file_mode_transport_prologue(self):
+        # The installed tool prepends ordinary statements before the file text.
+        # Compile only: no UE import, filesystem staging or main() execution.
+        source = Path(repair.__file__).read_text(encoding="utf-8")
+        compile("import sys\n__file__ = 'tool-file.py'\n" + source, "<file-mode-prologue>", "exec")
+
+
+class ImportInputStagingTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.package = Path(self.temp.name) / "package"
+        self.package.mkdir()
+        self.manifest = {"maps": {}}
+        for name, (_, _, filename) in repair.MAPS.items():
+            path = self.package / filename
+            path.write_bytes(("CPU input-copy fixture: " + name).encode())
+            self.manifest["maps"][name] = {"file": filename, "size_bytes": path.stat().st_size,
+                                           "sha256": repair.sha(path)}
+
+    def test_five_fixed_aliases_preserve_bytes_and_refuse_overwrite(self):
+        original_manifest = json.dumps(self.manifest, sort_keys=True)
+        originals = {path.name: path.read_bytes() for path in self.package.iterdir()}
+        inputs = repair.stage_import_inputs(self.package, self.manifest)
+        self.assertEqual({path.name for path in inputs.values()}, {
+            "T_Grass_Normal.png", "T_Grass_Masks.png", "T_Cliffs_Colour.png",
+            "T_Cliffs_Normal.png", "T_Cliffs_Masks.png"})
+        self.assertEqual({path.name for path in (self.package.parent / "import-inputs").iterdir()},
+                         {path.name for path in inputs.values()})
+        for name, path in inputs.items():
+            self.assertEqual(path.read_bytes(), originals[self.manifest["maps"][name]["file"]])
+        self.assertEqual(json.dumps(self.manifest, sort_keys=True), original_manifest)
+        self.assertEqual({path.name: path.read_bytes() for path in self.package.iterdir()}, originals)
+        before = {name: path.read_bytes() for name, path in inputs.items()}
+        with self.assertRaisesRegex(RuntimeError, "already exists"):
+            repair.stage_import_inputs(self.package, self.manifest)
+        self.assertEqual({name: path.read_bytes() for name, path in inputs.items()}, before)
+
+    def test_expansion_and_changed_source_fail_before_alias_writes(self):
+        self.manifest["maps"]["Grass_Colour"] = self.manifest["maps"]["Cliffs_Colour"]
+        with self.assertRaisesRegex(ValueError, "five"):
+            repair.stage_import_inputs(self.package, self.manifest)
+        del self.manifest["maps"]["Grass_Colour"]
+        source = self.package / repair.MAPS["Cliffs_Colour"][2]
+        source.write_bytes(source.read_bytes() + b"changed")
+        with self.assertRaisesRegex(ValueError, "hash, size or filename"):
+            repair.stage_import_inputs(self.package, self.manifest)
+        self.assertFalse((self.package.parent / "import-inputs").exists())
+
+
 class PackageAdmissionTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

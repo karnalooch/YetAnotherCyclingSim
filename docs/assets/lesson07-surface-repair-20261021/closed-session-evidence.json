@@ -65,6 +65,8 @@
     "production_validator_cases_passed": 146,
     "independent_review": "ACCEPT",
     "native_host_actions": false,
-    "native_start_result": "PENDING"
+    "native_start_result": "EDITOR_STARTED_LISTENER_VERIFIED_AUTHENTICATED_DISCOVERY_TIMEOUT",
+    "source_commit": "007c5c0737bc36e0dc482b66f4b326e363104621",
+    "native_evidence": "restart-39630648547-evidence.json"
   }
 }
