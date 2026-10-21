@@ -150,6 +150,11 @@ gate but stopped in Windows checkout validation before the native probe.
 checkout. The next attempt restores the previously successful full code-only
 checkout, preserving `lfs: false`, skipped LFS smudge and the unchanged LFS
 validator. No native tool was invoked by the failed inspection job.
+The first correction at `867c679129a4b39fbe51a766e5fba6ed075665d8`
+mistakenly removed sparse checkout from the CPU job instead of the Windows job.
+Its CPU gate stopped on a dirty checkout before native admission. The corrected
+workflow restores the original CPU checkout and removes sparse checkout only
+from Windows, matching the successful capture checkout configuration.
 
 The owner requested remote execution of the channel diagnosis and explicitly
 allowed creating the missing connection infrastructure. This supersedes the
