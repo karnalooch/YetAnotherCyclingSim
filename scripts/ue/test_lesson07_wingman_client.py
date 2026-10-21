@@ -2157,20 +2157,30 @@ class InspectionTests(unittest.TestCase):
             [call["name"] for call in calls],
             [
                 "explore",
-                "edit_material",
                 "edit_material_instance",
                 "edit_texture",
+                "edit_material",
                 "edit_asset",
                 "code_search",
             ],
         )
         paths = [record["path"] + "/" + record["name"] for record in registry_records()]
-        self.assertEqual(calls[2]["arguments"], {"name": paths[1]})
-        self.assertEqual(calls[3]["arguments"], {"names": paths[2:]})
+        self.assertEqual(calls[1]["arguments"], {"name": paths[1]})
+        self.assertEqual(calls[2]["arguments"], {"names": paths[2:]})
+        self.assertEqual(
+            calls[3]["arguments"],
+            {
+                "name": paths[0],
+                "save": False,
+                "section": "properties",
+                "limit": 1000,
+                "offset": 0,
+            },
+        )
         self.assertEqual(
             calls[4]["arguments"], {"save_assets": {"paths": paths, "dry_run": True}}
         )
-        self.assertIs(calls[1]["arguments"]["save"], False)
+        self.assertIs(calls[3]["arguments"]["save"], False)
         self.assertEqual(report["status"], "INSPECTION_RESPONSES_RECEIVED")
         self.assertEqual(report["native_tool_calls"], 6)
         for key in (
@@ -2389,7 +2399,7 @@ class InspectionTests(unittest.TestCase):
                 report["error_code"],
                 "REQUEST_TIMEOUT" if timeout else "INSPECTION_TOOL_ERROR",
             )
-            count = 3 if timeout else 4
+            count = 2 if timeout else 3
             self.assertEqual(report["native_tool_calls"], count)
             self.assertIsNone(report["native_tool_completed"])
             self.assertFalse(report["native_tool_response_received"])

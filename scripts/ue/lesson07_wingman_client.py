@@ -137,12 +137,18 @@ def inspection_plan():
                 "recursive": True,
             },
         },
-        {
-            "name": "edit_material",
-            "arguments": {"name": paths[0], "save": False, "limit": 1000, "offset": 0},
-        },
         {"name": "edit_material_instance", "arguments": {"name": paths[1]}},
         {"name": "edit_texture", "arguments": {"names": paths[2:]}},
+        {
+            "name": "edit_material",
+            "arguments": {
+                "name": paths[0],
+                "save": False,
+                "section": "properties",
+                "limit": 1000,
+                "offset": 0,
+            },
+        },
         {
             "name": "edit_asset",
             "arguments": {"save_assets": {"paths": paths, "dry_run": True}},

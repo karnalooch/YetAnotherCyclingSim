@@ -131,8 +131,9 @@ viewport world by name; it does not establish full world/geometry identity,
 graph correctness or whole-material acceptance.
 
 The next `[l07-inspect-editor]` operation uses six fixed, sequential dedicated
-read calls: registry exploration; master graph with `save=false`; instance
-parameters; nine texture targets including global colour and IDMap; an
+read calls: registry exploration; instance parameters; nine texture targets
+including global colour and IDMap; master expression properties with
+`section=properties`, `save=false` and bounded line pagination; an
 eleven-target save **dry run**; and a bounded
 installed-engine `Texture2DArray.cpp` search. Exact registry paths/classes must
 be present before proceeding, particularly because the instance tool can create
@@ -166,6 +167,29 @@ The parser correction uses this exact response as a regression fixture, verifies
 typed metadata and exact same-row identities, and retains the original six-call
 plan. [Exact registry evidence](../../assets/lesson07-inspection-20261021)
 also confirms unchanged owner PID/start time; no native asset change occurred.
+
+At `cd2d1b35a233972c11a48b0d3d28c91b84722b64`, [run 39529650683](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39529650683)
+passed registry verification and received the actual master graph. The complete
+graph exceeded the client's unchanged 64 KiB response budget: only its explicit
+60,752-character prefix was retained, with `text_truncated=true` and
+`INSPECTION_RESULT_SIZE`. The batch stopped after two calls, before instance or
+texture settings. The retained edges and partial non-default properties show
+IDMap samples 12 and 29–32 using explicit mip level 0; they do not establish
+the current texture's mip-generation setting or explain the visible grid.
+Master parameter defaults must not be reported as live instance values.
+The next fixed six-call batch reads the instance and textures before requesting
+only the master properties section, retaining the same schemas, size budgets,
+fail-closed behavior and no-Python restriction. The observed vendor contract
+supports this section selector; no arbitrary-code fallback is added.
+
+The [partial master evidence](../../assets/lesson07-inspection-20261021/master-bridge.json)
+and corresponding process receipts preserve the actual incomplete result.
+At 01:53:28 UTC the same PID 17896/start time remained verified; no asset was
+changed. Newly retained dedicated contracts do not close source-import capability:
+`edit_data_asset` is documented for DataAsset/PrimaryDataAsset, `download_asset`
+requires subsequent Python import, and `vault_asset` installs existing content
+packs rather than rebuilding these texture arrays. Their existence is not
+permission to reinterpret their target types or bypass the Python denial.
 
 The owner requested remote execution of the channel diagnosis and explicitly
 allowed creating the missing connection infrastructure. This supersedes the

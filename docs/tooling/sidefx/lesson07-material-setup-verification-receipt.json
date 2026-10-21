@@ -1524,7 +1524,7 @@
     },
     "delivery_authorization": "Owner requested publishing the same local repair on the existing branch, without regenerating terrain; exact commit and remote delivery are verified separately."
   },
-  "updated_at_utc": "2026-10-21T00:08:00Z",
+  "updated_at_utc": "2026-10-21T02:00:43Z",
   "grass2_replacement_20261020": {
     "status": "APPLIED_SAVED_NATIVE_READBACK_PASS_RENDER_PENDING",
     "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
@@ -1653,7 +1653,7 @@
     "performance_pass": false
   },
   "remote_connection_continuation_20261021": {
-    "status": "EDITOR_RETAINED_REGISTRY_READ_VERIFIED_MATERIAL_PARAMETERS_PENDING",
+    "status": "EDITOR_RETAINED_REGISTRY_VERIFIED_PARTIAL_MASTER_READ_PARAMETERS_PENDING",
     "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
     "owner_authorized_missing_connection_infrastructure": true,
     "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
@@ -2503,21 +2503,21 @@
       }
     },
     "dedicated_material_inspection_preparation": {
-      "status": "ACTUAL_REGISTRY_PARSER_CORRECTED_NEXT_NATIVE_READ_PENDING",
+      "status": "BOUNDED_PROPERTIES_SECTION_PREPARED_NEXT_NATIVE_READ_PENDING",
       "intent": "[l07-inspect-editor]",
       "maximum_native_calls": 6,
       "automatic_retry": false,
       "python_fallback": false,
       "operations": [
         "explore fixed Lesson07 root",
-        "edit_material read mode, save=false",
         "edit_material_instance name-only after exact registry existence proof",
         "edit_texture nine fixed targets including global colour and IDMap, read mode",
+        "edit_material read section=properties, save=false, limit=1000, offset=0",
         "edit_asset save_assets dry_run=true on eleven fixed targets",
         "code_search bounded installed Texture2DArray.cpp function search"
       ],
       "registry_prerequisite": "Exactly one observed #json-explore payload with typed complete metadata and exact directory/name/class/class_path from the same row for all eleven expected packages; header counts must agree. Unknown, duplicated or incomplete evidence stops the batch.",
-      "native_material_readback": "NOT_RUN",
+      "native_material_readback": "REGISTRY_VERIFIED_PARTIAL_MASTER_READ_INSTANCE_AND_TEXTURES_NOT_RUN",
       "visual_accepted": false,
       "performance_pass": false,
       "limit": "Current contracts do not establish local image import, Texture2DArray source-list reassembly, or every TextureCoordinate/nested-function property. Missing readback remains unknown.",
@@ -2530,8 +2530,8 @@
         "native_calls_during_validation": 0,
         "review_scope": "Dedicated read-only client, workflow intent exclusivity, owner preservation and receipt validation; not native material acceptance",
         "files_sha256": {
-          "scripts/ue/lesson07_wingman_client.py": "964d77805a4d6ca2f6dae0129fb06375adcd3eb1581c300d973d1f5cfc71d007",
-          "scripts/ue/test_lesson07_wingman_client.py": "dc3c167a6319576fd1d0ab3f34c84b9d5245603760b41707793077a0961792af",
+          "scripts/ue/lesson07_wingman_client.py": "0a684a71d038abd18bf9123c8a6cf6246859e5f2c1d4863ce5006e63181c5dbe",
+          "scripts/ue/test_lesson07_wingman_client.py": "29c2d857b6875ec6f0aca76c096222bea9fad14c48e03e23382e8c8ed929cfca",
           "scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1": "d3b9b34fd9b7c670004780508450d58e5fe150cc6bade6bee593c024814427ff",
           ".github/workflows/yacs-lesson07-remote-editor.yml": "59511aac8167341b15d106c1149694c738fd44756c403d30034f9732b7c4292a"
         },
@@ -2550,7 +2550,11 @@
         "current_ruff_status": "UNAVAILABLE_NOT_INSTALLED; compile/AST and focused client tests passed",
         "actual_native_fixture_byte_identity_verified": true,
         "actual_native_fixture_parser_passed": true,
-        "fixture_sha256": "a595806f3bb85800b99b9ed9a61cd8582a802a9679fc490f13fe523388acd8b1"
+        "fixture_sha256": "a595806f3bb85800b99b9ed9a61cd8582a802a9679fc490f13fe523388acd8b1",
+        "current_properties_section_tests_passed": 57,
+        "current_client_ast_changed_definitions": [
+          "inspection_plan"
+        ]
       },
       "first_attempt": {
         "source_commit": "72919f499181a919b1708df7480be8bf99e4bf01",
@@ -2613,12 +2617,46 @@
         "performance_pass": false,
         "exact_response_fixture": "scripts/ue/fixtures/lesson07_explore_assets_native_20261021.txt"
       },
-      "additional_discovery_contracts_retained_next": [
+      "additional_native_calls_for_contract_discovery": 0,
+      "native_partial_master_attempt": {
+        "source_commit": "cd2d1b35a233972c11a48b0d3d28c91b84722b64",
+        "run_id": 39529650683,
+        "cpu_job_id": 118992360674,
+        "cpu_conclusion": "success",
+        "windows_job_id": 118992419791,
+        "windows_conclusion": "failure",
+        "artifact_id": 12315086799,
+        "artifact_zip_sha256": "633aa949f56d4138e5869c08b7823172b30d643f5cbe4f5e74a04c9cce29b6af",
+        "artifact_digest_verified": true,
+        "native_tool_calls": 2,
+        "inspection_registry_verified": true,
+        "client_error": "INSPECTION_RESULT_SIZE",
+        "master_text_truncated": true,
+        "master_prefix_characters": 60752,
+        "response_limit_bytes": 65536,
+        "retained_evidence_directory": "docs/assets/lesson07-inspection-20261021",
+        "files_sha256": {
+          "master-bridge.json": "b0d743c1e390c2dfe8e5153457c1c53456743441def66000ad52e5e3f4eb8592",
+          "master-identity.json": "0bbc78400208082970e96561eed9f4d61d650c87009f882a423d850cdada30e1",
+          "master-probe.json": "2d847e12e6bb08cfcb4abefdd71077a0fb7ef1f6adb2d45f2132a3323b3d9f0e"
+        },
+        "owner_pid": 17896,
+        "owner_start_filetime_utc": "134370120000674689",
+        "identity_stable_across_probe": true,
+        "observed_utc": "2026-10-21T01:53:28.9825329Z",
+        "instance_parameter_reads_performed": false,
+        "texture_setting_reads_performed": false,
+        "actual_master_observation": "IDMap TextureSample_12 and _29 through _32 explicitly use TMVM_MipLevel with ConstMipValue=0. Master defaults are not live instance settings.",
+        "native_asset_changes": [],
+        "visual_accepted": false,
+        "performance_pass": false
+      },
+      "additional_discovery_contracts_retained": [
         "edit_data_asset",
         "download_asset",
         "vault_asset"
       ],
-      "additional_native_calls_for_contract_discovery": 0
+      "source_import_capability": "UNPROVEN: edit_data_asset targets DataAsset/PrimaryDataAsset; download_asset requires execute_python import; vault_asset installs existing packs. No permitted texture-array source reconstruction established."
     }
   },
   "whole_material_source_repair_20261021": {
