@@ -1071,6 +1071,155 @@ class ObserverTests(unittest.TestCase):
         self.assertFalse(state.response_received)
         self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), 1)
 
+    def test_cli_retains_sanitized_tool_error_and_unknown_completion_without_retry(
+        self,
+    ):
+        cause = "RuntimeError: synthetic plugin execution failure"
+        secret = "OTHER_SYNTHETIC_CREDENTIAL"
+
+        def failed(request):
+            if request["method"] == "tools/call":
+                return (
+                    200,
+                    {"Content-Type": "application/json"},
+                    client.canonical(
+                        {
+                            "jsonrpc": "2.0",
+                            "id": request["id"],
+                            "result": {
+                                "isError": True,
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": cause
+                                        + "\nhttps://example.invalid/private "
+                                        + TOKEN
+                                        + " synthetic-session-1\nBearer "
+                                        + secret,
+                                    }
+                                ],
+                            },
+                        }
+                    ),
+                )
+            return observer_reply(request)
+
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            peer(failed) as (port, requests),
+        ):
+            output = Path(directory) / "report.json"
+            stdout = io.StringIO()
+
+            def from_fixture(_path, *, observe_lesson07, observation_state):
+                return connection(port, state=observation_state).probe(
+                    observe_lesson07=observe_lesson07
+                )
+
+            with (
+                mock.patch.object(client, "probe_from_files", side_effect=from_fixture),
+                mock.patch("sys.stdout", stdout),
+            ):
+                code = client.main(
+                    [
+                        "--identity-receipt",
+                        str(Path(directory) / "identity.json"),
+                        "--output",
+                        str(output),
+                        "--observe-lesson07",
+                    ]
+                )
+            raw = output.read_text()
+            report = json.loads(raw)
+        self.assertEqual(code, 1)
+        self.assertEqual(report["status"], "OBSERVATION_FAILED")
+        self.assertEqual(report["error_code"], "OBSERVER_TOOL_ERROR")
+        self.assertEqual(report["native_tool_calls"], 1)
+        self.assertTrue(report["native_tool_attempted"])
+        self.assertTrue(report["native_tool_response_received"])
+        self.assertIsNone(report["native_tool_completed"])
+        self.assertEqual(report["native_material_readback"], "UNVERIFIED")
+        self.assertIn(cause, report["native_tool_error"]["sanitized_text"])
+        self.assertEqual(report["native_tool_error"]["retained_text_blocks"], 1)
+        self.assertFalse(report["native_tool_error"]["text_truncated"])
+        for private in (
+            TOKEN,
+            secret,
+            "synthetic-session-1",
+            "example.invalid/private",
+        ):
+            self.assertNotIn(private, raw)
+            self.assertNotIn(private, stdout.getvalue())
+        self.assertNotIn(cause, stdout.getvalue())
+        self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), 1)
+
+    def test_error_redaction_precedes_truncation_and_removes_credentials_and_controls(
+        self,
+    ):
+        secret = "SYNTHETIC_BOUNDARY_SECRET"
+        prefix = "x" * (client.OBSERVER_ERROR_TEXT_LIMIT - 5)
+        result = {
+            "isError": True,
+            "content": [{"type": "text", "text": prefix + secret}],
+        }
+        report = client.observer_error_diagnostic(result, (secret,))
+        self.assertEqual(
+            report["sanitized_text"],
+            (prefix + "[REDACTED]")[: client.OBSERVER_ERROR_TEXT_LIMIT],
+        )
+        self.assertTrue(report["text_truncated"])
+        for sensitive in (
+            "Authorization: Basic " + secret,
+            '"api_key": "' + secret + '"',
+            "password = 'first line\n" + secret + "'",
+            "client-secret=" + secret,
+            "access_token=" + secret,
+            "to\u200bken=" + secret,
+            "Bea\x00rer\t" + secret,
+            "https://user:" + secret + "@example.invalid/private",
+        ):
+            with self.subTest(sensitive=sensitive):
+                result["content"][0]["text"] = "Cause: plugin failed\n" + sensitive
+                report = client.observer_error_diagnostic(result, ())
+                self.assertIn("Cause: plugin failed", report["sanitized_text"])
+                self.assertNotIn(secret, report["sanitized_text"])
+                self.assertTrue(
+                    all(char.isprintable() for char in report["sanitized_text"])
+                )
+
+    def test_error_diagnostics_bound_blocks_and_ignore_non_error_and_nontext_values(
+        self,
+    ):
+        result = {
+            "isError": True,
+            "content": [
+                {"type": "image", "text": TOKEN},
+                {"type": "text", "text": "\ud800\x1b\x00native cause\n"},
+            ]
+            + [{"type": "text", "text": "x" * 1000}] * 6
+            + [{"type": "text", "text": TOKEN}],
+            "structuredContent": {"message": TOKEN},
+        }
+        report = client.observer_error_diagnostic(result, ())
+        self.assertEqual(
+            len(report["sanitized_text"]), client.OBSERVER_ERROR_TEXT_LIMIT
+        )
+        self.assertEqual(report["retained_text_blocks"], 7)
+        self.assertTrue(report["content_blocks_truncated"])
+        self.assertTrue(report["text_truncated"])
+        self.assertTrue(report["sanitized_text"].startswith("native cause"))
+        self.assertTrue(all(char.isprintable() for char in report["sanitized_text"]))
+        self.assertNotIn(TOKEN.encode(), client.canonical(report))
+        for flag in (False, 0, 1, "true", None):
+            self.assertIsNone(
+                client.observer_error_diagnostic({**result, "isError": flag}, ())
+            )
+        report = client.observer_error_diagnostic(
+            {"isError": True, "content": TOKEN}, ()
+        )
+        self.assertEqual(report["retained_text_blocks"], 0)
+        self.assertEqual(report["sanitized_text"], "")
+
     def test_unsupported_wrapper_reports_only_shape_and_keeps_attempt_unknown(self):
         def wrapped(request):
             if request["method"] == "tools/call":

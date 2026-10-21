@@ -16,6 +16,8 @@ on:
       - scripts/ue/test_lesson07_wingman_client.py
       - scripts/ue/lesson07_observe_editor.py
       - scripts/ue/test_lesson07_observe_editor.py
+      - scripts/assemble_surface_slices.py
+      - scripts/assets/test_assemble_surface_slices.py
 
 permissions:
   contents: read
@@ -99,7 +101,7 @@ jobs:
           fetch-depth: 1
           lfs: false
           persist-credentials: false
-          sparse-checkout: scripts/ue
+          sparse-checkout: scripts
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -132,9 +134,18 @@ jobs:
           if hashlib.sha256(observer).hexdigest() != "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5":
               raise ValueError("Reviewed observer source differs")
           print("Fixed passive observer admitted; existing native Editor still required")
+          for name in ("scripts/assemble_surface_slices.py", "scripts/assets/test_assemble_surface_slices.py"):
+              path = Path(name)
+              if path.is_symlink() or not 0 < path.stat().st_size <= 256 * 1024:
+                  raise ValueError("Surface-source adapter boundary differs")
+              if path.read_bytes() != subprocess.check_output(["git", "show", "HEAD:" + name]):
+                  raise ValueError("Surface-source adapter differs from exact commit")
           PY
+      - name: Install existing pinned image-test dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 Pillow==12.3.0
       - name: Run focused client and passive-observer CPU tests
-        run: python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor
+        run: python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.assets.test_assemble_surface_slices
 
   connect:
     name: Verify one canonical L07 Editor connection
@@ -156,6 +167,7 @@ jobs:
       L07_PROTECTED_CI_RUN_ID: ${{ needs.await_ci.outputs.ci_run_id }}
       L07_READONLY_OBSERVATION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-observe-editor]') }}
       L07_READONLY_DISCOVERY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-discover-editor]') }}
+      L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') }}
     steps:
       - name: Create isolated Git settings for code-only staging
         working-directory: ${{ github.workspace }}
@@ -185,6 +197,7 @@ jobs:
           persist-credentials: false
 
       - name: Validate code and boundaries before any task creation
+        id: validate
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
@@ -233,6 +246,25 @@ jobs:
             -ExpectedHead $env:GITHUB_SHA `
             -RunToken '${{ github.run_id }}-${{ github.run_attempt }}'
 
+      - name: Prepare only corrected Grass and Cliffs source slices offline
+        if: ${{ !cancelled() && steps.validate.outcome == 'success' && env.L07_PREPARE_SURFACE_SOURCES == 'true' }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          $output = 'D:\yacs\work\lesson07-source-repair-20261021\${{ github.run_id }}-${{ github.run_attempt }}'
+          $cursor = [IO.Path]::GetFullPath($output)
+          while ($cursor) {
+            if ((Test-Path -LiteralPath $cursor) -and
+                ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+              throw 'Redirected offline source-output path.'
+            }
+            $cursor = [IO.Path]::GetDirectoryName($cursor)
+          }
+          & $python -B -m unittest scripts.assets.test_assemble_surface_slices
+          if ($LASTEXITCODE -ne 0) { throw 'Surface-source regression tests failed.' }
+          & $python -B scripts/assemble_surface_slices.py --classes Grass Cliffs --output $output --project 'D:\yacs\project'
+          if ($LASTEXITCODE -ne 0) { throw 'Offline source assembly failed; no Unreal import requested.' }
+
       - name: Print bounded reports without config, credentials or raw UE logs
         id: reports
         if: ${{ always() }}
@@ -268,6 +300,14 @@ jobs:
               Write-Host ('L07_REMOTE_REPORT ' + $name + '=' + ($report | ConvertTo-Json -Depth 32 -Compress))
             } else { Write-Host ('L07_REMOTE_REPORT ' + $name + '=SEE_BOUNDED_JSON_ARTIFACT') }
             Copy-Item -LiteralPath $path -Destination (Join-Path $stage $name) -ErrorAction Stop
+          }
+          $assembly = 'D:\yacs\work\lesson07-source-repair-20261021\${{ github.run_id }}-${{ github.run_attempt }}\assembly-receipt.json'
+          if (Test-Path -LiteralPath $assembly -PathType Leaf) {
+            Assert-PlainReportPath $assembly
+            if ((Get-Item -LiteralPath $assembly).Length -gt 64KB) { throw 'Offline assembly receipt too large.' }
+            $assemblyReport = Get-Content -LiteralPath $assembly -Raw | ConvertFrom-Json
+            Write-Host ('L07_OFFLINE_ASSEMBLY ' + ($assemblyReport | ConvertTo-Json -Depth 16 -Compress))
+            Copy-Item -LiteralPath $assembly -Destination (Join-Path $stage 'assembly-receipt.json') -ErrorAction Stop
           }
           $session = 'D:\yacs\lesson07-remote\state\${{ github.sha }}\session.json'
           if (Test-Path -LiteralPath $session -PathType Leaf) {

@@ -67,6 +67,8 @@ OBSERVER_SCHEMA_SHA256 = (
 OBSERVER_SOURCE_LIMIT = 64 * 1024
 OBSERVER_REQUEST_LIMIT = 64 * 1024
 OBSERVER_OUTPUT_LIMIT = 1024 * 1024
+OBSERVER_ERROR_TEXT_LIMIT = 2048
+OBSERVER_ERROR_BLOCK_LIMIT = 8
 OBSERVER_TAG = "YACS_LESSON07_OBSERVATION_V1:"
 OBSERVER_STATUS = "OBSERVED_PARTIAL_DIAGNOSIS_NOT_ACCEPTANCE"
 OBSERVER_WORLD = (
@@ -399,6 +401,7 @@ class ObservationState:
     source_verified: bool = False
     schema_sha256: str | None = None
     result_shape: dict | None = None
+    tool_error: dict | None = None
 
     def report_fields(self):
         return {
@@ -414,6 +417,7 @@ class ObservationState:
             "observer_source_verified_before_call": self.source_verified,
             "observer_input_schema_sha256": self.schema_sha256,
             "native_tool_result_shape": self.result_shape,
+            "native_tool_error": self.tool_error,
         }
 
 
@@ -516,6 +520,57 @@ def observer_result_shape(result):
         summary["content_blocks"] = blocks
         summary["content_blocks_truncated"] = len(content) > 8
     return summary
+
+
+def observer_error_diagnostic(result, secrets):
+    """Retain bounded standard MCP error text, sanitized before truncation."""
+    if type(result) is not dict or result.get("isError") is not True:
+        return None
+    content = result.get("content")
+    blocks = content if type(content) is list else []
+    texts = [
+        block["text"]
+        for block in blocks[:OBSERVER_ERROR_BLOCK_LIMIT]
+        if type(block) is dict
+        and block.get("type") == "text"
+        and type(block.get("text")) is str
+    ]
+    text = "\n".join(texts)
+    for secret in secrets:
+        if secret:
+            text = text.replace(secret, "[REDACTED]")
+    text = "".join(
+        char if char.isprintable() or char in "\r\n" else " " if char.isspace() else ""
+        for char in text
+    )
+    # Conservatively discard the remainder after a credential assignment or
+    # Bearer value, including quoted/multiline values, before any output limit.
+    text = re.sub(
+        r"\b(?:authorization|proxy[-_]authorization|password|passwd|pwd|secret|"
+        r"(?:access|refresh|id|auth)[-_ ]?token|token|api[-_ ]?key|"
+        r"client[-_ ]?secret|credentials?|cookie|set[-_]cookie|"
+        r"(?:mcp[-_])?session[-_ ]?(?:id|token))\b[\"']?\s*[:=].*"
+        r"|\bbearer\s+.*",
+        "[REDACTED_CREDENTIAL]",
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    text = re.sub(
+        r"\b[a-z][a-z0-9+.-]*://[^\s<>\"']+",
+        "[REDACTED_URL]",
+        text,
+        flags=re.IGNORECASE,
+    )
+    for secret in secrets:
+        if secret:
+            text = text.replace(secret, "[REDACTED]")
+    text = re.sub(r"[\r\n]+", " | ", text)
+    return {
+        "sanitized_text": text[:OBSERVER_ERROR_TEXT_LIMIT],
+        "retained_text_blocks": len(texts),
+        "content_blocks_truncated": len(blocks) > OBSERVER_ERROR_BLOCK_LIMIT,
+        "text_truncated": len(text) > OBSERVER_ERROR_TEXT_LIMIT,
+    }
 
 
 def observer_loader():
@@ -983,6 +1038,9 @@ class DiscoveryClient:
             }
             result = self._post("tools/call", self._observer_params)
             state.result_shape = observer_result_shape(result)
+            state.tool_error = observer_error_diagnostic(
+                result, (self.discovery.token, self.session_id)
+            )
             observed = extract_observation(result, self.identity, state)
             state.completed = True
             report.update(

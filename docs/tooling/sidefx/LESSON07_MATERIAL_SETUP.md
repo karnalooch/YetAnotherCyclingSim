@@ -11,6 +11,50 @@
 
 ---
 
+## Whole-material source repair (2026-10-21, native application pending)
+
+The owner rejected the whole texture appearance, including blurred yellow-green
+mottling and broad repetition. The screenshot does not isolate a single cause.
+The original SideFX video was inspected directly in the official player: Lesson
+07 at 22:09–22:18 restores Colour-array sRGB; 23:09–23:49 distinguishes global
+colour from close tiling detail; 24:36–25:31 fills matching Normal/Masks arrays
+and checks the response while moving the light. Landscape Material / Functions
+at 10:21–11:41 explicitly pairs each colour layer with its matching normal and
+uses the same UVs. These are source-method observations, not YACS runtime proof.
+
+Two source-family and two channel defects are now proven by retained input
+hashes and import provenance:
+
+| Slice | Existing colour family | Incorrect normal family | Correct source | Roughness defect |
+| --- | --- | --- | --- | --- |
+| 0 Grass | Poly Haven `aerial_grass_rock` | `sparse_grass` via Stage3G Meadow | Matching `aerial_grass_rock_nor_dx_4k.png` | Renamed `...arm_4k.png` was converted to RGB luminance instead of extracting G |
+| 3 Cliffs | Material Maker `surface_set/scree` PaleLimestone | `boulder_01` via Stage3G Boulder | Matching `SaCalobra_PaleLimestone_Normal_DX.png` | Renamed `...ORM.png` was converted to RGB luminance instead of extracting G |
+
+The [source assembler](../../../scripts/assemble_surface_slices.py) now requires
+explicit classes and a new output directory, verifies six retained source
+hashes before writing, selects matching DirectX normals and extracts packed G.
+Six focused regressions independently passed. It preserves the existing colour
+recipe, 2048²/8-bit output, AO=255 and displacement=128. Only Grass and Cliffs
+are selected for the remote offline preparation; the accepted Grass2 replacement
+and other slices are retained. The generated Colour files are comparisons, not
+permission to replace the Colour array. Real host generation and native import
+remain separate results, reported in the receipt.
+
+This source repair is necessary but does not establish the whole visual fix.
+The current saved array has YACS grading (hue +25°, saturation 0.7, brightness
+1.1) applied to all five colour slices. Detail and Macro tiling are both 0.25,
+but their full mappings and physical periods remain unread. The Grass source
+is a [15 m scan](https://polyhaven.com/a/aerial_grass_rock); the Cliffs source is
+a retained 2 m loose-limestone-fragments recipe. Neither source suitability nor
+live texel scale is established by its filename. The normal-flatten workaround
+still suppresses normal detail; source correction does not authorize restoring
+it before the sampler/derivative contract is checked.
+
+Source evidence: [source backup](../../experiments/sa-calobra-material-repair-20261006/source-backup.json),
+[local inventory](../../experiments/sa-calobra-material-repair-20261006/local-inventory.json),
+[SideFX Landscape Workflow](https://www.sidefx.com/tutorials/project-pegasus-landscape-workflow/)
+and [Landscape Material](https://www.sidefx.com/tutorials/project-pegasus-landscape-material/).
+
 ## Remote continuation and scoped connection authority (2026-10-21)
 
 **Current connection result:** at `2026-10-20T23:37:42.3866008Z`,
@@ -34,13 +78,15 @@ actual message. Therefore the cause and current-world/material result remain
 unverified. PID 17896, its native start time, owner and listener stayed unchanged
 through the final check at 23:48:15 UTC. No automatic retry occurred.
 
-The next discovery-only delivery retrieves a bounded historical error excerpt
-from the launcher's fixed `D:\yacs\lesson07-remote\editor.log`. The reader requires
-fresh verified owner/process evidence, reads at most 4 MiB, selects only the
-failed call's timestamp window, redacts credentials and emits at most 32 KiB.
-Its 20 focused PowerShell cases passed. This recovery makes zero native calls;
-it does not assume that a Python exception or particular plugin setting caused
-the first failure.
+[Discovery-only recovery run 39518788016](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39518788016)
+at source `12a74fcc33a342e5fe3d05c5390b77a770906394` passed its CPU and Windows
+steps, retained the same owned Editor and made zero native calls. The bounded
+reader returned **`LOG_UNAVAILABLE`** at 00:04:57 UTC: the launcher's requested
+`D:\yacs\lesson07-remote\editor.log` does not exist. No error message was recovered.
+The downloaded artifact digest was verified. The next explicitly admitted
+passive read therefore retains a bounded, credential-redacted native error
+message if the tool fails again. This changes diagnostics, not the collector,
+its permission boundary or its no-automatic-retry rule.
 
 The owner requested remote execution of the channel diagnosis and explicitly
 allowed creating the missing connection infrastructure. This supersedes the

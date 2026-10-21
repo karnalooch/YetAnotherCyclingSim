@@ -1524,7 +1524,7 @@
     },
     "delivery_authorization": "Owner requested publishing the same local repair on the existing branch, without regenerating terrain; exact commit and remote delivery are verified separately."
   },
-  "updated_at_utc": "2026-10-20T16:29:19.581084+00:00",
+  "updated_at_utc": "2026-10-21T00:08:00Z",
   "grass2_replacement_20261020": {
     "status": "APPLIED_SAVED_NATIVE_READBACK_PASS_RENDER_PENDING",
     "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
@@ -1697,7 +1697,7 @@
       "editor_commands_executed": 0
     },
     "connection_workflow": ".github/workflows/yacs-lesson07-remote-editor.yml",
-    "connection_execution": "EDITOR_RETAINED_FIRST_NATIVE_OBSERVATION_FAILED_REASON_RECOVERY_PENDING",
+    "connection_execution": "EDITOR_RETAINED_FIRST_NATIVE_ERROR_UNKNOWN_LOG_UNAVAILABLE",
     "first_connection_attempt": {
       "source_commit": "3ba05803bfc3ff095eb012e3f790752b55b47d12",
       "protected_ci_run_id": 39508823330,
@@ -2243,13 +2243,197 @@
     "historical_native_error_recovery": {
       "mode": "EXISTING_EDITOR_DISCOVERY_THEN_FIXED_READ_ONLY_LOG_EXCERPT",
       "native_tool_calls": 0,
-      "execution": "PREPARED_NOT_RUN",
+      "execution": "EXECUTED_LOG_UNAVAILABLE",
       "source_path": "D:\\yacs\\lesson07-remote\\editor.log",
       "max_read_bytes": 4194304,
       "max_output_bytes": 32768,
       "powershell_cases_passed": 20,
       "reader_sha256": "1bb30d3033115b47d9e6f60ac637744121bb5bb61336fd337af7fdee13bdf594",
-      "test_sha256": "1214fba31d51ff90424a050628c995e86f1a0e4aa1a28dd5e8a9a99f7969dd79"
+      "test_sha256": "1214fba31d51ff90424a050628c995e86f1a0e4aa1a28dd5e8a9a99f7969dd79",
+      "source_commit": "12a74fcc33a342e5fe3d05c5390b77a770906394",
+      "run_id": 39518788016,
+      "cpu_job_id": 118957284963,
+      "connection_job_id": 118957347902,
+      "artifact_id": 12311120566,
+      "artifact_sha256": "bbabd2ac154c221726443783518dd47591abc698619cca195c9adfd4a6770d3d",
+      "artifact_downloaded_and_digest_verified": true,
+      "report": {
+        "schema_version": 1,
+        "source_commit": "12a74fcc33a342e5fe3d05c5390b77a770906394",
+        "observed_utc": "2026-10-21T00:04:57.2209194+00:00",
+        "status": "LOG_UNAVAILABLE",
+        "failed_observer_source": "f485b18217deba19bc881aa78d22e5f862d13e3e",
+        "failed_observer_utc": "2026-10-20T23:48:13.521280Z",
+        "source_path": "D:\\yacs\\lesson07-remote\\editor.log",
+        "process_id": 17896,
+        "process_start_filetime_utc": "134370120000674689",
+        "read_limit_bytes": 4194304,
+        "output_limit_bytes": 32768,
+        "native_tool_calls": 0,
+        "records": [],
+        "matching_lines": 0,
+        "truncated": false
+      },
+      "probe": {
+        "schema_version": 1,
+        "source_commit": "12a74fcc33a342e5fe3d05c5390b77a770906394",
+        "status": "BRIDGE_DISCOVERY_COMPLETE_NATIVE_READBACK_PENDING",
+        "observed_utc": "2026-10-21T00:04:56.6532834Z",
+        "error_type": null,
+        "identity_stable_across_probe": true,
+        "client_exit_code": 0,
+        "observation_requested": false,
+        "owner_before": {
+          "status": "ATTACH_EXISTING",
+          "owner_sid_matches": true,
+          "editor": {
+            "editor_pid": 17896,
+            "editor_start_filetime_utc": "134370120000674689",
+            "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+            "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+            "interactive_session_id": 1,
+            "canonical_project_matches": true
+          }
+        },
+        "owner_after": {
+          "status": "ATTACH_EXISTING",
+          "owner_sid_matches": true,
+          "editor": {
+            "editor_pid": 17896,
+            "editor_start_filetime_utc": "134370120000674689",
+            "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+            "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+            "interactive_session_id": 1,
+            "canonical_project_matches": true
+          }
+        },
+        "existing_editor_only_requested": true,
+        "existing_owner_required": true,
+        "identity_before": {
+          "schema_version": 1,
+          "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+          "observed_utc": "2026-10-21T00:04:53.0285373Z",
+          "source_commit": "12a74fcc33a342e5fe3d05c5390b77a770906394",
+          "pid": 17896,
+          "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+          "process_start_filetime_utc": "134370120000674689",
+          "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+          "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+          "canonical_project_argument_matches": true,
+          "listener": {
+            "address": "127.0.0.1",
+            "port": 19315,
+            "pid": 17896
+          }
+        },
+        "identity_after": {
+          "schema_version": 1,
+          "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+          "observed_utc": "2026-10-21T00:04:56.6477659Z",
+          "source_commit": "12a74fcc33a342e5fe3d05c5390b77a770906394",
+          "pid": 17896,
+          "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+          "process_start_filetime_utc": "134370120000674689",
+          "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+          "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+          "canonical_project_argument_matches": true,
+          "listener": {
+            "address": "127.0.0.1",
+            "port": 19315,
+            "pid": 17896
+          }
+        },
+        "native_tool_called": false,
+        "editor_started_or_stopped": false,
+        "native_tool_attempted": false,
+        "native_tool_completed": false,
+        "native_tool_call_attempts": 0,
+        "native_material_readback": "NOT_RUN",
+        "channel_comparison_performed": false,
+        "performance_pass": false
+      },
+      "error_message_recovered": false,
+      "file_sha256": {
+        "bridge.json": "1e6f7c1b2c71b7139bf04f5a988def3418866b72b36317a8c5f27ba6dd694834",
+        "identity.json": "148849ab3f28afa8c0ce31957320f3c8bcbcb41c7a446130634f42c52698fb33",
+        "probe.json": "fb805c0d80fdaed6304bd54865c86d1afaecebd3bbaa16b6af4752b6ad39cc3b",
+        "observer-failure-log.json": "d982affe194d18a2e243834c8bc7f8efd4af6eb6138a72162cf4bbedab684fbb"
+      },
+      "connection_job_conclusion": "success",
+      "workflow_conclusion": "success"
+    }
+  },
+  "whole_material_source_repair_20261021": {
+    "status": "SOURCE_FIX_CPU_VERIFIED_REMOTE_ASSEMBLY_AND_NATIVE_IMPORT_PENDING",
+    "owner_scope": "Whole texture appearance, not only a grid or repetition symptom",
+    "classes": [
+      "Grass",
+      "Cliffs"
+    ],
+    "slots": [
+      0,
+      3
+    ],
+    "source_hashes": {
+      "Grass": {
+        "colour": "719cffbc6f7cfec846cc2ba9610228dce5475cd2677f19f462bec6edc3e30ad9",
+        "normal": "90219e6e47a750758cd55b5456961dccec0fd4a6ceeaa198a81fa9c36198d11b",
+        "packed": "5423503ba94f8e16ced4615cfa05893ec76b3df65cf85be9c8c07201efd5be90"
+      },
+      "Cliffs": {
+        "colour": "6babc8e49248be89b464605c3c9cf427b63ac51ab42aebc05877359e902256e1",
+        "normal": "2e75301f9325efb39f37811409bebfd455d9e21bf740ca97d12ed66978290f62",
+        "packed": "919faf3cbf33250dd100b6c5e13f8036dd6e2222b29c46b7e09fb8a5c6465df1"
+      }
+    },
+    "normal_source_paths": {
+      "Grass": "worldgen/materials/scanned_refinement/source/aerial_grass_rock_nor_dx_4k.png",
+      "Cliffs": "worldgen/materials/material_maker/surface_set/scree/export/SaCalobra_PaleLimestone_Normal_DX.png"
+    },
+    "packed_roughness_channel": "G",
+    "unchanged": {
+      "colour_source_and_processing": true,
+      "target_size": [
+        2048,
+        2048
+      ],
+      "ao": 255,
+      "displacement": 128,
+      "Grass2_Sand_Scree": true,
+      "terrain": true,
+      "classification": true
+    },
+    "focused_cpu_tests_passed": 6,
+    "script_sha256": "97f46b2e5a2d4cb881da4c062acbb87684279cc201bb3ffefdb2922ae68ab37e",
+    "test_sha256": "7045e96879652f10340d666769f4fcc8f89bdaefe19812b680bf412bf3c740df",
+    "native_asset_mutation_performed": false,
+    "native_array_pixels_verified": false,
+    "visual_accepted": false,
+    "remaining_diagnosis": [
+      "Whole-array colour grade",
+      "Actual detail/macro UV mapping and physical repeat",
+      "Normal sampler/derivative contract before unflattening",
+      "Global-colour contribution",
+      "Same-camera current before/after captures"
+    ],
+    "sidefx_direct_video_review": {
+      "lesson07": "22:09-22:18;23:09-23:49;24:36-25:31",
+      "functions": "10:21-11:41",
+      "method": "Official embedded player frames and English transcript"
+    },
+    "native_attempt_policy": "One explicitly admitted passive read with bounded sanitized error retention; no automatic retry",
+    "performance_pass": false,
+    "producer_versions_recorded": true,
+    "native_error_retention": {
+      "status": "CPU_VERIFIED_NATIVE_ATTEMPT_PENDING",
+      "error_text_limit_characters": 2048,
+      "text_block_limit": 8,
+      "credential_redaction_before_truncation": true,
+      "automatic_retry": false,
+      "client_tests_passed": 40,
+      "observer_tests_passed": 20,
+      "client_sha256": "41269a5fc02527c7fafddafb506705d3eef4f4d2d0bcda1598a18b1bd68a7858",
+      "client_test_sha256": "9fa9c002067dbfdf542259e8143e894f698b85967bf310a982a5bd34dc977a34"
     }
   }
 }
