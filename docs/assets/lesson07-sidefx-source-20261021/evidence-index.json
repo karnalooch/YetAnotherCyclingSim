@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "status": "STANDARD_MEGASCANS_FOLDER_EMPTY_EXACT_ID_SEARCH_PENDING",
-  "owner_direction": "Reinspect supplied original SideFX archive and Lesson07, then reproduce original workflow",
+  "status": "ORIGINAL_ZIP_TEXTURES_DELIVERED_NATIVE_APPLICATION_UNCHANGED",
+  "owner_direction": "Extract and deliver the original texture files from the supplied SideFX ZIP; external acquisition and substitute searches are paused.",
   "source_archive_sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
   "reports": [
     {
@@ -78,6 +78,46 @@
       "file": "source-inventory-39654531355-2-evidence.json",
       "bytes": 12119,
       "sha256": "9558778efbc0691a8f331c4e660bd6c7a0d2916ec788adf2f8fc36e7209b2620"
+    },
+    {
+      "file": "source-inventory-39658443621-1-bridge.json",
+      "bytes": 120838,
+      "sha256": "0be8a7f45e33972f4e68bf9038d5318d105b161dcb27eec22ddde9103149b2c0"
+    },
+    {
+      "file": "source-inventory-39658443621-1-probe.json",
+      "bytes": 3939,
+      "sha256": "763426432e23c626c5135ac69526f00bcf4cdf8020b61199b45f21c279c52be1"
+    },
+    {
+      "file": "source-inventory-39658443621-1-identity.json",
+      "bytes": 616,
+      "sha256": "27b94242abbb7e9d2c344fcb211d6d67013d2257332a39bd73afd35aec1ed892"
+    },
+    {
+      "file": "source-inventory-39658443621-1-download-receipt.json",
+      "bytes": 647,
+      "sha256": "31a930f95154c79e30d4ad50b0611b9d3e43a4a60ab414594be2334ae8143efc"
+    },
+    {
+      "file": "source-inventory-39658443621-1-evidence.json",
+      "bytes": 14490,
+      "sha256": "bc0c2899aea40224e5d428e6a185054067c1eeed685735a43f0007c6f6162283"
+    },
+    {
+      "file": "original-textures-extraction-manifest.json",
+      "bytes": 108362,
+      "sha256": "c61c581c6cc9e79b0e6749d95ddfd2aff43ac8ab7cef1d1eed745ba4ca4360ef"
+    },
+    {
+      "file": "source-six-image-inspection.json",
+      "bytes": 10944,
+      "sha256": "a5bb844a664c884fa424fbde48bb87aedb71d4e4654c4ebdc6456494ffbbc1b1"
+    },
+    {
+      "file": "current-landscape-archive-comparison.json",
+      "bytes": 39605,
+      "sha256": "83a87ec85cfa52fe9342553c32b266f208f39fd5df5cbd5e58882947b6c78a3c"
     }
   ],
   "custom_normal_candidate_executed": false,
@@ -86,6 +126,80 @@
   "visual_acceptance": false,
   "performance_pass": false,
   "performance_note": "DEFERRED_AFTER_M3",
-  "host_session_note": "Owner manually reopened the canonical project after reset. Native read-only inventory attached to fresh PID11284/session1; no automated startup or previous identity reuse.",
-  "native_source_inspection": true
+  "host_session_note": "Owner manually reopened the canonical project after reset. Both native read-only inventories attached to PID 11284/session 1. The latest seven-call inspection retained 14 owner/process/listener checks; no automated startup or previous identity reuse.",
+  "native_source_inspection": true,
+  "latest_native_source_inspection": {
+    "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+    "run_id": 39658443621,
+    "run_attempt": 1,
+    "native_tool_calls": 7,
+    "owner_checks": 14,
+    "queries_verified": [
+      "tkekcgfn",
+      "vjulbjjr",
+      "wenocdss",
+      "ultncbnlw",
+      "ullmagidy"
+    ],
+    "all_five_pages_complete": true,
+    "all_five_queries_shown": 0,
+    "all_five_queries_total": 0,
+    "raw_from_registry_per_query": 457,
+    "registered_name_matches_found": false,
+    "renamed_assets_or_external_cache_absence_proven": false,
+    "license_entitlement_verified": false
+  },
+  "owner_reports_possession_of_required_source_files": false,
+  "archive_texture_delivery": {
+    "status": "DELIVERED_TO_OWNER",
+    "zip_name": "SideFX_Textures_From_Original_Zip.zip",
+    "zip_bytes": 217202273,
+    "zip_sha256": "672310b3b66072db2c1cfe73d958c69cb7b0a4e0c195a7a361c52b8e008ccdee",
+    "original_file_count": 57,
+    "texture2d_count": 48,
+    "landscape_debug_texture2d_count": 9,
+    "foliage_texture2d_count": 39,
+    "texture2darray_count": 3,
+    "png_count": 4,
+    "exr_count": 2,
+    "uasset_metadata_inspected_count": 125,
+    "original_paths_and_bytes_preserved": true,
+    "all_zip_members_size_crc32_sha256_verified": true,
+    "native_import_performed": false,
+    "images_edited_or_converted": false,
+    "uassets_reserialized": false,
+    "five_final_video_pbr_families_supplied": false,
+    "manifest": "original-textures-extraction-manifest.json",
+    "source_image_inspection": "source-six-image-inspection.json"
+  },
+  "current_original_landscape_pointer_comparison": {
+    "report": "current-landscape-archive-comparison.json",
+    "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+    "original_landscape_packages": 37,
+    "all_original_sha256_and_size_match_committed_canonical_lfs_pointers": true,
+    "remote_tree_truncated": false,
+    "lfs_binary_downloaded": false,
+    "lfs_server_object_availability_verified": false,
+    "windows_workspace_bytes_verified": false,
+    "unreal_invoked": false
+  },
+  "external_source_search_active": false,
+  "existing_local_export_requested_from_owner": false,
+  "protected_ci_for_latest_native_source": {
+    "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+    "run_id": 39658455912,
+    "conclusion": "failure",
+    "hosted_python_job_id": 119425014052,
+    "hosted_python_conclusion": "success",
+    "saved_mi_reader_tests_passed": 60,
+    "wingman_client_tests_passed": 110,
+    "full_plan_modules_selected": 285,
+    "full_plan_modules_available": 285,
+    "selection_count_is_not_all_modules_passed": true,
+    "windows_job_id": 119426772514,
+    "windows_failure": "LOCAL_BUSY before checkout/build; later proof-log staging had no working directory, and final cleanup also refused LOCAL_BUSY",
+    "owner_editor_preserved": true,
+    "native_build_pass": false,
+    "automation_pass": false
+  }
 }

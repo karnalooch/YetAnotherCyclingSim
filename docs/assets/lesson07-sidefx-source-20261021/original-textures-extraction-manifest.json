@@ -1,0 +1,2693 @@
+{
+  "created_utc": "2026-10-21T19:27:34.483628+00:00",
+  "source": {
+    "url": "https://media.sidefx.com/files/tutorials/project-pegasus-landscape-workflow/ProjectFiles_LandscapeWorkflow3.zip",
+    "name": "ProjectFiles_LandscapeWorkflow3.zip",
+    "bytes": 605943562,
+    "sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
+    "inventory_sha256": "3be24582dca0d1cc4d821ee627c7208703632a289697fa2c017833b91f2e46ae",
+    "unchanged_after_extraction": true
+  },
+  "selection": {
+    "uassets_examined": 125,
+    "metadata_parse_failures": 0,
+    "method": "Read every uasset package metadata with SkipLoadingExports and SkipPreloadDependencyLoading; resolve each bIsAsset true, OuterIndex zero export ClassIndex through the import table and compare its asset-registry class.",
+    "parser": "UAssetAPI 1.1.0",
+    "parser_dll_sha256": "4048337707660c7c3d810b37747049c85c228d0ed602112685098047bd59dbab",
+    "class_catalog_sha256": "ada15c5298e049010fa5ab4ed6dcf8b546af4a52d8322b2478049caac416f225",
+    "parser_script_sha256": "c5b4c42a1cc91a9c786a04f1ae3bda56369acaaad20b3228cfcc7e1e5e8a18cf",
+    "engine_override": "UNKNOWN (package metadata)",
+    "payloads_decoded": false,
+    "matching_classes": [
+      "/Script/Engine.Texture2D",
+      "/Script/Engine.Texture2DArray"
+    ],
+    "registry_classification_agrees_for_all_selected_assets": true,
+    "top_level_asset_class_counts_all_uassets": {
+      "/Script/CoreUObject.ObjectRedirector": 2,
+      "/Script/Engine.CurveLinearColor": 1,
+      "/Script/Engine.CurveLinearColorAtlas": 1,
+      "/Script/Engine.Material": 8,
+      "/Script/Engine.MaterialFunction": 15,
+      "/Script/Engine.MaterialFunctionMaterialLayer": 2,
+      "/Script/Engine.MaterialFunctionMaterialLayerBlend": 2,
+      "/Script/Engine.MaterialInstanceConstant": 14,
+      "/Script/Engine.StaticMesh": 21,
+      "/Script/Engine.Texture2D": 48,
+      "/Script/Engine.Texture2DArray": 3,
+      "/Script/HoudiniEngineRuntime.HoudiniAsset": 3,
+      "/Script/Landscape.LandscapeGrassType": 4
+    },
+    "all_sourcecontent_png_exr_included": true,
+    "bulk_sidecar_files_present_in_source_archive": 0,
+    "texture2d_count": 48,
+    "texture2darray_count": 3,
+    "png_count": 4,
+    "exr_count": 2
+  },
+  "output": {
+    "name": "SideFX_Textures_From_Original_Zip.zip",
+    "bytes": 217202273,
+    "sha256": "672310b3b66072db2c1cfe73d958c69cb7b0a4e0c195a7a361c52b8e008ccdee",
+    "file_count": 57,
+    "uncompressed_bytes": 224958528,
+    "original_archive_paths_preserved": true,
+    "all_members_verified_by_size_crc32_and_sha256": true,
+    "manifest_inside_zip": false
+  },
+  "scope": {
+    "unreal_invoked": false,
+    "project_changed": false,
+    "images_edited_or_converted": false,
+    "uassets_reserialized": false,
+    "description": "Original texture assets and six SourceContent images extracted from the supplied SideFX archive. Includes original diagnostic landscape textures/arrays and foliage textures. This extraction does not add external texture families or turn the archive placeholders into the final landscape PBR sets shown in the video."
+  },
+  "files": [
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Landscape/Textures/T_Pegasus_Landscape_AO.png",
+      "type": "PNG",
+      "bytes": 6331767,
+      "sha256": "266329a4cae29e9190275023a0c8af4de4a9fd75f83f61b43349ccca8c030e8f",
+      "source_crc32": "06ac6159",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Landscape/Textures/T_Pegasus_Landscape_Colour.png",
+      "type": "PNG",
+      "bytes": 5889075,
+      "sha256": "4f41e611abb4f43de7cd5d55f22077ff30b8bfc2094dda9be62a0023d668ac89",
+      "source_crc32": "9277c6b6",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Landscape/Textures/T_Terrain_IDMAP.png",
+      "type": "PNG",
+      "bytes": 767017,
+      "sha256": "02e67e7485799af52c2960883cd68e9a41dda42760004d562271961bb6db708c",
+      "source_crc32": "2340622b",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Landscape/Textures/T_Terrain_wetness.png",
+      "type": "PNG",
+      "bytes": 7692217,
+      "sha256": "34a2a91e1b73452b6cb8e08ab0ae0bd68a6742115640a19a67810bcd26632258",
+      "source_crc32": "d12caf36",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Textures/tlonbisya_4K_Displacement.exr",
+      "type": "OpenEXR",
+      "bytes": 49398483,
+      "sha256": "e0e7c2ddcf6e3d98d91ffa3747a9234791ebf8aae52009bddc8ab9d740279b30",
+      "source_crc32": "b19d783e",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/SourceContent/Pegasus/Textures/wepoeaw_4K_Displacement.exr",
+      "type": "OpenEXR",
+      "bytes": 49909184,
+      "sha256": "bfd92a6294d246c2ce58a2e93cbbfffa13c3653b77eb7ae00a9ed2a328f99993",
+      "source_crc32": "552e3e3b",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_B.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_B",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_B",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 8245,
+      "sha256": "a81a8a8258e4ef2104d1957da5b87eb466ac64f6956a4c410127e40d98d46117",
+      "source_crc32": "b4500892",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_G.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_G",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_G",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 8243,
+      "sha256": "e6034470e0a5db0a550552f2f7af37cd38b501b90c2db07ddcb24a572a2568ff",
+      "source_crc32": "a06947fc",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_Null.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_Null",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_Null",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 8647,
+      "sha256": "6f4d6b750e4a8ea4ab2ba867014a65266a6a9fdd55f6f6af60abe9464bae2eb3",
+      "source_crc32": "9a389499",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_O.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_O",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_O",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 8246,
+      "sha256": "d8f023fa92b987d397f26a845b25fe834303200ed166422c2fa9153e0d4ff1b8",
+      "source_crc32": "9920e0d4",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_P.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_P",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_P",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 8244,
+      "sha256": "289f2d34861ed269668b746240d02f265dc00079771fa817c2ca1c0da2da03f6",
+      "source_crc32": "526b2384",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_R.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_R",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_R",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 8208,
+      "sha256": "d5bd5c29d783ea26fcabecd0802e466aac70df2b3fd63154f62f57e67fe4b39c",
+      "source_crc32": "63e69e3d",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_V.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_V",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_V",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 8244,
+      "sha256": "5193ec018cc077dc95331b60ef66ad8b2a4d5d526df5f9e841f1f849d4527546",
+      "source_crc32": "6e7942ed",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_W.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_W",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_W",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 8763,
+      "sha256": "a9de4f3218d31a92b401ab148262b6e82d2196b29e61fcb685bd247c1dd3d2fc",
+      "source_crc32": "81025d7a",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_Y.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_Y",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_Y",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 8247,
+      "sha256": "11a2f673b9d9f3199248c8c5adb63580c5a0e7bb59fb14073fce7809ea0ed73f",
+      "source_crc32": "a06079c3",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/TA_Colour.uasset",
+      "type": "/Script/Engine.Texture2DArray",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "TA_Colour",
+          "class_index": -3,
+          "class_import_name": "Texture2DArray",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2DArray",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "TA_Colour",
+            "class_path": "/Script/Engine.Texture2DArray"
+          }
+        ]
+      },
+      "bytes": 5798,
+      "sha256": "d5d9519bea5d295bb61cef38a9706ddf30a38e1a776d72217f04bae975c5487c",
+      "source_crc32": "81620458",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/TA_Masks.uasset",
+      "type": "/Script/Engine.Texture2DArray",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "TA_Masks",
+          "class_index": -3,
+          "class_import_name": "Texture2DArray",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2DArray",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "TA_Masks",
+            "class_path": "/Script/Engine.Texture2DArray"
+          }
+        ]
+      },
+      "bytes": 6102,
+      "sha256": "9525568c0a980e9007a0ab418f5310b9383cdba1eedf958c12b8d98de5337b2d",
+      "source_crc32": "05aa2076",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/TA_Normal.uasset",
+      "type": "/Script/Engine.Texture2DArray",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "TA_Normal",
+          "class_index": -3,
+          "class_import_name": "Texture2DArray",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2DArray",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "TA_Normal",
+            "class_path": "/Script/Engine.Texture2DArray"
+          }
+        ]
+      },
+      "bytes": 3763,
+      "sha256": "b74b6b5b042b239d2e48b3230412245e0941e97bbf98c8220320d2778909d3f1",
+      "source_crc32": "e9bf6749",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Calluna_Vulgaris/Callune_twig1_diffuse.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "Callune_twig1_diffuse",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "Callune_twig1_diffuse",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 466013,
+      "sha256": "a07a305175fd6033556577d546f9624c5e40f4c453c2d033a532e14f56bba226",
+      "source_crc32": "2668a011",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Calluna_Vulgaris/Callune_twig1_normal.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "Callune_twig1_normal",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "Callune_twig1_normal",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 1670100,
+      "sha256": "602fb4cdb193eb78da59d9b7acf6c7e3c5ab7de36ab1ae394019aea399e8d995",
+      "source_crc32": "e9119334",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Calluna_Vulgaris/Callune_twig1_opacity.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "Callune_twig1_opacity",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "Callune_twig1_opacity",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 407988,
+      "sha256": "88acefdf5e1981447f23d754ffd46d8d8dac0149f692a385660003f37ac8fea2",
+      "source_crc32": "fcd11c25",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Cottongrass/PE_Flora_Card5_diffuse.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "PE_Flora_Card5_diffuse",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "PE_Flora_Card5_diffuse",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 540040,
+      "sha256": "86318b1679b594354d021bc06d4ba756f702a185087f5fd5b5e7688b7acd57dc",
+      "source_crc32": "24667ff2",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Cottongrass/PE_Flora_Card5_normal.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "PE_Flora_Card5_normal",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "PE_Flora_Card5_normal",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 2098729,
+      "sha256": "690d585015e1b449ec510353e5261f096a8468c21ba773376179de17b9cbe7de",
+      "source_crc32": "e5f1a351",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Cottongrass/PE_Flora_Card5_opacity.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "PE_Flora_Card5_opacity",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "PE_Flora_Card5_opacity",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 399576,
+      "sha256": "32caa9c09f7a2c3087dbbd04b9e88ef842a022893702759b6015bdfa791bc62e",
+      "source_crc32": "5e6715fa",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/fringe_moss_bake_2_diffuse.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "fringe_moss_bake_2_diffuse",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "fringe_moss_bake_2_diffuse",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 773747,
+      "sha256": "19851e8f2ef3426ae24ee0577616b6cdb6ca5c6de4c5c7c2ff53ec618bbddaf9",
+      "source_crc32": "ebd9e45e",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/fringe_moss_bake_2_normal.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "fringe_moss_bake_2_normal",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "fringe_moss_bake_2_normal",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 1751692,
+      "sha256": "30488b1115846fa745a3eb64c502561a2f9987176e43e5c1fafbd123c46f7abc",
+      "source_crc32": "56958fe7",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/fringe_moss_bake_2_opacity.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "fringe_moss_bake_2_opacity",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "fringe_moss_bake_2_opacity",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 294739,
+      "sha256": "61a4497b502050ab486dbd7c2c57f754bcc574ae11829d2b95594b93de16f740",
+      "source_crc32": "a0ce574a",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/PE_Flora_Bake5_diffuse.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "PE_Flora_Bake5_diffuse",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "PE_Flora_Bake5_diffuse",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 299677,
+      "sha256": "bd8672f5dd521901c7b04a81c779e9e4d386250e4c2e2252adcfb587ca03c687",
+      "source_crc32": "ea82ea2f",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/PE_Flora_Bake5_normal.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "PE_Flora_Bake5_normal",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "PE_Flora_Bake5_normal",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 1067794,
+      "sha256": "51b16ce9f28bd24851e2863f691152386355079932c0dbeafd9df153f55431aa",
+      "source_crc32": "5d0c144b",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/PE_Flora_Bake5_opacity.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "PE_Flora_Bake5_opacity",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "PE_Flora_Bake5_opacity",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 328280,
+      "sha256": "7cddcd540d0bf8e7520808dfa56461e8f47e148586fc5239e0947293223298c3",
+      "source_crc32": "d3d767a2",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/atlas_height.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "atlas_height",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "atlas_height",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 29056,
+      "sha256": "c9902513a638ca4cfef9c09d012b4390062d6777569a7483a57bd8bbd3030774",
+      "source_crc32": "b5455a37",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/card_diffuse.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "card_diffuse",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "card_diffuse",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 1088991,
+      "sha256": "330912320734add2bb306d21494466abe6edaf7a442b1f05243e34a32014341b",
+      "source_crc32": "cf439104",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/card_opacity.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "card_opacity",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "card_opacity",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 260378,
+      "sha256": "ce698c69abf5de94f2bcedaffdd81aa05dfeb0112c7f21b23375567d1f0ec959",
+      "source_crc32": "6cc6e3b6",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/tdnifdqt_2K_Albedo.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "tdnifdqt_2K_Albedo",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "tdnifdqt_2K_Albedo",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 2255951,
+      "sha256": "48407c2e5eb4ae85bd7761e18bf3923bf3e664b86e4120ddd9d9987ce64f275c",
+      "source_crc32": "f9772a85",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/tdnifdqt_2K_Normal.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "tdnifdqt_2K_Normal",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "tdnifdqt_2K_Normal",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 3827369,
+      "sha256": "f05f4411f63c6b51f0dcb812ad335d414aac7305bd15d5cac0accc01c9b83b25",
+      "source_crc32": "1ae89873",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/uktkebycw_2K_Albedo.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "uktkebycw_2K_Albedo",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "uktkebycw_2K_Albedo",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 718001,
+      "sha256": "b911937e6ac9d02d7587fabe754c637c63282f69f83ba1d7b190e125c59b91d5",
+      "source_crc32": "d34ce9fb",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/qgumD_4K_Albedo.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "qgumD_4K_Albedo",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "qgumD_4K_Albedo",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 1269483,
+      "sha256": "356500c3b659e8acd4d19c9307b414b025c1c248bde80b8453dafbabc9f295b7",
+      "source_crc32": "761d680d",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/qgumD_4K_Normal.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "qgumD_4K_Normal",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "qgumD_4K_Normal",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 2790875,
+      "sha256": "4f4ad656dbdb077bff110ad85c5d52a5421f3eb41dab82736f2b23d14b7717fc",
+      "source_crc32": "3a00a7c7",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/qgumD_4K_Opacity.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "qgumD_4K_Opacity",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "qgumD_4K_Opacity",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 593724,
+      "sha256": "86a969d1282b9748fa7a7ff588d6baf34fbc2d6210ebf8d380a649a16eebac8a",
+      "source_crc32": "9ca1e837",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/wkljdbis_4K_Albedo.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "wkljdbis_4K_Albedo",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "wkljdbis_4K_Albedo",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 4513202,
+      "sha256": "cf80117713287ec41a065374d1ffd01c8881e26475840a27eacb23720c33035a",
+      "source_crc32": "d5c4a9d1",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/wkljdbis_4K_Normal.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "wkljdbis_4K_Normal",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "wkljdbis_4K_Normal",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 5880465,
+      "sha256": "ac4d5a66316ee82735b63c6b6052d7424649ef96510462c82cd204bfdd7d0a69",
+      "source_crc32": "e59de5ab",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/wkljdbis_4K_Roughness.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "wkljdbis_4K_Roughness",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "wkljdbis_4K_Roughness",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 2758454,
+      "sha256": "3a1dc6a991c84d336cded544890c0f5f9eaef1d4097a9548c566352233540e99",
+      "source_crc32": "addf1194",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/T_PineBark_Top_PG_C.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_PineBark_Top_PG_C",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_PineBark_Top_PG_C",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 7557450,
+      "sha256": "8194a4157c5f7852c54ebc07511581ac23d2f64d55587e5a5bb487d16c7647e9",
+      "source_crc32": "dbdc0522",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/T_PineBark_Top_PG_H.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_PineBark_Top_PG_H",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_PineBark_Top_PG_H",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 1169776,
+      "sha256": "98031c46f8024e5ecce87ad042f6740cf6108ed2bbe16d235ce79ea25dd64324",
+      "source_crc32": "430147b0",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/T_PineBark_Top_PG_N.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_PineBark_Top_PG_N",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_PineBark_Top_PG_N",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 9784664,
+      "sha256": "c943d5682d0dd95f3f3bf985887f624eee8218eb43a10afce544557c2091f350",
+      "source_crc32": "4da33503",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/T_PineBark_Top_PG_O.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_PineBark_Top_PG_O",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_PineBark_Top_PG_O",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 1721047,
+      "sha256": "fd2bd0fc0bcbc409215b23eab241d6204324a5d29d2187af1c0310f18c6e1bf7",
+      "source_crc32": "771cf21a",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/T_PineBark_Top_PG_R.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_PineBark_Top_PG_R",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_PineBark_Top_PG_R",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 2916296,
+      "sha256": "4d29fb4d7d8ea9ea57130983046b5716f45f5ddebbd341767bebefcbe013d847",
+      "source_crc32": "375b75cb",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/rfei7_4K_Albedo.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "rfei7_4K_Albedo",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "rfei7_4K_Albedo",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 969797,
+      "sha256": "ec5f355d5b0a81fad18d6fdc1896f5c2fee955cf771bfbee58de2c30bccb1e28",
+      "source_crc32": "8fa63c1a",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/rfei7_4K_Normal.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "rfei7_4K_Normal",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "rfei7_4K_Normal",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 2212874,
+      "sha256": "f616170cca15418b307b3876e082acb225dd81d3e76b140eef40187191c49f34",
+      "source_crc32": "752fd62f",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/rfei7_4K_Opacity.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "rfei7_4K_Opacity",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "rfei7_4K_Opacity",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 1662964,
+      "sha256": "bfbc90cc92db0eb6399b87d49f6a2268259f89a4e787231e7d363ac06e009ec8",
+      "source_crc32": "8f38fa93",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/T_Atlas_Mountain_Ash_diffuse.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_Atlas_Mountain_Ash_diffuse",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_Atlas_Mountain_Ash_diffuse",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 12989088,
+      "sha256": "cd39815c688ba1abb15a4a93bef331a19e70dc54be4c1bfc415ba81c61dc8903",
+      "source_crc32": "f2e4a7ec",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/T_Atlas_Mountain_Ash_normal.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_Atlas_Mountain_Ash_normal",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_Atlas_Mountain_Ash_normal",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 14641219,
+      "sha256": "9942ba956b89aebd57a884e188440d6bd66b5855782a6ed03bde3f69cab87e7e",
+      "source_crc32": "4b988924",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/T_Atlas_Mountain_Ash_opacity.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_Atlas_Mountain_Ash_opacity",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_Atlas_Mountain_Ash_opacity",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 3009949,
+      "sha256": "6112b9df149a8170682f89ef73a96d6c6f3942dc2fc318142f6d954f0428dcf7",
+      "source_crc32": "24b8e313",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/T_Atlas_Mountain_Ash_roughness.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "T_Atlas_Mountain_Ash_roughness",
+          "class_index": -3,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "T_Atlas_Mountain_Ash_roughness",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 3999707,
+      "sha256": "74c4a10b123a0ce57e0cc87a86a64737d607a42695bdf39c0374fc80a1808720",
+      "source_crc32": "23e273de",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/uktkciscw_4K_Albedo.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "uktkciscw_4K_Albedo",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "uktkciscw_4K_Albedo",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 2057707,
+      "sha256": "358032b73df963c3800acf44d2d6de3e7cf058498eceae8e4b5d67affbe3eebf",
+      "source_crc32": "723ed610",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/uktkciscw_4K_Normal.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "uktkciscw_4K_Normal",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "uktkciscw_4K_Normal",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 3201385,
+      "sha256": "b4b60020787e953e1e4233c16a9ebfef612f06fdbdd01ac282c1e552da92f300",
+      "source_crc32": "06531c69",
+      "output_member_bytes_equal_source": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/uktkciscw_4K_Roughness.uasset",
+      "type": "/Script/Engine.Texture2D",
+      "class_evidence": {
+        "top_level_asset_export": {
+          "export_index": 3,
+          "object_name": "uktkciscw_4K_Roughness",
+          "class_index": -2,
+          "class_import_name": "Texture2D",
+          "class_package": "/Script/Engine",
+          "class_path": "/Script/Engine.Texture2D",
+          "outer_index": 0,
+          "is_asset": true
+        },
+        "matching_asset_registry_records": [
+          {
+            "object_path": "uktkciscw_4K_Roughness",
+            "class_path": "/Script/Engine.Texture2D"
+          }
+        ]
+      },
+      "bytes": 901788,
+      "sha256": "ee8186e55370c3703a30161dc72818cd36cc19fd66a12e0078978c1d205ea7d0",
+      "source_crc32": "83c2554f",
+      "output_member_bytes_equal_source": true
+    }
+  ],
+  "uasset_classification_coverage": [
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/__ExternalActors__/PegasusDemo/Workshops/Landscape_Workflow/Landscape_Workflow/B/CM/9NY0Z55VO3H7W6L8YAYOBH.uasset",
+      "bytes": 91441,
+      "sha256": "c4e794aa4fc05ceb7b8921ebeaea79ceb3f9209f769eb79f1c738188cbd0f939",
+      "top_level_asset_class": null,
+      "asset_registry_classes": [
+        "/Game/UltraDynamicSky/Blueprints/Ultra_Dynamic_Sky.Ultra_Dynamic_Sky_C"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Houdini/hda/sop_PE_Cache_Landscape.uasset",
+      "bytes": 33057,
+      "sha256": "65655e52daa7cbf4f7784046e9438b681ed246761f28e289f81982fdc1439b29",
+      "top_level_asset_class": "/Script/HoudiniEngineRuntime.HoudiniAsset",
+      "asset_registry_classes": [
+        "/Script/HoudiniEngineRuntime.HoudiniAsset"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Houdini/hda/sop_PE_import_bgeo.uasset",
+      "bytes": 9625,
+      "sha256": "14ed1bfe1f5ff7271659e4b5e0758a273548a6614132cb1a467221506ae472a4",
+      "top_level_asset_class": "/Script/HoudiniEngineRuntime.HoudiniAsset",
+      "asset_registry_classes": [
+        "/Script/HoudiniEngineRuntime.HoudiniAsset"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Houdini/hda/sop_PE_Load_Landscape.uasset",
+      "bytes": 66761,
+      "sha256": "9238e62161069c268916b053cece2ab43de93a973bf15314d64073b335bd73bb",
+      "top_level_asset_class": "/Script/HoudiniEngineRuntime.HoudiniAsset",
+      "asset_registry_classes": [
+        "/Script/HoudiniEngineRuntime.HoudiniAsset"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_BilinearBlend.uasset",
+      "bytes": 13914,
+      "sha256": "f67f4057eba49d734c6dcd54e260f17a4edc350ed713d8af85f12942174dc64d",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Bitpack.uasset",
+      "bytes": 49072,
+      "sha256": "3e2760d864a92f22b65db568831ed5c05783cbd60e00e8515b68290aea09ae7f",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_BitUnpack.uasset",
+      "bytes": 24620,
+      "sha256": "1e50ba670a62ae0f7520af773e5454491691ac7e9b423069cd9ff2e9912c2209",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_BlendLayers.uasset",
+      "bytes": 15602,
+      "sha256": "b4c8c26908bc0b3da33d60ce10b07e395700cf5aa080871e42a75a4770562acb",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Encode_IDS.uasset",
+      "bytes": 13448,
+      "sha256": "602d5f86b350da1f4850da3162d1e6ad68c43c51b5fb67c961d2971109511b92",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Extract_Parmsets.uasset",
+      "bytes": 21828,
+      "sha256": "cce52f8d882e1c246de7b87e22b0a349a4c07e41ab6cad8f7fdf144ec936decd",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_ID_Unpack.uasset",
+      "bytes": 18867,
+      "sha256": "f90c4a3be095db84470a7ca02d8eab3978256cc5a646005cb733c959ce9b0e26",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Layer_Unpack.uasset",
+      "bytes": 11387,
+      "sha256": "0a420ccf33dcd4f4ac07c2fc0e841efdfef5216885e3afbe9c2880905cd31203",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Layerblend_IDMAP.uasset",
+      "bytes": 29034,
+      "sha256": "01e6eb44f4bd469c7df15b9d17e0a0694a8b4afa2037f89b8be2cfd4f80147e4",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Material.uasset",
+      "bytes": 13312,
+      "sha256": "2fbd815bdd95f909336eea263ee393329603a03e352e01b3669559178436f71d",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_TextureAtlas_Sample.uasset",
+      "bytes": 20824,
+      "sha256": "688e07e906f5c8273d3acaadedc46aa5251d984b54f2d50e002b6bd082c5c5b2",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_TextureAtlas_SampleMasks.uasset",
+      "bytes": 22310,
+      "sha256": "a5c39ede4f354fe42fbfedf5c07383b0362b651c8a60672679a54bdaf9eda282",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_TextureAtlas_SampleNormal.uasset",
+      "bytes": 20948,
+      "sha256": "bb556279f30c6d116a4c24ae18a5234af28cf27cd9f2f59e43e6f85f71d5032a",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Unpack_Parmset_A.uasset",
+      "bytes": 27490,
+      "sha256": "222a75d8c4367ec57b73f28e2cd0301ed4a1293eaa453b0212e489d66c54239c",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_Unpack_Parmset_B.uasset",
+      "bytes": 28843,
+      "sha256": "f5b6b34e4d55fb54468a76e363751e8ecd1529821ecd73aac9db5f2acd3f8294",
+      "top_level_asset_class": "/Script/Engine.MaterialFunction",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunction"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Grasstypes/LGT_PE_Grass.uasset",
+      "bytes": 7020,
+      "sha256": "39dd4be05268f7ae7f0a831cec9e8b9af2105a7c9a71928dc1f33be8ab93a8d0",
+      "top_level_asset_class": "/Script/Landscape.LandscapeGrassType",
+      "asset_registry_classes": [
+        "/Script/Landscape.LandscapeGrassType"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Grasstypes/LGT_PE_Heather.uasset",
+      "bytes": 4236,
+      "sha256": "7221ff899c85a9511f4daae2053db96894d9ed5c63f4678dac194ddf956fb7b6",
+      "top_level_asset_class": "/Script/Landscape.LandscapeGrassType",
+      "asset_registry_classes": [
+        "/Script/Landscape.LandscapeGrassType"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Grasstypes/LGT_PE_Highland.uasset",
+      "bytes": 7247,
+      "sha256": "fe2a5435cfb83d0c89b380e79e8b4d8bfc45934398c028665fa0cdedd3a85c0a",
+      "top_level_asset_class": "/Script/Landscape.LandscapeGrassType",
+      "asset_registry_classes": [
+        "/Script/Landscape.LandscapeGrassType"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Grasstypes/LGT_PE_Wetland.uasset",
+      "bytes": 5695,
+      "sha256": "a335605528316ae952e66cf7d7a5d5d69d4c4a57c099c5940f5802adc2d47715",
+      "top_level_asset_class": "/Script/Landscape.LandscapeGrassType",
+      "asset_registry_classes": [
+        "/Script/Landscape.LandscapeGrassType"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Base.uasset",
+      "bytes": 19634,
+      "sha256": "f62f276df481f46a93eba85ac815f82907b296770ddbea2dd1200e66d423aa5f",
+      "top_level_asset_class": "/Script/Engine.MaterialFunctionMaterialLayer",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunctionMaterialLayer"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.uasset",
+      "bytes": 20936,
+      "sha256": "d5e15c4ed5b89d482fb0ca59c6dd11a3124130ddbe775642f4bdf233c50871d8",
+      "top_level_asset_class": "/Script/Engine.MaterialFunctionMaterialLayer",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunctionMaterialLayer"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.uasset",
+      "bytes": 52771,
+      "sha256": "3917fb91182f81f0fdf834216b61b8dbaafbff2065e8a20731274db212e37554",
+      "top_level_asset_class": "/Script/Engine.MaterialFunctionMaterialLayerBlend",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunctionMaterialLayerBlend"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape_Backup.uasset",
+      "bytes": 29897,
+      "sha256": "b4456d07ae85d376c14146f398bcb32dc473e92d3311c55fdb3d15d3821e9a66",
+      "top_level_asset_class": "/Script/Engine.MaterialFunctionMaterialLayerBlend",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialFunctionMaterialLayerBlend"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/M_Pegasus_Landscape_Master.uasset",
+      "bytes": 211283,
+      "sha256": "d2fed2b50581f53e80bc01c53379b6900b32b8b6b70d55272149d8ef0f2cc171",
+      "top_level_asset_class": "/Script/Engine.Material",
+      "asset_registry_classes": [
+        "/Script/Engine.Material"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/MI_Landscape_Instance.uasset",
+      "bytes": 38181,
+      "sha256": "dde1fb5e4732cb38b6f1e03ba4646b715d75032a85e08e4e89a8325e11e606c7",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_B.uasset",
+      "bytes": 8245,
+      "sha256": "a81a8a8258e4ef2104d1957da5b87eb466ac64f6956a4c410127e40d98d46117",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_G.uasset",
+      "bytes": 8243,
+      "sha256": "e6034470e0a5db0a550552f2f7af37cd38b501b90c2db07ddcb24a572a2568ff",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_Null.uasset",
+      "bytes": 8647,
+      "sha256": "6f4d6b750e4a8ea4ab2ba867014a65266a6a9fdd55f6f6af60abe9464bae2eb3",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_O.uasset",
+      "bytes": 8246,
+      "sha256": "d8f023fa92b987d397f26a845b25fe834303200ed166422c2fa9153e0d4ff1b8",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_P.uasset",
+      "bytes": 8244,
+      "sha256": "289f2d34861ed269668b746240d02f265dc00079771fa817c2ca1c0da2da03f6",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_R.uasset",
+      "bytes": 8208,
+      "sha256": "d5bd5c29d783ea26fcabecd0802e466aac70df2b3fd63154f62f57e67fe4b39c",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_V.uasset",
+      "bytes": 8244,
+      "sha256": "5193ec018cc077dc95331b60ef66ad8b2a4d5d526df5f9e841f1f849d4527546",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_W.uasset",
+      "bytes": 8763,
+      "sha256": "a9de4f3218d31a92b401ab148262b6e82d2196b29e61fcb685bd247c1dd3d2fc",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/Debug/T_Y.uasset",
+      "bytes": 8247,
+      "sha256": "11a2f673b9d9f3199248c8c5adb63580c5a0e7bb59fb14073fce7809ea0ed73f",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/TA_Colour.uasset",
+      "bytes": 5798,
+      "sha256": "d5d9519bea5d295bb61cef38a9706ddf30a38e1a776d72217f04bae975c5487c",
+      "top_level_asset_class": "/Script/Engine.Texture2DArray",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2DArray"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/TA_Masks.uasset",
+      "bytes": 6102,
+      "sha256": "9525568c0a980e9007a0ab418f5310b9383cdba1eedf958c12b8d98de5337b2d",
+      "top_level_asset_class": "/Script/Engine.Texture2DArray",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2DArray"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Materials/Landscape/Textures/TA_Normal.uasset",
+      "bytes": 3763,
+      "sha256": "b74b6b5b042b239d2e48b3230412245e0941e97bbf98c8220320d2778909d3f1",
+      "top_level_asset_class": "/Script/Engine.Texture2DArray",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2DArray"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Common/M_Bark_Master.uasset",
+      "bytes": 24885,
+      "sha256": "676c8f10689d4c7233d6d46f859c03f5f1b1729f749e00c23a1d7b226446b243",
+      "top_level_asset_class": "/Script/Engine.Material",
+      "asset_registry_classes": [
+        "/Script/Engine.Material"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Common/M_Foliage_Master.uasset",
+      "bytes": 32540,
+      "sha256": "908d2a90221c82435430ef9ef2e9c81edb38ea8ad7cfaff69ecbab1d7b0dfc02",
+      "top_level_asset_class": "/Script/Engine.Material",
+      "asset_registry_classes": [
+        "/Script/Engine.Material"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Common/M_Grass_Master.uasset",
+      "bytes": 94635,
+      "sha256": "0adb83f895449ce97e6f464a0f49e91621d5fa6ad5fcd50eff06bb318145e1c9",
+      "top_level_asset_class": "/Script/Engine.Material",
+      "asset_registry_classes": [
+        "/Script/Engine.Material"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Calluna_Vulgaris/Calluna_Vulgaris_01_Medium_Clump.uasset",
+      "bytes": 1385307,
+      "sha256": "abab84cb30e0461c908e791d8c0e4ff2af31cf7b10f2e41fb71ef8647eae65ac",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Calluna_Vulgaris/Callune_twig1_diffuse.uasset",
+      "bytes": 466013,
+      "sha256": "a07a305175fd6033556577d546f9624c5e40f4c453c2d033a532e14f56bba226",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Calluna_Vulgaris/Callune_twig1_normal.uasset",
+      "bytes": 1670100,
+      "sha256": "602fb4cdb193eb78da59d9b7acf6c7e3c5ab7de36ab1ae394019aea399e8d995",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Calluna_Vulgaris/Callune_twig1_opacity.uasset",
+      "bytes": 407988,
+      "sha256": "88acefdf5e1981447f23d754ffd46d8d8dac0149f692a385660003f37ac8fea2",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Calluna_Vulgaris/MI_Calluna_Vulgaris.uasset",
+      "bytes": 17860,
+      "sha256": "c7dfb9aedba5e97053dcd38c50f82e22a3c64beb988334f7afa05911e4d89f9f",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Cottongrass/cottongrass_01.uasset",
+      "bytes": 161696,
+      "sha256": "354712b9a404a7babe0882dc62d188b684f556049204f1d37b2cf36c7dc61038",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Cottongrass/MI_CottonGrass.uasset",
+      "bytes": 26665,
+      "sha256": "caf28665065ac35032aab4be72673a14675c3a94790bc1c7d8c6afa324cf2df0",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Cottongrass/PE_Flora_Card5_diffuse.uasset",
+      "bytes": 540040,
+      "sha256": "86318b1679b594354d021bc06d4ba756f702a185087f5fd5b5e7688b7acd57dc",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Cottongrass/PE_Flora_Card5_normal.uasset",
+      "bytes": 2098729,
+      "sha256": "690d585015e1b449ec510353e5261f096a8468c21ba773376179de17b9cbe7de",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Cottongrass/PE_Flora_Card5_opacity.uasset",
+      "bytes": 399576,
+      "sha256": "32caa9c09f7a2c3087dbbd04b9e88ef842a022893702759b6015bdfa791bc62e",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/fringe_moss_bake_2_diffuse.uasset",
+      "bytes": 773747,
+      "sha256": "19851e8f2ef3426ae24ee0577616b6cdb6ca5c6de4c5c7c2ff53ec618bbddaf9",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/fringe_moss_bake_2_normal.uasset",
+      "bytes": 1751692,
+      "sha256": "30488b1115846fa745a3eb64c502561a2f9987176e43e5c1fafbd123c46f7abc",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/fringe_moss_bake_2_opacity.uasset",
+      "bytes": 294739,
+      "sha256": "61a4497b502050ab486dbd7c2c57f754bcc574ae11829d2b95594b93de16f740",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/Fringe_Moss_Patch_01.uasset",
+      "bytes": 290621,
+      "sha256": "2d5edeb732bdffbffc67423bc033b7dfe63f34ee48969b973b7f01e111c1ab78",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/Fringe_Moss_Patch_02.uasset",
+      "bytes": 283724,
+      "sha256": "39e3482db0bec7f0d83246003132d071cb537a84fb96e341a60e62c534cd931e",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/Fringe_Moss_Patch_03.uasset",
+      "bytes": 199750,
+      "sha256": "76e4510cb9bfac898958df1a9f43a1429f070bb5ac12630366091efa8e186af4",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/MI_Fringe_Moss.uasset",
+      "bytes": 22495,
+      "sha256": "0e1a2e063008f422a3dbfe282bf5f99ae460a28f0c37532dad2fc54e17424ea9",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Fringe_Moss/MI_Fringe_Moss_Billboard.uasset",
+      "bytes": 19866,
+      "sha256": "6a48b01dccdd3faa93edd577c115ecdb9d35d94f5cdc30cf92da6f670f3db695",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/atlas_colour.uasset",
+      "bytes": 1357,
+      "sha256": "d3f4c5dd9d825bce75921fe0cbe5499d7a14ec4dee51a9d25399dd9be4c5ce73",
+      "top_level_asset_class": "/Script/CoreUObject.ObjectRedirector",
+      "asset_registry_classes": [
+        "/Script/CoreUObject.ObjectRedirector"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/atlas_height.uasset",
+      "bytes": 29056,
+      "sha256": "c9902513a638ca4cfef9c09d012b4390062d6777569a7483a57bd8bbd3030774",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/atlas_opacity.uasset",
+      "bytes": 1362,
+      "sha256": "e5e16a0ad8373a876f1dc31dc5a171b29040420477f15cc31701bb804a33e6a5",
+      "top_level_asset_class": "/Script/CoreUObject.ObjectRedirector",
+      "asset_registry_classes": [
+        "/Script/CoreUObject.ObjectRedirector"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/Grass_Patch_01.uasset",
+      "bytes": 582871,
+      "sha256": "ebf53dc575763ca026eb9b7bcbb671e0a329d48c161ce1a8a08633d90258255d",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/Grass_Patch_02.uasset",
+      "bytes": 231273,
+      "sha256": "1d2d63fe6a37a8907f3a39595b71a8ac80592e029925a60c4624c374060aa629",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/MI_Grass_Long.uasset",
+      "bytes": 22451,
+      "sha256": "efbe176f199e9c212501a5adf2dd395e5d34c86972c6a581e28be9c696d57b2c",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/MI_Grass_Short.uasset",
+      "bytes": 24882,
+      "sha256": "3e8e2f72e8638c0d677e8d1355d91d8747fc23a6f18005f1e6178c5799262e9c",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/PE_Flora_Bake5_diffuse.uasset",
+      "bytes": 299677,
+      "sha256": "bd8672f5dd521901c7b04a81c779e9e4d386250e4c2e2252adcfb587ca03c687",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/PE_Flora_Bake5_normal.uasset",
+      "bytes": 1067794,
+      "sha256": "51b16ce9f28bd24851e2863f691152386355079932c0dbeafd9df153f55431aa",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Groundcover/Grass/PE_Flora_Bake5_opacity.uasset",
+      "bytes": 328280,
+      "sha256": "7cddcd540d0bf8e7520808dfa56461e8f47e148586fc5239e0947293223298c3",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Betula_Pendula_01.uasset",
+      "bytes": 8685071,
+      "sha256": "07b03730221a8a329c04cc3508bd53cc0853f416869aa2a83a060a25dcc2e2d2",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/C_Birch_Colour.uasset",
+      "bytes": 5306,
+      "sha256": "fee0c48d071510fd37f7fd12747a9a139bdfa9c20adf770b54a351ee81bf4caa",
+      "top_level_asset_class": "/Script/Engine.CurveLinearColor",
+      "asset_registry_classes": [
+        "/Script/Engine.CurveLinearColor"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/card_diffuse.uasset",
+      "bytes": 1088991,
+      "sha256": "330912320734add2bb306d21494466abe6edaf7a442b1f05243e34a32014341b",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/card_opacity.uasset",
+      "bytes": 260378,
+      "sha256": "ce698c69abf5de94f2bcedaffdd81aa05dfeb0112c7f21b23375567d1f0ec959",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/CAT_Birch.uasset",
+      "bytes": 3991,
+      "sha256": "c7eaaeec50434ae20884df3257cfd8af8ad32df09f8489f254e689f73e6bdfa5",
+      "top_level_asset_class": "/Script/Engine.CurveLinearColorAtlas",
+      "asset_registry_classes": [
+        "/Script/Engine.CurveLinearColorAtlas"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/MI_Betula_Pendula.uasset",
+      "bytes": 14588,
+      "sha256": "8c6a559eeeee7465488c02ed5d11e1a3e81d12c5aba2585a56a20b12e130b16c",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/MI_Birch.uasset",
+      "bytes": 12672,
+      "sha256": "56e9f84503dc372a7af27e1b4cb64434733baffb8854deaebb7b554e92c3ebd4",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/tdnifdqt_2K_Albedo.uasset",
+      "bytes": 2255951,
+      "sha256": "48407c2e5eb4ae85bd7761e18bf3923bf3e664b86e4120ddd9d9987ce64f275c",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/tdnifdqt_2K_Normal.uasset",
+      "bytes": 3827369,
+      "sha256": "f05f4411f63c6b51f0dcb812ad335d414aac7305bd15d5cac0accc01c9b83b25",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/Twigs.uasset",
+      "bytes": 12634,
+      "sha256": "b20149c297e32531382adb7d59e099fcb27a88494b9fe3d4cc6165d33c8aac4f",
+      "top_level_asset_class": "/Script/Engine.Material",
+      "asset_registry_classes": [
+        "/Script/Engine.Material"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Betula_Pendula/Materials/uktkebycw_2K_Albedo.uasset",
+      "bytes": 718001,
+      "sha256": "b911937e6ac9d02d7587fabe754c637c63282f69f83ba1d7b190e125c59b91d5",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/Material_1.uasset",
+      "bytes": 14471,
+      "sha256": "31e2d5d686b7be740caf26924d10b32d338e397b8118f145741b7215c8ff70a0",
+      "top_level_asset_class": "/Script/Engine.Material",
+      "asset_registry_classes": [
+        "/Script/Engine.Material"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/MI_Corylus_Avellana.uasset",
+      "bytes": 17588,
+      "sha256": "042702534b1f8cdc2efab035ed4ebe2396dc5c5b695ae2aba355bb0e507eb3c8",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/principledshader.uasset",
+      "bytes": 9029,
+      "sha256": "6a253aef7950076c449f6af36281ca176a2b708ff85ff5f15b4f14d0007359aa",
+      "top_level_asset_class": "/Script/Engine.Material",
+      "asset_registry_classes": [
+        "/Script/Engine.Material"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/qgumD_4K_Albedo.uasset",
+      "bytes": 1269483,
+      "sha256": "356500c3b659e8acd4d19c9307b414b025c1c248bde80b8453dafbabc9f295b7",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/qgumD_4K_Normal.uasset",
+      "bytes": 2790875,
+      "sha256": "4f4ad656dbdb077bff110ad85c5d52a5421f3eb41dab82736f2b23d14b7717fc",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/qgumD_4K_Opacity.uasset",
+      "bytes": 593724,
+      "sha256": "86a969d1282b9748fa7a7ff588d6baf34fbc2d6210ebf8d380a649a16eebac8a",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/wkljdbis_4K_Albedo.uasset",
+      "bytes": 4513202,
+      "sha256": "cf80117713287ec41a065374d1ffd01c8881e26475840a27eacb23720c33035a",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/wkljdbis_4K_Normal.uasset",
+      "bytes": 5880465,
+      "sha256": "ac4d5a66316ee82735b63c6b6052d7424649ef96510462c82cd204bfdd7d0a69",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/Materials/wkljdbis_4K_Roughness.uasset",
+      "bytes": 2758454,
+      "sha256": "3a1dc6a991c84d336cded544890c0f5f9eaef1d4097a9548c566352233540e99",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/SM_Hazel_01_HP.uasset",
+      "bytes": 13118224,
+      "sha256": "ac9ffc85f3f4fe4f851fd3bab473b731db998e4fb2a936f478c97c273cc7c421",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/SM_Hazel_02_HP.uasset",
+      "bytes": 13115431,
+      "sha256": "a53180a59978a8dfd90393e7b8b05f3ac678c410c11e8e34235b7b4bc4628ff5",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Corylus_Avellana/SM_Hazel_03_HP.uasset",
+      "bytes": 15403613,
+      "sha256": "44dd6c63edf12f9317d5eac2ae170d5c43bb293f093f5374379d2b1c8c1ac5a5",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/M_Bark.uasset",
+      "bytes": 19362,
+      "sha256": "09a4f42e67c92c7a1574081a4d1e337d7520c8c267c111de02870aa1d8801ab0",
+      "top_level_asset_class": "/Script/Engine.Material",
+      "asset_registry_classes": [
+        "/Script/Engine.Material"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/MI_Pinus_Bark.uasset",
+      "bytes": 15779,
+      "sha256": "3b0f546ccdb88d0f10184d37b911909dc047afd13d7a474fa1bd540e84800983",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/MI_Pinus_Sylvestris.uasset",
+      "bytes": 22583,
+      "sha256": "ab70fb4b9704e29a269c79b263e1fc3b76e2ff766ebd0e0921ba15e2c5097f93",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/rfei7_4K_Albedo.uasset",
+      "bytes": 969797,
+      "sha256": "ec5f355d5b0a81fad18d6fdc1896f5c2fee955cf771bfbee58de2c30bccb1e28",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/rfei7_4K_Normal.uasset",
+      "bytes": 2212874,
+      "sha256": "f616170cca15418b307b3876e082acb225dd81d3e76b140eef40187191c49f34",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/rfei7_4K_Opacity.uasset",
+      "bytes": 1662964,
+      "sha256": "bfbc90cc92db0eb6399b87d49f6a2268259f89a4e787231e7d363ac06e009ec8",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/T_PineBark_Top_PG_C.uasset",
+      "bytes": 7557450,
+      "sha256": "8194a4157c5f7852c54ebc07511581ac23d2f64d55587e5a5bb487d16c7647e9",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/T_PineBark_Top_PG_H.uasset",
+      "bytes": 1169776,
+      "sha256": "98031c46f8024e5ecce87ad042f6740cf6108ed2bbe16d235ce79ea25dd64324",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/T_PineBark_Top_PG_N.uasset",
+      "bytes": 9784664,
+      "sha256": "c943d5682d0dd95f3f3bf985887f624eee8218eb43a10afce544557c2091f350",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/T_PineBark_Top_PG_O.uasset",
+      "bytes": 1721047,
+      "sha256": "fd2bd0fc0bcbc409215b23eab241d6204324a5d29d2187af1c0310f18c6e1bf7",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/Materials/T_PineBark_Top_PG_R.uasset",
+      "bytes": 2916296,
+      "sha256": "4d29fb4d7d8ea9ea57130983046b5716f45f5ddebbd341767bebefcbe013d847",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/SM_Pine_01_HP.uasset",
+      "bytes": 34767842,
+      "sha256": "431273bc0a82ebb083e1c9f6b50570314df1863f6df0f8e01d2a870255e76750",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/SM_Pine_02_HP.uasset",
+      "bytes": 49237572,
+      "sha256": "2d03216991048d1dd05576ad87e5cef8d00b2a5a3b9dd6724a345370c019a6ca",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Pinus_Sylvestris/SM_Pine_03_HP.uasset",
+      "bytes": 50449735,
+      "sha256": "87f259a83479e85f4ae6e40e0e180d2fe0daf77eb4c6162068fbff2d22489e16",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/MI_Sorbus_aucuparia_bark.uasset",
+      "bytes": 13873,
+      "sha256": "0a42726d410737c3eab0192da89e4f3b98b748a007ef949e38b6280312b3be90",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/MI_Sorbus_aucuparia_foliage.uasset",
+      "bytes": 22798,
+      "sha256": "649ce651b7036566c759baebc6d821dc7fa6eca6d167e9518a637aa1efb4e146",
+      "top_level_asset_class": "/Script/Engine.MaterialInstanceConstant",
+      "asset_registry_classes": [
+        "/Script/Engine.MaterialInstanceConstant"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/T_Atlas_Mountain_Ash_diffuse.uasset",
+      "bytes": 12989088,
+      "sha256": "cd39815c688ba1abb15a4a93bef331a19e70dc54be4c1bfc415ba81c61dc8903",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/T_Atlas_Mountain_Ash_normal.uasset",
+      "bytes": 14641219,
+      "sha256": "9942ba956b89aebd57a884e188440d6bd66b5855782a6ed03bde3f69cab87e7e",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/T_Atlas_Mountain_Ash_opacity.uasset",
+      "bytes": 3009949,
+      "sha256": "6112b9df149a8170682f89ef73a96d6c6f3942dc2fc318142f6d954f0428dcf7",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/T_Atlas_Mountain_Ash_roughness.uasset",
+      "bytes": 3999707,
+      "sha256": "74c4a10b123a0ce57e0cc87a86a64737d607a42695bdf39c0374fc80a1808720",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/uktkciscw_4K_Albedo.uasset",
+      "bytes": 2057707,
+      "sha256": "358032b73df963c3800acf44d2d6de3e7cf058498eceae8e4b5d67affbe3eebf",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/uktkciscw_4K_Normal.uasset",
+      "bytes": 3201385,
+      "sha256": "b4b60020787e953e1e4233c16a9ebfef612f06fdbdd01ac282c1e552da92f300",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/Materials/uktkciscw_4K_Roughness.uasset",
+      "bytes": 901788,
+      "sha256": "ee8186e55370c3703a30161dc72818cd36cc19fd66a12e0078978c1d205ea7d0",
+      "top_level_asset_class": "/Script/Engine.Texture2D",
+      "asset_registry_classes": [
+        "/Script/Engine.Texture2D"
+      ],
+      "selected": true
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/SM_Mountain_Ash_01_HP.uasset",
+      "bytes": 15694158,
+      "sha256": "ff0720e9c3e01f358e5bf501d09bdbca849818003a93676076f05422dbd1096a",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/SM_Mountain_Ash_01_LP.uasset",
+      "bytes": 107859,
+      "sha256": "e893d0de4172330864df2771fd1d420bce7cc6a870cca4a6edd36cacdb26fa27",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/SM_Mountain_Ash_02_HP.uasset",
+      "bytes": 15526253,
+      "sha256": "2ec3bb268a1ff260d49f4cb8e9ab11f48ac91efdf1e86d82be58bcc459c4ef34",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/SM_Mountain_Ash_03_HP.uasset",
+      "bytes": 10829400,
+      "sha256": "aea18fafd9e2c2535de831e4ea812f5fe6ecbea44362a2796b11c9b093eaf2eb",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/SM_Mountain_Ash_03_LP.uasset",
+      "bytes": 150969,
+      "sha256": "7d7a85cf9e21ccc60154b924bd6e1b19427196a7df5e1cf02cfeee449f0145b7",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/SM_Mountain_Ash_04_HP.uasset",
+      "bytes": 49586174,
+      "sha256": "00864db377502ea7072e888418808f62df616776af6f4a59b95cdbb68f2fdb80",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    },
+    {
+      "archive_path": "ProjectFiles_LandscapeWorkflow/Unreal/Content/PegasusDemo/Meshes/Foliage/Trees/Sorbus_aucuparia/SM_Mountain_Ash_04_LP.uasset",
+      "bytes": 705994,
+      "sha256": "c66b2dd40c8cdf275b9b9f5f40087c140ccca0ed8bb903d5fbab21982afeb5b5",
+      "top_level_asset_class": "/Script/Engine.StaticMesh",
+      "asset_registry_classes": [
+        "/Script/Engine.StaticMesh"
+      ],
+      "selected": false
+    }
+  ]
+}

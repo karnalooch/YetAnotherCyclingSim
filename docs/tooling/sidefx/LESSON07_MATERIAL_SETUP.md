@@ -5,13 +5,13 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (two complete CC0 rock sets acquired; five textures and three arrays successfully saved in native run 39636694686; same-camera images show excessive darkening and unresolved steep-face streaking; Macro 0.05 and Global Normal Flatten 1 retained; detailed-normal correctness, physical scale, fresh reopen, whole-area proof and protected delivery remain open)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (57 original ZIP texture files extracted and delivered without a new import; the earlier native run 39636694686 saved five textures and three arrays, whose images show excessive darkening and unresolved steep-face streaking; Macro 0.05 and Global Normal Flatten 1 retained; detailed-normal correctness, physical scale, fresh reopen, whole-area proof and protected delivery remain open)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
 ---
 
-## Current owner direction: original SideFX workflow (2026-10-21)
+## Current owner direction: original ZIP texture delivery (2026-10-21)
 
 The owner requested a fresh download of `ProjectFiles_LandscapeWorkflow3.zip`,
 a close reinspection of Lesson07 (Vimeo 888569514), then reproduction of the
@@ -19,30 +19,70 @@ original material workflow. The custom normal candidate and further substitute
 texture changes are paused before native execution. The [source reinspection](../../assets/lesson07-sidefx-source-20261021/README.md)
 retains the new verified archive, exact final surface IDs and video parameters;
 the archive default arrays are diagnostic placeholders. The five final
-PBR surfaces are acquired separately in the video. Preserve real Sa Calobra
-geography and current owner session while resolving those exact dependencies.
-Source inspection does not establish native application or Lesson07 completion.
+PBR surfaces are acquired separately in the video.
+
+The owner then explicitly narrowed the immediate task to getting the textures
+from that ZIP. **The requested file delivery is complete:**
+`SideFX_Textures_From_Original_Zip.zip`, **217,202,273 bytes**, SHA256
+`672310b3b66072db2c1cfe73d958c69cb7b0a4e0c195a7a361c52b8e008ccdee`.
+It contains exactly **57 original files: 48 Texture2D (9 diagnostic colours
+and 39 foliage textures), 3 Texture2DArray, 4 PNG and 2 EXR**. All original
+paths and bytes were preserved and checked by member size, CRC32 and SHA256;
+the [unchanged manifest](../../assets/lesson07-sidefx-source-20261021/original-textures-extraction-manifest.json)
+retains the selection evidence from inspecting the metadata of all 125
+`.uasset` files. The [image inspection](../../assets/lesson07-sidefx-source-20261021/source-six-image-inspection.json)
+retains the six source image formats. No new import, image conversion or active
+material change occurred, and this extraction did not supply the five final
+PBR families. External acquisition, purchase and substitute searches are
+paused; there is no request for an existing local export from the owner.
+
+The [37-package comparison](../../assets/lesson07-sidefx-source-20261021/current-landscape-archive-comparison.json)
+also confirms that all original Landscape source packages are already
+referenced by matching SHA256/size Git LFS pointers at exact source `5869953c`.
+This is remote committed-pointer evidence, not a readback of current Windows
+bytes or LFS server availability. Preserve real Sa Calobra geography and the
+current owner session. Source inspection and file delivery do not establish
+native application or Lesson07 completion.
 
 After the owner manually reset Windows and reopened the project, [native source
 inventory 39654531355/2](../../assets/lesson07-sidefx-source-20261021/source-inventory-39654531355-2-evidence.json)
 completed three read-only calls with six fresh owner checks. The standard
 Megascans surface folder contains zero registered Texture2D assets. This does
-not establish absence under other paths; five fixed project-wide ID queries
-are prepared. The fresh MI confirms Macro 0.05 and the earlier disabled global
-colour/specular and flattened normals. No material application or visual PASS
-is claimed. Protected CI passed hosted checks but native admission refused
-LOCAL_BUSY to preserve the reopened owner Editor.
+not establish absence under other paths.
 
-## Acquired surfaces and current repair (2026-10-21)
+After the owner manually started the runner, [exact-ID inventory
+39658443621/1](../../assets/lesson07-sidefx-source-20261021/source-inventory-39658443621-1-evidence.json)
+completed seven read-only calls and fourteen fresh owner checks at source
+`5869953cc0924b5078e2067e55336d720f3e6ea7`. All five fixed queries under `/Game`
+returned 0/0 without truncation; each reported 457 registry entries before the
+ID-name filter. The expected IDs are absent from the searched registered names.
+Renamed textures, unregistered files, external download caches and entitlement
+remain unverified. The owner subsequently reported not having these source
+files. The later original-ZIP extraction does not change these registry
+findings and does not claim to have added the matching D/N/ORDp families.
 
-The owner requested the actual textures and completion of Lesson07. Complete
-2K Poly Haven `dark_rock_02` and `rock_boulder_dry` sets are now acquired:
+The fresh MI and three array settings match the earlier three-call read exactly:
+Macro 0.05, disabled global colour/specular and flattened normals remain. The MI
+reports `saved=false`. SourceTextures slots, MI association/index, GPU format and
+graph samplers remain unverified. No new material application or visual PASS
+is claimed. [CI 39658455912](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39658455912)
+passed hosted Python, including 110 client tests and 60 saved-consumer reader
+tests. Its native build lane refused LOCAL_BUSY before checkout/build, preserving
+the reopened owner Editor; subsequent log staging failed because its checkout
+directory did not exist, and final cleanup also refused LOCAL_BUSY. Overall CI
+failed and no new native build or Automation proof was produced.
+
+## Earlier acquired surfaces and native repair (2026-10-21)
+
+Before the original-ZIP clarification, complete
+2K Poly Haven `dark_rock_02` and `rock_boulder_dry` sets were acquired:
 Diffuse, NormalDX, Roughness, AO and Height, with all ten files hash/decode
 verified. The [source and implementation evidence](../../assets/lesson07-surface-repair-20261021/README.md)
 records authors, CC0 licensing, scale and exact bytes. These are generic rock
-scans; the provider does not authenticate limestone. The darker set is prepared
-as a neutral-grey Cliffs appearance candidate, while the lighter set remains a
-comparison and accepted Grass2 is preserved.
+scans; the provider does not authenticate limestone. The darker set was
+prepared as the Cliffs appearance candidate described below; the lighter set
+remained an unapplied comparison. Further substitute work is paused under the
+current original-ZIP request.
 
 The bounded importer replaces only Grass Normal/Masks (retained corrected maps)
 and the three matching Cliffs maps in the existing five-slice arrays. It uses
@@ -83,7 +123,7 @@ Source-only [CI 39638791772](https://github.com/karnalooch/YetAnotherCyclingSim/
 subsequently reached the same `LOCAL_BUSY` admission boundary and also provides
 no new native build or Automation proof.
 
-### Current normal-contract diagnosis and isolated candidate
+### Paused normal-contract diagnosis and isolated candidate
 
 [Exact offline source inspection](../../assets/lesson07-normal-contract-20261021/README.md)
 resolved the original Normal function and master expression connections. It
@@ -93,11 +133,13 @@ and signed `(G,-R,B)` in place of `(G,1-R,B)`. The original seven packages were
 read only; all 260 master expression payloads roundtrip exactly in memory,
 while the documented whole-package parser limitation remains explicit.
 
-The next native stage prepares only a private function and master. It must
-reconnect semantic pins after duplication, compile with an explicit empty error
-list, save only those two assets, and retain them for independent graph readback.
-The active MI, parent, Flatten, map and arrays are unchanged by preparation.
-No native candidate execution or application is claimed at this point.
+That proposed native stage remains paused after the owner's original-source
+direction. It would prepare only a private function and master, reconnect
+semantic pins after duplication and retain independent graph readback. The fresh
+official normal function is byte-identical to the inspected current one, so the
+custom rewrite would be an adaptation rather than restoration of original bytes.
+No candidate was executed or applied; the active MI, parent, Flatten, map and
+arrays remain unchanged by this analysis.
 
 The [follow-up metadata discovery](../../assets/lesson07-surface-repair-20261021/discovery-39644676507-evidence.json)
 retained the full plain-text `edit_graph` description with zero native calls.
@@ -111,9 +153,10 @@ after the nine retained asset pointers advanced. The current change aligns
 both reader constants with the independently verified 40,154-byte MI and binds
 the provenance test to that raw server-readback receipt. The old recovery
 receipt still anchors unchanged map lineage. Local reader tests and a separate
-check using exact remote Git pointer blobs pass; hosted revalidation remains
-required. This changes no admission or owner guard and does not rerun the
-frozen observer.
+check using exact remote Git pointer blobs pass. Hosted revalidation subsequently
+passed all 60 reader tests at `1f6828d5` and again at `5869953c`; both sources'
+overall CI failed at the native LOCAL_BUSY admission boundary. This changes no
+admission or owner guard and does not rerun the frozen observer.
 
 ### Earlier recovery attempts retained as history
 

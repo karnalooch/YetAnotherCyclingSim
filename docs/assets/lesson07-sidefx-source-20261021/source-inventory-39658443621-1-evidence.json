@@ -1,0 +1,445 @@
+{
+  "schema_version": 1,
+  "status": "EXACT_VIDEO_IDS_NOT_FOUND_IN_REGISTERED_TEXTURE_NAMES",
+  "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+  "run_id": 39658443621,
+  "run_attempt": 1,
+  "job_id": 119425037647,
+  "workflow_conclusion": "success",
+  "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39658443621",
+  "artifact_id": 12371989916,
+  "artifact_bytes": 31983,
+  "artifact_sha256": "3c84c75682bc90980849ff247d37113703632bf26753a0cf6b606d9eb25c3151",
+  "observed_utc": "2026-10-21T19:09:44.3159816Z",
+  "client_sha256": "5fdc55545a38c536cc76b2e0cea2ab3d83a60b47d3c55211fb4813191850b522",
+  "native_tool_calls": 7,
+  "owner_checks": 14,
+  "editor_started_or_stopped": false,
+  "material_save_or_import": false,
+  "owner": {
+    "status": "ATTACH_EXISTING",
+    "owner_sid_matches": true,
+    "editor": {
+      "editor_pid": 11284,
+      "editor_start_filetime_utc": "134370817710799968",
+      "editor_started_utc": "2026-10-21T18:42:51.0799968Z",
+      "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+      "interactive_session_id": 1,
+      "canonical_project_matches": true
+    }
+  },
+  "identity_stable_across_probe": true,
+  "owner_process_listener_stable_in_all_checks": true,
+  "registry_query_contract": "Case-insensitive substring of the registered ASSET NAME; scope /Game, recursive true, Texture2D class and subclasses, limit 200, offset 0.",
+  "queries_verified": [
+    "tkekcgfn",
+    "vjulbjjr",
+    "wenocdss",
+    "ultncbnlw",
+    "ullmagidy"
+  ],
+  "all_five_pages_complete": true,
+  "pagination_attempted": false,
+  "registry_pages": [
+    {
+      "index": 1,
+      "response_sha256": "ab3b154994e63364aa4fb67c89221663006c0847b531b138358353ae471b2222",
+      "page": {
+        "mode": "assets",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "offset": 0,
+        "limit": 200,
+        "truncated": false,
+        "raw_from_registry": 457,
+        "loaded_in_shown": 0,
+        "filters": {
+          "pattern": "",
+          "query": "tkekcgfn",
+          "type": "/Script/Engine.Texture2D",
+          "class_path": "/Script/Engine.Texture2D",
+          "class_filter_recursive": true
+        },
+        "rows": []
+      }
+    },
+    {
+      "index": 2,
+      "response_sha256": "0cdd8be22518bb431b1b35af6abcfc6092fe828377f637868f8b2deafc2824a7",
+      "page": {
+        "mode": "assets",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "offset": 0,
+        "limit": 200,
+        "truncated": false,
+        "raw_from_registry": 457,
+        "loaded_in_shown": 0,
+        "filters": {
+          "pattern": "",
+          "query": "vjulbjjr",
+          "type": "/Script/Engine.Texture2D",
+          "class_path": "/Script/Engine.Texture2D",
+          "class_filter_recursive": true
+        },
+        "rows": []
+      }
+    },
+    {
+      "index": 3,
+      "response_sha256": "d57b16c3aa00af2455fa6fdb35051d6221e3d7b68bb3f73b1fc2686bae358e14",
+      "page": {
+        "mode": "assets",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "offset": 0,
+        "limit": 200,
+        "truncated": false,
+        "raw_from_registry": 457,
+        "loaded_in_shown": 0,
+        "filters": {
+          "pattern": "",
+          "query": "wenocdss",
+          "type": "/Script/Engine.Texture2D",
+          "class_path": "/Script/Engine.Texture2D",
+          "class_filter_recursive": true
+        },
+        "rows": []
+      }
+    },
+    {
+      "index": 4,
+      "response_sha256": "776530e234b5a3a7f23a58e34e03969070cf5f7254a7b9077d9426c105adcad4",
+      "page": {
+        "mode": "assets",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "offset": 0,
+        "limit": 200,
+        "truncated": false,
+        "raw_from_registry": 457,
+        "loaded_in_shown": 0,
+        "filters": {
+          "pattern": "",
+          "query": "ultncbnlw",
+          "type": "/Script/Engine.Texture2D",
+          "class_path": "/Script/Engine.Texture2D",
+          "class_filter_recursive": true
+        },
+        "rows": []
+      }
+    },
+    {
+      "index": 5,
+      "response_sha256": "6c139e875feb1a47e3a32137d6fad86b6380122cf20e7a9d993617cae8ae431e",
+      "page": {
+        "mode": "assets",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "offset": 0,
+        "limit": 200,
+        "truncated": false,
+        "raw_from_registry": 457,
+        "loaded_in_shown": 0,
+        "filters": {
+          "pattern": "",
+          "query": "ullmagidy",
+          "type": "/Script/Engine.Texture2D",
+          "class_path": "/Script/Engine.Texture2D",
+          "class_filter_recursive": true
+        },
+        "rows": []
+      }
+    }
+  ],
+  "exact_video_ids_found_in_registered_texture_names": false,
+  "project_wide_asset_absence_proven": false,
+  "renamed_assets_verified": false,
+  "external_download_cache_checked": false,
+  "license_entitlement_verified": false,
+  "comparison_to_earlier_inventory": {
+    "run_id": 39654531355,
+    "run_attempt": 2,
+    "source_commit": "1f6828d5d2d75f3d8b73547a76175de8b7e4c715",
+    "report_file": "source-inventory-39654531355-2-bridge.json",
+    "report_bytes": 111969,
+    "report_sha256": "3f195803211fd172dbae17c0ac357ee80d461527e8a2d68561c2b954f3d8199b",
+    "readbacks": [
+      {
+        "tool_name": "edit_material_instance",
+        "earlier_call_index": 2,
+        "current_call_index": 6,
+        "full_response_text_byte_identical": true,
+        "ordered_json_identical": true,
+        "response_sha256": "1f4aaa3066bf03ce46b3caa55ae4cd4b5542df5bea24811af3e1f4fa6a8be1e7"
+      },
+      {
+        "tool_name": "edit_texture",
+        "earlier_call_index": 3,
+        "current_call_index": 7,
+        "full_response_text_byte_identical": true,
+        "ordered_json_identical": true,
+        "response_sha256": "e6bdb7f3a363b0bbfe1119b77dfc8319d41c23a06105865063fb5a9cd5828508"
+      }
+    ]
+  },
+  "material_instance": {
+    "call_index": 6,
+    "asset": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS",
+    "saved": false,
+    "ordered_row_counts": {
+      "scalars": 61,
+      "vectors": 1,
+      "textures": 5,
+      "static_switches": 3
+    },
+    "relevant_scalars_ordered": [
+      {
+        "name": "Detail Tiling",
+        "value": 0.25,
+        "overridden": true
+      },
+      {
+        "name": "Terrain Resolution",
+        "value": 16000,
+        "overridden": true
+      },
+      {
+        "name": "UV Distort",
+        "value": 4,
+        "overridden": true
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Num IDmap Layers",
+        "value": 5,
+        "overridden": true
+      },
+      {
+        "name": "Global Specular Scale",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Global Normal Flatten",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Macro Tiling",
+        "value": 0.05000000074505806,
+        "overridden": true
+      },
+      {
+        "name": "UV Rotate",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Detail Brightness",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Global Brightness",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Global Saturation",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Terrain Scale",
+        "value": 50,
+        "overridden": true
+      }
+    ],
+    "texture_bindings": [
+      {
+        "name": "Normal Atlas",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.TA_Normal_Unified",
+        "overridden": true
+      },
+      {
+        "name": "Colour Atlas",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.TA_Colour_Unified",
+        "overridden": true
+      },
+      {
+        "name": "Terrain Colour",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color.T_PE_Terrain_Color",
+        "overridden": true
+      },
+      {
+        "name": "Masks Atlas",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.TA_Masks_Unified",
+        "overridden": true
+      },
+      {
+        "name": "Terrain IDmap",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap.T_PE_Terrain_IDMap",
+        "overridden": true
+      }
+    ],
+    "parameter_associations_and_indices_verified": false
+  },
+  "array_settings": [
+    {
+      "name": "TA_Colour_Unified",
+      "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified",
+      "width": 2048,
+      "height": 2048,
+      "source_width": 2048,
+      "source_height": 2048,
+      "pixel_format": "<n/a>",
+      "compression": "TC_Default",
+      "srgb": true,
+      "virtual_texture_streaming": false,
+      "lod_group": "TEXTUREGROUP_World",
+      "filter": "TF_Default",
+      "mip_gen": "TMGS_FromTextureGroup",
+      "lod_bias": 0,
+      "virtual_streaming": false,
+      "required_sampler": "SAMPLERTYPE_Color(0)"
+    },
+    {
+      "name": "TA_Normal_Unified",
+      "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified",
+      "width": 2048,
+      "height": 2048,
+      "source_width": 2048,
+      "source_height": 2048,
+      "pixel_format": "<n/a>",
+      "compression": "TC_Normalmap",
+      "srgb": false,
+      "virtual_texture_streaming": false,
+      "lod_group": "TEXTUREGROUP_HierarchicalLOD",
+      "filter": "TF_Default",
+      "mip_gen": "TMGS_FromTextureGroup",
+      "lod_bias": 0,
+      "virtual_streaming": false,
+      "required_sampler": "SAMPLERTYPE_Normal(3)"
+    },
+    {
+      "name": "TA_Masks_Unified",
+      "path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified",
+      "width": 2048,
+      "height": 2048,
+      "source_width": 2048,
+      "source_height": 2048,
+      "pixel_format": "<n/a>",
+      "compression": "TC_Masks",
+      "srgb": false,
+      "virtual_texture_streaming": false,
+      "lod_group": "TEXTUREGROUP_World",
+      "filter": "TF_Default",
+      "mip_gen": "TMGS_FromTextureGroup",
+      "lod_bias": 0,
+      "virtual_streaming": false,
+      "required_sampler": "SAMPLERTYPE_Masks(4)"
+    }
+  ],
+  "array_source_textures_verified": false,
+  "actual_gpu_format_verified": false,
+  "material_function_sampler_nodes_verified": false,
+  "limitations": [
+    "No registered Texture2D name under /Game matched the five exact video IDs. This does not exclude renamed assets, unregistered files or an external download cache.",
+    "raw_from_registry=457 is the count reported before the name filter for each query; it is not 457 matching surfaces or five separate populations.",
+    "MI rows do not expose parameter association or layer index; repeated names retain their returned order.",
+    "Array read mode exposes settings, not SourceTextures slot lists or actual GPU format; pixel_format is <n/a>.",
+    "required_sampler describes the requirement derived from texture settings, not actual material-function sampler nodes.",
+    "No new import, save, normal repair, global-colour source repair, PBR family verification, rendered whole-area review or owner acceptance occurred in this read-only run.",
+    "No license entitlement or complete absence of the original source families is established by registry name searches."
+  ],
+  "protected_ci": {
+    "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+    "run_id": 39658455912,
+    "conclusion": "failure",
+    "run_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39658455912",
+    "hosted_python_job_id": 119425014052,
+    "hosted_python_conclusion": "success",
+    "readback_test_module": {
+      "path": "scripts/ue/test_lesson07_readback.py",
+      "tests_passed": 60,
+      "seconds": 7.165,
+      "result_utc": "2026-10-21T19:06:58.6682130Z"
+    },
+    "client_test_module": {
+      "path": "scripts/ue/test_lesson07_wingman_client.py",
+      "tests_passed": 110,
+      "result_utc": "2026-10-21T19:06:59.6358225Z"
+    },
+    "windows_job_id": 119426772514,
+    "windows_conclusion": "failure",
+    "windows_failure": "LOCAL_BUSY before checkout/build; owner Editor preserved",
+    "windows_admission_refused_utc": "2026-10-21T19:10:54.7171535Z",
+    "secondary_error": "Proof-log staging had an invalid _unreal-ci-warm working directory because checkout had not run.",
+    "final_cleanup_owner_refusal_utc": "2026-10-21T19:10:56.2664994Z",
+    "new_native_build_or_automation": false,
+    "evidence_source": "Root-reviewed raw job logs for this exact source/run; earlier 1f6828d5 CI results are historical and are not transferred.",
+    "hosted_python_plan": "FULL",
+    "hosted_python_modules_selected": 285,
+    "hosted_python_modules_available": 285,
+    "module_selection_limitation": "285/285 is plan selection coverage; deferred editor-only and skipped modules are not counted as executed passes."
+  },
+  "original_workflow_application": false,
+  "normal_repair": false,
+  "global_colour_repair": false,
+  "lesson07_technical_pass": false,
+  "visual_acceptance": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3",
+  "reports": [
+    {
+      "file": "source-inventory-39658443621-1-bridge.json",
+      "bytes": 120838,
+      "sha256": "0be8a7f45e33972f4e68bf9038d5318d105b161dcb27eec22ddde9103149b2c0"
+    },
+    {
+      "file": "source-inventory-39658443621-1-probe.json",
+      "bytes": 3939,
+      "sha256": "763426432e23c626c5135ac69526f00bcf4cdf8020b61199b45f21c279c52be1"
+    },
+    {
+      "file": "source-inventory-39658443621-1-identity.json",
+      "bytes": 616,
+      "sha256": "27b94242abbb7e9d2c344fcb211d6d67013d2257332a39bd73afd35aec1ed892"
+    },
+    {
+      "file": "source-inventory-39658443621-1-download-receipt.json",
+      "bytes": 647,
+      "sha256": "31a930f95154c79e30d4ad50b0611b9d3e43a4a60ab414594be2334ae8143efc"
+    }
+  ]
+}

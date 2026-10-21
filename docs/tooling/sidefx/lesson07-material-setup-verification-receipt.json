@@ -1,5 +1,5 @@
 {
-  "status": "LESSON07_SOURCE_IMPORT_SAVED_RENDER_DEFECTS_AND_NORMAL_CONTRACT_OPEN",
+  "status": "LESSON07_ORIGINAL_ZIP_TEXTURES_DELIVERED_NATIVE_APPLICATION_UNCHANGED",
   "timestamp": "2026-10-20T03:20:00+02:00",
   "lesson": "PEG-02-07",
   "lesson_title": "7 | Material Setup",
@@ -1524,7 +1524,7 @@
     },
     "delivery_authorization": "Owner requested publishing the same local repair on the existing branch, without regenerating terrain; exact commit and remote delivery are verified separately."
   },
-  "updated_at_utc": "2026-10-21T16:41:53.8743735Z",
+  "updated_at_utc": "2026-10-21T19:33:52.279967+00:00",
   "grass2_replacement_20261020": {
     "status": "APPLIED_SAVED_NATIVE_READBACK_PASS_RENDER_PENDING",
     "base_head": "c4d2a44aa2b79579507cda2babd448eab45e1144",
@@ -2381,7 +2381,7 @@
       "native_tool_error": {
         "content_blocks_truncated": false,
         "retained_text_blocks": 1,
-        "sanitized_text": "🛑 Safety gate blocked this call. Tool 'execute_python' attempted to write to a PROTECTED file (project descriptor (.uproject)). These files are off-limits to AI-driven edits because they affect plugin packaging, build configuration, or engine-wide settings - a wrong edit can break the entire project. If you only need to READ this file (not write it), use code_search read_file instead (read-only, not gated) - F49. If you genuinely need to MODIFY this file, ask the user to do it manually. This gate runs at the tool layer and cannot be bypassed by retrying or rephrasing.",
+        "sanitized_text": "\ud83d\uded1 Safety gate blocked this call. Tool 'execute_python' attempted to write to a PROTECTED file (project descriptor (.uproject)). These files are off-limits to AI-driven edits because they affect plugin packaging, build configuration, or engine-wide settings - a wrong edit can break the entire project. If you only need to READ this file (not write it), use code_search read_file instead (read-only, not gated) - F49. If you genuinely need to MODIFY this file, ask the user to do it manually. This gate runs at the tool layer and cannot be bypassed by retrying or rephrasing.",
         "text_truncated": false
       },
       "probe_status": "LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED",
@@ -4184,6 +4184,20 @@
     },
     "hosted_revalidation": {
       "status": "PASS",
+      "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+      "ci_run_id": 39658455912,
+      "job_id": 119425014052,
+      "test_module": "scripts/ue/test_lesson07_readback.py",
+      "tests_passed": 60,
+      "module_result_utc": "2026-10-21T19:06:58.6682130Z",
+      "client_tests_passed": 110,
+      "overall_ci_conclusion": "failure",
+      "native_lane_job_id": 119426772514,
+      "native_lane_reason": "LOCAL_BUSY before checkout/build; owner Editor preserved. Log staging then failed for the absent worktree; final cleanup again refused LOCAL_BUSY.",
+      "native_build_executed": false
+    },
+    "prior_hosted_revalidation": {
+      "status": "PASS",
       "source_commit": "1f6828d5d2d75f3d8b73547a76175de8b7e4c715",
       "ci_run_id": 39654542444,
       "job_id": 119411407332,
@@ -4195,7 +4209,7 @@
     }
   },
   "original_sidefx_reinspection_20261021": {
-    "status": "STANDARD_MEGASCANS_FOLDER_EMPTY_EXACT_ID_SEARCH_PENDING",
+    "status": "ORIGINAL_ZIP_TEXTURES_DELIVERED_NATIVE_APPLICATION_UNCHANGED",
     "report": "docs/assets/lesson07-sidefx-source-20261021/README.md",
     "archive_sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
     "archive_bytes": 605943562,
@@ -4207,12 +4221,120 @@
     "lesson07_technical_pass": false,
     "performance_pass": false,
     "performance_note": "DEFERRED_AFTER_M3",
-    "native_source_inspection_report": "docs/assets/lesson07-sidefx-source-20261021/source-inventory-39654531355-2-evidence.json",
-    "native_source_inspection_run": 39654531355,
-    "native_source_inspection_attempt": 2,
+    "native_source_inspection_report": "docs/assets/lesson07-sidefx-source-20261021/source-inventory-39658443621-1-evidence.json",
+    "native_source_inspection_run": 39658443621,
+    "native_source_inspection_attempt": 1,
     "native_source_inspection_complete_for_standard_folder": true,
     "standard_megascans_texture_count": 0,
-    "project_wide_expected_id_search": "PENDING",
-    "fresh_owner_pid": 11284
+    "project_wide_expected_id_search": "COMPLETE_NO_REGISTERED_NAME_MATCHES",
+    "fresh_owner_pid": 11284,
+    "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+    "standard_folder_inspection_run": 39654531355,
+    "standard_folder_inspection_attempt": 2,
+    "native_calls": 7,
+    "fresh_host_checks": 14,
+    "fresh_owner_interactive_session_id": 1,
+    "renamed_assets_verified": false,
+    "external_download_cache_verified": false,
+    "source_array_slot_refs_verified": false,
+    "mi_parameter_associations_verified": false,
+    "license_entitlement_verified": false,
+    "source_id_query_results": [
+      {
+        "id": "tkekcgfn",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "raw_from_registry": 457,
+        "truncated": false
+      },
+      {
+        "id": "vjulbjjr",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "raw_from_registry": 457,
+        "truncated": false
+      },
+      {
+        "id": "wenocdss",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "raw_from_registry": 457,
+        "truncated": false
+      },
+      {
+        "id": "ultncbnlw",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "raw_from_registry": 457,
+        "truncated": false
+      },
+      {
+        "id": "ullmagidy",
+        "scope": "/Game",
+        "shown": 0,
+        "total": 0,
+        "raw_from_registry": 457,
+        "truncated": false
+      }
+    ],
+    "owner_reports_possession_of_required_source_files": false,
+    "current_request": "Extract and deliver the textures actually contained in the supplied original SideFX ZIP.",
+    "current_request_complete": true,
+    "external_source_search_active": false,
+    "existing_local_export_requested_from_owner": false,
+    "archive_texture_delivery": {
+      "status": "DELIVERED_TO_OWNER",
+      "zip_name": "SideFX_Textures_From_Original_Zip.zip",
+      "zip_bytes": 217202273,
+      "zip_sha256": "672310b3b66072db2c1cfe73d958c69cb7b0a4e0c195a7a361c52b8e008ccdee",
+      "original_file_count": 57,
+      "texture2d_count": 48,
+      "landscape_debug_texture2d_count": 9,
+      "foliage_texture2d_count": 39,
+      "texture2darray_count": 3,
+      "png_count": 4,
+      "exr_count": 2,
+      "uasset_metadata_inspected_count": 125,
+      "original_paths_and_bytes_preserved": true,
+      "all_zip_members_size_crc32_sha256_verified": true,
+      "native_import_performed": false,
+      "images_edited_or_converted": false,
+      "uassets_reserialized": false,
+      "five_final_video_pbr_families_supplied": false,
+      "manifest": "docs/assets/lesson07-sidefx-source-20261021/original-textures-extraction-manifest.json",
+      "source_image_inspection": "docs/assets/lesson07-sidefx-source-20261021/source-six-image-inspection.json"
+    },
+    "current_original_landscape_pointer_comparison": {
+      "report": "docs/assets/lesson07-sidefx-source-20261021/current-landscape-archive-comparison.json",
+      "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+      "original_landscape_packages": 37,
+      "all_original_sha256_and_size_match_committed_canonical_lfs_pointers": true,
+      "remote_tree_truncated": false,
+      "lfs_binary_downloaded": false,
+      "lfs_server_object_availability_verified": false,
+      "windows_workspace_bytes_verified": false,
+      "unreal_invoked": false
+    },
+    "protected_ci_for_native_source": {
+      "source_commit": "5869953cc0924b5078e2067e55336d720f3e6ea7",
+      "run_id": 39658455912,
+      "conclusion": "failure",
+      "hosted_python_job_id": 119425014052,
+      "hosted_python_conclusion": "success",
+      "saved_mi_reader_tests_passed": 60,
+      "wingman_client_tests_passed": 110,
+      "full_plan_modules_selected": 285,
+      "full_plan_modules_available": 285,
+      "selection_count_is_not_all_modules_passed": true,
+      "windows_job_id": 119426772514,
+      "windows_failure": "LOCAL_BUSY before checkout/build; later proof-log staging had no working directory, and final cleanup also refused LOCAL_BUSY",
+      "owner_editor_preserved": true,
+      "native_build_pass": false,
+      "automation_pass": false
+    }
   }
 }
