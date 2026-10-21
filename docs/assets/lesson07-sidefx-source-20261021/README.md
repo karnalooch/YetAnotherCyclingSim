@@ -21,9 +21,9 @@ Editor PID 11284. Its discovery step succeeded; the overall workflow failed
 later because the separate historical error reader refused the current owner
 with `FAILURE_LOG_OWNER`. That reader and the denied observer remain unchanged.
 The typed level tool supports `modify` with reflected properties and explicit
-`save:false`; a fresh actor inventory and exact binding proof are still needed
-before using it for a preview. An original-MI copy is being prepared so layer
-associations are preserved instead of guessed through name-only setters. The
+`save:false`; the preparation below obtained a fresh four-Landscape inventory,
+but exact material-binding proof is still needed before a binding preview.
+An original-MI copy is now saved, preserving the source layer parameters. The
 current Sa Calobra geography, visibility and registered texture coordinates
 remain required inputs. Source global-colour coverage and the missing final
 video surface sets remain explicit dependencies.
@@ -64,6 +64,46 @@ It does not apply the candidate to the Landscape. The active material,
 geometry, IDMap and map save state remain outside this preparation operation.
 Optional host memory and fixed small-crop file metadata support a separate
 future source-colour canary; this operation does not launch Houdini.
+
+That preparation now completed in [run 39672674724](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39672674724)
+at source `1479d2ddd424d47ddc35b179c5599eba9cfb6cbe`: eleven calls and 22
+fresh checks retained the same PID 11284. The
+[native preparation receipt](preparation-39672674724-evidence.json) records
+the two saved packages, unchanged nine inputs and complete ordered readbacks.
+The backup's decoded persisted tuple contract matches the actual current MI.
+The new source copy is saved at
+`/Game/Generated/YACS/Lesson07_Unified/Materials/SideFX_OneToOne_20261021/MI_Pegasus_Source_YACS`.
+It has not been assigned to the Landscape. Its offline reader encounters an
+unsupported legacy `TextureStreamingData` payload, so a complete candidate
+export comparison remains unverified despite the successful native reads.
+The separate [partial-prefix receipt](preparation-39672674724-candidate-prefix-evidence.json)
+does decode all parameter and runtime-layer properties before that unsupported
+section: eleven complete properties roundtrip to an identical 16,184-byte
+prefix. All 29 source scalar GUIDs, eight layer/blend tuples and five ZIP global
+values are preserved. The added Terrain Scale 50 has a zero ExpressionGUID,
+unlike the previously saved YACS override; that is an explicit metadata
+difference, not proof of a bad runtime value. This supplementary result does
+not change the [frozen full-validator result](preparation-39672674724-offline-validation.json)
+from `OFFLINE_PARAMETER_CONTRACT_UNVERIFIED` to PASS.
+The host reported about 16.8 GiB free physical memory, but the pinned 257-square
+source crop was missing. The small Houdini canary was consequently not launched;
+no alternate or full-size cache was substituted.
+
+The [base-coverage recipe correction](base-material-coverage-recipe.json) now
+sets the first `MAT_GRASS.use_mask` from 1 to the original HDA default 0.
+This fills base RGB and roughness outside the Grass mask. The second mask input
+remains connected for distortion, and the existing `heightscale=0` remains
+unchanged. Source-graph review found no nonzero height contribution from this
+flag for finite inputs; native height equality has not been tested. Existing
+cache files still use the earlier recipe: the pipeline skips files that already
+exist, so this code change neither invalidates nor repairs them automatically.
+No recook, cache deletion, geometry or IDMap write was performed.
+
+A separate [input-inspection operation](input-inspection-scope.json) is prepared
+to read metadata for eight fixed historical cache paths and make one installed
+plugin-source search, with two fresh owner checks. It will establish available
+inputs and inspect scalar-setter semantics before the final-video comparison.
+Its publication does not itself establish either result or alter a material.
 
 The archive and video establish an important dependency: **the downloaded
 project contains the material system and diagnostic arrays, not the five

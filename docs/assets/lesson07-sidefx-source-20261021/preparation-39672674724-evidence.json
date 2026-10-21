@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "status": "ORIGINAL_MI_COPY_SAVED_NATIVE_ORDERED_VALUES_VERIFIED_OFFLINE_REVIEW_PARTIAL",
+  "source_commit": "1479d2ddd424d47ddc35b179c5599eba9cfb6cbe",
+  "workflow_run_id": 39672674724,
+  "run_attempt": 1,
+  "workflow_conclusion": "success",
+  "cpu_job_id": 119474346812,
+  "windows_job_id": 119474519080,
+  "artifact_id": 12379584092,
+  "artifact_bytes": 63720,
+  "artifact_sha256": "111a7a381e0e6fa5cbc508dcf5d2c13717d38dd7e22c82bf0ea801357fd6c8b5",
+  "native_tool_calls": 11,
+  "fresh_owner_checks": 22,
+  "editor_pid": 11284,
+  "editor_start_filetime_utc": "134370817710799968",
+  "editor_started_or_stopped": false,
+  "source_mi_copy_saved": true,
+  "source_native_ordered_settings_verified": true,
+  "current_mi_unchanged": true,
+  "all_nine_input_files_unchanged": true,
+  "input_fingerprints": {
+    "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS": {
+      "sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+      "size_bytes": 40154
+    },
+    "/Game/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS": {
+      "sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66",
+      "size_bytes": 208956
+    },
+    "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified": {
+      "sha256": "7496f23a71d33cd5b812627354559645e8e8fdab57d5a7c5f0216a6293ab58b1",
+      "size_bytes": 25841182
+    },
+    "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified": {
+      "sha256": "565986d6df8ab5d9483c99273ba69a05dcff661a8f55b430bef16e400ba84c94",
+      "size_bytes": 18473310
+    },
+    "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified": {
+      "sha256": "a9528c0d7277f3ef0384470f9a47d8f3d5d18888dfab50e04e43d19df6416003",
+      "size_bytes": 37576130
+    },
+    "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color": {
+      "sha256": "ffe2f2aa37af5c38b2e6c622a95cf9462d41764f6d9b5b474029d89540000690",
+      "size_bytes": 425514280
+    },
+    "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap": {
+      "sha256": "0641c28615a1af24dcd3c6c01938db2ce092c3f1ee292bf293f1f7724b9ebf36",
+      "size_bytes": 13437988
+    },
+    "/Game/PegasusDemo/Materials/Landscape/MI_Landscape_Instance": {
+      "sha256": "dde1fb5e4732cb38b6f1e03ba4646b715d75032a85e08e4e89a8325e11e606c7",
+      "size_bytes": 38181
+    },
+    "/Game/PegasusDemo/Materials/Landscape/M_Pegasus_Landscape_Master": {
+      "sha256": "d2fed2b50581f53e80bc01c53379b6900b32b8b6b70d55272149d8ef0f2cc171",
+      "size_bytes": 211283
+    }
+  },
+  "saved_new_packages": [
+    {
+      "file": "MI_BeforePegasusSource_20261021.uasset",
+      "object_path": "/Game/Generated/YACS/Lesson07_Unified/RepairBackups/MI_BeforePegasusSource_20261021",
+      "sha256": "f16485ebabe662fc26a3c9548e2c77e737df48b599f7680694c48acb6cebf70a",
+      "size_bytes": 39836,
+      "source_file": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\RepairBackups\\MI_BeforePegasusSource_20261021.uasset"
+    },
+    {
+      "file": "MI_Pegasus_Source_YACS.uasset",
+      "object_path": "/Game/Generated/YACS/Lesson07_Unified/Materials/SideFX_OneToOne_20261021/MI_Pegasus_Source_YACS",
+      "sha256": "ca3ac78c351850a369fbed7e9bb77d7deeaaa2f9cf08ed17922b6dca81b1e38e",
+      "size_bytes": 39927,
+      "source_file": "D:\\yacs\\project\\Content\\Generated\\YACS\\Lesson07_Unified\\Materials\\SideFX_OneToOne_20261021\\MI_Pegasus_Source_YACS.uasset"
+    }
+  ],
+  "host_metadata": {
+    "logical_processors": 6,
+    "memory_status": "OBSERVED",
+    "free_physical_kib": 17652060,
+    "total_visible_kib": 33472112,
+    "crop_status": "MISSING",
+    "crop_size_bytes": null,
+    "crop_sha256": null,
+    "crop_expected_sha256": "058a52fdf717bc8ff5eb770101594c54f3f12e12a928efd67720205da50f59ac"
+  },
+  "native_application_verified": false,
+  "actor_binding_verified": false,
+  "compiler_verified": false,
+  "full_candidate_export_verified": false,
+  "global_colour_repaired": false,
+  "exact_final_video_pbr_sets_available": false,
+  "visual_acceptance": false,
+  "performance_pass": false,
+  "performance_status": "DEFERRED_AFTER_M3",
+  "small_rgb_canary_admitted": false,
+  "small_rgb_canary_blocker": "The pinned SCREE_SITE_GLOBAL_COLOR 257-square cache is missing at the fixed observed host path; no fallback or Houdini execution was attempted.",
+  "reports": [
+    {
+      "file": "preparation-39672674724-1-bridge.json.gz",
+      "bytes": 37580,
+      "sha256": "6e0a1e3a133d51499317180021e71e7ea3773d1e12014bf6c782422d8060e8f2",
+      "original_bytes": 189309,
+      "original_sha256": "8c788329c10e2c231adc1cfe41525e06421acf7712b2cc03b6813e6a9113f0d6"
+    },
+    {
+      "file": "preparation-39672674724-1-probe.json",
+      "bytes": 4457,
+      "sha256": "6f64f149e2ae5ad90bfc718d7c1769419bfb95626c80a501d5ca30ad34179b2e",
+      "original_bytes": 4457,
+      "original_sha256": "6f64f149e2ae5ad90bfc718d7c1769419bfb95626c80a501d5ca30ad34179b2e"
+    },
+    {
+      "file": "preparation-39672674724-1-identity.json",
+      "bytes": 616,
+      "sha256": "d546892ef43f2093e7ff1b95672c27c57f8f5f56b7f27160d8f4ebc3caecb5eb",
+      "original_bytes": 616,
+      "original_sha256": "d546892ef43f2093e7ff1b95672c27c57f8f5f56b7f27160d8f4ebc3caecb5eb"
+    },
+    {
+      "file": "preparation-39672674724-1-candidate-assets.json",
+      "bytes": 935,
+      "sha256": "5642d6d027e331661aea633582c1d279d9fc6a6bad20a892d689331dc38a1fc7",
+      "original_bytes": 935,
+      "original_sha256": "5642d6d027e331661aea633582c1d279d9fc6a6bad20a892d689331dc38a1fc7"
+    },
+    {
+      "file": "preparation-39672674724-offline-validation.json",
+      "bytes": 11369,
+      "sha256": "59c6b3ad62c0ff92c33db3f51c24678e0c7ea9eb045e18ac628d007734baefcd"
+    },
+    {
+      "file": "preparation-39672674724-candidate-prefix-evidence.json",
+      "bytes": 8215,
+      "sha256": "418f30b5fff26ca623087ab9a61b4d40330f7eecfb48813ef19ec17ff21d68cc"
+    },
+    {
+      "file": "preparation-39672674724-candidate-parameter-contract.json",
+      "bytes": 9810,
+      "sha256": "6b1802a82a234693177267378a82a2a440f6c66d422c09e00aa089eb0faa7b28"
+    }
+  ],
+  "backup_offline_parameter_contract_matches": true,
+  "candidate_prefix_parameters_match_zip_and_yacs_adaptations": true,
+  "candidate_prefix_complete_properties": 11,
+  "candidate_prefix_bytes": 16184,
+  "candidate_prefix_roundtrip_matches_original_bytes": true,
+  "candidate_original_scalar_guids_preserved": 29,
+  "candidate_added_terrain_scale_expression_guid": "00000000-0000-0000-0000-000000000000",
+  "candidate_added_terrain_scale_guid_matches_existing_yacs_mi": false,
+  "candidate_full_export_parser_failure": "Unsupported TextureStreamingData serialization after the fully decoded parameter/static-layer properties"
+}

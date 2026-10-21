@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+  "observed_utc": "2026-10-21T20:46:07.2304582Z",
+  "source_commit": "1479d2ddd424d47ddc35b179c5599eba9cfb6cbe",
+  "pid": 11284,
+  "process_created_utc": "2026-10-21T18:42:51.0799960Z",
+  "process_start_filetime_utc": "134370817710799968",
+  "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+  "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+  "canonical_project_argument_matches": true,
+  "listener": {
+    "address": "127.0.0.1",
+    "port": 19315,
+    "pid": 11284
+  }
+}

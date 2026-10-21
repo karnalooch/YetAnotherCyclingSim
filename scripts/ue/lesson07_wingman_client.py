@@ -176,6 +176,16 @@ PEGASUS_TEXTURES = (
 )
 PEGASUS_INPUTS = (PEGASUS_SOURCE, TRIAL_MI, PEGASUS_PARENT, PEGASUS_SOURCE_PARENT,
                   *(path for _name, path in PEGASUS_TEXTURES))
+PEGASUS_INPUTS_SCHEMA_SHA256 = INSPECTION_SCHEMA_SHA256["code_search"]
+
+
+def pegasus_inputs_inspection_plan():
+    """One fixed installed-plugin source search; no material reads or writes."""
+    return {"name": "code_search", "arguments": {
+        "operation": "grep", "scope": "plugin", "file_glob": "*.cpp",
+        "pattern": "SetScalarParameterValueEditorOnly", "context_lines": 12,
+        "max_results": 60,
+    }}
 
 
 def pegasus_plan():
@@ -980,6 +990,10 @@ class ObservationState:
     source_assets_queries_verified: list = field(default_factory=list)
     source_assets_registry_verified: bool = False
     source_assets_inventory_complete: bool = False
+    pegasus_inputs_requested: bool = False
+    pegasus_inputs_results: list = field(default_factory=list)
+    pegasus_inputs_host_checks: list = field(default_factory=list)
+    pegasus_inputs_schema_sha256: str | None = None
     pegasus_requested: bool = False
     pegasus_results: list = field(default_factory=list)
     pegasus_host_checks: list = field(default_factory=list)
@@ -1019,6 +1033,19 @@ class ObservationState:
     apply_verified: bool = False
 
     def report_fields(self):
+        if self.pegasus_inputs_requested:
+            return {
+                "native_tool_calls": sum(row["attempted"] for row in self.pegasus_inputs_results),
+                "native_tool_attempted": self.attempted, "native_tool_completed": self.completed,
+                "native_tool_response_received": len(self.pegasus_inputs_results) == 1
+                and self.pegasus_inputs_results[0]["response_received"],
+                "pegasus_inputs_results": self.pegasus_inputs_results,
+                "pegasus_inputs_host_checks": self.pegasus_inputs_host_checks,
+                "pegasus_inputs_schema_sha256": self.pegasus_inputs_schema_sha256,
+                "pegasus_inputs_source_semantics_verified": False,
+                "pegasus_inputs_material_mutation_requested": False,
+                "native_tool_error": self.tool_error,
+            }
         if self.pegasus_requested:
             return {
                 "native_tool_calls": sum(row["attempted"] for row in self.pegasus_results),
@@ -1887,6 +1914,9 @@ class DiscoveryClient:
         self._pegasus_params = None
         self._pegasus_row = None
         self._pegasus_files_guard = None
+        self._pegasus_inputs_params = None
+        self._pegasus_inputs_row = None
+        self._pegasus_inputs_files_guard = None
         self._trial_params = None
         self._trial_row = None
         self._trial_recovering = False
@@ -2051,6 +2081,18 @@ class DiscoveryClient:
                     and state.source_assets_schema_sha256 == SOURCE_ASSETS_SCHEMA_SHA256
                     and canonical(params) == canonical(source_assets_inspection_plan()[index]),
                     "SOURCE_ASSETS_ARGUMENTS")
+        pegasus_inputs_inspecting = (
+            method == "tools/call" and self._pegasus_inputs_params is not None
+            and params is self._pegasus_inputs_params and self._pegasus_inputs_row is not None
+            and not self._pegasus_inputs_row["attempted"] and not notification
+        )
+        if pegasus_inputs_inspecting:
+            state = self.observation_state
+            require(state.pegasus_inputs_requested and len(state.pegasus_inputs_results) == 1
+                    and state.pegasus_inputs_results[0] is self._pegasus_inputs_row
+                    and state.pegasus_inputs_schema_sha256 == PEGASUS_INPUTS_SCHEMA_SHA256
+                    and canonical(params) == canonical(pegasus_inputs_inspection_plan()),
+                    "PEGASUS_INPUTS_ARGUMENTS")
         trialing = (
             method == "tools/call" and self._trial_params is not None
             and params is self._trial_params and self._trial_row is not None
@@ -2116,7 +2158,7 @@ class DiscoveryClient:
                     and canonical(params) == canonical(surface_plan(self._surface_run_token)[index]),
                     "SURFACE_ARGUMENTS")
             self._surface_host_check("before")
-        native_call = observing or capturing or inspecting or trialing or vault_inspecting or surfacing or source_assets_inspecting or pegasus_preparing
+        native_call = observing or capturing or inspecting or trialing or vault_inspecting or surfacing or source_assets_inspecting or pegasus_preparing or pegasus_inputs_inspecting
         require(
             method in METHODS
             or (notification and method == "notifications/initialized")
@@ -2129,6 +2171,8 @@ class DiscoveryClient:
         )
         if surfacing:
             pass  # The fresh host check above is required for every surface operation.
+        elif pegasus_inputs_inspecting:
+            self._pegasus_inputs_host_check("before")
         elif pegasus_preparing:
             self._pegasus_host_check("before")
         elif source_assets_inspecting:
@@ -2230,6 +2274,11 @@ class DiscoveryClient:
                         "attempted": True, "completed": None,
                         "started_utc": self.observation_state.started_utc.isoformat(),
                     })
+                if pegasus_inputs_inspecting:
+                    self._pegasus_inputs_row.update({
+                        "attempted": True, "completed": None,
+                        "started_utc": self.observation_state.started_utc.isoformat(),
+                    })
                 if trialing:
                     self._trial_row.update({
                         "attempted": True, "completed": None,
@@ -2324,6 +2373,11 @@ class DiscoveryClient:
                     })
                 if pegasus_preparing:
                     self._pegasus_row.update({
+                        "response_received": True,
+                        "response_received_utc": self.observation_state.response_received_utc.isoformat(),
+                    })
+                if pegasus_inputs_inspecting:
+                    self._pegasus_inputs_row.update({
                         "response_received": True,
                         "response_received_utc": self.observation_state.response_received_utc.isoformat(),
                     })
@@ -2455,6 +2509,42 @@ class DiscoveryClient:
                 row["error_code"] = error.code
                 raise
         state.completed = True
+
+    def _pegasus_inputs_host_check(self, phase):
+        if self._pegasus_inputs_files_guard is not None:
+            self._pegasus_inputs_files_guard()
+        check = verify_trial_host_identity(self.identity, self.discovery)
+        validate_identity({**self.identity, "observed_utc": check["verified_utc"]}, self.discovery)
+        self.observation_state.pegasus_inputs_host_checks.append({"index": 1, "phase": phase, **check})
+
+    def _run_pegasus_inputs_inspection(self, schema):
+        state = self.observation_state
+        require(type(schema) is dict and hashlib.sha256(canonical(schema)).hexdigest() == PEGASUS_INPUTS_SCHEMA_SHA256,
+                "PEGASUS_INPUTS_TOOL_SCHEMA_UNSUPPORTED")
+        state.pegasus_inputs_schema_sha256 = PEGASUS_INPUTS_SCHEMA_SHA256
+        params = pegasus_inputs_inspection_plan()
+        row = {
+            "index": 1, "tool_name": params["name"], "arguments": params["arguments"],
+            "input_schema_sha256": state.pegasus_inputs_schema_sha256,
+            "attempted": False, "completed": False, "response_received": False,
+            "started_utc": None, "response_received_utc": None, "result": None, "error_code": None,
+        }
+        state.pegasus_inputs_results.append(row)
+        self._pegasus_inputs_params, self._pegasus_inputs_row = params, row
+        state.tool_name = params["name"]
+        try:
+            try:
+                result = self._post("tools/call", params)
+                retain_inspection_result(result, row, (self.discovery.token, self.session_id))
+            finally:
+                if row["attempted"]:
+                    self._pegasus_inputs_host_check("after")
+            # A successful search response is evidence for review, not proof
+            # of setter association semantics, complete matches or material state.
+            row["completed"] = state.completed = True
+        except ProbeError as error:
+            row["error_code"] = error.code
+            raise  # No follow-up, retry, alternate source or transport.
 
     def _pegasus_host_check(self, phase):
         if self._pegasus_files_guard is not None:
@@ -2718,13 +2808,15 @@ class DiscoveryClient:
         self, observe_lesson07=False, capture_lesson07=False, inspect_lesson07=False,
         trial_macro=False, apply_reviewed_macro=False, inspect_vault=False, import_surfaces=False, surface_run_token=None,
         inspect_source_assets=False, prepare_pegasus_candidate=False, pegasus_run_token=None,
+        inspect_pegasus_inputs=False,
     ):
         require(
-            sum((observe_lesson07, capture_lesson07, inspect_lesson07, trial_macro, apply_reviewed_macro, inspect_vault, import_surfaces, inspect_source_assets, prepare_pegasus_candidate)) <= 1,
+            sum((observe_lesson07, capture_lesson07, inspect_lesson07, trial_macro, apply_reviewed_macro, inspect_vault, import_surfaces, inspect_source_assets, prepare_pegasus_candidate, inspect_pegasus_inputs)) <= 1,
             "NATIVE_MODES_MUTUALLY_EXCLUSIVE",
         )
         self.observation_state.surface_requested = import_surfaces
         self.observation_state.pegasus_requested = prepare_pegasus_candidate
+        self.observation_state.pegasus_inputs_requested = inspect_pegasus_inputs
         self.observation_state.capture_requested = capture_lesson07
         self.observation_state.inspection_requested = inspect_lesson07
         self.observation_state.vault_requested = inspect_vault
@@ -2984,6 +3076,16 @@ class DiscoveryClient:
                 "visual_acceptance": False,
                 **self.observation_state.report_fields(),
             })
+        if inspect_pegasus_inputs:
+            require(tool_error is None, "PEGASUS_INPUTS_INCOMPLETE_TOOL_LIST")
+            require(session["signed_in"], "PEGASUS_INPUTS_SIGNED_OUT")
+            self._run_pegasus_inputs_inspection(inspection_schemas.get("code_search"))
+            report.update({
+                "status": "PEGASUS_INPUTS_RESPONSE_RECEIVED_REVIEW_PENDING",
+                "http_requests": self.requests,
+                "native_material_readback": "NOT_RUN", "visual_acceptance": False,
+                **self.observation_state.report_fields(),
+            })
         if prepare_pegasus_candidate:
             require(tool_error is None, "PEGASUS_INCOMPLETE_TOOL_LIST")
             require(session["signed_in"], "PEGASUS_SIGNED_OUT")
@@ -3048,6 +3150,7 @@ def probe_from_files(
     inspect_source_assets=False,
     import_surfaces=False,
     prepare_pegasus_candidate=False,
+    inspect_pegasus_inputs=False,
     observation_state=None,
 ):
     require(WINDOWS_HOST, "WINDOWS_HOST_REQUIRED")
@@ -3057,7 +3160,7 @@ def probe_from_files(
     identity = parse_json(identity_raw, CONFIG_LIMIT)
     safe_identity = validate_identity(identity, discovery)
     client = DiscoveryClient(discovery, identity, observation_state=observation_state)
-    if trial_macro or apply_reviewed_macro or inspect_vault or import_surfaces or inspect_source_assets or prepare_pegasus_candidate:
+    if trial_macro or apply_reviewed_macro or inspect_vault or import_surfaces or inspect_source_assets or prepare_pegasus_candidate or inspect_pegasus_inputs:
         if inspect_source_assets:
             client.observation_state.source_assets_external_host_identity = safe_identity
         elif inspect_vault:
@@ -3070,7 +3173,9 @@ def probe_from_files(
                     and read_bounded(identity_path, CONFIG_LIMIT) == identity_raw,
                     "INPUT_CHANGED")
 
-        if prepare_pegasus_candidate:
+        if inspect_pegasus_inputs:
+            client._pegasus_inputs_files_guard = trial_files_guard
+        elif prepare_pegasus_candidate:
             client._pegasus_files_guard = trial_files_guard
         elif inspect_source_assets:
             client._source_assets_files_guard = trial_files_guard
@@ -3088,6 +3193,7 @@ def probe_from_files(
         **({"apply_reviewed_macro": True} if apply_reviewed_macro else {}),
         **({"inspect_vault": True} if inspect_vault else {}),
         **({"inspect_source_assets": True} if inspect_source_assets else {}),
+        **({"inspect_pegasus_inputs": True} if inspect_pegasus_inputs else {}),
         **({"prepare_pegasus_candidate": True, "pegasus_run_token": Path(identity_path).parent.name} if prepare_pegasus_candidate else {}),
         **({"import_surfaces": True, "surface_run_token": Path(identity_path).parent.name} if import_surfaces else {}),
     )
@@ -3170,6 +3276,7 @@ def main(argv=None):
     mode.add_argument("--inspect-vault", action="store_true")
     mode.add_argument("--inspect-source-assets", action="store_true")
     mode.add_argument("--prepare-pegasus-candidate", action="store_true")
+    mode.add_argument("--inspect-pegasus-inputs", action="store_true")
     mode.add_argument("--import-surfaces", action="store_true")
     mode.add_argument("--trial-macro", action="store_true")
     mode.add_argument("--apply-reviewed-macro", action="store_true")
@@ -3180,6 +3287,7 @@ def main(argv=None):
         vault_requested=args.inspect_vault,
         source_assets_requested=args.inspect_source_assets,
         pegasus_requested=args.prepare_pegasus_candidate,
+        pegasus_inputs_requested=args.inspect_pegasus_inputs,
         surface_requested=args.import_surfaces,
         trial_requested=args.trial_macro,
         apply_requested=args.apply_reviewed_macro,
@@ -3201,6 +3309,8 @@ def main(argv=None):
             options["inspect_source_assets"] = True
         if args.prepare_pegasus_candidate:
             options["prepare_pegasus_candidate"] = True
+        if args.inspect_pegasus_inputs:
+            options["inspect_pegasus_inputs"] = True
         if args.import_surfaces:
             options["import_surfaces"] = True
         if args.trial_macro:
@@ -3217,7 +3327,9 @@ def main(argv=None):
         state.apply_verified = False
         report = {
             "schema_version": 1,
-            "status": "PEGASUS_CANDIDATE_FAILED"
+            "status": "PEGASUS_INPUTS_INSPECTION_FAILED"
+            if args.inspect_pegasus_inputs
+            else "PEGASUS_CANDIDATE_FAILED"
             if args.prepare_pegasus_candidate
             else "SURFACE_IMPORT_FAILED"
             if args.import_surfaces
@@ -3242,18 +3354,20 @@ def main(argv=None):
                 "RAW_RESPONSES_REVIEW_PENDING"
                 if (args.inspect_lesson07 or args.inspect_source_assets) and state.attempted
                 else "UNVERIFIED"
-                if state.attempted and not (args.capture_lesson07 or args.inspect_vault)
+                if state.attempted and not (args.capture_lesson07 or args.inspect_vault or args.inspect_pegasus_inputs)
                 else "NOT_RUN"
             ),
             "visual_acceptance": False,
             "performance_pass": False,
         }
-        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07 or args.trial_macro or args.apply_reviewed_macro or args.inspect_vault or args.import_surfaces or args.inspect_source_assets or args.prepare_pegasus_candidate:
+        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07 or args.trial_macro or args.apply_reviewed_macro or args.inspect_vault or args.import_surfaces or args.inspect_source_assets or args.prepare_pegasus_candidate or args.inspect_pegasus_inputs:
             report.update(state.report_fields())
         if rpc_code is not None:
             report["rpc_code"] = rpc_code
     prefix = (
-        "L07_WINGMAN_PEGASUS_CANDIDATE"
+        "L07_WINGMAN_PEGASUS_INPUTS_INSPECTION"
+        if args.inspect_pegasus_inputs
+        else "L07_WINGMAN_PEGASUS_CANDIDATE"
         if args.prepare_pegasus_candidate
         else "L07_WINGMAN_SURFACE_IMPORT"
         if args.import_surfaces
@@ -3290,7 +3404,9 @@ def main(argv=None):
         + f" native_tool_calls={report['native_tool_calls']}"
     )
     expected = (
-        "PEGASUS_CANDIDATE_SAVED_OFFLINE_REVIEW_PENDING"
+        "PEGASUS_INPUTS_RESPONSE_RECEIVED_REVIEW_PENDING"
+        if args.inspect_pegasus_inputs
+        else "PEGASUS_CANDIDATE_SAVED_OFFLINE_REVIEW_PENDING"
         if args.prepare_pegasus_candidate
         else "SURFACE_IMPORT_SAVED_IMAGES_REVIEW_PENDING"
         if args.import_surfaces

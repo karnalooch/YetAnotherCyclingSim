@@ -3996,10 +3996,10 @@ class SurfaceImportTests(unittest.TestCase):
                 with self.assertRaisesRegex(client.ProbeError, "SURFACE_RECEIPT_CHANGED"):
                     client.read_surface_receipt("123-1", row)
 
-    def test_workflow_all_2048_intents_require_one_owner_operation(self):
+    def test_workflow_all_4096_intents_require_one_owner_operation(self):
         workflow = Path(__file__).resolve().parents[2] / ".github/workflows/yacs-lesson07-remote-editor.yml"
         source = workflow.read_text(encoding="utf-8")
-        markers = ("prepare-pegasus-candidate", "remote-editor", "observe-editor", "discover-editor", "capture-editor", "inspect-editor",
+        markers = ("inspect-pegasus-inputs", "prepare-pegasus-candidate", "remote-editor", "observe-editor", "discover-editor", "capture-editor", "inspect-editor",
                    "inspect-vault", "trial-macro", "apply-macro", "import-surfaces", "inspect-source-assets")
         for bits in itertools.product((False, True), repeat=len(markers)):
             selected = {name for name, bit in zip(markers, bits) if bit}
@@ -4292,6 +4292,131 @@ class PegasusPreparationTests(unittest.TestCase):
                 with self.assertRaisesRegex(client.ProbeError, "PEGASUS_ARGUMENTS"):
                     connection(port).probe(prepare_pegasus_candidate=True, pegasus_run_token="123-1")
         self.assertEqual(self.native.calls, [])
+
+
+class PegasusInputsInspectionTests(unittest.TestCase):
+    def setUp(self):
+        for target, value in (("PEGASUS_INPUTS_SCHEMA_SHA256", INSPECTION_FIXTURE_HASHES["code_search"]),
+                              ("verify_trial_host_identity", trial_host_check)):
+            patcher = mock.patch.object(client, target, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def test_one_fixed_source_search_two_checks_and_no_material_claim(self):
+        with peer(inspection_reply) as (port, requests), mock.patch.object(client, "observer_loader") as observer:
+            probe = connection(port)
+            report = probe.probe(inspect_pegasus_inputs=True)
+            with self.assertRaisesRegex(client.ProbeError, "METHOD_NOT_ALLOWED"):
+                probe._post("tools/call", probe._pegasus_inputs_params)
+        self.assertEqual([row["body"]["params"] for row in requests if row["body"]["method"] == "tools/call"], [{
+            "name": "code_search", "arguments": {"operation": "grep", "scope": "plugin", "file_glob": "*.cpp",
+                "pattern": "SetScalarParameterValueEditorOnly", "context_lines": 12, "max_results": 60}}])
+        self.assertEqual(report["status"], "PEGASUS_INPUTS_RESPONSE_RECEIVED_REVIEW_PENDING")
+        self.assertEqual(report["native_tool_calls"], 1)
+        self.assertTrue(report["native_tool_completed"])
+        self.assertTrue(report["native_tool_response_received"])
+        self.assertEqual([(row["index"], row["phase"]) for row in report["pegasus_inputs_host_checks"]], [(1, "before"), (1, "after")])
+        self.assertEqual(report["pegasus_inputs_results"][0]["result"]["text"], "Uninterpreted native response: code_search")
+        self.assertEqual(report["native_material_readback"], "NOT_RUN")
+        for field in ("pegasus_inputs_source_semantics_verified", "pegasus_inputs_material_mutation_requested", "visual_acceptance", "performance_pass"):
+            self.assertFalse(report[field])
+        observer.assert_not_called()
+
+    def test_schema_change_or_signed_out_stops_before_native_call(self):
+        for issue in ("schema", "signed_out"):
+            def respond(request):
+                status, headers, raw = inspection_reply(request)
+                payload = json.loads(raw) if raw else None
+                if request["method"] == "tools/list" and issue == "schema":
+                    for descriptor in payload["result"]["tools"]:
+                        if descriptor["name"] == "code_search":
+                            descriptor["inputSchema"]["unexpected"] = True
+                if request["method"] == "session/status" and issue == "signed_out":
+                    payload["result"]["signed_in"] = False
+                return status, headers, client.canonical(payload) if payload else raw
+            state = client.ObservationState()
+            with self.subTest(issue=issue), peer(respond) as (port, requests):
+                with self.assertRaisesRegex(client.ProbeError, "PEGASUS_INPUTS_TOOL_SCHEMA_UNSUPPORTED|PEGASUS_INPUTS_SIGNED_OUT"):
+                    connection(port, state=state).probe(inspect_pegasus_inputs=True)
+            self.assertFalse(any(row["body"]["method"] == "tools/call" for row in requests))
+            self.assertEqual(state.report_fields()["native_tool_calls"], 0)
+
+    def test_rejection_or_oversize_response_retains_one_attempt_without_retry(self):
+        for oversized in (False, True):
+            def respond(request):
+                status, headers, raw = inspection_reply(request)
+                if request["method"] == "tools/call":
+                    payload = json.loads(raw)
+                    payload["result"] = {"isError": not oversized, "content": [{"type": "text", "text":
+                        "x" * client.INSPECTION_RESPONSE_LIMIT if oversized else "F49 policy denial " + TOKEN}]}
+                    raw = client.canonical(payload)
+                return status, headers, raw
+            state = client.ObservationState()
+            with self.subTest(oversized=oversized), peer(respond) as (port, requests):
+                with self.assertRaisesRegex(client.ProbeError, "INSPECTION_RESULT_SIZE|INSPECTION_TOOL_ERROR"):
+                    connection(port, state=state).probe(inspect_pegasus_inputs=True)
+            self.assertEqual(sum(row["body"]["method"] == "tools/call" for row in requests), 1)
+            self.assertEqual(len(state.pegasus_inputs_host_checks), 2)
+            self.assertIsNone(state.completed)
+            self.assertTrue(state.pegasus_inputs_results[0]["response_received"])
+            self.assertNotIn(TOKEN.encode(), client.canonical(state.report_fields()))
+
+    def test_owner_change_before_or_after_search_never_retries(self):
+        for fail_at in (1, 2):
+            checks = 0
+            def owner(host, discovery):
+                nonlocal checks
+                checks += 1
+                if checks == fail_at:
+                    raise client.ProbeError("TRIAL_IDENTITY_OWNER_CHANGED")
+                return trial_host_check(host, discovery)
+            state = client.ObservationState()
+            with self.subTest(fail_at=fail_at), peer(inspection_reply) as (port, requests), mock.patch.object(client, "verify_trial_host_identity", owner):
+                with self.assertRaisesRegex(client.ProbeError, "TRIAL_IDENTITY_OWNER_CHANGED"):
+                    connection(port, state=state).probe(inspect_pegasus_inputs=True)
+            self.assertEqual(sum(row["body"]["method"] == "tools/call" for row in requests), fail_at - 1)
+            self.assertIsNot(state.completed, True)
+
+    def test_file_guard_and_cli_preserve_failure_without_material_readback(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            def respond(request):
+                response = inspection_reply(request)
+                if request["method"] == "tools/call":
+                    (root / "identity.json").write_text("{}")
+                return response
+            with peer(respond) as (port, requests), mock.patch.object(client, "WINDOWS_HOST", True):
+                identity_path, discovery_path, output = root / "identity.json", root / "discovery.json", root / "bridge.json"
+                identity_path.write_bytes(client.canonical(identity(port)))
+                discovery_path.write_bytes(client.canonical(config(port)))
+                real = client.probe_from_files
+                with mock.patch.object(client, "probe_from_files", side_effect=lambda path, **kwargs: real(path, discovery_path, **kwargs)), mock.patch("sys.stdout", io.StringIO()) as stdout:
+                    code = client.main(["--identity-receipt", str(identity_path), "--output", str(output), "--inspect-pegasus-inputs"])
+                report = json.loads(output.read_text())
+        self.assertEqual(code, 1)
+        self.assertEqual(report["status"], "PEGASUS_INPUTS_INSPECTION_FAILED")
+        self.assertEqual(report["error_code"], "INPUT_CHANGED")
+        self.assertEqual(report["native_tool_calls"], 1)
+        self.assertEqual(report["native_material_readback"], "NOT_RUN")
+        self.assertIsNone(report["native_tool_completed"])
+        self.assertEqual(sum(row["body"]["method"] == "tools/call" for row in requests), 1)
+        self.assertNotIn(TOKEN, stdout.getvalue())
+
+    def test_exclusive_modes_and_arguments_reject_before_source_search(self):
+        for mode in ("observe_lesson07", "capture_lesson07", "inspect_lesson07", "inspect_vault",
+                     "inspect_source_assets", "prepare_pegasus_candidate", "import_surfaces", "trial_macro", "apply_reviewed_macro"):
+            with self.subTest(mode=mode), peer() as (port, requests):
+                with self.assertRaisesRegex(client.ProbeError, "NATIVE_MODES_MUTUALLY_EXCLUSIVE"):
+                    connection(port).probe(inspect_pegasus_inputs=True, **{mode: True})
+                self.assertEqual(requests, [])
+        original = client.pegasus_inputs_inspection_plan
+        for key, value in (("pattern", "arbitrary"), ("scope", "engine"), ("max_results", 500), ("operation", "read_file")):
+            changed = original()
+            changed["arguments"][key] = value
+            with self.subTest(key=key), peer(inspection_reply) as (port, requests), mock.patch.object(client, "pegasus_inputs_inspection_plan", side_effect=[changed, original()]):
+                with self.assertRaisesRegex(client.ProbeError, "PEGASUS_INPUTS_ARGUMENTS"):
+                    connection(port).probe(inspect_pegasus_inputs=True)
+            self.assertFalse(any(row["body"]["method"] == "tools/call" for row in requests))
 
 
 if __name__ == "__main__":

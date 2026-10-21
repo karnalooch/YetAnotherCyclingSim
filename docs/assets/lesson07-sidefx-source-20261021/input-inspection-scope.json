@@ -1,0 +1,58 @@
+{
+  "marker": "[l07-inspect-pegasus-inputs]",
+  "native_plan_calls": 1,
+  "identity_checks": 2,
+  "files": [
+    {
+      "path": "scripts/ue/lesson07_wingman_client.py",
+      "bytes": 162318,
+      "sha256": "d825d544cba6b0c05ce29a57574425ed8500be43107fbdae5f17c8059151a139"
+    },
+    {
+      "path": "scripts/ue/test_lesson07_wingman_client.py",
+      "bytes": 227993,
+      "sha256": "a5ccdbe1ec0a2257f162cf25f70569cbb2da951797a4e136e18f2ca6adf80b51"
+    },
+    {
+      "path": "scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1",
+      "bytes": 44490,
+      "sha256": "107fb9334972e5309913a25042aeb2c8b27f3928ded5e1f0161d2c63f54a7c94"
+    },
+    {
+      "path": ".github/workflows/yacs-lesson07-remote-editor.yml",
+      "bytes": 50920,
+      "sha256": "8cf841ea33be70f066277a1ea605cac6423822c446dbd4ad79ba8ac6fdb8c8fd"
+    }
+  ],
+  "observer_sha256": "033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5",
+  "native_operations_run": false,
+  "published": false,
+  "focused_tests": 7,
+  "workflow_marker_combinations": 4096,
+  "powershell_parsed_blocks": 12,
+  "metadata_helper_fixture": "PASS:8fixedpaths,streamedhash,oversize-nohash,missing,directory,symlink",
+  "pending_canary_unchanged": true,
+  "full_client_tests": 125,
+  "full_client_tests_seconds": 7.647,
+  "peer_review": "ACCEPT /root/limestone_assets",
+  "metadata_fixture_platform_adaptation": "Only fixed Windows fixture roots and existing path-guard separator changed for Linux; production helper hash/size/status logic unchanged.",
+  "status": "READY_FOR_NATIVE_INSPECTION_RESULTS_PENDING",
+  "baseline_source_commit": "1479d2ddd424d47ddc35b179c5599eba9cfb6cbe",
+  "schema_sha256": "5a8d65250ba94c62dd2cd1be3e622828cd72465d2acf64332f5bee655dd6e7d8",
+  "fixed_call": {
+    "name": "code_search",
+    "arguments": {
+      "operation": "grep",
+      "scope": "plugin",
+      "file_glob": "*.cpp",
+      "pattern": "SetScalarParameterValueEditorOnly",
+      "context_lines": 12,
+      "max_results": 60
+    }
+  },
+  "cache_metadata_fixed_path_count": 8,
+  "cache_hash_limit_bytes": 536870912,
+  "hython_launched": false,
+  "source_semantics_verified": false,
+  "material_mutation_requested": false
+}

@@ -1,0 +1,42 @@
+{
+  "status": "BASE_MATERIAL_COVERAGE_RECIPE_CORRECTED_EXISTING_CACHES_NOT_REBUILT",
+  "source_file": "scripts/houdini/lesson06_unified_pipeline.py",
+  "before_sha256": "6e8c8b707a28f4092db22e313feecaf3b02bf787bdda780657c7f8297325c40e",
+  "after_sha256": "867e8986511c89403173d47ccf87f6f966438f394086f7c64d799bb15269e32b",
+  "only_ast_change": {
+    "function": "stage4a_grass",
+    "node": "MAT_GRASS",
+    "parameter": "use_mask",
+    "before": 1,
+    "after": 0
+  },
+  "source_basis": "Original PE_heightfield_material::1.0 HDA default use_mask=0 and full exported internal graph; not proof of the absent historical author HIP instance setting.",
+  "source_graph_file": "material-hda-full-network.json",
+  "source_graph_sha256": "a408a392f463cf0e22697a28e9409674c474bbb7ef3a5a11142d12193a73551a",
+  "heightscale_unchanged": 0.0,
+  "grass_mask_second_input_retained_for_distortion": true,
+  "affected_fields": [
+    "RGB",
+    "roughness"
+  ],
+  "source_height_review": "Finite displacement is remapped to [-0,0] or bypasses to cleared height; distortion preserves zero; final height adds zero. Roughness and RGB replace only their separate fields.",
+  "source_review": "ACCEPT /root/limestone_assets",
+  "native_height_equality_verified": false,
+  "exact_small_crop_status": "MISSING",
+  "cache_invalidation_automatic": false,
+  "cache_rebuilt": false,
+  "existing_coloured_caches_stale_relative_to_recipe": [
+    "stage4a_grass",
+    "stage4b_sand",
+    "stage4c_cliff",
+    "pre_id_cache",
+    "final_unified_idmap",
+    "exported_global_colour"
+  ],
+  "cache_skip_behaviour": "Existing cache paths are skipped unless explicitly forced. No force/cook/delete was run.",
+  "active_unreal_material_modified_by_this_change": false,
+  "geometry_written": false,
+  "idmap_written": false,
+  "global_colour_repaired": false,
+  "lesson07_technical_pass": false
+}

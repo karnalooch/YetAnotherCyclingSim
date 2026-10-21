@@ -31,17 +31,32 @@ workflow as a whole failed. No reader guard or denied observer was changed.
 The [decoded original/current material comparison](../../assets/lesson07-sidefx-source-20261021/one-to-one-material-contract.json)
 supports retaining the current parent: all 257 shared expressions have matching
 resolved connections, and the additional YACS nodes provide visibility masking.
-A copy of the original MI will preserve its layered parameter identity while
+A copy of the original MI preserves its layered parameter identity while
 geographic inputs and visibility support remain YACS-specific. Native candidate
-creation, source-colour repair, application and visual proof are not yet
-established by this metadata and static comparison. The initial candidate uses
+creation is now recorded below; source-colour repair, application and visual
+proof remain outstanding. The initial candidate uses
 the ZIP's saved defaults; the final-video scalar profile is a separate trial.
 The [persisted tuple evidence](../../assets/lesson07-sidefx-source-20261021/one-to-one-mi-parameter-evidence.json)
 finds the retained current MI's layer indices and runtime stack already equal
 to the source. Its remaining ZIP-profile delta is five global scalar values.
-This historical binary comparison is not a fresh native capture. The prepared
-eleven-call operation creates two isolated MI copies and retains their actual
-saved bytes for review; it does not apply them to the current Landscape.
+This historical binary comparison is not itself a fresh native capture.
+[Preparation 39672674724](../../assets/lesson07-sidefx-source-20261021/preparation-39672674724-evidence.json)
+then completed eleven calls and 22 fresh owner checks at source `1479d2ddd4`.
+It saved both isolated copies, confirmed the active MI and nine inputs were
+unchanged, and retained the actual new packages. The backup's persisted tuple
+contract matches the current MI. The candidate's complete offline export read
+remains unverified because of legacy TextureStreamingData serialization.
+Neither copy was applied to the current Landscape. The fixed small RGB crop
+was missing, so no Houdini canary or full-cache fallback was launched.
+
+The [base material recipe](../../assets/lesson07-sidefx-source-20261021/base-material-coverage-recipe.json)
+now restores `MAT_GRASS.use_mask=0`, filling base RGB and roughness while keeping
+the Grass input for distortion and the existing zero height displacement.
+This is a source correction only. The pipeline's existing-file skip still
+preserves earlier caches; none has been invalidated or recooked, and the saved
+global colour is not yet repaired. A separate fixed-path cache metadata read
+and one plugin scalar-setter source search are prepared; native results remain
+pending at this source revision.
 
 The owner had earlier narrowed the immediate task to getting the textures
 from that ZIP. **The requested file delivery is complete:**

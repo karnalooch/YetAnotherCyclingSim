@@ -473,7 +473,8 @@ def stage4a_grass(force: bool = False):
         "filename3": str(TEX_DIR / "tlonbisya_4K_Displacement.exr"),
         "size": 12.0,
         "heightscale": 0.0,
-        "use_mask": 1,
+        # Fill the base RGB/roughness; input 1 still drives Grass distortion.
+        "use_mask": 0,
         "srcname1": "mask",
         "input2": "2",
         "use_distort": 1,

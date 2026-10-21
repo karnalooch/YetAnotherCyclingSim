@@ -148,6 +148,56 @@
       "file": "one-to-one-mi-parameter-evidence.json",
       "bytes": 36123,
       "sha256": "ac030995756e92fd902eb75a2cd2673aebab9c85e91a88ab3ee2189450cf68ab"
+    },
+    {
+      "file": "preparation-39672674724-1-bridge.json.gz",
+      "bytes": 37580,
+      "sha256": "6e0a1e3a133d51499317180021e71e7ea3773d1e12014bf6c782422d8060e8f2"
+    },
+    {
+      "file": "preparation-39672674724-1-probe.json",
+      "bytes": 4457,
+      "sha256": "6f64f149e2ae5ad90bfc718d7c1769419bfb95626c80a501d5ca30ad34179b2e"
+    },
+    {
+      "file": "preparation-39672674724-1-identity.json",
+      "bytes": 616,
+      "sha256": "d546892ef43f2093e7ff1b95672c27c57f8f5f56b7f27160d8f4ebc3caecb5eb"
+    },
+    {
+      "file": "preparation-39672674724-1-candidate-assets.json",
+      "bytes": 935,
+      "sha256": "5642d6d027e331661aea633582c1d279d9fc6a6bad20a892d689331dc38a1fc7"
+    },
+    {
+      "file": "preparation-39672674724-offline-validation.json",
+      "bytes": 11369,
+      "sha256": "59c6b3ad62c0ff92c33db3f51c24678e0c7ea9eb045e18ac628d007734baefcd"
+    },
+    {
+      "file": "preparation-39672674724-candidate-prefix-evidence.json",
+      "bytes": 8215,
+      "sha256": "418f30b5fff26ca623087ab9a61b4d40330f7eecfb48813ef19ec17ff21d68cc"
+    },
+    {
+      "file": "preparation-39672674724-candidate-parameter-contract.json",
+      "bytes": 9810,
+      "sha256": "6b1802a82a234693177267378a82a2a440f6c66d422c09e00aa089eb0faa7b28"
+    },
+    {
+      "file": "preparation-39672674724-evidence.json",
+      "bytes": 6778,
+      "sha256": "9dee6f51e883459cccb392ce2453b6c289aeacf508f9998958795c5afc856112"
+    },
+    {
+      "file": "base-material-coverage-recipe.json",
+      "bytes": 1860,
+      "sha256": "3a3f3c9707e8881db42e9a1ace6b3136992d76631b49f953ce901a382643b29a"
+    },
+    {
+      "file": "input-inspection-scope.json",
+      "bytes": 2176,
+      "sha256": "5d5086215c8e1740b517fc3178c3f5658eff796acf0429db15747ebe9d893435"
     }
   ],
   "custom_normal_candidate_executed": false,
@@ -234,10 +284,10 @@
   },
   "one_to_one_reproduction": {
     "base_commit": "0d6064147f14a89767007d381d7c292b81bdecbd",
-    "status": "ORIGINAL_MI_CANDIDATE_PREPARATION_READY_NATIVE_NOT_RUN",
+    "status": "ORIGINAL_MI_COPY_SAVED_NATIVE_ORDERED_VALUES_VERIFIED_OFFLINE_REVIEW_PARTIAL",
     "metadata_contract_added": "edit_level",
     "new_native_calls_admitted": 11,
-    "source_mi_copy_prepared": false,
+    "source_mi_copy_prepared": true,
     "native_application_verified": false,
     "global_colour_repaired": false,
     "exact_final_video_pbr_sets_available": false,
@@ -256,6 +306,27 @@
     "persisted_current_layer_and_blend_indices_match_source": true,
     "explicit_current_global_colour_strength_overrides": 1,
     "zip_profile_global_parameter_delta_count": 5,
-    "editor_only_layer_cache_verified": false
+    "editor_only_layer_cache_verified": false,
+    "preparation_source_commit": "1479d2ddd424d47ddc35b179c5599eba9cfb6cbe",
+    "preparation_run": 39672674724,
+    "preparation_workflow_conclusion": "success",
+    "preparation_native_tool_calls": 11,
+    "preparation_owner_checks": 22,
+    "preparation_evidence": "docs/assets/lesson07-sidefx-source-20261021/preparation-39672674724-evidence.json",
+    "native_current_mi_sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+    "small_rgb_canary_admitted": false,
+    "small_rgb_cache_status": "MISSING",
+    "full_candidate_export_verified": false,
+    "backup_offline_parameter_contract_matches": true,
+    "candidate_prefix_parameters_match_zip_and_yacs_adaptations": true,
+    "candidate_added_terrain_scale_guid_matches_existing_yacs_mi": false,
+    "base_coverage_recipe_corrected": true,
+    "base_coverage_recipe_evidence": "docs/assets/lesson07-sidefx-source-20261021/base-material-coverage-recipe.json",
+    "existing_colour_caches_rebuilt": false,
+    "automatic_cache_invalidation": false,
+    "input_inspection_marker": "[l07-inspect-pegasus-inputs]",
+    "input_inspection_status": "READY_FOR_NATIVE_INSPECTION_RESULTS_PENDING",
+    "input_inspection_native_calls": 1,
+    "input_inspection_owner_checks": 2
   }
 }
