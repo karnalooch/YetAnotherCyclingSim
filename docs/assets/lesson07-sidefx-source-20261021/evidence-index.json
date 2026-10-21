@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "status": "SOURCE_INSPECTION_COMPLETE_NATIVE_SOURCE_INVENTORY_PENDING",
+  "owner_direction": "Reinspect supplied original SideFX archive and Lesson07, then reproduce original workflow",
+  "source_archive_sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
+  "reports": [
+    {
+      "file": "download-receipt.json",
+      "bytes": 1143,
+      "sha256": "a5056b7df48e23f2f338bd3b2e711f7c043585b78d1110d871682a939a485829"
+    },
+    {
+      "file": "zip-inventory.json",
+      "bytes": 207950,
+      "sha256": "3be24582dca0d1cc4d821ee627c7208703632a289697fa2c017833b91f2e46ae"
+    },
+    {
+      "file": "original-material-settings.json",
+      "bytes": 28118,
+      "sha256": "2c3da8c52b69b3ee31e578639aca094f7ebbc82ebd97067d6a18ca9908c6f970"
+    },
+    {
+      "file": "source-png-metadata.json",
+      "bytes": 2546,
+      "sha256": "cc4c2765bda6768da7185a23bc3632bb0a21f4ea27736aba353600349acb755d"
+    },
+    {
+      "file": "video-observations.json",
+      "bytes": 2996,
+      "sha256": "422e687a7e90c871df557e5a3e04a3b301c68598a9d0c52e8d03e1a320b5e144"
+    },
+    {
+      "file": "video-frame-receipts.json",
+      "bytes": 11465,
+      "sha256": "b1e57eb5b9ba37cc552adf8c489b3a7c398a194efa18a193273dc0f59a288204"
+    },
+    {
+      "file": "source-archive-hda-summary.json",
+      "bytes": 18460,
+      "sha256": "261f5dedb4115d2a0f63b7c1f5c7ac763e35f4aaddf473925e0e0f435ce34a5e"
+    },
+    {
+      "file": "video-source-public-id-mapping.json",
+      "bytes": 3549,
+      "sha256": "4e76c8d58111332f04e024ff28dbbac05caa54e0a6d8d7eec43f3b15917f0f46"
+    },
+    {
+      "file": "delivery-parts-receipt.json",
+      "bytes": 634,
+      "sha256": "8ba4ee0dc06ac124fdc32bcec6c1d6ed7a7300f7baaf073835ba0d1148c8ffe8"
+    },
+    {
+      "file": "uv-rotation-trace.json",
+      "bytes": 10178,
+      "sha256": "ca08d1dff6b94ec18f803a048522888a59f673ad6df1fa3f0ec202c0b49104b5"
+    }
+  ],
+  "custom_normal_candidate_executed": false,
+  "native_application": false,
+  "lesson07_technical_pass": false,
+  "visual_acceptance": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3",
+  "host_session_note": "Owner reported a manual Windows reset on 2026-10-21. Prior process identity is historical; a new live owner/listener identity is required before native inventory."
+}

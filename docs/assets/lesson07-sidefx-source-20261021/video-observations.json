@@ -1,0 +1,129 @@
+{
+  "video_id": 888569514,
+  "duration_seconds": 1584,
+  "transcript_full_read": true,
+  "transcript_sha256": "2f0c5e8292219b145ab59ecb173f706bcced71bec15622cb0e926c500a32fa80",
+  "transcript_cues": 595,
+  "timeline_thumbnails_reviewed": 120,
+  "full_resolution_frames_reviewed_seconds": [
+    130,
+    174,
+    207,
+    327,
+    447,
+    485,
+    685,
+    770,
+    825,
+    850,
+    943,
+    950,
+    956,
+    979,
+    982,
+    1037,
+    1040,
+    1232,
+    1274,
+    1283,
+    1295,
+    1302,
+    1333,
+    1337,
+    1340,
+    1364,
+    1418,
+    1463,
+    1496,
+    1502,
+    1503,
+    1513,
+    1516,
+    1517,
+    1518,
+    1542
+  ],
+  "full_motion_every_frame_reviewed": false,
+  "independent_audio_listen": false,
+  "native_calls": 0,
+  "repo_edits": false,
+  "master_internals_shown_in_reviewed_frames": false,
+  "master_internal_coverage_excluded_by_narration": [
+    "00:01:01.075",
+    "00:01:07.565"
+  ],
+  "slots": [
+    {
+      "index": 0,
+      "surface": "Mossy Ground",
+      "visible_megascans_id": "tkekcgfn",
+      "id_read_from_frame_seconds": 1274,
+      "id_visually_confirmed": true
+    },
+    {
+      "index": 1,
+      "surface": "Tundra Mossy Ground",
+      "visible_megascans_id": "vjulbjjr",
+      "id_read_from_frame_seconds": 1232,
+      "id_visually_confirmed": true
+    },
+    {
+      "index": 2,
+      "surface": "Gravel Ground",
+      "visible_megascans_id": "wenocdss",
+      "id_read_from_frame_seconds": 1502,
+      "id_visually_confirmed": true
+    },
+    {
+      "index": 3,
+      "surface": "Layered Rock Cliff",
+      "visible_megascans_id": "ultncbnlw",
+      "id_read_from_frame_seconds": 1295,
+      "id_visually_confirmed": true
+    },
+    {
+      "index": 4,
+      "surface": "Shoreline Beach Rocks",
+      "visible_megascans_id": "ullmagidy",
+      "id_read_from_frame_seconds": 1517,
+      "id_visually_confirmed": true
+    }
+  ],
+  "final_mi_values": {
+    "Detail Brightness": 5.0,
+    "Detail Tiling": 0.25,
+    "Global Colour Strength": 0.5,
+    "Global Normal Flatten": 0.0,
+    "Global Specular Scale": 1.0,
+    "Macro Texture Distance": 10000.0,
+    "Macro Tiling": 0.05,
+    "Num IDmap Layers": 5.0,
+    "Specular Falloff Exponent": 1.0,
+    "Terrain Resolution": 2016.0,
+    "UV Distort": 1.0,
+    "UV Rotate": -90.0,
+    "Use IDmap": true,
+    "Use Terrain Colour": true
+  },
+  "idmap": {
+    "size_pixels": [
+      2016,
+      2016
+    ],
+    "compression_label": "Grayscale (G8/16, RGB8 sRGB)",
+    "srgb": false,
+    "format": "G8",
+    "filter": "Nearest"
+  },
+  "colour_array": {
+    "srgb": true,
+    "adjust_brightness_visible": 1.0,
+    "adjust_brightness_curve_visible": 1.0,
+    "hue_value_not_observed": true,
+    "saturation_value_not_observed": true
+  },
+  "author_comment_terrain_resolution": 2017,
+  "author_corrections_source": "https://www.sidefx.com/tutorials/project-pegasus-landscape-workflow/",
+  "official_zip_inspection_delegated_to": "/root/limestone_assets",
+  "inspection_regions_are_reading_crops_only": true
+}

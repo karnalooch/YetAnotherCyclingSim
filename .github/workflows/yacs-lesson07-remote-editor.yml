@@ -6,6 +6,7 @@ name: YACS Lesson07 remote Editor connection
 # on the existing owner session. No mode grants material/visual acceptance.
 # Apply mode retains only the independently reviewed Macro Tiling 0.05 result.
 # Vault mode only lists three fixed owned-pack filters; raw inventory stays local.
+# Source inspection performs only three fixed reads of Megascans, the MI and arrays.
 # Discovery performs no native calls; oversized graph contracts may retain only
 # their complete plain-text description within the existing report limits.
 on:
@@ -44,6 +45,7 @@ jobs:
       github.ref == 'refs/heads/codex/365-world-graph' &&
       github.actor == github.repository_owner &&
       contains(github.event.head_commit.message, '[l07-remote-editor]') &&
+      !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
       !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
       !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
       !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
@@ -103,6 +105,7 @@ jobs:
       github.actor == github.repository_owner &&
       !contains(github.event.head_commit.message, '[l07-remote-editor]') &&
       ((contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
@@ -111,6 +114,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
@@ -119,6 +123,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
@@ -127,6 +132,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
@@ -135,6 +141,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
@@ -143,6 +150,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
@@ -151,6 +159,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
@@ -159,13 +168,23 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
-        !contains(github.event.head_commit.message, '[l07-apply-macro]')))
+        !contains(github.event.head_commit.message, '[l07-apply-macro]')) ||
+       (contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]')))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -253,11 +272,12 @@ jobs:
       L07_READONLY_DISCOVERY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-discover-editor]') }}
       L07_VIEWPORT_CAPTURE: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-capture-editor]') }}
       L07_READONLY_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-editor]') }}
+      L07_SOURCE_ASSETS_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-source-assets]') }}
       L07_VAULT_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-vault]') }}
       L07_MACRO_TRIAL: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-trial-macro]') }}
       L07_SURFACE_IMPORT: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-import-surfaces]') }}
       L07_MACRO_APPLY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-apply-macro]') }}
-      L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') && !contains(github.event.head_commit.message, '[l07-inspect-vault]') && !contains(github.event.head_commit.message, '[l07-import-surfaces]') }}
+      L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') && !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') && !contains(github.event.head_commit.message, '[l07-inspect-vault]') && !contains(github.event.head_commit.message, '[l07-import-surfaces]') }}
     steps:
       - name: Create isolated Git settings for code-only staging
         working-directory: ${{ github.workspace }}
@@ -278,7 +298,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Cannot preserve LF bytes.' }
 
       - name: Checkout reviewed source without LFS payloads or canonical edits
-        if: ${{ needs.await_ci.result != 'success' && env.L07_SURFACE_IMPORT != 'true' && env.L07_READONLY_DISCOVERY != 'true' }}
+        if: ${{ needs.await_ci.result != 'success' && env.L07_SURFACE_IMPORT != 'true' && env.L07_READONLY_DISCOVERY != 'true' && env.L07_SOURCE_ASSETS_INSPECTION != 'true' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -287,8 +307,8 @@ jobs:
           lfs: false
           persist-credentials: false
 
-      - name: Checkout only startup or material-import source without LFS payloads
-        if: ${{ needs.await_ci.result == 'success' || env.L07_SURFACE_IMPORT == 'true' || env.L07_READONLY_DISCOVERY == 'true' }}
+      - name: Checkout only startup, import or source-inspection code without LFS payloads
+        if: ${{ needs.await_ci.result == 'success' || env.L07_SURFACE_IMPORT == 'true' || env.L07_READONLY_DISCOVERY == 'true' || env.L07_SOURCE_ASSETS_INSPECTION == 'true' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -309,7 +329,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $l07PriorNoLazyFetch=$env:GIT_NO_LAZY_FETCH
           try {
-            if ('${{ needs.await_ci.result }}' -ceq 'success' -or $env:L07_SURFACE_IMPORT -ceq 'true' -or $env:L07_READONLY_DISCOVERY -ceq 'true') {
+            if ('${{ needs.await_ci.result }}' -ceq 'success' -or $env:L07_SURFACE_IMPORT -ceq 'true' -or $env:L07_READONLY_DISCOVERY -ceq 'true' -or $env:L07_SOURCE_ASSETS_INSPECTION -ceq 'true') {
               # All pointer blobs are already local; do not fetch unrelated
               # large Git blobs merely to inspect their sizes in this scanner.
               $env:GIT_NO_LAZY_FETCH='1'
@@ -358,6 +378,7 @@ jobs:
           if ($env:L07_READONLY_DISCOVERY -ceq 'true') { $parameters['ExistingEditorOnly'] = $true }
           if ($env:L07_VIEWPORT_CAPTURE -ceq 'true') { $parameters['CaptureLesson07'] = $true }
           if ($env:L07_READONLY_INSPECTION -ceq 'true') { $parameters['InspectLesson07'] = $true }
+          if ($env:L07_SOURCE_ASSETS_INSPECTION -ceq 'true') { $parameters['InspectSourceAssets'] = $true }
           if ($env:L07_VAULT_INSPECTION -ceq 'true') { $parameters['InspectVault'] = $true }
           if ($env:L07_SURFACE_IMPORT -ceq 'true') { $parameters['ImportSurfaces'] = $true }
           if ($env:L07_MACRO_TRIAL -ceq 'true') { $parameters['TrialMacro'] = $true }

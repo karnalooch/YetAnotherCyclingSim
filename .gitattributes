@@ -124,3 +124,8 @@ docs/experiments/sa-calobra-pcgex-mcp-20261013/*.json -text whitespace=cr-at-eol
 # Retain Lesson07 native receipt bytes, including Windows-authored CRLF.
 docs/assets/lesson07-surface-repair-20261021/*.json -text whitespace=cr-at-eol
 docs/assets/lesson07-surface-repair-20261021/*.json.gz -text -diff
+
+# Preserve exact offline normal-contract evidence and compressed decoded graphs.
+docs/assets/lesson07-normal-contract-20261021/*.json -text whitespace=cr-at-eol
+docs/assets/lesson07-normal-contract-20261021/*.json.gz -text -diff
+docs/assets/lesson07-sidefx-source-20261021/*.json -text whitespace=cr-at-eol

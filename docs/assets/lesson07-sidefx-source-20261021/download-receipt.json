@@ -1,0 +1,21 @@
+{
+  "source_page": "https://www.sidefx.com/tutorials/project-pegasus-landscape-workflow/",
+  "source_url": "https://media.sidefx.com/files/tutorials/project-pegasus-landscape-workflow/ProjectFiles_LandscapeWorkflow3.zip",
+  "final_url": "https://media.sidefx.com/files/tutorials/project-pegasus-landscape-workflow/ProjectFiles_LandscapeWorkflow3.zip",
+  "http_status": 200,
+  "response_headers": {
+    "Content-Type": "application/zip",
+    "Content-Length": "605943562",
+    "Last-Modified": "Mon, 04 Dec 2023 15:51:14 GMT",
+    "ETag": "\"656df572-241df70a\"",
+    "Date": "Wed, 21 Oct 2026 18:01:20 GMT",
+    "Accept-Ranges": "bytes"
+  },
+  "archive_file": "/workspace/scratch/f7568a2cf030/asset-research/official-sidefx-landscape-20261021/ProjectFiles_LandscapeWorkflow3.zip",
+  "bytes": 605943562,
+  "sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
+  "historical_bytes": 605943562,
+  "historical_sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
+  "matches_historical_archive": true,
+  "purpose": "Original course-source inspection only; no source execution or Unreal invocation"
+}

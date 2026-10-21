@@ -1,0 +1,336 @@
+{
+  "purpose": "Offline dependency trace; no native call or value change",
+  "conclusion": "UV Rotate affects IDMap coordinates (center and four corners) and Terrain Colour coordinates. Atlas UVS inputs have no dependency on UV Rotate; atlas Samples indices do depend on it. It is not a cosmetic detail-UV rotation.",
+  "current_master": {
+    "sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66",
+    "all_material_expression_payloads_roundtrip_equal": true,
+    "whole_package_roundtrip_equal": false
+  },
+  "official_master": {
+    "sha256": "d2fed2b50581f53e80bc01c53379b6900b32b8b6b70d55272149d8ef0f2cc171",
+    "whole_package_roundtrip_equal": true
+  },
+  "traces_identical_between_current_and_official": true,
+  "trace": {
+    "scalar_node": "MaterialExpressionScalarParameter_9",
+    "master_default": -90.0,
+    "terrain_texture_samples": [
+      {
+        "sample": "MaterialExpressionTextureSample_6",
+        "texture_parameter": "Terrain Colour",
+        "coordinates_depend_on_uv_rotate": true,
+        "path": [
+          {
+            "node": "MaterialExpressionMaterialFunctionCall_11",
+            "input": "Degrees"
+          },
+          {
+            "node": "MaterialExpressionRotator_0",
+            "input": "Time"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_6",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteUsage_8",
+            "input": "Declaration reference"
+          },
+          {
+            "node": "MaterialExpressionDivide_1",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionTextureSample_6",
+            "input": "Coordinates"
+          }
+        ]
+      },
+      {
+        "sample": "MaterialExpressionTextureSample_12",
+        "texture_parameter": "Terrain IDmap",
+        "coordinates_depend_on_uv_rotate": true,
+        "path": [
+          {
+            "node": "MaterialExpressionMaterialFunctionCall_11",
+            "input": "Degrees"
+          },
+          {
+            "node": "MaterialExpressionRotator_0",
+            "input": "Time"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_6",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteUsage_72",
+            "input": "Declaration reference"
+          },
+          {
+            "node": "MaterialExpressionFloor_0",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionDivide_4",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionTextureSample_12",
+            "input": "Coordinates"
+          }
+        ]
+      },
+      {
+        "sample": "MaterialExpressionTextureSample_29",
+        "texture_parameter": "Terrain IDmap",
+        "coordinates_depend_on_uv_rotate": true,
+        "path": [
+          {
+            "node": "MaterialExpressionMaterialFunctionCall_11",
+            "input": "Degrees"
+          },
+          {
+            "node": "MaterialExpressionRotator_0",
+            "input": "Time"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_6",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionAdd_2",
+            "input": "B"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_11",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionSubtract_12",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionFloor_3",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionAdd_4",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_0",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionDivide_12",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionTextureSample_29",
+            "input": "Coordinates"
+          }
+        ]
+      },
+      {
+        "sample": "MaterialExpressionTextureSample_30",
+        "texture_parameter": "Terrain IDmap",
+        "coordinates_depend_on_uv_rotate": true,
+        "path": [
+          {
+            "node": "MaterialExpressionMaterialFunctionCall_11",
+            "input": "Degrees"
+          },
+          {
+            "node": "MaterialExpressionRotator_0",
+            "input": "Time"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_6",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionAdd_2",
+            "input": "B"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_11",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionSubtract_12",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionFloor_3",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionAdd_34",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_2",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionDivide_13",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionTextureSample_30",
+            "input": "Coordinates"
+          }
+        ]
+      },
+      {
+        "sample": "MaterialExpressionTextureSample_31",
+        "texture_parameter": "Terrain IDmap",
+        "coordinates_depend_on_uv_rotate": true,
+        "path": [
+          {
+            "node": "MaterialExpressionMaterialFunctionCall_11",
+            "input": "Degrees"
+          },
+          {
+            "node": "MaterialExpressionRotator_0",
+            "input": "Time"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_6",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionAdd_2",
+            "input": "B"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_11",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionSubtract_12",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionFloor_3",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionAdd_38",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_4",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionDivide_14",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionTextureSample_31",
+            "input": "Coordinates"
+          }
+        ]
+      },
+      {
+        "sample": "MaterialExpressionTextureSample_32",
+        "texture_parameter": "Terrain IDmap",
+        "coordinates_depend_on_uv_rotate": true,
+        "path": [
+          {
+            "node": "MaterialExpressionMaterialFunctionCall_11",
+            "input": "Degrees"
+          },
+          {
+            "node": "MaterialExpressionRotator_0",
+            "input": "Time"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_6",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionAdd_2",
+            "input": "B"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_11",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionSubtract_12",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionFloor_3",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionAdd_40",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionNamedRerouteDeclaration_3",
+            "input": "None"
+          },
+          {
+            "node": "MaterialExpressionDivide_15",
+            "input": "A"
+          },
+          {
+            "node": "MaterialExpressionTextureSample_32",
+            "input": "Coordinates"
+          }
+        ]
+      }
+    ],
+    "atlas_calls": [
+      {
+        "call": "MaterialExpressionMaterialFunctionCall_14",
+        "uvs_producer": "MaterialExpressionMultiply_15",
+        "uvs_depend_on_uv_rotate": false,
+        "samples_producer": "MaterialExpressionNamedRerouteUsage_12",
+        "samples_depend_on_uv_rotate": true
+      },
+      {
+        "call": "MaterialExpressionMaterialFunctionCall_15",
+        "uvs_producer": "MaterialExpressionMultiply_15",
+        "uvs_depend_on_uv_rotate": false,
+        "samples_producer": "MaterialExpressionNamedRerouteUsage_12",
+        "samples_depend_on_uv_rotate": true
+      },
+      {
+        "call": "MaterialExpressionMaterialFunctionCall_27",
+        "uvs_producer": "MaterialExpressionMultiply_15",
+        "uvs_depend_on_uv_rotate": false,
+        "samples_producer": "MaterialExpressionNamedRerouteUsage_12",
+        "samples_depend_on_uv_rotate": true
+      },
+      {
+        "call": "MaterialExpressionMaterialFunctionCall_36",
+        "uvs_producer": "MaterialExpressionMultiply_7",
+        "uvs_depend_on_uv_rotate": false,
+        "samples_producer": "MaterialExpressionNamedRerouteUsage_26",
+        "samples_depend_on_uv_rotate": true
+      },
+      {
+        "call": "MaterialExpressionMaterialFunctionCall_37",
+        "uvs_producer": "MaterialExpressionMultiply_7",
+        "uvs_depend_on_uv_rotate": false,
+        "samples_producer": "MaterialExpressionNamedRerouteUsage_26",
+        "samples_depend_on_uv_rotate": true
+      },
+      {
+        "call": "MaterialExpressionMaterialFunctionCall_38",
+        "uvs_producer": "MaterialExpressionMultiply_7",
+        "uvs_depend_on_uv_rotate": false,
+        "samples_producer": "MaterialExpressionNamedRerouteUsage_26",
+        "samples_depend_on_uv_rotate": true
+      }
+    ]
+  },
+  "native_calls": 0,
+  "repo_edits": false
+}

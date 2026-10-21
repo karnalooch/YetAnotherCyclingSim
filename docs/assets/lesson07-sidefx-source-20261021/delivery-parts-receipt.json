@@ -1,0 +1,20 @@
+{
+  "original_archive_sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
+  "original_files": 187,
+  "split_preserves_all_original_file_bytes": true,
+  "excluded_files": [],
+  "parts": [
+    {
+      "file": "SideFX_LandscapeWorkflow3_Unreal.zip",
+      "bytes": 436430180,
+      "sha256": "85cca47dc8d2e75afb88a8d6b196dd2d00207d23444639ed17585ee1984867f9",
+      "original_files": 145
+    },
+    {
+      "file": "SideFX_LandscapeWorkflow3_Houdini_Source.zip",
+      "bytes": 238515943,
+      "sha256": "b6a35b27e24f21aeaef2ce3e5e184904eee7f2a2b684ce083a7f2f9822f0a7ad",
+      "original_files": 42
+    }
+  ]
+}

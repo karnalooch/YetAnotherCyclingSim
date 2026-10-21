@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "scope": "Public official Quixel/Fab metadata lookup only; no login, acquisition, texture download, purchase, native operation or access-control workaround",
+  "families": [
+    {
+      "array_index": 0,
+      "legacy_quixel_id": "tkekcgfn",
+      "publisher_title": "Mossy Ground",
+      "observed_official_quixel_url": "https://quixel.com/megascans/home?assetId=tkekcgfn&category=3D+plant&search=pitted",
+      "web_reference": "turn124search0",
+      "evidence": "Official Quixel result URL contains exact assetId and matching publisher title in web search index",
+      "exact_current_fab_listing": null,
+      "account_entitlement_verified": false,
+      "redistribution_rights_verified": false
+    },
+    {
+      "array_index": 1,
+      "legacy_quixel_id": "vjulbjjr",
+      "publisher_title": "Tundra Mossy Ground",
+      "observed_official_quixel_url": "https://quixel.com/megascans/home?assetId=vjulbjjr&category=surface&search=natural",
+      "web_reference": "turn122search1",
+      "evidence": "Official Quixel result URL contains exact assetId and matching publisher title in web search index",
+      "exact_current_fab_listing": null,
+      "account_entitlement_verified": false,
+      "redistribution_rights_verified": false
+    },
+    {
+      "array_index": 2,
+      "legacy_quixel_id": "wenocdss",
+      "publisher_title": "Gravel Ground",
+      "observed_official_quixel_url": "https://quixel.com/megascans/free?assetId=wenocdss&category=brush&category=leakage",
+      "web_reference": "turn126search0",
+      "evidence": "Official Quixel result URL contains exact assetId and matching publisher title in web search index",
+      "exact_current_fab_listing": null,
+      "account_entitlement_verified": false,
+      "redistribution_rights_verified": false
+    },
+    {
+      "array_index": 3,
+      "legacy_quixel_id": "ultncbnlw",
+      "publisher_title": "Layered Rock Cliff",
+      "observed_official_quixel_url": "https://quixel.com/megascans/home?assetId=ultncbnlw&category=3D+plant&search=edge",
+      "web_reference": "turn126search1",
+      "evidence": "Official Quixel result URL contains exact assetId and matching publisher title in web search index",
+      "exact_current_fab_listing": null,
+      "account_entitlement_verified": false,
+      "redistribution_rights_verified": false
+    },
+    {
+      "array_index": 4,
+      "legacy_quixel_id": "ullmagidy",
+      "publisher_title": "Shoreline Beach Rocks",
+      "observed_official_quixel_url": "https://quixel.com/megascans/home?assetId=ullmagidy&search=uk",
+      "web_reference": "turn126search2",
+      "evidence": "Official Quixel result URL contains exact assetId and matching publisher title in web search index",
+      "exact_current_fab_listing": null,
+      "account_entitlement_verified": false,
+      "redistribution_rights_verified": false
+    }
+  ],
+  "limits": [
+    "All five legacy ID/title pairs were found in official Quixel-indexed pages.",
+    "No inspected official result established an exact legacy ID to current Fab listing UUID mapping.",
+    "Two different official Fab listings share Tundra Mossy Ground title; title alone is insufficient to select the legacy vjulbjjr surface.",
+    "One attempted official Quixel open returned403; no credential, proxy or alternate endpoint workaround was attempted."
+  ],
+  "same_title_fab_examples_not_proven_id_matches": [
+    "https://www.fab.com/listings/27f36f3a-d248-4109-b7d0-d0a65513bfa5",
+    "https://www.fab.com/listings/1ecf1abd-1775-425e-9d67-4c8273cd6901"
+  ]
+}

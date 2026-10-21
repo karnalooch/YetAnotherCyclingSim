@@ -50,6 +50,32 @@ The subsequent source-only [CI 39638791772](https://github.com/karnalooch/YetAno
 also refused native admission with `LOCAL_BUSY`; the active owner Editor was
 preserved. Neither result is a fresh native build or Automation pass.
 
+## Source diagnosis and superseding original-workflow review
+
+The owner subsequently requested a fresh download and close review of the
+original SideFX ZIP and Lesson07 video, followed by reproduction of that
+workflow. The private normal proposal is paused; it has never run in Unreal.
+The original source review and missing final-demo textures take precedence.
+
+The [pinned offline normal-contract inspection](../lesson07-normal-contract-20261021/README.md)
+proved a BR/TL producer mismatch and the signed-normal offset in the saved
+master. Its proposed correction is confined to a new private function and
+master, with explicit semantic reconnection after duplication and independent
+readback of the saved result. The active MI, Flatten, map and arrays stay at
+the retained checkpoint during preparation. No native candidate has been
+executed or applied in this report.
+
+[Metadata discovery 39644676507](discovery-39644676507-evidence.json) successfully
+retained the complete `edit_graph` plain-text description. It advertises
+Blueprint graphs, not material-function editing. There were zero native calls;
+the complete schema remains excluded. The later historical reader's unchanged
+owner guard again rejected the current session.
+
+The current protected CI caught a stale MI identity in the isolated historical
+reader after the nine pointers were published. Both reader constants now follow
+the independently verified retention receipt; the historical map identity is
+preserved. Local targeted tests pass; a new hosted result is still required.
+
 ## Retaining the saved candidate
 
 **Current result:** [run 39643271947](retention-39643271947-evidence.json)

@@ -6,6 +6,8 @@ The separate capture mode requests one current viewport JPEG through the
 dedicated screenshot tool, with no camera arguments or Python fallback.
 Vault inspection lists only three fixed name filters in the already-owned
 local cache; it cannot install, download or execute code.
+Source inspection reads one bounded Megascans registry page, the current
+material instance and three current arrays; it never imports or edits assets.
 Surface import executes one pinned project-local importer between two native
 captures at the same camera, then three fixed review views; normal tool safety
 review remains active.
@@ -138,6 +140,16 @@ INSPECTION_TARGETS = {
     INSPECTION_ROOT + "/Textures/T_PE_Terrain_Color": "Texture2D",
 }
 TRIAL_MI = INSPECTION_ROOT + "/Materials/MI_Landscape_Instance_YACS"
+SOURCE_ASSETS_ROOT = "/Game/Megascans/Surfaces"
+SOURCE_ASSETS_CLASS = "/Script/Engine.Texture2D"
+SOURCE_ASSETS_SCHEMA_SHA256 = {
+    name: INSPECTION_SCHEMA_SHA256[name]
+    for name in ("explore", "edit_material_instance", "edit_texture")
+}
+SOURCE_ASSETS_ARRAYS = tuple(
+    INSPECTION_ROOT + "/Materials/TA_" + channel + "_Unified"
+    for channel in ("Colour", "Normal", "Masks")
+)
 TRIAL_BACKUP = INSPECTION_ROOT + "/RepairBackups/MI_PreMacroTrial_20261021"
 # Complete ordered #json-mi snapshot observed in run 39530647438. Repeated
 # layer parameter names are intentional; never collapse these lists to maps.
@@ -393,6 +405,18 @@ def vault_inspection_plan():
     return tuple(
         {"name": VAULT_TOOL, "arguments": {"action": "list", "filter": name}}
         for name in VAULT_FILTERS
+    )
+
+
+def source_assets_inspection_plan():
+    """Three existing typed read modes, with no pagination or authoring args."""
+    return (
+        {"name": "explore", "arguments": {
+            "path": SOURCE_ASSETS_ROOT, "recursive": True,
+            "type": SOURCE_ASSETS_CLASS, "limit": 200, "offset": 0,
+        }},
+        {"name": "edit_material_instance", "arguments": {"name": TRIAL_MI}},
+        {"name": "edit_texture", "arguments": {"names": list(SOURCE_ASSETS_ARRAYS)}},
     )
 
 
@@ -760,6 +784,13 @@ class ObservationState:
     vault_schema_sha256: str | None = None
     vault_host_checks: list = field(default_factory=list)
     vault_external_host_identity: dict | None = None
+    source_assets_requested: bool = False
+    source_assets_results: list = field(default_factory=list)
+    source_assets_schema_sha256: dict = field(default_factory=dict)
+    source_assets_host_checks: list = field(default_factory=list)
+    source_assets_external_host_identity: dict | None = None
+    source_assets_registry_verified: bool = False
+    source_assets_inventory_complete: bool = False
     surface_requested: bool = False
     surface_results: list = field(default_factory=list)
     surface_host_checks: list = field(default_factory=list)
@@ -811,6 +842,9 @@ class ObservationState:
                 sum(row["attempted"] for row in self.trial_results)
                 if macro_mode
                 else
+                sum(row["attempted"] for row in self.source_assets_results)
+                if self.source_assets_requested
+                else
                 sum(row["attempted"] for row in self.vault_results)
                 if self.vault_requested
                 else
@@ -825,6 +859,10 @@ class ObservationState:
                 and all(row["response_received"] for row in self.trial_results[:normal_count])
                 and [row["stage"] for row in self.trial_results[:normal_count]] == list(fixed_plan)[:normal_count]
                 if macro_mode
+                else
+                len(self.source_assets_results) == 3
+                and all(row["response_received"] for row in self.source_assets_results)
+                if self.source_assets_requested
                 else
                 len(self.vault_results) == 3
                 and all(row["response_received"] for row in self.vault_results)
@@ -889,6 +927,22 @@ class ObservationState:
                     "apply_reviewed_trial_source_commit": APPLY_REVIEWED_TRIAL_SOURCE,
                 })
             report.update(macro_fields)
+        elif self.source_assets_requested:
+            report.update({
+                "source_assets_results": self.source_assets_results,
+                "source_assets_schema_sha256": self.source_assets_schema_sha256,
+                "source_assets_host_checks": self.source_assets_host_checks,
+                "external_host_identity": self.source_assets_external_host_identity,
+                "source_assets_registry_verified": self.source_assets_registry_verified,
+                "source_assets_inventory_complete": self.source_assets_inventory_complete,
+                "source_assets_pagination_attempted": False,
+                "source_assets_mi_associations_verified": False,
+                "source_assets_array_source_refs_verified": False,
+                "source_assets_readback_limits": [
+                    "MI read mode does not expose parameter association or layer index; repeated names remain ordered rows.",
+                    "Texture read mode exposes array settings, not a verified SourceTextures slot list.",
+                ],
+            })
         elif self.vault_requested:
             report.update({
                 "vault_results": self.vault_results,
@@ -1295,6 +1349,77 @@ def verify_trial_mi(text, path, macro):
     return snapshot
 
 
+def verify_source_assets_registry(text):
+    """Validate one registry page; a legitimate capped page stays incomplete."""
+    markers = re.findall(r"(?m)^#json-explore:([^\r\n]+)$", text)
+    require(text.count("#json-explore:") == len(markers) == 1,
+            "SOURCE_ASSETS_REGISTRY_FORMAT")
+    page = parse_json(markers[0].encode("utf-8"), INSPECTION_RESPONSE_LIMIT)
+    require(type(page) is dict and set(page) == {
+        "mode", "scope", "shown", "total", "offset", "limit", "truncated",
+        "raw_from_registry", "loaded_in_shown", "filters", "rows",
+    } and page["mode"] == "assets" and page["scope"] == SOURCE_ASSETS_ROOT,
+        "SOURCE_ASSETS_REGISTRY_FORMAT")
+    require(all(type(page[key]) is int for key in (
+        "shown", "total", "offset", "limit", "raw_from_registry", "loaded_in_shown"
+    )) and type(page["rows"]) is list and type(page["truncated"]) is bool
+        and page["offset"] == 0 and page["limit"] == 200
+        and 0 <= page["shown"] == len(page["rows"]) == min(page["total"], 200)
+        and page["total"] <= page["raw_from_registry"]
+        and 0 <= page["loaded_in_shown"] <= page["shown"]
+        and page["truncated"] == (page["shown"] < page["total"]),
+        "SOURCE_ASSETS_REGISTRY_COUNTS")
+    require(type(page["filters"]) is dict and page["filters"] == {
+        "pattern": "", "query": "", "type": SOURCE_ASSETS_CLASS,
+        "class_path": SOURCE_ASSETS_CLASS, "class_filter_recursive": True,
+    } and page["filters"]["class_filter_recursive"] is True,
+        "SOURCE_ASSETS_REGISTRY_FILTER")
+    # Counts come from the typed footer. A filtered/capped human-readable
+    # header may add presentation labels; retain it without guessing its format.
+    seen, loaded = set(), 0
+    for row in page["rows"]:
+        require(type(row) is dict and set(row) == {"name", "path", "class", "class_path", "loaded"}
+                and all(type(row[key]) is str for key in ("name", "path", "class", "class_path"))
+                and type(row["loaded"]) is bool
+                and re.fullmatch(r"[A-Za-z0-9_]{1,128}", row["name"]) is not None
+                and re.fullmatch(re.escape(SOURCE_ASSETS_ROOT) + r"(?:/[A-Za-z0-9_]{1,128})*", row["path"]) is not None
+                and re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,127}", row["class"]) is not None
+                and re.fullmatch(r"/Script/[A-Za-z][A-Za-z0-9_]{0,127}\." + re.escape(row["class"]), row["class_path"]) is not None,
+                "SOURCE_ASSETS_REGISTRY_ROW")
+        # The exact installed registry filter includes Texture2D subclasses.
+        package = row["path"] + "/" + row["name"]
+        require(package not in seen, "SOURCE_ASSETS_REGISTRY_DUPLICATE")
+        seen.add(package)
+        loaded += row["loaded"]
+    require(loaded == page["loaded_in_shown"], "SOURCE_ASSETS_REGISTRY_COUNTS")
+    return page["shown"] == page["total"]
+
+
+def verify_source_assets_readback(index, text):
+    """Check fixed target identities; retain values without claiming acceptance."""
+    if index == 2:
+        require(text.splitlines()[:1] == ["# MATERIAL INSTANCE MI_Landscape_Instance_YACS"]
+                and re.findall(r"(?m)^parent = (.+)$", text) == ["M_Landscape_YACS"]
+                and text.count("= saved=false (read-only call - asset untouched, not saved)") == 1,
+                "SOURCE_ASSETS_MI_READ_MODE")
+        marker = "#json-mi:"
+    else:
+        require(index == 3, "SOURCE_ASSETS_READBACK_INDEX")
+        marker = "#json-textures:"
+    lines = re.findall(r"(?m)^" + re.escape(marker) + r"([^\r\n]+)$", text)
+    require(text.count(marker) == len(lines) == 1, "SOURCE_ASSETS_READBACK_FORMAT")
+    value = parse_json(lines[0].encode("utf-8"), INSPECTION_RESPONSE_LIMIT)
+    if index == 2:
+        require(type(value) is dict and set(value) == {"scalars", "vectors", "textures", "static_switches"}
+                and all(type(rows) is list for rows in value.values()),
+                "SOURCE_ASSETS_READBACK_FORMAT")
+    else:
+        require(type(value) is list and len(value) == 3
+                and all(type(row) is dict for row in value)
+                and [row.get("path") for row in value] == list(SOURCE_ASSETS_ARRAYS),
+                "SOURCE_ASSETS_ARRAY_IDENTITY")
+
+
 def verify_trial_clean(text):
     require(re.fullmatch(
         r"# EDIT ASSET\s+~ would save " + re.escape(TRIAL_MI)
@@ -1529,6 +1654,9 @@ class DiscoveryClient:
         self._vault_params = None
         self._vault_row = None
         self._vault_files_guard = None
+        self._source_assets_params = None
+        self._source_assets_row = None
+        self._source_assets_files_guard = None
         self._trial_params = None
         self._trial_row = None
         self._trial_recovering = False
@@ -1677,6 +1805,21 @@ class DiscoveryClient:
                 and canonical(params) == canonical(vault_inspection_plan()[index]),
                 "VAULT_INSPECTION_ARGUMENTS",
             )
+        source_assets_inspecting = (
+            method == "tools/call" and self._source_assets_params is not None
+            and params is self._source_assets_params and self._source_assets_row is not None
+            and not self._source_assets_row["attempted"] and not notification
+        )
+        if source_assets_inspecting:
+            state = self.observation_state
+            index = len(state.source_assets_results) - 1
+            require(state.source_assets_requested and 0 <= index < 3
+                    and self._source_assets_row is state.source_assets_results[index]
+                    and all(row["completed"] is True for row in state.source_assets_results[:index])
+                    and (index == 0 or state.source_assets_registry_verified)
+                    and state.source_assets_schema_sha256 == SOURCE_ASSETS_SCHEMA_SHA256
+                    and canonical(params) == canonical(source_assets_inspection_plan()[index]),
+                    "SOURCE_ASSETS_ARGUMENTS")
         trialing = (
             method == "tools/call" and self._trial_params is not None
             and params is self._trial_params and self._trial_row is not None
@@ -1722,7 +1865,7 @@ class DiscoveryClient:
                     and canonical(params) == canonical(surface_plan(self._surface_run_token)[index]),
                     "SURFACE_ARGUMENTS")
             self._surface_host_check("before")
-        native_call = observing or capturing or inspecting or trialing or vault_inspecting or surfacing
+        native_call = observing or capturing or inspecting or trialing or vault_inspecting or surfacing or source_assets_inspecting
         require(
             method in METHODS
             or (notification and method == "notifications/initialized")
@@ -1735,6 +1878,8 @@ class DiscoveryClient:
         )
         if surfacing:
             pass  # The fresh host check above is required for every surface operation.
+        elif source_assets_inspecting:
+            self._source_assets_host_check("before")
         elif vault_inspecting:
             self._vault_host_check("before")
         elif trialing:
@@ -1817,6 +1962,11 @@ class DiscoveryClient:
                     })
                 if vault_inspecting:
                     self._vault_row.update({
+                        "attempted": True, "completed": None,
+                        "started_utc": self.observation_state.started_utc.isoformat(),
+                    })
+                if source_assets_inspecting:
+                    self._source_assets_row.update({
                         "attempted": True, "completed": None,
                         "started_utc": self.observation_state.started_utc.isoformat(),
                     })
@@ -1907,6 +2057,11 @@ class DiscoveryClient:
                         "response_received": True,
                         "response_received_utc": self.observation_state.response_received_utc.isoformat(),
                     })
+                if source_assets_inspecting:
+                    self._source_assets_row.update({
+                        "response_received": True,
+                        "response_received_utc": self.observation_state.response_received_utc.isoformat(),
+                    })
                 if trialing:
                     self._trial_row.update({
                         "response_received": True,
@@ -1984,6 +2139,53 @@ class DiscoveryClient:
         self.observation_state.vault_host_checks.append({
             "filter": self._vault_row["arguments"]["filter"], "phase": phase, **check,
         })
+
+    def _source_assets_host_check(self, phase):
+        if self._source_assets_files_guard is not None:
+            self._source_assets_files_guard()
+        check = verify_trial_host_identity(self.identity, self.discovery)
+        validate_identity({**self.identity, "observed_utc": check["verified_utc"]}, self.discovery)
+        self.observation_state.source_assets_host_checks.append({
+            "index": self._source_assets_row["index"], "phase": phase, **check,
+        })
+
+    def _run_source_assets_inspection(self, schemas):
+        state = self.observation_state
+        for name, expected in SOURCE_ASSETS_SCHEMA_SHA256.items():
+            schema = schemas.get(name)
+            require(type(schema) is dict and hashlib.sha256(canonical(schema)).hexdigest() == expected,
+                    "SOURCE_ASSETS_TOOL_SCHEMA_UNSUPPORTED")
+        state.source_assets_schema_sha256 = dict(SOURCE_ASSETS_SCHEMA_SHA256)
+        for index, params in enumerate(source_assets_inspection_plan(), 1):
+            row = {
+                "index": index, "tool_name": params["name"], "arguments": params["arguments"],
+                "input_schema_sha256": state.source_assets_schema_sha256[params["name"]],
+                "attempted": False, "completed": False, "response_received": False,
+                "started_utc": None, "response_received_utc": None,
+                "result": None, "error_code": None,
+            }
+            state.source_assets_results.append(row)
+            self._source_assets_params, self._source_assets_row = params, row
+            state.tool_name = params["name"]
+            try:
+                try:
+                    result = self._post("tools/call", params)
+                    retain_inspection_result(result, row, (self.discovery.token, self.session_id))
+                finally:
+                    if row["attempted"]:
+                        self._source_assets_host_check("after")
+                if index == 1:
+                    state.source_assets_inventory_complete = verify_source_assets_registry(row["result"]["text"])
+                    state.source_assets_registry_verified = True
+                else:
+                    verify_source_assets_readback(index, row["result"]["text"])
+                require(len(canonical(state.source_assets_results)) <= INSPECTION_AGGREGATE_LIMIT,
+                        "SOURCE_ASSETS_AGGREGATE_SIZE")
+                row["completed"] = True
+            except ProbeError as error:
+                row["error_code"] = error.code
+                raise
+        state.completed = True
 
     def _run_vault_inspection(self, schema):
         require(type(schema) is dict and hashlib.sha256(canonical(schema)).hexdigest() == VAULT_SCHEMA_SHA256,
@@ -2155,15 +2357,17 @@ class DiscoveryClient:
     def probe(
         self, observe_lesson07=False, capture_lesson07=False, inspect_lesson07=False,
         trial_macro=False, apply_reviewed_macro=False, inspect_vault=False, import_surfaces=False, surface_run_token=None,
+        inspect_source_assets=False,
     ):
         require(
-            sum((observe_lesson07, capture_lesson07, inspect_lesson07, trial_macro, apply_reviewed_macro, inspect_vault, import_surfaces)) <= 1,
+            sum((observe_lesson07, capture_lesson07, inspect_lesson07, trial_macro, apply_reviewed_macro, inspect_vault, import_surfaces, inspect_source_assets)) <= 1,
             "NATIVE_MODES_MUTUALLY_EXCLUSIVE",
         )
         self.observation_state.surface_requested = import_surfaces
         self.observation_state.capture_requested = capture_lesson07
         self.observation_state.inspection_requested = inspect_lesson07
         self.observation_state.vault_requested = inspect_vault
+        self.observation_state.source_assets_requested = inspect_source_assets
         self.observation_state.trial_requested = trial_macro
         self.observation_state.apply_requested = apply_reviewed_macro
         if trial_macro or apply_reviewed_macro:
@@ -2407,6 +2611,18 @@ class DiscoveryClient:
                     **state.report_fields(),
                 }
             )
+        if inspect_source_assets:
+            require(tool_error is None, "SOURCE_ASSETS_INCOMPLETE_TOOL_LIST")
+            require(session["signed_in"], "SOURCE_ASSETS_SIGNED_OUT")
+            self._run_source_assets_inspection(inspection_schemas)
+            report.update({
+                "status": "SOURCE_ASSETS_INSPECTION_RESPONSES_RECEIVED",
+                "http_requests": self.requests,
+                "notifications_received": self.notifications_received,
+                "native_material_readback": "RAW_RESPONSES_REVIEW_PENDING",
+                "visual_acceptance": False,
+                **self.observation_state.report_fields(),
+            })
         if import_surfaces:
             require(tool_error is None, "SURFACE_INCOMPLETE_TOOL_LIST")
             require(session["signed_in"], "SURFACE_SIGNED_OUT")
@@ -2457,6 +2673,7 @@ def probe_from_files(
     trial_macro=False,
     apply_reviewed_macro=False,
     inspect_vault=False,
+    inspect_source_assets=False,
     import_surfaces=False,
     observation_state=None,
 ):
@@ -2467,8 +2684,10 @@ def probe_from_files(
     identity = parse_json(identity_raw, CONFIG_LIMIT)
     safe_identity = validate_identity(identity, discovery)
     client = DiscoveryClient(discovery, identity, observation_state=observation_state)
-    if trial_macro or apply_reviewed_macro or inspect_vault or import_surfaces:
-        if inspect_vault:
+    if trial_macro or apply_reviewed_macro or inspect_vault or import_surfaces or inspect_source_assets:
+        if inspect_source_assets:
+            client.observation_state.source_assets_external_host_identity = safe_identity
+        elif inspect_vault:
             client.observation_state.vault_external_host_identity = safe_identity
         else:
             client.observation_state.trial_external_host_identity = safe_identity
@@ -2478,7 +2697,9 @@ def probe_from_files(
                     and read_bounded(identity_path, CONFIG_LIMIT) == identity_raw,
                     "INPUT_CHANGED")
 
-        if import_surfaces:
+        if inspect_source_assets:
+            client._source_assets_files_guard = trial_files_guard
+        elif import_surfaces:
             client._surface_files_guard = trial_files_guard
         elif inspect_vault:
             client._vault_files_guard = trial_files_guard
@@ -2491,6 +2712,7 @@ def probe_from_files(
         **({"trial_macro": True} if trial_macro else {}),
         **({"apply_reviewed_macro": True} if apply_reviewed_macro else {}),
         **({"inspect_vault": True} if inspect_vault else {}),
+        **({"inspect_source_assets": True} if inspect_source_assets else {}),
         **({"import_surfaces": True, "surface_run_token": Path(identity_path).parent.name} if import_surfaces else {}),
     )
     require(
@@ -2570,6 +2792,7 @@ def main(argv=None):
     mode.add_argument("--capture-lesson07", action="store_true")
     mode.add_argument("--inspect-lesson07", action="store_true")
     mode.add_argument("--inspect-vault", action="store_true")
+    mode.add_argument("--inspect-source-assets", action="store_true")
     mode.add_argument("--import-surfaces", action="store_true")
     mode.add_argument("--trial-macro", action="store_true")
     mode.add_argument("--apply-reviewed-macro", action="store_true")
@@ -2578,6 +2801,7 @@ def main(argv=None):
         capture_requested=args.capture_lesson07,
         inspection_requested=args.inspect_lesson07,
         vault_requested=args.inspect_vault,
+        source_assets_requested=args.inspect_source_assets,
         surface_requested=args.import_surfaces,
         trial_requested=args.trial_macro,
         apply_requested=args.apply_reviewed_macro,
@@ -2595,6 +2819,8 @@ def main(argv=None):
             options["inspect_lesson07"] = True
         if args.inspect_vault:
             options["inspect_vault"] = True
+        if args.inspect_source_assets:
+            options["inspect_source_assets"] = True
         if args.import_surfaces:
             options["import_surfaces"] = True
         if args.trial_macro:
@@ -2621,6 +2847,8 @@ def main(argv=None):
             if args.inspect_lesson07
             else "VAULT_INSPECTION_FAILED"
             if args.inspect_vault
+            else "SOURCE_ASSETS_INSPECTION_FAILED"
+            if args.inspect_source_assets
             else "CAPTURE_FAILED"
             if args.capture_lesson07
             else "OBSERVATION_FAILED"
@@ -2630,7 +2858,7 @@ def main(argv=None):
             "native_tool_calls": 0,
             "native_material_readback": (
                 "RAW_RESPONSES_REVIEW_PENDING"
-                if args.inspect_lesson07 and state.attempted
+                if (args.inspect_lesson07 or args.inspect_source_assets) and state.attempted
                 else "UNVERIFIED"
                 if state.attempted and not (args.capture_lesson07 or args.inspect_vault)
                 else "NOT_RUN"
@@ -2638,7 +2866,7 @@ def main(argv=None):
             "visual_acceptance": False,
             "performance_pass": False,
         }
-        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07 or args.trial_macro or args.apply_reviewed_macro or args.inspect_vault or args.import_surfaces:
+        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07 or args.trial_macro or args.apply_reviewed_macro or args.inspect_vault or args.import_surfaces or args.inspect_source_assets:
             report.update(state.report_fields())
         if rpc_code is not None:
             report["rpc_code"] = rpc_code
@@ -2653,6 +2881,8 @@ def main(argv=None):
         if args.inspect_lesson07
         else "L07_WINGMAN_VAULT_INSPECTION"
         if args.inspect_vault
+        else "L07_WINGMAN_SOURCE_ASSETS_INSPECTION"
+        if args.inspect_source_assets
         else "L07_WINGMAN_CAPTURE"
         if args.capture_lesson07
         else "L07_WINGMAN_OBSERVATION"
@@ -2686,6 +2916,8 @@ def main(argv=None):
         if args.inspect_lesson07
         else "VAULT_INSPECTION_RESPONSES_RECEIVED"
         if args.inspect_vault
+        else "SOURCE_ASSETS_INSPECTION_RESPONSES_RECEIVED"
+        if args.inspect_source_assets
         else "CAPTURE_RESPONSE_RECEIVED"
         if args.capture_lesson07
         else "OBSERVATION_COMPLETE"

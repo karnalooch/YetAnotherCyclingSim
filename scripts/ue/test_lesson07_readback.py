@@ -1227,12 +1227,20 @@ class WorkflowBoundaryTests(unittest.TestCase):
         self.assertEqual(material_pins, reader.CURRENT_MATERIAL_PINS)
 
         # Agreement between two stale constants must not admit an obsolete MI.
-        checkpoint = json.loads((ROOT / "docs/assets/lesson07-recovery-20261020/receipt.json").read_text(encoding="utf-8"))
+        # The verified nine-package retention supersedes the old Flatten-only MI;
+        # the historical recovery receipt still anchors the unchanged map lineage.
+        checkpoint = json.loads((ROOT / "docs/assets/lesson07-surface-repair-20261021/retention-39643271947-server-lfs-readback.json").read_text(encoding="utf-8"))
+        self.assertEqual(checkpoint["status"], "REMOTE_LFS_BYTES_VERIFIED_BRANCH_NOT_UPDATED")
+        self.assertIs(checkpoint["storage_started_empty"], True)
+        saved_mi = [row for row in checkpoint["assets"] if row["path"].endswith("/MI_Landscape_Instance_YACS.uasset")]
+        self.assertEqual(len(saved_mi), 1)
         self.assertEqual(
-            reader.CURRENT_MATERIAL_PINS[checkpoint["saved_asset"]],
-            (checkpoint["saved_sha256"], checkpoint["saved_size"]),
+            reader.CURRENT_MATERIAL_PINS[saved_mi[0]["path"]],
+            (saved_mi[0]["sha256"], saved_mi[0]["size_bytes"]),
         )
-        self.assertEqual(reader.MAP_SHA256, checkpoint["map_sha256"])
+        historical = json.loads((ROOT / "docs/assets/lesson07-recovery-20261020/receipt.json").read_text(encoding="utf-8"))
+        self.assertEqual(reader.MAP_SHA256, historical["map_sha256"])
+        self.assertNotEqual(saved_mi[0]["sha256"], historical["saved_sha256"])
 
     @unittest.skipUnless(shutil.which("git"), "Git required to inspect committed asset pointers")
     def test_current_pins_match_committed_asset_pointers_without_lfs_payloads(self):

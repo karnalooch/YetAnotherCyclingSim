@@ -1,0 +1,602 @@
+{
+  "schema_version": 1,
+  "scope": "Read-only official source inspection; no Houdini/Unreal execution, no asset modification, no visual/runtime acceptance",
+  "archive": {
+    "source_page": "https://www.sidefx.com/tutorials/project-pegasus-landscape-workflow/",
+    "source_url": "https://media.sidefx.com/files/tutorials/project-pegasus-landscape-workflow/ProjectFiles_LandscapeWorkflow3.zip",
+    "bytes": 605943562,
+    "sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
+    "matches_historical_archive": true
+  },
+  "archive_http_last_modified": "Mon, 04 Dec 2023 15:51:14 GMT",
+  "inventory": {
+    "entries": 394,
+    "files": 187,
+    "uncompressed_bytes": 674890049,
+    "all_entries_crc_verified": true,
+    "entries_safe": true,
+    "source_executed": false,
+    "unreal_invoked": false
+  },
+  "reader": {
+    "release": "UAssetAPI1.1.0",
+    "source_revision": "73530811a9d91ffa8959a1a4cb74cc3b9c5c6bed",
+    "dll_sha256": "4048337707660c7c3d810b37747049c85c228d0ed602112685098047bd59dbab",
+    "explicit_engine_override": false,
+    "explicit_mappings": false,
+    "all_five_original_material_assets_full_binary_roundtrip_identical_in_memory": true
+  },
+  "texture_arrays": [
+    {
+      "path": "Unreal/Content/PegasusDemo/Materials/Landscape/Textures/TA_Colour.uasset",
+      "size_bytes": 5798,
+      "sha256": "d5d9519bea5d295bb61cef38a9706ddf30a38e1a776d72217f04bae975c5487c",
+      "source": {
+        "SizeX": 64,
+        "SizeY": 64,
+        "NumSlices": 8,
+        "NumMips": 1,
+        "Format": "TSF_RGBA32F"
+      },
+      "source_textures": [
+        "/Engine/EditorLandscapeResources/WhiteSquareTexture.WhiteSquareTexture",
+        "/Game/PegasusDemo/Materials/Landscape/Textures/Debug/T_R.T_R",
+        "/Game/PegasusDemo/Materials/Landscape/Textures/Debug/T_O.T_O",
+        "/Game/PegasusDemo/Materials/Landscape/Textures/Debug/T_Y.T_Y",
+        "/Game/PegasusDemo/Materials/Landscape/Textures/Debug/T_G.T_G",
+        "/Game/PegasusDemo/Materials/Landscape/Textures/Debug/T_B.T_B",
+        "/Game/PegasusDemo/Materials/Landscape/Textures/Debug/T_P.T_P",
+        "/Game/PegasusDemo/Materials/Landscape/Textures/Debug/T_V.T_V"
+      ],
+      "explicit_settings": {
+        "MaxTextureSize": 2048,
+        "NeverStream": true,
+        "MipGenSettings": "TMGS_FromTextureGroup"
+      },
+      "omitted_settings_not_inferred": [
+        "CompressionSettings",
+        "SRGB"
+      ],
+      "binary_roundtrip_identical_in_memory": true
+    },
+    {
+      "path": "Unreal/Content/PegasusDemo/Materials/Landscape/Textures/TA_Masks.uasset",
+      "size_bytes": 6102,
+      "sha256": "9525568c0a980e9007a0ab418f5310b9383cdba1eedf958c12b8d98de5337b2d",
+      "source": {
+        "SizeX": 128,
+        "SizeY": 128,
+        "NumSlices": 1,
+        "NumMips": 1,
+        "Format": "TSF_BGRA8"
+      },
+      "source_textures": [
+        "/Engine/EngineMaterials/DefaultDiffuse_TC_Masks.DefaultDiffuse_TC_Masks"
+      ],
+      "explicit_settings": {
+        "CompressionSettings": "TC_Masks",
+        "SRGB": false,
+        "MaxTextureSize": 2048,
+        "NeverStream": true
+      },
+      "omitted_settings_not_inferred": [],
+      "binary_roundtrip_identical_in_memory": true
+    },
+    {
+      "path": "Unreal/Content/PegasusDemo/Materials/Landscape/Textures/TA_Normal.uasset",
+      "size_bytes": 3763,
+      "sha256": "b74b6b5b042b239d2e48b3230412245e0941e97bbf98c8220320d2778909d3f1",
+      "source": {
+        "SizeX": 1,
+        "SizeY": 1,
+        "NumSlices": 1,
+        "NumMips": 1,
+        "Format": "TSF_BGRA8"
+      },
+      "source_textures": [
+        "/Engine/EngineMaterials/BaseFlattenNormalMap.BaseFlattenNormalMap"
+      ],
+      "explicit_settings": {
+        "CompressionSettings": "TC_Normalmap",
+        "SRGB": false,
+        "MaxTextureSize": 2048,
+        "LODGroup": "TEXTUREGROUP_HierarchicalLOD",
+        "NeverStream": true
+      },
+      "omitted_settings_not_inferred": [],
+      "binary_roundtrip_identical_in_memory": true
+    }
+  ],
+  "material_assets": [
+    {
+      "path": "Unreal/Content/PegasusDemo/Materials/Landscape/M_Pegasus_Landscape_Master.uasset",
+      "size_bytes": 211283,
+      "sha256": "d2fed2b50581f53e80bc01c53379b6900b32b8b6b70d55272149d8ef0f2cc171"
+    },
+    {
+      "path": "Unreal/Content/PegasusDemo/Materials/Landscape/MI_Landscape_Instance.uasset",
+      "size_bytes": 38181,
+      "sha256": "dde1fb5e4732cb38b6f1e03ba4646b715d75032a85e08e4e89a8325e11e606c7"
+    },
+    {
+      "path": "Unreal/Content/PegasusDemo/Materials/Landscape/Functions/MF_PE_TextureAtlas_SampleNormal.uasset",
+      "size_bytes": 20948,
+      "sha256": "bb556279f30c6d116a4c24ae18a5234af28cf27cd9f2f59e43e6f85f71d5032a"
+    }
+  ],
+  "normal_function_matches_committed_original_exactly": true,
+  "original_mi": {
+    "parent": "/Game/PegasusDemo/Materials/Landscape/M_Pegasus_Landscape_Master.M_Pegasus_Landscape_Master",
+    "scalar_parameters": [
+      {
+        "parameter": {
+          "Name": "Detail Brightness",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 1.0
+      },
+      {
+        "parameter": {
+          "Name": "Detail Tiling",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 0.25
+      },
+      {
+        "parameter": {
+          "Name": "Displacement",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 1.0
+      },
+      {
+        "parameter": {
+          "Name": "Displacement Offset",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 0.5019999742507935
+      },
+      {
+        "parameter": {
+          "Name": "Displacement_Micro",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": "+0"
+      },
+      {
+        "parameter": {
+          "Name": "Global AO Power",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 1.0
+      },
+      {
+        "parameter": {
+          "Name": "Global Brightness",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 0.5
+      },
+      {
+        "parameter": {
+          "Name": "Global Colour Strength",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 0.5
+      },
+      {
+        "parameter": {
+          "Name": "Global Normal Flatten",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": "+0"
+      },
+      {
+        "parameter": {
+          "Name": "Global Saturation",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 0.5
+      },
+      {
+        "parameter": {
+          "Name": "Global Specular Scale",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 1.0
+      },
+      {
+        "parameter": {
+          "Name": "Macro Texture Displacement",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 5.0
+      },
+      {
+        "parameter": {
+          "Name": "Macro Texture Distance",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 10000.0
+      },
+      {
+        "parameter": {
+          "Name": "Macro Tiling",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 0.05000000074505806
+      },
+      {
+        "parameter": {
+          "Name": "Num IDmap Layers",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 5.0
+      },
+      {
+        "parameter": {
+          "Name": "Specular Falloff Exponent",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 0.5
+      },
+      {
+        "parameter": {
+          "Name": "Terrain Resolution",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 2016.0
+      },
+      {
+        "parameter": {
+          "Name": "UV Distort",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 4.0
+      },
+      {
+        "parameter": {
+          "Name": "UV Rotate",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": -90.0
+      },
+      {
+        "parameter": {
+          "Name": "Noise_Scale",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": 0.0005000000237487257
+      },
+      {
+        "parameter": {
+          "Name": "Bit",
+          "Association": "BlendParameter",
+          "Index": 3
+        },
+        "value": 4.0
+      },
+      {
+        "parameter": {
+          "Name": "Bit",
+          "Association": "BlendParameter",
+          "Index": 2
+        },
+        "value": 3.0
+      },
+      {
+        "parameter": {
+          "Name": "Bit",
+          "Association": "BlendParameter",
+          "Index": 1
+        },
+        "value": 2.0
+      },
+      {
+        "parameter": {
+          "Name": "Bit",
+          "Association": "BlendParameter",
+          "Index": 0
+        },
+        "value": 1.0
+      },
+      {
+        "parameter": {
+          "Name": "Material_Selection",
+          "Association": "LayerParameter",
+          "Index": 4
+        },
+        "value": 4.0
+      },
+      {
+        "parameter": {
+          "Name": "Material_Selection",
+          "Association": "LayerParameter",
+          "Index": 2
+        },
+        "value": 2.0
+      },
+      {
+        "parameter": {
+          "Name": "Material_Selection",
+          "Association": "LayerParameter",
+          "Index": 1
+        },
+        "value": 1.0
+      },
+      {
+        "parameter": {
+          "Name": "Material_Selection",
+          "Association": "LayerParameter",
+          "Index": 3
+        },
+        "value": 3.0
+      },
+      {
+        "parameter": {
+          "Name": "RefractionDepthBias",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": "+0"
+      }
+    ],
+    "vector_parameters": [
+      {
+        "parameter": {
+          "Name": "Offset",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "value": {
+          "R": 1047.0,
+          "G": 1080.0,
+          "B": "+0",
+          "A": "+0"
+        }
+      }
+    ],
+    "texture_parameters": [
+      {
+        "parameter": {
+          "Name": "Colour Atlas",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "object_path": "/Game/PegasusDemo/Materials/Landscape/Textures/TA_Colour.TA_Colour"
+      },
+      {
+        "parameter": {
+          "Name": "Masks Atlas",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "object_path": "/Game/PegasusDemo/Materials/Landscape/Textures/TA_Masks.TA_Masks"
+      },
+      {
+        "parameter": {
+          "Name": "Normal Atlas",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "object_path": "/Game/PegasusDemo/Materials/Landscape/Textures/TA_Normal.TA_Normal"
+      },
+      {
+        "parameter": {
+          "Name": "Terrain Colour",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "object_path": "/Engine/EditorLandscapeResources/WhiteSquareTexture.WhiteSquareTexture"
+      },
+      {
+        "parameter": {
+          "Name": "Terrain IDmap",
+          "Association": "GlobalParameter",
+          "Index": -1
+        },
+        "object_path": "/Game/PegasusDemo/Materials/Landscape/Textures/Debug/T_Null.T_Null"
+      }
+    ],
+    "static_parameters_runtime": {
+      "StaticSwitchParameters": [
+        {
+          "Value": false,
+          "ParameterInfo": {
+            "Name": "Allow Grass",
+            "Association": "GlobalParameter",
+            "Index": -1
+          },
+          "bOverride": true,
+          "ExpressionGUID": "{89ED7543-4C8D-6BEA-1674-1895D73D5C9B}"
+        },
+        {
+          "Value": true,
+          "ParameterInfo": {
+            "Name": "Use IDmap",
+            "Association": "GlobalParameter",
+            "Index": -1
+          },
+          "bOverride": true,
+          "ExpressionGUID": "{FF3FEE18-437F-D478-063C-79BAE53AFF1A}"
+        },
+        {
+          "Value": true,
+          "ParameterInfo": {
+            "Name": "Use Terrain Colour",
+            "Association": "GlobalParameter",
+            "Index": -1
+          },
+          "bOverride": true,
+          "ExpressionGUID": "{F6BF4B0D-45AF-FBAE-6A6B-FF99B4ADF698}"
+        }
+      ],
+      "MaterialLayers": {
+        "Layers": [
+          -37,
+          -38,
+          -38,
+          -38,
+          -38
+        ],
+        "Blends": [
+          -39,
+          -39,
+          -39,
+          -39
+        ],
+        "Layers_resolved": [
+          "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Base.ML_PE_Landscape_Base",
+          "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer",
+          "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer",
+          "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer",
+          "/Game/PegasusDemo/Materials/Landscape/Layers/ML_PE_Landscape_Layer.ML_PE_Landscape_Layer"
+        ],
+        "Blends_resolved": [
+          "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape",
+          "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape",
+          "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape",
+          "/Game/PegasusDemo/Materials/Landscape/Layers/MLB_PE_Landscape.MLB_PE_Landscape"
+        ]
+      },
+      "bHasMaterialLayers": true
+    }
+  },
+  "source_textures": [
+    {
+      "path": "SourceContent/Pegasus/Landscape/Textures/T_Terrain_IDMAP.png",
+      "size_bytes": 767017,
+      "sha256": "02e67e7485799af52c2960883cd68e9a41dda42760004d562271961bb6db708c"
+    },
+    {
+      "path": "SourceContent/Pegasus/Landscape/Textures/T_Pegasus_Landscape_Colour.png",
+      "size_bytes": 5889075,
+      "sha256": "4f41e611abb4f43de7cd5d55f22077ff30b8bfc2094dda9be62a0023d668ac89"
+    },
+    {
+      "path": "SourceContent/Pegasus/Landscape/Textures/T_Pegasus_Landscape_AO.png",
+      "size_bytes": 6331767,
+      "sha256": "266329a4cae29e9190275023a0c8af4de4a9fd75f83f61b43349ccca8c030e8f"
+    },
+    {
+      "path": "SourceContent/Pegasus/Landscape/Textures/T_Terrain_wetness.png",
+      "size_bytes": 7692217,
+      "sha256": "34a2a91e1b73452b6cb8e08ab0ae0bd68a6742115640a19a67810bcd26632258"
+    },
+    {
+      "path": "SourceContent/Pegasus/Textures/tlonbisya_4K_Displacement.exr",
+      "size_bytes": 49398483,
+      "sha256": "e0e7c2ddcf6e3d98d91ffa3747a9234791ebf8aae52009bddc8ab9d740279b30"
+    },
+    {
+      "path": "SourceContent/Pegasus/Textures/wepoeaw_4K_Displacement.exr",
+      "size_bytes": 49909184,
+      "sha256": "bfd92a6294d246c2ce58a2e93cbbfffa13c3653b77eb7ae00a9ed2a328f99993"
+    }
+  ],
+  "source_idmap": {
+    "size": [
+      2016,
+      2016
+    ],
+    "png_bit_depth": 8,
+    "png_colour_type": 0,
+    "raw_values": [
+      0,
+      17,
+      34,
+      51,
+      68,
+      85,
+      102,
+      119,
+      136,
+      153,
+      204,
+      221
+    ]
+  },
+  "source_global_colour": {
+    "size": [
+      2048,
+      2048
+    ],
+    "png_bit_depth": 8,
+    "png_colour_type": 2,
+    "all_zero_rgb_pixels": 4211,
+    "pixel_count": 4194304
+  },
+  "heightfield_material_hda": {
+    "source_hda": "Houdini/Packages/PegasusDemo/otls/sop_PE_heightfield_material.1.0.hda",
+    "source_hda_bytes": 45649,
+    "source_hda_sha256": "e7d41ca64757699aa65b69520aca96b11f7325365506ddc675f8ea2b23a45023",
+    "standard_gzip_member_offset": 14106,
+    "standard_gzip_member_compressed_bytes": 18775,
+    "decoded_bytes": 200699,
+    "decoded_sha256": "aef7c768b8f23caa08f15be161d656c376b07121642c36ad4ed0dfa54a8400fb",
+    "decoded_cpio_offset": 4,
+    "prefix_hex": "f70f0300",
+    "cpio_reader": "installed libarchive3.7.2",
+    "cpio_entries": 187,
+    "code_execution": false,
+    "hda_cooked": false,
+    "facts": {
+      "use_mask_dialog_default": 0,
+      "volume_wrangle_use_channel": "ch(\"../use_mask\")",
+      "volume_wrangle_snippet": "int use = chi(\"use\");\n\nif(use);\nelse @mask=1;",
+      "rgb_layers_replace_with_mask": [
+        "heightfield_layer2:r",
+        "heightfield_layer3:g",
+        "heightfield_layer4:b"
+      ],
+      "missing_colour_file_branch": "python1 selects switch1 input0 when filename1 absent; input0=heightfield_layerclear1 clearing allselectedlayers0; input1=b is RGB file branch"
+    },
+    "limitations": [
+      "Overview HIP has360 cpio entries and no PE_heightfield_material instances, grass, moss or use_mask parameter records; it does not establish the author first-grass instance setting.",
+      "This is source text inspection only; no Houdini execution or runtime proof."
+    ]
+  },
+  "overview_hip": {
+    "path": "Houdini/Landscape_Workflow_01_Overview.hip",
+    "size_bytes": 739064,
+    "sha256": "149878bf5e4895ed76f2ec5b84af0c00d03065398f551176154603282189de6b",
+    "cpio_entries": 360,
+    "reader": "installed libarchive3.7.2",
+    "material_instance_records_present": false
+  },
+  "current_mi_readback_limit": {
+    "source_commit": "61d3a245124284283fb2600cb1b1379e410e492c",
+    "size_bytes": 40154,
+    "sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+    "download_size_hash_verified": true,
+    "parse_success": false,
+    "error": "UAssetAPI1.1.0 ReadLocMetadataObject is not implemented",
+    "original_bytes_unchanged": true
+  },
+  "conclusions": [
+    "The official ZIP provides original material/function assets and diagnostic/default texture arrays; it does not contain the five complete landscape PBR families shown later in Lesson07.",
+    "The original MI binds Terrain Colour to Engine WhiteSquareTexture and Terrain IDmap to Debug/T_Null; source PNGs are separate imports, not already bound.",
+    "The HDA default use_mask=0 and its mask=1 branch establish unmasked base-material behavior; the supplied Overview HIP does not establish a saved first-grass instance parameter.",
+    "No source README, LICENSE, LICENCE or COPYING file was found by archive entry-name inventory; source availability does not itself prove third-party texture acquisition or redistribution entitlement."
+  ]
+}

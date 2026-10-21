@@ -1,0 +1,1340 @@
+{
+  "schema": "yacs.lesson07.normal-source-evidence.v1",
+  "source_commit": "c59f717f11b134f75f695a26b94f8655bd3bd271",
+  "inspection_only": true,
+  "runtime_verified": false,
+  "visual_acceptance": false,
+  "parser": {
+    "release": "UAssetAPI 1.1.0",
+    "source_revision": "73530811a9d91ffa8959a1a4cb74cc3b9c5c6bed",
+    "libraries": [
+      {
+        "full_name": "UAssetAPI, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null",
+        "path": "/workspace/scratch/f7568a2cf030/asset-research/normal-function-inspection/parser/uassetapi.1.1.0/lib/net8.0/UAssetAPI.dll",
+        "sha256": "4048337707660c7c3d810b37747049c85c228d0ed602112685098047bd59dbab"
+      },
+      {
+        "full_name": "Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed",
+        "path": "/workspace/scratch/f7568a2cf030/asset-research/normal-function-inspection/parser/newtonsoft.json.13.0.3/lib/net6.0/Newtonsoft.Json.dll",
+        "sha256": "22c649f75fce5be7c7ccda8880473b634ef69ecf33f5d1ab8ad892caf47d5a07"
+      }
+    ],
+    "json_limitation": "Library SerializeJson omits inherited MaterialInputPropertyData connection fields; *.connections.json records the library's public decoded fields directly."
+  },
+  "source_assets": [
+    {
+      "name": "MF_PE_TextureAtlas_SampleNormal.uasset",
+      "bytes": 20948,
+      "sha256": "bb556279f30c6d116a4c24ae18a5234af28cf27cd9f2f59e43e6f85f71d5032a",
+      "recorded_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 3,
+        "Patch": 1,
+        "Changelist": 28051148,
+        "Branch": "++UE5+Release-5.3"
+      },
+      "recorded_compatible_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 3,
+        "Patch": 0,
+        "Changelist": 27405482,
+        "Branch": "++UE5+Release-5.3"
+      },
+      "object_version_ue4": 522,
+      "object_version_ue5": 1009,
+      "explicit_engine_override": false,
+      "has_unversioned_properties": false,
+      "binary_equality_in_memory": true,
+      "original_bytes_unchanged": true,
+      "raw_or_unknown_types": {}
+    },
+    {
+      "name": "M_Landscape_YACS.uasset",
+      "bytes": 208956,
+      "sha256": "53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66",
+      "recorded_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 8,
+        "Patch": 2,
+        "Changelist": 56702186,
+        "Branch": "++UE5+Release-5.8"
+      },
+      "recorded_compatible_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 8,
+        "Patch": 0,
+        "Changelist": 55116800,
+        "Branch": "++UE5+Release-5.8"
+      },
+      "object_version_ue4": 522,
+      "object_version_ue5": 1018,
+      "explicit_engine_override": false,
+      "has_unversioned_properties": false,
+      "binary_equality_in_memory": false,
+      "original_bytes_unchanged": true,
+      "raw_or_unknown_types": {}
+    },
+    {
+      "name": "MF_PE_TextureAtlas_Sample.uasset",
+      "bytes": 20824,
+      "sha256": "688e07e906f5c8273d3acaadedc46aa5251d984b54f2d50e002b6bd082c5c5b2",
+      "recorded_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 3,
+        "Patch": 1,
+        "Changelist": 28051148,
+        "Branch": "++UE5+Release-5.3"
+      },
+      "recorded_compatible_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 3,
+        "Patch": 0,
+        "Changelist": 27405482,
+        "Branch": "++UE5+Release-5.3"
+      },
+      "object_version_ue4": 522,
+      "object_version_ue5": 1009,
+      "explicit_engine_override": false,
+      "has_unversioned_properties": false,
+      "binary_equality_in_memory": true,
+      "original_bytes_unchanged": true,
+      "raw_or_unknown_types": {}
+    },
+    {
+      "name": "MF_PE_TextureAtlas_SampleMasks.uasset",
+      "bytes": 22310,
+      "sha256": "a5c39ede4f354fe42fbfedf5c07383b0362b651c8a60672679a54bdaf9eda282",
+      "recorded_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 3,
+        "Patch": 1,
+        "Changelist": 28051148,
+        "Branch": "++UE5+Release-5.3"
+      },
+      "recorded_compatible_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 3,
+        "Patch": 0,
+        "Changelist": 27405482,
+        "Branch": "++UE5+Release-5.3"
+      },
+      "object_version_ue4": 522,
+      "object_version_ue5": 1009,
+      "explicit_engine_override": false,
+      "has_unversioned_properties": false,
+      "binary_equality_in_memory": true,
+      "original_bytes_unchanged": true,
+      "raw_or_unknown_types": {}
+    },
+    {
+      "name": "MF_PE_BilinearBlend.uasset",
+      "bytes": 13914,
+      "sha256": "f67f4057eba49d734c6dcd54e260f17a4edc350ed713d8af85f12942174dc64d",
+      "recorded_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 3,
+        "Patch": 1,
+        "Changelist": 28051148,
+        "Branch": "++UE5+Release-5.3"
+      },
+      "recorded_compatible_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 3,
+        "Patch": 0,
+        "Changelist": 27405482,
+        "Branch": "++UE5+Release-5.3"
+      },
+      "object_version_ue4": 522,
+      "object_version_ue5": 1009,
+      "explicit_engine_override": false,
+      "has_unversioned_properties": false,
+      "binary_equality_in_memory": true,
+      "original_bytes_unchanged": true,
+      "raw_or_unknown_types": {}
+    },
+    {
+      "name": "MF_PE_Material.uasset",
+      "bytes": 13312,
+      "sha256": "2fbd815bdd95f909336eea263ee393329603a03e352e01b3669559178436f71d",
+      "recorded_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 3,
+        "Patch": 1,
+        "Changelist": 28051148,
+        "Branch": "++UE5+Release-5.3"
+      },
+      "recorded_compatible_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 3,
+        "Patch": 0,
+        "Changelist": 27405482,
+        "Branch": "++UE5+Release-5.3"
+      },
+      "object_version_ue4": 522,
+      "object_version_ue5": 1009,
+      "explicit_engine_override": false,
+      "has_unversioned_properties": false,
+      "binary_equality_in_memory": true,
+      "original_bytes_unchanged": true,
+      "raw_or_unknown_types": {}
+    },
+    {
+      "name": "MF_PE_BlendLayers.uasset",
+      "bytes": 15602,
+      "sha256": "b4c8c26908bc0b3da33d60ce10b07e395700cf5aa080871e42a75a4770562acb",
+      "recorded_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 3,
+        "Patch": 1,
+        "Changelist": 28051148,
+        "Branch": "++UE5+Release-5.3"
+      },
+      "recorded_compatible_engine_version": {
+        "$type": "UAssetAPI.FEngineVersion, UAssetAPI",
+        "Major": 5,
+        "Minor": 3,
+        "Patch": 0,
+        "Changelist": 27405482,
+        "Branch": "++UE5+Release-5.3"
+      },
+      "object_version_ue4": 522,
+      "object_version_ue5": 1009,
+      "explicit_engine_override": false,
+      "has_unversioned_properties": false,
+      "binary_equality_in_memory": true,
+      "original_bytes_unchanged": true,
+      "raw_or_unknown_types": {}
+    }
+  ],
+  "master_roundtrip_scope": {
+    "whole_package_binary_equality": false,
+    "original_bytes": 208956,
+    "serialized_memory_bytes": 208903,
+    "export_count": 263,
+    "equal_export_payloads": 262,
+    "material_expression_count": 260,
+    "all_material_expression_payloads_equal": true,
+    "unequal_exports": [
+      {
+        "name": "M_Landscape_YACSEditorOnlyData",
+        "original_offset": 55433,
+        "original_bytes": 4453,
+        "original_payload_sha256": "ab08df1b99f2f2e46fe50b1fdec154e2cfb41baeedfdd47bc5cccf0974afc9a5",
+        "serialized_offset": 55380,
+        "serialized_bytes": 4453,
+        "serialized_payload_sha256": "3184fbf2d617b725d356311b403a5e44ab3e2e27edcfb3ece13524fbd212a2f1",
+        "payload_binary_equality": false,
+        "differing_bytes": [
+          {
+            "relative_offset": 138,
+            "original_byte": 52,
+            "serialized_byte": 64
+          }
+        ]
+      }
+    ],
+    "caveat": "No guarantee for complete UE5.8.2 package/header/EditorOnlyData serialization. No uasset rewrite is permitted by this inspection."
+  },
+  "selected_master_export_payload_proofs": [
+    {
+      "name": "MaterialExpressionGetMaterialAttributes_1",
+      "original_offset": 79823,
+      "original_bytes": 768,
+      "original_payload_sha256": "7802197a2a3010ea43c1e5d01c9bd07c124542b3f0dac8d910736e123bf98fee",
+      "serialized_offset": 79770,
+      "serialized_bytes": 768,
+      "serialized_payload_sha256": "7802197a2a3010ea43c1e5d01c9bd07c124542b3f0dac8d910736e123bf98fee",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionGetMaterialAttributes_4",
+      "original_offset": 81433,
+      "original_bytes": 970,
+      "original_payload_sha256": "c1d68b45f0548e67a8b3f79bfbec333c922e163448cccbcaa92f0be4184a1454",
+      "serialized_offset": 81380,
+      "serialized_bytes": 970,
+      "serialized_payload_sha256": "c1d68b45f0548e67a8b3f79bfbec333c922e163448cccbcaa92f0be4184a1454",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_19",
+      "original_offset": 101390,
+      "original_bytes": 1515,
+      "original_payload_sha256": "0b5f64553ade7f18675b4b2042fd09f853ed0da7ba3f83bd7c6fe21733b02eb8",
+      "serialized_offset": 101337,
+      "serialized_bytes": 1515,
+      "serialized_payload_sha256": "0b5f64553ade7f18675b4b2042fd09f853ed0da7ba3f83bd7c6fe21733b02eb8",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_22",
+      "original_offset": 106838,
+      "original_bytes": 1515,
+      "original_payload_sha256": "8d1c9899f7cf6b8bea57675e4af77a931ea02e9bb6f6b02c7c67de850b2ea06f",
+      "serialized_offset": 106785,
+      "serialized_bytes": 1515,
+      "serialized_payload_sha256": "8d1c9899f7cf6b8bea57675e4af77a931ea02e9bb6f6b02c7c67de850b2ea06f",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_25",
+      "original_offset": 110751,
+      "original_bytes": 1515,
+      "original_payload_sha256": "7c33437c694ec0e2d109bb0192e1ffe3337ff231f8bf271cf455f76290ba3b96",
+      "serialized_offset": 110698,
+      "serialized_bytes": 1515,
+      "serialized_payload_sha256": "7c33437c694ec0e2d109bb0192e1ffe3337ff231f8bf271cf455f76290ba3b96",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_27",
+      "original_offset": 112266,
+      "original_bytes": 2839,
+      "original_payload_sha256": "b1ea6a18a2ab6e3bc13b71b54434207c635a2723fb3529fcbe0ed89b0c51813f",
+      "serialized_offset": 112213,
+      "serialized_bytes": 2839,
+      "serialized_payload_sha256": "b1ea6a18a2ab6e3bc13b71b54434207c635a2723fb3529fcbe0ed89b0c51813f",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_30",
+      "original_offset": 116936,
+      "original_bytes": 1357,
+      "original_payload_sha256": "8207535805a6929c9393b0ed031eafca659fc91333a7488aaa1a24662314c4de",
+      "serialized_offset": 116883,
+      "serialized_bytes": 1357,
+      "serialized_payload_sha256": "8207535805a6929c9393b0ed031eafca659fc91333a7488aaa1a24662314c4de",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_31",
+      "original_offset": 118293,
+      "original_bytes": 1515,
+      "original_payload_sha256": "56cb7a47f191476e6f6bf828456826975b4e6fe195c88eeed1bb6af5cee7107c",
+      "serialized_offset": 118240,
+      "serialized_bytes": 1515,
+      "serialized_payload_sha256": "56cb7a47f191476e6f6bf828456826975b4e6fe195c88eeed1bb6af5cee7107c",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_32",
+      "original_offset": 119808,
+      "original_bytes": 1515,
+      "original_payload_sha256": "55bf3ae16de95cbce3094a440c3596700b0934f1a15d91b3165803563357da03",
+      "serialized_offset": 119755,
+      "serialized_bytes": 1515,
+      "serialized_payload_sha256": "55bf3ae16de95cbce3094a440c3596700b0934f1a15d91b3165803563357da03",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_34",
+      "original_offset": 122522,
+      "original_bytes": 1515,
+      "original_payload_sha256": "1495d3bdcf50b87a98290d95f69cd215b6bc901244dcd72b010f08c125e7b170",
+      "serialized_offset": 122469,
+      "serialized_bytes": 1515,
+      "serialized_payload_sha256": "1495d3bdcf50b87a98290d95f69cd215b6bc901244dcd72b010f08c125e7b170",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_35",
+      "original_offset": 124037,
+      "original_bytes": 1515,
+      "original_payload_sha256": "f82f22bf388a2d17b44f9c7d552dfbe9ecbbcb27676883146827fee7ed3422d4",
+      "serialized_offset": 123984,
+      "serialized_bytes": 1515,
+      "serialized_payload_sha256": "f82f22bf388a2d17b44f9c7d552dfbe9ecbbcb27676883146827fee7ed3422d4",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_38",
+      "original_offset": 131230,
+      "original_bytes": 2839,
+      "original_payload_sha256": "5d2ba8f0f25bfc5d9c5e438b409b3b4081a59ee92b01cf714dd25449113299e6",
+      "serialized_offset": 131177,
+      "serialized_bytes": 2839,
+      "serialized_payload_sha256": "5d2ba8f0f25bfc5d9c5e438b409b3b4081a59ee92b01cf714dd25449113299e6",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_39",
+      "original_offset": 134069,
+      "original_bytes": 1515,
+      "original_payload_sha256": "fbcb0c0e0646ac9ddf3706c401bd6358bdc01b84e8adce133a50ec89ee3b1e00",
+      "serialized_offset": 134016,
+      "serialized_bytes": 1515,
+      "serialized_payload_sha256": "fbcb0c0e0646ac9ddf3706c401bd6358bdc01b84e8adce133a50ec89ee3b1e00",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_4",
+      "original_offset": 135584,
+      "original_bytes": 1199,
+      "original_payload_sha256": "7fe1d807ee6395ecccbc0f38a5ff08995a22190365331441d4bfda12fb8ce4e2",
+      "serialized_offset": 135531,
+      "serialized_bytes": 1199,
+      "serialized_payload_sha256": "7fe1d807ee6395ecccbc0f38a5ff08995a22190365331441d4bfda12fb8ce4e2",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_40",
+      "original_offset": 136783,
+      "original_bytes": 1515,
+      "original_payload_sha256": "8d4fe09e784552c239bf157ed210b12e96beabb80fc0328dbe0c66cedbbd8bbb",
+      "serialized_offset": 136730,
+      "serialized_bytes": 1515,
+      "serialized_payload_sha256": "8d4fe09e784552c239bf157ed210b12e96beabb80fc0328dbe0c66cedbbd8bbb",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_41",
+      "original_offset": 138298,
+      "original_bytes": 1515,
+      "original_payload_sha256": "8213d9d8bc6d77ba03f18483cfb8cbcfa1eabd2659d5880677b997de6f0b5146",
+      "serialized_offset": 138245,
+      "serialized_bytes": 1515,
+      "serialized_payload_sha256": "8213d9d8bc6d77ba03f18483cfb8cbcfa1eabd2659d5880677b997de6f0b5146",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_42",
+      "original_offset": 139813,
+      "original_bytes": 1515,
+      "original_payload_sha256": "74fc23c3cf74e0cf6024e528e7a71f39605bca03f11eb20fa83d8f9ede6d69e0",
+      "serialized_offset": 139760,
+      "serialized_bytes": 1515,
+      "serialized_payload_sha256": "74fc23c3cf74e0cf6024e528e7a71f39605bca03f11eb20fa83d8f9ede6d69e0",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_43",
+      "original_offset": 141328,
+      "original_bytes": 2029,
+      "original_payload_sha256": "56c67633d4ae9463013d5138af88e36c12b97c240158009d3f372215442511a0",
+      "serialized_offset": 141275,
+      "serialized_bytes": 2029,
+      "serialized_payload_sha256": "56c67633d4ae9463013d5138af88e36c12b97c240158009d3f372215442511a0",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_45",
+      "original_offset": 143357,
+      "original_bytes": 1673,
+      "original_payload_sha256": "eed933167fc5cf9e258ccbbcdc9633c7dacacc33cc24fe70a0c33ccd01fc3805",
+      "serialized_offset": 143304,
+      "serialized_bytes": 1673,
+      "serialized_payload_sha256": "eed933167fc5cf9e258ccbbcdc9633c7dacacc33cc24fe70a0c33ccd01fc3805",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_8",
+      "original_offset": 158739,
+      "original_bytes": 1515,
+      "original_payload_sha256": "97e030a2d495deee4f3dc2281f707e2d0c78a0d86e6a3c411bc13932ac45f4af",
+      "serialized_offset": 158686,
+      "serialized_bytes": 1515,
+      "serialized_payload_sha256": "97e030a2d495deee4f3dc2281f707e2d0c78a0d86e6a3c411bc13932ac45f4af",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMultiply_15",
+      "original_offset": 164963,
+      "original_bytes": 335,
+      "original_payload_sha256": "b47899e775a76cc00ae222d66c33e8cb8fecc4a9b8c27d1882d726333e216ea7",
+      "serialized_offset": 164910,
+      "serialized_bytes": 335,
+      "serialized_payload_sha256": "b47899e775a76cc00ae222d66c33e8cb8fecc4a9b8c27d1882d726333e216ea7",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionMultiply_7",
+      "original_offset": 168759,
+      "original_bytes": 335,
+      "original_payload_sha256": "f9c141d4866e07f3b7bc11a202b36d74f1caf56a34aeb60150baa9e12719c4b6",
+      "serialized_offset": 168706,
+      "serialized_bytes": 335,
+      "serialized_payload_sha256": "f9c141d4866e07f3b7bc11a202b36d74f1caf56a34aeb60150baa9e12719c4b6",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionNamedRerouteDeclaration_67",
+      "original_offset": 179419,
+      "original_bytes": 413,
+      "original_payload_sha256": "bbd7d2234ee1afa6caa67c15deafcdd67d903056efe76d666626cc11cf15d23e",
+      "serialized_offset": 179366,
+      "serialized_bytes": 413,
+      "serialized_payload_sha256": "bbd7d2234ee1afa6caa67c15deafcdd67d903056efe76d666626cc11cf15d23e",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionOneMinus_4",
+      "original_offset": 186233,
+      "original_bytes": 250,
+      "original_payload_sha256": "ae9050cb7ad5f18e793f3915e3936bd509bad68c0c7095a7e36e41d121d0b33d",
+      "serialized_offset": 186180,
+      "serialized_bytes": 250,
+      "serialized_payload_sha256": "ae9050cb7ad5f18e793f3915e3936bd509bad68c0c7095a7e36e41d121d0b33d",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionReroute_0",
+      "original_offset": 186983,
+      "original_bytes": 250,
+      "original_payload_sha256": "0799a534547802d5cdd9635fc9ecbef0a404d0a09a0ba9495244f92d8c99ad0b",
+      "serialized_offset": 186930,
+      "serialized_bytes": 250,
+      "serialized_payload_sha256": "0799a534547802d5cdd9635fc9ecbef0a404d0a09a0ba9495244f92d8c99ad0b",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionSetMaterialAttributes_6",
+      "original_offset": 197531,
+      "original_bytes": 383,
+      "original_payload_sha256": "80ed84d7d93d545110e9c5f2a5b6a6c1b67659a5ccaa2b839cb6e7f7e76c313c",
+      "serialized_offset": 197478,
+      "serialized_bytes": 383,
+      "serialized_payload_sha256": "80ed84d7d93d545110e9c5f2a5b6a6c1b67659a5ccaa2b839cb6e7f7e76c313c",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionSetMaterialAttributes_9",
+      "original_offset": 197914,
+      "original_bytes": 435,
+      "original_payload_sha256": "2ba6df095f0b8c270dc9f85c3acf5efae8d5700cb10be9800fc3387beccf89cc",
+      "serialized_offset": 197861,
+      "serialized_bytes": 435,
+      "serialized_payload_sha256": "2ba6df095f0b8c270dc9f85c3acf5efae8d5700cb10be9800fc3387beccf89cc",
+      "payload_binary_equality": true
+    },
+    {
+      "name": "MaterialExpressionTextureCoordinate_5",
+      "original_offset": 202025,
+      "original_bytes": 165,
+      "original_payload_sha256": "bb97926147d31d6948a5456be05553c2564bd3feb50c2d372991f584e62039b1",
+      "serialized_offset": 201972,
+      "serialized_bytes": 165,
+      "serialized_payload_sha256": "bb97926147d31d6948a5456be05553c2564bd3feb50c2d372991f584e62039b1",
+      "payload_binary_equality": true
+    }
+  ],
+  "samplers": [
+    {
+      "name": "MaterialExpressionTextureSample_7",
+      "sampler_type_serialized": null,
+      "sampler_type_status": "omitted; current CDO value is not proved by this package",
+      "sampler_source_serialized": "SSM_Wrap_WorldGroupSettings",
+      "inputs": [
+        {
+          "json_path": "Exports[19].Data[0].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Coordinates",
+          "expression": 1,
+          "output_index": 0,
+          "input_name": "None",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionAppendVector_0",
+          "producer_cached_output": null
+        },
+        {
+          "json_path": "Exports[19].Data[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "TextureObject",
+          "expression": 5,
+          "output_index": 0,
+          "input_name": "None",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionFunctionInput_0",
+          "producer_cached_output": null
+        }
+      ]
+    },
+    {
+      "name": "MaterialExpressionTextureSample_13",
+      "sampler_type_serialized": null,
+      "sampler_type_status": "omitted; current CDO value is not proved by this package",
+      "sampler_source_serialized": "SSM_Wrap_WorldGroupSettings",
+      "inputs": [
+        {
+          "json_path": "Exports[16].Data[0].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Coordinates",
+          "expression": 2,
+          "output_index": 0,
+          "input_name": "None",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionAppendVector_1",
+          "producer_cached_output": null
+        },
+        {
+          "json_path": "Exports[16].Data[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "TextureObject",
+          "expression": 5,
+          "output_index": 0,
+          "input_name": "None",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionFunctionInput_0",
+          "producer_cached_output": null
+        }
+      ]
+    },
+    {
+      "name": "MaterialExpressionTextureSample_14",
+      "sampler_type_serialized": null,
+      "sampler_type_status": "omitted; current CDO value is not proved by this package",
+      "sampler_source_serialized": "SSM_Wrap_WorldGroupSettings",
+      "inputs": [
+        {
+          "json_path": "Exports[17].Data[0].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Coordinates",
+          "expression": 3,
+          "output_index": 0,
+          "input_name": "None",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionAppendVector_3",
+          "producer_cached_output": null
+        },
+        {
+          "json_path": "Exports[17].Data[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "TextureObject",
+          "expression": 5,
+          "output_index": 0,
+          "input_name": "None",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionFunctionInput_0",
+          "producer_cached_output": null
+        }
+      ]
+    },
+    {
+      "name": "MaterialExpressionTextureSample_15",
+      "sampler_type_serialized": "SAMPLERTYPE_Normal",
+      "sampler_type_status": "explicit",
+      "sampler_source_serialized": "SSM_Wrap_WorldGroupSettings",
+      "inputs": [
+        {
+          "json_path": "Exports[18].Data[0].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Coordinates",
+          "expression": 4,
+          "output_index": 0,
+          "input_name": "None",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionAppendVector_4",
+          "producer_cached_output": null
+        },
+        {
+          "json_path": "Exports[18].Data[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "TextureObject",
+          "expression": 5,
+          "output_index": 0,
+          "input_name": "None",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionFunctionInput_0",
+          "producer_cached_output": null
+        }
+      ]
+    }
+  ],
+  "normal_function_outputs": [
+    {
+      "name": "MaterialExpressionFunctionOutput_0",
+      "output_name": "BL",
+      "id": "{21A446EA-42DE-E7B9-1B90-D9B9048B5CE4}",
+      "saved_input": {
+        "json_path": "Exports[7].Data[1].Value[0]",
+        "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+        "name": "A",
+        "expression": 20,
+        "output_index": 0,
+        "input_name": "None",
+        "input_name_old": null,
+        "mask": 1,
+        "mask_r": 1,
+        "mask_g": 1,
+        "mask_b": 1,
+        "mask_a": 0,
+        "expression_name": null,
+        "producer_name": "MaterialExpressionTextureSample_7",
+        "producer_cached_output": null
+      },
+      "samples_vector_channel": "R",
+      "proposed_producer_name": "MaterialExpressionTextureSample_7",
+      "proposed_change": false,
+      "preserve_output_id_output_index_and_rgba_mask": true
+    },
+    {
+      "name": "MaterialExpressionFunctionOutput_1",
+      "output_name": "BR",
+      "id": "{96B643CF-41EB-4C07-F125-DBB4F331ABD7}",
+      "saved_input": {
+        "json_path": "Exports[8].Data[2].Value[0]",
+        "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+        "name": "A",
+        "expression": 18,
+        "output_index": 0,
+        "input_name": "None",
+        "input_name_old": null,
+        "mask": 1,
+        "mask_r": 1,
+        "mask_g": 1,
+        "mask_b": 1,
+        "mask_a": 0,
+        "expression_name": null,
+        "producer_name": "MaterialExpressionTextureSample_14",
+        "producer_cached_output": null
+      },
+      "samples_vector_channel": "B",
+      "proposed_producer_name": "MaterialExpressionTextureSample_13",
+      "proposed_change": true,
+      "preserve_output_id_output_index_and_rgba_mask": true
+    },
+    {
+      "name": "MaterialExpressionFunctionOutput_2",
+      "output_name": "TL",
+      "id": "{ABA00D55-4FAF-5B7C-98B3-45802B10EFD4}",
+      "saved_input": {
+        "json_path": "Exports[9].Data[2].Value[0]",
+        "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+        "name": "A",
+        "expression": 17,
+        "output_index": 0,
+        "input_name": "None",
+        "input_name_old": null,
+        "mask": 1,
+        "mask_r": 1,
+        "mask_g": 1,
+        "mask_b": 1,
+        "mask_a": 0,
+        "expression_name": null,
+        "producer_name": "MaterialExpressionTextureSample_13",
+        "producer_cached_output": null
+      },
+      "samples_vector_channel": "G",
+      "proposed_producer_name": "MaterialExpressionTextureSample_14",
+      "proposed_change": true,
+      "preserve_output_id_output_index_and_rgba_mask": true
+    },
+    {
+      "name": "MaterialExpressionFunctionOutput_3",
+      "output_name": "TR",
+      "id": "{9C01F43D-41B7-4762-2E16-13AA20C5DD16}",
+      "saved_input": {
+        "json_path": "Exports[10].Data[2].Value[0]",
+        "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+        "name": "A",
+        "expression": 19,
+        "output_index": 0,
+        "input_name": "None",
+        "input_name_old": null,
+        "mask": 1,
+        "mask_r": 1,
+        "mask_g": 1,
+        "mask_b": 1,
+        "mask_a": 0,
+        "expression_name": null,
+        "producer_name": "MaterialExpressionTextureSample_15",
+        "producer_cached_output": null
+      },
+      "samples_vector_channel": "A",
+      "proposed_producer_name": "MaterialExpressionTextureSample_15",
+      "proposed_change": false,
+      "preserve_output_id_output_index_and_rgba_mask": true
+    }
+  ],
+  "master_normal_calls": [
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_27",
+      "cached_outputs": [
+        {
+          "index": 0,
+          "name": "BL",
+          "id": "{21A446EA-42DE-E7B9-1B90-D9B9048B5CE4}"
+        },
+        {
+          "index": 1,
+          "name": "TL",
+          "id": "{ABA00D55-4FAF-5B7C-98B3-45802B10EFD4}"
+        },
+        {
+          "index": 2,
+          "name": "BR",
+          "id": "{96B643CF-41EB-4C07-F125-DBB4F331ABD7}"
+        },
+        {
+          "index": 3,
+          "name": "TR",
+          "id": "{9C01F43D-41B7-4762-2E16-13AA20C5DD16}"
+        }
+      ],
+      "inputs": [
+        {
+          "json_path": "Exports[94].Data[1].Value[0].Value[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Input",
+          "expression": 130,
+          "output_index": 0,
+          "input_name": "UVS",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionMultiply_15",
+          "producer_cached_output": null
+        },
+        {
+          "json_path": "Exports[94].Data[1].Value[1].Value[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Input",
+          "expression": 175,
+          "output_index": 0,
+          "input_name": "Samples",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionNamedRerouteUsage_12",
+          "producer_cached_output": null
+        },
+        {
+          "json_path": "Exports[94].Data[1].Value[2].Value[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Input",
+          "expression": 244,
+          "output_index": 0,
+          "input_name": "Texture",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionTextureObjectParameter_0",
+          "producer_cached_output": null
+        }
+      ]
+    },
+    {
+      "name": "MaterialExpressionMaterialFunctionCall_38",
+      "cached_outputs": [
+        {
+          "index": 0,
+          "name": "BL",
+          "id": "{21A446EA-42DE-E7B9-1B90-D9B9048B5CE4}"
+        },
+        {
+          "index": 1,
+          "name": "TL",
+          "id": "{ABA00D55-4FAF-5B7C-98B3-45802B10EFD4}"
+        },
+        {
+          "index": 2,
+          "name": "BR",
+          "id": "{96B643CF-41EB-4C07-F125-DBB4F331ABD7}"
+        },
+        {
+          "index": 3,
+          "name": "TR",
+          "id": "{9C01F43D-41B7-4762-2E16-13AA20C5DD16}"
+        }
+      ],
+      "inputs": [
+        {
+          "json_path": "Exports[104].Data[1].Value[0].Value[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Input",
+          "expression": 142,
+          "output_index": 0,
+          "input_name": "UVS",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionMultiply_7",
+          "producer_cached_output": null
+        },
+        {
+          "json_path": "Exports[104].Data[1].Value[1].Value[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Input",
+          "expression": 180,
+          "output_index": 0,
+          "input_name": "Samples",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionNamedRerouteUsage_26",
+          "producer_cached_output": null
+        },
+        {
+          "json_path": "Exports[104].Data[1].Value[2].Value[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Input",
+          "expression": 246,
+          "output_index": 0,
+          "input_name": "Texture",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionTextureObjectParameter_2",
+          "producer_cached_output": null
+        }
+      ]
+    }
+  ],
+  "corner_correspondence": [
+    {
+      "corner": "BL",
+      "colour_masks_samples_channel": "R",
+      "saved_normal_samples_channel": "R",
+      "master_normal_output_index": 0,
+      "master_colour_masks_output_index": 0,
+      "detail_material_call": 31,
+      "macro_material_call": 39
+    },
+    {
+      "corner": "BR",
+      "colour_masks_samples_channel": "G",
+      "saved_normal_samples_channel": "B",
+      "master_normal_output_index": 2,
+      "master_colour_masks_output_index": 1,
+      "detail_material_call": 32,
+      "macro_material_call": 40
+    },
+    {
+      "corner": "TL",
+      "colour_masks_samples_channel": "B",
+      "saved_normal_samples_channel": "G",
+      "master_normal_output_index": 1,
+      "master_colour_masks_output_index": 2,
+      "detail_material_call": 34,
+      "macro_material_call": 41
+    },
+    {
+      "corner": "TR",
+      "colour_masks_samples_channel": "A",
+      "saved_normal_samples_channel": "A",
+      "master_normal_output_index": 3,
+      "master_colour_masks_output_index": 3,
+      "detail_material_call": 35,
+      "macro_material_call": 42
+    }
+  ],
+  "normal_attribute_guid": "{0FA2821A-200F-4A4A-B719-B789C1259C64}",
+  "signed_value_flow_after_explicit_normal_sampling": [
+    "MF_PE_TextureAtlas_SampleNormal: four Normal TextureSample RGB outputs; exact BR/TL producer links must also be aligned",
+    "MF_PE_Material: FunctionInput Normal passes directly into Normal attribute; ORD.B bias/scale affects Displacement only",
+    "MF_PE_BlendLayers: Detail.Normal and Macro.Normal feed LinearInterpolate_2, then Normal attribute; Brightness affects BaseColor only",
+    "MF_PE_BilinearBlend: three BlendMaterialAttributes nodes; no normal encode/bias/scale",
+    "Master function45 -> named reroute67 -> GetMaterialAttributes_1.Normal -> BreakOutFloat3_43"
+  ],
+  "saved_signed_transform_nodes": [
+    {
+      "index": 111,
+      "name": "MaterialExpressionMaterialFunctionCall_43",
+      "class": "MaterialExpressionMaterialFunctionCall",
+      "decoded_type": "UAssetAPI.ExportTypes.NormalExport, UAssetAPI",
+      "serialized_property_names": [
+        "MaterialFunction",
+        "FunctionInputs",
+        "FunctionOutputs",
+        "MaterialExpressionEditorX",
+        "MaterialExpressionEditorY",
+        "MaterialExpressionGuid",
+        "Material",
+        "Outputs"
+      ],
+      "payload_binary_equality": true,
+      "simple_properties": {
+        "MaterialFunction": -50,
+        "MaterialExpressionEditorX": 6080,
+        "MaterialExpressionEditorY": 3888,
+        "Material": 1
+      },
+      "cached_outputs": [
+        {
+          "OutputName": "R",
+          "Mask": 0,
+          "MaskR": 0,
+          "MaskG": 0,
+          "MaskB": 0,
+          "MaskA": 0
+        },
+        {
+          "OutputName": "G",
+          "Mask": 0,
+          "MaskR": 0,
+          "MaskG": 0,
+          "MaskB": 0,
+          "MaskA": 0
+        },
+        {
+          "OutputName": "B",
+          "Mask": 0,
+          "MaskR": 0,
+          "MaskG": 0,
+          "MaskB": 0,
+          "MaskA": 0
+        }
+      ],
+      "inputs": [
+        {
+          "json_path": "Exports[110].Data[1].Value[0].Value[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Input",
+          "expression": 67,
+          "output_index": 1,
+          "input_name": "Float3",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionGetMaterialAttributes_1",
+          "producer_cached_output": {
+            "OutputName": "Normal",
+            "Mask": 0,
+            "MaskR": 0,
+            "MaskG": 0,
+            "MaskB": 0,
+            "MaskA": 0
+          }
+        }
+      ],
+      "material_function_name": "BreakOutFloat3Components"
+    },
+    {
+      "index": 192,
+      "name": "MaterialExpressionOneMinus_4",
+      "class": "MaterialExpressionOneMinus",
+      "decoded_type": "UAssetAPI.ExportTypes.NormalExport, UAssetAPI",
+      "serialized_property_names": [
+        "Input",
+        "MaterialExpressionEditorX",
+        "MaterialExpressionEditorY",
+        "MaterialExpressionGuid",
+        "Material"
+      ],
+      "payload_binary_equality": true,
+      "simple_properties": {
+        "MaterialExpressionEditorX": 6368,
+        "MaterialExpressionEditorY": 3888,
+        "Material": 1
+      },
+      "cached_outputs": [],
+      "inputs": [
+        {
+          "json_path": "Exports[191].Data[0].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Input",
+          "expression": 111,
+          "output_index": 0,
+          "input_name": "None",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionMaterialFunctionCall_43",
+          "producer_cached_output": {
+            "OutputName": "R",
+            "Mask": 0,
+            "MaskR": 0,
+            "MaskG": 0,
+            "MaskB": 0,
+            "MaskA": 0
+          }
+        }
+      ]
+    },
+    {
+      "index": 97,
+      "name": "MaterialExpressionMaterialFunctionCall_30",
+      "class": "MaterialExpressionMaterialFunctionCall",
+      "decoded_type": "UAssetAPI.ExportTypes.NormalExport, UAssetAPI",
+      "serialized_property_names": [
+        "MaterialFunction",
+        "FunctionInputs",
+        "FunctionOutputs",
+        "MaterialExpressionEditorX",
+        "MaterialExpressionEditorY",
+        "MaterialExpressionGuid",
+        "Material",
+        "Outputs"
+      ],
+      "payload_binary_equality": true,
+      "simple_properties": {
+        "MaterialFunction": -55,
+        "MaterialExpressionEditorX": 6512,
+        "MaterialExpressionEditorY": 3920,
+        "Material": 1
+      },
+      "cached_outputs": [
+        {
+          "OutputName": "Result",
+          "Mask": 0,
+          "MaskR": 0,
+          "MaskG": 0,
+          "MaskB": 0,
+          "MaskA": 0
+        }
+      ],
+      "inputs": [
+        {
+          "json_path": "Exports[96].Data[1].Value[0].Value[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Input",
+          "expression": 111,
+          "output_index": 1,
+          "input_name": "X",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionMaterialFunctionCall_43",
+          "producer_cached_output": {
+            "OutputName": "G",
+            "Mask": 0,
+            "MaskR": 0,
+            "MaskG": 0,
+            "MaskB": 0,
+            "MaskA": 0
+          }
+        },
+        {
+          "json_path": "Exports[96].Data[1].Value[1].Value[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Input",
+          "expression": 192,
+          "output_index": 0,
+          "input_name": "Y",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionOneMinus_4",
+          "producer_cached_output": null
+        },
+        {
+          "json_path": "Exports[96].Data[1].Value[2].Value[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Input",
+          "expression": 111,
+          "output_index": 2,
+          "input_name": "Z",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionMaterialFunctionCall_43",
+          "producer_cached_output": {
+            "OutputName": "B",
+            "Mask": 0,
+            "MaskR": 0,
+            "MaskG": 0,
+            "MaskB": 0,
+            "MaskA": 0
+          }
+        }
+      ],
+      "material_function_name": "MakeFloat3"
+    },
+    {
+      "index": 231,
+      "name": "MaterialExpressionSetMaterialAttributes_6",
+      "class": "MaterialExpressionSetMaterialAttributes",
+      "decoded_type": "UAssetAPI.ExportTypes.NormalExport, UAssetAPI",
+      "serialized_property_names": [
+        "Inputs",
+        "AttributeSetTypes",
+        "MaterialExpressionEditorX",
+        "MaterialExpressionEditorY",
+        "MaterialExpressionGuid",
+        "Material"
+      ],
+      "payload_binary_equality": true,
+      "simple_properties": {
+        "MaterialExpressionEditorX": 6576,
+        "MaterialExpressionEditorY": 3680,
+        "Material": 1
+      },
+      "cached_outputs": [],
+      "inputs": [
+        {
+          "json_path": "Exports[230].Data[0].Value[0].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Inputs",
+          "expression": 67,
+          "output_index": 0,
+          "input_name": "None",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionGetMaterialAttributes_1",
+          "producer_cached_output": {
+            "OutputName": "MaterialAttributes",
+            "Mask": 0,
+            "MaskR": 0,
+            "MaskG": 0,
+            "MaskB": 0,
+            "MaskA": 0
+          }
+        },
+        {
+          "json_path": "Exports[230].Data[0].Value[1].Value[0]",
+          "type": "UAssetAPI.PropertyTypes.Structs.ExpressionInputPropertyData",
+          "name": "Inputs",
+          "expression": 97,
+          "output_index": 0,
+          "input_name": "Normal",
+          "input_name_old": null,
+          "mask": 0,
+          "mask_r": 0,
+          "mask_g": 0,
+          "mask_b": 0,
+          "mask_a": 0,
+          "expression_name": null,
+          "producer_name": "MaterialExpressionMaterialFunctionCall_30",
+          "producer_cached_output": {
+            "OutputName": "Result",
+            "Mask": 0,
+            "MaskR": 0,
+            "MaskG": 0,
+            "MaskB": 0,
+            "MaskA": 0
+          }
+        }
+      ]
+    }
+  ],
+  "signed_transform_reasoning": {
+    "saved_transform": "(G, 1-R, B)",
+    "proposed_transform": "(G, -R, B)",
+    "neutral_signed_input": [
+      0,
+      0,
+      1
+    ],
+    "saved_output_for_neutral_input": [
+      0,
+      1,
+      1
+    ],
+    "proposed_output_for_neutral_input": [
+      0,
+      0,
+      1
+    ],
+    "interpretation": "Correct signed-vector negation while preserving the existing channel rotation. Does not independently certify Landscape tangent orientation."
+  },
+  "minimal_source_justified_repair": [
+    "Set SamplerType explicitly to Normal for all four texture samples in a project-private copy; retain coordinates, TextureObject inputs, sampler source, and mip behavior.",
+    "Retain function output IDs and input masks; set BR output producer to TextureSample_13 and TL output producer to TextureSample_14, preserving caller cached GUID mapping.",
+    "Preserve master G and B links; replace OneMinus contribution on the R-derived component with signed negation, yielding (G,-R,B)."
+  ],
+  "not_proved": [
+    "Current live CDO sampler defaults for the three omitted SamplerType tags",
+    "Current shader compilation, runtime shading, visual acceptance, performance, or fresh reopen",
+    "Complete master package serialization fidelity, including header and EditorOnlyData",
+    "Landscape tangent-basis orientation independently of the existing rotation"
+  ]
+}

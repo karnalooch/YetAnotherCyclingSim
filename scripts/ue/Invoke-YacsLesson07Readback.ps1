@@ -24,7 +24,7 @@ $OriginalMapPin = @{ sha256 = '61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae
 $MapPin = @{ sha256 = 'd14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75'; size_bytes = [long]1838638056 }
 $MaterialPins = @{
     'Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset' = @{
-        sha256 = '8c1dc875218a027a5ac83d88f8eedba49769fdd8494d287e7264807082eb11bf'; size_bytes = [long]39740
+        sha256 = 'dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d'; size_bytes = [long]40154
     }
     'Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset' = @{
         sha256 = '53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66'; size_bytes = [long]208956

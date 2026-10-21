@@ -3455,6 +3455,245 @@ class VaultInspectionTests(unittest.TestCase):
             self.assertFalse(public["vault_license_verified"])
 
 
+def source_assets_registry_text(total=1):
+    rows = [{
+        "name": f"T_tkekcgfn_{index}", "path": "/Game/Megascans/Surfaces/Mossy_Ground_tkekcgfn",
+        "class": "Texture2D", "class_path": "/Script/Engine.Texture2D", "loaded": False,
+    } for index in range(min(total, 200))]
+    return (
+        f"# ASSETS /Game/Megascans/Surfaces shown={len(rows)} total={total} offset=0 limit=200 loaded=0/{len(rows)}"
+        + (" TRUNCATED" if total > 200 else "")
+        + "\n#json-explore:" + json.dumps({
+            "mode": "assets", "scope": "/Game/Megascans/Surfaces", "shown": len(rows),
+            "total": total, "offset": 0, "limit": 200, "truncated": total > 200,
+            "raw_from_registry": total, "loaded_in_shown": 0,
+            "filters": {"pattern": "", "query": "", "type": "/Script/Engine.Texture2D",
+                        "class_path": "/Script/Engine.Texture2D", "class_filter_recursive": True},
+            "rows": rows,
+        })
+    )
+
+
+def source_assets_reply(request):
+    status, headers, raw = inspection_reply(request)
+    if request["method"] == "tools/call":
+        name = request["params"]["name"]
+        text = source_assets_registry_text() if name == "explore" else (
+            trial_mi_text(trial_snapshot(), client.TRIAL_MI) if name == "edit_material_instance"
+            else "#json-textures:" + json.dumps([
+                {"path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_" + channel + "_Unified",
+                 "source_width": 2048, "source_height": 2048}
+                for channel in ("Colour", "Normal", "Masks")
+            ])
+        )
+        payload = json.loads(raw)
+        payload["result"] = {"content": [{"type": "text", "text": text}]}
+        raw = client.canonical(payload)
+    return status, headers, raw
+
+
+class SourceAssetsInspectionTests(unittest.TestCase):
+    def setUp(self):
+        self.hashes = {name: INSPECTION_FIXTURE_HASHES[name]
+                       for name in ("explore", "edit_material_instance", "edit_texture")}
+        for target, replacement in (("SOURCE_ASSETS_SCHEMA_SHA256", self.hashes),
+                                    ("verify_trial_host_identity", trial_host_check)):
+            patcher = mock.patch.object(client, target, replacement)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def test_three_fixed_reads_keep_empty_or_capped_inventory_honest_without_pagination(self):
+        for total in (0, 1, 201):
+            def respond(request, total=total):
+                status, headers, raw = source_assets_reply(request)
+                if request["method"] == "tools/call" and request["params"]["name"] == "explore":
+                    payload = json.loads(raw)
+                    payload["result"]["content"][0]["text"] = source_assets_registry_text(total)
+                    raw = client.canonical(payload)
+                return status, headers, raw
+            with self.subTest(total=total), peer(respond) as (port, requests), mock.patch.object(client, "observer_loader") as loader:
+                probe = connection(port)
+                report = probe.probe(inspect_source_assets=True)
+                with self.assertRaisesRegex(client.ProbeError, "METHOD_NOT_ALLOWED"):
+                    probe._post("tools/call", probe._source_assets_params)
+            calls = [r["body"]["params"] for r in requests if r["body"]["method"] == "tools/call"]
+            self.assertEqual(calls, [
+                {"name": "explore", "arguments": {"path": "/Game/Megascans/Surfaces", "recursive": True,
+                                                  "type": "/Script/Engine.Texture2D", "limit": 200, "offset": 0}},
+                {"name": "edit_material_instance", "arguments": {"name": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS"}},
+                {"name": "edit_texture", "arguments": {"names": [
+                    "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified",
+                    "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified",
+                    "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified",
+                ]}},
+            ])
+            self.assertEqual(report["status"], "SOURCE_ASSETS_INSPECTION_RESPONSES_RECEIVED")
+            self.assertEqual(report["native_tool_calls"], 3)
+            for field in ("native_tool_attempted", "native_tool_completed", "native_tool_response_received", "source_assets_registry_verified"):
+                self.assertIs(report[field], True)
+            self.assertIs(report["source_assets_inventory_complete"], total <= 200)
+            for field in ("source_assets_pagination_attempted", "source_assets_mi_associations_verified",
+                          "source_assets_array_source_refs_verified", "visual_acceptance", "performance_pass"):
+                self.assertIs(report[field], False)
+            self.assertEqual([(r["index"], r["phase"]) for r in report["source_assets_host_checks"]],
+                             [(index, phase) for index in (1, 2, 3) for phase in ("before", "after")])
+            self.assertNotIn("observer_source_sha256", report)
+            loader.assert_not_called()
+
+    def test_wrong_registry_scope_counts_filters_duplicates_and_paths_stop_before_mi(self):
+        original = source_assets_registry_text()
+        variants = (
+            original.replace('"scope": "/Game/Megascans/Surfaces"', '"scope": "/Game/Other"'),
+            original.replace('"shown": 1', '"shown": true'),
+            original.replace('"truncated": false', '"truncated": true'),
+            original.replace('"class_filter_recursive": true', '"class_filter_recursive": false'),
+            original.replace('/Mossy_Ground_tkekcgfn', '/../Other'),
+            original.replace('"total": 1', '"total": 2'),
+            original + "\n#json-explore:{}",
+        )
+        for text in variants:
+            def respond(request, text=text):
+                status, headers, raw = source_assets_reply(request)
+                if request["method"] == "tools/call":
+                    payload = json.loads(raw)
+                    payload["result"]["content"][0]["text"] = text
+                    raw = client.canonical(payload)
+                return status, headers, raw
+            with self.subTest(text=text[:100]), peer(respond) as (port, requests):
+                state = client.ObservationState()
+                with self.assertRaises(client.ProbeError):
+                    connection(port, state=state).probe(inspect_source_assets=True)
+            self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), 1)
+            self.assertFalse(state.source_assets_registry_verified)
+            self.assertIsNone(state.completed)
+
+    def test_all_three_schema_pins_and_sign_in_are_required_before_native_calls(self):
+        for failure in ("explore", "edit_material_instance", "edit_texture", "signed_out"):
+            def respond(request, failure=failure):
+                status, headers, raw = source_assets_reply(request)
+                payload = json.loads(raw) if raw else None
+                if request["method"] == "tools/list" and failure != "signed_out":
+                    for tool in payload["result"]["tools"]:
+                        if tool["name"] == failure:
+                            tool["inputSchema"] = {**tool["inputSchema"], "new": True}
+                    raw = client.canonical(payload)
+                if request["method"] == "session/status" and failure == "signed_out":
+                    payload["result"]["signed_in"] = False
+                    raw = client.canonical(payload)
+                return status, headers, raw
+            with (self.subTest(failure=failure), peer(respond) as (port, requests),
+                  self.assertRaises(client.ProbeError)):
+                connection(port).probe(inspect_source_assets=True)
+            self.assertFalse(any(r["body"]["method"] == "tools/call" for r in requests))
+
+    def test_read_errors_timeout_oversize_inline_images_and_wrong_asset_stop_without_retry(self):
+        for failure in ("tool_error", "timeout", "oversize", "inline_image", "mi_saved", "wrong_array"):
+            def respond(request, failure=failure):
+                status, headers, raw = source_assets_reply(request)
+                target = "edit_texture" if failure == "wrong_array" else "edit_material_instance"
+                if request["method"] == "tools/call" and request["params"]["name"] == target:
+                    if failure == "timeout":
+                        time.sleep(0.2)
+                    else:
+                        payload = json.loads(raw)
+                        result = payload["result"]
+                        if failure == "tool_error":
+                            result["isError"] = True
+                        else:
+                            text = result["content"][0]["text"]
+                            result["content"][0]["text"] = (
+                                "a" * (70 * 1024) if failure == "oversize"
+                                else "data:image/jpeg;base64:NOT_REAL" if failure == "inline_image"
+                                else text.replace("saved=false", "saved=true") if failure == "mi_saved"
+                                else text.replace("TA_Normal_Unified", "TA_Other_Unified")
+                            )
+                        raw = client.canonical(payload)
+                return status, headers, raw
+            with self.subTest(failure=failure), peer(respond) as (port, requests):
+                state = client.ObservationState()
+                with self.assertRaises(client.ProbeError):
+                    connection(port, timeout=0.1 if failure == "timeout" else 2, state=state).probe(inspect_source_assets=True)
+            count = 3 if failure == "wrong_array" else 2
+            self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), count)
+            self.assertEqual(state.report_fields()["native_tool_calls"], count)
+            self.assertIsNone(state.completed)
+            self.assertEqual(len(state.source_assets_host_checks), count * 2)
+
+    def test_host_change_or_changed_input_stops_with_exact_attempt_accounting(self):
+        for fail_at, expected in ((1, 0), (2, 1), (3, 1), (6, 3)):
+            checks = 0
+            def changed(host, discovery, fail_at=fail_at):
+                nonlocal checks
+                checks += 1
+                if checks == fail_at:
+                    raise client.ProbeError("TRIAL_IDENTITY_CHANGED")
+                return trial_host_check(host, discovery)
+            with self.subTest(fail_at=fail_at), peer(source_assets_reply) as (port, requests), mock.patch.object(client, "verify_trial_host_identity", side_effect=changed):
+                state = client.ObservationState()
+                with self.assertRaisesRegex(client.ProbeError, "TRIAL_IDENTITY_CHANGED"):
+                    connection(port, state=state).probe(inspect_source_assets=True)
+            self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), expected)
+            self.assertEqual(state.report_fields()["native_tool_calls"], expected)
+            self.assertIsNot(state.completed, True)
+        for filename in ("identity.json", "discovery.json"):
+            with self.subTest(filename=filename), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                def changed_file(request, root=root, filename=filename):
+                    result = source_assets_reply(request)
+                    if request["method"] == "tools/call":
+                        (root / filename).write_text("{}")
+                    return result
+                with peer(changed_file) as (port, requests), mock.patch.object(client, "WINDOWS_HOST", True):
+                    (root / "identity.json").write_bytes(client.canonical(identity(port)))
+                    (root / "discovery.json").write_bytes(client.canonical(config(port)))
+                    with self.assertRaisesRegex(client.ProbeError, "INPUT_CHANGED"):
+                        client.probe_from_files(root / "identity.json", root / "discovery.json", inspect_source_assets=True)
+                self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), 1)
+
+    def test_fixed_arguments_modes_and_cli_reject_authoring_and_keep_errors_bounded(self):
+        with peer(source_assets_reply) as (port, requests):
+            for mode in ("observe_lesson07", "capture_lesson07", "inspect_lesson07", "inspect_vault", "trial_macro", "apply_reviewed_macro", "import_surfaces"):
+                with self.subTest(mode=mode), self.assertRaisesRegex(client.ProbeError, "NATIVE_MODES_MUTUALLY_EXCLUSIVE"):
+                    connection(port).probe(inspect_source_assets=True, **{mode: True})
+            for arguments in ({"path": "/Game/Other"}, {"path": "/Game/Megascans/Surfaces", "offset": 200}):
+                probe = connection(port)
+                state = probe.observation_state
+                state.source_assets_requested, state.source_assets_schema_sha256 = True, self.hashes
+                row = {"attempted": False, "completed": False}
+                state.source_assets_results.append(row)
+                probe._source_assets_row = row
+                probe._source_assets_params = {"name": "explore", "arguments": arguments}
+                with self.assertRaisesRegex(client.ProbeError, "SOURCE_ASSETS_ARGUMENTS"):
+                    probe._post("tools/call", probe._source_assets_params)
+            self.assertEqual(requests, [])
+        for fail in (False, True):
+            def respond(request, fail=fail):
+                status, headers, raw = source_assets_reply(request)
+                if fail and request["method"] == "tools/call":
+                    payload = json.loads(raw)
+                    payload["result"] = {"isError": True, "content": [{"type": "text", "text": "denied " + TOKEN}]}
+                    raw = client.canonical(payload)
+                return status, headers, raw
+            with self.subTest(fail=fail), tempfile.TemporaryDirectory() as directory, peer(respond) as (port, requests):
+                root = Path(directory)
+                receipt, discovery, output = root / "identity.json", root / "config.json", root / "bridge.json"
+                receipt.write_bytes(client.canonical(identity(port)))
+                discovery.write_bytes(client.canonical(config(port)))
+                real = client.probe_from_files
+                stdout = io.StringIO()
+                with mock.patch.object(client, "WINDOWS_HOST", True), mock.patch("sys.stdout", stdout), mock.patch.object(
+                    client, "probe_from_files", side_effect=lambda path, real=real, discovery=discovery, **kwargs: real(path, discovery, **kwargs)
+                ):
+                    code = client.main(["--identity-receipt", str(receipt), "--output", str(output), "--inspect-source-assets"])
+                report = json.loads(output.read_bytes())
+            self.assertEqual(code, 1 if fail else 0)
+            self.assertEqual(report["status"], "SOURCE_ASSETS_INSPECTION_FAILED" if fail else "SOURCE_ASSETS_INSPECTION_RESPONSES_RECEIVED")
+            self.assertEqual(report["native_tool_calls"], 1 if fail else 3)
+            self.assertEqual(report["native_material_readback"], "RAW_RESPONSES_REVIEW_PENDING")
+            self.assertNotIn(TOKEN, stdout.getvalue())
+            self.assertNotIn(TOKEN.encode(), client.canonical(report))
+
+
 class FileTests(unittest.TestCase):
     def test_end_to_end_files_keep_credentials_private_and_output_new(self):
         with tempfile.TemporaryDirectory() as directory, peer() as (port, _requests):
@@ -3700,11 +3939,11 @@ class SurfaceImportTests(unittest.TestCase):
                 with self.assertRaisesRegex(client.ProbeError, "SURFACE_RECEIPT_CHANGED"):
                     client.read_surface_receipt("123-1", row)
 
-    def test_workflow_all_512_intents_require_one_owner_operation(self):
+    def test_workflow_all_1024_intents_require_one_owner_operation(self):
         workflow = Path(__file__).resolve().parents[2] / ".github/workflows/yacs-lesson07-remote-editor.yml"
         source = workflow.read_text(encoding="utf-8")
         markers = ("remote-editor", "observe-editor", "discover-editor", "capture-editor", "inspect-editor",
-                   "inspect-vault", "trial-macro", "apply-macro", "import-surfaces")
+                   "inspect-vault", "trial-macro", "apply-macro", "import-surfaces", "inspect-source-assets")
         for bits in itertools.product((False, True), repeat=len(markers)):
             selected = {name for name, bit in zip(markers, bits) if bit}
             for job in ("await_ci", "observe_cpu"):

@@ -22,7 +22,7 @@ MAP_SHA256 = "d14a132cdfbb59f340a4c5ed503296153bb00700fa2a790cd3d5f900ebc5ac75"
 MAP_SIZE = 1838638056
 CURRENT_MATERIAL_PINS = {
     "Content/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS.uasset":
-        ("8c1dc875218a027a5ac83d88f8eedba49769fdd8494d287e7264807082eb11bf", 39740),
+        ("dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d", 40154),
     "Content/Generated/YACS/Lesson07_Unified/Materials/M_Landscape_YACS.uasset":
         ("53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66", 208956),
 }

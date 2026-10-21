@@ -4146,5 +4146,56 @@
     },
     "performance_pass": false,
     "performance_note": "DEFERRED_AFTER_M3"
+  },
+  "normal_contract_source_analysis": {
+    "status": "OFFLINE_SOURCE_CONTRACT_VERIFIED_PRIVATE_NATIVE_CANDIDATE_NOT_EXECUTED",
+    "report": "docs/assets/lesson07-normal-contract-20261021/README.md",
+    "compact_evidence_sha256": "1be16149e7fbe87770eae7bdad11444da7d7bd477e4ca12dd9696e7273bd49c7",
+    "original_assets_unchanged": true,
+    "normal_sampler_requirement": "All four explicit SAMPLERTYPE_Normal",
+    "corner_correction": "BR=Samples.G; TL=Samples.B, matching Colour/Masks",
+    "signed_rotation_correction": "(G,1-R,B) -> (G,-R,B)",
+    "planned_native_scope": [
+      "new private normal material function",
+      "new private landscape master"
+    ],
+    "active_mi_changed": false,
+    "native_candidate_executed": false,
+    "candidate_applied": false,
+    "technical_pass": false,
+    "performance_pass": false,
+    "native_candidate_status": "PAUSED_BY_OWNER_ORIGINAL_WORKFLOW_REINSPECTION_NOT_EXECUTED"
+  },
+  "current_reader_pin_alignment": {
+    "ci_run_id": 39644687140,
+    "failed_test": "test_current_pins_match_committed_asset_pointers_without_lfs_payloads",
+    "cause": "The retained MI pointer superseded the old Flatten-only checkpoint, while two reader pins remained stale.",
+    "new_mi_sha256": "dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d",
+    "new_mi_size_bytes": 40154,
+    "authority": "docs/assets/lesson07-surface-repair-20261021/retention-39643271947-server-lfs-readback.json",
+    "map_lineage_changed": false,
+    "local_tests": {
+      "reader_tests_run": 59,
+      "skipped": 2,
+      "failures": 0,
+      "exact_remote_pointer_test_run": 1,
+      "exact_remote_pointer_test_failures": 0,
+      "pointer_source_commit": "61d3a245124284283fb2600cb1b1379e410e492c"
+    },
+    "hosted_revalidation": "PENDING"
+  },
+  "original_sidefx_reinspection_20261021": {
+    "status": "SOURCE_INSPECTION_COMPLETE_NATIVE_SOURCE_INVENTORY_PENDING",
+    "report": "docs/assets/lesson07-sidefx-source-20261021/README.md",
+    "archive_sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
+    "archive_bytes": 605943562,
+    "full_transcript_read": true,
+    "full_motion_every_frame_reviewed": false,
+    "official_default_arrays_are_final_pbr": false,
+    "custom_normal_candidate_paused": true,
+    "native_material_application": false,
+    "lesson07_technical_pass": false,
+    "performance_pass": false,
+    "performance_note": "DEFERRED_AFTER_M3"
   }
 }

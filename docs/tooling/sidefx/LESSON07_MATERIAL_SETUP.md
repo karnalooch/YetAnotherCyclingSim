@@ -11,6 +11,18 @@
 
 ---
 
+## Current owner direction: original SideFX workflow (2026-10-21)
+
+The owner requested a fresh download of `ProjectFiles_LandscapeWorkflow3.zip`,
+a close reinspection of Lesson07 (Vimeo 888569514), then reproduction of the
+original material workflow. The custom normal candidate and further substitute
+texture changes are paused before native execution. The [source reinspection](../../assets/lesson07-sidefx-source-20261021/README.md)
+retains the new verified archive, exact final surface IDs and video parameters;
+the archive default arrays are diagnostic placeholders. The five final
+PBR surfaces are acquired separately in the video. Preserve real Sa Calobra
+geography and current owner session while resolving those exact dependencies.
+Source inspection does not establish native application or Lesson07 completion.
+
 ## Acquired surfaces and current repair (2026-10-21)
 
 The owner requested the actual textures and completion of Lesson07. Complete
@@ -60,6 +72,38 @@ the active owner Editor. Final protected delivery remains open.
 Source-only [CI 39638791772](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39638791772)
 subsequently reached the same `LOCAL_BUSY` admission boundary and also provides
 no new native build or Automation proof.
+
+### Current normal-contract diagnosis and isolated candidate
+
+[Exact offline source inspection](../../assets/lesson07-normal-contract-20261021/README.md)
+resolved the original Normal function and master expression connections. It
+supports three linked corrections: explicitly Normal sampling at all four
+corners, BR/TL producer correction to the same slice order as Colour/Masks,
+and signed `(G,-R,B)` in place of `(G,1-R,B)`. The original seven packages were
+read only; all 260 master expression payloads roundtrip exactly in memory,
+while the documented whole-package parser limitation remains explicit.
+
+The next native stage prepares only a private function and master. It must
+reconnect semantic pins after duplication, compile with an explicit empty error
+list, save only those two assets, and retain them for independent graph readback.
+The active MI, parent, Flatten, map and arrays are unchanged by preparation.
+No native candidate execution or application is claimed at this point.
+
+The [follow-up metadata discovery](../../assets/lesson07-surface-repair-20261021/discovery-39644676507-evidence.json)
+retained the full plain-text `edit_graph` description with zero native calls.
+It advertises Blueprint graphs, not material-function inspection. The full
+schema remains excluded by size, and the later historical error-reader again
+refused the changed owner identity. Its guard is unchanged.
+
+Protected [CI 39644687140](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39644687140)
+caught a stale material-instance pin in the isolated historical readback lane
+after the nine retained asset pointers advanced. The current change aligns
+both reader constants with the independently verified 40,154-byte MI and binds
+the provenance test to that raw server-readback receipt. The old recovery
+receipt still anchors unchanged map lineage. Local reader tests and a separate
+check using exact remote Git pointer blobs pass; hosted revalidation remains
+required. This changes no admission or owner guard and does not rerun the
+frozen observer.
 
 ### Earlier recovery attempts retained as history
 
