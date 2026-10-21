@@ -235,36 +235,46 @@ foreach ($mutate in $negativeMigrations) {
     Require $blocked 'Unproven or active prior task was admitted for migration.'
     $cases++
 }
-# The separately pinned closed 602 session permits exactly one new release;
-# it does not relax the failed-457 predicate or admit arbitrary completed tasks.
-function New-ClosedMigrationFixture {
+# Each separately pinned closed session permits exactly one new release;
+# neither relaxes failed-457 admission or admits arbitrary completed tasks.
+function New-ClosedMigrationFixture([ValidateSet('CLOSED_602','CLOSED_DE903')][string]$Kind='CLOSED_602') {
     $x=New-MigrationFixture
-    $pin=Get-L07ClosedTaskPin
+    $pin=Get-L07ClosedTaskPin -Kind $Kind
+    $x.Kind=$Kind
     $priorRelease='D:\yacs\lesson07-remote\releases\'+$pin.source_sha
     $priorScript=if ($IsWindows) { Join-Path $priorRelease 'scripts/ue/Start-YacsLesson07RemoteEditor.ps1' }
         else { $priorRelease+'\scripts\ue\Start-YacsLesson07RemoteEditor.ps1' }
     $x.Task.Actions[0].WorkingDirectory=$priorRelease
     $x.Task.Actions[0].Arguments='-NoLogo -NoProfile -File "'+$priorScript+'" -ExpectedHead '+$pin.source_sha
     $x.TaskInfo.LastTaskResult=[uint32]0
-    $x.NowUtc=[DateTime]::new(2026,10,21,10,0,0,[DateTimeKind]::Utc)
+    $x.NowUtc=[DateTime]::new(2026,10,21,18,0,0,[DateTimeKind]::Utc)
+    $deadline=if ($Kind -ceq 'CLOSED_DE903') { '2026-10-21T15:35:55.6288295Z' } else { '2026-10-20T23:23:48.9836870Z' }
     $x.PriorInstall=@{source_sha=$pin.source_sha;run_token=$pin.run_token;desktop_sid=$x.ExpectedSid
-        start_permitted_until_utc=('{"utc":"2026-10-20T23:23:48.9836870Z"}' | ConvertFrom-Json -AsHashtable)['utc']
+        start_permitted_until_utc=(('{"utc":"'+$deadline+'"}') | ConvertFrom-Json -AsHashtable)['utc']
         files=@(foreach ($path in $pin.files.Keys) { @{path=$path;sha256=$pin.files[$path].sha256} })}
     $x.PriorSession=@{source_sha=$pin.source_sha;status='EDITOR_EXITED_NO_AUTORESTART';phase='SUPERVISING';host_status='IDLE';reason_code=$null
-        checked_at_utc=('{"utc":"2026-10-21T07:37:58.9575712Z"}' | ConvertFrom-Json -AsHashtable)['utc']
+        checked_at_utc=(('{"utc":"'+$pin.checked_at_utc+'"}') | ConvertFrom-Json -AsHashtable)['utc']
         owner_sid_matches=$true;checkpoint_bytes_verified=$true;module_build_ids_verified=$true;autosave_session_override=$true
         editor_stop_requested=$false;package_save_requested=$false;project_config_write_requested=$false
         native_world_verified=$false;native_module_load_verified=$false;performance_pass=$false
-        editor=@{editor_pid=17896;editor_start_filetime_utc='134370120000674689';interactive_session_id=1;canonical_project_matches=$true
+        editor=@{editor_pid=$pin.editor_pid;editor_start_filetime_utc=$pin.editor_start_filetime_utc;interactive_session_id=$pin.interactive_session_id;canonical_project_matches=$true
             editor_executable_path='D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe'}}
     $x.InstallationSha256=$pin.installation_sha256;$x.InstallationBytes=$pin.installation_bytes
     $x.SessionSha256=$pin.session_sha256;$x.SessionBytes=$pin.session_bytes
     return $x
 }
 $closed=New-ClosedMigrationFixture
+[void]$closed.Remove('Kind')
 Assert-L07ClosedTaskData @closed
 Require ((Get-L07KnownTaskMigrationKind $closed.Task) -ceq 'CLOSED_602') 'Closed602 dispatch did not match exact action.'
 Require ((Get-L07KnownTaskMigrationKind (New-MigrationFixture).Task) -ceq 'FAILED_457') 'Failed457 dispatch changed.'
+$cases++
+$closed=New-ClosedMigrationFixture -Kind 'CLOSED_DE903'
+Assert-L07ClosedTaskData @closed
+Require ((Get-L07KnownTaskMigrationKind $closed.Task) -ceq 'CLOSED_DE903') 'ClosedDe903 dispatch did not match exact action.'
+Require ($closed.PriorSession.editor.editor_pid -eq 24984 -and
+    $closed.PriorSession.editor.editor_start_filetime_utc -ceq '134370703459789397' -and
+    $closed.PriorSession.editor.interactive_session_id -eq 2) 'ClosedDe903 process identity differs from the diagnostic.'
 $cases++
 $negativeClosedMigrations=@(
     {param($x) $x.InstallationSha256='0'*64},
@@ -284,7 +294,7 @@ $negativeClosedMigrations=@(
     {param($x) $x.Task.Principal.RunLevel='Highest'},
     {param($x) $x.Task.Settings.RestartCount=1},
     {param($x) $x.PriorInstall.source_sha='0'*40},
-    {param($x) $x.PriorInstall.run_token='39513355021-2'},
+    {param($x) $x.PriorInstall.run_token+='-changed'},
     {param($x) $x.PriorInstall.files[0].sha256='0'*64},
     {param($x) $x.PriorInstall.start_permitted_until_utc=$x.NowUtc.AddMinutes(1)},
     {param($x) $x.PriorSession.status='EDITOR_RUNNING_NATIVE_NOT_VERIFIED'},
@@ -298,21 +308,24 @@ $negativeClosedMigrations=@(
     {param($x) $x.PriorSession.editor_stop_requested=$true},
     {param($x) $x.PriorSession.editor_stop_requested=@($false)},
     {param($x) $x.PriorSession.editor_stop_requested=$null},
-    {param($x) $x.PriorSession.editor.editor_pid=17897},
-    {param($x) $x.PriorSession.editor.editor_start_filetime_utc='134370120000674688'},
-    {param($x) $x.PriorSession.editor.interactive_session_id=2},
-    {param($x) $x.PriorSession.editor.canonical_project_matches=@($true)}
+    {param($x) $x.PriorSession.editor.editor_pid++},
+    {param($x) $x.PriorSession.editor.editor_start_filetime_utc='0'},
+    {param($x) $x.PriorSession.editor.interactive_session_id++},
+    {param($x) $x.PriorSession.editor.canonical_project_matches=@($true)},
+    {param($x) $x.Kind=if ($x.Kind -ceq 'CLOSED_602') { 'CLOSED_DE903' } else { 'CLOSED_602' }}
 )
-foreach ($mutate in $negativeClosedMigrations) {
-    $closed=New-ClosedMigrationFixture
-    & $mutate $closed
-    $blocked=$false
-    try { Assert-L07ClosedTaskData @closed } catch {
-        Require ($_.Exception.Data['l07_reason'] -like 'MIGRATION_*' -or $_.Exception.Data['l07_reason'] -ceq 'TASK_SETTINGS_MISMATCH') 'Unexpected closed migration failure.'
-        $blocked=$true
+foreach ($kind in @('CLOSED_602','CLOSED_DE903')) {
+    foreach ($mutate in $negativeClosedMigrations) {
+        $closed=New-ClosedMigrationFixture -Kind $kind
+        & $mutate $closed
+        $blocked=$false
+        try { Assert-L07ClosedTaskData @closed } catch {
+            Require ($_.Exception.Data['l07_reason'] -like 'MIGRATION_*' -or $_.Exception.Data['l07_reason'] -ceq 'TASK_SETTINGS_MISMATCH') 'Unexpected closed migration failure.'
+            $blocked=$true
+        }
+        Require $blocked "Unproven $kind session was admitted for migration."
+        $cases++
     }
-    Require $blocked 'Unproven closed session was admitted for migration.'
-    $cases++
 }
 $failure=@{reason_code='SYSTEM_EXCEPTION';error_type='MethodInvocationException';error_inner_type='FormatException';error_hresult=-2146233087;error_native_code=5;handoff_step='DEADLINE'}
 $target=@{}

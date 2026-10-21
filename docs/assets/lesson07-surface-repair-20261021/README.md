@@ -135,6 +135,25 @@ required; the old run directory and checkpoint pins are preserved. Protected
 [CI for the importer source](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39627930173)
 completed successfully, which does not establish native material success.
 
+The subsequent [read-only diagnostic 39629865244](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39629865244)
+observed the exact prior session as `EDITOR_EXITED_NO_AUTORESTART` at
+`15:44:07.6634944 UTC`. The task was Ready with result 0, the host had zero
+live Editors, all four retained source files matched and all six saved
+map/material/array checkpoints were unchanged. The
+[closed-session evidence](closed-session-evidence.json) preserves the exact
+sanitized reports and original installation/session hashes. Supervisor result
+0 is not claimed as proof of a clean Unreal exit. This read-only diagnostic
+makes no startup admission; the owner-authorized fresh start still uses the
+normal protected CI, owner, disk and specifically pinned closed-session checks.
+
+The fresh-start implementation adds only a fixed `CLOSED_DE903` case to the
+existing closed-session validator, using those observed byte identities.
+The launcher, original failed-session path and installer execution body remain
+unchanged. The same-source one-shot restriction, a new release/state, retained
+old evidence and checks immediately before handoff remain enforced. Production
+validator tests passed 146 cases, independently reproduced; no native action
+was performed by those tests. The actual fresh start is still pending.
+
 **Lesson07 remains open.** Final M3 owner visual audit and performance remain at
 their existing project stages; `performance_pass: false`,
 `performance_note: "DEFERRED_AFTER_M3"`.

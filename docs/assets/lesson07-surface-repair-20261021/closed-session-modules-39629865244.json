@@ -1,0 +1,70 @@
+{
+  "status": "READ_ONLY_DIAGNOSTIC",
+  "source_commit": "d07ef0fc907b1a473a997cb8e05b65c1db68dc31",
+  "engine_editor_cmd": true,
+  "canonical_project_present": true,
+  "project_descriptor": {
+    "status": "BOUNDED_PROJECT_DESCRIPTOR_OBSERVED",
+    "engine_association": "{FEF18A3B-4D4B-15FD-E2E3-E5AA38A2AB75}",
+    "modules": [
+      {
+        "name": "YetAnotherCyclingSim",
+        "type": "Runtime"
+      },
+      {
+        "name": "YetAnotherCyclingSimEditor",
+        "type": "Editor"
+      }
+    ],
+    "sha256": "f00d5117b63b3a6a5d200ff4ffab035a770712cd358b3e6f4cb50b6063c06c66",
+    "dictionary_name_predicate_counts": {
+      "runtime_property": 1,
+      "runtime_key": 1,
+      "editor_property": 1,
+      "editor_key": 1
+    }
+  },
+  "free_d_gib": 63.13,
+  "editor_binaries": [
+    {
+      "name": "UnrealEditor-YetAnotherCyclingSim.dll",
+      "exists": true,
+      "bytes": 1612288,
+      "modified_utc": "2026-10-20T14:41:49.8563626Z"
+    },
+    {
+      "name": "UnrealEditor-YetAnotherCyclingSimEditor.dll",
+      "exists": true,
+      "bytes": 961536,
+      "modified_utc": "2026-10-20T15:18:41.1698810Z"
+    }
+  ],
+  "module_manifests": [
+    {
+      "file": "UnrealEditor.modules",
+      "build_id": "55116800",
+      "modules": [
+        "YetAnotherCyclingSim",
+        "YetAnotherCyclingSimEditor"
+      ]
+    }
+  ],
+  "plugins": [
+    {
+      "path": "Plugins\\Runtime\\HoudiniEngine",
+      "exists": true,
+      "plugin_descriptor_count": 1
+    },
+    {
+      "path": "Plugins\\PCGExtendedToolkit",
+      "exists": false,
+      "plugin_descriptor_count": 0
+    },
+    {
+      "path": "Plugins\\RoadForge",
+      "exists": true,
+      "plugin_descriptor_count": 1
+    }
+  ],
+  "note": "Module presence is diagnostic, not a binary compatibility or successful runtime load proof."
+}

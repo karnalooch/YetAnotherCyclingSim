@@ -54,6 +54,13 @@ records zero native calls and the exact manifest. Importer-source protected
 [CI 39627930173](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39627930173)
 completed successfully; Lesson07 remains open.
 
+The [closed-session diagnostic 39629865244](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39629865244)
+subsequently confirmed zero live Editors, the completed de903 supervisor and
+unchanged bytes for all six saved map/material/array checkpoints, including
+Macro 0.05. Its [exact evidence](../../assets/lesson07-surface-repair-20261021/closed-session-evidence.json)
+is retained for the specifically pinned fresh-session startup; the diagnostic
+itself does not authorize or perform a start.
+
 ## Earlier ready-made limestone selection (2026-10-21)
 
 The owner requested licensed ready-made assets and complete materials, with
