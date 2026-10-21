@@ -2533,7 +2533,7 @@
           "scripts/ue/lesson07_wingman_client.py": "500553e7e61f39c2630feb5705bab55870ce954b26e4474faaa00908a7cf2e68",
           "scripts/ue/test_lesson07_wingman_client.py": "25abb7379189f5173c511a7508fc8129acbbb5fbe68bc4f5190e09467cf34a14",
           "scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1": "d3b9b34fd9b7c670004780508450d58e5fe150cc6bade6bee593c024814427ff",
-          ".github/workflows/yacs-lesson07-remote-editor.yml": "eebdba02abc64c077ef073b3f68653d33e5df4bc1669027c1d23d0d70e324e9b"
+          ".github/workflows/yacs-lesson07-remote-editor.yml": "551bee1b3a2487f57232e696b9080564b49e923488c24820c0652ca6475435b7"
         },
         "root_focused_python_tests_passed": 82,
         "scoped_ruff_rules": "E9,F63,F7,F82",
@@ -2544,7 +2544,21 @@
           "structure",
           "links",
           "freshness"
-        ]
+        ],
+        "sparse_checkout_review_limitation": "Static review confirmed lazyMissing worktree support, but did not establish git-lfs compatibility with missing promisor Git objects. Actual Windows attempt failed before native access; sparse checkout removed."
+      },
+      "first_attempt": {
+        "source_commit": "72919f499181a919b1708df7480be8bf99e4bf01",
+        "run_id": 39528106136,
+        "cpu_job_id": 118987410807,
+        "cpu_conclusion": "success",
+        "windows_job_id": 118987500113,
+        "windows_conclusion": "failure",
+        "failed_step": "Validate code and boundaries before any task creation",
+        "error": "Could not scan for Git LFS tree: missing object: f5af5e0b69fef2de2518995f3b14361b09c6a3f8",
+        "native_probe_step": "skipped",
+        "native_tool_calls": 0,
+        "repair": "Restore previously successful full code-only checkout; no sparse-checkout or partial-object assumption; retain lfs:false, GIT_LFS_SKIP_SMUDGE and the unchanged LFS validator."
       }
     }
   },
@@ -2710,6 +2724,20 @@
         "editor_and_logs_preserved": true,
         "scope": "Hosted checks passed; native build/Automation not executed because owner Editor is active. Focused probe tests do not substitute protected CI."
       }
+    },
+    "original_idmap_visible_settings": {
+      "source": "https://player.vimeo.com/video/888569514?app_id=122963",
+      "mip_gen_settings": {
+        "time": "15:31.7",
+        "value": "NoMipmaps",
+        "observed_directly_in_texture_editor": true
+      },
+      "filter": {
+        "time": "17:21.7",
+        "value": "Nearest",
+        "observed_directly_in_texture_editor": true
+      },
+      "current_yacs_native_settings": "UNREAD"
     }
   }
 }

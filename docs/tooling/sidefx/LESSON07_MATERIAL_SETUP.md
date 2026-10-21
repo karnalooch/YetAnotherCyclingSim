@@ -21,6 +21,9 @@ colour from close tiling detail; 24:36–25:31 fills matching Normal/Masks array
 and checks the response while moving the light. Landscape Material / Functions
 at 10:21–11:41 explicitly pairs each colour layer with its matching normal and
 uses the same UVs. These are source-method observations, not YACS runtime proof.
+The original Lesson07 IDMap texture editor visibly shows **NoMipmaps** at
+15:31.7 and **Nearest** at 17:21.7. The existing YACS importer sets Nearest but
+does not explicitly set mip generation; the current native value is still unread.
 
 Two source-family and two channel defects are now proven by retained input
 hashes and import provenance:
@@ -139,6 +142,14 @@ remain pending review. The discovered tools do not establish local image import
 or source-array reassembly; `edit_texture` explicitly does not import. Graph
 read mode does not promise every TextureCoordinate or nested-function property,
 so absent values cannot be treated as defaults.
+
+The first dedicated inspection [run 39528106136](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39528106136)
+at `72919f499181a919b1708df7480be8bf99e4bf01` passed its 82-test focused CPU
+gate but stopped in Windows checkout validation before the native probe.
+`git lfs ls-files --long HEAD` could not scan a missing Git object in the sparse
+checkout. The next attempt restores the previously successful full code-only
+checkout, preserving `lfs: false`, skipped LFS smudge and the unchanged LFS
+validator. No native tool was invoked by the failed inspection job.
 
 The owner requested remote execution of the channel diagnosis and explicitly
 allowed creating the missing connection infrastructure. This supersedes the
