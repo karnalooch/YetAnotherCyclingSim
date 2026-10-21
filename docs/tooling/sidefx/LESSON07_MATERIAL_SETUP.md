@@ -23,6 +23,16 @@ PBR surfaces are acquired separately in the video. Preserve real Sa Calobra
 geography and current owner session while resolving those exact dependencies.
 Source inspection does not establish native application or Lesson07 completion.
 
+After the owner manually reset Windows and reopened the project, [native source
+inventory 39654531355/2](../../assets/lesson07-sidefx-source-20261021/source-inventory-39654531355-2-evidence.json)
+completed three read-only calls with six fresh owner checks. The standard
+Megascans surface folder contains zero registered Texture2D assets. This does
+not establish absence under other paths; five fixed project-wide ID queries
+are prepared. The fresh MI confirms Macro 0.05 and the earlier disabled global
+colour/specular and flattened normals. No material application or visual PASS
+is claimed. Protected CI passed hosted checks but native admission refused
+LOCAL_BUSY to preserve the reopened owner Editor.
+
 ## Acquired surfaces and current repair (2026-10-21)
 
 The owner requested the actual textures and completion of Lesson07. Complete

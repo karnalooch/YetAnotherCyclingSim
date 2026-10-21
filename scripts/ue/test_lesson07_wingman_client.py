@@ -3455,19 +3455,19 @@ class VaultInspectionTests(unittest.TestCase):
             self.assertFalse(public["vault_license_verified"])
 
 
-def source_assets_registry_text(total=1):
+def source_assets_registry_text(query="tkekcgfn", total=1):
     rows = [{
-        "name": f"T_tkekcgfn_{index}", "path": "/Game/Megascans/Surfaces/Mossy_Ground_tkekcgfn",
+        "name": f"T_{query.upper()}_{index}", "path": "/Game/Imported/Surfaces",
         "class": "Texture2D", "class_path": "/Script/Engine.Texture2D", "loaded": False,
     } for index in range(min(total, 200))]
     return (
-        f"# ASSETS /Game/Megascans/Surfaces shown={len(rows)} total={total} offset=0 limit=200 loaded=0/{len(rows)}"
+        f"# ASSETS /Game shown={len(rows)} total={total} offset=0 limit=200 loaded=0/{len(rows)}"
         + (" TRUNCATED" if total > 200 else "")
         + "\n#json-explore:" + json.dumps({
-            "mode": "assets", "scope": "/Game/Megascans/Surfaces", "shown": len(rows),
+            "mode": "assets", "scope": "/Game", "shown": len(rows),
             "total": total, "offset": 0, "limit": 200, "truncated": total > 200,
             "raw_from_registry": total, "loaded_in_shown": 0,
-            "filters": {"pattern": "", "query": "", "type": "/Script/Engine.Texture2D",
+            "filters": {"pattern": "", "query": query, "type": "/Script/Engine.Texture2D",
                         "class_path": "/Script/Engine.Texture2D", "class_filter_recursive": True},
             "rows": rows,
         })
@@ -3478,7 +3478,7 @@ def source_assets_reply(request):
     status, headers, raw = inspection_reply(request)
     if request["method"] == "tools/call":
         name = request["params"]["name"]
-        text = source_assets_registry_text() if name == "explore" else (
+        text = source_assets_registry_text(request["params"]["arguments"]["query"]) if name == "explore" else (
             trial_mi_text(trial_snapshot(), client.TRIAL_MI) if name == "edit_material_instance"
             else "#json-textures:" + json.dumps([
                 {"path": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_" + channel + "_Unified",
@@ -3502,24 +3502,29 @@ class SourceAssetsInspectionTests(unittest.TestCase):
             patcher.start()
             self.addCleanup(patcher.stop)
 
-    def test_three_fixed_reads_keep_empty_or_capped_inventory_honest_without_pagination(self):
-        for total in (0, 1, 201):
-            def respond(request, total=total):
+    def test_seven_fixed_reads_aggregate_all_five_pages_without_pagination(self):
+        queries = ("tkekcgfn", "vjulbjjr", "wenocdss", "ultncbnlw", "ullmagidy")
+        for totals in ((0, 0, 0, 0, 0), (1, 1, 1, 1, 1), (1, 1, 201, 1, 1)):
+            def respond(request, totals=totals):
                 status, headers, raw = source_assets_reply(request)
                 if request["method"] == "tools/call" and request["params"]["name"] == "explore":
+                    query = request["params"]["arguments"]["query"]
                     payload = json.loads(raw)
-                    payload["result"]["content"][0]["text"] = source_assets_registry_text(total)
+                    payload["result"]["content"][0]["text"] = source_assets_registry_text(query, totals[queries.index(query)])
                     raw = client.canonical(payload)
                 return status, headers, raw
-            with self.subTest(total=total), peer(respond) as (port, requests), mock.patch.object(client, "observer_loader") as loader:
+            with self.subTest(totals=totals), peer(respond) as (port, requests), mock.patch.object(client, "observer_loader") as loader:
                 probe = connection(port)
                 report = probe.probe(inspect_source_assets=True)
                 with self.assertRaisesRegex(client.ProbeError, "METHOD_NOT_ALLOWED"):
                     probe._post("tools/call", probe._source_assets_params)
             calls = [r["body"]["params"] for r in requests if r["body"]["method"] == "tools/call"]
             self.assertEqual(calls, [
-                {"name": "explore", "arguments": {"path": "/Game/Megascans/Surfaces", "recursive": True,
-                                                  "type": "/Script/Engine.Texture2D", "limit": 200, "offset": 0}},
+                {"name": "explore", "arguments": {"path": "/Game", "recursive": True,
+                                                  "type": "/Script/Engine.Texture2D", "query": query,
+                                                  "limit": 200, "offset": 0}}
+                for query in queries
+            ] + [
                 {"name": "edit_material_instance", "arguments": {"name": "/Game/Generated/YACS/Lesson07_Unified/Materials/MI_Landscape_Instance_YACS"}},
                 {"name": "edit_texture", "arguments": {"names": [
                     "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified",
@@ -3528,43 +3533,79 @@ class SourceAssetsInspectionTests(unittest.TestCase):
                 ]}},
             ])
             self.assertEqual(report["status"], "SOURCE_ASSETS_INSPECTION_RESPONSES_RECEIVED")
-            self.assertEqual(report["native_tool_calls"], 3)
+            self.assertEqual(report["native_tool_calls"], 7)
             for field in ("native_tool_attempted", "native_tool_completed", "native_tool_response_received", "source_assets_registry_verified"):
                 self.assertIs(report[field], True)
-            self.assertIs(report["source_assets_inventory_complete"], total <= 200)
+            self.assertEqual(report["source_assets_queries_verified"], list(queries))
+            self.assertIs(report["source_assets_inventory_complete"], all(total <= 200 for total in totals))
             for field in ("source_assets_pagination_attempted", "source_assets_mi_associations_verified",
                           "source_assets_array_source_refs_verified", "visual_acceptance", "performance_pass"):
                 self.assertIs(report[field], False)
             self.assertEqual([(r["index"], r["phase"]) for r in report["source_assets_host_checks"]],
-                             [(index, phase) for index in (1, 2, 3) for phase in ("before", "after")])
+                             [(index, phase) for index in range(1, 8) for phase in ("before", "after")])
             self.assertNotIn("observer_source_sha256", report)
             loader.assert_not_called()
 
-    def test_wrong_registry_scope_counts_filters_duplicates_and_paths_stop_before_mi(self):
-        original = source_assets_registry_text()
-        variants = (
-            original.replace('"scope": "/Game/Megascans/Surfaces"', '"scope": "/Game/Other"'),
-            original.replace('"shown": 1', '"shown": true'),
-            original.replace('"truncated": false', '"truncated": true'),
-            original.replace('"class_filter_recursive": true', '"class_filter_recursive": false'),
-            original.replace('/Mossy_Ground_tkekcgfn', '/../Other'),
-            original.replace('"total": 1', '"total": 2'),
-            original + "\n#json-explore:{}",
+    def test_recorded_zero_page_requires_new_scope_and_each_exact_query(self):
+        # Exact explore text from run 39654531355 attempt 2; historical scope is not /Game proof.
+        recorded = (
+            "# ASSETS /Game/Megascans/Surfaces shown=0 total=0 offset=0 limit=200 loaded=0/0\n"
+            "# SOURCE asset registry (on-disk index). Rows are registry-only unless tagged 'loaded' "
+            "(in memory now); explore does not load assets to list them.\n"
+            "# CLASS /Script/Engine.Texture2D (+subclasses, filtered at registry level)\n"
+            "# DIAGNOSTIC the registry returned 0 assets for class /Script/Engine.Texture2D "
+            "under /Game/Megascans/Surfaces - the class path may not exist or nothing derives from it\n"
+            '#json-explore:{"mode":"assets","scope":"/Game/Megascans/Surfaces","shown":0,'
+            '"total":0,"offset":0,"limit":200,"truncated":false,"raw_from_registry":0,'
+            '"loaded_in_shown":0,"filters":{"pattern":"","query":"","type":"/Script/Engine.Texture2D",'
+            '"class_path":"/Script/Engine.Texture2D","class_filter_recursive":true},"rows":[]}\n'
         )
-        for text in variants:
-            def respond(request, text=text):
+        self.assertEqual(hashlib.sha256(recorded.encode()).hexdigest(),
+                         "5017a0dbd8e80efac35fd83dbbd9ecdca39c24b55325abcb0a82539103c3183b")
+        with self.assertRaisesRegex(client.ProbeError, "SOURCE_ASSETS_REGISTRY_FORMAT"):
+            client.verify_source_assets_registry(recorded, "tkekcgfn")
+        for query in ("tkekcgfn", "vjulbjjr", "wenocdss", "ultncbnlw", "ullmagidy"):
+            # Only the newly requested scope/filter change; the observed zero-row contract stays exact.
+            text = recorded.replace("/Game/Megascans/Surfaces", "/Game").replace('"query":""', '"query":"' + query + '"')
+            self.assertIs(client.verify_source_assets_registry(text, query), True)
+            wrong_query = "vjulbjjr" if query == "tkekcgfn" else "tkekcgfn"
+            with self.assertRaisesRegex(client.ProbeError, "SOURCE_ASSETS_REGISTRY_FILTER"):
+                client.verify_source_assets_registry(text, wrong_query)
+
+    def test_wrong_registry_scope_counts_filters_duplicates_and_paths_stop_before_mi(self):
+        variants = (
+            (3, '"scope": "/Game"', '"scope": "/Game/Other"'),
+            (1, '"shown": 1', '"shown": true'),
+            (1, '"truncated": false', '"truncated": true'),
+            (1, '"class_filter_recursive": true', '"class_filter_recursive": false'),
+            (1, '/Imported/Surfaces', '/../Other'),
+            (5, '"total": 1', '"total": 2'),
+            (4, '"query": "ultncbnlw"', '"query": "tkekcgfn"'),
+            (2, 'T_VJULBJJR_0', 'T_Renamed_0'),
+            (3, '"rows": [', '"rows": [\n#json-explore:{}\n'),
+        )
+        for fail_at, old, new in variants:
+            calls_seen = 0
+            def respond(request, fail_at=fail_at, old=old, new=new):
+                nonlocal calls_seen
                 status, headers, raw = source_assets_reply(request)
                 if request["method"] == "tools/call":
-                    payload = json.loads(raw)
-                    payload["result"]["content"][0]["text"] = text
-                    raw = client.canonical(payload)
+                    calls_seen += 1
+                    if calls_seen == fail_at:
+                        payload = json.loads(raw)
+                        content = payload["result"]["content"][0]
+                        self.assertIn(old, content["text"])
+                        content["text"] = content["text"].replace(old, new)
+                        raw = client.canonical(payload)
                 return status, headers, raw
-            with self.subTest(text=text[:100]), peer(respond) as (port, requests):
+            with self.subTest(fail_at=fail_at, old=old), peer(respond) as (port, requests):
                 state = client.ObservationState()
                 with self.assertRaises(client.ProbeError):
                     connection(port, state=state).probe(inspect_source_assets=True)
-            self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), 1)
+            self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), fail_at)
+            self.assertEqual(state.source_assets_queries_verified, list(client.SOURCE_ASSETS_QUERIES[:fail_at - 1]))
             self.assertFalse(state.source_assets_registry_verified)
+            self.assertFalse(state.source_assets_inventory_complete)
             self.assertIsNone(state.completed)
 
     def test_all_three_schema_pins_and_sign_in_are_required_before_native_calls(self):
@@ -3613,14 +3654,14 @@ class SourceAssetsInspectionTests(unittest.TestCase):
                 state = client.ObservationState()
                 with self.assertRaises(client.ProbeError):
                     connection(port, timeout=0.1 if failure == "timeout" else 2, state=state).probe(inspect_source_assets=True)
-            count = 3 if failure == "wrong_array" else 2
+            count = 7 if failure == "wrong_array" else 6
             self.assertEqual(sum(r["body"]["method"] == "tools/call" for r in requests), count)
             self.assertEqual(state.report_fields()["native_tool_calls"], count)
             self.assertIsNone(state.completed)
             self.assertEqual(len(state.source_assets_host_checks), count * 2)
 
     def test_host_change_or_changed_input_stops_with_exact_attempt_accounting(self):
-        for fail_at, expected in ((1, 0), (2, 1), (3, 1), (6, 3)):
+        for fail_at, expected in ((1, 0), (2, 1), (9, 4), (10, 5), (11, 5), (14, 7)):
             checks = 0
             def changed(host, discovery, fail_at=fail_at):
                 nonlocal checks
@@ -3655,7 +3696,8 @@ class SourceAssetsInspectionTests(unittest.TestCase):
             for mode in ("observe_lesson07", "capture_lesson07", "inspect_lesson07", "inspect_vault", "trial_macro", "apply_reviewed_macro", "import_surfaces"):
                 with self.subTest(mode=mode), self.assertRaisesRegex(client.ProbeError, "NATIVE_MODES_MUTUALLY_EXCLUSIVE"):
                     connection(port).probe(inspect_source_assets=True, **{mode: True})
-            for arguments in ({"path": "/Game/Other"}, {"path": "/Game/Megascans/Surfaces", "offset": 200}):
+            for arguments in ({"path": "/Game/Other"}, {"path": "/Game", "offset": 200},
+                              {**client.source_assets_inspection_plan()[0]["arguments"], "query": "another_id"}):
                 probe = connection(port)
                 state = probe.observation_state
                 state.source_assets_requested, state.source_assets_schema_sha256 = True, self.hashes
@@ -3663,6 +3705,18 @@ class SourceAssetsInspectionTests(unittest.TestCase):
                 state.source_assets_results.append(row)
                 probe._source_assets_row = row
                 probe._source_assets_params = {"name": "explore", "arguments": arguments}
+                with self.assertRaisesRegex(client.ProbeError, "SOURCE_ASSETS_ARGUMENTS"):
+                    probe._post("tools/call", probe._source_assets_params)
+            # A completed row alone cannot admit the next ID without its verified filter.
+            for prior_queries in ([], ["vjulbjjr"]):
+                probe = connection(port)
+                state = probe.observation_state
+                state.source_assets_requested, state.source_assets_schema_sha256 = True, self.hashes
+                state.source_assets_queries_verified = prior_queries
+                row = {"attempted": False, "completed": False}
+                state.source_assets_results = [{"attempted": True, "completed": True}, row]
+                probe._source_assets_row = row
+                probe._source_assets_params = client.source_assets_inspection_plan()[1]
                 with self.assertRaisesRegex(client.ProbeError, "SOURCE_ASSETS_ARGUMENTS"):
                     probe._post("tools/call", probe._source_assets_params)
             self.assertEqual(requests, [])
@@ -3688,7 +3742,7 @@ class SourceAssetsInspectionTests(unittest.TestCase):
                 report = json.loads(output.read_bytes())
             self.assertEqual(code, 1 if fail else 0)
             self.assertEqual(report["status"], "SOURCE_ASSETS_INSPECTION_FAILED" if fail else "SOURCE_ASSETS_INSPECTION_RESPONSES_RECEIVED")
-            self.assertEqual(report["native_tool_calls"], 1 if fail else 3)
+            self.assertEqual(report["native_tool_calls"], 1 if fail else 7)
             self.assertEqual(report["native_material_readback"], "RAW_RESPONSES_REVIEW_PENDING")
             self.assertNotIn(TOKEN, stdout.getvalue())
             self.assertNotIn(TOKEN.encode(), client.canonical(report))

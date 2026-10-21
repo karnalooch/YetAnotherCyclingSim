@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "SOURCE_INSPECTION_COMPLETE_NATIVE_SOURCE_INVENTORY_PENDING",
+  "status": "STANDARD_MEGASCANS_FOLDER_EMPTY_EXACT_ID_SEARCH_PENDING",
   "owner_direction": "Reinspect supplied original SideFX archive and Lesson07, then reproduce original workflow",
   "source_archive_sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
   "reports": [
@@ -53,6 +53,31 @@
       "file": "uv-rotation-trace.json",
       "bytes": 10178,
       "sha256": "ca08d1dff6b94ec18f803a048522888a59f673ad6df1fa3f0ec202c0b49104b5"
+    },
+    {
+      "file": "source-inventory-39654531355-2-bridge.json",
+      "bytes": 111969,
+      "sha256": "3f195803211fd172dbae17c0ac357ee80d461527e8a2d68561c2b954f3d8199b"
+    },
+    {
+      "file": "source-inventory-39654531355-2-probe.json",
+      "bytes": 3939,
+      "sha256": "cc9f6e212defec01e2a2a47a5192642d23d18eda39ba66dff49b4813d5e6f8c7"
+    },
+    {
+      "file": "source-inventory-39654531355-2-identity.json",
+      "bytes": 616,
+      "sha256": "7c2a94139768339ba2362a6147f2b82f49b29e6153090aa09ce110ba189e9503"
+    },
+    {
+      "file": "source-inventory-39654531355-2-download-receipt.json",
+      "bytes": 647,
+      "sha256": "2ceae44ec1f92270816a7e8f27efc536f8aec69e0bba2b0f08c49dac1e9e0433"
+    },
+    {
+      "file": "source-inventory-39654531355-2-evidence.json",
+      "bytes": 12119,
+      "sha256": "9558778efbc0691a8f331c4e660bd6c7a0d2916ec788adf2f8fc36e7209b2620"
     }
   ],
   "custom_normal_candidate_executed": false,
@@ -61,5 +86,6 @@
   "visual_acceptance": false,
   "performance_pass": false,
   "performance_note": "DEFERRED_AFTER_M3",
-  "host_session_note": "Owner reported a manual Windows reset on 2026-10-21. Prior process identity is historical; a new live owner/listener identity is required before native inventory."
+  "host_session_note": "Owner manually reopened the canonical project after reset. Native read-only inventory attached to fresh PID11284/session1; no automated startup or previous identity reuse.",
+  "native_source_inspection": true
 }

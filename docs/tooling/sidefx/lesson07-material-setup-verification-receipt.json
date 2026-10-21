@@ -4182,10 +4182,20 @@
       "exact_remote_pointer_test_failures": 0,
       "pointer_source_commit": "61d3a245124284283fb2600cb1b1379e410e492c"
     },
-    "hosted_revalidation": "PENDING"
+    "hosted_revalidation": {
+      "status": "PASS",
+      "source_commit": "1f6828d5d2d75f3d8b73547a76175de8b7e4c715",
+      "ci_run_id": 39654542444,
+      "job_id": 119411407332,
+      "test_module": "scripts/ue/test_lesson07_readback.py",
+      "tests_passed": 60,
+      "module_result_utc": "2026-10-21T18:40:43.5512837Z",
+      "overall_ci_conclusion": "failure",
+      "native_lane_reason": "LOCAL_BUSY; open owner Editor preserved"
+    }
   },
   "original_sidefx_reinspection_20261021": {
-    "status": "SOURCE_INSPECTION_COMPLETE_NATIVE_SOURCE_INVENTORY_PENDING",
+    "status": "STANDARD_MEGASCANS_FOLDER_EMPTY_EXACT_ID_SEARCH_PENDING",
     "report": "docs/assets/lesson07-sidefx-source-20261021/README.md",
     "archive_sha256": "8c4e9f7ebacedc914f9ab55e82ac378aa18d3366207d859f393758a0f9dade10",
     "archive_bytes": 605943562,
@@ -4196,6 +4206,13 @@
     "native_material_application": false,
     "lesson07_technical_pass": false,
     "performance_pass": false,
-    "performance_note": "DEFERRED_AFTER_M3"
+    "performance_note": "DEFERRED_AFTER_M3",
+    "native_source_inspection_report": "docs/assets/lesson07-sidefx-source-20261021/source-inventory-39654531355-2-evidence.json",
+    "native_source_inspection_run": 39654531355,
+    "native_source_inspection_attempt": 2,
+    "native_source_inspection_complete_for_standard_folder": true,
+    "standard_megascans_texture_count": 0,
+    "project_wide_expected_id_search": "PENDING",
+    "fresh_owner_pid": 11284
   }
 }

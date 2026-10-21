@@ -6,8 +6,8 @@ The separate capture mode requests one current viewport JPEG through the
 dedicated screenshot tool, with no camera arguments or Python fallback.
 Vault inspection lists only three fixed name filters in the already-owned
 local cache; it cannot install, download or execute code.
-Source inspection reads one bounded Megascans registry page, the current
-material instance and three current arrays; it never imports or edits assets.
+Source inspection reads five fixed source-ID registry pages across /Game,
+the current material instance and three arrays; it never imports or edits assets.
 Surface import executes one pinned project-local importer between two native
 captures at the same camera, then three fixed review views; normal tool safety
 review remains active.
@@ -140,7 +140,8 @@ INSPECTION_TARGETS = {
     INSPECTION_ROOT + "/Textures/T_PE_Terrain_Color": "Texture2D",
 }
 TRIAL_MI = INSPECTION_ROOT + "/Materials/MI_Landscape_Instance_YACS"
-SOURCE_ASSETS_ROOT = "/Game/Megascans/Surfaces"
+SOURCE_ASSETS_ROOT = "/Game"
+SOURCE_ASSETS_QUERIES = ("tkekcgfn", "vjulbjjr", "wenocdss", "ultncbnlw", "ullmagidy")
 SOURCE_ASSETS_CLASS = "/Script/Engine.Texture2D"
 SOURCE_ASSETS_SCHEMA_SHA256 = {
     name: INSPECTION_SCHEMA_SHA256[name]
@@ -409,12 +410,13 @@ def vault_inspection_plan():
 
 
 def source_assets_inspection_plan():
-    """Three existing typed read modes, with no pagination or authoring args."""
-    return (
+    """Five fixed name queries plus two typed reads; no pagination or edits."""
+    return tuple(
         {"name": "explore", "arguments": {
             "path": SOURCE_ASSETS_ROOT, "recursive": True,
-            "type": SOURCE_ASSETS_CLASS, "limit": 200, "offset": 0,
-        }},
+            "type": SOURCE_ASSETS_CLASS, "query": query, "limit": 200, "offset": 0,
+        }} for query in SOURCE_ASSETS_QUERIES
+    ) + (
         {"name": "edit_material_instance", "arguments": {"name": TRIAL_MI}},
         {"name": "edit_texture", "arguments": {"names": list(SOURCE_ASSETS_ARRAYS)}},
     )
@@ -789,6 +791,7 @@ class ObservationState:
     source_assets_schema_sha256: dict = field(default_factory=dict)
     source_assets_host_checks: list = field(default_factory=list)
     source_assets_external_host_identity: dict | None = None
+    source_assets_queries_verified: list = field(default_factory=list)
     source_assets_registry_verified: bool = False
     source_assets_inventory_complete: bool = False
     surface_requested: bool = False
@@ -860,7 +863,7 @@ class ObservationState:
                 and [row["stage"] for row in self.trial_results[:normal_count]] == list(fixed_plan)[:normal_count]
                 if macro_mode
                 else
-                len(self.source_assets_results) == 3
+                len(self.source_assets_results) == 7
                 and all(row["response_received"] for row in self.source_assets_results)
                 if self.source_assets_requested
                 else
@@ -933,12 +936,14 @@ class ObservationState:
                 "source_assets_schema_sha256": self.source_assets_schema_sha256,
                 "source_assets_host_checks": self.source_assets_host_checks,
                 "external_host_identity": self.source_assets_external_host_identity,
+                "source_assets_queries_verified": self.source_assets_queries_verified,
                 "source_assets_registry_verified": self.source_assets_registry_verified,
                 "source_assets_inventory_complete": self.source_assets_inventory_complete,
                 "source_assets_pagination_attempted": False,
                 "source_assets_mi_associations_verified": False,
                 "source_assets_array_source_refs_verified": False,
                 "source_assets_readback_limits": [
+                    "Queries match the five course IDs in registered asset names only; renamed assets and license rights remain unverified.",
                     "MI read mode does not expose parameter association or layer index; repeated names remain ordered rows.",
                     "Texture read mode exposes array settings, not a verified SourceTextures slot list.",
                 ],
@@ -1349,8 +1354,9 @@ def verify_trial_mi(text, path, macro):
     return snapshot
 
 
-def verify_source_assets_registry(text):
-    """Validate one registry page; a legitimate capped page stays incomplete."""
+def verify_source_assets_registry(text, expected_query):
+    """Validate the fixed name filter; a legitimate capped page stays incomplete."""
+    require(expected_query in SOURCE_ASSETS_QUERIES, "SOURCE_ASSETS_REGISTRY_QUERY")
     markers = re.findall(r"(?m)^#json-explore:([^\r\n]+)$", text)
     require(text.count("#json-explore:") == len(markers) == 1,
             "SOURCE_ASSETS_REGISTRY_FORMAT")
@@ -1370,7 +1376,7 @@ def verify_source_assets_registry(text):
         and page["truncated"] == (page["shown"] < page["total"]),
         "SOURCE_ASSETS_REGISTRY_COUNTS")
     require(type(page["filters"]) is dict and page["filters"] == {
-        "pattern": "", "query": "", "type": SOURCE_ASSETS_CLASS,
+        "pattern": "", "query": expected_query, "type": SOURCE_ASSETS_CLASS,
         "class_path": SOURCE_ASSETS_CLASS, "class_filter_recursive": True,
     } and page["filters"]["class_filter_recursive"] is True,
         "SOURCE_ASSETS_REGISTRY_FILTER")
@@ -1382,6 +1388,7 @@ def verify_source_assets_registry(text):
                 and all(type(row[key]) is str for key in ("name", "path", "class", "class_path"))
                 and type(row["loaded"]) is bool
                 and re.fullmatch(r"[A-Za-z0-9_]{1,128}", row["name"]) is not None
+                and expected_query in row["name"].casefold()
                 and re.fullmatch(re.escape(SOURCE_ASSETS_ROOT) + r"(?:/[A-Za-z0-9_]{1,128})*", row["path"]) is not None
                 and re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,127}", row["class"]) is not None
                 and re.fullmatch(r"/Script/[A-Za-z][A-Za-z0-9_]{0,127}\." + re.escape(row["class"]), row["class_path"]) is not None,
@@ -1397,19 +1404,19 @@ def verify_source_assets_registry(text):
 
 def verify_source_assets_readback(index, text):
     """Check fixed target identities; retain values without claiming acceptance."""
-    if index == 2:
+    if index == 6:
         require(text.splitlines()[:1] == ["# MATERIAL INSTANCE MI_Landscape_Instance_YACS"]
                 and re.findall(r"(?m)^parent = (.+)$", text) == ["M_Landscape_YACS"]
                 and text.count("= saved=false (read-only call - asset untouched, not saved)") == 1,
                 "SOURCE_ASSETS_MI_READ_MODE")
         marker = "#json-mi:"
     else:
-        require(index == 3, "SOURCE_ASSETS_READBACK_INDEX")
+        require(index == 7, "SOURCE_ASSETS_READBACK_INDEX")
         marker = "#json-textures:"
     lines = re.findall(r"(?m)^" + re.escape(marker) + r"([^\r\n]+)$", text)
     require(text.count(marker) == len(lines) == 1, "SOURCE_ASSETS_READBACK_FORMAT")
     value = parse_json(lines[0].encode("utf-8"), INSPECTION_RESPONSE_LIMIT)
-    if index == 2:
+    if index == 6:
         require(type(value) is dict and set(value) == {"scalars", "vectors", "textures", "static_switches"}
                 and all(type(rows) is list for rows in value.values()),
                 "SOURCE_ASSETS_READBACK_FORMAT")
@@ -1813,10 +1820,11 @@ class DiscoveryClient:
         if source_assets_inspecting:
             state = self.observation_state
             index = len(state.source_assets_results) - 1
-            require(state.source_assets_requested and 0 <= index < 3
+            require(state.source_assets_requested and 0 <= index < 7
                     and self._source_assets_row is state.source_assets_results[index]
                     and all(row["completed"] is True for row in state.source_assets_results[:index])
-                    and (index == 0 or state.source_assets_registry_verified)
+                    and state.source_assets_queries_verified == list(SOURCE_ASSETS_QUERIES[:min(index, 5)])
+                    and (index < 5 or state.source_assets_registry_verified is True)
                     and state.source_assets_schema_sha256 == SOURCE_ASSETS_SCHEMA_SHA256
                     and canonical(params) == canonical(source_assets_inspection_plan()[index]),
                     "SOURCE_ASSETS_ARGUMENTS")
@@ -2156,6 +2164,7 @@ class DiscoveryClient:
             require(type(schema) is dict and hashlib.sha256(canonical(schema)).hexdigest() == expected,
                     "SOURCE_ASSETS_TOOL_SCHEMA_UNSUPPORTED")
         state.source_assets_schema_sha256 = dict(SOURCE_ASSETS_SCHEMA_SHA256)
+        registry_pages_complete = []
         for index, params in enumerate(source_assets_inspection_plan(), 1):
             row = {
                 "index": index, "tool_name": params["name"], "arguments": params["arguments"],
@@ -2174,9 +2183,12 @@ class DiscoveryClient:
                 finally:
                     if row["attempted"]:
                         self._source_assets_host_check("after")
-                if index == 1:
-                    state.source_assets_inventory_complete = verify_source_assets_registry(row["result"]["text"])
-                    state.source_assets_registry_verified = True
+                if index <= 5:
+                    query = SOURCE_ASSETS_QUERIES[index - 1]
+                    registry_pages_complete.append(verify_source_assets_registry(row["result"]["text"], query))
+                    state.source_assets_queries_verified.append(query)
+                    state.source_assets_registry_verified = index == 5
+                    state.source_assets_inventory_complete = index == 5 and all(registry_pages_complete)
                 else:
                     verify_source_assets_readback(index, row["result"]["text"])
                 require(len(canonical(state.source_assets_results)) <= INSPECTION_AGGREGATE_LIMIT,

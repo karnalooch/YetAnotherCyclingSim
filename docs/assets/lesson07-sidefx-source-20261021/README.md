@@ -11,9 +11,10 @@ The archive and video establish an important dependency: **the downloaded
 project contains the material system and diagnostic arrays, not the five
 finished Megascans surface sets shown at the end of the lesson.** Replacing the
 current arrays with those archive defaults would remove the actual surfaces.
-After re-establishing the Editor session following the owner's manual Windows
-reset, the next material operation is a fixed read-only inventory of the
-existing project's Megascans surfaces and current material/array settings. No completed
+After the owner's manual Windows reset, the reopened canonical Editor was
+verified and a three-call read-only inventory completed. The standard
+Megascans surface folder is empty; a fixed five-ID search across the project's
+registered texture names is the remaining presence check. No completed
 1:1 native application or Lesson07 acceptance is claimed by this source review.
 
 ## Original archive, downloaded again
@@ -155,20 +156,52 @@ offline inspection: `bb556279f30c6d116a4c24ae18a5234af28cf27cd9f2f59e43e6f85f71d
 The proposed private normal rewrite is consequently a separate adaptation,
 not an original Lesson07 instruction. It remains paused and unexecuted.
 
+## Native source inventory after the owner's reset
+
+[Run 39654531355, attempt 2](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39654531355)
+completed the three fixed read-only calls from source `1f6828d5`. The first
+attempt was canceled before a runner or any job step was assigned; no native
+operation occurred in that attempt. The second attached to the manually
+reopened canonical Editor, PID 11284, start FILETIME `134370817710799968`,
+interactive session 1. All six owner/process/listener checks agreed. No Editor
+start/stop, import, parameter change or material save was performed.
+
+The registry returned **0 shown / 0 total**, not truncated, for Texture2D and
+subclasses under `/Game/Megascans/Surfaces`. This is complete for that scope,
+not proof that the five sources are absent from every other project directory
+or from an external owned download cache. The [original receipts and review](source-inventory-39654531355-2-evidence.json)
+retain exact arguments and response bytes.
+
+The MI read confirms Detail Brightness 1, Macro Tiling 0.05, Global Normal
+Flatten 1, Global Specular Scale 0, UV Distort 4 and UV Rotate 0. The five
+returned Global Colour Strength rows are all zero; Global Brightness and
+Saturation are zero. Repeated scalar names retain their returned order, without
+claiming a verified association/index for each row. The MI explicitly reports
+`saved=false`.
+
+All three arrays report 2048x2048. Colour uses TC_Default/sRGB on, Normal uses
+TC_Normalmap/sRGB off, and Masks uses TC_Masks/sRGB off. The API returns
+`pixel_format=<n/a>`: settings are verified, but actual GPU BC5 is not. Its
+`required_sampler` field is a requirement derived from texture settings,
+not a readback of material-function sampler nodes. SourceTextures lists are
+not exposed by this read mode.
+
+Protected CI `39654542444` passed its executed hosted checks, including the
+previously failing saved-MI pin test. Its Windows lane refused `LOCAL_BUSY`
+before checkout/build to preserve the open owner Editor. Later proof-log
+staging also lacked its working directory because the checkout had not run.
+There is no new native build or Automation PASS.
+
 ## Next native scope and acceptance
 
-The owner reported a Windows reset, then clarified that it was manually
-triggered. The former Editor process identity is historical. Re-establish a
-fresh verified session through the existing startup path before attempting
-the source inventory; no operation may reuse the pre-reset owner identity.
-
-The fixed source inventory reads `/Game/Megascans/Surfaces`, the existing
-material instance and the three current array settings through their existing
-typed tools. It requires the same live owner process/listener and admits no
-Python execution, import, save, geometry change or editor startup. A complete
-registry result proves only presence/class/path; it does not prove licensing,
-source-map consistency or successful rendering. Missing or truncated inventory
-must remain explicit.
+The follow-up source inventory uses five fixed `explore` queries, one per
+exact video ID, across `/Game` Texture2D names, followed by the same MI and
+array-setting reads. The existing tool defines query as a case-insensitive
+substring of the asset name. The plan admits seven read-only calls and fourteen
+fresh owner checks, with no startup, dynamic query, pagination, import, save or
+retry. Each query retains its exact counts; a capped result stays incomplete.
+This can locate expected IDs outside the standard folder, but cannot prove
+that arbitrarily renamed textures have the original provenance or entitlement.
 
 Actual application, corrected global-colour generation, matching PBR sources,
 whole-area native evidence and final visual acceptance remain separate work.
