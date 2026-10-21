@@ -162,6 +162,7 @@ APPLY_REVIEWED_TRIAL_SOURCE = "71914188cbdaeac200074b8a070e2f44ed50e501"
 # This is a new bounded material import, not a replay of the frozen observer.
 # The vendor execute_python safety gate remains active and sees the clear file path.
 SURFACE_IMPORT_FILE = "apply_lesson07_surface_repair.py"
+# Pin the unchanged reviewed template; the staged file adds only its own __file__.
 SURFACE_IMPORT_SHA256 = "6c824070afe0ecc178dfa96d5f5fdef44d8b83168250a3917bc7c4c6da85d78e"
 SURFACE_ROOT = Path("D:/yacs/project/Saved/RuntimeProof/Lesson07SurfaceRepair-20261021")
 SURFACE_TAG = "YACS_L07_SURFACE_IMPORT="
@@ -199,10 +200,25 @@ def surface_capture_specs():
     }
 
 
+def surface_source_prefix(run_token):
+    path = str(surface_stage(run_token) / SURFACE_IMPORT_FILE).replace("\\", "/")
+    return ("__file__ = '" + path + "'\n").encode("ascii")
+
+
+def render_surface_source(run_token, template):
+    require(type(template) is bytes and hashlib.sha256(template).hexdigest() == SURFACE_IMPORT_SHA256,
+            "SURFACE_IMPORT_SOURCE_HASH")
+    return surface_source_prefix(run_token) + template
+
+
 def verify_surface_source(run_token):
     source = read_bounded(surface_stage(run_token) / SURFACE_IMPORT_FILE, 256 * 1024)
-    require(hashlib.sha256(source).hexdigest() == SURFACE_IMPORT_SHA256,
-            "SURFACE_IMPORT_SOURCE_HASH")
+    prefix = surface_source_prefix(run_token)
+    require(source.startswith(prefix), "SURFACE_IMPORT_SOURCE_PREFIX")
+    require(source == render_surface_source(run_token, source[len(prefix):]),
+            "SURFACE_IMPORT_SOURCE_PREFIX")
+    return {"template_sha256": SURFACE_IMPORT_SHA256,
+            "rendered_sha256": hashlib.sha256(source).hexdigest()}
 
 
 def verify_surface_summary(text):
@@ -725,6 +741,7 @@ class ObservationState:
     surface_host_checks: list = field(default_factory=list)
     surface_captures: list = field(default_factory=list)
     surface_summary: dict | None = None
+    surface_source_sha256: str | None = None
     surface_verified: bool = False
     trial_requested: bool = False
     trial_results: list = field(default_factory=list)
@@ -757,7 +774,8 @@ class ObservationState:
                 "surface_captures": self.surface_captures,
                 "surface_summary": self.surface_summary,
                 "surface_verified": self.surface_verified,
-                "surface_import_source_sha256": SURFACE_IMPORT_SHA256,
+                "surface_import_template_sha256": SURFACE_IMPORT_SHA256,
+                "surface_import_source_sha256": self.surface_source_sha256,
                 "native_tool_error": self.tool_error,
             }
         macro_mode = self.trial_requested or self.apply_requested
@@ -1887,7 +1905,9 @@ class DiscoveryClient:
             connection.close()
 
     def _surface_host_check(self, phase):
-        verify_surface_source(self._surface_run_token)
+        source = verify_surface_source(self._surface_run_token)
+        require(source["rendered_sha256"] == self.observation_state.surface_source_sha256,
+                "SURFACE_IMPORT_SOURCE_CHANGED")
         if self._surface_files_guard is not None:
             self._surface_files_guard()
         check = verify_trial_host_identity(self.identity, self.discovery)
@@ -1901,7 +1921,7 @@ class DiscoveryClient:
         validate_observer_schema(python_schema)  # Same installed Python schema; no observer execution.
         validate_capture_schema(capture_schema)
         self._surface_run_token = run_token
-        verify_surface_source(run_token)
+        state.surface_source_sha256 = verify_surface_source(run_token)["rendered_sha256"]
         for index, params in enumerate(surface_plan(run_token), 1):
             row = {"index": index, "tool_name": params["name"], "arguments": params["arguments"],
                    "attempted": False, "completed": False, "response_received": False,

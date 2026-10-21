@@ -5,7 +5,7 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (two complete CC0 rock sets acquired and fixed five-map package prepared; native import pending; saved Macro 0.05 and normal-flatten workaround retained; physical texel scale, detailed-normal correctness and whole-area proof remain unverified; source CI passed; the owner-closed Editor was reopened and a native BEFORE image confirms the correct world; the submitted importer failed source compilation, and a corrected new-source operation remains pending)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (two complete CC0 rock sets acquired and fixed five-map package prepared; native import pending; saved Macro 0.05 and normal-flatten workaround retained; physical texel scale, detailed-normal correctness and whole-area proof remain unverified; the owner-closed Editor was reopened and native BEFORE images confirm the correct world; executor compilation was corrected, but the next attempt lacked file context before asset processing; an explicit reviewed file-context adaptation remains pending)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
@@ -80,6 +80,21 @@ retains the JPEG and raw sanitized receipts; there is no import save receipt
 or AFTER image. This is not a policy denial. The owner Editor remained verified.
 The compatibility correction and fixed input-name adaptation are reviewed as a
 new source, with unchanged asset scope, package pins and normal safety gate.
+
+The next [run 39635077584](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39635077584)
+compiled that corrected source but stopped at the first `main` path expression
+because file-mode execution did not set `__file__`. Its BEFORE capture succeeded,
+the camera was restored and owner identity remained stable. The
+[exact evidence](../../assets/lesson07-surface-repair-20261021/import-39635077584-evidence.json)
+does not claim asset saves. The explicit file-context adaptation prepends only
+the admitted canonical script-path assignment to the full unchanged source;
+the same file-mode gate and original path/world/asset guards remain required.
+
+Protected [CI 39635091670](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39635091670)
+for that source passed its code/policy/security checks but failed native
+workspace-lock admission with `LOCAL_BUSY` while the owner Editor was active.
+No new native build/proof was reached. The session stays preserved; lightweight
+in-place material checks do not replace the outstanding protected delivery gate.
 
 ## Earlier ready-made limestone selection (2026-10-21)
 

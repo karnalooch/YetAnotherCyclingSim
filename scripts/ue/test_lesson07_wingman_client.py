@@ -3430,6 +3430,7 @@ class FileTests(unittest.TestCase):
 
 
 class SurfaceImportTests(unittest.TestCase):
+    RENDERED_SHA256 = "a" * 64
     SUMMARY = {
         "status": "SURFACE_REPAIR_SAVED_NATIVE_READBACK_PENDING_VISUAL", "saved": True,
         "changed_slots": [0, 3], "classification_changed": False, "terrain_changed": False,
@@ -3456,7 +3457,9 @@ class SurfaceImportTests(unittest.TestCase):
 
     @contextmanager
     def admitted(self):
-        with (mock.patch.object(client, "verify_surface_source"),
+        with (mock.patch.object(client, "verify_surface_source", return_value={
+                  "template_sha256": client.SURFACE_IMPORT_SHA256,
+                  "rendered_sha256": self.RENDERED_SHA256}),
               mock.patch.object(client, "verify_trial_host_identity", side_effect=lambda i, d: {
                   "verified_utc": datetime.now(timezone.utc).isoformat(), "pid": i["pid"]}),
               mock.patch.object(client, "retain_surface_capture", side_effect=lambda token, row: {"index": row["index"]}),
@@ -3483,6 +3486,8 @@ class SurfaceImportTests(unittest.TestCase):
         self.assertEqual(report["native_tool_calls"], 6)
         self.assertEqual(len(report["surface_captures"]), 5)
         self.assertEqual(len(report["surface_host_checks"]), 12)
+        self.assertEqual(report["surface_import_template_sha256"], client.SURFACE_IMPORT_SHA256)
+        self.assertEqual(report["surface_import_source_sha256"], self.RENDERED_SHA256)
         self.assertFalse(report["visual_acceptance"])
 
     def test_capture_camera_metadata_must_match_and_restore_every_fixed_view(self):
@@ -3533,9 +3538,47 @@ class SurfaceImportTests(unittest.TestCase):
         for token in ("../123-1", "123-1/other", "123-0?", "0-1", "123-0", "1;python", None):
             with self.subTest(token=token), self.assertRaises(client.ProbeError):
                 client.surface_plan(token)
-        with mock.patch.object(client, "read_bounded", return_value=b"changed importer"):
+        with mock.patch.object(client, "read_bounded", return_value=client.surface_source_prefix("123-1") + b"changed importer"):
             with self.assertRaisesRegex(client.ProbeError, "SURFACE_IMPORT_SOURCE_HASH"):
                 client.verify_surface_source("123-1")
+
+    def test_file_context_prefix_is_exact_and_body_remains_the_reviewed_template(self):
+        template = Path(__file__).with_name(client.SURFACE_IMPORT_FILE).read_bytes()
+        self.assertEqual(hashlib.sha256(template).hexdigest(), client.SURFACE_IMPORT_SHA256)
+        prefix = (b"__file__ = 'D:/yacs/project/Saved/RuntimeProof/Lesson07SurfaceRepair-20261021/"
+                  b"123-1/apply_lesson07_surface_repair.py'\n")
+        self.assertEqual(client.surface_source_prefix("123-1"), prefix)
+        rendered = prefix + template
+        self.assertEqual(client.render_surface_source("123-1", template), rendered)
+        with self.assertRaisesRegex(client.ProbeError, "SURFACE_IMPORT_SOURCE_HASH"):
+            client.render_surface_source("123-1", template + b"\n")
+        with mock.patch.object(client, "read_bounded", return_value=rendered):
+            self.assertEqual(client.verify_surface_source("123-1"), {
+                "template_sha256": client.SURFACE_IMPORT_SHA256,
+                "rendered_sha256": hashlib.sha256(rendered).hexdigest()})
+        # A different run, an unstaged template, another statement, altered line
+        # endings or any changed body is rejected without executing Python.
+        for bad_prefix in (b"", prefix.replace(b"123-1", b"123-2"),
+                           prefix.replace(b"D:/yacs/project", b"D:/other/project"),
+                           prefix.replace(b"\n", b"\r\n")):
+            with self.subTest(prefix=bad_prefix), mock.patch.object(client, "read_bounded", return_value=bad_prefix + template):
+                with self.assertRaisesRegex(client.ProbeError, "SURFACE_IMPORT_SOURCE_PREFIX"):
+                    client.verify_surface_source("123-1")
+        for body in (b"__name__ = '__main__'\n" + template, template + b"\n", template.replace(b"import unreal", b"import other")):
+            with self.subTest(body_sha=hashlib.sha256(body).hexdigest()), mock.patch.object(client, "read_bounded", return_value=prefix + body):
+                with self.assertRaisesRegex(client.ProbeError, "SURFACE_IMPORT_SOURCE_HASH"):
+                    client.verify_surface_source("123-1")
+
+    def test_wrong_file_context_stops_before_any_native_call_and_reports_no_rendered_hash(self):
+        template = Path(__file__).with_name(client.SURFACE_IMPORT_FILE).read_bytes()
+        rendered = client.surface_source_prefix("123-2") + template
+        state = client.ObservationState()
+        with peer(self.fixture()) as (port, requests), mock.patch.object(client, "read_bounded", return_value=rendered):
+            with self.assertRaisesRegex(client.ProbeError, "SURFACE_IMPORT_SOURCE_PREFIX"):
+                connection(port, state=state).probe(import_surfaces=True, surface_run_token="123-1")
+        self.assertFalse(any(r["body"]["method"] == "tools/call" for r in requests))
+        self.assertIsNone(state.report_fields()["surface_import_source_sha256"])
+        self.assertFalse(state.surface_verified)
 
     def test_native_receipt_cannot_promote_failure_or_geometry_change(self):
         self.assertEqual(client.verify_surface_summary(client.SURFACE_TAG + json.dumps(self.SUMMARY)), self.SUMMARY)

@@ -185,6 +185,35 @@ preserving the original manifest and strict destination checks. A reviewed
 corrected source uses a new run and all original checkpoint guards; no automatic
 retry, gate bypass or Editor restart is introduced.
 
+The corrected source `db494ab48efca53f82848bf52299dddc06af45c9` then reached a
+second concrete executor compatibility issue in [run 39635077584](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39635077584):
+file-mode execution did not define `__file__`. The source compiled and entered
+`main`, then stopped at its first path-context expression, before input or
+asset processing. The native BEFORE capture again succeeded and restored the
+camera; the same owner session remained verified through `16:31:02 UTC`.
+[Original receipts and image](import-39635077584-evidence.json) are retained;
+there is no import-save receipt or AFTER image and no policy denial.
+
+The file-context adaptation supplies one literal assignment derived from the
+already admitted canonical run path, followed by the complete unchanged
+`6c824070afe0ecc178dfa96d5f5fdef44d8b83168250a3917bc7c4c6da85d78e` importer body.
+Staging and client validation share the exact rendering rule; both the body
+hash and full staged-file hash are verified. The native tool still reviews the
+complete source via `execute_python(file=..., mode=file)`, with no nested
+execution. The original file-path, source, world, dirty-package and asset guards
+remain in the submitted script. Only a new reviewed operation may use this
+adaptation; the failed run is not repeated.
+The adaptation passed eleven focused client tests and two tests of the actual
+Stage writer, independently reproduced, alongside the thirteen unchanged-body
+importer tests. PowerShell/YAML parsing and the independent source review passed.
+
+Protected [CI 39635091670](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39635091670)
+for `db494ab` did not pass: its native lane stopped at workspace-lock admission
+with `LOCAL_BUSY` while the owner Editor was active. The native build/proof was
+not reached and the Editor/logs were preserved. This is separate from lightweight
+in-place material admission; it does not authorize closing the owner session or
+weakening protected CI. Final exact-source delivery proof remains outstanding.
+
 **Lesson07 remains open.** Final M3 owner visual audit and performance remain at
 their existing project stages; `performance_pass: false`,
 `performance_note: "DEFERRED_AFTER_M3"`.

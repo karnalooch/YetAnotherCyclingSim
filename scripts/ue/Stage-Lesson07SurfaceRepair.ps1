@@ -32,8 +32,25 @@ if ($LASTEXITCODE -ne 0) { throw 'SURFACE_STAGE_IMPORTER_HASH' }
   --grass-sources 'D:\yacs\work\lesson07-source-repair-20261021\39519585751-1' --download
 if ($LASTEXITCODE -ne 0) { throw 'SURFACE_STAGE_PACKAGE_FAILED' }
 $target=Join-Path $stage 'apply_lesson07_surface_repair.py'
-[IO.File]::Copy($source,$target,$false)
-if ((Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash -cne (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash) {
-  throw 'SURFACE_STAGE_COPY_HASH'
-}
+# The installed file tool evaluates the source without defining __file__.
+# Add only that exact staged path; retain every byte of the reviewed template.
+$renderSource = @'
+import hashlib, json, sys
+from pathlib import Path
+from scripts.ue.lesson07_wingman_client import (
+    SURFACE_IMPORT_FILE, plain_path, read_bounded, render_surface_source,
+    require, surface_stage, verify_surface_source,
+)
+run_token, source_name, target_name = sys.argv[1:]
+target = plain_path(Path(target_name))
+require(target == surface_stage(run_token) / SURFACE_IMPORT_FILE, "SURFACE_STAGE_TARGET")
+rendered = render_surface_source(run_token, read_bounded(source_name, 256 * 1024))
+with target.open("xb") as stream:
+    stream.write(rendered)
+proof = verify_surface_source(run_token)
+require(proof["rendered_sha256"] == hashlib.sha256(rendered).hexdigest(), "SURFACE_STAGE_RENDER_HASH")
+print("SURFACE_STAGE_SOURCE " + json.dumps(proof, sort_keys=True))
+'@
+& $python -B -c $renderSource $RunToken $source $target
+if ($LASTEXITCODE -ne 0) { throw 'SURFACE_STAGE_RENDER_FAILED' }
 Write-Host 'SURFACE_STAGE_READY native_import=NOT_RUN'
