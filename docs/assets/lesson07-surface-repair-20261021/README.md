@@ -94,7 +94,7 @@ must match native readback and report restoration; the old scene-changing
 capture script is not executed. Each call checks the process, native start time,
 owner and listener before and after. A denial,
 timeout, stale receipt or failed asset guard stops the operation without retry.
-The import receipt and all five exact JPEG files are retained. Import mode cannot start
+On successful completion, the import receipt and all five exact JPEG files are retained. Import mode cannot start
 an Editor or change configuration.
 
 Offline preparation passed six focused tests and independent full-image
@@ -116,12 +116,24 @@ The same PID and native start time owned the verified loopback listener at
 `15:36:32 UTC`. The first authenticated discovery then returned `REQUEST_TIMEOUT`
 after 20 seconds, with zero native tool calls. The process and listener still
 matched at `15:36:53 UTC`; current-world readback and import are not established.
-The active session is retained, with no restart or asset save requested.
+That startup operation retained the active session and requested no asset save.
 
 The [evidence index](startup-evidence.json) records the downloaded archive,
 verified SHA-256 and five unchanged startup reports. The initial read-only
 connection timeout is distinct from a native tool denial. Import still requires
 a fresh owner/process/listener check and successful authenticated discovery.
+
+The first [import run 39627916711](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39627916711)
+passed CPU admission and staged the exact five-map manifest on the remote host.
+Its next owner/listener check stopped with `SURFACE_IMPORT_OWNER_CHANGED`,
+**before the client or any native tool call**. No BEFORE image, import request,
+texture save or array save occurred. The owner then reported accidentally
+closing the Editor; this is not diagnosed as a crash. The
+[exact failure receipt and archive verification](import-39627916711-evidence.json)
+are retained. A fresh authorized Editor session and new import run token are
+required; the old run directory and checkpoint pins are preserved. Protected
+[CI for the importer source](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39627930173)
+completed successfully, which does not establish native material success.
 
 **Lesson07 remains open.** Final M3 owner visual audit and performance remain at
 their existing project stages; `performance_pass: false`,

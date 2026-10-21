@@ -5,7 +5,7 @@
 - **Branch**: `codex/365-world-graph`, Draft PR #474
 - **Accepted Base**: `2e1c209995b100fe01af08c39542605cffee9305`
 - **Receipt**: [lesson07-material-setup-verification-receipt.json](lesson07-material-setup-verification-receipt.json)
-- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (two complete CC0 rock sets acquired and fixed five-map package prepared; native import pending; saved Macro 0.05 and normal-flatten workaround retained; physical texel scale, detailed-normal correctness and whole-area proof remain unverified; startup source CI passed, UE process and listener verified, first authenticated discovery timed out with zero native calls)
+- **Technical Status**: `LESSON07_TECHNICAL_PASS: false` (two complete CC0 rock sets acquired and fixed five-map package prepared; native import pending; saved Macro 0.05 and normal-flatten workaround retained; physical texel scale, detailed-normal correctness and whole-area proof remain unverified; source CI passed; first import stopped before any native call when the owner accidentally closed the Editor; fresh session required)
 - **Visual Review**: `PENDING_FINAL_M3_AUDIT`
 - **Performance Acceptance**: `DEFERRED_AFTER_M3` (`performance_pass: false`, `performance_note: "DEFERRED_AFTER_M3"`)
 
@@ -43,6 +43,16 @@ at `15:36:32 UTC`; the first authenticated discovery timed out after 20 seconds
 with **zero native calls**. The same process/listener remained verified, but
 the current world and material are not yet read back. Exact reports and archive
 verification are retained in the [startup evidence](../../assets/lesson07-surface-repair-20261021/startup-evidence.json).
+
+The first [native import attempt 39627916711](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39627916711)
+staged the fixed package but stopped at the next owner/listener check with
+`SURFACE_IMPORT_OWNER_CHANGED`, before any native call or asset save. The owner
+confirmed accidental Editor closure. The original package pins and staged
+source bytes remain retained; a fresh authorized session is required. The
+[failure evidence](../../assets/lesson07-surface-repair-20261021/import-39627916711-evidence.json)
+records zero native calls and the exact manifest. Importer-source protected
+[CI 39627930173](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39627930173)
+completed successfully; Lesson07 remains open.
 
 ## Earlier ready-made limestone selection (2026-10-21)
 
