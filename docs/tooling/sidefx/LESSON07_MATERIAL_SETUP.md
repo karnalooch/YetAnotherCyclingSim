@@ -47,6 +47,17 @@ in the receipt under `remote_assembly`; the host directory is
 The source preparation step passed despite the separate native observer failure.
 **No native texture/array import or visual acceptance has occurred.**
 
+The dedicated [capture run 39520946859](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39520946859)
+succeeded at source `bb29f1c6573f8157243598f0bc57994ff4909568`. The actual
+956×431 Level Editor frame at 02:26:08 Warsaw reports `L_SaCalobra_Lesson07`
+and no PIE. It shows the owner's rejected broad olive tint and regular
+diamond/grid repetition. The same owner PID 17896 and native start time were
+retained. This is a **before-repair frame**, not the source fix applied in UE.
+Exact bytes, capture metadata, process receipts and installed tool contracts are
+retained in [the evidence directory](../../assets/lesson07-remote-20261021).
+
+![Current Lesson07 before native material repair](../../assets/lesson07-remote-20261021/current-viewport.jpg)
+
 This source repair is necessary but does not establish the whole visual fix.
 The current saved array has YACS grading (hue +25°, saturation 0.7, brightness
 1.1) applied to all five colour slices. Detail and Macro tiling are both 0.25,
@@ -105,15 +116,29 @@ Python tests and the offline slice-generation step passed. The artifact ZIP
 
 The Python path is stopped. Do not remove, encode or rephrase its project guard,
 retry that call, disable the gate or substitute another arbitrary-code transport.
-The next separate `[l07-capture-editor]` operation requests the vendor's dedicated
+The successful separate `[l07-capture-editor]` operation requested the vendor's dedicated
 `take_viewport_screenshot` with only `return_image=false`. It retains bounded
 exact contracts for supported `read_bp`, `explore`, `code_search`, `edit_texture`,
 `edit_material_instance`, `edit_asset`, `edit_material` and
 `edit_material_function` without calling them. The JPEG reader admits only
 one exact returned path in the installed tool's viewport-shot directory, verifies
 capture-time freshness and unchanged process identity, decodes dimensions and
-copies stable bytes with a matching SHA256. This screenshot operation does not
-establish the current world, graph correctness or whole-material acceptance.
+copies stable bytes with a matching SHA256. The result identifies the current
+viewport world by name; it does not establish full world/geometry identity,
+graph correctness or whole-material acceptance.
+
+The next `[l07-inspect-editor]` operation uses six fixed, sequential dedicated
+read calls: registry exploration; master graph with `save=false`; instance
+parameters; nine texture targets including global colour and IDMap; an
+eleven-target save **dry run**; and a bounded
+installed-engine `Texture2DArray.cpp` search. Exact registry paths/classes must
+be present before proceeding, particularly because the instance tool can create
+a missing asset in authoring mode. Every installed input schema is pinned before
+the first native call; any error stops the batch without retry. Raw responses
+remain pending review. The discovered tools do not establish local image import
+or source-array reassembly; `edit_texture` explicitly does not import. Graph
+read mode does not promise every TextureCoordinate or nested-function property,
+so absent values cannot be treated as defaults.
 
 The owner requested remote execution of the channel diagnosis and explicitly
 allowed creating the missing connection infrastructure. This supersedes the
@@ -173,11 +198,11 @@ project and world before reading loaded objects; it neither loads/saves packages
 nor changes the camera or material. Partial graph API information remains
 unavailable instead of being promoted to proof.
 
-The explicit `[l07-discover-editor]`, `[l07-observe-editor]` and
-`[l07-capture-editor]` intents use a
+The explicit `[l07-discover-editor]`, `[l07-observe-editor]`,
+`[l07-capture-editor]` and `[l07-inspect-editor]` intents use a
 separate exact-source focused CPU gate, consistent with the existing M3
 live-read admission, and require an already-open verified owner Editor. All
-four intents, including startup, are mutually exclusive. They retain the shared
+five intents, including startup, are mutually exclusive. They retain the shared
 native concurrency lane; no existing-session path can enter the installer or start an Editor.
 Discovery initializes MCP and reads metadata without a native tool call. It
 retains bounded exact contracts for `execute_python`, `take_viewport_screenshot`,

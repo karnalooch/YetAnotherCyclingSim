@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "source_commit": "bb29f1c6573f8157243598f0bc57994ff4909568",
+  "status": "LESSON07_CAPTURE_RESPONSE_RECEIVED_FILE_PENDING",
+  "observed_utc": "2026-10-21T00:26:10.5437079Z",
+  "error_type": null,
+  "identity_stable_across_probe": true,
+  "client_exit_code": 0,
+  "observation_requested": false,
+  "owner_before": {
+    "status": "ATTACH_EXISTING",
+    "owner_sid_matches": true,
+    "editor": {
+      "editor_pid": 17896,
+      "editor_start_filetime_utc": "134370120000674689",
+      "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+      "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+      "interactive_session_id": 1,
+      "canonical_project_matches": true
+    }
+  },
+  "owner_after": {
+    "status": "ATTACH_EXISTING",
+    "owner_sid_matches": true,
+    "editor": {
+      "editor_pid": 17896,
+      "editor_start_filetime_utc": "134370120000674689",
+      "editor_started_utc": "2026-10-20T23:20:00.0674689Z",
+      "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+      "interactive_session_id": 1,
+      "canonical_project_matches": true
+    }
+  },
+  "capture_requested": true,
+  "existing_editor_only_requested": false,
+  "existing_owner_required": true,
+  "identity_before": {
+    "schema_version": 1,
+    "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+    "observed_utc": "2026-10-21T00:26:06.2358821Z",
+    "source_commit": "bb29f1c6573f8157243598f0bc57994ff4909568",
+    "pid": 17896,
+    "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+    "process_start_filetime_utc": "134370120000674689",
+    "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+    "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+    "canonical_project_argument_matches": true,
+    "listener": {
+      "address": "127.0.0.1",
+      "port": 19315,
+      "pid": 17896
+    }
+  },
+  "identity_after": {
+    "schema_version": 1,
+    "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+    "observed_utc": "2026-10-21T00:26:10.5383469Z",
+    "source_commit": "bb29f1c6573f8157243598f0bc57994ff4909568",
+    "pid": 17896,
+    "process_created_utc": "2026-10-20T23:20:00.0674680Z",
+    "process_start_filetime_utc": "134370120000674689",
+    "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+    "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+    "canonical_project_argument_matches": true,
+    "listener": {
+      "address": "127.0.0.1",
+      "port": 19315,
+      "pid": 17896
+    }
+  },
+  "native_tool_called": true,
+  "editor_started_or_stopped": false,
+  "native_tool_attempted": true,
+  "native_tool_completed": true,
+  "native_tool_call_attempts": 1,
+  "native_material_readback": "NOT_RUN",
+  "channel_comparison_performed": false,
+  "performance_pass": false
+}

@@ -8,6 +8,7 @@
   the same verified owner Editor before and after discovery. -ObserveLesson07
   requires that existing owner and requests only the fixed Lesson07 readback.
   -CaptureLesson07 requests the vendor's dedicated viewport screenshot instead.
+  -InspectLesson07 performs the fixed six-call dedicated read-only material batch.
   The operation switches are mutually exclusive. No launch, task mutation, stop
   or save. Discovery credentials stay on the Windows host.
 #>
@@ -17,14 +18,16 @@ param(
   [Parameter(Mandatory)][ValidatePattern('^[0-9]+-[0-9]+$')][string]$RunToken,
   [Parameter(ParameterSetName='Observation')][switch]$ObserveLesson07,
   [Parameter(ParameterSetName='Capture')][switch]$CaptureLesson07,
+  [Parameter(ParameterSetName='Inspection')][switch]$InspectLesson07,
   [Parameter(ParameterSetName='ExistingEditorDiscovery')][switch]$ExistingEditorOnly
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$requireExistingOwner = [bool]($ExistingEditorOnly -or $ObserveLesson07 -or $CaptureLesson07)
-$nativeRequested = [bool]($ObserveLesson07 -or $CaptureLesson07)
-$ownerGuardPrefix = if ($ObserveLesson07) { 'OBSERVATION' } elseif ($CaptureLesson07) { 'CAPTURE' } else { 'DISCOVERY' }
+$requireExistingOwner = [bool]($ExistingEditorOnly -or $ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07)
+$nativeRequested = [bool]($ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07)
+$expectedNativeCalls = if ($InspectLesson07) { 6 } else { 1 }
+$ownerGuardPrefix = if ($ObserveLesson07) { 'OBSERVATION' } elseif ($CaptureLesson07) { 'CAPTURE' } elseif ($InspectLesson07) { 'INSPECTION' } else { 'DISCOVERY' }
 $projectRoot = 'D:\yacs\project'
 $projectFile = Join-Path $projectRoot 'YetAnotherCyclingSim.uproject'
 $expectedExe = 'D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe'
@@ -133,6 +136,7 @@ $report = [ordered]@{
   identity_stable_across_probe=$false;client_exit_code=$null
   observation_requested=[bool]$ObserveLesson07;owner_before=$null;owner_after=$null
   capture_requested=[bool]$CaptureLesson07
+  inspection_requested=[bool]$InspectLesson07
   existing_editor_only_requested=[bool]$ExistingEditorOnly;existing_owner_required=$requireExistingOwner
   identity_before=$null;identity_after=$null
   native_tool_called=$false;editor_started_or_stopped=$false
@@ -179,11 +183,12 @@ try {
   $clientArguments=@('-B',(Join-Path $PSScriptRoot 'lesson07_wingman_client.py'),'--identity-receipt',$identityPath,'--output',$clientPath)
   if ($ObserveLesson07) { $clientArguments+='--observe-lesson07' }
   if ($CaptureLesson07) { $clientArguments+='--capture-lesson07' }
+  if ($InspectLesson07) { $clientArguments+='--inspect-lesson07' }
   if ($nativeRequested) {
     # Until its bounded receipt is read, a subprocess failure leaves completion unknown.
     $report.native_tool_called=$null;$report.native_tool_attempted=$null;$report.native_tool_completed=$null
     $report.native_tool_call_attempts=$null
-    if ($ObserveLesson07) { $report.native_material_readback='UNVERIFIED' }
+    if ($ObserveLesson07 -or $InspectLesson07) { $report.native_material_readback='UNVERIFIED' }
   }
   & $python @clientArguments
   $report.client_exit_code = $LASTEXITCODE
@@ -198,9 +203,9 @@ try {
       $report[$field]=if ($clientReport[$field] -is [bool]) { $clientReport[$field] } else { $null }
     }
     $report.native_tool_call_attempts=if (($clientReport['native_tool_calls'] -is [int] -or $clientReport['native_tool_calls'] -is [long]) -and
-        $clientReport['native_tool_calls'] -in @(0,1)) { $clientReport['native_tool_calls'] } else { $null }
+        $clientReport['native_tool_calls'] -ge 0 -and $clientReport['native_tool_calls'] -le $expectedNativeCalls) { $clientReport['native_tool_calls'] } else { $null }
     $report.native_tool_called=if ($report.native_tool_attempted -eq $true -and $report.native_tool_completed -eq $true -and
-        $report.native_tool_call_attempts -eq 1) { $true
+        $report.native_tool_call_attempts -eq $expectedNativeCalls) { $true
     } elseif ($report.native_tool_attempted -eq $false -and $report.native_tool_call_attempts -eq 0) { $false
     } else { $null }
     if ($report.native_tool_attempted -eq $false -and $report.native_tool_call_attempts -eq 0) { $report.native_material_readback='NOT_RUN' }
@@ -232,6 +237,18 @@ try {
     }
     $report.native_material_readback='OBSERVED_PARTIAL_DIAGNOSIS_NOT_ACCEPTANCE'
     $report.status='LESSON07_OBSERVATION_COMPLETE_DIAGNOSIS_PARTIAL'
+  } elseif ($InspectLesson07) {
+    if ($clientReport['status'] -isnot [string] -or $clientReport['status'] -cne 'INSPECTION_RESPONSES_RECEIVED' -or
+        $report.native_tool_call_attempts -ne 6 -or
+        $report.native_tool_attempted -ne $true -or $report.native_tool_completed -ne $true -or
+        $clientReport['native_tool_response_received'] -isnot [bool] -or $clientReport['native_tool_response_received'] -ne $true -or
+        $clientReport['inspection_registry_verified'] -isnot [bool] -or $clientReport['inspection_registry_verified'] -ne $true -or
+        $clientReport['native_material_readback'] -isnot [string] -or $clientReport['native_material_readback'] -cne 'RAW_RESPONSES_REVIEW_PENDING' -or
+        $clientReport['inspection_results'] -isnot [array] -or $clientReport['inspection_results'].Count -ne 6) {
+      throw 'INSPECTION_RESPONSES_NOT_CONFIRMED'
+    }
+    $report.native_material_readback='RAW_RESPONSES_REVIEW_PENDING'
+    $report.status='LESSON07_INSPECTION_RESPONSES_RECEIVED_REVIEW_PENDING'
   } elseif ($CaptureLesson07) {
     if ($clientReport['status'] -isnot [string] -or $clientReport['status'] -cne 'CAPTURE_RESPONSE_RECEIVED' -or
         $report.native_tool_call_attempts -ne 1 -or
@@ -260,7 +277,7 @@ try {
   }
 } catch {
   $failure = $true
-  $report.status = if ($ObserveLesson07) { 'LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED' } elseif ($CaptureLesson07) { 'LESSON07_CAPTURE_INCOMPLETE_EDITOR_RETAINED' } else { 'BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED' }
+  $report.status = if ($ObserveLesson07) { 'LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED' } elseif ($CaptureLesson07) { 'LESSON07_CAPTURE_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectLesson07) { 'LESSON07_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } else { 'BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED' }
   # Never serialize exception messages that might contain discovery credentials.
   $report.error_type = $_.Exception.GetType().Name
   $safeCodes = @('CURRENT_RUN_REPORT_ALREADY_EXISTS','EXISTING_PYTHON_UNAVAILABLE',
@@ -271,6 +288,8 @@ try {
     'OBSERVATION_CLIENT_REPORT_SIZE','OBSERVATION_READBACK_NOT_CONFIRMED',
     'CAPTURE_REQUIRES_EXISTING_EDITOR','CAPTURE_REQUIRES_VERIFIED_OWNER','CAPTURE_OWNER_CHANGED',
     'CAPTURE_CLIENT_REPORT_SIZE','CAPTURE_RESPONSE_NOT_CONFIRMED',
+    'INSPECTION_REQUIRES_EXISTING_EDITOR','INSPECTION_REQUIRES_VERIFIED_OWNER','INSPECTION_OWNER_CHANGED',
+    'INSPECTION_CLIENT_REPORT_SIZE','INSPECTION_RESPONSES_NOT_CONFIRMED',
     'DISCOVERY_REQUIRES_EXISTING_EDITOR','DISCOVERY_REQUIRES_VERIFIED_OWNER','DISCOVERY_OWNER_CHANGED',
     'DISCOVERY_CLIENT_REPORT_SIZE','DISCOVERY_ONLY_NOT_CONFIRMED')
   $report['reason'] = if ($_.Exception.Message -cin $safeCodes) { $_.Exception.Message } else { 'PROBE_VALIDATION_ERROR' }

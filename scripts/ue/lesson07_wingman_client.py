@@ -93,6 +93,69 @@ CAPTURE_SCHEMA_SHA256 = (
 )
 CAPTURE_TEXT_LIMIT = 16 * 1024
 CAPTURE_BLOCK_LIMIT = 8
+INSPECTION_RESPONSE_LIMIT = 64 * 1024
+INSPECTION_AGGREGATE_LIMIT = 512 * 1024
+INSPECTION_SCHEMA_SHA256 = {
+    "explore": "76151450f64d19071b12a41adf92d369f749445e78431ccfb0a54e8491dda9b8",
+    "edit_material": "69806bca4ebfc563e5b00cd0467cb512c2b968a22359828da7b3c830c4c719f4",
+    "edit_material_instance": "f55278fdd0e125dfd8a9844a3508b85ba6f210e3491542dab7239215e2ed73e8",
+    "edit_texture": "be32c9649f13ed736dc2ccfb743c2f5c1f11dab9389b707594cef4d309d08a37",
+    "edit_asset": "1a12cb39dc34abd43c69e54e9e91e3e5cc4f90dfdcfc55dd945cfc79ead695ba",
+    "code_search": "5a8d65250ba94c62dd2cd1be3e622828cd72465d2acf64332f5bee655dd6e7d8",
+}
+INSPECTION_ROOT = "/Game/Generated/YACS/Lesson07_Unified"
+INSPECTION_TARGETS = {
+    INSPECTION_ROOT + "/Materials/M_Landscape_YACS": "Material",
+    INSPECTION_ROOT
+    + "/Materials/MI_Landscape_Instance_YACS": "MaterialInstanceConstant",
+    **{
+        INSPECTION_ROOT + "/Materials/TA_" + channel + "_Unified": "Texture2DArray"
+        for channel in ("Colour", "Normal", "Masks")
+    },
+    **{
+        INSPECTION_ROOT + "/Textures/Slices/T_" + name: "Texture2D"
+        for name in ("Grass_Normal", "Grass_Masks", "Cliffs_Normal", "Cliffs_Masks")
+    },
+    INSPECTION_ROOT + "/Textures/T_PE_Terrain_IDMap": "Texture2D",
+    INSPECTION_ROOT + "/Textures/T_PE_Terrain_Color": "Texture2D",
+}
+
+
+def inspection_plan():
+    """Only six reviewed dedicated read modes; no caller-supplied arguments."""
+    paths = list(INSPECTION_TARGETS)
+    return (
+        {
+            "name": "explore",
+            "arguments": {
+                "path": INSPECTION_ROOT,
+                "limit": 200,
+                "offset": 0,
+                "recursive": True,
+            },
+        },
+        {
+            "name": "edit_material",
+            "arguments": {"name": paths[0], "save": False, "limit": 1000, "offset": 0},
+        },
+        {"name": "edit_material_instance", "arguments": {"name": paths[1]}},
+        {"name": "edit_texture", "arguments": {"names": paths[2:]}},
+        {
+            "name": "edit_asset",
+            "arguments": {"save_assets": {"paths": paths, "dry_run": True}},
+        },
+        {
+            "name": "code_search",
+            "arguments": {
+                "operation": "grep",
+                "scope": "engine",
+                "file_glob": "**/Texture2DArray.cpp",
+                "pattern": "PostEditChangeProperty|UpdateSourceFromSourceTextures",
+                "context_lines": 12,
+                "max_results": 50,
+            },
+        },
+    )
 
 
 class ProbeError(Exception):
@@ -427,14 +490,27 @@ class ObservationState:
     capture_result: dict | None = None
     installed_tool_contracts: dict | None = None
     tool_list_complete: bool | None = None
+    inspection_requested: bool = False
+    inspection_results: list = field(default_factory=list)
+    inspection_schema_sha256: dict = field(default_factory=dict)
+    inspection_registry_verified: bool = False
 
     def report_fields(self):
         report = {
             # This is a wire-attempt count, not a count of completed evaluations.
-            "native_tool_calls": int(self.attempted),
+            "native_tool_calls": (
+                sum(row["attempted"] for row in self.inspection_results)
+                if self.inspection_requested
+                else int(self.attempted)
+            ),
             "native_tool_attempted": self.attempted,
             "native_tool_completed": self.completed,
-            "native_tool_response_received": self.response_received,
+            "native_tool_response_received": (
+                len(self.inspection_results) == 6
+                and all(row["response_received"] for row in self.inspection_results)
+                if self.inspection_requested
+                else self.response_received
+            ),
             "native_tool_started_utc": (
                 self.started_utc.isoformat() if self.started_utc else None
             ),
@@ -450,7 +526,15 @@ class ObservationState:
         if self.installed_tool_contracts is not None:
             report["installed_tool_contracts"] = self.installed_tool_contracts
             report["tool_list_complete"] = self.tool_list_complete
-        if self.capture_requested:
+        if self.inspection_requested:
+            report.update(
+                {
+                    "inspection_results": self.inspection_results,
+                    "inspection_schema_sha256": self.inspection_schema_sha256,
+                    "inspection_registry_verified": self.inspection_registry_verified,
+                }
+            )
+        elif self.capture_requested:
             report.update(
                 {
                     "capture_input_schema_sha256": self.schema_sha256,
@@ -674,6 +758,112 @@ def retain_capture_result(result, state, secrets):
     return state.capture_result
 
 
+def validate_inspection_schemas(schemas):
+    """Validate every installed raw input schema before the first native call."""
+    hashes = {}
+    for name, expected in INSPECTION_SCHEMA_SHA256.items():
+        schema = schemas.get(name)
+        require(type(schema) is dict, "INSPECTION_TOOL_SCHEMA_UNSUPPORTED")
+        digest = hashlib.sha256(canonical(schema)).hexdigest()
+        require(digest == expected, "INSPECTION_TOOL_SCHEMA_UNSUPPORTED")
+        hashes[name] = digest
+    return hashes
+
+
+def retain_inspection_result(result, row, secrets):
+    """Retain bounded standard text without interpreting vendor result wrappers."""
+    require(type(result) is dict, "INSPECTION_RESULT_SHAPE")
+    require(
+        "isError" not in result or type(result["isError"]) is bool,
+        "INSPECTION_RESULT_SHAPE",
+    )
+    content = result.get("content")
+    require(type(content) is list and 0 < len(content) <= 16, "INSPECTION_RESULT_SHAPE")
+    require(
+        all(
+            type(block) is dict
+            and block.get("type") == "text"
+            and type(block.get("text")) is str
+            for block in content
+        ),
+        "INSPECTION_RESULT_SHAPE",
+    )
+    text = sanitize_native_text(
+        "\n".join(block["text"] for block in content), secrets, preserve_newlines=True
+    )
+    require(
+        re.search(r"IMAGE_BASE64:|data:image/", text, re.IGNORECASE) is None,
+        "INSPECTION_INLINE_IMAGE_DENIED",
+    )
+    # Budget serialized JSON bytes (including escapes), leaving room for the
+    # fixed arguments/timing fields. Redaction happens before this truncation.
+    low, high = 0, min(len(text), INSPECTION_RESPONSE_LIMIT - 4096)
+    while low < high:
+        middle = (low + high + 1) // 2
+        if len(canonical(text[:middle])) <= INSPECTION_RESPONSE_LIMIT - 4096:
+            low = middle
+        else:
+            high = middle - 1
+    row["result"] = {
+        "text": text[:low],
+        "text_truncated": low < len(text),
+        "text_block_count": len(content),
+        "response_sha256": hashlib.sha256(canonical(result)).hexdigest(),
+    }
+    require(len(canonical(row)) <= INSPECTION_RESPONSE_LIMIT, "INSPECTION_RESULT_SIZE")
+    require(not result.get("isError", False), "INSPECTION_TOOL_ERROR")
+    require(0 < len(text) and low == len(text), "INSPECTION_RESULT_SIZE")
+
+
+def verify_inspection_registry(text):
+    """Admit targets only from unambiguous same-record registry path/class data."""
+    counts = re.findall(r"\bshown=(\d+)\s+total=(\d+)\b", text)
+    require(
+        len(counts) == 1
+        and counts[0][0] == counts[0][1]
+        and 0 < int(counts[0][0]) <= 200
+        and re.search(r"\bTRUNCATED\b", text, re.IGNORECASE) is None,
+        "INSPECTION_REGISTRY_INCOMPLETE",
+    )
+    lines = re.findall(r"(?m)^\s*#json-explore:\s*([^\r\n]+)$", text)
+    require(len(lines) == 1, "INSPECTION_REGISTRY_FORMAT")
+    registry = parse_json(lines[0].encode("utf-8"), INSPECTION_RESPONSE_LIMIT)
+    matches = {path: 0 for path in INSPECTION_TARGETS}
+    visited = 0
+
+    def walk(value, depth=0):
+        nonlocal visited
+        visited += 1
+        require(visited <= 4096 and depth <= 12, "INSPECTION_REGISTRY_SIZE")
+        if type(value) is dict:
+            strings = {item for item in value.values() if type(item) is str}
+            paths = [
+                path
+                for path in matches
+                if path in strings or path + "." + path.rsplit("/", 1)[1] in strings
+            ]
+            require(len(paths) <= 1, "INSPECTION_REGISTRY_AMBIGUOUS")
+            for path in paths:
+                kind = INSPECTION_TARGETS[path]
+                require(
+                    kind in strings or "/Script/Engine." + kind in strings,
+                    "INSPECTION_REGISTRY_CLASS",
+                )
+                matches[path] += 1
+                require(matches[path] == 1, "INSPECTION_REGISTRY_AMBIGUOUS")
+            for item in value.values():
+                walk(item, depth + 1)
+        elif type(value) is list:
+            for item in value:
+                walk(item, depth + 1)
+
+    walk(registry)
+    require(
+        all(count == 1 for count in matches.values()),
+        "INSPECTION_REGISTRY_TARGET_MISSING",
+    )
+
+
 def observer_loader():
     """Embed only the locally verified collector; the native side reads no file."""
     source_path = Path(__file__).absolute().with_name(OBSERVER_FILE)
@@ -802,6 +992,8 @@ class DiscoveryClient:
         self.observation_state = observation_state or ObservationState()
         self._observer_params = None
         self._capture_params = None
+        self._inspection_params = None
+        self._inspection_row = None
 
     def _message(self, value, request_id):
         messages = value if type(value) is list else [value]
@@ -900,7 +1092,30 @@ class DiscoveryClient:
                 and params["arguments"]["return_image"] is False,
                 "CAPTURE_ARGUMENTS",
             )
-        native_call = observing or capturing
+        inspecting = (
+            method == "tools/call"
+            and self._inspection_params is not None
+            and params is self._inspection_params
+            and self._inspection_row is not None
+            and not self._inspection_row["attempted"]
+            and not notification
+        )
+        if inspecting:
+            state = self.observation_state
+            index = len(state.inspection_results) - 1
+            require(
+                state.inspection_requested
+                and 0 <= index < 6
+                and self._inspection_row is state.inspection_results[index]
+                and all(
+                    row["completed"] is True for row in state.inspection_results[:index]
+                )
+                and (index == 0 or state.inspection_registry_verified)
+                and state.inspection_schema_sha256 == INSPECTION_SCHEMA_SHA256
+                and canonical(params) == canonical(inspection_plan()[index]),
+                "INSPECTION_ARGUMENTS",
+            )
+        native_call = observing or capturing or inspecting
         require(
             method in METHODS
             or (notification and method == "notifications/initialized")
@@ -963,6 +1178,14 @@ class DiscoveryClient:
                 self.observation_state.attempted = True
                 self.observation_state.completed = None
                 self.observation_state.started_utc = datetime.now(timezone.utc)
+                if inspecting:
+                    self._inspection_row.update(
+                        {
+                            "attempted": True,
+                            "completed": None,
+                            "started_utc": self.observation_state.started_utc.isoformat(),
+                        }
+                    )
             connection.request("POST", ENDPOINT, body=raw, headers=headers)
             response = connection.getresponse()
             require(not 300 <= response.status < 400, "HTTP_REDIRECT_DENIED")
@@ -1020,6 +1243,13 @@ class DiscoveryClient:
                 self.observation_state.response_received_utc = datetime.now(
                     timezone.utc
                 )
+                if inspecting:
+                    self._inspection_row.update(
+                        {
+                            "response_received": True,
+                            "response_received_utc": self.observation_state.response_received_utc.isoformat(),
+                        }
+                    )
             return result
         except ProbeError:
             if expired.is_set():
@@ -1036,12 +1266,15 @@ class DiscoveryClient:
                 watchdog.cancel()
             connection.close()
 
-    def probe(self, observe_lesson07=False, capture_lesson07=False):
+    def probe(
+        self, observe_lesson07=False, capture_lesson07=False, inspect_lesson07=False
+    ):
         require(
-            not (observe_lesson07 and capture_lesson07),
+            sum((observe_lesson07, capture_lesson07, inspect_lesson07)) <= 1,
             "NATIVE_MODES_MUTUALLY_EXCLUSIVE",
         )
         self.observation_state.capture_requested = capture_lesson07
+        self.observation_state.inspection_requested = inspect_lesson07
         if capture_lesson07 or observe_lesson07:
             self.observation_state.tool_name = (
                 CAPTURE_TOOL if capture_lesson07 else OBSERVER_TOOL
@@ -1067,6 +1300,7 @@ class DiscoveryClient:
         tool_error = None
         observer_schema = None
         capture_schema = None
+        inspection_schemas = {}
         try:
             for _page in range(MAX_PAGES):
                 listing = self._post(
@@ -1108,6 +1342,8 @@ class DiscoveryClient:
                         observer_schema = tool.get("inputSchema")
                     if name == CAPTURE_TOOL:
                         capture_schema = tool.get("inputSchema")
+                    if name in INSPECTION_SCHEMA_SHA256:
+                        inspection_schemas[name] = tool.get("inputSchema")
                 cursor = listing.get("nextCursor")
                 if cursor is None:
                     break
@@ -1220,6 +1456,61 @@ class DiscoveryClient:
                     **state.report_fields(),
                 }
             )
+        if inspect_lesson07:
+            require(tool_error is None, "INSPECTION_INCOMPLETE_TOOL_LIST")
+            require(session["signed_in"], "INSPECTION_SIGNED_OUT")
+            state = self.observation_state
+            state.inspection_schema_sha256 = validate_inspection_schemas(
+                inspection_schemas
+            )
+            for index, params in enumerate(inspection_plan(), 1):
+                row = {
+                    "index": index,
+                    "tool_name": params["name"],
+                    "arguments": params["arguments"],
+                    "input_schema_sha256": state.inspection_schema_sha256[
+                        params["name"]
+                    ],
+                    "attempted": False,
+                    "completed": False,
+                    "response_received": False,
+                    "started_utc": None,
+                    "response_received_utc": None,
+                    "result": None,
+                    "error_code": None,
+                }
+                state.inspection_results.append(row)
+                self._inspection_params, self._inspection_row = params, row
+                state.tool_name = params["name"]
+                state.tool_error = state.result_shape = None
+                try:
+                    result = self._post("tools/call", params)
+                    retain_inspection_result(
+                        result, row, (self.discovery.token, self.session_id)
+                    )
+                    row["completed"] = True
+                    if index == 1:
+                        verify_inspection_registry(row["result"]["text"])
+                        state.inspection_registry_verified = True
+                    require(
+                        len(canonical(state.inspection_results))
+                        <= INSPECTION_AGGREGATE_LIMIT,
+                        "INSPECTION_AGGREGATE_SIZE",
+                    )
+                except ProbeError as error:
+                    row["error_code"] = error.code
+                    raise
+            state.completed = True
+            report.update(
+                {
+                    "status": "INSPECTION_RESPONSES_RECEIVED",
+                    "http_requests": self.requests,
+                    "notifications_received": self.notifications_received,
+                    "native_material_readback": "RAW_RESPONSES_REVIEW_PENDING",
+                    "visual_acceptance": False,
+                    **state.report_fields(),
+                }
+            )
         return report
 
 
@@ -1229,6 +1520,7 @@ def probe_from_files(
     *,
     observe_lesson07=False,
     capture_lesson07=False,
+    inspect_lesson07=False,
     observation_state=None,
 ):
     require(WINDOWS_HOST, "WINDOWS_HOST_REQUIRED")
@@ -1239,7 +1531,9 @@ def probe_from_files(
     safe_identity = validate_identity(identity, discovery)
     client = DiscoveryClient(discovery, identity, observation_state=observation_state)
     report = client.probe(
-        observe_lesson07=observe_lesson07, capture_lesson07=capture_lesson07
+        observe_lesson07=observe_lesson07,
+        capture_lesson07=capture_lesson07,
+        inspect_lesson07=inspect_lesson07,
     )
     require(
         read_bounded(discovery_path, CONFIG_LIMIT) == discovery_raw
@@ -1283,8 +1577,12 @@ def main(argv=None):
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--observe-lesson07", action="store_true")
     mode.add_argument("--capture-lesson07", action="store_true")
+    mode.add_argument("--inspect-lesson07", action="store_true")
     args = parser.parse_args(argv)
-    state = ObservationState(capture_requested=args.capture_lesson07)
+    state = ObservationState(
+        capture_requested=args.capture_lesson07,
+        inspection_requested=args.inspect_lesson07,
+    )
     error_code = None
     rpc_code = None
     try:
@@ -1294,6 +1592,8 @@ def main(argv=None):
         }
         if args.capture_lesson07:
             options["capture_lesson07"] = True
+        if args.inspect_lesson07:
+            options["inspect_lesson07"] = True
         report = probe_from_files(args.identity_receipt, **options)
     except ProbeError as error:
         error_code, rpc_code = error.code, error.rpc_code
@@ -1303,7 +1603,9 @@ def main(argv=None):
     if error_code is not None:
         report = {
             "schema_version": 1,
-            "status": "CAPTURE_FAILED"
+            "status": "INSPECTION_FAILED"
+            if args.inspect_lesson07
+            else "CAPTURE_FAILED"
             if args.capture_lesson07
             else "OBSERVATION_FAILED"
             if args.observe_lesson07
@@ -1311,19 +1613,23 @@ def main(argv=None):
             "error_code": error_code,
             "native_tool_calls": 0,
             "native_material_readback": (
-                "UNVERIFIED"
+                "RAW_RESPONSES_REVIEW_PENDING"
+                if args.inspect_lesson07 and state.attempted
+                else "UNVERIFIED"
                 if state.attempted and not args.capture_lesson07
                 else "NOT_RUN"
             ),
             "visual_acceptance": False,
             "performance_pass": False,
         }
-        if args.observe_lesson07 or args.capture_lesson07:
+        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07:
             report.update(state.report_fields())
         if rpc_code is not None:
             report["rpc_code"] = rpc_code
     prefix = (
-        "L07_WINGMAN_CAPTURE"
+        "L07_WINGMAN_INSPECTION"
+        if args.inspect_lesson07
+        else "L07_WINGMAN_CAPTURE"
         if args.capture_lesson07
         else "L07_WINGMAN_OBSERVATION"
         if args.observe_lesson07
@@ -1332,7 +1638,10 @@ def main(argv=None):
     try:
         write_report(args.output, report)
     except ProbeError:
-        print(prefix + f" OUTPUT_UNAVAILABLE native_tool_calls={int(state.attempted)}")
+        print(
+            prefix
+            + f" OUTPUT_UNAVAILABLE native_tool_calls={state.report_fields()['native_tool_calls']}"
+        )
         return 1
     print(
         prefix
@@ -1341,7 +1650,9 @@ def main(argv=None):
         + f" native_tool_calls={report['native_tool_calls']}"
     )
     expected = (
-        "CAPTURE_RESPONSE_RECEIVED"
+        "INSPECTION_RESPONSES_RECEIVED"
+        if args.inspect_lesson07
+        else "CAPTURE_RESPONSE_RECEIVED"
         if args.capture_lesson07
         else "OBSERVATION_COMPLETE"
         if args.observe_lesson07

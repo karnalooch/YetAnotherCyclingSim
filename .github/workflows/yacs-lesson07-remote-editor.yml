@@ -36,6 +36,7 @@ jobs:
       contains(github.event.head_commit.message, '[l07-remote-editor]') &&
       !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
       !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+      !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
       !contains(github.event.head_commit.message, '[l07-discover-editor]')
     runs-on: ubuntu-latest
     timeout-minutes: 95
@@ -88,13 +89,20 @@ jobs:
       github.actor == github.repository_owner &&
       !contains(github.event.head_commit.message, '[l07-remote-editor]') &&
       ((contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')))
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -177,6 +185,7 @@ jobs:
       L07_READONLY_OBSERVATION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-observe-editor]') }}
       L07_READONLY_DISCOVERY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-discover-editor]') }}
       L07_VIEWPORT_CAPTURE: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-capture-editor]') }}
+      L07_READONLY_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-editor]') }}
       L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') }}
     steps:
       - name: Create isolated Git settings for code-only staging
@@ -205,6 +214,7 @@ jobs:
           fetch-depth: 1
           lfs: false
           persist-credentials: false
+          sparse-checkout: scripts
 
       - name: Validate code and boundaries before any task creation
         id: validate
@@ -251,6 +261,7 @@ jobs:
           if ($env:L07_READONLY_OBSERVATION -ceq 'true') { $parameters['ObserveLesson07'] = $true }
           if ($env:L07_READONLY_DISCOVERY -ceq 'true') { $parameters['ExistingEditorOnly'] = $true }
           if ($env:L07_VIEWPORT_CAPTURE -ceq 'true') { $parameters['CaptureLesson07'] = $true }
+          if ($env:L07_READONLY_INSPECTION -ceq 'true') { $parameters['InspectLesson07'] = $true }
           & ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 @parameters
 
       - name: Retain the exact JPEG returned by the dedicated viewport tool

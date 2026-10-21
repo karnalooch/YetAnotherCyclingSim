@@ -1653,11 +1653,11 @@
     "performance_pass": false
   },
   "remote_connection_continuation_20261021": {
-    "status": "EDITOR_RETAINED_PASSIVE_PYTHON_BLOCKED_F49",
+    "status": "EDITOR_RETAINED_DEDICATED_VIEWPORT_CAPTURE_VERIFIED_MATERIAL_READ_PENDING",
     "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
     "owner_authorized_missing_connection_infrastructure": true,
     "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
-    "native_tool_called": null,
+    "native_tool_called": true,
     "channel_comparison_performed": false,
     "asset_changes": [],
     "editor_lifecycle_changes": [
@@ -1669,7 +1669,7 @@
       }
     ],
     "performance_pass": false,
-    "note": "The same owner Editor PID 17896 and native start filetime 134370120000674689 remain verified through 2026-10-21T00:12:23.7830410Z. The explicit passive observation at 00:12:21 UTC returned the Wingman F49 protected-project gate error. Its collector is read-only, but execution is blocked; no Python retry, guard rephrasing or alternate arbitrary-code execution is admitted. Current material/world readback is unverified. A separate dedicated screenshot and supported read-only tool contracts are prepared next.",
+    "note": "The same owner Editor PID 17896 and native start filetime 134370120000674689 were retained through the successful dedicated viewport capture at 2026-10-21T00:26:08Z. The captured LevelEditor reports world_name L_SaCalobra_Lesson07 and no PIE. Python remains blocked by the prior F49 error; no retry or bypass. Native material edits have not occurred. Current frame shows broad olive tint and regular diamond/grid repetition; fixed dedicated material readback is prepared next.",
     "inventory": {
       "source_commit": "4bf894dd8dccc482a3e90a53bce6d6b01653e6a7",
       "run_id": 39507345660,
@@ -1697,7 +1697,7 @@
       "editor_commands_executed": 0
     },
     "connection_workflow": ".github/workflows/yacs-lesson07-remote-editor.yml",
-    "connection_execution": "EDITOR_RETAINED_PASSIVE_PYTHON_BLOCKED_F49",
+    "connection_execution": "EDITOR_RETAINED_DEDICATED_VIEWPORT_CAPTURE_VERIFIED_MATERIAL_READ_PENDING",
     "first_connection_attempt": {
       "source_commit": "3ba05803bfc3ff095eb012e3f790752b55b47d12",
       "protected_ci_run_id": 39508823330,
@@ -2363,7 +2363,7 @@
       "workflow_conclusion": "success"
     },
     "native_tool_attempted": true,
-    "native_tool_completed": null,
+    "native_tool_completed": true,
     "second_native_observation_attempt": {
       "source_commit": "c8370182042723d3f69610e6fcec1d4c074c96c0",
       "run_id": 39519585751,
@@ -2395,7 +2395,7 @@
       "interpretation": "Actual current error retained: protected .uproject safety gate F49. Observer implementation only reads project identity; do not remove or disguise the guard, retry execute_python or bypass the tool boundary."
     },
     "dedicated_capture_preparation": {
-      "status": "PREPARED_NATIVE_CAPTURE_PENDING",
+      "status": "EXECUTED_SEE_DEDICATED_CAPTURE_EXECUTION",
       "intent": "[l07-capture-editor]",
       "native_tool": "take_viewport_screenshot",
       "arguments": {
@@ -2439,6 +2439,113 @@
       "viewport_reader_tests_passed": 84,
       "viewport_reader_sha256": "f0ba95813e181734907a10d1b155f5730e8e521eaa2d05015f67f96e45d54ce6",
       "viewport_reader_tests_sha256": "40a88164f07e2b08c95c33368e86f153681df383fbea216018acc7ef1d67f8ef"
+    },
+    "dedicated_capture_execution": {
+      "source_commit": "bb29f1c6573f8157243598f0bc57994ff4909568",
+      "run_id": 39520946859,
+      "cpu_job_id": 118964358268,
+      "windows_job_id": 118964429475,
+      "cpu_conclusion": "success",
+      "windows_conclusion": "success",
+      "artifact_id": 12310519231,
+      "artifact_zip_sha256": "cef2665c10d8f232616fb21ed38a637e41aa5468b8d8edd4f477c385a337d01e",
+      "artifact_digest_verified": true,
+      "viewport_manifest": {
+        "schema_version": 1,
+        "status": "VIEWPORT_CAPTURE_RETAINED",
+        "source_commit": "bb29f1c6573f8157243598f0bc57994ff4909568",
+        "run_token": "39520946859-1",
+        "observed_utc": "2026-10-21T00:26:11.5541040+00:00",
+        "source_path": "D:\\yacs\\project\\Saved\\LocoHelperAI\\ViewportShots\\Viewport_LevelEditor_20261021_002608.jpg",
+        "copied_path": "D:\\yacs\\lesson07-remote\\reports\\39520946859-1\\current-viewport.jpg",
+        "sha256": "e012047b5c6954b45f8b6e3c54cf814a2baea8a87f25a356615be492a58f933e",
+        "source_sha256": "e012047b5c6954b45f8b6e3c54cf814a2baea8a87f25a356615be492a58f933e",
+        "byte_count": 45551,
+        "format": "JPEG",
+        "width": 956,
+        "height": 431,
+        "source_last_write_utc": "2026-10-21T00:26:08.7619623+00:00",
+        "native_tool_started_utc": "2026-10-21T00:26:08.1846800+00:00",
+        "native_tool_response_received_utc": "2026-10-21T00:26:08.7786260+00:00",
+        "process_id": 17896,
+        "process_start_filetime_utc": "134370120000674689",
+        "interactive_session_id": 1,
+        "identity_sha256": "e0086a44fdec74b1ed130a55d5fc283181d35f514d9f7c69f92c870deee1bf87",
+        "probe_sha256": "3818742c533f2c269c5742068618eeaab972061ff50bd223a8aab422f349b4be",
+        "bridge_sha256": "1cb25ac00b8c1d40178c2c625705bff432d20f5e6659c1fbeb3efda9ac36f7eb",
+        "capture_response_sha256": "660c148ab767a2df87ce21de4c3dc5c9ed5d45dae72216239ec0abce513c153c",
+        "capture_native_tool_calls": 1,
+        "additional_native_tool_calls": 0,
+        "native_material_readback": "NOT_RUN",
+        "visual_accepted": false,
+        "performance_pass": false
+      },
+      "native_tool_result": {
+        "response_sha256": "660c148ab767a2df87ce21de4c3dc5c9ed5d45dae72216239ec0abce513c153c",
+        "text": "Viewport screenshot saved: D:/yacs/project/Saved/LocoHelperAI/ViewportShots/Viewport_LevelEditor_20261021_002608.jpg (956x431, 45551 bytes). Image payload NOT inlined (return_image:false). viewport_type=LevelEditor | world_name=L_SaCalobra_Lesson07 | is_pie_running=0 | retry_count=1 | black_frame_detected=0 | avg_brightness=118.85 | near_black_fraction=0.000 | byte_identical_to_previous=0 | capture_source=\"FLevelEditorViewportClient (largest perspective Level Editor viewport)\"",
+        "text_block_count": 1,
+        "text_truncated": false
+      },
+      "retained_evidence_directory": "docs/assets/lesson07-remote-20261021",
+      "image_observation": "Regular diamond/grid repetition across broad yellow-green/olive areas. This is before native material repair, not acceptance.",
+      "native_asset_mutation_performed": false,
+      "native_material_readback": "NOT_RUN",
+      "visual_accepted": false,
+      "performance_pass": false,
+      "protected_ci": {
+        "run_id": 39520954465,
+        "conclusion": "failure",
+        "native_job_id": 118965747653,
+        "native_status": "LOCAL_BUSY",
+        "owner_editor_and_logs_preserved": true,
+        "native_build_and_automation_performed": false,
+        "performance_pass": false
+      }
+    },
+    "dedicated_material_inspection_preparation": {
+      "status": "PREPARED_NATIVE_READ_PENDING",
+      "intent": "[l07-inspect-editor]",
+      "maximum_native_calls": 6,
+      "automatic_retry": false,
+      "python_fallback": false,
+      "operations": [
+        "explore fixed Lesson07 root",
+        "edit_material read mode, save=false",
+        "edit_material_instance name-only after exact registry existence proof",
+        "edit_texture nine fixed targets including global colour and IDMap, read mode",
+        "edit_asset save_assets dry_run=true on eleven fixed targets",
+        "code_search bounded installed Texture2DArray.cpp function search"
+      ],
+      "registry_prerequisite": "Exact paths and classes for all eleven expected assets from a single actual explore JSON footer; unknown or incomplete evidence stops the batch.",
+      "native_material_readback": "NOT_RUN",
+      "visual_accepted": false,
+      "performance_pass": false,
+      "limit": "Current contracts do not establish local image import, Texture2DArray source-list reassembly, or every TextureCoordinate/nested-function property. Missing readback remains unknown.",
+      "validation": {
+        "client_tests_passed": 56,
+        "workflow_marker_combinations_passed": 32,
+        "powershell_switch_combinations_passed": 16,
+        "receipt_negative_cases_rejected": 18,
+        "powershell_workflow_blocks_parsed": 8,
+        "native_calls_during_validation": 0,
+        "review_scope": "Dedicated read-only client, workflow intent exclusivity, owner preservation and receipt validation; not native material acceptance",
+        "files_sha256": {
+          "scripts/ue/lesson07_wingman_client.py": "500553e7e61f39c2630feb5705bab55870ce954b26e4474faaa00908a7cf2e68",
+          "scripts/ue/test_lesson07_wingman_client.py": "25abb7379189f5173c511a7508fc8129acbbb5fbe68bc4f5190e09467cf34a14",
+          "scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1": "d3b9b34fd9b7c670004780508450d58e5fe150cc6bade6bee593c024814427ff",
+          ".github/workflows/yacs-lesson07-remote-editor.yml": "eebdba02abc64c077ef073b3f68653d33e5df4bc1669027c1d23d0d70e324e9b"
+        },
+        "root_focused_python_tests_passed": 82,
+        "scoped_ruff_rules": "E9,F63,F7,F82",
+        "scoped_ruff_passed": true,
+        "ruff_format_check_passed": true,
+        "docs_index_passed": [
+          "i18n",
+          "structure",
+          "links",
+          "freshness"
+        ]
+      }
     }
   },
   "whole_material_source_repair_20261021": {

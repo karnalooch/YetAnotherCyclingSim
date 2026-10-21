@@ -265,6 +265,80 @@ def capture_reply(request):
     return status, headers, raw
 
 
+# Synthetic schemas exercise full raw-schema pinning without copying large vendor
+# descriptions. Production pins are checked against the retained native receipt.
+INSPECTION_FIXTURE_SCHEMAS = {
+    name: {"type": "object", "description": "Synthetic schema: " + name}
+    for name in (
+        "explore",
+        "edit_material",
+        "edit_material_instance",
+        "edit_texture",
+        "edit_asset",
+        "code_search",
+    )
+}
+INSPECTION_FIXTURE_HASHES = {
+    name: hashlib.sha256(client.canonical(schema)).hexdigest()
+    for name, schema in INSPECTION_FIXTURE_SCHEMAS.items()
+}
+
+
+def registry_records():
+    # Independent path/class fixture: these are the existing eleven assets that
+    # must be proved present before any name-only tool can be admitted.
+    root = "/Game/Generated/YACS/Lesson07_Unified/"
+    return [
+        {"package": root + suffix, "kind": kind}
+        for suffix, kind in (
+            ("Materials/M_Landscape_YACS", "Material"),
+            ("Materials/MI_Landscape_Instance_YACS", "MaterialInstanceConstant"),
+            ("Materials/TA_Colour_Unified", "Texture2DArray"),
+            ("Materials/TA_Normal_Unified", "Texture2DArray"),
+            ("Materials/TA_Masks_Unified", "Texture2DArray"),
+            ("Textures/Slices/T_Grass_Normal", "Texture2D"),
+            ("Textures/Slices/T_Grass_Masks", "Texture2D"),
+            ("Textures/Slices/T_Cliffs_Normal", "Texture2D"),
+            ("Textures/Slices/T_Cliffs_Masks", "Texture2D"),
+            ("Textures/T_PE_Terrain_IDMap", "Texture2D"),
+            ("Textures/T_PE_Terrain_Color", "Texture2D"),
+        )
+    ]
+
+
+def registry_text(records=None):
+    return "shown=11 total=11\n#json-explore: " + json.dumps(
+        {"assets": registry_records() if records is None else records}
+    )
+
+
+def inspection_reply(request):
+    status, headers, raw = capture_reply(request)
+    if request["method"] in {"tools/list", "tools/call"}:
+        payload = json.loads(raw)
+        if request["method"] == "tools/list":
+            for descriptor in payload["result"]["tools"]:
+                if descriptor["name"] in INSPECTION_FIXTURE_SCHEMAS:
+                    descriptor["inputSchema"] = INSPECTION_FIXTURE_SCHEMAS[
+                        descriptor["name"]
+                    ]
+        else:
+            name = request["params"]["name"]
+            payload["result"] = {
+                "isError": False,
+                "content": [
+                    {
+                        "type": "text",
+                        "text": registry_text()
+                        if name == "explore"
+                        else "Uninterpreted native response: " + name,
+                    }
+                ],
+            }
+        raw = client.canonical(payload)
+    return status, headers, raw
+
+
 @contextmanager
 def peer(responder=default_reply):
     requests = []
@@ -2030,6 +2104,291 @@ class CaptureTests(unittest.TestCase):
             )
         self.assertEqual(report["native_tool_calls"], 0)
         self.assertFalse(any(row["body"]["method"] == "tools/call" for row in requests))
+
+
+class InspectionTests(unittest.TestCase):
+    def setUp(self):
+        patcher = mock.patch.object(
+            client, "INSPECTION_SCHEMA_SHA256", INSPECTION_FIXTURE_HASHES
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_six_fixed_reads_keep_raw_evidence_and_refuse_a_seventh_call(self):
+        with (
+            peer(inspection_reply) as (port, requests),
+            mock.patch.object(client, "observer_loader") as loader,
+        ):
+            probe = connection(port)
+            report = probe.probe(inspect_lesson07=True)
+            with self.assertRaisesRegex(client.ProbeError, "METHOD_NOT_ALLOWED"):
+                probe._post("tools/call", probe._inspection_params)
+        loader.assert_not_called()
+        calls = [
+            r["body"]["params"] for r in requests if r["body"]["method"] == "tools/call"
+        ]
+        self.assertEqual(
+            [call["name"] for call in calls],
+            [
+                "explore",
+                "edit_material",
+                "edit_material_instance",
+                "edit_texture",
+                "edit_asset",
+                "code_search",
+            ],
+        )
+        paths = [record["package"] for record in registry_records()]
+        self.assertEqual(calls[2]["arguments"], {"name": paths[1]})
+        self.assertEqual(calls[3]["arguments"], {"names": paths[2:]})
+        self.assertEqual(
+            calls[4]["arguments"], {"save_assets": {"paths": paths, "dry_run": True}}
+        )
+        self.assertIs(calls[1]["arguments"]["save"], False)
+        self.assertEqual(report["status"], "INSPECTION_RESPONSES_RECEIVED")
+        self.assertEqual(report["native_tool_calls"], 6)
+        for key in (
+            "native_tool_attempted",
+            "native_tool_completed",
+            "native_tool_response_received",
+            "inspection_registry_verified",
+        ):
+            self.assertIs(report[key], True)
+        self.assertEqual(
+            report["native_material_readback"], "RAW_RESPONSES_REVIEW_PENDING"
+        )
+        self.assertFalse(report["visual_acceptance"])
+        self.assertFalse(report["performance_pass"])
+        self.assertNotIn("capture_result", report)
+        self.assertNotIn("observer_source_sha256", report)
+        self.assertEqual(len(report["inspection_results"]), 6)
+        for row in report["inspection_results"]:
+            self.assertTrue(row["completed"])
+            self.assertTrue(row["response_received"])
+            self.assertIsNone(row["error_code"])
+            self.assertLessEqual(len(client.canonical(row)), 64 * 1024)
+        self.assertLessEqual(
+            len(client.canonical(report["inspection_results"])), 512 * 1024
+        )
+
+    def test_all_schema_pins_are_checked_before_any_native_call(self):
+        def drift_last_schema(request):
+            status, headers, raw = inspection_reply(request)
+            if request["method"] == "tools/list":
+                payload = json.loads(raw)
+                for tool in payload["result"]["tools"]:
+                    if tool["name"] == "code_search":
+                        tool["inputSchema"]["new_optional_argument"] = True
+                raw = client.canonical(payload)
+            return status, headers, raw
+
+        with peer(drift_last_schema) as (port, requests):
+            state = client.ObservationState()
+            with self.assertRaisesRegex(
+                client.ProbeError, "INSPECTION_TOOL_SCHEMA_UNSUPPORTED"
+            ):
+                connection(port, state=state).probe(inspect_lesson07=True)
+        self.assertFalse(any(r["body"]["method"] == "tools/call" for r in requests))
+        self.assertEqual(state.report_fields()["native_tool_calls"], 0)
+        self.assertFalse(state.completed)
+
+    def test_registry_guard_accepts_object_paths_and_full_classes_without_key_assumptions(
+        self,
+    ):
+        records = [
+            {
+                "arbitrary_name": row["package"]
+                + "."
+                + row["package"].rsplit("/", 1)[1],
+                "arbitrary_type": "/Script/Engine." + row["kind"],
+            }
+            for row in registry_records()
+        ]
+        client.verify_inspection_registry(registry_text(records))
+
+    def test_uncertain_registry_is_retained_and_stops_before_name_only_tools(self):
+        records = registry_records()
+        missing_mi = [
+            row for row in records if row["kind"] != "MaterialInstanceConstant"
+        ]
+        split = [
+            {"package": row["package"], "nested": {"kind": row["kind"]}}
+            for row in records
+        ]
+        wrong_class = [dict(row) for row in records]
+        wrong_class[1]["kind"] = "Material"
+        duplicate_key = registry_text().replace(
+            '"assets":', '"assets": [], "assets":', 1
+        )
+        for text in (
+            registry_text(missing_mi),
+            registry_text(split),
+            registry_text(wrong_class),
+            registry_text(records + [records[1]]),
+            registry_text().replace("shown=11", "shown=10"),
+            registry_text().replace("#json-explore:", "unknown-output:"),
+            duplicate_key,
+        ):
+
+            def uncertain(request):
+                status, headers, raw = inspection_reply(request)
+                if request["method"] == "tools/call":
+                    payload = json.loads(raw)
+                    payload["result"]["content"][0]["text"] = text
+                    raw = client.canonical(payload)
+                return status, headers, raw
+
+            with self.subTest(text=text[:100]), peer(uncertain) as (port, requests):
+                state = client.ObservationState()
+                with self.assertRaises(client.ProbeError):
+                    connection(port, state=state).probe(inspect_lesson07=True)
+            self.assertEqual(
+                sum(r["body"]["method"] == "tools/call" for r in requests), 1
+            )
+            self.assertFalse(state.inspection_registry_verified)
+            self.assertEqual(state.inspection_results[0]["result"]["text"], text)
+            self.assertTrue(state.inspection_results[0]["completed"])
+            self.assertIsNone(state.completed)
+
+    def test_failed_batch_cli_preserves_completed_rows_and_redacts_error_without_retry(
+        self,
+    ):
+        for fail_at, timeout in (
+            ("edit_texture", False),
+            ("edit_material_instance", True),
+        ):
+
+            def failed(request):
+                status, headers, raw = inspection_reply(request)
+                if (
+                    request["method"] == "tools/call"
+                    and request["params"]["name"] == fail_at
+                ):
+                    if timeout:
+                        time.sleep(0.3)
+                    else:
+                        payload = json.loads(raw)
+                        payload["result"] = {
+                            "isError": True,
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Native inspection refused.\n"
+                                    + TOKEN
+                                    + " synthetic-session-1\npassword=private-value",
+                                }
+                            ],
+                        }
+                        raw = client.canonical(payload)
+                return status, headers, raw
+
+            with (
+                self.subTest(fail_at=fail_at),
+                tempfile.TemporaryDirectory() as directory,
+                peer(failed) as (port, requests),
+            ):
+                output = Path(directory) / "report.json"
+                stdout = io.StringIO()
+
+                def from_fixture(
+                    _path, *, observe_lesson07, inspect_lesson07, observation_state
+                ):
+                    return connection(
+                        port, timeout=0.15 if timeout else 2, state=observation_state
+                    ).probe(
+                        observe_lesson07=observe_lesson07,
+                        inspect_lesson07=inspect_lesson07,
+                    )
+
+                with (
+                    mock.patch.object(
+                        client, "probe_from_files", side_effect=from_fixture
+                    ),
+                    mock.patch("sys.stdout", stdout),
+                ):
+                    code = client.main(
+                        [
+                            "--identity-receipt",
+                            str(Path(directory) / "identity.json"),
+                            "--output",
+                            str(output),
+                            "--inspect-lesson07",
+                        ]
+                    )
+                raw = output.read_bytes()
+                report = json.loads(raw)
+            self.assertEqual(code, 1)
+            self.assertEqual(report["status"], "INSPECTION_FAILED")
+            self.assertEqual(
+                report["error_code"],
+                "REQUEST_TIMEOUT" if timeout else "INSPECTION_TOOL_ERROR",
+            )
+            count = 3 if timeout else 4
+            self.assertEqual(report["native_tool_calls"], count)
+            self.assertIsNone(report["native_tool_completed"])
+            self.assertFalse(report["native_tool_response_received"])
+            self.assertTrue(report["inspection_registry_verified"])
+            self.assertTrue(report["tool_list_complete"])
+            self.assertEqual(
+                report["installed_tool_contracts"]["edit_asset"]["inputSchema"],
+                INSPECTION_FIXTURE_SCHEMAS["edit_asset"],
+            )
+            rows = report["inspection_results"]
+            self.assertEqual(len(rows), count)
+            self.assertTrue(all(row["completed"] is True for row in rows[:-1]))
+            self.assertTrue(rows[-1]["attempted"])
+            self.assertIsNone(rows[-1]["completed"])
+            self.assertIs(rows[-1]["response_received"], not timeout)
+            if not timeout:
+                self.assertIn("Native inspection refused.", rows[-1]["result"]["text"])
+            for secret in (TOKEN, "synthetic-session-1", "private-value"):
+                self.assertNotIn(secret.encode(), raw)
+                self.assertNotIn(secret, stdout.getvalue())
+            self.assertEqual(
+                sum(r["body"]["method"] == "tools/call" for r in requests), count
+            )
+            self.assertEqual(
+                sum(r["body"]["method"] == "tools/list" for r in requests), 1
+            )
+
+    def test_retained_text_bounds_serialized_unicode_bytes_and_redacts_first(self):
+        row = {}
+        result = {"content": [{"type": "text", "text": "ą" * (64 * 1024) + TOKEN}]}
+        with self.assertRaisesRegex(client.ProbeError, "INSPECTION_RESULT_SIZE"):
+            client.retain_inspection_result(result, row, (TOKEN,))
+        self.assertLessEqual(len(client.canonical(row)), 64 * 1024)
+        self.assertTrue(row["result"]["text_truncated"])
+        result["content"][0]["text"] = (
+            "Cause\n"
+            + TOKEN
+            + "\nhttps://example.invalid/private\npassword=private-value"
+        )
+        client.retain_inspection_result(result, row, (TOKEN,))
+        for secret in (TOKEN, "example.invalid/private", "private-value"):
+            self.assertNotIn(secret, row["result"]["text"])
+        self.assertIn("Cause\n", row["result"]["text"])
+
+    def test_mixed_modes_and_mutated_fixed_requests_refuse_before_network(self):
+        with peer(inspection_reply) as (port, requests):
+            for other in ("observe_lesson07", "capture_lesson07"):
+                with self.assertRaisesRegex(
+                    client.ProbeError, "NATIVE_MODES_MUTUALLY_EXCLUSIVE"
+                ):
+                    connection(port).probe(inspect_lesson07=True, **{other: True})
+            probe = connection(port)
+            state = probe.observation_state
+            state.inspection_requested = True
+            state.inspection_schema_sha256 = dict(INSPECTION_FIXTURE_HASHES)
+            row = {"attempted": False, "completed": False}
+            state.inspection_results.append(row)
+            probe._inspection_row = row
+            probe._inspection_params = {
+                "name": "explore",
+                "arguments": {"path": "/Game/Other"},
+            }
+            with self.assertRaisesRegex(client.ProbeError, "INSPECTION_ARGUMENTS"):
+                probe._post("tools/call", probe._inspection_params)
+        self.assertEqual(requests, [])
 
 
 class FileTests(unittest.TestCase):
