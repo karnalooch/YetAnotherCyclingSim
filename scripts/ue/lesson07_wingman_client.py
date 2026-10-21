@@ -152,6 +152,191 @@ SOURCE_ASSETS_ARRAYS = tuple(
     INSPECTION_ROOT + "/Materials/TA_" + channel + "_Unified"
     for channel in ("Colour", "Normal", "Masks")
 )
+PEGASUS_SOURCE = "/Game/PegasusDemo/Materials/Landscape/MI_Landscape_Instance"
+PEGASUS_SOURCE_PARENT = "/Game/PegasusDemo/Materials/Landscape/M_Pegasus_Landscape_Master"
+PEGASUS_PARENT = INSPECTION_ROOT + "/Materials/M_Landscape_YACS"
+PEGASUS_CANDIDATE = INSPECTION_ROOT + "/Materials/SideFX_OneToOne_20261021/MI_Pegasus_Source_YACS"
+PEGASUS_BACKUP = INSPECTION_ROOT + "/RepairBackups/MI_BeforePegasusSource_20261021"
+PEGASUS_SOURCE_SHA256 = "dde1fb5e4732cb38b6f1e03ba4646b715d75032a85e08e4e89a8325e11e606c7"
+PEGASUS_SOURCE_SIZE = 38181
+PEGASUS_BASELINE_SHA256 = "99c384e9701889aa2cae667b69e1faff32835e2b4440a9953e6f5884439b75ee"
+PEGASUS_CONTENT_ROOT = Path("D:/yacs/project/Content")
+PEGASUS_REPORT_ROOT = Path("D:/yacs/lesson07-remote/reports")
+PEGASUS_SCHEMA_SHA256 = {
+    name: INSPECTION_SCHEMA_SHA256[name]
+    for name in ("edit_material_instance", "edit_material", "edit_asset")
+}
+PEGASUS_SCHEMA_SHA256["edit_level"] = "e1913ef25e7ec948a4a2d2e1ccb95de193981ea5dd44efc463eff5fededb6d80"
+PEGASUS_TEXTURES = (
+    ("Colour Atlas", SOURCE_ASSETS_ARRAYS[0]),
+    ("Normal Atlas", SOURCE_ASSETS_ARRAYS[1]),
+    ("Masks Atlas", SOURCE_ASSETS_ARRAYS[2]),
+    ("Terrain Colour", INSPECTION_ROOT + "/Textures/T_PE_Terrain_Color"),
+    ("Terrain IDmap", INSPECTION_ROOT + "/Textures/T_PE_Terrain_IDMap"),
+)
+PEGASUS_INPUTS = (PEGASUS_SOURCE, TRIAL_MI, PEGASUS_PARENT, PEGASUS_SOURCE_PARENT,
+                  *(path for _name, path in PEGASUS_TEXTURES))
+
+
+def pegasus_plan():
+    """Original ZIP MI; only YACS registration/references change in the copy."""
+    return [
+        {"name": "edit_level", "arguments": {"class_contains": "Landscape", "limit": 200, "save": False}},
+        {"name": "edit_material_instance", "arguments": {"name": TRIAL_MI}},
+        {"name": "edit_material_instance", "arguments": {"name": PEGASUS_SOURCE}},
+        {"name": "edit_material", "arguments": {"name": PEGASUS_PARENT, "save": False,
+                                                "section": "properties", "limit": 1000, "offset": 0}},
+        {"name": "edit_asset", "arguments": {"save_assets": {"paths": list(PEGASUS_INPUTS), "dry_run": True}}},
+        {"name": "edit_asset", "arguments": {"duplicate_asset": {"from": TRIAL_MI, "to": PEGASUS_BACKUP}}},
+        {"name": "edit_asset", "arguments": {"duplicate_asset": {"from": PEGASUS_SOURCE, "to": PEGASUS_CANDIDATE}}},
+        {"name": "edit_material_instance", "arguments": {
+            "name": PEGASUS_CANDIDATE, "parent": PEGASUS_PARENT,
+            "scalars": [{"name": name, "value": value} for name, value in
+                        (("Terrain Resolution", 16000), ("Terrain Scale", 50), ("UV Rotate", 0))],
+            "vectors": [{"name": "Offset", "value": [-8000, -8000, 0, 0]}],
+            "textures": [{"name": name, "value": path} for name, path in PEGASUS_TEXTURES],
+        }},
+        {"name": "edit_material_instance", "arguments": {"name": PEGASUS_CANDIDATE}},
+        {"name": "edit_material_instance", "arguments": {"name": PEGASUS_BACKUP}},
+        {"name": "edit_material_instance", "arguments": {"name": TRIAL_MI}},
+    ]
+
+
+def pegasus_package_path(object_path):
+    require(object_path in (*PEGASUS_INPUTS, PEGASUS_BACKUP, PEGASUS_CANDIDATE), "PEGASUS_PACKAGE_PATH")
+    return plain_path(PEGASUS_CONTENT_ROOT / (object_path.removeprefix("/Game/") + ".uasset"))
+
+
+def pegasus_fingerprint(object_path):
+    path = pegasus_package_path(object_path)
+    # The existing 16000-square colour package is 425,514,280 bytes at a287c5a8.
+    # Hash fixed inputs in 1 MiB blocks; never allocate this package in RAM.
+    limit = (512 if object_path == PEGASUS_TEXTURES[3][1] else 128) * 1024 * 1024
+    try:
+        before = path.stat()
+        require(stat.S_ISREG(before.st_mode) and 0 < before.st_size <= limit, "PEGASUS_INPUT_SIZE")
+        digest, count = hashlib.sha256(), 0
+        with path.open("rb") as stream:
+            while block := stream.read(1024 * 1024):
+                count += len(block)
+                require(count <= limit, "PEGASUS_INPUT_SIZE")
+                digest.update(block)
+        after = plain_path(path).stat()
+        require(count == before.st_size == after.st_size and before.st_mtime_ns == after.st_mtime_ns,
+                "PEGASUS_INPUT_CHANGED")
+        return {"size_bytes": count, "sha256": digest.hexdigest()}
+    except OSError:
+        raise ProbeError("PEGASUS_INPUT_UNAVAILABLE") from None
+
+
+def pegasus_preflight():
+    for target in (PEGASUS_BACKUP, PEGASUS_CANDIDATE):
+        require(not pegasus_package_path(target).exists(), "PEGASUS_DESTINATION_EXISTS")
+    inputs = {path: pegasus_fingerprint(path) for path in PEGASUS_INPUTS}
+    require(inputs[PEGASUS_SOURCE] == {"size_bytes": PEGASUS_SOURCE_SIZE, "sha256": PEGASUS_SOURCE_SHA256},
+            "PEGASUS_SOURCE_HASH")
+    return inputs
+
+
+def verify_pegasus_inputs(inputs):
+    require(inputs == {path: pegasus_fingerprint(path) for path in PEGASUS_INPUTS}, "PEGASUS_INPUT_CHANGED")
+
+
+def pegasus_mi_snapshot(text, object_path, parent):
+    require(text.startswith("# MATERIAL INSTANCE " + object_path.rsplit("/", 1)[-1] + "\n")
+            and re.findall(r"(?m)^parent = ([^\r\n]+)$", text) == [parent.rsplit("/", 1)[-1]]
+            and text.count("= saved=false (read-only call - asset untouched, not saved)") == 1,
+            "PEGASUS_MI_READBACK")
+    lines = re.findall(r"(?m)^#json-mi:([^\r\n]+)$", text)
+    require(text.count("#json-mi:") == 1 and len(lines) == 1, "PEGASUS_MI_READBACK")
+    value = parse_json(lines[0].encode("utf-8"), INSPECTION_RESPONSE_LIMIT)
+    require(type(value) is dict and set(value) == {"scalars", "vectors", "textures", "static_switches"},
+            "PEGASUS_MI_READBACK")
+    for category, rows in value.items():
+        require(type(rows) is list and 0 < len(rows) <= 100, "PEGASUS_MI_READBACK")
+        for row in rows:
+            require(type(row) is dict and set(row) == {"name", "value", "overridden"}
+                    and type(row["name"]) is str and 0 < len(row["name"]) <= 128
+                    and type(row["overridden"]) is bool, "PEGASUS_MI_READBACK")
+            item = row["value"]
+            require((category == "scalars" and type(item) in (int, float) and math.isfinite(item))
+                    or (category == "static_switches" and type(item) is bool)
+                    or (category in ("vectors", "textures") and type(item) is str and 0 < len(item) <= 512),
+                    "PEGASUS_MI_READBACK")
+    return value
+
+
+def verify_pegasus_source(snapshot):
+    # Repeated names are deliberately left as ordered rows. Indexed tuple proof is offline.
+    expected = {"Detail Brightness": 1, "Detail Tiling": .25, "Macro Tiling": TRIAL_VALUE_F32,
+                "Global Brightness": .5, "Global Saturation": .5, "Global Normal Flatten": 0,
+                "Global Specular Scale": 1, "Specular Falloff Exponent": .5, "UV Distort": 4,
+                "Num IDmap Layers": 5, "Terrain Resolution": 2016, "Terrain Scale": 200, "UV Rotate": -90}
+    for name, value in expected.items():
+        rows = [row for row in snapshot["scalars"] if row["name"] == name]
+        require(len(rows) == 1 and rows[0]["value"] == value, "PEGASUS_SOURCE_SETTINGS")
+    strengths = [row for row in snapshot["scalars"] if row["name"] == "Global Colour Strength"]
+    # The installed name-only reader repeats names and does not expose association.
+    # Its overridden flags cannot prove how many explicit indexed overrides exist.
+    require(len(strengths) == 5 and any(row["value"] == .5 for row in strengths), "PEGASUS_SOURCE_SETTINGS")
+    require(sorted((row["name"], row["value"]) for row in snapshot["static_switches"])
+            == [("Allow Grass", False), ("Use IDmap", True), ("Use Terrain Colour", True)],
+            "PEGASUS_SOURCE_SETTINGS")
+
+
+def expected_pegasus_snapshot(source):
+    expected = json.loads(canonical(source))
+    for category, replacements in (
+        ("scalars", {"Terrain Resolution": 16000, "Terrain Scale": 50, "UV Rotate": 0}),
+        ("vectors", {"Offset": "(-8000,-8000,0,0)"}),
+        ("textures", {name: path + "." + path.rsplit("/", 1)[-1] for name, path in PEGASUS_TEXTURES}),
+    ):
+        for name, value in replacements.items():
+            rows = [row for row in expected[category] if row["name"] == name]
+            require(len(rows) == 1, "PEGASUS_SOURCE_SETTINGS")
+            rows[0].update(value=value, overridden=True)
+    return expected
+
+
+def verify_pegasus_clean(text):
+    require(re.findall(r"(?m)^= failures=([0-9]+)$", text) == ["0"], "PEGASUS_INPUT_DIRTY")
+    rows = re.findall(r"(?m)^~ would save (\S+) \(dirty=([01])\)$", text)
+    require(len(rows) == len(PEGASUS_INPUTS)
+            and set(rows) == {(path, "0") for path in PEGASUS_INPUTS}
+            and re.findall(r"(?m)^= save_assets dry_run: ([0-9]+) package\(s\) considered, nothing written$", text)
+            == [str(len(PEGASUS_INPUTS))], "PEGASUS_INPUT_DIRTY")
+
+
+def retain_pegasus_packages(run_token, rows):
+    require(type(run_token) is str and re.fullmatch(r"[1-9][0-9]{0,19}-[1-9][0-9]{0,4}", run_token),
+            "PEGASUS_RUN_TOKEN")
+    destination = plain_path(PEGASUS_REPORT_ROOT / run_token / "candidate-assets")
+    require(destination.parent.is_dir() and not destination.exists(), "PEGASUS_EXPORT_EXISTS")
+    retained = []
+    payloads = []
+    for path, call_index in ((PEGASUS_BACKUP, 6), (PEGASUS_CANDIDATE, 8)):
+        source = pegasus_package_path(path)
+        before = source.stat()
+        raw = read_bounded(source, 1024 * 1024)
+        after = source.stat()
+        started = datetime.fromisoformat(rows[call_index - 1]["started_utc"]).timestamp()
+        require(before.st_size == after.st_size and before.st_mtime_ns == after.st_mtime_ns
+                and before.st_mtime >= started, "PEGASUS_PACKAGE_NOT_FRESH")
+        retained.append({"object_path": path, "file": source.name, "source_file": str(source),
+                         "size_bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
+        payloads.append((source.name, raw))
+    destination.mkdir()
+    for name, raw in payloads:
+        with plain_path(destination / name).open("xb") as stream:
+            stream.write(raw)
+        require(read_bounded(destination / name, 1024 * 1024) == raw, "PEGASUS_EXPORT_MISMATCH")
+    write_report(destination.parent / "candidate-assets.json", {
+        "status": "TWO_NEW_PACKAGES_RETAINED_OFFLINE_REVIEW_PENDING", "assets": retained,
+        "mi_associations_verified": False, "actor_binding_verified": False, "visual_acceptance": False,
+    })
+    return retained
+
+
 TRIAL_BACKUP = INSPECTION_ROOT + "/RepairBackups/MI_PreMacroTrial_20261021"
 # Complete ordered #json-mi snapshot observed in run 39530647438. Repeated
 # layer parameter names are intentional; never collapse these lists to maps.
@@ -795,6 +980,18 @@ class ObservationState:
     source_assets_queries_verified: list = field(default_factory=list)
     source_assets_registry_verified: bool = False
     source_assets_inventory_complete: bool = False
+    pegasus_requested: bool = False
+    pegasus_results: list = field(default_factory=list)
+    pegasus_host_checks: list = field(default_factory=list)
+    pegasus_schema_sha256: dict = field(default_factory=dict)
+    pegasus_input_fingerprints: dict = field(default_factory=dict)
+    pegasus_packages: list = field(default_factory=list)
+    pegasus_baseline_verified: bool = False
+    pegasus_source_verified: bool = False
+    pegasus_clean_verified: bool = False
+    pegasus_backup_verified: bool = False
+    pegasus_candidate_verified: bool = False
+    pegasus_current_unchanged: bool = False
     surface_requested: bool = False
     surface_results: list = field(default_factory=list)
     surface_host_checks: list = field(default_factory=list)
@@ -822,6 +1019,28 @@ class ObservationState:
     apply_verified: bool = False
 
     def report_fields(self):
+        if self.pegasus_requested:
+            return {
+                "native_tool_calls": sum(row["attempted"] for row in self.pegasus_results),
+                "native_tool_attempted": self.attempted, "native_tool_completed": self.completed,
+                "native_tool_response_received": len(self.pegasus_results) == 11 and all(row["response_received"] for row in self.pegasus_results),
+                "pegasus_results": self.pegasus_results, "pegasus_host_checks": self.pegasus_host_checks,
+                "pegasus_schema_sha256": self.pegasus_schema_sha256,
+                "pegasus_input_fingerprints": self.pegasus_input_fingerprints,
+                "pegasus_packages": self.pegasus_packages,
+                "pegasus_baseline_verified": self.pegasus_baseline_verified,
+                "pegasus_source_verified": self.pegasus_source_verified,
+                "pegasus_clean_verified": self.pegasus_clean_verified,
+                "pegasus_backup_verified": self.pegasus_backup_verified,
+                "pegasus_candidate_verified": self.pegasus_candidate_verified,
+                "pegasus_current_unchanged": self.pegasus_current_unchanged,
+                "pegasus_baseline_sha256": PEGASUS_BASELINE_SHA256,
+                "pegasus_mi_associations_verified": False,
+                "pegasus_actor_binding_verified": False,
+                "pegasus_compile_verified": False,
+                "pegasus_active_material_mutation_requested": False,
+                "native_tool_error": self.tool_error,
+            }
         if self.surface_requested:
             return {
                 "native_tool_calls": sum(row["attempted"] for row in self.surface_results),
@@ -1665,6 +1884,9 @@ class DiscoveryClient:
         self._source_assets_params = None
         self._source_assets_row = None
         self._source_assets_files_guard = None
+        self._pegasus_params = None
+        self._pegasus_row = None
+        self._pegasus_files_guard = None
         self._trial_params = None
         self._trial_row = None
         self._trial_recovering = False
@@ -1834,6 +2056,26 @@ class DiscoveryClient:
             and params is self._trial_params and self._trial_row is not None
             and not self._trial_row["attempted"] and not notification
         )
+        pegasus_preparing = (
+            method == "tools/call" and self._pegasus_params is not None
+            and params is self._pegasus_params and self._pegasus_row is not None
+            and not self._pegasus_row["attempted"] and not notification
+        )
+        if pegasus_preparing:
+            state = self.observation_state
+            index = len(state.pegasus_results) - 1
+            require(state.pegasus_requested and 0 <= index < 11
+                    and self._pegasus_row is state.pegasus_results[index]
+                    and all(row["completed"] is True for row in state.pegasus_results[:index])
+                    and state.pegasus_schema_sha256 == PEGASUS_SCHEMA_SHA256
+                    and canonical(params) == canonical(pegasus_plan()[index])
+                    and (index < 5 or (state.pegasus_baseline_verified and state.pegasus_source_verified
+                                        and state.pegasus_clean_verified)), "PEGASUS_ARGUMENTS")
+            if index in (5, 6):
+                require(not pegasus_package_path(params["arguments"]["duplicate_asset"]["to"]).exists(),
+                        "PEGASUS_DESTINATION_EXISTS")
+            if index == 5:
+                verify_pegasus_inputs(state.pegasus_input_fingerprints)
         if trialing:
             state = self.observation_state
             rows, stage = state.trial_results, self._trial_row["stage"]
@@ -1874,7 +2116,7 @@ class DiscoveryClient:
                     and canonical(params) == canonical(surface_plan(self._surface_run_token)[index]),
                     "SURFACE_ARGUMENTS")
             self._surface_host_check("before")
-        native_call = observing or capturing or inspecting or trialing or vault_inspecting or surfacing or source_assets_inspecting
+        native_call = observing or capturing or inspecting or trialing or vault_inspecting or surfacing or source_assets_inspecting or pegasus_preparing
         require(
             method in METHODS
             or (notification and method == "notifications/initialized")
@@ -1887,6 +2129,8 @@ class DiscoveryClient:
         )
         if surfacing:
             pass  # The fresh host check above is required for every surface operation.
+        elif pegasus_preparing:
+            self._pegasus_host_check("before")
         elif source_assets_inspecting:
             self._source_assets_host_check("before")
         elif vault_inspecting:
@@ -1927,6 +2171,8 @@ class DiscoveryClient:
             headers["Mcp-Session-Id"] = self.session_id
         # HTTPConnection has no proxy/environment lookup and never follows a redirect.
         request_timeout = SURFACE_TIMEOUT_SECONDS if surfacing and self._surface_row["index"] == 2 else self.timeout
+        if pegasus_preparing and self._pegasus_row["index"] in (6, 7, 8):
+            request_timeout = 180.0
         connection = http.client.HTTPConnection(
             HOST, self.discovery.port, timeout=request_timeout
         )
@@ -1976,6 +2222,11 @@ class DiscoveryClient:
                     })
                 if source_assets_inspecting:
                     self._source_assets_row.update({
+                        "attempted": True, "completed": None,
+                        "started_utc": self.observation_state.started_utc.isoformat(),
+                    })
+                if pegasus_preparing:
+                    self._pegasus_row.update({
                         "attempted": True, "completed": None,
                         "started_utc": self.observation_state.started_utc.isoformat(),
                     })
@@ -2068,6 +2319,11 @@ class DiscoveryClient:
                     })
                 if source_assets_inspecting:
                     self._source_assets_row.update({
+                        "response_received": True,
+                        "response_received_utc": self.observation_state.response_received_utc.isoformat(),
+                    })
+                if pegasus_preparing:
+                    self._pegasus_row.update({
                         "response_received": True,
                         "response_received_utc": self.observation_state.response_received_utc.isoformat(),
                     })
@@ -2198,6 +2454,97 @@ class DiscoveryClient:
             except ProbeError as error:
                 row["error_code"] = error.code
                 raise
+        state.completed = True
+
+    def _pegasus_host_check(self, phase):
+        if self._pegasus_files_guard is not None:
+            self._pegasus_files_guard()
+        check = verify_trial_host_identity(self.identity, self.discovery)
+        validate_identity({**self.identity, "observed_utc": check["verified_utc"]}, self.discovery)
+        self.observation_state.pegasus_host_checks.append({
+            "index": self._pegasus_row["index"], "phase": phase, **check,
+        })
+
+    def _run_pegasus_preparation(self, schemas, run_token):
+        state = self.observation_state
+        require(type(run_token) is str and re.fullmatch(r"[1-9][0-9]{0,19}-[1-9][0-9]{0,4}", run_token),
+                "PEGASUS_RUN_TOKEN")
+        output = plain_path(PEGASUS_REPORT_ROOT / run_token)
+        require(output.is_dir() and not plain_path(output / "candidate-assets").exists()
+                and not plain_path(output / "candidate-assets.json").exists(), "PEGASUS_EXPORT_EXISTS")
+        for name, expected in PEGASUS_SCHEMA_SHA256.items():
+            schema = schemas.get(name)
+            require(type(schema) is dict and hashlib.sha256(canonical(schema)).hexdigest() == expected,
+                    "PEGASUS_TOOL_SCHEMA_UNSUPPORTED")
+        state.pegasus_schema_sha256 = dict(PEGASUS_SCHEMA_SHA256)
+        state.pegasus_input_fingerprints = pegasus_preflight()
+        baseline = source = None
+        for index, params in enumerate(pegasus_plan(), 1):
+            row = {
+                "index": index, "tool_name": params["name"], "arguments": params["arguments"],
+                "input_schema_sha256": state.pegasus_schema_sha256[params["name"]],
+                "attempted": False, "completed": False, "response_received": False,
+                "started_utc": None, "response_received_utc": None,
+                "result": None, "error_code": None,
+            }
+            state.pegasus_results.append(row)
+            self._pegasus_params, self._pegasus_row = params, row
+            state.tool_name = params["name"]
+            try:
+                try:
+                    result = self._post("tools/call", params)
+                    state.tool_error = observer_error_diagnostic(result, (self.discovery.token, self.session_id))
+                    retain_inspection_result(result, row, (self.discovery.token, self.session_id))
+                finally:
+                    if row["attempted"]:
+                        self._pegasus_host_check("after")
+                text = row["result"]["text"]
+                if index == 1:
+                    # Retain the advertised read response without inventing a material-binding parser.
+                    # This call contains no operation array and save is explicitly false.
+                    pass
+                elif index == 2:
+                    baseline = pegasus_mi_snapshot(text, TRIAL_MI, PEGASUS_PARENT)
+                    require(hashlib.sha256(canonical(baseline)).hexdigest() == PEGASUS_BASELINE_SHA256,
+                            "PEGASUS_BASELINE_CHANGED")
+                    state.pegasus_baseline_verified = True
+                elif index == 3:
+                    source = pegasus_mi_snapshot(text, PEGASUS_SOURCE, PEGASUS_SOURCE_PARENT)
+                    verify_pegasus_source(source)
+                    state.pegasus_source_verified = True
+                elif index == 4:
+                    require(text.startswith("# MATERIAL M_Landscape_YACS\n")
+                            and "## Expression properties (non-default)" in text, "PEGASUS_PARENT_READBACK")
+                elif index == 5:
+                    verify_pegasus_clean(text)
+                    state.pegasus_clean_verified = True
+                elif index in (6, 7):
+                    target = PEGASUS_BACKUP if index == 6 else PEGASUS_CANDIDATE
+                    require(re.findall(r"(?m)^= failures=([0-9]+)$", text) == ["0"]
+                            and target in text, "PEGASUS_DUPLICATE_NOT_CONFIRMED")
+                elif index == 8:
+                    require(re.findall(r"(?m)^= parent=([^;\r\n]+); saved=(true|false); failures=([0-9]+)$", text)
+                            == [("M_Landscape_YACS", "true", "0")], "PEGASUS_CANDIDATE_NOT_SAVED")
+                elif index == 9:
+                    candidate = pegasus_mi_snapshot(text, PEGASUS_CANDIDATE, PEGASUS_PARENT)
+                    require(candidate == expected_pegasus_snapshot(source), "PEGASUS_CANDIDATE_DRIFT")
+                    state.pegasus_candidate_verified = True
+                elif index == 10:
+                    require(pegasus_mi_snapshot(text, PEGASUS_BACKUP, PEGASUS_PARENT) == baseline,
+                            "PEGASUS_BACKUP_DRIFT")
+                    state.pegasus_backup_verified = True
+                else:
+                    require(pegasus_mi_snapshot(text, TRIAL_MI, PEGASUS_PARENT) == baseline,
+                            "PEGASUS_CURRENT_DRIFT")
+                    verify_pegasus_inputs(state.pegasus_input_fingerprints)
+                    state.pegasus_current_unchanged = True
+                require(len(canonical(state.pegasus_results)) <= INSPECTION_AGGREGATE_LIMIT,
+                        "PEGASUS_AGGREGATE_SIZE")
+                row["completed"] = True
+            except ProbeError as error:
+                row["error_code"] = error.code
+                raise  # Preserve partial isolated copies; never retry, delete or touch the active MI.
+        state.pegasus_packages = retain_pegasus_packages(run_token, state.pegasus_results)
         state.completed = True
 
     def _run_vault_inspection(self, schema):
@@ -2370,13 +2717,14 @@ class DiscoveryClient:
     def probe(
         self, observe_lesson07=False, capture_lesson07=False, inspect_lesson07=False,
         trial_macro=False, apply_reviewed_macro=False, inspect_vault=False, import_surfaces=False, surface_run_token=None,
-        inspect_source_assets=False,
+        inspect_source_assets=False, prepare_pegasus_candidate=False, pegasus_run_token=None,
     ):
         require(
-            sum((observe_lesson07, capture_lesson07, inspect_lesson07, trial_macro, apply_reviewed_macro, inspect_vault, import_surfaces, inspect_source_assets)) <= 1,
+            sum((observe_lesson07, capture_lesson07, inspect_lesson07, trial_macro, apply_reviewed_macro, inspect_vault, import_surfaces, inspect_source_assets, prepare_pegasus_candidate)) <= 1,
             "NATIVE_MODES_MUTUALLY_EXCLUSIVE",
         )
         self.observation_state.surface_requested = import_surfaces
+        self.observation_state.pegasus_requested = prepare_pegasus_candidate
         self.observation_state.capture_requested = capture_lesson07
         self.observation_state.inspection_requested = inspect_lesson07
         self.observation_state.vault_requested = inspect_vault
@@ -2453,7 +2801,7 @@ class DiscoveryClient:
                         observer_schema = tool.get("inputSchema")
                     if name == CAPTURE_TOOL:
                         capture_schema = tool.get("inputSchema")
-                    if name in INSPECTION_SCHEMA_SHA256:
+                    if name in INSPECTION_SCHEMA_SHA256 or name in PEGASUS_SCHEMA_SHA256:
                         inspection_schemas[name] = tool.get("inputSchema")
                     if name == VAULT_TOOL:
                         vault_schema = tool.get("inputSchema")
@@ -2636,6 +2984,17 @@ class DiscoveryClient:
                 "visual_acceptance": False,
                 **self.observation_state.report_fields(),
             })
+        if prepare_pegasus_candidate:
+            require(tool_error is None, "PEGASUS_INCOMPLETE_TOOL_LIST")
+            require(session["signed_in"], "PEGASUS_SIGNED_OUT")
+            self._run_pegasus_preparation(inspection_schemas, pegasus_run_token)
+            report.update({
+                "status": "PEGASUS_CANDIDATE_SAVED_OFFLINE_REVIEW_PENDING",
+                "http_requests": self.requests,
+                "native_material_readback": "CANDIDATE_ORDERED_VALUES_VERIFIED_INDEXED_TUPLES_REVIEW_PENDING",
+                "visual_acceptance": False,
+                **self.observation_state.report_fields(),
+            })
         if import_surfaces:
             require(tool_error is None, "SURFACE_INCOMPLETE_TOOL_LIST")
             require(session["signed_in"], "SURFACE_SIGNED_OUT")
@@ -2688,6 +3047,7 @@ def probe_from_files(
     inspect_vault=False,
     inspect_source_assets=False,
     import_surfaces=False,
+    prepare_pegasus_candidate=False,
     observation_state=None,
 ):
     require(WINDOWS_HOST, "WINDOWS_HOST_REQUIRED")
@@ -2697,7 +3057,7 @@ def probe_from_files(
     identity = parse_json(identity_raw, CONFIG_LIMIT)
     safe_identity = validate_identity(identity, discovery)
     client = DiscoveryClient(discovery, identity, observation_state=observation_state)
-    if trial_macro or apply_reviewed_macro or inspect_vault or import_surfaces or inspect_source_assets:
+    if trial_macro or apply_reviewed_macro or inspect_vault or import_surfaces or inspect_source_assets or prepare_pegasus_candidate:
         if inspect_source_assets:
             client.observation_state.source_assets_external_host_identity = safe_identity
         elif inspect_vault:
@@ -2710,7 +3070,9 @@ def probe_from_files(
                     and read_bounded(identity_path, CONFIG_LIMIT) == identity_raw,
                     "INPUT_CHANGED")
 
-        if inspect_source_assets:
+        if prepare_pegasus_candidate:
+            client._pegasus_files_guard = trial_files_guard
+        elif inspect_source_assets:
             client._source_assets_files_guard = trial_files_guard
         elif import_surfaces:
             client._surface_files_guard = trial_files_guard
@@ -2726,6 +3088,7 @@ def probe_from_files(
         **({"apply_reviewed_macro": True} if apply_reviewed_macro else {}),
         **({"inspect_vault": True} if inspect_vault else {}),
         **({"inspect_source_assets": True} if inspect_source_assets else {}),
+        **({"prepare_pegasus_candidate": True, "pegasus_run_token": Path(identity_path).parent.name} if prepare_pegasus_candidate else {}),
         **({"import_surfaces": True, "surface_run_token": Path(identity_path).parent.name} if import_surfaces else {}),
     )
     require(
@@ -2806,6 +3169,7 @@ def main(argv=None):
     mode.add_argument("--inspect-lesson07", action="store_true")
     mode.add_argument("--inspect-vault", action="store_true")
     mode.add_argument("--inspect-source-assets", action="store_true")
+    mode.add_argument("--prepare-pegasus-candidate", action="store_true")
     mode.add_argument("--import-surfaces", action="store_true")
     mode.add_argument("--trial-macro", action="store_true")
     mode.add_argument("--apply-reviewed-macro", action="store_true")
@@ -2815,6 +3179,7 @@ def main(argv=None):
         inspection_requested=args.inspect_lesson07,
         vault_requested=args.inspect_vault,
         source_assets_requested=args.inspect_source_assets,
+        pegasus_requested=args.prepare_pegasus_candidate,
         surface_requested=args.import_surfaces,
         trial_requested=args.trial_macro,
         apply_requested=args.apply_reviewed_macro,
@@ -2834,6 +3199,8 @@ def main(argv=None):
             options["inspect_vault"] = True
         if args.inspect_source_assets:
             options["inspect_source_assets"] = True
+        if args.prepare_pegasus_candidate:
+            options["prepare_pegasus_candidate"] = True
         if args.import_surfaces:
             options["import_surfaces"] = True
         if args.trial_macro:
@@ -2850,7 +3217,9 @@ def main(argv=None):
         state.apply_verified = False
         report = {
             "schema_version": 1,
-            "status": "SURFACE_IMPORT_FAILED"
+            "status": "PEGASUS_CANDIDATE_FAILED"
+            if args.prepare_pegasus_candidate
+            else "SURFACE_IMPORT_FAILED"
             if args.import_surfaces
             else "APPLY_REVIEWED_MACRO_FAILED"
             if args.apply_reviewed_macro
@@ -2879,12 +3248,14 @@ def main(argv=None):
             "visual_acceptance": False,
             "performance_pass": False,
         }
-        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07 or args.trial_macro or args.apply_reviewed_macro or args.inspect_vault or args.import_surfaces or args.inspect_source_assets:
+        if args.observe_lesson07 or args.capture_lesson07 or args.inspect_lesson07 or args.trial_macro or args.apply_reviewed_macro or args.inspect_vault or args.import_surfaces or args.inspect_source_assets or args.prepare_pegasus_candidate:
             report.update(state.report_fields())
         if rpc_code is not None:
             report["rpc_code"] = rpc_code
     prefix = (
-        "L07_WINGMAN_SURFACE_IMPORT"
+        "L07_WINGMAN_PEGASUS_CANDIDATE"
+        if args.prepare_pegasus_candidate
+        else "L07_WINGMAN_SURFACE_IMPORT"
         if args.import_surfaces
         else "L07_WINGMAN_APPLY_REVIEWED_MACRO"
         if args.apply_reviewed_macro
@@ -2919,7 +3290,9 @@ def main(argv=None):
         + f" native_tool_calls={report['native_tool_calls']}"
     )
     expected = (
-        "SURFACE_IMPORT_SAVED_IMAGES_REVIEW_PENDING"
+        "PEGASUS_CANDIDATE_SAVED_OFFLINE_REVIEW_PENDING"
+        if args.prepare_pegasus_candidate
+        else "SURFACE_IMPORT_SAVED_IMAGES_REVIEW_PENDING"
         if args.import_surfaces
         else "APPLY_REVIEWED_MACRO_VERIFIED_REVIEW_PENDING"
         if args.apply_reviewed_macro

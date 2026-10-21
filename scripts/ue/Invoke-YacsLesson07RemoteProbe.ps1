@@ -10,6 +10,7 @@
   -CaptureLesson07 requests the vendor's dedicated viewport screenshot instead.
   -InspectLesson07 performs the fixed six-call dedicated read-only material batch.
   -InspectSourceAssets reads five fixed surface IDs across /Game, then MI and arrays.
+  -PreparePegasusCandidate reads Landscape actors and prepares only two new MI packages.
   -InspectVault performs only the three fixed local owned-pack inventory reads.
   -ImportSurfaces stages five pinned maps, imports once, and retains native captures.
   -TrialMacro performs the reviewed Macro Tiling A/B/A trial and verifies restore.
@@ -25,6 +26,7 @@ param(
   [Parameter(ParameterSetName='Capture')][switch]$CaptureLesson07,
   [Parameter(ParameterSetName='Inspection')][switch]$InspectLesson07,
   [Parameter(ParameterSetName='SourceAssetsInspection')][switch]$InspectSourceAssets,
+  [Parameter(ParameterSetName='PegasusCandidate')][switch]$PreparePegasusCandidate,
   [Parameter(ParameterSetName='VaultInspection')][switch]$InspectVault,
   [Parameter(ParameterSetName='SurfaceImport')][switch]$ImportSurfaces,
   [Parameter(ParameterSetName='MacroTrial')][switch]$TrialMacro,
@@ -34,11 +36,11 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$requireExistingOwner = [bool]($ExistingEditorOnly -or $ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $InspectSourceAssets -or $InspectVault -or $TrialMacro -or $ApplyReviewedMacro -or $ImportSurfaces)
-$nativeRequested = [bool]($ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $InspectSourceAssets -or $InspectVault -or $TrialMacro -or $ApplyReviewedMacro -or $ImportSurfaces)
-$expectedNativeCalls = if ($ImportSurfaces) { 6 } elseif ($ApplyReviewedMacro) { 7 } elseif ($TrialMacro) { 12 } elseif ($InspectLesson07) { 6 } elseif ($InspectSourceAssets) { 7 } elseif ($InspectVault) { 3 } else { 1 }
+$requireExistingOwner = [bool]($ExistingEditorOnly -or $ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $InspectSourceAssets -or $InspectVault -or $TrialMacro -or $ApplyReviewedMacro -or $ImportSurfaces -or $PreparePegasusCandidate)
+$nativeRequested = [bool]($ObserveLesson07 -or $CaptureLesson07 -or $InspectLesson07 -or $InspectSourceAssets -or $InspectVault -or $TrialMacro -or $ApplyReviewedMacro -or $ImportSurfaces -or $PreparePegasusCandidate)
+$expectedNativeCalls = if ($PreparePegasusCandidate) { 11 } elseif ($ImportSurfaces) { 6 } elseif ($ApplyReviewedMacro) { 7 } elseif ($TrialMacro) { 12 } elseif ($InspectLesson07) { 6 } elseif ($InspectSourceAssets) { 7 } elseif ($InspectVault) { 3 } else { 1 }
 $maximumNativeCalls = if ($ApplyReviewedMacro) { 10 } elseif ($TrialMacro) { 15 } else { $expectedNativeCalls }
-$ownerGuardPrefix = if ($ImportSurfaces) { 'SURFACE_IMPORT' } elseif ($ObserveLesson07) { 'OBSERVATION' } elseif ($CaptureLesson07) { 'CAPTURE' } elseif ($InspectLesson07) { 'INSPECTION' } elseif ($InspectSourceAssets) { 'SOURCE_ASSETS_INSPECTION' } elseif ($InspectVault) { 'VAULT_INSPECTION' } elseif ($TrialMacro) { 'TRIAL_MACRO' } elseif ($ApplyReviewedMacro) { 'APPLY_MACRO' } else { 'DISCOVERY' }
+$ownerGuardPrefix = if ($PreparePegasusCandidate) { 'PEGASUS_CANDIDATE' } elseif ($ImportSurfaces) { 'SURFACE_IMPORT' } elseif ($ObserveLesson07) { 'OBSERVATION' } elseif ($CaptureLesson07) { 'CAPTURE' } elseif ($InspectLesson07) { 'INSPECTION' } elseif ($InspectSourceAssets) { 'SOURCE_ASSETS_INSPECTION' } elseif ($InspectVault) { 'VAULT_INSPECTION' } elseif ($TrialMacro) { 'TRIAL_MACRO' } elseif ($ApplyReviewedMacro) { 'APPLY_MACRO' } else { 'DISCOVERY' }
 $applyProofFlags=@('apply_verified','apply_candidate_verified','apply_mutation_attempted','apply_restore_attempted',
   'apply_restore_verified','apply_backup_verified','apply_registry_verified','apply_reviewed_trial_verified')
 $projectRoot = 'D:\yacs\project'
@@ -152,6 +154,8 @@ $report = [ordered]@{
   surface_import_requested=[bool]$ImportSurfaces;surface_import_verified=$false
   inspection_requested=[bool]$InspectLesson07
   source_assets_inspection_requested=[bool]$InspectSourceAssets;source_assets_inventory_complete=$null
+  pegasus_candidate_requested=[bool]$PreparePegasusCandidate;pegasus_candidate_prepared=$false
+  pegasus_offline_review_pending=[bool]$PreparePegasusCandidate;pegasus_host_metadata=$null
   vault_inspection_requested=[bool]$InspectVault;vault_inventory_accepted=$false;vault_license_verified=$false
   trial_macro_requested=[bool]$TrialMacro;trial_status=$null;trial_captures_received=0
   trial_mutation_attempted=$false;trial_restore_verified=$false;trial_backup_verified=$false;trial_registry_verified=$false
@@ -207,6 +211,36 @@ try {
     if ($null -eq $identity -or $identity.pid -ne $owner.editor.editor_pid -or
         $identity.process_start_filetime_utc -cne $owner.editor.editor_start_filetime_utc) { throw 'SURFACE_IMPORT_OWNER_CHANGED' }
   }
+  if ($PreparePegasusCandidate) {
+    # Optional OS/cache metadata only. No Houdini/GPU execution or crop repair.
+    $metadata=[ordered]@{logical_processors=[Environment]::ProcessorCount;memory_status='UNAVAILABLE';
+      free_physical_kib=$null;total_visible_kib=$null;crop_status='MISSING';crop_size_bytes=$null;crop_sha256=$null;crop_expected_sha256='058a52fdf717bc8ff5eb770101594c54f3f12e12a928efd67720205da50f59ac'}
+    try {
+      $os=Get-CimInstance -ClassName Win32_OperatingSystem
+      $metadata.free_physical_kib=[long]$os.FreePhysicalMemory
+      $metadata.total_visible_kib=[long]$os.TotalVisibleMemorySize
+      $metadata.memory_status='OBSERVED'
+    } catch { $metadata.memory_status='UNAVAILABLE' }
+    $crop='D:\yacs\work\lesson07-unified-20261019\preview_cache\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775\SCREE_SITE_GLOBAL_COLOR.bgeo.sc'
+    try {
+      if (Test-Path -LiteralPath $crop -PathType Leaf) {
+        Assert-L07PlainPath $crop 'D:\yacs\work'
+        $beforeCrop=Get-Item -LiteralPath $crop
+        $metadata.crop_size_bytes=$beforeCrop.Length
+        $metadata.crop_status='OUTSIDE_HASH_SIZE_BOUND'
+        if ($beforeCrop.Length -gt 0 -and $beforeCrop.Length -le 64MB) {
+          $cropHash=(Get-FileHash -LiteralPath $crop -Algorithm SHA256).Hash.ToLowerInvariant()
+          $afterCrop=Get-Item -LiteralPath $crop
+          if ($beforeCrop.Length -eq $afterCrop.Length -and $beforeCrop.LastWriteTimeUtc -eq $afterCrop.LastWriteTimeUtc) {
+            $metadata.crop_sha256=$cropHash
+            $metadata.crop_status=if ($cropHash -ceq $metadata.crop_expected_sha256) { 'PIN_MATCH' } else { 'PIN_MISMATCH' }
+          } else { $metadata.crop_status='CHANGED_DURING_READ' }
+        }
+      }
+    } catch { $metadata.crop_status='UNAVAILABLE' }
+    $report.pegasus_host_metadata=$metadata
+    Assert-L07OwnerProcess $owner
+  }
   $report.identity_before=$identity
   $identity | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $identityPath -Encoding utf8
   $clientArguments=@('-B',(Join-Path $PSScriptRoot 'lesson07_wingman_client.py'),'--identity-receipt',$identityPath,'--output',$clientPath)
@@ -214,6 +248,7 @@ try {
   if ($CaptureLesson07) { $clientArguments+='--capture-lesson07' }
   if ($InspectLesson07) { $clientArguments+='--inspect-lesson07' }
   if ($InspectSourceAssets) { $clientArguments+='--inspect-source-assets' }
+  if ($PreparePegasusCandidate) { $clientArguments+='--prepare-pegasus-candidate' }
   if ($InspectVault) { $clientArguments+='--inspect-vault' }
   if ($ImportSurfaces) { $clientArguments+='--import-surfaces' }
   if ($TrialMacro) { $clientArguments+='--trial-macro' }
@@ -222,7 +257,7 @@ try {
     # Until its bounded receipt is read, a subprocess failure leaves completion unknown.
     $report.native_tool_called=$null;$report.native_tool_attempted=$null;$report.native_tool_completed=$null
     $report.native_tool_call_attempts=$null
-    if ($ObserveLesson07 -or $InspectLesson07 -or $InspectSourceAssets -or $TrialMacro -or $ApplyReviewedMacro -or $ImportSurfaces) { $report.native_material_readback='UNVERIFIED' }
+    if ($ObserveLesson07 -or $InspectLesson07 -or $InspectSourceAssets -or $TrialMacro -or $ApplyReviewedMacro -or $ImportSurfaces -or $PreparePegasusCandidate) { $report.native_material_readback='UNVERIFIED' }
     if ($TrialMacro) {
       foreach ($field in @('trial_mutation_attempted','trial_restore_verified','trial_backup_verified','trial_registry_verified')) {
         $report[$field]=$null
@@ -292,7 +327,36 @@ try {
     $report.native_material_readback='REVIEWED_MACRO_APPLIED_CAPTURE_REVIEW_PENDING'
   }
   if ($report.client_exit_code -ne 0) { throw 'AUTHENTICATED_BRIDGE_PROBE_FAILED' }
-  if ($ImportSurfaces) {
+  if ($PreparePegasusCandidate) {
+    if ($clientReport['status'] -cne 'PEGASUS_CANDIDATE_SAVED_OFFLINE_REVIEW_PENDING' -or
+        $report.native_tool_call_attempts -ne 11 -or $report.native_tool_attempted -ne $true -or $report.native_tool_completed -ne $true -or
+        $clientReport['native_tool_response_received'] -isnot [bool] -or $clientReport['native_tool_response_received'] -ne $true -or
+        $clientReport['pegasus_results'] -isnot [array] -or $clientReport['pegasus_results'].Count -ne 11 -or
+        $clientReport['pegasus_host_checks'] -isnot [array] -or $clientReport['pegasus_host_checks'].Count -ne 22 -or
+        $clientReport['pegasus_packages'] -isnot [array] -or $clientReport['pegasus_packages'].Count -ne 2 -or
+        $clientReport['native_material_readback'] -cne 'CANDIDATE_ORDERED_VALUES_VERIFIED_INDEXED_TUPLES_REVIEW_PENDING') {
+      throw 'PEGASUS_CANDIDATE_RECEIPT_NOT_CONFIRMED'
+    }
+    foreach ($field in @('pegasus_baseline_verified','pegasus_source_verified','pegasus_clean_verified',
+        'pegasus_backup_verified','pegasus_candidate_verified','pegasus_current_unchanged')) {
+      if ($clientReport[$field] -isnot [bool] -or $clientReport[$field] -ne $true) { throw 'PEGASUS_CANDIDATE_RECEIPT_NOT_CONFIRMED' }
+    }
+    foreach ($field in @('pegasus_mi_associations_verified','pegasus_actor_binding_verified','pegasus_compile_verified',
+        'pegasus_active_material_mutation_requested','visual_acceptance','performance_pass')) {
+      if ($clientReport[$field] -isnot [bool] -or $clientReport[$field] -ne $false) { throw 'PEGASUS_CANDIDATE_RECEIPT_NOT_CONFIRMED' }
+    }
+    for ($index=0; $index -lt 11; $index++) {
+      $row=$clientReport['pegasus_results'][$index]
+      if ($row['index'] -ne ($index+1) -or $row['completed'] -isnot [bool] -or $row['completed'] -ne $true -or
+          $clientReport['pegasus_host_checks'][2*$index]['index'] -ne ($index+1) -or
+          $clientReport['pegasus_host_checks'][2*$index]['phase'] -cne 'before' -or
+          $clientReport['pegasus_host_checks'][2*$index+1]['index'] -ne ($index+1) -or
+          $clientReport['pegasus_host_checks'][2*$index+1]['phase'] -cne 'after') { throw 'PEGASUS_CANDIDATE_RECEIPT_NOT_CONFIRMED' }
+    }
+    $report.pegasus_candidate_prepared=$true
+    $report.native_material_readback='CANDIDATE_ORDERED_VALUES_VERIFIED_INDEXED_TUPLES_REVIEW_PENDING'
+    $report.status='LESSON07_PEGASUS_CANDIDATE_SAVED_OFFLINE_REVIEW_PENDING_EDITOR_RETAINED'
+  } elseif ($ImportSurfaces) {
     if ($clientReport['status'] -cne 'SURFACE_IMPORT_SAVED_IMAGES_REVIEW_PENDING' -or
         $clientReport['surface_verified'] -isnot [bool] -or $clientReport['surface_verified'] -ne $true -or
         $report.native_tool_call_attempts -ne 6 -or $report.native_tool_completed -ne $true -or
@@ -433,10 +497,16 @@ try {
   }
 } catch {
   $failure = $true
+  if ($PreparePegasusCandidate) {
+    $report.status='LESSON07_PEGASUS_CANDIDATE_INCOMPLETE_EDITOR_RETAINED'
+  } else {
   $report.status = if ($ImportSurfaces) { 'LESSON07_SURFACE_IMPORT_INCOMPLETE_EDITOR_RETAINED' } elseif ($ObserveLesson07) { 'LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED' } elseif ($CaptureLesson07) { 'LESSON07_CAPTURE_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectLesson07) { 'LESSON07_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectSourceAssets) { 'LESSON07_SOURCE_ASSETS_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } elseif ($InspectVault) { 'LESSON07_VAULT_INSPECTION_INCOMPLETE_EDITOR_RETAINED' } elseif ($TrialMacro) { 'LESSON07_TRIAL_MACRO_INCOMPLETE_EDITOR_RETAINED' } elseif ($ApplyReviewedMacro) { 'LESSON07_REVIEWED_MACRO_APPLY_INCOMPLETE_EDITOR_RETAINED' } else { 'BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED' }
+  }
   # Never serialize exception messages that might contain discovery credentials.
   $report.error_type = $_.Exception.GetType().Name
-  $safeCodes = @('SURFACE_IMPORT_REQUIRES_EXISTING_EDITOR','SURFACE_IMPORT_REQUIRES_VERIFIED_OWNER','SURFACE_IMPORT_OWNER_CHANGED',
+  $safeCodes = @('PEGASUS_CANDIDATE_REQUIRES_EXISTING_EDITOR','PEGASUS_CANDIDATE_REQUIRES_VERIFIED_OWNER','PEGASUS_CANDIDATE_OWNER_CHANGED',
+    'PEGASUS_CANDIDATE_CLIENT_REPORT_SIZE','PEGASUS_CANDIDATE_RECEIPT_NOT_CONFIRMED',
+    'SURFACE_IMPORT_REQUIRES_EXISTING_EDITOR','SURFACE_IMPORT_REQUIRES_VERIFIED_OWNER','SURFACE_IMPORT_OWNER_CHANGED',
     'SURFACE_IMPORT_CLIENT_REPORT_SIZE','SURFACE_IMPORT_RECEIPT_NOT_CONFIRMED','SURFACE_STAGE_ALREADY_EXISTS','SURFACE_STAGE_PACKAGE_FAILED',
     'SURFACE_STAGE_SOURCE_HEAD','SURFACE_STAGE_REDIRECTED_PATH','SURFACE_STAGE_IMPORTER_HASH','SURFACE_STAGE_COPY_HASH','CURRENT_RUN_REPORT_ALREADY_EXISTS','EXISTING_PYTHON_UNAVAILABLE',
     'NO_VERIFIED_WINGMAN_LISTENER_WITHIN_SIX_MINUTES','BRIDGE_IDENTITY_CHANGED_DURING_PROBE',

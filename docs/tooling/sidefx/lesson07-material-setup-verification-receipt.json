@@ -4340,12 +4340,29 @@
   "one_to_one_reproduction_20261021": {
     "owner_request": "Implement the author's solution 1:1",
     "base_commit": "0d6064147f14a89767007d381d7c292b81bdecbd",
-    "status": "INSTALLED_LEVEL_BINDING_CONTRACT_DISCOVERY_PREPARED",
+    "status": "ORIGINAL_MI_CANDIDATE_PREPARATION_READY_NATIVE_NOT_RUN",
     "metadata_contract_added": "edit_level",
-    "new_native_calls_admitted": 0,
+    "new_native_calls_admitted": 11,
     "native_application_verified": false,
     "global_colour_repaired": false,
     "exact_final_video_pbr_sets_available": false,
-    "geography_and_existing_owner_session_preserved": true
+    "geography_and_existing_owner_session_preserved": true,
+    "metadata_source_commit": "a287c5a87c3d1410513512f9711eed04814290b4",
+    "metadata_discovery_run": 39668607144,
+    "metadata_discovery_verified": true,
+    "metadata_native_calls": 0,
+    "metadata_workflow_conclusion": "failure",
+    "metadata_later_failure": "FAILURE_LOG_OWNER",
+    "material_contract": "docs/assets/lesson07-sidefx-source-20261021/one-to-one-material-contract.json",
+    "shared_master_expression_links_verified": 257,
+    "source_mi_copy_prepared": false,
+    "source_variant": "ZIP_SAVED_DEFAULTS_FINAL_VIDEO_PROFILE_SEPARATE",
+    "owner_checks_per_complete_preparation": 22,
+    "preparation_marker": "[l07-prepare-pegasus-candidate]",
+    "mi_parameter_comparison": "docs/assets/lesson07-sidefx-source-20261021/one-to-one-mi-parameter-evidence.json",
+    "persisted_current_layer_and_blend_indices_match_source": true,
+    "explicit_current_global_colour_strength_overrides": 1,
+    "zip_profile_global_parameter_delta_count": 5,
+    "editor_only_layer_cache_verified": false
   }
 }

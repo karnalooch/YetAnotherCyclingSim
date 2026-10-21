@@ -7,6 +7,7 @@ name: YACS Lesson07 remote Editor connection
 # Apply mode retains only the independently reviewed Macro Tiling 0.05 result.
 # Vault mode only lists three fixed owned-pack filters; raw inventory stays local.
 # Source inspection performs five fixed surface-ID reads across /Game, then MI and arrays.
+# Pegasus preparation performs eleven fixed calls and saves only a new source MI copy and backup.
 # Discovery performs no native calls; oversized graph contracts may retain only
 # their complete plain-text description within the existing report limits.
 on:
@@ -45,6 +46,7 @@ jobs:
       github.ref == 'refs/heads/codex/365-world-graph' &&
       github.actor == github.repository_owner &&
       contains(github.event.head_commit.message, '[l07-remote-editor]') &&
+      !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
       !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
       !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
       !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
@@ -105,6 +107,7 @@ jobs:
       github.actor == github.repository_owner &&
       !contains(github.event.head_commit.message, '[l07-remote-editor]') &&
       ((contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
@@ -114,6 +117,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
@@ -123,6 +127,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
@@ -132,6 +137,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
@@ -141,6 +147,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
@@ -150,6 +157,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
@@ -159,6 +167,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
@@ -168,6 +177,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]') &&
@@ -177,6 +187,7 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]')) ||
        (contains(github.event.head_commit.message, '[l07-inspect-source-assets]') &&
+        !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
         !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]') &&
         !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
@@ -184,7 +195,17 @@ jobs:
         !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
         !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
-        !contains(github.event.head_commit.message, '[l07-import-surfaces]')))
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]')) ||
+       (contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-trial-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-apply-macro]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-vault]') &&
+        !contains(github.event.head_commit.message, '[l07-import-surfaces]') &&
+        !contains(github.event.head_commit.message, '[l07-inspect-source-assets]')))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -273,11 +294,12 @@ jobs:
       L07_VIEWPORT_CAPTURE: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-capture-editor]') }}
       L07_READONLY_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-editor]') }}
       L07_SOURCE_ASSETS_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-source-assets]') }}
+      L07_PEGASUS_CANDIDATE: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') }}
       L07_VAULT_INSPECTION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-inspect-vault]') }}
       L07_MACRO_TRIAL: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-trial-macro]') }}
       L07_SURFACE_IMPORT: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-import-surfaces]') }}
       L07_MACRO_APPLY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-apply-macro]') }}
-      L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') && !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') && !contains(github.event.head_commit.message, '[l07-inspect-vault]') && !contains(github.event.head_commit.message, '[l07-import-surfaces]') }}
+      L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') && !contains(github.event.head_commit.message, '[l07-inspect-source-assets]') && !contains(github.event.head_commit.message, '[l07-inspect-vault]') && !contains(github.event.head_commit.message, '[l07-import-surfaces]') && !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') }}
     steps:
       - name: Create isolated Git settings for code-only staging
         working-directory: ${{ github.workspace }}
@@ -298,7 +320,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Cannot preserve LF bytes.' }
 
       - name: Checkout reviewed source without LFS payloads or canonical edits
-        if: ${{ needs.await_ci.result != 'success' && env.L07_SURFACE_IMPORT != 'true' && env.L07_READONLY_DISCOVERY != 'true' && env.L07_SOURCE_ASSETS_INSPECTION != 'true' }}
+        if: ${{ needs.await_ci.result != 'success' && env.L07_SURFACE_IMPORT != 'true' && env.L07_READONLY_DISCOVERY != 'true' && env.L07_SOURCE_ASSETS_INSPECTION != 'true' && env.L07_PEGASUS_CANDIDATE != 'true' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -308,7 +330,7 @@ jobs:
           persist-credentials: false
 
       - name: Checkout only startup, import or source-inspection code without LFS payloads
-        if: ${{ needs.await_ci.result == 'success' || env.L07_SURFACE_IMPORT == 'true' || env.L07_READONLY_DISCOVERY == 'true' || env.L07_SOURCE_ASSETS_INSPECTION == 'true' }}
+        if: ${{ needs.await_ci.result == 'success' || env.L07_SURFACE_IMPORT == 'true' || env.L07_READONLY_DISCOVERY == 'true' || env.L07_SOURCE_ASSETS_INSPECTION == 'true' || env.L07_PEGASUS_CANDIDATE == 'true' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}
@@ -329,7 +351,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $l07PriorNoLazyFetch=$env:GIT_NO_LAZY_FETCH
           try {
-            if ('${{ needs.await_ci.result }}' -ceq 'success' -or $env:L07_SURFACE_IMPORT -ceq 'true' -or $env:L07_READONLY_DISCOVERY -ceq 'true' -or $env:L07_SOURCE_ASSETS_INSPECTION -ceq 'true') {
+            if ('${{ needs.await_ci.result }}' -ceq 'success' -or $env:L07_SURFACE_IMPORT -ceq 'true' -or $env:L07_READONLY_DISCOVERY -ceq 'true' -or $env:L07_SOURCE_ASSETS_INSPECTION -ceq 'true' -or $env:L07_PEGASUS_CANDIDATE -ceq 'true') {
               # All pointer blobs are already local; do not fetch unrelated
               # large Git blobs merely to inspect their sizes in this scanner.
               $env:GIT_NO_LAZY_FETCH='1'
@@ -369,6 +391,7 @@ jobs:
             -RepoRoot (Get-Location).Path -Apply
 
       - name: Verify process ownership and run the selected fixed operation
+        id: probe
         run: |
           $parameters = @{
             ExpectedHead = $env:GITHUB_SHA
@@ -379,6 +402,7 @@ jobs:
           if ($env:L07_VIEWPORT_CAPTURE -ceq 'true') { $parameters['CaptureLesson07'] = $true }
           if ($env:L07_READONLY_INSPECTION -ceq 'true') { $parameters['InspectLesson07'] = $true }
           if ($env:L07_SOURCE_ASSETS_INSPECTION -ceq 'true') { $parameters['InspectSourceAssets'] = $true }
+          if ($env:L07_PEGASUS_CANDIDATE -ceq 'true') { $parameters['PreparePegasusCandidate'] = $true }
           if ($env:L07_VAULT_INSPECTION -ceq 'true') { $parameters['InspectVault'] = $true }
           if ($env:L07_SURFACE_IMPORT -ceq 'true') { $parameters['ImportSurfaces'] = $true }
           if ($env:L07_MACRO_TRIAL -ceq 'true') { $parameters['TrialMacro'] = $true }
@@ -460,7 +484,7 @@ jobs:
           if (Test-Path -LiteralPath $stage) { throw 'Current evidence stage already exists.' }
           [void][IO.Directory]::CreateDirectory($stage)
           foreach ($name in @('install.json','identity.json','bridge.json','vault-summary.json','probe.json','observer-failure-log.json','viewport.json',
-              'trial-macro.json','trial-macro-A-baseline.json','trial-macro-B-005.json','trial-macro-A-restored.json','apply-macro.json')) {
+              'trial-macro.json','trial-macro-A-baseline.json','trial-macro-B-005.json','trial-macro-A-restored.json','apply-macro.json','candidate-assets.json')) {
             # Vault text can include unrelated owned-pack or account-path data.
             # Only the client's explicit metadata-only summary may leave the host.
             if ($env:L07_VAULT_INSPECTION -ceq 'true' -and $name -ceq 'bridge.json') { continue }
@@ -584,6 +608,58 @@ jobs:
               throw 'Applied Macro JPEG changed during staging.'
             }
           }
+          if ($env:L07_PEGASUS_CANDIDATE -ceq 'true') {
+            $manifestPath=Join-Path $root 'candidate-assets.json'
+            if (Test-Path -LiteralPath $manifestPath -PathType Leaf) {
+              Assert-PlainReportPath $manifestPath
+              if ((Get-Item -LiteralPath $manifestPath).Length -gt 16KB) { throw 'Candidate asset manifest too large.' }
+              $manifest=Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json -AsHashtable
+              $bridgePath=Join-Path $root 'bridge.json'
+              Assert-PlainReportPath $bridgePath
+              if ((Get-Item -LiteralPath $bridgePath).Length -gt 2MB) { throw 'Candidate bridge report too large.' }
+              $bridge=Get-Content -LiteralPath $bridgePath -Raw | ConvertFrom-Json -AsHashtable -Depth 32
+              if ($manifest['status'] -cne 'TWO_NEW_PACKAGES_RETAINED_OFFLINE_REVIEW_PENDING' -or
+                  $manifest['assets'] -isnot [array] -or $manifest['assets'].Count -ne 2 -or
+                  $bridge['status'] -cne 'PEGASUS_CANDIDATE_SAVED_OFFLINE_REVIEW_PENDING' -or
+                  $bridge['native_tool_calls'] -ne 11 -or $bridge['pegasus_current_unchanged'] -ne $true -or
+                  $bridge['pegasus_packages'] -isnot [array] -or $bridge['pegasus_packages'].Count -ne 2) {
+                throw 'Candidate package receipt is not confirmed.'
+              }
+              $expected=@(
+                @{file='MI_BeforePegasusSource_20261021.uasset';object_path='/Game/Generated/YACS/Lesson07_Unified/RepairBackups/MI_BeforePegasusSource_20261021'},
+                @{file='MI_Pegasus_Source_YACS.uasset';object_path='/Game/Generated/YACS/Lesson07_Unified/Materials/SideFX_OneToOne_20261021/MI_Pegasus_Source_YACS'}
+              )
+              for ($index=0; $index -lt 2; $index++) {
+                $entry=$manifest['assets'][$index];$record=$bridge['pegasus_packages'][$index];$fixed=$expected[$index]
+                $source='D:/yacs/project/Content/'+$fixed.object_path.Substring(6)+'.uasset'
+                if ($entry -isnot [Collections.IDictionary] -or $entry.Count -ne 5 -or
+                    $entry['file'] -cne $fixed.file -or $entry['object_path'] -cne $fixed.object_path -or
+                    $entry['source_file'] -isnot [string] -or
+                    $entry['source_file'].Replace('\','/') -cne $source -or
+                    ($entry['size_bytes'] -isnot [int] -and $entry['size_bytes'] -isnot [long]) -or
+                    $entry['size_bytes'] -le 0 -or $entry['size_bytes'] -gt 1MB -or
+                    $entry['sha256'] -isnot [string] -or $entry['sha256'] -cnotmatch '^[0-9a-f]{64}$') {
+                  throw 'Candidate package is outside the two fixed paths.'
+                }
+                foreach ($key in @('file','object_path','source_file','size_bytes','sha256')) {
+                  if ($entry[$key] -cne $record[$key]) { throw 'Candidate package receipts disagree.' }
+                }
+                $path=Join-Path (Join-Path $root 'candidate-assets') $fixed.file
+                Assert-PlainReportPath $path
+                if ((Get-Item -LiteralPath $path).Length -ne $entry['size_bytes'] -or
+                    (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -cne $entry['sha256']) {
+                  throw 'Candidate package bytes do not match the receipt.'
+                }
+                $target=Join-Path $stage $fixed.file
+                [IO.File]::Copy($path,$target,$false)
+                if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant() -cne $entry['sha256']) {
+                  throw 'Candidate package changed during artifact staging.'
+                }
+              }
+            } elseif ('${{ steps.probe.outcome }}' -ceq 'success') {
+              throw 'Successful candidate preparation has no two-package receipt.'
+            }
+          }
           if ($env:L07_SURFACE_IMPORT -ceq 'true') {
             $surfaceRoot='D:\yacs\project\Saved\RuntimeProof\Lesson07SurfaceRepair-20261021\${{ github.run_id }}-${{ github.run_attempt }}'
             Assert-PlainReportPath $surfaceRoot
@@ -647,5 +723,7 @@ jobs:
             ${{ steps.reports.outputs.directory }}/surface-panorama.jpg
             ${{ steps.reports.outputs.directory }}/surface-puig-major.jpg
             ${{ steps.reports.outputs.directory }}/surface-scree.jpg
+            ${{ steps.reports.outputs.directory }}/MI_Pegasus_Source_YACS.uasset
+            ${{ steps.reports.outputs.directory }}/MI_BeforePegasusSource_20261021.uasset
           if-no-files-found: warn
           retention-days: 7

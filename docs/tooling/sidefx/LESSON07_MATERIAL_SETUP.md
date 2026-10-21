@@ -23,14 +23,27 @@ PBR surfaces are acquired separately in the video.
 
 After the completed extraction below, the owner requested implementation of
 the author's solution 1:1. Native material reproduction is active again.
-Preparation first retains the installed `edit_level` description/schema in
-the existing authenticated discovery report, with zero native calls. A copy of
-the original MI will preserve its layered parameter identity while geographic
-inputs and the current visibility support remain YACS-specific. Native
-candidate creation, source-colour repair, application and visual proof are
-not yet established by this metadata-only preparation.
+The [authenticated discovery](../../assets/lesson07-sidefx-source-20261021/discovery-39668607144-evidence.json)
+retained the full `edit_level` description/schema with zero native calls and
+unchanged owner PID 11284. The discovery itself succeeded; the later historical
+error-reader step refused the current session with `FAILURE_LOG_OWNER`, so the
+workflow as a whole failed. No reader guard or denied observer was changed.
+The [decoded original/current material comparison](../../assets/lesson07-sidefx-source-20261021/one-to-one-material-contract.json)
+supports retaining the current parent: all 257 shared expressions have matching
+resolved connections, and the additional YACS nodes provide visibility masking.
+A copy of the original MI will preserve its layered parameter identity while
+geographic inputs and visibility support remain YACS-specific. Native candidate
+creation, source-colour repair, application and visual proof are not yet
+established by this metadata and static comparison. The initial candidate uses
+the ZIP's saved defaults; the final-video scalar profile is a separate trial.
+The [persisted tuple evidence](../../assets/lesson07-sidefx-source-20261021/one-to-one-mi-parameter-evidence.json)
+finds the retained current MI's layer indices and runtime stack already equal
+to the source. Its remaining ZIP-profile delta is five global scalar values.
+This historical binary comparison is not a fresh native capture. The prepared
+eleven-call operation creates two isolated MI copies and retains their actual
+saved bytes for review; it does not apply them to the current Landscape.
 
-The owner then explicitly narrowed the immediate task to getting the textures
+The owner had earlier narrowed the immediate task to getting the textures
 from that ZIP. **The requested file delivery is complete:**
 `SideFX_Textures_From_Original_Zip.zip`, **217,202,273 bytes**, SHA256
 `672310b3b66072db2c1cfe73d958c69cb7b0a4e0c195a7a361c52b8e008ccdee`.

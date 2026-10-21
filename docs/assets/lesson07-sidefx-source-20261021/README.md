@@ -14,13 +14,56 @@ are no longer the active task; no existing local export is requested from the
 owner. This delivery made no Unreal import or material change.
 
 The subsequent owner request is to implement the author's solution 1:1.
-Native reproduction is now active again. The next bounded step retains the
-installed `edit_level` contract during the existing authenticated discovery;
-this adds no native call or binding mutation. An original-MI copy is being
-prepared so layer associations are preserved instead of guessed through
-name-only setters. The current Sa Calobra geography, visibility and registered
-texture coordinates remain required inputs. The source global-colour coverage
-defect and missing final video surface sets remain explicit dependencies.
+Native reproduction is now active again. The authenticated
+[metadata discovery](discovery-39668607144-evidence.json) retained the complete
+installed `edit_level` contract with **zero native calls** and the same owner
+Editor PID 11284. Its discovery step succeeded; the overall workflow failed
+later because the separate historical error reader refused the current owner
+with `FAILURE_LOG_OWNER`. That reader and the denied observer remain unchanged.
+The typed level tool supports `modify` with reflected properties and explicit
+`save:false`; a fresh actor inventory and exact binding proof are still needed
+before using it for a preview. An original-MI copy is being prepared so layer
+associations are preserved instead of guessed through name-only setters. The
+current Sa Calobra geography, visibility and registered texture coordinates
+remain required inputs. Source global-colour coverage and the missing final
+video surface sets remain explicit dependencies.
+
+The [decoded material contract](one-to-one-material-contract.json) compares the
+original and saved YACS masters. Their 257 shared expressions have matching
+classes and all resolved input links/output indices/channel masks. Of those,
+256 match every compared decoded property; the remaining material-layer node
+differs only in its cross-version EditorOnly representation, with matching
+runtime layers and blends. YACS adds visibility masking and removes an unused
+grass output. This supports retaining `M_Landscape_YACS` as parent for a copy
+of the original instance. It is static evidence, not a native compiler or
+render acceptance. The first candidate uses the ZIP's saved instance defaults;
+the final video's distinct brightness/distortion/falloff values remain a
+separate explicit comparison profile.
+
+The [persisted MI tuple comparison](one-to-one-mi-parameter-evidence.json)
+also resolves the repeated-name ambiguity. The saved YACS instance already has
+the original five runtime layers, four blends, all eight layer/blend index
+overrides and their expression GUIDs. Its 61-row native read includes inherited
+values; the package contains 30 explicit scalar overrides. There is only one
+explicit `Global Colour Strength`, associated with `GlobalParameter/-1`.
+Keeping the YACS registration and texture bindings leaves five scalar changes
+for the ZIP profile: Global Brightness 0 to 0.5, Global Colour Strength 0 to
+0.5, Global Normal Flatten 1 to 0, Global Saturation 0 to 0.5 and Global
+Specular Scale 0 to 1. The final video additionally uses Detail Brightness 5,
+UV Distort 1 and Specular Falloff Exponent 1. The offline reader roundtrips
+both selected current-MI export payloads exactly but cannot decode the
+editor-only layer-name/GUID cache; it does not prove a native compile.
+
+The reviewed candidate-preparation operation has eleven fixed typed calls and
+22 fresh owner checks. It inventories Landscape actors, checks current and
+source instances and the existing parent, requires nine clean input packages,
+then saves only a new current-MI backup and an adapted original-MI copy. It
+reads both copies and the active instance back, checks the input files remain
+unchanged, and retains exactly the two new packages for indexed offline review.
+It does not apply the candidate to the Landscape. The active material,
+geometry, IDMap and map save state remain outside this preparation operation.
+Optional host memory and fixed small-crop file metadata support a separate
+future source-colour canary; this operation does not launch Houdini.
 
 The archive and video establish an important dependency: **the downloaded
 project contains the material system and diagnostic arrays, not the five

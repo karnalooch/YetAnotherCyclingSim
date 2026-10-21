@@ -3996,10 +3996,10 @@ class SurfaceImportTests(unittest.TestCase):
                 with self.assertRaisesRegex(client.ProbeError, "SURFACE_RECEIPT_CHANGED"):
                     client.read_surface_receipt("123-1", row)
 
-    def test_workflow_all_1024_intents_require_one_owner_operation(self):
+    def test_workflow_all_2048_intents_require_one_owner_operation(self):
         workflow = Path(__file__).resolve().parents[2] / ".github/workflows/yacs-lesson07-remote-editor.yml"
         source = workflow.read_text(encoding="utf-8")
-        markers = ("remote-editor", "observe-editor", "discover-editor", "capture-editor", "inspect-editor",
+        markers = ("prepare-pegasus-candidate", "remote-editor", "observe-editor", "discover-editor", "capture-editor", "inspect-editor",
                    "inspect-vault", "trial-macro", "apply-macro", "import-surfaces", "inspect-source-assets")
         for bits in itertools.product((False, True), repeat=len(markers)):
             selected = {name for name, bit in zip(markers, bits) if bit}
@@ -4023,6 +4023,276 @@ class SurfaceImportTests(unittest.TestCase):
                 with self.assertRaisesRegex(client.ProbeError, "NATIVE_MODES_MUTUALLY_EXCLUSIVE"):
                     connection(port).probe(import_surfaces=True, surface_run_token="123-1", **{mode: True})
                 self.assertEqual(requests, [])
+
+PEGASUS_LEVEL_SCHEMA = {"type": "object", "properties": {
+    "class_contains": {"type": "string"}, "limit": {"type": "integer"}, "save": {"type": "boolean"}}}
+
+
+class PegasusPeer:
+    """Synthetic vendor responses and local package writes; never connects to UE."""
+
+    def __init__(self):
+        self.current = trial_snapshot()
+        next(row for row in self.current["scalars"] if row["name"] == "Macro Tiling")["value"] = client.TRIAL_VALUE_F32
+        self.source = json.loads(json.dumps(self.current))
+        values = {"Global Brightness": .5, "Global Colour Strength": .5, "Global Normal Flatten": 0,
+                  "Global Saturation": .5, "Global Specular Scale": 1,
+                  "Terrain Resolution": 2016, "Terrain Scale": 200, "UV Rotate": -90}
+        for row in self.source["scalars"]:
+            if row["name"] in values:
+                row["value"] = values[row["name"]]
+        self.source["vectors"][0]["value"] = "(1047,1080,0,0)"
+        self.backup = self.candidate = None
+        self.calls = []
+        self.error_at = None
+        self.after = lambda _peer, _text: _text
+
+    def __call__(self, request):
+        if request["method"] != "tools/call":
+            status, headers, raw = inspection_reply(request)
+            if request["method"] == "tools/list":
+                payload = json.loads(raw)
+                for descriptor in payload["result"]["tools"]:
+                    if descriptor["name"] == "edit_level":
+                        descriptor["inputSchema"] = PEGASUS_LEVEL_SCHEMA
+                raw = client.canonical(payload)
+            return status, headers, raw
+        params = request["params"]
+        self.calls.append(params)
+        name, args = params["name"], params["arguments"]
+        if self.error_at == len(self.calls):
+            result = {"isError": True, "content": [{"type": "text", "text": "F49 policy denied this operation"}]}
+        else:
+            if name == "edit_level":
+                text = "# LEVEL L_SaCalobra_Lesson07\nLandscape [Landscape_0]\n"
+            elif name == "edit_material":
+                text = "# MATERIAL M_Landscape_YACS\n## Expression properties (non-default)\n"
+            elif name == "edit_asset":
+                if "duplicate_asset" in args:
+                    source, target = args["duplicate_asset"]["from"], args["duplicate_asset"]["to"]
+                    if target == client.PEGASUS_BACKUP:
+                        self.backup = json.loads(json.dumps(self.current))
+                    else:
+                        self.candidate = json.loads(json.dumps(self.source))
+                    path = client.pegasus_package_path(target)
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    with path.open("xb") as stream:
+                        stream.write((source + " synthetic copied package").encode())
+                    text = "# EDIT ASSET\n= duplicated " + target + "\n= failures=0\n"
+                else:
+                    paths = args["save_assets"]["paths"]
+                    text = ("# EDIT ASSET\n" + "".join("~ would save " + path + " (dirty=0)\n" for path in paths)
+                            + f"= save_assets dry_run: {len(paths)} package(s) considered, nothing written\n= failures=0\n")
+            elif name == "edit_material_instance":
+                if "parent" in args:
+                    for category in ("scalars", "vectors", "textures"):
+                        for change in args[category]:
+                            row = next(row for row in self.candidate[category] if row["name"] == change["name"])
+                            value = change["value"]
+                            if category == "vectors":
+                                value = "(" + ",".join(str(number) for number in value) + ")"
+                            elif category == "textures":
+                                value += "." + value.rsplit("/", 1)[-1]
+                            row.update(value=value, overridden=True)
+                    client.pegasus_package_path(client.PEGASUS_CANDIDATE).write_bytes(b"synthetic adapted candidate")
+                    text = "= parent=M_Landscape_YACS; saved=true; failures=0\n"
+                else:
+                    target = args["name"]
+                    snapshot = {client.TRIAL_MI: self.current, client.PEGASUS_SOURCE: self.source,
+                                client.PEGASUS_BACKUP: self.backup, client.PEGASUS_CANDIDATE: self.candidate}[target]
+                    text = trial_mi_text(snapshot, target)
+                    if target == client.PEGASUS_SOURCE:
+                        text = text.replace("parent = M_Landscape_YACS", "parent = M_Pegasus_Landscape_Master")
+            else:
+                raise AssertionError(name)
+            result = {"isError": False, "content": [{"type": "text", "text": self.after(self, text)}]}
+        return 200, {"Content-Type": "application/json"}, client.canonical({"jsonrpc": "2.0", "id": request["id"], "result": result})
+
+
+class PegasusPreparationTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        hashes = {name: INSPECTION_FIXTURE_HASHES[name] for name in
+                  ("edit_material_instance", "edit_material", "edit_asset")}
+        hashes["edit_level"] = hashlib.sha256(client.canonical(PEGASUS_LEVEL_SCHEMA)).hexdigest()
+        source = b"synthetic exact original MI"
+        for target, value in (("PEGASUS_CONTENT_ROOT", self.root / "Content"),
+                              ("PEGASUS_REPORT_ROOT", self.root / "reports"),
+                              ("PEGASUS_SOURCE_SIZE", len(source)),
+                              ("PEGASUS_SOURCE_SHA256", hashlib.sha256(source).hexdigest()),
+                              ("PEGASUS_SCHEMA_SHA256", hashes),
+                              ("verify_trial_host_identity", trial_host_check)):
+            patcher = mock.patch.object(client, target, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        (client.PEGASUS_REPORT_ROOT / "123-1").mkdir(parents=True)
+        for path in client.PEGASUS_INPUTS:
+            destination = client.pegasus_package_path(path)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(source if path == client.PEGASUS_SOURCE else path.encode())
+        self.native = PegasusPeer()
+
+    def test_eleven_fixed_calls_retain_only_two_new_packages_and_preserve_active(self):
+        before = {path: client.pegasus_fingerprint(path) for path in client.PEGASUS_INPUTS}
+        with peer(self.native) as (port, _requests), mock.patch.object(client, "observer_loader") as loader:
+            probe = connection(port)
+            report = probe.probe(prepare_pegasus_candidate=True, pegasus_run_token="123-1")
+            with self.assertRaisesRegex(client.ProbeError, "METHOD_NOT_ALLOWED"):
+                probe._post("tools/call", probe._pegasus_params)
+        self.assertEqual(len(self.native.calls), 11)
+        self.assertEqual(self.native.calls[0], {"name": "edit_level", "arguments": {"class_contains": "Landscape", "limit": 200, "save": False}})
+        self.assertEqual(self.native.calls[5:7], [
+            {"name": "edit_asset", "arguments": {"duplicate_asset": {"from": client.TRIAL_MI, "to": client.PEGASUS_BACKUP}}},
+            {"name": "edit_asset", "arguments": {"duplicate_asset": {"from": client.PEGASUS_SOURCE, "to": client.PEGASUS_CANDIDATE}}},
+        ])
+        self.assertEqual(self.native.calls[7]["arguments"]["scalars"], [
+            {"name": "Terrain Resolution", "value": 16000}, {"name": "Terrain Scale", "value": 50}, {"name": "UV Rotate", "value": 0}])
+        self.assertEqual(set(self.native.calls[7]["arguments"]), {"name", "parent", "scalars", "vectors", "textures"})
+        self.assertEqual(report["native_tool_calls"], 11)
+        self.assertIs(report["native_tool_completed"], True)
+        self.assertEqual([(row["index"], row["phase"]) for row in report["pegasus_host_checks"]],
+                         [(index, phase) for index in range(1, 12) for phase in ("before", "after")])
+        for name in ("baseline_verified", "source_verified", "clean_verified", "backup_verified", "candidate_verified", "current_unchanged"):
+            self.assertIs(report["pegasus_" + name], True)
+        for name in ("pegasus_mi_associations_verified", "pegasus_actor_binding_verified", "pegasus_compile_verified",
+                     "pegasus_active_material_mutation_requested", "visual_acceptance", "performance_pass"):
+            self.assertIs(report[name], False)
+        output = client.PEGASUS_REPORT_ROOT / "123-1"
+        manifest = json.loads((output / "candidate-assets.json").read_bytes())
+        self.assertEqual(set(path.name for path in (output / "candidate-assets").iterdir()),
+                         {"MI_Pegasus_Source_YACS.uasset", "MI_BeforePegasusSource_20261021.uasset"})
+        self.assertEqual(manifest["assets"], report["pegasus_packages"])
+        self.assertEqual(before, {path: client.pegasus_fingerprint(path) for path in client.PEGASUS_INPUTS})
+        loader.assert_not_called()
+
+    def test_denial_stops_at_backup_without_retry_or_candidate(self):
+        self.native.error_at = 6
+        with peer(self.native) as (port, _requests):
+            state = client.ObservationState()
+            with self.assertRaisesRegex(client.ProbeError, "INSPECTION_TOOL_ERROR"):
+                connection(port, state=state).probe(prepare_pegasus_candidate=True, pegasus_run_token="123-1")
+        self.assertEqual(len(self.native.calls), 6)
+        self.assertEqual(len(state.pegasus_host_checks), 12)
+        self.assertFalse(client.pegasus_package_path(client.PEGASUS_CANDIDATE).exists())
+        self.assertEqual(state.report_fields()["native_tool_calls"], 6)
+        self.assertIsNone(state.completed)
+
+    def test_large_colour_fingerprint_streams_and_does_not_widen_other_bounds(self):
+        colour = client.pegasus_package_path(client.PEGASUS_TEXTURES[3][1])
+        with colour.open("wb") as stream:
+            stream.truncate(128 * 1024 * 1024 + 1)
+        reads = []
+        original_open = Path.open
+        class ReadSpy:
+            def __init__(self, stream):
+                self.stream = stream
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                self.stream.close()
+            def read(self, count):
+                reads.append(count)
+                return self.stream.read(count)
+        def spy(path, *args, **kwargs):
+            stream = original_open(path, *args, **kwargs)
+            return ReadSpy(stream) if path == colour and args == ("rb",) else stream
+        with mock.patch.object(Path, "open", spy):
+            fingerprint = client.pegasus_fingerprint(client.PEGASUS_TEXTURES[3][1])
+        self.assertEqual(fingerprint["size_bytes"], 128 * 1024 * 1024 + 1)
+        self.assertEqual(set(reads), {1024 * 1024})
+        self.assertGreater(len(reads), 128)
+        other = client.pegasus_package_path(client.PEGASUS_TEXTURES[4][1])
+        with other.open("wb") as stream:
+            stream.truncate(128 * 1024 * 1024 + 1)
+        with self.assertRaisesRegex(client.ProbeError, "PEGASUS_INPUT_SIZE"):
+            client.pegasus_fingerprint(client.PEGASUS_TEXTURES[4][1])
+        with colour.open("wb") as stream:
+            stream.truncate(512 * 1024 * 1024 + 1)
+        with self.assertRaisesRegex(client.ProbeError, "PEGASUS_INPUT_SIZE"):
+            client.pegasus_fingerprint(client.PEGASUS_TEXTURES[3][1])
+
+    def test_current_baseline_drift_stops_after_two_reads(self):
+        self.native.current["scalars"][0]["value"] += .125
+        with peer(self.native) as (port, _requests):
+            with self.assertRaisesRegex(client.ProbeError, "PEGASUS_BASELINE_CHANGED"):
+                connection(port).probe(prepare_pegasus_candidate=True, pegasus_run_token="123-1")
+        self.assertEqual(len(self.native.calls), 2)
+        self.assertFalse(client.pegasus_package_path(client.PEGASUS_BACKUP).exists())
+
+    def test_existing_target_and_source_drift_fail_before_any_native_call(self):
+        for error in ("PEGASUS_DESTINATION_EXISTS", "PEGASUS_SOURCE_HASH"):
+            target = client.pegasus_package_path(client.PEGASUS_CANDIDATE)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(b"existing")
+            if error == "PEGASUS_SOURCE_HASH":
+                target.unlink()
+                client.pegasus_package_path(client.PEGASUS_SOURCE).write_bytes(b"changed source")
+            with self.subTest(error=error), peer(self.native) as (port, _requests):
+                with self.assertRaisesRegex(client.ProbeError, error):
+                    connection(port).probe(prepare_pegasus_candidate=True, pegasus_run_token="123-1")
+            self.assertEqual(self.native.calls, [])
+
+    def test_input_drift_between_read_and_mutation_stops_before_backup(self):
+        def after(native, text):
+            if len(native.calls) == 5:
+                client.pegasus_package_path(client.PEGASUS_PARENT).write_bytes(b"changed parent")
+            return text
+        self.native.after = after
+        with peer(self.native) as (port, _requests):
+            with self.assertRaisesRegex(client.ProbeError, "PEGASUS_INPUT_CHANGED"):
+                connection(port).probe(prepare_pegasus_candidate=True, pegasus_run_token="123-1")
+        self.assertEqual(len(self.native.calls), 5)
+        self.assertIsNone(self.native.backup)
+
+    def test_candidate_drift_retains_isolated_copy_without_touching_current(self):
+        original = json.loads(json.dumps(self.native.current))
+        def after(native, text):
+            return text.replace('"value": 16000', '"value": 16001') if len(native.calls) == 9 else text
+        self.native.after = after
+        with peer(self.native) as (port, _requests):
+            with self.assertRaisesRegex(client.ProbeError, "PEGASUS_CANDIDATE_DRIFT"):
+                connection(port).probe(prepare_pegasus_candidate=True, pegasus_run_token="123-1")
+        self.assertEqual(len(self.native.calls), 9)
+        self.assertEqual(self.native.current, original)
+        self.assertTrue(client.pegasus_package_path(client.PEGASUS_CANDIDATE).exists())
+        self.assertFalse((client.PEGASUS_REPORT_ROOT / "123-1" / "candidate-assets.json").exists())
+
+    def test_owner_change_after_backup_stops_without_followup(self):
+        checks = 0
+        def owner(host, discovery):
+            nonlocal checks
+            checks += 1
+            if checks == 12:
+                raise client.ProbeError("TRIAL_IDENTITY_OWNER_CHANGED")
+            return trial_host_check(host, discovery)
+        with peer(self.native) as (port, _requests), mock.patch.object(client, "verify_trial_host_identity", owner):
+            with self.assertRaisesRegex(client.ProbeError, "TRIAL_IDENTITY_OWNER_CHANGED"):
+                connection(port).probe(prepare_pegasus_candidate=True, pegasus_run_token="123-1")
+        self.assertEqual(len(self.native.calls), 6)
+        self.assertTrue(client.pegasus_package_path(client.PEGASUS_BACKUP).exists())
+        self.assertFalse(client.pegasus_package_path(client.PEGASUS_CANDIDATE).exists())
+
+    def test_mode_exclusivity_and_fixed_arguments_cannot_be_replaced(self):
+        for mode in ("observe_lesson07", "capture_lesson07", "inspect_lesson07", "inspect_vault",
+                     "inspect_source_assets", "import_surfaces", "trial_macro", "apply_reviewed_macro"):
+            with self.subTest(mode=mode), peer() as (port, requests):
+                with self.assertRaisesRegex(client.ProbeError, "NATIVE_MODES_MUTUALLY_EXCLUSIVE"):
+                    connection(port).probe(prepare_pegasus_candidate=True, **{mode: True})
+                self.assertEqual(requests, [])
+        with peer(self.native) as (port, _requests):
+            original = client.pegasus_plan
+            def bad_plan():
+                result = original()
+                result[0]["arguments"]["save"] = True
+                return result
+            # Change the runner's list, then expose the fixed original to _post's independent guard.
+            with mock.patch.object(client, "pegasus_plan", side_effect=[bad_plan(), original()]):
+                with self.assertRaisesRegex(client.ProbeError, "PEGASUS_ARGUMENTS"):
+                    connection(port).probe(prepare_pegasus_candidate=True, pegasus_run_token="123-1")
+        self.assertEqual(self.native.calls, [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "status": "DISCOVERY_VERIFIED_HISTORICAL_ERROR_READER_OWNER_REFUSED",
+  "source_commit": "a287c5a87c3d1410513512f9711eed04814290b4",
+  "run_id": 39668607144,
+  "run_attempt": 1,
+  "cpu_job": 119460163242,
+  "windows_job": 119460380935,
+  "workflow_conclusion": "failure",
+  "discovery_status": "DISCOVERY_COMPLETE",
+  "discovery_observed_utc": "2026-10-21T20:17:21.7924271Z",
+  "native_tool_calls": 0,
+  "owner_pid": 11284,
+  "owner_filetime_utc": "134370817710799968",
+  "owner_identity_stable": true,
+  "editor_started_or_stopped": false,
+  "later_step_failure": {
+    "step": 12,
+    "name": "Recover the bounded error from the retained observer attempt",
+    "error": "FAILURE_LOG_OWNER",
+    "observed_utc": "2026-10-21T20:17:22.6181442Z",
+    "guard_modified": false,
+    "frozen_observer_retried": false
+  },
+  "artifact": {
+    "id": 12378278277,
+    "bytes": 29368,
+    "sha256": "2c3398fe44917feb7999160a88dd878087698def5885dd89eca31a5e8cb98f5a",
+    "download_hash_verified": true
+  },
+  "edit_level_contract": {
+    "status": "RETAINED",
+    "full_description_and_schema_retained": true,
+    "raw_schema_sha256": "e1913ef25e7ec948a4a2d2e1ccb95de193981ea5dd44efc463eff5fededb6d80",
+    "read_mode": "Actor inventory, not a documented generic property reader",
+    "mutation": "modify[{actor,component?,properties?}], save:false supported",
+    "actor_binding_attempted": false
+  },
+  "files": [
+    {
+      "path": "discovery-39668607144-1-bridge.json.gz",
+      "bytes": 27637,
+      "sha256": "50910496392e403f603fc20cecef2f4fa38705d655a2c72d45cef24dbd65adcb",
+      "raw_bytes": 98789,
+      "raw_sha256": "95b7f21a00af803482807614fd1e7fd94983b888ee62cdfff7a52a8deb4d6db7",
+      "encoding": "gzip"
+    },
+    {
+      "path": "discovery-39668607144-1-probe.json",
+      "bytes": 3903,
+      "sha256": "65175919e2560c84c9ebd5fa279c7100318dde4a5e0eb591f885c4c7860e7044",
+      "raw_bytes": 3903,
+      "raw_sha256": "65175919e2560c84c9ebd5fa279c7100318dde4a5e0eb591f885c4c7860e7044",
+      "encoding": "utf-8"
+    },
+    {
+      "path": "discovery-39668607144-1-identity.json",
+      "bytes": 616,
+      "sha256": "3d2ca78eacb377962a059e769d13bf14433018b6bdf5b551996f05b5740538c8",
+      "raw_bytes": 616,
+      "raw_sha256": "3d2ca78eacb377962a059e769d13bf14433018b6bdf5b551996f05b5740538c8",
+      "encoding": "utf-8"
+    }
+  ],
+  "performance_pass": false,
+  "performance_status": "DEFERRED_AFTER_M3"
+}

@@ -118,6 +118,36 @@
       "file": "current-landscape-archive-comparison.json",
       "bytes": 39605,
       "sha256": "83a87ec85cfa52fe9342553c32b266f208f39fd5df5cbd5e58882947b6c78a3c"
+    },
+    {
+      "file": "one-to-one-material-contract.json",
+      "bytes": 32371,
+      "sha256": "4d2f1227e33cfbc7beddbd2c1ae103586d018a4fd43b0b5e24507a8f7d1c9888"
+    },
+    {
+      "file": "discovery-39668607144-evidence.json",
+      "bytes": 2445,
+      "sha256": "0a7cc3b85e6462336ebe8cc20986b8ccbf882b1718b5a657fe9519f0aec93326"
+    },
+    {
+      "file": "discovery-39668607144-1-bridge.json.gz",
+      "bytes": 27637,
+      "sha256": "50910496392e403f603fc20cecef2f4fa38705d655a2c72d45cef24dbd65adcb"
+    },
+    {
+      "file": "discovery-39668607144-1-probe.json",
+      "bytes": 3903,
+      "sha256": "65175919e2560c84c9ebd5fa279c7100318dde4a5e0eb591f885c4c7860e7044"
+    },
+    {
+      "file": "discovery-39668607144-1-identity.json",
+      "bytes": 616,
+      "sha256": "3d2ca78eacb377962a059e769d13bf14433018b6bdf5b551996f05b5740538c8"
+    },
+    {
+      "file": "one-to-one-mi-parameter-evidence.json",
+      "bytes": 36123,
+      "sha256": "ac030995756e92fd902eb75a2cd2673aebab9c85e91a88ab3ee2189450cf68ab"
     }
   ],
   "custom_normal_candidate_executed": false,
@@ -204,12 +234,28 @@
   },
   "one_to_one_reproduction": {
     "base_commit": "0d6064147f14a89767007d381d7c292b81bdecbd",
-    "status": "INSTALLED_LEVEL_BINDING_CONTRACT_DISCOVERY_PREPARED",
+    "status": "ORIGINAL_MI_CANDIDATE_PREPARATION_READY_NATIVE_NOT_RUN",
     "metadata_contract_added": "edit_level",
-    "new_native_calls_admitted": 0,
+    "new_native_calls_admitted": 11,
     "source_mi_copy_prepared": false,
     "native_application_verified": false,
     "global_colour_repaired": false,
-    "exact_final_video_pbr_sets_available": false
+    "exact_final_video_pbr_sets_available": false,
+    "metadata_source_commit": "a287c5a87c3d1410513512f9711eed04814290b4",
+    "metadata_discovery_run": 39668607144,
+    "metadata_discovery_verified": true,
+    "metadata_native_calls": 0,
+    "metadata_workflow_conclusion": "failure",
+    "metadata_later_failure": "FAILURE_LOG_OWNER",
+    "material_contract": "docs/assets/lesson07-sidefx-source-20261021/one-to-one-material-contract.json",
+    "shared_master_expression_links_verified": 257,
+    "source_variant": "ZIP_SAVED_DEFAULTS_FINAL_VIDEO_PROFILE_SEPARATE",
+    "owner_checks_per_complete_preparation": 22,
+    "preparation_marker": "[l07-prepare-pegasus-candidate]",
+    "mi_parameter_comparison": "docs/assets/lesson07-sidefx-source-20261021/one-to-one-mi-parameter-evidence.json",
+    "persisted_current_layer_and_blend_indices_match_source": true,
+    "explicit_current_global_colour_strength_overrides": 1,
+    "zip_profile_global_parameter_delta_count": 5,
+    "editor_only_layer_cache_verified": false
   }
 }
