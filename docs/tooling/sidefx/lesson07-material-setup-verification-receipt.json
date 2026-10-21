@@ -1653,11 +1653,11 @@
     "performance_pass": false
   },
   "remote_connection_continuation_20261021": {
-    "status": "EDITOR_CREATED_AUTHENTICATED_CONNECTION_AND_POST_JOB_SURVIVAL_VERIFIED",
+    "status": "EDITOR_RETAINED_PASSIVE_PYTHON_BLOCKED_F49",
     "base_sha": "402e4d756dde3ee85c03db7415b91d7a10666098",
     "owner_authorized_missing_connection_infrastructure": true,
     "workflow": ".github/workflows/yacs-lesson07-editor-module-diagnostic.yml",
-    "native_tool_called": false,
+    "native_tool_called": null,
     "channel_comparison_performed": false,
     "asset_changes": [],
     "editor_lifecycle_changes": [
@@ -1669,7 +1669,7 @@
       }
     ],
     "performance_pass": false,
-    "note": "The separate task created PID17896 at2026-10-20T23:20:00.0674689Z. At23:37:42.3866008Z, after startupjobcleanup23:24:03.9664401Z, both current owner checks returned ATTACH_EXISTING with the samePID and native startfiletime. The owned listener authenticated, signed_in=true and all84tools were discovered. No native tool call, current-world readback or channel comparison has yet occurred.",
+    "note": "The same owner Editor PID 17896 and native start filetime 134370120000674689 remain verified through 2026-10-21T00:12:23.7830410Z. The explicit passive observation at 00:12:21 UTC returned the Wingman F49 protected-project gate error. Its collector is read-only, but execution is blocked; no Python retry, guard rephrasing or alternate arbitrary-code execution is admitted. Current material/world readback is unverified. A separate dedicated screenshot and supported read-only tool contracts are prepared next.",
     "inventory": {
       "source_commit": "4bf894dd8dccc482a3e90a53bce6d6b01653e6a7",
       "run_id": 39507345660,
@@ -1697,7 +1697,7 @@
       "editor_commands_executed": 0
     },
     "connection_workflow": ".github/workflows/yacs-lesson07-remote-editor.yml",
-    "connection_execution": "EDITOR_RETAINED_FIRST_NATIVE_ERROR_UNKNOWN_LOG_UNAVAILABLE",
+    "connection_execution": "EDITOR_RETAINED_PASSIVE_PYTHON_BLOCKED_F49",
     "first_connection_attempt": {
       "source_commit": "3ba05803bfc3ff095eb012e3f790752b55b47d12",
       "protected_ci_run_id": 39508823330,
@@ -2361,10 +2361,88 @@
       },
       "connection_job_conclusion": "success",
       "workflow_conclusion": "success"
+    },
+    "native_tool_attempted": true,
+    "native_tool_completed": null,
+    "second_native_observation_attempt": {
+      "source_commit": "c8370182042723d3f69610e6fcec1d4c074c96c0",
+      "run_id": 39519585751,
+      "cpu_job_id": 118959869977,
+      "cpu_conclusion": "success",
+      "windows_job_id": 118959933031,
+      "windows_conclusion": "failure",
+      "focused_python_tests_passed": 66,
+      "native_tool_started_utc": "2026-10-21T00:12:21.892433+00:00",
+      "native_tool_attempted": true,
+      "native_tool_calls": 1,
+      "native_tool_response_received": true,
+      "native_tool_completed": null,
+      "native_material_readback": "UNVERIFIED",
+      "native_tool_error": {
+        "content_blocks_truncated": false,
+        "retained_text_blocks": 1,
+        "sanitized_text": "🛑 Safety gate blocked this call. Tool 'execute_python' attempted to write to a PROTECTED file (project descriptor (.uproject)). These files are off-limits to AI-driven edits because they affect plugin packaging, build configuration, or engine-wide settings - a wrong edit can break the entire project. If you only need to READ this file (not write it), use code_search read_file instead (read-only, not gated) - F49. If you genuinely need to MODIFY this file, ask the user to do it manually. This gate runs at the tool layer and cannot be bypassed by retrying or rephrasing.",
+        "text_truncated": false
+      },
+      "probe_status": "LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED",
+      "identity_stable_across_probe": true,
+      "editor_pid": 17896,
+      "editor_start_filetime_utc": "134370120000674689",
+      "artifact_id": 12310806923,
+      "artifact_zip_sha256": "ec866dcecb788e5a08b57d77c5cbc9390bd53208cd852804a6eb85c54c024e5d",
+      "artifact_digest_verified": true,
+      "native_asset_mutation_performed": false,
+      "interpretation": "Actual current error retained: protected .uproject safety gate F49. Observer implementation only reads project identity; do not remove or disguise the guard, retry execute_python or bypass the tool boundary."
+    },
+    "dedicated_capture_preparation": {
+      "status": "PREPARED_NATIVE_CAPTURE_PENDING",
+      "intent": "[l07-capture-editor]",
+      "native_tool": "take_viewport_screenshot",
+      "arguments": {
+        "return_image": false
+      },
+      "input_schema_sha256": "4ef41b0bf0c6c93d64a049687e0e43565fb351cd484169b58473801840b3dcdc",
+      "python_fallback": false,
+      "retry": false,
+      "existing_owner_required": true,
+      "editor_started_or_stopped": false,
+      "native_material_readback": "NOT_RUN",
+      "visual_acceptance": false,
+      "performance_pass": false,
+      "contracts_retained_without_call": [
+        "read_bp",
+        "explore",
+        "code_search",
+        "edit_texture",
+        "edit_material_instance",
+        "edit_asset",
+        "edit_material",
+        "edit_material_function"
+      ],
+      "file_verification": "Exact returned canonical JPEG path; current native attempt timestamps; same owner process; bounded stable bytes; decoded JPEG dimensions and SHA256; new-only evidence copy.",
+      "focused_python_tests_passed": 75,
+      "client_tests_passed": 49,
+      "observer_tests_passed": 20,
+      "source_assembler_tests_passed": 6,
+      "client_sha256": "b889a4cacce3e96d31136be2c0ea8f9eb9465eb5e9389bd8d5c318e0cb4ad690",
+      "client_tests_sha256": "9a933d163b3ced02f51431d5b245baee8059203eb4e85558467327e42bb616ac",
+      "probe_sha256": "9b456075207183071b9126389d97bd9183f9358a990ae7b0b89b9c08b0328cff",
+      "intent_exclusivity_cases_passed": 16,
+      "powershell_capture_response_type_negatives_passed": 6,
+      "powershell_parse": "PASS",
+      "docs_index": {
+        "i18n": "PASS",
+        "structure": "PASS",
+        "links": "PASS",
+        "freshness": "PASS"
+      },
+      "viewport_reader_tests_passed": 84,
+      "viewport_reader_sha256": "f0ba95813e181734907a10d1b155f5730e8e521eaa2d05015f67f96e45d54ce6",
+      "viewport_reader_tests_sha256": "40a88164f07e2b08c95c33368e86f153681df383fbea216018acc7ef1d67f8ef"
     }
   },
   "whole_material_source_repair_20261021": {
-    "status": "SOURCE_FIX_CPU_VERIFIED_REMOTE_ASSEMBLY_AND_NATIVE_IMPORT_PENDING",
+    "status": "REMOTE_SOURCE_SLICES_ASSEMBLED_NATIVE_APPLICATION_PENDING",
     "owner_scope": "Whole texture appearance, not only a grid or repetition symptom",
     "classes": [
       "Grass",
@@ -2421,11 +2499,11 @@
       "functions": "10:21-11:41",
       "method": "Official embedded player frames and English transcript"
     },
-    "native_attempt_policy": "One explicitly admitted passive read with bounded sanitized error retention; no automatic retry",
+    "native_attempt_policy": "Passive Python path stopped after observed F49 denial. Dedicated screenshot and supported read-only tools only; no Python retry or guard bypass.",
     "performance_pass": false,
     "producer_versions_recorded": true,
     "native_error_retention": {
-      "status": "CPU_VERIFIED_NATIVE_ATTEMPT_PENDING",
+      "status": "NATIVE_ERROR_RETAINED_F49_NO_PYTHON_RETRY",
       "error_text_limit_characters": 2048,
       "text_block_limit": 8,
       "credential_redaction_before_truncation": true,
@@ -2433,7 +2511,98 @@
       "client_tests_passed": 40,
       "observer_tests_passed": 20,
       "client_sha256": "41269a5fc02527c7fafddafb506705d3eef4f4d2d0bcda1598a18b1bd68a7858",
-      "client_test_sha256": "9fa9c002067dbfdf542259e8143e894f698b85967bf310a982a5bd34dc977a34"
+      "client_test_sha256": "9fa9c002067dbfdf542259e8143e894f698b85967bf310a982a5bd34dc977a34",
+      "run_id": 39519585751
+    },
+    "remote_assembly": {
+      "source_commit": "c8370182042723d3f69610e6fcec1d4c074c96c0",
+      "run_id": 39519585751,
+      "windows_job_id": 118959933031,
+      "step_conclusion": "success",
+      "directory": "D:\\yacs\\work\\lesson07-source-repair-20261021\\39519585751-1",
+      "artifact_id": 12310806923,
+      "receipt_sha256": "5f05410605aa14c9a67b47e5485399790d0f76f02a8367f379dc4b2cf62ddb63",
+      "receipt": {
+        "status": "OFFLINE_SLICES_ASSEMBLED_UE_IMPORT_PENDING",
+        "producer_versions": {
+          "python": "3.12.10",
+          "pillow": "12.3.0",
+          "numpy": "2.3.5"
+        },
+        "classes": [
+          "Grass",
+          "Cliffs"
+        ],
+        "size": [
+          2048,
+          2048
+        ],
+        "inputs": {
+          "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\SaCalobra_Grass_BaseColor.png": {
+            "sha256": "719cffbc6f7cfec846cc2ba9610228dce5475cd2677f19f462bec6edc3e30ad9",
+            "size_bytes": 98214149
+          },
+          "D:\\yacs\\project\\worldgen\\materials\\scanned_refinement\\source\\aerial_grass_rock_nor_dx_4k.png": {
+            "sha256": "90219e6e47a750758cd55b5456961dccec0fd4a6ceeaa198a81fa9c36198d11b",
+            "size_bytes": 102796390
+          },
+          "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\SaCalobra_Grass_Roughness.png": {
+            "sha256": "5423503ba94f8e16ced4615cfa05893ec76b3df65cf85be9c8c07201efd5be90",
+            "size_bytes": 74669799
+          },
+          "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\SaCalobra_PaleLimestone_BaseColor.png": {
+            "sha256": "6babc8e49248be89b464605c3c9cf427b63ac51ab42aebc05877359e902256e1",
+            "size_bytes": 1273397
+          },
+          "D:\\yacs\\project\\worldgen\\materials\\material_maker\\surface_set\\scree\\export\\SaCalobra_PaleLimestone_Normal_DX.png": {
+            "sha256": "2e75301f9325efb39f37811409bebfd455d9e21bf740ca97d12ed66978290f62",
+            "size_bytes": 7872034
+          },
+          "D:\\yacs\\project\\worldgen\\houdini\\sa_calobra\\inputs\\textures\\SaCalobra_PaleLimestone_Roughness.png": {
+            "sha256": "919faf3cbf33250dd100b6c5e13f8036dd6e2222b29c46b7e09fb8a5c6465df1",
+            "size_bytes": 957684
+          }
+        },
+        "outputs": {
+          "slice_0_grass_colour.png": {
+            "sha256": "0d5c6a14ff4f3c813a535d53bd6e48c2058c8a50ac2a4a4353c3f7f288528590",
+            "size_bytes": 9676178
+          },
+          "slice_0_grass_masks.png": {
+            "sha256": "bc9131bb40a06e00c14544785b873bce6430797c59eb3c7369b34fbaff318d1c",
+            "size_bytes": 3756633
+          },
+          "slice_0_grass_normal.png": {
+            "sha256": "6cfe99fee469d538d07f6770bcd10714bac5f59db904cb665f26f3fddcdfb239",
+            "size_bytes": 10689967
+          },
+          "slice_3_cliffs_colour.png": {
+            "sha256": "63bacc9972b3bc26aef5315d9069c6c290b604576690bbd624f167f3896dda71",
+            "size_bytes": 1225473
+          },
+          "slice_3_cliffs_masks.png": {
+            "sha256": "1aab0bd68d58a0cce9d63e6e1ffac446b7913975b29fab2fbbfa6c21c736584c",
+            "size_bytes": 405971
+          },
+          "slice_3_cliffs_normal.png": {
+            "sha256": "bb7309dc48d312d03b3c3cba67b1a857e05d1778db42d0695404891c8b5f0dae",
+            "size_bytes": 8293176
+          }
+        },
+        "classification_changed": false,
+        "terrain_changed": false,
+        "native_ue_verified": false,
+        "visual_accepted": false
+      },
+      "protected_ci": {
+        "run_id": 39519593200,
+        "conclusion": "failure",
+        "native_job_id": 118961129627,
+        "native_reason": "LOCAL_BUSY",
+        "observed_utc": "2026-10-21T00:14:19.0735289Z",
+        "editor_and_logs_preserved": true,
+        "scope": "Hosted checks passed; native build/Automation not executed because owner Editor is active. Focused probe tests do not substitute protected CI."
+      }
     }
   }
 }

@@ -44,6 +44,45 @@ INSTALLED_PYTHON_SCHEMA = {
 }
 
 
+# Exact raw screenshot inputSchema retained by authenticated discovery.
+INSTALLED_CAPTURE_SCHEMA = {
+    "properties": {
+        "camera_location": {
+            "description": "Optional [X, Y, Z] world location to frame this ONE capture from. The Level Editor camera is moved for the capture and restored before the tool returns, so the user's view is never left moved. Refused while PIE is the capture target. Must be exactly 3 JSON numbers.",
+            "items": {"type": "number"},
+            "type": "array",
+        },
+        "camera_rotation": {
+            "description": "Optional [Pitch, Yaw, Roll] camera rotation in degrees for this ONE capture. The order is Pitch, Yaw, Roll - NOT the (Roll, Pitch, Yaw) order that UE's Python unreal.Rotator() positional constructor uses, which silently aims the camera at the ground. Restored with the rest of the camera.",
+            "items": {"type": "number"},
+            "type": "array",
+        },
+        "focus_actor": {
+            "description": "Outliner label of a LEVEL ACTOR to frame, e.g. 'BP_Coin_2'. Computes a bounds-scaled 3/4 view and points the camera at it, then restores your viewport like any other override here. Resolves exact label first, then case-insensitive substring over label + internal name. Frames on COLLIDING bounds when they are tighter, so a Character is framed on its body and not on its perception sphere. Mutually exclusive with camera_location / camera_rotation, which it would otherwise silently overwrite. An ASSET is not framable this way - this is level actors only.",
+            "type": "string",
+        },
+        "focus_margin": {
+            "description": "Distance multiplier for focus_actor (default 1.0 = the standard 3/4 view; >1 pulls the camera back for context, <1 tightens). Ignored without focus_actor.",
+            "type": "number",
+        },
+        "fov": {
+            "description": "Optional horizontal field of view in degrees for this ONE capture, 5 to 170. Lower = tighter framing on a distant actor. Restored with the rest of the camera.",
+            "type": "number",
+        },
+        "return_image": {
+            "description": "Default true: return the capture inline as IMAGE_BASE64:jpeg:<payload>. false = write the JPEG to Saved/LocoHelperAI/ViewportShots/ and return the saved file path plus the capture metadata only - recommended for external callers, where the payload is pure token cost (T-258).",
+            "type": "boolean",
+        },
+    },
+    "type": "object",
+}
+
+CAPTURE_TEXT = (
+    "Saved JPEG: D:/yacs/project/Saved/LocoHelperAI/ViewportShots/synthetic.jpg\n"
+    "Viewport: Level Editor; width=956; height=431"
+)
+
+
 def identity(port):
     now = datetime.now(timezone.utc)
     return {
@@ -164,6 +203,64 @@ def observer_reply(request):
     if request["method"] == "tools/list":
         payload = json.loads(raw)
         payload["result"]["tools"][0]["inputSchema"] = INSTALLED_PYTHON_SCHEMA
+        raw = client.canonical(payload)
+    return status, headers, raw
+
+
+def capture_reply(request):
+    if request["method"] == "tools/call":
+        return (
+            200,
+            {"Content-Type": "application/json"},
+            client.canonical(
+                {
+                    "jsonrpc": "2.0",
+                    "id": request["id"],
+                    "result": {
+                        "isError": False,
+                        "content": [{"type": "text", "text": CAPTURE_TEXT}],
+                    },
+                }
+            ),
+        )
+    status, headers, raw = observer_reply(request)
+    if request["method"] == "tools/list":
+        payload = json.loads(raw)
+        listing = payload["result"]["tools"]
+        listing[0]["description"] = "Installed Python description."
+        listing.append(
+            {
+                "name": "take_viewport_screenshot",
+                "description": "Save the current viewport without camera overrides.",
+                "inputSchema": INSTALLED_CAPTURE_SCHEMA,
+            }
+        )
+        for name in (
+            "read_bp",
+            "explore",
+            "code_search",
+            "edit_texture",
+            "edit_material_instance",
+            "edit_asset",
+            "edit_material",
+            "edit_material_function",
+        ):
+            listing.append(
+                {
+                    "name": name,
+                    "description": "Installed dedicated operation: " + name,
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "asset_path": {
+                                "type": "string",
+                                "default": "/Game/Example",
+                                "description": "Installed argument description.",
+                            }
+                        },
+                    },
+                }
+            )
         raw = client.canonical(payload)
     return status, headers, raw
 
@@ -1487,6 +1584,452 @@ class ObserverTests(unittest.TestCase):
             self.assertIsNone(report["native_tool_completed"])
             self.assertNotIn(TOKEN.encode(), output.read_bytes())
             self.assertNotIn(TOKEN, stdout.getvalue())
+
+
+class CaptureTests(unittest.TestCase):
+    def test_one_fixed_capture_retains_text_and_never_loads_or_calls_python(self):
+        state = client.ObservationState()
+        with (
+            peer(capture_reply) as (port, requests),
+            mock.patch.object(
+                client, "observer_loader", side_effect=AssertionError("No Python")
+            ) as loader,
+        ):
+            probe = connection(port, state=state)
+            report = probe.probe(capture_lesson07=True)
+            with self.assertRaisesRegex(client.ProbeError, "METHOD_NOT_ALLOWED"):
+                probe._post("tools/call", probe._capture_params)
+        loader.assert_not_called()
+        calls = [
+            row["body"] for row in requests if row["body"]["method"] == "tools/call"
+        ]
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(
+            calls[0]["params"],
+            {"name": client.CAPTURE_TOOL, "arguments": {"return_image": False}},
+        )
+        self.assertEqual(report["status"], "CAPTURE_RESPONSE_RECEIVED")
+        self.assertEqual(report["native_tool_calls"], 1)
+        self.assertTrue(report["native_tool_attempted"])
+        self.assertTrue(report["native_tool_completed"])
+        self.assertTrue(report["native_tool_response_received"])
+        self.assertEqual(report["native_tool_name"], client.CAPTURE_TOOL)
+        self.assertLessEqual(
+            client.utc(report["native_tool_started_utc"]),
+            client.utc(report["native_tool_response_received_utc"]),
+        )
+        self.assertEqual(
+            report["capture_input_schema_sha256"], client.CAPTURE_SCHEMA_SHA256
+        )
+        self.assertEqual(report["capture_arguments"], {"return_image": False})
+        self.assertEqual(report["capture_result"]["text"], CAPTURE_TEXT)
+        self.assertFalse(report["capture_result"]["text_truncated"])
+        self.assertEqual(report["capture_result"]["text_block_count"], 1)
+        self.assertRegex(report["capture_result"]["response_sha256"], r"^[0-9a-f]{64}$")
+        self.assertEqual(report["native_material_readback"], "NOT_RUN")
+        self.assertFalse(report["capture_file_verified"])
+        self.assertFalse(report["visual_acceptance"])
+        self.assertNotIn("observer_source_sha256", report)
+        self.assertFalse(state.source_verified)
+
+    def test_modes_and_extra_capture_arguments_are_rejected_before_network(self):
+        with peer(capture_reply) as (port, requests):
+            probe = connection(port)
+            with self.assertRaisesRegex(
+                client.ProbeError, "NATIVE_MODES_MUTUALLY_EXCLUSIVE"
+            ):
+                probe.probe(observe_lesson07=True, capture_lesson07=True)
+            for arguments in (
+                {"return_image": True},
+                {"return_image": 0},
+                {"return_image": False, "fov": 90},
+            ):
+                probe._capture_params = {
+                    "name": client.CAPTURE_TOOL,
+                    "arguments": arguments,
+                }
+                with self.assertRaisesRegex(client.ProbeError, "CAPTURE_ARGUMENTS"):
+                    probe._post("tools/call", probe._capture_params)
+        self.assertEqual(requests, [])
+        with (
+            mock.patch("sys.stderr", io.StringIO()),
+            mock.patch.object(client, "probe_from_files") as probe,
+        ):
+            with self.assertRaises(SystemExit) as caught:
+                client.main(
+                    [
+                        "--identity-receipt",
+                        "/unused.json",
+                        "--output",
+                        "/unused-output.json",
+                        "--observe-lesson07",
+                        "--capture-lesson07",
+                    ]
+                )
+        self.assertEqual(caught.exception.code, 2)
+        probe.assert_not_called()
+
+    def test_schema_drift_missing_tool_and_signed_out_refuse_before_capture(self):
+        for fault, expected in (
+            ("drift", "CAPTURE_TOOL_SCHEMA_UNSUPPORTED"),
+            ("missing", "CAPTURE_TOOL_SCHEMA_UNSUPPORTED"),
+            ("signed_out", "CAPTURE_SIGNED_OUT"),
+        ):
+
+            def reply(request, fault=fault):
+                status, headers, raw = capture_reply(request)
+                if request["method"] == "tools/list":
+                    payload = json.loads(raw)
+                    if fault == "missing":
+                        payload["result"]["tools"] = [
+                            row
+                            for row in payload["result"]["tools"]
+                            if row["name"] != client.CAPTURE_TOOL
+                        ]
+                    elif fault == "drift":
+                        payload["result"]["tools"][1]["inputSchema"]["properties"][
+                            "return_image"
+                        ]["default"] = False
+                    raw = client.canonical(payload)
+                if request["method"] == "session/status" and fault == "signed_out":
+                    payload = json.loads(raw)
+                    payload["result"]["signed_in"] = False
+                    raw = client.canonical(payload)
+                return status, headers, raw
+
+            state = client.ObservationState()
+            with self.subTest(fault=fault), peer(reply) as (port, requests):
+                with self.assertRaisesRegex(client.ProbeError, expected):
+                    connection(port, state=state).probe(capture_lesson07=True)
+            self.assertFalse(state.attempted)
+            self.assertFalse(state.completed)
+            self.assertFalse(
+                any(row["body"]["method"] == "tools/call" for row in requests)
+            )
+
+    def test_capture_result_failures_keep_one_attempt_and_never_retry_or_fallback(self):
+        good = {"isError": False, "content": [{"type": "text", "text": CAPTURE_TEXT}]}
+        for result, expected in (
+            (
+                {
+                    "isError": True,
+                    "content": [
+                        {"type": "text", "text": "Capture refused; Bearer " + TOKEN}
+                    ],
+                },
+                "CAPTURE_TOOL_ERROR",
+            ),
+            ({**good, "isError": 0}, "CAPTURE_RESULT_SHAPE"),
+            (
+                {**good, "structuredContent": {"output": CAPTURE_TEXT}},
+                "CAPTURE_RESULT_WRAPPER_UNSUPPORTED",
+            ),
+            (
+                {**good, "content": [{"type": "image", "data": TOKEN}]},
+                "CAPTURE_RESULT_SHAPE",
+            ),
+            (
+                {
+                    **good,
+                    "content": [{"type": "text", "text": "IMAGE_BASE64:jpeg:" + TOKEN}],
+                },
+                "CAPTURE_INLINE_IMAGE_DENIED",
+            ),
+            ({**good, "content": good["content"] * 9}, "CAPTURE_RESULT_SHAPE"),
+            (
+                {
+                    **good,
+                    "content": [
+                        {"type": "text", "text": "x" * (client.CAPTURE_TEXT_LIMIT + 1)}
+                    ],
+                },
+                "CAPTURE_RESULT_TEXT_SIZE",
+            ),
+        ):
+
+            def reply(request, result=result):
+                if request["method"] == "tools/call":
+                    return (
+                        200,
+                        {"Content-Type": "application/json"},
+                        client.canonical(
+                            {"jsonrpc": "2.0", "id": request["id"], "result": result}
+                        ),
+                    )
+                return capture_reply(request)
+
+            state = client.ObservationState()
+            with self.subTest(expected=expected), peer(reply) as (port, requests):
+                with self.assertRaisesRegex(client.ProbeError, expected):
+                    connection(port, state=state).probe(capture_lesson07=True)
+            self.assertTrue(state.attempted)
+            self.assertTrue(state.response_received)
+            self.assertIsNone(state.completed)
+            calls = [
+                row["body"] for row in requests if row["body"]["method"] == "tools/call"
+            ]
+            self.assertEqual(len(calls), 1)
+            self.assertEqual(calls[0]["params"]["name"], client.CAPTURE_TOOL)
+            self.assertNotIn(TOKEN.encode(), client.canonical(state.report_fields()))
+            if expected == "CAPTURE_TOOL_ERROR":
+                self.assertIn("Capture refused", state.tool_error["sanitized_text"])
+            if expected == "CAPTURE_RESULT_TEXT_SIZE":
+                self.assertTrue(state.capture_result["text_truncated"])
+                self.assertEqual(
+                    len(state.capture_result["text"]), client.CAPTURE_TEXT_LIMIT
+                )
+
+    def test_capture_metadata_redacts_actual_credentials_before_truncation(self):
+        state = client.ObservationState(capture_requested=True)
+        raw_text = (
+            CAPTURE_TEXT
+            + "\n"
+            + TOKEN
+            + " synthetic-session-1\nhttps://private.invalid/path\ntoken='other secret\nsecond line'"
+        )
+        result = {"isError": False, "content": [{"type": "text", "text": raw_text}]}
+        report = client.retain_capture_result(
+            result, state, (TOKEN, "synthetic-session-1")
+        )
+        self.assertTrue(report["text"].startswith(CAPTURE_TEXT))
+        for private in (
+            TOKEN,
+            "synthetic-session-1",
+            "private.invalid",
+            "other secret",
+            "second line",
+        ):
+            self.assertNotIn(private, report["text"])
+        self.assertTrue(
+            all(char.isprintable() or char == "\n" for char in report["text"])
+        )
+        prefix = "x" * (client.CAPTURE_TEXT_LIMIT - 5)
+        result["content"][0]["text"] = prefix + TOKEN
+        with self.assertRaisesRegex(client.ProbeError, "CAPTURE_RESULT_TEXT_SIZE"):
+            client.retain_capture_result(result, state, (TOKEN,))
+        self.assertEqual(
+            state.capture_result["text"],
+            (prefix + "[REDACTED]")[: client.CAPTURE_TEXT_LIMIT],
+        )
+
+    def test_capture_timeout_remains_unknown_without_retry(self):
+        def delayed(request):
+            if request["method"] == "tools/call":
+                time.sleep(0.3)
+            return capture_reply(request)
+
+        state = client.ObservationState()
+        with peer(delayed) as (port, requests):
+            with self.assertRaisesRegex(client.ProbeError, "REQUEST_TIMEOUT"):
+                connection(port, timeout=0.08, state=state).probe(capture_lesson07=True)
+        self.assertTrue(state.attempted)
+        self.assertIsNone(state.completed)
+        self.assertFalse(state.response_received)
+        self.assertIsNone(state.response_received_utc)
+        self.assertEqual(
+            sum(row["body"]["method"] == "tools/call" for row in requests), 1
+        )
+
+    def test_capture_cli_preserves_completion_and_result_after_file_recheck_failure(
+        self,
+    ):
+        for change_identity in (False, True):
+            with (
+                self.subTest(change_identity=change_identity),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                root = Path(directory)
+                receipt, config_path, output = (
+                    root / "identity.json",
+                    root / "config.json",
+                    root / "report.json",
+                )
+
+                def reply(request):
+                    if request["method"] == "tools/call" and change_identity:
+                        receipt.write_bytes(receipt.read_bytes() + b" ")
+                    return capture_reply(request)
+
+                with peer(reply) as (port, requests):
+                    receipt.write_bytes(client.canonical(identity(port)))
+                    config_path.write_bytes(client.canonical(config(port)))
+                    original = client.probe_from_files
+
+                    def from_fixture(path, **kwargs):
+                        return original(path, config_path, **kwargs)
+
+                    stdout = io.StringIO()
+                    with (
+                        mock.patch.object(client, "WINDOWS_HOST", True),
+                        mock.patch.object(
+                            client, "probe_from_files", side_effect=from_fixture
+                        ),
+                        mock.patch("sys.stdout", stdout),
+                    ):
+                        code = client.main(
+                            [
+                                "--identity-receipt",
+                                str(receipt),
+                                "--output",
+                                str(output),
+                                "--capture-lesson07",
+                            ]
+                        )
+                report = json.loads(output.read_bytes())
+                self.assertEqual(code, 1 if change_identity else 0)
+                self.assertEqual(
+                    report["status"],
+                    "CAPTURE_FAILED"
+                    if change_identity
+                    else "CAPTURE_RESPONSE_RECEIVED",
+                )
+                self.assertTrue(report["native_tool_completed"])
+                self.assertEqual(report["native_tool_calls"], 1)
+                self.assertEqual(report["capture_result"]["text"], CAPTURE_TEXT)
+                self.assertEqual(report["native_material_readback"], "NOT_RUN")
+                if change_identity:
+                    self.assertEqual(report["error_code"], "INPUT_CHANGED")
+                else:
+                    self.assertEqual(report["external_host_identity"]["pid"], 1234)
+                self.assertIn("L07_WINGMAN_CAPTURE", stdout.getvalue())
+                self.assertNotIn(CAPTURE_TEXT, stdout.getvalue())
+                self.assertNotIn(TOKEN.encode(), output.read_bytes())
+                self.assertEqual(
+                    sum(row["body"]["method"] == "tools/call" for row in requests), 1
+                )
+
+    def test_failed_capture_cli_preserves_safe_discovery_contracts_without_replay(self):
+        def failed(request):
+            status, headers, raw = capture_reply(request)
+            payload = json.loads(raw) if raw else None
+            if request["method"] == "tools/list":
+                payload["result"]["tools"][0]["description"] = TOKEN
+                raw = client.canonical(payload)
+            elif request["method"] == "tools/call":
+                payload["result"] = {
+                    "isError": True,
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Native capture refused.\n"
+                            + TOKEN
+                            + " synthetic-session-1\npassword='private value'",
+                        }
+                    ],
+                }
+                raw = client.canonical(payload)
+            return status, headers, raw
+
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            peer(failed) as (port, requests),
+        ):
+            output = Path(directory) / "report.json"
+            stdout = io.StringIO()
+
+            def from_fixture(
+                _path, *, observe_lesson07, capture_lesson07, observation_state
+            ):
+                return connection(port, state=observation_state).probe(
+                    observe_lesson07=observe_lesson07, capture_lesson07=capture_lesson07
+                )
+
+            with (
+                mock.patch.object(client, "probe_from_files", side_effect=from_fixture),
+                mock.patch("sys.stdout", stdout),
+            ):
+                code = client.main(
+                    [
+                        "--identity-receipt",
+                        str(Path(directory) / "identity.json"),
+                        "--output",
+                        str(output),
+                        "--capture-lesson07",
+                    ]
+                )
+            raw = output.read_bytes()
+            report = json.loads(raw)
+        self.assertEqual(code, 1)
+        self.assertEqual(report["status"], "CAPTURE_FAILED")
+        self.assertEqual(report["error_code"], "CAPTURE_TOOL_ERROR")
+        self.assertEqual(report["native_tool_calls"], 1)
+        self.assertIsNone(report["native_tool_completed"])
+        self.assertTrue(report["tool_list_complete"])
+        contracts = report["installed_tool_contracts"]
+        self.assertEqual(set(contracts), client.CONTRACT_TOOLS)
+        self.assertEqual(
+            contracts["execute_python"],
+            {"status": "EXCLUDED", "reason": "CONTRACT_CREDENTIAL"},
+        )
+        self.assertEqual(
+            contracts[client.CAPTURE_TOOL]["inputSchema"], INSTALLED_CAPTURE_SCHEMA
+        )
+        for name in (
+            "read_bp",
+            "explore",
+            "code_search",
+            "edit_texture",
+            "edit_material_instance",
+            "edit_asset",
+            "edit_material",
+            "edit_material_function",
+        ):
+            self.assertEqual(contracts[name]["status"], "RETAINED")
+            self.assertEqual(
+                contracts[name]["description"], "Installed dedicated operation: " + name
+            )
+            self.assertEqual(
+                contracts[name]["inputSchema"]["properties"]["asset_path"],
+                {
+                    "type": "string",
+                    "default": "/Game/Example",
+                    "description": "Installed argument description.",
+                },
+            )
+        for secret in (TOKEN, "synthetic-session-1", "private value"):
+            self.assertNotIn(secret.encode(), raw)
+            self.assertNotIn(secret, stdout.getvalue())
+        self.assertNotIn("tools", report)
+        self.assertLess(len(raw), client.RESPONSE_LIMIT)
+        self.assertEqual(
+            sum(row["body"]["method"] == "tools/list" for row in requests), 1
+        )
+        self.assertEqual(
+            sum(row["body"]["method"] == "tools/call" for row in requests), 1
+        )
+
+    def test_discovery_retains_exact_dedicated_contracts_without_calling_them(self):
+        with peer(capture_reply) as (port, requests):
+            report = connection(port).probe()
+        contracts = report["installed_tool_contracts"]
+        self.assertEqual(set(contracts), client.CONTRACT_TOOLS)
+        self.assertEqual(
+            contracts[client.CAPTURE_TOOL]["inputSchema"], INSTALLED_CAPTURE_SCHEMA
+        )
+        for name in (
+            "read_bp",
+            "explore",
+            "code_search",
+            "edit_texture",
+            "edit_material_instance",
+            "edit_asset",
+            "edit_material",
+            "edit_material_function",
+        ):
+            self.assertEqual(contracts[name]["status"], "RETAINED")
+            self.assertEqual(
+                contracts[name]["description"], "Installed dedicated operation: " + name
+            )
+            self.assertEqual(
+                contracts[name]["inputSchema"]["properties"]["asset_path"],
+                {
+                    "type": "string",
+                    "default": "/Game/Example",
+                    "description": "Installed argument description.",
+                },
+            )
+        self.assertEqual(report["native_tool_calls"], 0)
+        self.assertFalse(any(row["body"]["method"] == "tools/call" for row in requests))
 
 
 class FileTests(unittest.TestCase):

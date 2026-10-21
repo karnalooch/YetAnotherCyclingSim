@@ -1,7 +1,9 @@
-"""Bounded host-local Wingman discovery and fixed passive Lesson07 observation.
+"""Bounded host-local Wingman discovery and fixed Lesson07 operations.
 
 Discovery is the default. Opt-in observation admits one hash-pinned adjacent
 collector through the exact observed execute_python contract, in file mode.
+The separate capture mode requests one current viewport JPEG through the
+dedicated screenshot tool, with no camera arguments or Python fallback.
 There is no arbitrary code/tool argument, Editor startup or retry surface.
 The Windows harness must supply a fresh OS identity receipt and recheck that
 identity after this process exits. The receipt is not an active-world readback.
@@ -49,7 +51,18 @@ MAX_EVENTS = 512
 IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_.:-]{0,127}\Z")
 SCHEMA_TYPES = {"object", "array", "string", "number", "integer", "boolean", "null"}
 METHODS = {"initialize", "tools/list", "session/status"}
-CONTRACT_TOOLS = {"execute_python", "take_viewport_screenshot"}
+CONTRACT_TOOLS = {
+    "execute_python",
+    "take_viewport_screenshot",
+    "read_bp",
+    "explore",
+    "code_search",
+    "edit_texture",
+    "edit_material_instance",
+    "edit_asset",
+    "edit_material",
+    "edit_material_function",
+}
 CONTRACT_LIMIT = 32 * 1024
 CONTRACT_DESCRIPTION_LIMIT = 16 * 1024
 CONTRACT_BOOLEAN_ANNOTATIONS = {
@@ -74,6 +87,12 @@ OBSERVER_STATUS = "OBSERVED_PARTIAL_DIAGNOSIS_NOT_ACCEPTANCE"
 OBSERVER_WORLD = (
     "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07"
 )
+CAPTURE_TOOL = "take_viewport_screenshot"
+CAPTURE_SCHEMA_SHA256 = (
+    "4ef41b0bf0c6c93d64a049687e0e43565fb351cd484169b58473801840b3dcdc"
+)
+CAPTURE_TEXT_LIMIT = 16 * 1024
+CAPTURE_BLOCK_LIMIT = 8
 
 
 class ProbeError(Exception):
@@ -398,13 +417,19 @@ class ObservationState:
     completed: bool | None = False
     response_received: bool = False
     started_utc: datetime | None = None
+    response_received_utc: datetime | None = None
+    tool_name: str | None = None
     source_verified: bool = False
     schema_sha256: str | None = None
     result_shape: dict | None = None
     tool_error: dict | None = None
+    capture_requested: bool = False
+    capture_result: dict | None = None
+    installed_tool_contracts: dict | None = None
+    tool_list_complete: bool | None = None
 
     def report_fields(self):
-        return {
+        report = {
             # This is a wire-attempt count, not a count of completed evaluations.
             "native_tool_calls": int(self.attempted),
             "native_tool_attempted": self.attempted,
@@ -413,12 +438,35 @@ class ObservationState:
             "native_tool_started_utc": (
                 self.started_utc.isoformat() if self.started_utc else None
             ),
-            "observer_source_sha256": OBSERVER_SHA256,
-            "observer_source_verified_before_call": self.source_verified,
-            "observer_input_schema_sha256": self.schema_sha256,
+            "native_tool_response_received_utc": (
+                self.response_received_utc.isoformat()
+                if self.response_received_utc
+                else None
+            ),
+            "native_tool_name": self.tool_name,
             "native_tool_result_shape": self.result_shape,
             "native_tool_error": self.tool_error,
         }
+        if self.installed_tool_contracts is not None:
+            report["installed_tool_contracts"] = self.installed_tool_contracts
+            report["tool_list_complete"] = self.tool_list_complete
+        if self.capture_requested:
+            report.update(
+                {
+                    "capture_input_schema_sha256": self.schema_sha256,
+                    "capture_arguments": {"return_image": False},
+                    "capture_result": self.capture_result,
+                }
+            )
+        else:
+            report.update(
+                {
+                    "observer_source_sha256": OBSERVER_SHA256,
+                    "observer_source_verified_before_call": self.source_verified,
+                    "observer_input_schema_sha256": self.schema_sha256,
+                }
+            )
+        return report
 
 
 def validate_observer_schema(schema):
@@ -522,20 +570,8 @@ def observer_result_shape(result):
     return summary
 
 
-def observer_error_diagnostic(result, secrets):
-    """Retain bounded standard MCP error text, sanitized before truncation."""
-    if type(result) is not dict or result.get("isError") is not True:
-        return None
-    content = result.get("content")
-    blocks = content if type(content) is list else []
-    texts = [
-        block["text"]
-        for block in blocks[:OBSERVER_ERROR_BLOCK_LIMIT]
-        if type(block) is dict
-        and block.get("type") == "text"
-        and type(block.get("text")) is str
-    ]
-    text = "\n".join(texts)
+def sanitize_native_text(text, secrets, *, preserve_newlines=False):
+    """Remove credentials and control characters before applying output caps."""
     for secret in secrets:
         if secret:
             text = text.replace(secret, "[REDACTED]")
@@ -564,13 +600,78 @@ def observer_error_diagnostic(result, secrets):
     for secret in secrets:
         if secret:
             text = text.replace(secret, "[REDACTED]")
-    text = re.sub(r"[\r\n]+", " | ", text)
+    return (
+        re.sub(r"\r\n?", "\n", text)
+        if preserve_newlines
+        else re.sub(r"[\r\n]+", " | ", text)
+    )
+
+
+def observer_error_diagnostic(result, secrets):
+    """Retain bounded standard MCP error text, sanitized before truncation."""
+    if type(result) is not dict or result.get("isError") is not True:
+        return None
+    content = result.get("content")
+    blocks = content if type(content) is list else []
+    texts = [
+        block["text"]
+        for block in blocks[:OBSERVER_ERROR_BLOCK_LIMIT]
+        if type(block) is dict
+        and block.get("type") == "text"
+        and type(block.get("text")) is str
+    ]
+    text = sanitize_native_text("\n".join(texts), secrets)
     return {
         "sanitized_text": text[:OBSERVER_ERROR_TEXT_LIMIT],
         "retained_text_blocks": len(texts),
         "content_blocks_truncated": len(blocks) > OBSERVER_ERROR_BLOCK_LIMIT,
         "text_truncated": len(text) > OBSERVER_ERROR_TEXT_LIMIT,
     }
+
+
+def validate_capture_schema(schema):
+    """Pin the complete screenshot schema retained by authenticated discovery."""
+    require(type(schema) is dict, "CAPTURE_TOOL_SCHEMA_UNSUPPORTED")
+    digest = hashlib.sha256(canonical(schema)).hexdigest()
+    require(digest == CAPTURE_SCHEMA_SHA256, "CAPTURE_TOOL_SCHEMA_UNSUPPORTED")
+    return digest
+
+
+def retain_capture_result(result, state, secrets):
+    """Keep standard text only; the host separately verifies the returned JPEG."""
+    require(type(result) is dict, "CAPTURE_RESULT_SHAPE")
+    if "isError" in result:
+        require(type(result["isError"]) is bool, "CAPTURE_RESULT_SHAPE")
+        require(not result["isError"], "CAPTURE_TOOL_ERROR")
+    require("structuredContent" not in result, "CAPTURE_RESULT_WRAPPER_UNSUPPORTED")
+    content = result.get("content")
+    require(
+        type(content) is list and 0 < len(content) <= CAPTURE_BLOCK_LIMIT,
+        "CAPTURE_RESULT_SHAPE",
+    )
+    texts = []
+    for block in content:
+        require(
+            type(block) is dict
+            and block.get("type") == "text"
+            and type(block.get("text")) is str,
+            "CAPTURE_RESULT_SHAPE",
+        )
+        texts.append(block["text"])
+    text = "\n".join(texts)
+    require(
+        re.search(r"IMAGE_BASE64:|data:image/", text, re.IGNORECASE) is None,
+        "CAPTURE_INLINE_IMAGE_DENIED",
+    )
+    text = sanitize_native_text(text, secrets, preserve_newlines=True)
+    state.capture_result = {
+        "text": text[:CAPTURE_TEXT_LIMIT],
+        "text_truncated": len(text) > CAPTURE_TEXT_LIMIT,
+        "text_block_count": len(texts),
+        "response_sha256": hashlib.sha256(canonical(result)).hexdigest(),
+    }
+    require(0 < len(text) <= CAPTURE_TEXT_LIMIT, "CAPTURE_RESULT_TEXT_SIZE")
+    return state.capture_result
 
 
 def observer_loader():
@@ -700,6 +801,7 @@ class DiscoveryClient:
         self.notifications_received = 0
         self.observation_state = observation_state or ObservationState()
         self._observer_params = None
+        self._capture_params = None
 
     def _message(self, value, request_id):
         messages = value if type(value) is list else [value]
@@ -785,10 +887,24 @@ class DiscoveryClient:
             and not self.observation_state.attempted
             and not notification
         )
+        capturing = (
+            method == "tools/call"
+            and self._capture_params is not None
+            and params is self._capture_params
+            and not self.observation_state.attempted
+            and not notification
+        )
+        if capturing:
+            require(
+                params == {"name": CAPTURE_TOOL, "arguments": {"return_image": False}}
+                and params["arguments"]["return_image"] is False,
+                "CAPTURE_ARGUMENTS",
+            )
+        native_call = observing or capturing
         require(
             method in METHODS
             or (notification and method == "notifications/initialized")
-            or observing,
+            or native_call,
             "METHOD_NOT_ALLOWED",
         )
         require(
@@ -842,7 +958,7 @@ class DiscoveryClient:
             watchdog = threading.Timer(remaining, expire)
             watchdog.daemon = True
             watchdog.start()
-            if observing:
+            if native_call:
                 # request() may partially send and then raise. Never retry it.
                 self.observation_state.attempted = True
                 self.observation_state.completed = None
@@ -899,8 +1015,11 @@ class DiscoveryClient:
                 deadline,
                 RESPONSE_LIMIT if observing else LINE_LIMIT,
             )
-            if observing:
+            if native_call:
                 self.observation_state.response_received = True
+                self.observation_state.response_received_utc = datetime.now(
+                    timezone.utc
+                )
             return result
         except ProbeError:
             if expired.is_set():
@@ -917,7 +1036,16 @@ class DiscoveryClient:
                 watchdog.cancel()
             connection.close()
 
-    def probe(self, observe_lesson07=False):
+    def probe(self, observe_lesson07=False, capture_lesson07=False):
+        require(
+            not (observe_lesson07 and capture_lesson07),
+            "NATIVE_MODES_MUTUALLY_EXCLUSIVE",
+        )
+        self.observation_state.capture_requested = capture_lesson07
+        if capture_lesson07 or observe_lesson07:
+            self.observation_state.tool_name = (
+                CAPTURE_TOOL if capture_lesson07 else OBSERVER_TOOL
+            )
         initialization = self._post(
             "initialize",
             {
@@ -938,6 +1066,7 @@ class DiscoveryClient:
         seen_cursors = set()
         tool_error = None
         observer_schema = None
+        capture_schema = None
         try:
             for _page in range(MAX_PAGES):
                 listing = self._post(
@@ -977,6 +1106,8 @@ class DiscoveryClient:
                     )
                     if name == OBSERVER_TOOL:
                         observer_schema = tool.get("inputSchema")
+                    if name == CAPTURE_TOOL:
+                        capture_schema = tool.get("inputSchema")
                 cursor = listing.get("nextCursor")
                 if cursor is None:
                     break
@@ -992,6 +1123,10 @@ class DiscoveryClient:
             tool_error = {"code": error.code}
             if error.rpc_code is not None:
                 tool_error["rpc_code"] = error.rpc_code
+        # Preserve only the already bounded/credential-checked descriptors if a
+        # later native call fails. No discovery replay or raw listing is kept.
+        self.observation_state.installed_tool_contracts = contracts
+        self.observation_state.tool_list_complete = tool_error is None
         session = self._post("session/status")
         require(
             type(session) is dict and type(session.get("signed_in")) is bool,
@@ -1056,6 +1191,35 @@ class DiscoveryClient:
                     **state.report_fields(),
                 }
             )
+        if capture_lesson07:
+            require(tool_error is None, "CAPTURE_INCOMPLETE_TOOL_LIST")
+            require(session["signed_in"], "CAPTURE_SIGNED_OUT")
+            state = self.observation_state
+            state.schema_sha256 = validate_capture_schema(capture_schema)
+            self._capture_params = {
+                "name": CAPTURE_TOOL,
+                "arguments": {"return_image": False},
+            }
+            result = self._post("tools/call", self._capture_params)
+            state.result_shape = observer_result_shape(result)
+            state.tool_error = observer_error_diagnostic(
+                result, (self.discovery.token, self.session_id)
+            )
+            retain_capture_result(
+                result, state, (self.discovery.token, self.session_id)
+            )
+            state.completed = True
+            report.update(
+                {
+                    "status": "CAPTURE_RESPONSE_RECEIVED",
+                    "http_requests": self.requests,
+                    "notifications_received": self.notifications_received,
+                    "native_material_readback": "NOT_RUN",
+                    "capture_file_verified": False,
+                    "visual_acceptance": False,
+                    **state.report_fields(),
+                }
+            )
         return report
 
 
@@ -1064,6 +1228,7 @@ def probe_from_files(
     discovery_path=DISCOVERY_PATH,
     *,
     observe_lesson07=False,
+    capture_lesson07=False,
     observation_state=None,
 ):
     require(WINDOWS_HOST, "WINDOWS_HOST_REQUIRED")
@@ -1073,7 +1238,9 @@ def probe_from_files(
     identity = parse_json(identity_raw, CONFIG_LIMIT)
     safe_identity = validate_identity(identity, discovery)
     client = DiscoveryClient(discovery, identity, observation_state=observation_state)
-    report = client.probe(observe_lesson07=observe_lesson07)
+    report = client.probe(
+        observe_lesson07=observe_lesson07, capture_lesson07=capture_lesson07
+    )
     require(
         read_bounded(discovery_path, CONFIG_LIMIT) == discovery_raw
         and read_bounded(identity_path, CONFIG_LIMIT) == identity_raw,
@@ -1113,17 +1280,21 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--identity-receipt", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--observe-lesson07", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--observe-lesson07", action="store_true")
+    mode.add_argument("--capture-lesson07", action="store_true")
     args = parser.parse_args(argv)
-    state = ObservationState()
+    state = ObservationState(capture_requested=args.capture_lesson07)
     error_code = None
     rpc_code = None
     try:
-        report = probe_from_files(
-            args.identity_receipt,
-            observe_lesson07=args.observe_lesson07,
-            observation_state=state,
-        )
+        options = {
+            "observe_lesson07": args.observe_lesson07,
+            "observation_state": state,
+        }
+        if args.capture_lesson07:
+            options["capture_lesson07"] = True
+        report = probe_from_files(args.identity_receipt, **options)
     except ProbeError as error:
         error_code, rpc_code = error.code, error.rpc_code
     except Exception:
@@ -1132,21 +1303,31 @@ def main(argv=None):
     if error_code is not None:
         report = {
             "schema_version": 1,
-            "status": "OBSERVATION_FAILED"
+            "status": "CAPTURE_FAILED"
+            if args.capture_lesson07
+            else "OBSERVATION_FAILED"
             if args.observe_lesson07
             else "DISCOVERY_FAILED",
             "error_code": error_code,
             "native_tool_calls": 0,
-            "native_material_readback": "UNVERIFIED" if state.attempted else "NOT_RUN",
+            "native_material_readback": (
+                "UNVERIFIED"
+                if state.attempted and not args.capture_lesson07
+                else "NOT_RUN"
+            ),
             "visual_acceptance": False,
             "performance_pass": False,
         }
-        if args.observe_lesson07:
+        if args.observe_lesson07 or args.capture_lesson07:
             report.update(state.report_fields())
         if rpc_code is not None:
             report["rpc_code"] = rpc_code
     prefix = (
-        "L07_WINGMAN_OBSERVATION" if args.observe_lesson07 else "L07_WINGMAN_DISCOVERY"
+        "L07_WINGMAN_CAPTURE"
+        if args.capture_lesson07
+        else "L07_WINGMAN_OBSERVATION"
+        if args.observe_lesson07
+        else "L07_WINGMAN_DISCOVERY"
     )
     try:
         write_report(args.output, report)
@@ -1159,7 +1340,13 @@ def main(argv=None):
         + report["status"]
         + f" native_tool_calls={report['native_tool_calls']}"
     )
-    expected = "OBSERVATION_COMPLETE" if args.observe_lesson07 else "DISCOVERY_COMPLETE"
+    expected = (
+        "CAPTURE_RESPONSE_RECEIVED"
+        if args.capture_lesson07
+        else "OBSERVATION_COMPLETE"
+        if args.observe_lesson07
+        else "DISCOVERY_COMPLETE"
+    )
     return 0 if report["status"] == expected else 1
 
 

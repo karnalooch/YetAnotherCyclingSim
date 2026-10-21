@@ -16,6 +16,8 @@ on:
       - scripts/ue/test_lesson07_wingman_client.py
       - scripts/ue/lesson07_observe_editor.py
       - scripts/ue/test_lesson07_observe_editor.py
+      - scripts/ue/Read-YacsLesson07Viewport.ps1
+      - scripts/ue/Test-YacsLesson07Viewport.ps1
       - scripts/assemble_surface_slices.py
       - scripts/assets/test_assemble_surface_slices.py
 
@@ -33,6 +35,7 @@ jobs:
       github.actor == github.repository_owner &&
       contains(github.event.head_commit.message, '[l07-remote-editor]') &&
       !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+      !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
       !contains(github.event.head_commit.message, '[l07-discover-editor]')
     runs-on: ubuntu-latest
     timeout-minutes: 95
@@ -85,9 +88,14 @@ jobs:
       github.actor == github.repository_owner &&
       !contains(github.event.head_commit.message, '[l07-remote-editor]') &&
       ((contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]') &&
         !contains(github.event.head_commit.message, '[l07-discover-editor]')) ||
        (contains(github.event.head_commit.message, '[l07-discover-editor]') &&
-        !contains(github.event.head_commit.message, '[l07-observe-editor]')))
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-capture-editor]')) ||
+       (contains(github.event.head_commit.message, '[l07-capture-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-observe-editor]') &&
+        !contains(github.event.head_commit.message, '[l07-discover-editor]')))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -123,6 +131,7 @@ jobs:
               "test_lesson07_wingman_client.py", "test_lesson07_observe_editor.py",
               "Invoke-YacsLesson07RemoteProbe.ps1", "Start-YacsLesson07RemoteEditor.ps1",
               "Read-YacsLesson07ObserverFailure.ps1", "Test-YacsLesson07ObserverFailure.ps1",
+              "Read-YacsLesson07Viewport.ps1", "Test-YacsLesson07Viewport.ps1",
           ):
               path = Path("scripts/ue") / name
               subprocess.run(["git", "ls-files", "--error-unmatch", "--", str(path)], check=True)
@@ -167,6 +176,7 @@ jobs:
       L07_PROTECTED_CI_RUN_ID: ${{ needs.await_ci.outputs.ci_run_id }}
       L07_READONLY_OBSERVATION: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-observe-editor]') }}
       L07_READONLY_DISCOVERY: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-discover-editor]') }}
+      L07_VIEWPORT_CAPTURE: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-capture-editor]') }}
       L07_PREPARE_SURFACE_SOURCES: ${{ needs.observe_cpu.result == 'success' && contains(github.event.head_commit.message, '[l07-repair-sources]') }}
     steps:
       - name: Create isolated Git settings for code-only staging
@@ -207,7 +217,9 @@ jobs:
             'scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1',
             'scripts/ue/Test-YacsLesson07RemotePreflight.ps1',
             'scripts/ue/Read-YacsLesson07ObserverFailure.ps1',
-            'scripts/ue/Test-YacsLesson07ObserverFailure.ps1')) {
+            'scripts/ue/Test-YacsLesson07ObserverFailure.ps1',
+            'scripts/ue/Read-YacsLesson07Viewport.ps1',
+            'scripts/ue/Test-YacsLesson07Viewport.ps1')) {
             $tokens=$null; $errors=$null
             [Management.Automation.Language.Parser]::ParseFile(
               (Join-Path (Get-Location).Path $relative), [ref]$tokens, [ref]$errors) | Out-Null
@@ -216,6 +228,7 @@ jobs:
           & ./scripts/live_host/Test-YacsLiveTaskPrincipal.ps1
           & ./scripts/ue/Test-YacsLesson07RemotePreflight.ps1
           & ./scripts/ue/Test-YacsLesson07ObserverFailure.ps1
+          & ./scripts/ue/Test-YacsLesson07Viewport.ps1
           $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
           if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Existing Python unavailable.' }
           & $python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor
@@ -237,7 +250,16 @@ jobs:
           }
           if ($env:L07_READONLY_OBSERVATION -ceq 'true') { $parameters['ObserveLesson07'] = $true }
           if ($env:L07_READONLY_DISCOVERY -ceq 'true') { $parameters['ExistingEditorOnly'] = $true }
+          if ($env:L07_VIEWPORT_CAPTURE -ceq 'true') { $parameters['CaptureLesson07'] = $true }
           & ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 @parameters
+
+      - name: Retain the exact JPEG returned by the dedicated viewport tool
+        id: capture
+        if: ${{ success() && env.L07_VIEWPORT_CAPTURE == 'true' }}
+        run: |
+          & ./scripts/ue/Read-YacsLesson07Viewport.ps1 `
+            -ExpectedHead $env:GITHUB_SHA `
+            -RunToken '${{ github.run_id }}-${{ github.run_attempt }}'
 
       - name: Recover the bounded error from the retained observer attempt
         if: ${{ success() && env.L07_READONLY_DISCOVERY == 'true' }}
@@ -289,7 +311,7 @@ jobs:
           Assert-PlainReportPath $stage
           if (Test-Path -LiteralPath $stage) { throw 'Current evidence stage already exists.' }
           [void][IO.Directory]::CreateDirectory($stage)
-          foreach ($name in @('install.json','identity.json','bridge.json','probe.json','observer-failure-log.json')) {
+          foreach ($name in @('install.json','identity.json','bridge.json','probe.json','observer-failure-log.json','viewport.json')) {
             $path = Join-Path $root $name
             if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
             Assert-PlainReportPath $path
@@ -300,6 +322,33 @@ jobs:
               Write-Host ('L07_REMOTE_REPORT ' + $name + '=' + ($report | ConvertTo-Json -Depth 32 -Compress))
             } else { Write-Host ('L07_REMOTE_REPORT ' + $name + '=SEE_BOUNDED_JSON_ARTIFACT') }
             Copy-Item -LiteralPath $path -Destination (Join-Path $stage $name) -ErrorAction Stop
+          }
+          $viewport = Join-Path $root 'current-viewport.jpg'
+          if ('${{ steps.capture.outcome }}' -ceq 'success' -and
+              -not (Test-Path -LiteralPath $viewport -PathType Leaf)) {
+            throw 'Successful viewport retention has no exact JPEG artifact.'
+          }
+          if (Test-Path -LiteralPath $viewport -PathType Leaf) {
+            Assert-PlainReportPath $viewport
+            $manifestPath = Join-Path $root 'viewport.json'
+            Assert-PlainReportPath $manifestPath
+            $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+            if ($manifest.status -isnot [string] -or $manifest.status -cne 'VIEWPORT_CAPTURE_RETAINED' -or
+                $manifest.source_commit -isnot [string] -or $manifest.source_commit -cne $env:GITHUB_SHA -or
+                $manifest.run_token -isnot [string] -or $manifest.run_token -cne '${{ github.run_id }}-${{ github.run_attempt }}' -or
+                $manifest.sha256 -isnot [string] -or $manifest.sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+                ($manifest.byte_count -isnot [int] -and $manifest.byte_count -isnot [long]) -or
+                $manifest.byte_count -ne (Get-Item -LiteralPath $viewport).Length -or
+                (Get-Item -LiteralPath $viewport).Length -le 0 -or
+                (Get-Item -LiteralPath $viewport).Length -gt 32MB -or
+                (Get-FileHash -LiteralPath $viewport -Algorithm SHA256).Hash.ToLowerInvariant() -cne $manifest.sha256) {
+              throw 'Viewport artifact does not match its bounded capture receipt.'
+            }
+            $stageViewport = Join-Path $stage 'current-viewport.jpg'
+            Copy-Item -LiteralPath $viewport -Destination $stageViewport -ErrorAction Stop
+            if ((Get-FileHash -LiteralPath $stageViewport -Algorithm SHA256).Hash.ToLowerInvariant() -cne $manifest.sha256) {
+              throw 'Viewport evidence changed during staging.'
+            }
           }
           $assembly = 'D:\yacs\work\lesson07-source-repair-20261021\${{ github.run_id }}-${{ github.run_attempt }}\assembly-receipt.json'
           if (Test-Path -LiteralPath $assembly -PathType Leaf) {
@@ -325,6 +374,8 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
         with:
           name: lesson07-remote-connection-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ steps.reports.outputs.directory }}/*.json
+          path: |
+            ${{ steps.reports.outputs.directory }}/*.json
+            ${{ steps.reports.outputs.directory }}/current-viewport.jpg
           if-no-files-found: warn
           retention-days: 7

@@ -37,8 +37,15 @@ Six focused regressions independently passed. It preserves the existing colour
 recipe, 2048²/8-bit output, AO=255 and displacement=128. Only Grass and Cliffs
 are selected for the remote offline preparation; the accepted Grass2 replacement
 and other slices are retained. The generated Colour files are comparisons, not
-permission to replace the Colour array. Real host generation and native import
-remain separate results, reported in the receipt.
+permission to replace the Colour array.
+
+Remote generation **succeeded** in [run 39519585751](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39519585751)
+at source `c8370182042723d3f69610e6fcec1d4c074c96c0`, using Python 3.12.10,
+Pillow 12.3.0 and NumPy 2.3.5. The six output PNGs and their hashes are recorded
+in the receipt under `remote_assembly`; the host directory is
+`D:\yacs\work\lesson07-source-repair-20261021\39519585751-1`.
+The source preparation step passed despite the separate native observer failure.
+**No native texture/array import or visual acceptance has occurred.**
 
 This source repair is necessary but does not establish the whole visual fix.
 The current saved array has YACS grading (hue +25°, saturation 0.7, brightness
@@ -57,7 +64,7 @@ and [Landscape Material](https://www.sidefx.com/tutorials/project-pegasus-landsc
 
 ## Remote continuation and scoped connection authority (2026-10-21)
 
-**Current connection result:** at `2026-10-20T23:37:42.3866008Z`,
+**Post-job survival proof:** at `2026-10-20T23:37:42.3866008Z`,
 [discovery job 118948001389](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39515925462/job/118948001389)
 verified authenticated Wingman access to **the same Editor PID 17896 and native
 start filetime `134370120000674689`** created at 23:20 UTC. Both owner checks
@@ -83,10 +90,30 @@ at source `12a74fcc33a342e5fe3d05c5390b77a770906394` passed its CPU and Windows
 steps, retained the same owned Editor and made zero native calls. The bounded
 reader returned **`LOG_UNAVAILABLE`** at 00:04:57 UTC: the launcher's requested
 `D:\yacs\lesson07-remote\editor.log` does not exist. No error message was recovered.
-The downloaded artifact digest was verified. The next explicitly admitted
-passive read therefore retains a bounded, credential-redacted native error
-message if the tool fails again. This changes diagnostics, not the collector,
-its permission boundary or its no-automatic-retry rule.
+The downloaded artifact digest was verified.
+
+**Current native blocker:** the following explicit attempt in
+[run 39519585751](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39519585751/job/118959933031)
+retained the actual response at 00:12:21 UTC: Wingman's **F49 safety gate**
+classified `execute_python` as an attempted write to protected `.uproject`.
+The pinned collector only reads project identity, but the tool denied execution.
+The same owner Editor PID 17896 and native start time remained verified through
+00:12:23 UTC. The client retains one attempted call, a received error and unknown
+completion; no material readback or asset mutation is established. All 66 focused
+Python tests and the offline slice-generation step passed. The artifact ZIP
+`12310806923` was downloaded and SHA256-verified.
+
+The Python path is stopped. Do not remove, encode or rephrase its project guard,
+retry that call, disable the gate or substitute another arbitrary-code transport.
+The next separate `[l07-capture-editor]` operation requests the vendor's dedicated
+`take_viewport_screenshot` with only `return_image=false`. It retains bounded
+exact contracts for supported `read_bp`, `explore`, `code_search`, `edit_texture`,
+`edit_material_instance`, `edit_asset`, `edit_material` and
+`edit_material_function` without calling them. The JPEG reader admits only
+one exact returned path in the installed tool's viewport-shot directory, verifies
+capture-time freshness and unchanged process identity, decodes dimensions and
+copies stable bytes with a matching SHA256. This screenshot operation does not
+establish the current world, graph correctness or whole-material acceptance.
 
 The owner requested remote execution of the channel diagnosis and explicitly
 allowed creating the missing connection infrastructure. This supersedes the
@@ -146,15 +173,18 @@ project and world before reading loaded objects; it neither loads/saves packages
 nor changes the camera or material. Partial graph API information remains
 unavailable instead of being promoted to proof.
 
-The explicit `[l07-discover-editor]` and `[l07-observe-editor]` intents use a
+The explicit `[l07-discover-editor]`, `[l07-observe-editor]` and
+`[l07-capture-editor]` intents use a
 separate exact-source focused CPU gate, consistent with the existing M3
 live-read admission, and require an already-open verified owner Editor. All
-three intents are mutually exclusive. They retain the shared native concurrency
-lane; neither existing-session path can enter the installer or start an Editor.
+four intents, including startup, are mutually exclusive. They retain the shared
+native concurrency lane; no existing-session path can enter the installer or start an Editor.
 Discovery initializes MCP and reads metadata without a native tool call. It
-retains bounded exact input/output contracts for `execute_python` and
-`take_viewport_screenshot`, including defaults and enums; other tool rows stay
-structural. Credentials and unrelated metadata are excluded. The wrapper
+retains bounded exact contracts for `execute_python`, `take_viewport_screenshot`,
+`read_bp`, `explore`, `code_search`, `edit_texture`, `edit_material_instance`,
+`edit_asset`, `edit_material` and `edit_material_function`, including advertised
+defaults and enums; other tool rows stay structural.
+Credentials and unrelated metadata are excluded. The wrapper
 checks the owner, PID, native start time and listener again after the read. Its
 success status is deliberately partial diagnosis, not graph, visual or
 performance acceptance. Unknown completion after a timeout is retained as
@@ -162,11 +192,11 @@ unknown, and no native request is retried. The collector records bounded
 viewport metadata without selecting or changing a viewport. Its active view
 identity is not a proven screenshot target.
 
-The prepared passive mode passed 57 focused Python tests (37 client and 20
+The initial passive mode passed 57 focused Python tests (37 client and 20
 collector), independently rerun. These synthetic tests do not establish native execution or output-wrapper
 compatibility; the input contract was independently verified from the installed tool. The frozen collector
 SHA256 is `033301fa3cd9e35ba68b3ab15754772ba2dcfb2e2dc3aa8b7d01615c60f13bd5`;
-its first native execution remains pending. To respect
+its native attempts are recorded above; the current attempt was blocked by F49. To respect
 [Wingman's documented project-local file-I/O boundary](https://ai.locodev.dev/docs/how-it-works),
 the client embeds the exact hash-verified collector bytes in the fixed Python
 argument, checks that hash again in a fresh native namespace, and performs no
@@ -176,7 +206,8 @@ collector passed a fake-Unreal test with all file-open APIs forbidden. Installed
 input-schema SHA256 is pinned to the actual discovery response; output-wrapper
 compatibility still requires native evidence. The request supplies only `code` and
 explicit `mode="file"`, never a file argument. Bounded failure diagnostics retain
-only fixed response-shape fields, counts and tag/footer indicators, not raw logs.
+fixed response-shape fields, counts, tag/footer indicators and bounded
+credential-redacted tool error text, not raw UE logs.
 
 At exact source `3ba05803bfc3ff095eb012e3f790752b55b47d12`,
 [protected CyclingSim CI 39508823330](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39508823330)

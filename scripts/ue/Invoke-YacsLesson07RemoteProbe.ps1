@@ -7,21 +7,24 @@
   invokes the fixed discovery client. -ExistingEditorOnly additionally requires
   the same verified owner Editor before and after discovery. -ObserveLesson07
   requires that existing owner and requests only the fixed Lesson07 readback.
-  These two switches are mutually exclusive. No launch, task mutation, stop or
-  save. Discovery credentials stay on the Windows host.
+  -CaptureLesson07 requests the vendor's dedicated viewport screenshot instead.
+  The operation switches are mutually exclusive. No launch, task mutation, stop
+  or save. Discovery credentials stay on the Windows host.
 #>
 [CmdletBinding(DefaultParameterSetName='Discovery')]
 param(
   [Parameter(Mandatory)][ValidatePattern('^[0-9a-f]{40}$')][string]$ExpectedHead,
   [Parameter(Mandatory)][ValidatePattern('^[0-9]+-[0-9]+$')][string]$RunToken,
   [Parameter(ParameterSetName='Observation')][switch]$ObserveLesson07,
+  [Parameter(ParameterSetName='Capture')][switch]$CaptureLesson07,
   [Parameter(ParameterSetName='ExistingEditorDiscovery')][switch]$ExistingEditorOnly
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$requireExistingOwner = [bool]($ExistingEditorOnly -or $ObserveLesson07)
-$ownerGuardPrefix = if ($ObserveLesson07) { 'OBSERVATION' } else { 'DISCOVERY' }
+$requireExistingOwner = [bool]($ExistingEditorOnly -or $ObserveLesson07 -or $CaptureLesson07)
+$nativeRequested = [bool]($ObserveLesson07 -or $CaptureLesson07)
+$ownerGuardPrefix = if ($ObserveLesson07) { 'OBSERVATION' } elseif ($CaptureLesson07) { 'CAPTURE' } else { 'DISCOVERY' }
 $projectRoot = 'D:\yacs\project'
 $projectFile = Join-Path $projectRoot 'YetAnotherCyclingSim.uproject'
 $expectedExe = 'D:\yacs\engine\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe'
@@ -129,6 +132,7 @@ $report = [ordered]@{
   observed_utc=[DateTime]::UtcNow.ToString('o');error_type=$null
   identity_stable_across_probe=$false;client_exit_code=$null
   observation_requested=[bool]$ObserveLesson07;owner_before=$null;owner_after=$null
+  capture_requested=[bool]$CaptureLesson07
   existing_editor_only_requested=[bool]$ExistingEditorOnly;existing_owner_required=$requireExistingOwner
   identity_before=$null;identity_after=$null
   native_tool_called=$false;editor_started_or_stopped=$false
@@ -173,11 +177,13 @@ try {
   $report.identity_before=$identity
   $identity | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $identityPath -Encoding utf8
   $clientArguments=@('-B',(Join-Path $PSScriptRoot 'lesson07_wingman_client.py'),'--identity-receipt',$identityPath,'--output',$clientPath)
-  if ($ObserveLesson07) {
-    $clientArguments+='--observe-lesson07'
+  if ($ObserveLesson07) { $clientArguments+='--observe-lesson07' }
+  if ($CaptureLesson07) { $clientArguments+='--capture-lesson07' }
+  if ($nativeRequested) {
     # Until its bounded receipt is read, a subprocess failure leaves completion unknown.
     $report.native_tool_called=$null;$report.native_tool_attempted=$null;$report.native_tool_completed=$null
-    $report.native_tool_call_attempts=$null;$report.native_material_readback='UNVERIFIED'
+    $report.native_tool_call_attempts=$null
+    if ($ObserveLesson07) { $report.native_material_readback='UNVERIFIED' }
   }
   & $python @clientArguments
   $report.client_exit_code = $LASTEXITCODE
@@ -187,7 +193,7 @@ try {
     if ((Get-Item -LiteralPath $clientPath).Length -gt 2MB) { throw ($ownerGuardPrefix+'_CLIENT_REPORT_SIZE') }
     $clientReport=Get-Content -LiteralPath $clientPath -Raw | ConvertFrom-Json -AsHashtable -Depth 32
   }
-  if ($ObserveLesson07) {
+  if ($nativeRequested) {
     foreach ($field in @('native_tool_attempted','native_tool_completed')) {
       $report[$field]=if ($clientReport[$field] -is [bool]) { $clientReport[$field] } else { $null }
     }
@@ -226,6 +232,23 @@ try {
     }
     $report.native_material_readback='OBSERVED_PARTIAL_DIAGNOSIS_NOT_ACCEPTANCE'
     $report.status='LESSON07_OBSERVATION_COMPLETE_DIAGNOSIS_PARTIAL'
+  } elseif ($CaptureLesson07) {
+    if ($clientReport['status'] -isnot [string] -or $clientReport['status'] -cne 'CAPTURE_RESPONSE_RECEIVED' -or
+        $report.native_tool_call_attempts -ne 1 -or
+        $report.native_tool_attempted -ne $true -or $report.native_tool_completed -ne $true -or
+        $clientReport['native_tool_response_received'] -isnot [bool] -or $clientReport['native_tool_response_received'] -ne $true -or
+        $clientReport['native_tool_name'] -isnot [string] -or $clientReport['native_tool_name'] -cne 'take_viewport_screenshot' -or
+        $clientReport['native_material_readback'] -isnot [string] -or $clientReport['native_material_readback'] -cne 'NOT_RUN' -or
+        $clientReport['capture_input_schema_sha256'] -isnot [string] -or $clientReport['capture_input_schema_sha256'] -cne '4ef41b0bf0c6c93d64a049687e0e43565fb351cd484169b58473801840b3dcdc' -or
+        $clientReport['capture_arguments'] -isnot [Collections.IDictionary] -or
+        $clientReport['capture_arguments'].Count -ne 1 -or
+        $clientReport['capture_arguments']['return_image'] -isnot [bool] -or
+        $clientReport['capture_arguments']['return_image'] -ne $false -or
+        $clientReport['capture_result'] -isnot [Collections.IDictionary] -or
+        $clientReport['capture_result']['text'] -isnot [string]) {
+      throw 'CAPTURE_RESPONSE_NOT_CONFIRMED'
+    }
+    $report.status='LESSON07_CAPTURE_RESPONSE_RECEIVED_FILE_PENDING'
   } else {
     if ($ExistingEditorOnly -and ($clientReport['status'] -isnot [string] -or
         $clientReport['status'] -cne 'DISCOVERY_COMPLETE' -or
@@ -237,7 +260,7 @@ try {
   }
 } catch {
   $failure = $true
-  $report.status = if ($ObserveLesson07) { 'LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED' } else { 'BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED' }
+  $report.status = if ($ObserveLesson07) { 'LESSON07_OBSERVATION_INCOMPLETE_EDITOR_RETAINED' } elseif ($CaptureLesson07) { 'LESSON07_CAPTURE_INCOMPLETE_EDITOR_RETAINED' } else { 'BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED' }
   # Never serialize exception messages that might contain discovery credentials.
   $report.error_type = $_.Exception.GetType().Name
   $safeCodes = @('CURRENT_RUN_REPORT_ALREADY_EXISTS','EXISTING_PYTHON_UNAVAILABLE',
@@ -246,6 +269,8 @@ try {
     'PATH_OUTSIDE_BOUNDARY','REPARSE_POINT_REJECTED','PATH_BOUNDARY_NOT_REACHED',
     'OBSERVATION_REQUIRES_EXISTING_EDITOR','OBSERVATION_REQUIRES_VERIFIED_OWNER','OBSERVATION_OWNER_CHANGED',
     'OBSERVATION_CLIENT_REPORT_SIZE','OBSERVATION_READBACK_NOT_CONFIRMED',
+    'CAPTURE_REQUIRES_EXISTING_EDITOR','CAPTURE_REQUIRES_VERIFIED_OWNER','CAPTURE_OWNER_CHANGED',
+    'CAPTURE_CLIENT_REPORT_SIZE','CAPTURE_RESPONSE_NOT_CONFIRMED',
     'DISCOVERY_REQUIRES_EXISTING_EDITOR','DISCOVERY_REQUIRES_VERIFIED_OWNER','DISCOVERY_OWNER_CHANGED',
     'DISCOVERY_CLIENT_REPORT_SIZE','DISCOVERY_ONLY_NOT_CONFIRMED')
   $report['reason'] = if ($_.Exception.Message -cin $safeCodes) { $_.Exception.Message } else { 'PROBE_VALIDATION_ERROR' }
