@@ -15,6 +15,8 @@ on:
       - scripts/houdini/audit_l07_mask_cache.py
       - scripts/houdini/verify_l07_scree_crop.py
       - scripts/houdini/test_verify_l07_scree_crop.py
+      - scripts/houdini/l07_sand_source_audit.py
+      - scripts/houdini/test_l07_sand_source_audit.py
 
 permissions:
   contents: read
@@ -262,4 +264,85 @@ jobs:
             D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/scree-diagnostic-verified.json
           if-no-files-found: warn
           compression-level: 0
+          retention-days: 30
+
+
+  sand_source_preflight:
+    name: Verify 16K accepted Sand Stage2 producer contract without geometry
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-sand-producer]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Source Hash, Stage2 Mask statistics and empty-sand distinction
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_sand_source_audit -v
+          python -B -m py_compile scripts/houdini/l07_sand_source_audit.py
+
+  sand_source_audit:
+    name: Audit accepted full-16K sand producer range before coastal-site selection
+    needs: sand_source_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 10
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout exact read-only source audit code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Verify original source byte identity, producer stats and sand data range
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong exact source SHA.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Expected bounded source audit Python missing.' }
+          & $python -B scripts/houdini/l07_sand_source_audit.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Full 16K producer stats not verified.' }
+          $file='D:\yacs\work\lesson07-sand-mask-audit\${{ github.run_id }}-${{ github.run_attempt }}\sand-source-audit.json'
+          if (-not (Test-Path -LiteralPath $file)) { throw 'No original sand producer receipt.' }
+          $result=Get-Content -LiteralPath $file -Raw | ConvertFrom-Json
+          if ($result.full_16k_height_or_masks_mutated -ne $false -or
+              $result.sand_coastline_location_verified -ne $false -or
+              $result.native_cook -ne $false) {
+            throw 'A producer metadata check wrongly claims complete coastal geo/render proof.'
+          }
+          Write-Host "Original Stage2 sand source audit status: $($result.status)"
+      - name: Retain verified source producer statistics, no material or UE output
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-full-domain-sand-producer-${{ github.run_id }}-${{ github.run_attempt }}
+          path: D:/yacs/work/lesson07-sand-mask-audit/${{ github.run_id }}-${{ github.run_attempt }}/sand-source-audit.json
+          if-no-files-found: warn
           retention-days: 30
