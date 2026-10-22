@@ -105,6 +105,23 @@ class MaterialSiteTests(unittest.TestCase):
             check.assert_called_once_with(
                 canary.CROP_ROOT/"39794174742-1",canary.CROP_ROOT/"39785285512-1",source)
 
+    def test_interleaved_source_tint_order_and_real_scree_admission(self):
+        mapping=canary.INTERLEAVED_SOURCE_TINT_AFTER_ROLE
+        self.assertEqual([name for name,_,_ in mapping["grass"]],
+                         ["grass_gradient","grass_brightness"])
+        self.assertEqual([name for name,_,_ in mapping["cliff"]],["cliff"])
+        self.assertEqual([name for name,_,_ in mapping["scree"]],["scree"])
+        self.assertEqual([mask for _,mask,_ in mapping["scree"]],["scree_mask"])
+        self.assertNotIn("sand",mapping)
+        self.assertEqual([t for role,_,_,_,_ in canary.ROLES
+                          for t,_,_ in mapping.get(role,())],
+                         ["grass_gradient","grass_brightness","cliff","scree"])
+        source=Path(canary.__file__).read_text(encoding="utf-8")
+        self.assertIn("if interleaved_tints and scree_token is None:",source)
+        self.assertIn("complete_author_mask_and_tint_graph",source)
+        self.assertIn("native_tint_case(",source)
+        self.assertIn("LOAD_SAFE_TINT_",source)
+
     def test_png_chunk_crc(self):
         payload=b"abc"
         block=canary.png_chunk(b"tEXt",payload)
