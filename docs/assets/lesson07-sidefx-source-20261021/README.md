@@ -1,5 +1,10 @@
 # Lesson07: original SideFX package and video reinspection
 
+## Latest owner decision — texture substitutions selected (2026-10-22)
+
+The owner now **authorizes choosing replacements** for the ten Quixel surface families when exact current identity/availability is unknown. This **supersedes the earlier asset-byte-identical 1:1 requirement only for the source texture families**. Pegasus graph/topology, directly observed settings, Houdini-first process and Sa Calobra terrain/registration invariants still govern. The chosen **eight Poly Haven CC0 texture sources** and exact mapping to five Houdini stages plus five Unreal array slots are recorded in [SUBSTITUTION_SELECTION_20261022.md](SUBSTITUTION_SELECTION_20261022.md). The authoritative status is **SELECTED only**: no downloads, native material cook, UE import or visual PASS resulted from this decision. Keep historical no-substitute statements below as time-stamped prior decisions, not current blocking policy. All material execution gates stay active until real PBR source files, conversion/channel proof and native checks are present.
+
+
 ## Exact owner requirement and open source gaps (2026-10-22)
 
 The owner explicitly requires **1:1 Pegasus reproduction, including all
