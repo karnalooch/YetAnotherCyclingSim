@@ -1,8 +1,6 @@
 name: YACS Lesson07 bounded viewport recovery
 
-# One-shot navigation in the current owner session, not a new world pipeline.
-# Preserve host checks and shared exclusion; cancel only unstarted Blender runs
-# accidentally queued by the exact navigation-only commits listed below.
+# Navigation in the current owner session. Never start or stop an Editor.
 on:
   push:
     branches: [codex/365-world-graph]
@@ -142,8 +140,7 @@ jobs:
           $prior=$env:GIT_NO_LAZY_FETCH
           try {
             $env:GIT_NO_LAZY_FETCH='1'
-            $checkoutProof=& ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
-            $checkoutProof | Select-Object -Last 1
+            & ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1 6>&1 | Select-Object -Last 1
           } finally {$env:GIT_NO_LAZY_FETCH=$prior}
           & ./scripts/live_host/Test-YacsLiveTaskPrincipal.ps1
           & ./scripts/ue/Test-YacsLesson07RemotePreflight.ps1
@@ -157,8 +154,21 @@ jobs:
           $ErrorActionPreference='Stop'
           $state=& ./scripts/runner/Get-YacsUnrealHostState.ps1
           $rows=@($state.local_or_unknown_processes)+@($state.remote_ci_processes)
+          $consoleUser=[string](Get-CimInstance Win32_ComputerSystem).UserName
+          $consoleSid=([Security.Principal.NTAccount]::new($consoleUser)).Translate([Security.Principal.SecurityIdentifier]).Value
           $safeRows=@($rows | ForEach-Object {
-            [ordered]@{name=$_.name;pid=$_.process_id;parent_pid=$_.parent_process_id;exe=$_.executable_path;created=$_.creation_date;session=$_.session_id;owner_class=$_.owner;canonical_project_mentioned=([string]$_.command_line).Replace('\','/').Contains('D:/yacs/project/YetAnotherCyclingSim.uproject')}
+            $p=Get-Process -Id $_.process_id -ErrorAction Stop
+            $c=Get-CimInstance Win32_Process -Filter "ProcessId=$($_.process_id)"
+            $owner=Invoke-CimMethod -InputObject $c -MethodName GetOwnerSid
+            $tokens=@([regex]::Matches([string]$_.command_line,'"([^"]*)"|(\S+)') | ForEach-Object {if($_.Groups[1].Success){$_.Groups[1].Value}else{$_.Groups[2].Value}})
+            $projectTokens=@($tokens | Where-Object {$_ -match '\.uproject$'})
+            $safeProjects=@($projectTokens | ForEach-Object {
+              $normal=$_.Replace('\','/')
+              if($normal -match '^D:/yacs/[a-zA-Z0-9_./ -]+\.uproject$'){$normal}else{'OUTSIDE_CANONICAL_ROOT_OR_RELATIVE'}
+            })
+            $title=[string]$p.MainWindowTitle
+            if($title -notmatch '^[\p{L}\p{N}\s._*()\[\]:/\\-]{0,200}$'){$title='REDACTED_WINDOW_TITLE'}
+            [ordered]@{name=$_.name;pid=$_.process_id;parent_pid=$_.parent_process_id;exe=$_.executable_path;created=$_.creation_date;session=$_.session_id;owner_class=$_.owner;console_sid_matches=($owner.ReturnValue -eq 0 -and $owner.Sid -ceq $consoleSid);canonical_project_mentioned=([string]$_.command_line).Replace('\','/').Contains('D:/yacs/project/YetAnotherCyclingSim.uproject');project_arguments=$safeProjects;argument_count=$tokens.Count;project_browser_flag=('-projectbrowser' -in $tokens);window_title=$title;window_present=($p.MainWindowHandle -ne 0);working_set_bytes=$p.WorkingSet64;private_bytes=$p.PrivateMemorySize64}
           })
           $discovery='D:\yacs\project\Saved\LocoAI\external-mcp-config.json'
           $bridge=[ordered]@{exists=(Test-Path -LiteralPath $discovery);listeners=@()}
