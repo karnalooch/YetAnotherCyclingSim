@@ -1,0 +1,121 @@
+name: YACS Lesson07 real 16K source crop for CC0 material proof
+
+# Extract only the accepted original L06 cached HEIGHT / Alpha / source masks.
+# Two sequential fresh hython invocations keep original 3- and 4-volume loads
+# in separate OS processes. No UE or Landscape writes and no material cook.
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/lesson07-polyhaven-real-crop.yml
+      - .gumball/workflow-lifecycle.json
+      - scripts/houdini/extract_l07_real_crop.py
+      - scripts/houdini/test_extract_l07_real_crop.py
+      - scripts/houdini/verify_l07_real_crop.py
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Pin historic accepted 16K source hashes and exact crop bounds
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-real-crop]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Run fail-closed bounded source checks
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_extract_l07_real_crop -v
+          python -B -m py_compile scripts/houdini/verify_l07_real_crop.py scripts/houdini/extract_l07_real_crop.py
+
+  extract:
+    name: Capture 256x256 real Sa Calobra HEIGHT and source-mask data
+    needs: preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 50
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout only bounded source-reader scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Pin exact event and verify allowed preexisting source caches
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong source commit.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Canonical Houdini 22 missing.' }
+          $base='D:\yacs\work\lesson06-unified-20261019'
+          foreach ($name in @('stage1_base.bgeo.sc', 'stage2_masks.bgeo.sc')) {
+            if (-not (Test-Path -LiteralPath (Join-Path $base $name))) {
+              throw "Accepted original L06 cache missing: $name"
+            }
+          }
+          $scratch='D:\yacs\work\lesson07-cc0-real-crops'
+          if (-not (Test-Path -LiteralPath 'D:\yacs\work')) { throw 'Canonical D work root missing.' }
+          New-Item -Path $scratch -ItemType Directory -Force | Out-Null
+      - name: Extract real height, mask and Alpha in fresh native process
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          & $hython -B scripts/houdini/extract_l07_real_crop.py --stage base --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Accepted L06 base real-crop extraction failed; sources unchanged.' }
+      - name: Extract original four semantic source masks in SECOND native process
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          & $hython -B scripts/houdini/extract_l07_real_crop.py --stage masks --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Accepted L06 mask real-crop extraction failed; sources unchanged.' }
+      - name: Independently verify native source-crop bytes and coordinates
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          & $hython -B scripts/houdini/verify_l07_real_crop.py --root 'D:\yacs\work\lesson07-cc0-real-crops\${{ github.run_id }}-${{ github.run_attempt }}' --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Source extraction geometry/identity readback failed.' }
+      - name: Retain only tiny native crops and manifests (not original giant caches)
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-real-cc0-source-window-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/*-real-crop.json
+            D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/*-real-crop.npz
+            D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/real-source-verified.json
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 30
