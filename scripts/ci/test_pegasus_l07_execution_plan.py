@@ -32,15 +32,23 @@ class Lesson07PlanTests(unittest.TestCase):
         gates = plan["gates"]
         self.assertEqual([row["id"] for row in gates], [f"G{i:02}" for i in range(13)])
         self.assertTrue(all(row["status"] in VALID_STATUS for row in gates))
-        self.assertEqual(plan["acceptance"]["only_complete_if_all_required"], "PASS_FULL")
+        self.assertEqual(
+            plan["acceptance"]["only_complete_if_all_required"], "PASS_FULL"
+        )
         all_ids = {row["id"] for row in gates}
         self.assertTrue(all(set(row["depends_on"]) <= all_ids for row in gates))
         self.assertFalse(any(row["id"] in row["depends_on"] for row in gates))
         for row in gates:
             self.assertTrue(row["title"].strip())
             self.assertTrue(row["not_proven"].strip())
-            self.assertTrue(all(url.startswith("https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/")
-                                for url in row["verified_runs"]))
+            self.assertTrue(
+                all(
+                    url.startswith(
+                        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/"
+                    )
+                    for url in row["verified_runs"]
+                )
+            )
 
     def test_phase_order_and_dag_acyclic(self) -> None:
         plan = load_plan()
@@ -58,27 +66,52 @@ class Lesson07PlanTests(unittest.TestCase):
     def test_physical_terrain_identity_is_fixed(self) -> None:
         plan = load_plan()
         sha = plan["accepted_source_sha256"]
-        self.assertEqual(set(sha), {"stage1_base", "stage2_masks", "stage3_historical_scree",
-                                    "material_hda", "tint_hda"})
+        self.assertEqual(
+            set(sha),
+            {
+                "stage1_base",
+                "stage2_masks",
+                "stage3_historical_scree",
+                "material_hda",
+                "tint_hda",
+            },
+        )
         for key, value in sha.items():
             with self.subTest(key=key):
                 self.assertTrue(re.fullmatch(r"[a-f0-9]{64}", value))
-        self.assertEqual(sha["stage1_base"], "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952")
-        self.assertEqual(sha["stage2_masks"], "203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8")
+        self.assertEqual(
+            sha["stage1_base"],
+            "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
+        )
+        self.assertEqual(
+            sha["stage2_masks"],
+            "203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8",
+        )
 
     def test_exact_cc0_roles_and_no_assumed_ordp_channels(self) -> None:
         plan = load_plan()
         cc0 = plan["source_adaptations"]
         self.assertEqual(len(cc0["all_eight_vendor_source_names"]), 8)
         self.assertEqual(len(set(cc0["all_eight_vendor_source_names"])), 8)
-        self.assertEqual(cc0["ue_five_slice_order"], [
-            "mossy_rock", "sparse_grass", "gravel_floor_02",
-            "dark_rock_02", "coast_sand_rocks_02"])
+        self.assertEqual(
+            cc0["ue_five_slice_order"],
+            [
+                "mossy_rock",
+                "sparse_grass",
+                "gravel_floor_02",
+                "dark_rock_02",
+                "coast_sand_rocks_02",
+            ],
+        )
         self.assertEqual(cc0["ue_ordp_packing_until_resolved"], "UNKNOWN")
         self.assertIs(cc0["demo_terrain_resolution_2016_applies_to_real_16000"], False)
-        self.assertIs(cc0["nonzero_demo_displacement_may_modify_accepted_height"], False)
+        self.assertIs(
+            cc0["nonzero_demo_displacement_may_modify_accepted_height"], False
+        )
 
-    def test_technical_pass_requires_every_verified_gate_and_visual_approval(self) -> None:
+    def test_technical_pass_requires_every_verified_gate_and_visual_approval(
+        self,
+    ) -> None:
         plan = load_plan()
         states = {row["id"]: row["status"] for row in plan["gates"]}
         admission = plan["acceptance"]
@@ -86,7 +119,9 @@ class Lesson07PlanTests(unittest.TestCase):
         self.assertEqual(required, [f"G{i:02}" for i in range(12)])
         complete = all(states[name] == "PASS_FULL" for name in required)
         if admission["lesson07_technical_pass"]:
-            self.assertTrue(complete, "Never claim full Lesson07 on a crop, proxy or metadata read.")
+            self.assertTrue(
+                complete, "Never claim full Lesson07 on a crop, proxy or metadata read."
+            )
             self.assertTrue(admission["owner_visual_accepted"])
         if admission["owner_visual_accepted"]:
             self.assertEqual(states["G10"], "PASS_FULL")
