@@ -490,3 +490,120 @@ jobs:
             D:/yacs/work/lesson07-cc0-tint-proofs/${{ github.run_id }}-${{ github.run_attempt }}/tint-limestone_gray_candidate.png
           if-no-files-found: warn
           retention-days: 30
+
+
+  interleaved_tints_preflight:
+    name: Check original SideFX four Tint HDA nodes interleaved with five material HDAs
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-interleaved-tints]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Source-order graph guards and syntax
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_real_material_canary scripts.houdini.test_l07_original_tint_hda_canary -v
+          python -B -m py_compile scripts/houdini/l07_real_material_canary.py scripts/houdini/l07_original_tint_hda_canary.py
+
+  interleaved_tints_native:
+    name: Cook source-ordered 5 materials and 4 Tint HDAs on real Sa Calobra site
+    needs: interleaved_tints_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 40
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout reviewed native source modules only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/assets
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Preserve existing source authority and check memory headroom
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong source revision.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python unavailable.' }
+          $original='D:\yacs\work\lesson07-cc0-real-crops\39785285512-1\real-source-verified.json'
+          $stage3='D:\yacs\work\lesson07-cc0-real-crops\39794174742-1\scree-diagnostic-verified.json'
+          foreach ($file in @($original,$stage3)) {
+            if (-not (Test-Path -LiteralPath $file)) { throw "Missing read-only accepted real source: $file" }
+          }
+          $memJson=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(12)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Available commit guard rejected new cook.' }
+          $mem=$memJson | ConvertFrom-Json
+          if ([int64]$mem.available_physical_bytes -lt 8GB) { throw 'Not enough physical memory.' }
+          Write-Host "Original Pegasus 5+4 HDA source-order headroom: $memJson"
+      - name: Cook original Material and Tint HDAs in source topology, scratch only
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Canonical Houdini 22 missing.' }
+          & $hython -B scripts/houdini/l07_real_material_canary.py --source-token '39785285512-1' --scree-token '39794174742-1' --run-token '${{ github.run_id }}-${{ github.run_attempt }}' --interleaved-tints
+          if ($LASTEXITCODE -ne 0) { throw 'Interleaved original HDA source-order test failed, leaving source unchanged.' }
+          $manifest='D:\yacs\work\lesson07-cc0-real-material\${{ github.run_id }}-${{ github.run_attempt }}\real-material-canary.json'
+          if (-not (Test-Path -LiteralPath $manifest)) { throw 'No verified Material/Tint sequence receipt.' }
+          $proof=Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json
+          $order=@($proof.tint_stages | ForEach-Object { $_.name })
+          if ($proof.status -cne 'FIVE_PEGASUS_CC0_REAL_STAGE3_SOURCE_ORDERED_TINTS_BOUNDED_PASS' -or
+              $proof.source_tints_interleaved_in_author_order -ne $true -or
+              $proof.complete_author_mask_and_tint_graph -ne $false -or
+              $proof.stage3_upstream_lineage_accepted -ne $false -or
+              $proof.ground_truth_height_and_stage2_masks_unchanged -ne $true -or
+              $proof.whole_landscape_material_pass -ne $false -or
+              $proof.unreal_import -ne $false -or
+              @($proof.stages).Count -ne 5 -or $order.Count -ne 4) {
+            throw 'Material+Tint candidate was promoted or incomplete.'
+          }
+          if (($order -join ',') -cne 'grass_gradient,grass_brightness,cliff,scree') {
+            throw 'Author SideFX Tint graph order was changed.'
+          }
+          if (@($proof.tint_stages | Where-Object { $_.height_and_semantic_masks_preserved -ne $true }).Count -gt 0) {
+            throw 'Protected source field changed in real Tint HDA chain.'
+          }
+          Write-Host 'FIVE_ORIGINAL_MATERIALS_FOUR_INTERLEAVED_SOURCE_TINTS_REAL_STAGE3_BOUNDED_PASS'
+      - name: Upload exact source-order receipt and real color stage previews only
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-source-ordered-materials-and-tints-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-material-canary.json
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-*-colour.png
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/tint-*.png
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/tint-scree.bgeo.sc
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 30
