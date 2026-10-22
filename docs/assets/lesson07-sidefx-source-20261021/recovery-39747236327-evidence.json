@@ -1,0 +1,839 @@
+{
+  "schema_version": 1,
+  "status": "CAMERA_RECOVERED_MATERIAL_READ_ONLY",
+  "run_id": 39747236327,
+  "job_id": 119718858883,
+  "source_commit": "e81d01e89c8eecf12c9547ddb14012c3c38376c6",
+  "artifact": {
+    "id": 12412051594,
+    "bytes": 44126,
+    "sha256": "d9b04d062998e05327c482c9e9b2f487a5cb6e77cd541e5c17325a8c62798661"
+  },
+  "owner": {
+    "start": "134371303194962215",
+    "session": 2,
+    "port": 19315,
+    "pid": 36184
+  },
+  "native_tool_calls": 4,
+  "camera": {
+    "world": "/Game/Generated/YACS/Lesson07_Unified/L_SaCalobra_Lesson07.L_SaCalobra_Lesson07",
+    "bounds": [
+      {
+        "actor": "SaCalobra_Unified_0_0",
+        "origin": [
+          -203225.01130776305,
+          -203225.0000953675,
+          23486.258765902396
+        ],
+        "extent": [
+          203199.9887116027,
+          203199.98788833624,
+          24052.04842749526
+        ]
+      },
+      {
+        "actor": "SaCalobra_Unified_1_0",
+        "origin": [
+          203175.00154854392,
+          -203225.0000953675,
+          42455.09997601021
+        ],
+        "extent": [
+          203199.98936087842,
+          203199.98788833624,
+          43020.88355176853
+        ]
+      },
+      {
+        "actor": "SaCalobra_Unified_0_1",
+        "origin": [
+          -203225.0102223092,
+          203175.01211166376,
+          71820.62123601632
+        ],
+        "extent": [
+          203199.98977994267,
+          203199.98788833624,
+          71890.79627669598
+        ]
+      },
+      {
+        "actor": "SaCalobra_Unified_1_1",
+        "origin": [
+          203175.0030234881,
+          203175.01211166376,
+          71796.49488439616
+        ],
+        "extent": [
+          203199.9894934357,
+          203199.98788833624,
+          64656.32327400269
+        ]
+      }
+    ],
+    "before": [
+      [
+        2097345.641838,
+        1027490.414321,
+        -1539522.610749
+      ],
+      [
+        -65.199901,
+        -318.999974,
+        -0.000004
+      ]
+    ],
+    "after": [
+      [
+        -81304.9822673219,
+        -81304.97317914624,
+        387551.40490483516
+      ],
+      [
+        -38.12638473510742,
+        45,
+        0
+      ]
+    ],
+    "transforms_unchanged": true,
+    "assets_saved": false,
+    "material_changed": false
+  },
+  "image": {
+    "name": "landscape.jpg",
+    "sha256": "8b93342d4ccae59a9e57154e576c900cece6359dcea7642100828257b6d0d602",
+    "bytes": 41322,
+    "visually_reviewed": true,
+    "observation": "Landscape is visible above the terrain; broad pale green/grey coverage and dark steep faces remain. This frame does not establish whole-area or final material acceptance."
+  },
+  "active_mi": {
+    "scalars": [
+      {
+        "name": "Detail Tiling",
+        "value": 0.25,
+        "overridden": true
+      },
+      {
+        "name": "Noise_Scale",
+        "value": 0.0005000000237487257,
+        "overridden": true
+      },
+      {
+        "name": "Terrain Resolution",
+        "value": 16000,
+        "overridden": true
+      },
+      {
+        "name": "UV Distort",
+        "value": 4,
+        "overridden": true
+      },
+      {
+        "name": "Grass_Type",
+        "value": -1,
+        "overridden": false
+      },
+      {
+        "name": "Material_Selection",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Global_Colour_Weight",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Macro_Selection",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Hue",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Brightness",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Material_Selection",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Grass_Type",
+        "value": -1,
+        "overridden": false
+      },
+      {
+        "name": "Brigthness",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Micro Scale",
+        "value": 0.019999999552965164,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Macro Scale",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Tiling Scale",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Material_Selection",
+        "value": 2,
+        "overridden": true
+      },
+      {
+        "name": "Grass_Type",
+        "value": -1,
+        "overridden": false
+      },
+      {
+        "name": "Brigthness",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Micro Scale",
+        "value": 0.019999999552965164,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Macro Scale",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Tiling Scale",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Material_Selection",
+        "value": 3,
+        "overridden": true
+      },
+      {
+        "name": "Grass_Type",
+        "value": -1,
+        "overridden": false
+      },
+      {
+        "name": "Brigthness",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Micro Scale",
+        "value": 0.019999999552965164,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Macro Scale",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Tiling Scale",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Material_Selection",
+        "value": 4,
+        "overridden": true
+      },
+      {
+        "name": "Grass_Type",
+        "value": -1,
+        "overridden": false
+      },
+      {
+        "name": "Brigthness",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Micro Scale",
+        "value": 0.019999999552965164,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Macro Scale",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Tiling Scale",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Bit",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Bit",
+        "value": 2,
+        "overridden": true
+      },
+      {
+        "name": "Bit",
+        "value": 3,
+        "overridden": true
+      },
+      {
+        "name": "Bit",
+        "value": 4,
+        "overridden": true
+      },
+      {
+        "name": "Num IDmap Layers",
+        "value": 5,
+        "overridden": true
+      },
+      {
+        "name": "Global Specular Scale",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Global Normal Flatten",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Macro Texture Distance",
+        "value": 10000,
+        "overridden": true
+      },
+      {
+        "name": "Macro Tiling",
+        "value": 0.05000000074505806,
+        "overridden": true
+      },
+      {
+        "name": "Displacement",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Displacement_Micro",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "UV Rotate",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Displacement Offset",
+        "value": 0.5019999742507935,
+        "overridden": true
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Detail Brightness",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Specular Falloff Exponent",
+        "value": 0.5,
+        "overridden": true
+      },
+      {
+        "name": "Global Brightness",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Global AO Power",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Macro Texture Displacement",
+        "value": 5,
+        "overridden": true
+      },
+      {
+        "name": "Global Saturation",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Distance",
+        "value": 0.05000000074505806,
+        "overridden": false
+      },
+      {
+        "name": "Count",
+        "value": 8,
+        "overridden": false
+      },
+      {
+        "name": "Terrain Scale",
+        "value": 50,
+        "overridden": true
+      }
+    ],
+    "vectors": [
+      {
+        "name": "Offset",
+        "value": "(-8000,-8000,0,0)",
+        "overridden": true
+      }
+    ],
+    "textures": [
+      {
+        "name": "Normal Atlas",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.TA_Normal_Unified",
+        "overridden": true
+      },
+      {
+        "name": "Colour Atlas",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.TA_Colour_Unified",
+        "overridden": true
+      },
+      {
+        "name": "Terrain Colour",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color.T_PE_Terrain_Color",
+        "overridden": true
+      },
+      {
+        "name": "Masks Atlas",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.TA_Masks_Unified",
+        "overridden": true
+      },
+      {
+        "name": "Terrain IDmap",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap.T_PE_Terrain_IDMap",
+        "overridden": true
+      }
+    ],
+    "static_switches": [
+      {
+        "name": "Use Terrain Colour",
+        "value": true,
+        "overridden": true
+      },
+      {
+        "name": "Use IDmap",
+        "value": true,
+        "overridden": true
+      },
+      {
+        "name": "Allow Grass",
+        "value": false,
+        "overridden": true
+      }
+    ]
+  },
+  "candidate_mi": {
+    "scalars": [
+      {
+        "name": "Detail Tiling",
+        "value": 0.25,
+        "overridden": true
+      },
+      {
+        "name": "Noise_Scale",
+        "value": 0.0005000000237487257,
+        "overridden": true
+      },
+      {
+        "name": "Terrain Resolution",
+        "value": 16000,
+        "overridden": true
+      },
+      {
+        "name": "UV Distort",
+        "value": 4,
+        "overridden": true
+      },
+      {
+        "name": "Grass_Type",
+        "value": -1,
+        "overridden": false
+      },
+      {
+        "name": "Material_Selection",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Global_Colour_Weight",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Macro_Selection",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Hue",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Brightness",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Material_Selection",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Grass_Type",
+        "value": -1,
+        "overridden": false
+      },
+      {
+        "name": "Brigthness",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Micro Scale",
+        "value": 0.019999999552965164,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Macro Scale",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Tiling Scale",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Material_Selection",
+        "value": 2,
+        "overridden": true
+      },
+      {
+        "name": "Grass_Type",
+        "value": -1,
+        "overridden": false
+      },
+      {
+        "name": "Brigthness",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Micro Scale",
+        "value": 0.019999999552965164,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Macro Scale",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Tiling Scale",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Material_Selection",
+        "value": 3,
+        "overridden": true
+      },
+      {
+        "name": "Grass_Type",
+        "value": -1,
+        "overridden": false
+      },
+      {
+        "name": "Brigthness",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Micro Scale",
+        "value": 0.019999999552965164,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Macro Scale",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Tiling Scale",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Material_Selection",
+        "value": 4,
+        "overridden": true
+      },
+      {
+        "name": "Grass_Type",
+        "value": -1,
+        "overridden": false
+      },
+      {
+        "name": "Brigthness",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Micro Scale",
+        "value": 0.019999999552965164,
+        "overridden": false
+      },
+      {
+        "name": "Displacement Macro Scale",
+        "value": 0,
+        "overridden": false
+      },
+      {
+        "name": "Tiling Scale",
+        "value": 1,
+        "overridden": false
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Bit",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Bit",
+        "value": 2,
+        "overridden": true
+      },
+      {
+        "name": "Bit",
+        "value": 3,
+        "overridden": true
+      },
+      {
+        "name": "Bit",
+        "value": 4,
+        "overridden": true
+      },
+      {
+        "name": "Num IDmap Layers",
+        "value": 5,
+        "overridden": true
+      },
+      {
+        "name": "Global Specular Scale",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Global Normal Flatten",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Macro Texture Distance",
+        "value": 10000,
+        "overridden": true
+      },
+      {
+        "name": "Macro Tiling",
+        "value": 0.05000000074505806,
+        "overridden": true
+      },
+      {
+        "name": "Displacement",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Displacement_Micro",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "UV Rotate",
+        "value": 0,
+        "overridden": true
+      },
+      {
+        "name": "Displacement Offset",
+        "value": 0.5019999742507935,
+        "overridden": true
+      },
+      {
+        "name": "Global Colour Strength",
+        "value": 0.5,
+        "overridden": true
+      },
+      {
+        "name": "Detail Brightness",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Specular Falloff Exponent",
+        "value": 0.5,
+        "overridden": true
+      },
+      {
+        "name": "Global Brightness",
+        "value": 0.5,
+        "overridden": true
+      },
+      {
+        "name": "Global AO Power",
+        "value": 1,
+        "overridden": true
+      },
+      {
+        "name": "Macro Texture Displacement",
+        "value": 5,
+        "overridden": true
+      },
+      {
+        "name": "Global Saturation",
+        "value": 0.5,
+        "overridden": true
+      },
+      {
+        "name": "Distance",
+        "value": 0.05000000074505806,
+        "overridden": false
+      },
+      {
+        "name": "Count",
+        "value": 8,
+        "overridden": false
+      },
+      {
+        "name": "Terrain Scale",
+        "value": 50,
+        "overridden": true
+      }
+    ],
+    "vectors": [
+      {
+        "name": "Offset",
+        "value": "(-8000,-8000,0,0)",
+        "overridden": true
+      }
+    ],
+    "textures": [
+      {
+        "name": "Normal Atlas",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Normal_Unified.TA_Normal_Unified",
+        "overridden": true
+      },
+      {
+        "name": "Colour Atlas",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Colour_Unified.TA_Colour_Unified",
+        "overridden": true
+      },
+      {
+        "name": "Terrain Colour",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_Color.T_PE_Terrain_Color",
+        "overridden": true
+      },
+      {
+        "name": "Masks Atlas",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Materials/TA_Masks_Unified.TA_Masks_Unified",
+        "overridden": true
+      },
+      {
+        "name": "Terrain IDmap",
+        "value": "/Game/Generated/YACS/Lesson07_Unified/Textures/T_PE_Terrain_IDMap.T_PE_Terrain_IDMap",
+        "overridden": true
+      }
+    ],
+    "static_switches": [
+      {
+        "name": "Use Terrain Colour",
+        "value": true,
+        "overridden": true
+      },
+      {
+        "name": "Use IDmap",
+        "value": true,
+        "overridden": true
+      },
+      {
+        "name": "Allow Grass",
+        "value": false,
+        "overridden": true
+      }
+    ]
+  },
+  "native_mi_association_indices_verified": false,
+  "protected_packages_unchanged": true,
+  "material_changed": false,
+  "assets_saved": false,
+  "post_startup_job_survival_verified": true,
+  "visual_acceptance": false,
+  "lesson07_technical_pass": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3"
+}

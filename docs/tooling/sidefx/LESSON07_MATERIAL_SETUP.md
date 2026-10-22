@@ -11,6 +11,42 @@
 
 ---
 
+## Current owner direction: exact Pegasus configuration and assets (2026-10-22)
+
+The owner's latest instruction requires **1:1 reproduction of Pegasus, from
+configuration through assets**. This is the completion criterion for the
+ongoing #365 / M3 work in Draft PR #474. It supersedes any interpretation of
+the earlier ZIP-only delivery or adapted candidate as a completed reproduction.
+The target is the final tutorial workflow, including original HDA/material
+graphs, authored instance parameters, exact texture families, map packing,
+array order and import/compression/sRGB settings. An unverified original value
+remains a source gap; a visually similar substitute does not close that gap.
+
+The [source comparison](../../assets/lesson07-sidefx-source-20261021/README.md#exact-owner-requirement-and-open-source-gaps-2026-10-22)
+records the unresolved differences. The ZIP supplies diagnostic arrays, not
+the five final-video PBR families. The prepared MI has the ZIP scalar profile,
+not the final video values of Detail Brightness 5, UV Distort 1 and Specular
+Falloff Exponent 1. Both current instances still bind the YACS arrays. The
+existing Houdini stages also use substitute colour/roughness inputs; the five
+identified Unreal families do not establish the inputs of the author's earlier
+Houdini instances. Their exact inputs and parameters need separate evidence.
+
+Official exact-source identification and permitted retrieval are active again.
+Purchase and substitute selection are not authorized. The proposed new
+source-crop/canary implementation using the current substitutes was stopped
+before edits or native execution. Existing mechanism-test code remains
+historical preparation, not 1:1 acceptance. Independent read-only source/header
+inspection and retention of the successful Editor recovery continue.
+
+The accepted Sa Calobra relief, extent, scale and registered terrain maps
+remain the geographic inputs. Demo resolution, terrain size and coordinate
+orientation cannot silently replace those inputs. Their required data mapping
+and the current master's visibility integration are explicit differences to
+verify, not evidence that every saved value or graph is already identical.
+No material application, full reproduction, whole-area visual acceptance or
+M3 completion is claimed. `LESSON07_TECHNICAL_PASS: false` and
+`performance_pass: false` remain unchanged.
+
 ## Current restart request after competing Editors (2026-10-22)
 
 The owner subsequently reported closing both Editors and explicitly requested
@@ -44,9 +80,18 @@ matched the same process before and after discovery. Discovery ended with
 precise timeout phase was not retained. A startup-readiness race is possible,
 not established. The Editor remained supervised, and the camera step was
 skipped. This is a verified process start, not native-world or visual proof.
-The next bounded recovery attaches to that existing session with fresh
-singleton PID/start/listener checks; it does not reinstall, restart, enlarge
-the timeout or loop over native requests.
+[Recovery 39747236327](../../assets/lesson07-sidefx-source-20261021/recovery-39747236327-evidence.json)
+then succeeded in the same PID/start/session at source `e81d01e89c8eecf12c9547ddb14012c3c38376c6`.
+Fresh discovery passed, and four native calls confirmed the exact Lesson07
+world, framed its four Landscape actors and read both material instances.
+The actual JPEG (`8b93342d4ccae59a9e57154e576c900cece6359dcea7642100828257b6d0d602`)
+shows terrain, with broad pale green/grey coverage and dark steep faces still
+unresolved. Actor transforms and protected package bytes remained unchanged;
+no material was changed or saved. Active global-colour values remain zero,
+Macro Tiling 0.05 and Global Normal Flatten 1; the isolated candidate retains
+its five source-profile scalar differences. This establishes the requested
+restart, post-startup-job survival, live connection and camera recovery, not
+final material or whole-area acceptance.
 
 [Recovery run 39704721721, attempt 2](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39704721721/attempts/2)
 rechecked source `62ec16d1960822a18238f2764558e8093f4c3243` on the home
@@ -100,7 +145,21 @@ must reuse the original HeightField Crop recipe from that accepted cache;
 its small output does not establish a small memory requirement for loading
 the full input. No aggregate material/terrain cook is authorized by this read.
 
-## Current owner direction: original SideFX material reproduction (2026-10-21)
+[Source observation 39747236507](../../assets/lesson07-sidefx-source-20261021/source-stage4a-39747236507-evidence.json)
+subsequently authenticated the retained 519,575,557-byte `stage1_base` against
+its accepted SHA. The 1,167,222,140-byte `stage2_masks` has current SHA
+`203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8`, matching
+its bounded local producer receipt; independent historical lineage was not
+established. About 15.45 GiB physical and 49.6 GiB commit were available at
+that observation. These are the two actual stage4a inputs; a proposed separate
+source-crop test remains paused under the exact-source requirement above.
+They do not replace the missing final-cache crop's contract. Header reading
+was skipped because the Windows executable reports version `22.0.0.466` and
+the reader expected 466 in the wrong component. The follow-up reader uses
+that exact observed version, size and executable SHA; it still performs no
+geometry load or cook.
+
+## Earlier owner direction: original SideFX material reproduction (2026-10-21)
 
 The owner requested a fresh download of `ProjectFiles_LandscapeWorkflow3.zip`,
 a close reinspection of Lesson07 (Vimeo 888569514), then reproduction of the
@@ -124,7 +183,8 @@ A copy of the original MI preserves its layered parameter identity while
 geographic inputs and visibility support remain YACS-specific. Native candidate
 creation is now recorded below; source-colour repair, application and visual
 proof remain outstanding. The initial candidate uses
-the ZIP's saved defaults; the final-video scalar profile is a separate trial.
+the ZIP's saved defaults. The final-video scalar profile is now required by
+the 22 October instruction above, rather than an optional comparison trial.
 The [persisted tuple evidence](../../assets/lesson07-sidefx-source-20261021/one-to-one-mi-parameter-evidence.json)
 finds the retained current MI's layer indices and runtime stack already equal
 to the source. Its remaining ZIP-profile delta is five global scalar values.
@@ -141,7 +201,9 @@ was missing, so no Houdini canary or full-cache fallback was launched.
 The [base material recipe](../../assets/lesson07-sidefx-source-20261021/base-material-coverage-recipe.json)
 now restores `MAT_GRASS.use_mask=0`, filling base RGB and roughness while keeping
 the Grass input for distortion and the existing zero height displacement.
-This is a source correction only. The pipeline's existing-file skip still
+This is a source-code hypothesis based on the HDA default, not proof of the
+author's saved first-grass instance or the cause of the black RGB. The
+pipeline's existing-file skip still
 preserves earlier caches; none has been invalidated or recooked, and the saved
 global colour is not yet repaired. A separate fixed-path cache metadata read
 and one plugin scalar-setter source search are prepared; native results remain
@@ -159,8 +221,10 @@ retains the selection evidence from inspecting the metadata of all 125
 `.uasset` files. The [image inspection](../../assets/lesson07-sidefx-source-20261021/source-six-image-inspection.json)
 retains the six source image formats. No new import, image conversion or active
 material change occurred, and this extraction did not supply the five final
-PBR families. External acquisition, purchase and substitute searches are
-paused; there is no request for an existing local export from the owner.
+PBR families. External acquisition and substitute searches were paused for
+that earlier extraction-only request. Exact official-source verification and
+permitted retrieval are active again under the 22 October instruction;
+purchase and substitute selection remain outside authorization.
 
 The [37-package comparison](../../assets/lesson07-sidefx-source-20261021/current-landscape-archive-comparison.json)
 also confirms that all original Landscape source packages are already

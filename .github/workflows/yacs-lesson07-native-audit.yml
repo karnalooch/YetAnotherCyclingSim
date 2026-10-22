@@ -164,14 +164,14 @@ jobs:
           function Read-L07GinfoHeader([string]$Path,[Collections.IDictionary]$Source,[Collections.IDictionary]$Tool,[bool]$SourceIdentityMatches) {
             $row=[ordered]@{path=$Path;arguments=@('-S','-u',$Path);status='PENDING_TOOL_PROVENANCE';started=$false;exit_code=$null;
               time_limit_seconds=30;output_limit_bytes=65536;stdout='';stderr='';source_metadata_unchanged=$null}
-            if (-not $Tool.version_matches_known_installation) { return $row }
+            if (-not $Tool.version_matches_known_installation -or -not $Tool.observed_executable_pin_matches) { return $row }
             if (-not $SourceIdentityMatches -or $Source.status -cne 'STABLE_HASH_OBSERVED') { $row.status='PENDING_SOURCE_IDENTITY';return $row }
             $process=$null;$sourceLock=$null
             try {
               $before=Get-L07PlainFile $Path
               if ($before.Length -ne $Source.bytes -or $before.LastWriteTimeUtc.ToString('o') -cne $Source.modified_utc) { throw 'SOURCE_CHANGED' }
               $sourceLock=[IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
-              $toolNow=Get-L07StableHash $Tool.file.path 64MB
+              $toolNow=Get-L07StableHash $Tool.file.path 64MB $Tool.observed_executable_pin.bytes
               if ($toolNow.status -cne 'STABLE_HASH_OBSERVED' -or $toolNow.sha256 -cne $Tool.file.sha256) { throw 'TOOL_CHANGED' }
               $start=[Diagnostics.ProcessStartInfo]::new();$start.FileName=$Tool.file.path;$start.UseShellExecute=$false
               $start.CreateNoWindow=$true;$start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true
@@ -253,14 +253,19 @@ jobs:
             $result.stage2=[ordered]@{file=$maskFile;hash_limit_bytes=6GB;producer_sha_match=$maskMatches;
               previously_accepted_pin_exists=$false;source_lineage_independently_verified=$false}
             $result.final_cache_metadata=Get-L07FileMetadata $final
-            $tool=[ordered]@{file=(Get-L07StableHash $ginfo 64MB);file_version=$null;version_matches_known_installation=$false;
-              provenance_basis='FIXED_EXISTING_INSTALLATION_AND_FILE_VERSION';accepted_executable_sha256_pin_exists=$false}
+            # Identity observed in native audit 39747236507; this is not a historical executable acceptance.
+            $toolPin=[ordered]@{source_run_id=39747236507;source_commit='e81d01e89c8eecf12c9547ddb14012c3c38376c6';bytes=4369200;
+              sha256='be4c5d9d9753483596d7eb9664dab27fc816d0ba912597d78a6ce9061689d31d'}
+            $tool=[ordered]@{file=(Get-L07StableHash $ginfo 64MB $toolPin.bytes);file_version=$null;version_matches_known_installation=$false;
+              provenance_basis='NATIVE_RUN_OBSERVED_FILE_IDENTITY_AND_EXACT_WINDOWS_VERSION';
+              observed_executable_pin=$toolPin;observed_executable_pin_matches=$false}
             if ($tool.file.status -ceq 'STABLE_HASH_OBSERVED') {
+              $tool.observed_executable_pin_matches=($tool.file.bytes -eq $toolPin.bytes -and $tool.file.sha256 -ceq $toolPin.sha256)
               try {
                 $version=(Get-L07PlainFile $ginfo).VersionInfo
                 $tool.file_version=if ($version.FileVersion -is [string] -and $version.FileVersion -cmatch '^[0-9A-Za-z .,+()_-]{1,80}$') { $version.FileVersion } else { $null }
                 $tool.version_matches_known_installation=($null -ne $tool.file_version -and $version.FileMajorPart -eq 22 -and
-                  $version.FileMinorPart -eq 0 -and $version.FileBuildPart -eq 466)
+                  $version.FileMinorPart -eq 0 -and $version.FileBuildPart -eq 0 -and $version.FilePrivatePart -eq 466)
               } catch { $tool.version_matches_known_installation=$false }
             }
             $result.ginfo_tool=$tool

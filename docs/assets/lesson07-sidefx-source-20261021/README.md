@@ -1,5 +1,37 @@
 # Lesson07: original SideFX package and video reinspection
 
+## Exact owner requirement and open source gaps (2026-10-22)
+
+The owner explicitly requires **1:1 Pegasus reproduction, including all
+configuration and assets**. The final tutorial state is the target. The
+original ZIP, its defaults and the existing adapted candidate are separate
+observations; none alone establishes that target. This dated instruction
+supersedes the earlier extraction-only acquisition pause recorded below.
+Official exact-source verification and permitted retrieval are active again.
+No purchase or substitute selection is authorized.
+
+| Area | Verified observation | Remaining requirement |
+|---|---|---|
+| Original Unreal graph | The 257 shared expressions have matching resolved connections; YACS adds visibility support and removes an unused grass output | Verify and explicitly retain any geographic integration differences; do not call the whole current graph byte-identical |
+| Final PBR arrays | The five exact legacy IDs and their slot order are visible in Lesson07; the supplied ZIP has diagnostic arrays | Obtain the exact five families with matching D/N/ORDp maps and verify their source identity and settings |
+| Final MI configuration | The prepared candidate retains ZIP defaults: Detail Brightness 1, UV Distort 4, Falloff 0.5 | Reproduce the verified final-video values 5, 1 and 1, plus the complete original parameter identities |
+| Fresh native MI read | Recovery 39747236327 read both instances successfully; they still bind the existing YACS arrays | Name/order-only rows do not prove association/index or original SourceTextures |
+| Houdini source textures | Current grass/cliff colour and roughness use Sa Calobra substitutions; sand uses coast_sand_01; scree uses Material Forge | Independently establish the author's actual Lesson03–05 input families and files; do not assume the five Unreal IDs identify them |
+| Houdini instance values | Original HDA definitions are identified; their default use_mask is 0 | Defaults do not prove a saved author instance; exact material/tint/distortion parameters remain to be checked |
+| Geographic registration | Current maps use the real 16000-square, 8-km Sa Calobra domain | Preserve the accepted geography and verify its required coordinate mapping separately from tutorial material fidelity |
+
+The five required Unreal families are `tkekcgfn`, `vjulbjjr`, `wenocdss`,
+`ultncbnlw` and `ullmagidy`, in that order. Their official indexed legacy
+ID/title mappings are retained in [the public-source receipt](video-source-public-id-mapping.json).
+An exact current Fab listing, available source files and account entitlement
+have not been established. A matching title is insufficient to select an asset.
+
+The proposed new source-crop/canary using the current substitutions was stopped
+before edits or native execution. The existing canary remains a mechanism test,
+not 1:1 completion evidence. No material was changed by the successful
+[Editor/camera recovery](recovery-39747236327-evidence.json). Read-only source
+inspection can continue while the original-input gaps are resolved.
+
 ## Decision and implementation boundary
 
 The owner requested the original Landscape Workflow3 archive and another close
@@ -9,9 +41,10 @@ experiments. Issue #365 / M3 continues in the existing Draft PR #474.
 
 The owner's preceding clarification narrowed the immediate request to extracting
 the textures from that supplied ZIP. **This extraction and file delivery is
-complete.** External Fab/Quixel acquisition, purchase and substitute searches
-are no longer the active task; no existing local export is requested from the
-owner. This delivery made no Unreal import or material change.
+complete.** External Fab/Quixel acquisition and substitute searches were
+paused for that extraction-only request. The latest instruction above resumes
+exact original-source verification and permitted retrieval. This earlier
+delivery made no Unreal import or material change.
 
 The subsequent owner request is to implement the author's solution 1:1.
 Native reproduction is now active again. The authenticated
@@ -37,8 +70,8 @@ runtime layers and blends. YACS adds visibility masking and removes an unused
 grass output. This supports retaining `M_Landscape_YACS` as parent for a copy
 of the original instance. It is static evidence, not a native compiler or
 render acceptance. The first candidate uses the ZIP's saved instance defaults;
-the final video's distinct brightness/distortion/falloff values remain a
-separate explicit comparison profile.
+the final video's distinct brightness/distortion/falloff values are now part
+of the required target, not an optional comparison profile.
 
 The [persisted MI tuple comparison](one-to-one-mi-parameter-evidence.json)
 also resolves the repeated-name ambiguity. The saved YACS instance already has
@@ -91,13 +124,15 @@ no alternate or full-size cache was substituted.
 
 The [base-coverage recipe correction](base-material-coverage-recipe.json) now
 sets the first `MAT_GRASS.use_mask` from 1 to the original HDA default 0.
-This fills base RGB and roughness outside the Grass mask. The second mask input
+The HDA graph indicates this fills base RGB and roughness outside the Grass
+mask; it has not been proved by a native A/B. The second mask input
 remains connected for distortion, and the existing `heightscale=0` remains
 unchanged. Source-graph review found no nonzero height contribution from this
 flag for finite inputs; native height equality has not been tested. Existing
 cache files still use the earlier recipe: the pipeline skips files that already
 exist, so this code change neither invalidates nor repairs them automatically.
-No recook, cache deletion, geometry or IDMap write was performed.
+No recook, cache deletion, geometry or IDMap write was performed. The definition
+default does not establish the value in the author's first-grass instance.
 
 A separate [input-inspection operation](input-inspection-scope.json) is prepared
 to read metadata for eight fixed historical cache paths and make one installed
@@ -390,9 +425,11 @@ Automation PASS is claimed.
 
 The requested original-ZIP extraction and delivery are complete. The 57 files
 have not been imported by this delivery, and the five final video PBR families
-have not been added. No external acquisition or substitute search is active.
-The later reproduction request resumes material work using the original source
-system; its native candidate and application are not yet verified.
+have not been added. Exact official-source verification and permitted retrieval
+are active under the 22 October instruction; substitute selection is not.
+The native candidate was saved and read back, but it uses the ZIP profile and
+current YACS textures, has never been assigned to the Landscape and does not
+meet the final-video 1:1 requirement.
 
 Actual application, corrected global-colour generation, matching PBR sources,
 whole-area native evidence and final visual acceptance remain separate work.
