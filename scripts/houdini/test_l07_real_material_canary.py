@@ -48,6 +48,21 @@ class MaterialSiteTests(unittest.TestCase):
         changed={**expected,"r":"rgb","roughness":"rough"}
         self.assertIsNone(canary.compare_protected(expected,changed,"grass"))
 
+    def test_bounded_native_float32_rounding_restoration(self):
+        self.assertTrue(canary.is_bounded_float_rounding(0.000030517578125,268))
+        self.assertTrue(canary.is_bounded_float_rounding(0.0,0))
+        self.assertFalse(canary.is_bounded_float_rounding(0.00011,268))
+        self.assertFalse(canary.is_bounded_float_rounding(0.00003,10000))
+        self.assertFalse(canary.is_bounded_float_rounding(float("nan"),1))
+        self.assertFalse(canary.is_bounded_float_rounding(float("inf"),1))
+        self.assertFalse(canary.is_bounded_float_rounding(-0.0001,1))
+
+    def test_next_hda_uses_reopened_scratch_not_raw_material(self):
+        source=Path(canary.__file__).read_text(encoding="utf-8")
+        self.assertIn('previous=geo_obj.createNode("file","LOAD_SAFE_"+role.upper())',source)
+        self.assertNotIn('previous=material',source)
+        self.assertIn('target.setAllVoxelsFromString(original.tobytes())',source)
+
     def test_png_chunk_crc(self):
         payload=b"abc"
         block=canary.png_chunk(b"tEXt",payload)
