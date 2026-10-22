@@ -31,7 +31,7 @@ BASE_AND_MASKS = {
     "masks": {
         "name": "stage2_masks.bgeo.sc",
         "bytes": 1167222140,
-        "sha256": "203d46ea79a0a697d46256f631271135a0cd8768f7432ea315512c16a8",
+        "sha256": "203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8",
         "layers": ("grass_mask", "sand_mask", "cliff_mask", "ramp_layer"),
     },
 }
