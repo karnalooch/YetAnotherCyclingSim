@@ -71,7 +71,7 @@ class ExposureCurvatureContract(unittest.TestCase):
     def test_incomplete_author_point_positions_explicitly_adapted(self):
         self.assertEqual(x.EXPOSURE_CANDIDATE[1],(0.93538,(0.651,0.651,0.651)))
         self.assertEqual(x.CURVATURE_CANDIDATE[-1],(1.0,(2.0,2.0,2.0)))
-        self.assertTrue("final source HIP" in x.__doc__)
+        self.assertIn("exact final author ramp tuples",x.__doc__)
         self.assertIn("YACS_ADAPTATION",SOURCE.read_text(encoding="utf-8"))
 
     def test_native_parameter_menu_is_selected_from_real_labels(self):
