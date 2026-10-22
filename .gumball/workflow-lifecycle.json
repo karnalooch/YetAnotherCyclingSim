@@ -415,6 +415,16 @@
       "file": "yacs-live-host.yml",
       "state": "CURRENT",
       "reason": "Issue #476 owner-only fixed-branch opt-in YACS Live Host preflight/install/activate/post-job verify. Independent limited interactive AtLogOn scheduled task owns the persistent PixelStreaming2 Unreal Editor, never a GitHub Actions child; no run gets persistent visual PASS until a separate later receiver observes current PID+SID+heartbeat and new WebRTC frames. Scoped code-only, no runner/service/scene mutations on default preflight."
+    },
+    {
+      "file": "lesson07-polyhaven-acquire.yml",
+      "state": "CURRENT",
+      "reason": "Issue #365 / PR #474 owner-approved Poly Haven CC0 source-acquisition workflow: opt-in marker, exact-SHA Python tests, official publisher checksum verification and isolated D: cache; bounded native Houdini image-header readback only. No terrain/material cook, Unreal edit, or purchase."
+    },
+    {
+      "file": "lesson07-polyhaven-hda-canary.yml",
+      "state": "CURRENT",
+      "reason": "Issue #365 / PR #474 owner-approved original SideFX HDA bounded synthetic-material smoke with verified Poly Haven source; opt-in marker, hosted invariants, one non-cancelling shared Windows host lane, strict source pins, readback and no accepted Landscape/cache changes."
     }
   ]
 }
