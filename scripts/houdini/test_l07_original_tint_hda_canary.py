@@ -90,6 +90,19 @@ class TintCanaryContract(unittest.TestCase):
         self.assertIn("generic working mask escaped [0,1]",source)
         self.assertIn("restored_only_in_disposable_native_candidate",source)
 
+    def test_neutral_limestone_is_explicit_optional_source_masked_adaptation(self):
+        self.assertEqual(tint.GRADE_CASE,
+                         ("limestone_gray_candidate","cliff","cliff_mask","grade_cliff"))
+        self.assertEqual(tint.GRADE_LIMESTONE_RGB,(0.876,0.991,1.178))
+        self.assertEqual(tint.source_for_case("limestone_gray_candidate",{},Path("D:/scratch")),
+                         Path("D:/scratch")/"tint-cliff.bgeo.sc")
+        self.assertNotIn(tint.GRADE_CASE,tint.CASES)
+        fake=FakeHDA()
+        parameters=tint.apply_parms(fake,"grade_cliff",None)
+        self.assertEqual(parameters["ramp_mask"],"mask")
+        self.assertEqual(parameters["use_ramp"],0)
+        self.assertEqual(fake.slots["tint"].value,(0.876,0.991,1.178))
+
     def test_source_scopes_never_canonical_map(self):
         self.assertTrue(str(tint.SCRATCH_ROOT).replace("\\","/").startswith("D:/yacs/work/"))
         self.assertTrue(str(tint.MATERIAL_ROOT).replace("\\","/").startswith("D:/yacs/work/"))
