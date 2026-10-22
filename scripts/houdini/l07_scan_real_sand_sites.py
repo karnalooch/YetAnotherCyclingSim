@@ -52,6 +52,7 @@ def check_source()->dict:
 def candidates_at_bucket_peaks(volume, clock=time.monotonic)->dict:
     started=clock()
     candidates={}
+    band_peaks={}
     scanned=0
     positives=0
     for j in range(WINDOW//2,16000-WINDOW//2,STEP):
@@ -66,11 +67,21 @@ def candidates_at_bucket_peaks(volume, clock=time.monotonic)->dict:
                 previous=candidates.get(key)
                 if previous is None or (value,i,j)>(previous["max_sample"],previous["i"],previous["j"]):
                     candidates[key]={"i":i,"j":j,"max_sample":value}
+                # The highest sand value in a bucket often lies in Alpha=0
+                # offshore. Retain candidate peaks in *each* sand-intensity
+                # band for a separate Alpha/height intersection on Stage1.
+                band=min(3,int(value*4))
+                band_key=(key[0],key[1],band)
+                past=band_peaks.get(band_key)
+                if past is None or (value,i,j)>(past["max_sample"],past["i"],past["j"]):
+                    band_peaks[band_key]={"i":i,"j":j,"max_sample":value,
+                                          "sand_value_band":band}
             if scanned%32768==0 and clock()-started>MAX_SCAN_SEC:
                 raise ValueError("Native sand discovery exceeded bounded scan admission")
-    if len(candidates)>MAX_BUCKETS:
+    if len(candidates)>MAX_BUCKETS or len(band_peaks)>4*MAX_BUCKETS:
         raise ValueError("Unexpected number of occupied tile buckets")
-    return {"sampled":scanned,"positive_count":positives,"bucket_peaks":candidates,
+    return {"sampled":scanned,"positive_count":positives,
+            "bucket_peaks":candidates,"band_peaks":band_peaks,
             "seconds":clock()-started}
 
 
@@ -84,8 +95,13 @@ def refine_neighborhood(volume,i:int,j:int)->dict:
             if not math.isfinite(n) or n<(-1e-5) or n>1.00001:
                 raise ValueError("Invalid sampled native sand candidate")
             v.append(n)
+    # Exactly the same 16x16 world-index lattice sampled in Stage1, in
+    # the same row-major order. Stage2 and Stage1 must never be loaded
+    # simultaneously just to intersect semantic sand with valid Alpha.
+    grid16=[v[y*32+x] for y in range(0,32,2) for x in range(0,32,2)]
     return {"sample_count":len(v),"positive_samples":sum(x>MIN_SAND for x in v),
-            "mean":sum(v)/len(v),"max":max(v),"sample_step":8}
+            "mean":sum(v)/len(v),"max":max(v),"sample_step":8,
+            "alpha_joint_grid16":grid16}
 
 
 def select_diverse(results:list[dict], count:int=8)->list[dict]:
@@ -98,7 +114,7 @@ def select_diverse(results:list[dict], count:int=8)->list[dict]:
     return chosen
 
 
-def run(hou)->dict:
+def run(hou,alpha_aware=False)->dict:
     if hou.isUIAvailable() or tuple(hou.applicationVersion())!=(22,0,466):
         raise ValueError("Requires fresh headless Houdini 22.0.466")
     if hou.node("/obj").children():
@@ -132,6 +148,21 @@ def run(hou)->dict:
         refined.append({**item,"refined":data,"center_world_xyz":coords,
                         "window_indices":[item["i"]-128,item["j"]-128,item["i"]+128,item["j"]+128]})
     chosen=select_diverse(refined)
+    alpha_pool=[]
+    if alpha_aware:
+        candidates=sorted(original["band_peaks"].values(),
+                          key=lambda x:(x["i"],x["j"],x["sand_value_band"]))
+        if not 0<len(candidates)<=4*MAX_BUCKETS:
+            raise ValueError("Unexpected candidate diversity count")
+        for item in candidates:
+            stats=refine_neighborhood(volume,item["i"],item["j"])
+            coord=list(map(float,volume.indexToPos((item["i"],item["j"],0))))
+            alpha_pool.append({**item,"refined":stats,
+                               "center_world_xyz":coord,
+                               "window_indices":[item["i"]-128,item["j"]-128,
+                                                 item["i"]+128,item["j"]+128]})
+        if len({(x["i"],x["j"]) for x in alpha_pool})!=len(alpha_pool):
+            raise ValueError("Duplicate Stage2 Alpha-aware candidate coordinates")
     if len(chosen)<1 or chosen[0]["refined"]["positive_samples"]<1:
         raise ValueError("No verified sand-positive representative site was found")
     if check_source()!=before:
@@ -143,6 +174,9 @@ def run(hou)->dict:
         "scan_stride":STEP,"positive_coarse_samples":original["positive_count"],
         "scanned_sample_count":original["sampled"],"candidate_bucket_count":len(original["bucket_peaks"]),
         "initial_peak_candidates_refined":len(refined),"chosen":chosen,
+        "alpha_aware_candidate_pool":alpha_pool,
+        "alpha_aware_grid_step":16 if alpha_aware else None,
+        "alpha_aware_pool_count":len(alpha_pool),
         "site_alpha_and_height_verified":False,"coastline_landmark_verified":False,
         "canonical_height_or_masks_changed":False,"native_material_cook":False,"unreal_import":False,
         "memory_admission":memory,
@@ -152,11 +186,13 @@ def run(hou)->dict:
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--token",required=True)
+    parser.add_argument("--alpha-aware",action="store_true",
+                        help="Retain bounded per-sand-band full-domain candidate pool for Stage1 land intersection")
     args=parser.parse_args()
     if not re.fullmatch(r"[0-9]{9,13}-[1-9][0-9]*",args.token):
         raise ValueError("Invalid workflow run and attempt")
     import hou
-    result=run(hou)
+    result=run(hou,alpha_aware=args.alpha_aware)
     folder=OUT/args.token
     if os.name=="nt" and not str(folder).lower().replace("/","\\").startswith("d:\\yacs\\work\\"):
         raise ValueError("Cannot write outside isolated source diagnostics")
