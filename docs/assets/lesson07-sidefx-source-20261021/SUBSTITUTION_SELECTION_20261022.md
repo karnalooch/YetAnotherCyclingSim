@@ -1,5 +1,15 @@
 # YACS Lesson07 — approved replacement PBR asset selection (2026-10-22)
 
+## Implemented source acquisition and native decoding — 2026-10-22
+
+**This section supersedes the earlier selected-only status below for source acquisition.** The approved eight Poly Haven source families were downloaded to the isolated `D:/yacs/work/lesson07-polyhaven-cc0-v1` directory. All **45 of 45** maps were verified against the publisher's MD5 and reread using local SHA-256: **917,734,092 bytes**, sourced as 20 native 4K Houdini map inputs and 25 2K Unreal map inputs. [Source run 39774587988](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39774587988) **PASS**, receipt artifact `l07-polyhaven-verified-sources-39774587988-1`.
+
+The next [native inspection run 39776164539](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39776164539) **PASS** on Houdini 22.0.466: exact source readback, 5 Houdini role + 5 UE slot manifests, all 45 OpenImageIO headers and image dimensions/number of channels verified. Readback receipt artifact `l07-polyhaven-verified-sources-39776164539-1` contains `source-verification.json`, `bindings-v1.json`, `hython-image-inspection.json`. Sources are not yet assigned to the canonical world or to the Unreal texture arrays. Original UE ORD(p) swizzles/channel packing, final mask graph parameters and full-area material result are not validated. The implementation deliberately preserves those gates. HDA smoke test run is separate and must not be claimed PASS without explicit output and safety-invariant receipt.
+
+Relevant code: `scripts/assets/acquire_l07_polyhaven.py`, `scripts/assets/build_l07_polyhaven_bindings.py`, `scripts/assets/probe_l07_polyhaven_hython.py`, and `.github/workflows/lesson07-polyhaven-acquire.yml`. No copyrighted texture binaries are checked into the public repository. All existing material-dependent production cook guards remain enabled.
+
+
+
 Status: **SELECTED / NOT ACQUIRED / NOT INSTALLED / NOT COOKED**.
 
 Owner instruction on 2026-10-22: when identity of the ten original Quixel families cannot be established, **choose suitable replacement assets** rather than block the repair indefinitely. This is explicit approval of *material-source substitution*, **not** approval to alter accepted Sa Calobra heightfields, masks, terrain registration, or silently change Pegasus graph structure. The reconstruction goal is now: **Pegasus workflow/topology and independently verified parameters as close as possible, with openly substituted textures**; it can no longer be described as pixel-accurate or asset-identical 1:1.
