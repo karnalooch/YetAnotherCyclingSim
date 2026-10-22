@@ -37,6 +37,11 @@ CASES = (
 )
 MAX_BGEO_BYTES = 32 * 1024 * 1024
 MAX_IMAGE_BYTES = 2 * 1024 * 1024
+# Weighted mean, sampled only on accepted source cliff_mask of 39785285512-1
+# and displayed RGB in original Tint HDA run 39807010598 (not a SideFX video parm).
+# This is a very small per-channel neutralizing experiment, not a final bake.
+GRADE_LIMESTONE_RGB = (0.876, 0.991, 1.178)
+GRADE_CASE = ("limestone_gray_candidate", "cliff", "cliff_mask", "grade_cliff")
 
 
 def sha(path: Path) -> str:
@@ -74,6 +79,8 @@ def check_material_source_report(path: Path) -> dict:
 def source_for_case(case: str, report: dict, output: Path)->Path:
     if case=="grass_brightness":
         return output/"tint-grass_gradient.bgeo.sc"
+    if case=="limestone_gray_candidate":
+        return output/"tint-cliff.bgeo.sc"
     if case not in ("grass_gradient","cliff","scree"):
         raise ValueError("Unknown source material tint stage")
     role="grass" if case=="grass_gradient" else case
@@ -111,7 +118,7 @@ def apply_parms(tint,kind,hou):
     parameters={"srcname1":"mask","strength":1.0,"ramp_mask":"","use_ramp":0}
     if kind=="gradient":
         parameters.update({"use_ramp":1,"strength":0.95})
-    elif kind in ("solid_cliff","solid_scree"):
+    elif kind in ("solid_cliff","solid_scree","grade_cliff"):
         parameters["ramp_mask"]="mask"
     tint.setParms(parameters)
     if kind=="gradient":
@@ -124,6 +131,8 @@ def apply_parms(tint,kind,hou):
         tint.parmTuple("tint").set((0.597,0.597,0.597))
     elif kind=="solid_scree":
         tint.parmTuple("tint").set((0.874,0.822347,0.701822))
+    elif kind=="grade_cliff":
+        tint.parmTuple("tint").set(GRADE_LIMESTONE_RGB)
     else:
         raise ValueError(f"Unapproved tint mode {kind}")
     return parameters
@@ -223,9 +232,12 @@ def native_case(obj,case,role,mask_name,kind,source_file,output,np,hou) -> dict:
         "name":case,"kind":kind,"native_type":"PE_heightfield_tint::1.0",
         "source":str(source_file),"source_sha256":sha(source_file),
         "input2_mask":mask_name,"mask_nonzero":count,
-        "author_source_status":"INFERRED_FINAL_GRASS_RAMP" if kind=="gradient" else "VIDEO_VERIFIED_UI_PARAMETERS",
+        "author_source_status":("YACS_ADAPTATION_WEIGHTED_CLIFF_GRAY" if kind=="grade_cliff"
+                                else "INFERRED_FINAL_GRASS_RAMP" if kind=="gradient"
+                                else "VIDEO_VERIFIED_UI_PARAMETERS"),
         "yacs_adaptation":("STAGE2_RAMP_LAYER_INSTEAD_OF_AUTHOR_MASK6_7_8" if kind=="gradient"
                            else "HISTORICAL_STAGE3_UPSTREAM_NOT_FULLY_PROVEN" if kind=="solid_scree"
+                           else "MASK_WEIGHTED_NEUTRAL_RGB_GAINS_NOT_IN_ORIGINAL_SIDEFX_VIDEO" if kind=="grade_cliff"
                            else None),
         "parms":parms,"height_and_semantic_masks_preserved":True,
         "raw_native_rounding":roundoff,
@@ -240,7 +252,7 @@ def native_case(obj,case,role,mask_name,kind,source_file,output,np,hou) -> dict:
     }
 
 
-def run(hou,np,output):
+def run(hou,np,output,neutral_grade=False):
     if hou.isUIAvailable() or tuple(hou.applicationVersion())!=(22,0,466):
         raise ValueError("Wrong Houdini native process/version")
     if hou.node("/obj").children():
@@ -255,12 +267,16 @@ def run(hou,np,output):
         for n in g.children():
             n.destroy()
         results=[]
-        for case,role,mask_name,kind in CASES:
+        active_cases=CASES + ((GRADE_CASE,) if neutral_grade else ())
+        for case,role,mask_name,kind in active_cases:
             source=source_for_case(case,report,output)
             result=native_case(g,case,role,mask_name,kind,source,output,np,hou)
             results.append(result)
         return {
-            "status":"ORIGINAL_PEGASUS_TINT_HDA_REAL_SITE_ISOLATED_PROOF_NOT_FULL_GRAPH",
+            "status":("ORIGINAL_PEGASUS_TINT_AND_YACS_LIMESTONE_GRADE_ISOLATED_PROOF"
+                     if neutral_grade else "ORIGINAL_PEGASUS_TINT_HDA_REAL_SITE_ISOLATED_PROOF_NOT_FULL_GRAPH"),
+            "grade_is_adaptation_not_author_source":neutral_grade,
+            "neutral_grade_mask_weighted_rgb":list(GRADE_LIMESTONE_RGB) if neutral_grade else None,
             "source_run":MATERIAL_RUN,"original_tint_hda_sha256":TINT_HDA_SHA256,
             "stages":results,
             "full_graph":False,"whole_domain":False,"final_ue_lit":False,
@@ -274,6 +290,8 @@ def run(hou,np,output):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-token",required=True)
+    parser.add_argument("--neutral-grade",action="store_true",
+                        help="Add one scratch-only dark-gray cliff grade after source tint; not original video")
     args=parser.parse_args()
     if not re.fullmatch(r"[0-9]{9,13}-[1-9][0-9]*",args.run_token):
         raise ValueError("Unexpected GH run/attempt token")
@@ -285,7 +303,7 @@ def main():
     import numpy as np
     import scripts.houdini.l07_real_material_canary
     target=SCRATCH_ROOT/args.run_token
-    result=run(hou,np,target)
+    result=run(hou,np,target,neutral_grade=args.neutral_grade)
     manifest=target/"tint-native-evidence.json"
     manifest.write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")
     print(json.dumps({"status":result["status"],"source":MATERIAL_RUN,
