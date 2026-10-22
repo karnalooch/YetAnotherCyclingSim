@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "status": "EDITOR_STARTED_WINGMAN_DISCOVERY_TIMEOUT",
+  "issue": 365,
+  "milestone": "M3",
+  "source_sha": "2f543eaa0f74c1683edee86dccbfe2dc4bffe48b",
+  "protected_ci": {
+    "run_id": 39744815573,
+    "conclusion": "success",
+    "native_job_id": 119711895945,
+    "execution_mode": "runtime"
+  },
+  "startup": {
+    "run_id": 39744804663,
+    "job_id": 119713880978,
+    "conclusion": "failure",
+    "artifact_id": 12410988757,
+    "installation_status": "EDITOR_RUNNING_NATIVE_NOT_VERIFIED",
+    "task_start_requested": true,
+    "task_migration": {
+      "kind": "INTERRUPTED_007",
+      "prior_source_sha": "007c5c0737bc36e0dc482b66f4b326e363104621",
+      "prior_installation_sha256": "9bd0541dd266826a70bcdb8aacdfda69d944eea867e60ff15943418d8f801cbc",
+      "prior_session_sha256": "240f2d4be4744a302ecec7695ae4b4c5eac35803f6956c9dc49649102b30b3ed",
+      "prior_release_retained": true,
+      "prior_state_retained": true,
+      "owner_sid_matches": true,
+      "prior_task_result": 3221225786,
+      "prior_ue_clean_exit_verified": false
+    },
+    "checkpoint_bytes_verified": true,
+    "module_build_ids_verified": true,
+    "editor": {
+      "editor_pid": 36184,
+      "editor_start_filetime_utc": "134371303194962215",
+      "editor_started_utc": "2026-10-22T08:11:59.4962215Z",
+      "editor_executable_path": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+      "interactive_session_id": 2,
+      "canonical_project_matches": true
+    }
+  },
+  "probe": {
+    "status": "BRIDGE_DISCOVERY_INCOMPLETE_EDITOR_RETAINED",
+    "reason": "AUTHENTICATED_BRIDGE_PROBE_FAILED",
+    "client_exit_code": 1,
+    "bridge_error_code": "REQUEST_TIMEOUT",
+    "identity_stable_across_probe": true,
+    "identity_before": {
+      "schema_version": 1,
+      "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+      "observed_utc": "2026-10-22T08:13:31.3647096Z",
+      "source_commit": "2f543eaa0f74c1683edee86dccbfe2dc4bffe48b",
+      "pid": 36184,
+      "process_created_utc": "2026-10-22T08:11:59.496221Z",
+      "process_start_filetime_utc": "134371303194962215",
+      "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+      "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+      "canonical_project_argument_matches": true,
+      "listener": {
+        "address": "127.0.0.1",
+        "port": 19315,
+        "pid": 36184
+      }
+    },
+    "identity_after": {
+      "schema_version": 1,
+      "status": "L07_WINGMAN_HOST_IDENTITY_VERIFIED",
+      "observed_utc": "2026-10-22T08:13:52.5128639Z",
+      "source_commit": "2f543eaa0f74c1683edee86dccbfe2dc4bffe48b",
+      "pid": 36184,
+      "process_created_utc": "2026-10-22T08:11:59.496221Z",
+      "process_start_filetime_utc": "134371303194962215",
+      "executable": "D:\\yacs\\engine\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealEditor.exe",
+      "project": "D:\\yacs\\project\\YetAnotherCyclingSim.uproject",
+      "canonical_project_argument_matches": true,
+      "listener": {
+        "address": "127.0.0.1",
+        "port": 19315,
+        "pid": 36184
+      }
+    },
+    "native_tool_calls": 0,
+    "native_material_readback": "NOT_RUN",
+    "timeout_phase": "NOT_RETAINED",
+    "readiness_race": "POSSIBLE_NOT_PROVEN"
+  },
+  "last_session": {
+    "checked_at_utc": "2026-10-22T08:13:49.7740508Z",
+    "status": "EDITOR_RUNNING_NATIVE_NOT_VERIFIED",
+    "phase": "SUPERVISING",
+    "owner_sid_matches": true,
+    "autosave_session_override": true
+  },
+  "camera_recovery": "SKIPPED_AFTER_PROBE_FAILURE",
+  "editor_stop_requested": false,
+  "project_config_write_requested": false,
+  "package_save_requested": false,
+  "native_world_verified": false,
+  "post_job_survival_verified": false,
+  "visual_acceptance": false,
+  "lesson07_technical_pass": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3",
+  "next_operation": "One existing-session discovery and bounded camera recovery, with fresh singleton PID/start/listener verification; no installer, restart, timeout increase or retry loop."
+}

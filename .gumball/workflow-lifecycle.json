@@ -384,7 +384,7 @@
     {
       "file": "yacs-lesson07-native-audit.yml",
       "state": "CURRENT",
-      "reason": "Owner-only L06 accepted cache SHA and L07 on-disk map/texture source authentication on Windows; no Houdini/UE launch and no source changes."
+      "reason": "Owner-only read-only authentication of retained L06 stage4a inputs, bounded producer receipts, native ginfo headers and Windows memory metadata; no Houdini/UE session launch, cook or source changes."
     },
     {
       "file": "yacs-lesson07-recover-view.yml",

@@ -1,6 +1,7 @@
 name: YACS Lesson07 bounded viewport recovery
 
 # Navigation in the current owner session. Never start or stop an Editor.
+# Attach after startup 39744804663 retained one canonical Editor but discovery timed out.
 on:
   push:
     branches: [codex/365-world-graph]

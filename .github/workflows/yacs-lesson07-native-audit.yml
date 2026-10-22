@@ -1,5 +1,7 @@
 name: YACS Lesson07 native source audit (read-only)
 
+# Fixed STAGE4A_SOURCE_METADATA_ONLY profile. Never cook, import hou, load a HIP,
+# mutate UE, or load complete BGEO geometry. Producer claims remain unaccepted.
 on:
   push:
     branches: [codex/365-world-graph]
@@ -10,12 +12,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: yacs-lesson07-native-audit
+  group: yacs-unreal-ci-${{ github.repository }}
   cancel-in-progress: false
 
 jobs:
   audit:
-    name: L06 source and L07 saved assets, no UE launch
+    name: Retained stage4a source metadata and header inspection
     if: >-
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/365-world-graph' &&
@@ -26,78 +28,254 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - name: Authenticate source and inspect existing L07 on D
+      - name: Read fixed source identities, producer claims, headers and memory
         env:
           AUDIT_SHA: ${{ github.sha }}
         run: |
-          $ErrorActionPreference = 'Stop'
-          $out = Join-Path $env:RUNNER_TEMP 'lesson07-native-audit.json'
-          $src = 'D:\yacs\work\lesson06-unified-20261019\final_unified_idmap.bgeo.sc'
-          $map = 'D:\yacs\project\Content\Generated\YACS\Lesson07_Unified\L_SaCalobra_Lesson07.umap'
-          $masks = 'D:\yacs\project\Content\Generated\YACS\Lesson07_Unified\Materials\TA_Masks_Unified.uasset'
-          $manifest = 'D:\yacs\work\lesson07-unified-20261019\ue_transfer\manifest.json'
-          $free = ([IO.DriveInfo]::new('D:\')).AvailableFreeSpace
-          $active = @(Get-Process -Name UnrealEditor,UnrealEditor-Cmd,hython,houdini,hbatch -ErrorAction SilentlyContinue | Select-Object -ExpandProperty ProcessName -Unique)
-          $result = [ordered]@{
-            status = 'STARTING'
-            commit = $env:AUDIT_SHA
-            mode = 'READ_ONLY_NO_COOK_NO_UE'
-            free_gib = [math]::Round($free/1GB,2)
-            native_processes_present = $active
-            accepted_source = [ordered]@{exists=$false;bytes=0;sha256=$null;pinned=$false}
-            saved_map = [ordered]@{exists=$false;bytes=0}
-            masks_array = [ordered]@{exists=$false;bytes=0}
-            prior_tiles = [ordered]@{exists=$false;count=0;visibility_verified=$false}
-            can_proceed_native = $false
-            errors = @()
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference='Stop'
+          if ($PSVersionTable.PSVersion -lt [version]'7.4') { throw 'PowerShell 7.4 or later required.' }
+          $root='D:\yacs\work\lesson06-unified-20261019'
+          $base=Join-Path $root 'stage1_base.bgeo.sc'
+          $masks=Join-Path $root 'stage2_masks.bgeo.sc'
+          $preid=Join-Path $root 'pre_id_cache.bgeo.sc'
+          $final=Join-Path $root 'final_unified_idmap.bgeo.sc'
+          $ginfo='D:\yacs\tools\houdini-22.0.466\bin\ginfo.exe'
+          $out=Join-Path $env:RUNNER_TEMP 'lesson07-native-audit.json'
+
+          function Get-L07PlainFile([string]$Path) {
+            $cursor=[IO.Path]::GetFullPath($Path)
+            while ($cursor) {
+              $item=Get-Item -LiteralPath $cursor -Force -ErrorAction Stop
+              if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'REPARSE_PATH' }
+              $cursor=[IO.Path]::GetDirectoryName($cursor)
+            }
+            $item=Get-Item -LiteralPath $Path -Force -ErrorAction Stop
+            if ($item.PSIsContainer) { throw 'REGULAR_FILE_REQUIRED' }
+            return $item
           }
-          try {
-            if (Test-Path -LiteralPath $src -PathType Leaf) {
-              $file = Get-Item -LiteralPath $src -ErrorAction Stop
-              $result.accepted_source.exists = $true
-              $result.accepted_source.bytes = [long]$file.Length
-              if ($file.Length -eq 4808520505) {
-                $actual = (Get-FileHash -LiteralPath $src -Algorithm SHA256 -ErrorAction Stop).Hash.ToLowerInvariant()
-                $result.accepted_source.sha256 = $actual
-                $result.accepted_source.pinned = $actual -eq 'f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24'
+          function Get-L07FileMetadata([string]$Path) {
+            $row=[ordered]@{path=$Path;status='MISSING';bytes=$null;modified_utc=$null;sha256=$null}
+            try {
+              if (Test-Path -LiteralPath $Path) {
+                $item=Get-L07PlainFile $Path
+                $row.bytes=[long]$item.Length;$row.modified_utc=$item.LastWriteTimeUtc.ToString('o')
+                $row.status='METADATA_ONLY'
               }
-            }
-            if (Test-Path -LiteralPath $map -PathType Leaf) {
-              $file = Get-Item -LiteralPath $map -ErrorAction Stop
-              $result.saved_map.exists = $true
-              $result.saved_map.bytes = [long]$file.Length
-            }
-            if (Test-Path -LiteralPath $masks -PathType Leaf) {
-              $file = Get-Item -LiteralPath $masks -ErrorAction Stop
-              $result.masks_array.exists = $true
-              $result.masks_array.bytes = [long]$file.Length
-            }
-            if (Test-Path -LiteralPath $manifest -PathType Leaf) {
-              $old = Get-Content -LiteralPath $manifest -Raw -ErrorAction Stop | ConvertFrom-Json
-              $result.prior_tiles.exists = $true
-              $result.prior_tiles.count = @($old.tiles).Count
-              $result.prior_tiles.visibility_verified = (
-                @($old.tiles).Count -eq 4 -and
-                @($old.tiles | Where-Object {
-                  $null -eq $_.visibility -or
-                  $_.visibility.layer -ne 'visibility' -or
-                  $_.visibility.outside_source_zero -ne $true
-                }).Count -eq 0
-              )
-            }
-            $valid = $result.accepted_source.pinned -and
-              $result.saved_map.exists -and $result.masks_array.exists
-            $result.can_proceed_native = $valid -and $free -ge 30GB -and $active.Count -eq 0
-            $result.status = if ($valid) { 'SOURCE_AUTHENTICATED' } else { 'SOURCE_BLOCKED' }
-          } catch {
-            $result.status = 'ERROR'
-            $result.errors += [string]$_.Exception.Message
-          } finally {
-            $result | ConvertTo-Json -Depth 7 | Set-Content -LiteralPath $out -Encoding UTF8
-            $result | ConvertTo-Json -Depth 7
+            } catch { $row.status='UNAVAILABLE_OR_REJECTED' }
+            return $row
           }
-          if ($result.status -ne 'SOURCE_AUTHENTICATED') { throw 'Source gate blocked; no native actions.' }
-      - name: Upload concise source audit even on failure
+          function Get-L07StableHash([string]$Path,[long]$Limit,[long]$ExactBytes=0) {
+            $row=Get-L07FileMetadata $Path
+            if ($row.status -cne 'METADATA_ONLY') { return $row }
+            if ($row.bytes -le 0 -or $row.bytes -gt $Limit) { $row.status='METADATA_ONLY_SIZE_BOUND';return $row }
+            if ($ExactBytes -gt 0 -and $row.bytes -ne $ExactBytes) { $row.status='METADATA_ONLY_PINNED_SIZE_MISMATCH';return $row }
+            $stream=$null
+            try {
+              $before=Get-L07PlainFile $Path
+              # Sharing only reads prevents writers/deletion while streaming this fixed file.
+              $stream=[IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
+              if ($stream.Length -ne $before.Length -or $before.Length -ne $row.bytes -or
+                  $before.LastWriteTimeUtc.ToString('o') -cne $row.modified_utc) { throw 'SOURCE_CHANGED' }
+              $hash=(Get-FileHash -InputStream $stream -Algorithm SHA256).Hash.ToLowerInvariant()
+              $after=Get-L07PlainFile $Path
+              if ($after.Length -ne $before.Length -or $after.LastWriteTimeUtc -ne $before.LastWriteTimeUtc) { throw 'SOURCE_CHANGED' }
+              $row.sha256=$hash;$row.status='STABLE_HASH_OBSERVED'
+            } catch { $row.sha256=$null;$row.status='UNAVAILABLE_OR_CHANGED' }
+            finally { if ($null -ne $stream) { $stream.Dispose() } }
+            return $row
+          }
+          function Test-L07FiniteNumber($Value) {
+            return (($Value -is [long] -or $Value -is [int] -or $Value -is [double] -or $Value -is [decimal]) -and
+              [double]::IsFinite([double]$Value))
+          }
+          function Select-L07ReceiptData([Collections.IDictionary]$Data,[string]$Stage,[string]$Output,[string[]]$Stats,[bool]$Layers) {
+            if ($Data.stage -isnot [string] -or $Data.stage -cne $Stage -or $Data.output_file -isnot [string] -or
+                $Data.output_file.Replace('/','\') -cne $Output -or $Data.sha256 -isnot [string] -or
+                $Data.sha256 -cnotmatch '^[a-f0-9]{64}$') { throw 'PRODUCER_IDENTITY_SCHEMA' }
+            $selected=[ordered]@{stage=$Stage;output_file=$Output;sha256=$Data.sha256;statistics=[ordered]@{}}
+            foreach ($name in $Stats) {
+              $stat=$Data[$name]
+              if ($stat -isnot [Collections.IDictionary] -or
+                  -not (Test-L07FiniteNumber $stat.min) -or -not (Test-L07FiniteNumber $stat.max) -or
+                  -not (Test-L07FiniteNumber $stat.mean) -or
+                  ($stat.count -isnot [long] -and $stat.count -isnot [int]) -or $stat.count -ne 256000000 -or
+                  $stat.min -gt $stat.max -or $stat.mean -lt $stat.min -or $stat.mean -gt $stat.max) { throw 'PRODUCER_STATISTICS_SCHEMA' }
+              $selected.statistics[$name]=[ordered]@{min=$stat.min;max=$stat.max;mean=$stat.mean;count=$stat.count}
+            }
+            if ($Layers) {
+              if ($Data.layers -isnot [array] -or $Data.layers.Count -lt 1 -or $Data.layers.Count -gt 32) { throw 'PRODUCER_LAYERS_SCHEMA' }
+              foreach ($name in $Data.layers) {
+                if ($name -isnot [string] -or $name -cnotmatch '^[A-Za-z][A-Za-z0-9_ ]{0,31}$') { throw 'PRODUCER_LAYERS_SCHEMA' }
+              }
+              if (@($Data.layers | Sort-Object -Unique).Count -ne $Data.layers.Count) { throw 'PRODUCER_DUPLICATE_LAYERS' }
+              $selected.layers=@($Data.layers)
+            }
+            return $selected
+          }
+          function Read-L07ProducerReceipt([string]$Path,[string]$Stage,[string]$Output,[string[]]$Stats,[bool]$Layers=$false) {
+            $row=[ordered]@{file=(Get-L07FileMetadata $Path);status='UNAVAILABLE';claim=$null;independently_accepted=$false}
+            $stream=$null
+            try {
+              $before=Get-L07PlainFile $Path
+              if ($before.Length -lt 1 -or $before.Length -gt 64KB) { throw 'RECEIPT_SIZE_BOUND' }
+              $row.file.bytes=[long]$before.Length;$row.file.modified_utc=$before.LastWriteTimeUtc.ToString('o')
+              $stream=[IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
+              if ($stream.Length -ne $before.Length) { throw 'RECEIPT_CHANGED' }
+              $bytes=[byte[]]::new([int]$before.Length);$stream.ReadExactly($bytes,0,$bytes.Length)
+              if ($stream.ReadByte() -ne -1) { throw 'RECEIPT_CHANGED' }
+              $after=Get-L07PlainFile $Path
+              if ($after.Length -ne $before.Length -or $after.LastWriteTimeUtc -ne $before.LastWriteTimeUtc) { throw 'RECEIPT_CHANGED' }
+              $row.file.sha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+              $row.file.status='STABLE_BOUNDED_READ'
+              $data=[Text.UTF8Encoding]::new($false,$true).GetString($bytes).TrimStart([char]0xfeff) | ConvertFrom-Json -AsHashtable -Depth 8
+              if ($data -isnot [Collections.IDictionary]) { throw 'RECEIPT_OBJECT_REQUIRED' }
+              $row.claim=Select-L07ReceiptData $data $Stage $Output $Stats $Layers
+              $row.status='PRODUCER_CLAIM_OBSERVED'
+            } catch { $row.status='UNAVAILABLE_OR_REJECTED';$row.claim=$null }
+            finally { if ($null -ne $stream) { $stream.Dispose() } }
+            return $row
+          }
+          function Get-L07MemorySnapshot {
+            $row=[ordered]@{observed_utc=[DateTime]::UtcNow.ToString('o');status='UNAVAILABLE';available_physical_bytes=$null;
+              available_commit_bytes=$null;total_physical_bytes=$null;total_commit_bytes=$null}
+            try {
+              if (-not ('L07SourceMemory' -as [type])) {
+                Add-Type -TypeDefinition @'
+          using System;
+          using System.Runtime.InteropServices;
+          public static class L07SourceMemory {
+            [StructLayout(LayoutKind.Sequential)] public struct Status {
+              public uint length, load;
+              public ulong totalPhys, availPhys, totalCommit, availCommit, totalVirtual, availVirtual, availExtended;
+            }
+            [DllImport("kernel32.dll", SetLastError=true)] [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool GlobalMemoryStatusEx(ref Status status);
+          }
+          '@
+              }
+              $m=[L07SourceMemory+Status]::new();$m.length=[Runtime.InteropServices.Marshal]::SizeOf($m)
+              if (-not [L07SourceMemory]::GlobalMemoryStatusEx([ref]$m)) { throw 'MEMORY_SNAPSHOT_FAILED' }
+              $row.status='OBSERVED';$row.available_physical_bytes=$m.availPhys;$row.available_commit_bytes=$m.availCommit
+              $row.total_physical_bytes=$m.totalPhys;$row.total_commit_bytes=$m.totalCommit
+            } catch {}
+            return $row
+          }
+          function Read-L07GinfoHeader([string]$Path,[Collections.IDictionary]$Source,[Collections.IDictionary]$Tool,[bool]$SourceIdentityMatches) {
+            $row=[ordered]@{path=$Path;arguments=@('-S','-u',$Path);status='PENDING_TOOL_PROVENANCE';started=$false;exit_code=$null;
+              time_limit_seconds=30;output_limit_bytes=65536;stdout='';stderr='';source_metadata_unchanged=$null}
+            if (-not $Tool.version_matches_known_installation) { return $row }
+            if (-not $SourceIdentityMatches -or $Source.status -cne 'STABLE_HASH_OBSERVED') { $row.status='PENDING_SOURCE_IDENTITY';return $row }
+            $process=$null;$sourceLock=$null
+            try {
+              $before=Get-L07PlainFile $Path
+              if ($before.Length -ne $Source.bytes -or $before.LastWriteTimeUtc.ToString('o') -cne $Source.modified_utc) { throw 'SOURCE_CHANGED' }
+              $sourceLock=[IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
+              $toolNow=Get-L07StableHash $Tool.file.path 64MB
+              if ($toolNow.status -cne 'STABLE_HASH_OBSERVED' -or $toolNow.sha256 -cne $Tool.file.sha256) { throw 'TOOL_CHANGED' }
+              $start=[Diagnostics.ProcessStartInfo]::new();$start.FileName=$Tool.file.path;$start.UseShellExecute=$false
+              $start.CreateNoWindow=$true;$start.RedirectStandardOutput=$true;$start.RedirectStandardError=$true
+              foreach ($arg in @('-S','-u',$Path)) { [void]$start.ArgumentList.Add($arg) }
+              $process=[Diagnostics.Process]::new();$process.StartInfo=$start
+              if (-not $process.Start()) { throw 'GINFO_START_FAILED' };$row.started=$true
+              $timer=[Diagnostics.Stopwatch]::StartNew();$count=0
+              $outText=[Text.StringBuilder]::new();$errText=[Text.StringBuilder]::new()
+              $outBuffer=[char[]]::new(2048);$errBuffer=[char[]]::new(2048)
+              $outRead=$process.StandardOutput.ReadAsync($outBuffer,0,$outBuffer.Length)
+              $errRead=$process.StandardError.ReadAsync($errBuffer,0,$errBuffer.Length)
+              $outEnded=$false;$errEnded=$false
+              while (-not ($process.HasExited -and $outEnded -and $errEnded)) {
+                if ($timer.Elapsed.TotalSeconds -ge 30) { $row.status='TIME_BOUND';break }
+                foreach ($kind in @('stdout','stderr')) {
+                  $ended=if ($kind -ceq 'stdout') { $outEnded } else { $errEnded }
+                  $pending=if ($kind -ceq 'stdout') { $outRead } else { $errRead }
+                  if (-not $ended -and $pending.IsCompleted) {
+                    $length=$pending.GetAwaiter().GetResult()
+                    if ($length -eq 0) { if ($kind -ceq 'stdout') { $outEnded=$true } else { $errEnded=$true };continue }
+                    [char[]]$buffer=if ($kind -ceq 'stdout') { $outBuffer } else { $errBuffer }
+                    $chunk=[string]::new($buffer,0,$length);$count+=[Text.Encoding]::UTF8.GetByteCount($chunk)
+                    if ($count -gt 64KB) { $row.status='OUTPUT_BOUND';break }
+                    if ($kind -ceq 'stdout') {
+                      [void]$outText.Append($chunk);$outRead=$process.StandardOutput.ReadAsync($outBuffer,0,$outBuffer.Length)
+                    } else {
+                      [void]$errText.Append($chunk);$errRead=$process.StandardError.ReadAsync($errBuffer,0,$errBuffer.Length)
+                    }
+                  }
+                }
+                if ($row.status -ceq 'OUTPUT_BOUND') { break }
+                Start-Sleep -Milliseconds 25
+              }
+              $row.stdout=$outText.ToString();$row.stderr=$errText.ToString()
+              if ($row.status -cin @('TIME_BOUND','OUTPUT_BOUND')) {
+                # Only this newly-created ginfo child is terminated, never another process.
+                if (-not $process.HasExited) { $process.Kill($true);[void]$process.WaitForExit(5000) }
+              } else {
+                $row.exit_code=$process.ExitCode
+                $row.status=if ($process.ExitCode -eq 0) { 'HEADER_OBSERVED' } else { 'GINFO_FAILED' }
+              }
+              $after=Get-L07PlainFile $Path
+              $row.source_metadata_unchanged=($after.Length -eq $before.Length -and $after.LastWriteTimeUtc -eq $before.LastWriteTimeUtc)
+              if (-not $row.source_metadata_unchanged) { $row.status='SOURCE_CHANGED' }
+            } catch { $row.status='UNAVAILABLE_OR_REJECTED' }
+            finally {
+              if ($null -ne $process) {
+                try { if ($row.started -and -not $process.HasExited) { $process.Kill($true);[void]$process.WaitForExit(5000) } } catch {}
+                $process.Dispose()
+              }
+              if ($null -ne $sourceLock) { $sourceLock.Dispose() }
+            }
+            return $row
+          }
+
+          $result=[ordered]@{status='READ_ONLY_SOURCE_METADATA_OBSERVED_NOT_COOK_ADMISSION';commit=$env:AUDIT_SHA;
+            profile='STAGE4A_SOURCE_METADATA_ONLY';memory_before=(Get-L07MemorySnapshot);memory_after=$null;
+            stage1=$null;stage2=$null;producer_receipts=$null;ginfo_tool=$null;headers=@();final_cache_metadata=$null;
+            full_geometry_load_requested=$false;hou_imported=$false;hip_loaded=$false;terrain_cook_requested=$false;
+            cache_written=$false;editor_started_or_stopped=$false;project_files_written=$false;source_profile_admitted=$false;performance_pass=$false}
+          try {
+            $receipts=[ordered]@{
+              stage1=(Read-L07ProducerReceipt (Join-Path $root 'stage1_base.json') 'stage1_base' $base @('height','alpha'))
+              stage2=(Read-L07ProducerReceipt (Join-Path $root 'stage2_masks.json') 'stage2_masks' $masks @('grass_mask','sand_mask','cliff_mask','ramp_layer'))
+              pre_id=(Read-L07ProducerReceipt (Join-Path $root 'pre_id_cache.json') 'stage4_materials_and_tints' $preid @('height','r','g','b') $true)
+            }
+            $result.producer_receipts=$receipts
+            $baseFile=Get-L07StableHash $base 512MB 519575557
+            # Accepted L06 source SHA; size retained in the L07 inventory.
+            $basePin='08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952'
+            $baseMatches=($baseFile.status -ceq 'STABLE_HASH_OBSERVED' -and $baseFile.sha256 -ceq $basePin)
+            $result.stage1=[ordered]@{file=$baseFile;accepted_size_bytes=519575557;accepted_sha256=$basePin;accepted_pin_matches=$baseMatches}
+            $maskFile=Get-L07FileMetadata $masks
+            $maskMatches=$null
+            if ($receipts.stage2.status -ceq 'PRODUCER_CLAIM_OBSERVED') {
+              $maskFile=Get-L07StableHash $masks 6GB
+              if ($maskFile.status -ceq 'STABLE_HASH_OBSERVED') { $maskMatches=($maskFile.sha256 -ceq $receipts.stage2.claim.sha256) }
+            }
+            $result.stage2=[ordered]@{file=$maskFile;hash_limit_bytes=6GB;producer_sha_match=$maskMatches;
+              previously_accepted_pin_exists=$false;source_lineage_independently_verified=$false}
+            $result.final_cache_metadata=Get-L07FileMetadata $final
+            $tool=[ordered]@{file=(Get-L07StableHash $ginfo 64MB);file_version=$null;version_matches_known_installation=$false;
+              provenance_basis='FIXED_EXISTING_INSTALLATION_AND_FILE_VERSION';accepted_executable_sha256_pin_exists=$false}
+            if ($tool.file.status -ceq 'STABLE_HASH_OBSERVED') {
+              try {
+                $version=(Get-L07PlainFile $ginfo).VersionInfo
+                $tool.file_version=if ($version.FileVersion -is [string] -and $version.FileVersion -cmatch '^[0-9A-Za-z .,+()_-]{1,80}$') { $version.FileVersion } else { $null }
+                $tool.version_matches_known_installation=($null -ne $tool.file_version -and $version.FileMajorPart -eq 22 -and
+                  $version.FileMinorPart -eq 0 -and $version.FileBuildPart -eq 466)
+              } catch { $tool.version_matches_known_installation=$false }
+            }
+            $result.ginfo_tool=$tool
+            $result.headers+=Read-L07GinfoHeader $base $baseFile $tool $baseMatches
+            $result.headers+=Read-L07GinfoHeader $masks $maskFile $tool ($maskMatches -eq $true)
+          } catch { $result.status='SOURCE_METADATA_INCOMPLETE';$result.error_type=$_.Exception.GetType().Name }
+          finally {
+            $result.memory_after=Get-L07MemorySnapshot
+            $json=$result | ConvertTo-Json -Depth 14
+            if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 256KB) { throw 'SOURCE_REPORT_SIZE_BOUND' }
+            [IO.File]::WriteAllText($out,$json,[Text.UTF8Encoding]::new($false))
+            [ordered]@{status=$result.status;profile=$result.profile;commit=$result.commit;report=$out;
+              source_profile_admitted=$false;terrain_cook_requested=$false;editor_started_or_stopped=$false} | ConvertTo-Json -Compress
+          }
+      - name: Upload bounded source observations even when an input is absent
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

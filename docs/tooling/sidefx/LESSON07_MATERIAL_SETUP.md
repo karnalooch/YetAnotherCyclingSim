@@ -32,8 +32,21 @@ and a new idle-host check. Prior files remain retained and no task is stopped.
 The launcher also updates only its three array pins to the independently
 recorded current packages. Existing protected CI, checkpoint and singleton
 guards remain required. The previously running Live Host is not a restart
-target. No native `region_inspect` or shutdown request was sent, and no new
-Editor start is claimed at this revision.
+target. No native `region_inspect` or shutdown request was sent.
+
+[Startup 39744804663](../../assets/lesson07-sidefx-source-20261021/restart-39744804663-evidence.json)
+then opened the canonical project at 08:11:59 UTC after protected CI
+`39744815573` succeeded for source `2f543eaa0f74c1683edee86dccbfe2dc4bffe48b`.
+The limited interactive task owns Editor PID 36184, session 2, with start
+filetime `134371303194962215`. Its Wingman listener on loopback port 19315
+matched the same process before and after discovery. Discovery ended with
+`REQUEST_TIMEOUT`, zero native tool calls and no material readback; its
+precise timeout phase was not retained. A startup-readiness race is possible,
+not established. The Editor remained supervised, and the camera step was
+skipped. This is a verified process start, not native-world or visual proof.
+The next bounded recovery attaches to that existing session with fresh
+singleton PID/start/listener checks; it does not reinstall, restart, enlarge
+the timeout or loop over native requests.
 
 [Recovery run 39704721721, attempt 2](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39704721721/attempts/2)
 rechecked source `62ec16d1960822a18238f2764558e8093f4c3243` on the home
