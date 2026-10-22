@@ -81,7 +81,6 @@ class TintCanaryContract(unittest.TestCase):
             tint.apply_parms(FakeHDA(),"unknown",None)
 
     def test_source_scopes_never_canonical_map(self):
-        self.assertEqual(tint.SCRATCH_ROOT.parts[:3],("D:\\","yacs","work") if False else ("D:\\","yacs","work"))
         self.assertTrue(str(tint.SCRATCH_ROOT).replace("\\","/").startswith("D:/yacs/work/"))
         self.assertTrue(str(tint.MATERIAL_ROOT).replace("\\","/").startswith("D:/yacs/work/"))
         self.assertFalse("Saved/" in str(tint.SCRATCH_ROOT))
