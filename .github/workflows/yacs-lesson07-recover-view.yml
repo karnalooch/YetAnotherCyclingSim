@@ -1,0 +1,124 @@
+name: YACS Lesson07 bounded viewport recovery
+
+# One-shot navigation in the current owner session, not a new world pipeline.
+# Keep the existing preflight, native safety review, runner admission and lock.
+# No lifecycle call, material mutation, package save or full native build.
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/yacs-lesson07-recover-view.yml
+      - scripts/ue/lesson07_recover_view.py
+      - scripts/ue/test_lesson07_recover_view.py
+
+permissions:
+  contents: read
+
+jobs:
+  cpu:
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner &&
+      contains(github.event.head_commit.message, '[l07-recover-view]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          lfs: false
+          persist-credentials: false
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts
+            .github/workflows
+      - name: Install existing pinned test dependencies
+        run: python -m pip install --disable-pip-version-check --only-binary=:all: numpy==2.3.5 Pillow==12.3.0
+      - name: Preserve existing boundaries and test the exact new source
+        run: |
+          python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.assets.test_assemble_surface_slices scripts.ue.test_apply_lesson07_surface_repair scripts.assets.test_prepare_lesson07_surface_repair scripts.ue.test_stage_lesson07_surface_repair scripts.ue.test_lesson07_recover_view
+          git diff --exit-code
+
+  recover:
+    needs: cpu
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 12
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      GIT_OPTIONAL_LOCKS: '0'
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: l07-view-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - name: Isolate source checkout settings without editing the owner workspace
+        working-directory: ${{ github.workspace }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $isolated=Join-Path $env:RUNNER_TEMP 'l07-view-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          if(Test-Path -LiteralPath $isolated){throw 'Owned Git settings already exist.'}
+          [IO.File]::WriteAllText($isolated,'')
+          $env:GIT_CONFIG_GLOBAL=$isolated
+          $env:GIT_CONFIG_NOSYSTEM='1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          "GIT_CONFIG_NOSYSTEM=1" >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if($LASTEXITCODE -ne 0){throw 'Git long paths failed.'}
+          git config --global core.autocrlf false
+          if($LASTEXITCODE -ne 0){throw 'Git byte preservation failed.'}
+          git config --global core.eol lf
+          if($LASTEXITCODE -ne 0){throw 'Git LF preservation failed.'}
+      - name: Stage code only at exact SHA
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          path: l07-view-${{ github.run_id }}-${{ github.run_attempt }}
+          lfs: false
+          persist-credentials: false
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts
+            .github/workflows
+      - name: Validate code-only checkout and unchanged host safety checks
+        run: |
+          $ErrorActionPreference='Stop'
+          $prior=$env:GIT_NO_LAZY_FETCH
+          try {
+            $env:GIT_NO_LAZY_FETCH='1'
+            & ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+          } finally {$env:GIT_NO_LAZY_FETCH=$prior}
+          & ./scripts/live_host/Test-YacsLiveTaskPrincipal.ps1
+          & ./scripts/ue/Test-YacsLesson07RemotePreflight.ps1
+          & ./scripts/ue/Test-YacsLesson07ObserverFailure.ps1
+          & ./scripts/ue/Test-YacsLesson07Viewport.ps1
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          & $python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.ue.test_lesson07_recover_view
+          if($LASTEXITCODE -ne 0){throw 'Native-host source tests failed.'}
+      - name: Existing-session Wingman preflight without startup or shutdown
+        run: |
+          & ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 -ExpectedHead $env:GITHUB_SHA -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' -ExistingEditorOnly
+      - name: Recover the camera once and retain the real viewport
+        run: |
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          & $python -B scripts/ue/lesson07_recover_view.py --expected-head $env:GITHUB_SHA --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if($LASTEXITCODE -ne 0){throw 'View recovery stopped; no automatic retry or fallback.'}
+      - name: Retain only bounded recovery evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lesson07-view-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/lesson07-remote/reports/${{ github.run_id }}-${{ github.run_attempt }}/view-recovery/result.json
+            D:/yacs/lesson07-remote/reports/${{ github.run_id }}-${{ github.run_attempt }}/view-recovery/landscape.jpg
+            D:/yacs/lesson07-remote/reports/${{ github.run_id }}-${{ github.run_attempt }}/probe.json
+          if-no-files-found: warn
+          retention-days: 7
