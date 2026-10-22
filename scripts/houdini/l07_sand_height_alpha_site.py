@@ -23,6 +23,7 @@ OUTPUT=Path("D:/yacs/work/lesson07-valid-sand-sites")
 PIN_MASK_SHA="203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8"
 GRID=(16000,16000,1)
 SIZE=256
+MAX_ALPHA_POOL=4*1200
 
 
 def sha(path:Path)->str:
@@ -33,17 +34,27 @@ def sha(path:Path)->str:
     return h.hexdigest()
 
 
-def load_sites()->tuple[list[dict],str]:
-    evidence=json.loads(CANDIDATE.read_text(encoding="utf-8"))
+def load_sites(candidate_file:Path|None=None)->tuple[list[dict],str]:
+    source=CANDIDATE if candidate_file is None else candidate_file
+    if candidate_file is not None:
+        root=Path("D:/yacs/work/lesson07-sand-candidates").resolve()
+        if not source.resolve().is_relative_to(root):
+            raise ValueError("Cannot read a sand candidate outside the isolated work root")
+    evidence=json.loads(source.read_text(encoding="utf-8"))
     if evidence.get("status")!="SAND_POSITIVE_STAGE2_WORLD_COORDINATE_CANDIDATES_NOT_CROPPED":
         raise ValueError("Expected exact Stage2 native sand candidate status")
     if evidence.get("source",{}).get("source_sha256")!=PIN_MASK_SHA:
         raise ValueError("Candidate source is not accepted Stage2")
     if evidence.get("site_alpha_and_height_verified") is not False:
         raise ValueError("Stage2 scan cannot itself prove Stage1 height/Alpha")
-    selected=evidence.get("chosen",[])
-    if not isinstance(selected,list) or not 1<=len(selected)<=8:
+    pool=evidence.get("alpha_aware_candidate_pool",[])
+    if pool and evidence.get("alpha_aware_grid_step")!=16:
+        raise ValueError("Wrong sand land-overlap site resolution")
+    selected=pool if pool else evidence.get("chosen",[])
+    if not isinstance(selected,list) or not 1<=len(selected)<=MAX_ALPHA_POOL:
         raise ValueError("Unexpected source discovery candidates")
+    if pool and evidence.get("alpha_aware_pool_count")!=len(pool):
+        raise ValueError("Native candidate pool metadata mismatch")
     for item in selected:
         i,j=item["i"],item["j"]
         if not isinstance(i,int) or not isinstance(j,int) or not 128<=i<15872 or not 128<=j<15872:
@@ -52,7 +63,19 @@ def load_sites()->tuple[list[dict],str]:
             raise ValueError("Candidate has no original sand-positive neighborhood")
         if item.get("window_indices")!=[i-128,j-128,i+128,j+128]:
             raise ValueError("Unapproved candidate sample window")
-    return selected,sha(CANDIDATE)
+        sand_grid=item.get("refined",{}).get("alpha_joint_grid16")
+        if pool and (not isinstance(sand_grid,list) or len(sand_grid)!=256):
+            raise ValueError("Missing native aligned 16x16 Stage2 sand values")
+        if sand_grid is not None:
+            import math
+            if len(sand_grid)!=256 or not all(
+                isinstance(x,(float,int)) and math.isfinite(float(x)) and
+                -0.00001<=float(x)<=1.00001 for x in sand_grid
+            ):
+                raise ValueError("Invalid Stage2 sand values for Stage1 aligned check")
+    if pool and len({(x["i"],x["j"]) for x in selected})!=len(selected):
+        raise ValueError("Duplicate full-domain sand candidates")
+    return selected,sha(source)
 
 
 def require_source()->tuple[int,int]:
@@ -77,11 +100,19 @@ def sample_region(height,alpha,site,step=16):
     invalid_height_inside_valid_alpha=0
     skipped_height_outside_alpha=0
     positive_heights=[]
+    sand_grid=site.get("refined",{}).get("alpha_joint_grid16")
+    if sand_grid is not None and (step!=16 or len(sand_grid)!=256):
+        raise ValueError("Source Stage1/2 intersection grid is not aligned")
+    sand_valid_land=0
+    sand_valid_coast=0
     for yy in range(j-128,j+128,step):
         for xx in range(i-128,i+128,step):
             h=float(height.voxel((xx,yy,0)))
             a=float(alpha.voxel((xx,yy,0)))
             total+=1
+            s=float(sand_grid[total-1]) if sand_grid is not None else 0.0
+            if not math.isfinite(s) or not 0<=s<=1.00001:
+                raise ValueError("Native Stage2 sand sample is invalid")
             if not math.isfinite(a) or not -0.00001<=a<=1.00001:
                 invalid_alpha+=1
                 continue
@@ -97,8 +128,12 @@ def sample_region(height,alpha,site,step=16):
                 continue
             valid+=1
             positive_heights.append(h)
+            if s>0.01:
+                sand_valid_land+=1
             if -50<=h<=35:
                 plausible+=1
+                if s>0.01:
+                    sand_valid_coast+=1
     return {
         "sample_step":step,"total":total,
         "alpha_valid":valid,
@@ -108,6 +143,10 @@ def sample_region(height,alpha,site,step=16):
         "alpha_fraction":valid/total,
         "valid_low_elevation_count":plausible,
         "valid_low_elevation_fraction":plausible/total,
+        "valid_sand_alpha_overlap_count":sand_valid_land,
+        "valid_low_sand_overlap_count":sand_valid_coast,
+        "sand_alpha_overlap_fraction":sand_valid_coast/total,
+        "sand_joint_source_aligned":sand_grid is not None,
         "valid_height_min":min(positive_heights) if positive_heights else None,
         "valid_height_max":max(positive_heights) if positive_heights else None,
         "valid_height_mean":sum(positive_heights)/len(positive_heights) if positive_heights else None,
@@ -116,6 +155,7 @@ def sample_region(height,alpha,site,step=16):
 
 def order_candidates(data:list[dict])->list[dict]:
     return sorted(data,key=lambda x:(
+        -x["stage1"].get("valid_low_sand_overlap_count",0),
         -x["stage1"]["valid_low_elevation_fraction"],
         -x["stage1"]["alpha_fraction"],
         -x["stage2"]["refined"]["mean"],
@@ -133,12 +173,12 @@ def extract(vol,i,j,np):
     return data
 
 
-def run(hou,np,token):
+def run(hou,np,token,candidate_file:Path|None=None):
     if hou.isUIAvailable() or tuple(hou.applicationVersion())!=(22,0,466):
         raise ValueError("Fresh headless original Houdini required")
     if hou.node("/obj").children():
         raise ValueError("Refuse to operate on existing editor scene")
-    sites,candidate_hash=load_sites()
+    sites,candidate_hash=load_sites(candidate_file)
     before=require_source()
     import sys
     sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
@@ -164,23 +204,36 @@ def run(hou,np,token):
         summary=sample_region(h,vols["Alpha"],entry)
         observed.append({"stage2":entry,"stage1":summary,"geographic_center":coordinate})
     ordered=order_candidates(observed)
-    selected=next((v for v in ordered if v["stage1"]["alpha_fraction"]>=0.95 and
-                   v["stage1"]["valid_low_elevation_fraction"]>=0.80 and
+    has_joint=bool(sites and sites[0].get("refined",{}).get("alpha_joint_grid16"))
+    selected=next((v for v in ordered if
                    v["stage1"]["invalid_alpha"]==0 and
-                   v["stage1"]["invalid_height_inside_valid_alpha"]==0),None)
+                   v["stage1"]["invalid_height_inside_valid_alpha"]==0 and
+                   (
+                       v["stage1"]["valid_low_sand_overlap_count"]>=4 and
+                       v["stage1"]["alpha_fraction"]>=0.10 and
+                       v["stage1"]["valid_low_elevation_fraction"]>=0.05
+                       if has_joint else
+                       v["stage1"]["alpha_fraction"]>=0.95 and
+                       v["stage1"]["valid_low_elevation_fraction"]>=0.80
+                   )),None)
     if selected is None:
         return {
             "schema_version":1,
             "status":"NO_ACCEPTABLE_REAL_STAGE1_ALPHA_AND_LOW_HEIGHT_SAND_SITE",
             "source_stage1_sha256":STAGE1_SHA,"source_stage2_sha256":PIN_MASK_SHA,
             "candidate_report_sha256":candidate_hash,"candidates":ordered,
+            "alpha_aware_source_overlap_evaluated":has_joint,
+            "original_stage1_height_alpha_unchanged":True,
             "terrain_or_masks_changed":False,"native_source_cropped":False,
+            "sand_positive_land_verified":False,
+            "coastline_landmark_verified":False,"unreal_import":False,
             "coastline_visual_proof":False
         }
     i,j=selected["stage2"]["i"],selected["stage2"]["j"]
     cropped={name:extract(vol,i,j,np) for name,vol in vols.items()}
-    if int(np.count_nonzero(cropped["Alpha"]>0.5))<int(0.95*SIZE*SIZE):
-        raise ValueError("Precise native Alpha does not match candidate's accepted coarse score")
+    accepted_fraction=0.05 if has_joint else 0.95
+    if int(np.count_nonzero(cropped["Alpha"]>0.5))<int(accepted_fraction*SIZE*SIZE):
+        raise ValueError("Precise native Alpha is lower than the admission sample threshold")
     if require_source()!=before:
         raise ValueError("Original Stage1 changed during sand source extraction")
     out=OUTPUT/token
@@ -207,6 +260,9 @@ def run(hou,np,token):
         "accepted_real_cropped_base_path":str(local),
         "accepted_real_cropped_base_sha256":sha(local),
         "precise_alpha_valid_count":int(np.count_nonzero(cropped["Alpha"]>0.5)),
+        "sand_positive_land_verified":bool(has_joint and selected["stage1"]["valid_low_sand_overlap_count"]>=4),
+        "sand_low_elevation_intersection_coarse_count":selected["stage1"]["valid_low_sand_overlap_count"],
+        "stage2_precise_sand_alpha_intersection_not_yet_verified":True,
         "precise_valid_height_min":float(cropped["height"][cropped["Alpha"]>0.5].min()),
         "precise_valid_height_max":float(cropped["height"][cropped["Alpha"]>0.5].max()),
         "world_extent":[list(map(float,vols["height"].indexToPos((i-128,j-128,0)))),
@@ -222,12 +278,14 @@ def run(hou,np,token):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--token",required=True)
+    parser.add_argument("--candidate-file",type=Path,
+                        help="Exact versioned Stage2 scan result from same-run alpha-aware search")
     args=parser.parse_args()
     if not re.fullmatch(r"[0-9]{9,13}-[1-9][0-9]*",args.token):
         raise ValueError("Invalid exact GitHub run and attempt")
     import hou
     import numpy as np
-    result=run(hou,np,args.token)
+    result=run(hou,np,args.token,args.candidate_file)
     out=OUTPUT/args.token
     if os.name=="nt" and not str(out).lower().replace("/","\\").startswith("d:\\yacs\\work\\"):
         raise ValueError("Wrong output work root")
