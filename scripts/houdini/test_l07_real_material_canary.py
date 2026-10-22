@@ -63,6 +63,16 @@ class MaterialSiteTests(unittest.TestCase):
         self.assertNotIn('previous=material',source)
         self.assertIn('target.setAllVoxelsFromString(original.tobytes())',source)
 
+    def test_stage3_switch_is_explicitly_optional(self):
+        self.assertEqual(canary.selected_mask("scree","cliff_mask",None),"cliff_mask")
+        self.assertEqual(canary.selected_mask("scree","cliff_mask","39794174742-1"),"scree_mask")
+        self.assertEqual(canary.selected_mask("cliff","cliff_mask","39794174742-1"),"cliff_mask")
+        self.assertEqual(canary.selected_mask("grass","grass_mask","39794174742-1"),"grass_mask")
+
+    def test_historical_scree_never_added_to_protected_production_layers(self):
+        self.assertNotIn("scree_mask",canary.PROTECTED)
+        self.assertEqual(canary.SIZE,256)
+
     def test_png_chunk_crc(self):
         payload=b"abc"
         block=canary.png_chunk(b"tEXt",payload)
