@@ -76,10 +76,25 @@ at source `7b43d13` confirms both installed HDA hashes and the stock
 `default.pic` identity. It finds no exact original Albedo/Displacement maps
 among the ten entries in the fixed project texture root or the five named
 family subfolders. This scoped result does not inspect other download caches.
-The installed host pipeline differs from the published recipe, so this
-read-only audit is not a deployment or proof that the source graph changes
-have appeared in Houdini or Unreal. Author CWD and numeric roughness remain
-unresolved.
+At that audit the installed host pipeline differed from the published recipe;
+the read-only audit did not deploy the correction or prove graph changes in
+Houdini or Unreal. Author CWD and numeric roughness remain unresolved.
+
+The subsequent [source installation](../../assets/lesson07-sidefx-source-20261021/material-source-sync-39764410137-evidence.json),
+run `39764410137` at source `9d857ed`, successfully installed exactly one
+file: `D:/yacs/project/scripts/houdini/lesson06_unified_pipeline.py`.
+Its **37,392 bytes / SHA256
+`9880239b94db8077c8c8a1eab0e0fdc99db158650157c170845627fdde0d6eaf`**
+match the reviewed recipe. The original **34,868 bytes / SHA256
+`6e8c8b707a28f4092db22e313feecaf3b02bf787bdda780657c7f8297325c40e`**
+are retained in
+`D:/yacs/work/l07-material-source-sync-39764410137-1/lesson06_unified_pipeline.previous.py`.
+The receipt reports `SOURCE_INSTALLED` and both verified identities; all
+three sibling Editor jobs were skipped. The separate canary source was not
+installed. This was source synchronization only: no Houdini import, hython
+execution, cook, UE change or runtime reload. Existing application views have
+not been recooked from this revision, and native/material acceptance remains
+false. The installed dependent-stage guards remain in force.
 
 Official exact-source identification and permitted retrieval are active again.
 Purchase and substitute selection are not authorized. The proposed new

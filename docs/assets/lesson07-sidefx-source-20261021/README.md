@@ -141,10 +141,34 @@ and records the five named immediate family folders as absent in that scope.
 It does not search other libraries or establish whole-host absence. The stock
 `default.pic` is present; the project/work CWD candidate files are absent.
 
-The installed host recipe has hash `6e8c8b70...`, different from the published
-source recipe checked by this audit. The read-only run does not deploy the
-new source corrections. No original map acquisition, material cook, cache
-overwrite, HIP save, Unreal import or visual acceptance is established.
+At that resource audit, the installed host recipe had hash `6e8c8b70...`,
+different from the published source recipe checked by the audit. That read-only
+run did not deploy the new source corrections. No original map acquisition,
+material cook, cache overwrite, HIP save, Unreal import or visual acceptance
+is established by it.
+
+## Reviewed source installed on the canonical host (2026-10-22)
+
+The subsequent [source installation receipt](material-source-sync-39764410137-evidence.json)
+records successful run `39764410137`, source commit `9d857ed`. The fixed
+canonical file `D:/yacs/project/scripts/houdini/lesson06_unified_pipeline.py`
+now contains the reviewed graph/tint corrections and material-entry guards:
+**37,392 bytes**, SHA256
+`9880239b94db8077c8c8a1eab0e0fdc99db158650157c170845627fdde0d6eaf`.
+The previous **34,868-byte** file, SHA256
+`6e8c8b707a28f4092db22e313feecaf3b02bf787bdda780657c7f8297325c40e`,
+is retained at
+`D:/yacs/work/l07-material-source-sync-39764410137-1/lesson06_unified_pipeline.previous.py`.
+The source-sync step reported `SOURCE_INSTALLED` only after checking both
+resulting identities. Its three sibling Editor jobs were skipped.
+
+Only this one recipe file was installed; the separate canary source was not
+synchronized. The receipt explicitly records no Houdini import, hython run,
+cook, UE mutation or runtime reload. Thus this closes source installation,
+not execution of a corrected graph or 1:1 material acceptance. Original maps,
+the remaining final mask/ramp settings and geographic integration still gate
+any dependent native replay. The historical read-only and source-review
+receipts above remain unchanged.
 
 ## Decision and implementation boundary
 
