@@ -26,9 +26,11 @@ class TestRealCropContract(unittest.TestCase):
         self.assertEqual(crop.BASE_AND_MASKS['base']['sha256'],
                          '08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952')
         self.assertEqual(crop.BASE_AND_MASKS['masks']['sha256'],
-                         '203d46ea79a0a697d46256f631271135a0cd8768f7432ea315512c16a8')
+                         '203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8')
         self.assertEqual(crop.GRID,(16000,16000,1))
         self.assertEqual(crop.CROP,256)
+        for kind in ('base','masks'):
+            self.assertEqual(len(crop.BASE_AND_MASKS[kind]['sha256']),64)
 
     def test_source_layers_are_exactly_original_cached_names(self):
         self.assertEqual(crop.BASE_AND_MASKS['base']['layers'],('height','mask','Alpha'))
