@@ -38,6 +38,17 @@ ROLES = (
     ("scree", "gray_rocks", "cliff_mask", 100.0, True),
 )
 PROTECTED = ("height", "mask", "Alpha", "grass_mask", "sand_mask", "cliff_mask", "ramp_layer")
+# Video-verified main-chain order: Grass -> gradient -> brightness -> Sand;
+# Cliff -> Cliff Tint -> Scree -> Scree Tint. This bounded canary still uses the
+# accepted YACS Stage2 ramp_layer in lieu of the unavailable source mask6/7/8
+# author HDA branches and does not include exposure/curvature tints.
+INTERLEAVED_SOURCE_TINT_AFTER_ROLE = {
+    "grass": (("grass_gradient","ramp_layer","gradient"),
+              ("grass_brightness",None,"brightness")),
+    "cliff": (("cliff","cliff_mask","solid_cliff"),),
+    "scree": (("scree","scree_mask","solid_scree"),),
+}
+
 BINARY_LIMIT = 32 * 1024**2
 
 
@@ -280,13 +291,24 @@ def restore_scratch_height(cooked,source_arrays,protected,hou,np,role):
              "canonical_16k_terrain_changed":False}
 
 
-def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:str|None=None)->dict:
+def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:str|None=None,interleaved_tints=False)->dict:
     if hou.isUIAvailable() or tuple(hou.applicationVersion())!=(22,0,466):
         raise ValueError("Only fresh headless Houdini 22.0.466 is supported")
     if hou.node("/obj").children():
         raise ValueError("Unexpected user HIP or prior Houdini scene")
     if digest(HDA)!=PIN_HDA:
         raise ValueError("Original archived SideFX Pegasus HDA identity mismatch")
+    if interleaved_tints and scree_token is None:
+        raise ValueError("Real Stage3 scree source is mandatory for interleaved Tint/HDA proof")
+    native_tint_case=None
+    if interleaved_tints:
+        sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+        from scripts.houdini.l07_original_tint_hda_canary import (
+            TINT_HDA,TINT_HDA_SHA256,native_case
+        )
+        if digest(TINT_HDA)!=TINT_HDA_SHA256:
+            raise ValueError("Original archived SideFX Tint HDA identity mismatch")
+        native_tint_case=native_case
     provenance, material_files, binding=accepted_inputs(crop_path,token,asset_root,np)
     arrays,metadata=read_crops(crop_path,np)
     real_scree_diagnostic=None
@@ -299,6 +321,8 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:
         raise ValueError("Pinned real-world sample not valid for both grass and cliff")
     output.mkdir(parents=True,exist_ok=False)
     hou.hda.installFile(str(HDA),force_use_assets=True)
+    if interleaved_tints:
+        hou.hda.installFile(str(TINT_HDA),force_use_assets=True)
     geo_obj=hou.node("/obj").createNode("geo","PEGASUS_REAL_CC0_CANARY")
     try:
         for child in geo_obj.children():
@@ -317,6 +341,7 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:
         source.parm("file").set(str(input_source))
         previous=source
         results=[]
+        tint_results=[]
         for role,slug,default_mask,size,use_mask in ROLES:
             mask_name=selected_mask(role,default_mask,scree_token)
             if mask_name is None:
@@ -389,9 +414,25 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:
             # output, to guarantee immutable input heights for next stage.
             previous=geo_obj.createNode("file","LOAD_SAFE_"+role.upper())
             previous.parm("file").set(str(cache))
+            if interleaved_tints:
+                source_for_tint=cache
+                for tint_name,tint_mask,tint_kind in INTERLEAVED_SOURCE_TINT_AFTER_ROLE.get(role,()):
+                    outcome=native_tint_case(
+                        geo_obj,tint_name,role,tint_mask,tint_kind,source_for_tint,output,np,hou)
+                    if outcome["height_and_semantic_masks_preserved"] is not True:
+                        raise ValueError("Interleaved source tint changed canonical height/Alpha/masks")
+                    tint_results.append(outcome)
+                    source_for_tint=Path(outcome["bgeo"])
+                    previous=geo_obj.createNode("file","LOAD_SAFE_TINT_"+tint_name.upper())
+                    previous.parm("file").set(str(source_for_tint))
         return {
-            "status":("FIVE_PEGASUS_CC0_REAL_STAGE3_DIAGNOSTIC_PASSED_NOT_PRODUCTION"
+            "status":("FIVE_PEGASUS_CC0_REAL_STAGE3_SOURCE_ORDERED_TINTS_BOUNDED_PASS"
+                if interleaved_tints else
+                "FIVE_PEGASUS_CC0_REAL_STAGE3_DIAGNOSTIC_PASSED_NOT_PRODUCTION"
                 if scree_token else "FIVE_PEGASUS_CC0_HDA_REAL_SITE_MECHANISM_PASSED_NOT_PRODUCTION"),
+            "source_tints_interleaved_in_author_order":bool(interleaved_tints),
+            "complete_author_mask_and_tint_graph":False,
+            "tint_stages":tint_results,
             "historical_real_stage3_diagnostic":real_scree_diagnostic,
             "stage3_upstream_lineage_accepted":False,
             "source_token":token,
@@ -404,7 +445,9 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:
                 ("Original Stage3 scree source is diagnostic with upstream lineage UNVERIFIED"
                     if scree_token else "Original Stage3 scree mask not connected"),
                 "grass Curl distortion",
-                "grass ramp and brightness tints", "cliff/scree/exposure/curvature final tint network",
+                ("Original mask6/7/8 and exposure/curvature nodes remain absent"
+                 if interleaved_tints else "grass/brightness/cliff/scree tint nodes not in main chain"),
+                "complete source-author tint/mask branch graph",
                 "HDA nonzero height displacement", "whole-area source material cook",
                 "UE imported arrays, packed ORD(p), shader/render acceptance"],
             "ground_truth_height_and_stage2_masks_unchanged":True,
@@ -424,6 +467,8 @@ def main():
     p.add_argument("--source-token",required=True)
     p.add_argument("--run-token",required=True)
     p.add_argument("--scree-token",default=None,help="Read-only verified historical Stage3 crop token; not production authority")
+    p.add_argument("--interleaved-tints",action="store_true",
+                   help="Run 4 original Tint HDAs interleaved after Grass/Cliff/Scree, diagnostic only")
     args=p.parse_args()
     for t in (args.source_token,args.run_token,*([args.scree_token] if args.scree_token else [])):
         if not re.fullmatch(r"[0-9]{9,13}-[1-9][0-9]*",t):
@@ -435,7 +480,7 @@ def main():
     import hou
     import numpy as np
     output=OUTPUT_ROOT/args.run_token
-    result=run(hou,np,CROP_ROOT/args.source_token,SOURCE_ROOT,output,args.source_token,args.scree_token)
+    result=run(hou,np,CROP_ROOT/args.source_token,SOURCE_ROOT,output,args.source_token,args.scree_token,args.interleaved_tints)
     report=output/"real-material-canary.json"
     report.write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")
     print(json.dumps({"status":result["status"],"source":result["source_token"],
