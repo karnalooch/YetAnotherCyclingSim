@@ -1,0 +1,112 @@
+name: YACS Lesson07 real source 5-material original Pegasus HDA canary
+
+# Uses independently hash-verified ORIGINAL accepted 16K L06 real source crop,
+# exact SideFX HDA and publisher-verified CC0 PBR maps. Bounded 256x256 site.
+# Sand mask coverage = 0 at this site; scree cliff-mask is a TEST PROXY only.
+# No material bake on full Landscape, no geometry/source cache/UE mutations.
+on:
+  push:
+    branches: [codex/365-world-graph]
+    paths:
+      - .github/workflows/lesson07-polyhaven-real-material.yml
+      - .gumball/workflow-lifecycle.json
+      - scripts/houdini/l07_real_material_canary.py
+      - scripts/houdini/test_l07_real_material_canary.py
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Test exact material identity, input masks, and protected voxel invariants
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-real-material]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Source guard tests and syntax
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_real_material_canary -v
+          python -B -m py_compile scripts/houdini/l07_real_material_canary.py
+
+  material:
+    name: Original HDA on five CC0 maps and 256x256 actual Sa Calobra data
+    needs: preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 40
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout bounded native authoring source at exact event SHA
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/assets
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Check isolated real source and native memory before any cook
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong exact source SHA.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python missing.' }
+          $data='D:\yacs\work\lesson07-cc0-real-crops\39785285512-1'
+          foreach ($s in @('base-real-crop.npz','masks-real-crop.npz','real-source-verified.json')) {
+            if (-not (Test-Path -LiteralPath (Join-Path $data $s))) {
+              throw "Verified real Sa Calobra crop missing: $s"
+            }
+          }
+          $memJson=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(12)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Memory preflight failed.' }
+          $m=$memJson | ConvertFrom-Json
+          if ([int64]$m.available_physical_bytes -lt 8GB) { throw 'Insufficient physical memory for original HDA canary.' }
+          Write-Host "Bounded material memory admission: $memJson"
+      - name: Cook five SideFX HDAs only on separately assembled real 256x256 crop
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Houdini 22.0.466 missing.' }
+          & $hython -B scripts/houdini/l07_real_material_canary.py --source-token '39785285512-1' --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Real SideFX material HDA proof incomplete: preserve original source.' }
+      - name: Retain real native material images and one bounded final geometry
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-original-cc0-real-material-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-material-canary.json
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-*-colour.png
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-after-scree.bgeo.sc
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 30
