@@ -14,9 +14,9 @@ W dniu 22.10.2026 użytkownik **zezwolił wybrać zamienniki ośmiu rodzin Poly 
 
 ## A. Chronione źródła i zastany stan
 
-| Element | Identifikator/status | Zakres |
+| Element | Identyfikator/status | Zakres |
 |---|---|---|
-| Sa Calobra | 16 000 × 16 000, 0,5 m, 8×8 km | 256 mln próbek, 4 istniejące aktywa UE Landscape, zachować world transform / orientację / alfabetyczny podział |
+| Sa Calobra | 16 000 × 16 000, 0,5 m, 8×8 km | 256 mln próbek, 4 istniejące aktywa UE Landscape, zachować world transform / orientację / istniejący podział |
 | L06 base | SHA256 `08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952` | Wysokość i Alpha; bez zmian |
 | L06 masks | SHA256 `203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8` | grass_mask, sand_mask, cliff_mask, ramp_layer; bez zmian |
 | Historical L06 Stage3 scree | SHA256 `2af8ce5b467db28613c2033677c444dba5a89af943b906b01258a0b44106edb7` | 96 479 665 B. Rozmiar i hash zgadzają się z producentem; pełna linia pochodzenia niepotwierdzona (Stage4C 4,3 GB bez producer JSON) |
@@ -90,8 +90,8 @@ Kluczowe edges źródłowe: `material5 -> tint3 -> material6 -> tint4`; `heightf
 
 ### F1 — Realne scree i nadmorski piasek [P0]
 **Problem:** scree 8619 nonzero real cells (13.15% wycinka) kontra 51727 proxy cells; na tym samym wycinku sand_mask=0.  
-**Operacje:** (1) pobrać finalny status runu `39795208757` i dalsze real Stage3 diagnostics; nie zgłaszać PASS jeśli workflow miał startup_failure; (2) zrefingerprintfowac Stage4C 4.3GB **strumieniowo**, jeśli bezpieczne i może być źródłem Stage3, lub odtworzyć Stage3 tylko w izolowanym scratch; oznaczyć niepewne lineage, nie akceptować wyłącznie producer-self-hash; (3) drugie miejsce o sand_mask>0 znalezione z rzeczywistego Stage2, plus dark steep cliff site; (4) dla trzech sites wyeksportować HEIGHT/Alpha/Mask/ID as NPZ/BGEO z exact world coords i obligatoryjnymi hashami.  
-**Wyjście:** 3 niezależne site-metadata z georeferencją + 3 proof boards. **PASS:** sand>0, scree>0 i cliff>0 we właściwych miejscach; rzeczywisty scree zamiast proxy i pełne protected height/masks checksum. **FAIL:** zerowy piasek uznany za test, pomylenie screw i cliff, nieznany Stage3 lineage „zaakceptowany”.
+**Operacje:** (1) pobrać finalny status runu `39795208757` i dalsze real Stage3 diagnostics; nie zgłaszać PASS jeśli workflow miał startup_failure; (2) zidentyfikować i niezależnie zweryfikować Stage4C 4.3GB **strumieniowo**, jeśli bezpieczne i może być źródłem Stage3, lub odtworzyć Stage3 tylko w izolowanym scratch; oznaczyć niepewne lineage, nie akceptować wyłącznie producer-self-hash; (3) drugie miejsce o sand_mask>0 znalezione z rzeczywistego Stage2, plus dark steep cliff site; (4) dla trzech sites wyeksportować HEIGHT/Alpha/Mask/ID as NPZ/BGEO z exact world coords i obligatoryjnymi hashami.  
+**Wyjście:** 3 niezależne site-metadata z georeferencją + 3 proof boards. **PASS:** sand>0, scree>0 i cliff>0 we właściwych miejscach; rzeczywisty scree zamiast proxy i pełne protected height/masks checksum. **FAIL:** zerowy piasek uznany za test, pomylenie scree i cliff, nieznany Stage3 lineage „zaakceptowany”.
 
 ### F2 — Jeden nowy, wersjonowany source graph Houdiniego [P0]
 **Wejście:** B1/B2 i oryginalne dwa HDA, CC0 manifest + real clips.  
@@ -113,7 +113,7 @@ Kluczowe edges źródłowe: `material5 -> tint3 -> material6 -> tint4`; `heightf
 ### F5 — IDMap i eksport RGB/AO/masek [P0]
 **Klucz autora:** pod oficjalnym kursem George Hulm wskazał: liczba IDMap Layers musi = liczbie zakodowanych warstw; `Bit` należy do Blend, `Texture Atlas Index` do Layer; pokazany master domyślnie zakłada demo 2017 vertices / Terrain Resolution=2016 i wymaga kompensacji dla innych rozdzielczości.  
 **Operacje:** real F4 output → pięć klas w oryginalnych `PE_heightfield_layers_to_ID` / decoder, test class 0/bit i IDvalue, eksport 16k color/ID/Alpha. Nigdy nie kopiować Scottish ZIP debug Colour/AO na Majorkę. Na aktualnym UE test grayscale/linear/lossless/nearest ID sample na krawędziach z pionowymi maskami; nie akceptować bleeding. **Nie włączać UV Rotate=-90 z demo** bez testu real world IDMap/Colour mapping (UV Rotate zasila także odczyty IDMap).  
-**PASS:** 5 klas, wszystkie ważne komórki zachowane, brak zgubionego indeksu 0, ID i RGB na tej samej rejestracji/co najmniej 4 tyles seamless. **FAIL:** nierówna liczba bit/layer, brak wierności IDMap, jakikolwiek rotate/offset mismatch.
+**PASS:** 5 klas, wszystkie ważne komórki zachowane, brak zgubionego indeksu 0, ID i RGB na tej samej rejestracji/co najmniej 4 kafle seamless. **FAIL:** nierówna liczba bit/layer, brak wierności IDMap, jakikolwiek rotate/offset mismatch.
 
 ### F6 — PBR UE: 5 rodzin × 3 tablice 2048² [P0]
 **Stała kolejność po zatwierdzeniu CC0:** 0 `mossy_rock`, 1 `sparse_grass`, 2 `gravel_floor_02`, 3 `dark_rock_02`, 4 `coast_sand_rocks_02`. Każda ma 2K Diffuse, Roughness, DX Normal, AO, Displacement (25 verified source maps).
