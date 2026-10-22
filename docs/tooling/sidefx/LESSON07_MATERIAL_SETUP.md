@@ -11,7 +11,14 @@
 
 ---
 
-## Current connection blocker: two existing Editors (2026-10-22)
+## Current restart request after competing Editors (2026-10-22)
+
+The owner subsequently reported closing both Editors and explicitly requested
+starting the canonical Lesson07 project again. A fresh host/checkpoint/task
+read is required before the existing one-shot interactive launcher can start
+it. The previously running Live Host is not a restart target. No native
+`region_inspect` request or shutdown was sent by this continuation, and no
+new Editor start is claimed at this revision.
 
 [Recovery run 39704721721, attempt 2](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39704721721/attempts/2)
 rechecked source `62ec16d1960822a18238f2764558e8093f4c3243` on the home
@@ -27,13 +34,35 @@ the canonical Editor is missing.
 The second process uses the retained `b9fddea3f602-y473save01` project configured
 for YACS Live Host. That launcher deliberately uses `-RenderOffscreen`, so an
 absent main window does not establish a stale process or permission to discard
-unsaved state. The bounded recovery workflow now also reads selected Live Host
-task/session, parent-process and native-heartbeat metadata, plus the three fixed
-small preview-cache file sizes. It exposes no credentials or raw command lines,
-performs no shutdown, and leaves both singleton guards intact. Its publication
-is not a claim that the new observations have run or that either session is
-clean. Resolving ownership remains separate from source-colour correction,
-native material application and whole-area acceptance below.
+unsaved state. [Recovery run 39741931856](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39741931856)
+executed the bounded metadata reader at source
+`47dd5daa693c936d6b51e36e0dc266abcff79c9c`. At 07:41:06 UTC it proved that
+PID 6340 belongs to session `20261021T234306Z-3daf8b084bbc`, installed source
+`5a3517ee74b7477832af66f1727c4e4510c8f80b`, with the matching parent PID 10756,
+running scheduled task and a native heartbeat 3.308 seconds old. The existing
+status reader returned `LIVE_RECEIVER_PROVEN_CURRENT_PROCESS`. This establishes
+a responsive Live Host, not a clean unsaved-package inventory. The Lesson07
+preflight again stopped before any native tool call, preserving both Editors.
+
+That reader also found all three fixed small caches absent:
+`SCREE_SITE_GLOBAL_COLOR.bgeo.sc`, `SCREE_FULLRES_PREVIEW.bgeo.sc` and
+`PREVIEW_GLOBAL_COLOR.bgeo.sc`. It loaded no terrain data. A proposed read-only
+Live Host inspection was superseded by the owner's explicit closure/restart
+instruction before publication or execution. Its unsaved state was never
+measured. Both singleton guards remain intact.
+
+The bounded native colour A/B is prepared in
+[`prepare_lesson07_colour_canary.py`](../../../scripts/houdini/prepare_lesson07_colour_canary.py),
+with ten focused CPU tests and an independent source/API review. It compares
+the original pinned material HDA with `use_mask=1` and `use_mask=0` on one
+fingerprinted 257-by-257 retained crop, preserving exact non-RGB voxels and
+every volume lattice in new output copies. CPU OpenCL must be selected before
+hython starts; the existing 12 GiB commit-headroom guard remains mandatory.
+Because both accepted crop inputs are absent, this native test has **not run**.
+Missing input stops before importing Houdini or creating output; there is no
+full-cache fallback. Even a successful canary would demonstrate only the base
+coverage mechanism, not complete material replay, production colour repair,
+fresh-process reopening or whole-area acceptance.
 
 ## Current owner direction: original SideFX material reproduction (2026-10-21)
 
