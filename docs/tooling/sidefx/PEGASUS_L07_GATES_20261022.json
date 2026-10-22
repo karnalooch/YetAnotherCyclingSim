@@ -1,0 +1,521 @@
+{
+  "schema_version": 1,
+  "program": "YACS-M3-PEG-02-07",
+  "document": "docs/tooling/sidefx/PEGASUS_L07_FINALE_20261022.md",
+  "issued_utc_date": "2026-10-22",
+  "scope": "Houdini-first recreation of SideFX Pegasus workflow on accepted 16000x16000 Sa Calobra domain, with owner-approved Poly Haven CC0 source replacements",
+  "pr": 474,
+  "branch": "codex/365-world-graph",
+  "architecture_authority": "HOUDINI_SIDEFX_PRIMARY_20261016",
+  "acceptance": {
+    "lesson07_technical_pass": false,
+    "owner_visual_accepted": false,
+    "performance_pass": false,
+    "performance_state": "DEFERRED_AFTER_M3",
+    "pr_must_remain_draft": true,
+    "required_for_technical_visual_closeout": [
+      "G00",
+      "G01",
+      "G02",
+      "G03",
+      "G04",
+      "G05",
+      "G06",
+      "G07",
+      "G08",
+      "G09",
+      "G10",
+      "G11"
+    ],
+    "only_complete_if_all_required": "PASS_FULL",
+    "never_promote": [
+      "PASS_DIAGNOSTIC",
+      "PASS_BOUNDED"
+    ]
+  },
+  "accepted_source_sha256": {
+    "stage1_base": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
+    "stage2_masks": "203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8",
+    "stage3_historical_scree": "2af8ce5b467db28613c2033677c444dba5a89af943b906b01258a0b44106edb7",
+    "material_hda": "e7d41ca64757699aa65b69520aca96b11f7325365506ddc675f8ea2b23a45023",
+    "tint_hda": "93cc47dd511bc3d5868835b5dd3b9082c13cab23355b688aaf2a947e8687a2ed"
+  },
+  "render_constraints": {
+    "landscape_sites": [
+      "4 landscape overview",
+      "serpentine hairpin/road/shoulder",
+      "vertical dark-gray cliff",
+      "actual Stage3 scree slope",
+      "sand>0 coastal site",
+      "sparse grass transitions",
+      "central 4-tile seam/ID/Alpha",
+      "handlebar/TPP near-far"
+    ],
+    "real_screenshots_required": true,
+    "expected_ue_compiled_materials": true,
+    "shader_normal_and_roughness_validation": true
+  },
+  "source_adaptations": {
+    "original_assets_replaced_by_cc0": true,
+    "all_eight_vendor_source_names": [
+      "dark_rock",
+      "sparse_grass",
+      "dense_sand",
+      "dark_rock_02",
+      "gray_rocks",
+      "mossy_rock",
+      "gravel_floor_02",
+      "coast_sand_rocks_02"
+    ],
+    "ue_five_slice_order": [
+      "mossy_rock",
+      "sparse_grass",
+      "gravel_floor_02",
+      "dark_rock_02",
+      "coast_sand_rocks_02"
+    ],
+    "all_unobserved_video_ramp_knots": "UNKNOWN; explicit YACS_ADAPTATION only",
+    "demo_terrain_resolution_2016_applies_to_real_16000": false,
+    "nonzero_demo_displacement_may_modify_accepted_height": false,
+    "ue_ordp_packing_until_resolved": "UNKNOWN"
+  },
+  "phases": [
+    {
+      "phase": "F0",
+      "name": "Inventory/freeze",
+      "owner": "integrator",
+      "depends_on": [],
+      "files_in_scope": [
+        "docs/tooling/sidefx/LESSON07_MATERIAL_SETUP.md"
+      ],
+      "must_prove": [
+        "exact source SHA/HDA sha",
+        "four Landscape actors",
+        "original base and Stage2 masks unchanged",
+        "single owned UE editor or no UE mutation"
+      ],
+      "expected_outputs": [
+        "f0-source-and-editor-inventory.json"
+      ],
+      "forbidden": [
+        "kill existing UE",
+        "bypass LOCAL_BUSY",
+        "overwrite accepted BGEO/DTM"
+      ]
+    },
+    {
+      "phase": "F1",
+      "name": "True Stage3 + sand coast + vertical cliff",
+      "owner": "source-analysis",
+      "depends_on": [
+        "F0"
+      ],
+      "files_in_scope": [
+        "scripts/houdini/audit_l07_scree_cache.py",
+        "scripts/houdini/verify_l07_scree_crop.py",
+        "scripts/houdini/l07_real_material_canary.py"
+      ],
+      "must_prove": [
+        "true scree mask source registration and lineage status",
+        "sand_mask >0 on independent coastal site",
+        "cliff_mask >0 on independent steep site",
+        "height/Alpha/masks exact protected"
+      ],
+      "expected_outputs": [
+        "f1-real-sites.json",
+        "real-scree-and-coast proof images"
+      ],
+      "forbidden": [
+        "treat scree cliff proxy as real",
+        "pretend Stage3 producer self SHA proves complete upstream chain"
+      ]
+    },
+    {
+      "phase": "F2",
+      "name": "SideFX native full material/tint graph",
+      "owner": "houdini-author",
+      "depends_on": [
+        "F1"
+      ],
+      "files_in_scope": [
+        "scripts/houdini",
+        "worldgen/houdini/sa_calobra"
+      ],
+      "must_prove": [
+        "source-verified Material/Tint port/order graph",
+        "source observations and inferred/unknown per parameter",
+        "5 HDA map hashes",
+        "pre/post file readback and no source height/mask delta"
+      ],
+      "expected_outputs": [
+        "l07-hda-graph-contract.json",
+        "l07-color-tint-recipe-v1.json",
+        "three material site receipts"
+      ],
+      "forbidden": [
+        "guess collapsed ramp tuples",
+        "edit archived SideFX HDA source",
+        "enable forced production cache reuse"
+      ]
+    },
+    {
+      "phase": "F3",
+      "name": "Neutral gray limestone color and PBR grade",
+      "owner": "materials-analysis",
+      "depends_on": [
+        "F2"
+      ],
+      "files_in_scope": [
+        "worldgen/houdini/sa_calobra",
+        "docs/assets/lesson07-sidefx-source-20261021"
+      ],
+      "must_prove": [
+        "source-tint graph before custom grade",
+        "actual cliff mask only",
+        "balanced dark-gray and legible cliff in source RGB",
+        "zero new black-valid pixels and no streak",
+        "roughness/normal correct"
+      ],
+      "expected_outputs": [
+        "f3-cliff-ab-histograms.json",
+        "native A/B material preview"
+      ],
+      "forbidden": [
+        "darken whole map blindly",
+        "replace PBR by constant roughness",
+        "claim UE Lit from Houdini proof"
+      ]
+    },
+    {
+      "phase": "F4",
+      "name": "All 16000-square Houdini producer",
+      "owner": "houdini-author",
+      "depends_on": [
+        "F3"
+      ],
+      "files_in_scope": [
+        "scripts/houdini",
+        "D:/yacs/work"
+      ],
+      "must_prove": [
+        "100% 16k coverage not a crop",
+        "global UV/register preserved",
+        "chunktile halos and adjacent-seam equality",
+        "fresh process readback",
+        "bounded peak memory",
+        "unchanged original accepted height/Alpha/Stage2"
+      ],
+      "expected_outputs": [
+        "f4-full-domain-tiles.json",
+        "f4-all-domain-hash-manifest.json"
+      ],
+      "forbidden": [
+        "all --force on accepted L06",
+        "re-cook full domain monolith on busy host",
+        "reuse old cache as new proof"
+      ]
+    },
+    {
+      "phase": "F5",
+      "name": "IDMap/Colour/Alpha registered exports",
+      "owner": "houdini-author",
+      "depends_on": [
+        "F4"
+      ],
+      "files_in_scope": [
+        "scripts/houdini",
+        "worldgen/houdini/sa_calobra"
+      ],
+      "must_prove": [
+        "five ID classes and correct class 0",
+        "5-layer ID count matches MI",
+        "exact geographic pixels and 4 UE tile registration",
+        "colour/Alpha source equality and no missing pixels"
+      ],
+      "expected_outputs": [
+        "f5-idmap-color-export-manifest.json"
+      ],
+      "forbidden": [
+        "copy demo 2017 terrain/UV rotate -90",
+        "use ZIP diagnostic Colour/AO on real Sa Calobra"
+      ]
+    },
+    {
+      "phase": "F6",
+      "name": "UE three 5-slice PBR arrays",
+      "owner": "ue-contract-reader",
+      "depends_on": [
+        "F0"
+      ],
+      "files_in_scope": [
+        "scripts/ue",
+        "worldgen/materials",
+        "Game/Pegasus-candidate-assets"
+      ],
+      "must_prove": [
+        "actual original material function ORDp swizzles",
+        "all 5 slots/2k dimensions",
+        "D sRGB N linear/Normal M linear/Masks",
+        "normal DX correctness and array source readback",
+        "pool VRAM/residency"
+      ],
+      "expected_outputs": [
+        "f6-packed-ordp-contract.json",
+        "f6-array-import-proof.json"
+      ],
+      "forbidden": [
+        "guess ORM equals ORD(p)",
+        "overwrite existing TA arrays",
+        "inflate texture pool without diagnosis"
+      ]
+    },
+    {
+      "phase": "F7",
+      "name": "UE original master isolated MI candidate",
+      "owner": "integrator",
+      "depends_on": [
+        "F5",
+        "F6"
+      ],
+      "files_in_scope": [
+        "Game/YACS-L07-candidate",
+        "scripts/ue"
+      ],
+      "must_prove": [
+        "original 257 shared material expressions/links unchanged",
+        "5 layer/4 blend GUID and association indices",
+        "final-video MI profile and geographic differences explicit",
+        "shader compile/readback",
+        "no active world save during test"
+      ],
+      "expected_outputs": [
+        "f7-candidate-mi-parameter-report.json",
+        "f7-shader-compile.json"
+      ],
+      "forbidden": [
+        "change active material before bound proof",
+        "overwrite original master",
+        "rotate registered IDMap blindly"
+      ]
+    },
+    {
+      "phase": "F8",
+      "name": "Real UE Lit screenshots at 8 views",
+      "owner": "integrator",
+      "depends_on": [
+        "F7"
+      ],
+      "files_in_scope": [
+        "scripts/ue",
+        "docs/evidence"
+      ],
+      "must_prove": [
+        "fresh screenshot of exact current Level and 4 landscape actors",
+        "hairpin/road/gravel/vertical-cliff/true-scree/sand/grass/seam gallery",
+        "camera/world/light/sRGB/MI sha",
+        "no holes/black/streak/overbudget"
+      ],
+      "expected_outputs": [
+        "f8-lit-gallery-manifest.json",
+        "8+ fresh Lit captures plus debug passes"
+      ],
+      "forbidden": [
+        "recycle historical screen",
+        "claim that a five-HDA board is UE Lit"
+      ]
+    },
+    {
+      "phase": "F9",
+      "name": "Retention/rollback/final review",
+      "owner": "integrator",
+      "depends_on": [
+        "F8"
+      ],
+      "files_in_scope": [
+        "docs/tooling/sidefx",
+        "docs/assets/lesson07-sidefx-source-20261021",
+        "Game/YACS-L07-candidate"
+      ],
+      "must_prove": [
+        "LFS exact OID/server readback",
+        "standalone fresh reopening of validated source and UE consumer",
+        "original map/MI rollback proof",
+        "current-head CI",
+        "owner visual review"
+      ],
+      "expected_outputs": [
+        "f9-closeout-report.json",
+        "review gallery"
+      ],
+      "forbidden": [
+        "merge PR474 without separate approval",
+        "mark M3 performance as passed from one camera"
+      ]
+    }
+  ],
+  "gates": [
+    {
+      "id": "G00",
+      "title": "Verified CC0 source maps and source SideFX HDA",
+      "status": "PASS_BOUNDED",
+      "depends_on": [],
+      "verified_runs": [
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39774587988",
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39776164539",
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39780478739"
+      ],
+      "not_proven": "45 maps verified, original HDA proof synthetic only"
+    },
+    {
+      "id": "G01",
+      "title": "Accepted full 16K source height/masks and real 256 crop",
+      "status": "PASS_BOUNDED",
+      "depends_on": [
+        "G00"
+      ],
+      "verified_runs": [
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39785285512"
+      ],
+      "not_proven": "proof pertains to isolated real 256x256 site"
+    },
+    {
+      "id": "G02",
+      "title": "Real scree mask plus upstream authoritative lineage",
+      "status": "PASS_DIAGNOSTIC",
+      "depends_on": [
+        "G01"
+      ],
+      "verified_runs": [
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39794174742"
+      ],
+      "not_proven": "Stage3 georegistration/voxels verified; historical Stage4C upstream evidence incomplete"
+    },
+    {
+      "id": "G03",
+      "title": "Five native SideFX HDA materials on real site with authentic scree",
+      "status": "BLOCKED",
+      "depends_on": [
+        "G02"
+      ],
+      "verified_runs": [
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39789846215"
+      ],
+      "not_proven": "earlier five-HDA PASS used cliff mask proxy; 39795208757 startup/retry not admitted"
+    },
+    {
+      "id": "G04",
+      "title": "Source-like complete Tint/Mask graph on semantic sites",
+      "status": "BLOCKED",
+      "depends_on": [
+        "G03"
+      ],
+      "verified_runs": [],
+      "not_proven": "missing complete final mask ramp tuples/source HIP; require explicit source/inference/adaptation fields"
+    },
+    {
+      "id": "G05",
+      "title": "Neutral gray limestone, black/streak and roughness quality",
+      "status": "BLOCKED",
+      "depends_on": [
+        "G04"
+      ],
+      "verified_runs": [],
+      "not_proven": "brown/warm cliffs and too wide old scree proxy; source and Lit numeric A/B absent"
+    },
+    {
+      "id": "G06",
+      "title": "Three distinct real-site canaries including coast sand>0",
+      "status": "BLOCKED",
+      "depends_on": [
+        "G04"
+      ],
+      "verified_runs": [
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39785285512"
+      ],
+      "not_proven": "sand mask zero at scree site; no independent coastal site proof"
+    },
+    {
+      "id": "G07",
+      "title": "Whole 16000x16000 Houdini color/masks/ID producer with seam proof",
+      "status": "BLOCKED",
+      "depends_on": [
+        "G05",
+        "G06"
+      ],
+      "verified_runs": [],
+      "not_proven": "only 256x256 canaries admitted, no full-domain image proof"
+    },
+    {
+      "id": "G08",
+      "title": "Three UE 2k 5-layer PBR arrays D/N/ORDp",
+      "status": "BLOCKED",
+      "depends_on": [
+        "G00"
+      ],
+      "verified_runs": [],
+      "not_proven": "source inputs exist but channel swizzle and actual UE array imports not proved"
+    },
+    {
+      "id": "G09",
+      "title": "Original Unreal Landscape master + video final MI isolated",
+      "status": "BLOCKED",
+      "depends_on": [
+        "G07",
+        "G08"
+      ],
+      "verified_runs": [],
+      "not_proven": "MI scalar/readback and compiler final source not proved"
+    },
+    {
+      "id": "G10",
+      "title": "Fresh native UE Lit complete four-actor world gallery",
+      "status": "BLOCKED",
+      "depends_on": [
+        "G09"
+      ],
+      "verified_runs": [],
+      "not_proven": "no fresh correct full Lit screenshots; owner rejects dark brown and streaking"
+    },
+    {
+      "id": "G11",
+      "title": "Owner visual approval and reviewed delivery",
+      "status": "BLOCKED",
+      "depends_on": [
+        "G10"
+      ],
+      "verified_runs": [],
+      "not_proven": "owner signoff and exact current-head proof pending"
+    },
+    {
+      "id": "G12",
+      "title": "M3 dedicated GPU performance gate",
+      "status": "DEFERRED",
+      "depends_on": [
+        "G10"
+      ],
+      "verified_runs": [],
+      "not_proven": "DEFERRED_AFTER_M3; distinct from Lesson07 technical/visual admission"
+    }
+  ],
+  "evidence_freshness_contract": {
+    "each_native_receipt_requires": [
+      "git exact source commit",
+      "sha256 of actual source and output bytes",
+      "status bounded by test scope",
+      "fresh-process reopen readback",
+      "protected height/masks unchanged",
+      "native memory/runner lease when modifying host"
+    ],
+    "no_reuse_of_historical_pass_for_new_head": true
+  },
+  "safety": [
+    "do not kill or launch competing UE",
+    "do not bypass LOCAL_BUSY",
+    "do not commit paid/unverified assets",
+    "never overwrite original 16k caches",
+    "no all --force on accepted producer",
+    "no parallel native writers",
+    "keep PR #474 Draft"
+  ],
+  "proof_trust": "SOURCE_VERIFIED, NATIVE_VERIFIED, YACS_ADAPTATION, INFERRED, UNKNOWN"
+}
