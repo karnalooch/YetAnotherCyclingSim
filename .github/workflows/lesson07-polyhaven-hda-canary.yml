@@ -69,7 +69,7 @@ jobs:
           sparse-checkout: |
             scripts/assets
             scripts/houdini
-            scripts/ue/lesson06_memory_guard.py
+            scripts/ue
           lfs: false
           clean: false
           persist-credentials: false
