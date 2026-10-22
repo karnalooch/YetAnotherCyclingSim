@@ -28,6 +28,15 @@ BASE_AND_MASKS = {
         "sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
         "layers": ("height", "mask", "Alpha"),
     },
+    "scree": {
+        # Native ginfo + 96,479,665-byte source hash and producer JSON were
+        # observed 2026-10-22. The earlier cliff producer's lineage is NOT
+        # verified. This is a historical diagnostic, never source admission.
+        "name": "stage3_scree.bgeo.sc",
+        "bytes": 96479665,
+        "sha256": "2af8ce5b467db28613c2033677c444dba5a89af943b906b01258a0b44106edb7",
+        "layers": ("scree_mask",),
+    },
     "masks": {
         "name": "stage2_masks.bgeo.sc",
         "bytes": 1167222140,
@@ -161,12 +170,15 @@ def run(stage: str, token: str, hou, np, output: Path) -> dict:
         np.savez_compressed(stream, **arrays)
     os.replace(tmp, destination)
     report = {
-        "status": "REAL_ACCEPTED_L06_SOURCE_CROP_REOPEN_REQUIRED",
+        "status": ("HISTORICAL_STAGE3_SCREE_CROP_DIAGNOSTIC_NOT_ACCEPTED" if stage == "scree"
+                   else "REAL_ACCEPTED_L06_SOURCE_CROP_REOPEN_REQUIRED"),
         "stage": stage, "run_token": token, "source": before_identity,
         "original_16000_grid": list(GRID), "crop_size": CROP,
         "crop_index_window": list(window), "source_site_xyz": list(SITE_WORLD),
         "layer_metadata": lattice, "crop_path": str(destination),
         "crop_bytes": destination.stat().st_size, "crop_sha256": sha256(destination),
+        "producer_upstream_lineage_verified": False if stage == "scree" else None,
+        "historical_scree_authority_admitted": False if stage == "scree" else None,
         "native_houdini_version": hou.applicationVersionString(),
         "elapsed_sec": time.monotonic() - started,
         "memory_before": memory_before,
