@@ -393,14 +393,15 @@
     {
       "id": "G03",
       "title": "Five native SideFX HDA materials on real site with authentic scree",
-      "status": "BLOCKED",
+      "status": "PASS_DIAGNOSTIC",
       "depends_on": [
         "G02"
       ],
       "verified_runs": [
-        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39789846215"
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39789846215",
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39805083280"
       ],
-      "not_proven": "earlier five-HDA PASS used cliff mask proxy; 39795208757 startup/retry not admitted"
+      "not_proven": "Five original material HDAs did cook and reopen on 256x256 real Sa Calobra site with exactly 8619 real historical Stage3 scree cells and zero fully black RGB cells. Full upstream Stage3 provenance, sand>0 site, all original Tints, full 16K world and UE Lit remain unproven. Not PASS_FULL."
     },
     {
       "id": "G04",
@@ -420,7 +421,7 @@
         "G04"
       ],
       "verified_runs": [],
-      "not_proven": "brown/warm cliffs and too wide old scree proxy; source and Lit numeric A/B absent"
+      "not_proven": "Bright cliff-mask scree proxy was replaced by a genuine Stage3 diagnostic mask (pixel RGB mean decreased 105.6/96.5/79.5 to 60.6/52.1/38.5). Dominant limestone is still warm/brown. Native original tint + full UE Lit colour/roughness review pending."
     },
     {
       "id": "G06",
