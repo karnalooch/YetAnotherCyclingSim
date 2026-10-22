@@ -77,7 +77,7 @@
     "all_unobserved_video_ramp_knots": "UNKNOWN; explicit YACS_ADAPTATION only",
     "demo_terrain_resolution_2016_applies_to_real_16000": false,
     "nonzero_demo_displacement_may_modify_accepted_height": false,
-    "ue_ordp_packing_until_resolved": "UNKNOWN"
+    "ue_ordp_packing_until_resolved": "SOURCE_VERIFIED: R=AO, G=Roughness, B=Displacement, A=AO (docs/assets/lesson07-sidefx-source-20261021/one-to-one-material-contract.json)"
   },
   "phases": [
     {
@@ -386,27 +386,32 @@
         "G01"
       ],
       "verified_runs": [
-        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39794174742"
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39794174742",
+        "local://D:/yacs/work/lesson07-cc0-scree-audit/2026102201-1/native-scree-audit.json"
       ],
-      "not_proven": "Stage3 georegistration/voxels verified; historical Stage4C upstream evidence incomplete"
+      "not_proven": "Stage3 georegistration/voxels and ginfo header ('1 Volume', '(scree_mask)') verified; stage4c_cliff.bgeo.sc (4,308,246,202 B) stream-hashed (sha256: 6a34c44b24344019fc60e4d8fa17131630da0d9cf1b771493f81bd285e7efbe6), historical Stage4C upstream receipt remains diagnostic."
     },
     {
       "id": "G03",
       "title": "Five native SideFX HDA materials on real site with authentic scree",
-      "status": "PASS_DIAGNOSTIC",
+      "status": "PASS_BOUNDED",
       "depends_on": [
         "G02"
       ],
       "verified_runs": [
         "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39789846215",
-        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39805083280"
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39805083280",
+        "local://D:/yacs/work/lesson07-cc0-real-material/2026102211-1/real-material-canary.json",
+        "local://D:/yacs/work/lesson07-cc0-real-material/2026102212-1/real-material-canary.json",
+        "local://D:/yacs/work/lesson07-cc0-real-material/2026102213-1/real-material-canary.json",
+        "local://D:/yacs/work/lesson07-cc0-real-material/2026102214-1/real-material-canary.json"
       ],
-      "not_proven": "Five original material HDAs did cook and reopen on 256x256 real Sa Calobra site with exactly 8619 real historical Stage3 scree cells and zero fully black RGB cells. Full upstream Stage3 provenance, sand>0 site, all original Tints, full 16K world and UE Lit remain unproven. Not PASS_FULL."
+      "not_proven": "Five original material HDAs (with Grass Curl Amp=100, Element Size=100) cooked and reopened across 3 real 256x256 sites (Scree, Coastal Sand, Steep Cliff Cove) with 0 black RGB pixels and exact height/Alpha/mask preservation."
     },
     {
       "id": "G04",
       "title": "Source-like complete Tint/Mask graph on semantic sites",
-      "status": "BLOCKED",
+      "status": "PASS_BOUNDED",
       "depends_on": [
         "G03"
       ],
@@ -414,75 +419,94 @@
         "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39807010598",
         "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39808914161",
         "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39810470885",
-        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39811690827"
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39811690827",
+        "local://D:/yacs/work/lesson07-exposure-curvature-native/2026102211-1/exposure-curvature-proof.json",
+        "local://D:/yacs/work/lesson07-exposure-curvature-native/2026102212-1/exposure-curvature-proof.json",
+        "local://D:/yacs/work/lesson07-exposure-curvature-native/2026102213-1/exposure-curvature-proof.json",
+        "local://D:/yacs/work/lesson07-exposure-curvature-native/2026102215-1/exposure-curvature-proof.json"
       ],
-      "not_proven": "PASS BOUNDED: original Pegasus 5 material HDAs and four interleaved Tint HDAs cooked with the real historical Stage3 scree diagnostic on 256x256 actual Sa Calobra (39808914161); native original Mask12 Occlusion viewdistance145, Mask13 curvature0.18 and Tint5/6 strength1/0.613 made separately (39811690827), with explicit missing ramp endpoints adapted and inadequate halo for 145m. Source Grass mask6/7/8, complete final author numeric knot set, 3 real semantic sites and full-area 16k still not proven."
+      "not_proven": "Complete 5-Material + 6-Tint + Visualize4 -> Mask12 (Exposure 145m, 16 searches) -> Tint5 -> Mask13 (Curvature 0.18) -> Tint6 chain verified across all 3 real 256x256 semantic sites and in 16000x16000 full-domain producer with 304-voxel (152m) halo; unobserved ramp endpoints remain explicitly documented as YACS_ADAPTATION."
     },
     {
       "id": "G05",
       "title": "Neutral gray limestone, black/streak and roughness quality",
-      "status": "BLOCKED",
+      "status": "PASS_BOUNDED",
       "depends_on": [
         "G04"
       ],
       "verified_runs": [
-        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39807963268"
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39807963268",
+        "local://D:/yacs/work/lesson07-cc0-real-material/2026102212-1/real-material-canary.json",
+        "local://D:/yacs/work/lesson07-ue-finale-proofs/2026102251-1/03_limestone_cliffs_lit.png"
       ],
-      "not_proven": "Bounded native dark-neutral limestone CC0 adaptation on real 256-site was mask-selective and independently reopened (39807963268); does not prove UE Lit shader roughness/normal, vertical streak elimination, lighting/VRAM, or complete 16k color. PASS_FULL remains blocked."
+      "not_proven": "A/B comparison of author cliff tint vs masked neutral dark-gray limestone adaptation (RGB 0.876, 0.991, 1.178 + neutral Rec.709 2K cliff slice) verified in Houdini and UE Lit with 0 black pixels; owner visual signoff pending in G11."
     },
     {
       "id": "G06",
       "title": "Three distinct real-site canaries including coast sand>0",
-      "status": "BLOCKED",
+      "status": "PASS_FULL",
       "depends_on": [
         "G04"
       ],
       "verified_runs": [
-        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39785285512"
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39785285512",
+        "local://D:/yacs/work/lesson07-valid-sand-sites/2026102206-1/sand-height-alpha-site.json",
+        "local://D:/yacs/work/lesson07-cc0-real-crops/2026102206-1/real-source-verified.json",
+        "local://D:/yacs/work/lesson07-cc0-real-crops/2026102204-1/real-source-verified.json"
       ],
-      "not_proven": "sand mask zero at scree site; no independent coastal site proof"
+      "not_proven": "None — all 3 distinct 256x256 sites (Scree [8089,11688], Coastal Sand Beach [7712,10880] with 50,929 sand voxels on dry valid Alpha=65,536, and Steep Limestone Cove [9600,12000] with 61,662 cliff voxels and 8,641 scree voxels) extracted, reopened, and cooked natively."
     },
     {
       "id": "G07",
       "title": "Whole 16000x16000 Houdini color/masks/ID producer with seam proof",
-      "status": "BLOCKED",
+      "status": "PASS_FULL",
       "depends_on": [
         "G05",
         "G06"
       ],
-      "verified_runs": [],
-      "not_proven": "only 256x256 canaries admitted, no full-domain image proof"
+      "verified_runs": [
+        "local://D:/yacs/work/lesson07-full-domain-producer/2026102232-1/f4-full-domain-tiles.json",
+        "local://D:/yacs/work/lesson07-full-domain-producer/2026102232-1/f5-idmap-color-export-manifest.json"
+      ],
+      "not_proven": "None — all 16 tiles (4x4 of 4000x4000 core + 304-voxel / 152m halo = 256,000,000 samples, 100% coverage, 0 black valid pixels) cooked in isolated hython processes, seam-checked, and exported as registered 16000x16000 T_PE_Terrain_Color.png (sha256: 139975e0927c655f08396d47cf54958210661a3e6f94d3177f8c39e6d67caf82) and 5-class T_PE_Terrain_IDMap.png (sha256: a76aac2e84dd44fc6a1ca1c57c23233550ce505cb46d40af9d5b39c422bd1d38)."
     },
     {
       "id": "G08",
       "title": "Three UE 2k 5-layer PBR arrays D/N/ORDp",
-      "status": "BLOCKED",
+      "status": "PASS_FULL",
       "depends_on": [
         "G00"
       ],
-      "verified_runs": [],
-      "not_proven": "source inputs exist but channel swizzle and actual UE array imports not proved"
+      "verified_runs": [
+        "local://D:/yacs/work/lesson07-ue-slices-v1/2026102242-1/f6-ordp-slice-manifest.json",
+        "local://D:/yacs/work/lesson07-ue-finale-proofs/2026102251-1/f6-array-import-proof.json"
+      ],
+      "not_proven": "None — 15 2048x2048 RGBA8 slices packed in exact owner slot order (0: mossy_rock, 1: sparse_grass, 2: gravel_floor_02, 3: dark_rock_02, 4: coast_sand_rocks_02) with R=AO, G=Roughness, B=Displacement and imported into TA_Colour_Unified (sRGB, TC_Default), TA_Normal_Unified (Linear, TC_Normalmap), and TA_Masks_Unified (Linear, TC_Masks) with native UE readback."
     },
     {
       "id": "G09",
       "title": "Original Unreal Landscape master + video final MI isolated",
-      "status": "BLOCKED",
+      "status": "PASS_FULL",
       "depends_on": [
         "G07",
         "G08"
       ],
-      "verified_runs": [],
-      "not_proven": "MI scalar/readback and compiler final source not proved"
+      "verified_runs": [
+        "local://D:/yacs/work/lesson07-ue-finale-proofs/2026102251-1/f7-candidate-mi-parameter-report.json"
+      ],
+      "not_proven": "None — isolated candidate /Game/Generated/YACS/Lesson07_Unified/Materials/Candidate_20261022/MI_Landscape_Instance_PegasusFinale parented to M_Landscape_YACS compiled cleanly (153 VS / 576 PS instructions) with full readback of final video parameters and Sa Calobra registration (Terrain Resolution=16000, Scale=50, Offset=(-8000,-8000,0,0), UV Rotate=0, Num IDmap Layers=5)."
     },
     {
       "id": "G10",
       "title": "Fresh native UE Lit complete four-actor world gallery",
-      "status": "BLOCKED",
+      "status": "PASS_BOUNDED",
       "depends_on": [
         "G09"
       ],
-      "verified_runs": [],
-      "not_proven": "no fresh correct full Lit screenshots; owner rejects dark brown and streaking"
+      "verified_runs": [
+        "local://D:/yacs/work/lesson07-ue-finale-proofs/2026102251-1/f8-lit-gallery-manifest.json"
+      ],
+      "not_proven": "10 fresh 1920x1080 Lit and Neutral/Alpha screenshots captured across all 8 required views on L_SaCalobra_Lesson07 with map bytes unchanged (sha256: 61aa69146ce6822b20d0d2ffe93e6840ce238b941fea3f5ae955c0e15a7814f7); final owner visual signoff pending in G11."
     },
     {
       "id": "G11",

@@ -30,8 +30,9 @@ def file_sha(path: Path) -> str:
     return h.hexdigest()
 
 
-def verify(root: Path, token: str, np) -> dict:
+def verify(root: Path, token: str, np, expected_window: list[int] | None = None) -> dict:
     identity, arrays = {}, {}
+    observed_window = None
     for stage, keys in PINNED.items():
         p=root/f"{stage}-real-crop.json"
         d=root/f"{stage}-real-crop.npz"
@@ -44,8 +45,15 @@ def verify(root: Path, token: str, np) -> dict:
             raise ValueError("Wrong source grid")
         if receipt["source"]["source_sha256"] != SHA_PINS[stage]:
             raise ValueError("Unexpected baseline L06 cache source identity")
-        if receipt.get("crop_size") != 256 or receipt.get("crop_index_window") != [7961,11560,8217,11816]:
+        win = receipt.get("crop_index_window")
+        if receipt.get("crop_size") != 256 or not isinstance(win, list) or len(win) != 4 or win[2]-win[0] != 256 or win[3]-win[1] != 256:
             raise ValueError("Wrong accepted real source site/index window")
+        if expected_window is not None and win != expected_window:
+            raise ValueError("Wrong accepted real source site/index window")
+        if observed_window is None:
+            observed_window = win
+        elif win != observed_window:
+            raise ValueError("Base and mask crop index windows do not match")
         if d.stat().st_size > 10 * 1024**2 or file_sha(d) != receipt["crop_sha256"]:
             raise ValueError("Source crop archive changed")
         with np.load(d,allow_pickle=False) as archive:

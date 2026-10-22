@@ -146,18 +146,18 @@ Każde nowe binarium ma source provenance, SHA-256, manifest plus Git LFS OID (w
 
 | Gate | Obecny stan | Minimalny obowiązkowy dowód |
 |---|---|---|
-| G00 | PASS source only | 45 PBR map hashes, original HDA hash and header |
-| G01 | PASS bounded real crop | stage1+stage2 16k pins and 256² coordinates/voxel samples |
-| G02 | PASS diagnostic; production BLOCKED | actual Stage3 scree source registration + upstream lineage |
-| G03 | PASS with proxy; true scree **UNVERIFIED** | five real 256² materials with actual scree and source-mask hashes |
-| G04 | TODO | full source-like HDA Mask/Tint graph and all known/unknown parms |
-| G05 | TODO | new cliff neutral-grey/no black/roughness/normal A/B proof |
-| G06 | TODO | 3 real semantic sites, incl coast with sand>0 |
-| G07 | TODO | 100% 16000² Houdini producer with 4 Landscape seams and intact base |
-| G08 | TODO | UE D/N/ORD(p) packed 3 arrays, 5×2K, true slices, compression |
-| G09 | TODO | isolated original master/MI candidate and shader compile/readback |
-| G10 | TODO | fresh UE Lit screenshots at real 8 site types and native data |
-| G11 | TODO | separate user-approved final visual review |
+| G00 | PASS_BOUNDED | 45 PBR map hashes, original HDA hash and header |
+| G01 | PASS_BOUNDED | stage1+stage2 16k pins and 256² coordinates/voxel samples |
+| G02 | PASS_DIAGNOSTIC | actual Stage3 scree source registration + ginfo header + Stage4C stream SHA-256 (`6a34c44b24344019fc60e4d8fa17131630da0d9cf1b771493f81bd285e7efbe6`) |
+| G03 | PASS_BOUNDED | five real 256² materials with actual scree, Grass Curl (100/100) and source-mask hashes across 3 sites |
+| G04 | PASS_BOUNDED | full source-like HDA Mask/Tint graph (`Visualize4 -> Mask12 Exposure 145m -> Tint5 -> Mask13 Curvature 0.18 -> Tint6`) |
+| G05 | PASS_BOUNDED | cliff neutral-grey (`0.876, 0.991, 1.178` + neutral Rec.709 2K slice), 0 black pixels, roughness/normal A/B proof |
+| G06 | PASS_FULL | 3 real semantic sites (`[8089,11688]` scree, `[7712,10880]` coastal sand>0 on dry valid Alpha, `[9600,12000]` steep cliff cove) |
+| G07 | PASS_FULL | 100% 16000² Houdini producer (16 tiles of 4000² core + 304-voxel / 152m halo) with 4 Landscape seams and intact base (`2026102232-1`) |
+| G08 | PASS_FULL | UE D/N/ORD(p) (`R=AO, G=Roughness, B=Displacement`) packed 3 arrays, 5×2K (`mossy_rock`, `sparse_grass`, `gravel_floor_02`, `dark_rock_02`, `coast_sand_rocks_02`), true slices, compression (`2026102242-1`, `2026102251-1`) |
+| G09 | PASS_FULL | isolated original master/MI candidate (`MI_Landscape_Instance_PegasusFinale` -> `M_Landscape_YACS`) and shader compile/readback (`2026102251-1`) |
+| G10 | PASS_BOUNDED | fresh UE Lit screenshots at real 8 site types + Neutral/Alpha debug pairs (`2026102251-1`); awaiting G11 owner visual review |
+| G11 | PENDING OWNER REVIEW | separate user-approved final visual review |
 | G12 | DEFERRED AFTER M3 | distinct performance/VRAM/fps gate |
 
 **Nie promować:** G03 do G07, ponieważ pięć HDA gotowych na 256² nie jest 16k. G10 nie jest PASS na podstawie testów CPU/shader compile. Brak source proof = BLOCKED, nie „prawie PASS”.

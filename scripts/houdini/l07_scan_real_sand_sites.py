@@ -150,7 +150,13 @@ def run(hou,alpha_aware=False)->dict:
     chosen=select_diverse(refined)
     alpha_pool=[]
     if alpha_aware:
-        candidates=sorted(original["band_peaks"].values(),
+        dedup_coords={}
+        for item in sorted(original["band_peaks"].values(),
+                           key=lambda x:(-x["max_sample"],x["i"],x["j"],-x["sand_value_band"])):
+            coord_key=(item["i"],item["j"])
+            if coord_key not in dedup_coords:
+                dedup_coords[coord_key]=item
+        candidates=sorted(dedup_coords.values(),
                           key=lambda x:(x["i"],x["j"],x["sand_value_band"]))
         if not 0<len(candidates)<=4*MAX_BUCKETS:
             raise ValueError("Unexpected candidate diversity count")

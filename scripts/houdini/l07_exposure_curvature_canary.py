@@ -81,8 +81,10 @@ def sha(path:Path)->str:
     return h.hexdigest()
 
 
-def source_material()->tuple[Path,dict]:
-    report=json.loads((MATERIAL_ROOT/"real-material-canary.json").read_text(encoding="utf-8"))
+def source_material(material_run:str|None=None)->tuple[Path,dict]:
+    run_id = material_run if material_run is not None else MATERIAL_RUN
+    mat_root = Path("D:/yacs/work/lesson07-cc0-real-material") / run_id
+    report=json.loads((mat_root/"real-material-canary.json").read_text(encoding="utf-8"))
     if report.get("status")!="FIVE_PEGASUS_CC0_REAL_STAGE3_SOURCE_ORDERED_TINTS_BOUNDED_PASS":
         raise ValueError("Only source-ordered five-HDA/four-Tint receipt allowed")
     if report.get("stage3_upstream_lineage_accepted") is not False:
@@ -90,13 +92,15 @@ def source_material()->tuple[Path,dict]:
     if report.get("complete_author_mask_and_tint_graph") is not False:
         raise ValueError("Input unexpectedly claims final whole-graph authority")
     tints=report.get("tint_stages",[])
-    if [t["name"] for t in tints]!=["grass_gradient","grass_brightness","cliff","scree"]:
+    names=[t["name"] for t in tints]
+    if names not in (["grass_gradient","grass_brightness","cliff","scree"],
+                     ["grass_gradient","grass_brightness","cliff","limestone_gray_candidate","scree"]):
         raise ValueError("Different original source tinted-HDA node sequence")
     for t in tints:
         if t.get("height_and_semantic_masks_preserved") is not True:
             raise ValueError("Original tint output changed an accepted mask")
     target=Path(tints[-1]["bgeo"]).resolve()
-    if not target.is_relative_to(MATERIAL_ROOT.resolve()) or not target.is_file():
+    if not target.is_relative_to(mat_root.resolve()) or not target.is_file():
         raise ValueError("Original bounded scree-tint BGEO missing/out of scope")
     if sha(target)!=tints[-1]["bgeo_sha256"]:
         raise ValueError("Source ordered last Tint HDA bytes changed")
@@ -239,14 +243,14 @@ def render_tint(node,source_geometry,baseline,case,output,hou,np):
     }
 
 
-def run(hou,np,output:Path):
+def run(hou,np,output:Path,material_run:str|None=None):
     if hou.isUIAvailable() or tuple(hou.applicationVersion())!=(22,0,466):
         raise ValueError("Requires single fresh headless Houdini 22.0.466")
     if hou.node("/obj").children():
         raise ValueError("Nonempty native scene is not owner-approved")
     if sha(HDA)!=HDA_SHA:
         raise ValueError("Original SideFX tint asset bytes have changed")
-    data,prior_proof=source_material()
+    data,prior_proof=source_material(material_run=material_run)
     hou.hda.installFile(str(HDA),force_use_assets=True)
     output.mkdir(parents=True,exist_ok=False)
     obj=hou.node("/obj").createNode("geo","L07_REAL_EXPOSURE_CURVATURE")
@@ -332,13 +336,16 @@ def run(hou,np,output:Path):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--token",required=True)
+    parser.add_argument("--material-run",default=None,help="Optional upstream real-material run token")
     args=parser.parse_args()
     if not re.fullmatch(r"[0-9]{9,13}-[1-9][0-9]*",args.token):
         raise ValueError("Expected exact workflow run-attempt token")
+    if args.material_run is not None and not re.fullmatch(r"[0-9]{9,13}-[1-9][0-9]*",args.material_run):
+        raise ValueError("Expected exact material run-attempt token")
     import hou
     import numpy as np
     sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
-    result=run(hou,np,SCRATCH/args.token)
+    result=run(hou,np,SCRATCH/args.token,material_run=args.material_run)
     file=SCRATCH/args.token/"exposure-curvature-proof.json"
     file.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print(json.dumps({"status":result["status"],

@@ -114,8 +114,11 @@ def read_crops(folder:Path,np)->tuple[dict,dict]:
 def read_historical_scree_source(source_token: str, scree_token: str, np):
     """Reverify exact Stage3 diagnostic bytes; do not grant upstream authority."""
     sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
-    from scripts.houdini.verify_l07_scree_crop import verify as verify_scree
-    diagnostic=verify_scree(CROP_ROOT/scree_token,CROP_ROOT/source_token,np)
+    from scripts.houdini.verify_l07_scree_crop import verify as verify_scree, CANONICAL_SOURCE_TOKEN
+    if source_token == CANONICAL_SOURCE_TOKEN:
+        diagnostic=verify_scree(CROP_ROOT/scree_token,CROP_ROOT/source_token,np)
+    else:
+        diagnostic=verify_scree(CROP_ROOT/scree_token,CROP_ROOT/source_token,np,base_token=source_token)
     if not diagnostic.get("site_has_scree") or diagnostic.get("scree_nonzero",0)<=0:
         raise ValueError("Source scree mask is empty at the chosen real Sa Calobra site")
     if diagnostic.get("source_stage3_upstream_lineage_accepted") is not False:
@@ -291,7 +294,7 @@ def restore_scratch_height(cooked,source_arrays,protected,hou,np,role):
              "canonical_16k_terrain_changed":False}
 
 
-def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:str|None=None,interleaved_tints=False)->dict:
+def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:str|None=None,interleaved_tints=False,grass_curl=False,neutral_cliff_grade=False)->dict:
     if hou.isUIAvailable() or tuple(hou.applicationVersion())!=(22,0,466):
         raise ValueError("Only fresh headless Houdini 22.0.466 is supported")
     if hou.node("/obj").children():
@@ -358,12 +361,21 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:
                 raise ValueError("Not the pinned original SideFX HDA")
             material.setInput(0,previous)
             material.setInput(1,mask_node)
+            use_role_curl = bool(grass_curl and role=="grass")
             params={
                 **material_files[role],
                 "size":size,"heightscale":0.0,"use_mask":int(use_mask),
                 "srcname1":"mask","input2":"2",
-                "use_distort":0,  # Diagnostic only; Grass author's Curl is not recreated here
+                "use_distort":1 if use_role_curl else 0,
             }
+            if use_role_curl:
+                params.update({
+                    "noisetype":"curl",
+                    "amp":100.0,
+                    "element_size":100.0,
+                    "element_scalex":1.0,"element_scaley":1.0,"element_scalez":1.0,
+                    "offsetx":0.0,"offsety":0.0,"offsetz":0.0,
+                })
             material.setParms(params)
             material.cook(force=True)
             if material.errors():
@@ -399,7 +411,8 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:
                 "mask_source":("HISTORICAL_STAGE3_GEOREGISTERED_UPSTREAM_UNVERIFIED" if role=="scree" and scree_token
                     else "STAGE2_ACCEPTED" if role not in ("rock","scree")
                     else "UNMASKED" if role=="rock" else "DIAGNOSTIC_CLIFF_PROXY_NOT_SCREE_STAGE3"),
-                "heightscale_canary_override":0,"distortion_disabled_in_canary":True,
+                "heightscale_canary_override":0,"distortion_disabled_in_canary":not use_role_curl,
+                "grass_curl_enabled":use_role_curl,
                 "native_height_rounding":height_rounding,
                 "size":size,"material_warnings":list(material.warnings()),
                 "rgb_min":float(rgb.min()),"rgb_max":float(rgb.max()),
@@ -416,9 +429,15 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:
             previous.parm("file").set(str(cache))
             if interleaved_tints:
                 source_for_tint=cache
-                for tint_name,tint_mask,tint_kind in INTERLEAVED_SOURCE_TINT_AFTER_ROLE.get(role,()):
+                role_tints = list(INTERLEAVED_SOURCE_TINT_AFTER_ROLE.get(role,()))
+                if role=="cliff" and neutral_cliff_grade:
+                    role_tints.append(("limestone_gray_candidate","cliff_mask","grade_cliff"))
+                for tint_name,tint_mask,tint_kind in role_tints:
                     outcome=native_tint_case(
-                        geo_obj,tint_name,role,tint_mask,tint_kind,source_for_tint,output,np,hou)
+                        geo_obj,tint_name,role,tint_mask,tint_kind,source_for_tint,output,np,hou,
+                        scree_crop_dir=CROP_ROOT/scree_token if scree_token else None,
+                        base_crop_dir=crop_path,
+                        base_token=token)
                     if outcome["height_and_semantic_masks_preserved"] is not True:
                         raise ValueError("Interleaved source tint changed canonical height/Alpha/masks")
                     tint_results.append(outcome)
@@ -431,6 +450,8 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:
                 "FIVE_PEGASUS_CC0_REAL_STAGE3_DIAGNOSTIC_PASSED_NOT_PRODUCTION"
                 if scree_token else "FIVE_PEGASUS_CC0_HDA_REAL_SITE_MECHANISM_PASSED_NOT_PRODUCTION"),
             "source_tints_interleaved_in_author_order":bool(interleaved_tints),
+            "grass_curl_author_settings_enabled":bool(grass_curl),
+            "neutral_cliff_grade_yacs_adaptation_enabled":bool(neutral_cliff_grade),
             "complete_author_mask_and_tint_graph":False,
             "tint_stages":tint_results,
             "historical_real_stage3_diagnostic":real_scree_diagnostic,
@@ -469,6 +490,10 @@ def main():
     p.add_argument("--scree-token",default=None,help="Read-only verified historical Stage3 crop token; not production authority")
     p.add_argument("--interleaved-tints",action="store_true",
                    help="Run 4 original Tint HDAs interleaved after Grass/Cliff/Scree, diagnostic only")
+    p.add_argument("--grass-curl",action="store_true",
+                   help="Enable author Curl distortion (Amp 100, Element Size 100) on Grass material")
+    p.add_argument("--neutral-cliff-grade",action="store_true",
+                   help="Enable optional YACS_ADAPTATION neutral dark-gray cliff tint after author cliff tint")
     args=p.parse_args()
     for t in (args.source_token,args.run_token,*([args.scree_token] if args.scree_token else [])):
         if not re.fullmatch(r"[0-9]{9,13}-[1-9][0-9]*",t):
@@ -480,7 +505,7 @@ def main():
     import hou
     import numpy as np
     output=OUTPUT_ROOT/args.run_token
-    result=run(hou,np,CROP_ROOT/args.source_token,SOURCE_ROOT,output,args.source_token,args.scree_token,args.interleaved_tints)
+    result=run(hou,np,CROP_ROOT/args.source_token,SOURCE_ROOT,output,args.source_token,args.scree_token,args.interleaved_tints,grass_curl=args.grass_curl,neutral_cliff_grade=args.neutral_cliff_grade)
     report=output/"real-material-canary.json"
     report.write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")
     print(json.dumps({"status":result["status"],"source":result["source_token"],

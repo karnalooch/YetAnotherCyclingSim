@@ -114,7 +114,23 @@ function Assert-L07FailedTaskData(
         if ($PriorSession[$field] -isnot [bool] -or $PriorSession[$field] -ne $false) { Stop-L07Install 'MIGRATION_FAILED_SESSION' }
     }
 }
-function Get-L07PriorTaskPin([ValidateSet('CLOSED_602','CLOSED_DE903','INTERRUPTED_007')][string]$Kind='CLOSED_602') {
+function Get-L07PriorTaskPin([ValidateSet('CLOSED_602','CLOSED_DE903','INTERRUPTED_007','CLOSED_2F543')][string]$Kind='CLOSED_602') {
+    if ($Kind -ceq 'CLOSED_2F543') {
+        return @{
+            source_sha='2f543eaa0f74c1683edee86dccbfe2dc4bffe48b';run_token='39744804663-1'
+            last_task_result=0;session_status='EDITOR_EXITED_NO_AUTORESTART'
+            installation_bytes=930;installation_sha256='5922dbd9522c7985cd3f2b55a37a5c9f0d783d26633e3d895f688f5c71cf6548'
+            session_bytes=6733;session_sha256='db9acbee534c96ddfb640cebc8a4b5d885deeb8daf8a5583d6b0835925b04d9d'
+            checked_at_utc='2026-10-22T17:05:56.2022131Z'
+            editor_pid=36184;editor_start_filetime_utc='134371303194962215';interactive_session_id=2
+            files=@{
+                'scripts/ue/Install-YacsLesson07RemoteEditor.ps1'=@{bytes=35521;sha256='50697feb9cc3bf53a7f51b8a2d1800a10243ab283f0c251a63b66627f225246e'}
+                'scripts/ue/Start-YacsLesson07RemoteEditor.ps1'=@{bytes=23002;sha256='8b83bf5582ee5e88a76339545fd678ca46ecc65d2df444b4e77e47273cbc9005'}
+                'scripts/runner/Get-YacsUnrealHostState.ps1'=@{bytes=3374;sha256='73506d6f1707faa33c97797f6e57d1d22e381eb72787377c3bdbb66fe0d2c346'}
+                'scripts/live_host/Assert-YacsLiveTaskPrincipal.ps1'=@{bytes=2304;sha256='2bd54cda4f1a1aa3ca3af3d3a94d7013317bfe570910701fc7c17d946d0af0b2'}
+            }
+        }
+    }
     if ($Kind -ceq 'INTERRUPTED_007') {
         # Diagnostic run 39743797257/job 119707179718 observed an idle host and
         # this exact interrupted supervisor. Its stale receipt is not clean exit.
@@ -174,7 +190,7 @@ function Get-L07KnownTaskMigrationKind([object]$Task) {
     $action=$Task.Actions[0]
     if ($action.Execute -isnot [string] -or $action.Execute -ine 'D:\yacs\tools\powershell-7.6.6-win-x64\pwsh.exe' -or
         $action.Arguments -isnot [string] -or $action.WorkingDirectory -isnot [string]) { Stop-L07Install 'MIGRATION_TASK_DEFINITION' }
-    foreach ($kind in @('FAILED_457','CLOSED_602','CLOSED_DE903','INTERRUPTED_007')) {
+    foreach ($kind in @('FAILED_457','CLOSED_602','CLOSED_DE903','INTERRUPTED_007','CLOSED_2F543')) {
         $pin=if ($kind -ceq 'FAILED_457') { Get-L07FailedTaskPin } else { Get-L07PriorTaskPin -Kind $kind }
         $priorRelease='D:\yacs\lesson07-remote\releases\'+$pin.source_sha
         $priorScript=if ($IsWindows) { Join-Path $priorRelease 'scripts/ue/Start-YacsLesson07RemoteEditor.ps1' }
@@ -190,7 +206,7 @@ function Assert-L07PriorTaskData(
     [string]$SessionSha256, [long]$SessionBytes,
     [string]$ResolvedTaskSid, [string]$ExpectedSid, [string]$HostStatus,
     [DateTime]$NowUtc=[DateTime]::UtcNow,
-    [ValidateSet('CLOSED_602','CLOSED_DE903','INTERRUPTED_007')][string]$Kind='CLOSED_602'
+    [ValidateSet('CLOSED_602','CLOSED_DE903','INTERRUPTED_007','CLOSED_2F543')][string]$Kind='CLOSED_602'
 ) {
     $pin=Get-L07PriorTaskPin -Kind $Kind
     if ($HostStatus -cne 'IDLE' -or $Task.State -is [Array] -or [string]$Task.State -cne 'Ready' -or
@@ -272,7 +288,7 @@ function Get-L07FailedTaskMigration([object]$Task, [string]$ExpectedSid) {
     return [ordered]@{prior_source_sha=$pin.source_sha;prior_session_sha256=$priorSession.sha256;prior_release_retained=$true;prior_state_retained=$true;owner_sid_matches=$true;prior_task_result=1}
 }
 function Get-L07PriorTaskMigration([object]$Task, [string]$ExpectedSid,
-    [ValidateSet('CLOSED_602','CLOSED_DE903','INTERRUPTED_007')][string]$Kind='CLOSED_602') {
+    [ValidateSet('CLOSED_602','CLOSED_DE903','INTERRUPTED_007','CLOSED_2F543')][string]$Kind='CLOSED_602') {
     $pin=Get-L07PriorTaskPin -Kind $Kind
     $priorRelease=Join-Path $root ('releases\'+$pin.source_sha)
     $priorInstall=Read-L07MigrationJson (Join-Path $priorRelease 'installation.json')
@@ -299,7 +315,7 @@ function Get-L07PriorTaskMigration([object]$Task, [string]$ExpectedSid,
 function Get-L07KnownTaskMigration([object]$Task, [string]$ExpectedSid) {
     $kind=Get-L07KnownTaskMigrationKind $Task
     if ($kind -ceq 'FAILED_457') { return Get-L07FailedTaskMigration -Task $Task -ExpectedSid $ExpectedSid }
-    if ($kind -cin @('CLOSED_602','CLOSED_DE903','INTERRUPTED_007')) { return Get-L07PriorTaskMigration -Kind $kind -Task $Task -ExpectedSid $ExpectedSid }
+    if ($kind -cin @('CLOSED_602','CLOSED_DE903','INTERRUPTED_007','CLOSED_2F543')) { return Get-L07PriorTaskMigration -Kind $kind -Task $Task -ExpectedSid $ExpectedSid }
     Stop-L07Install 'MIGRATION_TASK_DEFINITION'
 }
 function Copy-L07SessionFailure([Collections.IDictionary]$Session, [Collections.IDictionary]$Target) {

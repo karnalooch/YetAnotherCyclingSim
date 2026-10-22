@@ -102,7 +102,7 @@ class ExposureCurvatureContract(unittest.TestCase):
         self.assertEqual(x.HDA_SHA,
                          "93cc47dd511bc3d5868835b5dd3b9082c13cab23355b688aaf2a947e8687a2ed")
         self.assertEqual(x.MATERIAL_RUN,"39808914161-1")
-        self.assertTrue(str(x.SCRATCH).startswith("D:/yacs/work/"))
+        self.assertTrue(x.SCRATCH.as_posix().startswith("D:/yacs/work/"))
 
 
 if __name__=="__main__":

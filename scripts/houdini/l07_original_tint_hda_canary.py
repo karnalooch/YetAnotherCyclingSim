@@ -87,7 +87,7 @@ def source_for_case(case: str, report: dict, output: Path)->Path:
     return Path(next(s for s in report["stages"] if s["role"]==role)["output_path"])
 
 
-def make_mask_source(geo, semantic_name: str | None, np, hou) -> tuple[object,int]:
+def make_mask_source(geo, semantic_name: str | None, np, hou, scree_crop_dir: Path | None = None, base_crop_dir: Path | None = None, base_token: str | None = None) -> tuple[object,int]:
     if semantic_name is None:
         # Brightness has Mask="" per author: its second port does not gate tint.
         return hou.Geometry(geo), 65536
@@ -95,10 +95,14 @@ def make_mask_source(geo, semantic_name: str | None, np, hou) -> tuple[object,in
     original=volume_by_name(geo,hou)
     if semantic_name=="scree_mask":
         from scripts.houdini.verify_l07_scree_crop import verify as verify_scree
-        report=verify_scree(SCREE_CROP,BASE_CROP,np)
-        if report["scree_nonzero"]!=8619 or report["production_scree_mask_admitted"] is not False:
+        eff_scree = scree_crop_dir if scree_crop_dir is not None else SCREE_CROP
+        eff_base = base_crop_dir if base_crop_dir is not None else BASE_CROP
+        report=verify_scree(eff_scree,eff_base,np,base_token=base_token)
+        if report["scree_nonzero"]<=0 or report["production_scree_mask_admitted"] is not False:
             raise ValueError("True scree source counts or diagnostic authority changed")
-        with np.load(SCREE_CROP/"scree-real-crop.npz",allow_pickle=False) as bundle:
+        if scree_crop_dir is None and report["scree_nonzero"]!=8619:
+            raise ValueError("True scree source counts or diagnostic authority changed")
+        with np.load(eff_scree/"scree-real-crop.npz",allow_pickle=False) as bundle:
             samples=np.array(bundle["scree_mask"],dtype="<f4",copy=True)
     else:
         if semantic_name not in ("ramp_layer","cliff_mask"):
@@ -174,7 +178,7 @@ def preserve_generic_working_mask_in_scratch(cooked,source,hou,np,role):
     return clone,numbers
 
 
-def native_case(obj,case,role,mask_name,kind,source_file,output,np,hou) -> dict:
+def native_case(obj,case,role,mask_name,kind,source_file,output,np,hou,scree_crop_dir:Path|None=None,base_crop_dir:Path|None=None,base_token:str|None=None) -> dict:
     from scripts.houdini.l07_real_material_canary import (
         restore_scratch_height,source_layer_hashes,volume_by_name,save_png
     )
@@ -186,7 +190,7 @@ def native_case(obj,case,role,mask_name,kind,source_file,output,np,hou) -> dict:
     original_height=np.frombuffer(volume_by_name(loaded,hou)["height"].allVoxelsAsString(),dtype="<f4").reshape((256,256)).copy()
     input_source=obj.createNode("file","IN_"+case.upper())
     input_source.parm("file").set(str(source_file))
-    mask_geometry,count=make_mask_source(loaded,mask_name,np,hou)
+    mask_geometry,count=make_mask_source(loaded,mask_name,np,hou,scree_crop_dir=scree_crop_dir,base_crop_dir=base_crop_dir,base_token=base_token)
     mask_path=output/("tint-"+case+"-mask.bgeo.sc")
     mask_geometry.saveToFile(str(mask_path))
     if mask_path.stat().st_size>MAX_BGEO_BYTES:

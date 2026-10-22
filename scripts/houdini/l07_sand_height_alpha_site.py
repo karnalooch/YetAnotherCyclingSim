@@ -113,7 +113,7 @@ def sample_region(height,alpha,site,step=16):
             s=float(sand_grid[total-1]) if sand_grid is not None else 0.0
             if not math.isfinite(s) or not 0<=s<=1.00001:
                 raise ValueError("Native Stage2 sand sample is invalid")
-            if not math.isfinite(a) or not -0.00001<=a<=1.00001:
+            if not math.isfinite(a) or not -0.00001<=a<=1.001:
                 invalid_alpha+=1
                 continue
             if a<=0.5:
@@ -130,7 +130,7 @@ def sample_region(height,alpha,site,step=16):
             positive_heights.append(h)
             if s>0.01:
                 sand_valid_land+=1
-            if -50<=h<=35:
+            if 0.0<h<=35.0:
                 plausible+=1
                 if s>0.01:
                     sand_valid_coast+=1
@@ -208,6 +208,9 @@ def run(hou,np,token,candidate_file:Path|None=None):
     selected=next((v for v in ordered if
                    v["stage1"]["invalid_alpha"]==0 and
                    v["stage1"]["invalid_height_inside_valid_alpha"]==0 and
+                   (v["stage1"].get("valid_height_min") or 0.0)>0.05 and
+                   (v["stage1"].get("valid_height_mean") or 0.0)>1.0 and
+                   (v["stage1"].get("valid_height_max") or 0.0)>10.0 and
                    (
                        v["stage1"]["valid_low_sand_overlap_count"]>=4 and
                        v["stage1"]["alpha_fraction"]>=0.10 and

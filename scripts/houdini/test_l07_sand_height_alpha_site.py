@@ -32,6 +32,13 @@ class HeightAlphaSiteContract(unittest.TestCase):
         self.assertEqual(data["valid_low_elevation_fraction"],1.0)
         self.assertEqual(data["valid_height_mean"],12.5)
 
+    def test_stage1_actual_scaled_alpha_value_is_accepted(self):
+        site={"i":2528,"j":8160,"refined":{"alpha_joint_grid16":[0.85]*256}}
+        data=m.sample_region(ExampleVolume(12.5),ExampleVolume(1.0001100301742554),site)
+        self.assertEqual(data["invalid_alpha"],0)
+        self.assertEqual(data["alpha_valid"],256)
+        self.assertEqual(data["valid_low_sand_overlap_count"],256)
+
     def test_outside_alpha_is_not_a_valid_real_source(self):
         data=m.sample_region(ExampleVolume(12.5),ExampleVolume(0.0),{"i":2528,"j":8160})
         self.assertEqual(data["alpha_valid"],0)
@@ -48,6 +55,11 @@ class HeightAlphaSiteContract(unittest.TestCase):
 
     def test_high_elevation_does_not_count_as_coastal_height(self):
         data=m.sample_region(ExampleVolume(370),ExampleVolume(1),{"i":2528,"j":8160})
+        self.assertEqual(data["alpha_fraction"],1)
+        self.assertEqual(data["valid_low_elevation_fraction"],0)
+
+    def test_sub_zero_sea_level_does_not_count_as_coastal_land_height(self):
+        data=m.sample_region(ExampleVolume(-0.3),ExampleVolume(1),{"i":2528,"j":8160})
         self.assertEqual(data["alpha_fraction"],1)
         self.assertEqual(data["valid_low_elevation_fraction"],0)
 

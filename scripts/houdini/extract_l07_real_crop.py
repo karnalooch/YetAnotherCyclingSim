@@ -93,10 +93,10 @@ def require_memory() -> dict:
     return state
 
 
-def check_lattice(volume, hou) -> tuple[int,int,int,int]:
+def check_lattice(volume, hou, center_ij: tuple[int, int] | None = None) -> tuple[int,int,int,int]:
     if not isinstance(volume, hou.Volume) or tuple(volume.resolution()) != GRID:
         raise ValueError("Unexpected native volume type/size")
-    center = tuple(int(v) for v in volume.posToIndex(SITE_WORLD))
+    center = (center_ij[0], center_ij[1], 0) if center_ij is not None else tuple(int(v) for v in volume.posToIndex(SITE_WORLD))
     window = compute_window(center)
     first = tuple(float(v) for v in volume.indexToPos((window[0], window[1], 0)))
     last = tuple(float(v) for v in volume.indexToPos((window[2] - 1, window[3] - 1, 0)))
@@ -105,9 +105,10 @@ def check_lattice(volume, hou) -> tuple[int,int,int,int]:
         raise ValueError("Source origin/rotation differs from accepted Sa Calobra")
     if abs(last[0]-first[0]) < 127.0 or abs(last[2]-first[2]) < 127.0:
         raise ValueError("Crop voxel scale does not match accepted 0.5m lattice")
-    if any(abs(v-target) > 1.0 for v,target in zip(first,(-19.35,0.0,-1780.25))):
-        # Bounded geographic sanity: from observed scree-site and 0.5m grid.
-        raise ValueError(f"Unexpected scree-site geographic mapping: {first}")
+    expected_first = (-3999.75 + window[0] * 0.5, 0.0, 3999.75 - window[1] * 0.5) if center_ij is not None else (-19.35, 0.0, -1780.25)
+    if any(abs(v-target) > 1.0 for v,target in zip(first, expected_first)):
+        # Bounded geographic sanity: from observed site and 0.5m grid.
+        raise ValueError(f"Unexpected site geographic mapping: {first}")
     return window
 
 
@@ -123,7 +124,7 @@ def read_crop(primitive, window, np):
     return pixels
 
 
-def run(stage: str, token: str, hou, np, output: Path) -> dict:
+def run(stage: str, token: str, hou, np, output: Path, center_ij: tuple[int, int] | None = None) -> dict:
     if hou.isUIAvailable() or tuple(hou.applicationVersion()) != (22, 0, 466):
         raise ValueError("Fresh headless Houdini 22.0.466 required")
     if hou.node("/obj").children():
@@ -139,12 +140,14 @@ def run(stage: str, token: str, hou, np, output: Path) -> dict:
            for primitive in geo.prims() if isinstance(primitive, hou.Volume)}
     if set(raw) != set(spec["layers"]):
         raise ValueError(f"Unexpected cached native layer names: {sorted(raw)}")
-    window = check_lattice(raw[spec["layers"][0]], hou)
+    first_vol = raw[spec["layers"][0]]
+    window = check_lattice(first_vol, hou, center_ij=center_ij)
+    site_xyz = list(map(float, first_vol.indexToPos((center_ij[0], center_ij[1], 0)))) if center_ij is not None else list(SITE_WORLD)
     arrays = {}
     lattice = {}
     for layer in spec["layers"]:
         volume = raw[layer]
-        if check_lattice(volume, hou) != window:
+        if check_lattice(volume, hou, center_ij=center_ij) != window:
             raise ValueError(f"{layer} has different geographic mapping")
         cropped = read_crop(volume, window, np)
         arrays[layer] = cropped
@@ -174,7 +177,7 @@ def run(stage: str, token: str, hou, np, output: Path) -> dict:
                    else "REAL_ACCEPTED_L06_SOURCE_CROP_REOPEN_REQUIRED"),
         "stage": stage, "run_token": token, "source": before_identity,
         "original_16000_grid": list(GRID), "crop_size": CROP,
-        "crop_index_window": list(window), "source_site_xyz": list(SITE_WORLD),
+        "crop_index_window": list(window), "source_site_xyz": site_xyz,
         "layer_metadata": lattice, "crop_path": str(destination),
         "crop_bytes": destination.stat().st_size, "crop_sha256": sha256(destination),
         "producer_upstream_lineage_verified": False if stage == "scree" else None,
@@ -194,6 +197,8 @@ def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--stage", choices=tuple(BASE_AND_MASKS), required=True)
     ap.add_argument("--token", required=True)
+    ap.add_argument("--center-ij", nargs=2, type=int, default=None,
+                    help="Optional explicit (i, j) voxel center on 16000x16000 grid")
     args=ap.parse_args()
     if not re.fullmatch(r"[0-9]{9,13}-[1-9][0-9]*", args.token):
         raise ValueError("Expected GitHub run-attempt token")
@@ -202,7 +207,8 @@ def main():
     import hou
     import numpy as np
     output = OUTPUT_ROOT / args.token
-    result=run(args.stage,args.token,hou,np,output)
+    center_ij = tuple(args.center_ij) if args.center_ij is not None else None
+    result=run(args.stage,args.token,hou,np,output,center_ij=center_ij)
     print(json.dumps({"status":result["status"],"stage":args.stage,"sha256":result["crop_sha256"],
         "layer_counts":{k:v["nonzero"] for k,v in result["layer_metadata"].items()},
         "crop_file":result["crop_path"],"elapsed_sec":result["elapsed_sec"]}),flush=True)

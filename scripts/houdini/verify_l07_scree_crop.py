@@ -28,7 +28,7 @@ def sha256(path: Path)->str:
     return h.hexdigest()
 
 
-def validate_provenance(report:dict, baseline:dict)->dict:
+def validate_provenance(report:dict, baseline:dict, expected_window:list[int]|None=EXPECTED_WINDOW)->dict:
     if report.get("status") != "HISTORICAL_STAGE3_SCREE_CROP_DIAGNOSTIC_NOT_ACCEPTED":
         raise ValueError("Stage3 was not prepared in diagnostic-only mode")
     if report.get("stage") != "scree":
@@ -39,7 +39,8 @@ def validate_provenance(report:dict, baseline:dict)->dict:
         raise ValueError("Stage3 size differs from native audit")
     if report.get("original_16000_grid") != [16000,16000,1]:
         raise ValueError("Unexpected full resolution")
-    if report.get("crop_size") != 256 or report.get("crop_index_window") != EXPECTED_WINDOW:
+    win = report.get("crop_index_window")
+    if report.get("crop_size") != 256 or (expected_window is not None and win != expected_window):
         raise ValueError("Native sample differs from pinned Sa Calobra site")
     if report.get("historical_scree_authority_admitted") is not False:
         raise ValueError("Historical scree authority may not be promoted")
@@ -52,7 +53,7 @@ def validate_provenance(report:dict, baseline:dict)->dict:
         raise ValueError("Missing native scree mask layer")
     if not re.fullmatch(r"[0-9a-f]{64}",str(scree.get("sha256_float32_le",""))):
         raise ValueError("Incomplete scree voxel receipt")
-    if report["crop_index_window"] != EXPECTED_WINDOW:
+    if expected_window is not None and report["crop_index_window"] != expected_window:
         raise ValueError("Unexpected geographic window")
     if baseline.get("status") != "REAL_SOURCE_CROPS_VERIFIED_NO_MATERIAL_COOK":
         raise ValueError("Canonical Stage1/Stage2 source windows are not accepted")
@@ -70,14 +71,16 @@ def validate_provenance(report:dict, baseline:dict)->dict:
     return scree
 
 
-def verify(stage_dir:Path,base_dir:Path,np)->dict:
+def verify(stage_dir:Path,base_dir:Path,np,base_token:str|None=None)->dict:
     sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
     from scripts.houdini.verify_l07_real_crop import verify as verify_base
-    source=verify_base(base_dir,CANONICAL_SOURCE_TOKEN,np)
+    effective_base_token = base_token if base_token is not None else CANONICAL_SOURCE_TOKEN
+    source=verify_base(base_dir,effective_base_token,np)
     report_path=stage_dir/"scree-real-crop.json"
     crop_path=stage_dir/"scree-real-crop.npz"
     report=json.loads(report_path.read_text(encoding="utf-8"))
-    scree=validate_provenance(report,source)
+    exp_win = EXPECTED_WINDOW if base_token is None else report.get("crop_index_window")
+    scree=validate_provenance(report,source,expected_window=exp_win)
     if crop_path.stat().st_size>4*1024*1024 or sha256(crop_path)!=report["crop_sha256"]:
         raise ValueError("Stage3 extracted source file differs from native receipt")
     with np.load(crop_path,allow_pickle=False) as bundle:
@@ -98,8 +101,8 @@ def verify(stage_dir:Path,base_dir:Path,np)->dict:
         "source_cache_sha256":EXPECTED_SHA,"crop_sha256":report["crop_sha256"],
         "scree_nonzero":n,"scree_min":mn,"scree_max":mx,
         "site_has_scree":n>0,
-        "cropped_source_path":str(crop_path),"canonical_stage1_stage2_run":CANONICAL_SOURCE_TOKEN,
-        "native_window":EXPECTED_WINDOW,
+        "cropped_source_path":str(crop_path),"canonical_stage1_stage2_run":effective_base_token,
+        "native_window":report.get("crop_index_window",EXPECTED_WINDOW),
         "canonical_height_and_masks_untouched":True,
         "source_stage3_upstream_lineage_accepted":False,
         "production_scree_mask_admitted":False,
@@ -109,14 +112,18 @@ def verify(stage_dir:Path,base_dir:Path,np)->dict:
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-token",required=True)
+    parser.add_argument("--base-token",default=None)
     args=parser.parse_args()
     if not re.fullmatch(r"[0-9]{9,13}-[1-9][0-9]*",args.run_token):
         raise ValueError("Expected immutable GitHub run-attempt ID")
+    if args.base_token is not None and not re.fullmatch(r"[0-9]{9,13}-[1-9][0-9]*",args.base_token):
+        raise ValueError("Expected immutable GitHub base run-attempt ID")
     if os.name=="nt" and not str(ROOT).lower().replace("/","\\").startswith("d:\\yacs\\work\\"):
         raise ValueError("Wrong isolation directory")
     import numpy as np
     target=ROOT/args.run_token
-    report=verify(target,ROOT/CANONICAL_SOURCE_TOKEN,np)
+    base_dir=ROOT/(args.base_token if args.base_token else CANONICAL_SOURCE_TOKEN)
+    report=verify(target,base_dir,np,base_token=args.base_token)
     output=target/"scree-diagnostic-verified.json"
     if output.exists():
         raise ValueError("Previous source proof exists; no overwriting")

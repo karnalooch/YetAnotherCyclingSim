@@ -19,6 +19,7 @@ OUT=Path("D:/yacs/work/lesson07-cc0-scree-audit")
 GINFO=Path("D:/yacs/tools/houdini-22.0.466/bin/ginfo.exe")
 GINFO_SHA="be4c5d9d9753483596d7eb9664dab27fc816d0ba912597d78a6ce9061689d31d"
 MAX_SIZE=2*1024**3
+STAGE4C_MAX_SIZE=8*1024**3
 
 
 def signature(path,limit):
@@ -26,8 +27,6 @@ def signature(path,limit):
         return {"exists":False}
     before=path.stat()
     if not 0<before.st_size<=limit:
-        # Historical 4.3-GB cliff output is not needed to inspect the separate
-        # Stage3 scree mask. Retain its metadata, but NEVER mark it hash-pinned.
         return {"exists":True,"bytes":before.st_size,"sha256":None,
                 "modified_ns":before.st_mtime_ns,"hash_skipped_size_limit":limit}
     h=hashlib.sha256()
@@ -41,12 +40,13 @@ def signature(path,limit):
             "modified_ns":before.st_mtime_ns}
 
 
-def inventory():
+def inventory(hash_large=True):
     data={}
     for label in ("stage3_scree","stage4c_cliff"):
         cache=ROOT/(label+".bgeo.sc")
         receipt=ROOT/(label+".json")
-        meta=signature(cache,MAX_SIZE)
+        limit=STAGE4C_MAX_SIZE if (label=="stage4c_cliff" and hash_large) else MAX_SIZE
+        meta=signature(cache,limit)
         receipt_state=signature(receipt,16*1024)
         if not receipt_state["exists"]:
             data[label]={"cache":meta,"receipt":receipt_state,"producer_claim_matches_bytes":False}
