@@ -12,6 +12,7 @@ on:
       - scripts/houdini/extract_l07_real_crop.py
       - scripts/houdini/test_extract_l07_real_crop.py
       - scripts/houdini/verify_l07_real_crop.py
+      - scripts/houdini/audit_l07_mask_cache.py
 
 permissions:
   contents: read
@@ -118,4 +119,51 @@ jobs:
             D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/real-source-verified.json
           if-no-files-found: warn
           compression-level: 0
+          retention-days: 30
+
+
+  mask_source_audit:
+    name: Read-only producer/source hash audit for changed Stage2 masks
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-mask-audit]')
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 12
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout only bound read-only auditing sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Check source SHA and audit Stage2 bytes without any mutation
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong source commit.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned audit Python unavailable.' }
+          & $python -B scripts/houdini/audit_l07_mask_cache.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Read-only mask cache/source audit failed.' }
+      - name: Retain identity comparison, not original source bytes
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-cc0-stage2-mask-lineage-${{ github.run_id }}-${{ github.run_attempt }}
+          path: D:/yacs/work/lesson07-cc0-mask-audits/${{ github.run_id }}-${{ github.run_attempt }}/mask-source-audit.json
+          if-no-files-found: warn
           retention-days: 30
