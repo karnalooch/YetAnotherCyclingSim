@@ -7,6 +7,10 @@
 
 **Immediate owner priority, reaffirmed 2026-10-20:** finish Pegasus lessons 06 and 07. Houdini leads; Material Forge, Blender and Unreal Engine complement its workflow. Preserve the accepted L06 source/cache, complete the L07 material and transfer, and verify the actual UE consumer's heights, validity/visibility, seams, collision and saved/reopened state. See the current [L07 audit](LESSON07_MATERIAL_SETUP.md) for the remaining gaps; a supporting tool's build or render alone does not close the lesson.
 
+## Pegasus Lesson07 — aktywny plan domknięcia (2026-10-22)
+
+Dla #365 / M3 istniejący **[plan wykonawczy finalnych materiałów PEG-02-07](PEGASUS_L07_FINALE_20261022.md)** oraz **[maszynowa macierz faz i bramek PASS/FAIL](PEGASUS_L07_GATES_20261022.json)** prowadzą wykonanie na istniejącym Draft PR #474. Użytkownik dopuścił osiem zamiennych źródeł Poly Haven CC0 przy zachowaniu metod Houdiniego z SideFX; dla tego **konkretnego** zadania wymaga sprawdzenia całego 16000×16000 / 8×8 km Landscape Sa Calobra, nie tylko reprezentatywnego wycinka. Ukończenie obejmuje wierną kolejność grafu tintów, prawdziwe maski, końcowe UE Texture Arrays/MI i świeże zdjęcia Lit z całego świata. Dokładny stan mierzony jest zakresem natywnych dowodów, a nie zielonym statusem testu na 256². Nie oznaczać ukończenia Lesson07 ani M3 performance bez odpowiednich bramek.
+
 ## Owner decision and precedence
 
 Houdini is the **primary executor for procedural world authoring**, including Landscape, roads, cliffs and later environment assets. Original SideFX tutorial projects, HDAs and their demonstrated workflows are the implementation starting point. Unreal consumes the outputs and provides the supported runtime/material/editor integration demonstrated by the selected recipe. This does not replace route, physics or geographic data authority with a DCC tool.
