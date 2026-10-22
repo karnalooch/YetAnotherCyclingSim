@@ -55,9 +55,11 @@ def describe(node)->dict:
             "default_evaluation":value,
             "expression":str(parm.expression())[:140] if parm.isTimeDependent() else None,
         })
+    native_labels=getattr(node,"inputLabels",None)
+    labels=list(native_labels()) if callable(native_labels) else []
     result={
         "node_type":node.type().name(),
-        "input_labels":list(node.type().inputLabels()),
+        "input_labels":labels,
         "min_inputs":node.type().minNumInputs(),
         "max_inputs":node.type().maxNumInputs(),
         "parameters":output,
