@@ -61,6 +61,12 @@ flowchart TB
 
 ## Current focus
 
+### 2026-10-22 — Pegasus Lesson07 finisz M3
+
+**Aktualne instrukcje:** [szczegółowy plan Houdini-first, tinty, PBR/UE i 8km Lit](tooling/sidefx/PEGASUS_L07_FINALE_20261022.md) oraz [maszynowa macierz PASS/FAIL](tooling/sidefx/PEGASUS_L07_GATES_20261022.json). Dotyczą istniejącego Draft [PR #474](https://github.com/karnalooch/YetAnotherCyclingSim/pull/474), bez tworzenia alternatywnej gałęzi. Zestaw ośmiu Poly Haven CC0 jest zatwierdzoną adaptacją materiałów; źródłowy materiał Houdiniego, przyjęty realny teren i graf Pegasusa pozostają nadrzędne. Ostateczna akceptacja wymaga prawdziwych renderów **Lit** całych czterech Landscape w UE, nie pojedynczego 256² podglądu.
+
+
+
 **Owner update, 2026-10-16:** the [Houdini/SideFX workflow](tooling/sidefx/README.md) supersedes earlier native-UE/PCG/Blender-first generation plans. Current implementation is a separate fresh Landscape only; the earlier rollout rows below retain issue/proof history, not permission to resume the superseded generator.
 
 | Area | Current state |
