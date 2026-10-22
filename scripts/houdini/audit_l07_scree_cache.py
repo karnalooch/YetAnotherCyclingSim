@@ -77,12 +77,23 @@ def inventory():
         run=subprocess.run([str(GINFO),"-S","-u",str(ROOT/"stage3_scree.bgeo.sc")],
             capture_output=True,text=True,timeout=40,check=False,encoding="utf-8",errors="replace")
         header=run.stdout
-        expected=("1 Volumes" in header and "(scree_mask)" in header
-                  and "[16000, 16000, 1]" in header)
+        # Houdini prints singular "Volume" when there is just one; capture
+        # only shape/name technical lines to resolve this without guessing.
+        one_volume=bool(re.search(r"\\b1 Volume(?:s)?\\b",header))
+        right_name=bool(re.search(r"\\(scree_mask\\)",header))
+        right_lattice=("[16000, 16000, 1]" in header)
+        expected=(one_volume and right_name and right_lattice)
+        technical_lines=[
+            line.strip() for line in header.splitlines()
+            if ("Volume" in line or "scree" in line or "Voxel Count" in line
+                or "(mask)" in line)
+        ][:30]
         native={"exit_code":run.returncode,
                 "geometry_header_has_correct_scree_layer":expected,
-                "one_volume":("1 Volumes" in header),
-                "stage3_bounds_matches_16k":("[16000, 16000, 1]" in header),
+                "one_volume":one_volume,
+                "scree_mask_named_layer":right_name,
+                "stage3_bounds_matches_16k":right_lattice,
+                "technical_header_lines":technical_lines,
                 "header_sha256":hashlib.sha256(header.encode()).hexdigest(),
                 "stderr_empty":not bool(run.stderr.strip())}
         if run.returncode!=0 or not expected or run.stderr.strip():
