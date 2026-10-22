@@ -13,6 +13,8 @@ on:
       - scripts/houdini/l07_real_material_canary.py
       - scripts/houdini/test_l07_real_material_canary.py
       - scripts/houdini/audit_l07_scree_cache.py
+      - scripts/houdini/verify_l07_scree_crop.py
+      - scripts/houdini/test_verify_l07_scree_crop.py
 permissions:
   contents: read
 
@@ -159,4 +161,100 @@ jobs:
           name: l07-original-scree-source-inventory-${{ github.run_id }}-${{ github.run_attempt }}
           path: D:/yacs/work/lesson07-cc0-scree-audit/${{ github.run_id }}-${{ github.run_attempt }}/native-scree-audit.json
           if-no-files-found: warn
+          retention-days: 30
+
+
+  real_scree_preflight:
+    name: Validate real Stage3 historical scree-mask contract and five-material safety
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-true-scree-material]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Validate 5 HDA roles, verified scree source, and zero geometry mutation
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_real_material_canary scripts.houdini.test_verify_l07_scree_crop -v
+          python -B -m py_compile scripts/houdini/l07_real_material_canary.py
+
+  real_scree_material:
+    name: Re-cook 5 original SideFX HDAs using real historical Stage3 scree source
+    needs: real_scree_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 50
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout exact committed five-HDA and original scree-mask verification
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/assets
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Check source identities and RAM, retain only isolated target
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong exact source SHA.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python unavailable.' }
+          $orig='D:\yacs\work\lesson07-cc0-real-crops\39785285512-1\real-source-verified.json'
+          $scree='D:\yacs\work\lesson07-cc0-real-crops\39794174742-1\scree-diagnostic-verified.json'
+          $maps='D:\yacs\work\lesson07-polyhaven-cc0-v1\bindings-v1.json'
+          foreach ($file in @($orig,$scree,$maps)) {
+            if (-not (Test-Path -LiteralPath $file)) { throw "Native source evidence missing: $file" }
+          }
+          $memJson=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(12)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Memory guard failed.' }
+          $mem=$memJson | ConvertFrom-Json
+          if ([int64]$mem.available_physical_bytes -lt 8GB) { throw 'Not enough RAM for native HDA source preview.' }
+          Write-Host "Original SideFX material memory preflight: $memJson"
+      - name: Recreate real Sa Calobra material board with true historical Stage3 scree pixels
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Houdini 22.0.466 is missing.' }
+          & $hython -B scripts/houdini/l07_real_material_canary.py --source-token '39785285512-1' --scree-token '39794174742-1' --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Five-stage authentic Stage3 diagnostic failed without changing canonical terrain.' }
+      - name: Preserve real images, diagnosed mask coverage and final scratch BGEO
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-original-hda-real-stage3-scree-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-material-canary.json
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-*-colour.png
+            D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-after-scree.bgeo.sc
+          if-no-files-found: warn
+          compression-level: 0
           retention-days: 30
