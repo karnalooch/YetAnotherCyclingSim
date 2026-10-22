@@ -128,7 +128,7 @@ def align_to_original(vol,original,hou)->None:
     after_last=vol.indexToPos((SIZE-1,SIZE-1,0))
     if (max(abs(float(a)-float(b)) for a,b in zip(after_first,target))>0.008
             or max(abs(float(a)-float(b)) for a,b in zip(after_last,original["last_voxel_world_xyz"]))>0.02):
-        raise ValueError("Native cropped material lattice cannot be registered to accepted 16K coordinates")
+        raise ValueError(f"Native cropped lattice mismatch: first={list(after_first)}, last={list(after_last)}, expected_first={target}, expected_last={original['last_voxel_world_xyz']}, initial_first={list(first)}, original_transform={list(vol.transform().asTuple())}")
 
 
 def make_original_geometry(obj,hou,np,arrays,metadata):
