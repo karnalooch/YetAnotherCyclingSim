@@ -410,8 +410,13 @@
       "depends_on": [
         "G03"
       ],
-      "verified_runs": [],
-      "not_proven": "missing complete final mask ramp tuples/source HIP; require explicit source/inference/adaptation fields"
+      "verified_runs": [
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39807010598",
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39808914161",
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39810470885",
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39811690827"
+      ],
+      "not_proven": "PASS BOUNDED: original Pegasus 5 material HDAs and four interleaved Tint HDAs cooked with the real historical Stage3 scree diagnostic on 256x256 actual Sa Calobra (39808914161); native original Mask12 Occlusion viewdistance145, Mask13 curvature0.18 and Tint5/6 strength1/0.613 made separately (39811690827), with explicit missing ramp endpoints adapted and inadequate halo for 145m. Source Grass mask6/7/8, complete final author numeric knot set, 3 real semantic sites and full-area 16k still not proven."
     },
     {
       "id": "G05",
@@ -420,8 +425,10 @@
       "depends_on": [
         "G04"
       ],
-      "verified_runs": [],
-      "not_proven": "Bright cliff-mask scree proxy was replaced by a genuine Stage3 diagnostic mask (pixel RGB mean decreased 105.6/96.5/79.5 to 60.6/52.1/38.5). Dominant limestone is still warm/brown. Native original tint + full UE Lit colour/roughness review pending."
+      "verified_runs": [
+        "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39807963268"
+      ],
+      "not_proven": "Bounded native dark-neutral limestone CC0 adaptation on real 256-site was mask-selective and independently reopened (39807963268); does not prove UE Lit shader roughness/normal, vertical streak elimination, lighting/VRAM, or complete 16k color. PASS_FULL remains blocked."
     },
     {
       "id": "G06",
