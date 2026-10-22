@@ -240,6 +240,7 @@ def main():
     if os.name=="nt":
         if not str(SCRATCH_ROOT).lower().replace("/","\\").startswith("d:\\yacs\\work\\"):
             raise ValueError("Tint evidence must live in isolated D work folder")
+    sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
     import hou
     import numpy as np
     import scripts.houdini.l07_real_material_canary
