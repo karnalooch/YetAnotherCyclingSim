@@ -28,9 +28,32 @@ class CanaryBoundaryTests(unittest.TestCase):
                 patch.object(canary, "OUTPUT_ROOT", output_root), \
                 patch.object(canary, "cook_canary") as cook:
             with self.assertRaises(FileNotFoundError):
-                canary.main(["--run-token", "missing-default"])
+                canary.preflight("SCREE_SITE_GLOBAL_COLOR")
             cook.assert_not_called()
             self.assertFalse(output_root.exists())
+
+    def test_main_rejects_substitute_canary_before_preflight_or_output(self):
+        with patch.object(canary, "output_directory") as output, \
+                patch.object(canary, "preflight") as preflight, \
+                patch.object(canary, "require_native_environment") as environment, \
+                patch.object(canary, "cook_canary") as cook:
+            for crop in canary.CROP_PINS:
+                with self.subTest(crop=crop), self.assertRaisesRegex(
+                        RuntimeError, "PEGASUS_SUBSTITUTE_CANARY_DISABLED"):
+                    canary.main(["--run-token", "disabled", "--source-crop", crop])
+            for blocked in (output, preflight, environment, cook):
+                blocked.assert_not_called()
+
+    def test_direct_cook_rejects_before_environment_import_or_io(self):
+        with patch.object(canary, "require_native_environment") as environment, \
+                patch("builtins.__import__", side_effect=AssertionError("Unexpected native import")), \
+                patch.object(Path, "open") as file_open, \
+                patch.object(Path, "mkdir") as mkdir, \
+                patch.object(Path, "write_text") as write:
+            with self.assertRaisesRegex(RuntimeError, "PEGASUS_SUBSTITUTE_CANARY_DISABLED"):
+                canary.cook_canary({}, self.root / "disabled", {})
+            for blocked in (environment, file_open, mkdir, write):
+                blocked.assert_not_called()
 
     def test_changed_or_oversized_source_is_rejected_before_native_work(self):
         crop = self.root / "SCREE_SITE_GLOBAL_COLOR.bgeo.sc"

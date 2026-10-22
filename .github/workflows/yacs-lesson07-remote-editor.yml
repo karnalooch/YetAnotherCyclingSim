@@ -12,6 +12,7 @@ name: YACS Lesson07 remote Editor connection
 # After owner-requested startup, reuse the bounded camera recovery and retain its viewport.
 # Discovery performs no native calls; oversized graph contracts may retain only
 # their complete plain-text description within the existing report limits.
+# Source sync is an independent fixed-file deployment; it never enters an Editor job.
 on:
   push:
     branches: [codex/365-world-graph]
@@ -47,6 +48,7 @@ jobs:
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/365-world-graph' &&
       github.actor == github.repository_owner &&
+      !contains(github.event.head_commit.message, '[l07-sync-material-source]') &&
       contains(github.event.head_commit.message, '[l07-remote-editor]') &&
       !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
         !contains(github.event.head_commit.message, '[l07-prepare-pegasus-candidate]') &&
@@ -108,6 +110,7 @@ jobs:
       github.repository == 'karnalooch/YetAnotherCyclingSim' &&
       github.ref == 'refs/heads/codex/365-world-graph' &&
       github.actor == github.repository_owner &&
+      !contains(github.event.head_commit.message, '[l07-sync-material-source]') &&
       !contains(github.event.head_commit.message, '[l07-remote-editor]') &&
       ((contains(github.event.head_commit.message, '[l07-observe-editor]') &&
         !contains(github.event.head_commit.message, '[l07-inspect-pegasus-inputs]') &&
@@ -299,7 +302,7 @@ jobs:
   connect:
     name: Verify one canonical L07 Editor connection
     needs: [await_ci, observe_cpu]
-    if: ${{ !cancelled() && (needs.await_ci.result == 'success' || needs.observe_cpu.result == 'success') }}
+    if: ${{ !cancelled() && !contains(github.event.head_commit.message, '[l07-sync-material-source]') && (needs.await_ci.result == 'success' || needs.observe_cpu.result == 'success') }}
     concurrency:
       group: yacs-unreal-ci-${{ github.repository }}
       cancel-in-progress: false
@@ -771,5 +774,144 @@ jobs:
             ${{ steps.reports.outputs.directory }}/surface-scree.jpg
             ${{ steps.reports.outputs.directory }}/MI_Pegasus_Source_YACS.uasset
             ${{ steps.reports.outputs.directory }}/MI_BeforePegasusSource_20261021.uasset
+          if-no-files-found: warn
+          retention-days: 7
+
+  sync_material_source:
+    name: Install one fixed Houdini recipe source without executing it
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      github.actor == github.repository_owner &&
+      contains(github.event.head_commit.message, '[l07-sync-material-source]')
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 8
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: l07-source-sync-${{ github.run_id }}-${{ github.run_attempt }}
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      GIT_OPTIONAL_LOCKS: '0'
+    steps:
+      - name: Create isolated Git settings preserving exact source bytes
+        working-directory: ${{ github.workspace }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $isolated=Join-Path $env:RUNNER_TEMP 'l07-source-sync-${{ github.run_id }}-${{ github.run_attempt }}.gitconfig'
+          if (Test-Path -LiteralPath $isolated) { throw 'GIT_CONFIG_ALREADY_EXISTS' }
+          [IO.File]::WriteAllText($isolated,'')
+          $env:GIT_CONFIG_GLOBAL=$isolated;$env:GIT_CONFIG_NOSYSTEM='1'
+          "GIT_CONFIG_GLOBAL=$isolated" >> $env:GITHUB_ENV
+          'GIT_CONFIG_NOSYSTEM=1' >> $env:GITHUB_ENV
+          git config --global core.longpaths true
+          if ($LASTEXITCODE -ne 0) { throw 'GIT_LONGPATHS_FAILED' }
+          git config --global core.autocrlf false
+          if ($LASTEXITCODE -ne 0) { throw 'GIT_AUTOCRLF_FAILED' }
+          git config --global core.eol lf
+          if ($LASTEXITCODE -ne 0) { throw 'GIT_EOL_FAILED' }
+
+      - name: Checkout only the reviewed recipe at this exact commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: l07-source-sync-${{ github.run_id }}-${{ github.run_attempt }}
+          fetch-depth: 1
+          lfs: false
+          persist-credentials: false
+          filter: blob:limit=1m
+          sparse-checkout-cone-mode: false
+          sparse-checkout: /scripts/houdini/lesson06_unified_pipeline.py
+
+      - name: Verify, retain and replace only the fixed canonical recipe
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference='Stop'
+          $source=Join-Path (Get-Location).Path 'scripts/houdini/lesson06_unified_pipeline.py'
+          $target='D:\yacs\project\scripts\houdini\lesson06_unified_pipeline.py'
+          $stage=Join-Path 'D:\yacs\work' ('l07-material-source-sync-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT)
+          $temporary=Join-Path $stage 'lesson06_unified_pipeline.new.py'
+          $backup=Join-Path $stage 'lesson06_unified_pipeline.previous.py'
+          $out=Join-Path $env:RUNNER_TEMP 'lesson07-material-source-sync-${{ github.run_id }}-${{ github.run_attempt }}.json'
+          $oldSha='6e8c8b707a28f4092db22e313feecaf3b02bf787bdda780657c7f8297325c40e'
+          $newSha='9880239b94db8077c8c8a1eab0e0fdc99db158650157c170845627fdde0d6eaf'
+          $report=[ordered]@{profile='SOURCE_SYNC';source_sha=$env:GITHUB_SHA;status='FAILED';phase='PREFLIGHT';
+            source_installed=$false;replacement_attempted=$false;replacement_completed=$false;atomic_compare_and_swap=$false;
+            hou_imported=$false;hython_executed=$false;cook_executed=$false;ue_changed=$false;runtime_reloaded=$false;
+            source=$null;before=$null;after=$null;backup=$null;retained_directory=$stage;error_type=$null;error_code=$null}
+          function Get-SyncPlainPath([string]$Path) {
+            $cursor=[IO.Path]::GetFullPath($Path)
+            while ($cursor) {
+              $item=Get-Item -LiteralPath $cursor -Force -ErrorAction Stop
+              if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'REPARSE_PATH' }
+              $cursor=[IO.Path]::GetDirectoryName($cursor)
+            }
+            return Get-Item -LiteralPath $Path -Force -ErrorAction Stop
+          }
+          function Get-SyncIdentity([string]$Path,[long]$Bytes,[string]$Sha,[IO.Stream]$Stream=$null) {
+            $owned=$null
+            try {
+              $before=Get-SyncPlainPath $Path
+              if ($before.PSIsContainer -or $before.Length -ne $Bytes -or $Bytes -gt 256KB) { throw 'PINNED_SIZE' }
+              if ($null -eq $Stream) { $owned=[IO.File]::Open($Path,'Open','Read','Read');$Stream=$owned }
+              if ($Stream.Length -ne $Bytes) { throw 'OPEN_FILE_SIZE' }
+              $Stream.Position=0;$hash=(Get-FileHash -InputStream $Stream -Algorithm SHA256).Hash.ToLowerInvariant()
+              $after=Get-SyncPlainPath $Path
+              if ($hash -cne $Sha -or $after.Length -ne $Bytes -or $before.LastWriteTimeUtc -ne $after.LastWriteTimeUtc) { throw 'SOURCE_CHANGED_OR_PIN_MISMATCH' }
+              return [ordered]@{path=$Path;bytes=$Bytes;sha256=$hash;modified_utc=$after.LastWriteTimeUtc.ToString('o')}
+            } finally { if ($null -ne $owned) { $owned.Dispose() } }
+          }
+          $held=$null
+          try {
+            if ($env:GITHUB_SHA -cnotmatch '^[0-9a-f]{40}$' -or $env:GITHUB_RUN_ID -notmatch '^[0-9]{6,16}$' -or $env:GITHUB_RUN_ATTEMPT -notmatch '^[0-9]{1,3}$') { throw 'RUN_IDENTITY' }
+            $head=@(& git rev-parse HEAD)
+            if ($LASTEXITCODE -ne 0 -or $head.Count -ne 1 -or $head[0] -cne $env:GITHUB_SHA) { throw 'CHECKOUT_HEAD' }
+            $report.source=Get-SyncIdentity $source 37392 $newSha
+            $report.before=Get-SyncIdentity $target 34868 $oldSha
+            $parent=Get-SyncPlainPath 'D:\yacs\work'
+            if (-not $parent.PSIsContainer -or (Test-Path -LiteralPath $stage)) { throw 'STAGING_BOUNDARY_OR_EXISTS' }
+            $report.phase='STAGING'
+            New-Item -ItemType Directory -Path $stage -ErrorAction Stop | Out-Null
+            $null=Get-SyncPlainPath $stage
+            [IO.File]::Copy($source,$temporary,$false)
+            $null=Get-SyncIdentity $temporary 37392 $newSha
+            $report.phase='TARGET_RECHECK'
+            $null=Get-SyncPlainPath $target
+            # Deny in-place writers while retaining rename compatibility. This is not a compare-and-swap.
+            $held=[IO.File]::Open($target,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::Read -bor [IO.FileShare]::Delete))
+            $null=Get-SyncPlainPath $stage
+            $null=Get-SyncIdentity $temporary 37392 $newSha
+            if (Test-Path -LiteralPath $backup) { throw 'BACKUP_ALREADY_EXISTS' }
+            $report.before=Get-SyncIdentity $target 34868 $oldSha $held
+            $report.phase='REPLACE';$report.replacement_attempted=$true
+            [IO.File]::Replace($temporary,$target,$backup,$false)
+            $report.replacement_completed=$true;$report.phase='VERIFY'
+            # Verify the bytes actually replaced: a competing rename must never yield successful admission.
+            $report.backup=Get-SyncIdentity $backup 34868 $oldSha
+            $report.after=Get-SyncIdentity $target 37392 $newSha
+            $report.source_installed=$true;$report.status='SOURCE_INSTALLED';$report.phase='COMPLETE'
+          } catch {
+            $report.error_type=$_.Exception.GetType().Name;$report.error_code='SOURCE_SYNC_FAILED'
+            if ($_.Exception.Message -cmatch '^[A-Z_]{1,64}$') { $report.error_code=$_.Exception.Message }
+          }
+          finally {
+            if ($null -ne $held) { $held.Dispose() }
+            $json=$report | ConvertTo-Json -Depth 6 -Compress
+            if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 16KB) { throw 'RECEIPT_SIZE' }
+            [IO.File]::WriteAllText($out,$json,[Text.UTF8Encoding]::new($false))
+            Write-Host ('L07_MATERIAL_SOURCE_SYNC '+$json)
+          }
+          if (-not $report.source_installed) { throw 'SOURCE_SYNC_FAILED_SEE_RECEIPT' }
+
+      - name: Retain the source installation receipt only
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lesson07-material-source-sync-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/lesson07-material-source-sync-${{ github.run_id }}-${{ github.run_attempt }}.json
           if-no-files-found: warn
           retention-days: 7

@@ -1,9 +1,10 @@
-"""Unified Sa Calobra Lesson 06 Pipeline.
+"""Partially reconstructed Pegasus recipe for the existing Sa Calobra domain.
 
-Executes Pegasus Landscape Workflow (Lessons 3-6) on the full, single,
-unified 16000x16000 (0.5m) domain covering 100% of Working and 100% of Context.
-Preserves original Pegasus HDAs, methods, and metric parameters.
-Stages each phase into versioned .bgeo.sc caches to guarantee bounded memory.
+Original HDAs and verified author graph/tint corrections are retained here.
+The remaining historical material inputs and mask settings are not a complete
+1:1 author recipe. Dependent cooks and cache reuse are blocked until the exact
+sources, remaining parameters and geographic integration are established.
+Existing 16000x16000 terrain, masks, caches and HIPs remain unchanged.
 """
 from __future__ import annotations
 
@@ -78,6 +79,23 @@ def stats(arr: np.ndarray) -> dict:
 
 def linear_ramp(points, vals):
     return hou.Ramp([hou.rampBasis.Linear] * len(points), points, vals)
+
+
+def require_exact_material_sources() -> None:
+    """Do not run the historical substitute recipe as the author's final graph.
+
+    The missing original files are only one dependency: the rocky predecessor,
+    roughness resolution, remaining mask/instance fields and separate output
+    provenance also need source-backed implementation. A filename match or an
+    existing historical cache cannot admit this recipe. No bypass is provided.
+    """
+    raise RuntimeError(
+        "PEGASUS_MATERIAL_SOURCES_INCOMPLETE: original tjmledzr/ulgmbhwn/"
+        "td1hcimn/tdwlcc1l/vjdqcba map bytes, rocky predecessor, default.pic "
+        "resolution and remaining author/geographic configuration are not "
+        "established. Material-dependent stages and historical cache reuse "
+        "are disabled. See docs/assets/lesson07-sidefx-source-20261021/README.md."
+    )
 
 
 # ==============================================================================
@@ -311,6 +329,7 @@ def stage2_masks(force: bool = False):
 # STAGE 3: SCREE MASKS (Slump + Pockets + Transport)
 # ==============================================================================
 def stage3_scree(force: bool = False):
+    require_exact_material_sources()
     print("=== [STAGE 3] COMPUTING SCREE SLUMP & TRANSPORT ===", flush=True)
     out_file = WORK_DIR / "stage3_scree.bgeo.sc"
     if out_file.exists() and not force:
@@ -441,6 +460,7 @@ def stage3_scree(force: bool = False):
 # STAGE 4: MATERIALS, TINTS & PRE-ID CACHE (STAGED FOR BOUNDED MEMORY)
 # ==============================================================================
 def stage4a_grass(force: bool = False):
+    require_exact_material_sources()
     print("=== [STAGE 4a] APPLYING GRASS MATERIAL ===", flush=True)
     out_file = WORK_DIR / "stage4a_grass.bgeo.sc"
     if out_file.exists() and not force:
@@ -495,7 +515,8 @@ def stage4a_grass(force: bool = False):
 
 
 def stage4b_sand(force: bool = False):
-    print("=== [STAGE 4b] APPLYING SAND MATERIAL & TINT RAMP ===", flush=True)
+    require_exact_material_sources()
+    print("=== [STAGE 4b] APPLYING GRASS TINTS THEN SAND MATERIAL ===", flush=True)
     out_file = WORK_DIR / "stage4b_sand.bgeo.sc"
     if out_file.exists() and not force:
         print(f"Stage 4b cache already exists: {out_file}, skipping.", flush=True)
@@ -527,8 +548,29 @@ def stage4b_sand(force: bool = False):
     cl_ramp.setInput(0, bl_ramp)
     cl_ramp.setParms({"srcname1": "ramp_layer", "dstname1": "mask"})
 
+    # L04: grass -> gradient -> unmasked brightness -> sand. Last readable
+    # ramp fields are at 14:02 (point 2) and 16:21 (point 1). Combining them
+    # is a temporal inference, not a final saved-HIP read; cooking stays blocked.
+    # See houdini-author-graph-followup-20261022.json for the source evidence.
+    tint_node = g.createNode("PE_heightfield_tint::1.0", "HEIGHTFIELD_TINT")
+    tint_node.setInput(0, prev)
+    tint_node.setInput(1, cl_ramp)
+    tint_node.setParms({
+        "use_ramp": 1,
+        "srcname1": "mask",
+        "ramp_mask": "",
+        "strength": 0.95
+    })
+    tint_node.parm("tint_ramp").set(linear_ramp(
+        [0.0, 0.996694], [(0.34, 0.55, 0.12705), (1.0, 0.822741, 0.538)]))
+
+    t_bright = g.createNode("PE_heightfield_tint::1.0", "GRASS_BRIGHTNESS")
+    t_bright.setInput(0, tint_node)
+    t_bright.setParms({"use_ramp": 0, "ramp_mask": "", "strength": 1.0})
+    t_bright.parmTuple("tint").set((2.0, 2.0, 2.0))
+
     mat_sand = g.createNode("PE_heightfield_material::1.0", "MAT_SAND")
-    mat_sand.setInput(0, prev)
+    mat_sand.setInput(0, t_bright)
     mat_sand.setInput(1, cl_sand)
     mat_sand.setParms({
         "filename1": str(TEX_DIR / "coast_sand_01_diff_2k.jpg"),
@@ -542,25 +584,15 @@ def stage4b_sand(force: bool = False):
         "input2": "2"
     })
 
-    tint_node = g.createNode("PE_heightfield_tint::1.0", "HEIGHTFIELD_TINT")
-    tint_node.setInput(0, mat_sand)
-    tint_node.setInput(1, cl_ramp)
-    tint_node.setParms({
-        "use_ramp": 1,
-        "srcname1": "mask",
-        "ramp_mask": "",
-        "strength": 0.85
-    })
-    tint_node.parm("tint_ramp").set(linear_ramp([0.0, 0.5, 1.0], [(0.42, 0.56, 0.22), (0.58, 0.54, 0.28), (0.74, 0.64, 0.36)]))
-
-    print("Cooking Sand Material & Tint...", flush=True)
-    tint_node.cook(force=True)
-    tint_node.geometry().saveToFile(str(out_file))
+    print("Cooking Grass Tints & Sand Material...", flush=True)
+    mat_sand.cook(force=True)
+    mat_sand.geometry().saveToFile(str(out_file))
     g.destroy()
     print(f"=== [STAGE 4b COMPLETE in {time.time() - t0:.1f}s] ===", flush=True)
 
 
 def stage4c_cliff(force: bool = False):
+    require_exact_material_sources()
     print("=== [STAGE 4c] APPLYING CLIFF MATERIAL ===", flush=True)
     out_file = WORK_DIR / "stage4c_cliff.bgeo.sc"
     if out_file.exists() and not force:
@@ -606,6 +638,7 @@ def stage4c_cliff(force: bool = False):
 
 
 def stage4d_scree(force: bool = False):
+    require_exact_material_sources()
     print("=== [STAGE 4d] APPLYING SCREE MATERIAL, TINTS & COMPILING PRE-ID CACHE ===", flush=True)
     out_file = WORK_DIR / "pre_id_cache.bgeo.sc"
     if out_file.exists() and not force:
@@ -641,9 +674,17 @@ def stage4d_scree(force: bool = False):
     cl_cliff.setInput(0, bl_cliff)
     cl_cliff.setParms({"srcname1": "cliff_mask", "dstname1": "mask"})
 
-    # 1. Scree Material
+    # L05 09:42 closes the previously unverified connection: the cliff tint
+    # feeds scree input 0. At 09:56 its last readable RGB is .597, not .437.
+    t_cliff = g.createNode("PE_heightfield_tint::1.0", "CLIFF_TINT")
+    t_cliff.setInput(0, prev)
+    t_cliff.setInput(1, cl_cliff)
+    t_cliff.setParms({"strength": 1.0, "use_ramp": 0, "srcname1": "mask", "ramp_mask": "mask"})
+    t_cliff.parmTuple("tint").set((0.597, 0.597, 0.597))
+
+    # Scree material follows the cliff tint; its mask remains a separate input.
     mat_scree = g.createNode("PE_heightfield_material::1.0", "MAT_SCREE")
-    mat_scree.setInput(0, prev)
+    mat_scree.setInput(0, t_cliff)
     mat_scree.setInput(1, cl_scree)
     mat_scree.setParms({
         "filename1": str(SCREE_TEX_DIR / "YACS_Material_BaseColor.png"),
@@ -656,19 +697,12 @@ def stage4d_scree(force: bool = False):
         "use_distort": 0
     })
 
-    # 2. Cliff Tint
-    t_cliff = g.createNode("PE_heightfield_tint::1.0", "CLIFF_TINT")
-    t_cliff.setInput(0, mat_scree)
-    t_cliff.setInput(1, cl_cliff)
-    t_cliff.setParms({"strength": 0.15, "use_ramp": 0, "srcname1": "mask", "ramp_mask": "mask"})
-    t_cliff.parmTuple("tint").set((0.94, 0.96, 1.0))
-
-    # 3. Scree Tint
+    # L05 10:34 shows all three exact displayed scree-tint components.
     t_scree = g.createNode("PE_heightfield_tint::1.0", "SCREE_TINT")
-    t_scree.setInput(0, t_cliff)
+    t_scree.setInput(0, mat_scree)
     t_scree.setInput(1, cl_scree)
-    t_scree.setParms({"strength": 0.2, "use_ramp": 0, "srcname1": "mask", "ramp_mask": "mask"})
-    t_scree.parmTuple("tint").set((1.0, 0.98, 0.95))
+    t_scree.setParms({"strength": 1.0, "use_ramp": 0, "srcname1": "mask", "ramp_mask": "mask"})
+    t_scree.parmTuple("tint").set((0.874, 0.822347, 0.701822))
 
     # 4. Exposure Tint (computed on lesson 04 post-material height)
     m_exp = g.createNode("heightfield_maskbyfeature", "BROAD_EXPOSURE")
@@ -743,6 +777,7 @@ def stage4d_scree(force: bool = False):
 
 
 def stage4_materials_and_tints(force: bool = False):
+    require_exact_material_sources()
     stage4a_grass(force=force)
     stage4b_sand(force=force)
     stage4c_cliff(force=force)
@@ -754,6 +789,7 @@ def stage4_materials_and_tints(force: bool = False):
 # STAGE 5: LESSON 06 IDMAP GENERATION & HIP CHECKPOINT
 # ==============================================================================
 def stage5_idmap(force: bool = False):
+    require_exact_material_sources()
     print("=== [STAGE 5] GENERATING LESSON 06 UNIFIED IDMAP ===", flush=True)
     out_file = WORK_DIR / "final_unified_idmap.bgeo.sc"
     checkpoint_hip = WORLD_DIR / "SaCalobra_Pegasus_Lesson06_Unified_v001.hiplc"
@@ -893,6 +929,11 @@ def main():
     ap.add_argument("--stage", choices=["base", "masks", "4a", "4b", "4c", "scree", "4d", "materials", "idmap", "all"], default="all")
     ap.add_argument("--force", action="store_true", help="Force recooking even if stage cache exists")
     args = ap.parse_args()
+
+    # Reject the entire dependent request before all/--force can rebuild base
+    # or masks, and before historical cache presence can report completion.
+    if args.stage not in ("base", "masks"):
+        require_exact_material_sources()
 
     print(f"Houdini Version: {hou.applicationVersionString()}", flush=True)
     print(f"Project Dir: {PROJECT_DIR}", flush=True)

@@ -1,0 +1,256 @@
+{
+  "schema_version": 1,
+  "observed_date": "2026-10-22",
+  "issue": 365,
+  "milestone": "M3",
+  "pull_request": 474,
+  "review_head_sha": "fbe2eb785f5089b3092f7a9fdce5b3dc5e785908",
+  "status": "ORIGINAL_HDA_STATIC_SOURCE_BRANCHES_VERIFIED;NO_NATIVE_ACCEPTANCE",
+  "scope": "Independent static review of the original material and tint HDA definitions. This is source evidence, not an author-instance or native cook receipt.",
+  "validation": {
+    "payload_size_limit_bytes": 65536,
+    "decoded_size_limit_bytes_per_hda": 1048576,
+    "payload_hashes_recomputed": true,
+    "decoded_hashes_recomputed": true,
+    "all_retained_entry_sizes_hashes_and_text_checked_against_independently_parsed_cpio": true,
+    "native_calls": 0,
+    "embedded_python_executed": false,
+    "hou_loaded": false,
+    "hda_installed": false,
+    "hip_loaded": false,
+    "cook_requested": false,
+    "cache_written": false,
+    "repository_lfs_pointers_modified": false
+  },
+  "sources": {
+    "material": {
+      "repository_path": "worldgen/houdini/sa_calobra/otls/sop_PE_heightfield_material.1.0.hda",
+      "source_bytes": 45649,
+      "source_sha256": "e7d41ca64757699aa65b69520aca96b11f7325365506ddc675f8ea2b23a45023",
+      "repository_lfs_pointer_and_payload_match": true,
+      "gzip_offset_bytes": 14106,
+      "decoded_bytes": 200699,
+      "decoded_sha256": "aef7c768b8f23caa08f15be161d656c376b07121642c36ad4ed0dfa54a8400fb",
+      "decoded_container": "Little-endian uint32 length followed by ASCII 070707 CPIO; parsed as data only",
+      "supplied_decode_json_sha256": "84d9757cec438065a57e83e93aea98759cf460731b8dd8cadffa3dba6364b521",
+      "cpio_entries_independently_verified": 187,
+      "missing_root_instance_sections": [
+        "hdaroot.parm",
+        "hdaroot.chn",
+        "hdaroot.multiparm"
+      ]
+    },
+    "tint": {
+      "repository_path": "worldgen/houdini/sa_calobra/otls/sop_PE_heightfield_tint.1.0.hda",
+      "source_bytes": 28878,
+      "source_sha256": "93cc47dd511bc3d5868835b5dd3b9082c13cab23355b688aaf2a947e8687a2ed",
+      "repository_lfs_pointer_and_payload_match": true,
+      "gzip_offset_bytes": 3638,
+      "decoded_bytes": 125126,
+      "decoded_sha256": "f6ec2bac343eaa354343bd64578b92fb22f8e918ef51e90c273149e16ee5414a",
+      "decoded_container": "Little-endian uint32 length followed by ASCII 070707 CPIO; parsed as data only",
+      "supplied_decode_json_sha256": "17666baed18b2dd188b5e1ef83bde44ee56e69b0dfdcc8747b5e178d7c62067f",
+      "cpio_entries_independently_verified": 56,
+      "missing_root_instance_sections": [
+        "hdaroot.parm",
+        "hdaroot.chn",
+        "hdaroot.multiparm"
+      ]
+    }
+  },
+  "material_file_selection": {
+    "selector_entry": {
+      "entry": "hdaroot/python1.parm",
+      "bytes": 801,
+      "sha256": "9a773104b6eb183b4c8b04ea7ec616ca15aef73f3c29405646f00277cd2c3ad3",
+      "excerpt_lines": [
+        "switch2 = hou.node('../switch2')",
+        "path2 = parent.parm(\\\"filename2\\\").evalAsString()",
+        "",
+        "if os.path.exists(path2):",
+        "    switch2.parm('input').set(1)",
+        "else:",
+        "    switch2.parm('input').set(0)"
+      ]
+    },
+    "selector_logic": "For each filename1/filename2/filename3, python1 obtains parent.parm(...).evalAsString(); os.path.exists on that returned string selects input 1 when true and input 0 when false on switch1/switch2/switch3 respectively.",
+    "selectors": [
+      {
+        "parameter": "filename1",
+        "switch": "switch1",
+        "exists_true_input": 1,
+        "exists_false_input": 0,
+        "input_0": "heightfield_layerclear1",
+        "input_1": "b",
+        "wiring_evidence": {
+          "entry": "hdaroot/switch1.def",
+          "bytes": 565,
+          "sha256": "5175e1dffe0dd1740bc52c236f5b729a977c182286a767f2a8b57b297dcc6f7b",
+          "excerpt_lines": [
+            "inputs",
+            "{",
+            "0 \theightfield_layerclear1 0 1",
+            "1 \tb 0 1",
+            "}"
+          ]
+        }
+      },
+      {
+        "parameter": "filename2",
+        "switch": "switch2",
+        "exists_true_input": 1,
+        "exists_false_input": 0,
+        "input_0": "switch1",
+        "input_1": "roughness",
+        "wiring_evidence": {
+          "entry": "hdaroot/switch2.def",
+          "bytes": 551,
+          "sha256": "bfa8d6c20c03db681d0b5ab526881f5c47636a56e623290edd4f07e9805925e5",
+          "excerpt_lines": [
+            "inputs",
+            "{",
+            "0 \tswitch1 0 1",
+            "1 \troughness 0 1",
+            "}"
+          ]
+        }
+      },
+      {
+        "parameter": "filename3",
+        "switch": "switch3",
+        "exists_true_input": 1,
+        "exists_false_input": 0,
+        "input_0": "switch2",
+        "input_1": "heightfield_remap1",
+        "wiring_evidence": {
+          "entry": "hdaroot/switch3.def",
+          "bytes": 568,
+          "sha256": "24308b3dde4d34601da75c024a30bfb09eea83c7078b077fabbb1a40719fe1fc",
+          "excerpt_lines": [
+            "inputs",
+            "{",
+            "0 \tswitch2 0 1",
+            "1 \theightfield_remap1 0 1",
+            "}"
+          ]
+        }
+      }
+    ],
+    "roughness_reader": {
+      "node_type": "heightfield_file",
+      "source_parameter": "filename2",
+      "monochrome_operation": "lum",
+      "output_layer": "roughness",
+      "definition_evidence": {
+        "entry": "hdaroot/roughness.init",
+        "bytes": 39,
+        "sha256": "261876786ce4d771498faab0e10e13a9a5a70af34d18bc455630c190c90c6437",
+        "excerpt_lines": [
+          "type = heightfield_file",
+          "matchesdef = 1"
+        ]
+      },
+      "parameter_evidence": {
+        "entry": "hdaroot/roughness.parm",
+        "bytes": 990,
+        "sha256": "8434371a842f92ca308f3e43c327afc47e43b84351894b48632bb620dc26e619",
+        "excerpt_lines": [
+          "source\t[ 0\tlocks=0 ]\t(\t\"file\"\t)",
+          "filename\t[ 0\tlocks=0 ]\t(\t`chs(\\\"../filename2\\\")`\t)",
+          "monoop\t[ 0\tlocks=0 ]\t(\t\"lum\"\t)",
+          "layer\t[ 0\tlocks=0 ]\t(\troughness\t)",
+          "heightscale\t[ 0\tlocks=0 ]\t(\t1\t)"
+        ]
+      }
+    },
+    "default_pic_inference_limit": {
+      "author_visible_filename2_literal": "default.pic",
+      "literal_evidence": "houdini-author-material-observations-20261022.json",
+      "evaluated_filename2_on_author_machine": "UNKNOWN",
+      "author_process_working_directory": "UNKNOWN",
+      "author_os_path_exists_result": "UNKNOWN",
+      "author_selected_switch2_input": "UNKNOWN",
+      "author_numeric_final_roughness": "UNKNOWN",
+      "conclusion": "The existence of a stock $HH/pic/default.pic resource alone does not establish that the evaluated filename2 path passed os.path.exists in the author process. False selects switch1; true selects the roughness file reader. Neither the definition nor a stock resource inventory proves the final numeric roughness."
+    }
+  },
+  "raw_dialog_script_contract": {
+    "material_noisetype": {
+      "parameter": "noisetype",
+      "source_region": "Raw DialogScript bytes before compressed Contents; exact parameter block",
+      "byte_offset": 10778,
+      "bytes": 451,
+      "block_sha256": "5fd30a8fe13975e03446cdb30fe2cae879e70184f5b5c5a213f71c1b4315159a",
+      "excerpt_lines": [
+        "                name    \"noisetype\"",
+        "                label   \"Noise Type\"",
+        "                type    ordinal",
+        "                default { \"curl\" }",
+        "                    \"simplex\"   \"Simplex\"",
+        "                    \"curl\"      \"Curl\""
+      ],
+      "author_final_instance_value": "UNKNOWN_FROM_THIS_DEFINITION",
+      "menu_tokens": {
+        "simplex": "Simplex",
+        "curl": "Curl"
+      },
+      "definition_default_token": "curl"
+    },
+    "tint_parameter_labels": [
+      {
+        "parameter": "ramp_mask",
+        "source_region": "Raw DialogScript bytes before compressed Contents; exact parameter block",
+        "byte_offset": 1433,
+        "bytes": 319,
+        "block_sha256": "4ca93e0105d0dbefad56b9ddec370f750fb449c6064079c830cfaf8bff939a39",
+        "excerpt_lines": [
+          "        name    \"ramp_mask\"",
+          "        label   \"Mask\"",
+          "        type    string",
+          "        default { \"mask\" }"
+        ],
+        "author_final_instance_value": "UNKNOWN_FROM_THIS_DEFINITION",
+        "label": "Mask"
+      },
+      {
+        "parameter": "srcname1",
+        "source_region": "Raw DialogScript bytes before compressed Contents; exact parameter block",
+        "byte_offset": 2886,
+        "bytes": 368,
+        "block_sha256": "3a3062541c3cd2b6eaccf974ad5b4dc3e69b13712379be42614dcc0cc3d669a2",
+        "excerpt_lines": [
+          "            name    \"srcname1\"",
+          "            label   \"Ramp Layer\"",
+          "            type    string",
+          "            default { \"mask\" }"
+        ],
+        "author_final_instance_value": "UNKNOWN_FROM_THIS_DEFINITION",
+        "label": "Ramp Layer"
+      }
+    ],
+    "tint_internal_mask_binding": {
+      "entry": "hdaroot/heightfield_wrangle2.parm",
+      "bytes": 1706,
+      "sha256": "99c702dea23abb4b461c7c7d936c0be07da813ec787ab9c9cb32d3ebe42b0a47",
+      "excerpt_lines": [
+        "use_mask\t[ 8\tlocks=0 ]\t(\t`chs(\\\"../ramp_mask\\\")`\t)"
+      ]
+    },
+    "interpretation": "Tint Mask is ramp_mask; Ramp Layer is srcname1. An empty Mask field corresponds to ramp_mask=\"\". Menu tokens and definition defaults do not establish final author-instance values."
+  },
+  "limits": [
+    "Both decoded definitions lack hdaroot.parm, hdaroot.chn and hdaroot.multiparm. External input labels in hdaroot.def do not establish final author-instance parameter values or final tutorial wiring.",
+    "The supplied section JSONs were independently checked against the original hash-matched payloads; only selected technical excerpts and hashes are retained here. Author/host metadata and the complete CPIO are omitted.",
+    "No embedded Python, parameter expressions, VEX, menu scripts or callbacks were executed. No Houdini process was launched by this review.",
+    "This receipt does not resolve original texture bytes, complete final material/tint/mask settings, selected runtime branches, pixel equality, geography changes or native acceptance."
+  ],
+  "accepted_flags": {
+    "dependent_material_cook_admitted": false,
+    "original_texture_files_verified": false,
+    "author_final_instance_contract_complete": false,
+    "native_runtime_accepted": false,
+    "material_accepted": false,
+    "visual_accepted": false,
+    "performance_pass": false
+  }
+}

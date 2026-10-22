@@ -32,12 +32,13 @@ not 1:1 completion evidence. No material was changed by the successful
 [Editor/camera recovery](recovery-39747236327-evidence.json). Read-only source
 inspection can continue while the original-input gaps are resolved.
 
-The [direct grass-mask source correction](grass-mask-source-correction-20261022.json)
+The earlier [direct grass-mask source correction](grass-mask-source-correction-20261022.json)
 withdraws the earlier unmasked-base proposal. Lesson04's 04:46-04:54 narration
 and 04:55 frame confirm the final enabled mask and an upstream rocky material.
-Only `stage4a_grass.use_mask` is restored from 0 to 1; the rest of the recipe
-AST is unchanged. Exact recipe pins and the strict existing comparison test
-are updated, with all ten CPU tests passing. No native canary or cook ran,
+At published source `fbe2eb7`, only `stage4a_grass.use_mask` was restored from
+0 to 1; the rest of that recipe AST was unchanged. Exact recipe pins and the
+strict existing comparison test were updated, with all ten CPU tests passing.
+The subsequent graph correction below is a separate change. No native canary or cook ran,
 and the existing substitute texture families remain unaccepted for 1:1.
 
 The independent [native header observation](source-headers-39749604030-evidence.json)
@@ -49,8 +50,8 @@ there was no full geometry load, material replay or UE change.
 
 The [timestamped author-instance receipt](houdini-author-material-observations-20261022.json)
 retains five material families, their visible configuration, twelve ordered
-source/material/tint operations (with the cliff-tint insertion explicitly
-unverified) and hashes for 42 inspected frames. The separate
+source/material/tint operations (with the cliff-tint insertion still unverified
+in that initial observation) and hashes for 42 inspected frames. The separate
 [official ID/title mapping](houdini-material-public-id-mapping-20261022.json)
 corroborates their legacy Quixel identities. These five Houdini families are
 distinct from the five Lesson07 Unreal array families listed above.
@@ -68,10 +69,10 @@ its resolved bytes and numeric output are not established. Grass has Distort
 enabled with the observed Curl controls, while the other four displayed
 instances have it disabled. The unmasked `(2,2,2)` tint is after grass and
 before sand. The graph also contains separate grass, cliff, scree, exposure
-and curvature tint observations. The retained cliff-tint frame shows a branch
-with no output connection; its final insertion before scree remains unknown.
-Complete ramp points, mask graphs and final saved-HIP parameters also remain
-unknown. Temporary previews are separately recorded and
+and curvature tint observations. The initial cliff-tint frame shows a branch
+with no output connection; the later follow-up below closes this connection.
+Complete final mask/ramp tuples and saved-HIP parameters still have explicit
+gaps. Temporary previews are separately recorded and
 must not replace the last directly observed settings.
 
 The [additional official-archive search](additional-author-hip-search-20261022.json)
@@ -84,6 +85,66 @@ open. No source texture acquisition, native material replay, cache recook or
 terrain change follows from these observations. Demo displacement values
 are evidence of the author's setup, not authorization to alter the accepted
 Sa Calobra heights.
+
+## Graph correction and blocked material replay (2026-10-22)
+
+The [later graph and parameter inspection](houdini-author-graph-followup-20261022.json)
+retains 69 cited frame identities and distinguishes directly observed values,
+temporal inference and unread fields. At Lesson05 09:41.5-09:42 the author
+connects the cliff tint before the scree material. Later frames also expose
+the final readable cliff and scree tint components. This supersedes the
+earlier connection gap without changing the historical receipt.
+
+The [reviewed source correction](graph-source-correction-20261022.json) in the
+existing `lesson06_unified_pipeline.py` contains these changes:
+
+| Area | Corrected source recipe | Evidence limit |
+|---|---|---|
+| Grass/sand order | Grass material -> gradient tint -> unmasked `(2,2,2)` tint -> sand material | The supporting mask branch and original materials remain incomplete |
+| Grass gradient | Strength `0.95`; point 1 at `0`, RGB `(0.34,0.55,0.12705)`; point 2 at `0.996694`, RGB `(1,0.822741,0.538)`; Linear | Each point is directly read at a different time; their assembled final state is a temporal inference, not saved-HIP readback |
+| Cliff/scree order | Cliff material -> cliff tint -> scree material -> scree tint | The original material and mask inputs are still dependencies |
+| Cliff tint | Strength `1`, RGB `(0.597,0.597,0.597)`, Mask `mask` | Last readable 09:56 setting; earlier `0.437` and `0.487` are tuning states |
+| Scree tint | Strength `1`, RGB `(0.874,0.822347,0.701822)`, Mask `mask` | All three fields are directly readable at 10:34 |
+
+The same inspection also resolves more of the author mask graph. Grass
+occlusion uses **Subtract with Invert Mask OFF**; the author inverts the ramp
+itself. Exposure comes from the post-scree branch with the visualization helper,
+and curvature continues the exposure-mask output. The last observed exposure
+View Distance is `145` and Max Curvature is `0.18`. These observations are
+retained for the next source correction; the still incomplete final ramp tuples
+are not filled from presets or guessed numeric positions.
+
+Material-dependent execution is now blocked at all seven direct stage entries
+and before CLI dispatch for `all`, `materials`, `4a`, `4b`, `4c`, `scree`, `4d`
+and `idmap`. The check precedes cache reuse and stops `all --force` before it
+can reach base or masks. It has no bypass switch. The independent historical
+substitute canary is also blocked at both `main` and `cook_canary`; its
+diagnostic functions and strict source checks are retained. These changes
+prevent the old substitutions or old cache presence from being reported as a
+new reproduction. They do not admit a cook or change accepted terrain.
+All **14 CPU tests pass**, including 32 pipeline entrypoint calls with and
+without `force`. Independent source/code review accepts this partial,
+blocked recipe. The base and mask function ASTs are unchanged. These tests
+stub native modules for pipeline import; they do not claim a native replay.
+
+The [static original-HDA inspection](houdini-original-hda-file-branches-20261022.json)
+shows why the Roughness field needs more care: the HDA's Python SOP tests
+`os.path.exists` on the evaluated `filename2`. Its false branch bypasses the
+roughness-file node. Merely locating Houdini's stock `default.pic` does not
+prove which branch the author used or the resulting numeric roughness.
+
+The [native resource read](material-resources-39761109220-evidence.json), run
+`39761109220` at source `7b43d13`, confirms that both installed material/tint
+HDAs match the original byte hashes. It enumerates all ten entries of the
+fixed project texture root, finds no exact-family Albedo/Displacement matches,
+and records the five named immediate family folders as absent in that scope.
+It does not search other libraries or establish whole-host absence. The stock
+`default.pic` is present; the project/work CWD candidate files are absent.
+
+The installed host recipe has hash `6e8c8b70...`, different from the published
+source recipe checked by this audit. The read-only run does not deploy the
+new source corrections. No original map acquisition, material cook, cache
+overwrite, HIP save, Unreal import or visual acceptance is established.
 
 ## Decision and implementation boundary
 

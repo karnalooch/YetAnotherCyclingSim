@@ -43,10 +43,43 @@ now resolves one important instance value. At 04:20-04:27 the author disables
 grass masking only for a preview, then re-enables it at 04:46-04:54; the 04:55
 frame confirms the checked mask. Grass is layered over an earlier rocky
 material. The proposed `use_mask=0` coverage change is therefore withdrawn,
-and `stage4a_grass` is restored to 1. Its other recipe AST is unchanged. The
-existing mechanism canary retains strict recipe/asset pins, and all ten CPU
-tests pass; it has not run natively. This does not restore the missing rocky
+and `stage4a_grass` was restored to 1 at published source `fbe2eb7`, with its
+other recipe AST unchanged in that correction. Its ten CPU tests passed;
+it did not run natively. This did not restore the missing rocky
 predecessor or replace the current substitute inputs, and no cache is recooked.
+
+The later [graph follow-up](../../assets/lesson07-sidefx-source-20261021/houdini-author-graph-followup-20261022.json)
+closes the cliff-tint connection and records 69 cited frames. The existing
+pipeline now places the grass gradient and unmasked `(2,2,2)` tint before sand,
+and the cliff tint before scree. It uses the last readable cliff RGB
+`(0.597,0.597,0.597)` and scree RGB `(0.874,0.822347,0.701822)`, both Strength
+`1`. Grass Strength is `0.95`; its two separately observed ramp points are
+assembled with an explicit temporal-inference limit. The new receipt also
+distinguishes the grass occlusion ramp inversion from the disabled Invert Mask
+checkbox and records further exposure/curvature source observations. Unknown
+final mask/ramp tuples remain unresolved; they are not synthesized from defaults.
+
+The material-dependent CLI stages and all seven direct entry functions now
+stop before cache reuse or authoring. This includes default `all --force`
+before any base/mask dispatch. The historical substitute canary also stops
+before its output/preflight/native entry. There is no bypass. These source
+corrections cannot silently execute the remaining historical texture inputs
+or promote an old cache to a new 1:1 result.
+The [source-change receipt](../../assets/lesson07-sidefx-source-20261021/graph-source-correction-20261022.json)
+records all 14 passing CPU tests, 32 exercised pipeline entrypoint calls,
+unchanged base/mask ASTs and independent review. Native replay remains blocked.
+
+The [original-HDA file-branch review](../../assets/lesson07-sidefx-source-20261021/houdini-original-hda-file-branches-20261022.json)
+establishes that `filename2` is tested with `os.path.exists` before selecting
+the roughness-file branch. The [native resource audit](../../assets/lesson07-sidefx-source-20261021/material-resources-39761109220-evidence.json)
+at source `7b43d13` confirms both installed HDA hashes and the stock
+`default.pic` identity. It finds no exact original Albedo/Displacement maps
+among the ten entries in the fixed project texture root or the five named
+family subfolders. This scoped result does not inspect other download caches.
+The installed host pipeline differs from the published recipe, so this
+read-only audit is not a deployment or proof that the source graph changes
+have appeared in Houdini or Unreal. Author CWD and numeric roughness remain
+unresolved.
 
 Official exact-source identification and permitted retrieval are active again.
 Purchase and substitute selection are not authorized. The proposed new

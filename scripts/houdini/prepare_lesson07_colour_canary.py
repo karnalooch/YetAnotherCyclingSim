@@ -1,20 +1,16 @@
-"""Bounded mechanism A/B test of the original Pegasus HDA mask switch.
+"""Disabled historical A/B diagnostic of the Pegasus HDA mask switch.
 
-Run with Houdini 22.0.466 hython in a fresh headless process, for example:
-    $env:HOUDINI_OCL_DEVICETYPE = "CPU"
-    $env:HOUDINI_COP_MAXRES = "32768"
-    hython prepare_lesson07_colour_canary.py --run-token colour-20261022-a
+The YACS substitute colour and roughness inputs do not reproduce the author's
+original material inputs or layer sequence. The exact-source requirement
+supersedes this diagnostic: both native entrypoints reject execution before
+source I/O, output creation or Houdini access, with no bypass option.
+Read-only diagnostic helpers and strict historical pins remain available.
 
-This retained diagnostic uses YACS substitute colour and roughness inputs. It
-does not reproduce the author's original material inputs or layer sequence
-and is not the exact-Pegasus acceptance recipe.
-
-This uses a retained 257x257 diagnostic crop, not the full terrain cache. It
-simulates stage4a's colour-free input with the crop's final Grass layer and
-existing geometry. It is a mechanism test, not a replay of all material stages
-or a production global-colour replacement. Both outputs retain every original
-non-RGB volume, including roughness, masks, height, Alpha and ID. No existing
-HIP, cache, texture, Unreal asset or editor session is written.
+The retained implementation targets a 257x257 diagnostic crop and simulates
+stage4a's colour-free input with the crop's final Grass layer and geometry.
+Its planned outputs protect non-RGB volumes, including roughness, masks,
+height, Alpha and ID. This is neither an author-recipe replay nor evidence
+of a production global-colour repair.
 """
 from __future__ import annotations
 
@@ -55,7 +51,7 @@ ASSET_PINS = {
     "filename3": ("inputs/textures/tlonbisya_4K_Displacement.exr", 49398483,
                   "e0e7c2ddcf6e3d98d91ffa3747a9234791ebf8aae52009bddc8ab9d740279b30"),
 }
-RECIPE_SHA256 = "d8026332c1abe42a3ab2e7428ce4335f9f69c2403bb1e2105164671a65202c37"
+RECIPE_SHA256 = "9880239b94db8077c8c8a1eab0e0fdc99db158650157c170845627fdde0d6eaf"
 # Exact stage4a_grass values in the fingerprinted recipe; only use_mask varies.
 MATERIAL_PARMS = {
     "size": 12.0, "heightscale": 0.0, "srcname1": "mask", "input2": "2",
@@ -66,6 +62,15 @@ RGB = frozenset(("r", "g", "b"))
 REQUIRED = frozenset(("height", "Alpha", "id", "grass", "grass 2", "sand", "cliffs", "scree")) | RGB
 RESOLUTION = (257, 257, 1)
 MAX_CROP_BYTES = 64 * 1024**2
+
+
+def reject_superseded_substitute_canary() -> None:
+    raise RuntimeError(
+        "PEGASUS_SUBSTITUTE_CANARY_DISABLED: the historical YACS substitute "
+        "diagnostic is superseded by the exact-source requirement. Original "
+        "material sources and a source-backed recipe are not established; "
+        "native canary execution is disabled."
+    )
 
 
 def reject_links(path: Path) -> None:
@@ -195,7 +200,8 @@ def lattice(state: dict) -> dict:
 
 
 def cook_canary(inputs: dict, target: Path, report: dict) -> None:
-    # Deliberately delayed until all pinned files and the output boundary pass.
+    reject_superseded_substitute_canary()
+    # Retained historical implementation; the fixed guard above rejects it.
     require_native_environment()
     import hou
     import numpy as np
@@ -308,6 +314,7 @@ def main(argv=None) -> int:
     parser.add_argument("--source-crop", choices=tuple(CROP_PINS), default="SCREE_SITE_GLOBAL_COLOR",
                         help="Explicit pinned crop selection; never falls back if it is missing")
     args = parser.parse_args(argv)
+    reject_superseded_substitute_canary()
     target = output_directory(args.run_token)
     inputs = preflight(args.source_crop)
     require_native_environment()
