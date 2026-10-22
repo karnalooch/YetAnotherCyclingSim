@@ -26,7 +26,7 @@ def signature(path,limit):
         return {"exists":False}
     before=path.stat()
     if not 0<before.st_size<=limit:
-        raise ValueError("Observed file outside bounded hash scope")
+        raise ValueError(f"Observed file outside bounded hash scope: {path}, bytes={before.st_size}, limit={limit}")
     h=hashlib.sha256()
     with path.open("rb") as f:
         for chunk in iter(lambda:f.read(1<<20),b""):
