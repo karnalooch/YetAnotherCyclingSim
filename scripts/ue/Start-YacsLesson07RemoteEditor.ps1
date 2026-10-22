@@ -292,9 +292,10 @@ try {
         # Saved Macro 0.05: apply run 39533695950; byte proof diagnostic 39579824031.
         @(($materialRoot+'MI_Landscape_Instance_YACS.uasset'),40154,'dcd34f9381414c0d63bbd234072ef1b4ac7dd62cf04a4ecc1fe2c48a029d3d2d'),
         @(($materialRoot+'M_Landscape_YACS.uasset'),208956,'53a1d68a97a5205a25463dea5c6aaaec4a9bb1167a1ce9e131a84406327fad66'),
-        @(($materialRoot+'TA_Colour_Unified.uasset'),24178947,'9efed079b6fba9f1c900c4348b9dceabab785a6eadcaf0ea21a6fe8b775568cf'),
-        @(($materialRoot+'TA_Normal_Unified.uasset'),40441798,'838a513e1c725e4e69da26715e6dff3734bfa2e98ef7d91a31278c2a0dbaf0f1'),
-        @(($materialRoot+'TA_Masks_Unified.uasset'),12124066,'e34fb9b1a51d4251058b6cf3da66951f3abc26ac4a6ab1c25f9d348c6923c9e8')
+        # Saved inputs: native preparation 39672674724; fresh diagnostic 39743797257.
+        @(($materialRoot+'TA_Colour_Unified.uasset'),25841182,'7496f23a71d33cd5b812627354559645e8e8fdab57d5a7c5f0216a6293ab58b1'),
+        @(($materialRoot+'TA_Normal_Unified.uasset'),37576130,'a9528c0d7277f3ef0384470f9a47d8f3d5d18888dfab50e04e43d19df6416003'),
+        @(($materialRoot+'TA_Masks_Unified.uasset'),18473310,'565986d6df8ab5d9483c99273ba69a05dcff661a8f55b430bef16e400ba84c94')
     )
     foreach ($pin in $pins) {
         $proof=Get-L07FileProof (Join-Path $projectRoot $pin[0])

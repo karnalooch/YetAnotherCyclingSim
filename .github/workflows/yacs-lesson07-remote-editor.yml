@@ -9,6 +9,7 @@ name: YACS Lesson07 remote Editor connection
 # Source inspection performs five fixed surface-ID reads across /Game, then MI and arrays.
 # Pegasus preparation performs eleven fixed calls and saves only a new source MI copy and backup.
 # Pegasus input inspection reads one plugin source search and eight fixed cache metadata rows.
+# After owner-requested startup, reuse the bounded camera recovery and retain its viewport.
 # Discovery performs no native calls; oversized graph contracts may retain only
 # their complete plain-text description within the existing report limits.
 on:
@@ -404,7 +405,7 @@ jobs:
           & ./scripts/ue/Test-YacsLesson07Viewport.ps1
           $python = 'D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
           if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Existing Python unavailable.' }
-          & $python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.ue.test_apply_lesson07_surface_repair scripts.ue.test_stage_lesson07_surface_repair
+          & $python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.ue.test_apply_lesson07_surface_repair scripts.ue.test_stage_lesson07_surface_repair scripts.ue.test_lesson07_recover_view
           if ($LASTEXITCODE -ne 0) { throw 'L07 discovery or passive-reader boundary tests failed.' }
 
       - name: Start a separate limited interactive task only if the host is idle
@@ -434,6 +435,25 @@ jobs:
           if ($env:L07_MACRO_TRIAL -ceq 'true') { $parameters['TrialMacro'] = $true }
           if ($env:L07_MACRO_APPLY -ceq 'true') { $parameters['ApplyReviewedMacro'] = $true }
           & ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 @parameters
+
+      - name: Recover the Landscape camera after the authorized startup
+        if: ${{ success() && needs.await_ci.result == 'success' }}
+        run: |
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          & $python -B scripts/ue/lesson07_recover_view.py `
+            --expected-head $env:GITHUB_SHA --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Startup camera recovery stopped; Editor retained without retry.' }
+
+      - name: Retain the bounded startup camera result
+        if: ${{ always() && needs.await_ci.result == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lesson07-startup-view-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/lesson07-remote/reports/${{ github.run_id }}-${{ github.run_attempt }}/view-recovery/result.json
+            D:/yacs/lesson07-remote/reports/${{ github.run_id }}-${{ github.run_attempt }}/view-recovery/landscape.jpg
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Retain the exact JPEG returned by the dedicated viewport tool
         id: capture

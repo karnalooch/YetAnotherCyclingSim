@@ -14,11 +14,26 @@
 ## Current restart request after competing Editors (2026-10-22)
 
 The owner subsequently reported closing both Editors and explicitly requested
-starting the canonical Lesson07 project again. A fresh host/checkpoint/task
-read is required before the existing one-shot interactive launcher can start
-it. The previously running Live Host is not a restart target. No native
-`region_inspect` request or shutdown was sent by this continuation, and no
-new Editor start is claimed at this revision.
+starting the canonical Lesson07 project again. [Diagnostic 39743797257](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39743797257),
+source `abc450ce055ef039e14b4a5a3e93ff20b6d3dcdb`, confirmed an idle host with
+zero live Editors and zero stale CIM records at 07:54:40 UTC. The six saved
+map/material packages match the latest retained input identities from
+[native preparation 39672674724](../../assets/lesson07-sidefx-source-20261021/preparation-39672674724-evidence.json).
+The Colour array is the later 25,841,182-byte `7496f23a...` package, rather than
+the earlier retention snapshot; no package is restored or rewritten.
+
+The existing task still targets source `007c5c0737bc36e0dc482b66f4b326e363104621`
+from run `39630648547-1`. It is Ready with result `3221225786`; its last session
+receipt is a stale `EDITOR_RUNNING_NATIVE_NOT_VERIFIED` observation from
+2026-10-21 18:12:37 UTC, not a clean-exit receipt. The narrow `INTERRUPTED_007`
+migration uses these exact fresh installation/session/source fingerprints,
+expired launch permission, unchanged limited interactive principal/settings
+and a new idle-host check. Prior files remain retained and no task is stopped.
+The launcher also updates only its three array pins to the independently
+recorded current packages. Existing protected CI, checkpoint and singleton
+guards remain required. The previously running Live Host is not a restart
+target. No native `region_inspect` or shutdown request was sent, and no new
+Editor start is claimed at this revision.
 
 [Recovery run 39704721721, attempt 2](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39704721721/attempts/2)
 rechecked source `62ec16d1960822a18238f2764558e8093f4c3243` on the home
@@ -63,6 +78,14 @@ Missing input stops before importing Houdini or creating output; there is no
 full-cache fallback. Even a successful canary would demonstrate only the base
 coverage mechanism, not complete material replay, production colour repair,
 fresh-process reopening or whole-area acceptance.
+
+The same 07:54 diagnostic found the retained full
+`lesson06-unified-20261019/final_unified_idmap.bgeo.sc` at its expected
+4,808,520,505-byte size. This was metadata only: its current hash and a safe
+native crop extraction remain unverified. Recreating the small source crop
+must reuse the original HeightField Crop recipe from that accepted cache;
+its small output does not establish a small memory requirement for loading
+the full input. No aggregate material/terrain cook is authorized by this read.
 
 ## Current owner direction: original SideFX material reproduction (2026-10-21)
 

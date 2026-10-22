@@ -387,6 +387,11 @@
       "reason": "Owner-only L06 accepted cache SHA and L07 on-disk map/texture source authentication on Windows; no Houdini/UE launch and no source changes."
     },
     {
+      "file": "yacs-lesson07-recover-view.yml",
+      "state": "CURRENT",
+      "reason": "Issue #365 owner-only fixed-branch [l07-recover-view] intent with focused exact-source CPU checks, bounded read-only process/session/cache inventory and one camera recovery in the already running canonical Lesson07 Editor. The shared non-cancelling native lane and single-Editor PID/start/listener ownership remain required. No Editor startup/shutdown, map/package save, authoring mutation or material/visual acceptance."
+    },
+    {
       "file": "yacs-lesson07-remote-editor.yml",
       "state": "CURRENT",
       "reason": "Owner-only Lesson07 connection modes: explicit startup requires protected exact-SHA CI; separate discovery-only and fixed passive-observer intents require exact-source CPU checks and an already running canonical Editor. Neither existing-session path enters the installer or starts an Editor. All modes retain the shared native lane and authenticated process ownership, preserve all running sessions and make no material/visual acceptance claim."

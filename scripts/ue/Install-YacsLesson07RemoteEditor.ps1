@@ -5,7 +5,7 @@
 .DESCRIPTION
   Requires the existing yacs-unreal-ci reservation and successful exact-SHA CI.
   -Apply is explicit. Without it, only read-only preflight runs. Only the pinned
-  failed 457 or closed 602/de903 task may have its action migrated; no task is stopped
+  failed 457, closed 602/de903, or interrupted 007 task may have its action migrated; no task is stopped
   or unregistered. Existing releases/state and canonical files are retained.
 #>
 [CmdletBinding()]
@@ -114,12 +114,31 @@ function Assert-L07FailedTaskData(
         if ($PriorSession[$field] -isnot [bool] -or $PriorSession[$field] -ne $false) { Stop-L07Install 'MIGRATION_FAILED_SESSION' }
     }
 }
-function Get-L07ClosedTaskPin([ValidateSet('CLOSED_602','CLOSED_DE903')][string]$Kind='CLOSED_602') {
+function Get-L07PriorTaskPin([ValidateSet('CLOSED_602','CLOSED_DE903','INTERRUPTED_007')][string]$Kind='CLOSED_602') {
+    if ($Kind -ceq 'INTERRUPTED_007') {
+        # Diagnostic run 39743797257/job 119707179718 observed an idle host and
+        # this exact interrupted supervisor. Its stale receipt is not clean exit.
+        return @{
+            source_sha='007c5c0737bc36e0dc482b66f4b326e363104621';run_token='39630648547-1'
+            last_task_result=[uint32]3221225786;session_status='EDITOR_RUNNING_NATIVE_NOT_VERIFIED'
+            installation_bytes=930;installation_sha256='9bd0541dd266826a70bcdb8aacdfda69d944eea867e60ff15943418d8f801cbc'
+            session_bytes=6738;session_sha256='240f2d4be4744a302ecec7695ae4b4c5eac35803f6956c9dc49649102b30b3ed'
+            checked_at_utc='2026-10-21T18:12:37.4610531Z'
+            editor_pid=34848;editor_start_filetime_utc='134370724521531735';interactive_session_id=2
+            files=@{
+                'scripts/ue/Install-YacsLesson07RemoteEditor.ps1'=@{bytes=33664;sha256='e104537753a2a822315a949617c6cb6da70fe9cb4209bf21230e4609440dd0e9'}
+                'scripts/ue/Start-YacsLesson07RemoteEditor.ps1'=@{bytes=22916;sha256='8dfd047027ac874ea550868f020997e0df731e26e7d8ba8deb8bcb2518931e91'}
+                'scripts/runner/Get-YacsUnrealHostState.ps1'=@{bytes=3374;sha256='73506d6f1707faa33c97797f6e57d1d22e381eb72787377c3bdbb66fe0d2c346'}
+                'scripts/live_host/Assert-YacsLiveTaskPrincipal.ps1'=@{bytes=2304;sha256='2bd54cda4f1a1aa3ca3af3d3a94d7013317bfe570910701fc7c17d946d0af0b2'}
+            }
+        }
+    }
     if ($Kind -ceq 'CLOSED_DE903') {
         # Exact closed-session bytes from diagnostic run 39629865244/job 119324891844.
         # The owner closed this Editor; this permits one new release, not a retry.
         return @{
             source_sha='de903a85e67540f451ea86743ea981fb7eb79f18';run_token='39625318792-1'
+            last_task_result=0;session_status='EDITOR_EXITED_NO_AUTORESTART'
             installation_bytes=930;installation_sha256='48c0a9a2548888a375baf3eda9db6541936900da453d3e052225ab66071e5c44'
             session_bytes=6732;session_sha256='cc69b0b48a54b5ebeeef6cad95d66b17096a13337a3bbad8cb2b072e735a940e'
             checked_at_utc='2026-10-21T15:44:07.6634944Z'
@@ -136,6 +155,7 @@ function Get-L07ClosedTaskPin([ValidateSet('CLOSED_602','CLOSED_DE903')][string]
     # Task result 0 is a completed supervisor, not proof of a clean UE exit.
     return @{
         source_sha='602f8d0136d8f930adab1cda0c5006de8bf2d9d3';run_token='39513355021-1'
+        last_task_result=0;session_status='EDITOR_EXITED_NO_AUTORESTART'
         installation_bytes=930;installation_sha256='8b78fa1df99f91897dbc301467743dd13ea5d6239e62d2c9ed5d4e5cff146ff5'
         session_bytes=6732;session_sha256='8e2b1cd9c108d9ef1f6244ccdfc8d13bcd59ba30be06f3bea23e96e94b3c69eb'
         checked_at_utc='2026-10-21T07:37:58.9575712Z'
@@ -154,8 +174,8 @@ function Get-L07KnownTaskMigrationKind([object]$Task) {
     $action=$Task.Actions[0]
     if ($action.Execute -isnot [string] -or $action.Execute -ine 'D:\yacs\tools\powershell-7.6.6-win-x64\pwsh.exe' -or
         $action.Arguments -isnot [string] -or $action.WorkingDirectory -isnot [string]) { Stop-L07Install 'MIGRATION_TASK_DEFINITION' }
-    foreach ($kind in @('FAILED_457','CLOSED_602','CLOSED_DE903')) {
-        $pin=if ($kind -ceq 'FAILED_457') { Get-L07FailedTaskPin } else { Get-L07ClosedTaskPin -Kind $kind }
+    foreach ($kind in @('FAILED_457','CLOSED_602','CLOSED_DE903','INTERRUPTED_007')) {
+        $pin=if ($kind -ceq 'FAILED_457') { Get-L07FailedTaskPin } else { Get-L07PriorTaskPin -Kind $kind }
         $priorRelease='D:\yacs\lesson07-remote\releases\'+$pin.source_sha
         $priorScript=if ($IsWindows) { Join-Path $priorRelease 'scripts/ue/Start-YacsLesson07RemoteEditor.ps1' }
             else { $priorRelease+'\scripts\ue\Start-YacsLesson07RemoteEditor.ps1' }
@@ -164,18 +184,21 @@ function Get-L07KnownTaskMigrationKind([object]$Task) {
     }
     Stop-L07Install 'MIGRATION_TASK_DEFINITION'
 }
-function Assert-L07ClosedTaskData(
+function Assert-L07PriorTaskData(
     [object]$Task, [object]$TaskInfo, [Collections.IDictionary]$PriorInstall,
     [Collections.IDictionary]$PriorSession, [string]$InstallationSha256, [long]$InstallationBytes,
     [string]$SessionSha256, [long]$SessionBytes,
     [string]$ResolvedTaskSid, [string]$ExpectedSid, [string]$HostStatus,
     [DateTime]$NowUtc=[DateTime]::UtcNow,
-    [ValidateSet('CLOSED_602','CLOSED_DE903')][string]$Kind='CLOSED_602'
+    [ValidateSet('CLOSED_602','CLOSED_DE903','INTERRUPTED_007')][string]$Kind='CLOSED_602'
 ) {
-    $pin=Get-L07ClosedTaskPin -Kind $Kind
+    $pin=Get-L07PriorTaskPin -Kind $Kind
     if ($HostStatus -cne 'IDLE' -or $Task.State -is [Array] -or [string]$Task.State -cne 'Ready' -or
         ($TaskInfo.LastTaskResult -isnot [int] -and $TaskInfo.LastTaskResult -isnot [long] -and $TaskInfo.LastTaskResult -isnot [uint32]) -or
-        $TaskInfo.LastTaskResult -ne 0) { Stop-L07Install 'MIGRATION_NOT_IDLE_CLOSED' }
+        $TaskInfo.LastTaskResult -ne $pin.last_task_result) {
+        if ($Kind -ceq 'INTERRUPTED_007') { Stop-L07Install 'MIGRATION_NOT_IDLE_INTERRUPTED' }
+        Stop-L07Install 'MIGRATION_NOT_IDLE_CLOSED'
+    }
     if ((Get-L07KnownTaskMigrationKind $Task) -cne $Kind) { Stop-L07Install 'MIGRATION_TASK_DEFINITION' }
     Assert-L07TaskSettings $Task
     if ($ResolvedTaskSid -cne $ExpectedSid -or $ExpectedSid -cnotmatch '^S-1-\d+-' -or
@@ -195,7 +218,7 @@ function Assert-L07ClosedTaskData(
         if ($entries.Count -ne 1 -or $entries[0]['sha256'] -isnot [string] -or $entries[0]['sha256'] -cne $pin.files[$relative].sha256) { Stop-L07Install 'MIGRATION_SOURCE_HASH' }
     }
     if ($SessionBytes -ne $pin.session_bytes -or $SessionSha256 -cne $pin.session_sha256 -or $null -ne $PriorSession['reason_code']) { Stop-L07Install 'MIGRATION_CLOSED_SESSION' }
-    $expectedFields=@{source_sha=$pin.source_sha;status='EDITOR_EXITED_NO_AUTORESTART';phase='SUPERVISING';host_status='IDLE'}
+    $expectedFields=@{source_sha=$pin.source_sha;status=$pin.session_status;phase='SUPERVISING';host_status='IDLE'}
     foreach ($field in $expectedFields.Keys) {
         if ($PriorSession[$field] -isnot [string] -or $PriorSession[$field] -cne $expectedFields[$field]) { Stop-L07Install 'MIGRATION_CLOSED_SESSION' }
     }
@@ -248,9 +271,9 @@ function Get-L07FailedTaskMigration([object]$Task, [string]$ExpectedSid) {
     }
     return [ordered]@{prior_source_sha=$pin.source_sha;prior_session_sha256=$priorSession.sha256;prior_release_retained=$true;prior_state_retained=$true;owner_sid_matches=$true;prior_task_result=1}
 }
-function Get-L07ClosedTaskMigration([object]$Task, [string]$ExpectedSid,
-    [ValidateSet('CLOSED_602','CLOSED_DE903')][string]$Kind='CLOSED_602') {
-    $pin=Get-L07ClosedTaskPin -Kind $Kind
+function Get-L07PriorTaskMigration([object]$Task, [string]$ExpectedSid,
+    [ValidateSet('CLOSED_602','CLOSED_DE903','INTERRUPTED_007')][string]$Kind='CLOSED_602') {
+    $pin=Get-L07PriorTaskPin -Kind $Kind
     $priorRelease=Join-Path $root ('releases\'+$pin.source_sha)
     $priorInstall=Read-L07MigrationJson (Join-Path $priorRelease 'installation.json')
     $priorSession=Read-L07MigrationJson (Join-Path $root ('state\'+$pin.source_sha+'\session.json'))
@@ -266,17 +289,17 @@ function Get-L07ClosedTaskMigration([object]$Task, [string]$ExpectedSid,
     $principalProof=Assert-YacsLiveTaskPrincipal -Task $Task -ExpectedSid $ExpectedSid
     $taskInfo=Get-ScheduledTaskInfo -TaskName $taskName -TaskPath '\' -ErrorAction Stop
     $hostState=& (Join-Path $RepoRoot 'scripts/runner/Get-YacsUnrealHostState.ps1')
-    Assert-L07ClosedTaskData -Kind $Kind -Task $Task -TaskInfo $taskInfo -PriorInstall $priorInstall.data -PriorSession $priorSession.data `
+    Assert-L07PriorTaskData -Kind $Kind -Task $Task -TaskInfo $taskInfo -PriorInstall $priorInstall.data -PriorSession $priorSession.data `
         -InstallationSha256 $priorInstall.sha256 -InstallationBytes $priorInstall.size_bytes `
         -SessionSha256 $priorSession.sha256 -SessionBytes $priorSession.size_bytes `
         -ResolvedTaskSid $principalProof.sid -ExpectedSid $ExpectedSid -HostStatus $hostState.status
     return [ordered]@{kind=$Kind;prior_source_sha=$pin.source_sha;prior_installation_sha256=$priorInstall.sha256;prior_session_sha256=$priorSession.sha256
-        prior_release_retained=$true;prior_state_retained=$true;owner_sid_matches=$true;prior_task_result=0;prior_ue_clean_exit_verified=$false}
+        prior_release_retained=$true;prior_state_retained=$true;owner_sid_matches=$true;prior_task_result=$pin.last_task_result;prior_ue_clean_exit_verified=$false}
 }
 function Get-L07KnownTaskMigration([object]$Task, [string]$ExpectedSid) {
     $kind=Get-L07KnownTaskMigrationKind $Task
     if ($kind -ceq 'FAILED_457') { return Get-L07FailedTaskMigration -Task $Task -ExpectedSid $ExpectedSid }
-    if ($kind -cin @('CLOSED_602','CLOSED_DE903')) { return Get-L07ClosedTaskMigration -Kind $kind -Task $Task -ExpectedSid $ExpectedSid }
+    if ($kind -cin @('CLOSED_602','CLOSED_DE903','INTERRUPTED_007')) { return Get-L07PriorTaskMigration -Kind $kind -Task $Task -ExpectedSid $ExpectedSid }
     Stop-L07Install 'MIGRATION_TASK_DEFINITION'
 }
 function Copy-L07SessionFailure([Collections.IDictionary]$Session, [Collections.IDictionary]$Target) {
