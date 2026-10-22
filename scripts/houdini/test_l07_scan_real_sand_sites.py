@@ -33,6 +33,15 @@ class ScanContract(unittest.TestCase):
         self.assertGreater(found["mean"],0)
         self.assertLessEqual(found["max"],1)
 
+    def test_source_native_refine_exposes_same_16x16_grid_as_stage1(self):
+        found=scan.refine_neighborhood(FakeMaskVolume(),128,128)
+        grid=found["alpha_joint_grid16"]
+        self.assertEqual(len(grid),256)
+        self.assertEqual(grid[0],0.0)
+        self.assertGreater(max(grid),0)
+        self.assertTrue(all(0<=v<=1 for v in grid))
+        self.assertEqual(scan.MAX_BUCKETS,1200)
+
     def test_diverse_selection_does_not_recommend_near_duplicates(self):
         rows=[
             {"i":500,"j":500,"refined":{"mean":.6,"positive_samples":100}},
