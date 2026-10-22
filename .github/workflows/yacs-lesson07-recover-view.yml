@@ -82,7 +82,6 @@ jobs:
               jobs = api('/actions/runs/' + str(run_id) + '/jobs?per_page=100')
               if jobs['total_count'] != len(jobs['jobs']):
                   raise RuntimeError('Incomplete job inventory')
-              # Never stop an assigned runner, native process or executing proof.
               if any(job.get('status') not in ('queued', 'pending') or job.get('runner_id', 0)
                      or job.get('steps') for job in jobs['jobs']):
                   continue
@@ -143,7 +142,8 @@ jobs:
           $prior=$env:GIT_NO_LAZY_FETCH
           try {
             $env:GIT_NO_LAZY_FETCH='1'
-            & ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+            $checkoutProof=& ./scripts/ci/Test-YacsCodeOnlyCheckout.ps1
+            $checkoutProof | Select-Object -Last 1
           } finally {$env:GIT_NO_LAZY_FETCH=$prior}
           & ./scripts/live_host/Test-YacsLiveTaskPrincipal.ps1
           & ./scripts/ue/Test-YacsLesson07RemotePreflight.ps1
@@ -152,6 +152,29 @@ jobs:
           $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
           & $python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.ue.test_lesson07_recover_view
           if($LASTEXITCODE -ne 0){throw 'Native-host source tests failed.'}
+      - name: Identify competing sessions without exposing credentials
+        run: |
+          $ErrorActionPreference='Stop'
+          $state=& ./scripts/runner/Get-YacsUnrealHostState.ps1
+          $rows=@($state.local_or_unknown_processes)+@($state.remote_ci_processes)
+          $safeRows=@($rows | ForEach-Object {
+            [ordered]@{name=$_.name;pid=$_.process_id;parent_pid=$_.parent_process_id;exe=$_.executable_path;created=$_.creation_date;session=$_.session_id;owner_class=$_.owner;canonical_project_mentioned=([string]$_.command_line).Replace('\','/').Contains('D:/yacs/project/YetAnotherCyclingSim.uproject')}
+          })
+          $discovery='D:\yacs\project\Saved\LocoAI\external-mcp-config.json'
+          $bridge=[ordered]@{exists=(Test-Path -LiteralPath $discovery);listeners=@()}
+          if($bridge.exists){
+            $item=Get-Item -LiteralPath $discovery
+            if($item.Length -le 16384 -and -not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)){
+              $cfg=Get-Content -LiteralPath $discovery -Raw | ConvertFrom-Json
+              $endpoint=[uri]$cfg.url
+              $bridge.file_updated=$item.LastWriteTimeUtc.ToString('o')
+              if($endpoint.Scheme -ceq 'http' -and $endpoint.Host -ceq '127.0.0.1'){
+                $bridge.listeners=@(Get-NetTCPConnection -LocalPort $endpoint.Port -State Listen -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,OwningProcess)
+              }
+            }
+          }
+          $os=Get-CimInstance Win32_OperatingSystem
+          Write-Host ('L07_HOST_INVENTORY='+([ordered]@{status=$state.status;local_count=$state.local_or_unknown_count;remote_count=$state.remote_ci_count;stale_count=$state.stale_cim_record_count;processes=$safeRows;bridge=$bridge;free_ram_kib=$os.FreePhysicalMemory} | ConvertTo-Json -Depth 8 -Compress))
       - name: Existing-session Wingman preflight without startup or shutdown
         run: |
           $ownerProof=& ./scripts/ue/Start-YacsLesson07RemoteEditor.ps1 -ExpectedHead $env:GITHUB_SHA -PreflightOnly
@@ -173,4 +196,19 @@ jobs:
             D:/yacs/lesson07-remote/reports/${{ github.run_id }}-${{ github.run_attempt }}/view-recovery/landscape.jpg
             D:/yacs/lesson07-remote/reports/${{ github.run_id }}-${{ github.run_attempt }}/probe.json
           if-no-files-found: warn
+          retention-days: 7
+      - name: Retain the exact scoped source for independent offline checks
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: lesson07-repair-source-${{ github.run_id }}
+          path: |
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/ue/lesson07_recover_view.py
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/ue/test_lesson07_recover_view.py
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/ue/lesson07_wingman_client.py
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/ue/Start-YacsLesson07RemoteEditor.ps1
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/houdini/lesson06_unified_pipeline.py
+            l07-view-${{ github.run_id }}-${{ github.run_attempt }}/scripts/houdini/cook_and_verify_lesson07_exports.py
+          if-no-files-found: error
           retention-days: 7
