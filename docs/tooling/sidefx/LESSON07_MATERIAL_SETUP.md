@@ -11,6 +11,14 @@
 
 ---
 
+## Current owner decision and delivered native CC0 proof (2026-10-22)
+
+**AUTHORITATIVE LATEST DECISION:** when exact Quixel material sets were unavailable, the owner authorized selecting replacements. Eight Poly Haven CC0 families have been acquired, with 45 original PBR map files verified in Houdini 22.0.466. **Exact original Quixel-family 1:1 is superseded for texture sourcing only**, not for the SideFX Houdini-first workflow or preservation of accepted Sa Calobra geography.
+
+The [real-world five-stage native SideFX HDA proof](../../assets/lesson07-sidefx-source-20261021/REAL_CC0_5_HDA_20261022.md) completed **PASS** under [workflow run 39789846215](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39789846215). This is a bounded 256x256 material-mechanism preview using authentic accepted full-16K source height/Alpha/masks and the original SideFX material HDA. Each stage preserved original height and all source masks byte-for-byte in its saved/reopened isolated output. Any measured <=0.031 mm native float32 rounding was restored in scratch only; canonical caches and the owner's UE map were untouched.
+
+**IMPORTANT LIMITS:** true Stage3 scree/transport mask is not yet wired into this preview; the screen image currently uses a conspicuously overbroad **cliff-mask proxy**. Sand mask at that scree site is zero. Final author tint/occlusion/curvature graph, physical nonzero displacement, entire 16K producer, Unreal D/N/ORD(p) arrays, streaming performance and the in-editor visual acceptance are outstanding. **`LESSON07_TECHNICAL_PASS: false`, `performance_pass: false`, PR #474 remains Draft.** Existing no-substitution and no-cook paragraphs below are historical states prior to this later owner approval and bounded native canary, not active policy that forbids the current isolated tests.
+
 ## Current owner direction: exact Pegasus configuration and assets (2026-10-22)
 
 The owner's latest instruction requires **1:1 reproduction of Pegasus, from
