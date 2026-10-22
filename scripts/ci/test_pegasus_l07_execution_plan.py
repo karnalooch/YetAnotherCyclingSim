@@ -3,6 +3,7 @@
 This is a structural proof about the tracked execution plan, not a native
 Houdini/UE execution or permission to claim visual completion.
 """
+
 from __future__ import annotations
 
 import json
