@@ -268,6 +268,23 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str)->dict:
                 raise ValueError(f"Original SideFX HDA cook errors at {role}: {material.errors()}")
             cooked=material.geometry()
             hashes=source_layer_hashes(cooked,hou)
+            if hashes.get("height")!=protected["height"]:
+                # Evidence only: zero-displacement HDA may still change height.
+                # DO NOT accept/copy this output before understanding magnitude.
+                h=volume_by_name(cooked,hou).get("height")
+                if h is None:
+                    raise ValueError(f"Original HDA removed the height volume at {role}")
+                native=np.frombuffer(h.allVoxelsAsString(),dtype="<f4").reshape((SIZE,SIZE))
+                if not np.isfinite(native).all():
+                    raise ValueError(f"Nonfinite masked HDA heights at {role}")
+                delta=np.abs(native.astype(np.float64)-arrays["height"].astype(np.float64))
+                metrics={"changed_count":int(np.count_nonzero(delta)),
+                         "max_delta_m":float(delta.max()),
+                         "mean_delta_m":float(delta.mean()),
+                         "p99_delta_m":float(np.percentile(delta,99)),
+                         "height_raw_min_m":float(native.min()),
+                         "height_raw_max_m":float(native.max())}
+                raise ValueError(f"Native masked HDA height change at {role}: {json.dumps(metrics)}")
             compare_protected(protected,hashes,role)
             for channel in ("r","g","b"):
                 if channel not in hashes:
