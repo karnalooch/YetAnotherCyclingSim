@@ -122,8 +122,14 @@ def source_layer_hashes(geo,hou)->dict:
 def align_to_original(vol,original,hou)->None:
     first=vol.indexToPos((0,0,0))
     target=original["first_voxel_world_xyz"]
+    # Accepted L06 j-index heads toward negative Z. A newly created Houdini
+    # heightfield SOP heads toward positive Z; keep X and up unchanged.
+    # Mirror ONLY scratch volume transforms, NEVER accepted source arrays.
+    local=hou.Matrix4(vol.transform()) * hou.hmath.buildTranslate(vol.vertex(0).point().position())
+    vol.setTransform(local * hou.hmath.buildScale((1.0,1.0,-1.0)))
+    reflected_first=vol.indexToPos((0,0,0))
     center=vol.vertex(0).point()
-    center.setPosition(center.position()+hou.Vector3(tuple(float(t)-float(f) for t,f in zip(target,first))))
+    center.setPosition(center.position()+hou.Vector3(tuple(float(t)-float(f) for t,f in zip(target,reflected_first))))
     after_first=vol.indexToPos((0,0,0))
     after_last=vol.indexToPos((SIZE-1,SIZE-1,0))
     if (max(abs(float(a)-float(b)) for a,b in zip(after_first,target))>0.008
