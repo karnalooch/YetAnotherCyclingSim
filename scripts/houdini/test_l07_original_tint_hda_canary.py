@@ -80,6 +80,16 @@ class TintCanaryContract(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"Unapproved tint mode"):
             tint.apply_parms(FakeHDA(),"unknown",None)
 
+    def test_native_tint_restores_only_scratch_working_mask_before_height(self):
+        source=SOURCE.read_text(encoding="utf-8")
+        self.assertIn("preserve_generic_working_mask_in_scratch(",source)
+        self.assertIn("mask_restored,working_mask=",source)
+        self.assertIn("restore_scratch_height(\n        mask_restored",source)
+        self.assertIn("generic_working_mask_copied_back_in_scratch",source)
+        self.assertIn("source_masks[\"mask\"].allVoxelsAsString()",source)
+        self.assertIn("generic working mask escaped [0,1]",source)
+        self.assertIn("restored_only_in_disposable_native_candidate",source)
+
     def test_source_scopes_never_canonical_map(self):
         self.assertTrue(str(tint.SCRATCH_ROOT).replace("\\","/").startswith("D:/yacs/work/"))
         self.assertTrue(str(tint.MATERIAL_ROOT).replace("\\","/").startswith("D:/yacs/work/"))
