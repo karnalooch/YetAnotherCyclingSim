@@ -79,8 +79,8 @@ def inventory():
         header=run.stdout
         # Houdini prints singular "Volume" when there is just one; capture
         # only shape/name technical lines to resolve this without guessing.
-        one_volume=bool(re.search(r"\\b1 Volume(?:s)?\\b",header))
-        right_name=bool(re.search(r"\\(scree_mask\\)",header))
+        one_volume=bool(re.search(r"\b1 Volume(?:s)?\b",header))
+        right_name=bool(re.search(r"\(scree_mask\)",header))
         right_lattice=("[16000, 16000, 1]" in header)
         expected=(one_volume and right_name and right_lattice)
         technical_lines=[
