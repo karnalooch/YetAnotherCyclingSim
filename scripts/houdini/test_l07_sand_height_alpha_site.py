@@ -51,6 +51,28 @@ class HeightAlphaSiteContract(unittest.TestCase):
         self.assertEqual(data["alpha_fraction"],1)
         self.assertEqual(data["valid_low_elevation_fraction"],0)
 
+    def test_alpha_joint_source_mask_requires_real_land_overlap(self):
+        coast={"i":2528,"j":8160,
+               "refined":{"alpha_joint_grid16":[0.85]*256}}
+        a=m.sample_region(ExampleVolume(12.5),ExampleVolume(1.0),coast)
+        self.assertEqual(a["valid_low_sand_overlap_count"],256)
+        self.assertTrue(a["sand_joint_source_aligned"])
+        b=m.sample_region(ExampleVolume(12.5),ExampleVolume(0.0),coast)
+        self.assertEqual(b["valid_low_sand_overlap_count"],0)
+        self.assertFalse(b["alpha_valid"])
+
+    def test_coast_sand_alpha_intersection_outranks_offshore_high_sand(self):
+        sites=[
+            {"stage2":{"i":1000,"j":1000,"refined":{"mean":0.99}},
+             "stage1":{"valid_low_sand_overlap_count":0,
+                       "alpha_fraction":0.0,"valid_low_elevation_fraction":0.0}},
+            {"stage2":{"i":5000,"j":5000,"refined":{"mean":0.05}},
+             "stage1":{"valid_low_sand_overlap_count":5,
+                       "alpha_fraction":0.15,"valid_low_elevation_fraction":0.1}},
+        ]
+        ranked=m.order_candidates(sites)
+        self.assertEqual(ranked[0]["stage2"]["i"],5000)
+
     def test_best_site_is_determined_by_stage1_quality_before_sand_density(self):
         sites=[
             {"stage2":{"i":500,"j":500,"refined":{"mean":1.0}},
