@@ -19,6 +19,8 @@ on:
       - scripts/houdini/test_l07_sand_source_audit.py
       - scripts/houdini/l07_scan_real_sand_sites.py
       - scripts/houdini/test_l07_scan_real_sand_sites.py
+      - scripts/houdini/l07_sand_height_alpha_site.py
+      - scripts/houdini/test_l07_sand_height_alpha_site.py
 
 permissions:
   contents: read
@@ -434,5 +436,94 @@ jobs:
         with:
           name: l07-native-sand-positive-sites-${{ github.run_id }}-${{ github.run_attempt }}
           path: D:/yacs/work/lesson07-sand-candidates/${{ github.run_id }}-${{ github.run_attempt }}/real-sand-site-candidates.json
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  sand_height_alpha_preflight:
+    name: Validate full-16K Stage1 Alpha/height identity at real sand-positive sites
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-sand-height-alpha]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Check selection prioritizes authoritative real Stage1 Alpha and height
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_sand_height_alpha_site -v
+          python -B -m py_compile scripts/houdini/l07_sand_height_alpha_site.py
+
+  sand_height_alpha_native:
+    name: Independently verify exact 16K source height and Alpha at sand-positive sites
+    needs: sand_height_alpha_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 24
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout Stage1 source inspection code at exact event SHA
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Read original full-16K Stage1 and rank candidate sand sites using actual Alpha/height
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Source SHA not this reviewed commit.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Canonical Houdini 22 missing.' }
+          $candidates='D:\yacs\work\lesson07-sand-candidates\39813029959-1\real-sand-site-candidates.json'
+          if (-not (Test-Path -LiteralPath $candidates)) { throw 'No independently verified Stage2 source candidate evidence.' }
+          & $hython -B scripts/houdini/l07_sand_height_alpha_site.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Original real Stage1 Alpha/height was not verified; canonical files remain.' }
+          $report='D:\yacs\work\lesson07-valid-sand-sites\${{ github.run_id }}-${{ github.run_attempt }}\sand-height-alpha-site.json'
+          if (-not (Test-Path -LiteralPath $report)) { throw 'Native sand-height source receipt absent.' }
+          $proof=Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
+          if ($proof.original_stage1_height_alpha_unchanged -ne $true -and
+              $proof.status -cne 'NO_ACCEPTABLE_REAL_STAGE1_ALPHA_AND_LOW_HEIGHT_SAND_SITE') {
+            throw 'Source Stage1 authoritative height/Alpha was not preserved.'
+          }
+          if ($proof.unreal_import -ne $false -or $proof.coastline_landmark_verified -ne $false) {
+            throw 'A 16K source metadata check cannot claim coast image/UE acceptance.'
+          }
+          Write-Host "REAL_STAGE1_SAND_SITE_SOURCE_VERIFICATION=$($proof.status)"
+      - name: Retain georeferenced real source Alpha/height/sand site without full BGEO
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-real-sand-source-height-alpha-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-valid-sand-sites/${{ github.run_id }}-${{ github.run_attempt }}/sand-height-alpha-site.json
+            D:/yacs/work/lesson07-valid-sand-sites/${{ github.run_id }}-${{ github.run_attempt }}/selected-sand-stage1.npz
           if-no-files-found: warn
           retention-days: 30
