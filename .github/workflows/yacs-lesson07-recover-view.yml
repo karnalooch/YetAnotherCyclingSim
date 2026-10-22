@@ -154,6 +154,9 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Native-host source tests failed.'}
       - name: Existing-session Wingman preflight without startup or shutdown
         run: |
+          $ownerProof=& ./scripts/ue/Start-YacsLesson07RemoteEditor.ps1 -ExpectedHead $env:GITHUB_SHA -PreflightOnly
+          $ownerSummary=$ownerProof | Select-Object status,phase,reason_code,host_status,owner_sid_matches,editor
+          Write-Host ('L07_OWNER_PREFLIGHT='+($ownerSummary | ConvertTo-Json -Compress -Depth 6))
           & ./scripts/ue/Invoke-YacsLesson07RemoteProbe.ps1 -ExpectedHead $env:GITHUB_SHA -RunToken '${{ github.run_id }}-${{ github.run_attempt }}' -ExistingEditorOnly
       - name: Recover the camera once and retain the real viewport
         run: |
