@@ -129,6 +129,42 @@ def apply_parms(tint,kind,hou):
     return parameters
 
 
+
+def preserve_generic_working_mask_in_scratch(cooked,source,hou,np,role):
+    """Restore only the HDA scratch "mask" output; protect semantic source masks.
+
+    The original Tint HDA may replace the generic working layer with its ramp
+    mask. That is a temporary node working layer, not a grant to mutate the
+    accepted stage2 grass/sand/cliff/ramp masks or original Alpha/height.
+    """
+    from scripts.houdini.l07_real_material_canary import volume_by_name,source_layer_hashes
+    source_masks=volume_by_name(source,hou)
+    result_masks=volume_by_name(cooked,hou)
+    if "mask" not in source_masks or "mask" not in result_masks:
+        raise ValueError(f"Native {role}: generic mask layer was removed")
+    def vox(vol):
+        values=np.frombuffer(vol.allVoxelsAsString(),dtype="<f4").reshape((256,256))
+        if not np.isfinite(values).all():
+            raise ValueError(f"Native {role}: working mask has NaN or infinity")
+        if float(values.min())<-0.0001 or float(values.max())>1.0001:
+            raise ValueError(f"Native {role}: generic working mask escaped [0,1]")
+        return values
+    initial=vox(source_masks["mask"])
+    changed=vox(result_masks["mask"])
+    delta=np.abs(initial.astype(np.float64)-changed.astype(np.float64))
+    numbers={"changed_cells":int(np.count_nonzero(delta)),
+             "max_absolute_change":float(delta.max()),
+             "raw_min":float(changed.min()),
+             "raw_max":float(changed.max()),
+             "restored_only_in_disposable_native_candidate":True}
+    clone=hou.Geometry(cooked)
+    volume_by_name(clone,hou)["mask"].setAllVoxelsFromString(
+        source_masks["mask"].allVoxelsAsString())
+    if source_layer_hashes(clone,hou)["mask"]!=source_layer_hashes(source,hou)["mask"]:
+        raise ValueError("Generic mask copyback did not restore source byte identity")
+    return clone,numbers
+
+
 def native_case(obj,case,role,mask_name,kind,source_file,output,np,hou) -> dict:
     from scripts.houdini.l07_real_material_canary import (
         restore_scratch_height,source_layer_hashes,volume_by_name,save_png
@@ -159,8 +195,10 @@ def native_case(obj,case,role,mask_name,kind,source_file,output,np,hou) -> dict:
     if tint.errors():
         raise ValueError(f"Source tint HDA reported errors {case}: {tint.errors()}")
     raw=tint.geometry()
+    mask_restored,working_mask=preserve_generic_working_mask_in_scratch(
+        raw,loaded,hou,np,case)
     repaired,hashes,roundoff=restore_scratch_height(
-        raw,{"height":original_height},protected,hou,np,case)
+        mask_restored,{"height":original_height},protected,hou,np,case)
     for key in ("r","g","b"):
         if key not in hashes:
             raise ValueError(f"Tint HDA omitted {key} colour layer")
@@ -190,7 +228,9 @@ def native_case(obj,case,role,mask_name,kind,source_file,output,np,hou) -> dict:
                            else "HISTORICAL_STAGE3_UPSTREAM_NOT_FULLY_PROVEN" if kind=="solid_scree"
                            else None),
         "parms":parms,"height_and_semantic_masks_preserved":True,
-        "raw_native_rounding":roundoff,"native_warnings":list(tint.warnings()),
+        "raw_native_rounding":roundoff,
+        "generic_working_mask_copied_back_in_scratch":working_mask,
+        "native_warnings":list(tint.warnings()),
         "min_rgb":float(colour.min()),"max_rgb":float(colour.max()),
         "mean_rgb":list(map(float,colour.mean(axis=(0,1)))),
         "black_all_three_rgb_count":int(np.count_nonzero(np.all(colour<=1e-6,axis=-1))),
