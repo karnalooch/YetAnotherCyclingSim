@@ -1,8 +1,8 @@
 name: YACS Lesson07 bounded viewport recovery
 
 # One-shot navigation in the current owner session, not a new world pipeline.
-# Keep the existing preflight, native safety review, runner admission and lock.
-# No lifecycle call, material mutation, package save or full native build.
+# Preserve host checks and shared exclusion; cancel only unstarted Blender runs
+# accidentally queued by the exact navigation-only commits listed below.
 on:
   push:
     branches: [codex/365-world-graph]
@@ -23,6 +23,9 @@ jobs:
       contains(github.event.head_commit.message, '[l07-recover-view]')
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: write
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
       PYTHONDONTWRITEBYTECODE: '1'
@@ -43,6 +46,51 @@ jobs:
         run: |
           python -B -m unittest scripts.ue.test_lesson07_wingman_client scripts.ue.test_lesson07_observe_editor scripts.assets.test_assemble_surface_slices scripts.ue.test_apply_lesson07_surface_repair scripts.assets.test_prepare_lesson07_surface_repair scripts.ue.test_stage_lesson07_surface_repair scripts.ue.test_lesson07_recover_view
           git diff --exit-code
+      - name: Cancel only unstarted incidental Blender jobs from this camera change
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json, os, subprocess
+          repo = 'karnalooch/YetAnotherCyclingSim'
+          heads = {'78e178503a05ae6088de4dfd5246bd076d0b99fb',
+                   '52777531f0adb3f4631c38350454e6233b29182e',
+                   'c3bcd74767b4e48c3afbc8632de1cb17be6f85bf',
+                   'ebfed6fe71d292f534a423ec6ff19be9fd3aa90c', os.environ['GITHUB_SHA']}
+          def api(path, method='GET'):
+              result = subprocess.run(['gh', 'api', '--method', method, 'repos/' + repo + path],
+                                      text=True, capture_output=True, timeout=20, check=False)
+              if result.returncode:
+                  raise RuntimeError('GitHub API refused bounded queue operation; no fallback')
+              return json.loads(result.stdout) if result.stdout.strip() else None
+          def eligible(run):
+              return (run.get('path') == '.github/workflows/blender-material-forge-reference.yml'
+                      and run.get('head_branch') == 'codex/365-world-graph'
+                      and run.get('head_sha') in heads and run.get('event') == 'pull_request'
+                      and run.get('actor', {}).get('login') == 'karnalooch'
+                      and run.get('status') in ('queued', 'pending')
+                      and run.get('head_repository', {}).get('full_name') == repo)
+          runs = api('/actions/runs?branch=codex%2F365-world-graph&event=pull_request&per_page=100')
+          targets = [run['id'] for run in runs['workflow_runs'] if eligible(run)]
+          if len(targets) > 5:
+              raise RuntimeError('Unexpected number of incidental Blender runs')
+          cancelled = []
+          for run_id in targets:
+              run = api('/actions/runs/' + str(run_id))
+              if not eligible(run):
+                  continue
+              jobs = api('/actions/runs/' + str(run_id) + '/jobs?per_page=100')
+              if jobs['total_count'] != len(jobs['jobs']):
+                  raise RuntimeError('Incomplete job inventory')
+              # Never stop an assigned runner, native process or executing proof.
+              if any(job.get('status') not in ('queued', 'pending') or job.get('runner_id', 0)
+                     or job.get('steps') for job in jobs['jobs']):
+                  continue
+              api('/actions/runs/' + str(run_id) + '/cancel', 'POST')
+              cancelled.append(run_id)
+          print(json.dumps({'cancel_requested_unstarted_blender_runs': cancelled,
+                            'proof_pass_claimed': False, 'host_changed': False}))
+          PY
 
   recover:
     needs: cpu
