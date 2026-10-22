@@ -1,9 +1,13 @@
-"""Bounded native A/B test of the original Pegasus base-colour mask switch.
+"""Bounded mechanism A/B test of the original Pegasus HDA mask switch.
 
 Run with Houdini 22.0.466 hython in a fresh headless process, for example:
     $env:HOUDINI_OCL_DEVICETYPE = "CPU"
     $env:HOUDINI_COP_MAXRES = "32768"
     hython prepare_lesson07_colour_canary.py --run-token colour-20261022-a
+
+This retained diagnostic uses YACS substitute colour and roughness inputs. It
+does not reproduce the author's original material inputs or layer sequence
+and is not the exact-Pegasus acceptance recipe.
 
 This uses a retained 257x257 diagnostic crop, not the full terrain cache. It
 simulates stage4a's colour-free input with the crop's final Grass layer and
@@ -51,7 +55,7 @@ ASSET_PINS = {
     "filename3": ("inputs/textures/tlonbisya_4K_Displacement.exr", 49398483,
                   "e0e7c2ddcf6e3d98d91ffa3747a9234791ebf8aae52009bddc8ab9d740279b30"),
 }
-RECIPE_SHA256 = "867e8986511c89403173d47ccf87f6f966438f394086f7c64d799bb15269e32b"
+RECIPE_SHA256 = "d8026332c1abe42a3ab2e7428ce4335f9f69c2403bb1e2105164671a65202c37"
 # Exact stage4a_grass values in the fingerprinted recipe; only use_mask varies.
 MATERIAL_PARMS = {
     "size": 12.0, "heightscale": 0.0, "srcname1": "mask", "input2": "2",

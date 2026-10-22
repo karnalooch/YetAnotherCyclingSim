@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "observed_date_utc": "2026-10-22",
+  "repository_head_at_recording": "9105e46fe9dde22e60d2947b65046f6f6bb9e262",
+  "scope": "Issue #365 / M3: read-only search for the original saved Landscape Workflow lesson 03-05 material/tint instances beyond the previously verified Workflow3 archive.",
+  "result": "TARGET_AUTHOR_HIP_NOT_LOCATED_IN_REVIEWED_OFFICIAL_SOURCES",
+  "catalog_reference": "docs/tooling/sidefx/catalog/catalog.json",
+  "target": {
+    "filename": "Landscape_Workflow_03_Detailing.hip",
+    "author_path_visible_in_video": "D:/PegasusDemo/Promotional/Landscapes/Main/Landscape_Workflow_03_Detailing.hip",
+    "path_evidence": "Reported by the parallel source-video reviewer from the original lesson 03/04 title bar; the archive reviewer did not independently re-view those frames.",
+    "sought_saved_node_types": ["PE_heightfield_material", "PE_heightfield_tint"],
+    "original_instance_parameters_and_inputs_verified_by_this_search": false
+  },
+  "method": {
+    "transport": "Anonymous ordinary HTTPS GET; HTTP Range only where the server returned 206 with the requested Content-Range.",
+    "archive_read": "ZIP metadata and CRC checks; bounded in-memory extraction of selected HIP records; SHA256 comparison with the existing catalog.",
+    "hip_read": "Old ASCII CPIO records read only as data. Saved .init node types and selected .def connections inspected without evaluating scripts, expressions, callbacks or HDA code.",
+    "houdini_or_unreal_invoked": false,
+    "hip_loaded_natively": false,
+    "hda_definitions_expanded_natively": false,
+    "cook_performed": false,
+    "source_or_runtime_assets_modified": false,
+    "guessed_archive_urls_requested": false,
+    "access_control_workaround_used": false
+  },
+  "official_page_inventory": [
+    {
+      "url": "https://www.sidefx.com/tutorials/project-pegasus-landscape-workflow/",
+      "http_status": 200,
+      "html_bytes": 398426,
+      "inspection": "Independent read-only peer inspection of current HTML; one window.files record, id 199. No additional ZIP/HIP links established.",
+      "listed_archives": ["https://media.sidefx.com/files/tutorials/project-pegasus-landscape-workflow/ProjectFiles_LandscapeWorkflow3.zip"]
+    },
+    {
+      "url": "https://www.sidefx.com/tutorials/project-pegasus-landscape-material/",
+      "http_status": 200,
+      "html_bytes": 69505,
+      "html_sha256": "8375c7ae69c0d5ca77ae9ceb7855e1b27001c165007e019bb527088b4bbd2045",
+      "inspection": "Current window.files array empty; no public media.sidefx.com ZIP/HIP links found in the page.",
+      "listed_archives": []
+    }
+  ],
+  "additional_archives": [
+    {
+      "source_page": "https://www.sidefx.com/tutorials/project-pegasus-landscape-technical-deep-dive/",
+      "current_page_file_id": 200,
+      "url": "https://media.sidefx.com/files/tutorials/project-pegasus-landscape-technical-deep-dive/ProjectFiles_TechnicalDeepdives2.zip",
+      "http_status": 200,
+      "bytes": 68398,
+      "last_modified": "Wed, 29 Nov 2023 17:57:27 GMT",
+      "sha256": "675a8f7ad82af59c8818aa4de48c2334b4c5c8ee479a6958552def86338368dd",
+      "whole_archive_sha256_matches_catalog": true,
+      "zip_entries_including_directories": 6,
+      "all_non_directory_files_crc_verified": true,
+      "other_files": [
+        "ProjectFiles_TechnicalDeepdives/HeightfieldAdvectPoints/sop_PE_Heightfield_Advect_Points.hda",
+        "ProjectFiles_TechnicalDeepdives/RGBHeightfields/hda/sop_PE_Heightfield_Colour.hda"
+      ],
+      "hips": [
+        {
+          "path": "ProjectFiles_TechnicalDeepdives/RGBHeightfields/Heightfield_RGB.hip",
+          "bytes": 281712,
+          "sha256": "0480e9a71817693ceb96f3603008747ebbdc8a51057f63d6eaf56ebbb436d80b",
+          "sha256_matches_catalog": true,
+          "cpio_records": 110,
+          "saved_sop_instances": 9,
+          "network": "/obj/Heightfield_RGB",
+          "node_types": ["heightfield", "heightfield_noise", "heightfield_copylayer", "volumewrangle", "heightfield_maskbyfeature", "PE_Heightfield_Colour"],
+          "colour_instances": 3,
+          "colour_second_inputs_in_order": ["mask_full", "mask_slope", "mask_valley_peaks"],
+          "sought_material_or_tint_instances_found": 0,
+          "interpretation": "Separate RGB/mask example; not the saved material/tint instances from Landscape Workflow lessons 03-05."
+        }
+      ]
+    },
+    {
+      "source_page": "https://www.sidefx.com/tutorials/project-pegasus-landscape-creation/",
+      "current_page_file_id": 198,
+      "url": "https://media.sidefx.com/files/tutorials/project-pegasus-landscape-creation/ProjectFiles_LandscapeCreation2.zip",
+      "http_status": 200,
+      "bytes": 286034,
+      "last_modified": "Wed, 29 Nov 2023 17:55:13 GMT",
+      "sha256": "0792e36b2a990da33bffe2657c4379315ed5ff34e926b7c712ae975ad4e5f4db",
+      "whole_archive_sha256_matches_catalog": true,
+      "zip_entries_including_directories": 4,
+      "all_non_directory_files_crc_verified": true,
+      "other_files": ["ProjectFiles_LandscapeCreation/hdas/sop_pe_landscape.1.0.hda"],
+      "hips": [
+        {
+          "path": "ProjectFiles_LandscapeCreation/ProjectFiles_LandscapeCreation_DigitalAsset.hip",
+          "bytes": 609530,
+          "sha256": "35194d7f7c2784c17f9b539cfc46b76df89d01cbb602618aab43dd803283f645",
+          "sha256_matches_catalog": true,
+          "saved_node_instances": 6,
+          "node_types": ["geo", "img", "localscheduler", "pe_landscape::1.0", "topnet"],
+          "sought_material_or_tint_instances_found": 0
+        },
+        {
+          "path": "ProjectFiles_LandscapeCreation/ProjectFiles_LandscapeCreation_HFErodeExamples.hip",
+          "bytes": 2110048,
+          "sha256": "f09302e60675f213607c7d7f74dea742404fccd07771efd4e6f943737c0a3548",
+          "sha256_matches_catalog": true,
+          "saved_node_instances": 336,
+          "interpretation": "Heightfield construction and erosion examples; saved instance type inventory contains no sought PE material/tint types.",
+          "sought_material_or_tint_instances_found": 0
+        }
+      ]
+    },
+    {
+      "source_page": "https://www.sidefx.com/tutorials/project-pegasus-create-a-landscape-color-map/",
+      "series_publication_date": "2024-08-08",
+      "current_page_file_id": 289,
+      "url": "https://media.sidefx.com/files/tutorials/project-pegasus-create-a-landscape-color-map/projectfiles_pegasus_colormap.zip",
+      "http_status": 206,
+      "total_archive_bytes": 226993919,
+      "last_modified": "Fri, 09 Aug 2024 22:16:16 GMT",
+      "etag": "\"66b69530-d87a6ff\"",
+      "whole_archive_downloaded": false,
+      "whole_archive_sha256_verified_in_this_search": false,
+      "historical_catalog_archive_sha256": "8750fc8ac9ea6267ff3285d0f827c9256437b729a7653cbaba74d8f4e4e9f7d5",
+      "tail_content_range": "bytes 226928383-226993918/226993919",
+      "tail_bytes_read": 65536,
+      "zip_entries_including_directories": 31,
+      "central_directory_sha256": "b48db4616ba2bad06f5230c740aa4fbc98c9202f8d426a31e1209fce99fffadc",
+      "total_bytes_read_for_tail_and_two_hip_ranges": 1190736,
+      "selected_hip_ranges_used_if_match_etag": true,
+      "hips": [
+        {
+          "path": "Pegasus_LandscapeColorMap/ProjectFiles/Pegasus_LandscapeColorMap_Start.hip",
+          "local_zip_header_offset": 56650633,
+          "range_bytes_read": 451412,
+          "bytes": 1341821,
+          "sha256": "c5da3db920e175a5f566f72cf5c9871b570c85672ea56b5cd91c1d6bd607d624",
+          "crc_and_catalog_sha256_verified": true,
+          "cpio_records": 285,
+          "saved_node_instances": 41,
+          "sought_material_or_tint_instances_found": 0
+        },
+        {
+          "path": "Pegasus_LandscapeColorMap/ProjectFiles_Complete/Pegasus_LandscapeColorMap_Complete.hip",
+          "local_zip_header_offset": 226318018,
+          "range_bytes_read": 673788,
+          "bytes": 2004094,
+          "sha256": "62dfd595711f42d5bc3611bc9338a55c6533a544903423a86b58638d7d421a0c",
+          "crc_and_catalog_sha256_verified": true,
+          "cpio_records": 557,
+          "saved_node_instances": 92,
+          "different_colour_hda_types": ["pegasus::heightfield_color_adjust::1.0", "pegasus::heightfield_color_layers::1.0", "pegasus::heightfield_occlusion_mask::1.0", "pegasus::heightfield_texture_mask::1.0"],
+          "sought_material_or_tint_instances_found": 0
+        }
+      ],
+      "interpretation": "Later, separate workflow with different colour HDAs; not evidence of the original Landscape Workflow lesson 03-05 instance settings."
+    }
+  ],
+  "search_limits_and_conclusions": [
+    "Exact-name official searches did not locate Landscape_Workflow_03_Detailing.hip or establish public Workflow ZIP1/ZIP2 URLs. No guessed historical URLs were requested.",
+    "The target HIP filename is absent from the reviewed archive inventories. The five inspected additional HIPs have no saved instances of the sought PE material/tint types.",
+    "Saved-node type inventory is static source evidence. External HDA internals, native load compatibility, effective parameter evaluation, geometry and cook results were not verified.",
+    "A negative result is limited to the reviewed current official pages, indexed searches and named archives. It does not establish that the target was never published or is unavailable elsewhere.",
+    "Workflow page comments about missing HIPs are user reports. The author's re-upload note concerns corrected Unreal material-instance defaults and does not provide an additional HIP or older archive URL.",
+    "The separate RGB and later Color Map examples must not be substituted for the original lesson 03-05 material/tint settings or treated as proof of literal final-tutorial identity.",
+    "Original video inspection remains a separate evidence source for the missing author's instance settings and inputs. This search grants no runtime, material, visual or performance acceptance."
+  ]
+}

@@ -473,8 +473,10 @@ def stage4a_grass(force: bool = False):
         "filename3": str(TEX_DIR / "tlonbisya_4K_Displacement.exr"),
         "size": 12.0,
         "heightscale": 0.0,
-        # Fill the base RGB/roughness; input 1 still drives Grass distortion.
-        "use_mask": 0,
+        # Lesson04 04:46-04:54 restores masking after a temporary preview.
+        # The author's preceding rocky material is still missing from this
+        # adapted recipe; unmasking grass is not a 1:1 replacement for it.
+        "use_mask": 1,
         "srcname1": "mask",
         "input2": "2",
         "use_distort": 1,

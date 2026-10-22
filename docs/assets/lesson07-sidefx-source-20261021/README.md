@@ -16,8 +16,8 @@ No purchase or substitute selection is authorized.
 | Final PBR arrays | The five exact legacy IDs and their slot order are visible in Lesson07; the supplied ZIP has diagnostic arrays | Obtain the exact five families with matching D/N/ORDp maps and verify their source identity and settings |
 | Final MI configuration | The prepared candidate retains ZIP defaults: Detail Brightness 1, UV Distort 4, Falloff 0.5 | Reproduce the verified final-video values 5, 1 and 1, plus the complete original parameter identities |
 | Fresh native MI read | Recovery 39747236327 read both instances successfully; they still bind the existing YACS arrays | Name/order-only rows do not prove association/index or original SourceTextures |
-| Houdini source textures | Current grass/cliff colour and roughness use Sa Calobra substitutions; sand uses coast_sand_01; scree uses Material Forge | Independently establish the author's actual Lesson03–05 input families and files; do not assume the five Unreal IDs identify them |
-| Houdini instance values | Original HDA definitions are identified; their default use_mask is 0 | Defaults do not prove a saved author instance; exact material/tint/distortion parameters remain to be checked |
+| Houdini source textures | Direct Lesson03–05 inspection identifies five separate original families; current grass/cliff, sand and scree still use substitutions | Obtain those exact original files and verify their bytes and settings; the five Unreal IDs do not identify these Houdini inputs |
+| Houdini instance values | Direct Lesson04 review now proves final grass use_mask=1 after a temporary unmasked preview; original HDA default is 0 | Restore the author's preceding rocky material with its exact inputs; complete the remaining material/tint/distortion parameter comparison |
 | Geographic registration | Current maps use the real 16000-square, 8-km Sa Calobra domain | Preserve the accepted geography and verify its required coordinate mapping separately from tutorial material fidelity |
 
 The five required Unreal families are `tkekcgfn`, `vjulbjjr`, `wenocdss`,
@@ -31,6 +31,59 @@ before edits or native execution. The existing canary remains a mechanism test,
 not 1:1 completion evidence. No material was changed by the successful
 [Editor/camera recovery](recovery-39747236327-evidence.json). Read-only source
 inspection can continue while the original-input gaps are resolved.
+
+The [direct grass-mask source correction](grass-mask-source-correction-20261022.json)
+withdraws the earlier unmasked-base proposal. Lesson04's 04:46-04:54 narration
+and 04:55 frame confirm the final enabled mask and an upstream rocky material.
+Only `stage4a_grass.use_mask` is restored from 0 to 1; the rest of the recipe
+AST is unchanged. Exact recipe pins and the strict existing comparison test
+are updated, with all ten CPU tests passing. No native canary or cook ran,
+and the existing substitute texture families remain unaccepted for 1:1.
+
+The independent [native header observation](source-headers-39749604030-evidence.json)
+confirms three 16000-square base volumes (`height`, `mask`, `Alpha`) and four
+matching-size source masks. This is header/source-identity evidence only;
+there was no full geometry load, material replay or UE change.
+
+## Author's Houdini materials: Lessons03–05 source observations
+
+The [timestamped author-instance receipt](houdini-author-material-observations-20261022.json)
+retains five material families, their visible configuration, twelve ordered
+source/material/tint operations (with the cliff-tint insertion explicitly
+unverified) and hashes for 42 inspected frames. The separate
+[official ID/title mapping](houdini-material-public-id-mapping-20261022.json)
+corroborates their legacy Quixel identities. These five Houdini families are
+distinct from the five Lesson07 Unreal array families listed above.
+
+| Author material | Original legacy ID | Publisher title | Observed Height Scale / Size | Evidence and precision |
+|---|---|---|---|---|
+| Rocky predecessor | `tjmledzr` | Hawaiian Lava Stone | 10 / 1000 | L03 09:24, final visible lesson state |
+| Grass | `ulgmbhwn` | Rocky Steppe | 0 / 100 | L04 03:55–04:58, last directly readable fields; mask restored ON |
+| Sand | `td1hcimn` | Thai Rippled Sand | 10 / 500 | L04 06:20–06:32, last directly readable fields |
+| Cliff | `tdwlcc1l` | Icelandic Cliff | −10 / 100 | L05 00:03, continuation of the completed L04 setup |
+| Scree | `vjdqcba` | Rocky Ground | 1 / 100 | L05 00:12–02:20, last directly readable HDA fields; mask network continues changing |
+
+All five observed instances leave Roughness at the literal `default.pic`;
+its resolved bytes and numeric output are not established. Grass has Distort
+enabled with the observed Curl controls, while the other four displayed
+instances have it disabled. The unmasked `(2,2,2)` tint is after grass and
+before sand. The graph also contains separate grass, cliff, scree, exposure
+and curvature tint observations. The retained cliff-tint frame shows a branch
+with no output connection; its final insertion before scree remains unknown.
+Complete ramp points, mask graphs and final saved-HIP parameters also remain
+unknown. Temporary previews are separately recorded and
+must not replace the last directly observed settings.
+
+The [additional official-archive search](additional-author-hip-search-20261022.json)
+inspected five HIPs from three further official archives without finding the
+author's `Landscape_Workflow_03_Detailing.hip` or its material/tint instances.
+This negative finding applies to the inspected files only. The selected
+video filenames and some resolutions are readable, but original texture
+bytes/hashes, exact Fab mappings and the remaining configuration are still
+open. No source texture acquisition, native material replay, cache recook or
+terrain change follows from these observations. Demo displacement values
+are evidence of the author's setup, not authorization to alter the accepted
+Sa Calobra heights.
 
 ## Decision and implementation boundary
 
@@ -122,17 +175,14 @@ The host reported about 16.8 GiB free physical memory, but the pinned 257-square
 source crop was missing. The small Houdini canary was consequently not launched;
 no alternate or full-size cache was substituted.
 
-The [base-coverage recipe correction](base-material-coverage-recipe.json) now
-sets the first `MAT_GRASS.use_mask` from 1 to the original HDA default 0.
-The HDA graph indicates this fills base RGB and roughness outside the Grass
-mask; it has not been proved by a native A/B. The second mask input
-remains connected for distortion, and the existing `heightscale=0` remains
-unchanged. Source-graph review found no nonzero height contribution from this
-flag for finite inputs; native height equality has not been tested. Existing
-cache files still use the earlier recipe: the pipeline skips files that already
-exist, so this code change neither invalidates nor repairs them automatically.
-No recook, cache deletion, geometry or IDMap write was performed. The definition
-default does not establish the value in the author's first-grass instance.
+The historical [base-coverage proposal](base-material-coverage-recipe.json)
+changed `MAT_GRASS.use_mask` from 1 to the HDA default 0. Its source-graph
+interpretation remains a mechanism observation, not a native A/B or proof of
+the author's instance. Direct Lesson04 review supersedes that proposal and
+restores the verified final mask value 1, as recorded above. The separate
+mask input and `heightscale=0` remain unchanged. Existing caches are skipped
+and were not invalidated or rebuilt by either source edit. No geometry or
+IDMap write was performed.
 
 A separate [input-inspection operation](input-inspection-scope.json) is prepared
 to read metadata for eight fixed historical cache paths and make one installed
@@ -327,9 +377,11 @@ the retained 20 October native evidence contains black RGB inside valid Grass2
 regions. Earlier disabling of Global Brightness hid this symptom; it did not
 repair the Houdini source. The original material HDA's unmasked default fills
 its material mask, while the current first grass operation explicitly uses a
-mask over a base without RGB. This is a concrete source-stage hypothesis,
-**not a verified cause**. The supplied Overview HIP does not contain that
-first-grass instance, so its exact authored value cannot be inferred from it.
+mask over a base without RGB. Direct Lesson04 inspection shows that the author
+instead layers masked grass over an earlier rocky material. The current
+pipeline lacks that predecessor. This is a demonstrated recipe difference;
+its contribution to the retained black RGB still requires a faithful native
+replay. The supplied Overview HIP does not contain the relevant instances.
 
 The freshly downloaded normal function has the same SHA256 as the earlier
 offline inspection: `bb556279f30c6d116a4c24ae18a5234af28cf27cd9f2f59e43e6f85f71d5032a`.

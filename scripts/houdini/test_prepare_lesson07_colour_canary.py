@@ -93,7 +93,7 @@ class CanaryBoundaryTests(unittest.TestCase):
             recorded = repair["render_caches"][name]["path"].replace("\\", "/")
             self.assertEqual(recorded, str(canary.PREVIEW_ROOT / f"{name}.bgeo.sc"))
 
-    def test_canary_parameters_equal_accepted_stage4a_recipe(self):
+    def test_canary_parameters_equal_fingerprinted_stage4a_recipe(self):
         path = Path(canary.__file__).with_name("lesson06_unified_pipeline.py")
         self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), canary.RECIPE_SHA256)
         tree = ast.parse(path.read_text())
@@ -105,7 +105,7 @@ class CanaryBoundaryTests(unittest.TestCase):
         values = {ast.literal_eval(k): v for k, v in zip(assignments[0].args[0].keys, assignments[0].args[0].values)}
         scalar_keys = set(values) - {"filename1", "filename2", "filename3"}
         self.assertEqual({key: ast.literal_eval(values[key]) for key in scalar_keys},
-                         {**canary.MATERIAL_PARMS, "use_mask": 0})
+                         {**canary.MATERIAL_PARMS, "use_mask": 1})
         for key in ("filename1", "filename2", "filename3"):
             filename = ast.literal_eval(values[key].args[0].right)
             self.assertEqual(Path(canary.ASSET_PINS[key][0]).name, filename)

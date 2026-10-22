@@ -27,9 +27,26 @@ records the unresolved differences. The ZIP supplies diagnostic arrays, not
 the five final-video PBR families. The prepared MI has the ZIP scalar profile,
 not the final video values of Detail Brightness 5, UV Distort 1 and Specular
 Falloff Exponent 1. Both current instances still bind the YACS arrays. The
-existing Houdini stages also use substitute colour/roughness inputs; the five
-identified Unreal families do not establish the inputs of the author's earlier
-Houdini instances. Their exact inputs and parameters need separate evidence.
+existing Houdini stages also use substitute colour/roughness inputs. Separate
+[Lesson03–05 source observations](../../assets/lesson07-sidefx-source-20261021/houdini-author-material-observations-20261022.json)
+now identify the author's five Houdini families: `tjmledzr`, `ulgmbhwn`,
+`td1hcimn`, `tdwlcc1l` and `vjdqcba`. These are distinct from the five Unreal
+families. The receipt retains 42 frame identities and visible settings,
+including `Roughness = default.pic` and the `(2,2,2)` tint after grass and
+before sand. Exact texture bytes, complete tint/mask configuration and a
+final saved-HIP read remain open. The
+[additional official-archive search](../../assets/lesson07-sidefx-source-20261021/additional-author-hip-search-20261022.json)
+did not find the author's detailing HIP in the five further HIPs inspected.
+
+The [fresh Lesson04 source correction](../../assets/lesson07-sidefx-source-20261021/grass-mask-source-correction-20261022.json)
+now resolves one important instance value. At 04:20-04:27 the author disables
+grass masking only for a preview, then re-enables it at 04:46-04:54; the 04:55
+frame confirms the checked mask. Grass is layered over an earlier rocky
+material. The proposed `use_mask=0` coverage change is therefore withdrawn,
+and `stage4a_grass` is restored to 1. Its other recipe AST is unchanged. The
+existing mechanism canary retains strict recipe/asset pins, and all ten CPU
+tests pass; it has not run natively. This does not restore the missing rocky
+predecessor or replace the current substitute inputs, and no cache is recooked.
 
 Official exact-source identification and permitted retrieval are active again.
 Purchase and substitute selection are not authorized. The proposed new
@@ -159,6 +176,16 @@ the reader expected 466 in the wrong component. The follow-up reader uses
 that exact observed version, size and executable SHA; it still performs no
 geometry load or cook.
 
+The corrected [header run 39749604030](../../assets/lesson07-sidefx-source-20261021/source-headers-39749604030-evidence.json)
+completed at source `9105e46fe9dde22e60d2947b65046f6f6bb9e262`. Both fixed
+`ginfo -S -u` children returned exit 0 with empty stderr and unchanged source
+metadata. The base has exactly three volumes (`height`, `mask`, `Alpha`);
+the second source has four (`grass_mask`, `sand_mask`, `cliff_mask`,
+`ramp_layer`). Every reported resolution is 16000 x 16000 x 1. Header counts
+do not prove voxel storage, lattice, finite values or native memory peaks.
+No geometry was loaded, source profile admitted, cache written or UE asset
+changed. The exact-source material dependency remains open.
+
 ## Earlier owner direction: original SideFX material reproduction (2026-10-21)
 
 The owner requested a fresh download of `ProjectFiles_LandscapeWorkflow3.zip`,
@@ -198,16 +225,14 @@ remains unverified because of legacy TextureStreamingData serialization.
 Neither copy was applied to the current Landscape. The fixed small RGB crop
 was missing, so no Houdini canary or full-cache fallback was launched.
 
-The [base material recipe](../../assets/lesson07-sidefx-source-20261021/base-material-coverage-recipe.json)
-now restores `MAT_GRASS.use_mask=0`, filling base RGB and roughness while keeping
-the Grass input for distortion and the existing zero height displacement.
-This is a source-code hypothesis based on the HDA default, not proof of the
-author's saved first-grass instance or the cause of the black RGB. The
-pipeline's existing-file skip still
-preserves earlier caches; none has been invalidated or recooked, and the saved
-global colour is not yet repaired. A separate fixed-path cache metadata read
-and one plugin scalar-setter source search are prepared; native results remain
-pending at this source revision.
+The historical [base material recipe](../../assets/lesson07-sidefx-source-20261021/base-material-coverage-recipe.json)
+proposed `MAT_GRASS.use_mask=0` from the HDA default to fill base colour. The
+22 October direct Lesson04 review above supersedes that proposal: the author
+re-enables masking and supplies a preceding rocky material. The recipe has
+been restored to `use_mask=1`, with zero height displacement retained. The
+pipeline's existing-file skip preserves earlier caches; none has been
+invalidated or recooked, and the saved global colour is not repaired by this
+source correction.
 
 The owner had earlier narrowed the immediate task to getting the textures
 from that ZIP. **The requested file delivery is complete:**

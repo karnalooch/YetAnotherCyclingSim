@@ -1,0 +1,1137 @@
+{
+  "schema_version": 1,
+  "observed_date_utc": "2026-10-22",
+  "document_status": "EVIDENCE",
+  "status": "PARTIAL_AUTHOR_INSTANCE_CONTRACT;NO_NATIVE_ACCEPTANCE",
+  "repository_context": {
+    "repository": "karnalooch/YetAnotherCyclingSim",
+    "branch": "codex/365-world-graph",
+    "base_head_sha": "9105e46fe9dde22e60d2947b65046f6f6bb9e262",
+    "issue": 365,
+    "draft_pr": 474,
+    "milestone": "M3"
+  },
+  "scope": "Exact author input families and visible HDA instance configuration in the original Pegasus Landscape Workflow Lessons03-05. This receipt does not alter the YACS recipe or admit substitute assets.",
+  "official_course_url": "https://www.sidefx.com/tutorials/project-pegasus-landscape-workflow/",
+  "related_public_id_title_mapping": "houdini-material-public-id-mapping-20261022.json",
+  "catalog_reference": "docs/tooling/sidefx/catalog/PEG-02.md",
+  "source_videos": [
+    {
+      "lesson": 3,
+      "public_player_url": "https://player.vimeo.com/video/888568015",
+      "captions_sha256": "2500bef6f0ba343b177ba8bd4fa66acf01ea20b81c53d095f6f20dd17d2bf99c",
+      "captions_size_bytes": 14324,
+      "captions_match_retained_catalog": true,
+      "review": "Complete captions read; selected 1920x1080 source-video frames visually inspected. This is not a claim of continuous full-video playback."
+    },
+    {
+      "lesson": 4,
+      "public_player_url": "https://player.vimeo.com/video/888568278",
+      "captions_sha256": "0a1b906617532bc3b9dc9daefca9cc6a12bf9632e515474de4684730a38c9ed6",
+      "captions_size_bytes": 23661,
+      "captions_match_retained_catalog": true,
+      "review": "Complete captions read; selected 1920x1080 source-video frames visually inspected. This is not a claim of continuous full-video playback."
+    },
+    {
+      "lesson": 5,
+      "public_player_url": "https://player.vimeo.com/video/888568753",
+      "captions_sha256": "d72a5b91f2d7b5a10600cb18d2650fdbe145d59db53c5a804a61dc09443062d7",
+      "captions_size_bytes": 24227,
+      "captions_match_retained_catalog": true,
+      "review": "Complete captions read; selected 1920x1080 source-video frames visually inspected. This is not a claim of continuous full-video playback."
+    }
+  ],
+  "source_environment_observed": {
+    "hip_titlebar": "D:/PegasusDemo/Promotional/Landscapes/Main/Landscape_Workflow_03_Detailing.hip",
+    "houdini_titlebar": "Houdini FX 20.0.484 - Py3.10",
+    "material_asset_label": "PE_heightfield_material",
+    "material_ui_label": "Pe Heightfield Material",
+    "tint_type_visible": "PE_heightfield_tint::1.0",
+    "texture_root": "D:/Megascans Library/Downloaded/surface",
+    "evidence": [
+      "L03_564.000",
+      "L04_981.000"
+    ],
+    "author_hip_availability": "NOT_FOUND_IN_INSPECTED_OFFICIAL_ARCHIVES"
+  },
+  "evidence_retention": {
+    "frame_media_committed": false,
+    "captions_committed": false,
+    "signed_media_urls_committed": false,
+    "scratch_source_directory": "/workspace/scratch/eff428cbad56/pegasus-lesson03-05-source-20261022",
+    "frame_receipt_file": "frame-receipts.json",
+    "reproduction": "Use the public lesson player and cited timestamps. Frame hashes identify these decoded 1080p captures; another decoder/seek may select a neighbouring frame and yield a different PNG hash.",
+    "access": "Anonymous public player configuration supplied the media/caption URLs. No blocked endpoint or access control was bypassed."
+  },
+  "parameter_name_convention": "filename1/2/3 name the existing PE material adapter inputs corresponding to the visible Colour/Roughness/Height labels. Other values below use UI labels. UI observations are not a native parameter-template or saved-HIP dump.",
+  "materials": [
+    {
+      "role": "rocky_base",
+      "legacy_quixel_id": "tjmledzr",
+      "folder_observed": "Rock_Lava_tjmledzr",
+      "source_node_paths": [
+        "/obj/geo1/PE_heightfield_material1 (L03)",
+        "/obj/geo1/PE_heightfield_material2 (copied continuation in L04)"
+      ],
+      "identity_evidence": [
+        "L03_262.000",
+        "L03_477.000",
+        "L03_564.000",
+        "L04_016.000"
+      ],
+      "inputs": {
+        "filename1": {
+          "ui_label": "Colour",
+          "filename_stem_observed": "tjmledzr_4K_Albedo",
+          "extension": "jpg",
+          "full_parameter_string": "UNKNOWN",
+          "texture_file_sha256": "UNKNOWN",
+          "evidence": [
+            "L03_477.000",
+            "L03_564.000"
+          ]
+        },
+        "filename2": {
+          "ui_label": "Roughness",
+          "observed_literal": "default.pic",
+          "resolved_resource_bytes_or_numeric_roughness": "UNKNOWN",
+          "evidence": [
+            "L03_564.000"
+          ]
+        },
+        "filename3": {
+          "ui_label": "Height",
+          "filename_stem_observed": "tjmledzr_4K_Displacement",
+          "extension": "exr",
+          "full_parameter_string": "UNKNOWN",
+          "texture_file_sha256": "UNKNOWN",
+          "evidence": [
+            "L03_271.000",
+            "L03_477.000",
+            "L03_564.000"
+          ]
+        }
+      },
+      "input_precision": "The chooser exposes the complete Albedo.jpg and Displacement.exr names; final HDA fields expose the matching family/4K prefixes but truncate their suffixes. No full literal HDA path or texture bytes were read.",
+      "final_visible_settings": {
+        "status": "VERIFIED_AT_L03_END_09_24",
+        "evidence": [
+          "L03_564.000"
+        ],
+        "ui_parameters": {
+          "mask_enabled": true,
+          "Mask": "mask",
+          "Remap": false,
+          "Heightblend": false,
+          "Height Scale": 10,
+          "Height Scale Mask": false,
+          "Size": 1000,
+          "Center": [
+            0,
+            0
+          ],
+          "Rotate": 0,
+          "Distort": false
+        }
+      },
+      "transient_states_not_final": [
+        {
+          "evidence": [
+            "L03_500.000"
+          ],
+          "ui_parameters": {
+            "Height Scale": 15,
+            "Size": 2000
+          },
+          "note": "Earlier HDA trial; superseded by the last visible 10/1000 state."
+        },
+        {
+          "evidence": [
+            "L03_555.000",
+            "L03_557.000",
+            "L03_560.000"
+          ],
+          "note": "Colour temporarily empty for height inspection; Rotate 32.2 is visible at 09:15, then reset to zero. Colour is restored by 09:24."
+        }
+      ],
+      "remaining_unknowns": [
+        "Exact saved HIP parameters beyond the displayed fields",
+        "Texture bytes, colour-space/import behaviour and source-file hashes"
+      ]
+    },
+    {
+      "role": "grass",
+      "legacy_quixel_id": "ulgmbhwn",
+      "folder_observed": "ground_other_ulgmbhwn",
+      "source_node_paths": [
+        "/obj/geo1/PE_heightfield_material3"
+      ],
+      "identity_evidence": [
+        "L04_049.000",
+        "L04_056.000",
+        "L04_058.000"
+      ],
+      "inputs": {
+        "filename1": {
+          "ui_label": "Colour",
+          "filename_stem_observed": "ulgmbhwn_4K_Albedo",
+          "extension": "UNKNOWN",
+          "full_parameter_string": "UNKNOWN",
+          "texture_file_sha256": "UNKNOWN",
+          "evidence": [
+            "L04_056.000",
+            "L04_058.000",
+            "L04_295.000"
+          ]
+        },
+        "filename2": {
+          "ui_label": "Roughness",
+          "observed_literal": "default.pic",
+          "resolved_resource_bytes_or_numeric_roughness": "UNKNOWN",
+          "evidence": [
+            "L04_295.000"
+          ]
+        },
+        "filename3": {
+          "ui_label": "Height",
+          "filename_stem_observed": "ulgmbhwn_4K_Displacement",
+          "extension": "UNKNOWN",
+          "full_parameter_string": "UNKNOWN",
+          "texture_file_sha256": "UNKNOWN",
+          "evidence": [
+            "L04_056.000",
+            "L04_058.000",
+            "L04_295.000"
+          ],
+          "visible_file_kind": "Image-thumbnail file is dragged; a separate EXR file is also present in the folder."
+        }
+      },
+      "final_visible_settings": {
+        "status": "MASK_AND_ZERO_HEIGHT_VERIFIED_AFTER_PREVIEW;_OTHER_FIELDS_LAST_DIRECTLY_OBSERVED",
+        "evidence": [
+          "L04_235.000",
+          "L04_289.000",
+          "L04_295.000",
+          "L04_298.000"
+        ],
+        "ui_parameters": {
+          "mask_enabled": true,
+          "Mask": "mask",
+          "Remap": false,
+          "Heightblend": false,
+          "Height Scale": 0,
+          "Height Scale Mask": false,
+          "Size": 100,
+          "Center": [
+            0,
+            0
+          ],
+          "Rotate": 0,
+          "Distort": true,
+          "Noise Type": "Curl",
+          "Amplitude": 100,
+          "Element Size": 100,
+          "Element Scale": [
+            1,
+            1,
+            1
+          ],
+          "Offset": [
+            0,
+            0,
+            0
+          ]
+        },
+        "per_field_evidence": {
+          "Size": [
+            "L04_235.000"
+          ],
+          "Center_Rotate_Distort_and_noise_fields": [
+            "L04_289.000"
+          ],
+          "mask_and_height_scale": [
+            "L04_295.000",
+            "L04_298.000"
+          ]
+        },
+        "precision_limit": "Size=100 is last directly readable at 03:55. It is not re-read from a final saved HIP. The 04:28 change concerns distortion Element Size; do not confuse it with material Size."
+      },
+      "transient_states_not_final": [
+        {
+          "evidence": [
+            "L04_058.000"
+          ],
+          "ui_parameters": {
+            "Height Scale": 10,
+            "Size": 1000
+          },
+          "note": "Inherited rocky-material values before grass tuning."
+        },
+        {
+          "evidence": [
+            "L04_266.000"
+          ],
+          "ui_parameters": {
+            "mask_enabled": false
+          },
+          "caption_interval": "04:20.575-04:27.765",
+          "note": "Temporary unmasked distortion preview; not the final authored grass setting."
+        }
+      ],
+      "remaining_unknowns": [
+        "Exact Albedo and Displacement filename extensions",
+        "Unshown distortion controls and exact mask-builder settings",
+        "Final saved-HIP parameter read"
+      ]
+    },
+    {
+      "role": "sand",
+      "legacy_quixel_id": "td1hcimn",
+      "folder_observed": "sand_fine_td1hcimn",
+      "source_node_paths": [
+        "/obj/geo1/PE_heightfield_material4"
+      ],
+      "identity_evidence": [
+        "L04_376.000",
+        "L04_384.000",
+        "L04_392.000"
+      ],
+      "inputs": {
+        "filename1": {
+          "ui_label": "Colour",
+          "filename_stem_observed": "td1hcimn_2K_Albedo",
+          "extension": "UNKNOWN",
+          "full_parameter_string": "UNKNOWN",
+          "texture_file_sha256": "UNKNOWN",
+          "evidence": [
+            "L04_376.000",
+            "L04_392.000"
+          ]
+        },
+        "filename2": {
+          "ui_label": "Roughness",
+          "observed_literal": "default.pic",
+          "resolved_resource_bytes_or_numeric_roughness": "UNKNOWN",
+          "evidence": [
+            "L04_392.000"
+          ]
+        },
+        "filename3": {
+          "ui_label": "Height",
+          "filename_stem_observed": "td1hcimn_2K_Displacement",
+          "extension": "UNKNOWN",
+          "full_parameter_string": "UNKNOWN",
+          "texture_file_sha256": "UNKNOWN",
+          "evidence": [
+            "L04_376.000",
+            "L04_392.000"
+          ],
+          "visible_file_kind": "Image-thumbnail displacement is dragged; a separate EXR file is visible."
+        }
+      },
+      "final_visible_settings": {
+        "status": "LAST_DIRECTLY_OBSERVED_MATERIAL_SETTINGS;NOT_SAVED_HIP_READ",
+        "evidence": [
+          "L04_380.000",
+          "L04_384.000",
+          "L04_392.000"
+        ],
+        "ui_parameters": {
+          "mask_enabled": true,
+          "Mask": "mask",
+          "Remap": false,
+          "Heightblend": false,
+          "Height Scale": 10,
+          "Height Scale Mask": false,
+          "Size": 500,
+          "Center": [
+            0,
+            0
+          ],
+          "Rotate": 0,
+          "Distort": false
+        },
+        "per_field_evidence": {
+          "mask_and_remap": [
+            "L04_380.000"
+          ],
+          "Distort": [
+            "L04_384.000"
+          ],
+          "Height_Scale_Size_Center_Rotate": [
+            "L04_392.000"
+          ]
+        }
+      },
+      "transient_states_not_final": [
+        {
+          "evidence": [
+            "L04_367.000"
+          ],
+          "note": "Newly copied HDA still contains the grass family before the sand reassignment."
+        },
+        {
+          "evidence": [
+            "L04_384.000"
+          ],
+          "ui_parameters": {
+            "Size": 100
+          },
+          "note": "Superseded by Size=500 at 06:29-06:32."
+        }
+      ],
+      "remaining_unknowns": [
+        "Exact Albedo and Displacement filename extensions",
+        "Complete final mask-builder settings",
+        "Final saved-HIP parameter read"
+      ]
+    },
+    {
+      "role": "cliff",
+      "legacy_quixel_id": "tdwlcc1l",
+      "folder_observed": "Rock_Cliffs_tdwlcc1l",
+      "source_node_paths": [
+        "/obj/geo1/PE_heightfield_material5"
+      ],
+      "identity_evidence": [
+        "L04_877.000",
+        "L05_003.000"
+      ],
+      "inputs": {
+        "filename1": {
+          "ui_label": "Colour",
+          "filename_stem_observed": "tdwlcc1l_2K_Albedo",
+          "extension": "UNKNOWN",
+          "full_parameter_string": "UNKNOWN",
+          "texture_file_sha256": "UNKNOWN",
+          "evidence": [
+            "L04_877.000",
+            "L04_878.000",
+            "L05_003.000"
+          ]
+        },
+        "filename2": {
+          "ui_label": "Roughness",
+          "observed_literal": "default.pic",
+          "resolved_resource_bytes_or_numeric_roughness": "UNKNOWN",
+          "evidence": [
+            "L05_003.000"
+          ]
+        },
+        "filename3": {
+          "ui_label": "Height",
+          "filename_stem_observed": "tdwlcc1l_2K_Displacement",
+          "extension": "UNKNOWN",
+          "full_parameter_string": "UNKNOWN",
+          "texture_file_sha256": "UNKNOWN",
+          "evidence": [
+            "L04_877.000",
+            "L05_003.000"
+          ],
+          "visible_file_kind": "Selected 2K displacement has an EXR icon; literal extension is hidden."
+        }
+      },
+      "input_precision": "Both 2K and 4K files are present in Explorer. The selected displacement at 14:37 and selected Albedo at 14:38 are 2K. Final HDA fields show the cliff family but truncate before the resolution and filename suffix; the complete literal parameter string remains UNKNOWN.",
+      "final_visible_settings": {
+        "status": "VERIFIED_IN_L05_OPENING_CONTINUATION",
+        "evidence": [
+          "L05_003.000"
+        ],
+        "ui_parameters": {
+          "mask_enabled": true,
+          "Mask": "mask",
+          "Remap": false,
+          "Heightblend": false,
+          "Height Scale": -10,
+          "Height Scale Mask": false,
+          "Size": 100,
+          "Center": [
+            0,
+            0
+          ],
+          "Rotate": 0,
+          "Distort": false
+        }
+      },
+      "last_observed_mask_builder_fragment": {
+        "status": "PARTIAL_ONLY",
+        "node": "heightfield_maskbyfeature9",
+        "evidence": [
+          "L04_975.000"
+        ],
+        "ui_parameters": {
+          "Smooth Radius": 1,
+          "Combine with Existing": "Replace",
+          "Invert Mask": false,
+          "Mask by Slope": true,
+          "Min Slope Angle": 20.5,
+          "Max Slope Angle": 59.8,
+          "Mask by Height": false,
+          "Mask by Curvature": false
+        },
+        "complete_ramp_points": "UNKNOWN"
+      },
+      "remaining_unknowns": [
+        "Exact final Albedo literal filename/extension; 2K Albedo selection is observed in Explorer, while the final HDA suffix is truncated",
+        "Literal Displacement extension despite the visible EXR type icon",
+        "Complete final mask-builder settings"
+      ]
+    },
+    {
+      "role": "scree",
+      "legacy_quixel_id": "vjdqcba",
+      "folder_observed": "rock_forest_vjdqcba",
+      "source_node_paths": [
+        "/obj/geo1/PE_heightfield_material6"
+      ],
+      "identity_evidence": [
+        "L05_005.500",
+        "L05_005.750",
+        "L05_006.500",
+        "L05_007.000"
+      ],
+      "inputs": {
+        "filename1": {
+          "ui_label": "Colour",
+          "filename_stem_observed": "vjdqcba_4K_Albedo",
+          "extension": "UNKNOWN",
+          "full_parameter_string": "UNKNOWN",
+          "texture_file_sha256": "UNKNOWN",
+          "evidence": [
+            "L05_005.750",
+            "L05_007.000",
+            "L05_140.000"
+          ]
+        },
+        "filename2": {
+          "ui_label": "Roughness",
+          "observed_literal": "default.pic",
+          "resolved_resource_bytes_or_numeric_roughness": "UNKNOWN",
+          "evidence": [
+            "L05_140.000"
+          ]
+        },
+        "filename3": {
+          "ui_label": "Height",
+          "filename_stem_observed": "vjdqcba_4K_Displacement",
+          "extension": "UNKNOWN",
+          "full_parameter_string": "UNKNOWN",
+          "texture_file_sha256": "UNKNOWN",
+          "evidence": [
+            "L05_006.500",
+            "L05_007.000",
+            "L05_140.000"
+          ],
+          "visible_file_kind": "EXR-icon displacement is visibly dragged into Height at 00:06.500; literal extension is hidden."
+        }
+      },
+      "final_visible_settings": {
+        "status": "LAST_DIRECTLY_OBSERVED_HDA_SETTINGS;MASK_NETWORK_CONTINUES_TO_CHANGE",
+        "evidence": [
+          "L05_012.000",
+          "L05_132.000",
+          "L05_140.000",
+          "L05_145.000"
+        ],
+        "ui_parameters": {
+          "mask_enabled": true,
+          "Mask": "mask",
+          "Remap": false,
+          "Heightblend": false,
+          "Height Scale": 1,
+          "Height Scale Mask": false,
+          "Size": 100,
+          "Center": [
+            0,
+            0
+          ],
+          "Rotate": 0,
+          "Distort": false
+        },
+        "per_field_evidence": {
+          "Distort": [
+            "L05_012.000"
+          ],
+          "mask_and_material_controls": [
+            "L05_140.000"
+          ]
+        },
+        "note": "Remap is a separate HeightField Remap SOP in the mask branch, not the HDA Remap checkbox."
+      },
+      "transient_states_not_final": [
+        {
+          "evidence": [
+            "L05_007.000"
+          ],
+          "ui_parameters": {
+            "mask_enabled": false,
+            "Size": 2000
+          },
+          "note": "Initial material preview before setting Size=100 and enabling its mask."
+        }
+      ],
+      "remaining_unknowns": [
+        "Exact Albedo and Displacement literal extensions",
+        "Full final scree-mask/slump/remap graph parameters",
+        "Final saved-HIP parameter read"
+      ]
+    }
+  ],
+  "ordered_graph": [
+    {
+      "order": 1,
+      "role": "source_plus_manual",
+      "node": "heightfield_layer3 in L03; copied heightfield_layer4 in L04",
+      "operation": "Add",
+      "evidence": [
+        "L03_500.000",
+        "L04_016.000"
+      ]
+    },
+    {
+      "order": 2,
+      "role": "rocky_base",
+      "node": "PE_heightfield_material1 in L03; PE_heightfield_material2 in L04",
+      "evidence": [
+        "L03_564.000",
+        "L04_016.000",
+        "L04_056.000"
+      ]
+    },
+    {
+      "order": 3,
+      "role": "grass",
+      "node": "PE_heightfield_material3",
+      "evidence": [
+        "L04_056.000",
+        "L04_298.000"
+      ]
+    },
+    {
+      "order": 4,
+      "role": "grass_gradient_tint",
+      "node": "PE_heightfield_tint1",
+      "evidence": [
+        "L04_617.000",
+        "L04_981.000"
+      ]
+    },
+    {
+      "order": 5,
+      "role": "unmasked_brightness_tint_before_sand",
+      "node": "PE_heightfield_tint2",
+      "evidence": [
+        "L04_617.000",
+        "L04_983.000"
+      ]
+    },
+    {
+      "order": 6,
+      "role": "sand",
+      "node": "PE_heightfield_material4",
+      "evidence": [
+        "L04_376.000",
+        "L04_617.000"
+      ]
+    },
+    {
+      "order": 7,
+      "role": "cliff",
+      "node": "PE_heightfield_material5",
+      "evidence": [
+        "L04_877.000",
+        "L05_003.000"
+      ]
+    },
+    {
+      "order": 8,
+      "role": "cliff_tint",
+      "node": "PE_heightfield_tint3",
+      "ordering_status": "INFERRED_FROM_NARRATION_NOT_FINAL_WIRING_PROOF",
+      "final_connection_before_scree": "UNKNOWN",
+      "caption_interval": "L05 09:20-09:50",
+      "evidence": [
+        "L05_579.000"
+      ],
+      "wiring_precision": "At 09:39 the tint receives cliff/material mask inputs but has no visible output connection. Its final insertion into the main chain before scree is not shown by the retained frames. The order number is an inferred editorial position, not an established final edge."
+    },
+    {
+      "order": 9,
+      "role": "scree",
+      "node": "PE_heightfield_material6",
+      "evidence": [
+        "L05_007.000",
+        "L05_140.000"
+      ],
+      "note": "Added after cliff. A cliff tint is previewed after the cliff material; final insertion upstream of scree is not directly captured and remains UNKNOWN."
+    },
+    {
+      "order": 10,
+      "role": "scree_tint",
+      "node": "PE_heightfield_tint4",
+      "caption_interval": "L05 09:54-10:26",
+      "evidence": [
+        "L05_626.000"
+      ]
+    },
+    {
+      "order": 11,
+      "role": "exposure_tint",
+      "node": "PE_heightfield_tint5",
+      "caption_interval": "L05 10:38-14:06",
+      "evidence": [
+        "L05_846.000"
+      ]
+    },
+    {
+      "order": 12,
+      "role": "curvature_tint",
+      "node": "PE_heightfield_tint6",
+      "caption_interval": "L05 14:10-15:25",
+      "evidence": [
+        "L05_925.000"
+      ]
+    }
+  ],
+  "ordered_graph_precision": "Material/tint order comes from the visible node graph and full caption sequence. The cliff-tint position is explicitly inferred: its final output connection before scree is UNKNOWN. The complete final mask graph, all wiring tuples and exact node parameter sets remain UNKNOWN.",
+  "tints": {
+    "complete_author_contract": "UNKNOWN",
+    "reason": "Selected parameter views do not establish every final ramp point, interpolation, mask node and source connection. These fragments are observations, not a runnable complete author recipe.",
+    "observed_fragments": [
+      {
+        "node": "PE_heightfield_tint1",
+        "role": "grass_gradient",
+        "temporal_status": "LAST_VISIBLE_L04_TWEAK",
+        "evidence": [
+          "L04_981.000"
+        ],
+        "ui_parameters": {
+          "Mode": "Gradient",
+          "Mask": "",
+          "Strength": 0.95,
+          "Ramp Layer": "mask",
+          "Point No.": 1,
+          "Position": 0,
+          "Color": [
+            0.34,
+            0.55,
+            0.12705
+          ],
+          "Interpolation": "Linear"
+        },
+        "unread_final_ramp_points": "UNKNOWN"
+      },
+      {
+        "node": "PE_heightfield_tint2",
+        "role": "brightness_after_grass_before_sand",
+        "temporal_status": "VERIFIED_AT_L04_END",
+        "evidence": [
+          "L04_983.000",
+          "L04_984.000"
+        ],
+        "ui_parameters": {
+          "Mode": "Solid Colour",
+          "Mask": "",
+          "Strength": 1,
+          "Tint": [
+            2,
+            2,
+            2
+          ]
+        },
+        "note": "Unmasked at this graph position; do not move it after sand/cliff/scree and call that equivalent."
+      },
+      {
+        "node": "PE_heightfield_tint3",
+        "role": "cliff",
+        "temporal_status": "OBSERVED_DURING_TUNING_FINAL_STATUS_UNKNOWN",
+        "evidence": [
+          "L05_579.000"
+        ],
+        "ui_parameters": {
+          "Mode": "Solid Colour",
+          "Mask": "mask",
+          "Strength": 1,
+          "Tint": [
+            0.437,
+            0.437,
+            0.437
+          ]
+        }
+      },
+      {
+        "node": "PE_heightfield_tint4",
+        "role": "scree",
+        "temporal_status": "OBSERVED_DURING_TUNING_FINAL_STATUS_UNKNOWN",
+        "evidence": [
+          "L05_626.000"
+        ],
+        "ui_parameters": {
+          "Mode": "Solid Colour",
+          "Color editor R displayed": 0.874,
+          "Color editor G displayed": 0.8223,
+          "Color editor B displayed": 0.7018,
+          "HDA B displayed": 0.701822
+        },
+        "exact_full_RGB": "UNKNOWN"
+      },
+      {
+        "node": "PE_heightfield_tint5",
+        "role": "exposure",
+        "temporal_status": "LAST_SELECTED_EXPOSURE_TINT_VIEW;OTHER_POINTS_UNKNOWN",
+        "evidence": [
+          "L05_846.000"
+        ],
+        "ui_parameters": {
+          "Mode": "Gradient",
+          "Mask": "",
+          "Strength": 1,
+          "Point No.": 2,
+          "Position": 0.93538,
+          "Color": [
+            0.651,
+            0.651,
+            0.651
+          ],
+          "Interpolation": "Linear",
+          "Ramp Layer": "mask"
+        }
+      },
+      {
+        "node": "PE_heightfield_tint6",
+        "role": "curvature",
+        "temporal_status": "LAST_SELECTED_CURVATURE_TINT_VIEW",
+        "evidence": [
+          "L05_925.000"
+        ],
+        "ui_parameters": {
+          "Mode": "Gradient",
+          "Mask": "",
+          "Strength": 0.613,
+          "Point No.": 2,
+          "Position": 1,
+          "Color": [
+            2,
+            2,
+            2
+          ],
+          "Interpolation": "Linear",
+          "Ramp Layer": "mask"
+        },
+        "remaining_ramp_and_mask_settings": "UNKNOWN"
+      }
+    ]
+  },
+  "source_frames": {
+    "L03_262.000": {
+      "lesson": 3,
+      "time_seconds": 262,
+      "frame_file": "lesson03-frame-262.000.png",
+      "frame_size_bytes": 981297,
+      "frame_sha256": "5b1832d34d75c809b16233347ac9d01070f4e3bec40d757e49f9c4753172b3cd"
+    },
+    "L03_477.000": {
+      "lesson": 3,
+      "time_seconds": 477,
+      "frame_file": "lesson03-frame-477.000.png",
+      "frame_size_bytes": 703797,
+      "frame_sha256": "91670e961612a682af89b98cf14484e63ca84272825323b65425155c1a83f329"
+    },
+    "L03_564.000": {
+      "lesson": 3,
+      "time_seconds": 564,
+      "frame_file": "lesson03-frame-564.000.png",
+      "frame_size_bytes": 1444992,
+      "frame_sha256": "3fdf9ca5d290cc05acb7eb43abf9f264eef37380b5e0949434c680dda57143aa"
+    },
+    "L04_016.000": {
+      "lesson": 4,
+      "time_seconds": 16,
+      "frame_file": "lesson04-frame-016.000.png",
+      "frame_size_bytes": 1256982,
+      "frame_sha256": "8f658fd66bf8d274b30986f4ac0dce05e73884a1e9d859501fa8d23aa3797b6f"
+    },
+    "L03_271.000": {
+      "lesson": 3,
+      "time_seconds": 271,
+      "frame_file": "lesson03-frame-271.000.png",
+      "frame_size_bytes": 1150517,
+      "frame_sha256": "f6787a54ffb8b23735543142a6485199d08bc67f3326a180d6258d1dce473312"
+    },
+    "L03_500.000": {
+      "lesson": 3,
+      "time_seconds": 500,
+      "frame_file": "lesson03-frame-500.000.png",
+      "frame_size_bytes": 1438556,
+      "frame_sha256": "d728cc8c501e97a4ce791b90788eee50f108031a2925c75036958548f7ed1869"
+    },
+    "L03_555.000": {
+      "lesson": 3,
+      "time_seconds": 555,
+      "frame_file": "lesson03-frame-555.000.png",
+      "frame_size_bytes": 1787302,
+      "frame_sha256": "2a2d474768988603d449db43df34f14abaf41a4aa1b8a4aa518ca130ba404f89"
+    },
+    "L03_557.000": {
+      "lesson": 3,
+      "time_seconds": 557,
+      "frame_file": "lesson03-frame-557.000.png",
+      "frame_size_bytes": 1540286,
+      "frame_sha256": "1657390236af87fb1b16dd405f3ca40ee52bf1fe05c6cc78a30820a35311e4a5"
+    },
+    "L03_560.000": {
+      "lesson": 3,
+      "time_seconds": 560,
+      "frame_file": "lesson03-frame-560.000.png",
+      "frame_size_bytes": 1629196,
+      "frame_sha256": "f2aa970d3b0418d77ffa053bd17ac385ef3a88d3262055dd3d73e179cb94df98"
+    },
+    "L04_049.000": {
+      "lesson": 4,
+      "time_seconds": 49,
+      "frame_file": "lesson04-frame-049.000.png",
+      "frame_size_bytes": 1398485,
+      "frame_sha256": "baf1ed401027ba99501721fe0c655123db49712acd5e848cddff5a1ee9e1b27c"
+    },
+    "L04_056.000": {
+      "lesson": 4,
+      "time_seconds": 56,
+      "frame_file": "lesson04-frame-056.000.png",
+      "frame_size_bytes": 885397,
+      "frame_sha256": "133c4752d84f7cb583e9fae8f8fd0a666d2457396b61d574fc2b05f0a5a3d9e3"
+    },
+    "L04_058.000": {
+      "lesson": 4,
+      "time_seconds": 58,
+      "frame_file": "lesson04-frame-058.000.png",
+      "frame_size_bytes": 2032331,
+      "frame_sha256": "6781255b10edd3b8b6db12f9bcc36d2d80f3fec66aeb329667fc264293cc82c4"
+    },
+    "L04_295.000": {
+      "lesson": 4,
+      "time_seconds": 295,
+      "frame_file": "lesson04-frame-295.000.png",
+      "frame_size_bytes": 2019252,
+      "frame_sha256": "545b7931798070e1f18c17feccf4e51f8ef160d17f6144b059af98b80320790e"
+    },
+    "L04_235.000": {
+      "lesson": 4,
+      "time_seconds": 235,
+      "frame_file": "lesson04-frame-235.000.png",
+      "frame_size_bytes": 2222654,
+      "frame_sha256": "c9d1877410bfe8b0bf33f458a0cf43196086fbd3f52a7e6cebcf5284ea3e71ef"
+    },
+    "L04_289.000": {
+      "lesson": 4,
+      "time_seconds": 289,
+      "frame_file": "lesson04-frame-289.000.png",
+      "frame_size_bytes": 2010456,
+      "frame_sha256": "60e5af124626c77812b0b02aedbf21b6cb0f4600532cc78f80054ea902293f8f"
+    },
+    "L04_298.000": {
+      "lesson": 4,
+      "time_seconds": 298,
+      "frame_file": "lesson04-frame-298.000.png",
+      "frame_size_bytes": 2076512,
+      "frame_sha256": "d8f42299eef19f7e5cabd14400f886f6a0fd82bb2c58d4e495dbbd7863c35b80"
+    },
+    "L04_266.000": {
+      "lesson": 4,
+      "time_seconds": 266,
+      "frame_file": "lesson04-frame-266.000.png",
+      "frame_size_bytes": 1736702,
+      "frame_sha256": "ea2c51db935366fbeb3090778b1f3a36985d3b95d0042e151165b098234dfcd8"
+    },
+    "L04_376.000": {
+      "lesson": 4,
+      "time_seconds": 376,
+      "frame_file": "lesson04-frame-376.000.png",
+      "frame_size_bytes": 657316,
+      "frame_sha256": "a353a02bfcc294e8332f0f8c7c5da1c0a403740969238c24d819729d9e64ac16"
+    },
+    "L04_384.000": {
+      "lesson": 4,
+      "time_seconds": 384,
+      "frame_file": "lesson04-frame-384.000.png",
+      "frame_size_bytes": 2062168,
+      "frame_sha256": "32b2323bc6a00dbf7d4fb779febbf07ae2693237e729dc4197ee37cb9aa8b07e"
+    },
+    "L04_392.000": {
+      "lesson": 4,
+      "time_seconds": 392,
+      "frame_file": "lesson04-frame-392.000.png",
+      "frame_size_bytes": 1465147,
+      "frame_sha256": "dcd47edfcfa26c42c54b6d91dcccc84e39fd44031295035f2707635febd23fb4"
+    },
+    "L04_380.000": {
+      "lesson": 4,
+      "time_seconds": 380,
+      "frame_file": "lesson04-frame-380.000.png",
+      "frame_size_bytes": 2086353,
+      "frame_sha256": "4862bcd416c99f10f1e3b874fbdd925b83e54f6987f67ca37456748230863fe6"
+    },
+    "L04_367.000": {
+      "lesson": 4,
+      "time_seconds": 367,
+      "frame_file": "lesson04-frame-367.000.png",
+      "frame_size_bytes": 1448860,
+      "frame_sha256": "1052fe8ed6985d26dc25d03df30ce79d3bd55f15a7aefdf64304af7a5d71c98e"
+    },
+    "L04_877.000": {
+      "lesson": 4,
+      "time_seconds": 877,
+      "frame_file": "lesson04-frame-877.000.png",
+      "frame_size_bytes": 889923,
+      "frame_sha256": "381002dca77cad6554cc43d59f30570f22ca5baa389eb29a60425cda1cd6736e"
+    },
+    "L05_003.000": {
+      "lesson": 5,
+      "time_seconds": 3,
+      "frame_file": "lesson05-frame-003.000.png",
+      "frame_size_bytes": 2494328,
+      "frame_sha256": "10cfac98859f25e1581f1d8186c4690778858673ab109662e1e73adfc768b4d1"
+    },
+    "L04_975.000": {
+      "lesson": 4,
+      "time_seconds": 975,
+      "frame_file": "lesson04-frame-975.000.png",
+      "frame_size_bytes": 1514977,
+      "frame_sha256": "4c258f077efbdcf1ab656c47a3f1bd0d73f5e195dc957effb937e040d10ff247"
+    },
+    "L05_005.500": {
+      "lesson": 5,
+      "time_seconds": 5.5,
+      "frame_file": "lesson05-frame-005.500.png",
+      "frame_size_bytes": 1524574,
+      "frame_sha256": "1375a7f5ceeae6b0758998f4048c43918c227c781f587324b9b2be4a82faa288"
+    },
+    "L05_005.750": {
+      "lesson": 5,
+      "time_seconds": 5.75,
+      "frame_file": "lesson05-frame-005.750.png",
+      "frame_size_bytes": 1015861,
+      "frame_sha256": "82af9fd35c5661870253f0480e884be7ed8538f9c6a40f6f3f0903aefb847adc"
+    },
+    "L05_006.500": {
+      "lesson": 5,
+      "time_seconds": 6.5,
+      "frame_file": "lesson05-frame-006.500.png",
+      "frame_size_bytes": 1347716,
+      "frame_sha256": "827e9520fa83d29d759abf6dbe3e67718c6a4b6448f100d9b01111391464f315"
+    },
+    "L05_007.000": {
+      "lesson": 5,
+      "time_seconds": 7,
+      "frame_file": "lesson05-frame-007.000.png",
+      "frame_size_bytes": 2419250,
+      "frame_sha256": "8bc189c0b7a780e605fec48e86aa711bad80f5919782eb5d001c4a4e056542a6"
+    },
+    "L05_140.000": {
+      "lesson": 5,
+      "time_seconds": 140,
+      "frame_file": "lesson05-frame-140.000.png",
+      "frame_size_bytes": 1952038,
+      "frame_sha256": "04b9109441557a2f51427b8fe25ce429a248cc563b687224f999440943e8d671"
+    },
+    "L05_012.000": {
+      "lesson": 5,
+      "time_seconds": 12,
+      "frame_file": "lesson05-frame-012.000.png",
+      "frame_size_bytes": 1391737,
+      "frame_sha256": "412ebce6e7ea17510038fe16a4957d3bdbf64028fd586422066fb740a855b0fd"
+    },
+    "L05_132.000": {
+      "lesson": 5,
+      "time_seconds": 132,
+      "frame_file": "lesson05-frame-132.000.png",
+      "frame_size_bytes": 1722967,
+      "frame_sha256": "6682a3360e9510a960ccb4cc29ff39b6aef2656f00b21fa553fdd09ecea470d6"
+    },
+    "L05_145.000": {
+      "lesson": 5,
+      "time_seconds": 145,
+      "frame_file": "lesson05-frame-145.000.png",
+      "frame_size_bytes": 1536415,
+      "frame_sha256": "da6c2b263077fc089d8db439ea195feb48202d28e8a35c1c89b50677d2d9df42"
+    },
+    "L04_617.000": {
+      "lesson": 4,
+      "time_seconds": 617,
+      "frame_file": "lesson04-frame-617.000.png",
+      "frame_size_bytes": 1270910,
+      "frame_sha256": "cce0ccd10a3e4094ffa3ee47c1b96c5d4b9007a8666cbcfcb5e442b587885dc6"
+    },
+    "L04_981.000": {
+      "lesson": 4,
+      "time_seconds": 981,
+      "frame_file": "lesson04-frame-981.000.png",
+      "frame_size_bytes": 1337260,
+      "frame_sha256": "ee5269f744cc7e8c95c31438cfcbdd4378849aa36fa9956f07407b0a838a0e88"
+    },
+    "L04_983.000": {
+      "lesson": 4,
+      "time_seconds": 983,
+      "frame_file": "lesson04-frame-983.000.png",
+      "frame_size_bytes": 1664093,
+      "frame_sha256": "5f0a8af28ebd466f388d819dbf7f9a1fa0dddafe1fbf4fabe53bd833ef50a438"
+    },
+    "L05_579.000": {
+      "lesson": 5,
+      "time_seconds": 579,
+      "frame_file": "lesson05-frame-579.000.png",
+      "frame_size_bytes": 1539828,
+      "frame_sha256": "9b51cfeb4951c368e93cc3bb6fd7b289843d1a05752fbb73e6dac1b66550501e"
+    },
+    "L05_626.000": {
+      "lesson": 5,
+      "time_seconds": 626,
+      "frame_file": "lesson05-frame-626.000.png",
+      "frame_size_bytes": 1188272,
+      "frame_sha256": "9888632f6176d3fc711dd884d99647119af49eec82fc7b980222b3ed056891c7"
+    },
+    "L05_846.000": {
+      "lesson": 5,
+      "time_seconds": 846,
+      "frame_file": "lesson05-frame-846.000.png",
+      "frame_size_bytes": 1348579,
+      "frame_sha256": "edcd61883f510a0c39318b70d11978c73e79a14783f80f9cad9d13a87eb6438f"
+    },
+    "L05_925.000": {
+      "lesson": 5,
+      "time_seconds": 925,
+      "frame_file": "lesson05-frame-925.000.png",
+      "frame_size_bytes": 2010365,
+      "frame_sha256": "6b6913cae4844f83b89d4746837401787f7194fd40ac7ae53a06d1b8ea196a18"
+    },
+    "L04_984.000": {
+      "lesson": 4,
+      "time_seconds": 984,
+      "frame_file": "lesson04-frame-984.000.png",
+      "frame_size_bytes": 1764987,
+      "frame_sha256": "b69f41c48837a61205410e3454a550b02be5498d66ab1099d354d9c5b89a25cc"
+    },
+    "L04_878.000": {
+      "lesson": 4,
+      "time_seconds": 878,
+      "frame_file": "lesson04-frame-878.000.png",
+      "frame_size_bytes": 905703,
+      "frame_sha256": "0c4f921b271ff99c3f3be80e15c17e3060a77bebc1427936b111ea0ec57dafc8"
+    }
+  },
+  "explicit_limits": [
+    "The five Houdini IDs tjmledzr, ulgmbhwn, td1hcimn, tdwlcc1l and vjdqcba are distinct from the five Lesson07 Unreal array IDs; no automatic mapping between those families is asserted.",
+    "The supplied Overview HIP and default HDA values do not establish these author instance settings. This receipt adds timestamped video evidence and preserves prior source receipts.",
+    "default.pic is a verified Roughness field literal for all five displayed HDA instances. Its resolved bytes and numeric roughness output are UNKNOWN; do not replace this fact with a guessed constant.",
+    "Explorer hides file extensions except in the cited lava chooser. EXR icons are recorded as visible file-kind evidence, not as a verbatim filename-extension read.",
+    "The cliff folder contains 2K and 4K maps. Explorer selections identify 2K Displacement and Albedo; the complete final HDA path strings remain truncated.",
+    "The global brightness tint is after grass and before sand; its unmasked state does not justify moving it to the end of the material chain.",
+    "Material Size and distortion Element Size are separate controls. HDA Remap and the external HeightField Remap SOP are separate operations.",
+    "No exact source texture bytes, texture SHA256, account entitlement, current Fab UUID, or asset acquisition was established by this video inspection.",
+    "No Houdini/Unreal operation, cook, cache extraction, native material change or terrain change was performed for this receipt. Demo displacement values are evidence only and do not authorize changing accepted Sa Calobra geography/heights.",
+    "No full final author HIP, complete tint/mask recipe, pixel equality or material acceptance is claimed."
+  ],
+  "native_proof": false,
+  "one_to_one_material_acceptance": false,
+  "performance_status": "DEFERRED_AFTER_M3",
+  "performance_pass": false
+}

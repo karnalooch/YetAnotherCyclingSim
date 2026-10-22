@@ -1,0 +1,305 @@
+{
+  "schema_version": 1,
+  "status": "NATIVE_SOURCE_HEADERS_OBSERVED_NOT_MATERIAL_ACCEPTANCE",
+  "run_id": 39749604030,
+  "job_id": 119726537854,
+  "source_commit": "9105e46fe9dde22e60d2947b65046f6f6bb9e262",
+  "workflow_url": "https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39749604030",
+  "artifact": {
+    "id": 12412398784,
+    "name": "lesson07-native-audit-39749604030-1",
+    "zip_bytes": 2561,
+    "zip_sha256": "3f816d7f40260145f15f04a5663a239cb7bfb9a55d5a17bd5acaa83b01b787ca",
+    "member": "lesson07-native-audit.json",
+    "member_bytes": 9920,
+    "member_sha256": "9ed0bc60a648528d9cdd6ae8462b368b87aa36f8c3e0b591be508424e30ebf76"
+  },
+  "retention_note": "The technical report is retained below. Only the ginfo artist and hostname header lines are omitted; source paths, hashes, technical header text and all status fields are unchanged. Exact original report identity is recorded above.",
+  "verified": {
+    "stage1_accepted_sha_matches": true,
+    "stage2_current_sha_matches_producer_receipt": true,
+    "ginfo_observed_executable_pin_and_exact_version_match": true,
+    "both_ginfo_children_exit_zero": true,
+    "both_stderr_empty": true,
+    "both_source_metadata_unchanged": true,
+    "stage1_volume_names": [
+      "height",
+      "mask",
+      "Alpha"
+    ],
+    "stage2_volume_names": [
+      "grass_mask",
+      "sand_mask",
+      "cliff_mask",
+      "ramp_layer"
+    ],
+    "each_volume_resolution": [
+      16000,
+      16000,
+      1
+    ],
+    "each_volume_voxel_count": 256000000,
+    "full_geometry_load": false,
+    "hou_import": false,
+    "hip_load": false,
+    "cook": false,
+    "cache_write": false,
+    "unreal_mutation": false
+  },
+  "limits": [
+    "ginfo -S reads a header summary. These headers do not establish voxel storage/channel types, exact lattice transforms, data equality, finite values or measured peak native memory.",
+    "stage2 hash agrees with the bounded local producer receipt; independent historical lineage remains unverified.",
+    "The final 4,808,520,505-byte cache was observed only as metadata; its current hash was not read.",
+    "Available-memory snapshots are not an admission or a measured native-cook memory bound.",
+    "The current material recipe and substitute textures do not meet the owner's exact Pegasus requirement. No source crop, canary or production replay was admitted."
+  ],
+  "native_report": {
+    "status": "READ_ONLY_SOURCE_METADATA_OBSERVED_NOT_COOK_ADMISSION",
+    "commit": "9105e46fe9dde22e60d2947b65046f6f6bb9e262",
+    "profile": "STAGE4A_SOURCE_METADATA_ONLY",
+    "memory_before": {
+      "observed_utc": "2026-10-22T08:41:45.5766426Z",
+      "status": "OBSERVED",
+      "available_physical_bytes": 18502717440,
+      "available_commit_bytes": 52444581888,
+      "total_physical_bytes": 34275442688,
+      "total_commit_bytes": 107675762688
+    },
+    "memory_after": {
+      "observed_utc": "2026-10-22T08:41:54.9083299Z",
+      "status": "OBSERVED",
+      "available_physical_bytes": 18404032512,
+      "available_commit_bytes": 52333633536,
+      "total_physical_bytes": 34275442688,
+      "total_commit_bytes": 107675762688
+    },
+    "stage1": {
+      "file": {
+        "path": "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.bgeo.sc",
+        "status": "STABLE_HASH_OBSERVED",
+        "bytes": 519575557,
+        "modified_utc": "2026-10-19T06:49:41.8043940Z",
+        "sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952"
+      },
+      "accepted_size_bytes": 519575557,
+      "accepted_sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
+      "accepted_pin_matches": true
+    },
+    "stage2": {
+      "file": {
+        "path": "D:\\yacs\\work\\lesson06-unified-20261019\\stage2_masks.bgeo.sc",
+        "status": "STABLE_HASH_OBSERVED",
+        "bytes": 1167222140,
+        "modified_utc": "2026-10-19T07:01:06.4195101Z",
+        "sha256": "203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8"
+      },
+      "hash_limit_bytes": 6442450944,
+      "producer_sha_match": true,
+      "previously_accepted_pin_exists": false,
+      "source_lineage_independently_verified": false
+    },
+    "producer_receipts": {
+      "stage1": {
+        "file": {
+          "path": "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.json",
+          "status": "STABLE_BOUNDED_READ",
+          "bytes": 608,
+          "modified_utc": "2026-10-19T06:49:42.9496429Z",
+          "sha256": "a4a0c81d6e8a80a598b7922a83c2a528c5c34988b8218007ec8761ade35dc2f7"
+        },
+        "status": "PRODUCER_CLAIM_OBSERVED",
+        "claim": {
+          "stage": "stage1_base",
+          "output_file": "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.bgeo.sc",
+          "sha256": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
+          "statistics": {
+            "height": {
+              "min": -1.2999999523162842,
+              "max": 1437.158203125,
+              "mean": 418.9786798986856,
+              "count": 256000000
+            },
+            "alpha": {
+              "min": 0,
+              "max": 1.0001100301742554,
+              "mean": 0.9759627641636786,
+              "count": 256000000
+            }
+          }
+        },
+        "independently_accepted": false
+      },
+      "stage2": {
+        "file": {
+          "path": "D:\\yacs\\work\\lesson06-unified-20261019\\stage2_masks.json",
+          "status": "STABLE_BOUNDED_READ",
+          "bytes": 695,
+          "modified_utc": "2026-10-19T07:01:18.2809760Z",
+          "sha256": "80a0eaa341af90ad86918ec8c969a7b6874f0dabfe16a8850e46f57b3de24d18"
+        },
+        "status": "PRODUCER_CLAIM_OBSERVED",
+        "claim": {
+          "stage": "stage2_masks",
+          "output_file": "D:\\yacs\\work\\lesson06-unified-20261019\\stage2_masks.bgeo.sc",
+          "sha256": "203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8",
+          "statistics": {
+            "grass_mask": {
+              "min": 0,
+              "max": 1,
+              "mean": 0.3950157924123836,
+              "count": 256000000
+            },
+            "sand_mask": {
+              "min": 0,
+              "max": 1,
+              "mean": 0.07240492912124141,
+              "count": 256000000
+            },
+            "cliff_mask": {
+              "min": 0,
+              "max": 1,
+              "mean": 0.30394656722987845,
+              "count": 256000000
+            },
+            "ramp_layer": {
+              "min": 0,
+              "max": 1,
+              "mean": 0.4128230467630489,
+              "count": 256000000
+            }
+          }
+        },
+        "independently_accepted": false
+      },
+      "pre_id": {
+        "file": {
+          "path": "D:\\yacs\\work\\lesson06-unified-20261019\\pre_id_cache.json",
+          "status": "STABLE_BOUNDED_READ",
+          "bytes": 944,
+          "modified_utc": "2026-10-19T12:34:07.4418681Z",
+          "sha256": "4f810017445d53626daf8b3b4c81a8d087d400d09e75823460e14764b6679ffc"
+        },
+        "status": "PRODUCER_CLAIM_OBSERVED",
+        "claim": {
+          "stage": "stage4_materials_and_tints",
+          "output_file": "D:\\yacs\\work\\lesson06-unified-20261019\\pre_id_cache.bgeo.sc",
+          "sha256": "b97969d87cc887bdea28b5f3e5b04ce7fc20e15f6cec682c1b46f21f4acda45e",
+          "statistics": {
+            "height": {
+              "min": -1.2999999523162842,
+              "max": 1437.158203125,
+              "mean": 418.9890780196411,
+              "count": 256000000
+            },
+            "r": {
+              "min": 0,
+              "max": 0.7616127729415894,
+              "mean": 0.3320504529042193,
+              "count": 256000000
+            },
+            "g": {
+              "min": 0,
+              "max": 0.7639183402061462,
+              "mean": 0.3181091296490887,
+              "count": 256000000
+            },
+            "b": {
+              "min": 0,
+              "max": 0.7685295343399048,
+              "mean": 0.24294083889350576,
+              "count": 256000000
+            }
+          },
+          "layers": [
+            "height",
+            "mask",
+            "Alpha",
+            "r",
+            "g",
+            "b",
+            "roughness",
+            "ramp",
+            "grass",
+            "grass 2",
+            "sand",
+            "cliffs",
+            "scree"
+          ]
+        },
+        "independently_accepted": false
+      }
+    },
+    "ginfo_tool": {
+      "file": {
+        "path": "D:\\yacs\\tools\\houdini-22.0.466\\bin\\ginfo.exe",
+        "status": "STABLE_HASH_OBSERVED",
+        "bytes": 4369200,
+        "modified_utc": "2026-10-08T15:27:54.0000000Z",
+        "sha256": "be4c5d9d9753483596d7eb9664dab27fc816d0ba912597d78a6ce9061689d31d"
+      },
+      "file_version": "22, 0, 0, 466",
+      "version_matches_known_installation": true,
+      "provenance_basis": "NATIVE_RUN_OBSERVED_FILE_IDENTITY_AND_EXACT_WINDOWS_VERSION",
+      "observed_executable_pin": {
+        "source_run_id": 39747236507,
+        "source_commit": "e81d01e89c8eecf12c9547ddb14012c3c38376c6",
+        "bytes": 4369200,
+        "sha256": "be4c5d9d9753483596d7eb9664dab27fc816d0ba912597d78a6ce9061689d31d"
+      },
+      "observed_executable_pin_matches": true
+    },
+    "headers": [
+      {
+        "path": "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.bgeo.sc",
+        "arguments": [
+          "-S",
+          "-u",
+          "D:\\yacs\\work\\lesson06-unified-20261019\\stage1_base.bgeo.sc"
+        ],
+        "status": "HEADER_OBSERVED",
+        "started": true,
+        "exit_code": 0,
+        "time_limit_seconds": 30,
+        "output_limit_bytes": 65536,
+        "stdout": "            date - 2026-10-19 08:49:39\n        software - Houdini 22.0.466\n____________________________________________________________\n4 Points\n3 Vertices\n3 Primitives\n          3 Volumes\n____________________________________________________________\n     1 point attributes:\tP\n     1 primitive attributes:\tname\n     1 global attributes:\tvolvis\n____________________________________________________________\nVolume Resolutions:\n  0 (height) : [16000, 16000, 1] Voxel Count: 256,000,000\n  1 (mask) : [16000, 16000, 1] Voxel Count: 256,000,000\n  2 (Alpha) : [16000, 16000, 1] Voxel Count: 256,000,000\n____________________________________________________________\n  Size: 8000, 1438.46, 8000\nCenter: 0, 717.929, 0\nBounds: -4000, -1.3, -4000\n        4000 1437.16 4000\n",
+        "stderr": "",
+        "source_metadata_unchanged": true
+      },
+      {
+        "path": "D:\\yacs\\work\\lesson06-unified-20261019\\stage2_masks.bgeo.sc",
+        "arguments": [
+          "-S",
+          "-u",
+          "D:\\yacs\\work\\lesson06-unified-20261019\\stage2_masks.bgeo.sc"
+        ],
+        "status": "HEADER_OBSERVED",
+        "started": true,
+        "exit_code": 0,
+        "time_limit_seconds": 30,
+        "output_limit_bytes": 65536,
+        "stdout": "            date - 2026-10-19 09:00:54\n        software - Houdini 22.0.466\n____________________________________________________________\n8 Points\n4 Vertices\n4 Primitives\n          4 Volumes\n____________________________________________________________\n     1 point attributes:\tP\n     1 primitive attributes:\tname\n     1 global attributes:\tvolvis\n____________________________________________________________\nVolume Resolutions:\n  0 (grass_mask) : [16000, 16000, 1] Voxel Count: 256,000,000\n  1 (sand_mask) : [16000, 16000, 1] Voxel Count: 256,000,000\n  2 (cliff_mask) : [16000, 16000, 1] Voxel Count: 256,000,000\n  3 (ramp_layer) : [16000, 16000, 1] Voxel Count: 256,000,000\n____________________________________________________________\n  Size: 8000, 0.5, 8000\nCenter: 0, 0, 0\nBounds: -4000, -0.25, -4000\n        4000 0.25 4000\n",
+        "stderr": "",
+        "source_metadata_unchanged": true
+      }
+    ],
+    "final_cache_metadata": {
+      "path": "D:\\yacs\\work\\lesson06-unified-20261019\\final_unified_idmap.bgeo.sc",
+      "status": "METADATA_ONLY",
+      "bytes": 4808520505,
+      "modified_utc": "2026-10-19T12:39:57.4343723Z",
+      "sha256": null
+    },
+    "full_geometry_load_requested": false,
+    "hou_imported": false,
+    "hip_loaded": false,
+    "terrain_cook_requested": false,
+    "cache_written": false,
+    "editor_started_or_stopped": false,
+    "project_files_written": false,
+    "source_profile_admitted": false,
+    "performance_pass": false
+  },
+  "lesson07_technical_pass": false,
+  "performance_pass": false,
+  "performance_note": "DEFERRED_AFTER_M3"
+}

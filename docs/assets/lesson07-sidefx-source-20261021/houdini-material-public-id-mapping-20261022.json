@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "observed_date_utc": "2026-10-22",
+  "status": "FIVE_HOUDINI_LEGACY_ID_TITLE_PAIRS_VERIFIED_IN_OFFICIAL_INDEX",
+  "scope": "Public official Quixel search-index corroboration of the five Houdini material families identified in Pegasus Landscape Workflow Lessons03-05. These are distinct from the five final Lesson07 Unreal array families.",
+  "video_context_basis": "Lesson numbers and folder labels come from the separate reviewed tutorial-frame inspection. This receipt independently corroborates public legacy ID/title pairs, not video-frame content or downloaded files.",
+  "families": [
+    {
+      "lesson": 3,
+      "video_folder_label": "Rock_Lava_tjmledzr",
+      "legacy_quixel_id": "tjmledzr",
+      "publisher_title": "Hawaiian Lava Stone",
+      "observed_official_quixel_url": "https://quixel.com/megascans/home?assetId=tjmledzr&category=3D+plant&category=herb",
+      "web_references": [
+        "turn74search0"
+      ],
+      "identity_evidence": "Official Quixel index result title is Hawaiian Lava Stone and its URL contains the exact assetId=tjmledzr; the result labels the asset Surface.",
+      "exact_current_fab_listing": null,
+      "exact_current_fab_mapping_status": "UNKNOWN"
+    },
+    {
+      "lesson": 4,
+      "video_folder_label": "ground_other_ulgmbhwn",
+      "legacy_quixel_id": "ulgmbhwn",
+      "publisher_title": "Rocky Steppe",
+      "observed_official_quixel_url": "https://quixel.com/megascans/home?assetId=ulgmbhwn&category=surface&search=cliff",
+      "web_references": [
+        "turn74search1",
+        "turn74search2"
+      ],
+      "identity_evidence": "Official Quixel index result title is Rocky Steppe and its URL contains the exact assetId=ulgmbhwn; a second official result confirms the same ID/title pair.",
+      "exact_current_fab_listing": null,
+      "exact_current_fab_mapping_status": "UNKNOWN"
+    },
+    {
+      "lesson": 4,
+      "video_folder_label": "sand_fine_td1hcimn",
+      "legacy_quixel_id": "td1hcimn",
+      "publisher_title": "Thai Rippled Sand",
+      "observed_official_quixel_url": "https://quixel.com/megascans/home?assetId=td1hcimn&category=surface&search=thai",
+      "corroborating_official_quixel_url": "https://quixel.com/megascans/collections?assetId=td1hcimn",
+      "web_references": [
+        "turn77search3",
+        "turn77search6"
+      ],
+      "identity_evidence": "Two official Quixel index results pair Thai Rippled Sand with exact assetId=td1hcimn. The folder label sand_fine is not the publisher title.",
+      "character_disambiguation": "Eight characters: t d 1 h c i m n. Position 3 is digit one; position 6 is lowercase i.",
+      "exact_current_fab_listing": null,
+      "exact_current_fab_mapping_status": "UNKNOWN"
+    },
+    {
+      "lesson": 4,
+      "video_folder_label": "Rock_Cliffs_tdwlcc1l",
+      "legacy_quixel_id": "tdwlcc1l",
+      "publisher_title": "Icelandic Cliff",
+      "observed_official_quixel_url": "https://quixel.com/megascans/home?assetId=tdwlcc1l&category=surface&search=iceland",
+      "corroborating_official_quixel_url": "https://quixel.com/megascans/collections?assetId=tdwlcc1l&category=archviz-basics&category=tutorial",
+      "web_references": [
+        "turn77search1",
+        "turn77search4"
+      ],
+      "identity_evidence": "Official Quixel index results pair Icelandic Cliff with exact assetId=tdwlcc1l.",
+      "character_disambiguation": "Eight characters: t d w l c c 1 l. Positions 4 and 8 are lowercase l; position 7 is digit one.",
+      "exact_current_fab_listing": null,
+      "exact_current_fab_mapping_status": "UNKNOWN"
+    },
+    {
+      "lesson": 5,
+      "video_folder_label": "rock_forest_vjdqcba",
+      "legacy_quixel_id": "vjdqcba",
+      "publisher_title": "Rocky Ground",
+      "observed_official_quixel_url": "https://quixel.com/megascans/home?assetId=vjdqcba&category=surface",
+      "corroborating_official_quixel_url": "https://quixel.com/megascans/home?assetId=vjdqcba&category=ground&category=surface&search=forest",
+      "web_references": [
+        "turn77search2",
+        "turn77search5"
+      ],
+      "identity_evidence": "Two official Quixel index results pair Rocky Ground with exact assetId=vjdqcba, corroborating the reviewed Bridge title ROCKY GROUND.",
+      "character_disambiguation": "Seven lowercase letters: v j d q c b a; no digits.",
+      "exact_current_fab_listing": null,
+      "exact_current_fab_mapping_status": "UNKNOWN"
+    }
+  ],
+  "limits": [
+    "Evidence is from public official search-index results; it is not a fresh authenticated metadata or entitlement read.",
+    "URL category/search parameters describe browsing context, not asset identity. Exact assetId and publisher title are the identity evidence.",
+    "No exact legacy-ID-to-Fab-UUID mapping has been established. Same-title listings are not accepted matches.",
+    "This public ID/title lookup does not verify original map filenames, resolutions, packing, import settings, file hashes, historical versions or account entitlements. Separately timestamped video observations, including readable filenames and resolutions, are retained in houdini-author-material-observations-20261022.json.",
+    "Price and download availability of the exact legacy assets remain UNKNOWN; a same-title Fab listing does not establish either.",
+    "These five Houdini families do not replace tkekcgfn, vjulbjjr, wenocdss, ultncbnlw and ullmagidy required by the final Lesson07 Unreal arrays.",
+    "No direct Quixel/Fab HTML requests, login, purchase, asset download, native call or runtime change was performed for this receipt."
+  ]
+}
