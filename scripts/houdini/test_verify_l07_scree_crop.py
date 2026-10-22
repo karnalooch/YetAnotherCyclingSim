@@ -18,7 +18,7 @@ def inputs():
         "status":"REAL_SOURCE_CROPS_VERIFIED_NO_MATERIAL_COOK",
         "crop_resolution":[256,256,1],
         "raw_source_resolution":[16000,16000,1],
-        "extent_world":[FIRST,LAST],
+        "extent_world":[FIRST.copy(),LAST.copy()],
     }
     report={
         "status":"HISTORICAL_STAGE3_SCREE_CROP_DIAGNOSTIC_NOT_ACCEPTED",
@@ -33,8 +33,8 @@ def inputs():
         "source_masks_modified":False,
         "layer_metadata":{"scree_mask":{
             "sha256_float32_le":"a"*64,"nonzero":42,
-            "first_voxel_world_xyz":FIRST,
-            "last_voxel_world_xyz":LAST}}
+            "first_voxel_world_xyz":FIRST.copy(),
+            "last_voxel_world_xyz":LAST.copy()}}
     }
     return report,baseline
 
