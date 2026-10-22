@@ -246,6 +246,26 @@ jobs:
           if (-not (Test-Path -LiteralPath $hython)) { throw 'Houdini 22.0.466 is missing.' }
           & $hython -B scripts/houdini/l07_real_material_canary.py --source-token '39785285512-1' --scree-token '39794174742-1' --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
           if ($LASTEXITCODE -ne 0) { throw 'Five-stage authentic Stage3 diagnostic failed without changing canonical terrain.' }
+          $resultPath='D:\yacs\work\lesson07-cc0-real-material\${{ github.run_id }}-${{ github.run_attempt }}\real-material-canary.json'
+          if (-not (Test-Path -LiteralPath $resultPath)) { throw 'No native five-HDA report was saved.' }
+          $proof=Get-Content -LiteralPath $resultPath -Raw | ConvertFrom-Json
+          if ($proof.status -cne 'FIVE_PEGASUS_CC0_REAL_STAGE3_DIAGNOSTIC_PASSED_NOT_PRODUCTION') {
+            throw 'Native material status does not prove real Stage3 diagnostic input.'
+          }
+          $stages=@($proof.stages)
+          if ($stages.Count -ne 5) { throw 'Not all five Pegasus HDAs completed.' }
+          if ($stages[4].role -cne 'scree' -or $stages[4].mask -cne 'scree_mask' -or
+              $stages[4].mask_source -cne 'HISTORICAL_STAGE3_GEOREGISTERED_UPSTREAM_UNVERIFIED' -or
+              [int]$stages[4].mask_nonzero -ne 8619) {
+            throw 'Native scree preview did not use the exact real Stage3 diagnostic mask.'
+          }
+          if ($proof.stage3_upstream_lineage_accepted -ne $false -or
+              $proof.ground_truth_height_and_stage2_masks_unchanged -ne $true -or
+              $proof.whole_landscape_material_pass -ne $false -or
+              $proof.unreal_import -ne $false) {
+            throw 'Native diagnostic proof was incorrectly promoted to production.'
+          }
+          Write-Host 'REAL_STAGE3_8619_CELLS_AND_FIVE_HDA_SOURCE_INVARIANTS_VERIFIED'
       - name: Preserve real images, diagnosed mask coverage and final scratch BGEO
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
