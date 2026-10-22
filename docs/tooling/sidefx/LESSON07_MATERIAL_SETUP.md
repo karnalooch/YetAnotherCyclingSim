@@ -11,6 +11,30 @@
 
 ---
 
+## Current connection blocker: two existing Editors (2026-10-22)
+
+[Recovery run 39704721721, attempt 2](https://github.com/karnalooch/YetAnotherCyclingSim/actions/runs/39704721721/attempts/2)
+rechecked source `62ec16d1960822a18238f2764558e8093f4c3243` on the home
+runner at 07:32:52 UTC. Both the historical observation and this fresh inventory
+identify the canonical Lesson07 Editor, PID 23968, started at
+`2026-10-22T00:45:12.5416180Z`, and a second Editor, PID 6340, started at
+`2026-10-21T23:43:06.1461720Z`. The canonical discovery listener on loopback
+port 19315 belongs to PID 23968. The preflight stops with
+`OTHER_UNREAL_OWNER`; no native tool call or camera/material change occurred.
+The secondary `DISCOVERY_REQUIRES_EXISTING_EDITOR` message does not mean that
+the canonical Editor is missing.
+
+The second process uses the retained `b9fddea3f602-y473save01` project configured
+for YACS Live Host. That launcher deliberately uses `-RenderOffscreen`, so an
+absent main window does not establish a stale process or permission to discard
+unsaved state. The bounded recovery workflow now also reads selected Live Host
+task/session, parent-process and native-heartbeat metadata, plus the three fixed
+small preview-cache file sizes. It exposes no credentials or raw command lines,
+performs no shutdown, and leaves both singleton guards intact. Its publication
+is not a claim that the new observations have run or that either session is
+clean. Resolving ownership remains separate from source-colour correction,
+native material application and whole-area acceptance below.
+
 ## Current owner direction: original SideFX material reproduction (2026-10-21)
 
 The owner requested a fresh download of `ProjectFiles_LandscapeWorkflow3.zip`,

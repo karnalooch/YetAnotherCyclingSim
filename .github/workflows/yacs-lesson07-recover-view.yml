@@ -185,6 +185,88 @@ jobs:
           }
           $os=Get-CimInstance Win32_OperatingSystem
           Write-Host ('L07_HOST_INVENTORY='+([ordered]@{status=$state.status;local_count=$state.local_or_unknown_count;remote_count=$state.remote_ci_count;stale_count=$state.stale_cim_record_count;processes=$safeRows;bridge=$bridge;free_ram_kib=$os.FreePhysicalMemory} | ConvertTo-Json -Depth 8 -Compress))
+          # Read-only metadata: hidden offscreen windows and receipt flags do not prove clean unsaved state.
+          function Get-L07PlainFile([string]$Path) {
+            $cursor=[IO.Path]::GetFullPath($Path)
+            while($cursor){
+              if(Test-Path -LiteralPath $cursor){
+                if((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Redirected diagnostic path.'}
+              }
+              $cursor=Split-Path -Path $cursor -Parent
+            }
+            $item=Get-Item -LiteralPath $Path -Force
+            if($item.PSIsContainer){throw 'Diagnostic file required.'};return $item
+          }
+          function Read-L07LiveJson([string]$Path,[int]$Limit) {
+            $item=Get-L07PlainFile $Path
+            if($item.Length -lt 1 -or $item.Length -gt $Limit){throw 'Diagnostic JSON exceeds bound.'}
+            $stream=[IO.File]::Open($item.FullName,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+            try {
+              $bytes=[byte[]]::new($Limit+1);$count=0
+              while($count -lt $bytes.Length){$read=$stream.Read($bytes,$count,$bytes.Length-$count);if($read -eq 0){break};$count+=$read}
+              if($count -lt 1 -or $count -gt $Limit){throw 'Diagnostic JSON exceeds bound.'}
+              $json=[Text.UTF8Encoding]::new($false,$true).GetString($bytes,0,$count).TrimStart([char]0xfeff) | ConvertFrom-Json -AsHashtable -Depth 16
+              if($json -isnot [Collections.IDictionary]){throw 'Diagnostic JSON object required.'};return $json
+            } finally {$stream.Dispose()}
+          }
+          $live=[ordered]@{read_state='UNAVAILABLE_OR_REJECTED';active=$null;parent=$null;existing_status=$null;
+            native_heartbeat=$null;unsaved_state='NOT_MEASURED';editor_started_or_stopped=$false}
+          try {
+            $liveRoot='D:\yacs\live-host'
+            $install=Read-L07LiveJson (Join-Path $liveRoot 'state/installation.json') 2097152
+            $active=Read-L07LiveJson (Join-Path $liveRoot 'state/current-session.json') 16384
+            if($install.source_sha -isnot [string] -or $install.source_sha -cnotmatch '^[a-f0-9]{40}$' -or
+              $active.source_sha -isnot [string] -or $active.source_sha -cnotmatch '^[a-f0-9]{40}$' -or
+              $active.session -isnot [string] -or $active.session -cnotmatch '^[0-9]{8}T[0-9]{6}Z-[a-f0-9]{12}$'){throw 'Invalid Live Host identity.'}
+            foreach($key in @('editor_pid','live_host_pid')){
+              if(($active[$key] -isnot [long] -and $active[$key] -isnot [int]) -or $active[$key] -le 0 -or $active[$key] -gt [int]::MaxValue){throw 'Invalid recorded process ID.'}
+            }
+            . ./scripts/live_host/Convert-YacsLiveUtc.ps1
+            $started=ConvertTo-YacsLiveUtc -Value $active.editor_started_utc
+            $candidate=@($rows | Where-Object process_id -eq $active.editor_pid)
+            $live.active=[ordered]@{session=$active.session;source_sha=$active.source_sha;editor_pid=$active.editor_pid;
+              editor_started_utc=$started.ToString('o');live_host_pid=$active.live_host_pid;
+              source_matches_install=($active.source_sha -ceq $install.source_sha);
+              console_sid_matches=($active.desktop_sid -ceq $consoleSid -and $install.desktop_sid -ceq $consoleSid);
+              recorded_parent_matches=($candidate.Count -eq 1 -and $candidate[0].parent_process_id -eq $active.live_host_pid)}
+            try {
+              $parent=Get-Process -Id $active.live_host_pid -ErrorAction Stop
+              $parentCim=Get-CimInstance Win32_Process -Filter "ProcessId=$($active.live_host_pid)" -ErrorAction Stop
+              $parentOwner=Invoke-CimMethod -InputObject $parentCim -MethodName GetOwnerSid -ErrorAction Stop
+              $live.parent=[ordered]@{pid=$parent.Id;created=$parent.StartTime.ToUniversalTime().ToString('o');session=$parent.SessionId;
+                pinned_powershell_matches=($parent.Path -ieq 'D:\yacs\tools\powershell-7.6.6-win-x64\pwsh.exe');
+                console_sid_matches=($parentOwner.ReturnValue -eq 0 -and $parentOwner.Sid -ceq $consoleSid);started_before_editor=($parent.StartTime.ToUniversalTime() -le $started)}
+            } catch {$live.parent=[ordered]@{read_state='UNAVAILABLE_OR_REJECTED'}}
+            $sessionRoot=Join-Path $liveRoot "runtime/sessions/$($active.session)"
+            try {
+              $native=Read-L07LiveJson (Join-Path $sessionRoot 'live-heartbeat.json') 16384
+              $time=ConvertTo-YacsLiveUtc -Value $native.updated_utc
+              $live.native_heartbeat=[ordered]@{tick_status_matches=($native.status -ceq 'EDITOR_TICK_ALIVE');
+                session_matches=($native.session -ceq $active.session);source_matches=($native.source_sha -ceq $active.source_sha);
+                updated_utc=$time.ToString('o');age_seconds=[Math]::Round(([DateTime]::UtcNow-$time).TotalSeconds,3)}
+              if(($native.sequence -is [long] -or $native.sequence -is [int]) -and $native.sequence -ge 0 -and $native.sequence -le 999999){$live.native_heartbeat.sequence=$native.sequence}
+            } catch {$live.native_heartbeat=[ordered]@{read_state='UNAVAILABLE_OR_REJECTED'}}
+            try {
+              $null=Read-L07LiveJson (Join-Path $sessionRoot 'host-status.json') 131072
+              $observed=& ./scripts/live_host/Get-YacsLiveHostStatus.ps1 2>$null 3>$null 4>$null 5>$null 6>$null | ConvertFrom-Json -AsHashtable -Depth 16
+              $live.existing_status=[ordered]@{observed_status=if($observed.status -cin @('INSTALLED_UNVERIFIED','STALE_OR_DEAD_NOT_LIVE','LIVE_RECEIVER_PROVEN_CURRENT_PROCESS','EDITOR_ALIVE_VIDEO_UNVERIFIED')){$observed.status}else{'UNRECOGNIZED'};
+                task_state=if($observed.task_state -cin @('Unknown','Disabled','Queued','Ready','Running')){$observed.task_state}else{'UNRECOGNIZED'}}
+              foreach($key in @('editor_process_identity_verified','heartbeat_fresh','live_editor','world_native_verified','browser_frames_received')){
+                if($observed[$key] -is [bool]){$live.existing_status[$key]=$observed[$key]}
+              }
+            } catch {$live.existing_status=[ordered]@{read_state='UNAVAILABLE_OR_REJECTED'}}
+            $live.read_state='OBSERVED_METADATA_ONLY'
+          } catch {}
+          Write-Host ('L07_LIVE_HOST_INVENTORY='+($live | ConvertTo-Json -Depth 6 -Compress))
+          $preview='D:\yacs\work\lesson07-unified-20261019\preview_cache\340c7f8aa20e0d3e34b7a8416981eaa115eae4e4de025337c5e229e00d5ae775'
+          $cacheRows=@(foreach($name in @('SCREE_SITE_GLOBAL_COLOR.bgeo.sc','SCREE_FULLRES_PREVIEW.bgeo.sc','PREVIEW_GLOBAL_COLOR.bgeo.sc')){
+            $entry=[ordered]@{file=$name;read_state='ABSENT'}
+            if(Test-Path -LiteralPath (Join-Path $preview $name)){
+              try {$item=Get-L07PlainFile (Join-Path $preview $name);$entry.read_state='METADATA_ONLY';$entry.bytes=$item.Length;$entry.modified_utc=$item.LastWriteTimeUtc.ToString('o')}
+              catch {$entry.read_state='UNAVAILABLE_OR_REJECTED'}
+            };$entry
+          })
+          Write-Host ('L07_PEGASUS_CACHE_INVENTORY='+([ordered]@{files=$cacheRows;contents_read=$false;producer_run=$false} | ConvertTo-Json -Depth 4 -Compress))
       - name: Existing-session Wingman preflight without startup or shutdown
         run: |
           $ownerProof=& ./scripts/ue/Start-YacsLesson07RemoteEditor.ps1 -ExpectedHead $env:GITHUB_SHA -PreflightOnly
