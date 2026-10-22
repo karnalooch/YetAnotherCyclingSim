@@ -18,6 +18,8 @@ on:
       - scripts/houdini/l07_original_tint_hda_canary.py
       - scripts/houdini/test_l07_original_tint_hda_canary.py
       - scripts/houdini/l07_feature_native_contract.py
+      - scripts/houdini/l07_exposure_curvature_canary.py
+      - scripts/houdini/test_l07_exposure_curvature_canary.py
 permissions:
   contents: read
 
@@ -687,5 +689,112 @@ jobs:
         with:
           name: l07-native-exposure-curvature-parm-contract-${{ github.run_id }}-${{ github.run_attempt }}
           path: D:/yacs/work/lesson07-feature-native-contract/${{ github.run_id }}-${{ github.run_attempt }}/native-feature-tint-parameter-contract.json
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  exposure_curvature_preflight:
+    name: Verify original SideFX Exposure/Curvature Tint source parameters and mask edge rules
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-exposure-curvature]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Test source branch wiring, video settings and separately admitted adaptations
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_exposure_curvature_canary -v
+          python -B -m py_compile scripts/houdini/l07_exposure_curvature_canary.py
+
+  exposure_curvature_native:
+    name: Cook original 145m Exposure and 0.18 Curvature branch on bounded real site
+    needs: exposure_curvature_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 40
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout exact source, no canonical UE project changes
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Check source ordered HDA proof and memory before occlusion cook
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong source revision.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          $source='D:\yacs\work\lesson07-cc0-real-material\39808914161-1\real-material-canary.json'
+          if (-not (Test-Path -LiteralPath $source)) { throw 'Real bounded author-ordered material proof missing.' }
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python missing.' }
+          $memJson=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(12)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Physical and commit admission rejected.' }
+          $mem=$memJson | ConvertFrom-Json
+          if ([int64]$mem.available_physical_bytes -lt 8GB) { throw 'Not enough available physical RAM.' }
+          Write-Host "Source feature native memory admission: $memJson"
+      - name: Cook original SideFX Mask12 and Mask13 plus Tint5 and Tint6
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Canonical Houdini 22 missing.' }
+          & $hython -B scripts/houdini/l07_exposure_curvature_canary.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Bounded original Exposure/Curvature source graph did not pass.' }
+          $file='D:\yacs\work\lesson07-exposure-curvature-native\${{ github.run_id }}-${{ github.run_attempt }}\exposure-curvature-proof.json'
+          if (-not (Test-Path -LiteralPath $file)) { throw 'Source graph report not saved.' }
+          $proof=Get-Content -LiteralPath $file -Raw | ConvertFrom-Json
+          if ($proof.status -cne 'ORIGINAL_PEGASUS_EXPOSURE_CURVATURE_NATIVE_REAL_SITE_ADAPTED_RAMP_CANARY_PASS' -or
+              $proof.author_full_ramp_tuples_verified -ne $false -or
+              $proof.boundary_halo_adequate_for_145m_occlusion -ne $false -or
+              $proof.canonical_height_and_alpha_changed -ne $false -or
+              $proof.semantic_stage2_masks_changed -ne $false -or
+              $proof.full_domain_cooked -ne $false -or
+              $proof.unreal_imported -ne $false) {
+            throw 'Limited source graph incorrectly claimed full author/canonical proof.'
+          }
+          if ($proof.tint5.output.original_semantic_volumes_unchanged -ne $true -or
+              $proof.tint6.output.original_semantic_volumes_unchanged -ne $true) {
+            throw 'The original SideFX feature changed protected native data.'
+          }
+          Write-Host 'NATIVE_PEGASUS_MASK12_MASK13_TINT5_TINT6_PROOF_BOUNDED_RAMP_ADAPTED'
+      - name: Retain bounded real feature masks, original color nodes and evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-pegasus-real-exposure-curvature-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-exposure-curvature-native/${{ github.run_id }}-${{ github.run_attempt }}/exposure-curvature-proof.json
+            D:/yacs/work/lesson07-exposure-curvature-native/${{ github.run_id }}-${{ github.run_attempt }}/*.png
+            D:/yacs/work/lesson07-exposure-curvature-native/${{ github.run_id }}-${{ github.run_attempt }}/native-curvature.bgeo.sc
           if-no-files-found: warn
           retention-days: 30
