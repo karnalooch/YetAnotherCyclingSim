@@ -75,6 +75,8 @@ def compute_window(center: tuple[int, int, int], resolution=GRID,
 
 
 def require_memory() -> dict:
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     from scripts.ue.lesson06_memory_guard import require_headroom
     state = require_headroom(gib=30)
     if state["available_physical_bytes"] < 12 * 1024**3:
