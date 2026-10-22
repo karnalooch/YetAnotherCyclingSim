@@ -384,3 +384,109 @@ jobs:
             D:/yacs/work/lesson07-cc0-tint-proofs/${{ github.run_id }}-${{ github.run_attempt }}/tint-*.png
           if-no-files-found: warn
           retention-days: 30
+
+
+  neutral_limestone_preflight:
+    name: Test optional mask-weighted limestone-neutral native Tint HDA adapter
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-neutral-grade]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Verify five-HDA proof integrity, original tint settings, and explicit grade isolation
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_original_tint_hda_canary -v
+          python -B -m py_compile scripts/houdini/l07_original_tint_hda_canary.py
+
+  neutral_limestone_native:
+    name: Test original tint followed by scoped neutral-gray YACS limestone adaptation
+    needs: neutral_limestone_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 35
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout pinned SideFX source adapter for one scratch-only A/B
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Authorize only hash-matched original source and safe physical memory
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong native source commit.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Expected Python absent.' }
+          $source='D:\yacs\work\lesson07-cc0-real-material\39805083280-1\real-material-canary.json'
+          if (-not (Test-Path -LiteralPath $source)) { throw 'Real five-HDA evidence not present.' }
+          $memJson=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(12)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Guard denied commit headroom.' }
+          $mem=$memJson | ConvertFrom-Json
+          if ([int64]$mem.available_physical_bytes -lt 8GB) { throw 'Insufficient physical RAM.' }
+          Write-Host "Native neutral limestone source candidate memory: $memJson"
+      - name: Run original Pegasus tints and one verified source-mask grayscale correction
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Pinned Houdini not installed.' }
+          & $hython -B scripts/houdini/l07_original_tint_hda_canary.py --run-token '${{ github.run_id }}-${{ github.run_attempt }}' --neutral-grade
+          if ($LASTEXITCODE -ne 0) { throw 'Native neutral-cliff A/B failed; no production material changed.' }
+          $manifest='D:\yacs\work\lesson07-cc0-tint-proofs\${{ github.run_id }}-${{ github.run_attempt }}\tint-native-evidence.json'
+          if (-not (Test-Path -LiteralPath $manifest)) { throw 'Native grade receipt missing.' }
+          $proof=Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json
+          $stages=@($proof.stages)
+          if ($proof.status -cne 'ORIGINAL_PEGASUS_TINT_AND_YACS_LIMESTONE_GRADE_ISOLATED_PROOF' -or
+              $proof.grade_is_adaptation_not_author_source -ne $true -or
+              $proof.full_graph -ne $false -or $proof.whole_domain -ne $false -or
+              $stages.Count -ne 5 -or $stages[4].name -cne 'limestone_gray_candidate' -or
+              $stages[4].input2_mask -cne 'cliff_mask' -or
+              $stages[4].author_source_status -cne 'YACS_ADAPTATION_WEIGHTED_CLIFF_GRAY') {
+            throw 'Color candidate was improperly characterized as a source-author or full-domain output.'
+          }
+          if (@($stages | Where-Object { $_.height_and_semantic_masks_preserved -ne $true }).Count -ne 0) {
+            throw 'The test changed protected height/semantic masks.'
+          }
+          Write-Host 'FIVE_NATIVE_SIDEFX_TINT_OPERATORS_FOUR_AUTHOR_PLUS_ONE_EXPLICIT_YACS_GRADE'
+      - name: Publish grade A/B proof without publishing original full terrain
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-source-cliff-to-neutral-gray-ab-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-tint-proofs/${{ github.run_id }}-${{ github.run_attempt }}/tint-native-evidence.json
+            D:/yacs/work/lesson07-cc0-tint-proofs/${{ github.run_id }}-${{ github.run_attempt }}/tint-cliff.png
+            D:/yacs/work/lesson07-cc0-tint-proofs/${{ github.run_id }}-${{ github.run_attempt }}/tint-limestone_gray_candidate.png
+          if-no-files-found: warn
+          retention-days: 30
