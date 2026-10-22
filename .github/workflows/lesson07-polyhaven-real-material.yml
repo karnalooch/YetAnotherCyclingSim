@@ -12,6 +12,7 @@ on:
       - .gumball/workflow-lifecycle.json
       - scripts/houdini/l07_real_material_canary.py
       - scripts/houdini/test_l07_real_material_canary.py
+      - scripts/houdini/audit_l07_scree_cache.py
 permissions:
   contents: read
 
@@ -109,4 +110,53 @@ jobs:
             D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/real-after-scree.bgeo.sc
           if-no-files-found: warn
           compression-level: 0
+          retention-days: 30
+
+
+  scree_audit:
+    name: Read-only audit of original preexisting Stage3 scree-mask cache
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-scree-audit]')
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 15
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout historical scree audit source at exact event commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Inspect only preexisting scree cache, producer and native ginfo header
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong audited source SHA.' }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned Python unavailable.' }
+          & $python -B scripts/houdini/audit_l07_scree_cache.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Read-only scree metadata audit failed.' }
+      - name: Retain existing screen-mask source identity only
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-original-scree-source-inventory-${{ github.run_id }}-${{ github.run_attempt }}
+          path: D:/yacs/work/lesson07-cc0-scree-audit/${{ github.run_id }}-${{ github.run_attempt }}/native-scree-audit.json
+          if-no-files-found: warn
           retention-days: 30
