@@ -13,6 +13,8 @@ on:
       - scripts/houdini/test_extract_l07_real_crop.py
       - scripts/houdini/verify_l07_real_crop.py
       - scripts/houdini/audit_l07_mask_cache.py
+      - scripts/houdini/verify_l07_scree_crop.py
+      - scripts/houdini/test_verify_l07_scree_crop.py
 
 permissions:
   contents: read
@@ -166,4 +168,98 @@ jobs:
           name: l07-cc0-stage2-mask-lineage-${{ github.run_id }}-${{ github.run_attempt }}
           path: D:/yacs/work/lesson07-cc0-mask-audits/${{ github.run_id }}-${{ github.run_attempt }}/mask-source-audit.json
           if-no-files-found: warn
+          retention-days: 30
+
+
+  scree_preflight:
+    name: Verify historical Stage3 source-crop diagnostic pins without native work
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-stage3-crop]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Check full digest, georeferenced window, and forbidden promotion
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_verify_l07_scree_crop -v
+          python -B -m unittest scripts.houdini.test_extract_l07_real_crop -v
+          python -B -m py_compile scripts/houdini/verify_l07_scree_crop.py scripts/houdini/extract_l07_real_crop.py
+
+  scree_extract:
+    name: Extract only real historical Stage3 scree-mask voxels on 256x256 Sa Calobra site
+    needs: scree_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 30
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+      HOUDINI_COP_MAXRES: '32768'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout fixed read-only Stage3 probe source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Check exact event and historical cache presence without mutation
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Source revision differs from the exact workflow event.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Pinned hython executable is absent.' }
+          $stage3='D:\yacs\work\lesson06-unified-20261019\stage3_scree.bgeo.sc'
+          if (-not (Test-Path -LiteralPath $stage3)) { throw 'The original Stage3 source scree file is missing.' }
+          $baseline='D:\yacs\work\lesson07-cc0-real-crops\39785285512-1\real-source-verified.json'
+          if (-not (Test-Path -LiteralPath $baseline)) { throw 'Original accepted Stage1/2 seven-layer source readback is absent.' }
+      - name: Extract source-fingerprinted Stage3 scree values using fresh hython
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          & $hython -B scripts/houdini/extract_l07_real_crop.py --stage scree --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Historical Stage3 read refused; source remains intact.' }
+      - name: Independently reopen and verify Stage3 pixels against accepted site coordinates
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          & $hython -B scripts/houdini/verify_l07_scree_crop.py --run-token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Historical Stage3 georeferencing/hash validation failed.' }
+      - name: Retain bounded diagnostic-only Stage3 data, never full source cache
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-stage3-scree-real-window-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/scree-real-crop.json
+            D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/scree-real-crop.npz
+            D:/yacs/work/lesson07-cc0-real-crops/${{ github.run_id }}-${{ github.run_attempt }}/scree-diagnostic-verified.json
+          if-no-files-found: warn
+          compression-level: 0
           retention-days: 30
