@@ -104,7 +104,7 @@ def read_historical_scree_source(source_token: str, scree_token: str, np):
     """Reverify exact Stage3 diagnostic bytes; do not grant upstream authority."""
     sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
     from scripts.houdini.verify_l07_scree_crop import verify as verify_scree
-    diagnostic=verify(CROP_ROOT/scree_token,CROP_ROOT/source_token,np)
+    diagnostic=verify_scree(CROP_ROOT/scree_token,CROP_ROOT/source_token,np)
     if not diagnostic.get("site_has_scree") or diagnostic.get("scree_nonzero",0)<=0:
         raise ValueError("Source scree mask is empty at the chosen real Sa Calobra site")
     if diagnostic.get("source_stage3_upstream_lineage_accepted") is not False:
