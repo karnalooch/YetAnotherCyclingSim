@@ -73,6 +73,38 @@ class MaterialSiteTests(unittest.TestCase):
         self.assertNotIn("scree_mask",canary.PROTECTED)
         self.assertEqual(canary.SIZE,256)
 
+    def test_real_scree_verifier_is_called_by_correct_import_alias(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        class FakeArchive:
+            files=["scree_mask"]
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def __getitem__(self, key):
+                self.files.index(key)
+                return object()
+
+        source=SimpleNamespace(
+            float32="float32",
+            load=lambda *args, **kwargs: FakeArchive(),
+            array=lambda *args, **kwargs: SimpleNamespace(shape=(256,256)),
+            isfinite=lambda _: SimpleNamespace(all=lambda: True),
+        )
+        receipt={"site_has_scree":True,"scree_nonzero":8619,
+                 "source_stage3_upstream_lineage_accepted":False}
+        with patch("scripts.houdini.verify_l07_scree_crop.verify", return_value=receipt) as check:
+            mask, observed=canary.read_historical_scree_source("39785285512-1","39794174742-1",source)
+            self.assertEqual(mask.shape,(256,256))
+            self.assertEqual(observed["scree_nonzero"],8619)
+            check.assert_called_once_with(
+                canary.CROP_ROOT/"39794174742-1",canary.CROP_ROOT/"39785285512-1",source)
+
     def test_png_chunk_crc(self):
         payload=b"abc"
         block=canary.png_chunk(b"tEXt",payload)
