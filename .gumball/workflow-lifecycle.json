@@ -430,6 +430,11 @@
       "file": "lesson07-polyhaven-real-crop.yml",
       "state": "CURRENT",
       "reason": "Issue #365/PR #474 opt-in exact-SHA real Sa Calobra L06 native read-only crop: immutable source hashes (16K base/masks), two serial fresh Houdini processes and 256-sample region bound, separate small immutable proof and world-coordinate checks. No terrain/cache writes, authoring cook, UE import or performance/visual acceptance."
+    },
+    {
+      "file": "lesson07-polyhaven-real-material.yml",
+      "state": "CURRENT",
+      "reason": "Issue #365/PR #474 explicit-source-commit opt-in bounded Houdini original SideFX HDA material proof using verified 256x256 real L06 Sa Calobra height, Alpha and Stage2 masks plus 5 CC0 PBR families. Sand source mask empty at chosen scree site and scree cliff proxy diagnostic only; height/displacement frozen, outputs scratch D work + PNG/readback. No 8-km bake, accepted terrain/mask/UE change, visual production pass or performance admission."
     }
   ]
 }
