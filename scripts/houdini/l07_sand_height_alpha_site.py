@@ -69,25 +69,42 @@ def require_source()->tuple[int,int]:
 
 def sample_region(height,alpha,site,step=16):
     i,j=site["i"],site["j"]
+    import math
     valid=0
     plausible=0
     total=0
+    invalid_alpha=0
+    invalid_height_inside_valid_alpha=0
+    skipped_height_outside_alpha=0
     positive_heights=[]
     for yy in range(j-128,j+128,step):
         for xx in range(i-128,i+128,step):
             h=float(height.voxel((xx,yy,0)))
             a=float(alpha.voxel((xx,yy,0)))
-            if not -9999<h<9999 or not -0.00001<=a<=1.00001:
-                raise ValueError("Nonfinite/out-of-range accepted Stage1 sample")
             total+=1
-            if a>0.5:
-                valid+=1
-                positive_heights.append(h)
-                if -50<=h<=35:
-                    plausible+=1
+            if not math.isfinite(a) or not -0.00001<=a<=1.00001:
+                invalid_alpha+=1
+                continue
+            if a<=0.5:
+                # Stage1 has valid coastal sand mask searches beyond the
+                # terrain-Alpha footprint. Never treat offshore NoData heights
+                # or their source sentinels as admissible land heights.
+                if not math.isfinite(h) or not -9999<h<9999:
+                    skipped_height_outside_alpha+=1
+                continue
+            if not math.isfinite(h) or not -9999<h<9999:
+                invalid_height_inside_valid_alpha+=1
+                continue
+            valid+=1
+            positive_heights.append(h)
+            if -50<=h<=35:
+                plausible+=1
     return {
         "sample_step":step,"total":total,
         "alpha_valid":valid,
+        "invalid_alpha":invalid_alpha,
+        "invalid_height_inside_valid_alpha":invalid_height_inside_valid_alpha,
+        "ignored_outside_alpha_nodata_heights":skipped_height_outside_alpha,
         "alpha_fraction":valid/total,
         "valid_low_elevation_count":plausible,
         "valid_low_elevation_fraction":plausible/total,
@@ -148,7 +165,9 @@ def run(hou,np,token):
         observed.append({"stage2":entry,"stage1":summary,"geographic_center":coordinate})
     ordered=order_candidates(observed)
     selected=next((v for v in ordered if v["stage1"]["alpha_fraction"]>=0.95 and
-                   v["stage1"]["valid_low_elevation_fraction"]>=0.80),None)
+                   v["stage1"]["valid_low_elevation_fraction"]>=0.80 and
+                   v["stage1"]["invalid_alpha"]==0 and
+                   v["stage1"]["invalid_height_inside_valid_alpha"]==0),None)
     if selected is None:
         return {
             "schema_version":1,
