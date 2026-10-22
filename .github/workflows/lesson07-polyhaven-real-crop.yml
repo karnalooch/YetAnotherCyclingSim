@@ -17,6 +17,8 @@ on:
       - scripts/houdini/test_verify_l07_scree_crop.py
       - scripts/houdini/l07_sand_source_audit.py
       - scripts/houdini/test_l07_sand_source_audit.py
+      - scripts/houdini/l07_scan_real_sand_sites.py
+      - scripts/houdini/test_l07_scan_real_sand_sites.py
 
 permissions:
   contents: read
@@ -344,5 +346,93 @@ jobs:
         with:
           name: l07-full-domain-sand-producer-${{ github.run_id }}-${{ github.run_attempt }}
           path: D:/yacs/work/lesson07-sand-mask-audit/${{ github.run_id }}-${{ github.run_attempt }}/sand-source-audit.json
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  sand_site_scan_preflight:
+    name: Validate real Stage2 sand site scan source hashes and deterministic selection
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-sand-site-scan]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Exact Stage2 hash and source-owned sand window selection
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_scan_real_sand_sites scripts.houdini.test_l07_sand_source_audit -v
+          python -B -m py_compile scripts/houdini/l07_scan_real_sand_sites.py
+
+  sand_site_scan:
+    name: Scan pinned original 16K sand mask and find independent geographic candidates
+    needs: sand_site_scan_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 20
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout bounded 16K native sand-mask inspection sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Read original pinned 16K mask and find real sand-positive sites only
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Not this source commit.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Pinned Houdini missing.' }
+          $receipt='D:\yacs\work\lesson07-sand-mask-audit\39812334921-1\sand-source-audit.json'
+          if (-not (Test-Path -LiteralPath $receipt)) { throw 'Full source sand range identity was not audited.' }
+          & $hython -B scripts/houdini/l07_scan_real_sand_sites.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Native original sand site scan failed; no terrain modified.' }
+          $file='D:\yacs\work\lesson07-sand-candidates\${{ github.run_id }}-${{ github.run_attempt }}\real-sand-site-candidates.json'
+          if (-not (Test-Path -LiteralPath $file)) { throw 'Source scan evidence not written.' }
+          $proof=Get-Content -LiteralPath $file -Raw | ConvertFrom-Json
+          if ($proof.status -cne 'SAND_POSITIVE_STAGE2_WORLD_COORDINATE_CANDIDATES_NOT_CROPPED' -or
+              $proof.site_alpha_and_height_verified -ne $false -or
+              $proof.coastline_landmark_verified -ne $false -or
+              $proof.native_material_cook -ne $false -or
+              $proof.canonical_height_or_masks_changed -ne $false -or
+              @($proof.chosen).Count -lt 1) {
+            throw 'Real Stage2 sand coordinates were incorrectly promoted to a full coastal proof.'
+          }
+          Write-Host "REAL_SAND_POSITIVE_SITE_CANDIDATES_DISCOVERED: $(@($proof.chosen).Count)"
+      - name: Retain only geographic native source candidate coordinates
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-native-sand-positive-sites-${{ github.run_id }}-${{ github.run_attempt }}
+          path: D:/yacs/work/lesson07-sand-candidates/${{ github.run_id }}-${{ github.run_attempt }}/real-sand-site-candidates.json
           if-no-files-found: warn
           retention-days: 30
