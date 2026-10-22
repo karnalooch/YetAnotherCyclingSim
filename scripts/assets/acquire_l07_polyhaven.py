@@ -126,7 +126,7 @@ def choose_file(tree: dict, slug: str, kind: str, resolution: str, formats: tupl
             return {"slug": slug, "map": kind, "resolution": resolution,
                     "format": ext, "name": name, "url": item["url"],
                     "size": size, "provider_md5": md5.lower()}
-    raise ValueError(f"No suitable source file for {slug}/{kind}/{resolution}: {list(variants)}")
+    raise ValueError(f"No suitable source file for {slug}/{kind}/{resolution}: root={list(tree)} map_keys={list(types)} formats={list(variants)}")
 
 
 def build_plan(selection: dict, reader=safe_json_get) -> dict:
