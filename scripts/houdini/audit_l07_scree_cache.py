@@ -26,7 +26,10 @@ def signature(path,limit):
         return {"exists":False}
     before=path.stat()
     if not 0<before.st_size<=limit:
-        raise ValueError(f"Observed file outside bounded hash scope: {path}, bytes={before.st_size}, limit={limit}")
+        # Historical 4.3-GB cliff output is not needed to inspect the separate
+        # Stage3 scree mask. Retain its metadata, but NEVER mark it hash-pinned.
+        return {"exists":True,"bytes":before.st_size,"sha256":None,
+                "modified_ns":before.st_mtime_ns,"hash_skipped_size_limit":limit}
     h=hashlib.sha256()
     with path.open("rb") as f:
         for chunk in iter(lambda:f.read(1<<20),b""):
