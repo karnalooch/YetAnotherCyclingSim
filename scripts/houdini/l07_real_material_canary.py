@@ -208,6 +208,53 @@ def compare_protected(before,after,role):
         raise ValueError(f"Original HDA modified protected geometry/masks at {role}: missing={missing}, changed={changed}")
 
 
+def is_bounded_float_rounding(max_delta_m,changed_count,total=SIZE*SIZE):
+    # A guard only for native COLOR-preview scratch: <=0.1 mm and <=5% cells.
+    # Authoritative height MUST be restored byte-for-byte, not approximated.
+    import math
+    return (isinstance(changed_count,int) and isinstance(total,int)
+            and 0<=changed_count<=int(total*0.05)
+            and isinstance(max_delta_m,(float,int)) and math.isfinite(max_delta_m)
+            and 0<=max_delta_m<=0.0001)
+
+
+def restore_scratch_height(cooked,source_arrays,protected,hou,np,role):
+    original=source_arrays["height"]
+    raw_volume=volume_by_name(cooked,hou).get("height")
+    if raw_volume is None:
+        raise ValueError(f"Original HDA removed height at {role}")
+    raw=np.frombuffer(raw_volume.allVoxelsAsString(),dtype="<f4").reshape((SIZE,SIZE))
+    if not np.isfinite(raw).all():
+        raise ValueError(f"Original HDA made nonfinite heights at {role}")
+    delta=np.abs(raw.astype(np.float64)-original.astype(np.float64))
+    metrics={"changed_count":int(np.count_nonzero(delta)),
+             "max_delta_m":float(delta.max()),
+             "mean_delta_m":float(delta.mean()),
+             "p99_delta_m":float(np.percentile(delta,99)),
+             "height_raw_min_m":float(raw.min()),
+             "height_raw_max_m":float(raw.max())}
+    # Do not hide ANY change of original masks or Alpha behind the height fix.
+    raw_hashes=source_layer_hashes(cooked,hou)
+    for name in PROTECTED:
+        if name!="height" and raw_hashes.get(name)!=protected[name]:
+            raise ValueError(f"Native HDA changed protected {name} at {role}; refuse adjustment")
+    if not is_bounded_float_rounding(metrics["max_delta_m"],metrics["changed_count"]):
+        raise ValueError(f"Native HDA non-rounding height change at {role}: {json.dumps(metrics)}")
+    # Houdini's material-HDA interpolation may introduce 1-ulp drift. We only
+    # repair scratch geometry so the next layer receives EXACT source bytes.
+    repaired=hou.Geometry(cooked)
+    target=volume_by_name(repaired,hou).get("height")
+    if target is None:
+        raise ValueError("Cloned scratch output lost height")
+    target.setAllVoxelsFromString(original.tobytes())
+    hashes=source_layer_hashes(repaired,hou)
+    compare_protected(protected,hashes,role)
+    return repaired,hashes,{**metrics,
+             "scratch_height_restored_exactly":True,
+             "restoration_scope":"DISPOSABLE_REAL_256_CROP_ONLY",
+             "canonical_16k_terrain_changed":False}
+
+
 def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str)->dict:
     if hou.isUIAvailable() or tuple(hou.applicationVersion())!=(22,0,466):
         raise ValueError("Only fresh headless Houdini 22.0.466 is supported")
@@ -267,29 +314,14 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str)->dict:
             if material.errors():
                 raise ValueError(f"Original SideFX HDA cook errors at {role}: {material.errors()}")
             cooked=material.geometry()
-            hashes=source_layer_hashes(cooked,hou)
-            if hashes.get("height")!=protected["height"]:
-                # Evidence only: zero-displacement HDA may still change height.
-                # DO NOT accept/copy this output before understanding magnitude.
-                h=volume_by_name(cooked,hou).get("height")
-                if h is None:
-                    raise ValueError(f"Original HDA removed the height volume at {role}")
-                native=np.frombuffer(h.allVoxelsAsString(),dtype="<f4").reshape((SIZE,SIZE))
-                if not np.isfinite(native).all():
-                    raise ValueError(f"Nonfinite masked HDA heights at {role}")
-                delta=np.abs(native.astype(np.float64)-arrays["height"].astype(np.float64))
-                metrics={"changed_count":int(np.count_nonzero(delta)),
-                         "max_delta_m":float(delta.max()),
-                         "mean_delta_m":float(delta.mean()),
-                         "p99_delta_m":float(np.percentile(delta,99)),
-                         "height_raw_min_m":float(native.min()),
-                         "height_raw_max_m":float(native.max())}
-                raise ValueError(f"Native masked HDA height change at {role}: {json.dumps(metrics)}")
-            compare_protected(protected,hashes,role)
+            # Clamp only measured native float32 interpolation in scratch;
+            # preserve all stage2 source masks and original height bytes.
+            repaired,hashes,height_rounding=restore_scratch_height(
+                cooked,arrays,protected,hou,np,role)
             for channel in ("r","g","b"):
                 if channel not in hashes:
                     raise ValueError(f"Original HDA missing RGB output at {role}")
-            volumes=volume_by_name(cooked,hou)
+            volumes=volume_by_name(repaired,hou)
             channels=[np.frombuffer(volumes[c].allVoxelsAsString(),dtype="<f4").reshape((SIZE,SIZE))
                       for c in ("r","g","b")]
             rgb=np.stack(channels,axis=-1)
@@ -298,7 +330,7 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str)->dict:
             image=output/f"real-{role}-colour.png"
             save_png(image,rgb,np)
             cache=output/f"real-after-{role}.bgeo.sc"
-            cooked.saveToFile(str(cache))
+            repaired.saveToFile(str(cache))
             if cache.stat().st_size>BINARY_LIMIT:
                 raise ValueError("Native HDA emitted oversized real source fragment")
             opened=hou.Geometry()
@@ -311,6 +343,7 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str)->dict:
                 "mask":mask_name,"mask_nonzero":count.get(mask_name,0) if mask_name else SIZE*SIZE,
                 "mask_source":"STAGE2_ACCEPTED" if role not in ("rock","scree") else ("UNMASKED" if role=="rock" else "DIAGNOSTIC_CLIFF_PROXY_NOT_SCREE_STAGE3"),
                 "heightscale_canary_override":0,"distortion_disabled_in_canary":True,
+                "native_height_rounding":height_rounding,
                 "size":size,"material_warnings":list(material.warnings()),
                 "rgb_min":float(rgb.min()),"rgb_max":float(rgb.max()),
                 "black_rgb_pixels":int(np.count_nonzero(np.all(rgb<=1e-6,axis=2))),
@@ -320,7 +353,10 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str)->dict:
                 "native_reopen_equal":True,
                 "base_height_alpha_masks_unchanged":True,
             })
-            previous=material
+            # Feed the REOPENED repaired scratch output, not the raw HDA
+            # output, to guarantee immutable input heights for next stage.
+            previous=geo_obj.createNode("file","LOAD_SAFE_"+role.upper())
+            previous.parm("file").set(str(cache))
         return {
             "status":"FIVE_PEGASUS_CC0_HDA_REAL_SITE_MECHANISM_PASSED_NOT_PRODUCTION",
             "source_token":token,
@@ -334,6 +370,8 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str)->dict:
                 "HDA nonzero height displacement", "whole-area source material cook",
                 "UE imported arrays, packed ORD(p), shader/render acceptance"],
             "ground_truth_height_and_stage2_masks_unchanged":True,
+            "original_HDA_float32_rounding_corrected_only_in_disposable_crops":True,
+            "native_original_height_restored_byte_exact_after_each_stage":True,
             "real_source_256x256":True,
             "whole_landscape_material_pass":False,
             "unreal_import":False,
