@@ -105,7 +105,8 @@ def require_manifest(manifest_path: Path) -> dict:
 
 
 def choose_file(tree: dict, slug: str, kind: str, resolution: str, formats: tuple[str, ...]) -> dict:
-    types = tree.get(kind, {})
+    vendor_key = {"diffuse": "Diffuse", "rough": "Rough", "disp": "Displacement", "ao": "AO"}.get(kind, kind)
+    types = tree.get(vendor_key, tree.get(kind, {}))
     if not isinstance(types, dict):
         raise ValueError(f"Missing {kind} tree for {slug}")
     variants = types.get(resolution, {})
