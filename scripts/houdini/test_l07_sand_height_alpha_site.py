@@ -37,6 +37,15 @@ class HeightAlphaSiteContract(unittest.TestCase):
         self.assertEqual(data["alpha_valid"],0)
         self.assertEqual(data["valid_low_elevation_fraction"],0)
 
+    def test_offshore_nodata_height_does_not_abort_stage1_alpha_site_scan(self):
+        sample=m.sample_region(ExampleVolume(32768),ExampleVolume(0),{"i":2528,"j":8160})
+        self.assertEqual(sample["ignored_outside_alpha_nodata_heights"],256)
+        self.assertEqual(sample["invalid_height_inside_valid_alpha"],0)
+        self.assertEqual(sample["alpha_fraction"],0)
+        inland=m.sample_region(ExampleVolume(32768),ExampleVolume(1),{"i":2528,"j":8160})
+        self.assertEqual(inland["invalid_height_inside_valid_alpha"],256)
+        self.assertEqual(inland["alpha_fraction"],0)
+
     def test_high_elevation_does_not_count_as_coastal_height(self):
         data=m.sample_region(ExampleVolume(370),ExampleVolume(1),{"i":2528,"j":8160})
         self.assertEqual(data["alpha_fraction"],1)
