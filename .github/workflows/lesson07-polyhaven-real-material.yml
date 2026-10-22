@@ -17,6 +17,7 @@ on:
       - scripts/houdini/test_verify_l07_scree_crop.py
       - scripts/houdini/l07_original_tint_hda_canary.py
       - scripts/houdini/test_l07_original_tint_hda_canary.py
+      - scripts/houdini/l07_feature_native_contract.py
 permissions:
   contents: read
 
@@ -606,4 +607,85 @@ jobs:
             D:/yacs/work/lesson07-cc0-real-material/${{ github.run_id }}-${{ github.run_attempt }}/tint-scree.bgeo.sc
           if-no-files-found: warn
           compression-level: 0
+          retention-days: 30
+
+
+  native_feature_contract_preflight:
+    name: Check native MaskByFeature and Tint template introspection source safety
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-feature-native]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Syntax and original HDA input contract
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m py_compile scripts/houdini/l07_feature_native_contract.py
+          python -B -m unittest scripts.houdini.test_l07_original_tint_hda_canary -v
+
+  native_feature_contract:
+    name: Inspect actual Houdini 22 MaskByFeature/Visualize/Tint native parameters read-only
+    needs: native_feature_contract_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 12
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout exact native source inspection script
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Read original source HDA parms without opening user project or cooking source
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Wrong exact source commit.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Canonical Houdini binary absent.' }
+          & $hython -B scripts/houdini/l07_feature_native_contract.py --token '${{ github.run_id }}-${{ github.run_attempt }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Native author-node parameter contract failed.' }
+          $report='D:\yacs\work\lesson07-feature-native-contract\${{ github.run_id }}-${{ github.run_attempt }}\native-feature-tint-parameter-contract.json'
+          if (-not (Test-Path -LiteralPath $report)) { throw 'No native contract report.' }
+          $result=Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
+          if ($result.status -cne 'SIDEFX_NATIVE_FEATURE_TINT_PARM_CONTRACT_READ_ONLY' -or
+              $result.houdini_scene_saved -ne $false -or $result.native_cook -ne $false -or
+              $result.original_height_and_masks_modified -ne $false) {
+            throw 'Source-only tool introspection wrongly claimed real-world acceptance.'
+          }
+          Write-Host 'NATIVE_MASKBYFEATURE_AND_TINT_PARAMETER_CONTRACT_READ_BACK'
+      - name: Preserve safe native parm labels, not scene or binary caches
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-native-exposure-curvature-parm-contract-${{ github.run_id }}-${{ github.run_attempt }}
+          path: D:/yacs/work/lesson07-feature-native-contract/${{ github.run_id }}-${{ github.run_attempt }}/native-feature-tint-parameter-contract.json
+          if-no-files-found: warn
           retention-days: 30
