@@ -527,3 +527,136 @@ jobs:
             D:/yacs/work/lesson07-valid-sand-sites/${{ github.run_id }}-${{ github.run_attempt }}/selected-sand-stage1.npz
           if-no-files-found: warn
           retention-days: 30
+
+
+  sand_alpha_overlay_preflight:
+    name: Validate sand-intensity-band candidates and exact Stage1 land overlap logic
+    if: >-
+      github.repository == 'karnalooch/YetAnotherCyclingSim' &&
+      github.ref == 'refs/heads/codex/365-world-graph' &&
+      contains(github.event.head_commit.message, '[l07-sand-alpha-overlay]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+          lfs: false
+          persist-credentials: false
+      - name: Reject offshore Alpha=0 sand sites at both source stages
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python -B -m unittest scripts.houdini.test_l07_scan_real_sand_sites scripts.houdini.test_l07_sand_height_alpha_site -v
+          python -B -m py_compile scripts/houdini/l07_scan_real_sand_sites.py scripts/houdini/l07_sand_height_alpha_site.py
+
+  sand_alpha_overlay_native:
+    name: Native full16k sand candidates intersected with Stage1 Alpha in separate processes
+    needs: sand_alpha_overlay_preflight
+    runs-on: [self-hosted, yacs-ue58]
+    timeout-minutes: 50
+    concurrency:
+      group: yacs-unreal-ci-${{ github.repository }}
+      cancel-in-progress: false
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      HOUDINI_OCL_DEVICETYPE: CPU
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout exact authored original native source readers
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts/houdini
+            scripts/ue
+          lfs: false
+          clean: false
+          persist-credentials: false
+      - name: Admission exact source pins and available memory before full-domain read
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD).Trim() -cne $env:GITHUB_SHA) { throw 'Reviewed exact source SHA mismatch.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw 'Pinned Houdini 22 missing.' }
+          foreach ($file in @('stage1_base.bgeo.sc','stage2_masks.bgeo.sc')) {
+            $p=Join-Path 'D:\yacs\work\lesson06-unified-20261019' $file
+            if (-not (Test-Path -LiteralPath $p)) { throw "Missing accepted source $file" }
+          }
+          $python='D:\yacs\tool-cache\material-forge\python\Scripts\python.exe'
+          if (-not (Test-Path -LiteralPath $python)) { throw 'Pinned memory-guard Python missing.' }
+          $state=(& $python -B -c 'import json; from scripts.ue.lesson06_memory_guard import require_headroom; print(json.dumps(require_headroom(30)))') -join ''
+          if ($LASTEXITCODE -ne 0) { throw 'Physical memory guard failed.' }
+          $health=$state | ConvertFrom-Json
+          if ([int64]$health.available_physical_bytes -lt 12GB) { throw 'Insufficient real memory for isolated 16k source audit.' }
+          Write-Host "Alpha-sand intersection admission $state"
+      - name: Isolated Stage2 16k band-stratified sand candidate scan
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          & $hython -B scripts/houdini/l07_scan_real_sand_sites.py --token '${{ github.run_id }}-${{ github.run_attempt }}' --alpha-aware
+          if ($LASTEXITCODE -ne 0) { throw 'Stage2 original 16k sand-intensity candidate scan failed, source unchanged.' }
+          $p='D:\yacs\work\lesson07-sand-candidates\${{ github.run_id }}-${{ github.run_attempt }}\real-sand-site-candidates.json'
+          if (-not (Test-Path -LiteralPath $p)) { throw 'No native source candidate manifest.' }
+          $m=Get-Content -LiteralPath $p -Raw | ConvertFrom-Json
+          if ($m.status -cne 'SAND_POSITIVE_STAGE2_WORLD_COORDINATE_CANDIDATES_NOT_CROPPED' -or
+              $m.alpha_aware_grid_step -ne 16 -or
+              $m.alpha_aware_pool_count -lt 10 -or
+              $m.site_alpha_and_height_verified -ne $false) {
+            throw 'Sand source candidate scan wrongly classified land without Stage1.'
+          }
+          Write-Host "ALPHA_AWARE_STAGE2_CANDIDATE_POOL=$($m.alpha_aware_pool_count)"
+      - name: Separate fresh hython reads only original Stage1 Alpha+height for all candidates
+        run: |
+          $ErrorActionPreference='Stop'
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          $candidate='D:\yacs\work\lesson07-sand-candidates\${{ github.run_id }}-${{ github.run_attempt }}\real-sand-site-candidates.json'
+          & $hython -B scripts/houdini/l07_sand_height_alpha_site.py --token '${{ github.run_id }}-${{ github.run_attempt }}' --candidate-file $candidate
+          if ($LASTEXITCODE -ne 0) { throw 'Alpha/height verification failed; no accepted source was changed.' }
+          $p='D:\yacs\work\lesson07-valid-sand-sites\${{ github.run_id }}-${{ github.run_attempt }}\sand-height-alpha-site.json'
+          if (-not (Test-Path -LiteralPath $p)) { throw 'No independent Stage1 source analysis receipt.' }
+          $m=Get-Content -LiteralPath $p -Raw | ConvertFrom-Json
+          if ($m.original_stage1_height_alpha_unchanged -ne $true -or
+              $m.unreal_import -ne $false -or
+              $m.coastline_landmark_verified -ne $false) { throw 'Native sand site claimed mutation or an unproven coastline.' }
+          if ($m.status -ceq 'NO_ACCEPTABLE_REAL_STAGE1_ALPHA_AND_LOW_HEIGHT_SAND_SITE') {
+            if ($m.alpha_aware_source_overlap_evaluated -ne $true -or
+                $m.sand_positive_land_verified -ne $false -or
+                @($m.candidates).Count -lt 10) {
+              throw 'No-site report omitted source authority or the complete candidate pool.'
+            }
+            Write-Host 'ALPHA_AWARE_SAND_SITE_ABSENT_DIAGNOSTIC_ONLY_NO_MATERIAL_PASS'
+          } elseif ($m.status -ceq 'REAL_SAND_POSITIVE_SITE_STAGE1_HEIGHT_ALPHA_VERIFIED_STAGE2_CROP_PENDING') {
+            if ($m.sand_positive_land_verified -ne $true -or
+                $m.sand_low_elevation_intersection_coarse_count -lt 4 -or
+                $m.source_stage2_mask_not_yet_cropped -ne $true) {
+              throw 'Coast land Alpha and real Stage2 sand overlay was not proven.'
+            }
+            Write-Host "ALPHA_OVERLAY_SAND_LAND_SITE_FOUND_DEFER_PRECISE_STAGE2=$($m.sand_low_elevation_intersection_coarse_count)"
+          } else {
+            throw "Unrecognized native Stage1/Stage2 intersection status $($m.status)"
+          }
+      - name: Retain only source identity and bounded real-site crop if found
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: l07-alpha-aware-sand-land-intersection-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            D:/yacs/work/lesson07-sand-candidates/${{ github.run_id }}-${{ github.run_attempt }}/real-sand-site-candidates.json
+            D:/yacs/work/lesson07-valid-sand-sites/${{ github.run_id }}-${{ github.run_attempt }}/sand-height-alpha-site.json
+            D:/yacs/work/lesson07-valid-sand-sites/${{ github.run_id }}-${{ github.run_attempt }}/selected-sand-stage1.npz
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 30
