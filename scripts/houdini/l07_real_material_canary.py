@@ -100,6 +100,31 @@ def read_crops(folder:Path,np)->tuple[dict,dict]:
     return arrays,meta
 
 
+def read_historical_scree_source(source_token: str, scree_token: str, np):
+    """Reverify exact Stage3 diagnostic bytes; do not grant upstream authority."""
+    sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+    from scripts.houdini.verify_l07_scree_crop import verify as verify_scree
+    diagnostic=verify(CROP_ROOT/scree_token,CROP_ROOT/source_token,np)
+    if not diagnostic.get("site_has_scree") or diagnostic.get("scree_nonzero",0)<=0:
+        raise ValueError("Source scree mask is empty at the chosen real Sa Calobra site")
+    if diagnostic.get("source_stage3_upstream_lineage_accepted") is not False:
+        raise ValueError("Historical scree lineage cannot be silently promoted")
+    with np.load(CROP_ROOT/scree_token/"scree-real-crop.npz",allow_pickle=False) as source:
+        if source.files!=["scree_mask"]:
+            raise ValueError("Stage3 source must contain exactly one scree mask")
+        mask=np.array(source["scree_mask"],dtype="<f4",copy=True)
+    if mask.shape!=(SIZE,SIZE) or not np.isfinite(mask).all():
+        raise ValueError("Historical scree diagnostic crop has invalid voxels")
+    return mask, diagnostic
+
+
+def selected_mask(role: str, original: str | None, scree_token: str | None) -> str | None:
+    """Explicitly switch only the scree test to real historical Stage3 mask."""
+    if role=="scree" and scree_token is not None:
+        return "scree_mask"
+    return original
+
+
 def volume_by_name(geo,hou)->dict:
     items={v.attribValue("name"):v for v in geo.prims() if isinstance(v,hou.Volume)}
     if len(items)!=len(geo.prims()):
@@ -255,7 +280,7 @@ def restore_scratch_height(cooked,source_arrays,protected,hou,np,role):
              "canonical_16k_terrain_changed":False}
 
 
-def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str)->dict:
+def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str,scree_token:str|None=None)->dict:
     if hou.isUIAvailable() or tuple(hou.applicationVersion())!=(22,0,466):
         raise ValueError("Only fresh headless Houdini 22.0.466 is supported")
     if hou.node("/obj").children():
@@ -264,6 +289,10 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str)->dict:
         raise ValueError("Original archived SideFX Pegasus HDA identity mismatch")
     provenance, material_files, binding=accepted_inputs(crop_path,token,asset_root,np)
     arrays,metadata=read_crops(crop_path,np)
+    real_scree_diagnostic=None
+    if scree_token is not None:
+        mask,real_scree_diagnostic=read_historical_scree_source(token,scree_token,np)
+        arrays["scree_mask"]=mask  # scratch mask only, never insert into canonical source BGEO
     # Never use newly computed/estimated masks in place of Stage2 accepted masks.
     count={name:int(np.count_nonzero(arrays[name])) for name in arrays}
     if count["Alpha"]!=SIZE*SIZE or count["grass_mask"]==0 or count["cliff_mask"]==0:
@@ -288,7 +317,8 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str)->dict:
         source.parm("file").set(str(input_source))
         previous=source
         results=[]
-        for role,slug,mask_name,size,use_mask in ROLES:
+        for role,slug,default_mask,size,use_mask in ROLES:
+            mask_name=selected_mask(role,default_mask,scree_token)
             if mask_name is None:
                 mask_node=source
             else:
@@ -341,7 +371,9 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str)->dict:
                 "role":role,"material":slug,
                 "source_texture_hashes":{k:binding['houdini'][[t['role'] for t in binding['houdini']].index(role)]['files'][k]['sha256'] for k in ("diff","rough","disp")},
                 "mask":mask_name,"mask_nonzero":count.get(mask_name,0) if mask_name else SIZE*SIZE,
-                "mask_source":"STAGE2_ACCEPTED" if role not in ("rock","scree") else ("UNMASKED" if role=="rock" else "DIAGNOSTIC_CLIFF_PROXY_NOT_SCREE_STAGE3"),
+                "mask_source":("HISTORICAL_STAGE3_GEOREGISTERED_UPSTREAM_UNVERIFIED" if role=="scree" and scree_token
+                    else "STAGE2_ACCEPTED" if role not in ("rock","scree")
+                    else "UNMASKED" if role=="rock" else "DIAGNOSTIC_CLIFF_PROXY_NOT_SCREE_STAGE3"),
                 "heightscale_canary_override":0,"distortion_disabled_in_canary":True,
                 "native_height_rounding":height_rounding,
                 "size":size,"material_warnings":list(material.warnings()),
@@ -358,14 +390,20 @@ def run(hou,np,crop_path:Path,asset_root:Path,output:Path,token:str)->dict:
             previous=geo_obj.createNode("file","LOAD_SAFE_"+role.upper())
             previous.parm("file").set(str(cache))
         return {
-            "status":"FIVE_PEGASUS_CC0_HDA_REAL_SITE_MECHANISM_PASSED_NOT_PRODUCTION",
+            "status":("FIVE_PEGASUS_CC0_REAL_STAGE3_DIAGNOSTIC_PASSED_NOT_PRODUCTION"
+                if scree_token else "FIVE_PEGASUS_CC0_HDA_REAL_SITE_MECHANISM_PASSED_NOT_PRODUCTION"),
+            "historical_real_stage3_diagnostic":real_scree_diagnostic,
+            "stage3_upstream_lineage_accepted":False,
             "source_token":token,
             "real_source_provenance":provenance,
             "original_hda_sha256":PIN_HDA,
             "source_voxel_count":SIZE*SIZE,
             "source_layer_nonzero":count,
             "stages":results,
-            "unsupported_in_this_canary":["Original Layer3 scree/slump mask", "grass Curl distortion",
+            "unsupported_in_this_canary":[
+                ("Original Stage3 scree source is diagnostic with upstream lineage UNVERIFIED"
+                    if scree_token else "Original Stage3 scree mask not connected"),
+                "grass Curl distortion",
                 "grass ramp and brightness tints", "cliff/scree/exposure/curvature final tint network",
                 "HDA nonzero height displacement", "whole-area source material cook",
                 "UE imported arrays, packed ORD(p), shader/render acceptance"],
@@ -385,8 +423,9 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--source-token",required=True)
     p.add_argument("--run-token",required=True)
+    p.add_argument("--scree-token",default=None,help="Read-only verified historical Stage3 crop token; not production authority")
     args=p.parse_args()
-    for t in (args.source_token,args.run_token):
+    for t in (args.source_token,args.run_token,*([args.scree_token] if args.scree_token else [])):
         if not re.fullmatch(r"[0-9]{9,13}-[1-9][0-9]*",t):
             raise ValueError("Expected immutable numeric GitHub run/attempt token")
     if os.name=="nt":
@@ -396,7 +435,7 @@ def main():
     import hou
     import numpy as np
     output=OUTPUT_ROOT/args.run_token
-    result=run(hou,np,CROP_ROOT/args.source_token,SOURCE_ROOT,output,args.source_token)
+    result=run(hou,np,CROP_ROOT/args.source_token,SOURCE_ROOT,output,args.source_token,args.scree_token)
     report=output/"real-material-canary.json"
     report.write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")
     print(json.dumps({"status":result["status"],"source":result["source_token"],
