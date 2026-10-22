@@ -91,6 +91,14 @@ class SelectionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Publisher type/title mismatch'):
             mod.build_plan(mod.require_manifest(SELECTION), reader=reader)
 
+    def test_real_vendor_capitalized_map_keys(self):
+        tree = sample_tree("dark_rock")
+        for small, canonical in (("diffuse", "Diffuse"), ("rough", "Rough"), ("disp", "Displacement"), ("ao", "AO")):
+            tree[canonical] = tree.pop(small)
+        for kind in ("diffuse", "rough", "disp", "ao", "nor_gl", "nor_dx"):
+            item = mod.choose_file(tree, "dark_rock", kind, "4k", ("png",))
+            self.assertEqual(item["map"], kind)
+
     def test_missing_map_fails_closed(self):
         tree = sample_tree('dark_rock')
         del tree['disp']['4k']
