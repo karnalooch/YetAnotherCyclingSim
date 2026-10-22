@@ -13,7 +13,7 @@ import re
 import os
 
 CACHE=Path("D:/yacs/work/lesson06-unified-20261019")
-PREVIOUS_PIN="203d46ea79a0a697d46256f631271135a0cd8768f7432ea315512c16a8"
+PREVIOUS_PIN="203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8"
 
 
 def fingerprint(path:Path)->dict:
