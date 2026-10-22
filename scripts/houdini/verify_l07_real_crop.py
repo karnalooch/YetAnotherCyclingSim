@@ -19,7 +19,7 @@ PINNED = {
 }
 SHA_PINS = {
     "base": "08586f0e1aa6aa033cf7364a929d2c260c87c41d6dc11445c981e10ec6ba2952",
-    "masks": "203d46ea79a0a697d46256f631271135a0cd8768f7432ea315512c16a8",
+    "masks": "203d46ea79a0a697d46256f631271135a0cd8766ba8768f7432ea315512c16a8",
 }
 
 def file_sha(path: Path) -> str:
