@@ -10,6 +10,10 @@ on:
       - scripts/assets/acquire_l07_polyhaven.py
       - scripts/assets/test_acquire_l07_polyhaven.py
       - scripts/assets/lesson07_polyhaven_sources.json
+      - scripts/assets/build_l07_polyhaven_bindings.py
+      - scripts/assets/test_build_l07_polyhaven_bindings.py
+      - scripts/assets/probe_l07_polyhaven_hython.py
+      - scripts/assets/test_probe_l07_polyhaven_hython.py
 
 permissions:
   contents: read
@@ -40,7 +44,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          python -B -m unittest discover -s scripts/assets -p test_acquire_l07_polyhaven.py -v
+          python -B -m unittest discover -s scripts/assets -p 'test_*l07_polyhaven*.py' -v
           python -B -m json.tool scripts/assets/lesson07_polyhaven_sources.json >/dev/null
 
   acquire:
@@ -85,12 +89,21 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Official source acquisition failed.' }
           & $python -B scripts/assets/acquire_l07_polyhaven.py verify --selection $manifest --destination $output
           if ($LASTEXITCODE -ne 0) { throw 'Independent source readback failed.' }
+          & $python -B scripts/assets/build_l07_polyhaven_bindings.py --selection $manifest --source-root $output
+          if ($LASTEXITCODE -ne 0) { throw 'Verified PBR source binding failed.' }
+          $hython='D:\yacs\tools\houdini-22.0.466\bin\hython.exe'
+          if (-not (Test-Path -LiteralPath $hython)) { throw "Canonical hython missing: $hython" }
+          & $hython -B scripts/assets/probe_l07_polyhaven_hython.py --root $output
+          if ($LASTEXITCODE -ne 0) { throw 'Read-only Houdini OpenImageIO image header check failed.' }
           "verification_path=$output\source-verification.json" >> $env:GITHUB_OUTPUT
       - name: Retain verification receipt, never copied PBR binaries
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
         with:
           name: l07-polyhaven-verified-sources-${{ github.run_id }}-${{ github.run_attempt }}
-          path: D:/yacs/work/lesson07-polyhaven-cc0-v1/source-verification.json
+          path: |
+            D:/yacs/work/lesson07-polyhaven-cc0-v1/source-verification.json
+            D:/yacs/work/lesson07-polyhaven-cc0-v1/bindings-v1.json
+            D:/yacs/work/lesson07-polyhaven-cc0-v1/hython-image-inspection.json
           if-no-files-found: warn
           retention-days: 30
