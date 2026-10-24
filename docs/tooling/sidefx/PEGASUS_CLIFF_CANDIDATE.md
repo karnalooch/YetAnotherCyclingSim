@@ -1,5 +1,140 @@
 # Pegasus cliff candidate: bounded native extraction
 
+## Source-settings continuation, 2026-10-24
+
+The owner resumed full roadside cliff authoring and requested literal Pegasus
+settings. The accepted nighttime consumer is the separate project at
+`D:/yacs/work/lesson07-readback-39439835210-2`, not the canonical repository's
+same-named map. The coordinator verified its 03:11:47 saved map SHA-256
+`a22b0a8e0d7927ea48d289ea9299e5eeb709d750e96023164f04a32ad3252170`.
+The height lineage remains accepted FINAL `f741335d...`; appearance acceptance
+does not accept newly generated cliffs or their clearance.
+
+### Original parameters and actual native pilot
+
+Native inspection of the supplied `CliffPDG.hip` and original generator HDA
+agrees on subdivision **2**, edge falloff **4**, texture scale **0.01**, strength
+**10**, exponent **1.5**, and output percentage **80**. The original extraction
+threshold is **1000**. The earlier 0.15/0.6-strength, scale-0.1 and CC0 controls
+below are historical experiments, not these original settings.
+
+Both original displacement images are actually present in the supplied bundle:
+
+- `SourceContent/Pegasus/Textures/wepoeaw_4K_Displacement.exr`, SHA-256
+  `bfd92a6294d246c2ce58a2e93cbbfffa13c3653b77eb7ae00a9ed2a328f99993`.
+- `SourceContent/Pegasus/Textures/tlonbisya_4K_Displacement.exr`, SHA-256
+  `e0e7c2ddcf6e3d98d91ffa3747a9234791ebf8aae52009bddc8ab9d740279b30`.
+
+These owner-supplied tutorial Megascans files stay outside Git. Their local
+presence does not establish redistribution rights. `--original-project` verifies
+the original HIP/image hashes and adapts only their broken project-variable
+paths. It rejects explicit strength, normal-blur, pre-flow and road-cut overrides.
+The original HDA internally blurs **P N**; the L03 06:29-06:46 transcript describes
+an N-only operation. This discrepancy is retained, rather than silently calling
+an N-only edit an unchanged HDA.
+
+The original extractor on the current native crop, using threshold1000 and its
+flow branch, produced 45,501 points / 43,614 polygons. Fresh saved-HIP graph
+regeneration reproduced exact ordered P float bytes and oriented polygon indices.
+The input is an actual 258x258 native crop around window `(26,40)`; the real
+height/visibility samples and registered current IDMap remain unchanged. No
+projected road exclusion or lattice correction was added in this profile.
+Evidence: `D:/yacs/work/pegasus-cliff-source-settings-20261024-extract`.
+
+Its complete class0 has 2,100 source polygons. The original generator and both
+original images produced 394,519 unique positions / 423,833 polygons. Fresh
+saved-HIP regeneration passed the same exact P/topology comparison. There are
+60,410 triangles and363,423 quads, giving exactly **787,256** triangles after
+triangulation. Point Cd and vertex N are present. Original-settings displacement
+against the same graph at zero strength is max11.372801m, mean2.605006m, with
+exactly zero Y change. This is procedural presentation displacement, not surveyed
+rock geometry or proof of clearance/contact. Bounds in Houdini metres are
+X[-656.251221,-626.250305], Y[510.886353,576.319092],
+Z[1118.942139,1155.250366].
+
+Evidence: `D:/yacs/work/pegasus-cliff-source-settings-20261024-full-recipe-class0`.
+The reused native FBX ROP exported
+`Saved/cliff-native-full-recipe-export-20261024/pegasus_current_class2.fbx`
+(the inherited filename contains class0), SHA-256
+`974a10778dd5e4393c3048545dfa84245b454c7f021a2a4396dfdc11b8e57268`.
+`Saved/cliff-source-native-fbx-counts-20261024.json` owns the independent source
+counts. Coordinator UE import/material/placement evidence is separate; no world
+placement, native collision, visual acceptance or all-cliff completion follows.
+
+`--max-source-primitives` is an explicit execution-memory budget, not a changed
+source generator parameter. Its historical default1000 rejected all four genuine
+classes in the original-threshold crop. The class0 run explicitly used3000 while
+retaining every source polygon and all original generator settings.
+
+### Complete corridor inventory and shared native flow input
+
+`Saved/pegasus-cliff-corridor-inventory-20261024-source/inventory.json` records all
+six real route parts and the existing 500m working corridor. Of555 intersecting
+128m windows,543 contain cliff sample centres inside that corridor:10,801,467
+registered IDMap samples. The old178-window subset used a provisional64m band,
+not an owner-defined extent. Whole-window counts remain distinct from the new
+exact sample-centre predicates; these classify the current mask, not geological
+truth, visible area or a three-dimensional road-volume clearance.
+
+One native source rectangle covers the entire working-window envelope with128m
+context: requested X[-1952,2016], Z[-1952,3296] metres. Actual Crop/Splice sampling
+is7938x10498 (83,333,124 samples), first centre
+(-1952.249756,0,3296.249756), last(2016.250122,0,-1952.249756).
+Every cropped height was compared with its exact original native tile value;
+every joined value/overlap was compared with its corresponding cropped piece.
+The original ID decoder exactly reproduces current class191, and no cliff-coded
+sample coincides with a source visibility hole. Original visibility stays in
+the retained transport tiles; only unused ID/visibility layers are removed at
+the flow cache boundary, without changing height/mask values.
+
+Evidence is
+`D:/yacs/work/pegasus-cliff-route-source-20261024-global-input/input_preparation.json`.
+The212,538,920-byte `flow_input.bgeo.sc` has SHA-256
+`067ae4ebdc0f68afef7dc88782834017c974a761a3e0db8e308ab9180500405e`.
+The four separately retained height-only pieces also support source road-height
+inspection without reloading full transport tiles. Source/cache paths are active.
+
+The original Resample has `fixedresample=0`, `resscale=1.0`; its displayed
+`gridspacing=4` is **inactive**. Native pilot output remains258x258, not a4m grid.
+The shared input retains0.5m source sampling. No4m reduction is claimed.
+The original Flowfield/remap/copy branch was started over this common
+domain, with rain amount0.1, density0.1,100 iterations and seed8736. The domain
+crop is an explicit geographic input adaptation; equivalence to flow over the
+entire available8km source has NOT RUN. Independent128m flows, filtering small
+parts per chunk and clipping before displacement can change boundaries, so
+global-context edge/connectivity proof is still required before full rollout.
+The original100m cliff split occurs downstream of generation; merely selecting
+that grid size is not seam proof.
+
+The0.5m control was subsequently stopped explicitly to prioritize the
+source-matched derivative input. Its status is **NOT_COMPLETED**; no flow cache
+or solver-progress checkpoint exists. The verified owned PID34480 was stopped
+at2026-10-24T08:44:47Z after1568.359375CPU seconds, peak working set3,862,319,104B.
+Inputs, frozen producer, log and a clearly labelled reconstructed setup HIP are
+retained in `D:/yacs/work/pegasus-cliff-route-source-20261024-global-flow-v2`.
+`not_completed.json` records the exact command and the distinction between the
+reconstructed setup and an unavailable runtime-progress checkpoint.
+
+Actual native inspection of all four supplied PEG-05 terrain caches measured
+**2.0m** spacing in both axes,2016x2016 or2017x2017 samples. Thus the0.5m YACS
+input is16times denser by horizontal sample count than the original input.
+`Saved/cliff-original-source-grid-20261024.json` binds all cache hashes, native
+volume transforms and sample coordinates. The original layered cache SHA-256 is
+`2f432b0c2ec7284027c75a8036c995767fb484a777162b81bbf1e38697d8e2cf`.
+The coordinator approved a **2m input adapter for derived cliffs only**, with
+source-relative measurements, separate categorical/validity sampling, unchanged
+FINAL0.5m, and literal original generator parameters. This adapter is
+**NOT IMPLEMENTED / NOT RUN at the Argon handoff**; no2m geometry, native flow,
+coverage completion or production acceptance is claimed.
+
+The original Split HDA (`b40d2878...`) was also cooked on the complete class0
+pilot. It preserves exact ordered P, Cd, vertex N and oriented topology bytes,
+assigning all423833polygons to `cliff_0000_0000` with Nanite enabled. It classifies
+existing geometry through a bbox grid and assigns Unreal output attributes;
+it does not physically clip or simplify polygons and does not reduce the earlier
+generator's peak memory. Evidence:
+`D:/yacs/work/pegasus-cliff-source-settings-20261024-class0-split/split_receipt.json`.
+
 ## Current status
 
 **PAUSED: 92 / 178 raw candidate windows validated; 86 remain.** The raw layer
@@ -631,3 +766,44 @@ original V3 manifest SHA-256
 Ruff format/check passed; independent read-only audit found no blocking defect
 for this known checkpoint. This is recoverability proof, not a corrected road
 profile, production clearance, full-route completion or visual acceptance.
+
+## 2 m derivative cliff adapter, shared 2 m flow, connected corridor extraction, and UE 5.7 L13 integration (2026-10-24)
+
+Per owner authorization (`ARGON_CLIFF_ROAD_HANDOFF_20261024.md`), the accepted
+0.5 m `FINAL` HeightField and UE Landscape remain untouched, while cliff
+extraction and flow generation use a dedicated **2 m derivative cliff input
+adapter** (`--prepare-global-flow` with `--grid-spacing 2.0`, `--cook-global-flow`,
+and `--extract-global-2m`) in `scripts/houdini/pegasus_cliff_candidate.py`
+(producer SHA-256 `ec8eb3d3113dc69df69566e0d41ca076a52095f97e29199c62fd139179d4b5ae`).
+
+### 1. Separate 2 m derivative input and shared global flow
+
+- **2 m derivative input (`D:/yacs/work/pegasus-cliff-route-source-20261024-global-input-2m`):**
+  - `flow_input.bgeo.sc` SHA-256: `221586fff81841c953b3e2658ef5f5604d7d1e393f79998f878e1558dcbbe0a9`.
+  - `input_preparation.json` SHA-256: `8783e1f1c2efdb978ca98a7353c48554959c03981e80bf178a989b44cf2db63c`.
+  - Grid resolution: `1985 × 2625 × 1` (`step_i_m = 1.999496 m`, `step_j_m = 1.999619 m`), bounds `[-1952, 2016] × [-1952, 3296] m`.
+  - Height is resampled natively (`heightfield_resample`, `gridspacing=2.0`, source-relative RMS delta `0.2116 m`), while categorical `id=191` (`PE_Heightfield_id_to_layer`) and `visibility` are sampled separately without bilinear ID corruption (`2,226,434` cliff mask voxels, `0` visibility conflicts).
+- **Shared 2 m global flow (`D:/yacs/work/pegasus-cliff-route-source-20261024-global-flow-2m-v1`):**
+  - Cooked in `160.93 s` (`flow_cache.bgeo.sc` SHA-256 `553f9e92a9c21a523ab7806fce1967dea748251b81290cc51b3845bc7efd8d7b`, `flow_voxels_sha256` `194605489b24452f58f521b40cbf94ffeab8f2d01942608ed1af2b42ed0e220a`, range `[-0.75, 1.24]`).
+  - Fresh-process `--reopen` (`flow_fresh_regeneration.json`) regenerated the identical voxel hash in `162.16 s` (`graph_regeneration: PASS`).
+
+### 2. Connected corridor extraction and 1:1 original generator/split runs
+
+- **Connected corridor extraction (`D:/yacs/work/pegasus-cliff-route-source-20261024-global-extract-2m-v1`):**
+  - Ran `PE_Heightfield_Extract_Cliffs::1.0` (`threshold = 1000.0`) with the shared 2 m flow across the entire working corridor in `78.47 s`; fresh `--reopen --regenerate` passed (`output_disk_reload: PASS`, `graph_regeneration: PASS`).
+  - `cliffs.bgeo.sc` SHA-256: `0b98407e6c93a98fd6beab4c820cb21ca58c735f422b187bcfa60ff5c216e11d` (`2,136,033` points, `2,044,931` primitives across **852 connected `@class` components**: **736** within the `<= 3000` primitive single-component execution budget and **116** above budget). Every component's 3D distance to the BTIB 2021 3D road top (`pavement_top.bgeo.sc`) is recorded in `receipt.json`.
+- **1:1 `PE_Cliff_Generator::1.0` (`subdivision=2, edgemask=4, scale=0.01, strength=10, exp=1.5, percentage=80`), `PE_Cliff_Split::1.0` (`gridsize=100, naniteenabled=1`), and FBX export on connected 2 m corridor classes:**
+  - **Class 346 (`D:/yacs/work/pegasus-cliff-route-source-20261024-global-2m-class346` & `-split`):** `1,626` source prims -> `296,723` points / `322,662` prims, `min_3d_distance_m = 9.870 m` (`passes_5m_clearance: true`), `output_disk_reload: PASS`, `graph_regeneration: PASS`, `SM_Pegasus_2m_Class346.fbx` SHA-256 `6fbdc6cc44fe62738f9b35d1c166b93b8e5ead3391f8ec556750481867c96c83`, Split (`cliff_0346_0000: 322,662`, `unchanged_bytes: true`).
+  - **Class 296 (`D:/yacs/work/pegasus-cliff-route-source-20261024-global-2m-class296` & `-split`):** `1,771` source prims -> `324,316` points / `349,952` prims, `min_3d_distance_m = 116.999 m` (`passes_5m_clearance: true`), `output_disk_reload: PASS`, `graph_regeneration: PASS`, `SM_Pegasus_2m_Class296.fbx` SHA-256 `343accc5abdd05a574070aa9888477d41fd11da1a55aa77e0359cf6e4669bedb`, Split (`cliff_0296_0000: 120,298`, `cliff_0296_0001: 229,654`, `unchanged_bytes: true`).
+  - **Class 159 (`D:/yacs/work/pegasus-cliff-route-source-20261024-global-2m-class159` & `-split`):** `1,214` source prims -> `223,092` points / `241,304` prims, `min_3d_distance_m = 22.435 m` (`passes_5m_clearance: true`), `output_disk_reload: PASS`, `graph_regeneration: PASS`, `SM_Pegasus_2m_Class159.fbx` SHA-256 `931534cf2c48cc343dec1613031b39b39187caa1a8c0cba0c9cadaa82ef2ee3e`, Split (`cliff_0159_0000: 241,304`, `unchanged_bytes: true`).
+
+### 3. Native UE 5.7 L13 cliff material and StaticMesh integration
+
+- **Material (`scripts/ue/author_pegasus_cliff_material.py`, SHA-256 `bf39c1ef65595600a70f6f8a006c43e0dd77bf1648f29e0410eb79b83090de5f`):**
+  - Authored, compiled (`native_recompile: true`, `52` expressions), and saved `/Game/Generated/YACS/PegasusCliffs/Materials/M_Cliff_Pegasus_L13_Confirmed_20261024` (`91,095 B`, SHA-256 `de56d6b057e400a28794d4beae7cf9ff1bd7347ec271e12687e9d8d19e7a0be0`) in `D:/yacs/work/lesson07-readback-39439835210-2` (`Saved/argon-handoff-20261024/material-author-surface-result.json`). RVT blending remains explicitly `BLOCKED_NO_RVT_SOURCE_VOLUME_IN_CONSUMER`.
+- **StaticMesh assets (`FBXNIM_ImportNormals`, `vertexColorImportOption=Replace`, `NaniteEnabled=True`, `CTF_UseComplexAsSimple`, `CollisionPrims=0`):**
+  - `/Game/Generated/YACS/PegasusCliffs_Source20261024/SM_Pegasus_Source_Class0_Cd` (reimported with `FBXNIM_ImportNormals`, bound to L13 material, verified across full editor restart).
+  - `/Game/Generated/YACS/PegasusCliffs_2m_20261024/SM_Pegasus_2m_Class346` (`14,497,391 B`, SHA-256 `8828ca0c4f1e4c6a8536ad03f56cb2dfee46e5b915ddb0a43b437a9af66c6f26`, `NaniteTriangles: 591,106`, trace hit `423.742 m`).
+  - `/Game/Generated/YACS/PegasusCliffs_2m_20261024/SM_Pegasus_2m_Class296` (`16,132,226 B`, SHA-256 `5b5c92b9a4c3143042434429591feff6e32330841c49f41e74967c30568ba409`, `NaniteTriangles: 646,930`, trace hit `572.952 m`).
+  - `/Game/Generated/YACS/PegasusCliffs_2m_20261024/SM_Pegasus_2m_Class159` (`10,988,865 B`, SHA-256 `f7d86f6b87a472907881c3dad8962dfbf5ff826742d791829a451f8f1a588a41`, `NaniteTriangles: 445,108`, trace hit `151.021 m`).
+  - Receipts and viewport captures are retained under `Saved/argon-handoff-20261024/ue-corridor-cliffs-and-btib2-import.json` and `ue-corridor-placement-and-traces.json`.

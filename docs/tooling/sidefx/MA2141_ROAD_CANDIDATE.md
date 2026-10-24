@@ -3,14 +3,20 @@
 
 ## Current status
 
-The historical full-route profile is NOT ADMITTED: part 3 original edges 280–286
-sample rock relief rather than supported pavement elevations. Its saved UE mesh
-is quarantined and has no placed preview actor. The new producer explicitly
-excludes this pinned interval, including both endpoints, while retaining raw DTM
-observations. Native rebuild, fresh reopen and FBX export passed for that excluded candidate;
-its UE import and road admission remain unverified.
-The separate first-100m slab remains a bounded native proof only; full-road
-contact, physics and UE terrain integration are not accepted.
+**Current source-first candidate:** thirteen original BTIB 2021 road-surface
+polygons now supply actual footprint widths and 3D boundary elevations. Native
+Houdini triangulation, metric UVs, finite pavement, fresh graph regeneration and
+FBX export passed. All 107 formerly excluded rock-cleft stations now hit the
+source-derived surface. The old DTM-derived vertical artifact is not reused.
+See [BTIB continuation](#btib-2021-source-footprints-and-native-full-route-candidate).
+
+This does not establish road/Landscape contact, an admitted physics profile or
+complete canonical-axis coverage. The original CartoCiudad axis has 86 misses
+against the selected source footprints; the urban terminal lacks a polygonal
+surface in this product, while another interval requires alignment comparison.
+At the crossing, a topmost vertical ray does not identify the lower road level.
+The historical full-route DTM mesh remains quarantined. The first-100m slab and
+the later five-metre-width fallback are retained diagnostic evidence only.
 
 Owner continuation, 2026-10-24, M3/#365: cliffs and real Ma-2141 roads are now
 authorized. The owner's subsequent correction explicitly excludes the old road
@@ -735,3 +741,336 @@ The existing HTTP resolver received 403; Chrome successfully found the exact
 record but its download event did not complete and the tool was interrupted.
 No payload/hash/header/bbox/classification verification is claimed. Do not infer
 successful acquisition from a catalog filename. No source Z repair was made.
+
+## BTIB 2021 source footprints and native full-route candidate
+
+The owner resumed full cliff/road implementation on 2026-10-24. The accepted
+night-time Landscape was subsequently identified in a different checkout:
+`D:/yacs/work/lesson07-readback-39439835210-2`, map SHA256
+`a22b0a8e0d7927ea48d289ea9299e5eeb709d750e96023164f04a32ad3252170`.
+This section records a source-space road producer. It does **not** identify the
+older canonical-project map as that accepted consumer, alter its Landscape, or
+claim a measured transform/contact result in the night-time consumer.
+
+### Official source and selection
+
+The [ICGIB BTIB description](https://apps.caib.es/sites/icgibinfo/es/base_topografica_de_las__islas_baleares_btib/)
+identifies a 1:5,000 three-dimensional topographic database. The official
+[2021 road-surface service](https://ideib.caib.es/geoserveis/rest/services/public/2021BTIB5000/MapServer/20)
+returns original EPSG:25831 XYZ rings. Its source specification gives nominal
+1 m horizontal / 1.25 m vertical accuracy and Palma sea-level height context;
+these are source limitations, not centimetre pavement survey proof.
+
+Exact original responses and metadata remain outside Git under
+`Saved/asphalt-research-20261024/`:
+
+- `btib2021-road-surface-ma2141-source.json`, 1,967,755 bytes, SHA256
+  `92fd933d551f7513bf906a8b8134bf6eda9302c4c00b6de3f45a0a9d3bdc3776`:
+  56 original features, Z present, no exceeded transfer limit, no clipping,
+  simplification, quantization request or geometry precision reduction.
+- The exact cleft-only response has SHA256
+  `02e490fdafb9e25c1749101e4f4083b99068d09112d8acd71863fc26c394794c`.
+- `btib2021-csw-dataset.xml`, SHA256
+  `fa4d81faf2e9a159b86477df65a5e91191be5ec8cada31971eddd40edebb7b7b`,
+  records **CC BY 4.0** for dataset
+  `d932a3b8-6366-4b88-bc48-44b2963a49e7`. This dataset-specific legal record
+  resolves the older contradictory generic by-sa wording in ArcGIS iteminfo.
+  Attribute derivative products to BTIB 2021 / ICGIB and retain the source
+  record; public API access alone was not treated as a license.
+
+Read-only footprint intersection selected OBJECTIDs **7605, 7608, 7612, 7613,
+7614, 7625, 29026, 29027, 29042, 29043, 29044, 29046, 29047**. Each is an
+original `btib/tm3_0027_redviaria_s` feature; this selection is explicit input to
+the producer, not an inferred road-name field. Object 7664 is excluded because
+it extends along a large adjacent Ma-10 segment despite a 3.8 m overlap near
+the route endpoint. The 31 explanada features in the response are not all roads
+and are not imported. `CGN` means a non-hidden surface representation; it is
+not a surveyed pavement-quality flag. `PAV` belongs to the explanada category.
+
+### Native recipe and actual proof
+
+[`btib` / `btib-verify`](../../../scripts/houdini/ma2141_road_candidate.py)
+adapt the original rings to local metre coordinates without changing their
+geometry. Each feature uses documented native
+[Triangulate 2D 3.0](https://www.sidefx.com/docs/houdini/nodes/sop/triangulate2d.html):
+XZ projection, constrained original polygons, outside removal,
+`restorepos=1`, `refine=0`, `allowconstrsplit=0`. Each source feature is cooked
+separately so one road level does not fuse with another. Source boundary XYZ
+and projected source area are measured after triangulation. Python imports,
+orchestrates and measures; it contains no replacement road triangulator.
+
+Native [UV Project](https://www.sidefx.com/docs/houdini/nodes/sop/uvproject.html)
+uses orthographic XZ projection with a **4 m presentation tile**, checked from
+actual geometry/UV edge differences. Native PolyExtrude gives a closed slab
+with an explicit **0.1 m vertical construction assumption**, extruded downward;
+the source top is unchanged. Both values are candidate presentation controls,
+not BTIB measurements or original Pegasus asphalt settings.
+The separate earlier native Sweep fallback also now uses native length-weighted
+UVs with normalization and tile-boundary rounding disabled. A 5 × 10 m native
+probe produced exactly 1.25 × 2.5 UV units for a 4 m tile; the unmodified default
+rounding had produced 1 × 3 and was unsuitable for metric tiling across parts.
+
+Producer SHA256:
+`edf231720c613941fd4d948fd81f943aa547266bddde0e5edf3498b651b67972`.
+Actual output: `D:/yacs/work/ma2141-road-owner-20261024-btib1/`.
+
+- 6,524 original boundary points, 6,498 top triangles.
+- Closed finite pavement: 13,048 points / 19,520 primitives. All undirected
+  mesh edges have incidence two; top/underside orientation passed.
+- Maximum local float-storage difference is below 0.001 m; source XYZ is
+  retained by the native graph. Source projected areas match independently.
+- Maximum measured metric UV discrepancy: **0.000244140625 m**, attributable
+  to float storage. Native source top positions remain exact after extrusion.
+- Fresh-process reopening **regenerated** triangulation, UV and finite pavement
+  from the retained boundaries and reproduced the geometry/profile metrics;
+  it did not merely reload the final output BGEO.
+- `export/ma2141_btib_asphalt.fbx` SHA256
+  `b17c49222d750e99624efde4a4ce65dc83dba8f490063c08b960cfdbf07cf44d`.
+  Native FBX is Y-up right-handed, metre source geometry with unit conversion
+  enabled; Unreal conversion requires separate measured readback.
+
+The 6,584 original canonical station observations were ray-tested against these
+native triangles: **6,498 hits / 86 misses**. All 3,864 part-3 observations hit,
+including all 107 formerly excluded cleft observations (171.000610–190.660278 m).
+At the exact two points of the historical 73.19 m drop, native road Z is now
+**172.003235 → 171.954102 m**. This correction comes from original 3D road
+boundaries, with no DTM smoothing or invented replacement heights.
+
+### Remaining source and integration work
+
+The canonical-axis misses are 50 part-0 observations and 36 part-5 observations.
+Read-only source-footprint analysis finds about 88.7 m of the urban terminal
+and 65.8 m of another canonical interval outside the selected road polygons.
+This is an **alignment/representation finding**, not proof of a missing road or
+tunnel. The official BTIB catalogue omits polygonal urban road representation;
+the nearest paved explanada is about 82 m from the terminal and is not a valid
+substitute. Do not extend an asphalt polygon or shift canonical XY to conceal
+the mismatch. At the known crossing, topmost ray hits cannot be admitted as
+the lower-branch road profile or bridge clearance.
+
+The normal-Y minimum of the raw triangulated top is 0.204725. BTIB is a
+photogrammetric boundary source with metre vertical uncertainty, so source
+fidelity and outward orientation alone do not prove a smooth rideable surface.
+Profile, transverse gradient, seams and Landscape contact require the next
+source/consumer inspection. Neither the accepted Landscape appearance nor
+these source checks grants road/physics/visual admission.
+
+An additional official
+[BTIB 2018 axis service](https://ideib.caib.es/geoserveis/rest/services/public/GOIB_BTIB_IB/MapServer/9)
+does supply original 3D road/street axes, unlike the corresponding 2021 display
+layer's XY-only response. Retained full-route raw response:
+`btib2018-road-axis-ma2141-source.json`, SHA256
+`08f2f6d53c48c1bb28cdac5d4c07e41e6b80367ee8c2245bc5358d1d1aff753e`.
+The exact dataset-specific CSW legal record identifies CC BY 4.0; it remains
+with the local source. Its elevation, epoch, line identity and crossing level
+must be verified before using it to replace a missing profile sample. A nearest
+curve may be another hairpin arm; an arbitrary distance gate is not source
+admission. No street-width measurement is supplied by a centreline.
+
+Unreal import, native contact/collision, saved consumer, fresh consumer reopen,
+whole-road visual acceptance and road/physics admission remain **NOT RUN** by
+this producer. Performance remains `DEFERRED_AFTER_M3`, `performance_pass: false`.
+
+## Transfer checkpoint: Argon continuation, 2026-10-24
+
+**STOPPED FOR HANDOFF at the owner's request. No further geometry cook or
+implementation was started after that request.** The road specialist releases
+authorship of this document and
+[`ma2141_road_candidate.py`](../../../scripts/houdini/ma2141_road_candidate.py)
+to the coordinator/Argon. No road actor or Landscape change was made by this
+specialist. Work remains local and uncommitted on `codex/365-world-graph`, base
+`dd2322f1e1ad784ee45878d40e80fcf69f953b30`, M3/#365.
+
+### Exact producers and ready files
+
+- Maintained script SHA256:
+  `e451b99e6581e4f0a79cbf05fa3a2a7ddcf8015f6a6c968fbe00bd05745ba21f`.
+  It adds a read-only `btib-residual` mode after the completed geometry cook.
+- The completed geometry's exact producer is preserved at
+  `D:/yacs/work/ma2141-road-owner-20261024-btib1/producer.py`, SHA256
+  `edf231720c613941fd4d948fd81f943aa547266bddde0e5edf3498b651b67972`.
+  Do not recook the unchanged geometry merely because the maintained script
+  subsequently gained an independent diagnostic mode.
+- Ready source graph/cache/export:
+  `D:/yacs/work/ma2141-road-owner-20261024-btib1/`:
+  `btib_source_surface.hip`, all thirteen `boundary_*.bgeo.sc`,
+  `pavement_top.bgeo.sc`, `pavement_slab.bgeo.sc`,
+  `canonical_profile_observations.json`, identical `btib_receipt.json` /
+  `btib_reopen.json`, and `export/ma2141_btib_asphalt.fbx` with the export
+  receipt. The FBX hash is recorded above. Source bindings in the HIP are
+  explicit absolute paths into this retained directory.
+- The superseded fixed-five-metre fallback remains at
+  `D:/yacs/work/ma2141-road-owner-20261024-surface3/`, with its frozen producer
+  SHA256 `689b620800ba3fbfcf2d671fbdac8c9349e65d75debe6461e9a3506e2f7789c7`.
+  It is not the real-width BTIB continuation target. Earlier `surface1` and
+  `surface2` directories are incomplete/failed trials, not current evidence.
+
+### Complete source-cache diagnostic and actual native probes
+
+`D:/yacs/work/ma2141-road-owner-20261024-btib1-residual/` contains:
+
+- `source_residuals.json`, all **13,022** source boundary/triangle-centroid
+  samples; `source_residual_summary.json`, **zero missing samples** against
+  the exact FINAL cache; `source_residuals_by_sample_kind.json`.
+- `road-final-source-residual-map.png` / `.pdf`,
+  `cleft-source-cross-sections.png` / `.pdf`, and the native measurements in
+  `cleft-native-cross-sections.json`.
+- `native_ue_probe_candidates.json`, nineteen concrete georeferenced probe
+  locations with source road/cache Z and proposed vertical rays.
+- `source_footprint_continuity.json`, original footprint adjacency and source
+  height differences across shared boundaries.
+
+Residual is **road top minus native FINAL HeightField cache**, sampled with
+documented `hou.Volume.sample`; it is not the UE triangle interpolation rule.
+Overall range: **−73.287521…+9.432461 m**, RMS 3.224218 m. Boundary vertices:
+6,524, P95 absolute 1.252652 m; triangle centroids: 6,498, P95 absolute 0.870285 m.
+The actual source heights came from the exact height-only crops prepared by
+the cliff specialist at
+`D:/yacs/work/pegasus-cliff-route-source-20261024-global-input/height_piece_{0,1,2,3}.bgeo.sc`.
+Their `input_preparation.json` ties their retained original values to FINAL
+`f741335d...` and manifest `760425da...`; preparation SHA256 is
+`377a7c03411ba9faed9eac23c646f1348b6b9f9b22425400245aa5f53a3a71e5`.
+Read the actual file/hash before continuation; never modify these shared caches.
+
+The coordinator subsequently executed all nineteen **distance-only** collision
+probes in the correct night-time consumer. The retained result is
+`D:/yacs/project/Saved/correct-owner-world-20261024/native-road-source-probes.json`,
+SHA256 `45574a9ebc45ddc7f88299ff1ea86fb663da48dbfa16227743c1520a0ceab7ef`.
+Maximum native-minus-source-cache absolute difference is **0.0705127 m**.
+Hit actor identity remains UNKNOWN; this does not establish whole-road contact
+or road collision. Preserved input fields named `ue_collision_status: NOT RUN`
+are not the execution result: use the appended measured native-distance/height
+fields and the record's explicit outer status.
+
+At the three detailed cross-sections:
+
+- A: original 2018 axis E482786.904114 / N4410353.110107 / Z172.310 m;
+  2021 native road Z172.309326 m, FINAL source Z244.081070 m at the axis.
+  The sampled 4.5 m road footprint spans source heights 243.297…245.660 m.
+- B: E482787.767106 / N4410346.584291 / axis Z172.030193 m;
+  native road Z172.030029 m, source Z245.180756 m. One road edge already
+  reaches source Z171.983 m, while the axis/other side reaches about 245 m.
+- C, north control: E482802.375231 / N4410444.834047;
+  native road Z182.587646 m versus source Z182.136032 m.
+
+The discrepancy is present on both boundary and centroid/axis measurements.
+Its cause remains **UNRESOLVED**: planimetry, acquisition epoch, terrain
+representation or structure. No 73 m CUT, global height offset or material
+concealment is authorized by these measurements. Original ortho overlay with
+both independent road sources is
+`D:/yacs/project/Saved/asphalt-research-20261024/cleft-ortho-btib-context.png`.
+The original raw 25 cm pixels and metadata remain at
+`Saved/road-source-diagnostic-20261024/grade_ortho_raw.png` and
+`grade_ortho_metadata.json`.
+
+### Unfinished junction and urban terminal: exact resumption boundary
+
+The original selected footprints form **two** 2D union components, areas
+62,391.466665 / 1,731.177963 m². Most full-width shared boundaries have source
+ΔZ=0. At the crossing, 29043/29044 meet in XY at one point but have **7.523 m**
+different source Z; preserve that grade separation. The actual loop connects
+through 29047/29046 with matching shared-boundary Z.
+
+The small southern 29027 component needs the local junction surface supplied
+by the otherwise excluded large Ma-10 source polygon **7664**. The proposed
+next operation was an explicit bounded native **Clip 2.0** of that original
+source triangulation near E484795 / N4407265, approximately
+E484770…484830 / N4407235…4407310. **This Clip is NOT IMPLEMENTED or cooked.**
+The original 7664 feature remains in the full raw response. Do not import its
+entire multi-kilometre Ma-10 footprint or claim that point-only contact already
+establishes a continuous paved junction. Installed Clip parameters were read:
+`clipop=0` keeps the positive plane side, `originx/originz`, `dirx/dirz` define
+the plane, `snaptol=1e-5`, `dofill=0`. Four source-space planes can bound the
+required fragment, retaining native interpolation on the original triangles.
+
+All official 2021 paved-area/explanada features in the query were checked for
+the urban endpoint; none covers it. The nearest paved explanada, **46851**, is
+about 82 m away. Do not stretch it into the street. The owner explicitly
+authorized separate ortho-based interpretation of visible pavement edges as
+the next step. **No edge digitization or urban pavement geometry was created.**
+Ready 25 cm source crops under `Saved/asphalt-research-20261024/`:
+`urban-terminal-ortho-raw.png`, `urban-terminal-ortho-route.png`, and
+`urban-terminal-ortho-metadata.json`. Bounds are
+E482820…482940 / N4411040…4411220; source pixels map as
+`E=482820+0.25*x`, `N=4411220-0.25*y`.
+Visible edges, parked vehicles, deep shadow and occlusion must remain distinct;
+record interpretation uncertainty instead of inserting a constant width.
+Original 2018 paved street axes **109/112** (`PORT DE SA CALOBRA`, `FIRME=001`)
+provide local XYZ context but no measured width. Their nearest distances for
+the fifty missing canonical terminal observations are at most 1.031184 m.
+For the other 36 canonical misses, 2018 `MA-2141` axes **224682/224701** are
+at most 2.853116 m away. This supports alignment investigation, not automatic
+displacement of the original route or footprint. `FIRME=003` means unsealed in
+the source dictionary; several old coincident-axis attributes conflict with
+the pavement evidence and cannot be copied blindly.
+
+### Verification at transfer
+
+Ruff, formatting and Python compilation passed for the maintained script.
+The completed BTIB cook/fresh regeneration/export and all retained output
+hashes were independently re-read successfully. Documentation index guards
+reported **i18n PASS, structure PASS, links PASS, freshness PASS** before this
+checkpoint update; rerun them as part of final handoff integration.
+No project dependency manifest changed. Matplotlib 3.11.2 was used only from
+temporary `Saved/road-plot-packages` for these analytical figures; the project's
+Python environment and requirements were not upgraded.
+
+## Southern junction Clip 2.0 (7664), urban terminal ortho interpretation, raw DTM cross-check, and bounded earthworks adapter (2026-10-24)
+
+Per `ARGON_CLIFF_ROAD_HANDOFF_20261024.md` Section 8, `scripts/houdini/ma2141_road_candidate.py`
+(producer SHA-256 `6120eb08375dc181a53bc71deb97693255da033dc4e91508c7f6eb82c52a767a`)
+was extended and executed natively in Houdini 22.0.466 (`hython.exe`) and integrated
+into the night-time UE 5.7 consumer (`D:/yacs/work/lesson07-readback-39439835210-2`).
+
+### 1. Raw retained Base_DTM vs FINAL vs BTIB 2021 / 2018 cross-check
+
+- Evidence: `Saved/argon-handoff-20261024/road-dtm-final-crosscheck.json` (`13,022` samples).
+- `FINAL` minus raw retained 0.5 m GeoTIFF (`sa_calobra_8x8km_mdt50cm_epsg25831.tif`, bilinear):
+  `p50_abs = 0.000031 m`, `p95_abs = 0.051252 m`, `RMS = 0.025663 m`, `max_abs = 0.304140 m`.
+- At cleft cross-sections `A` (`E482775.34, N4410355.02`) and `B` (`E482787.77, N4410346.58`),
+  both raw `Base_DTM` (`244.013 m` / `245.240 m`) and `FINAL` (`244.081 m` / `245.181 m`)
+  sample the overhanging upper gorge wall from nadir, whereas BTIB 2021 polygon `7608`
+  (`172.309 m` / `172.030 m`) and BTIB 2018 3D axis `106` (`173.400 m` / `172.011 m`) agree
+  on the lower road bench. The `-73.16 m` / `-73.29 m` residual is a 2.5D nadir DTM property
+  of the overhanging gorge, not a Houdini processing bug; a 73 m open cut is forbidden.
+
+### 2. Southern junction native Clip 2.0 (`7664`) and urban terminal (`990109`) in `btib2`
+
+- Evidence: `D:/yacs/work/ma2141-road-owner-20261024-btib2/btib_receipt.json`, `btib_reopen.json`,
+  and `Saved/argon-handoff-20261024/urban-terminal-ortho-interpretation.json` (SHA-256 `b10eee85c327eeac224dc377020b76bb5b091a66a4e0802c71a48502c8a62e76`).
+- **Southern junction:** Polygon `29026` bridges `29042` and `29027` on the west with a
+  `0.000224 m` (`0.224 mm`) ESRI coordinate rounding seam at `(484805.124, 4407260.408, 560.569)`.
+  Original Ma-10 polygon `7664` is triangulated and clipped via four chained native `clip::2.0`
+  SOPs (`clipop=0`, `snaptol=1e-5`, `dofill=0`) to `E484770..484995, N4407235..4407375`,
+  yielding `69` points / `67` triangles (`1,623.290 m²`) that share 13 exact 3D vertices
+  (`58.207 m` boundary) with `29027` and cover the 3 southern canonical profile stations (`0.0..3.81 m`)
+  without importing the multi-kilometre Ma-10 road. The remaining 33 part-5 canonical misses
+  (`stations 751.65..815.49 m`) lie `0.018..0.391 m` outside the northern edge of `29042` due to
+  CartoCiudad 2D chord generalization.
+- **Urban terminal (`OBJECTID 990109`):** Digitized from the 25 cm ortho (`urban-terminal-ortho-raw.png`)
+  and 3D axes `109`/`112` (`PORT DE SA CALOBRA`), tying exactly into `7614` across 3 shared 3D vertices
+  (`5.888 m` shared boundary, `0.0 m` gap, `19` points / `17` triangles, `644.846 m²`, provenance
+  `URBAN_TERMINAL_ORTHO_AND_BTIB2018_AXIS_INTERPRETED_NOT_CM_SURVEY` with explicit shadow and parked-car
+  uncertainty zones). Covers **50 / 50** previously missing part-0 terminal stations (`763.43..851.99 m`),
+  raising canonical profile coverage from `6,498 / 6,584` to **`6,551 / 6,584` (`99.50%`)**.
+- **Combined `btib2` surface and FBX:** `6,612` top points / `6,582` top triangles, closed slab
+  `13,224` points / `19,776` primitives (`pavement_top.bgeo.sc` SHA-256 `d91e991b0b13fcb9f4a8acb27e3ee3854ff650c9b61edfe2e55740888370bb8d`,
+  `pavement_slab.bgeo.sc` SHA-256 `f0e2fd6a3ad13dba89ac7cb3b2d12b4ce22589342904ab7182e8f202177fd3bf`,
+  fresh-process `btib-verify` regeneration `PASS`). Exported `D:/yacs/work/ma2141-road-owner-20261024-btib2-fbx/ma2141_btib_asphalt.fbx`
+  SHA-256 `026ce78bb45519810b9536d51b0ba7ef43b40cd242b4680ea497a6016a0173a5`.
+
+### 3. Bounded reversible `Road_Earthworks` adapter (`btib-earthworks`) and UE 5.7 integration
+
+- **Bounded reversible HeightField adapter (`D:/yacs/work/ma2141-road-owner-20261024-btib2-earthworks`):**
+  - Partitions `btib2` into `6,476` valid contact triangles (`|residual| <= 5.0 m`) and `106` excluded
+    cleft/bridge structure triangles (`|residual| > 5.0 m`), projects the `-0.10 m` road underside into
+    a tight crop (`2071 × 2581`) of `height_piece_0.bgeo.sc` (`79,140` modified voxels), and proves
+    `outside_mask_max_delta_m = 0.0`, `forbidden_cleft_structure_max_delta_m = 0.0`,
+    `cleft_73m_cut_forbidden_enforced = true`, and `rollback_base_dtm_exact = true` (`btib-earthworks-verify` `PASS`).
+- **UE 5.7 import and collision verification (`Saved/argon-handoff-20261024/ue-corridor-cliffs-and-btib2-import.json`):**
+  - Imported `/Game/Generated/YACS/RoadCandidate_20261024/ma2141_btib_asphalt` (`654,772 B`, SHA-256
+    `f3716cac8b3407ada8086eecd037276e15e1ad1a22de12be40b599d7dc893d53`, `26,478` vertices, `26,388` triangles),
+    bound `/Game/Generated/YACS/RoadAsphaltConsumer/aged_mountain_asphalt/dry_varied/9c0a41f6e2ae/MI_MaterialForge`,
+    removed auto convex collision, and set `CollisionTraceFlag = CTF_UseComplexAsSimple`.
+  - Vertical `trace_world` hits verified on the clipped `7664` junction tie-in (`560.958 m`) and the
+    urban terminal `990109` (`17.288 m`); viewport renders retained under `Saved/argon-handoff-20261024/ue-context-*.png`.
