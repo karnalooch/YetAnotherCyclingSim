@@ -1,5 +1,17 @@
 # Ma-2141 source-aligned Houdini road candidate
 
+
+## Current status
+
+The historical full-route profile is NOT ADMITTED: part 3 original edges 280–286
+sample rock relief rather than supported pavement elevations. Its saved UE mesh
+is quarantined and has no placed preview actor. The new producer explicitly
+excludes this pinned interval, including both endpoints, while retaining raw DTM
+observations. Native rebuild, fresh reopen and FBX export passed for that excluded candidate;
+its UE import and road admission remain unverified.
+The separate first-100m slab remains a bounded native proof only; full-road
+contact, physics and UE terrain integration are not accepted.
+
 Owner continuation, 2026-10-24, M3/#365: cliffs and real Ma-2141 roads are now
 authorized. The owner's subsequent correction explicitly excludes the old road
 as the implementation baseline. This candidate reads the original full-route
@@ -613,3 +625,113 @@ named layer, assign the disabled patch, validate registration/encoding, enable
 only for the bounded comparison, measure native Landscape contact and confirm
 that disabling the patch exactly restores source samples. Do not save the
 active map or promote this experimental thickness without those proofs.
+
+
+## 2026-10-24 profile invalidation: part 3 rock-cleft interval
+
+A subsequent read-only check invalidates any interpretation of the full-route
+Sweep as a real pavement elevation profile. Frozen producer `6340e808d8772c713751a88830e0a9acc12387d5deb97f8b629de327ea9aa2a5`
+and its earlier receipts remain historical evidence, not corrected geometry.
+The saved UE asset `SM_Ma2141_SourceUp` must remain quarantined as a diagnostic;
+its preview actor was already removed. Do not place it as a usable road.
+
+The retained profile record SHA256
+`0132e59ebba1005d9604bb47084ff5bf26eaef341d5d57a8f53a1a63c396d9de`
+has a 73.189987 m drop across 1.959385 m horizontally at zero XY turn:
+part 3 observations 3567–3568, station 6857.888271–6859.847656 m,
+original edge 286 (all indices zero-based). Coordinates are
+(E482788.008656, N4410345.770026, H245.039993) to
+(E482788.232986, N4410343.823525, H171.850006), EPSG:25831 metres.
+The resulting grade is -37.353555 and inclination -88.466489 degrees.
+Its ideal ribbon normal Y=0.0267616 explains the native minimum 0.0267553:
+positive-facing normals alone did not establish a plausible road profile.
+All 28 segments with absolute grade above 0.5 occur in part 3 around stations
+6673–6858 m, original edges 280–286. This threshold is diagnostic, not an
+admission rule. No geographic elevations were smoothed or replaced.
+
+Evidence under `Saved/road-source-diagnostic-20261024/`:
+`profile_grade_readonly.json`, `grade_ortho_raw.png`, `grade_ortho_route.png`,
+and `grade_ortho_metadata.json`. The crop reads retained
+`manual-cnig/PNOA_MA_OF_ETRS89_HU31_h25_0643_4.tif` at 0.25 m/pixel,
+E482740..482900 / N4410280..4410580. Red marks edges 280–286; yellow the
+source alignment; the scale bar is 50 m. Visual inspection shows a narrow
+shaded rock cleft with visible approach pavement and projecting rock faces.
+This supports investigating overhang/ground-sampling mismatch; it does not
+prove an underground tunnel or supply hidden pavement elevations.
+
+The retained CartoCiudad response (id `604000000293`, address `Ma-2141`,
+type `carretera`) contains a two-dimensional MULTILINESTRING and no per-edge
+height, tunnel, or level attributes. The official
+[CartoCiudad catalogue](https://www.cartociudad.es/carto-theme/Documentos/resources/documentos_tecnicos/CARTOCIUDAD_Catalogo.pdf)
+distinguishes surface and tunnel situations, but those fields are absent here.
+The [IGN service inventory](https://www.ign.es/web/es/ign/portal/ide-area-nodo-ide-ign)
+provides the transport-network WFS as a possible additional source.
+Neither a road name nor a source DTM sample establishes pavement Z under rock.
+
+Next action: inspect source LiDAR classifications/returns and transport-network
+attributes at these exact edges; retain unresolved pavement heights as absent.
+A future opt-in producer must explicitly exclude this identified source interval
+(or fail closed) until supported, preserving the six source parts and XY.
+Do not use a global arbitrary grade threshold, interpolate an unseen profile,
+or promote the existing full-route mesh based on winding/UE import success.
+This finding does not invalidate the separately measured first-100m slab proof;
+that proof still has its documented contact and UE limitations.
+
+
+Follow-up source lookup: official IGN WFS GetCapabilities advertises
+`tn-ro:RoadLink`, `tn:VerticalPosition` and EPSG:25831. The bounded
+160 x 300 m RoadLink query returned one 5,243-byte GML record, retained as
+`transport_RoadLink.xml`: `TN-RO_ROADLINK_VIAL_TR70190001179`, lifespan version
+2020-02-28, two-dimensional centreline matching the investigated source edges,
+and `net:fictitious=true`. The flag alone does not prove a tunnel or invalidate
+the existence of the road. The bounded VerticalPosition spatial query timed out
+after 45 seconds; no vertical-position value was obtained from that query.
+The official schema defines VerticalPosition as a relative vertical position
+linked indirectly through `net:networkRef`; it is not a surveyed height.
+
+Parent-reported native UE quarantine receipt:
+`Saved/ue-road-grade-invalidation-20261024.json`. Metadata now explicitly marks
+`YACS.Admission=NOT_ADMITTED`, records the source-edge reason and evidence.
+Only `SM_Ma2141_SourceUp` was saved; no map actors were added or saved.
+Post-tag asset SHA256 is
+`d1a59f7cf1eed207cf2311e65f5c295238d3db34368ecdf4b5253ae8968a9a04`;
+the earlier `e4b8a869...` asset hash identifies the historical pre-tag file.
+This quarantine changes metadata, not the defective source-derived geometry.
+
+
+## Explicit source-gap candidate after profile invalidation
+
+LF producer SHA256: `ac01f63e5f610061360da9bc957555efc62767698d1b6cefee0977dd3781fa6c`.
+The pinned-source guard computes original part-3 cumulative edge lengths and
+checks vertices 280/287 against stations 6671.352303768111 / 6877.482119067211 m.
+Both endpoint observations are excluded (1e-6 m numerical station guard), as are
+all interior observations. The nominal source interval is 206.129815 m;
+the retained neighbouring sample endpoints span a conservative 210.069376 m gap
+(stations 6669.38065986 to 6879.45003612), because both boundary samples are absent.
+Raw `dtm_height_m` and canonical XY remain unchanged;
+107 observations become `height_m=null` with explicit unresolved source kind.
+Old records without this exclusion are rejected by `profile_geometry`.
+
+Fresh record `Saved/road-source-diagnostic-20261024/profile_excluded.json` SHA256
+`193946d27cf2802c9a59d1e58ac05e20c0d8c28a976b9bdc6d523eb832973951`.
+Native build and fresh-process reopen in `profile_excluded_native/` agree:
+6459 supported points, 125 excluded (107 rock-cleft + 18 bridge), 9 open runs,
+58131 surface points / 51600 quads, minimum face normal Y=0.847786963.
+Source connectivity/attributes and maximum position storage error
+0.000121810 m passed. This removes the known vertical artifact without inventing
+replacement heights; it does not establish surveyed pavement or contact.
+
+Native FBX: `fbx_excluded/ma2141_source_up.fbx`, 852768 bytes, SHA256
+`c96f72ba65c00ddc3cd3cc2d8a9dd1493ba0024fd5cfab128bf8dd39616f82e0`.
+The adjacent `export_receipt.json` records original FBX ROP controls and frame.
+This new file has NOT been imported into UE. Historical producer/asset evidence
+remains retained separately. Ruff and scoped whitespace checks passed.
+
+Additional input acquisition remains blocked: official CNIG record
+[13022274](https://centrodedescargas.cnig.es/CentroDescargas/detalleArchivo?sec=13022274)
+identifies `PNOA_2024_BAL_482-4411_H31_NPC03.laz`, 2024, 47.83 MB,
+5 points/m2, ETRS89 UTM with orthometric heights and CC-BY 4.0-compatible terms.
+The existing HTTP resolver received 403; Chrome successfully found the exact
+record but its download event did not complete and the tool was interrupted.
+No payload/hash/header/bbox/classification verification is claimed. Do not infer
+successful acquisition from a catalog filename. No source Z repair was made.

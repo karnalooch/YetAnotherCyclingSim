@@ -164,6 +164,56 @@ def batch(args):
     if args.output.exists():
         raise RuntimeError("Batch output exists; preserve checkpoint")
     args.output.mkdir(parents=True)
+    checkpoint = None
+    if args.resume:
+        checkpoint = json.loads((args.resume / "batch.json").read_text())
+        if (
+            checkpoint["producer_sha256"]
+            != "5636169a61819c976c1956cf7f62606e1de9c4bac9e956a233fdef0b8315d856"
+        ):
+            raise RuntimeError("Unsupported checkpoint producer")
+        if (
+            checkpoint["inventory_sha256"] != sha(args.batch)
+            or sha(args.batch)
+            != "1645af92ee8223959b65b8686ad7445f31486ec6fde631a54d4121f3b2cea430"
+        ):
+            raise RuntimeError("Checkpoint inventory changed")
+        if sha(record["idmap"]) != record["idmap_sha256"]:
+            raise RuntimeError("Current ID source changed")
+        manifest_path = Path(
+            "D:/yacs/work/lesson07-consumer-update-20261020/manifest.json"
+        )
+        if (
+            sha(manifest_path)
+            != "760425da4a8fa46c4e201a74f0a70ced802f14dc992d1569885167fe73a8978e"
+        ):
+            raise RuntimeError("Current source manifest changed")
+        manifest = json.loads(manifest_path.read_text())
+        for tile in manifest["tiles"]:
+            if sha(manifest_path.parent / tile["file"]) != tile["sha256"]:
+                raise RuntimeError("Current native source tile changed")
+        cores = checkpoint["cores"]
+        if checkpoint["completed"] != len(cores) or checkpoint["target"] != len(
+            windows
+        ):
+            raise RuntimeError("Checkpoint count mismatch")
+        if [c["core"] for c in cores] != [
+            [w["ix"], w["iz"]] for w in windows[: len(cores)]
+        ]:
+            raise RuntimeError("Checkpoint is not the exact inventory prefix")
+        windows = windows[: len(cores)]
+        subprocess.run(
+            [
+                "D:/yacs/tools/houdini-22.0.466/bin/hython.exe",
+                str(Path(__file__).resolve()),
+                "--resume-native",
+                "--resume",
+                str(args.resume.resolve()),
+                "--output",
+                str((args.output / "native_readback").resolve()),
+            ],
+            check=True,
+        )
     results = []
     seams = {}
     started = time.time()
@@ -173,7 +223,53 @@ def batch(args):
         ix, iz = w["ix"], w["iz"]
         out = args.output / f"core_{ix}_{iz}"
         reused = False
-        if args.reuse_batch:
+        if checkpoint:
+            saved = checkpoint["cores"][len(results)]
+            out = Path(saved["output_directory"])
+            prior = json.loads((out / "receipt.json").read_text())
+            producer = prior["producer_sha256"]
+            if (
+                producer
+                not in {
+                    "5636169a61819c976c1956cf7f62606e1de9c4bac9e956a233fdef0b8315d856",
+                    "ece78990c3ed57138441e4065e899d0060df6ce76f1a2b1169c878034a794aa5",
+                }
+                or producer != saved["native_producer_sha256"]
+            ):
+                raise RuntimeError("Per-core producer mismatch")
+            if prior["chosen_window"] != w or prior["inventory_sha256"] != sha(
+                args.batch
+            ):
+                raise RuntimeError("Per-core source window mismatch")
+            if (
+                prior["source_final_sha256"]
+                != "f741335dce4cae0843a54df9a1478b321dc5e2d3401f93f301cc6647fee4ed24"
+                or prior["manifest_sha256"] != sha(manifest_path)
+            ):
+                raise RuntimeError("Per-core source lineage mismatch")
+            if (
+                prior["idmap_sha256"] != record["idmap_sha256"]
+                or prior["halo_m"] != 8
+                or not prior["pre_flow_raw_stage"]
+                or prior["road_exclusion"]["half_width_m"] != 6
+                or prior["road_exclusion"]["route_sha256"] != sha(route_path)
+            ):
+                raise RuntimeError("Per-core source configuration mismatch")
+            if (
+                sha(out / "cliffs.bgeo.sc") != prior["output_sha256"]
+                or prior["output_sha256"] != saved["output_sha256"]
+                or sha(out / "candidate.hiplc") != prior["hip_sha256"]
+            ):
+                raise RuntimeError("Checkpoint geometry/HIP changed")
+            reload = json.loads((out / "fresh_reopen.json").read_text())
+            if (
+                reload["output_disk_reload"] != "PASS"
+                or reload["output_sha256"] != prior["output_sha256"]
+                or reload["hip_sha256"] != prior["hip_sha256"]
+            ):
+                raise RuntimeError("Checkpoint bound reload missing")
+            reused = True
+        elif args.reuse_batch:
             old = args.reuse_batch / f"core_{ix}_{iz}"
             if (old / "validation.json").exists():
                 prior = json.loads((old / "receipt.json").read_text())
@@ -218,11 +314,20 @@ def batch(args):
                 )
         vertices = []
         faces = []
-        for line in (out / "cliffs.obj").read_text().splitlines():
+        obj_path = (
+            args.output / "native_readback" / f"core_{ix}_{iz}.obj"
+            if checkpoint
+            else out / "cliffs.obj"
+        )
+        for line in obj_path.read_text().splitlines():
             if line.startswith("v "):
                 vertices.append(list(map(float, line.split()[1:4])))
             elif line.startswith("f "):
                 faces.append([int(t.split("/")[0]) - 1 for t in line.split()[1:]])
+        if checkpoint and (
+            len(vertices) != prior["points"] or len(faces) != prior["primitives"]
+        ):
+            raise RuntimeError("Native checkpoint counts changed")
         vertices = np.asarray(vertices).reshape(-1, 3)
         if not np.isfinite(vertices).all():
             raise RuntimeError("Nonfinite mesh")
@@ -338,6 +443,14 @@ def batch(args):
                     "target": len(windows),
                     "elapsed_seconds": time.time() - started,
                     "raw_source_geometry_only": True,
+                    "checkpoint_validation_only": bool(args.resume),
+                    "resumed_checkpoint_sha256": sha(args.resume / "batch.json")
+                    if args.resume
+                    else None,
+                    "remaining_generation": "NOT RUN" if args.resume else "IN PROGRESS",
+                    "original_target": checkpoint["target"]
+                    if checkpoint
+                    else len(windows),
                     "production_admission": False,
                     "cores": results,
                 },
@@ -998,6 +1111,12 @@ def main():
         type=Path,
         help="Reuse hash-bound ece78990 checkpoint outputs with independent revalidation",
     )
+    p.add_argument("--resume-native", action="store_true", help=argparse.SUPPRESS)
+    p.add_argument(
+        "--resume",
+        type=Path,
+        help="Validate retained V3 checkpoints only; no generation or recook",
+    )
     p.add_argument("--batch-limit", type=int, default=178)
     p.add_argument("--source", type=Path)
     p.add_argument("--otls", type=Path)
@@ -1066,6 +1185,27 @@ def main():
     )
     p.add_argument("--reopen", action="store_true")
     args = p.parse_args()
+    if args.resume_native:
+        if hou is None or not args.resume or args.output.exists():
+            p.error(
+                "Native checkpoint readback requires hython, --resume and a fresh output"
+            )
+        if hou.applicationVersion() != (22, 0, 466):
+            raise RuntimeError("Native version changed")
+        hou.setMaxThreads(2)
+        args.output.mkdir(parents=True)
+        checkpoint = json.loads((args.resume / "batch.json").read_text())
+        for core in checkpoint["cores"]:
+            source = Path(core["output_directory"]) / "cliffs.bgeo.sc"
+            if sha(source) != core["output_sha256"]:
+                raise RuntimeError("Native checkpoint source changed")
+            geometry = hou.Geometry()
+            geometry.loadFromFile(str(source))
+            ix, iz = core["core"]
+            geometry.saveToFile(str(args.output / f"core_{ix}_{iz}.obj"))
+        return
+    if args.resume and (not args.batch or args.reuse_batch):
+        p.error("--resume requires --batch and cannot combine with --reuse-batch")
     if args.batch:
         batch(args)
         return

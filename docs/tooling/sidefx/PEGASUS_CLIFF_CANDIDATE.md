@@ -1,6 +1,19 @@
 # Pegasus cliff candidate: bounded native extraction
 
-Status: **local extraction and output disk reload passed; full-route delivery remains open**.
+## Current status
+
+**PAUSED: 92 / 178 raw candidate windows validated; 86 remain.** The raw layer
+uses provisional 2D road exclusion, which is not valid production clearance for
+tunnels or overhanging rock. Full-route generation and world admission are open.
+There is **no final spire/overhang proof**. The isolated native UE preview was a
+thin folded sheet and was **not accepted for visual quality**. Neither strength,
+normal-blur nor texture-scale controls established a finished cliff appearance.
+
+The paused orchestrator was subsequently stopped at its verified boundary;
+there is no orphaned batch process. Checkpoint-only recovery validation is
+recorded below; it never generates the remaining windows or changes sources.
+Historical successful component tests below do not override this current state.
+
 Date: 2026-10-24. M3, existing #365 workstream and `codex/365-world-graph`;
 research base `dd2322f1e1ad784ee45878d40e80fcf69f953b30`, local uncommitted adapter.
 The owner authorized cliffs and real Ma-2141 roads in this conversation. This
@@ -23,7 +36,7 @@ Captions and original definitions were inspected; no claim of watching the film.
 Originals remain in the external corpus under
 `P1_05_Cliff_Generation/Materialy/Pegasus_Cliff_Project_Files_2/Pegasus_Cliff_Project_Files`.
 The actual source root on this host is
-`C:/Users/akarn/OneDrive/Dokumenty/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an/outputs/Pegasus_Komplet`.
+`<owner-source-library>/Pegasus_Komplet`.
 
 The adapter [pegasus_cliff_candidate.py](../../../scripts/houdini/pegasus_cliff_candidate.py)
 loads the original HDA, verifies its resolved definition and hash, and feeds
@@ -538,3 +551,83 @@ Maximum lattice registration movements are 0.000122070313 / 0.000172633492 /
 At this publication checkpoint V3 has 49/178 validated cores and is resumed;
 this is not a completion claim. Ruff and Python compilation pass for the LF
 snapshot. Historical ECE/C5B/563 receipts are retained with their true identities.
+
+## Texture-scale control and 3D clearance limitation (2026-10-24)
+
+PEG-05 L03 05:03-05:11 addresses overly small texture tiling by setting scale
+0.01. The [official Labs Triplanar Displace documentation](https://www.sidefx.com/docs/houdini/nodes/sop/labs--triplanar_displace.html)
+confirms that a lower value enlarges the projected pattern. A separate retained
+adapter `Saved/pegasus-cliff-scale001.py`, SHA-256
+`b1e2c577d3a8cc2a62869d6ff457b49c2a01da531d004331f636ad7272d75ab6`,
+changes only both recorded/applied scale literals from 0.1 to 0.01 relative to
+the LF producer. The running batch producer remains immutable.
+
+The CURRENT class-2 control retains strength 0.6, subdivision 1, the original
+boundary mask, P/N blur, CC0 maps and Y restoration. Output is retained at
+`D:/yacs/work/pegasus-cliff-current-class2-scale001`: 14,954 points and 16,921
+polygons, BGEO SHA-256
+`1d3e69e19fe51d07e53121fb0aa8dea1ba5bacd72be23b2e0f240995c0502ad4`.
+Matched pre-reduction displacement max/mean is 0.311958 / 0.039763 m; Y delta
+is zero. Vertex-to-source maximum is 0.335671 m; reverse maximum 0.409395 m.
+Fresh-process output disk reload passed; graph regeneration was NOT RUN.
+`Saved/pegasus-cliff-scale001-comparison.png` uses actual exported polygons,
+identical orthographic camera and flat CPU lighting for source, scale 0.1 and
+scale 0.01. Larger projection removes much of the fine grit but retains smooth
+folded-sheet forms. It does not establish a finished cliff or surveyed spire,
+and is not admitted for rollout. Tutorial strengths 10/15 were not adopted.
+
+The raw 178-window route candidate uses a conservative **2D** road exclusion.
+It is not a production 3D clearance contract: a tunnel roof or natural overhang
+above the road can share its XY footprint and would be incorrectly removed by
+this rule. A road diagnostic reported a steep DTM transition on part 3, edges
+280-286; tunnel interpretation remains under investigation. World admission
+requires an actual road elevation/profile and 3D road-volume clearance before
+retaining or removing overhanging rock. The current raw batch remains an
+explicit candidate/history layer, not full-world geometry acceptance.
+## Raw batch paused after input diagnosis
+
+V3 was deliberately paused at a completed window boundary: **92 / 178** validated
+candidate cores, **86 not generated/admitted**, last core `(27,36)`. Six of the
+eight cross-tile windows passed native source/splice checks. Full-batch PASS is
+not claimed. The reason is the unresolved real-road profile, 3D clearance and
+visual-detail quality, not a relaxation of validation thresholds.
+
+The original pause was session `95522`, PID `36940`. After checking the exact
+command line, `PAUSE` marker and absence of native children, that owned process
+was terminated. Exact producer `5636169...` is retained at
+`Saved/pegasus-cliff-producer-5636169.py`; verified LF `224078...` remains at
+`Saved/pegasus-cliff-final-lf.py`. The owned script now contains the LF recovery
+adapter below. No background generation remains.
+
+## Checkpoint-only recovery verification
+
+The final recovery producer is
+`b5b6e28d406269d0786924e753dbd29d86539d90ac704f35219dc45e683ef4b6`.
+`--resume` validates the existing V3 prefix into a new evidence directory; it
+**does not generate the remaining windows**, recook terrain, or amend original
+receipts. It pins the original inventory, current ID image, source manifest and
+all four native tile hashes; checks route source, per-core ECE/563 producer,
+window/configuration, HIP/BGEO hashes and bound prior reload; then loads BGEO
+natively into fresh OBJ files and repeats actual projected-polygon clearance
+and edge endpoint bijection at the unchanged 5 m / 1 mm thresholds.
+The internal `--resume-native` helper alone is only file readback, not full
+source/configuration validation. Python 3.12 supplies existing Shapely; Houdini
+22.0.466 Python 3.13 performs the serialized native readback without a HIP cook.
+
+Reproducible validation command (choose a new output directory on each run):
+
+```powershell
+$env:HOUDINI_OCL_DEVICETYPE = 'CPU'
+python scripts/houdini/pegasus_cliff_candidate.py --batch Saved/pegasus-cliff-inventory-20261024-guarded/inventory.json --resume D:/yacs/work/pegasus-cliff-raw-route-20261024-v3 --output D:/yacs/work/pegasus-cliff-resume-validation-20261024
+```
+
+Exact final-producer validation passed **92 / 92 retained checkpoints**, totaling
+1,919,597 polygons; minimum planar clearance 5.501383146 m, maximum matched
+boundary endpoint delta 0.000244 m. The original generation target remains
+178, with 86 remaining NOT RUN. Evidence is
+`D:/yacs/work/pegasus-cliff-resume-validation-20261024/batch.json`; it binds
+original V3 manifest SHA-256
+`99f563818117d8724c3388e0da90f323de15010e548a9839c9e99e95e802dde9`.
+Ruff format/check passed; independent read-only audit found no blocking defect
+for this known checkpoint. This is recoverability proof, not a corrected road
+profile, production clearance, full-route completion or visual acceptance.

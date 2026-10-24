@@ -19,6 +19,10 @@ SOURCE = (
     / "worldgen/terrain/benchmarks/sa_calobra/ma2141_cartociudad_source_2026-10-02.json"
 )
 SOURCE_SHA = "6520b92486b5d1c63353b8253d388ab21d380c78fda119849311be8344d8ae36"
+UNRESOLVED_PART3_STATIONS = (6671.352303768111, 6877.482119067211)
+UNRESOLVED_KIND = "UNRESOLVED_ROCK_CLEFT_TERRAIN_NOT_ROAD_HEIGHT"
+
+
 BLOCKERS = [
     "Full-route asphalt elevation and vertical datum are not admitted",
     "Full-route pavement width and banking are not supplied by CartoCiudad",
@@ -73,6 +77,21 @@ def prepare_profile(source, dtm, laz, output):
         if raster.crs.to_epsg() != 25831:
             raise ValueError("DTM CRS mismatch")
         for index, line in enumerate(route.geoms):
+            if index == 3:
+                original = np.asarray(line.coords)
+                original_stations = np.concatenate(
+                    (
+                        [0.0],
+                        np.cumsum(np.linalg.norm(np.diff(original, axis=0), axis=1)),
+                    )
+                )
+                if len(original) != 302 or not np.allclose(
+                    original_stations[[280, 287]],
+                    UNRESOLVED_PART3_STATIONS,
+                    rtol=0,
+                    atol=1e-6,
+                ):
+                    raise ValueError("Pinned source-edge exclusion changed")
             dense = line.segmentize(2.0)
             xy = [list(p) for p in dense.coords]
             stations = np.concatenate(
@@ -103,6 +122,12 @@ def prepare_profile(source, dtm, laz, output):
                         if len(nearby)
                         else "UNRESOLVED_UPPER_BRANCH_EXCLUDED"
                     )
+                if index == 3 and (
+                    UNRESOLVED_PART3_STATIONS[0] - 1e-6
+                    <= station
+                    <= UNRESOLVED_PART3_STATIONS[1] + 1e-6
+                ):
+                    z, kind = None, UNRESOLVED_KIND
                 observations.append(
                     {
                         "station_m": station,
@@ -137,6 +162,17 @@ def prepare_profile(source, dtm, laz, output):
             "bridge_transition_search_m": 50,
             "bridge_radius_m": 1.5,
             "bridge_warning": "Class17 includes bridge accessories; medians are observations, not admitted pavement. Unsupported upper-branch samples omitted; no transition interpolation.",
+            "unresolved_source_intervals": [
+                {
+                    "source_part": 3,
+                    "original_edges_inclusive": [280, 286],
+                    "original_vertices_inclusive": [280, 287],
+                    "station_range_m": list(UNRESOLVED_PART3_STATIONS),
+                    "endpoint_policy": "Both endpoints excluded; 1e-6 m station roundoff guard",
+                    "reason": UNRESOLVED_KIND,
+                    "raw_dtm_observations_preserved": True,
+                }
+            ],
             "parts": parts,
             "road_admitted": False,
         },
@@ -151,6 +187,20 @@ def profile_geometry(record_path, output, reopen=False):
     record = json.loads(record_path.read_text())
     if record["route_sha256"] != SOURCE_SHA or len(record["parts"]) != 6:
         raise ValueError("Source coverage mismatch")
+    # Historical pre-exclusion records must not regenerate the known vertical artifact.
+    masked = [
+        o
+        for o in record["parts"][3]["observations"]
+        if UNRESOLVED_PART3_STATIONS[0] - 1e-6
+        <= o["station_m"]
+        <= UNRESOLVED_PART3_STATIONS[1] + 1e-6
+    ]
+    if not masked or any(
+        o["height_m"] is not None or o["source_kind"] != UNRESOLVED_KIND for o in masked
+    ):
+        raise ValueError(
+            "Known unresolved rock-cleft interval requires explicit exclusion"
+        )
     expected = []
     expected_runs = []
     expected_attributes = []
