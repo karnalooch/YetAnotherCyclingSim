@@ -1,5 +1,7 @@
 # M3 world, host and owner decisions
 
+**Latest scope extension — 2026-10-24:** the owner authorizes implementing source-led roadside cliffs/rock forms and real Ma-2141 roads, accepts the current appearance, and permits justified revisions of earlier project safeguards. Apply the [recorded scope decision](../../WORLD_BUILDING_BIBLE.md#current-executor-decision--houdini--sidefx-2026-10-16). It supersedes terrain-only restrictions for this work, while source retention, active-session preservation and truthful geometry/native proof remain applicable. Regenerable intermediate junk may be removed after checking dependencies and exact target paths.
+
 > Scoped policy migrated from original root AGENTS.md (blob `c4c75a9e92088195a7aad1c72c849ac9482d1462`). Read only for applicable work. Current domain SSOT and owner decisions take precedence over superseded chronology.
 
 ### Houdini-first rebuild and SideFX source fidelity — 2026-10-16

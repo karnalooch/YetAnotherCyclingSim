@@ -61,6 +61,8 @@ flowchart TB
 
 ## Current focus
 
+**Owner extension, 2026-10-24:** current appearance accepted; research and implement source-led Pegasus cliffs/rock forms and real Ma-2141 roads. The [scope decision](WORLD_BUILDING_BIBLE.md#current-executor-decision--houdini--sidefx-2026-10-16) supersedes the terrain-only restriction below for these workstreams. Existing caches and active editor state are retained; new geometry and native proof remain separate from appearance acceptance.
+
 ### 2026-10-22 — Pegasus Lesson07 finisz M3
 
 **Aktualne instrukcje:** [szczegółowy plan Houdini-first, tinty, PBR/UE i 8km Lit](tooling/sidefx/PEGASUS_L07_FINALE_20261022.md) oraz [maszynowa macierz PASS/FAIL](tooling/sidefx/PEGASUS_L07_GATES_20261022.json). Dotyczą istniejącego Draft [PR #474](https://github.com/karnalooch/YetAnotherCyclingSim/pull/474), bez tworzenia alternatywnej gałęzi. Zestaw ośmiu Poly Haven CC0 jest zatwierdzoną adaptacją materiałów; źródłowy materiał Houdiniego, przyjęty realny teren i graf Pegasusa pozostają nadrzędne. Ostateczna akceptacja wymaga prawdziwych renderów **Lit** całych czterech Landscape w UE, nie pojedynczego 256² podglądu.

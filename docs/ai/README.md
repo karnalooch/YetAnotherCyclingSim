@@ -12,6 +12,8 @@ proof-admission, milestone or merge authority.
 
 ## World-authoring executor
 
+**Latest scope, 2026-10-24:** the owner explicitly activates source-led cliffs/rock forms and real Ma-2141 roads alongside the existing terrain. The [recorded extension](DECISION_LIFECYCLE.md#active-world-executor-decision-2026-10-16) supersedes terrain-only wording in earlier role cards and guidance for this task.
+
 Houdini is the primary executor for new world generation under the owner's 2026-10-16 decision. Read [the SideFX workflow and complete concordance](../tooling/sidefx/README.md) before terrain, road or environment authoring. Domain roles still own source/proof boundaries; the tool is not geography or physics authority. The current fresh-Landscape task excludes road/world-asset construction. Indexing all sources is not a claim that every recipe has been implemented.
 
 For Sa Calobra, the [build guide](../tooling/sidefx/SA_CALOBRA_BUILD_GUIDE.md) is required task context alongside the selected recipe. It defines source-led terrain, stage boundaries, cache reuse and Unreal handoff. The [Labs package review](../tooling/sidefx/SIDEFX_LABS_22_0_466.md) maps the owner-supplied tools to operations and records version/deprecation gaps. These documents implement the Bible and existing roadmap; they do not grant new scope or prove a host installation.

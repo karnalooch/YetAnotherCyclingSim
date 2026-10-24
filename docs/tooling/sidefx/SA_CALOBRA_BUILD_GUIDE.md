@@ -31,6 +31,8 @@ A historical detail blend of `0.001`, a measured approximately `0.178 m` displac
 
 ## 2. Active scope versus later direction
 
+**2026-10-24 extension:** the owner now explicitly authorizes the cliff/rock and Ma-2141 road rows below, accepting the current appearance as the starting point. Follow the [current scope decision](../../WORLD_BUILDING_BIBLE.md#current-executor-decision--houdini--sidefx-2026-10-16); the terrain-only wording and “Later” labels below describe the original adoption order. Reuse the existing base/detail caches, and qualify new road geometry and cliff meshes independently. Missing geographic inputs or runtime proof remain gaps.
+
 The active terrain workflow is **base first, then masks, separately controlled surface detail and terrain surfacing**: the complete supplied Ma-2141 reference, a 500 m horizontal working buffer on each side, and surrounding terrain context. The immediate local pass is to reopen, inspect and checkpoint the existing base before adding more detail. No base or detail PASS is conferred by this document. Road geometry, road earthworks, cliff meshes, vegetation and buildings remain later workstreams under the existing roadmap.
 
 Complete one pass with its appropriate evidence, retain its cache, and then move downstream. Do not demand finished materials or cliff meshes before a base checkpoint can be useful; equally, do not call that checkpoint the final world. The following ordering replaces the earlier table that grouped all materials with later vegetation:

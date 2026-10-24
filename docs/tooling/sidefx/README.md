@@ -3,7 +3,7 @@
 **Status:** authoritative execution workflow under the [World Building Bible](../../WORLD_BUILDING_BIBLE.md).  
 **Decision:** `HOUDINI_SIDEFX_PRIMARY_20261016`, active from 2026-10-16.  
 **Authority:** explicit owner instructions in the local research/generation task; no GitHub issue or production admission is fabricated.  
-**Current scope:** fresh, independent Ma-2141 Landscape in Houdini; the entire road reference with 500 m on either side and surrounding terrain for background. No road mesh, earthworks, vegetation, buildings or assembled world yet.
+**Current scope, extended 2026-10-24:** continue the existing Ma-2141 Landscape and accepted appearance, and implement source-led roadside cliffs/rock forms and real Ma-2141 roads. The [owner extension](../../WORLD_BUILDING_BIBLE.md#current-executor-decision--houdini--sidefx-2026-10-16) supersedes earlier terrain-only restrictions. Vegetation and buildings are not added by this task. Preserve L06/L07 sources/caches and record remaining consumer proof separately.
 
 **Immediate owner priority, reaffirmed 2026-10-20:** finish Pegasus lessons 06 and 07. Houdini leads; Material Forge, Blender and Unreal Engine complement its workflow. Preserve the accepted L06 source/cache, complete the L07 material and transfer, and verify the actual UE consumer's heights, validity/visibility, seams, collision and saved/reopened state. See the current [L07 audit](LESSON07_MATERIAL_SETUP.md) for the remaining gaps; a supporting tool's build or render alone does not close the lesson.
 
@@ -12,6 +12,8 @@
 Dla #365 / M3 istniejący **[plan wykonawczy finalnych materiałów PEG-02-07](PEGASUS_L07_FINALE_20261022.md)** oraz **[maszynowa macierz faz i bramek PASS/FAIL](PEGASUS_L07_GATES_20261022.json)** prowadzą wykonanie na istniejącym Draft PR #474. Użytkownik dopuścił osiem zamiennych źródeł Poly Haven CC0 przy zachowaniu metod Houdiniego z SideFX; dla tego **konkretnego** zadania wymaga sprawdzenia całego 16000×16000 / 8×8 km Landscape Sa Calobra, nie tylko reprezentatywnego wycinka. Ukończenie obejmuje wierną kolejność grafu tintów, prawdziwe maski, końcowe UE Texture Arrays/MI i świeże zdjęcia Lit z całego świata. Dokładny stan mierzony jest zakresem natywnych dowodów, a nie zielonym statusem testu na 256². Nie oznaczać ukończenia Lesson07 ani M3 performance bez odpowiednich bramek.
 
 ## Owner decision and precedence
+
+The 2026-10-24 [new Ma-2141 source/road candidate](MA2141_ROAD_CANDIDATE.md) distinguishes local native results from full-route and Unreal admission and does not resume the retired 300 m road.
 
 Houdini is the **primary executor for procedural world authoring**, including Landscape, roads, cliffs and later environment assets. Original SideFX tutorial projects, HDAs and their demonstrated workflows are the implementation starting point. Unreal consumes the outputs and provides the supported runtime/material/editor integration demonstrated by the selected recipe. This does not replace route, physics or geographic data authority with a DCC tool.
 
