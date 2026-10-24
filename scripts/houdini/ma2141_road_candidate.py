@@ -366,6 +366,471 @@ def export_profile_fbx(profile_root, output):
     )
 
 
+def current_terrain_trial(record_path, profile_root, output, reopen=False):
+    """Native-only patch of current FINAL for an interior source road interval."""
+    import hou
+
+    if hou.applicationVersionString() != "22.0.466":
+        raise ValueError("Revalidate current terrain adapter")
+    manifest_path = Path("D:/yacs/work/lesson07-consumer-update-20261020/manifest.json")
+    if (
+        digest(manifest_path)
+        != "760425da4a8fa46c4e201a74f0a70ced802f14dc992d1569885167fe73a8978e"
+    ):
+        raise ValueError("Current FINAL manifest changed")
+    manifest = json.loads(manifest_path.read_text())
+    tile = next(
+        t
+        for t in manifest["tiles"]
+        if t["file"].endswith("SaCalobra_Unified_0_0.bgeo.sc")
+    )
+    tile_path = manifest_path.parent / tile["file"]
+    if digest(tile_path) != tile["sha256"]:
+        raise ValueError("Current FINAL transport changed")
+    record = json.loads(record_path.read_text())
+    profile = json.loads((profile_root / "profile_receipt.json").read_text())
+    road_path = profile_root / "visual_5m.bgeo.sc"
+    if profile["record_sha256"] != digest(record_path) or profile["files"][
+        road_path.name
+    ] != digest(road_path):
+        raise ValueError("Current road source identity changed")
+    observations = [
+        o for o in record["parts"][0]["observations"] if o["station_m"] <= 120
+    ]
+    if reopen:
+        prior = json.loads((output / "current_terrain.json").read_text())
+        if prior["producer_sha256"] != digest(Path(__file__)):
+            raise ValueError("Current terrain producer changed")
+        for name, sha in prior["files"].items():
+            if digest(output / name) != sha:
+                raise ValueError("Current terrain artifact changed")
+        hou.hipFile.load(str(output / "current_terrain.hip"), suppress_save_prompt=True)
+        obj = hou.node("/obj/CURRENT_ROAD_TERRAIN")
+    else:
+        output.mkdir(parents=True, exist_ok=False)
+        obj = hou.node("/obj").createNode("geo", "CURRENT_ROAD_TERRAIN")
+        src = obj.createNode("file", "CURRENT_FINAL_TILE")
+        src.parm("file").set(str(tile_path))
+        positions = [
+            (o["easting_m"] - 483650, o["height_m"], 4409899.5 - o["northing_m"])
+            for o in observations
+        ]
+        left, right = (
+            min(p[0] for p in positions) - 10,
+            max(p[0] for p in positions) + 10,
+        )
+        bottom, top = (
+            min(p[2] for p in positions) - 10,
+            max(p[2] for p in positions) + 10,
+        )
+        crop = obj.createNode("heightfield_crop", "SOURCE_CROP")
+        crop.setInput(0, src)
+        crop.setParms(
+            {
+                "cropmode": 0,
+                "sizex": right - left,
+                "sizey": top - bottom,
+                "tx": (left + right) / 2,
+                "tz": (bottom + top) / 2,
+            }
+        )
+        road_geo = hou.Geometry()
+        road_geo.loadFromFile(str(road_path))
+        discard = [
+            p
+            for p in road_geo.prims()
+            if any(
+                v.point().attribValue("source_part") != 0
+                or not 10 <= v.point().attribValue("station_m") <= 110
+                for v in p.vertices()
+            )
+        ]
+        road_geo.deletePrims(discard, keep_points=False)
+        road_geo.saveToFile(str(output / "road_interval.bgeo.sc"))
+        road = obj.createNode("file", "CURRENT_ROAD_INTERVAL")
+        road.parm("file").set(str(output / "road_interval.bgeo.sc"))
+        spine = hou.Geometry()
+        spine.addAttrib(hou.attribType.Point, "up", (0.0, 1.0, 0.0))
+        line = spine.createPolygon(is_closed=False)
+        for position in positions:
+            point = spine.createPoint()
+            point.setPosition(position)
+            line.addVertex(point)
+        spine.saveToFile(str(output / "support_spine.bgeo.sc"))
+        backbone = obj.createNode("file", "REAL_SOURCE_OVERLAP")
+        backbone.parm("file").set(str(output / "support_spine.bgeo.sc"))
+        support = obj.createNode("sweep::2.0", "SUPPORT_7M")
+        support.setInput(0, backbone)
+        support.setParms({"surfaceshape": 3, "width": 7, "upvectortype": 2})
+        project = obj.createNode("heightfield_project", "PROJECT_CURRENT_ROAD")
+        project.setInput(0, crop)
+        project.setInput(1, support)
+        project.setParms(
+            {"combine": 0, "hitfarthest": 0, "maxraydist": 1000, "dojitter": 0}
+        )
+        blank = obj.createNode("heightfield_copylayer", "EMPTY_SUPPORT_MASK")
+        blank.setInput(0, crop)
+        blank.setParms({"srcname1": "height", "dstname1": "mask", "copysrc1": 0})
+        mask = obj.createNode("heightfield_maskbyobject", "SUPPORT_MASK")
+        mask.setInput(0, blank)
+        mask.setInput(1, support)
+        mask.setParms({"maskdir": 0, "maxdist": 5, "blurradius": 0, "dojitter": 0})
+        layer = obj.createNode("heightfield_layer", "REVERSIBLE_CANDIDATE")
+        layer.setInput(0, crop)
+        layer.setInput(1, project)
+        layer.setInput(2, mask)
+        layer.setParms({"mode": 7, "blend": 1, "layer": "height"})
+        for label, source in [
+            ("SOURCE_TRIANGLES", crop),
+            ("CANDIDATE_TRIANGLES", layer),
+        ]:
+            node = obj.createNode("convertheightfield", label)
+            node.setInput(0, source)
+            node.setParms({"surftype": 3, "lod": 1})
+        rollback = obj.createNode("switch", "ROLLBACK_SOURCE")
+        rollback.setInput(0, crop)
+        rollback.setInput(1, layer)
+        rollback.parm("input").set(0)
+        rollback.setDisplayFlag(True)
+
+    def volume(node, name="height"):
+        return next(p for p in node.geometry().prims() if p.attribValue("name") == name)
+
+    crop = volume(obj.node("SOURCE_CROP"))
+    source = volume(obj.node("CURRENT_FINAL_TILE"))
+    nx, ny, _ = crop.resolution()
+    index = source.posToIndex(crop.indexToPos((0, 0, 0)))
+    ix, iy = round(index[0]), round(index[1])
+    actual = crop.allVoxels()
+    expected = tuple(
+        source.voxel((ix + i, iy + j, 0)) for j in range(ny) for i in range(nx)
+    )
+    if tuple(actual) != expected or any(not math.isfinite(v) for v in actual):
+        raise ValueError("Current native crop changed source samples")
+    if max(volume(obj.node("SOURCE_CROP"), "visibility").allVoxels()) > 0.5:
+        raise ValueError("Current crop contains visibility holes")
+    candidate = volume(obj.node("REVERSIBLE_CANDIDATE")).allVoxels()
+    if any(not math.isfinite(v) for v in candidate):
+        raise ValueError("Nonfinite current terrain candidate")
+    mask = volume(obj.node("SUPPORT_MASK"), "mask").allVoxels()
+    delta = [b - a for a, b in zip(actual, candidate, strict=True)]
+    outside = max(
+        (abs(d) for d, m in zip(delta, mask, strict=True) if m == 0), default=0
+    )
+    if (
+        outside > 1e-6
+        or obj.node("ROLLBACK_SOURCE").parm("input").eval() != 0
+        or tuple(volume(obj.node("ROLLBACK_SOURCE")).allVoxels()) != tuple(actual)
+    ):
+        raise ValueError("Current candidate footprint or rollback failed")
+    road = obj.node("CURRENT_ROAD_INTERVAL").geometry()
+
+    def residual(node, points):
+        geo = node.geometry()
+        values = []
+        for x, y, z in points:
+            pos, normal, uvw = hou.Vector3(), hou.Vector3(), hou.Vector3()
+            hit = geo.intersect(
+                hou.Vector3(x, y + 100, z), hou.Vector3(0, -1, 0), pos, normal, uvw
+            )
+            if hit < 0 or geo.prim(hit).numVertices() != 3:
+                raise ValueError("Current triangle contact miss")
+            values.append(y - pos[1])
+        return {
+            "count": len(values),
+            "min_m": min(values),
+            "max_m": max(values),
+            "rms_m": math.sqrt(sum(v * v for v in values) / len(values)),
+        }
+
+    positions = [p.position() for p in road.points()]
+    receipt = {
+        "status": "CURRENT_FINAL_REVERSIBLE_PATCH_NOT_ADMITTED",
+        "producer_sha256": digest(Path(__file__)),
+        "manifest_sha256": digest(manifest_path),
+        "source_tile_sha256": tile["sha256"],
+        "axis_mapping": record["axis_mapping"],
+        "road_sha256": digest(road_path),
+        "record_sha256": digest(record_path),
+        "source_samples_exact": len(actual),
+        "source_grid_dimensions": [nx, ny],
+        "source_grid_first": list(crop.indexToPos((0, 0, 0))),
+        "source_grid_last": list(crop.indexToPos((nx - 1, ny - 1, 0))),
+        "before": residual(obj.node("SOURCE_TRIANGLES"), positions),
+        "after": residual(obj.node("CANDIDATE_TRIANGLES"), positions),
+        "dtm_observation_minus_current_native_triangle": residual(
+            obj.node("SOURCE_TRIANGLES"),
+            [
+                (
+                    o["easting_m"] - 483650,
+                    o["dtm_height_m"],
+                    4409899.5 - o["northing_m"],
+                )
+                for o in observations
+            ],
+        ),
+        "baseline_comparison_note": "DTM nearest-cell observations versus CURRENT FINAL native interpolated triangles; not a full-grid DTM difference",
+        "delta_min_m": min(delta),
+        "delta_max_m": max(delta),
+        "changed_samples": sum(d != 0 for d in delta),
+        "outside_support_max_delta_m": outside,
+        "rollback_source_exact": True,
+        "road_interval_requested_m": [10, 110],
+        "real_support_observations_m": [
+            observations[0]["station_m"],
+            observations[-1]["station_m"],
+        ],
+        "support_width_m_assumption": 7,
+        "road_width_m_assumption": 5,
+        "contact_pass": False,
+        "ue_modified": False,
+    }
+    if not reopen:
+        obj.node("REVERSIBLE_CANDIDATE").geometry().saveToFile(
+            str(output / "current_patch.bgeo.sc")
+        )
+        hou.hipFile.save(str(output / "current_terrain.hip"))
+        receipt["files"] = {
+            name: digest(output / name)
+            for name in [
+                "current_patch.bgeo.sc",
+                "current_terrain.hip",
+                "road_interval.bgeo.sc",
+                "support_spine.bgeo.sc",
+            ]
+        }
+    write_new(
+        output / ("current_terrain_reopen.json" if reopen else "current_terrain.json"),
+        receipt,
+    )
+
+
+def slab_trial(terrain_root, output, thickness, reopen=False):
+    """Separate visual construction hypothesis; top/physics are never lifted."""
+    import hou
+    from collections import Counter
+
+    if (
+        hou.applicationVersionString() != "22.0.466"
+        or not math.isfinite(thickness)
+        or thickness <= 0
+    ):
+        raise ValueError(
+            "Pinned runtime and explicit positive candidate thickness required"
+        )
+    base = json.loads((terrain_root / "current_terrain.json").read_text())
+    for name, sha in base["files"].items():
+        if digest(terrain_root / name) != sha:
+            raise ValueError("Bounded current terrain source changed")
+    if reopen:
+        prior = json.loads((output / "slab_receipt.json").read_text())
+        if (
+            prior["producer_sha256"] != digest(Path(__file__))
+            or prior["vertical_thickness_m_assumption"] != thickness
+        ):
+            raise ValueError("Slab producer/thickness changed")
+        for name, sha in prior["files"].items():
+            if digest(output / name) != sha:
+                raise ValueError("Slab artifact changed")
+        hou.hipFile.load(str(output / "slab_trial.hip"), suppress_save_prompt=True)
+    else:
+        output.mkdir(parents=True, exist_ok=False)
+        hou.hipFile.load(
+            str(terrain_root / "current_terrain.hip"), suppress_save_prompt=True
+        )
+    obj = hou.node("/obj/CURRENT_ROAD_TERRAIN")
+    road = obj.node("CURRENT_ROAD_INTERVAL")
+    if not reopen:
+        top = obj.createNode("divide", "UNCHANGED_TOP_TRIANGLES")
+        top.setInput(0, road)
+        top.setParms({"convex": 1, "usemaxsides": 1, "numsides": 3})
+        reverse = obj.createNode("reverse", "UNDERSIDE_EXTRUSION_ORIENTATION")
+        reverse.setInput(0, top)
+
+        def extrude(name, node, distance):
+            result = obj.createNode("polyextrude::2.0", name)
+            result.setInput(0, node)
+            result.setParms(
+                {
+                    "splittype": 1,
+                    "dist": 0,
+                    "xformfront": 1,
+                    "xformspace": 1,
+                    "translatey": distance,
+                    "divs": 1,
+                    "outputfront": 1,
+                    "outputback": 1,
+                    "outputside": 1,
+                    "outputfrontgrp": 1,
+                    "outputbackgrp": 1,
+                    "outputsidegrp": 1,
+                }
+            )
+            return result
+
+        extrude("PAVEMENT_SLAB", reverse, -thickness)
+        underside = obj.createNode("xform", "SUPPORT_UNDERSIDE")
+        underside.setInput(0, obj.node("SUPPORT_7M"))
+        underside.parm("ty").set(-thickness)
+        obj.node("PROJECT_CURRENT_ROAD").setInput(1, underside)
+        terrain_height = next(
+            p
+            for p in obj.node("SOURCE_CROP").geometry().prims()
+            if p.attribValue("name") == "height"
+        )
+        column_height = max(
+            1.0,
+            max(terrain_height.allVoxels())
+            - top.geometry().boundingBox().minvec()[1]
+            + 1.0,
+        )
+        above = extrude("ABOVE_TOP_TEST_VOLUME", top, column_height)
+        for name, source in [
+            ("TERRAIN_ABOVE_TOP_BEFORE", obj.node("SOURCE_TRIANGLES")),
+            ("TERRAIN_ABOVE_TOP_AFTER", obj.node("CANDIDATE_TRIANGLES")),
+        ]:
+            boolean = obj.createNode("boolean::2.0", name)
+            boolean.setInput(0, source)
+            boolean.setInput(1, above)
+            boolean.setParms(
+                {
+                    "asurface": 1,
+                    "bsurface": 0,
+                    "booleanop": 1,
+                    "detriangulate": 0,
+                    "removeinlinepoints": 0,
+                }
+            )
+    slab = obj.node("PAVEMENT_SLAB").geometry()
+    if not all(math.isfinite(v) for p in slab.points() for v in p.position()):
+        raise ValueError("Nonfinite slab")
+    edges = Counter(
+        tuple(
+            sorted(
+                (
+                    vertices[i].point().number(),
+                    vertices[(i + 1) % len(vertices)].point().number(),
+                )
+            )
+        )
+        for primitive in slab.prims()
+        for vertices in [primitive.vertices()]
+        for i in range(len(vertices))
+    )
+    if any(count != 2 for count in edges.values()):
+        raise ValueError("Slab is not closed manifold")
+    upper = slab.findPrimGroup("extrudeBack").prims()
+    lower = slab.findPrimGroup("extrudeFront").prims()
+    sides = slab.findPrimGroup("extrudeSide").prims()
+    if min(p.normal()[1] for p in upper) <= 0 or max(p.normal()[1] for p in lower) >= 0:
+        raise ValueError("Slab top/bottom orientation invalid")
+    top_positions = {tuple(v.point().position()) for p in upper for v in p.vertices()}
+    expected = {tuple(p.position()) for p in road.geometry().points()}
+    if top_positions != expected:
+        raise ValueError("Slab moved source pavement top")
+
+    def values(name):
+        return next(
+            p
+            for p in obj.node(name).geometry().prims()
+            if p.attribValue("name") == "height"
+        ).allVoxels()
+
+    source = values("SOURCE_CROP")
+    candidate = values("REVERSIBLE_CANDIDATE")
+    mask = next(
+        p
+        for p in obj.node("SUPPORT_MASK").geometry().prims()
+        if p.attribValue("name") == "mask"
+    ).allVoxels()
+    delta = [b - a for a, b in zip(source, candidate, strict=True)]
+    outside = max(
+        (abs(d) for d, m in zip(delta, mask, strict=True) if m == 0), default=0
+    )
+    if (
+        outside > 1e-6
+        or tuple(values("ROLLBACK_SOURCE")) != tuple(source)
+        or obj.node("ROLLBACK_SOURCE").parm("input").eval() != 0
+    ):
+        raise ValueError("Slab patch source rollback/footprint changed")
+    terrain = obj.node("CANDIDATE_TRIANGLES").geometry()
+    gaps = []
+    for x, y, z in expected:
+        pos, n, u = hou.Vector3(), hou.Vector3(), hou.Vector3()
+        if (
+            terrain.intersect(
+                hou.Vector3(x, y + 100, z), hou.Vector3(0, -1, 0), pos, n, u
+            )
+            < 0
+        ):
+            raise ValueError("Underside contact ray missed")
+        gaps.append(y - thickness - pos[1])
+    intersections = {}
+    for name in ["TERRAIN_ABOVE_TOP_BEFORE", "TERRAIN_ABOVE_TOP_AFTER"]:
+        node = obj.node(name)
+        geometry = node.geometry()
+        if node.errors() or node.warnings():
+            raise ValueError(
+                "Native Boolean contact diagnostic: "
+                + str(node.errors() + node.warnings())
+            )
+        intersections[name] = {
+            "points": len(geometry.points()),
+            "primitives": len(geometry.prims()),
+        }
+    if intersections["TERRAIN_ABOVE_TOP_BEFORE"]["primitives"] == 0:
+        raise ValueError("Above-top Boolean positive control found no known intrusion")
+    receipt = {
+        "status": "VISUAL_FINITE_PAVEMENT_CANDIDATE_NOT_ADMITTED",
+        "producer_sha256": digest(Path(__file__)),
+        "base_terrain_receipt_sha256": digest(terrain_root / "current_terrain.json"),
+        "vertical_thickness_m_assumption": thickness,
+        "thickness_authority": "Explicit visual candidate; not measured Ma-2141 thickness or engineering standard",
+        "source_top_points_exact": len(expected),
+        "slab_points": len(slab.points()),
+        "slab_primitives": len(slab.prims()),
+        "top_triangles": len(upper),
+        "underside_triangles": len(lower),
+        "side_faces": len(sides),
+        "closed_manifold_edge_incidence_verified": True,
+        "underside_minus_terrain_m": {
+            "count": len(gaps),
+            "min": min(gaps),
+            "max": max(gaps),
+            "rms": math.sqrt(sum(x * x for x in gaps) / len(gaps)),
+        },
+        "native_boolean_surface_inside_above_top_volume": intersections,
+        "terrain_above_top_native_triangles_empty": intersections[
+            "TERRAIN_ABOVE_TOP_AFTER"
+        ]["primitives"]
+        == 0,
+        "source_delta_min_m": min(delta),
+        "source_delta_max_m": max(delta),
+        "changed_samples": sum(d != 0 for d in delta),
+        "outside_support_max_delta_m": outside,
+        "rollback_source_exact": True,
+        "road_top_lift_m": 0,
+        "physics_modified": False,
+        "ue_modified": False,
+        "underside_contact_admitted": False,
+    }
+    if not reopen:
+        slab.saveToFile(str(output / "pavement_slab.bgeo.sc"))
+        obj.node("REVERSIBLE_CANDIDATE").geometry().saveToFile(
+            str(output / "underside_terrain.bgeo.sc")
+        )
+        hou.hipFile.save(str(output / "slab_trial.hip"))
+        receipt["files"] = {
+            name: digest(output / name)
+            for name in [
+                "pavement_slab.bgeo.sc",
+                "underside_terrain.bgeo.sc",
+                "slab_trial.hip",
+            ]
+        }
+    write_new(output / ("slab_reopen.json" if reopen else "slab_receipt.json"), receipt)
+
+
 def prepare_preview(source, dtm, width, output):
     """A fixed 100 m source part-0 probe; terrain samples are not asphalt survey."""
     import rasterio
@@ -1054,6 +1519,10 @@ def main():
             "profile",
             "profile-verify",
             "export-profile",
+            "current-terrain",
+            "current-terrain-verify",
+            "slab",
+            "slab-verify",
         ],
     )
     parser.add_argument("--source", type=Path, default=SOURCE)
@@ -1063,10 +1532,21 @@ def main():
     parser.add_argument("--laz", type=Path)
     parser.add_argument("--width-m", type=float)
     parser.add_argument("--terrain-root", type=Path)
+    parser.add_argument("--thickness-m", type=float)
     parser.add_argument("--preview-root", type=Path)
     parser.add_argument("--support-margin-m", type=float, choices=[0, 1], default=0)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+    if args.mode in ("slab", "slab-verify"):
+        if args.terrain_root is None or args.thickness_m is None:
+            parser.error("Slab requires --terrain-root and explicit --thickness-m")
+        slab_trial(
+            args.terrain_root.resolve(),
+            args.output.resolve(),
+            args.thickness_m,
+            args.mode == "slab-verify",
+        )
+        return
     if args.mode == "export-profile":
         if args.preview_root is None:
             parser.error("Export requires --preview-root with verified profile")
@@ -1114,6 +1594,16 @@ def main():
     if args.mode in ("profile", "profile-verify"):
         profile_geometry(
             args.record, args.output.resolve(), args.mode == "profile-verify"
+        )
+        return
+    if args.mode in ("current-terrain", "current-terrain-verify"):
+        if args.preview_root is None:
+            parser.error("Current terrain requires --preview-root")
+        current_terrain_trial(
+            args.record,
+            args.preview_root.resolve(),
+            args.output.resolve(),
+            args.mode == "current-terrain-verify",
         )
         return
     if args.mode == "prepare-terrain":

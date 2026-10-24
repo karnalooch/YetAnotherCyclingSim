@@ -390,7 +390,7 @@ Current producer **`b9369ba4ecc88be669422f7b88e73c21c7c10edea78b0e30101e79bc4ed1
 - Current `fbx_up_final/ma2141_source_up.fbx` SHA-256:
   `b75c17fd86afc7e7e0a3f18828aeda8e16f6cb87bd7ee639c710f0dec84648fc`.
   Native bounds in meters: `[-1273.311279,14.930000,-1271.478394]` to
-  `[1306.158813,721.857666,2645.966797]`. This revision has the UE readback recorded below.
+  `[1306.158813,721.857666,2645.966797]`. The corrected UE readback is recorded below.
 
 ## Retained asphalt material reuse
 
@@ -463,12 +463,153 @@ Verify texture registration/height encoding, masked delta footprint, source
 layer preservation, toggled rollback and actual post-update contact. Do not
 offset the road or use material opacity to conceal the defect.
 
-## Checkpoint source byte identity
+## Fresh current-FINAL bounded terrain candidate
 
-The native corrected-road and FBX runs used Windows CRLF producer
-`b9369ba4ecc88be669422f7b88e73c21c7c10edea78b0e30101e79bc4ed1cb79`.
-The Git-normalized LF form has SHA-256
-`7838f689c7d6206f4156a3cd26dc9d6628d171e7e55cd48c66eb5d2439d34657`.
-Converting only LF to CRLF reproduces the tested producer hash exactly.
-The receipt guards still compare physical source bytes: an LF checkout must
-produce new receipts; it cannot claim the old CRLF native run as exact-byte proof.
+`current-terrain` / `current-terrain-verify` now implement that independent
+native trial. Inputs are the corrected `profile_up_final` mesh/record and
+verified current `SaCalobra_Unified_0_0.bgeo.sc`, SHA-256
+`fb4c5a7691f4af15cad405cfe87e4f5378d058c231710df36827e37ec0a7c7fb`.
+The pinned transport manifest is
+`760425da4a8fa46c4e201a74f0a70ced802f14dc992d1569885167fe73a8978e`.
+The road interval requests chainage 10–110 m; actual retained source support
+runs 0–118.072882 m, so the evaluated interval avoids support end boundaries.
+Support width remains the explicit numerical 7 m, pavement 5 m assumption.
+
+Native HeightField Crop retains all source samples exactly. Current FINAL has
+height and visibility only, so [HeightField Copy Layer](https://www.sidefx.com/docs/houdini/nodes/sop/heightfield_copylayer.html)
+creates an empty mask with `copysrc1=0`; native Mask by Geometry fills it before
+Project/Layer blending. This is a separate branch with source-default rollback.
+
+Actual build and fresh reopen in `current_final_patch_v2`, producer
+`0a26087d6079f86d674b4e8152ebb68970f50d46c8a44071caca0b0cf7473820`:
+
+- 263 × 124 crop, **32,612 source samples identical**, no source visibility holes.
+- 459 road-vertex native triangle hits. Before: RMS 0.083388 m, range
+  −0.361206 to +0.468826 m. After: **RMS 0.003990 m**, range
+  **−0.013107 to +0.011230 m**. `contact_pass=false`; no triangle-interior,
+  consumer quantization or visual contact acceptance is inferred.
+- 62 DTM nearest-cell backbone observations minus current-FINAL interpolated
+  triangle heights: RMS 0.015603 m, range −0.042343 to +0.044571 m. This compares
+  different sampling methods, not every cell of two raster baselines.
+- 3,302 changed terrain samples; delta **−1.188896 to +1.543236 m**;
+  zero change outside support. Rollback output reproduces source exactly.
+- `current_patch.bgeo.sc` SHA-256
+  `eacbb56325a8a9061a0d32ba8e50fdd16664579307a086f8a94b3bb313a96d49`.
+
+No Unreal terrain mutation occurred. Consumer integration remains blocked on
+an exposed, verified way to create/assign the required Landscape Patch Edit
+Layer, followed by explicit texture encoding/registration and rollback proof.
+The native patch is not a reason to promote the visible full-route road.
+
+## Producer newline provenance
+
+Historical native receipts hash the exact Windows CRLF producer bytes. The
+road checkpoint `b9369ba4ecc88be669422f7b88e73c21c7c10edea78b0e30101e79bc4ed1cb79`
+corresponds to LF-normalized source
+`7838f689c7d6206f4156a3cd26dc9d6628d171e7e55cd48c66eb5d2439d34657`;
+these are distinct byte identities, not interchangeable proof hashes.
+The later CRLF current-patch producer `0a26087d6079f86d674b4e8152ebb68970f50d46c8a44071caca0b0cf7473820`
+has now been normalized to repository-required LF before final native checks.
+Its LF SHA-256 is
+`87b52353a3e98097c90f959bffe8086971d8e730939c9879b19af37fabc1215f`.
+New final native receipts must explicitly name that LF producer; previous
+receipts retain their original identities and are not relabeled.
+
+Final LF-native execution completed successfully: `profile_up_lf` build and
+fresh reopen, `fbx_up_lf` export, and `current_final_patch_lf` build and fresh
+reopen all record producer `87b52353a3e98097c90f959bffe8086971d8e730939c9879b19af37fabc1215f`.
+Counts, bounds, upward-face checks and bounded contact metrics remain as
+reported above. New FBX SHA-256 is
+`e9e943c9a270961e235eb6c4e9d4de6cff1d2e61e919281bd09083960443b14c`.
+That regenerated file was not reimported into UE; the earlier UE proof remains
+bound to `b75c17fd86afc7e7e0a3f18828aeda8e16f6cb87bd7ee639c710f0dec84648fc`.
+
+## Opt-in finite pavement / underside grading hypothesis
+
+The zero-thickness road initially projected its top onto terrain, leaving
+millimeter-scale raster disagreement at the visible surface. The independent
+`slab` / `slab-verify` branch tests a **0.10 m vertical thickness assumption**,
+supplied explicitly through `--thickness-m`. This number is neither observed
+Ma-2141 construction nor a SideFX or engineering thickness standard.
+
+[Official Poly Extrude 2.0](https://www.sidefx.com/docs/houdini/nodes/sop/polyextrude.html)
+supports a global transform of the extruded front while retaining the back
+and connecting side faces. Native Divide triangulates the retained road top;
+Reverse prepares the whole open surface orientation, then connected-component
+Poly Extrude translates the new underside downward with distance zero and a
+global Y transform. The original top point set is unchanged. The separate
+7 m support ribbon is translated to the underside only; native Project/Mask/
+Layer grades the copied current terrain to that construction surface.
+
+This follows the Bible's separation of road and presentation terrain; the
+[Road Physics Profile](../../ROAD_PHYSICS_PROFILE.md) remains untouched.
+Rendered slab thickness does not become authoritative grade, width, banking
+or collision. No road lift or material-opacity workaround is used.
+
+The [native Boolean surface/solid operation](https://www.sidefx.com/docs/houdini/nodes/sop/boolean.html)
+clips the complete terrain triangles against an outward closed volume above
+the unchanged native road top. This checks triangle interiors rather than
+only vertex probes. The unmodified terrain is the positive control. Boolean
+errors/warnings, open slab edges or incorrect top/bottom normals fail the run.
+
+Actual `slab_010_trial` build and fresh reopen, LF producer
+`6340e808d8772c713751a88830e0a9acc12387d5deb97f8b629de327ea9aa2a5`:
+
+- **459 top points exactly unchanged**, zero top lift. Closed edge-incidence slab:
+  918 points, 800 top triangles, 800 underside triangles and 116 side faces.
+  Every edge is incident to two faces and top/bottom normals are checked;
+  this does not independently prove vertex-manifoldness or no self-intersection.
+- Before grading, native Boolean finds 4,297 terrain polygons above the road
+  top; after underside grading it returns **zero points and zero polygons**.
+  This proves the bounded native triangle intrusion test, not UE rendering or
+  all-route contact.
+- Underside-minus-terrain at 459 native probes still ranges
+  **−0.013109 to +0.011229 m**, RMS 0.003991 m. Underside contact is therefore
+  not admitted; the new volume separates that remaining raster discrepancy
+  from the visible top surface.
+- 3,302 modified terrain samples, delta **−1.288895 to +1.443237 m**;
+  zero change outside support, exact source rollback. No physics/UE mutation.
+- `pavement_slab.bgeo.sc` SHA-256
+  `bf7ec94bb629c6aec92f042bec7a1cdb24edc5e21a14cb61d8385cdf4a6a5b0b`;
+  `underside_terrain.bgeo.sc` SHA-256
+  `7db03aeb9688fe912065c66d614bfc8d16825efbfd035edee4ddcb91190b136b`.
+
+The earlier LF `87b52353...` checkpoint and its evidence remain separately
+retained. This opt-in branch does not replace the saved full-route UE asset,
+apply a Landscape Patch, or claim structural/physics acceptance.
+
+### Future LandscapeTexturePatch handoff — not executed
+
+The source layer is `REVERSIBLE_CANDIDATE` in `slab_010_trial/slab_trial.hip`;
+the separate native `SUPPORT_MASK` supplies alpha. Export them together without
+resampling, preserving the exact 263 × 124 grid. Candidate heights are absolute
+Houdini meters. For an explicit UE float-height encoding, convert them to
+centimeters and use `WorldUnits`, `ZeroInEncoding=0`,
+`WorldSpaceEncodingScale=1`, `ZeroHeightMeaning=WorldZero`, and `AlphaBlend`.
+Alpha is the same support mask, zero outside support. These are proposed
+bindings from installed UE headers, not successful texture import settings.
+
+Native voxel-center mapping is:
+
+```text
+Houdini X = -1253.2501220703125 + 0.5 * column
+Houdini Z = -638.75 - 0.5 * row
+UE X,Y   = 100 * (Houdini X,Houdini Z)
+```
+
+With texture V increasing toward UE +Y, reverse the native row order for both
+height and alpha. The intended center is UE XY
+`(-118775.01220703125,-66950)` cm; pixel-center coverage is
+`(13100,6150)` cm. Installed `GetUnscaledCoverage` explicitly measures between
+outer pixel centers, not outer pixel edges. Verify all four corner sample
+positions and asymmetric interior control points after native import before
+enabling a patch; do not silently infer raster orientation from image display.
+
+`AssignToLandscape` requires an existing **Landscape Patch Edit Layer**.
+The currently exposed toolsets do not provide a verified way to create/assign
+that layer or call arbitrary reflected functions. Thus integration remains
+blocked at that specific consumer operation. Once available: create a separate
+named layer, assign the disabled patch, validate registration/encoding, enable
+only for the bounded comparison, measure native Landscape contact and confirm
+that disabling the patch exactly restores source samples. Do not save the
+active map or promote this experimental thickness without those proofs.

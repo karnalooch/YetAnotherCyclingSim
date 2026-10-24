@@ -13,7 +13,7 @@ Dla #365 / M3 istniejący **[plan wykonawczy finalnych materiałów PEG-02-07](P
 
 ## Owner decision and precedence
 
-The 2026-10-24 [new Ma-2141 source/road candidate](MA2141_ROAD_CANDIDATE.md) distinguishes local native results from full-route and Unreal admission and does not resume the retired 300 m road.
+The 2026-10-24 implementation records are [bounded original-HDA cliff extraction](PEGASUS_CLIFF_CANDIDATE.md) and [new Ma-2141 source/road candidate](MA2141_ROAD_CANDIDATE.md). These distinguish local native results from full-route and Unreal admission; neither resumes the retired 300 m road.
 
 Houdini is the **primary executor for procedural world authoring**, including Landscape, roads, cliffs and later environment assets. Original SideFX tutorial projects, HDAs and their demonstrated workflows are the implementation starting point. Unreal consumes the outputs and provides the supported runtime/material/editor integration demonstrated by the selected recipe. This does not replace route, physics or geographic data authority with a DCC tool.
 
